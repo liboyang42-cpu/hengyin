@@ -99,6 +99,7 @@ Page({
     emptyTit: TYPE_EMPTY.topic.tit,
     emptySub: TYPE_EMPTY.topic.sub,
     // 模板 tab(/api/template/my-list,原 mytemplate 列表)
+    topicTemplates: [],
     tplList: [],
     tplLoaded: false,
     tplLoading: false,
@@ -192,7 +193,7 @@ Page({
     this._all = [];
     this.setData({ authRequired: !!authRequired, list: [], loaded: false, loading: false,
       projectState: 'loading', projectErrorMsg: '', projectAccessDenied: false,
-      capped: false, hasRowOps: false, tplList: [], tplLoaded: false, tplLoading: false,
+      capped: false, hasRowOps: false, topicTemplates: [], tplList: [], tplLoaded: false, tplLoading: false,
       tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false,
       auditSheet: { show: false, loading: false, error: '', title: '', bizType: '', bizId: '',
         rows: [], appealText: '', canAppeal: false } });
@@ -223,7 +224,7 @@ Page({
     if (kind === 'project') {
       if (denied) {
         this._all = [];
-        this.setData({ list: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
+        this.setData({ list: [], topicTemplates: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
       }
       this.setData({ loading: false, projectAccessDenied: denied,
         projectState: this.data.loaded ? 'ready' : 'error',
@@ -314,6 +315,7 @@ Page({
           const rows = res.data.rows.map(decorate);
           const show = function (joined) {
             that._all = rows.concat(joined);
+            that.setData({ topicTemplates: rows.filter(p => p.isTemplate === true) });
             that.setData({
               loaded: true,
               projectState: 'ready',
@@ -370,7 +372,7 @@ Page({
     if (tab === 'template') return;
     const all = this._all || [];
 
-    let rows = all.filter(function (p) { return p.bizType === (tab === 'activity' ? 'activity' : 'topic'); });
+    let rows = all.filter(function (p) { return p.isTemplate !== true && p.bizType === (tab === 'activity' ? 'activity' : 'topic'); });
 
     // 待处理置顶:未通过 > 草稿 > 审核中 > 其余保持接口倒序(sort 稳定)
     rows = rows.slice().sort(function (a, b) { return rankOf(a) - rankOf(b); });
@@ -395,6 +397,13 @@ Page({
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;
     if (!item || this._navigating) return; // 跳转中不响应连点
+    if (item.isTemplate === true) {
+      this._navigating = true;
+      wx.navigateTo({ url: '/pages/templatedetail/topic-detail/index?id=' + item.id
+        + (this.data.operationScope ? '&scope=MERCHANT' : ''),
+        complete: () => { this._navigating = false; } });
+      return;
+    }
     // 草稿 / 未通过(编辑重发)→ 进专业编辑器继续编辑
     if (item.bizType === 'topic' && (item.state === 'draft' || item.state === 'rejected')) {
       this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
@@ -466,8 +475,7 @@ Page({
   },
 
   // BL-120 另存为模板:POST /api/template/topic-template/save-as(id, scope)。
-  // 后端把本主题置 is_template=1(不复制),只认本人(商家 scope 认店主)且审核通过的主题,
-  // 其余按后端文案如实提示;回包无 topicId,成功后回读列表。
+  // 后端另建模板副本;原主题保留,成功后回读列表。
   saveAsTemplate(e) {
     const ds = e.currentTarget.dataset;
     const id = ds.id;

@@ -121,3 +121,24 @@ test('在途守卫:同一主题重复确认只发一次,结束后放行', () => 
   page.saveAsTemplate({ currentTarget: { dataset: { id: 14 } } });
   assert.equal(sent.length, 2);
 });
+
+
+test('theme template copy moves to templates while the live theme stays visible', () => {
+  const page = makePage();
+  loadRows(page, [
+    { id: 51, bizType: 'topic', state: 'running', title: 'Live theme', isTemplate: false },
+    { id: 52, bizType: 'topic', state: 'running', title: 'Template copy', isTemplate: true },
+  ]);
+  assert.deepEqual(page.data.list.map(row => row.id), [51]);
+  assert.deepEqual(page.data.topicTemplates.map(row => row.id), [52]);
+  page.data.typeTab = 'template';
+  page.applyView();
+  assert.equal(page.data.topicTemplates[0].title, 'Template copy');
+  let target;
+  global.wx.navigateTo = options => { target = options.url; options.complete(); };
+  page.onCardTap({ currentTarget: { dataset: { item: page.data.topicTemplates[0] } } });
+  assert.equal(target, '/pages/templatedetail/topic-detail/index?id=52');
+  page.data.operationScope = 'MERCHANT';
+  page.onCardTap({ currentTarget: { dataset: { item: page.data.topicTemplates[0] } } });
+  assert.equal(target, '/pages/templatedetail/topic-detail/index?id=52&scope=MERCHANT');
+});

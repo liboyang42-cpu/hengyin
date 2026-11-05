@@ -670,6 +670,7 @@
       "needsData": true,
       "dataKeys": [
         "clubId",
+        "id",
         "activityId",
         "memberId"
       ],
@@ -1262,7 +1263,7 @@
       "pagePath": "pages/searchmap/index",
       "pkg": "pages/searchmap",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],

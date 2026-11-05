@@ -75,6 +75,15 @@
   <!-- ===== 模板(原 mytemplate 节点玩法列表收编) ===== -->
   <block wx:else>
     <view class="mp-list">
+      <view class="mp-card" wx:for="{{topicTemplates}}" wx:key="id" data-item="{{item}}" bindtap="onCardTap" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="mp-main">
+          <image lazy-load="true" class="mp-cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+          <view class="mp-body">
+            <view class="mp-tit">{{item.title}}</view>
+            <view class="mp-tags"><text class="mp-type">主题模板</text></view>
+          </view>
+        </view>
+      </view>
       <view class="mp-card" wx:for="{{tplList}}" wx:key="id" data-id="{{item.id}}" bindtap="tplTap" hover-class="cy-pressed" hover-stay-time="80">
         <view class="mp-main">
           <image lazy-load="true" class="mp-cover" src="{{item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" />
@@ -106,7 +115,7 @@
     <cy-empty wx:if="{{tplAccessDenied}}" kind="no-permission" title="当前身份不能查看这些模板" fill size="lg" />
     <cy-error load-failure wx:if="{{!tplAccessDenied && !tplLoading && tplErrorMsg && !tplLoaded}}" title="{{tplErrorMsg}}" sub="" retry="重试" bind:retry="retryTemplates" />
     <view wx:if="{{tplLoading && tplLoaded}}" class="mp-refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在同步最新节点玩法…</view>
-    <cy-empty wx:if="{{tplLoaded && !tplErrorMsg && tplList.length===0}}" title="还没有节点玩法" />
+    <cy-empty wx:if="{{tplLoaded && !tplErrorMsg && tplList.length===0 && loaded && topicTemplates.length===0}}" title="还没有模板" />
   </block>
 
 </view>

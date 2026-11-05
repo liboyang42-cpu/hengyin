@@ -77,6 +77,8 @@ class ApiProjectControllerTest {
         controller = spy(new ApiProjectController());
         doReturn(ME).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper",
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantService", cmsRegistrationMerchantService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
@@ -426,6 +428,21 @@ class ApiProjectControllerTest {
         assertEquals("31.11", row.get("latitude"));
         assertEquals("121.38", row.get("longitude"));
         assertEquals("海星市场", row.get("addressName"));
+    }
+
+    @Test
+    void projectsExposeTemplateCopyWithoutChangingLiveTheme() {
+        CmsTopic live = topic(51L, null, "pro");
+        CmsTopic copy = topic(52L, null, "pro");
+        com.chengyinhub.business.mapper.CmsTopicMapper mapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        when(mapper.selectTemplateTopicIdsByMemberId(ME)).thenReturn(Collections.singletonList(52L));
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper", mapper);
+        when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
+                .thenReturn(new ArrayList<>(Arrays.asList(live, copy)));
+        List<Map<String, Object>> result = rows(call(null));
+        assertEquals(false, rowById(result, 51L).get("isTemplate"));
+        assertEquals(true, rowById(result, 52L).get("isTemplate"));
+        assertEquals(live.getStatus(), copy.getStatus());
     }
 
     // ---- helpers ----

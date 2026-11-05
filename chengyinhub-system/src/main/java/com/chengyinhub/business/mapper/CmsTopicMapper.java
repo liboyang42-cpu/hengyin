@@ -213,6 +213,8 @@ public interface CmsTopicMapper
     /** T7 读某主题的模板标记(/use 门禁) */
     public Integer selectTopicIsTemplate(Long id);
 
+    public java.util.List<Long> selectTemplateTopicIdsByMemberId(@Param("memberId") Long memberId);
+
     /** T7 另存为模板:把刚复制出的副本标成已审核、在架的模板(只认本人、未删、尚非模板的行) */
     public int markTopicTemplateCopy(@Param("id") Long id, @Param("memberId") Long memberId,
                                      @Param("checkStatus") Integer checkStatus);

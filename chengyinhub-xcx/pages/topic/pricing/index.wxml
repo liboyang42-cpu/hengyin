@@ -1,5 +1,5 @@
 <wxs src="../../../utils/wxs/money.wxs" module="money" />
-<view class="pg {{themeClass}} {{reducedMotion ? 'cy-motion-reduced' : ''}}" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<view class="pg {{themeClass === 'theme-dark' ? 'theme-dark' : 'theme-merchant'}} {{reducedMotion ? 'cy-motion-reduced' : ''}}" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

@@ -1,4 +1,4 @@
-@import "../../../style/merchant-light.wxss";
+@import "../../../style/merchant-light-scope.wxss";
 
 .pg { min-height: 100vh; background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
 .pg-scroll { height: calc(100vh - 180rpx); padding: 0 32rpx; box-sizing: border-box; }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5727,
+  "controlCount": 5728,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1323225,7 +1323225,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323293,7 +1323293,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323446,7 +1323446,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323513,7 +1323513,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323581,7 +1323581,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323651,7 +1323651,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323718,7 +1323718,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323785,7 +1323785,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323852,7 +1323852,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323919,7 +1323919,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1323986,7 +1323986,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324053,7 +1324053,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324120,7 +1324120,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324187,7 +1324187,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324254,7 +1324254,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324322,7 +1324322,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324389,7 +1324389,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324456,7 +1324456,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324523,7 +1324523,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324590,7 +1324590,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324658,7 +1324658,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324725,7 +1324725,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324792,7 +1324792,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1324859,7 +1324859,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325020,7 +1325020,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325087,7 +1325087,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325154,7 +1325154,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325221,7 +1325221,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325288,7 +1325288,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325355,7 +1325355,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325422,7 +1325422,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325489,7 +1325489,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325558,7 +1325558,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325719,7 +1325719,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1325891,7 +1325891,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326067,7 +1326067,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326137,7 +1326137,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326298,7 +1326298,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326365,7 +1326365,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326432,7 +1326432,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326593,7 +1326593,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1326660,7 +1326660,7 @@
       "route": "pages/searchmap/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
-      "role": "player",
+      "role": "merchant",
       "entry": {
         "wxml": "pages/searchmap/index.wxml",
         "js": "pages/searchmap/index.js"
@@ -1390101,7 +1390101,353 @@
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:100:catchtap:tplDelete:11",
+      "id": "subpackageA/pages/myproject/index.wxml:106:catchtap:tplSubmitMarket:9",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "tplSubmitMarket",
+        "line": 106,
+        "selectorHint": ".mp-op",
+        "visibleCondition": "{{item._canSubmitMarket}}",
+        "disabledCondition": null,
+        "ariaLabel": "提交广场审核",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/template/my-list",
+          "/api/template/{param}/market-submit"
+        ],
+        "primaryApis": [
+          "/api/template/my-list",
+          "/api/template/{param}/market-submit"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/{param}/market-submit",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/my-list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:911"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:107:catchtap:tplToggle:10",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "tplToggle",
+        "line": 107,
+        "selectorHint": ".mp-op",
+        "visibleCondition": "{{item._canToggleMarket}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item._marketActionText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/template/my-list",
+          "/api/template/updateLibraryStatus"
+        ],
+        "primaryApis": [
+          "/api/template/my-list",
+          "/api/template/updateLibraryStatus"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/my-list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/template/updateLibraryStatus",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/template/updateLibraryStatus"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:937"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:108:catchtap:tplAudit:11",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "tplAudit",
+        "line": 108,
+        "selectorHint": ".mp-op",
+        "visibleCondition": "{{item._audit}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "查看{{item.title}}的审核记录",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/audit/timeline",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/audit/timeline"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:719"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:109:catchtap:tplDelete:12",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1390124,7 +1390470,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "tplDelete",
-        "line": 100,
+        "line": 109,
         "selectorHint": ".mp-op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1390166,11 +1390512,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:958"
+        "staticSource": "subpackageA/pages/myproject/index.js:966"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:117:bind:close:closeOpsSheet:13",
+      "id": "subpackageA/pages/myproject/index.wxml:126:bind:close:closeOpsSheet:14",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1390193,7 +1390539,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeOpsSheet",
-        "line": 117,
+        "line": 126,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1390233,11 +1390579,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:447"
+        "staticSource": "subpackageA/pages/myproject/index.js:456"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:120:bindtap:onOpsPick:14",
+      "id": "subpackageA/pages/myproject/index.wxml:129:bindtap:onOpsPick:15",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1390260,7 +1390606,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 120,
+        "line": 129,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{opsSheet.canEdit}}",
         "disabledCondition": null,
@@ -1390422,11 +1390768,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:121:bindtap:onOpsPick:15",
+      "id": "subpackageA/pages/myproject/index.wxml:130:bindtap:onOpsPick:16",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1390449,7 +1390795,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 121,
+        "line": 130,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{opsSheet.canViewApplies}}",
         "disabledCondition": null,
@@ -1390611,11 +1390957,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:122:bindtap:onOpsPick:16",
+      "id": "subpackageA/pages/myproject/index.wxml:131:bindtap:onOpsPick:17",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1390638,7 +1390984,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 122,
+        "line": 131,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{opsSheet.canToggle}}",
         "disabledCondition": null,
@@ -1390800,11 +1391146,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:123:bindtap:onOpsPick:17",
+      "id": "subpackageA/pages/myproject/index.wxml:132:bindtap:onOpsPick:18",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1390827,7 +1391173,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 123,
+        "line": 132,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{opsSheet.canCancel}}",
         "disabledCondition": null,
@@ -1390989,11 +1391335,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:124:bindtap:onOpsPick:18",
+      "id": "subpackageA/pages/myproject/index.wxml:133:bindtap:onOpsPick:19",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1391016,7 +1391362,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 124,
+        "line": 133,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{opsSheet.canAudit}}",
         "disabledCondition": null,
@@ -1391178,11 +1391524,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:125:bindtap:onOpsPick:19",
+      "id": "subpackageA/pages/myproject/index.wxml:134:bindtap:onOpsPick:20",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1391205,7 +1391551,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 125,
+        "line": 134,
         "selectorHint": ".tm-row",
         "visibleCondition": "{{opsSheet.canSaveAsTemplate}}",
         "disabledCondition": null,
@@ -1391367,11 +1391713,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:128:bindtap:onOpsPick:20",
+      "id": "subpackageA/pages/myproject/index.wxml:137:bindtap:onOpsPick:21",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1391394,7 +1391740,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpsPick",
-        "line": 128,
+        "line": 137,
         "selectorHint": ".tm-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1391556,183 +1391902,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:451"
-      }
-    },
-    {
-      "id": "subpackageA/pages/myproject/index.wxml:134:bind:close:closeAuditSheet:21",
-      "route": "subpackageA/pages/myproject/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageA/pages/myproject/index.wxml",
-        "js": "subpackageA/pages/myproject/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closeAuditSheet",
-        "line": 134,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:762"
-      }
-    },
-    {
-      "id": "subpackageA/pages/myproject/index.wxml:139:bindtap:loadAudit:22",
-      "route": "subpackageA/pages/myproject/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageA/pages/myproject/index.wxml",
-        "js": "subpackageA/pages/myproject/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "loadAudit",
-        "line": 139,
-        "selectorHint": ".mp-ops-row",
-        "visibleCondition": "{{auditSheet.error}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/audit/timeline",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/audit/timeline"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/audit/timeline",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:732"
+        "staticSource": "subpackageA/pages/myproject/index.js:460"
       }
     },
     {
@@ -1391873,11 +1392043,187 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:208"
+        "staticSource": "subpackageA/pages/myproject/index.js:209"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:158:bindtap:removeAuditAttachment:23",
+      "id": "subpackageA/pages/myproject/index.wxml:143:bind:close:closeAuditSheet:22",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeAuditSheet",
+        "line": 143,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:770"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:148:bindtap:loadAudit:23",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "loadAudit",
+        "line": 148,
+        "selectorHint": ".mp-ops-row",
+        "visibleCondition": "{{auditSheet.error}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/audit/timeline",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/audit/timeline"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/audit/timeline",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:740"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:167:bindtap:removeAuditAttachment:24",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1391900,7 +1392246,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "removeAuditAttachment",
-        "line": 158,
+        "line": 167,
         "selectorHint": "text[bindtap]",
         "visibleCondition": "{{!auditSheet.pending && !auditSheet.confirmed}}",
         "disabledCondition": null,
@@ -1391940,11 +1392286,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:799"
+        "staticSource": "subpackageA/pages/myproject/index.js:807"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:160:bindtap:addAuditAttachment:24",
+      "id": "subpackageA/pages/myproject/index.wxml:169:bindtap:addAuditAttachment:25",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1391970,7 +1392316,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addAuditAttachment",
-        "line": 160,
+        "line": 169,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{auditSheet.canAppeal && !auditSheet.pending && auditSheet.attachments.length < 6}}",
         "disabledCondition": null,
@@ -1392061,11 +1392407,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:786"
+        "staticSource": "subpackageA/pages/myproject/index.js:794"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:163:bindtap:recoverAuditAppeal:25",
+      "id": "subpackageA/pages/myproject/index.wxml:172:bindtap:recoverAuditAppeal:26",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392088,7 +1392434,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "recoverAuditAppeal",
-        "line": 163,
+        "line": 172,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{auditSheet.pending}}",
         "disabledCondition": null,
@@ -1392178,11 +1392524,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:806"
+        "staticSource": "subpackageA/pages/myproject/index.js:814"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:164:bindtap:appealAudit:26",
+      "id": "subpackageA/pages/myproject/index.wxml:173:bindtap:appealAudit:27",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392205,7 +1392551,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "appealAudit",
-        "line": 164,
+        "line": 173,
         "selectorHint": ".mp-ops-row",
         "visibleCondition": "{{auditSheet.canAppeal && !auditSheet.pending}}",
         "disabledCondition": null,
@@ -1392304,11 +1392650,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:847"
+        "staticSource": "subpackageA/pages/myproject/index.js:855"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:173:bind:alt:onDeleteItemAlt:28",
+      "id": "subpackageA/pages/myproject/index.wxml:182:bind:alt:onDeleteItemAlt:29",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392331,7 +1392677,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDeleteItemAlt",
-        "line": 173,
+        "line": 182,
         "selectorHint": "#dcActivity",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1392456,11 +1392802,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1071"
+        "staticSource": "subpackageA/pages/myproject/index.js:1079"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:173:bind:confirm:onConfirmDeleteActivity:27",
+      "id": "subpackageA/pages/myproject/index.wxml:182:bind:confirm:onConfirmDeleteActivity:28",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392483,7 +1392829,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteActivity",
-        "line": 173,
+        "line": 182,
         "selectorHint": "#dcActivity",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1392600,11 +1392946,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:971"
+        "staticSource": "subpackageA/pages/myproject/index.js:979"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:174:bind:confirm:onConfirmCancelActivity:29",
+      "id": "subpackageA/pages/myproject/index.wxml:183:bind:confirm:onConfirmCancelActivity:30",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392627,7 +1392973,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmCancelActivity",
-        "line": 174,
+        "line": 183,
         "selectorHint": "#dcCancel",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1392744,11 +1393090,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:974"
+        "staticSource": "subpackageA/pages/myproject/index.js:982"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:175:bind:confirm:onConfirmCancelTopic:30",
+      "id": "subpackageA/pages/myproject/index.wxml:184:bind:confirm:onConfirmCancelTopic:31",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392771,7 +1393117,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmCancelTopic",
-        "line": 175,
+        "line": 184,
         "selectorHint": "#dcCancelTopic",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1392888,11 +1393234,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:995"
+        "staticSource": "subpackageA/pages/myproject/index.js:1003"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:176:bind:alt:onDeleteItemAlt:32",
+      "id": "subpackageA/pages/myproject/index.wxml:185:bind:alt:onDeleteItemAlt:33",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1392915,7 +1393261,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDeleteItemAlt",
-        "line": 176,
+        "line": 185,
         "selectorHint": "#dcRoute",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1393040,11 +1393386,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1071"
+        "staticSource": "subpackageA/pages/myproject/index.js:1079"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:176:bind:confirm:onConfirmDeleteRoute:31",
+      "id": "subpackageA/pages/myproject/index.wxml:185:bind:confirm:onConfirmDeleteRoute:32",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1393067,7 +1393413,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteRoute",
-        "line": 176,
+        "line": 185,
         "selectorHint": "#dcRoute",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1393184,11 +1393530,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:972"
+        "staticSource": "subpackageA/pages/myproject/index.js:980"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:177:bind:alt:onDeleteTemplateAlt:34",
+      "id": "subpackageA/pages/myproject/index.wxml:186:bind:alt:onDeleteTemplateAlt:35",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1393211,7 +1393557,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDeleteTemplateAlt",
-        "line": 177,
+        "line": 186,
         "selectorHint": "#dcTpl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1393304,11 +1393650,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1076"
+        "staticSource": "subpackageA/pages/myproject/index.js:1084"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:177:bind:confirm:onConfirmDeleteTemplate:33",
+      "id": "subpackageA/pages/myproject/index.wxml:186:bind:confirm:onConfirmDeleteTemplate:34",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1393331,7 +1393677,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteTemplate",
-        "line": 177,
+        "line": 186,
         "selectorHint": "#dcTpl",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1393424,7 +1393770,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:1049"
+        "staticSource": "subpackageA/pages/myproject/index.js:1057"
       }
     },
     {
@@ -1393491,7 +1393837,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:424"
+        "staticSource": "subpackageA/pages/myproject/index.js:433"
       }
     },
     {
@@ -1393546,6 +1393892,7 @@
         "routes": [
           "pages/publish/activity/index?id=",
           "pages/publish/fabu/index?id=",
+          "pages/templatedetail/topic-detail/index?id=",
           "pages/topic/merchantinfo/merchantinfo?topicId="
         ],
         "apis": [],
@@ -1393563,7 +1393910,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:395"
+        "staticSource": "subpackageA/pages/myproject/index.js:397"
       }
     },
     {
@@ -1393631,7 +1393978,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:393"
+        "staticSource": "subpackageA/pages/myproject/index.js:395"
       }
     },
     {
@@ -1393702,11 +1394049,84 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:513"
+        "staticSource": "subpackageA/pages/myproject/index.js:521"
       }
     },
     {
-      "id": "subpackageA/pages/myproject/index.wxml:78:bindtap:tplTap:7",
+      "id": "subpackageA/pages/myproject/index.wxml:78:bindtap:onCardTap:7",
+      "route": "subpackageA/pages/myproject/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageA/pages/myproject/index.wxml",
+        "js": "subpackageA/pages/myproject/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onCardTap",
+        "line": 78,
+        "selectorHint": ".mp-card",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/publish/activity/index?id=",
+          "pages/publish/fabu/index?id=",
+          "pages/templatedetail/topic-detail/index?id=",
+          "pages/topic/merchantinfo/merchantinfo?topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/pages/myproject/index.js:397"
+      }
+    },
+    {
+      "id": "subpackageA/pages/myproject/index.wxml:87:bindtap:tplTap:8",
       "route": "subpackageA/pages/myproject/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1393729,7 +1394149,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tplTap",
-        "line": 78,
+        "line": 87,
         "selectorHint": ".mp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1393772,7 +1394192,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:897"
+        "staticSource": "subpackageA/pages/myproject/index.js:905"
       }
     },
     {
@@ -1393881,353 +1394301,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:251"
-      }
-    },
-    {
-      "id": "subpackageA/pages/myproject/index.wxml:97:catchtap:tplSubmitMarket:8",
-      "route": "subpackageA/pages/myproject/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageA/pages/myproject/index.wxml",
-        "js": "subpackageA/pages/myproject/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "tplSubmitMarket",
-        "line": 97,
-        "selectorHint": ".mp-op",
-        "visibleCondition": "{{item._canSubmitMarket}}",
-        "disabledCondition": null,
-        "ariaLabel": "提交广场审核",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/my-list",
-          "/api/template/{param}/market-submit"
-        ],
-        "primaryApis": [
-          "/api/template/my-list",
-          "/api/template/{param}/market-submit"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/{param}/market-submit",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/my-list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:903"
-      }
-    },
-    {
-      "id": "subpackageA/pages/myproject/index.wxml:98:catchtap:tplToggle:9",
-      "route": "subpackageA/pages/myproject/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageA/pages/myproject/index.wxml",
-        "js": "subpackageA/pages/myproject/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "tplToggle",
-        "line": 98,
-        "selectorHint": ".mp-op",
-        "visibleCondition": "{{item._canToggleMarket}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item._marketActionText}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/template/my-list",
-          "/api/template/updateLibraryStatus"
-        ],
-        "primaryApis": [
-          "/api/template/my-list",
-          "/api/template/updateLibraryStatus"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/my-list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/template/updateLibraryStatus",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/template/updateLibraryStatus"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:929"
-      }
-    },
-    {
-      "id": "subpackageA/pages/myproject/index.wxml:99:catchtap:tplAudit:10",
-      "route": "subpackageA/pages/myproject/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "subpackageA/pages/myproject/index.wxml",
-        "js": "subpackageA/pages/myproject/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "tplAudit",
-        "line": 99,
-        "selectorHint": ".mp-op",
-        "visibleCondition": "{{item._audit}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "查看{{item.title}}的审核记录",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/audit/timeline",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/audit/timeline"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/audit/timeline",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageA/pages/myproject/index.js:711"
+        "staticSource": "subpackageA/pages/myproject/index.js:252"
       }
     },
     {
@@ -1449205,7 +1449279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:587"
+        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:585"
       }
     },
     {
@@ -1449297,7 +1449371,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:677"
+        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:675"
       }
     },
     {
@@ -1449387,7 +1449461,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:672"
+        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:670"
       }
     },
     {

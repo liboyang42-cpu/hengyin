@@ -59,6 +59,9 @@ public class ApiProjectController extends BaseController {
     private ICmsTopicService cmsTopicService;
 
     @Autowired
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
+
+    @Autowired
     private ICmsActivityService cmsActivityService;
 
     @Autowired
@@ -258,12 +261,15 @@ public class ApiProjectController extends BaseController {
             }
         }
         if (topics != null) {
+            java.util.Set<Long> templateIds = new java.util.HashSet<>(cmsTopicMapper.selectTemplateTopicIdsByMemberId(memberId));
             Map<Long, Integer> signupCounts = cmsActivityService.countSignedUpRegistrationsByTopicIds(
                     topics.stream().map(CmsTopic::getId).filter(java.util.Objects::nonNull)
                             .collect(java.util.stream.Collectors.toList()));
             for (CmsTopic t : topics) {
                 t.setSignupCount(signupCounts.getOrDefault(t.getId(), 0));
-                all.add(mapTopic(t, draftSet, acceptedChapterTopics, acceptedTypes));
+                Map<String, Object> item = mapTopic(t, draftSet, acceptedChapterTopics, acceptedTypes);
+                item.put("isTemplate", templateIds.contains(t.getId()));
+                all.add(item);
             }
         }
 

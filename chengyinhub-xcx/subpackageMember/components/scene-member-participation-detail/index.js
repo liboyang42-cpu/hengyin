@@ -333,6 +333,20 @@ Component({
         && character.sameReader(app, reader) && generation === that._detailGeneration
         && requestEpoch === that._detailRequestEpoch
         && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id);
+      const readFailure = (res, statusCode) => {
+        if (!isCurrent()) return;
+        settled = true;
+        that.setData({ info: {}, displayInfo: {} });
+        const code = Number(statusCode || (res && res.code));
+        if (code === 403 || code === 404 || (res && res.code != '200' && GONE_RECORD_MSG.test(String(res.msg || '')))) {
+          that.setData({ loadState: 'missing-param', missingTitle: '链接已失效', errorActionText: '返回' });
+          return;
+        }
+        const msg = app.getRequestErrorMessage
+          ? app.getRequestErrorMessage(res, '参与详情没能打开')
+          : ((res && (res.msg || res.errMsg)) || '参与详情没能打开');
+        that.setData({ loadState: 'error', loadErrorText: msg, errorActionText: '重试' });
+      };
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -341,8 +355,8 @@ Component({
         method: "POST",
         success: function (res) {
           if (!isCurrent()) return;
-          settled = true;
-          if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+            settled = true;
             const info = res.data;
             that._cancelRecordPending = false;
 
@@ -364,27 +378,11 @@ Component({
               resultEntryError: entry || !character.hasTopicRelation(info) ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
             if (entry) that._probeCharacter(entry.topicId, reader);
           } else {
-            // 第十二轮 k9(p1 N-4):别人的参与记录 / 已不存在的记录 = 链接失效,给「链接已失效 · 返回」,不是空白的加载失败
-            if (res && res.code != "200" && GONE_RECORD_MSG.test(String(res.msg || ''))) {
-              that.setData({ loadState: 'missing-param', missingTitle: '链接已失效', errorActionText: '返回' });
-              return;
-            }
-            const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';
-            const msg = app.getRequestErrorMessage
-              ? app.getRequestErrorMessage(res, fallback)
-              : ((res && (res.msg || res.errMsg)) || fallback);
-            that.setData({ loadState: 'error', loadErrorText: msg, errorActionText: '重试' });
+            readFailure(res);
           }
         },
-        fail: function (res) {
-          if (!isCurrent()) return;
-          settled = true;
-          const fallback = '网络异常，请重试';
-          const msg = app.getRequestErrorMessage
-            ? app.getRequestErrorMessage(res, fallback)
-            : ((res && (res.msg || res.errMsg)) || fallback);
-          that.setData({ loadState: 'error', loadErrorText: msg, errorActionText: '重试' });
-        }
+        fail(res, statusCode) { readFailure(res, statusCode); },
+        successStatusAbnormal(res, statusCode) { readFailure(res, statusCode); }
       });
     },
 

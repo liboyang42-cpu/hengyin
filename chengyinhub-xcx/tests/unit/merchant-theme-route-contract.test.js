@@ -65,3 +65,14 @@ test('我的项目按进入身份二选一:商家浅色走类作用域桥接,玩
   const themes = topLevelThemeClasses(read('subpackageA/pages/myproject/index.wxml'))
   assert.ok(themes.has('theme-merchant') && themes.has('theme-dark'))
 })
+
+
+test('club pricing is shared and declares both themes with scoped light tokens', () => {
+  const route = 'pages/topic/pricing/index'
+  assert.equal(classifyPageDomain(route), 'shared')
+  const themes = topLevelThemeClasses(read(route + '.wxml'))
+  assert.ok(themes.has('theme-merchant') && themes.has('theme-dark'))
+  const styles = read(route + '.wxss')
+  assert.match(styles, /@import ["'].*merchant-light-scope\.wxss["']/)
+  assert.doesNotMatch(styles, /@import ["'].*merchant-light\.wxss["']/)
+})

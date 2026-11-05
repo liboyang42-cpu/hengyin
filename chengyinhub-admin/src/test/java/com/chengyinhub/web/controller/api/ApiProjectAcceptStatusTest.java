@@ -59,6 +59,8 @@ class ApiProjectAcceptStatusTest {
         controller = spy(new ApiProjectController());
         doReturn(ME).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper",
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         ReflectionTestUtils.setField(controller, "cmsActivityService", actService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantService", regService);
         ReflectionTestUtils.setField(controller, "coopInviteService", coopInviteService);
