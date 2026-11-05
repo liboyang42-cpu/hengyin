@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -120,13 +121,13 @@ class ApiProjectAcceptStatusTest {
 
     @Test
     void my_topic_list_leaves_template_copies_to_the_template_tab() {
-        // 第十二轮 k9:另存为模板复制出的模板行不再在「主题」里多出一张同名「进行中」卡
+        // 查询保留副本，isTemplate 投影由前端把它放进「模板」页签。
         when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
                 .thenReturn(Collections.singletonList(myTopic(1L, null, 1, 0)));
         row(1L);
         org.mockito.ArgumentCaptor<CmsTopic> query = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicService).selectCmsTopicList(query.capture());
-        assertEquals(Boolean.TRUE, query.getValue().getExcludeTemplates());
+        assertNotEquals(Boolean.TRUE, query.getValue().getExcludeTemplates());
     }
 
     @Test

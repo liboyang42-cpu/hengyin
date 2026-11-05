@@ -231,8 +231,7 @@ public class ApiProjectController extends BaseController {
         topicQuery.setMemberId(memberId);
         topicQuery.setDelFlag(0);
         topicQuery.setActiveClubOnly(true);
-        // 第十二轮 k9:另存为模板现在是复制出一条模板行(k1),它不该在「主题」里再出一张「进行中」卡
-        topicQuery.setExcludeTemplates(true);
+        // 模板副本也要返回，前端按 isTemplate 分到「模板」，不能在查询时丢掉。
         List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(topicQuery);
         Map<Long, java.util.Set<String>> acceptedTypes = new HashMap<>();
         if (topics != null && !topics.isEmpty()) {

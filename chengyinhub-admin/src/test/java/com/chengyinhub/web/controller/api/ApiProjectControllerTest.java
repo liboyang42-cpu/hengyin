@@ -438,7 +438,11 @@ class ApiProjectControllerTest {
         when(mapper.selectTemplateTopicIdsByMemberId(ME)).thenReturn(Collections.singletonList(52L));
         ReflectionTestUtils.setField(controller, "cmsTopicMapper", mapper);
         when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
-                .thenReturn(new ArrayList<>(Arrays.asList(live, copy)));
+                .thenAnswer(invocation -> {
+                    CmsTopic query = invocation.getArgument(0);
+                    return new ArrayList<>(Boolean.TRUE.equals(query.getExcludeTemplates())
+                            ? Collections.singletonList(live) : Arrays.asList(live, copy));
+                });
         List<Map<String, Object>> result = rows(call(null));
         assertEquals(false, rowById(result, 51L).get("isTemplate"));
         assertEquals(true, rowById(result, 52L).get("isTemplate"));
