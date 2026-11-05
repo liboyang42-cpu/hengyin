@@ -425,7 +425,7 @@ const methods = {
       const ctx = supportMatrix.context(c, node);
       if (ctx.challenge || !supportMatrix.validate(matrix, template, ctx)) return;
       const advanced = supportMatrix.config(template), name = node.name || '这一站';
-      const row = supportMatrix.mains(matrix, advanced)[0];
+      const row = supportMatrix.mains(matrix, supportMatrix.pickAs(advanced, ctx))[0];   // 按会自动落结果规则后的口径认主玩法(翻卡这类非结果规则下算附加项)
       const cannot = row && row.key && supportMatrix.choice(matrix, row.key, supportMatrix.pickAs(advanced, ctx), ctx);
       const plain = !Object.keys(advanced).some(key => advanced[key] && advanced[key].enabled === true);
       if (!row && plain) out.blocked = '「' + name + '」：这一站的参与方式要选「定位到达」或「扫码」';

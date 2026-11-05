@@ -64,6 +64,9 @@ function stations(templates) {
 test('加互斥组的当下按站名说清:要重存的列出来,用不了的不让加', () => {
   const coin = catalog.applyToConfig(cfg.defaultConfig(), 'coin'), dice = catalog.applyToConfig(cfg.defaultConfig(), 'dice');
   assert.deepEqual(stations([{ name: '左巷 · 硬币摊', config: coin }, { name: '右巷 · 骰子摊', config: dice }]), { blocked: '', resave: ['左巷 · 硬币摊', '右巷 · 骰子摊'] });
+  // 翻卡、相册这类不带结果规则时算附加项的玩法,带上结果规则就是主玩法:要重存,不是用不了(rig 实走发现)
+  for (const key of ['random', 'estimate', 'pricePair', 'hidden', 'profile', 'note', 'typeIn', 'countdown', 'photoCheck', 'objectCard', 'check', 'd20', 'steps'])
+    assert.deepEqual(stations([{ name: '站', config: catalog.applyToConfig(cfg.defaultConfig(), key) }]), { blocked: '', resave: ['站'] }, key);
   const ready = Object.assign({}, coin, { outcomeRules: { version: 1, pass: {}, fail: {} } });
   assert.deepEqual(stations([{ name: '左巷', config: ready, method: 5 }]), { blocked: '', resave: [] });
   const shake = catalog.applyToConfig(cfg.defaultConfig(), 'shake');
