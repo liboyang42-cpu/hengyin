@@ -111,8 +111,8 @@
             bind:preview="onCoverPreview"
             bind:retry="retryCoverUpload"
           />
-          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
         </view>
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
       </view>
 
       <view class="li" id="field-template">
