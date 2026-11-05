@@ -1055,7 +1055,9 @@ Component({
             const teamModeValue = info.cmsActivity ? Number(info.cmsActivity.teamMode) : 0;
             const startRaw = info.cmsActivity && info.cmsActivity.startDate ? String(info.cmsActivity.startDate) : '';
             const startMs = startRaw ? Date.parse(startRaw.indexOf('T') > 0 ? startRaw : startRaw.replace(/-/g, '/')) : NaN;
+            // 已完成的订单(路线走完 / 已核销)不再出「和队友一起出发」
             info.teamOpen = Number(info.ownerType) === 2 && Number(info.registrationStatus) === 2
+              && info.orderStateKey !== 'completed'
               && (teamModeValue === 1 || teamModeValue === 2);
             info.teamStarted = info.teamOpen && !(startMs > Date.now());
 

@@ -23,8 +23,8 @@ Rig start: Docker started in this container without trouble. The rig had to be b
 | Free ticket | WALKED | 确认报名 → 「免费报名成功」, ¥0.00. |
 | 参与人信息 | WALKED | Empty save showed pink blocks (bug 1, fixed). Filled save works; phone shows masked on the order. |
 | Ticket wallet | WALKED | Card with name, date, place, 开始游戏. |
-| Teams | PARTLY | 我的队伍 and 附近招募 empty states open; 加入队伍 with a broken link shows plain 「邀请链接不完整 / 返回上一页」. Creating, joining, leaving and kicking were NOT walked. |
-| Reopen | NOT WALKED | No finished run was available in this rig. |
+| Teams | WALKED (second pass, below) | See "Second pass". |
+| Reopen | WALKED (second pass, below) | See "Second pass". |
 | Refund / leave | WALKED | 取消并退款 dialog states ¥69.00 and the free-cancel deadline. After confirming: 「报名已取消，现金退款正在派发」. Money read-back only; settlement untouched. |
 | Messages inbox and outbox | WALKED | Inbox shows 系统通知 「报名成功」 and opens as a card. Outbox: 「还没有发出的邀请」. Guest view had two messages at once (bug 4, fixed). |
 | Profile, badges, stats, monthly review | WALKED | 主页, 成就 (50 points, 排名), 帖文, 关于, 勋章墙 empty with 「去探索」, 月度回顾 for a new player is empty without fake numbers. |
@@ -49,7 +49,7 @@ Rig start: Docker started in this container without trouble. The rig had to be b
 
 ## For the lead (not changed by me)
 
-- **Time zone on the refund timeline (possible money-screen bug, needs a decision).** After a refund the order timeline shows 「订单已创建 17:37」, 「付款成功 17:37」, 「正在退款 09:40」. In the rig the app runs in GMT+8 but MySQL is UTC, and the refund time comes from a MySQL clock while the created time comes from Java. If production MySQL is also not on GMT+8, players would see a refund time 8 hours early. I did not touch it. Please check production's `@@global.time_zone`.
+- **Time zone on the refund timeline (possible money-screen bug, needs a decision).** After a refund the order timeline shows 「订单已创建 17:37」, 「付款成功 17:37」, 「正在退款 09:40」. In the rig the app runs in GMT+8 but MySQL is UTC, and the refund time comes from a MySQL clock while the created time comes from Java. If production MySQL is also not on GMT+8, players would see a refund time 8 hours early. I did not touch it. **Update from the lead:** production's database is on China time (checked read-only), so this is a rig artifact. No action needed.
 - Club page, guest view: the 「加入」 button floats over the score of the last leaderboard row in the rig (the gutter uses a measured width the rig can't measure). Probably rig only; check on a phone.
 - Club contribution board lists the 主理人 with 「0 场 · 0.0 km」 but 「5.0 分」 (score comes from sessions hosted). Looks intentional.
 
@@ -60,4 +60,40 @@ Rig start: Docker started in this container without trouble. The rig had to be b
 - The home page 「编辑精选」 and banner images are empty in the rig (no fixtures), so their look was not judged.
 - On the rig, a real mouse tap on 「立即报名」 of the topic page did not fire its handler, while calling the same handler directly opened the session picker. I traced it to an overlay on first visit in the club page but not for the topic page; I could not reproduce it as a product fault, so I report it as unexplained.
 
-STATUS: PARTIAL - guest, sign-up, ticket, refund, messages, profile, post and deregistration walked and 5 bugs fixed; team actions, reopen and the final deregistration step not walked
+
+## Second pass (team actions and reopen)
+
+The rig had stopped between sessions, so I rebuilt it (fresh database, same fixtures, seed chains). Topic 990014 was set to team mode with a cap of 3 (rig fixture). Four players bought the ¥69 ticket for the same session through the real screens.
+
+| Step | Result |
+|---|---|
+| Create team (order page → 叫上队友 → size sheet → 3 人队伍) | WALKED. Team page opens: 招募中, 1 / 3, 邀请队友, 公开招募 switch. The size sheet only offers 2 and 3 (the topic's cap). |
+| Join with a real invitation link (invite code) | WALKED. Players 2 and 3 joined: 2 / 3, then 3 / 3, button changes to 查看队伍. |
+| Full team | WALKED. The fourth player sees 「队伍已满」 and no join button. Leader page shows 已满员. |
+| Kick | WALKED. Confirm dialog explains the consequences in plain words; after 移出队员 the DB shows the member removed and the team back to 招募中 2 / 3. The kicked player re-opening the link and tapping join gets 「暂时无法加入该队伍」 (the server's deliberate wording, nothing joined). |
+| Leave | WALKED. A member leaves with 退出队伍, lands on 我的队伍, the team is back to 1 / 3 and appears under 附近招募. |
+| Leader leaves | WALKED. Two players rejoined; the leader left with 退出并移交队长; leadership went to the earliest member (DB checked). |
+| Disband | WALKED. New leader disbands; everyone is out, 我的队伍 shows no team, and an old member opening the team link sees 「无权查看该队伍」. |
+| Reopen after finishing | WALKED as player 9009 (finished 990014 with all 4 stops in the chain). Order detail shows 已完成 / 本次订单已核销; opening the play page for that order shows 「本轮探索已完成 · 看看这一天的收获」; tapping it opens the finish card (探店完成, 用时, 公里, 4/4, 邮票 4), 查看记录 shows the route card, 继续 goes back to the order. Badge count stayed at 1, points and balance unchanged: nothing re-awarded, nothing broken. |
+
+### Bug fixed in the second pass
+
+7. **A finished order still offered 「和队友一起出发」.** After the run was completed and verified, the order page still showed the team-up card. It is now hidden once the order is 已完成. File: `subpackageMember/components/cy/scene-member-order-detail/index.js`. Proof: `m5-finished-order-before.jpg` / `-after.jpg`; 89 related tests pass; ledger rebuilt: 5,743 controls, unchanged on disk.
+
+### Rig gaps found (not product bugs)
+
+- The rig's runtime had no `wx.getRandomValues`, so every team command (join, kick, leave) hung on 「加入中…」. I added it to the rig runtime only. On a phone it exists; not verified on a phone.
+- Team page shows 「场次开始 11月15日 02:00」 in the rig for a 10:00 session: the server sends `+08:00` and the rig's browser is on UTC. On a phone in China it shows 10:00. Not confirmed on a phone.
+
+### Seen, not changed
+
+- A new player's default name is 「城瘾用户」, so a team of three players shows three identical names to the leader (hard to tell whom to kick). It is the default nickname, not a team page fault.
+- A few player-facing lines still say 「核销」 (disband dialog: 「需要自己去核销」; order page: 「已核销 0/4 家」). I left them as the existing wording.
+
+### Still not walked
+
+- The final 微信确认 step of deregistration (needs WeChat). Not walked, as you said.
+- A free theme played to the end. The only finished run in the rig is the ¥69 ticket theme from the chain; reopen behaves the same on its order, but I did not build and play a free theme from scratch.
+- Everything on a real phone, and a real content-review hold on posts.
+
+STATUS: PARTIAL - team create/join/full/kick/leave/transfer/disband and reopen of a finished run walked and one more bug fixed; deregistration's WeChat confirm, a free theme played from scratch, and all phone-only checks not walked
