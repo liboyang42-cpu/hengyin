@@ -216,3 +216,11 @@ Not a phone. Results: `integ/ROUND13-M1-RESULT.md`. Shots: `integ/fix-shots/r13-
 - Review: topic 990014 approved through the real `/business/audit/review` (k10's `approve.py`, path adjusted).
 - Logins: author 9003, players 9009 and 9004 (fixture identities). The player token for the replay checks came from `seed-walk.py token`, which is the real `/api/login/code`.
 - Driver: k10's `repl.mjs`/`helpers.mjs`, plus a `rowBtn(label, button)` helper that taps the button in the same row as a label.
+
+## Round 13 · m2, authoring a saved theme on screen (third job)
+
+Not a phone. Rig as above, plus the k10 stand-ins so that real uploads work: `proof/k10-walk/wxfake.py` (api.weixin.qq.com, 127.0.0.1:443) and `fakeoss.py` (bucket host, 127.0.0.3:443), a self-signed cert with both names, `/etc/hosts` entries, a private truststore copy (`RIG_TRUSTSTORE`), `CHENGYIN_OSS_ENDPOINT=https://oss-cn-shanghai.aliyuncs.com`, `CHENGYIN_OSS_BUCKET_NAME=chengyin-oss` and dummy key values. The app must start without `JAVA_TOOL_OPTIONS` (it points the JVM at the agent proxy). From k10's rig diff I applied only the `app.py` and `mpweb/src/nav.js` hunks. Drive: k10's `repl.mjs`/`helpers.mjs`.
+
+Authored 「午后巷口」 (topic 990014, author 9003) with only the editor screens: title, description, category, cover uploaded through the image check (real upload), story text, 个人独立进行, one chapter with a text block and two stations (豆浆摊 and 油条摊, both 选项问答, template cover uploaded), 保存草稿 (saved to cloud), dates, a free ticket. Not authored on screen: the 集合地点 (the rig's default 模拟位置 was used).
+
+Publishing was not reached: with a 互斥组 saved, 「发布」 fails on the server with 「豆浆摊：开了状态或 d20 检定的主题里，个人任务的这一站参与方式要选「定位到达」或「扫码」…」 and the screen only says 「网络中断，暂时确认不了是否已发布」. After removing the group the leftover ALL rule keeps the theme on the generic runtime (the E16/E18 family, not this lane). So the play-side items (P3 in a run, L1 in a run, backpack chip) were not played.

@@ -70,4 +70,31 @@ Not done:
 - The typing probe reported the 「这一段的反馈内容」 box as empty after typing in 30 games. I could not reproduce it by hand (the box was not found in the page in the follow-up probe), so I cannot say if it is a real input bug or a probe mistake. **Unverified.**
 - E12, E13, E2, P3, P4 and the backpack chip are still not walked (they need a saved theme or a started run).
 
-STATUS: PARTIAL - editor screens of all 32 library games were opened and scanned, with fixes for the ASCII placeholder, the raw 旧设置 captions and the edge-to-edge blocks; but no game was configured, saved and previewed end to end, the feedback-box typing probe is unresolved, and E12, E13, E2, P3, P4 and the backpack chip remain unwalked
+## Fourth pass: saved theme built on screen, remaining items
+
+Rig notes (what I stood up to make real uploads work) are in `map-shots/m2-rig-notes.md`, section 「Round 13 · m2, authoring a saved theme on screen」. I authored 「午后巷口」 (topic 990014) from the editor screens only: 主题详情 (cover through a real upload and image check), one chapter, two 选项问答 stations (豆浆摊, 油条摊), 保存草稿 to the cloud, dates and a free ticket. Not a phone.
+
+| Item | Walked | What I saw |
+|---|---|---|
+| E13 | Yes | With both stations saved, 编辑章节 reads 「请先在主题里添加物品」 under 章末配给, no longer 「请先保存本章节点」 (`m2-after-e13.jpg`; the group in that shot was added earlier in the session) |
+| E12 | Yes | Adding a 互斥组 with both stations flips 全部完成 off and 至少完成几站 = 1 (`m2-after-e12.jpg`). I also found the 至少完成几站 row drew its label and number stacked on two lines (CSS made every pill row after the first `display:block`): fixed, same shot shows one line |
+| E2 | Yes | An audio file sent to review: modal 「文件已提交审核，通过后请重试此文件」, no 「上传失败」 (`m2-after-e2.jpg`) |
+| P4 | Yes (editor preview) | 拍照打卡 preview: question larger, 前置说明 and 补充说明 small grey. While walking it I found the question was **invisible** in the editor's player preview: black text on the black preview layer, because the inline preview took the editor's light text colour. Fixed (`theme-dark` on the preview wrapper). After: `m2-after-preview-ink.jpg` (选项问答 preview, question and options readable). Before: I saw it on screen (question missing, only two grey lines) but did not keep that shot |
+| P3 | No | The scan kit is only reached in a played run, and the editor preview starts at the question |
+| L1 in a run, backpack chip | No | Need a published, started run |
+| Game library (story-flow list with 预览/配置) | Partly | See below |
+
+Other things the walks showed, fixed:
+- 选项问答 and the other games show a 「反馈分段（本站内）」 card to every identity. Typing in it turns on `branch`, and the server then refuses the save with 「当前身份未解锁「分支 / 条件玩法」」. Clearing the text does not turn it off, so the author is stuck until they find the × on the step. The card is now not offered when the identity is locked (`lockedGames.branch`), as locked games already are.
+- Earlier worry resolved: the 「这一段的反馈内容」 box does accept typing. My probe clicked it while it sat under the bottom bar.
+
+Seen, not fixed (not mine or not clear):
+- A theme with a 互斥组 cannot be published: the server error 「豆浆摊：开了状态或 d20 检定的主题里，个人任务的这一站参与方式要选「定位到达」或「扫码」…」 reaches the screen only as 「网络中断，暂时确认不了是否已发布」, and the status stays 待确认. This is the E16/E18/E21 family (other lanes). Because of it I could not publish and play the theme, which is why P3 in a run, L1 in a run and the backpack chip are still not walked.
+- In the node sheet the 「修改原模板（影响 1 个节点）」 button is clipped by its card.
+- The 选择玩法 sheet shows a one-line description under the picked game, and the story-flow game list shows 「这种玩法暂时无法确认是否完成（通用结算）」 under unsupported games. Left as they are (disabled reasons).
+
+Game library: the template editor's 选择玩法 sheet was scanned for all 32 games (third pass). The story-flow list (新建故事玩法, 预览 and 配置 per game, about 20 rows) I opened and saw, but my automated pass over its 预览 buttons broke after the first row (the preview returns to the editor, not the list), so only 文字问答, 选项问答 and 拍照打卡 were previewed by me. No game in it was configured, saved and previewed end to end except 选项问答 (saved and bound twice) and 拍照打卡 (previewed).
+
+Checks on the pushed commit: ledger `--check` 5743 controls PASS before the final rebase; 254 related unit tests pass. I did not re-run `ui-integrity.js` after the last rebase.
+
+STATUS: PARTIAL - E12, E13, E2, P4 and the editor screens of the 32-game library were walked on a theme authored on screen, with fixes for the invisible editor-preview question, the locked 反馈分段 card, and the stacked 完成要求 row; but P3, L1 and the backpack chip in a real run were not walked because a theme with a 互斥组 cannot be published (server reason hidden behind 「网络中断」, E16/E18/E21 family), and the story-flow game list was only partly previewed
