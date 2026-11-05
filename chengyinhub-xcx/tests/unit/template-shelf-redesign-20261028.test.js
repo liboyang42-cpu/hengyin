@@ -307,34 +307,36 @@ function info(extra) {
     games: ['档案一', '档案二', '档案三', '档案四', '终局'].map((t) => ({ title: t, duration: 10 })) }, extra || {});
 }
 
-test('城市定向：封面 + 每关一张卡，末关是三选一结局；✓ 清单只有关数、结局、时长、勋章', async () => {
+// 第十二轮 k3(p3 N3):卡背与 ✓ 清单只写模板里真有的东西;2 章 3 节点、没有结局分支的模板不能再写「5 关剧情」「三选一结局」。
+test('城市定向：封面 + 每关一张卡；卡背不写死流程；✓ 清单按真实章节/节点、时长、勋章', async () => {
   const { page, requests } = mountPreview({ id: '7' });
   assert.deepEqual(requests[0].data, { id: '7' });
-  await respond(requests[0], ok(info()));
+  await respond(requests[0], ok(info({ chapters: [{ name: '序章', nodeCount: 2 }, { name: '终章', nodeCount: 1 }] })));
   const cards = page.data.cards;
   assert.equal(cards.length, 6);
   assert.equal(cards[0].cover, true);
   assert.deepEqual(cards[0].steps, ['档案一', '档案二', '档案三', '档案四', '终局']);
-  assert.deepEqual(cards[1].steps, ['读档案', '做任务，拿证据', '解锁下一关']);
-  assert.deepEqual(cards[5].steps, ['汇总证据', '三选一结局', '领取勋章']);
+  assert.deepEqual(cards[1].steps, []);
+  assert.deepEqual(cards[5].steps, []);
   assert.equal(cards[1].foot, '10 分钟');
-  assert.deepEqual(page.data.checks, ['5 关剧情，每关一个玩法', '最后一关三选一结局', '约 1 小时30 分', '勋章「A-00 临时调查员」']);
+  assert.deepEqual(page.data.checks, ['2 章节 · 3 节点', '约 1 小时30 分', '勋章「A-00 临时调查员」']);
+  assert.doesNotMatch(JSON.stringify(page.data), /三选一结局|关剧情|读档案/);
   assert.equal(page.data.cover, '/pages/templatedetail/art/covers/topic/anomaly-coordinate.jpg');
 });
 
 test('自由探索 1 个玩法 / 生活不掉线多章：卡背与 ✓ 清单各按自己的形态', async () => {
   const solo = mountPreview({ id: '1' });
   await respond(solo.requests[0], ok(info({ name: '风味巡游', productType: 2, totalTime: 14400, games: [{ title: '单人探索', duration: 0 }] })));
-  assert.deepEqual(solo.page.data.cards[1].steps, ['随时开始', '任选一个轻动作', '玩满 3 次通关']);
+  assert.deepEqual(solo.page.data.cards[1].steps, []);
   assert.equal(solo.page.data.cards[1].foot, '4 小时');
-  assert.deepEqual(solo.page.data.checks, ['1 个玩法，一个人就能玩', '随时开始，可以跨天', '约 4 小时']);
+  assert.deepEqual(solo.page.data.checks, ['1 个玩法', '约 4 小时']);
   const life = mountPreview({ id: '3' });
   const games = Array.from({ length: 7 }, (_, i) => ({ title: 'G' + i, duration: 2 }));
   await respond(life.requests[0], ok(info({ name: '生活不掉线', productType: 2, totalTime: 360, games,
     chapters: [{ name: '吃饭 EAT' }, { name: '衣物 WEAR' }, { name: '居住 HOME' }, { name: '出行 MOVE' }] })));
   assert.deepEqual(life.page.data.checks, ['吃饭 / 衣物 / 居住 / 出行', '7 个小玩法', '首局约 6 分钟']);
   assert.deepEqual(life.page.data.cards[0].steps.slice(-1), ['…'], '封面卡背最多列 5 个再省略');
-  assert.deepEqual(life.page.data.cards[3].steps, ['答几道小题', '拿到备用答案']);
+  assert.deepEqual(life.page.data.cards[3].steps, []);
 });
 
 test('卡堆：左右滑切换，点最前面那张翻面并放大 1.25,两侧邻卡仍露出；点侧卡先转到中间', async () => {
