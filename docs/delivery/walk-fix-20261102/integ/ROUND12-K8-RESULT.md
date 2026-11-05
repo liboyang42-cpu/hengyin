@@ -95,4 +95,4 @@ This replaces the first start's result. The first start stopped when it couldn't
 - N9, N11, N12 and F13 have no rig walk.
 - A phone is needed for: the canvas die and hold-to-roll, real compass and mic levels, the permission dialogs, the camera, and the predict wheel's 3D seal.
 
-STATUS: PARTIAL - N13, N15, F17, F18 not done; N9, N11, N12, F13 fixed with unit tests but not walked in the rig; N16, N17 and the 248-shape check-after-skip need the owner; CI result on a commit with this work not yet read
+STATUS: PARTIAL - cloud stopped for credit; N13, N15, F17, F18 not done; N9, N11, N12, F13 fixed with unit tests but not walked in the rig; N16, N17 and the 248-shape check-after-skip need the owner; CI result on a commit with this work not yet read
