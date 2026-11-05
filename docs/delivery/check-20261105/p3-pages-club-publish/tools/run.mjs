@@ -7,6 +7,7 @@ import { open, sleep } from './lib.mjs';
 const o = JSON.parse(process.argv[2]);
 const steps = JSON.parse(process.argv[3] || '[]');
 const w = await open({ path: o.path || 'pages/index/index', identity: o.identity, lat: o.lat, lng: o.lng });
+const net0 = (await w.net()).length;
 if (o.open) { await w.open(o.open); await sleep(o.settle || 3000); }
 const dump = async (k) => console.log('##', k, '|', (await w.text()).replace(/9:41 \| ▮▮▮ ◔ ▭ \| ··· ◉/g, '').slice(0, o.dumpLen || 900));
 for (const s of steps) {
@@ -24,8 +25,8 @@ for (const s of steps) {
     if (s.pay) await w.pay(s.pay);
     if (s.scan) await w.scan(s.scan);
     if (s.loc) await w.loc(s.loc[0], s.loc[1]);
-    if (s.data) console.log('data', s.data, JSON.stringify(await w.data(s.data)).slice(0, 1500));
-    if (s.eval) console.log('eval', JSON.stringify(await w.eval(s.eval)).slice(0, 1500));
+    if (s.data) console.log('data', s.data, String(JSON.stringify(await w.data(s.data))).slice(0, 1500));
+    if (s.eval) console.log('eval', String(JSON.stringify(await w.eval(s.eval))).slice(0, 1500));
   } catch (e) { console.log('STEP ERR', JSON.stringify(s).slice(0, 120), e.message.slice(0, 160)); }
   await sleep(s.wait || 900);
   if (s.shot) { await w.shot2(s.shot); }
@@ -34,6 +35,6 @@ for (const s of steps) {
 console.log('route', (await w.route()).join('>'));
 const rep = await w.report();
 console.log('REPORT', JSON.stringify({ ...rep, consoleErrors: rep.consoleErrors.filter((c) => !/404/.test(c)) }));
-const net = (await w.net()).filter((n) => /\/api\//.test(n.url) && n.method !== 'GET' && !/role\/info|access\/me|login|track|consent/.test(n.url));
-if (o.net) for (const n of net) console.log('NET', n.status, n.method, n.url.replace(/.*__api/, ''), String(JSON.stringify(n.body)).slice(0, 300));
+const net = (await w.net()).slice(net0).filter((n) => /\/api\//.test(n.url) && n.method !== 'GET' && !/role\/info|access\/me|login|track|consent/.test(n.url));
+if (o.net) for (const n of net) console.log('NET', n.status, n.method, n.url.replace(/.*__api/, ''), 'REQ', String(typeof n.reqBody==='string'?n.reqBody:JSON.stringify(n.reqBody)).slice(0,200), 'RES', String(typeof n.resBody==='string'?n.resBody:JSON.stringify(n.resBody)).slice(0, 400));
 await w.close();
