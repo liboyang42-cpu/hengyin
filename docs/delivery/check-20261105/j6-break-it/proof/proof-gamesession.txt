@@ -1,0 +1,80 @@
+9004 PLAYER 200 500 本场游戏尚未准备 data keys reasonCode
+9004 CLUB 200 500 本场游戏尚未准备 data keys reasonCode
+9004 MERCHANT 200 500 当前商家不负责本场站点 data keys reasonCode
+9004 LEAD 200 500 本场游戏尚未准备 data keys reasonCode
+9004 ADMIN 200 500 本场游戏尚未准备 data keys reasonCode
+walk-player-2 PLAYER 200 500 本场游戏尚未准备 data keys reasonCode
+walk-player-2 CLUB 200 500 本场游戏尚未准备 data keys reasonCode
+walk-player-2 MERCHANT 200 500 当前商家不负责本场站点 data keys reasonCode
+walk-player-2 LEAD 200 500 本场游戏尚未准备 data keys reasonCode
+walk-player-2 ADMIN 200 500 本场游戏尚未准备 data keys reasonCode
+9009 PLAYER 200 500 本场游戏尚未准备 data keys reasonCode
+9009 CLUB 200 500 本场游戏尚未准备 data keys reasonCode
+9009 MERCHANT 200 500 当前商家不负责本场站点 data keys reasonCode
+9009 LEAD 200 500 本场游戏尚未准备 data keys reasonCode
+9009 ADMIN 200 500 本场游戏尚未准备 data keys reasonCode
+9002 PLAYER 200 500 本场游戏尚未准备 data keys reasonCode
+9002 CLUB 200 500 本场游戏尚未准备 data keys reasonCode
+9002 MERCHANT 200 500 本场游戏尚未准备 data keys reasonCode
+9002 LEAD 200 500 本场游戏尚未准备 data keys reasonCode
+9002 ADMIN 200 500 本场游戏尚未准备 data keys reasonCode
+9008 PLAYER 200 500 本场游戏尚未准备 data keys reasonCode
+9008 CLUB 200 200 操作成功 data keys sessionId,activityId,perspective,status,revision,authorityEpoch,currentChapterId,snapshotAt
+9008 MERCHANT 200 500 当前商家不负责本场站点 data keys reasonCode
+9008 LEAD 200 500 本场游戏尚未准备 data keys reasonCode
+9008 ADMIN 200 500 本场游戏尚未准备 data keys reasonCode
+## shared control/export as non-lead
+9004 GET /api/game/session/shared/control {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9004 GET /api/game/session/shared/export {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9004 GET /api/game/session/recap/export {"activityId": 13} -> HTTP 200 {"msg": "仅该场俱乐部主理人可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 GET /api/game/session/shared/control {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 GET /api/game/session/shared/export {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 GET /api/game/session/recap/export {"activityId": 13} -> HTTP 200 {"msg": "仅该场俱乐部主理人可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 GET /api/game/session/shared/control {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 GET /api/game/session/shared/export {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 GET /api/game/session/recap/export {"activityId": 13} -> HTTP 200 {"msg": "仅该场俱乐部主理人可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 GET /api/game/session/shared/control {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 GET /api/game/session/shared/export {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 GET /api/game/session/recap/export {"activityId": 13} -> HTTP 200 {"msg": "仅该场俱乐部主理人可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9008 GET /api/game/session/shared/control {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9008 GET /api/game/session/shared/export {"activityId": 13} -> HTTP 200 {"msg": "当前账号没有本场操作权限", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9008 GET /api/game/session/recap/export {"activityId": 13} -> HTTP 200 {"msg": "仅该场俱乐部主理人可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+## commands as non-member
+9004 POST /api/game/session/command {"activityId": 13, "action": "START", "requestId": "j6-gs-START"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "START", "requestId": "j6-gs9-START"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "OPEN_STAGE", "requestId": "j6-gs-OPEN_STAGE"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "OPEN_STAGE", "requestId": "j6-gs9-OPEN_STAGE"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "BROADCAST", "requestId": "j6-gs-BROADCAST"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "BROADCAST", "requestId": "j6-gs9-BROADCAST"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "RELEASE", "requestId": "j6-gs-RELEASE"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "RELEASE", "requestId": "j6-gs9-RELEASE"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "END", "requestId": "j6-gs-END"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "END", "requestId": "j6-gs9-END"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "UNLOCK_CHAPTER", "requestId": "j6-gs-UNLOCK_CHAPTER"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "UNLOCK_CHAPTER", "requestId": "j6-gs9-UNLOCK_CHAPTER"} -> HTTP 200 {"msg": "缺少当前版本号", "code": 500, "data": {"reasonCode": "GAME_BAD_REQUEST"}}
+lead view rev 0 epoch None status NOT_PREPARED
+9004 POST /api/game/session/command {"activityId": 13, "action": "RUN_PAUSE", "requestId": "j6-9004-RUN_PAUSE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "RUN_CANCEL", "requestId": "j6-9004-RUN_CANCEL", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "ARRIVAL_ISSUE", "requestId": "j6-9004-ARRIVAL_ISSUE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "MANUAL_SIGN", "requestId": "j6-9004-MANUAL_SIGN", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "ACT_UNLOCK", "requestId": "j6-9004-ACT_UNLOCK", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9004 POST /api/game/session/command {"activityId": 13, "action": "STAFF_TEAM_EXIT", "requestId": "j6-9004-STAFF_TEAM_EXIT", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "RUN_PAUSE", "requestId": "j6-9009-RUN_PAUSE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "RUN_CANCEL", "requestId": "j6-9009-RUN_CANCEL", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "ARRIVAL_ISSUE", "requestId": "j6-9009-ARRIVAL_ISSUE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "MANUAL_SIGN", "requestId": "j6-9009-MANUAL_SIGN", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "ACT_UNLOCK", "requestId": "j6-9009-ACT_UNLOCK", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9009 POST /api/game/session/command {"activityId": 13, "action": "STAFF_TEAM_EXIT", "requestId": "j6-9009-STAFF_TEAM_EXIT", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 POST /api/game/session/command {"activityId": 13, "action": "RUN_PAUSE", "requestId": "j6-9003-RUN_PAUSE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 POST /api/game/session/command {"activityId": 13, "action": "RUN_CANCEL", "requestId": "j6-9003-RUN_CANCEL", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 POST /api/game/session/command {"activityId": 13, "action": "ARRIVAL_ISSUE", "requestId": "j6-9003-ARRIVAL_ISSUE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+9003 POST /api/game/session/command {"activityId": 13, "action": "MANUAL_SIGN", "requestId": "j6-9003-MANUAL_SIGN", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+9003 POST /api/game/session/command {"activityId": 13, "action": "ACT_UNLOCK", "requestId": "j6-9003-ACT_UNLOCK", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+9003 POST /api/game/session/command {"activityId": 13, "action": "STAFF_TEAM_EXIT", "requestId": "j6-9003-STAFF_TEAM_EXIT", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 POST /api/game/session/command {"activityId": 13, "action": "RUN_PAUSE", "requestId": "j6-walk-player-2-RUN_PAUSE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 POST /api/game/session/command {"activityId": 13, "action": "RUN_CANCEL", "requestId": "j6-walk-player-2-RUN_CANCEL", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 POST /api/game/session/command {"activityId": 13, "action": "ARRIVAL_ISSUE", "requestId": "j6-walk-player-2-ARRIVAL_ISSUE", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+walk-player-2 POST /api/game/session/command {"activityId": 13, "action": "MANUAL_SIGN", "requestId": "j6-walk-player-2-MANUAL_SIGN", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "此动作仅适用于队伍共享局", "code": 500, "data": {"reasonCode": "GAME_ACTION_UNSUPPORTED"}}
+walk-player-2 POST /api/game/session/command {"activityId": 13, "action": "ACT_UNLOCK", "requestId": "j6-walk-player-2-ACT_UNLOCK", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+walk-player-2 POST /api/game/session/command {"activityId": 13, "action": "STAFF_TEAM_EXIT", "requestId": "j6-walk-player-2-STAFF_TEAM_EXIT", "expectedRevision": 0, "authorityEpoch": null, "payload": {}} -> HTTP 200 {"msg": "仅本场获授权工作人员可操作", "code": 500, "data": {"reasonCode": "GAME_FORBIDDEN_SCOPE"}}
+lead view after rev 0 status NOT_PREPARED

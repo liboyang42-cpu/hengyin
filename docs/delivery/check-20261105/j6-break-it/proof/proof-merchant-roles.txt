@@ -1,0 +1,14 @@
+9002 POST /api/merchant/operators/invite {"roleCode": "MERCHANT_CHECKIN", "requestId": "2e44618f-9db4-4ebf-a8a1-2253b5c23999"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"invite": {"id": 1, "roleCode": "MERCHANT_CHECKIN", "status": "PENDING", "invitedAt": "2026-11-05T10:27:14.786+08:00", "expiresAt": "2026-11-06T10:27:14.000+08:00", "acceptedAt": null, "revokedAt": null, "version": 0, "mutationState": null}, "token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo"}}
+TOKEN ktfag9… keys ['invite', 'token']
+## preview: guest, other merchant, invitee, bad token
+anon POST /api/merchant/operators/invite/preview {"token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo"} -> HTTP 401 {"msg": "登录状态已失效，请重新登录", "code": 401}
+9005 POST /api/merchant/operators/invite/preview {"token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"merchantName": "探店日样板咖啡", "roleCode": "MERCHANT_CHECKIN", "roleName": "核销员"}}
+9004 POST /api/merchant/operators/invite/preview {"token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"merchantName": "探店日样板咖啡", "roleCode": "MERCHANT_CHECKIN", "roleName": "核销员"}}
+9004 POST /api/merchant/operators/invite/preview {"token": "xxxxxxxxxxxxxxxxxxxx"} -> HTTP 200 {"msg": "邀请无效或已失效", "code": 409}
+9004 POST /api/merchant/operators/invite/preview {"token": "short"} -> HTTP 200 {"msg": "邀请无效或已失效", "code": 400}
+9004 POST /api/merchant/operators/invite/preview "" -> HTTP 200 {"msg": "邀请无效或已失效", "code": 400}
+## invitee accepts as clerk (MERCHANT_CHECKIN)
+9004 POST /api/merchant/operators/invite/accept {"token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo", "requestId": "e4adb6fa-71ea-4bed-b28f-68cd9d81fc9b"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 1, "nickname": "玩家小城", "avatar": "", "roleCode": "MERCHANT_CHECKIN", "status": "ACTIVE", "acceptedAt": "2026-11-05T10:27:14.855+08:00", "revokedAt": null, "version": 0, "mutationState": null}}
+9009 POST /api/merchant/operators/invite/accept {"token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo", "requestId": "05f1c274-eb2c-4758-b7e9-375c341f15b1"} -> HTTP 200 {"msg": "邀请无效或已失效", "code": 409}
+9009 POST /api/merchant/operators/invite/preview {"token": "ktfag9eLttGpYn8r8iLqWPm7C7kFeOlH2bInyyEkHKo"} -> HTTP 200 {"msg": "邀请无效或已失效", "code": 409}
+

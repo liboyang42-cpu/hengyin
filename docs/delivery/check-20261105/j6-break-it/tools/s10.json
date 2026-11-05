@@ -1,0 +1,2 @@
+[{"wait":3500},{"scroll":1500},{"wait":500},{"net":1},{"sh":"/root/j6/expire.sh 990006"},
+{"tap":"取消并退款"},{"wait":1200},{"dbltap":["取消并退款",{"exact":true,"nth":0}]},{"wait":4000},{"shot":"19-s3-refund-after-expiry"},{"text":500},{"wait":3000},{"route":1},{"shot":"20-s3-refund-after-expiry-later"},{"text":600},{"net":1}]

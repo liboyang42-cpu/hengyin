@@ -1,0 +1,37 @@
+paid 79 {"ok": true, "registrationId": 79, "registrationNo": "A202611058FE91A47", "totalFen": 6900, "callbackStatus": 204, "paymentStatusBefore": 1, "readback": ["2", "2026-11-05 10:25:35", "RIG-TXN-79"], "ca
+paid 80 {"ok": true, "registrationId": 80, "registrationNo": "A20261105A4EBE1B4", "totalFen": 6900, "callbackStatus": 204, "paymentStatusBefore": 1, "readback": ["2", "2026-11-05 10:25:39", "RIG-TXN-80"], "ca
+walk-player-2 POST /api/team/create {"ownerType": 2, "ownerId": 11, "title": "甲队", "maxMembers": 3, "joinMode": 1} -> HTTP 200 {"msg": "队伍已创建", "code": 200, "data": {"teamId": 1, "team": {"createBy": null, "createTime": null, "updateBy": null, "updateTime": null, "remark": null, "id": 1, "ownerType": 2, "ownerId": 11, "leaderMemberId": 990006, "inviteCode": "TuROlGwECui58kH9iUh9Gg", "title": "甲队", "joinMode": 1, "maxMembers": 3, "joinedCount": 1, "status": 0, "expireTime": "2026-11-
+walk-player-3 POST /api/team/create {"ownerType": 2, "ownerId": 11, "title": "乙队", "maxMembers": 3, "joinMode": 2} -> HTTP 200 {"msg": "队伍已创建", "code": 200, "data": {"teamId": 2, "team": {"createBy": null, "createTime": null, "updateBy": null, "updateTime": null, "remark": null, "id": 2, "ownerType": 2, "ownerId": 11, "leaderMemberId": 990007, "inviteCode": "CG7jRtCrSTayPKPLCC5IAQ", "title": "乙队", "joinMode": 2, "maxMembers": 3, "joinedCount": 1, "status": 0, "expireTime": "2026-11-
+1	990006	TuROlGwECui58kH9iUh9Gg	1	0
+2	990007	CG7jRtCrSTayPKPLCC5IAQ	2	0
+## outsider 9004 (no ticket) against team 1 (leader walk-player-2)
+9004 POST /api/team/info {"teamId": 1} -> HTTP 200 {"msg": "无权查看该队伍", "code": 500, "errorCode": "TEAM_INFO_REFUSED"}
+9004 POST /api/team/info {"inviteCode": "TuROlGwECui58kH9iUh9Gg"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"leader": false, "joined": false, "members": [{"role": 1, "memberName": "城瘾用户", "memberAvatar": ""}], "team": {"id": 1, "title": "甲队", "status": 0, "joinMode": 1, "joinedCount": 1, "maxMembers": 3}}}
+anon POST /api/team/info {"inviteCode": "TuROlGwECui58kH9iUh9Gg"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"leader": false, "joined": false, "members": [{"role": 1, "memberName": "城瘾用户", "memberAvatar": ""}], "team": {"id": 1, "title": "甲队", "status": 0, "joinMode": 1, "joinedCount": 1, "maxMembers": 3}}}
+9004 POST /api/team/join {"inviteCode": "TuROlGwECui58kH9iUh9Gg"} -> HTTP 200 {"msg": "持有这一场的票才能加入", "code": 500, "errorCode": "TICKET_REQUIRED"}
+9004 POST /api/team/applications {"teamId": 1} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+9004 POST /api/team/join-mode {"teamId": 1, "joinMode": 2} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+9004 POST /api/team/kick {"teamId": 1, "memberId": 990006} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+9004 POST /api/team/disband {"teamId": 1} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+9004 POST /api/team/quit {"teamId": 1} -> HTTP 200 {"msg": "你不在该队伍中", "code": 500}
+## other leader walk-player-3 against team 1
+walk-player-3 POST /api/team/info {"teamId": 1} -> HTTP 200 {"msg": "无权查看该队伍", "code": 500, "errorCode": "TEAM_INFO_REFUSED"}
+walk-player-3 POST /api/team/disband {"teamId": 1} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+walk-player-3 POST /api/team/kick {"teamId": 1, "memberId": 990006} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+walk-player-3 POST /api/team/handle {"teamId": 1, "memberId": 990008, "approved": true} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+## club member walk-player-1 (order 75 still paying, no paid ticket) joins team 1 by code
+walk-player-1 POST /api/team/join {"inviteCode": "TuROlGwECui58kH9iUh9Gg"} -> HTTP 200 {"msg": "持有这一场的票才能加入", "code": 500, "errorCode": "TICKET_REQUIRED"}
+## walk-player-4 (paid) applies to team 2, walk-player-2 (not its leader) approves
+walk-player-4 POST /api/team/apply {"teamId": 2, "message": "带我一个"} -> HTTP 200 {"msg": "已申请，等待队长同意", "code": 200, "data": {"applyExpireTime": "2026-11-06T10:25:50.203+08:00"}}
+walk-player-2 POST /api/team/applications {"teamId": 2} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+walk-player-2 POST /api/team/handle {"teamId": 2, "memberId": 990008, "approved": true} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+walk-player-4 POST /api/team/kick {"teamId": 2, "memberId": 990007} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+## walk-player-4 joins team 1 for real, then team-1 leader tries to kick a member of team 2 via team 1 id
+walk-player-4 POST /api/team/withdraw {"teamId": 2} -> HTTP 200 {"msg": "已撤回申请", "code": 200}
+walk-player-4 POST /api/team/join {"inviteCode": "TuROlGwECui58kH9iUh9Gg"} -> HTTP 200 {"msg": "已加入队伍", "code": 200, "data": {"createBy": null, "createTime": "2026-11-05 02:25:39", "updateBy": null, "updateTime": "2026-11-05 02:25:50", "remark": null, "id": 1, "ownerType": 2, "ownerId": 11, "leaderMemberId": 990006, "inviteCode": "TuROlGwECui58kH9iUh9Gg", "title": "甲队", "joinMode": 1, "maxMembers": 3, "joinedCount": 2, "status": 0, "expireTime
+walk-player-2 POST /api/team/kick {"teamId": 1, "memberId": 990007} -> HTTP 200 {"msg": "成员不在队伍中", "code": 500}
+walk-player-2 POST /api/team/kick {"teamId": 2, "memberId": 990007} -> HTTP 200 {"msg": "只有队长可以操作", "code": 500}
+1	990006	1
+1	990008	1
+2	990007	1
+2	990008	5

@@ -1,0 +1,2 @@
+FIXTURE 02:25:34 cms_topic 990014 team_mode 0->1
+FIXTURE 02:28:25 ums_member 9003,9008 role player->club (same as ROUND10-F3, p3 F13 / j6 F8)

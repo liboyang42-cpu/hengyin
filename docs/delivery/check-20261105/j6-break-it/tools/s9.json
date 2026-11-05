@@ -1,0 +1,2 @@
+[{"wait":3500},{"scroll":1500},{"wait":500},{"shot":"17-s3-paid-order-before-expiry"},{"text":700},{"net":1},{"sh":"/root/j6/expire.sh 990006"},
+{"tap":"取消并退款"},{"wait":1500},{"shot":"18-s3-refund-confirm"},{"text":500}]

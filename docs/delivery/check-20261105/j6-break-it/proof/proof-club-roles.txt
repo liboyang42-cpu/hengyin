@@ -1,0 +1,61 @@
+9008 POST /api/club/access/me {"clubId": 7002} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"active": true, "club": {"id": 7002, "name": "执行俱乐部", "logo": null}, "activityId": null, "roleCodes": ["CLUB_OWNER"], "permissions": ["club:read", "club:write", "club:member:list:read", "club:member:approve", "club:member:manage", "club:content:manage", "club:notify:send", "club:activity:read", "club:activity:manage", "c
+## owner 9008 grants walk-player-2 CLUB_OPERATOR and walk-player-3 EVENT_CHECKIN for activity 13
+walk-player-3 POST /api/club/join {"id": 7002} -> HTTP 200 {"msg": "加入成功", "code": 200, "data": {"state": "joined"}}
+9008 POST /api/club/roles/assign {"clubId": 7002, "targetMemberId": 990006, "roleCode": "CLUB_OPERATOR", "requestId": "f97e4973-d5a4-444c-9383-d77ffbc14b90"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 1, "targetMemberId": 990006, "roleCode": "CLUB_OPERATOR", "scopeType": "CLUB", "scopeId": 7002, "expiresAt": null, "assignedAt": "2026-11-05T10:28:25.173+08:00", "version": 0, "customerPhoneVisible": false}}
+9008 POST /api/club/roles/assign {"clubId": 7002, "targetMemberId": 990007, "roleCode": "EVENT_CHECKIN", "activityId": 13, "requestId": "7d708304-60be-4bb2-ad19-d8f6cd2bad36"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"id": 2, "targetMemberId": 990007, "roleCode": "EVENT_CHECKIN", "scopeType": "EVENT", "scopeId": 13, "expiresAt": null, "assignedAt": "2026-11-05T10:28:25.197+08:00", "version": 0, "customerPhoneVisible": false}}
+walk-player-2 POST /api/club/access/me {"clubId": 7002} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"active": true, "club": {"id": 7002, "name": "执行俱乐部", "logo": null}, "activityId": null, "roleCodes": ["CLUB_MEMBER", "CLUB_OPERATOR"], "permissions": ["club:read", "club:activity:read", "club:member:list:read", "club:member:approve", "club:content:manage", "club:notify:send"], "eventAccesses": [], "canManageRoles": fals
+walk-player-3 POST /api/club/access/me {"clubId": 7002, "activityId": 13} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"active": true, "club": {"id": 7002, "name": "执行俱乐部", "logo": null}, "activityId": 13, "roleCodes": ["CLUB_MEMBER", "EVENT_CHECKIN"], "permissions": ["club:read", "club:activity:read", "club:event:checkin"], "eventAccesses": [], "canManageRoles": false}}
+1	7002	990006	CLUB_OPERATOR	CLUB	7002	ACTIVE	NULL	9008	2026-11-05 10:28:25	NULL	NULL	NULL	0	0	9008	2026-11-05 10:28:25	9008	2026-11-05 10:28:25	7002:990006:CLUB:7002
+2	7002	990007	EVENT_CHECKIN	EVENT	13	ACTIVE	NULL	9008	2026-11-05 10:28:25	NULL	NULL	NULL	0	0	9008	2026-11-05 10:28:25	9008	2026-11-05 10:28:25	7002:990007:EVENT:13
+## walk-player-2
+walk-player-2 POST /api/club/settlement/summary {"clubId": 7002} -> HTTP 200 {"msg": "仅主理人与联席主理人可查看分润", "code": 500}
+walk-player-2 POST /api/club/settlement/withdraw {"clubId": 7002, "amount": 1, "requestId": "936182b3-9c2c-4ff8-b7f7-e4c2d8acc69a"} -> HTTP 200 {"msg": "仅俱乐部主理人可发起提现", "code": 500}
+walk-player-2 POST /api/club/governance/owner/transfer {"clubId": 7002, "targetMemberId": 990006, "requestId": "dd345d03-00c9-48d6-b1a3-481212f0a756"} -> HTTP 200 {"msg": "新主理人不合法", "code": 400}
+walk-player-2 POST /api/club/governance/ban {"clubId": 7002, "targetMemberId": 9009, "reason": "x", "requestId": "17745696-930a-4533-bcaf-288d9b981982"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-2 POST /api/club/roles/assign {"clubId": 7002, "targetMemberId": 990007, "roleCode": "CLUB_CO_OWNER", "requestId": "fc1b62ca-dff0-4f92-b4d3-b93d74f0a792"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-2 POST /api/club/roles/revoke {"clubId": 7002, "assignmentId": 2, "version": 0, "reason": "x", "requestId": "185ed1c1-7a27-4e12-bf45-3b7bfb28bf73"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-2 POST /api/club/remove-member {"clubId": 7002, "memberId": 9009} -> HTTP 200 {"msg": "无权管理该俱乐部", "code": 500}
+walk-player-2 POST /api/club/dissolve {"id": 7002} -> HTTP 200 {"msg": "请先确认解散俱乐部及其后果", "code": 500}
+walk-player-2 POST /api/club/update-mine {"id": 7002, "name": "被改名"} -> HTTP 200 {"msg": "无权修改该俱乐部", "code": 500}
+walk-player-2 POST /api/club/set-member-role {"clubId": 7002, "memberId": 990007, "role": 1} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-2 POST /api/club/membership/setting/update {"clubId": 7002, "enabled": true} -> HTTP 200 {"msg": "俱乐部付费会员功能暂未开放", "code": 404}
+walk-player-2 POST /api/club/membership/finance/invoices {"clubId": 7002} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-2 POST /api/club/event-ops/cancel {"activityId": 13, "reason": "x", "requestId": "650f7f8b-eeda-4dd1-9efb-d1a39be5feba"} -> HTTP 200 {"msg": "取消场次参数不完整", "code": 400}
+walk-player-2 POST /api/club/event-ops/roster {"activityId": 13} -> HTTP 200 {"msg": "场次范围不完整", "code": 400}
+walk-player-2 POST /api/club/open-session {"clubId": 7002, "topicId": 990014} -> HTTP 200 {"msg": "请选择俱乐部、主题和日期", "code": 500}
+## walk-player-3
+walk-player-3 POST /api/club/settlement/summary {"clubId": 7002} -> HTTP 200 {"msg": "仅主理人与联席主理人可查看分润", "code": 500}
+walk-player-3 POST /api/club/settlement/withdraw {"clubId": 7002, "amount": 1, "requestId": "936182b3-9c2c-4ff8-b7f7-e4c2d8acc69a"} -> HTTP 200 {"msg": "仅俱乐部主理人可发起提现", "code": 500}
+walk-player-3 POST /api/club/governance/owner/transfer {"clubId": 7002, "targetMemberId": 990006, "requestId": "dd345d03-00c9-48d6-b1a3-481212f0a756"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/governance/ban {"clubId": 7002, "targetMemberId": 9009, "reason": "x", "requestId": "17745696-930a-4533-bcaf-288d9b981982"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/roles/assign {"clubId": 7002, "targetMemberId": 990007, "roleCode": "CLUB_CO_OWNER", "requestId": "fc1b62ca-dff0-4f92-b4d3-b93d74f0a792"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/roles/revoke {"clubId": 7002, "assignmentId": 2, "version": 0, "reason": "x", "requestId": "185ed1c1-7a27-4e12-bf45-3b7bfb28bf73"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/remove-member {"clubId": 7002, "memberId": 9009} -> HTTP 200 {"msg": "无权管理该俱乐部", "code": 500}
+walk-player-3 POST /api/club/dissolve {"id": 7002} -> HTTP 200 {"msg": "请先确认解散俱乐部及其后果", "code": 500}
+walk-player-3 POST /api/club/update-mine {"id": 7002, "name": "被改名"} -> HTTP 200 {"msg": "无权修改该俱乐部", "code": 500}
+walk-player-3 POST /api/club/set-member-role {"clubId": 7002, "memberId": 990007, "role": 1} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/membership/setting/update {"clubId": 7002, "enabled": true} -> HTTP 200 {"msg": "俱乐部付费会员功能暂未开放", "code": 404}
+walk-player-3 POST /api/club/membership/finance/invoices {"clubId": 7002} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/event-ops/cancel {"activityId": 13, "reason": "x", "requestId": "650f7f8b-eeda-4dd1-9efb-d1a39be5feba"} -> HTTP 200 {"msg": "取消场次参数不完整", "code": 400}
+walk-player-3 POST /api/club/event-ops/roster {"activityId": 13} -> HTTP 200 {"msg": "场次范围不完整", "code": 400}
+walk-player-3 POST /api/club/open-session {"clubId": 7002, "topicId": 990014} -> HTTP 200 {"msg": "请选择俱乐部、主题和日期", "code": 500}
+## co-host against the other club 7001
+walk-player-2 POST /api/club/join-requests {"clubId": 7001} -> HTTP 200 {"msg": "只有主理人或管理员可查看入会申请", "code": 500}
+walk-player-2 POST /api/club/members {"clubId": 7001} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": [{"createBy": null, "createTime": null, "updateBy": null, "updateTime": null, "remark": null, "id": null, "clubId": 7001, "memberId": 9003, "role": 2, "status": 1, "joinMessage": null, "joinTime": null, "delFlag": null, "nickname": "俱乐部主理人", "avatar": "", "levelId": 1, "isOwner": true}]}
+walk-player-2 POST /api/club/settlement/summary {"clubId": 7001} -> HTTP 200 {"msg": "仅主理人与联席主理人可查看分润", "code": 500}
+walk-player-2 POST /api/club/event-ops/roster {"activityId": 9} -> HTTP 200 {"msg": "场次范围不完整", "code": 400}
+walk-player-2 POST /api/club/roles/list {"clubId": 7001} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+
+7002	9009	0
+7002	990005	0
+7002	990006	0
+7002	990007	0
+7002	990008	0
+## retries with valid parameters
+walk-player-2 POST /api/club/governance/owner/transfer {"clubId": 7002, "targetMemberId": 990007, "requestId": "bfbaef5b-2984-4ac6-9681-3dc4137768ae"} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-2 POST /api/club/dissolve {"id": 7002, "dissolveConfirmed": true, "memberConsequencesConfirmed": true} -> HTTP 200 {"msg": "无权解散该俱乐部", "code": 500}
+walk-player-3 POST /api/club/dissolve {"id": 7002, "dissolveConfirmed": true, "memberConsequencesConfirmed": true} -> HTTP 200 {"msg": "无权解散该俱乐部", "code": 500}
+walk-player-2 POST /api/club/event-ops/roster {"clubId": 7002, "activityId": 13} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+walk-player-3 POST /api/club/event-ops/roster {"clubId": 7002, "activityId": 13} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"clubId": 7002, "activityId": 13, "registered": [], "waitlist": [], "arrived": [{"memberId": 9009, "nickname": "玩家二号", "baseArrived": 1, "correctionVersion": 0, "baseArrivedAt": "2026-11-05T02:14:00.000+08:00", "displayName": "E2E 玩家二号", "arrived": true, "arrivedAt": "2026-11-05T02:14:00.000+08:00"}], "noShow": [], "phon
+walk-player-2 POST /api/club/event-ops/roster {"clubId": 7001, "activityId": 9} -> HTTP 200 {"msg": "俱乐部身份无效或权限不足", "code": 403}
+

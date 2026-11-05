@@ -1,0 +1,21 @@
+## outsiders
+anon GET /api/team/trail/state {"activityId": 11} -> HTTP 401 {"msg": "登录状态已失效，请重新登录", "code": 401}
+9004 GET /api/team/trail/state {"activityId": 11} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": false}}
+9004 POST /api/team/trail/sync {"activityId": 11, "pts": [[31.23, 121.4737], [31.2303, 121.4737], [31.2306, 121.4737], [31.230900000000002, 121.4737], [31.2312, 121.4737]]} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": false}}
+walk-player-1 POST /api/team/trail/sync {"activityId": 11, "pts": [[31.23, 121.4737], [31.2303, 121.4737], [31.2306, 121.4737], [31.230900000000002, 121.4737], [31.2312, 121.4737]]} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": false}}
+walk-player-2 POST /api/team/trail/sync {"activityId": 12, "pts": [[31.23, 121.4737], [31.2303, 121.4737], [31.2306, 121.4737], [31.230900000000002, 121.4737], [31.2312, 121.4737]]} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": false}}
+## paid players: p3 (team 2) walks, p4 (team 1 with p2) walks, p2 reads
+walk-player-3 POST /api/team/trail/sync {"activityId": 11, "pts": [[31.24, 121.4737], [31.240299999999998, 121.4737], [31.240599999999997, 121.4737], [31.2409, 121.4737], [31.2412, 121.4737]], "done": -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": []}}
+walk-player-4 POST /api/team/trail/sync {"activityId": 11, "pts": [[31.25, 121.4737], [31.2503, 121.4737], [31.2506, 121.4737], [31.2509, 121.4737], [31.2512, 121.4737]], "done": 1} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": [{"key": "7b86a3f39cb9", "done": 999, "name": "乙队", "avatar": "", "pts": [[31.24, 121.4737], [31.2403, 121.4737], [31.2406, 121.4737], [31.2409, 121.4737], [31.2412, 121.4737]], "ago": 0}]}}
+walk-player-2 POST /api/team/trail/sync {"activityId": 11, "pts": []} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": [{"key": "7b86a3f39cb9", "done": 999, "name": "乙队", "avatar": "", "pts": [[31.24, 121.4737], [31.2403, 121.4737], [31.2406, 121.4737], [31.2409, 121.4737], [31.2412, 121.4737]], "ago": 0}]}}
+## p3 opts out; p2 reads again
+walk-player-3 POST /api/team/trail/consent {"activityId": 11, "share": false} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": false, "decided": true}}
+walk-player-2 POST /api/team/trail/sync {"activityId": 11, "pts": []} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": []}}
+## p3 opts back in without sending points: old points were deleted?
+walk-player-3 POST /api/team/trail/consent {"activityId": 11, "share": true} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "decided": true}}
+walk-player-2 POST /api/team/trail/sync {"activityId": 11, "pts": []} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": []}}
+## p4 cancels (refund) and keeps reading?
+walk-player-4 POST /api/registration/cancel-refund {"id": "80"} -> HTTP 200 {"msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分", "code": 200, "data": {"registrationId": 80, "scope": "PARENT_ORDER", "cancellationStatus": "CANCELLED", "cashRefundStatus": "DISPATCHING", "cashRefundAmount": 69.0, "pointsUsed": 0, "pointsReturned": 0, "pointsRefundStatus": "NOT_NEEDED"}}
+walk-player-4 POST /api/team/trail/sync {"activityId": 11, "pts": [[31.26, 121.4737], [31.2603, 121.4737], [31.2606, 121.4737], [31.260900000000003, 121.4737], [31.261200000000002, 121.4737]]} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": false}}
+walk-player-3 POST /api/team/trail/sync {"activityId": 11, "pts": [[31.27, 121.4737], [31.2703, 121.4737], [31.270599999999998, 121.4737], [31.2709, 121.4737], [31.2712, 121.4737]]} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": []}}
+walk-player-2 POST /api/team/trail/sync {"activityId": 11, "pts": []} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"available": true, "share": true, "teams": [{"key": "7b86a3f39cb9", "done": 0, "name": "乙队", "avatar": "", "pts": [[31.27, 121.4737], [31.2703, 121.4737], [31.2706, 121.4737], [31.2709, 121.4737], [31.2712, 121.4737]], "ago": 0}]}}

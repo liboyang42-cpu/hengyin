@@ -1,0 +1,29 @@
+walk-player-2 POST /api/im/start {"target_member_id": 990007} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"conversationId": 13}}
+CID 13 {"conversationId": 13}
+walk-player-2 POST /api/im/send {"conversation_id": 13, "content": "明天几点集合", "type": "text", "client_message_id": "j6-m1"} -> HTTP 200 {"msg": "消息标识格式不正确", "code": 400}
+12	9	0
+11	10	0
+10	9	0
+## outsider 9004 against the conversation
+9004 POST /api/im/messages {"conversation_id": 13} -> HTTP 200 {"msg": "无权查看该会话", "code": 403}
+9004 POST /api/im/send {"conversation_id": 13, "content": "插一句", "type": "text", "client_message_id": "j6-x1"} -> HTTP 200 {"msg": "消息标识格式不正确", "code": 400}
+9004 POST /api/im/read {"conversation_id": 13, "read_to": "12"} -> HTTP 200 {"msg": "操作成功", "code": 200}
+9004 POST /api/im/mute {"conversation_id": 13, "muted": 1} -> HTTP 200 {"msg": "操作失败，请稍后重试", "code": 500}
+9004 POST /api/im/delete {"conversation_id": 13} -> HTTP 200 {"msg": "操作成功", "code": 200}
+9004 POST /api/im/send-receipt {"conversation_id": 13, "client_message_id": "j6-m1"} -> HTTP 200 {"msg": "无权查看该会话", "code": 403}
+9004 POST /api/im/report {"message_id": "12", "reason": "test"} -> HTTP 200 {"msg": "无权举报该会话的消息", "code": 403}
+9004 POST /api/im/poll/result {"poll_id": 1} -> HTTP 200 {"msg": "投票不存在", "code": 404}
+
+15	13	990006	0	0	0	0	0	2026-11-05 02:26:27	NULL
+16	13	990007	0	0	0	0	0	2026-11-05 02:26:27	NULL
+walk-player-2 POST /api/im/send {"conversation_id": 13, "content": "明天几点集合", "msg_type": "text", "client_message_id": "6f109407-da89-41ce-b499-1c57f19aaf53"} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"createBy": null, "createTime": null, "updateBy": null, "updateTime": null, "remark": null, "id": 13, "conversationId": 13, "senderId": 990006, "receiverId": 990007, "msgType": 1, "content": "明天几点集合", "extraJson": null, "status": 0, "checkStatus": 1, "visibleOrderAt": null, "clientMessageId": "6f109407-da89-41ce-b499-1c5
+13	990006	明天几点集合
+cols id,conversation_id,member_id,role,unread_count,last_read_msg_id,muted,deleted,create_time,last_read_visible_at
+BEFORE 15	13	990006	0	0	13	0	0	2026-11-05 02:26:27	2026-11-05 02:26:35.261580
+16	13	990007	0	1	0	0	0	2026-11-05 02:26:27	NULL
+9004 POST /api/im/read {"conversation_id": 13, "read_to": "13"} -> HTTP 200 {"msg": "操作成功", "code": 200}
+9004 POST /api/im/delete {"conversation_id": 13} -> HTTP 200 {"msg": "操作成功", "code": 200}
+AFTER  15	13	990006	0	0	13	0	0	2026-11-05 02:26:27	2026-11-05 02:26:35.261580
+16	13	990007	0	1	0	0	0	2026-11-05 02:26:27	NULL
+walk-player-3 POST /api/im/unread-total "" -> HTTP 200 {"msg": "操作成功", "code": 200, "data": 3}
+walk-player-3 POST /api/im/messages {"conversation_id": 13} -> HTTP 200 {"msg": "操作成功", "code": 200, "data": {"nextCursor": 13, "blocked": false, "blockedByMe": false, "hasMore": false, "list": [{"createBy": null, "createTime": "2026-11-05 02:26:35", "updateBy": null, "updateTime": null, "remark": null, "id": 13, "conversationId": 13, "senderId": 990006, "receiverId": 990007, "msgType": 1, "content": "明天几点集合", "extraJson": null,
