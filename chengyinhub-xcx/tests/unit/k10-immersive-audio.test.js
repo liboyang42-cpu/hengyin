@@ -17,6 +17,7 @@ function audioFactory(list) {
       pause() { this.paused = true; (handlers.pause || []).forEach(f => f()) },
       stop() { this.stops += 1; this.paused = true; (handlers.stop || []).forEach(f => f()) },
       destroy() { this.destroyed = true },
+      emit(name) { (handlers[name] || []).forEach(f => f()) },
       end() { this.paused = true; (handlers.ended || []).forEach(f => f()) },
     }
     ;['Play', 'Pause', 'Stop', 'Ended', 'Error', 'Waiting', 'Canplay'].forEach((n) => {
@@ -302,3 +303,25 @@ test('m3:下一站语音只在 wifi/4g/5g 下预热一首,且不进音频会话'
   page._preloadNextStationAudio(page.data.nodes[1])
   assert.equal(audios.length, 1, '弱网不预热')
 })
+
+
+test('慢旁白在play前显示加载,canplay不冒充已开始播放,play才清加载', () => {
+  const { page, audios } = loadPlay();
+  page.initAudio(); const audio = audios[0]; audio.play = () => {};
+  page.data.chapter = { id: 90, audioUrl: '/profile/slow-narration.mp3' };
+  page.playChapterAudio(true);
+  assert.equal(page.data.audioNodeId, 'chapter'); assert.equal(page.data.audioLoading, true);
+  audio.emit('canplay'); assert.equal(page.data.audioLoading, true);
+  audio.emit('play'); assert.equal(page.data.audioLoading, false); assert.equal(page.data.audioPlaying, true);
+});
+
+test('销毁后的旧旁白和换局前的回调不覆盖当前音频状态', () => {
+  const { page, audios } = loadPlay();
+  page.initAudio(); const old = audios[0]; page.destroyAudio(); page.initAudio();
+  page.setData({ audioNodeId: 'chapter', audioLoading: true, audioPlaying: false, audioError: '' });
+  old.emit('play'); old.emit('error'); old.emit('canplay');
+  assert.equal(page.data.audioLoading, true); assert.equal(page.data.audioError, '');
+  page.data.topicId = 88; audios[1].emit('play');
+  assert.equal(page.data.audioPlaying, false);
+  page.initAudio(); assert.equal(audios.length, 3, '新局取得自己的播放器回调');
+});

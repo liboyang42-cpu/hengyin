@@ -208,3 +208,15 @@ test('纯音频尾声空blocks无视频也进入结局章,重铺只自动播放�
   assert.equal(plays, 1);
   p.openChapterFull(); assert.equal(plays, 1);
 });
+
+
+test('当前局开始任务成功后自动打开本站,业务拒绝不打开', async () => {
+  for (const accepted of [true, false]) {
+    const { page: p } = setup();
+    p.data.themeBag.actionRows = [{ kind: 'QUEST', nodeId: 86, key: 'b', operation: 'QUEST_START', enabled: true }];
+    p._themeGameplayCommand = () => Promise.resolve(accepted);
+    await p.startGame(p.data.nodes[1]);
+    assert.equal(p.data.advancedPlay.show, accepted);
+    if (accepted) assert.equal(p.data.advancedPlay.node.nodeId, 86);
+  }
+});

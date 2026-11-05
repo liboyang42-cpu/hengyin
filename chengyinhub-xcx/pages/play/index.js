@@ -4153,9 +4153,9 @@ Page({
     const audio = this._audio;
     audio.stop();
     audio.src = secureOwnMedia(url);
-    audio.play();
     this._chapterAudioFile = file;
-    this.setData({ audioNodeId: 'chapter' });
+    this.setData({ audioNodeId: 'chapter', audioLoading: true, audioError: '' });
+    audio.play();
   },
 
   /** 故事流里带位置的音频块(2026-09-06 恢复,与上面的整章旁白并存)。
@@ -9002,31 +9002,42 @@ Page({
 
   // ---------- 音频播放 ----------
   initAudio() {
-    if (this._audio) return;
+    const sessionKey = this._sessionKey(), routeSessionId = String((this._routeState || {}).sessionId || '');
+    const scope = JSON.stringify([sessionKey, routeSessionId]);
+    if (this._audio && this._audioScope === scope) return;
+    if (this._audio) this.destroyAudio();
+    this._audioScope = scope;
     const that = this;
     const audio = audioSession.register(wx.createInnerAudioContext(), { kind: 'guide' });
+    const current = () => that._audio === audio && that._isPlayAccountCurrent()
+      && sessionKey === that._sessionKey() && routeSessionId === String((that._routeState || {}).sessionId || '');
     audio.obeyMuteSwitch = false;       // 静音开关下也出声（语音导览属于内容消费）
     audio.onPlay(() => {
+      if (!current()) return;
       audioSession.keepAwake('guideAudio', true);
       that._duckBgm('guide', true);
       that.setData({ audioPlaying: true, audioLoading: false, audioError: '' });
     });
     audio.onPause(() => {
+      if (!current()) return;
       audioSession.keepAwake('guideAudio', false);
       that._duckBgm('guide', false);
       that.setData({ audioPlaying: false });
     });
     audio.onStop(() => {
+      if (!current()) return;
       audioSession.keepAwake('guideAudio', false);
       that._duckBgm('guide', false);
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onEnded(() => {
+      if (!current()) return;
       audioSession.keepAwake('guideAudio', false);
       that._duckBgm('guide', false);
       that.setData({ audioPlaying: false, audioLoading: false });
     });
     audio.onError((err) => {
+      if (!current()) return;
       // 原生 errMsg(如 "MediaError:..." / 网络码)不给玩家看;面板上已有「播放失败，点此重试」,提示只说人话且不挡玩法
       const msg = '音频加载失败';
       audioSession.keepAwake('guideAudio', false);
@@ -9035,10 +9046,8 @@ Page({
       cyToast('这段音频放不出来，点一下再试');
     });
     audio.onWaiting(() => {
+      if (!current()) return;
       that.setData({ audioLoading: true, audioError: '' });
-    });
-    audio.onCanplay(() => {
-      that.setData({ audioLoading: false, audioError: '' });
     });
     this._audio = audio;
   },
