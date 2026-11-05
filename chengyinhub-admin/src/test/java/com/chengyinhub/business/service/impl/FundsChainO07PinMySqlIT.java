@@ -121,6 +121,7 @@ class FundsChainO07PinMySqlIT {
         claimMapper = template.getMapper(SettlementClaimMapper.class);
 
         service = new MerchantPayableServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "settlementDetailMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
         ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
         ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
         ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);

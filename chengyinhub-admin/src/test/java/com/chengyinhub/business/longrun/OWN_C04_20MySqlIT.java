@@ -138,6 +138,7 @@ class OWN_C04_20MySqlIT {
 
     private IMerchantPayableService payable(MerchantPayableBatchMapper mapper) {
         MerchantPayableServiceImpl target = new MerchantPayableServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "settlementDetailMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
         ReflectionTestUtils.setField(target, "batchMapper", mapper);
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.setInterfaces(IMerchantPayableService.class);

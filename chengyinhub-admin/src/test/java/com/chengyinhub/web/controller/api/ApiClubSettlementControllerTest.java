@@ -218,10 +218,12 @@ class ApiClubSettlementControllerTest {
     @Test
     void withdrawUsesTheSameVerifiedPaidTotalAsSummary() {
         ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
-        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB)))
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER))
                 .thenReturn(Arrays.asList(settledRow(1L, "100.00", "98.00"), settledRow(2L, "50.00", "50.00")));
 
-        AjaxResult summary = controller.summary(clubBody());
+        Map<String, Object> personal = clubBody();
+        personal.put("personal", true);
+        AjaxResult summary = controller.summary(personal);
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) summary.get(AjaxResult.DATA_TAG);
         assertEquals("¥148.00", data.get("settledAmountText"));
@@ -236,7 +238,7 @@ class ApiClubSettlementControllerTest {
     @Test
     void withdrawFailsClosedWhenAnySettledRowIsUnverified() {
         ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
-        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB)))
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER))
                 .thenReturn(Arrays.asList(settledRow(1L, "100.00", "100.00"), settledRow(2L, "50.00", null)));
 
         AjaxResult result = controller.withdraw(clubBody());
@@ -249,7 +251,7 @@ class ApiClubSettlementControllerTest {
     @Test
     void withdrawFailsClosedWhenSettlementDataUnavailable() {
         ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
-        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB))).thenReturn(null);
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER)).thenReturn(null);
 
         AjaxResult result = controller.withdraw(clubBody());
 

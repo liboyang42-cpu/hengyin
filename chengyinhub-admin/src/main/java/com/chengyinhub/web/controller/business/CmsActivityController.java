@@ -163,7 +163,7 @@ public class CmsActivityController extends BaseController
             return error("活动不存在");
         }
         PublishSafetyRequest.ReviewMode mode = activityReviewPolicy.modeOf(policyView(editable, current), STAFF);
-        SafetyDecision decision = decide(editable, current.getMemberId(), mode);
+        SafetyDecision decision = decide(editable, current.getMemberId(), mode, current.getTemplateId());
         if (decision == null || decision.isBlock()) {
             return error("活动内容包含违规信息，请修改后重试");
         }
@@ -194,11 +194,28 @@ public class CmsActivityController extends BaseController
      */
     private SafetyDecision decide(CmsActivity activity, Long ownerMemberId, PublishSafetyRequest.ReviewMode mode)
     {
+        return decide(activity, ownerMemberId, mode, null);
+    }
+
+    private SafetyDecision decide(CmsActivity activity, Long ownerMemberId, PublishSafetyRequest.ReviewMode mode,
+                                  Long storedTemplateId)
+    {
         PublishSafetyRequest safety = new PublishSafetyRequest();
         safety.setContentType(AuditTask.BIZ_ACTIVITY);
         safety.setMemberId(ownerMemberId);
         safety.setOpenid("");
-        safety.setText(IWxContentSecurityService.joinText(activity.getName(), activity.getDescription()));
+        java.util.List<String> texts = new java.util.ArrayList<>();
+        texts.add(IWxContentSecurityService.joinText(activity.getName(), activity.getDescription()));
+        Long templateId = activity.getTemplateId() == null ? storedTemplateId : activity.getTemplateId();
+        if (templateId != null && templateId > 0) {
+            CmsMemberTemplate template = cmsMemberTemplateService.selectCmsMemberTemplateById(templateId);
+            if (template == null || Integer.valueOf(2).equals(template.getDelFlag())) {
+                throw new com.chengyinhub.common.exception.ServiceException("绑定玩法不存在，请重新选择");
+            }
+            for (com.chengyinhub.business.util.JourneyReviewTexts.Entry entry
+                    : com.chengyinhub.business.util.JourneyReviewTexts.collectBoundTemplate(template)) texts.add(entry.getText());
+        }
+        safety.setText(IWxContentSecurityService.joinText(texts.toArray(new String[0])));
         safety.setHasSignup(true);
         safety.setReviewMode(mode.name());
         return contentSafetyGate.decide(safety);

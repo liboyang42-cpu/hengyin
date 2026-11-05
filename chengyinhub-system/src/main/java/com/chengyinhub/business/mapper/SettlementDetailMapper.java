@@ -24,6 +24,9 @@ public interface SettlementDetailMapper {
     List<SettlementDetail> selectSettledDetails(@org.apache.ibatis.annotations.Param("sourceType") String sourceType,
                                                 @org.apache.ibatis.annotations.Param("sourceId") Long sourceId);
 
+    List<SettlementDetail> selectRegistrationRefundAdjustments(@Param("registrationId") Long registrationId,
+            @Param("excludeRefundId") Long excludeRefundId);
+
     int existsAdjustment(@org.apache.ibatis.annotations.Param("sourceType") String sourceType,
                          @org.apache.ibatis.annotations.Param("sourceId") Long sourceId);
 
@@ -78,6 +81,20 @@ public interface SettlementDetailMapper {
      */
     List<ClubSessionFeeRegistration> selectFeeRegistrationsForUpdate(@Param("activityId") Long activityId,
                                                                      @Param("registrationId") Long registrationId);
+
+    int countInAppExploreRedemption(@Param("redemptionId") Long redemptionId);
+
+    Long selectExploreSessionTopicId(@Param("activityId") Long activityId);
+
+    List<CoopGroupVerify> selectExploreCoopVerifiesByActivity(@Param("activityId") Long activityId);
+
+    /** 每家店每张探索票最多一人，重复章节核销不增加人头。 */
+    List<ClubSessionFeeRegistration> selectExploreFeeRegistrationsForUpdate(@Param("activityId") Long activityId,
+            @Param("merchantMemberId") Long merchantMemberId, @Param("registrationId") Long registrationId);
+
+    /** 存量线下应收不能与新钱包结算并付。 */
+    int countLegacyExploreReceivables(@Param("activityId") Long activityId,
+            @Param("merchantMemberId") Long merchantMemberId);
 
     /** 报名支付时落的主理人(receiver_type=merchant)分账行,锁行。 */
     List<SettlementDetail> selectPayeeLinesForUpdate(@Param("registrationId") Long registrationId);

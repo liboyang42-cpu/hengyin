@@ -63,7 +63,7 @@ class ThemeBoundTemplateTextSafetyTest {
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
 
-        for (String field : new String[]{"title", "rule", "question", "option", "hint", "feedback", "story"}) {
+        for (String field : new String[]{"title", "rule", "question", "option", "hint", "feedback", "story", "nestedConfig", "preference"}) {
             CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
             request.setTitle("桥边问答");
             if ("title".equals(field)) request.setTitle("桥边问答 违规");
@@ -73,6 +73,8 @@ class ThemeBoundTemplateTextSafetyTest {
             if ("hint".equals(field)) request.setHint1("违规提示");
             if ("feedback".equals(field)) request.setFeedbackText("违规反馈");
             if ("story".equals(field)) request.setStoryJson("[{\"title\":\"段\",\"text\":\"违规故事\"}]");
+            if ("nestedConfig".equals(field)) request.setAdvancedConfigJson("{\"futureGame\":{\"newField\":[\"违规新配置\"]}}");
+            if ("preference".equals(field)) request.setPreferenceJson("{\"unknown\":\"违规偏好\"}");
 
             AjaxResult result = controller.draft(request);
 

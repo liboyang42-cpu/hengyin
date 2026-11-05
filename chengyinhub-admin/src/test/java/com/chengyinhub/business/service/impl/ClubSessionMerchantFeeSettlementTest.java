@@ -122,6 +122,12 @@ class ClubSessionMerchantFeeSettlementTest {
         ClubSessionMerchantFee fee = new ClubSessionMerchantFee();
         ReflectionTestUtils.setField(fee, "coopOrderMapper", orders);
         ReflectionTestUtils.setField(fee, "settlementDetailMapper", details);
+        // 本组是领队场(product_type=1)，真实 SQL 对探索类型查询返回空，不是 Mockito 默认的 0L。
+        when(details.selectExploreSessionTopicId(ACTIVITY)).thenReturn(null);
+        var snapshots = mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class);
+        when(snapshots.selectSnapshotByTopicId(TOPIC)).thenReturn(
+                com.chengyinhub.business.service.TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC));
+        ReflectionTestUtils.setField(fee, "topicSaleSnapshotMapper", snapshots);
         ReflectionTestUtils.setField(fee, "settlementClaimService", claims);
         ReflectionTestUtils.setField(fee, "alarmService", alarms);
 

@@ -86,6 +86,9 @@ public class TopicSaleCanonicalBuilder {
             if (directPayer == null || directPayer.longValue() != offer.path("payerClubId").asLong()) {
                 throw new IllegalStateException("SALE_SNAPSHOT_MISSING_CLUB_DIRECT_PAYER");
             }
+            if (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+                ((ObjectNode) offer).put("paymentRoute", "SESSION_SETTLEMENT");
+            }
         }
         ObjectNode settlement = json.createObjectNode();
         settlement.put("merchantDepositRequired", false);

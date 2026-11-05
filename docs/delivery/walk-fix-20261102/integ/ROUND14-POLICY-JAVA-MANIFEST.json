@@ -1,7 +1,7 @@
 {
   "baseCommit": "4aff0697d715b0ecb278b7fb0a631e65484fd84e",
   "lane": "POLICY",
-  "state": "frozen-uncommitted-java-for-coordinator",
+  "state": "combined-source-after-independent-review; final runtime/device pending",
   "files": [
     {
       "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
@@ -13,7 +13,7 @@
     },
     {
       "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/util/JourneyReviewTexts.java",
-      "sha256": "e3b463636980f84e37a74c2e06d8c838f43a7c3965d2bb337404cf1c4b4fbb71"
+      "sha256": "42ab4afe838079f131276278fe35dc46138480648657c5265e660953085df9ab"
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ActivityBoundGameContentSafetyTest.java",
@@ -21,7 +21,7 @@
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/BoundTemplateReviewTextsTest.java",
-      "sha256": "322c5dfb457f659eef0d631ce5ec10c52dc573e775bef6e097b3ddddac6f5338"
+      "sha256": "432ca2dcb5634a4221b2b0759a2e69d646522fc86adcbe7edba0a93062a20de9"
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ThemeBoundTemplateTextSafetyTest.java",

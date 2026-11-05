@@ -175,28 +175,7 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
             assertActivityTicketProjection(topicId, tickets);
             ApprovedSaleCanonical approved = approvedCanonicalSource.read(topicId, topic.getProductType());
             if (approved.getCanonical().requiresFourStoreContract()) {
-                assertShopDayTermsArePerk(topicId, offers);
-                // 主办方角色槽仍是开售闸（平台主体、声明人非空），只是不再兼任 EXTRA 审批人。
-                ProductRole organizerActor = assertShopDayOrganizerActor(topicId);
-                freezeCanonical15(topic, finalizeNow);
-                // 唯一执行俱乐部只解析一次，A4 快照与 A1/A2 条款必须绑同一个 club。
-                Long executingClub = resolveExecutingClub(orderLineup.getEntries());
-                // E2 资格槽与 terms 用同一个 executingClub，并在同一开售事务内落库、读回。
-                // declaredBy 复用已经验证过的 ORGANIZER 操作账号，只作本次自动冻结的审计 actor。
-                productRoleService.declareDistributionSlotForSale(
-                        topicId, executingClub, organizerActor.getDeclaredBy());
-                // A4 开售闸：唯一执行俱乐部的对公收款人必须已审核，且在同一事务里冻结成不可变快照。
-                // 放在 PRICING→SELLING CAS 之前 ⇒ 任一失败整体回滚，绝不进入 SELLING。
-                clubPayeeService.snapshotForSale(topicId, executingClub, finalizeNow);
-                // A1/A2 开售闸：40 元费率、每维 200、证据截止一并冻结。
-                // ★没有这一脚，club_edition_compensation_terms 永远空表 ⇒ Q/EXTRA 的六个写入口与 FINAL
-                //   全部抛 EDITION_TERMS_MISSING，「开售后计划工时冻结」那道闸也永不通电。
-                // 履约窗结束与审批人一并冻进条款：总纲 §2.1.2 要求「超范围劳动的小时单价和审批人必须在
-                // 开售快照中冻结」。★审批人由 freezeTermsForSale 自己从当期成本版本上<b>显式登记的项目负责人</b>
-                // 读取并做可达校验 —— 不再复用 ORGANIZER 槽的 declared_by（那是「谁点了那个按钮」的审计字段，
-                // 契约明写「不参与主体归属判断」，幂等重试还保留最初那个人）。
-                compensationService.freezeTermsForSale(topicId, executingClub, finalizeNow, evidenceDueAt(topic),
-                        fulfillmentEndAt(topic));
+                throw new IllegalStateException("四店固定补偿产品已停止新开售，已售合同继续履行");
             } else {
                 freezeCanonical15(topic, finalizeNow);
             }

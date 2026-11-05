@@ -17,13 +17,13 @@ import static org.mockito.Mockito.when;
 
 class ExploreSaleSnapshotGateTest {
     @Test
-    void legacySellingBeforeCanonicalLaunchKeepsSellingButNewMissingSnapshotFailsClosed() {
+    void missingSnapshotRefusesNewSalesEvenWhenSellingStartedBeforeCanonicalLaunch() {
         TopicSaleSnapshotMapper snapshots = mock(TopicSaleSnapshotMapper.class);
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         when(registrations.lockExploreTopicForUpdate(9L)).thenReturn(9L);
 
         CmsTopic legacy = topic(Date.from(Instant.parse("2026-08-14T15:59:59Z")));
-        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSnapshotFrozen(legacy, snapshots, registrations));
+        assertThrows(IllegalStateException.class, () -> ExploreSaleSnapshotGate.assertSnapshotFrozen(legacy, snapshots, registrations));
 
         CmsTopic current = topic(Date.from(Instant.parse("2026-08-14T16:00:00Z")));
         assertThrows(IllegalStateException.class,
@@ -35,7 +35,7 @@ class ExploreSaleSnapshotGateTest {
      * 以 l2 的实现为准。同一场景改证:普通自由探索与四店探店日快照都不再按账号数票,只校验快照、只锁主题行。
      */
     @Test
-    void ordinaryFreeExploreAndShopDayNoLongerCountTicketsPerAccount() throws Exception {
+    void ordinaryFreeExploreDoesNotCountAccountsButLegacyFourStoreStopsNewSales() throws Exception {
         TopicSaleSnapshotMapper snapshots = mock(TopicSaleSnapshotMapper.class);
         CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
         CmsTopic topic = topic(Date.from(Instant.parse("2026-11-01T00:00:00Z")));
@@ -51,8 +51,8 @@ class ExploreSaleSnapshotGateTest {
         assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSnapshotFrozen(topic, snapshots, registrations));
 
         when(snapshots.selectSnapshotByTopicId(9L)).thenReturn(TopicSaleCanonicalTestFixture.snapshot(9L));
-        assertDoesNotThrow(() -> ExploreSaleSnapshotGate.assertSnapshotFrozen(topic, snapshots, registrations));
-        org.mockito.Mockito.verify(registrations, org.mockito.Mockito.times(2)).lockExploreTopicForUpdate(9L);
+        assertThrows(IllegalStateException.class, () -> ExploreSaleSnapshotGate.assertSnapshotFrozen(topic, snapshots, registrations));
+        org.mockito.Mockito.verify(registrations, org.mockito.Mockito.times(1)).lockExploreTopicForUpdate(9L);
         org.mockito.Mockito.verifyNoMoreInteractions(registrations);
     }
 

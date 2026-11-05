@@ -95,6 +95,7 @@ class MerchantPayableServiceTest {
         productRoleService = mock(IProductRoleService.class);
 
         service = new MerchantPayableServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "settlementDetailMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
         ReflectionTestUtils.setField(service, "clubDirectReceivableService",
                 mock(com.chengyinhub.business.service.impl.ClubDirectMerchantReceivableService.class));
         ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
@@ -150,6 +151,24 @@ class MerchantPayableServiceTest {
     // ------------------------------------------------- 正控
 
     /** ★ 计酬档核销 ⇒ 落一行 ACCRUAL,金额与费率都取**核销这一刻**那个 offer 的值。 */
+    @Test
+    void ordinaryExploreSessionScanDoesNotAccrueOfflinePayableOrReceivable() {
+        var redemption = new Redemption(); redemption.setId(77L); redemption.setOfferId(88L);
+        var offer = new MerchantChapterOffer(); offer.setId(88L); offer.setTermsMode(TermsMode.REVSHARE);
+        offer.setPayerClubId(61L); offer.setPerHeadFee(new BigDecimal("8.00"));
+        when(redemptionMapper.selectById(77L)).thenReturn(redemption);
+        when(offerMapper.selectById(88L)).thenReturn(offer);
+        var details = mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class);
+        ReflectionTestUtils.setField(service, "settlementDetailMapper", details);
+        when(details.countInAppExploreRedemption(77L)).thenReturn(1);
+        service.accrueOnRedemption(77L); service.accrueOnRedemption(77L);
+        verify(payableMapper, never()).insertPayable(any());
+        verify(claimService, never()).claim(any());
+        var direct = (com.chengyinhub.business.service.impl.ClubDirectMerchantReceivableService)
+                ReflectionTestUtils.getField(service, "clubDirectReceivableService");
+        verify(direct, never()).accrue(any(), any());
+    }
+
     @Test
     void revshareRedemption_accruesWithFeeSnapshot() {
         service.accrueOnRedemption(RED);
@@ -772,7 +791,7 @@ class MerchantPayableServiceTest {
                 new java.util.HashSet<String>(Arrays.asList(
                         "MerchantPayableMapper", "MerchantPayableBatchMapper",
                         "RedemptionMapper", "MerchantChapterOfferMapper", "IProductRoleService",
-                        "ISettlementClaimService", "ClubDirectMerchantReceivableService")),
+                        "ISettlementClaimService", "ClubDirectMerchantReceivableService", "SettlementDetailMapper")),
                 injectable,
                 "本服务只记账不打款。多出来的依赖若能加余额/转账 = 新造第三个打款方(PR#78 刚根治掉的病)。"
                         + "真要加依赖,先读 IMerchantPayableService 类注释的三条边界,再改这条断言。");

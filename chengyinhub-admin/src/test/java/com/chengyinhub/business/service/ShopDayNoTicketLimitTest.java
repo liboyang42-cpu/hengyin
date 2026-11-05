@@ -81,7 +81,7 @@ class ShopDayNoTicketLimitTest {
                 "../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java")
                 .replaceAll("\\s+", "");
 
-        assertEquals(1, occurrences(source, "assertExploreSaleSnapshotFrozen(sellerTopic);"));
+        assertEquals(2, occurrences(source, "assertExploreSaleSnapshotFrozen(sellerTopic);"));
         assertEquals(1, occurrences(source, "assertExploreSaleSnapshotFrozen(orderTopic);"));
         assertEquals(1, occurrences(source, "assertExploreSaleSnapshotFrozen(topic);"));
     }
@@ -109,6 +109,6 @@ class ShopDayNoTicketLimitTest {
     }
 
     private static TopicSaleSnapshot snapshot() {
-        return TopicSaleCanonicalTestFixture.snapshot(TOPIC_ID);
+        return TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC_ID);
     }
 }

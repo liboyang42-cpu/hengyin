@@ -13,8 +13,6 @@ import com.chengyinhub.common.constant.ProductType;
  * 只保留「没有冻结开售快照不卖」与快照完整性校验；库存仍由票种库存行把关。
  */
 public final class ExploreSaleSnapshotGate {
-    private static final java.time.Instant CANONICAL15_EFFECTIVE_AT =
-            java.time.Instant.parse("2026-08-14T16:00:00Z");
     private ExploreSaleSnapshotGate() {}
 
     public static void assertSnapshotFrozen(CmsTopic sellerTopic,
@@ -24,18 +22,26 @@ public final class ExploreSaleSnapshotGate {
                 || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(sellerTopic.getProductType())) return;
         TopicSaleSnapshot snapshot = snapshotMapper.selectSnapshotByTopicId(sellerTopic.getId());
         if (snapshot == null) {
-            // 审计真源明确要求历史 SELLING 豁免；只认功能启用前已实际开售的不可变时间事实。
-            if (sellerTopic.getSellingStartedAt() == null
-                    || !sellerTopic.getSellingStartedAt().toInstant().isBefore(CANONICAL15_EFFECTIVE_AT)) {
-                throw new IllegalStateException("SALE_SNAPSHOT_MISSING");
-            }
+            throw new IllegalStateException("SALE_SNAPSHOT_MISSING");
         } else {
             // 方法开头已断言 sellerTopic 是 FREE_EXPLORE,这里按同一事实取校验档位(read 内即完整性校验)。
-            TopicSaleCanonicalCodec.read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson(),
-                    ProductType.FREE_EXPLORE);
+            if (TopicSaleCanonicalCodec.read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson(),
+                    ProductType.FREE_EXPLORE).requiresFourStoreContract()) {
+                throw new IllegalStateException("四店固定补偿产品已停止新售票，已售合同继续履行");
+            }
         }
         if (registrationMapper.lockExploreTopicForUpdate(sellerTopic.getId()) == null) {
             throw new IllegalStateException("主题不存在，拒绝售票");
+        }
+    }
+
+    private static Long positiveClub(Long id) { return id != null && id > 0 ? id : null; }
+
+    /** 只拦新的普通探索场次/售票，不改存量合同的结算权利。 */
+    public static void assertSessionClub(CmsTopic topic, Long sessionClubId) {
+        if (topic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && !java.util.Objects.equals(positiveClub(sessionClubId), positiveClub(topic.getClubId()))) {
+            throw new IllegalStateException("自由探索只开放内容所属俱乐部的场次，不能跨俱乐部售票");
         }
     }
 }

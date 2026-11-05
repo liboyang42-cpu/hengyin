@@ -278,6 +278,7 @@ class B03AssetMybatisIntegrationTest {
 
     private IMerchantPayableService payable(MerchantPayableBatchMapper mapper) {
         MerchantPayableServiceImpl target = new MerchantPayableServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "settlementDetailMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
         ReflectionTestUtils.setField(target, "batchMapper", mapper);
         return proxy(target, IMerchantPayableService.class);
     }

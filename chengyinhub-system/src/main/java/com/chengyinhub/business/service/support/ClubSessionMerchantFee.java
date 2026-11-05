@@ -61,6 +61,9 @@ public class ClubSessionMerchantFee {
     private CoopOrderMapper coopOrderMapper;
 
     @Autowired
+    private com.chengyinhub.business.mapper.TopicSaleSnapshotMapper topicSaleSnapshotMapper;
+
+    @Autowired
     private SettlementDetailMapper settlementDetailMapper;
 
     @Autowired
@@ -89,12 +92,18 @@ public class ClubSessionMerchantFee {
     /** 一家商家(一张合作单)在本场的费用。 */
     public static final class Charge {
         private final Long orderId;
+        private final String contractType;
         private final Long merchantMemberId;
         private final BigDecimal fee;
         private final List<RegistrationFee> registrations;
 
         Charge(Long orderId, Long merchantMemberId, BigDecimal fee, List<RegistrationFee> registrations) {
+            this(orderId, "COOP_ORDER", merchantMemberId, fee, registrations);
+        }
+
+        Charge(Long orderId, String contractType, Long merchantMemberId, BigDecimal fee, List<RegistrationFee> registrations) {
             this.orderId = orderId;
+            this.contractType = contractType;
             this.merchantMemberId = merchantMemberId;
             this.fee = fee;
             this.registrations = registrations;
@@ -165,10 +174,12 @@ public class ClubSessionMerchantFee {
                 || activity.getClubId() <= 0 || activity.getTopicId() == null) {
             return EMPTY;
         }
-        List<CoopGroupVerify> scans = settlementDetailMapper.selectGroupVerifiesByActivity(activity.getId());
-        if (scans == null || scans.isEmpty()) {
-            return EMPTY;
-        }
+        boolean explore = settlementDetailMapper.selectExploreSessionTopicId(activity.getId()) != null;
+        List<CoopGroupVerify> scans = explore
+                ? settlementDetailMapper.selectExploreCoopVerifiesByActivity(activity.getId())
+                : settlementDetailMapper.selectGroupVerifiesByActivity(activity.getId());
+        if (scans == null) scans = Collections.emptyList();
+        if (!explore && scans.isEmpty()) return EMPTY;
         Map<Long, CoopOrder> effective = new LinkedHashMap<>();
         List<CoopOrder> orders = coopOrderMapper.selectEffectiveOrdersByTopicId(activity.getTopicId());
         if (orders != null) {
@@ -212,8 +223,11 @@ public class ClubSessionMerchantFee {
                         activity.getId(), order.getId(), merchant);
                 continue;
             }
-            if (registrations == null) {
-                registrations = settlementDetailMapper.selectFeeRegistrationsForUpdate(activity.getId(), registrationId);
+            if (explore) requireNoLegacyReceivable(activity, merchant);
+            if (explore || registrations == null) {
+                registrations = explore
+                        ? settlementDetailMapper.selectExploreFeeRegistrationsForUpdate(activity.getId(), merchant, registrationId)
+                        : settlementDetailMapper.selectFeeRegistrationsForUpdate(activity.getId(), registrationId);
                 if (registrations == null) registrations = Collections.emptyList();
             }
             List<RegistrationFee> fees = new ArrayList<>();
@@ -224,6 +238,13 @@ public class ClubSessionMerchantFee {
                         fee.multiply(BigDecimal.valueOf(heads)).setScale(2, RoundingMode.UNNECESSARY)));
             }
             charges.add(new Charge(order.getId(), merchant, fee, fees));
+        }
+        if (explore) addExploreOfferCharges(activity, payeeMemberId, registrationId, charges);
+        java.util.Set<Long> merchants = new java.util.HashSet<>();
+        for (Charge charge : charges) {
+            if (!merchants.add(charge.getMerchantMemberId())) {
+                throw refuse(activity, "MERCHANT_CONTRACT_AMBIGUOUS", "同一家店有多份现金合同，不能重复计费");
+            }
         }
         return charges.isEmpty() ? EMPTY : new Plan(charges);
     }
@@ -270,7 +291,8 @@ public class ClubSessionMerchantFee {
                 }
                 SettlementClaim claim = settlementClaimService.claim(SettlementClaim.request("ACTIVITY",
                         activity.getId(), "REGISTRATION", reg.getRegistrationId(), "MERCHANT",
-                        charge.getMerchantMemberId(), "MERCHANT_PARTICIPATION", "COOP_ORDER", "COOP_ORDER",
+                        charge.getMerchantMemberId(), "MERCHANT_PARTICIPATION",
+                        "COOP_ORDER".equals(charge.contractType) ? "COOP_ORDER" : "CHAPTER_OFFER", charge.contractType,
                         charge.getOrderId()));
                 SettlementDetail detail = new SettlementDetail();
                 detail.setClaimId(claim.getId());
@@ -294,6 +316,51 @@ public class ClubSessionMerchantFee {
                                     + " 的核销费行,不重复记账,本场不结算");
                 }
             }
+        }
+    }
+
+    private void requireNoLegacyReceivable(CmsActivity activity, Long merchant) {
+        if (settlementDetailMapper.countLegacyExploreReceivables(activity.getId(), merchant) > 0) {
+            throw refuse(activity, "LEGACY_OFFLINE_RECEIVABLE_EXISTS", "本店已有线下应收，须先人工核对，不能再入钱包");
+        }
+    }
+
+    private void addExploreOfferCharges(CmsActivity activity, Long payee, Long registrationId, List<Charge> charges) {
+        var snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(activity.getTopicId());
+        if (snapshot == null) throw refuse(activity, "SALE_CONTRACT_MISSING", "探索票缺冻结销售合同");
+        var canonical = TopicSaleCanonicalCodec.read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), 2);
+        if (canonical.requiresFourStoreContract()) throw refuse(activity, "LEGACY_FOUR_STORE_CONTRACT", "四店合同保留原结算路径");
+        Map<Long, com.fasterxml.jackson.databind.JsonNode> terms = new LinkedHashMap<>();
+        for (var offer : canonical.getMerchantCashSettlementMode().path("offers")) {
+            if (!"REVSHARE".equals(offer.path("termsMode").asText())) continue;
+            Long merchant = offer.path("merchantId").asLong();
+            if (merchant <= 0 || !offer.path("id").canConvertToLong() || offer.path("id").asLong() <= 0
+                    || !Objects.equals(activity.getClubId(), offer.path("payerClubId").asLong())) {
+                throw refuse(activity, "FROZEN_TERMS_UNPROVEN", "探索商家冻结付款方或合同不明确");
+            }
+            var previous = terms.putIfAbsent(merchant, offer);
+            if (previous != null && !previous.path("perHeadFee").asText().equals(offer.path("perHeadFee").asText())) {
+                throw refuse(activity, "MERCHANT_CONTRACT_AMBIGUOUS", "同一家店的冻结人头费不一致");
+            }
+        }
+        for (var entry : terms.entrySet()) {
+            Long merchant = entry.getKey();
+            if (merchant.equals(payee)) continue;
+            var registrations = settlementDetailMapper.selectExploreFeeRegistrationsForUpdate(activity.getId(), merchant, registrationId);
+            if (registrations == null || registrations.isEmpty()) continue;
+            requireNoLegacyReceivable(activity, merchant);
+            BigDecimal fee;
+            try {
+                fee = new BigDecimal(entry.getValue().path("perHeadFee").asText()).setScale(2, RoundingMode.UNNECESSARY);
+                if (fee.signum() < 0) throw new IllegalArgumentException();
+            } catch (RuntimeException invalid) {
+                throw refuse(activity, "FROZEN_FIXED_FEE_UNPROVEN", "探索商家冻结人头费无效");
+            }
+            List<RegistrationFee> fees = new ArrayList<>();
+            for (var registration : registrations) {
+                fees.add(new RegistrationFee(registration.getRegistrationId(), 1, fee));
+            }
+            charges.add(new Charge(entry.getValue().path("id").asLong(), "MERCHANT_CHAPTER_OFFER", merchant, fee, fees));
         }
     }
 

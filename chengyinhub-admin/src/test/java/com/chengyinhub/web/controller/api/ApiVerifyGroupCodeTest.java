@@ -225,6 +225,20 @@ class ApiVerifyGroupCodeTest {
         verify(groupVerifyMapper).insertIgnoreCoopGroupVerify(any());
     }
 
+    @Test
+    void earlyGroupScanRecordsParticipation() {
+        activity.setStartDate(new Date(System.currentTimeMillis() + 86_400_000L));
+        activity.setEndDate(new Date(System.currentTimeMillis() + 172_800_000L));
+        doReturn(LEADER).when(controller).getAppUserId();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> issued = (Map<String, Object>) controller.issueGroupCode(ACTIVITY).get("data");
+        doReturn(MERCHANT).when(controller).getAppUserId();
+        when(groupVerifyMapper.insertIgnoreCoopGroupVerify(any())).thenReturn(1);
+        assertEquals(200, controller.redeemGroupCode(String.valueOf(issued.get("code"))).get("code"));
+        verify(groupVerifyMapper).insertIgnoreCoopGroupVerify(any());
+        verify(auditMapper).insertBusinessAuditEvent(any());
+    }
+
     /** ★越权面:不是本主题承接俱乐部的人 ⇒ 出不了码。漏了就是任何人都能造团码骗商家扫。 */
     @Test
     void issue_nonOrganizer_rejected() {

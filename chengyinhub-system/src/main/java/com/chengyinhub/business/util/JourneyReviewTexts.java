@@ -292,32 +292,38 @@ public final class JourneyReviewTexts {
     }
 
     /**
-     * 主题节点绑定的节点玩法(cms_member_template)的全部玩家可见文字:名称、简介、规则、题干、答案、
-     * 反馈、选项、提示、揭晓、故事块、奖励文案与节点块配置叙事段。随主题发布/编辑时与主题文本同一道闸
+     * 主题/活动绑定的玩法(cms_member_template)的全部字符串与配置正文,不依赖玩法字段白名单。
+     * 随主题/活动发布或编辑时与主内容走同一道闸
      * (check-1104 j5 B1:主题内节点玩法原先只走媒体闸,文字未送机审就随主题公开)。
      */
     public static List<Entry> collectBoundTemplate(com.chengyinhub.business.domain.CmsMemberTemplate t) {
         List<Entry> entries = new ArrayList<Entry>();
         if (t == null) return entries;
-        add(entries, "title", t.getTitle());
-        add(entries, "description", t.getDescription());
-        add(entries, "players", t.getPlayers());
-        add(entries, "usageLocation", t.getUsageLocation());
-        add(entries, "requiredMaterials", t.getRequiredMaterials());
-        add(entries, "questionName", t.getQuestionName());
-        add(entries, "questionAnswer", t.getQuestionAnswer());
-        add(entries, "feedbackText", t.getFeedbackText());
-        entries.addAll(collectTemplateFields(t));
-        entries.addAll(collectBlocks(t.getAdvancedConfigJson()));
+        // 绑定时扫描全部字符串叶子,新玩法/嵌套配置不能靠新增字段名绕过现有门禁。
+        collectBoundTexts(MAPPER.valueToTree(t), "", entries, new java.util.HashSet<String>());
         return entries;
     }
 
-    /** 模板库提交里、既有 joinText 之外的玩家可见散字段(选项/规则说明/勋章名已在 joinText 内)。 */
+    private static void collectBoundTexts(JsonNode node, String path, List<Entry> entries, java.util.Set<String> seen) {
+        if (node == null) return;
+        if (node.isTextual()) {
+            // Plain text may look like JSON; retain it as well as any decoded nested text.
+            if (seen.add(node.asText().trim())) add(entries, path, node.asText());
+            JsonNode nested = parse(node.asText());
+            if (nested != null && (nested.isContainerNode() || nested.isTextual())) collectBoundTexts(nested, path, entries, seen);
+        } else if (node.isObject()) {
+            node.fields().forEachRemaining(field -> collectBoundTexts(field.getValue(),
+                    path.isEmpty() ? field.getKey() : path + "." + field.getKey(), entries, seen));
+        } else if (node.isArray()) {
+            for (JsonNode child : node) collectBoundTexts(child, path + "[]", entries, seen);
+        }
+    }
+
+    /** 草稿/模板编辑也收全部字符串叶子,避免已绑定的玩法通过编辑新配置绕过绑定期检查。 */
     public static List<Entry> collectTemplateFields(com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest r) {
         List<Entry> entries = new ArrayList<Entry>();
         if (r == null) return entries;
-        addTemplateStory(entries, r.getHint1(), r.getHint2(), r.getAnswerReveal(), r.getStoryText(),
-                r.getStoryJson(), r.getPhotoRequireDesc(), r.getRewardRulesJson());
+        collectBoundTexts(MAPPER.valueToTree(r), "", entries, new java.util.HashSet<String>());
         return entries;
     }
 

@@ -55,6 +55,15 @@ public interface CoopSettlementMapper {
     java.util.List<com.chengyinhub.business.domain.vo.ClubSessionSettlementRow> selectClubSessionSettlements(
             @org.apache.ibatis.annotations.Param("clubId") Long clubId);
 
+    /** 本人历史收款，身份只从服务端登录态传入，不依赖当前岗位。 */
+    List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectPersonalClubSummary(
+            @Param("clubId") Long clubId, @Param("memberId") Long memberId);
+
+    List<com.chengyinhub.business.domain.vo.ClubSessionSettlementRow> selectPersonalClubSessions(
+            @Param("clubId") Long clubId, @Param("memberId") Long memberId);
+
+    List<java.util.Map<String, Object>> selectPersonalSettlementClubs(@Param("memberId") Long memberId);
+
     /** 同 selectSummaryByBeneficiary 口径,按主题取(发起人分润页 clubFinance)。 */
     java.util.List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectSummaryByTopicId(
             @org.apache.ibatis.annotations.Param("topicId") Long topicId);

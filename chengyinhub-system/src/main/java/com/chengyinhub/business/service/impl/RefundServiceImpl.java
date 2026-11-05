@@ -46,6 +46,7 @@ import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -122,6 +123,9 @@ public class RefundServiceImpl implements IRefundService {
 
     @Autowired
     private SettlementDetailMapper settlementDetailMapper;
+
+    @Autowired
+    private com.chengyinhub.business.mapper.TopicSaleSnapshotMapper topicSaleSnapshotMapper;
 
     /** 客诉期提现闸:结算时涉诉暂扣的报名单,商家并没拿到这单的钱。 */
     @Autowired
@@ -763,12 +767,125 @@ public class RefundServiceImpl implements IRefundService {
         return rows;
     }
 
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public void recordVerifiedExploreManualRefund(com.chengyinhub.business.domain.ActivityCancelManualRefundCase row) {
+        if (row == null || !com.chengyinhub.business.domain.ActivityCancelManualRefundCase
+                .STATUS_MANUAL_REFUND_EVIDENCE_VERIFIED.equals(row.getStatus())
+                || row.getId() == null || row.getVerifiedByUserId() == null || row.getHandledByUserId() == null
+                || row.getVerifiedByUserId().equals(row.getHandledByUserId()) || row.getEvidenceSha256() == null
+                || row.getActualRefundAmountFen() == null || row.getActualRefundAmountFen() <= 0) {
+            throw new IllegalStateException("人工退款缺双人复核与金额凭证");
+        }
+        CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(row.getPayerRegistrationId());
+        if (observed == null) throw new IllegalStateException("人工退款原支付主单不存在");
+        if (!Integer.valueOf(3).equals(observed.getPurchaseKind()) || row.getActivityId() == null) return;
+        var order = RegistrationTopicFence.lock(observed, cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        if (order.topic() == null || !Integer.valueOf(2).equals(order.topic().getProductType())) return;
+        if (!row.getActivityId().equals(observed.getOwnerId()) || !Long.valueOf(2).equals(observed.getOwnerType())
+                || !row.getPayerMemberId().equals(observed.getMemberId())
+                || !Objects.equals(row.getParentOrderNo(), StringUtils.isEmpty(observed.getParentOrderNo())
+                        ? "REG:" + observed.getId() : observed.getParentOrderNo())) {
+            throw new IllegalStateException("人工退款与原订单范围不一致");
+        }
+        // 四店历史合同不改结算设计；普通探索票必须有逐报名原分账，缺失时拒绝凭空让平台承担。
+        var sale = topicSaleSnapshotMapper.selectSnapshotByTopicId(order.topic().getId());
+        if (sale == null) throw new IllegalStateException("人工退款缺原销售合同");
+        if (com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                sale.getSchemaVersion(), sale.getCanonicalJson(), 2).requiresFourStoreContract()) return;
+        RestoreDispatchGuard.requireDispatchAllowed();
+        java.util.Set<Long> expectedIds = new java.util.HashSet<>();
+        try {
+            var json = new com.fasterxml.jackson.databind.ObjectMapper();
+            for (var id : json.readTree(row.getVerifiedRegistrationIdsJson())) expectedIds.add(id.longValue());
+            for (var id : json.readTree(row.getUnverifiedRegistrationIdsJson())) expectedIds.add(id.longValue());
+        } catch (Exception invalid) { throw new IllegalStateException("人工退款报名快照损坏", invalid); }
+        java.util.Set<Long> actualIds = new java.util.HashSet<>();
+        List<BigDecimal> bases = new ArrayList<>(), remaining = new ArrayList<>();
+        BigDecimal totalBase = BigDecimal.ZERO, totalRemaining = BigDecimal.ZERO;
+        for (CmsRegistration registration : order.rows()) {
+            actualIds.add(registration.getId());
+            if (!Integer.valueOf(3).equals(registration.getPurchaseKind())) throw new IllegalStateException("人工探索退款混入其他票种");
+            BigDecimal base = defaultZero(registration.getPayableAmount());
+            if (Integer.valueOf(1).equals(order.activity().getIsSettlement())) {
+                var lines = settlementDetailMapper.selectSettledDetails("registration", registration.getId());
+                BigDecimal ledger = BigDecimal.ZERO;
+                if (lines != null) for (var line : lines) ledger = ledger.add(defaultZero(line.getSettlementAmount()));
+                if (base.signum() > 0 && ledger.compareTo(base) != 0) throw new IllegalStateException("人工退款原分账不完整");
+                Predicate<SettlementDetail> actuallyPaid = resolveSystem1PaidCheck(registration,
+                        lines == null ? java.util.Collections.emptyList() : lines);
+                if (lines != null) for (var line : lines) {
+                    if (actuallyPaid.test(line) && "merchant".equals(line.getReceiverType())
+                            && line.getSettlementAmount().signum() > 0) {
+                        var received = umsMemberBalanceDetailMapper.selectIncomeMemberIdsByEventTypeAndEventId(3L, registration.getOwnerId());
+                        if (received == null || received.size() != 1 || received.get(0) == null || received.get(0) <= 0) {
+                            throw new IllegalStateException("人工退款主理人原实收人缺失或不唯一，请人工核对原入账凭证");
+                        }
+                    }
+                    if (actuallyPaid.test(line) && "platform".equals(line.getReceiverType())
+                            && line.getSettlementAmount().signum() > 0
+                            && platformDebitMember(registration, line) == null) {
+                        throw new IllegalStateException("人工退款找不到平台原实收人");
+                    }
+                }
+            }
+            List<RefundApplication> history = registrationRefundHistory(registration.getId());
+            for (var previous : history) {
+                if (Integer.valueOf(0).equals(previous.getStatus())) throw new IllegalStateException("同单仍有待审核退款，请先核对");
+                if (("manual-case:" + row.getId() + ":" + registration.getId()).equals(previous.getIdempotencyKey())) {
+                    throw new IllegalStateException("人工退款已记账，不能再次复核冲销");
+                }
+            }
+            BigDecimal available = base.subtract(approvedRefundCash(history, null));
+            if (available.signum() < 0) throw new IllegalStateException("原订单已退金额超过实付");
+            bases.add(base); remaining.add(available);
+            totalBase = totalBase.add(base); totalRemaining = totalRemaining.add(available);
+        }
+        BigDecimal amount = BigDecimal.valueOf(row.getActualRefundAmountFen(), 2);
+        if (!expectedIds.equals(actualIds) || row.getPaidCashAmountFen() == null
+                || totalBase.compareTo(BigDecimal.valueOf(row.getPaidCashAmountFen(), 2)) != 0
+                || amount.compareTo(totalRemaining) > 0) {
+            throw new IllegalStateException("人工退款金额或报名范围与原订单余额不一致");
+        }
+        BigDecimal unallocated = amount, basisLeft = totalRemaining;
+        for (int i = 0; i < order.rows().size(); i++) {
+            BigDecimal available = remaining.get(i);
+            if (available.signum() == 0) continue;
+            BigDecimal part = unallocated.multiply(available).divide(basisLeft, 2, RoundingMode.HALF_UP);
+            basisLeft = basisLeft.subtract(available); unallocated = unallocated.subtract(part);
+            if (part.signum() == 0) continue;
+            CmsRegistration registration = order.rows().get(i);
+            RefundApplication refund = new RefundApplication();
+            refund.setRefundNo("MR" + row.getId() + "R" + registration.getId());
+            refund.setSourceType("registration"); refund.setSourceId(registration.getId());
+            refund.setOwnerType(registration.getOwnerType()); refund.setOwnerId(registration.getOwnerId());
+            refund.setMemberId(registration.getMemberId()); refund.setMerchantId(row.getOwnerMemberId());
+            refund.setPaidAmount(bases.get(i)); refund.setRefundAmount(part);
+            refund.setIdempotencyKey("manual-case:" + row.getId() + ":" + registration.getId());
+            refund.setReason("人工退款凭证已复核 case=" + row.getId());
+            refund.setCreatedByUserId(row.getHandledByUserId()); refund.setPayoutMethod(row.getManualChannel());
+            refund.setPayoutReceiptUrl("/" + row.getEvidenceObjectKey());
+            refund.setPayoutHandlerId(row.getHandledByUserId()); refund.setPayoutHandledAt(row.getHandledAt());
+            refund.setPayoutReviewer2Id(row.getVerifiedByUserId()); refund.setPayoutReviewed2At(row.getVerifiedAt());
+            if (refundApplicationMapper.insertVerifiedManualCaseRefund(refund) != 1 || refund.getId() == null) {
+                throw new IllegalStateException("人工退款记账失败");
+            }
+            markRegistrationRefunded(registration);
+            clawBackSettledShares(refund, registration, true);
+            settlementDetailMapper.voidPendingBySource("registration", registration.getId());
+        }
+    }
+
     /**
      * 结算后退款的逐收款方冲销(P0-B / HF-04 / 第十轮 f4 / 第十二轮 k11):按退款比例给每条已结算分账行写负数冲销,
      * 已真实打款的收款方(含平台)从余额扣回,扣不够记欠款。幂等:同一退款同一收款方只冲一次。
      * 调用方须在资金事务内、已锁报名行。
      */
     void clawBackSettledShares(RefundApplication refund, CmsRegistration registration) {
+        clawBackSettledShares(refund, registration, false);
+    }
+
+    private void clawBackSettledShares(RefundApplication refund, CmsRegistration registration, boolean manualCase) {
         List<SettlementDetail> settledList =
                 settlementDetailMapper.selectSettledDetails(refund.getSourceType(), refund.getSourceId());
         if (settledList != null && !settledList.isEmpty()) {
@@ -795,7 +912,9 @@ public class RefundServiceImpl implements IRefundService {
             }
             // 第十轮 f4 第 5 项:各收款方按比例冲销后合计必须等于退款对应的那一份,不能各自四舍五入再相加
             // (¥97.50 付款 3% 平台费退一半:平台 1.465→1.47、商家 47.285→47.29,合计多扣 1 分)。
-            BigDecimal[][] amounts = allocateClawback(toAdjust, refund, totalGross);
+            BigDecimal[][] amounts = manualCase && !toAdjust.isEmpty()
+                    ? allocateManualClawback(toAdjust, refund, totalGross)
+                    : allocateClawback(toAdjust, refund, totalGross);
             for (int i = 0; i < toAdjust.size(); i++) {
                 SettlementDetail settled = toAdjust.get(i);
                 boolean system1Paid = paidFlags.get(i);
@@ -804,6 +923,32 @@ public class RefundServiceImpl implements IRefundService {
                 createSettlementAdjustment(refund, system1Paid, settled, amounts[i], debitMember);
             }
         }
+    }
+
+    /** 多次部分退款按累计目标减已冲金额，最后一次不能再把平台 0.585 四舍五入多扣一分。 */
+    private BigDecimal[][] allocateManualClawback(List<SettlementDetail> originals, RefundApplication refund, BigDecimal gross) {
+        RefundApplication cumulative = new RefundApplication();
+        cumulative.setPaidAmount(refund.getPaidAmount());
+        cumulative.setRefundAmount(approvedRefundCash(registrationRefundHistory(refund.getSourceId()), null));
+        BigDecimal[][] amounts = allocateClawback(originals, cumulative, gross);
+        var previous = settlementDetailMapper.selectRegistrationRefundAdjustments(refund.getSourceId(), refund.getId());
+        if (previous != null) for (var adjustment : previous) {
+            for (int i = 0; i < originals.size(); i++) {
+                var original = originals.get(i);
+                if (Objects.equals(original.getReceiverType(), adjustment.getReceiverType())
+                        && Objects.equals(original.getReceiverId(), adjustment.getReceiverId())) {
+                    for (int column = 0; column < 3; column++) amounts[i][column] =
+                            amounts[i][column].add(clawbackColumn(adjustment, column));
+                }
+            }
+        }
+        BigDecimal total = BigDecimal.ZERO;
+        for (var amount : amounts) {
+            for (var column : amount) if (column.signum() < 0) throw new IllegalStateException("历史部分退款冲销不一致，请人工核对");
+            total = total.add(amount[2]);
+        }
+        if (total.compareTo(refund.getRefundAmount()) != 0) throw new IllegalStateException("历史退款缺原冲销凭证，请人工核对");
+        return amounts;
     }
 
     private CmsRegistration loadRegistration(RefundApplication refund) {

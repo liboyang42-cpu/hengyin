@@ -140,7 +140,7 @@ class ExploreReserveWiringTest {
     }
 
     private static TopicSaleSnapshot snapshot() {
-        return TopicSaleCanonicalTestFixture.snapshot(TOPIC);
+        return TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC);
     }
 
     private void givenActivity(Long topicId) {

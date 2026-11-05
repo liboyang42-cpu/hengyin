@@ -1933,6 +1933,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         } else if (sellerTopic != null) {
             assertRegistrationSellable(activity, sellerTopic, null, now);
         }
+        assertExploreSaleSnapshotFrozen(sellerTopic);
         return sellerTopic;
     }
 
@@ -1970,6 +1971,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
+        if (activity != null) ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId());
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
             assertCommercialSaleOpen(topic, ticket, now);
             return;

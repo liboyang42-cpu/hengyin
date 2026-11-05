@@ -109,7 +109,7 @@ class ShopDayOneTicketMySqlIT {
             statement.setLong(3, 1L);
             statement.setLong(4, 701L);
             statement.setString(5, com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(
-                    TopicSaleCanonicalTestFixture.canonical()));
+                    TopicSaleCanonicalTestFixture.ordinaryCanonical(), 2));
             statement.executeUpdate();
         }
     }
@@ -157,7 +157,7 @@ class ShopDayOneTicketMySqlIT {
             com.chengyinhub.business.domain.TopicSaleSnapshot snapshot =
                     session.getMapper(TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC);
             String retailValue = com.chengyinhub.business.service.support.TopicSaleCanonicalCodec
-                    .read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson())
+                    .read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), 2)
                     .getMicroExperienceCatalog().path("perks").get(0).path("retailValue").asText();
             assertEquals("20", retailValue, "持久化回读不得变成 2E+1");
         }
@@ -187,7 +187,7 @@ class ShopDayOneTicketMySqlIT {
             try (PreparedStatement update = session.getConnection().prepareStatement(
                     "UPDATE topic_sale_snapshot SET canonical_json=? WHERE topic_id=?")) {
                 update.setString(1, TopicSaleCanonicalCodec.write(
-                        new com.fasterxml.jackson.databind.ObjectMapper().treeToValue(frozen, TopicSaleCanonicalV1.class)));
+                        new com.fasterxml.jackson.databind.ObjectMapper().treeToValue(frozen, TopicSaleCanonicalV1.class), 2));
                 update.setLong(2, TOPIC);
                 assertEquals(1, update.executeUpdate());
             }
@@ -204,7 +204,7 @@ class ShopDayOneTicketMySqlIT {
             com.chengyinhub.business.domain.TopicSaleSnapshot readback =
                     session.getMapper(TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC);
             com.fasterxml.jackson.databind.JsonNode frozenActor = TopicSaleCanonicalCodec
-                    .read(readback.getSchemaVersion(), readback.getCanonicalJson())
+                    .read(readback.getSchemaVersion(), readback.getCanonicalJson(), 2)
                     .getClubWorkPackage().path("organizerActor");
             assertEquals(live.getId().longValue(), frozenActor.path("roleId").asLong());
             assertEquals("PLATFORM", frozenActor.path("actorType").asText());

@@ -207,13 +207,17 @@ class TopicSaleCanonicalV1Test {
     }
 
     @Test
-    void ordinaryFreeAcceptsOnlyExplicitClubDirectRevshare() throws Exception {
+    void ordinaryFreeAcceptsExplicitSessionSettlementAndHistoricalClubDirectRevshare() throws Exception {
         ObjectNode value = ordinaryFreeTwoChapterFixture();
         for (String parent : new String[]{"merchantCashSettlementMode", "microExperienceCatalog"}) {
             for (com.fasterxml.jackson.databind.JsonNode offer : value.path(parent).path("offers")) {
                 ((ObjectNode) offer).put("termsMode", "REVSHARE").put("perHeadFee", "0.01")
                         .put("payerClubId", 61L).put("paymentRoute", "CLUB_DIRECT");
             }
+        }
+        JSON.treeToValue(value, TopicSaleCanonicalV1.class).validateComplete(2);
+        for (String parent : new String[]{"merchantCashSettlementMode", "microExperienceCatalog"}) {
+            for (var offer : value.path(parent).path("offers")) ((ObjectNode) offer).put("paymentRoute", "SESSION_SETTLEMENT");
         }
         JSON.treeToValue(value, TopicSaleCanonicalV1.class).validateComplete(2);
         for (String field : new String[]{"payerClubId", "paymentRoute", "perHeadFee"}) {

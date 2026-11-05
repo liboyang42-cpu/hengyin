@@ -102,7 +102,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         List<CmsTopic> topics = new ArrayList<>();
         for (Long topicId : topicIds) {
             CmsTopic topic = topicId == null ? null : topicService.selectCmsTopicById(topicId);
-            if (topic != null && (topic.getDelFlag() == null || topic.getDelFlag() == 0)) {
+            if (topic != null && (topic.getDelFlag() == null || topic.getDelFlag() == 0)
+                    && (!Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                        || clubId.equals(topic.getClubId()))) {
                 topics.add(topic);
             }
         }
@@ -167,6 +169,7 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         requireTopicOpenForSessions(topic.getLifecycle(),
                 Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
                         && (clubOwned || clubOrder));
+        com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSessionClub(topic, request.getClubId());
         if (!clubOwned && !clubOrder) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");
         }

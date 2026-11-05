@@ -136,7 +136,7 @@ class ExploreQtyGateTest {
     }
 
     private static TopicSaleSnapshot snapshot() {
-        return TopicSaleCanonicalTestFixture.snapshot(TOPIC);
+        return TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC);
     }
 
     private void givenActivity() {

@@ -81,6 +81,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by id asc
     </select>
 
+    <select id="selectRegistrationRefundAdjustments" resultMap="SettlementDetailResult" useCache="false" flushCache="true">
+        select d.* from settlement_detail d join refund_application ra on ra.id = d.source_id
+        where d.source_type = 'refund' and d.status = 1
+          and ra.source_type = 'registration' and ra.source_id = #{registrationId}
+          and ra.id != #{excludeRefundId} and ra.status = 1 and ra.del_flag = 0
+        order by d.id for update
+    </select>
+
     <select id="existsAdjustment" resultType="int">
         select count(1)
         from settlement_detail
@@ -268,6 +276,63 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
+    <select id="countInAppExploreRedemption" resultType="int">
+        select count(*) from redemption rd join cms_registration r on r.id = rd.registration_id
+        join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        join cms_topic t on t.id = a.topic_id and t.product_type = 2
+        join topic_sale_snapshot ss on ss.topic_id = t.id
+        where rd.id = #{redemptionId} and rd.topic_id = t.id and rd.status = 'ACTIVE'
+          and a.club_id &gt; 0 and a.club_id = t.club_id
+          and ss.schema_version = 'CANONICAL_15_V1'
+          and json_unquote(json_extract(ss.canonical_json, '$.completionPolicy.evidenceRule')) is not null
+          and json_unquote(json_extract(ss.canonical_json, '$.completionPolicy.evidenceRule')) != 'FOUR_STORE_REDEEM'
+    </select>
+
+    <select id="selectExploreSessionTopicId" resultType="java.lang.Long">
+        select t.id from cms_activity a join cms_topic t on t.id = a.topic_id
+        where a.id = #{activityId} and t.product_type = 2
+    </select>
+
+    <select id="selectExploreCoopVerifiesByActivity" resultType="com.chengyinhub.business.domain.CoopGroupVerify">
+        select o.id as coopOrderId, o.topic_id as topicId, #{activityId} as activityId,
+               o.to_id as merchantMemberId
+        from coop_order o join cms_activity a on a.topic_id = o.topic_id
+        where a.id = #{activityId} and o.to_type = 'merchant' and o.status = 0 and o.del_flag = 0
+          and exists (select 1 from redemption rd join cms_registration r on r.id = rd.registration_id
+                      where r.owner_type = 2 and r.owner_id = a.id
+                        and rd.topic_id = a.topic_id and rd.merchant_id = o.to_id and rd.status = 'ACTIVE')
+        order by o.id
+    </select>
+
+    <select id="selectExploreFeeRegistrationsForUpdate" useCache="false" flushCache="true"
+            resultType="com.chengyinhub.business.domain.vo.ClubSessionFeeRegistration">
+        select r.id as registrationId, 1 as orderNum, 1 as verifiedSeats
+        from cms_registration r
+        where r.owner_type = 2 and r.owner_id = #{activityId}
+          and r.payment_status = 2 and r.registration_status = 2
+          and exists (select 1 from redemption rd join cms_activity a on a.id = r.owner_id
+                      where rd.registration_id = r.id and rd.topic_id = a.topic_id
+                        and rd.merchant_id = #{merchantMemberId} and rd.status = 'ACTIVE')
+          and not exists (select 1 from refund_application ra where ra.source_type = 'registration'
+                          and ra.source_id = r.id and ra.status = 1 and ra.del_flag = 0)
+        <choose>
+            <when test="registrationId != null">and r.id = #{registrationId}</when>
+            <otherwise>
+                and not exists (select 1 from cms_activity_settlement_hold h
+                                where h.registration_id = r.id and h.activity_id = r.owner_id and h.status = 0)
+            </otherwise>
+        </choose>
+        order by r.id for update
+    </select>
+
+    <select id="countLegacyExploreReceivables" resultType="int">
+        select count(*) from redemption rd join cms_registration r on r.id = rd.registration_id
+        where r.owner_type = 2 and r.owner_id = #{activityId} and rd.merchant_id = #{merchantMemberId}
+          and (exists (select 1 from club_direct_merchant_receivable cr where cr.redemption_id = rd.id
+                       and cr.status in ('OPEN', 'SETTLED', 'REFUND_DUE'))
+               or exists (select 1 from merchant_payable mp where mp.redemption_id = rd.id and mp.entry_type = 'ACCRUAL'))
+    </select>
+
     <select id="selectPayeeLinesForUpdate" useCache="false" flushCache="true"
             resultType="com.chengyinhub.business.domain.SettlementDetail">
         select id, claim_id as claimId, merchant_id as merchantId, source_type as sourceType, source_id as sourceId,
@@ -291,7 +356,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select d.id as detailId, r.id as registrationId, a.id as activityId, a.topic_id as topicId,
                coalesce(a.name, r.activity_title) as activityTitle, r.ticket_name as ticketName,
                coalesce(d.update_time, d.create_time) as occurredAt,
-               d.settlement_amount as feeAmount, o.fixed_fee as unitFee,
+               d.settlement_amount as feeAmount,
+               case when c.source_contract_type = 'MERCHANT_CHAPTER_OFFER' then d.gross_amount else o.fixed_fee end as unitFee,
                (select coalesce(sum(adj.settlement_amount), 0)
                   from settlement_detail adj
                   join refund_application ra on ra.id = adj.source_id and ra.source_type = 'registration'
@@ -315,20 +381,38 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectUnsettledFeeEstimates" resultType="com.chengyinhub.business.domain.vo.ClubSessionFeeEstimate">
         select gv.activity_id as activityId, gv.merchant_member_id as merchantMemberId, a.end_date as endDate,
                o.fixed_fee * (
-                   select coalesce(sum(case when seat.n &gt; 0 then seat.n else coalesce(r.order_num, 1) end), 0)
+                   select coalesce(sum(case when t.product_type = 2 then 1 when seat.n &gt; 0 then seat.n else coalesce(r.order_num, 1) end), 0)
                    from cms_registration r
                    left join (select s.registration_id, count(1) as n from cms_registration_seat s
                               where s.status = 1 group by s.registration_id) seat on seat.registration_id = r.id
                    where r.owner_type = 2 and r.owner_id = gv.activity_id
                      and r.payment_status = 2 and r.registration_status = 2
-                     and <include refid="tookPart"/>
+                     and (case when t.product_type = 2 then exists (
+                         select 1 from redemption rd where rd.registration_id = r.id and rd.topic_id = t.id
+                           and rd.merchant_id = gv.merchant_member_id and rd.status = 'ACTIVE')
+                         else <include refid="tookPart"/> end)
                      and not exists (
                          select 1 from refund_application ra
                          where ra.source_type = 'registration' and ra.source_id = r.id
                            and ra.status = 1 and ra.del_flag = 0)
                ) as amount
-        from coop_group_verify gv
+        from (
+            select gv.activity_id, gv.merchant_member_id, gv.coop_order_id from coop_group_verify gv
+            join cms_activity ga on ga.id = gv.activity_id
+            left join cms_topic gt on gt.id = ga.topic_id
+            where gt.product_type is null or gt.product_type != 2
+            union all
+            select a.id, o.to_id, o.id from cms_activity a
+            join cms_topic t on t.id = a.topic_id and t.product_type = 2 and a.club_id = t.club_id and a.club_id &gt; 0
+            join topic_sale_snapshot ss on ss.topic_id = t.id and ss.schema_version = 'CANONICAL_15_V1'
+              and json_unquote(json_extract(ss.canonical_json, '$.completionPolicy.evidenceRule')) != 'FOUR_STORE_REDEEM'
+            join coop_order o on o.topic_id = t.id and o.to_type = 'merchant' and o.status = 0 and o.del_flag = 0
+            where exists (select 1 from redemption rd join cms_registration r on r.id = rd.registration_id
+                          where r.owner_type = 2 and r.owner_id = a.id and rd.topic_id = t.id
+                            and rd.merchant_id = o.to_id and rd.status = 'ACTIVE')
+        ) gv
         join cms_activity a on a.id = gv.activity_id
+        join cms_topic t on t.id = a.topic_id
         join coop_order o on o.id = gv.coop_order_id and o.to_type = 'merchant'
              and o.to_id = gv.merchant_member_id and o.status = 0 and o.del_flag = 0 and o.share_mode = 2
         where a.is_settlement = 0 and a.del_flag = 0 and a.status = 1 and a.club_id &gt; 0
@@ -339,6 +423,30 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and gv.activity_id in
           <foreach collection="activityIds" item="activityId" open="(" separator="," close=")">#{activityId}</foreach>
         </if>
-        order by gv.activity_id, gv.merchant_member_id
+        union all
+        select a.id as activityId, f.merchantId as merchantMemberId, a.end_date as endDate,
+               min(f.fee) * count(distinct r.id) as amount
+        from cms_activity a join cms_topic t on t.id = a.topic_id and t.product_type = 2
+        join topic_sale_snapshot ss on ss.topic_id = t.id and ss.schema_version = 'CANONICAL_15_V1'
+        join json_table(ss.canonical_json, '$.merchantCashSettlementMode.offers[*]' columns (
+            offerId bigint path '$.id', merchantId bigint path '$.merchantId', payerClubId bigint path '$.payerClubId',
+            termsMode varchar(16) path '$.termsMode', fee decimal(12,2) path '$.perHeadFee')) f
+          on f.termsMode = 'REVSHARE' and f.payerClubId = a.club_id
+        join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+          and r.payment_status = 2 and r.registration_status = 2
+        where a.is_settlement = 0 and a.del_flag = 0 and a.status = 1 and a.club_id &gt; 0 and a.club_id = t.club_id
+          and json_unquote(json_extract(ss.canonical_json, '$.completionPolicy.evidenceRule')) != 'FOUR_STORE_REDEEM'
+          and exists (select 1 from redemption rd where rd.registration_id = r.id and rd.topic_id = t.id
+                      and rd.merchant_id = f.merchantId and rd.status = 'ACTIVE')
+          and not exists (select 1 from refund_application ra where ra.source_type = 'registration'
+                          and ra.source_id = r.id and ra.status = 1 and ra.del_flag = 0)
+        <if test="merchantMemberId != null">and f.merchantId = #{merchantMemberId}</if>
+        <if test="activityIds != null and activityIds.size() > 0">
+          and a.id in
+          <foreach collection="activityIds" item="activityId" open="(" separator="," close=")">#{activityId}</foreach>
+        </if>
+        group by a.id, f.merchantId, a.end_date
+        having min(f.fee) = max(f.fee)
+        order by activityId, merchantMemberId
     </select>
 </mapper>

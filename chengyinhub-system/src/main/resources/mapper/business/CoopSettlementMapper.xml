@@ -256,6 +256,48 @@
         order by max(pay.create_time) desc, a.id desc
     </select>
 
+    <select id="selectPersonalClubSummary" resultMap="ClubSummaryResult">
+        <include refid="summarySelectFrom"/>
+        where s.del_flag = 0 and s.merchant_id = #{memberId}
+          and ((s.beneficiary_role = 'CLUB' and s.beneficiary_id = #{clubId})
+            or (s.beneficiary_role is null and t.club_id = #{clubId}
+                and s.payee_type = 'initiator' and s.line_type in ('INITIATOR_MARGIN', 'INITIATOR_GUARANTEE')))
+        order by s.create_time desc, s.id desc
+    </select>
+
+    <!-- 本人视角不返回整场销售额、其他收款人、平台或合作商家账目。 -->
+    <select id="selectPersonalClubSessions" resultMap="ClubSessionSettlementResult">
+        select a.id as activity_id, a.name as activity_name, a.start_date,
+               sum(pay.change_balance)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'merchant' and adj.receiver_id = #{memberId}) as net_amount,
+               min(pay.member_id) as payee_min_member_id, max(pay.member_id) as payee_max_member_id
+        from cms_activity a
+        join ums_member_balance_detail pay on pay.event_id = a.id and pay.event_type = 3
+             and pay.change_type = 1 and pay.del_flag = 0 and pay.member_id = #{memberId}
+        where a.club_id = #{clubId}
+        group by a.id, a.name, a.start_date
+        order by max(pay.create_time) desc, a.id desc
+    </select>
+
+    <select id="selectPersonalSettlementClubs" resultType="java.util.LinkedHashMap">
+        select distinct c.id as "clubId", c.name as "name"
+        from club c
+        join (
+            select beneficiary_id as club_id from coop_settlement
+            where del_flag = 0 and beneficiary_role = 'CLUB' and merchant_id = #{memberId}
+            union
+            select t.club_id from coop_settlement s join cms_topic t on t.id = s.topic_id
+            where s.del_flag = 0 and s.merchant_id = #{memberId} and s.beneficiary_role is null
+              and s.payee_type = 'initiator' and s.line_type in ('INITIATOR_MARGIN', 'INITIATOR_GUARANTEE')
+            union
+            select a.club_id from cms_activity a
+            join ums_member_balance_detail pay on pay.event_id = a.id and pay.event_type = 3
+                 and pay.change_type = 1 and pay.del_flag = 0 and pay.member_id = #{memberId}
+        ) earned on earned.club_id = c.id
+        order by c.id desc
+    </select>
+
     <select id="selectSummaryByTopicId" resultMap="ClubSummaryResult">
         <include refid="summarySelectFrom"/>
         where s.del_flag = 0 and s.topic_id = #{topicId}

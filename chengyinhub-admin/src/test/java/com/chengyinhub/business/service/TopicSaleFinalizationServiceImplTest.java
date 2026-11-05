@@ -128,41 +128,26 @@ class TopicSaleFinalizationServiceImplTest {
         stubSuccessfulCanonicalFreeze();
     }
 
+
+
+
+
     @Test
-    void shopDayWithoutPlatformOrganizerActorCannotFinalize() {
+    void newFourStoreSaleStopsBeforeCreatingCompensationOrChangingFrozenHistory() {
         CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
         topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-        when(productRoleService.activeOrganizerSlot(TOPIC_ID)).thenReturn(null);
-
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
-
-        assertEquals("SALE_FREE_EXPLORE_ORGANIZER_MISSING", error.getMessage());
-        verify(saleSnapshotMapper, never()).insertSnapshot(any(TopicSaleSnapshot.class));
-        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
-    }
-
-    @Test
-    void shopDayOrganizerMustBePlatformAndCarryDeclarationAudit() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-        ProductRole club = platformOrganizer();
-        club.setEntityType(RoleEntityType.CLUB);
-        club.setEntityId(701L);
-        when(productRoleService.activeOrganizerSlot(TOPIC_ID)).thenReturn(club);
-
-        IllegalStateException wrongActor = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
-        assertEquals("SALE_FREE_EXPLORE_ORGANIZER_MUST_BE_PLATFORM", wrongActor.getMessage());
-
-        ProductRole noOperator = platformOrganizer();
-        noOperator.setDeclaredBy(null);
-        when(productRoleService.activeOrganizerSlot(TOPIC_ID)).thenReturn(noOperator);
-        IllegalStateException missingAudit = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
-        assertEquals("SALE_FREE_EXPLORE_ORGANIZER_AUDIT_MISSING", missingAudit.getMessage());
+        stubSuccessfulCanonicalFreeze(TopicSaleCanonicalTestFixture.canonical());
+        assertTrue(assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID))
+                .getMessage().contains("停止新开售"));
+        verify(clubPayeeService, never()).snapshotForSale(any(), any(), any());
+        verify(compensationService, never()).freezeTermsForSale(any(), any(), any(), any(), any());
+        verify(saleSnapshotMapper, never()).insertSnapshot(any());
+        verify(topicMapper, never()).finalizeForSale(any(), any(), any());
+        topic.setLifecycle(TopicLifecycleState.SELLING.getCode());
+        topic.setSellingStartedAt(Date.from(NOW.minusSeconds(1)));
+        when(saleSnapshotMapper.selectSnapshotByTopicId(TOPIC_ID)).thenReturn(TopicSaleCanonicalTestFixture.snapshot(TOPIC_ID));
+        assertEquals(topic.getSellingStartedAt(), service.finalizeForSale(TOPIC_ID), "历史开售回执保留");
     }
 
     @Test
@@ -471,27 +456,9 @@ class TopicSaleFinalizationServiceImplTest {
         verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
     }
 
-    @Test
-    void requiredRevshareChapterAndOfferAreRejectedBeforeSelling() {
-        givenNonPerkRequiredSupply(TermsMode.REVSHARE, new BigDecimal("1.00"), 0);
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
 
-        assertEquals("SALE_FREE_EXPLORE_TERMS_NOT_PERK", error.getMessage());
-        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
-    }
 
-    @Test
-    void requiredTrafficChapterCannotBypassWithZeroQuota() {
-        givenNonPerkRequiredSupply(TermsMode.TRAFFIC, null, 0);
-
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
-
-        assertEquals("SALE_FREE_EXPLORE_TERMS_NOT_PERK", error.getMessage());
-        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
-    }
 
     @Test
     void classicProductKeepsOriginalFinalizationAndSkipsShopDayCanonicalGates() {
@@ -876,7 +843,9 @@ class TopicSaleFinalizationServiceImplTest {
     }
 
     private static TopicSaleCanonicalV1 completeCanonical() {
-        return TopicSaleCanonicalTestFixture.canonical();
+        TopicSaleCanonicalV1 canonical = TopicSaleCanonicalTestFixture.canonical();
+        canonical.getCompletionPolicy().put("evidenceRule", "ALL_REQUIRED_STAMPS");
+        return canonical;
     }
 
     private static OmsTicket validTicket() {
@@ -894,48 +863,11 @@ class TopicSaleFinalizationServiceImplTest {
     }
 
     // ── A4 开售闸：对公收款人快照必须在 PRICING→SELLING CAS 之前冻结 ──────────────
-    @Test
-    void shopDayFreezesCorporatePayeeSnapshotBeforeSellingCas() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
 
-        service.finalizeForSale(TOPIC_ID);
 
-        verify(clubPayeeService).snapshotForSale(TOPIC_ID, 7L, Date.from(NOW));
-        verify(topicMapper).finalizeForSale(eq(TOPIC_ID), eq(Date.from(NOW)), eq(Date.from(NOW)));
-    }
 
-    @Test
-    void shopDayCannotEnterSellingWhenPayeeGateBlocks() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-        when(clubPayeeService.snapshotForSale(eq(TOPIC_ID), eq(7L), any(Date.class)))
-                .thenThrow(new IllegalStateException("SALE_PAYEE_NOT_VERIFIED"));
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
 
-        assertEquals("SALE_PAYEE_NOT_VERIFIED", error.getMessage());
-        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
-    }
-
-    @Test
-    void shopDayCannotEnterSellingWithoutExactlyOneExecutingClub() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-        when(lineupSource.readEffectiveLineup(TOPIC_ID)).thenReturn(
-                new CoopOrderLineupSource.ReadResult(Collections.emptyList(), Collections.emptyList()));
-
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
-
-        assertEquals("SALE_EXECUTING_CLUB_UNRESOLVED", error.getMessage());
-        verify(clubPayeeService, never()).snapshotForSale(any(), any(), any());
-        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
-    }
 
     @Test
     void twoDifferentOrganizerClubsBlockSaleInsteadOfBeingGuessed() {
@@ -970,36 +902,9 @@ class TopicSaleFinalizationServiceImplTest {
     private static final Date EXPECTED_EVIDENCE_DUE_AT =
             Date.from(Instant.parse("2026-08-13T16:00:00Z").plus(14, java.time.temporal.ChronoUnit.DAYS));
 
-    @Test
-    void shopDayFreezesCompensationTermsWithTheAuthoritativeEditionEndPlusSevenDays() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
 
-        service.finalizeForSale(TOPIC_ID);
 
-        // endDate=2026-08-13T00:00Z ⇒ Asia/Shanghai 的 2026-08-13 ⇒ 窗口结束 2026-08-14T00:00+08:00
-        // = 2026-08-13T16:00Z；T+14 = 2026-08-27T16:00Z(2026-11-05 业主:所有路径结束后 14 天)。不是 JVM 默认时区、不是 new Date()。
-        verify(compensationService).freezeTermsForSale(TOPIC_ID, 7L, Date.from(NOW), EXPECTED_EVIDENCE_DUE_AT,
-                EXPECTED_FULFILLMENT_END_AT);
-    }
 
-    @Test
-    void shopDaySaleWritesTheExecutingClubDistributionSlotBeforeTermsFreeze() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-
-        service.finalizeForSale(TOPIC_ID);
-
-        org.mockito.InOrder order = org.mockito.Mockito.inOrder(productRoleService, clubPayeeService,
-                compensationService, topicMapper);
-        order.verify(productRoleService).declareDistributionSlotForSale(TOPIC_ID, 7L, 9001L);
-        order.verify(clubPayeeService).snapshotForSale(TOPIC_ID, 7L, Date.from(NOW));
-        order.verify(compensationService).freezeTermsForSale(eq(TOPIC_ID), eq(7L), any(Date.class),
-                any(Date.class), any(Date.class));
-        order.verify(topicMapper).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
-    }
 
     /**
      * ★EXTRA 审批人<b>不再</b>从这一层传下去。
@@ -1008,64 +913,14 @@ class TopicSaleFinalizationServiceImplTest {
      * 并在那里做可达校验。{@code ProductRole.declaredBy} 是「谁点了 ORGANIZER 槽那个按钮」的<b>审计</b>
      * 字段（COMMENT 明写「不参与主体归属判断」），换一个声明人不得改变本期的审批人。
      */
-    @Test
-    void theOrganizerSlotDeclarerIsNoLongerPromotedIntoTheExtraApprover() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-        ProductRole organizer = platformOrganizer();
-        organizer.setDeclaredBy(4242L);
-        when(productRoleService.activeOrganizerSlot(TOPIC_ID)).thenReturn(organizer);
 
-        service.finalizeForSale(TOPIC_ID);
-
-        // 主办方角色槽仍是开售闸（读了它、断言了它），但它的 declaredBy 不再流进补偿条款。
-        verify(productRoleService).activeOrganizerSlot(TOPIC_ID);
-        verify(compensationService).freezeTermsForSale(eq(TOPIC_ID), eq(7L), any(Date.class), any(Date.class),
-                any(Date.class));
-    }
 
     /** 履约窗结束也必须冻进条款：EXTRA 的开工时刻上界与 FINAL 的「期已结束」事实门都要它。 */
-    @Test
-    void theEditionFulfillmentEndIsFrozenIntoTheTermsNotRecomputedLater() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
 
-        service.finalizeForSale(TOPIC_ID);
 
-        verify(compensationService).freezeTermsForSale(eq(TOPIC_ID), eq(7L), any(Date.class), any(Date.class),
-                eq(EXPECTED_FULFILLMENT_END_AT));
-    }
 
-    @Test
-    void compensationTermsAndPayeeSnapshotAreFrozenInTheSameTransactionBeforeTheSellingCas() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
 
-        service.finalizeForSale(TOPIC_ID);
 
-        org.mockito.InOrder order = org.mockito.Mockito.inOrder(clubPayeeService, compensationService, topicMapper);
-        order.verify(clubPayeeService).snapshotForSale(TOPIC_ID, 7L, Date.from(NOW));
-        order.verify(compensationService).freezeTermsForSale(eq(TOPIC_ID), eq(7L), any(Date.class), any(Date.class), any(Date.class));
-        order.verify(topicMapper).finalizeForSale(eq(TOPIC_ID), any(Date.class), any(Date.class));
-    }
-
-    @Test
-    void shopDayCannotEnterSellingWhenTheCompensationTermsFreezeFails() {
-        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
-        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
-        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
-        when(compensationService.freezeTermsForSale(eq(TOPIC_ID), eq(7L), any(Date.class), any(Date.class), any(Date.class)))
-                .thenThrow(new IllegalStateException("EDITION_TERMS_WRITE_FAILED"));
-
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> service.finalizeForSale(TOPIC_ID));
-
-        assertEquals("EDITION_TERMS_WRITE_FAILED", error.getMessage());
-        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
-    }
 
     /** 缺活动结束事实 ⇒ 无法解析 T+7 ⇒ fail closed，绝不用 JVM now 凑一个截止时刻。 */
     @Test

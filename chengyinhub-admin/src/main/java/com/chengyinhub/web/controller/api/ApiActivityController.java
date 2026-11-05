@@ -725,6 +725,28 @@ public class ApiActivityController extends BaseController {
             if (hostedRun != null) {
                 return error(hostedRun);
             }
+            if (!Long.valueOf(1L).equals(cmsActivity.getPublishStatus())
+                    && cmsActivity.getTemplateId() != null && cmsActivity.getTemplateId() > 0) {
+                try {
+                    CmsActivityPublishRequest review = new CmsActivityPublishRequest();
+                    org.springframework.beans.BeanUtils.copyProperties(cmsActivity, review);
+                    PublishSafetyRequest safety = new PublishSafetyRequest();
+                    safety.setContentType(AuditTask.BIZ_ACTIVITY);
+                    safety.setMemberId(publisher.ownerMemberId());
+                    safety.setOpenid(resolveOpenid(memberId));
+                    safety.setText(activitySafetyText(review, cmsActivity.getTemplateId()));
+                    safety.setHasSignup(true);
+                    safety.setReviewMode(activityReviewPolicy.modeOf(review, publisher.reviewSubject()).name());
+                    SafetyDecision decision = contentSafetyGate.decide(safety);
+                    if (decision == null || decision.isBlock()) return error("活动内容包含违规信息，请修改后重试");
+                    if (decision.isHold()) return error("活动内容待审核，请编辑保存后等待审核");
+                } catch (ServiceException invalid) {
+                    return error(invalid.getMessage());
+                } catch (Exception failure) {
+                    logger.error("活动上架内容安全裁决失败: activityId={}", cid, failure);
+                    return error("系统繁忙，请稍后重试");
+                }
+            }
             cmsActivity.setPublishStatus(cmsActivity.getPublishStatus() == 1L ? 0L : 1L);
             int rows = cmsActivityService.updateCmsActivity(cmsActivity);
             if (rows > 0) {
@@ -884,7 +906,7 @@ public class ApiActivityController extends BaseController {
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(secOpenid);
-            safety.setText(activitySafetyText(request));
+            safety.setText(activitySafetyText(request, null));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
             safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
@@ -1013,7 +1035,7 @@ public class ApiActivityController extends BaseController {
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(resolveOpenid(memberId));
-            safety.setText(activitySafetyText(request));
+            safety.setText(activitySafetyText(request, exist.getTemplateId()));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
             safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
@@ -1116,6 +1138,23 @@ public class ApiActivityController extends BaseController {
             parts.add(ticket.getMeetingPoint());
             parts.add(ticket.getMeetingPointAddress());
             parts.add(ticket.getRefundRule());
+        }
+        return IWxContentSecurityService.joinText(parts.toArray(new String[0]));
+    }
+
+    private String activitySafetyText(CmsActivityPublishRequest request, Long storedTemplateId) {
+        Long templateId = request.getTemplateId() == null ? storedTemplateId : request.getTemplateId();
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        parts.add(activitySafetyText(request));
+        if (templateId != null && templateId > 0) {
+            CmsMemberTemplate template = memberTemplateService.selectCmsMemberTemplateById(templateId);
+            if (template == null || Integer.valueOf(2).equals(template.getDelFlag())) {
+                throw new ServiceException("绑定玩法不存在，请重新选择");
+            }
+            for (com.chengyinhub.business.util.JourneyReviewTexts.Entry entry
+                    : com.chengyinhub.business.util.JourneyReviewTexts.collectBoundTemplate(template)) {
+                parts.add(entry.getText());
+            }
         }
         return IWxContentSecurityService.joinText(parts.toArray(new String[0]));
     }

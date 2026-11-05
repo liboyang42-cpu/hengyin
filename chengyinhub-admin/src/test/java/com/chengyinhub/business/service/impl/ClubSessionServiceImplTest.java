@@ -246,14 +246,12 @@ class ClubSessionServiceImplTest {
 
     /** 第十一轮 i1:自由探索在开售审核(2)时、本俱乐部有生效合作单,可先开一场给开售审核投影场次票。 */
     @Test
-    void freeExploreInSaleReview_withClubCoopOrder_opensSession() {
+    void crossClubFreeExploreEvenWithCoopOrderRefusesNewSession() {
         topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
         topic.setLifecycle(2);
 
-        Long activityId = service.open(request(), OWNER_ID, "主理人");
-
-        assertEquals(Long.valueOf(51L), activityId);
-        verify(activityService).insertCmsActivity(any());
+        assertThrows(IllegalStateException.class, () -> service.open(request(), OWNER_ID, "主理人"));
+        verify(activityService, never()).insertCmsActivity(any());
     }
 
     @Test

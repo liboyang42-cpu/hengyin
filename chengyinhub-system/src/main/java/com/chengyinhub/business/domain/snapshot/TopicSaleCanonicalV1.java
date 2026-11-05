@@ -343,7 +343,8 @@ public class TopicSaleCanonicalV1 {
         for (JsonNode offer : offers) {
             String mode = offer.path("termsMode").asText();
             if ("REVSHARE".equals(mode)) {
-                if (!"CLUB_DIRECT".equals(offer.path("paymentRoute").asText())
+                if (!("CLUB_DIRECT".equals(offer.path("paymentRoute").asText())
+                        || "SESSION_SETTLEMENT".equals(offer.path("paymentRoute").asText()))
                         || !offer.path("payerClubId").canConvertToLong() || offer.path("payerClubId").asLong() <= 0
                         || !offer.hasNonNull("perHeadFee")
                         || !offer.path("perHeadFee").isValueNode()) fail(settlementCode);

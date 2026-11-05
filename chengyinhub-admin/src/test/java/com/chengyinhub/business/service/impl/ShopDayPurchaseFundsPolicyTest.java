@@ -205,7 +205,7 @@ class ShopDayPurchaseFundsPolicyTest {
         }
 
         private static TopicSaleSnapshot snapshot() {
-            return TopicSaleCanonicalTestFixture.snapshot(TOPIC_ID);
+            return TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC_ID);
         }
     }
 }

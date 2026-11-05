@@ -153,6 +153,7 @@ class ClubSessionMerchantFeeMySqlIT {
         ClubSessionMerchantFee fee = new ClubSessionMerchantFee();
         ReflectionTestUtils.setField(fee, "coopOrderMapper", template.getMapper(CoopOrderMapper.class));
         ReflectionTestUtils.setField(fee, "settlementDetailMapper", detailMapper);
+        ReflectionTestUtils.setField(fee, "topicSaleSnapshotMapper", template.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class));
         ReflectionTestUtils.setField(fee, "settlementClaimService",
                 new SettlementClaimServiceImpl(template.getMapper(SettlementClaimMapper.class)));
         ReflectionTestUtils.setField(fee, "alarmService", mock(AlarmService.class));
@@ -169,6 +170,7 @@ class ClubSessionMerchantFeeMySqlIT {
         topic.setProductType(1);
         topic.setClubId(CLUB);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         ReflectionTestUtils.setField(activityService, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(activityService, "topicSaleSnapshotMapper",
                 template.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class));
@@ -208,6 +210,11 @@ class ClubSessionMerchantFeeMySqlIT {
         ReflectionTestUtils.setField(refundService, "umsMemberMapper", umsMemberMapper);
         ReflectionTestUtils.setField(refundService, "umsMemberBalanceDetailMapper", balanceMapper);
         ReflectionTestUtils.setField(refundService, "alarmService", refundAlarms);
+        ReflectionTestUtils.setField(refundService, "topicSaleSnapshotMapper", template.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class));
+        ReflectionTestUtils.setField(refundService, "refundApplicationMapper", template.getMapper(com.chengyinhub.business.mapper.RefundApplicationMapper.class));
+        ReflectionTestUtils.setField(refundService, "perkLedgerService", mock(IPerkLedgerService.class));
+        ReflectionTestUtils.setField(refundService, "merchantReferralBountyService", mock(com.chengyinhub.business.service.impl.MerchantReferralBountyService.class));
+        ReflectionTestUtils.setField(refundService, "firstReviewPointsClawback", mock(com.chengyinhub.business.service.impl.FirstReviewPointsClawbackService.class));
     }
 
     @BeforeEach
@@ -222,7 +229,12 @@ class ClubSessionMerchantFeeMySqlIT {
                 "DROP TABLE IF EXISTS coop_group_verify", "DROP TABLE IF EXISTS settlement_claim",
                 "DROP TABLE IF EXISTS cms_registration_seat", "DROP TABLE IF EXISTS club_lead_checkin",
                 "DROP TABLE IF EXISTS club_event_attendance_correction", "DROP TABLE IF EXISTS player_node_progress");
+        execute("DROP TABLE IF EXISTS redemption", "DROP TABLE IF EXISTS merchant_payable", "DROP TABLE IF EXISTS club_direct_merchant_receivable");
         execute(
+                "CREATE TABLE redemption (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, topic_id BIGINT, chapter_id BIGINT,"
+                        + " merchant_id BIGINT, offer_id BIGINT, status VARCHAR(16)) ENGINE=InnoDB",
+                "CREATE TABLE merchant_payable (id BIGINT PRIMARY KEY AUTO_INCREMENT, redemption_id BIGINT, entry_type VARCHAR(16)) ENGINE=InnoDB",
+                "CREATE TABLE club_direct_merchant_receivable (id BIGINT PRIMARY KEY AUTO_INCREMENT, redemption_id BIGINT, status VARCHAR(16)) ENGINE=InnoDB",
                 "CREATE TABLE topic_edition_finalization (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT NOT NULL,"
                         + " UNIQUE KEY uk_topic_edition_finalization(topic_id)) ENGINE=InnoDB",
                 "CREATE TABLE topic_sale_snapshot (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT UNIQUE, schema_version VARCHAR(64),"
@@ -266,7 +278,13 @@ class ClubSessionMerchantFeeMySqlIT {
                 "CREATE TABLE coop_complaint (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT, registration_id BIGINT, reporter_member_id BIGINT,"
                         + "status INT, del_flag INT) ENGINE=InnoDB",
                 "CREATE TABLE refund_application (id BIGINT PRIMARY KEY AUTO_INCREMENT, source_type VARCHAR(32), source_id BIGINT,"
-                        + "paid_amount DECIMAL(12,2), refund_amount DECIMAL(12,2), status INT, del_flag INT DEFAULT 0) ENGINE=InnoDB",
+                        + "paid_amount DECIMAL(12,2), refund_amount DECIMAL(12,2), status INT, del_flag INT DEFAULT 0,"
+                        + "refund_no VARCHAR(64), owner_type BIGINT, owner_id BIGINT, member_id BIGINT, merchant_id BIGINT, reason VARCHAR(500),"
+                        + "reject_reason VARCHAR(500), reviewer_id BIGINT, reviewed_at DATETIME, created_by_user_id BIGINT, adjustment_created INT,"
+                        + "idempotency_key VARCHAR(128) UNIQUE, payout_status INT, payout_method VARCHAR(64), payout_receipt_url VARCHAR(500),"
+                        + "payout_handler_id BIGINT, payout_handled_at DATETIME, payout_reviewer2_id BIGINT, payout_reviewed2_at DATETIME,"
+                        + "payout_remark VARCHAR(500), payout_lease_token VARCHAR(64), payout_lease_owner BIGINT, payout_lease_expires_at DATETIME,"
+                        + "create_time DATETIME, update_time DATETIME, platform_takeover_at DATETIME) ENGINE=InnoDB",
                 "CREATE TABLE coop_invite (id BIGINT PRIMARY KEY, invite_type INT) ENGINE=InnoDB",
                 "CREATE TABLE coop_order (id BIGINT PRIMARY KEY, invite_id BIGINT, reg_id BIGINT, topic_id BIGINT, game_id BIGINT, from_id BIGINT,"
                         + " to_id BIGINT, to_type VARCHAR(16), share_mode INT, share_rate DECIMAL(6,2), fixed_fee DECIMAL(10,2), perks_snapshot TEXT,"
@@ -785,10 +803,221 @@ class ClubSessionMerchantFeeMySqlIT {
         assertMoney("29.00", balance(PLATFORM).add(balance(PRINCIPAL)));
     }
 
+    @Test
+    void explorationFeesCountEachShopScannedTicketOnceWithoutGroupCodes() throws Exception {
+        seedSession(ACTIVITY, 15);
+        for (long id = 74; id <= 76; id++) seedPaid(id, ACTIVITY);
+        freezeOrdinaryExplore(ordinaryExplore());
+        execute("INSERT INTO ums_member(id,balance,status,del_flag) VALUES (9005,0,1,0)",
+                "INSERT INTO coop_order(id,topic_id,from_id,to_id,to_type,share_mode,fixed_fee,terms_version,terms_snapshot,status,del_flag,create_time)"
+                        + " SELECT 2,topic_id,from_id,9005,to_type,2,5.00,terms_version,'{\"shareMode\":2,\"fixedFee\":5.00}',0,0,NOW() FROM coop_order WHERE id=1");
+        exploreScan(74, MERCHANT, 100); exploreScan(74, MERCHANT, 101);
+        exploreScan(75, MERCHANT, 100); exploreScan(75, 9005, 102);
+        // Attendance alone is not a shop visit. A group code is not required.
+        leadCheckin(76);
+        assertMoney("0.00", balance(MERCHANT));
+        var estimates = new SqlSessionTemplate(buildFactory(dataSource)).getMapper(SettlementDetailMapper.class)
+                .selectUnsettledFeeEstimates(MERCHANT, null);
+        assertMoney("16.00", estimates.get(0).getAmount());
+        assertEquals(1, activityService.executeActivitySettlement());
+        assertMoney("16.00", balance(MERCHANT)); assertMoney("5.00", balance(9005L));
+        assertMoney("3.51", balance(PLATFORM)); assertMoney("92.49", balance(PRINCIPAL));
+        assertEquals(3, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        assertEquals(0, activityService.executeActivitySettlement());
+        assertMoney("117.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)).add(balance(9005L)));
+    }
+
+    @Test
+    void frozenExploreOfferFeeCountsUniqueShopHeadsAndRefusesExcessOrOfflineLiability() throws Exception {
+        seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY);
+        execute("UPDATE coop_order SET status=2");
+        var canonical = ordinaryExplore();
+        var offers = canonical.getMerchantCashSettlementMode().withArray("offers");
+        offers.removeAll();
+        for (int i = 0; i < 2; i++) offers.addObject().put("id", 400 + i).put("chapterId", 100 + i)
+                .put("merchantId", MERCHANT).put("payerClubId", CLUB).put("termsMode", "REVSHARE").put("paymentRoute", "SESSION_SETTLEMENT").put("perHeadFee", "50.00");
+        canonical.getMicroExperienceCatalog().set("offers", offers.deepCopy());
+        canonical.setStoreCount(1);
+        for (var store : canonical.getStoreCluster()) ((com.fasterxml.jackson.databind.node.ObjectNode) store).put("merchantMemberId", MERCHANT);
+        freezeOrdinaryExplore(canonical);
+        exploreScan(74, MERCHANT, 100); exploreScan(74, MERCHANT, 101);
+        assertThrows(RuntimeException.class, () -> activityService.executeActivitySettlement());
+        assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
+        assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
+        execute("UPDATE topic_sale_snapshot SET canonical_json=JSON_SET(canonical_json,"
+                + "'$.merchantCashSettlementMode.offers[0].perHeadFee','8.00','$.merchantCashSettlementMode.offers[1].perHeadFee','8.00',"
+                + "'$.microExperienceCatalog.offers[0].perHeadFee','8.00','$.microExperienceCatalog.offers[1].perHeadFee','8.00')",
+                "INSERT INTO club_direct_merchant_receivable(redemption_id,status) SELECT MIN(id),'OPEN' FROM redemption");
+        assertThrows(RuntimeException.class, () -> activityService.executeActivitySettlement());
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+        // Only the isolated fixture's hypothetical debt is removed; no production migration or cleanup exists.
+        execute("DELETE FROM club_direct_merchant_receivable");
+        assertEquals(1, activityService.executeActivitySettlement());
+        assertMoney("8.00", balance(MERCHANT)); assertMoney("29.83", balance(PRINCIPAL));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+    }
+
+    @Test
+    void verifiedManualPartialExploreRefundDebitsOriginalSharesAndRecordsShortfallOnce() throws Exception {
+        seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY);
+        freezeOrdinaryExplore(ordinaryExplore()); exploreScan(74, MERCHANT, 100);
+        assertEquals(1, activityService.executeActivitySettlement());
+        execute("UPDATE ums_member SET balance=0.50 WHERE id=" + PRINCIPAL,
+                "UPDATE ums_member SET balance=0.10 WHERE id=" + PLATFORM,
+                "UPDATE ums_member SET balance=0.20 WHERE id=" + MERCHANT);
+        var manual = verifiedManualCase(1950L);
+        tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual));
+        assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
+        assertMoney("18.70", money("SELECT SUM(amount) FROM ums_member_settlement_debt"));
+        assertMoney("-19.50", money("SELECT SUM(settlement_amount) FROM settlement_detail WHERE source_type='refund'"));
+        assertMoney("14.41", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + PRINCIPAL));
+        assertMoney("0.49", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + PLATFORM));
+        assertMoney("3.80", money("SELECT amount FROM ums_member_settlement_debt WHERE member_id=" + MERCHANT));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM refund_application WHERE status=1 AND payout_status=4"));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM refund_application WHERE payout_status IN (0,5,6)"));
+        assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual)));
+        assertEquals(3, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM refund_application"));
+        assertEquals(0, activityService.executeActivitySettlement());
+    }
+
+    @Test
+    void manualRemainderAfterEarlierHalfRefundClawsOnlyTheOriginalRemainingFen() throws Exception {
+        seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY);
+        freezeOrdinaryExplore(ordinaryExplore()); exploreScan(74, MERCHANT, 100);
+        assertEquals(1, activityService.executeActivitySettlement());
+        execute("INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                + " VALUES (610,'registration',74,39.00,19.50,1,0)");
+        clawBack(610L, 74L, "39.00", "19.50");
+        assertMoney("0.58", balance(PLATFORM)); assertMoney("14.92", balance(PRINCIPAL)); assertMoney("4.00", balance(MERCHANT));
+        tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(verifiedManualCase(1950L)));
+        assertMoney("0.00", balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"), "两次退款不能因舍入多扣一分");
+        assertMoney("-39.00", money("SELECT SUM(settlement_amount) FROM settlement_detail WHERE source_type='refund'"));
+        assertEquals(2, scalarInt("SELECT COUNT(*) FROM refund_application"));
+    }
+
+    @Test
+    void manualRefundOfUnpaidComplaintHeldExploreTicketNeverDebitsAnotherTicketsIncome() throws Exception {
+        for (boolean anotherTicketWasPaid : new boolean[]{false, true}) {
+            resetSchema();
+            seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY);
+            if (anotherTicketWasPaid) seedPaid(75L, ACTIVITY);
+            freezeOrdinaryExplore(ordinaryExplore()); exploreScan(74, MERCHANT, 100);
+            execute("INSERT INTO coop_complaint(id,topic_id,registration_id,reporter_member_id,status,del_flag) VALUES (9301,"
+                    + TOPIC + ",74,7001,0,0)");
+            assertEquals(1, feeMapper.countInAppExploreRedemption((long) scalarInt("SELECT MIN(id) FROM redemption")),
+                    "真实扫码路由必须阻止另生线下应收");
+            assertEquals(1, activityService.executeActivitySettlement());
+            assertEquals(1, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
+            String received = anotherTicketWasPaid ? "39.00" : "0.00";
+            assertMoney(received, balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
+            tx.executeWithoutResult(s1 -> refundService.recordVerifiedExploreManualRefund(verifiedManualCase(3900L)));
+            assertEquals(1, scalarInt("SELECT COUNT(*) FROM refund_application WHERE status=1 AND payout_status=4"));
+            assertEquals(2, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE source_type='registration' AND source_id=74 AND status=2"));
+            assertEquals(0, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE source_type='refund'"));
+            assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_balance_detail WHERE event_type=6"));
+            assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"));
+            execute("UPDATE coop_complaint SET status=3 WHERE id=9301");
+            activityService.executeActivitySettlement();
+            assertMoney(received, balance(PRINCIPAL).add(balance(PLATFORM)).add(balance(MERCHANT)));
+        }
+    }
+
+    @Test
+    void manualRefundRefusesGuessingPrincipalAfterHeldTicketReleasedToANewOwner() throws Exception {
+        seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY); seedPaid(75L, ACTIVITY);
+        freezeOrdinaryExplore(ordinaryExplore()); exploreScan(74, MERCHANT, 100); exploreScan(75, MERCHANT, 100);
+        execute("INSERT INTO ums_member(id,status,del_flag,balance) VALUES (991005,1,0,0)",
+                "INSERT INTO coop_complaint(id,topic_id,registration_id,reporter_member_id,status,del_flag) VALUES (9301,"
+                        + TOPIC + ",75,7001,0,0)");
+        assertEquals(1, activityService.executeActivitySettlement());
+        var payee = ReflectionTestUtils.getField(activityService, "clubPrincipalPayee");
+        var clubs = (ClubMapper) ReflectionTestUtils.getField(payee, "clubMapper");
+        var club = clubs.selectClubById(CLUB);
+        try {
+            club.setMemberId(991005L);
+            execute("UPDATE coop_complaint SET status=3 WHERE id=9301");
+            activityService.executeActivitySettlement();
+            assertMoney("29.83", balance(PRINCIPAL)); assertMoney("29.83", balance(991005L));
+            assertEquals(PRINCIPAL, feeMapper.selectPayeeLinesForUpdate(75L).get(0).getReceiverId(),
+                    "原生产补结只改status，没有重写按旧主理人冻结的receiver_id");
+            var manual = verifiedManualCase(3900L);
+            manual.setParentOrderNo("REG:75"); manual.setPayerRegistrationId(75L); manual.setPayerMemberId(7075L);
+            manual.setVerifiedRegistrationIdsJson("[75]");
+            assertTrue(assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(
+                    s1 -> refundService.recordVerifiedExploreManualRefund(manual))).getMessage().contains("主理人原实收人"));
+            assertEquals(0, scalarInt("SELECT COUNT(*) FROM refund_application"));
+            assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_settlement_debt"));
+            assertMoney("29.83", balance(PRINCIPAL)); assertMoney("29.83", balance(991005L));
+            assertMoney("16.00", balance(MERCHANT)); assertMoney("2.34", balance(PLATFORM));
+        } finally {
+            club.setMemberId(PRINCIPAL);
+        }
+    }
+
+    @Test
+    void manualExploreRefundMissingProofOriginalLedgerOrRemainingCashCannotWriteAnything() throws Exception {
+        seedSession(ACTIVITY, 15); seedPaid(74L, ACTIVITY);
+        freezeOrdinaryExplore(ordinaryExplore());
+        assertEquals(1, activityService.executeActivitySettlement());
+        var manual = verifiedManualCase(3900L);
+        manual.setEvidenceSha256(null);
+        assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual)));
+        manual.setEvidenceSha256("a".repeat(64)); manual.setActualRefundAmountFen(3901L);
+        assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual)));
+        manual.setActualRefundAmountFen(3900L);
+        execute("DELETE FROM ums_member_balance_detail WHERE event_type=7");
+        assertTrue(assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(
+                s1 -> refundService.recordVerifiedExploreManualRefund(manual))).getMessage().contains("平台原实收人"),
+                "真正已放款的报名仍必须有原平台实收凭证");
+        execute("DELETE FROM settlement_detail WHERE receiver_type='platform'");
+        assertThrows(RuntimeException.class, () -> tx.executeWithoutResult(s -> refundService.recordVerifiedExploreManualRefund(manual)));
+        assertEquals(0, scalarInt("SELECT COUNT(*) FROM refund_application"));
+        assertMoney("39.00", balance(PRINCIPAL).add(balance(PLATFORM)));
+    }
+
+    private com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1 ordinaryExplore() {
+        var canonical = TopicSaleCanonicalTestFixture.canonical();
+        canonical.getCompletionPolicy().put("evidenceRule", "ALL_REQUIRED_STAMPS");
+        return canonical;
+    }
+
+    private void freezeOrdinaryExplore(com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1 canonical) throws Exception {
+        topic.setProductType(2);
+        execute("UPDATE cms_topic SET product_type=2 WHERE id=" + TOPIC,
+                "UPDATE cms_registration SET purchase_kind=3, fee_platform_rate=0.0300, wechat_payment_amount=payable_amount WHERE owner_id=" + ACTIVITY,
+                "DELETE FROM settlement_detail");
+        var snapshot = new com.chengyinhub.business.domain.TopicSaleSnapshot();
+        snapshot.setTopicId(TOPIC); snapshot.setSchemaVersion(com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.SCHEMA_VERSION);
+        snapshot.setParameterVersion(1L); snapshot.setSourceReviewTaskId(1L); snapshot.setFrozenAt(new java.util.Date());
+        snapshot.setCanonicalJson(com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(canonical, 2));
+        new SqlSessionTemplate(buildFactory(dataSource)).getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class).insertSnapshot(snapshot);
+    }
+
+    private void exploreScan(long registrationId, long merchant, long chapter) throws Exception {
+        execute("INSERT INTO redemption(registration_id,topic_id,chapter_id,merchant_id,offer_id,status) VALUES ("
+                + registrationId + "," + TOPIC + "," + chapter + "," + merchant + "," + (chapter + 300) + ",'ACTIVE')");
+    }
+
+    private com.chengyinhub.business.domain.ActivityCancelManualRefundCase verifiedManualCase(long amount) {
+        var row = new com.chengyinhub.business.domain.ActivityCancelManualRefundCase();
+        row.setId(99L); row.setActivityId(ACTIVITY); row.setParentOrderNo("REG:74"); row.setPayerRegistrationId(74L);
+        row.setPayerMemberId(7074L); row.setOwnerMemberId(PRINCIPAL); row.setPaidCashAmountFen(3900L);
+        row.setVerifiedRegistrationIdsJson("[74]"); row.setUnverifiedRegistrationIdsJson("[]");
+        row.setStatus(com.chengyinhub.business.domain.ActivityCancelManualRefundCase.STATUS_MANUAL_REFUND_EVIDENCE_VERIFIED);
+        row.setHandledByUserId(8L); row.setVerifiedByUserId(9L); row.setActualRefundAmountFen(amount);
+        row.setEvidenceSha256("a".repeat(64)); row.setManualChannel("offline_transfer");
+        row.setEvidenceObjectKey("upload/merchant-aftercare-evidence/0123456789abcdef0123456789abcdef.jpg");
+        row.setHandledAt(new java.util.Date()); row.setVerifiedAt(new java.util.Date());
+        return row;
+    }
+
     private SqlSessionFactory buildFactory(DataSource ds) throws Exception {
         Configuration configuration = new Configuration(new Environment("club-session-fee-it",
                 new SpringManagedTransactionFactory(), ds));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
+        addMapper(configuration, com.chengyinhub.business.mapper.RefundApplicationMapper.class, "mapper/business/RefundApplicationMapper.xml");
         addMapper(configuration, CmsRegistrationMapper.class, "mapper/business/CmsRegistrationMapper.xml");
         addMapper(configuration, com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class, "mapper/business/TopicSaleSnapshotMapper.xml");
         addMapper(configuration, CmsActivityMapper.class, "mapper/business/CmsActivityMapper.xml");
