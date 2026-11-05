@@ -16,7 +16,7 @@ function rightMoment(input) {
   if (data.firstTime === false) return null;
   const node = o.node || {};
   const text = String(node.passText || '').trim();
-  const reveal = text ? '' : (typeof data.answerReveal === 'string' ? data.answerReveal.trim() : '');
+  const reveal = typeof data.answerReveal === 'string' ? data.answerReveal.trim() : '';
   const fragment = Number(o.mode) === 2 ? '' : String(node.fragmentText || '').trim();
   return { text, reveal, fragment, hold: !!(text || reveal || fragment) };
 }

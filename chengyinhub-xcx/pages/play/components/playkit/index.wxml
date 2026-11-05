@@ -54,9 +54,9 @@
 <cy-playkit-dailysign wx:elif="{{kit.type === 'dailysign'}}"
   show="{{show}}" inline="{{inline}}" date-label="{{kit.dateLabel}}" address="{{kit.address}}"
   lines="{{kit.lines}}" signer="{{kit.signer}}" left-at="{{kit.leftAt}}"
-  serial-label="{{kit.serialLabel}}" text-max="{{kit.textMax}}"
+  serial-label="{{kit.serialLabel}}"
   revealed="{{kit.revealed}}" photo-url="{{kit.photoUrl}}"
-  claimed="{{kit.claimed}}" my-text="{{kit.myText}}" my-photo-url="{{kit.myPhotoUrl}}"
+  claimed="{{kit.claimed}}"
   bind:accept="onAccept" bind:close="onClose" />
 
 <cy-playkit-slowtask wx:elif="{{kit.type === 'slowtask'}}"
@@ -152,6 +152,7 @@
   bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-pricepair wx:elif="{{kit.type === 'pricepair'}}"
+  attempts="{{kit.attempts}}" finished="{{kit.finished}}" passed="{{kit.passed}}" last-pick-id="{{kit.lastPickId}}" answer-id="{{kit.answerId}}"
   show="{{show}}" title="{{kit.title}}" items="{{kit.items}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}"
   bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />

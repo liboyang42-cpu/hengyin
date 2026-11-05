@@ -165,9 +165,6 @@ function buildDailySign(seg, now) {
     leftAt: seg.leftAt || '',
     photoUrl: seg.photoUrl || '',          // 上一个人拍的,印在票上;没给就不印
     serialLabel: Number(seg.serial) > 0 ? 'NO. ' + pad4(seg.serial) : '',   // 第十二轮 k7 N10:服务端没给签号就不印「NO. 0000」
-    textMax: Number(seg.textMax) || 40,
-    myText: seg.myText || '',
-    myPhotoUrl: seg.myPhotoUrl || '',
     claimed: !!seg.claimedDate,
     revealed: !!seg.claimedDate,
   };
@@ -615,7 +612,7 @@ function pickPlayKit(view, now) {
         attempts: seg.attempts || 0,
         finished: !!seg.finished,
         passed: !!seg.passed,
-        answerId: seg.answerId || '',
+        answerId: seg.answerId || '', lastPickId: seg.lastPickId || '',
       });
     }
     if (name === 'album') return Object.assign(base, albumKit(seg));
@@ -1115,7 +1112,7 @@ function serverPayload(type, action, detail) {
     case 'typein:submit': return { text: d.text || '', elapsedMs: Math.round(d.elapsedMs || 0) };
     /* 接力签:留下的那句和可选照片。现网 CLAIM_DAILY_SIGN 还不消费这两字段,多带无害;
        后端接上之后不必再改小程序。 */ 
-    case 'dailysign:accept': return { text: d.text || '', photoUrl: d.photoUrl || '' };
+    case 'dailysign:accept': return {};
     // 抽卡不带参数:抽哪一件由服务端按权重定,客户端说了不算
     case 'random:draw': return {};
     // C1:设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)

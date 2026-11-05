@@ -40,6 +40,11 @@ Component({
     items: { type: Array, value: [] },
     limitSeconds: { type: Number, value: 0 },
     maxTries: { type: Number, value: 0 },
+    attempts: { type: Number, value: 0 },
+    finished: { type: Boolean, value: false },
+    passed: { type: Boolean, value: false },
+    lastPickId: { type: String, value: '' },
+    answerId: { type: String, value: '' },
   },
   data: {
     // 同 playkit-qa:派生数据换键名,别写回被监听的 items —— 那会自触发死循环
@@ -47,9 +52,14 @@ Component({
     revealed: false,
   },
   observers: {
-    'show, items': function (show, items) {
+    'show, items, attempts, finished, passed, lastPickId, answerId': function (show, items) {
       if (!show) return;
-      this.setData({ posters: paint(items), revealed: false });
+      const d = this.data;
+      this.setData({ posters: paint(items).map(it => {
+        if (it.id === d.lastPickId) return Object.assign(it, d.passed ? { state: 'is-right', mark: '就是它' } : { state: 'is-wrong', mark: '不是' });
+        if (d.finished && it.id === d.answerId) return Object.assign(it, { state: 'is-right', mark: '正确答案' });
+        return it;
+      }), revealed: !!d.finished });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
     },
