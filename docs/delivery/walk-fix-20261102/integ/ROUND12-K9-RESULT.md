@@ -97,7 +97,7 @@ No migrations. No new endpoints. No write contract or money rule changed. No gat
 - **J1:** `ApiTopicController` (the 401 change above).
 - **J2:** `JourneyReviewTexts` / `TopicTextSafety` (the field label change).
 - Tests, run with `mvn -pl chengyinhub-admin -am`: `ApiTopicListLoginCodeTest` 1, `JourneyReviewTextsPlainFieldTest` 2, `JourneyReviewTextsTest` 23, `TopicTextSafetyTest` 7, `ApiTopicListToMerchantPublisherTest` 2, `ApiTopicMerchantOperatorScopeTest` 9. All green.
-- The rig jar was not rebuilt, so neither change is proven over HTTP.
+- J1 was later proven over HTTP (see CI). J2 is unit-proven only.
 
 ## Gates
 
@@ -105,13 +105,35 @@ No migrations. No new endpoints. No write contract or money rule changed. No gat
 - `build-action-ledger.js --check`: PASS. 5718 → 5726 controls (event contracts 2768 → 2774: six 「返回」 exits; tap 2507 → 2509: 去买这一场的票, and the 个人介绍 row split in two). `action-ledger.test.js` counts updated, 46/46.
 - `tests/unit/r12-k9-pages.test.js`: 25 tests. The first 20 were checked against the base tree, where all 20 fail.
 - Full mini-program unit suite: see "Full suite" below.
+- Also fixed on the way: the shared login gate change has no test of its own apart from `r12-k9-pages`. `access-gate-contract` still passes.
 
 ## Full suite
 
-FULL_SUITE_PLACEHOLDER
+I ran all 1,747 `tests/unit/*.test.js` files on my tree and on the branch tip I rebased onto (`89b6106f2`), 4 in parallel.
+- **Base fails:** `action-ledger`, `merchant-theme-route-contract`, `route-matrix-freshness`.
+- **Mine, first run:** the same three, plus three more:
+  - `im-send-retry`: real. My peer-name read fired after the first load and shifted the harness's request order.
+  - `user-character-page`: real. It pinned the old 「模板暂无可展示属性」 line.
+  - `scene-twin-single-source-contract`: passes when run alone.
+- **Fix:** `95910add7` fixed both real ones. The name read now only runs when the link had no name, and the character-page contract was updated to the new state.
+- **After the fix:** `action-ledger` passes alone (46/46); in the parallel run it hit the time limit under load. `merchant-theme-route-contract` and `route-matrix-freshness` fail the same way on the base, from `pages/topic/pricing` and the route matrix, which I didn't touch.
 
 ## CI
 
-CI_PLACEHOLDER
+My last code commit is `95910add7`. Its PR #723 runs were cancelled by newer pushes from other lanes; seven lanes push to this branch.
 
-STATUS_PLACEHOLDER
+On `52c6fdce8`, which contains all my code commits:
+- **Mini followup focused regression:** success (run 41991531339).
+- **Isolated authenticated Redis recovery:** success (run 41991531301).
+- **Funds MySQL IT:** still running when I wrote this (run 41991531286).
+- **GitHub CI:** still running when I wrote this (run 41991531573).
+
+Every full GitHub CI run I watched on this branch was cancelled by the next push before it finished. **The full CI result for a commit containing my work is not confirmed.**
+
+**HTTP read-backs:** the rig jar was rebuilt from `95910add7` after the first draft of this file. `fix-shots/k9-http-readbacks.txt` shows:
+- `topic/list is_my=1` without a valid session answers `{"code":401}` (J1 proven over HTTP).
+- The unrelated-account `project/home` refusal, which the page now maps to 「链接已失效」.
+
+J2 (the field label) is still unit-proven only.
+
+STATUS: PARTIAL - k2's leftovers and most of p1's LOW list are fixed and walked in the rig; p2 N-9 and several j1/j5/j6 LOW items are fixed. Several items are listed for you as write contracts, money rules or owner design calls. Some LOW items are not done (p1 N-12, N-7 counter; j5 N11, carried L-items; p2 N-14/16/17 rest; p3 N18; j6 stamp-camera; the missing-param helper lines on club/edit, join-requests and group-code). Item 5 has only the p3 guest sweep. The full GitHub CI was cancelled by other lanes' pushes and is not confirmed.
