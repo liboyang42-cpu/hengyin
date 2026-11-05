@@ -3,14 +3,15 @@ draft: save as draft (saveDraft=true) then publish through /api/topic/publish-dr
 import sys, datetime, json
 from common import *
 name, tid = sys.argv[1], int(sys.argv[2]); busy = "busy" in sys.argv[3:]; draft = "draft" in sys.argv[3:]
-p3 = tok("e2e-openid-9003")
+import os
+p3 = tok(os.environ.get("WHO", "e2e-openid-9003"))
 D = datetime.datetime.now().replace(hour=9, minute=0, second=0, microsecond=0)
 d = lambda k: (D + datetime.timedelta(days=k)).strftime("%Y-%m-%d %H:%M:%S")
 st = http("POST", "/api/publisher/identity/status", token=p3, json_body={})
 if not ((st.get("data") or {}).get("registered")):
-    print("identity", http("POST", "/api/publisher/identity", token=p3, json_body={"realName": "测试主理人", "idCard": "110101199001010015", "consent": True, "source": "topic_publish"}))
+    print("identity", http("POST", "/api/publisher/identity", token=p3, json_body={"realName": "测试主理人", "idCard": os.environ.get("IDCARD", "110101199001010015"), "consent": True, "source": "topic_publish"}))
 dto = {"name": name, "subtitle": "j5", "description": "干净的简介", "startDate": d(10), "endDate": d(40), "saleEndAt": d(30),
-       "imgUrl": "https://rigbucket.oss-rig.invalid/upload/205dc125ee594333b2e681429bfef410.png", "categoryIds": "1", "productType": 2, "publishMode": "normal", "tickets": [], "clubId": 7001, "recruitDeadline": d(5), "openMerchantPool": 1,
+       "imgUrl": "https://rigbucket.oss-rig.invalid/upload/205dc125ee594333b2e681429bfef410.png", "categoryIds": "1", "productType": 2, "publishMode": "normal", "tickets": [], "clubId": int(os.environ.get("CLUB", "7001")), "recruitDeadline": d(5), "openMerchantPool": 1,
        "chapters": [{"name": "第1章", "description": "j5", "schemaVersion": 1, "required": 1, "recruitEnabled": 1, "categoryId": 4001, "termsMode": "PERK", "perkMinValue": 30, "maxMerchant": 1,
                      "blocks": [{"type": "text", "content": "j5"}, {"type": "node", "nodeIndex": 0}],
                      "nodes": [{"name": "桥头", "address": "上海市黄浦区", "longitude": "121.470000", "latitude": "31.230000", "nodeTime": 30, "templateId": tid}]}]}

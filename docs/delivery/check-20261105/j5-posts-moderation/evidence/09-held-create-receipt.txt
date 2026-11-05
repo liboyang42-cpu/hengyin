@@ -1,0 +1,3 @@
+identity {'msg': '实名信息已登记', 'code': 200, 'data': {'registered': True}, '_status': 200}
+create {"msg": "已提交审核", "code": 200, "data": {"topicId": 990022, "auditTaskId": 9, "reviewState": "PENDING", "bundledTemplateIds": [], "published": false, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}, "_status": 200}
+((990022, 'j5 繁忙新建主题', 1, 0, 2, 0),)
