@@ -78,7 +78,9 @@ test('游客空白页逐页挂 login 守卫(或已挂 club/merchant 守卫)并�
     assert.match(wxml, /<cy-access-gate kind="login" \/>/, p);
     assert.equal(JSON.parse(read(p + '.json')).usingComponents['cy-access-gate'], '/components/cy/access-gate/index', p);
   }
-  for (const p of ['pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/settlement/index']) {
+  // 历史收款人不再依赖当前岗位；登录守卫 + 服务端按冻结收款人逐行校验。
+  assert.match(read('pages/club/settlement/index.wxml'), /<cy-access-gate[^>]*kind="login"/)
+  for (const p of ['pages/club/customers/index', 'pages/club/customer-detail/index']) {
     assert.match(read(p + '.wxml'), /<cy-access-gate[^>]*kind="club"/, p);
   }
 });

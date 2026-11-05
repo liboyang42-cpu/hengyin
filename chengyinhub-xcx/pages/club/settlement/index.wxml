@@ -2,19 +2,24 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-access-gate id="cy-access-gate" kind="club" need="club:finance:read" club-id="{{clubId}}" />
+  <cy-access-gate id="cy-access-gate" kind="login" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="俱乐部结算" safe-top="{{false}}" />
-  <cy-club-direct-ledger class="section" wx:if="{{clubId}}" kind="club" club-id="{{clubId}}" />
+  <cy-club-direct-ledger class="section" wx:if="{{summary && !summary.personal && clubId}}" kind="club" club-id="{{clubId}}" />
   <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主理人本人,管理员不显示(isOwner 由 summary 接口判定) -->
-  <cy-funds-stages class="section" wx:if="{{summary && summary.isOwner && (state === 'ready' || state === 'empty')}}" bind:stages="onStages" />
+  <cy-funds-stages class="section" wx:if="{{summary && (summary.isOwner || summary.personal) && (state === 'ready' || state === 'empty')}}" bind:stages="onStages" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
   <cy-error load-failure wx:elif="{{state === 'error'}}" title="结算数据暂不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
   <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有平台分润记录" />
 
+  <view class="section" wx:elif="{{state === 'clubs'}}">
+    <view class="topic-row" wx:for="{{clubs}}" wx:key="clubId" data-id="{{item.clubId}}" bindtap="openClubSettlement" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="topic-row-name">{{item.name}}</text><cy-icon name="arrow-right" size="24" />
+    </view>
+  </view>
   <block wx:elif="{{state === 'ready'}}">
     <view class="section">
       <view class="settled-card" wx:if="{{summary.topics.length}}">
@@ -30,7 +35,7 @@
         aria-label="{{withdrawState === 'zero' ? '联系平台客服提现，当前可提现为 0' : (withdrawState === 'unknown' ? '联系平台客服提现，可提现余额待确认' : '联系平台客服提现')}}"
         bindtap="goWithdraw">联系平台客服提现</button>
       <text class="withdraw-hint" wx:if="{{withdrawState === 'zero' && complaintWaiting}}">客诉期结束后可提现</text>
-      <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown'}}">{{summary.isOwner === false ? '仅主理人可发起提现' : '—'}}</text>
+      <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown'}}">{{summary.isOwner === false && !summary.personal ? '仅主理人可发起提现' : '—'}}</text>
       <!-- 2026-09-04 截图走查改:原文案是「已入账金额待确认」,而它正上方那张卡
            写着「已入账分润 ¥12,480.00」—— 一个说已入账、一个说待确认,自相矛盾,
            而且是在动钱的页面上。
@@ -49,8 +54,8 @@
         <view class="topic-row-body">
           <view class="topic-row-meta">
             <text class="topic-row-meta-line">{{item.dateText}}</text>
-            <text class="topic-row-meta-line">销售额 {{item.grossText}}</text>
-            <text class="topic-row-meta-line">{{item.feeLabel}} {{item.feeText}}</text>
+            <text wx:if="{{!summary.personal}}" class="topic-row-meta-line">销售额 {{item.grossText}}</text>
+            <text wx:if="{{!summary.personal}}" class="topic-row-meta-line">{{item.feeLabel}} {{item.feeText}}</text>
             <text wx:if="{{item.merchantFeeText}}" class="topic-row-meta-line">商家核销费 {{item.merchantFeeText}}</text>
             <text class="topic-row-meta-line">{{item.payeeText}}</text>
           </view>

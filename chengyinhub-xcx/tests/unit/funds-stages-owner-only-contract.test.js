@@ -81,5 +81,5 @@ test('俱乐部分润页:只有主理人本人(isOwner===true)显示三段,管�
   assert.equal(run(false), false, '管理员不显示')
   assert.equal(run(undefined), false)
   const wxml = read('pages/club/settlement/index.wxml')
-  assert.match(wxml, /<cy-funds-stages class="section" wx:if="\{\{summary && summary\.isOwner && \(state === 'ready' \|\| state === 'empty'\)\}\}"(?: bind:stages="onStages")? \/>/)
+  assert.match(wxml, /<cy-funds-stages class="section" wx:if="\{\{summary && \(summary\.isOwner \|\| summary\.personal\) && \(state === 'ready' \|\| state === 'empty'\)\}\}"(?: bind:stages="onStages")? \/>/)
 })
