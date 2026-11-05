@@ -430,7 +430,11 @@ Page({
     if (score) return req('/api/orient/scoring/session/' + score[1], method, data, header, true);
     throw new Error('Unknown orient lifecycle endpoint');
   }),
-  ...r5PlayerRuntime.methods(), closeR5Verdict() { this.setData({ 'r5Verdict.show': false }); },  // 结果反馈判定屏「继续」(状态见 r5-player-runtime)
+  ...r5PlayerRuntime.methods(),
+  closeR5Verdict() {
+    const ending = this._afterR5Verdict; this._afterR5Verdict = null;
+    this.setData({ 'r5Verdict.show': false }, () => { if (ending) ending(); });
+  },
   ...themeBackpack.methods(req),
   ...themeRecords.methods(req, true),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
@@ -8259,11 +8263,26 @@ Page({
   _playEndingChapter(chapter, after, isCurrent) {
     const current = () => typeof isCurrent !== 'function' || isCurrent();
     if (!current()) return;
+    // 末站作者反馈先读完，不能在背包与反馈层下面抢播尾声。
+    if (this.data.r5Verdict && this.data.r5Verdict.show) {
+      const owner = this._boundPlayOwner(), sessionKey = this._sessionKey();
+      const routeSessionId = String((this._routeState || {}).sessionId || '');
+      this._afterR5Verdict = () => {
+        if (!this._isPlayAccountCurrent() || owner !== this._playOwner || sessionKey !== this._sessionKey()
+            || routeSessionId !== String((this._routeState || {}).sessionId || '')) return;
+        this._playEndingChapter(chapter, after, isCurrent);
+      };
+      return;
+    }
+    this._afterR5Verdict = null;
+    this._playKitNodeId = null;
     this._chapterTrailNext = null;
     this._afterEndingChapter = () => { if (current()) after(); };
     this.stopAudio();
     const built = Object.assign(this.buildChapter({ chapters: [chapter] }, this.data.nodes), { ending: true, idxLabel: '结局' });
-    this.setData({ chapter: built, chapterGameAnchor: '' }, () => { if (current()) this.openChapterFull(); });
+    this.setData({ chapter: built, chapterGameAnchor: '', themeBackpackOpen: false,
+      sessionToolsOpen: false, 'sheet.show': false, advancedPlay: { show: false, node: null },
+      playKit: { show: false, kit: null, readyForBase: false } }, () => { if (current()) this.openChapterFull(); });
   },
   continueLifeEnding() {
     const scope = this._lifeEndingShownScope;
