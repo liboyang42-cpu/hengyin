@@ -118,8 +118,13 @@ public final class GameplaySupportMatrix {
         boolean r5=config.path("outcomeRules").path("version").asInt()==1 || challenge && game.path("survival").path("zeroChallenge").path("version").asInt()==2;
         List<String> enabled = new ArrayList<>();
         List<String> secondary = new ArrayList<>();
+        // 第十三轮 m7:带结果规则的主玩法再开「扫码参与」时,扫码是这一站的参与方式(到达证明),不是第二个玩法。
+        // 到达只认 /checkin 扫到这一站自己的码(PlayBasicCommandApplication#checkinOnce 比对 checkin_code 与目标站),
+        // 任务由主玩法的服务端判定经 recordGameplayOutcome 结算。与作者端 gameplay-support-matrix.js mains() 同一口径。
+        boolean scanParticipation = r5 && !challenge && scanIsParticipation(config);
         config.fields().forEachRemaining(field -> {
             if (!field.getValue().path("enabled").asBoolean()) return;
+            if (scanParticipation && "scan".equals(field.getKey())) return;
             if (addon(field.getKey()) && !(r5 && TYPES.containsKey(field.getKey()) && TYPES.get(field.getKey()).path("r5CompletionProof").asBoolean())) secondary.add(field.getKey());
             else enabled.add(type(field.getKey(), field.getValue()));
         });
@@ -128,6 +133,7 @@ public final class GameplaySupportMatrix {
             enabled.add("SCAN".equals(basic) ? "scan" : "GPS".equals(basic) ? "GPS" : "ANSWER".equals(basic) ? method == 1 ? "qaText" : "qaPick" : secondary.isEmpty() ? "none" : secondary.get(0));
         }
         String tool = firstTool(rules, config.path("interactionTools"), challenge);
+        if (scanParticipation && method != 4) fail(nodeId, nodeName, "scan", tool, "扫码证明须使用 validationMethod=4");
         if (challenge && game.path("survival").path("zeroChallenge").path("version").asInt()==2)
             GameplayOutcomeRules.visit(config, (path, after) -> {
                 if (!after.path("costs").isEmpty() || !after.path("effects").isEmpty())
@@ -158,6 +164,19 @@ public final class GameplaySupportMatrix {
             try { GameplayTemplateRules.assertCompatible(config); }
             catch (IllegalArgumentException invalid) { fail(nodeId, nodeName, key, "vote", invalid.getMessage()); }
         }
+    }
+
+    /** 扫码之外还开了一个真正的主玩法(不是附加项)时,扫码只是参与方式。 */
+    public static boolean scanIsParticipation(JsonNode config) {
+        if (!config.path("scan").path("enabled").asBoolean()) return false;
+        Iterator<Map.Entry<String, JsonNode>> fields = config.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            String key = field.getKey();
+            if ("scan".equals(key) || !field.getValue().path("enabled").asBoolean() || addon(key)) continue;
+            for (JsonNode row : TYPES.values()) if (key.equals(row.path("section").asText()) && !"scan".equals(row.path("key").asText())) return true;
+        }
+        return false;
     }
 
     public static void validateChallenge(JsonNode theme, JsonNode configs) {

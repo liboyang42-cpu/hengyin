@@ -97,6 +97,32 @@ class TopicRoutePublicationOutcomeScopeTest {
         assertDoesNotThrow(() -> f.compiler.freezePublication(f.topic, null));
     }
 
+    /* 第十三轮 m7:业主的游戏要扫码站和互斥组、彩蛋同在一个主题里。主玩法(文字问答 / 拍照问答)带结果规则,参与方式选「扫码」:
+       保存编出任务、发布冻结都放行;站点没有自己的码就拒;参与方式不是扫码就拒,并说人话。 */
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings = {"TYPE", "SHOT"})
+    void qrStationWithBranchAndEggSavesAndFreezes(String mode) throws Exception {
+        String qa = "TYPE".equals(mode) ? "\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"门牌上的年份\",\"answerText\":\"1931\",\"maxTries\":0}"
+                : "\"qa\":{\"enabled\":true,\"mode\":\"SHOT\",\"title\":\"拍下码头\",\"maxTries\":0}";
+        Fixture f = new Fixture("{\"schemaVersion\":1," + qa + ",\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"欢迎\"},\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}");
+        CmsTopicChapter chapter = new CmsTopicChapter(); chapter.setId(21L); chapter.setTopicId(10L); chapter.setSortId(0L); chapter.setName("码头");
+        when(f.chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(chapter));
+        CmsTopicNode node = f.nodes.selectCmsTopicNodeList(new CmsTopicNode()).get(0); node.setChapterId(21L); node.setName("旧码头"); node.setCheckinCode("rig-code-11");
+        CmsMemberTemplate template = f.templates.selectCmsMemberTemplateByIds(Collections.singletonList(701L)).get(0); template.setValidationMethod(4);
+        String theme = "{\"schemaVersion\":1,\"capacity\":0,\"chapters\":[{\"index\":0,\"hpCost\":0,\"luckCost\":0,\"grants\":[],\"completion\":{\"type\":\"ALL\"},\"eggs\":[{\"id\":\"egg1\",\"name\":\"雨中便条\",\"content\":\"船票\",\"trigger\":\"TIME\",\"threshold\":1,\"rewards\":[]}]}]}";
+        f.topic.setThemeRuntimeConfigJson(theme);
+        String saved = f.compiler.compileTemplateRules(f.topic);
+        assertEquals(1, quests(saved)); f.topic.setThemeRuntimeConfigJson(saved);
+        assertDoesNotThrow(() -> f.compiler.freezePublication(f.topic, null));
+        node.setCheckinCode(" ");
+        f.topic.setThemeRuntimeConfigJson(theme);
+        String noCode = assertThrows(IllegalArgumentException.class, () -> { f.topic.setThemeRuntimeConfigJson(f.compiler.compileTemplateRules(f.topic)); f.compiler.freezePublication(f.topic, null); }).getMessage();
+        assertTrue(noCode.contains("扫码"), noCode);
+        node.setCheckinCode("rig-code-11"); template.setValidationMethod(0);
+        f.topic.setThemeRuntimeConfigJson(theme);
+        String direct = assertThrows(IllegalArgumentException.class, () -> f.compiler.compileTemplateRules(f.topic)).getMessage();
+        assertEquals("「旧码头」的扫码：扫码玩法的参与方式要选「扫码」", direct);
+    }
+
     static String settledConfig(String kit) {
         String game;
         switch (kit) {

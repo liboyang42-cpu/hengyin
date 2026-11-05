@@ -5,6 +5,8 @@ const ZERO_CHALLENGE_GAMEPLAYS = ['pricePair', 'blindTaste', 'check', 'diceRoll'
 // 与服务端 AdvancedActionJudgement.SELF_REPORTED_SECTIONS 同一份名单
 const SELF_REPORTED = ['reaction', 'ballShake', 'quietHold', 'shout', 'stopwatch', 'compass'];
 const ZERO_CHALLENGE_REASON = '此玩法暂不支持归零恢复，请选择其他挑战节点';
+// 与服务端 GameplaySupportMatrix REASONS「扫码证明须使用 validationMethod=4」同一句人话
+const SCAN_METHOD = '扫码玩法的参与方式要选「扫码」';
 // 服务端约束说明是工程合同（OWNER/TEAM/maxTries…），作者页只显示下面的作者文案；未知代码保留原文。
 const CONSTRAINT_COPY = {
   PROOF_REQUIRED: '这个附加玩法不能单独判定完成，需要配合主玩法使用',
@@ -107,6 +109,8 @@ function validate(matrix, template, context = {}) {
     rows = [key === 'GPS' ? { key, completionProof: true, tools: {} } : matrix.types.find(row => row.key === key) || { tools: {} }];
   }
   if (!rows.length) return '这种玩法不能用作归零挑战';
+  // 第十三轮 m7:主玩法再开扫码参与 = 扫码站,扫码是到达证明;参与方式必须存成扫码(与服务端 GameplaySupportMatrix.scanIsParticipation 同一口径、同一句话)
+  if (!context.challenge && advanced.scan?.enabled === true && rows.some(row => row.key !== 'scan') && Number(template.validationMethod) !== matrix.legacyProofs.scan) return SCAN_METHOD;
   for (const row of rows) {
     if (context.challenge) {
       if (context.challengeVersion === 2 && !ZERO_CHALLENGE_GAMEPLAYS.includes(row.section)) return ZERO_CHALLENGE_REASON;
@@ -116,7 +120,7 @@ function validate(matrix, template, context = {}) {
       if (!(advanced.outcomeRules?.version === 1 ? row.r5CompletionProof : row.completionProof)) return '这种玩法暂时无法确认是否完成';
       if (advanced.outcomeRules?.version !== 1 && (['qaText', 'qaPick'].includes(row.key) && Number((advanced.qa || {}).maxTries) > 0
         || row.key === 'sort' && Number((advanced.sort || {}).maxAttempts) > 0)) return matrix.constraints.FREE_RETRY;
-      if (row.key === 'scan' && Number(template.validationMethod) !== matrix.legacyProofs.scan) return '扫码玩法须选择扫码验证';
+      if (row.key === 'scan' && Number(template.validationMethod) !== matrix.legacyProofs.scan) return SCAN_METHOD;
     }
   }
   if (tools.plans?.length && advanced.interactionRules != null

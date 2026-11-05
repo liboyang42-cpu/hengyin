@@ -3291,6 +3291,43 @@ class AdvancedGameRuntimeServiceImplTest {
         when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(node);
     }
 
+    /* 第十三轮 m7:扫码站 = 带结果规则的主玩法(文字问答)+ 扫码参与。服务端比对这一站自己的码;
+       扫码只是参与证明,不结算任务;任务只由主玩法的服务端判定经 recordGameplayOutcome 结一次。
+       错码、别站的码、重放、别人的局都不能完成它,也不能结两次。 */
+    @Test void qrStationScanProvesOwnCodeAndTaskSettlesOnceThroughGameplayOutcome() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode config = json.readTree("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"门牌上的年份\",\"answerText\":\"1931\",\"maxTries\":0},"
+                + "\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"欢迎来到旧码头\"},\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}");
+        assertTrue(com.chengyinhub.business.service.support.GameplaySupportMatrix.scanIsParticipation(config));
+        stubNodeCheckinCode("DOCK-CODE");
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class); ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.genericPlayer(any(), any(), any())).thenReturn(true); when(route.canPlay(any(), any(), any(), any())).thenReturn(true);
+        when(route.gameplayInstance(any(), any(), any(), any())).thenReturn("quest:dock"); when(route.nodeRuntimeConfig(any(), any(), any(), any())).thenReturn(config);
+        GameRuntimeSession session = runningSession(config.toString(), "{\"attemptOrdinal\":1}"); session.setPlayInstanceId("quest:dock");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session); when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        int v = session.getVersion();
+        for (String bad : new String[]{"WRONG", "OTHER-STATION-CODE", ""}) {
+            assertThrows(IllegalArgumentException.class, () -> service.act(MEMBER_ID, 51L, v, "scan-bad-" + bad, "SUBMIT_SCAN", Collections.singletonMap("code", bad)));
+        }
+        verify(sessionMapper, never()).updateStateCas(any());
+        assertFalse(session.getStateJson().contains("scanned"));
+        service.act(MEMBER_ID, 51L, v, "scan-ok", "SUBMIT_SCAN", Collections.singletonMap("code", "DOCK-CODE"));
+        assertTrue(json.readTree(session.getStateJson()).path("scan").path("scanned").asBoolean());
+        assertEquals(GameRuntimeSession.STATUS_RUNNING, session.getStatus(), "扫码只是参与证明,不结算任务");
+        verify(route, never()).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+        assertThrows(RuntimeException.class, () -> service.act(MEMBER_ID + 1, 51L, session.getVersion(), "other-player", "SUBMIT_QA", Collections.singletonMap("input", "1931")));
+        service.act(MEMBER_ID, 51L, session.getVersion(), "qa-ok", "SUBMIT_QA", Collections.singletonMap("input", "1931"));
+        org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision = org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);
+        verify(route).recordGameplayOutcome(org.mockito.ArgumentMatchers.eq(MEMBER_ID), any(), any(), org.mockito.ArgumentMatchers.eq(NODE_ID), org.mockito.ArgumentMatchers.eq("quest:dock"), org.mockito.ArgumentMatchers.eq("advanced:51:1"), decision.capture(), any());
+        assertEquals("PASS", decision.getValue().path("outcome").asText());
+        assertEquals(GameRuntimeSession.STATUS_COMPLETED, session.getStatus());
+        int done = session.getVersion();
+        service.act(MEMBER_ID, 51L, done, "qa-replay", "SUBMIT_QA", Collections.singletonMap("input", "1931"));
+        service.act(MEMBER_ID, 51L, done, "scan-replay", "SUBMIT_SCAN", Collections.singletonMap("code", "DOCK-CODE"));
+        verify(route, org.mockito.Mockito.times(1)).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+        assertEquals(done, session.getVersion(), "完成后的重放不改状态");
+    }
+
     @Test
     void scanOverlayUrlStaysHiddenUntilScanned() {
         // 与 reply 同一条防泄漏口径:扫之前的网络回包里搜不到叠加图

@@ -226,6 +226,28 @@ public class GameplaySupportMatrixTest {
         rejected(theme("TEAM"), config, 4, "scan", "vote");
         assertDoesNotThrow(() -> GameplaySupportMatrix.validateNode(JSON.createObjectNode(), 11, "旧站", JSON.createObjectNode().set("estimate", JSON.createObjectNode().put("enabled", true)), 8));
     }
+    /* 第十三轮 m7:带结果规则的主玩法 + 「扫码参与」= 扫码站。扫码是到达证明(扫这一站自己的码),主玩法照常由服务端判定结算;
+       参与方式不是扫码就拒,并且说人话;扫码本身仍不是能单独结算的玩法(没有主玩法时照旧拒)。 */
+    @ParameterizedTest @ValueSource(strings = {"qaText", "qaPick", "qaShot", "sort", "match", "classify"})
+    void resultRuleGameWithScanParticipationIsAQrTaskStation(String key) throws Exception {
+        ObjectNode config = config(key); config.with("outcomeRules").put("version", 1).putObject("pass"); config.with("outcomeRules").putObject("fail");
+        config.set("scan", config("scan").get("scan"));
+        assertTrue(GameplaySupportMatrix.scanIsParticipation(config));
+        assertDoesNotThrow(() -> GameplaySupportMatrix.validateNode(theme("PLAYER"), 11, "旧码头", config, 4));
+        GameplaySupportMatrix.Refusal wrong = assertThrows(GameplaySupportMatrix.Refusal.class, () -> GameplaySupportMatrix.validateNode(theme("PLAYER"), 11, "旧码头", config, 0));
+        assertEquals("「旧码头」的扫码：扫码玩法的参与方式要选「扫码」", wrong.getMessage());
+        assertFalse(wrong.getMessage().contains("状态或 d20"), wrong.getMessage());
+        ObjectNode alone = config("scan"); alone.with("outcomeRules").put("version", 1).putObject("pass");
+        assertFalse(GameplaySupportMatrix.scanIsParticipation(alone));
+        rejected(theme("PLAYER"), alone, 4, "scan", "genericSettlement");
+        ObjectNode branchOnly = config("scan"); branchOnly.putObject("branch").put("enabled", true);
+        assertFalse(GameplaySupportMatrix.scanIsParticipation(branchOnly), "附加项不能让扫码变成参与方式");
+    }
+    @Test void scanWithoutResultRulesKeepsItsOldBasicProof() throws Exception {
+        assertDoesNotThrow(() -> GameplaySupportMatrix.validateNode(theme("PLAYER"), 11, "旧码头", config("scan"), 4));
+        assertEquals("SCAN", GameplaySupportMatrix.basicCompletionKind(config("scan"), 4));
+        rejected(theme("PLAYER"), config("scan"), 0, "scan", "genericSettlement");
+    }
     private static void rejected(JsonNode theme, JsonNode config, int method, String type, String tool) {
         String message = assertThrows(IllegalArgumentException.class, () -> GameplaySupportMatrix.validateNode(theme, 11, "站点", config, method)).toString();
         assertTrue(message.contains("11") && message.contains(type) && message.contains(tool), message);

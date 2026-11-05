@@ -73,7 +73,7 @@ test('真实 endpoint 的主玩法/工具策略双向限制，旧独立玩法仍
   assert.equal(support.validate(matrix, tpl(qa, 1), shared), '');
   assert.match(support.validate(matrix, tpl({ ...qa, qa: { ...qa.qa, maxTries: 3 }, ...cost }, 1)), /maxTries/);
   assert.match(support.validate(matrix, tpl({ sort: { enabled: true, maxAttempts: 1 }, ...cost })), /maxAttempts/);
-  assert.match(support.validate(matrix, tpl({ scan: { enabled: true }, ...cost }, 1)), /须选择扫码验证/);
+  assert.match(support.validate(matrix, tpl({ scan: { enabled: true }, ...cost }, 1)), /扫码玩法的参与方式要选「扫码」/);
   assert.equal(support.validate(matrix, tpl({ ...qa, branch: { enabled: true }, random: { enabled: true }, ...cost }, 1)), '');
 });
 
