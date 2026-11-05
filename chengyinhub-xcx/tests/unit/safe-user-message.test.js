@@ -115,3 +115,8 @@ test('m3:Spring 序列化报错与缺环境变量的原文不给玩家看', () =
   assert.equal(safeUserMessage('Could not write JSON: 对象存储配置缺失: CHENGYIN_OSS_BUCKET_NAME', 'x'), '服务开小差了，请稍后重试')
   assert.equal(safeUserMessage('活动已满员', 'x'), '活动已满员')
 })
+
+test('m3:模板选了扫码参与就存 validationMethod=4(否则发布被服务端拒)', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.js'), 'utf8')
+  assert.match(src, /gameKey === 'qaShot'\) formData\.validationMethod = 2; else if \(this\.data\.advanced && this\.data\.advanced\.scan && this\.data\.advanced\.scan\.enabled\) formData\.validationMethod = 4;/)
+})
