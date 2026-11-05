@@ -1,0 +1,36 @@
+{
+  "at": 1793906753429,
+  "state": [
+    {
+      "kind": "audio",
+      "id": 8,
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/a91e653bf6c54f258ce86b8011ba7a8e.mp3",
+      "paused": true,
+      "currentTime": 0.461614,
+      "readyState": 4,
+      "volume": 0.25
+    },
+    {
+      "kind": "video",
+      "id": 9,
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "paused": false,
+      "currentTime": 0.115414,
+      "readyState": 4,
+      "volume": 1
+    }
+  ],
+  "bag": false,
+  "cv": {
+    "show": true,
+    "playing": false,
+    "token": 1,
+    "url": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+    "poster": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/68dd8b2efd264e4b8376166c638d2b3f.jpg"
+  },
+  "hit": "DIV",
+  "viewport": {
+    "w": 390,
+    "h": 844
+  }
+}

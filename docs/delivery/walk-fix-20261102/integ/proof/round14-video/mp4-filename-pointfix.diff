@@ -1,0 +1,13 @@
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -90,7 +90,9 @@
+   getBlob.then(function (blob) {
+     var fd = new FormData(); var fm = o.formData || {};
+     for (var k in fm) fd.append(k, fm[k]);
+-    var extension = { 'audio/mpeg': 'mp3', 'video/mp4': 'mp4', 'image/jpeg': 'jpg' }[blob.type] || ((blob.type || '').split('/')[1] || 'jpg');
++    var selectedExtension = /\.([a-z0-9]+)$/i.exec(String((o.formData || {}).fileName || src).split(/[?#]/)[0]);
++    var extension = selectedExtension ? selectedExtension[1].toLowerCase()
++      : ({ 'audio/mpeg': 'mp3', 'video/mp4': 'mp4', 'image/jpeg': 'jpg', 'image/png': 'png' }[blob.type] || 'bin');
+     fd.append(o.name || 'file', blob, 'rig-upload.' + extension);
+     var h = Object.assign({}, o.header || {}); for (var hk in h) if (hk.toLowerCase() === 'content-type') delete h[hk];
+     return fetch(url, { method: 'POST', headers: h, body: fd });

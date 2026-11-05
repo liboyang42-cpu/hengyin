@@ -1,0 +1,192 @@
+{
+  "video": [
+    {
+      "t": 1793906207218,
+      "id": 2,
+      "event": "create",
+      "src": "",
+      "currentTime": 0,
+      "paused": true,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906207222,
+      "id": 2,
+      "event": "loadstart",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0,
+      "paused": true,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906207523,
+      "id": 2,
+      "event": "canplay",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906207523,
+      "id": 2,
+      "event": "play",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906207524,
+      "id": 2,
+      "event": "playing",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906207787,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0.196563,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906208053,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0.462405,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906208319,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0.727998,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906208583,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 0.992901,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906208850,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 1.25915,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906209114,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 1.523895,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906209381,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 1.790191,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906209611,
+      "id": 2,
+      "event": "timeupdate",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906209611,
+      "id": 2,
+      "event": "pause",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793906209611,
+      "id": 2,
+      "event": "ended",
+      "src": "/__oss/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    }
+  ],
+  "chapter": {
+    "id": 128,
+    "opening": true,
+    "idxLabel": "",
+    "name": "序章",
+    "description": "",
+    "cover": "",
+    "mileage": "",
+    "timeText": "",
+    "atmospherePreset": "DEFAULT",
+    "atmosphereClass": "atmosphere--default",
+    "routeGeometry": null,
+    "audioUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/0e5f48bf5bb74940ac8b4b0bf96651f8.mp3",
+    "videoUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+    "videoPosterUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/fe8f27169fae46b4a779220a3f876072.jpg",
+    "blocks": [
+      {
+        "key": "lid8",
+        "type": "text",
+        "content": "R14-VIDEO：蓝色雨幕，序章开始。"
+      }
+    ]
+  }
+}
