@@ -89,6 +89,14 @@ Required receipt: 7 tests, zero failure/error/skip, plus exact source hashes. A 
 
 After the final candidate is installed by its sole runtime owner, the remaining isolated walkthrough is: use independently authenticated former A/current B/stranger accounts, create earnings via normal test business flows, transfer the same club twice through normal governance, and read each account's account-earnings entry → personal club list → summary → exact topic row/detail. Confirm A gets only frozen A rows and ledger slices, B's personal projection excludes A, stranger/other-club/negative-ID reads refuse, and A cannot reach current club account/direct-ledger or manage the club. Read back unchanged payee IDs/amounts and original-recipient refund adjustments independently. Keep all real transfer paths off; contacting customer service proves only the entry, not a completed payment or customer-service case.
 
+## Integration triage and independent POLICY review
+
+Coordinator full-suite triage requested X08 missing-club handling, stale business500 wording and M-32 account earnings. Serial reproduction in ACCESS found two stale assertions: X08 expected removed duplicate helper text even though the existing missing-club title and return action remain; M-32 expected the club-wide direct ledger to mount solely on clubId, which conflicts with the approved historical personal projection. Tests now require the visible title/back action and the exact non-personal ledger guard. The business500 detail-clear test already passes with the earlier own-history refusal wording fix.
+
+Final serial local Node union: **184/184 PASS**, zero failure/error/skip, from the original nine listed suites plus `club-ui-true-defects-contract.test.js` and `dw29-l6-merchant-r2.test.js`. The three triage suites alone pass 65/65. No product behavior or shared baseline/ledger changed in this follow-up.
+
+Root additionally assigned read-only POLICY review, then authorized a correction only in `JourneyReviewTexts.java` and `BoundTemplateReviewTextsTest.java`. One concrete P1 text-loss defect was found: JSON-looking raw story text could lose visible suffixes/keys during recursive decode. The prepared overlay retains raw text plus deduplicated decoded leaves, leaves the general parser untouched, and adds two tests (suite total4). Exact overlay hashes and full independent review are in `ROUND14-POLICY-INDEPENDENT-REVIEW.md` and `/tmp/round14-policy-review-overlay-manifest.json`; root owns Java overlay/testing/commit. No local Java execution or POLICY-source commit occurred.
+
 ## Unverified / release boundary
 
 - No authenticated HTTP/UI walkthrough on the final JAR, no new screenshots, no real multi-account ownership-transfer flow, no customer-service case processed to final payment, no native device acceptance. Unit/SQL tests are not a real business walkthrough.
