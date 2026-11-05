@@ -678,6 +678,11 @@ test('WXML 提供三起点主动作、待编排区、补内容与两种归章入
 
 
 test('开局先于第一章，复用编辑器且不抢占章节编号，保存后可再次编辑', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
+  assert.match(wxml, /bindtap="openTopicOpening"/)
+  assert.match(wxml, /slopes-chapter-create-actions[\s\S]*?添加章节[\s\S]*?bindtap="openTopicOpening"/)
+  assert.match(wxml, /openingIndex >= 0 \? '编辑序章' : '添加序章'/)
+  assert.match(wxml, /editScope !== 'WHITELIST' \|\| openingIndex >= 0/)
   const page = makePage()
   page.data.formData.productType = 1
   page._createChapterDirect()

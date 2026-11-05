@@ -2857,14 +2857,21 @@ page { background: var(--cy-btn-solid-bg); }
 /* 添加章节:列表最下方,不在右上角。
    稿子(4028:13849)是白底 + 虚线描边的大卡,不是一条透明虚线框 —— 它跟上面几张
    章节卡是同一族(同宽同圆角同底),虚线只表示"这张还不存在"。 */
+.slopes-chapter-create-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-3);
+  margin: var(--cy-space-2) var(--cy-page-x) 0;
+}
+
 .slopes-add-chapter {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 88rpx;
   box-sizing: border-box;
   gap: var(--cy-space-1-5);
-  margin: var(--cy-space-2) var(--cy-page-x) 0;
   padding: var(--cy-space-4) 0;
   border-radius: var(--cy-radius-xl);
   border: 4rpx dashed var(--cy-color-border-strong);

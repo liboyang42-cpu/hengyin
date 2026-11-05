@@ -400,9 +400,12 @@
 
         <!-- 添加章节放在列表最下方(参考 Trip Way 的 + Create Activity),
              不在右上角 —— 空态卡里那句「点击添加章节」原先指向的按钮在别处。 -->
-        <view class="slopes-add-chapter" wx:if="{{formData.chapters.length || pendingMaterials.length}}" bindtap="onTapAddChapter" aria-role="button" aria-label="添加章节" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="slopes-chapter-create-actions" wx:if="{{formData.chapters.length || pendingMaterials.length}}">
+        <view class="slopes-add-chapter" bindtap="onTapAddChapter" aria-role="button" aria-label="添加章节" hover-class="cy-pressed" hover-stay-time="80">
           <view class="slopes-add-chapter__ico"><cy-icon name="plus" size="28" /></view>
           <text class="slopes-add-chapter__txt">添加章节</text>
+        </view>
+        <view class="node-pill" wx:if="{{formData.productType === 1 && (editScope !== 'WHITELIST' || openingIndex >= 0)}}" bindtap="openTopicOpening" aria-role="button" aria-label="{{openingIndex >= 0 ? '编辑序章' : '添加序章'}}" hover-class="cy-pressed" hover-stay-time="80">{{openingIndex >= 0 ? '编辑序章' : '添加序章'}}</view>
         </view>
       </view>
     </block>
