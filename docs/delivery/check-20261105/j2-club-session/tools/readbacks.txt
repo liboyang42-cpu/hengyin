@@ -3,3 +3,63 @@ Redis caches may hold the old window; if a page still says 未开始, re-open it
 FIXTURE TIME SHIFT cms_activity 9: 2026-11-05 11:14:37..2026-11-05 23:14:36 -> 2026-11-05 11:01:08..2026-11-05 23:01:07 (Shanghai wall time; mysql NOW()=2026-11-05 03:02:08 UTC)
 Redis caches may hold the old window; if a page still says 未开始, re-open it.
 ((1, 71, datetime.datetime(2026, 11, 5, 9, 0), datetime.datetime(2026, 11, 5, 18, 0)), (2, 72, datetime.datetime(2026, 11, 5, 10, 54, 37), datetime.datetime(2026, 11, 5, 23, 14, 36)), (3, 73, datetime.datetime(2026, 11, 5, 10, 54, 37), datetime.datetime(2026, 11, 5, 23, 14, 36)))
+SELECT id,start_date,end_date,is_settlement -> ((9, datetime.datetime(2026, 10, 27, 11, 1, 8), datetime.datetime(2026, 10, 27, 23, 1, 7), 0),)
+SELECT id,balance -> ((9001, Decimal('0.00')), (9002, Decimal('0.00')), (990005, Decimal('0.00')), (990006, Decimal('0.00')))
+145 分润结算（活动+主题） {"msg": "操作成功", "code": 200, "_status": 200}
+146 商家结算T+7打款 {"msg": "操作成功", "code": 200, "_status": 200}
+SELECT job_log_id,job_name,status,LEFT(exception_info,200) -> ((70578, '商家结算T+7打款', '0', ''), (70577, '分润结算（活动+主题）', '0', ''))
+SELECT id,is_settlement -> ((9, 1),)
+SELECT id,balance -> ((9001, Decimal('4.68')), (9002, Decimal('0.00')), (990005, Decimal('151.32')), (990006, Decimal('0.00')))
+SELECT member_id,event_type,event_id,change_balance,after_ba -> ((990005, 3, 9, Decimal('151.32'), Decimal('151.32'), '活动分润 - 人民广场 · 喷泉报时'), (9001, 7, 9, Decimal('4.68'), Decimal('4.68'), '活动平台分润 - 人民广场 · 喷泉报时'))
+Traceback (most recent call last):
+  File "/home/user/hengyin/docs/delivery/check-20261105/j2-club-session/tools/k_settle.py", line 20, in <module>
+    q("SELECT id,source_id,receiver_type,receiver_id,amount,status FROM settlement_detail ORDER BY id")
+  File "/home/user/hengyin/docs/delivery/check-20261105/j2-club-session/tools/k_settle.py", line 6, in <lambda>
+    q = lambda s, a=None: print(s.split(' FROM')[0][:60], '->', cl.q(s, a))
+                                                                ^^^^^^^^^^
+  File "/root/walk-rig/candidate/scripts/e2e/chain_lib.py", line 100, in q
+    cur.execute(sql, args or ())
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+             ^^^^^^^^^^^^^^^^^^
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/connections.py", line 563, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/connections.py", line 825, in _read_query_result
+    result.read()
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/connections.py", line 1199, in read
+    first_packet = self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/connections.py", line 775, in _read_packet
+    packet.raise_for_error()
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/root/walk-rig/venv/lib/python3.11/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'amount' in 'field list'")
+SQLERR (1054, "Unknown column 'net_amount' in 'field list'")
+id | coop_order_id | status
+id | source_id | receiver_type | receiver_id | gross_amount | settlement_amount | status
+1 | 74 | merchant | 990005 | 37.83 | 37.83 | 1
+2 | 74 | platform | 0 | 1.17 | 1.17 | 1
+3 | 75 | merchant | 990005 | 37.83 | 37.83 | 1
+4 | 75 | platform | 0 | 1.17 | 1.17 | 1
+5 | 76 | merchant | 990005 | 37.83 | 37.83 | 1
+6 | 76 | platform | 0 | 1.17 | 1.17 | 1
+7 | 77 | merchant | 990005 | 37.83 | 37.83 | 1
+8 | 77 | platform | 0 | 1.17 | 1.17 | 1
+SQLERR (1054, "Unknown column 'refund_amount' in 'field list'")
+member_id | event_type | change_balance | after_balance | change_reason
+990005 | 3 | 151.32 | 151.32 | 活动分润 - 人民广场 · 喷泉报时
+9001 | 7 | 4.68 | 4.68 | 活动平台分润 - 人民广场 · 喷泉报时
+990005 | 6 | -37.83 | 113.49 | 退款冲销
+id | source_type | source_id | receiver_type | receiver_id | gross_amount | settlement_amount | status | entry_kind
+9 | refund | 1 | platform | 0 | -1.17 | -1.17 | 1 | 
+10 | refund | 1 | merchant | 990005 | -37.83 | -37.83 | 1 | 
+id | balance
+9001 | 4.68
+990005 | 113.49
+id | refund_no | source_type | source_id | owner_type | owner_id | member_id | merchant_id | paid_amount | refund_amount | status | reason | reject_reason | reviewer_id | reviewed_at | adjustment_created | idempotency_key | del_flag | create_time | update_time | platform_takeover_at | payout_status | payout_submission_state | payout_method | payout_receipt_url | payout_handler_id | payout_handled_at | payout_reviewer2_id | payout_reviewed2_at | payout_remark | payout_lease_token | payout_lease_owner | payout_lease_expires_at | created_by_user_id | fulfillment_sync_queue_at
+1 | RF77 | registration | 77 | 2 | 9 | 990009 | 990005 | 39.00 | 39.00 | 1 | 主理人取消报名并退款 | 主理人取消报名并退款 | 0 | 2026-11-05 11:22:35 | 0 | registration:77 | 0 | 2026-11-05 03:22:34 | 2026-11-05 03:22:35 |  | 6 | LEGACY_RECONCILE |  |  |  |  |  |  | 原路退款结果未知,等待按确定性退款号查单 |  |  |  |  | 2026-11-05 03:22:34.897926
