@@ -24,6 +24,8 @@ public interface TopicRouteSessionMapper {
     TopicRouteSession selectAccessibleById(@Param("id") Long id, @Param("memberId") Long memberId);
     List<TopicRouteSession> selectByOwners(@Param("scopes") List<TopicRouteSession> scopes);
     int updateStateCas(TopicRouteSession session);
+    /** 仅已完成局领取待领物资；不改变终态、完成时间或路线节点。 */
+    int updateCompletedClaimCas(TopicRouteSession session);
     TopicRouteAction selectActionByAction(@Param("sessionId") Long sessionId, @Param("memberId") Long memberId,
                                           @Param("actionId") String actionId);
     TopicRouteAction selectActionByReceipt(@Param("sessionId") Long sessionId, @Param("receiptId") String receiptId);
