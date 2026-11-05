@@ -57,6 +57,7 @@ class ApiTopicSaveDraftContractTest {
     @BeforeEach
     void setUp() {
         controller = spy(new ApiTopicController());
+        ReflectionTestUtils.setField(controller, "responseObjectMapper", new com.fasterxml.jackson.databind.ObjectMapper());
         // 手工 new 不走 @Value 默认值,旧写门禁显式开闸(与 Spring 运行时默认一致)。
         ReflectionTestUtils.setField(controller, "legacyCommunityWritesEnabled", true);
         topicService = mock(ICmsTopicService.class);

@@ -2239,7 +2239,7 @@ class AdvancedGameRuntimeServiceImplTest {
         service.act(MEMBER_ID, 51L, 0, "photo", "SUBMIT_QA", Collections.singletonMap("imageUrl", "owned-photo"));
         assertEquals(1, checked.get());
         verify(route).recordNodeResult(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("quest:photo"),
-                org.mockito.ArgumentMatchers.eq("photo"), org.mockito.ArgumentMatchers.eq(true), org.mockito.ArgumentMatchers.eq(false), org.mockito.ArgumentMatchers.eq(0), any());
+                org.mockito.ArgumentMatchers.eq("theme:51:55c64d0fcd6f9d5f7c828093857e3fdf"), org.mockito.ArgumentMatchers.eq(true), org.mockito.ArgumentMatchers.eq(false), org.mockito.ArgumentMatchers.eq(0), any());
         assertEquals("owned-photo", new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson()).path("qa").path("lastImageUrl").asText());
     }
 

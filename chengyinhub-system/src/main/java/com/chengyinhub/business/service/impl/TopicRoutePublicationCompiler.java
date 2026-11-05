@@ -640,7 +640,7 @@ final class TopicRoutePublicationCompiler {
         if (!"LINEAR".equals(frozen.path("routeMode").asText())) throw new IllegalArgumentException("通用任务使用幕与任务前置推进，请选择线性路线");
         if ((team && theme.path("replayEnabled").asBoolean()) || theme.path("rescueLimit").asInt()>0 || theme.has("actionSources")) throw new IllegalArgumentException("通用任务不能组合旧自动救援或信号行动计数，队伍局不使用个人重玩");
         for (JsonNode grant:theme.path("grants")) if (!"ENDING".equals(grant.path("source").asText())) throw new IllegalArgumentException("通用收益须配置在任务或章节中，不能启用旧节点信号发放");
-        for (JsonNode chapter:theme.path("chapters")) if (chapter.path("eggs").size()>0) throw new IllegalArgumentException("通用局章节彩蛋触发尚未接通");
+        for (JsonNode chapter:theme.path("chapters")) if (team && chapter.path("eggs").size()>0) throw new IllegalArgumentException("组队主题的章节彩蛋尚未接通，请使用个人进行方式");
         if (!tasks) throw new IllegalArgumentException("通用运行规则须配置实际幕和任务");
         if (tasks) {
             JsonNode survival=game.path("survival");

@@ -3246,6 +3246,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteEngine.State actionBefore = eventId == null ? null : readEngineState(session.getStateJson());
         Map<String, Set<JourneyStatLinks.Reason>> reasons = new LinkedHashMap<>();
         if (genericPlayer(session)) {
+            themeEngine.chapterTick(config,state,rules,clock.millis());
             themeEngine.reconcileHeld(config,state,rules);
             JourneyInitialState.clamp(rules,state);
             if (actionBefore != null && reason != null) JourneyStatLinks.apply(rules,actionBefore,state,"MEMBER:"+session.getMemberId(),eventId,reason);
