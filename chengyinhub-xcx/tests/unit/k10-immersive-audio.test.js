@@ -251,3 +251,54 @@ test('活跃一局切后台保留音乐，离开或已结束时暂停', () => {
   page._runStarted=false; page.onHide(); assert.equal(music.paused,true); assert.equal(page._audio.paused,true);
   page.destroyAudio(); page._stopStationBgm();
 });
+
+// ---- 第十三轮 m3-media-network:弱网 / 失败的媒体不能卡住一局 ----
+test('m3:语音出错不把原生 errMsg 弹给玩家;面板仍留「点此重试」', () => {
+  const src = read('pages/play/index.js')
+  assert.ok(!/const msg = \(err && err\.errMsg\)/.test(src), '不再取原生 errMsg 当提示')
+  assert.ok(/audioError: msg \}\);\s*cyToast\('这段音频放不出来/.test(src))
+})
+
+test('m3:配乐出错最多重试两次(3s/8s),重试用同一个播放器,之后才收掉', () => {
+  const timers = []
+  const realSet = global.setTimeout
+  global.setTimeout = (f, ms) => { timers.push({ f, ms }); return timers.length }
+  try {
+    const { page, audios } = loadPlay()
+    page._syncStationBgm({ audioUrl: 'https://x.test/upload/bgm.mp3' })
+    const bgm = audios[0]
+    assert.equal(bgm.plays, 1)
+    page._retryBgm(bgm, '_stationBgm', () => page._stopStationBgm())
+    assert.equal(timers[0].ms, 3000)
+    timers[0].f()
+    assert.equal(bgm.plays, 2, '第一次重试重新播')
+    page._retryBgm(bgm, '_stationBgm', () => page._stopStationBgm())
+    assert.equal(timers[1].ms, 8000)
+    timers[1].f()
+    assert.equal(bgm.plays, 3)
+    page._retryBgm(bgm, '_stationBgm', () => page._stopStationBgm())
+    assert.equal(bgm.destroyed, true, '第三次出错才放弃')
+    assert.equal(page._stationBgm, null)
+  } finally { global.setTimeout = realSet }
+})
+
+test('m3:下一站语音只在 wifi/4g/5g 下预热一首,且不进音频会话', () => {
+  const { page, audios } = loadPlay()
+  let net = 'wifi'
+  global.wx.getNetworkType = (o) => o.success({ networkType: net })
+  page.data.nodes = [
+    { nodeId: 1, audio: 'https://x.test/a.mp3', done: false },
+    { nodeId: 2, audio: 'https://x.test/b.mp3', done: false },
+    { nodeId: 3, audio: 'https://x.test/c.mp3', done: false },
+  ]
+  page._preloadNextStationAudio(page.data.nodes[0])
+  assert.equal(audios.length, 1)
+  assert.equal(audios[0].src, 'https://x.test/b.mp3')
+  assert.equal(audios[0].volume, 0)
+  assert.equal(audios[0].plays, 0, '只预热,不播')
+  page._preloadNextStationAudio(page.data.nodes[0])
+  assert.equal(audios.length, 1, '同一站只预热一次')
+  net = '3g'
+  page._preloadNextStationAudio(page.data.nodes[1])
+  assert.equal(audios.length, 1, '弱网不预热')
+})
