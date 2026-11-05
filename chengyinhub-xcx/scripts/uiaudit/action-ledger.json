@@ -1065011,7 +1065011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:184"
+        "staticSource": "pages/play/components/play-stage/index.js:186"
       }
     },
     {
@@ -1069403,7 +1069403,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:174"
+        "staticSource": "pages/play/components/play-stage/index.js:176"
       }
     },
     {
@@ -1073796,7 +1073796,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:173"
+        "staticSource": "pages/play/components/play-stage/index.js:175"
       }
     },
     {
@@ -1078188,7 +1078188,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:243"
+        "staticSource": "pages/play/components/play-stage/index.js:245"
       }
     },
     {
@@ -1083627,7 +1083627,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:12:bindtap:onCta:1",
+      "id": "pages/play/components/playkit-album/index.wxml:13:bindtap:onCta:1",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1083718,8 +1083718,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCta",
-        "line": 12,
-        "selectorHint": "view[bindtap]",
+        "line": 13,
+        "selectorHint": ".album__cta",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1083770,11 +1083770,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:20"
+        "staticSource": "pages/play/components/playkit-album/index.js:28"
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:13:bindtap:choosePhoto:2",
+      "id": "pages/play/components/playkit-album/index.wxml:14:bindtap:choosePhoto:2",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1083865,7 +1083865,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "choosePhoto",
-        "line": 13,
+        "line": 14,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{uploaded || uploadFailure === 'retry'}}",
         "disabledCondition": null,
@@ -1083917,11 +1083917,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:33"
+        "staticSource": "pages/play/components/playkit-album/index.js:41"
       }
     },
     {
-      "id": "pages/play/components/playkit-album/index.wxml:15:bindtap:close:3",
+      "id": "pages/play/components/playkit-album/index.wxml:16:bindtap:close:3",
       "route": "component:pages/play/components/playkit-album/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1084009,7 +1084009,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "close",
-        "line": 15,
+        "line": 16,
         "selectorHint": ".album__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1084050,7 +1084050,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:19"
+        "staticSource": "pages/play/components/playkit-album/index.js:27"
       }
     },
     {
@@ -1084182,7 +1084182,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-album/index.js:18"
+        "staticSource": "pages/play/components/playkit-album/index.js:26"
       }
     },
     {
@@ -1100802,11 +1100802,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:133"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:139"
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:25:bindtap:onSkip:6",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:26:bindtap:onSkip:6",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1100885,7 +1100885,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSkip",
-        "line": 25,
+        "line": 26,
         "selectorHint": ".qt__skip",
         "visibleCondition": "{{canSkip && !running && !preparing}}",
         "disabledCondition": null,
@@ -1100926,7 +1100926,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:263"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:270"
       }
     },
     {
@@ -1101049,7 +1101049,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:270"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:277"
       }
     },
     {
@@ -1101182,7 +1101182,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:217"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:224"
       }
     },
     {
@@ -1101306,7 +1101306,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:212"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:219"
       }
     },
     {
@@ -1101439,7 +1101439,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:227"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:234"
       }
     },
     {
@@ -1101563,7 +1101563,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:258"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:265"
       }
     },
     {
@@ -1105674,11 +1105674,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:120"
+        "staticSource": "pages/play/components/playkit-shout/index.js:126"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:22:bindtap:onSkip:6",
+      "id": "pages/play/components/playkit-shout/index.wxml:23:bindtap:onSkip:6",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -1105757,7 +1105757,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSkip",
-        "line": 22,
+        "line": 23,
         "selectorHint": ".sh__skip",
         "visibleCondition": "{{canSkip && !running && !preparing}}",
         "disabledCondition": null,
@@ -1105798,7 +1105798,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:227"
+        "staticSource": "pages/play/components/playkit-shout/index.js:234"
       }
     },
     {
@@ -1105921,7 +1105921,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:234"
+        "staticSource": "pages/play/components/playkit-shout/index.js:241"
       }
     },
     {
@@ -1106054,7 +1106054,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:186"
+        "staticSource": "pages/play/components/playkit-shout/index.js:193"
       }
     },
     {
@@ -1106178,7 +1106178,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:181"
+        "staticSource": "pages/play/components/playkit-shout/index.js:188"
       }
     },
     {
@@ -1106311,7 +1106311,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:193"
+        "staticSource": "pages/play/components/playkit-shout/index.js:200"
       }
     },
     {
@@ -1106435,7 +1106435,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:225"
+        "staticSource": "pages/play/components/playkit-shout/index.js:232"
       }
     },
     {
@@ -1107918,7 +1107918,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:108"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:109"
       }
     },
     {
@@ -1108041,7 +1108041,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:151"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:152"
       }
     },
     {
@@ -1108164,7 +1108164,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:151"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:152"
       }
     },
     {
@@ -1108288,7 +1108288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:188"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:189"
       }
     },
     {
@@ -1108411,7 +1108411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:113"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:114"
       }
     },
     {
@@ -1108535,7 +1108535,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:187"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:188"
       }
     },
     {
@@ -1108658,7 +1108658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:137"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:138"
       }
     },
     {
