@@ -1740,7 +1740,7 @@ public class ApiMerchantController extends BaseController {
                     Map<String, Object> e = new HashMap<>();
                     e.put("type", "stationInvite");
                     e.put("label", "站点邀请");
-                    e.put("content", "「" + entry.getActivityName() + "」有 " + entry.getInvitedCount() + " 个站点待接受邀请");
+                    e.put("content", entry.getInvitedCount() + " 个站点待接受邀请 · 「" + entry.getActivityName() + "」"); // 预览一行会截断,要做的事放前面
                     e.put("ownerType", 2L);
                     e.put("ownerId", entry.getActivityId());
                     e.put("gameActivityId", entry.getActivityId());
