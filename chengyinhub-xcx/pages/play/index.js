@@ -8149,7 +8149,7 @@ Page({
       && params.topicId === this.data.topicId && params.activityId === (this.data.activityId || 0)
       && routeSessionId === String((this._routeState || {}).sessionId || '');
     const finish = () => { if (isCurrent()) next(); };
-    req('/api/play/journey/ending', 'GET', params).then((res) => {
+    req('/api/play/journey/ending', 'GET', params, undefined, true).then((res) => {
       if (!isCurrent()) return;
       const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
       if (!d || !d.title) { finish(); return; }

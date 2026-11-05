@@ -51,3 +51,20 @@ test('drawn card immediately opens its server content and unseen cards stay hidd
   assert.equal(c.data.deck[1].opened, false); assert.equal(c.data.deck[1].body, '');
   c._clear();
 });
+test('legacy without an ending still finishes; optional read is quiet and a stale reply cannot finish another run', async () => {
+  const source = fs.readFileSync(path.join(ROOT, 'pages/play/index.js'), 'utf8');
+  const begin = source.indexOf('  _loadLifeEnding(next) {');
+  const end = source.indexOf('  /** 把一章结局章', begin);
+  let reply, options;
+  const req = (...args) => { options = args; return new Promise(resolve => { reply = resolve; }); };
+  const method = new Function('req', 'return ({' + source.slice(begin, end) + '})._loadLifeEnding;')(req);
+  const page = { data: { topicId: 1, activityId: 0 }, _routeState: { sessionId: 2 }, _isPlayAccountCurrent: () => true };
+  let finished = 0;
+  method.call(page, () => finished++);
+  assert.equal(options[4], true, 'missing optional ending must not show a configuration error toast');
+  reply({ code: 500, msg: '本主题未配置剧情' }); await Promise.resolve();
+  assert.equal(finished, 1);
+  method.call(page, () => finished++); page._routeState.sessionId = 3;
+  reply({ code: 200, data: null }); await Promise.resolve();
+  assert.equal(finished, 1, 'old ending response must not finish the new run');
+});
