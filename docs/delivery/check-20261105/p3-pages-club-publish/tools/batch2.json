@@ -1,0 +1,15 @@
+[
+{"id":"p01-publish-fabu","path":"pages/publish/fabu/index","identity":"e2e-openid-9003","skip":["publish|发布|submit"]},
+{"id":"p02-publish-simple","path":"pages/publish/simple/index","identity":"e2e-openid-9003","skip":["submit|发布"]},
+{"id":"p03-publish-temp","path":"pages/publish/temp/index","identity":"e2e-openid-9003","skip":["submit|发布"]},
+{"id":"p04-publish-activity","path":"pages/publish/activity/index","identity":"e2e-openid-9003","skip":["submit|发布"]},
+{"id":"p05-publish-topicadd","path":"pages/publish/topicadd/topicadd","identity":"e2e-openid-9003","skip":["submit|发布"]},
+{"id":"p06-publish-template-intro","path":"pages/publish/template-intro/index","identity":"e2e-openid-9003"},
+{"id":"t01-template","path":"pages/template/index","identity":"e2e-openid-9003"},
+{"id":"t02-templatedetail","path":"pages/templatedetail/templatedetail?id=1","identity":"e2e-openid-9003"},
+{"id":"t03-topic-preview","path":"pages/templatedetail/topic-preview/index?id=990013","identity":"e2e-openid-9003"},
+{"id":"t04-tpl-topic-detail","path":"pages/templatedetail/topic-detail/index?id=990013","identity":"e2e-openid-9003"},
+{"id":"t05-pricing","path":"pages/topic/pricing/index?topicId=990013","identity":"e2e-openid-9003","skip":["submit|确认|锁定"]},
+{"id":"t06-pricing-partner","path":"pages/topic/pricing/partner/index?topicId=990013&toType=MERCHANT&toId=8001","identity":"e2e-openid-9003"},
+{"id":"t07-mytemplate","path":"subpackageMember/mytemplate/mytemplate","identity":"e2e-openid-9003","skip":["删除|delete"]}
+]
