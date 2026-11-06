@@ -229,7 +229,7 @@
             <image src="/pages/merchant/images/merchant/reviews/icon-send.svg" mode="aspectFit" />
           </view>
         </view>
-        <cy-inline-error wx:if="{{replyReviewId === item.id && replyError}}" class="review-error" kind=\"{{replyPending ? 'data' : 'error'}}\"
+        <cy-inline-error wx:if="{{replyReviewId === item.id && replyError}}" class="review-error" kind="{{replyPending ? 'data' : 'error'}}"
                          title="{{replyPending ? '回复待确认' : '回复提示'}}" sub="{{replyError}}" />
 
         <view class="review-actions">
