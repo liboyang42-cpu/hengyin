@@ -15,6 +15,14 @@ test('首屏分派:城市定向且 allDone ⇒ openFinish,否则故事流', () =
   assert.ok(before.includes('that.rebuild();'), 'allDone 必须先由 rebuild 算出')
 })
 
-test('关闭通关卡后已通关的主题回详情,不落回开局', () => {
-  assert.match(js, /closeFinish\(\) \{\s*\n\s*this\._hideFinish\(\(\) => \{\s*\n\s*if \(this\.data\.allDone && !this\.data\.isPreview && !this\.data\.isMock\) this\.goBackDetail\(\);/)
+function assertCloseFinishContract(source) {
+  assert.match(source, /closeFinish\(\) \{\s*\n\s*this\._hideFinish\(\(\) => \{\s*\n\s*if \(this\.data\.allDone && !this\._canContinueMerchantGames\(\) && !this\.data\.isPreview && !this\.data\.isMock\) this\.goBackDetail\(\);/)
+}
+
+test('关闭通关卡后无可继续商家玩法的已通关主题回详情,不落回开局', () => {
+  assertCloseFinishContract(js)
+})
+
+test('mutation 负控:移除未完成商家玩法保留条件必须变红', () => {
+  assert.throws(() => assertCloseFinishContract(js.replace(' && !this._canContinueMerchantGames()', '')), assert.AssertionError)
 })

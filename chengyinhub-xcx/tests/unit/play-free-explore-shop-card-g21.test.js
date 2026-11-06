@@ -3,6 +3,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
 const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
@@ -31,6 +32,27 @@ test('g21 第三轮:未拆/拆包中只出卡包,没有包面标题、章数和�
   assert.doesNotMatch(wxss, /\.fx-pack__print|\.fx-pack__t\b|\.fx-pack__s\b|\.fx-pack-hint/)
 })
 
-test('CTA 是「到店打卡」', () => {
-  assert.match(wxml, /\{\{hero\.node\.done \? '已核销' : '到店打卡'\}\}/)
+function assertHeroCtaContract(markup) {
+  const button = markup.match(/<cy-btn variant="\{\{([^}]+)\}\}" style="width:100%" bindtap="heroEnter"[^>]*>\{\{([^}]+)\}\}<\/cy-btn>/)
+  assert.ok(button, '缺店卡主 CTA')
+  assert.equal(button[1], "hero.node.entryDisabled ? 'disabled' : 'primary'")
+  for (const [node, label, variant] of [
+    [{ done: true, entryDisabled: false }, '继续互动', 'primary'],
+    [{ done: true, entryDisabled: true }, '已核销', 'disabled'],
+    [{ done: false, entryDisabled: false }, '到店打卡', 'primary'],
+  ]) {
+    assert.equal(vm.runInNewContext(button[2], { hero: { node } }), label)
+    assert.equal(vm.runInNewContext(button[1], { hero: { node } }), variant)
+  }
+}
+
+test('CTA 按 entryDisabled 展示已核销,未完成玩法可继续互动,未核销到店打卡', () => {
+  assertHeroCtaContract(wxml)
+})
+
+test('mutation 负控:旧核销文案或 done 禁用条件必须变红', () => {
+  for (const mutated of [
+    wxml.replace("hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')", "hero.node.done ? '已核销' : '到店打卡'"),
+    wxml.replace("hero.node.entryDisabled ? 'disabled' : 'primary'", "hero.node.done ? 'disabled' : 'primary'"),
+  ]) assert.throws(() => assertHeroCtaContract(mutated), assert.AssertionError)
 })
