@@ -44,15 +44,10 @@ public class MerchantAftercareDisplayColumnsContractTest {
             ddl.execute("create alias JSON_VALID for \"" + aliases + ".jsonValid\"");
             ddl.execute("create alias JSON_TYPE for \"" + aliases + ".jsonType\"");
             ddl.execute("create alias JSON_CONTAINS for \"" + aliases + ".jsonContains\"");
-            ddl.execute("create table refund_application(id bigint primary key, refund_no varchar(40), source_type varchar(32),"
-                    + "source_id bigint, merchant_id bigint, member_id bigint, refund_amount decimal(10,2), status int,"
-                    + "reason varchar(200), payout_status int, del_flag int, create_time timestamp, update_time timestamp, platform_takeover_at timestamp)");
-            ddl.execute("create table merchant_aftercare_response(id bigint primary key, refund_application_id bigint, merchant_id bigint, decision varchar(16))");
-            ddl.execute("create table mms_merchant(id bigint primary key, member_id bigint, status int, account_status int, del_flag int)");
-            ddl.execute("create table cms_registration(id bigint primary key, owner_type int, owner_id bigint, parent_order_no varchar(64), activity_title varchar(200))");
-            ddl.execute("create table cms_activity(id bigint primary key, topic_id bigint, name varchar(255))");
-            ddl.execute("create table cms_topic(id bigint primary key, name varchar(255))");
-            ddl.execute("create table ums_member(id bigint primary key, nickname varchar(64), del_flag int)");
+            createSchema(ddl);
+            ddl.execute("alter table refund_application add column update_time timestamp before platform_takeover_at");
+            ddl.execute("alter table cms_registration add column parent_order_no varchar(64) before activity_title");
+            ddl.execute("alter table cms_activity add column topic_id bigint before name");
             ddl.execute("create table redemption(id bigint primary key, registration_id bigint, chapter_id bigint, topic_id bigint, merchant_id bigint, status varchar(16))");
             ddl.execute("create table activity_cancel_manual_refund_case(id bigint primary key, case_type varchar(32), status varchar(48),"
                     + "activity_id bigint, topic_id bigint, payer_registration_id bigint, parent_order_no varchar(64),"
@@ -197,16 +192,8 @@ public class MerchantAftercareDisplayColumnsContractTest {
         dataSource.setURL("jdbc:h2:mem:merchant_aftercare_display;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
         dataSource.setUser("sa");
         try (Connection connection = dataSource.getConnection(); Statement ddl = connection.createStatement()) {
-            ddl.execute("create table refund_application (id bigint primary key, refund_no varchar(40), source_type varchar(32),"
-                    + " source_id bigint, merchant_id bigint, member_id bigint, refund_amount decimal(10,2), status int,"
-                    + " reason varchar(200), payout_status int, del_flag int, create_time timestamp, platform_takeover_at timestamp)");
-            ddl.execute("create table merchant_aftercare_response (id bigint primary key, refund_application_id bigint,"
-                    + " merchant_id bigint, decision varchar(16))");
-            ddl.execute("create table mms_merchant (id bigint primary key, member_id bigint, status int, account_status int, del_flag int)");
-            ddl.execute("create table cms_registration (id bigint primary key, owner_type int, owner_id bigint, activity_title varchar(200))");
-            ddl.execute("create table cms_activity (id bigint primary key, name varchar(255))");
-            ddl.execute("create table cms_topic (id bigint primary key, name varchar(255))");
-            ddl.execute("create table ums_member (id bigint primary key, nickname varchar(64), phone varchar(32), del_flag int)");
+            createSchema(ddl);
+            ddl.execute("alter table ums_member add column phone varchar(32) before del_flag");
 
             ddl.execute("insert into mms_merchant values (77, 900, 1, 1, 0)");
             ddl.execute("insert into cms_activity values (301, '外滩夜跑')");
@@ -246,6 +233,18 @@ public class MerchantAftercareDisplayColumnsContractTest {
             assertTrue(run(connection, bound(configuration, "selectOwnedRefundDisplay", detailParams)).isEmpty(),
                     "详情展示列不得越权读到别家 owner 的单");
         }
+    }
+
+    private void createSchema(Statement ddl) throws Exception {
+        ddl.execute("create table refund_application(id bigint primary key, refund_no varchar(40), source_type varchar(32),"
+                + "source_id bigint, merchant_id bigint, member_id bigint, refund_amount decimal(10,2), status int,"
+                + "reason varchar(200), payout_status int, del_flag int, create_time timestamp, platform_takeover_at timestamp)");
+        ddl.execute("create table merchant_aftercare_response(id bigint primary key, refund_application_id bigint, merchant_id bigint, decision varchar(16))");
+        ddl.execute("create table mms_merchant(id bigint primary key, member_id bigint, status int, account_status int, del_flag int)");
+        ddl.execute("create table cms_registration(id bigint primary key, owner_type int, owner_id bigint, activity_title varchar(200))");
+        ddl.execute("create table cms_activity(id bigint primary key, name varchar(255))");
+        ddl.execute("create table cms_topic(id bigint primary key, name varchar(255))");
+        ddl.execute("create table ums_member(id bigint primary key, nickname varchar(64), del_flag int)");
     }
 
     private Map<String, Object> params(String bucket) {

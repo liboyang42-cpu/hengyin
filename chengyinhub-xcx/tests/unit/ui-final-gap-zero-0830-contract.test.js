@@ -57,7 +57,9 @@ test('退款售后详情不再保留查单表单与最近查询(2026-09-17 改 R
   const wxml = read('pages/merchant/aftercare/detail/index.wxml')
   assert.doesNotMatch(wxml, /这里能查到什么|最近查询|onRefundIdInput|findAftercare/)
   assert.doesNotMatch(js, /recentQueries|merchant_aftercare_recent_queries|findAftercare/)
-  assert.match(js, /refundId == null\)\s*\{\s*wx\.redirectTo\(\{ url: '\/pages\/merchant\/aftercare\/index' \}\)/)
+  assert.match(js, /recordType === 'REFUND' && \(refundId == null \|\| manualCaseId != null\)/)
+  assert.match(js, /recordType === 'MANUAL_CASE' && \(manualCaseId == null \|\| refundId != null\)/)
+  assert.match(js, /!\['REFUND', 'MANUAL_CASE'\]\.includes\(recordType\)\)\s*\{\s*wx\.redirectTo\(\{ url: '\/pages\/merchant\/aftercare\/index' \}\)/)
 })
 
 test('经营团队空态内含主邀请动作和门店说明详情入口', () => {

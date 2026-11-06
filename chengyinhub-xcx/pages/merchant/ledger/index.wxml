@@ -130,7 +130,7 @@
                        
                        action="重试此部分" bind:action="retrySettlementEntries" />
       <view class="fin-card" wx:if="{{entries.length}}">
-        <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey" bindtap="goSettlementDetail" data-id="{{item.coopDetailId}}" aria-role="{{item.coopDetailId ? 'button' : ''}}">
+        <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey" bindtap="goSettlementDetail" data-id="{{item.coopDetailId}}" hover-class="{{item.coopDetailId ? 'cy-pressed' : 'none'}}" aria-role="{{item.coopDetailId ? 'button' : ''}}">
           <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.sourceText}}</text>

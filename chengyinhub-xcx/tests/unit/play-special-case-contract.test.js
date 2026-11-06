@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8')
@@ -15,10 +16,18 @@ test('沉浸游玩页保留地图退出能力，开始飞行层出现时隐藏�
   // 组件默认值必须是 false —— 只留前半条的话,组件改了默认值这里照样绿。
   assert.doesNotMatch(wxml, /show-exit="\{\{true\}\}"/)
   assert.match(read('components/cy/free-map/index.js'), /showExit:\s*\{\s*type:\s*Boolean,\s*value:\s*false\s*\}/)
-  // 2026-09-09:顶部输入地址占住了胶囊底下那条位置带,状态条整体让到它下面(§6.6),
-  // 所以 top 是 contentTop 加一个偏移。要守的仍是「由胶囊真实位置算出来」,不是那个字面表达式。
-  assert.match(read('pages/play/index.wxml'), /class="play-topstack"[^>]*style="top:\{\{chrome\.contentTop \+ \d+\}\}px"/,
-    '状态条必须由胶囊真实位置定位，不能退回写死 top')
+  // 普通场让出地址框；C12 已结束 FREE 无地址框，状态条贴胶囊下方。完整可见/留白真值表见 play-free-explore-no-gather。
+  const top = wxml.match(/class="play-topstack"[^>]*style="top:\{\{([^}]*)\}\}px"/)
+  assert.ok(top, '状态条必须保留胶囊位置表达式')
+  for (const contentTop of [64, 103]) {
+    for (const [lead, offset] of [
+      [{ exists: true, freeEntry: false, ended: false }, 56],
+      [{ exists: true, freeEntry: true, ended: true }, 0],
+    ]) {
+      assert.equal(vm.runInNewContext(top[1], { chrome: { contentTop }, lead }), contentTop + offset,
+        '状态条必须按真实胶囊位置与当前场景偏移，不能写死 top')
+    }
+  }
   assert.match(read('pages/play/index.wxml'), /<cy-map-address-search[^>]*top="\{\{chrome\.contentTop\}\}"/,
     '输入地址自己必须贴在胶囊底下那条位置带上')
   const freeMap = read('components/cy/free-map/index.wxml')

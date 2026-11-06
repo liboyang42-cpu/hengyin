@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5746,
+  "controlCount": 5747,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1005653,10 +1005653,14 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
+          "/api/merchant/aftercare/detail",
+          "/api/merchant/aftercare/manual-case-detail",
           "/api/merchant/aftercare/respond",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/merchant/aftercare/detail",
+          "/api/merchant/aftercare/manual-case-detail",
           "/api/merchant/aftercare/respond"
         ],
         "auxiliaryApis": [
@@ -1005673,6 +1005677,18 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/aftercare/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/aftercare/manual-case-detail",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1391572,14 +1391588,14 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "write",
       "effectClasses": [
-        "read",
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -1391634,14 +1391650,17 @@
             "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/template/{param}/market-submit"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
@@ -1460658,7 +1460677,7 @@
       }
     },
     {
-      "id": "subpackageMember/mytemplate/mytemplate.wxml:97:bindtap:templateStatus:5",
+      "id": "subpackageMember/mytemplate/mytemplate.wxml:97:bindtap:templateStatus:5:variant:library-status",
       "route": "subpackageMember/mytemplate/mytemplate",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1460667,10 +1460686,45 @@
         "wxml": "subpackageMember/mytemplate/mytemplate.wxml",
         "js": "subpackageMember/mytemplate/mytemplate.js"
       },
-      "variant": null,
-      "requiredRequests": null,
+      "variant": {
+        "id": "library-status",
+        "predicate": {
+          "list.length": 1,
+          "list.0.drop": true,
+          "loading": false,
+          "loadingMore": false,
+          "list.0._canSubmitMarket": false,
+          "list.0._canToggleMarket": true
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/template/updateLibraryStatus",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
       "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequestOutcomes": {
+        "success": [
+          "success"
+        ],
+        "error": [
+          "error"
+        ],
+        "timeout": [
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1460711,9 +1460765,6 @@
           "pages/privacy/index"
         ],
         "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
           "/api/template/my-list",
           "/api/template/updateLibraryStatus"
         ],
@@ -1460721,26 +1460772,10 @@
           "/api/template/my-list",
           "/api/template/updateLibraryStatus"
         ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
+        "auxiliaryApis": [],
         "apiContracts": [
           {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
+            "url": "/api/template/updateLibraryStatus",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1460750,16 +1460785,140 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/template/updateLibraryStatus"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/mytemplate/mytemplate.js:112"
+      }
+    },
+    {
+      "id": "subpackageMember/mytemplate/mytemplate.wxml:97:bindtap:templateStatus:5:variant:market-submit",
+      "route": "subpackageMember/mytemplate/mytemplate",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "subpackageMember/mytemplate/mytemplate.wxml",
+        "js": "subpackageMember/mytemplate/mytemplate.js"
+      },
+      "variant": {
+        "id": "market-submit",
+        "predicate": {
+          "list.length": 1,
+          "list.0.drop": true,
+          "loading": false,
+          "loadingMore": false,
+          "list.0._canSubmitMarket": true,
+          "list.0._canToggleMarket": false
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/template/{param}/market-submit",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": {
+        "success": [
+          "success"
+        ],
+        "error": [
+          "error"
+        ],
+        "timeout": [
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ]
+      },
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "templateStatus",
+        "line": 97,
+        "selectorHint": ".dd",
+        "visibleCondition": "{{item._canSubmitMarket || item._canToggleMarket}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item._canSubmitMarket ? '提交广场审核' : item._marketActionText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/template/my-list",
+          "/api/template/{param}/market-submit"
+        ],
+        "primaryApis": [
+          "/api/template/my-list",
+          "/api/template/{param}/market-submit"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/template/{param}/market-submit",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
-            "url": "/api/template/updateLibraryStatus",
+            "url": "/api/template/my-list",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/template/updateLibraryStatus"
+          "/api/template/{param}/market-submit"
         ]
       },
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",

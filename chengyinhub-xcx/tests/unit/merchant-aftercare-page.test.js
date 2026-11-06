@@ -193,12 +193,17 @@ test('回应失败重试复用 requestId，编辑草稿后生成新的 requestId
   assert.notEqual(changedBody.requestId, firstBody.requestId, '不同草稿不能复用旧 requestId');
 });
 
-test('缺 refundId 直接回售后列表，不请求任何接口也不出查单表单', () => {
-  const mounted = mountPage();
-  mounted.page.onLoad({});
-  assert.deepEqual(mounted.navigations, ['/pages/merchant/aftercare/index']);
-  assert.equal(mounted.requests.length, 0);
-  assert.equal(Object.prototype.hasOwnProperty.call(mounted.page, 'findAftercare'), false);
+test('缺所属资源ID、混用ID或未知类型直接回售后列表，不请求接口也不出查单表单', () => {
+  for (const options of [{}, { recordType: 'MANUAL_CASE' },
+    { recordType: 'MANUAL_CASE', manualCaseId: '81', refundId: '82' },
+    { recordType: 'REFUND', refundId: '81', manualCaseId: '82' },
+    { recordType: 'UNKNOWN', refundId: '81' }]) {
+    const mounted = mountPage();
+    mounted.page.onLoad(options);
+    assert.deepEqual(mounted.navigations, ['/pages/merchant/aftercare/index']);
+    assert.equal(mounted.requests.length, 0);
+    assert.equal(Object.prototype.hasOwnProperty.call(mounted.page, 'findAftercare'), false);
+  }
 
   // 负控:带合法 refundId 时不能被误重定向
   const ok = mountPage();

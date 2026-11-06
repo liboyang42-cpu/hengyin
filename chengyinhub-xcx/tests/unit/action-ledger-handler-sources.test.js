@@ -111,22 +111,53 @@ test('真实反引号模板 URL 动作保留读写分类与分支，不因去污
   }
 })
 
+test('条件请求 URL 只提取真实分支，并从同一请求对象取得 method', () => {
+  const { extractTargets } = require('../../scripts/uiaudit/build-action-ledger')
+  const source = "app.sendRequest({ url: isManualCase\n"
+    + " ? `/api/merchant/aftercare/manual-case-detail?manualCaseId=\${id}`\n"
+    + " : `/api/merchant/aftercare/detail?refundId=\${id}`, method: 'POST',\n"
+    + " data: { note: '/api/not-a-url' }, success: () => {} })"
+  assert.deepEqual(extractTargets(source).apiContracts.map(api => [api.url, api.method]), [
+    ['/api/merchant/aftercare/manual-case-detail', 'POST'],
+    ['/api/merchant/aftercare/detail', 'POST'],
+  ])
+  const nested = "app.sendRequest({ url: first ? '/api/merchant/aftercare/respond' "
+    + ": second ? `/api/merchant/crm/customers/\${id}/detail` : unknown }); "
+    + "app.sendRequest({ url: '/api/neighbor', method: 'POST' })"
+  const contracts = extractTargets(nested).apiContracts
+  assert.deepEqual(contracts.filter(api => api.url !== '/api/neighbor').map(api => [api.url, api.method]), [
+    ['/api/merchant/aftercare/respond', 'GET'],
+    ['/api/merchant/crm/customers/{param}/detail', 'GET'],
+  ])
+  assert.deepEqual(extractTargets("app.sendRequest({ url: flag ? unknown : other })").apiContracts, [])
+  for (const suffix of [', method: unknown', ', method: \'GET\', ...options', ', [key]: value']) {
+    assert.deepEqual(extractTargets('app.sendRequest({ url: flag ? `/api/one` : `/api/two`' + suffix + ' })').apiContracts, [])
+  }
+  assert.deepEqual(extractTargets("// url: flag ? `/api/comment` : `/api/also-comment`").apiContracts, [])
+})
+
 test('四条商家写端点精确落入 writeApis，详情查询保留在 primaryApis 但不被当写', () => {
   const cases = [
-    ['pages/merchant/aftercare/detail/index.js', 'submitResponse', '/api/merchant/aftercare/respond', '/api/merchant/aftercare/detail'],
+    ['pages/merchant/aftercare/detail/index.js', 'submitResponse', '/api/merchant/aftercare/respond', '/api/merchant/aftercare/detail', '/api/merchant/aftercare/manual-case-detail'],
     ['pages/merchant/customer/detail/index.js', 'submitTag', '/api/merchant/crm/customers/{param}/tags', '/api/merchant/crm/customers/{param}/detail'],
     ['pages/merchant/customer/detail/index.js', 'submitNote', '/api/merchant/crm/customers/{param}/notes', '/api/merchant/crm/customers/{param}/detail'],
     ['pages/merchant/customer/detail/index.js', 'hideNote', '/api/merchant/crm/customers/{param}/notes/hide', '/api/merchant/crm/customers/{param}/detail'],
   ]
-  for (const [js, handler, writeUrl, readUrl] of cases) {
+  for (const [js, handler, writeUrl, ...readUrls] of cases) {
     const hits = ledger().controls.filter(row => row.entry.js === js && row.control.handler === handler)
     assert.ok(hits.length, `${handler} 在记录中缺项`)
     for (const row of hits) {
       assert.equal(row.actionClass, 'write', `${handler} 必须判写`)
       assert.deepEqual(row.targets.writeApis, [writeUrl], `${handler} writeApis 必须只含真实写端点`)
       assert.ok(row.targets.primaryApis.includes(writeUrl), `${handler} primaryApis 保留写端点`)
-      assert.ok(row.targets.primaryApis.includes(readUrl), `${handler} 详情读取必须保留`)
-      assert.ok(!row.targets.writeApis.includes(readUrl), `${handler} 详情读取不得冒充写`)
+      for (const readUrl of readUrls) {
+        assert.ok(row.targets.primaryApis.includes(readUrl), `${handler} 详情读取必须保留 ${readUrl}`)
+        assert.ok(!row.targets.writeApis.includes(readUrl), `${handler} 详情读取不得冒充写 ${readUrl}`)
+        if (js === 'pages/merchant/aftercare/detail/index.js') {
+          assert.ok(row.targets.apiContracts.some(api => api.url === readUrl && api.method === 'POST'
+            && api.auth === 'authenticated'), `${readUrl} 是真实已认证 POST 查询，不能靠 method 判写`)
+        }
+      }
       assert.ok(row.requiredBranches.includes('forbidden-owner'), `${handler} 缺 forbidden-owner`)
       assert.ok(row.requiredBranches.includes('timeout'), `${handler} 缺 timeout`)
       assert.equal(row.accessBoundary, 'owned-resource', `${handler} 写归属边界`)
@@ -134,6 +165,147 @@ test('四条商家写端点精确落入 writeApis，详情查询保留在 primar
       assert.equal(contract && contract.method, 'POST', `${handler} 写端点 method 合同`)
     }
   }
+})
+
+test('人工工单与普通退款详情是互斥只读候选，不强制同一分支发两次查询', () => {
+  const { handlerSlices, expandHandlerBody, inferEffectClasses } = require('../../scripts/uiaudit/build-action-ledger')
+  const file = pathFor('pages/merchant/aftercare/detail/index.js'), slices = handlerSlices(file)
+  for (const handler of ['loadDetail', 'retry']) {
+    const targets = targetsForHandler(file, handler)
+    assert.deepEqual(targets.primaryApis, (handler === 'retry' ? ['/api/merchant/access/me'] : [])
+      .concat(['/api/merchant/aftercare/detail', '/api/merchant/aftercare/manual-case-detail']))
+    const effects = inferEffectClasses(handler, expandHandlerBody(handler, slices), new Map(), targets)
+    assert.ok(effects.includes('read'))
+    assert.ok(!effects.includes('write'))
+    assert.ok(targets.apiContracts.filter(api => targets.primaryApis.includes(api.url))
+      .every(api => api.method === 'POST' && api.auth === 'authenticated'))
+  }
+  const response = ledger().controls.find(row => row.entry.js === 'pages/merchant/aftercare/detail/index.js'
+    && row.control.handler === 'submitResponse')
+  assert.ok(response)
+  assert.equal(response.requiredRequests, null)
+  assert.equal(response.requiredRequestsByBranch, null)
+})
+
+test('模板广场提交臂单独判写，POST列表读不能冒充写', () => {
+  const { handlerSlices, expandHandlerBody, inferEffectClasses } = require('../../scripts/uiaudit/build-action-ledger')
+  const file = pathFor('subpackageMember/mytemplate/mytemplate.js')
+  const body = expandHandlerBody('templateStatus', handlerSlices(file))
+  const targets = targetsForHandler(file, 'templateStatus')
+  const effectsFor = url => inferEffectClasses('templateStatus', body, new Map(), {
+    primaryApis: [url], apiContracts: targets.apiContracts.filter(api => api.url === url),
+  })
+  assert.ok(effectsFor('/api/template/{param}/market-submit').includes('write'),
+    '不能靠另一上下架写口掩盖广场提交臂被误作读取')
+  assert.ok(!effectsFor('/api/template/my-list').includes('write'),
+    '列表也是POST，不能因此加入写API')
+})
+
+test('模板广场两variant绑定真实单行状态，runner拒错臂双请求、validator拒错臂重复副作用', async () => {
+  const { authorityRequestPlan, predicateMatches, selectElement } = require('../automator/action-evidence-runner')
+  const { validateAuthorityEvidence, validateBranchReceipt } = require('../../scripts/uiaudit/action-evidence-store')
+  const file = pathFor('subpackageMember/mytemplate/mytemplate.js')
+  const source = fs.readFileSync(file, 'utf8')
+  const vm = require('node:vm'), ownRequire = require('node:module').createRequire(file)
+  const { marketView } = ownRequire('../../utils/template-market.js')
+  const approved = { id: 7, draftStatus: 1, status: 1, checkStatus: 1, publishStatus: 0 }
+  const rows = ledger().controls.filter(row => row.entry.js === 'subpackageMember/mytemplate/mytemplate.js'
+    && row.control.handler === 'templateStatus')
+  assert.equal(rows.length, 2)
+  const cases = [
+    ['market-submit', approved, '/api/template/{param}/market-submit'],
+    ['library-status', { ...approved, id: 8, marketTemplateId: 80, marketStatus: 0 }, '/api/template/updateLibraryStatus'],
+  ]
+  for (const [id, item, urlTemplate] of cases) {
+    const action = rows.find(row => row.variant.id === id)
+    const requests = []; let definition
+    vm.runInNewContext(source, {
+      getApp: () => ({ sendRequest: request => requests.push(request) }),
+      Page: page => { definition = page },
+      require: name => name === '../../utils/template-market.js' ? ownRequire(name) : {},
+    }, { filename: file })
+    const row = { ...item, ...marketView(item), drop: true }
+    const page = { ...definition, data: { ...definition.data, list: [row], loading: false, loadingMore: false } }
+    const matches = data => Object.entries(action.variant.predicate).every(([key, expected]) =>
+      predicateMatches(key.split('.').reduce((value, part) => value == null ? undefined : value[part], data), expected))
+    assert.ok(matches(page.data))
+    assert.ok(!matches({ ...page.data, list: [row, row] }), '不能借另一行状态命中')
+    assert.ok(!matches({ ...page.data, list: [{ ...row, _canSubmitMarket: !row._canSubmitMarket,
+      _canToggleMarket: !row._canToggleMarket }] }))
+    assert.ok(!matches({ ...page.data, list: [{ ...row, drop: false }] }))
+    const label = row._canSubmitMarket ? '提交广场审核' : row._marketActionText
+    const element = { attribute: async name => name === 'aria-label' ? label : String(item.id) }
+    assert.equal((await selectElement({ $$: async () => [element] }, action,
+      { accessibility: { label } })).element, element)
+    const event = { currentTarget: { dataset: { id: item.id } } }
+    page.templateStatus(event); page.templateStatus(event)
+    assert.deepEqual(requests.map(request => ({ url: request.url, method: request.method })), [
+      { url: urlTemplate.replace('{param}', String(item.id)), method: 'POST' },
+    ])
+    const expected = { urlTemplate, method: 'POST', kind: 'write' }
+    const wrong = { ...expected, urlTemplate: cases.find(entry => entry[0] !== id)[2] }
+    for (const branch of action.requiredBranches) {
+      assert.deepEqual(authorityRequestPlan(action, branch, { requests: [expected] })
+        .map(stage => stage.outcome), [branch])
+      assert.throws(() => authorityRequestPlan(action, branch, { requests: [wrong] }), /静态有序请求合同/)
+      assert.throws(() => authorityRequestPlan(action, branch, { requests: [expected, wrong] }), /有序 expectation.requests/)
+    }
+    const attestation = { identityFingerprint: 'synthetic-principal', accountRole: action.role }
+    const receipt = {
+      actionId: action.id, fixtureId: 'synthetic-market-unit',
+      request: { method: 'POST', url: requests[0].url, resourceId: String(item.id), authMode: 'authenticated' },
+      expectedRequest: expected,
+      authority: { endpoint: 'synthetic-only', resourceId: String(item.id), before: 0, after: 1 },
+      assertions: ['synthetic-unit-check'],
+      accessScope: { principalFingerprint: attestation.identityFingerprint, role: action.role,
+        ownerFingerprint: 'synthetic-owner', scope: 'template:' + item.id, scopeVerified: true, decision: 'allowed' },
+    }
+    assert.doesNotThrow(() => validateAuthorityEvidence(action, receipt, 'write', 'success', attestation))
+    assert.throws(() => validateAuthorityEvidence(action, { ...receipt, expectedRequest: wrong,
+      request: { ...receipt.request, url: wrong.urlTemplate.replace('{param}', String(item.id)) } },
+    'write', 'success', attestation), /不在动作 API 真源中/)
+    assert.throws(() => validateAuthorityEvidence(action, receipt, 'write', 'error', attestation), /副作用/)
+    assert.throws(() => validateAuthorityEvidence(action, receipt, 'write', 'timeout', attestation), /确定终态/)
+    assert.doesNotThrow(() => validateAuthorityEvidence(action, { ...receipt, timeoutResolution: 'committed' },
+      'write', 'timeout', attestation))
+    const denied = { ...receipt, authority: { ...receipt.authority, after: 0 },
+      accessScope: { ...receipt.accessScope, decision: 'denied' } }
+    assert.doesNotThrow(() => validateAuthorityEvidence(action, denied, 'write', 'forbidden-owner', attestation))
+    assert.throws(() => validateAuthorityEvidence(action, { ...denied, authority: receipt.authority },
+      'write', 'forbidden-owner', attestation), /副作用/)
+    const duplicate = { actionId: action.id, branch: 'duplicate-trigger', fixtureId: receipt.fixtureId,
+      assertions: ['synthetic-unit-check'], observed: { triggerCount: 2, sideEffectCount: 1 } }
+    assert.doesNotThrow(() => validateBranchReceipt(action, 'duplicate-trigger', duplicate, { id: receipt.fixtureId }))
+    assert.throws(() => validateBranchReceipt(action, 'duplicate-trigger',
+      { ...duplicate, observed: { triggerCount: 2, sideEffectCount: 2 } }, { id: receipt.fixtureId }), /副作用至多 1 次/)
+  }
+})
+
+test('模板广场条件写两variant保留精确POST、只读列表及归属权限合同', () => {
+  const rows = ledger().controls.filter(item => item.entry.js === 'subpackageMember/mytemplate/mytemplate.js'
+    && item.control.handler === 'templateStatus')
+  assert.deepEqual(rows.map(row => row.variant.id).sort(), ['library-status', 'market-submit'])
+  for (const row of rows) {
+    const url = row.variant.id === 'market-submit' ? '/api/template/{param}/market-submit' : '/api/template/updateLibraryStatus'
+    assert.equal(row.actionClass, 'write')
+    assert.equal(row.accessBoundary, 'owned-resource')
+    assert.deepEqual(row.targets.writeApis, [url])
+    assert.deepEqual(row.targets.primaryApis.slice().sort(), ['/api/template/my-list', url].sort())
+    assert.ok(row.targets.apiContracts.some(api => api.url === url && api.method === 'POST' && api.auth === 'authenticated'))
+    assert.deepEqual(row.requiredBranches, ['success', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'])
+    assert.deepEqual(row.requiredRequests, [{ urlTemplate: url, method: 'POST', kind: 'write' }])
+    assert.equal(row.requiredRequestsByBranch, null)
+    for (const branch of row.requiredBranches) assert.deepEqual(row.requiredRequestOutcomes[branch], [branch])
+    assert.equal(row.evidence.status, 'pending')
+  }
+  const direct = ledger().controls.find(item => item.entry.js === 'subpackageA/pages/myproject/index.js'
+    && item.control.handler === 'tplSubmitMarket')
+  assert.ok(direct)
+  assert.equal(direct.actionClass, 'write')
+  assert.equal(direct.accessBoundary, 'owned-resource')
+  assert.deepEqual(direct.targets.writeApis, ['/api/template/{param}/market-submit'])
+  assert.ok(direct.requiredBranches.includes('forbidden-owner'))
+  assert.ok(direct.requiredBranches.includes('duplicate-trigger'))
 })
 
 test('权威回读负控：绑定详情读端点冒充写被拒，绑定真实写端点被接受（实际 validator）', () => {
@@ -153,6 +325,7 @@ test('权威回读负控：绑定详情读端点冒充写被拒，绑定真实�
   })
   const cases = [
     ['pages/merchant/aftercare/detail/index.js', 'submitResponse', '/api/merchant/aftercare/respond', '/api/merchant/aftercare/respond?refundId=99', '/api/merchant/aftercare/detail', '/api/merchant/aftercare/detail?refundId=99'],
+    ['pages/merchant/aftercare/detail/index.js', 'submitResponse', '/api/merchant/aftercare/respond', '/api/merchant/aftercare/respond?refundId=99', '/api/merchant/aftercare/manual-case-detail', '/api/merchant/aftercare/manual-case-detail?manualCaseId=99'],
     ['pages/merchant/customer/detail/index.js', 'submitTag', '/api/merchant/crm/customers/{param}/tags', '/api/merchant/crm/customers/99/tags', '/api/merchant/crm/customers/{param}/detail', '/api/merchant/crm/customers/99/detail'],
     ['pages/merchant/customer/detail/index.js', 'submitNote', '/api/merchant/crm/customers/{param}/notes', '/api/merchant/crm/customers/99/notes', '/api/merchant/crm/customers/{param}/detail', '/api/merchant/crm/customers/99/detail'],
     ['pages/merchant/customer/detail/index.js', 'hideNote', '/api/merchant/crm/customers/{param}/notes/hide', '/api/merchant/crm/customers/99/notes/hide', '/api/merchant/crm/customers/{param}/detail', '/api/merchant/crm/customers/99/detail'],
@@ -179,11 +352,12 @@ test('聊天拉黑选项读取会话对象，清空只打开确认，两者都�
     // doBlock includes the guarded unblock->message refresh closed-conversation fallback.
     // Static candidates are conservative; the ordinary block branch still performs no write.
     // Auth renewal may reopen the explicit first-use agreement gate; it does not record consent here.
-    // loadMessages -> decorate constructs canonical card URLs and the allowed generic coupon-wallet URL.
+    // loadMessages -> decorate also reaches the canonical cancelled-activity ID target, never a dataset URL.
+    // The closure includes card destinations and the allowed generic coupon-wallet URL.
     // extractTargets records route literals in that source closure, not observed navigation destinations;
     // neither the block confirmation nor the clear confirmation navigates to these card destinations.
     assert.deepEqual(row.targets.routes, id === 'block'
-      ? ['pages/privacy/index', 'pages/square/detail/index', 'pages/topic/index/index', 'subpackageB/pages/im/list/index', 'subpackageMember/coupon-wallet/index'] : [])
+      ? ['pages/activity/detail/index?id=', 'pages/privacy/index', 'pages/square/detail/index', 'pages/topic/index/index', 'subpackageB/pages/im/list/index', 'subpackageMember/coupon-wallet/index'] : [])
   }
 })
 
