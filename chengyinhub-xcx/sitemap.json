@@ -10,7 +10,6 @@
     { "action": "allow", "page": "pages/activity/detail/index" },
     { "action": "allow", "page": "pages/activity/official-detail/index" },
     { "action": "allow", "page": "pages/club/detail/index" },
-    { "action": "allow", "page": "pages/userinfo/userinfo", "params": { "tab": "about" }, "matching": "inclusive" },
     { "action": "allow", "page": "subpackageRoam/official-routes/index" },
     { "action": "allow", "page": "subpackageRoam/official-route/index" },
     { "action": "allow", "page": "subpackageRoam/poi-detail/index" },
