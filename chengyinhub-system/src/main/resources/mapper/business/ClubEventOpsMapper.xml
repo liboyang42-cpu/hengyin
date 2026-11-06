@@ -862,7 +862,7 @@
         where delivery_id = #{deliveryId} and status = 'PENDING' and next_attempt_at &lt;= #{now}
     </update>
 
-    <select id="selectDispatchableByCampaign" resultMap="deliveryResult">
+    <select id="selectDispatchableByCampaign" resultMap="deliveryResult" useCache="false" flushCache="true">
         select d.id, d.campaign_id, d.recipient_member_id, d.channel, d.status,
                d.attempt_count, d.message_id, d.last_error, d.sent_at, d.version
         from club_event_notification_delivery d

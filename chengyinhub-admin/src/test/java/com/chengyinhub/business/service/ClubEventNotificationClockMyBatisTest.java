@@ -71,14 +71,28 @@ class ClubEventNotificationClockMyBatisTest {
                         Map.of("campaignId", 9L, "limit", 50, "now", due));
                 assertEquals(List.of(delivery.getId()), ready.stream().map(ClubEventDelivery::getId).toList(),
                         "a due campaign must remain claimable when the database clock is behind");
-                assertEquals(1, session.update(namespace + "claimNotificationOutbox",
-                        Map.of("deliveryId", delivery.getId(), "leaseUntil", lease, "now", due)));
-                assertEquals(0, session.update(namespace + "claimNotificationOutbox",
-                        Map.of("deliveryId", delivery.getId(), "leaseUntil", lease, "now", due)),
-                        "an unexpired lease cannot be claimed twice");
-                assertTrue(mapper.selectDueCampaignIds(due, 10).isEmpty());
+                try (java.sql.Connection competing = source.getConnection();
+                     java.sql.PreparedStatement update = competing.prepareStatement(
+                             "update club_event_notification_outbox set next_attempt_at=? where delivery_id=?")) {
+                    assertTrue(competing.getAutoCommit());
+                    update.setTimestamp(1, new java.sql.Timestamp(lease.getTime()));
+                    update.setLong(2, delivery.getId());
+                    assertEquals(1, update.executeUpdate());
+                }
+                assertTrue(session.selectList(namespace + "selectDispatchableByCampaign",
+                        Map.of("campaignId", 9L, "limit", 50, "now", due)).isEmpty(),
+                        "a locking read must observe another connection renewing the lease");
 
-                Date expired = new Date(lease.getTime() + 1000);
+                Date claimTime = new Date(lease.getTime() + 1000);
+                Date activeLease = new Date(claimTime.getTime() + 60000);
+                assertEquals(1, session.update(namespace + "claimNotificationOutbox",
+                        Map.of("deliveryId", delivery.getId(), "leaseUntil", activeLease, "now", claimTime)));
+                assertEquals(0, session.update(namespace + "claimNotificationOutbox",
+                        Map.of("deliveryId", delivery.getId(), "leaseUntil", activeLease, "now", claimTime)),
+                        "an unexpired lease cannot be claimed twice");
+                assertTrue(mapper.selectDueCampaignIds(claimTime, 10).isEmpty());
+
+                Date expired = new Date(activeLease.getTime() + 1000);
                 assertEquals(List.of(9L), mapper.selectDueCampaignIds(expired, 10));
                 assertEquals(1, session.update(namespace + "claimNotificationOutbox",
                         Map.of("deliveryId", delivery.getId(), "leaseUntil",
