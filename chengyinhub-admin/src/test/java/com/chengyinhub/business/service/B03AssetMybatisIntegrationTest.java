@@ -105,6 +105,7 @@ class B03AssetMybatisIntegrationTest {
         ICmsPointsSettingService settings = mock(ICmsPointsSettingService.class);
         CmsPointsSetting rule = new CmsPointsSetting();
         rule.setValue(new BigDecimal("5"));
+        rule.setStatus(1L);
         when(settings.selectCmsPointsSettingList(any())).thenReturn(Collections.singletonList(rule));
         PointsAwardServiceImpl target = new PointsAwardServiceImpl();
         ReflectionTestUtils.setField(target, "cmsPointsSettingService", settings);
