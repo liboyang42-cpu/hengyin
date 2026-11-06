@@ -118,6 +118,7 @@ public class ApiClubSettlementController extends BaseController {
             // 不是按本结算行 id —— 只回 id 会让「俱乐部分润 → 结算详情」永远落 missing-record。
             t.put("topicId", row.getTopicId());
             t.put("name", topicName(row));
+            t.put("lineType", row.getLineType());
             t.put("originalAmountText", money(original));
             t.put("executedAdjustmentText", money(adjustment));
             t.put("netAmountText", money(net));

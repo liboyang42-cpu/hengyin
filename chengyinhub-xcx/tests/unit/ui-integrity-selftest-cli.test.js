@@ -7,6 +7,37 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const script = path.resolve(__dirname, '../lint/ui-integrity.js');
+
+test('U5 局部失败回调有可见反馈才放行，未知、遮蔽、递归仍红', t => {
+  const { scanU5 } = require('../lint/ui-integrity');
+  const dir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'u5-local-fail-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const file = path.join(dir, 'index.js');
+  const request = 'app.sendRequest({url:"/api/project/home",silentError:true,fail:failed})';
+  const cases = [
+    ['const failed = () => toast("失败");', '', true],
+    ['const failed = res => { if (active()) toast(app.getRequestErrorMessage(res, "请重试")); };', '', true],
+    ['const failed = (res) => { toast(res.message); };', '', true],
+    ['', '', false],
+    ['let failed = res => { toast(res.message); };', '', false],
+    ['const failed = res => { resolve(null); };', '', false],
+    ['const failed = res => { failed(res); toast("失败"); };', '', false],
+    ['const failed = toast => { toast("失败"); };', '', false],
+    ['const failed = res => { const toast = unknown; toast("失败"); };', '', false],
+    ['const failed = res => { return () => toast("失败"); };', '', false],
+    ['const failed = res => { toast("失败"); };', 'const failed = unknown;', false],
+    ['function other() { const failed = res => { toast("失败"); }; }', '', false],
+  ];
+  for (const [declaration, shadow, green] of cases) {
+    const source = shadow
+      ? 'const app=getApp();Page({load(){' + declaration + '{' + shadow + request + '}}})'
+      : 'const app=getApp();Page({load(){' + declaration + request + '}})';
+    fs.writeFileSync(file, source);
+    assert.equal(scanU5([file], new Map()).violations.length === 0, green, source);
+  }
+  const actual = path.resolve(__dirname, '../../subpackageA/pages/myproject/index.js');
+  assert.deepEqual(scanU5([actual], new Map()).violations, []);
+});
 for (const flags of [[], ['--warn-as-error']]) {
   test('UI 门禁自证独立于扫描参数：--selftest ' + flags.join(' '), () => {
     const result = spawnSync(process.execPath, [script, '--selftest', ...flags], { encoding: 'utf8' });

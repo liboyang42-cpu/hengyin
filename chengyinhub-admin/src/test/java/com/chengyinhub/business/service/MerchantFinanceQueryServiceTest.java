@@ -33,6 +33,28 @@ import org.springframework.test.util.ReflectionTestUtils;
 class MerchantFinanceQueryServiceTest {
 
     @Test
+    void coopListUsesTheSameNetProjectionWithoutChangingOriginalOrLeakingOtherPayees() {
+        MerchantFinanceQueryService service = serviceWithBalanceRows(Collections.emptyList());
+        CoopSettlementMapper mapper = (CoopSettlementMapper) ReflectionTestUtils.getField(service, "coopSettlementMapper");
+        var mine = new com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow();
+        mine.setId(31L); mine.setMerchantId(7L); mine.setStatus(0);
+        mine.setAmount(new BigDecimal("40.00")); mine.setExecutedAdjustmentAmount(new BigDecimal("-10.00"));
+        var other = new com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow();
+        other.setId(32L); other.setMerchantId(8L); other.setAmount(new BigDecimal("99.00"));
+        other.setExecutedAdjustmentAmount(BigDecimal.ZERO);
+        when(mapper.selectSummaryByMerchant(7L)).thenReturn(Arrays.asList(mine, other));
+        var rows = service.settlementEntries(7L, "coop", 1, 20).getRows();
+        assertEquals(1, rows.size());
+        assertEquals("30.00", rows.get(0).getSignedAmount());
+        assertEquals("40.00", rows.get(0).getOriginalAmount());
+        assertEquals("-10.00", rows.get(0).getExecutedAdjustmentAmount());
+        assertEquals("31", rows.get(0).getRefId());
+        assertEquals(new BigDecimal("40.00"), mine.getAmount());
+        mine.setExecutedAdjustmentAmount(null);
+        assertEquals(null, service.settlementEntries(7L, "coop", 1, 20).getRows().get(0).getSignedAmount());
+    }
+
+    @Test
     void calculatesPersonalAccountNetWithServerDecimalArithmetic() {
         MerchantFinanceQueryService service = serviceWithBalanceRows(Arrays.asList(
                 balance("0.10", 2L, new Date()), balance("0.20", 2L, new Date()), balance("-0.05", 2L, new Date())));

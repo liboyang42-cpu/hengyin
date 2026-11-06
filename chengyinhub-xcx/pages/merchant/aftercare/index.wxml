@@ -49,7 +49,8 @@
           <text class="acl-group-total" wx:if="{{group.totalText && !keyword && !(hasMore && index === groups.length - 1)}}">{{group.totalText}}</text>
         </view>
         <view class="fin-card acl-card">
-          <view class="fin-row acl-row" wx:for="{{group.items}}" wx:key="refundId"
+          <view class="fin-row acl-row" wx:for="{{group.items}}" wx:key="recordKey"
+                data-recordtype="{{item.recordType}}" data-manualcaseid="{{item.manualCaseId}}"
                 data-refundid="{{item.refundId}}" bindtap="openDetail"
                 aria-role="button" aria-label="打开售后 {{item.titleText}}，{{item.statusText}}{{item.takeoverText ? '，' + item.takeoverText : ''}}，{{item.refundAmountText}}"
                 hover-class="cy-pressed" hover-stay-time="80">

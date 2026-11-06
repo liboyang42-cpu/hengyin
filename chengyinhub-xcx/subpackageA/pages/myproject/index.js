@@ -424,7 +424,7 @@ Page({
     }
     // 这个列表就是「我发布的」,所以主题一律进项目主页(主办视图)——
     // 原来跳的 topic/index 是玩家买票页,发布者在那儿看不到谁来接、卖了多少。
-    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?' + (item._pendingChapterInvite ? 'id=' : 'topicId=') + item.id
       + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
@@ -1125,9 +1125,9 @@ function rankOf(p) {
 function decorateJoin(p) {
   return Object.assign(decorate(p), {
     _canToggle: false, _canDelete: false, _canEdit: false, _canCancel: false, _canAudit: false,
-    _canSaveAsTemplate: false, _canViewApplies: false, _roleText: '承办',
+    _canSaveAsTemplate: false, _canViewApplies: false, _roleText: p._pendingChapterInvite ? '受邀' : '承办',
     // 承接卡没有报名/浏览数(不归承接方统计),底行写关系,不印「0 报名 · 0 浏览」
-    _showAccept: true, acceptStatusText: '我承接的'
+    _showAccept: true, acceptStatusText: p._pendingChapterInvite ? '待接受邀请' : '我承接的'
   });
 }
 

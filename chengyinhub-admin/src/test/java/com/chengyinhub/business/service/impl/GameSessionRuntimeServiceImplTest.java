@@ -3560,6 +3560,143 @@ class GameSessionRuntimeServiceImplTest {
         return map;
     }
     @Test
+    void configuredModuleCannotSupplyFreeCollectDirectorMetadata() {
+        CmsTopic topic = configuredTopic();
+        topic.setGameModuleConfigJson(runtimeConfigJson().replaceFirst("\\{", "{\"playMode\":\"ROUTE\",\"freeCollect\":true,"));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        when(runtimeMapper.insertSession(any())).thenAnswer(call -> {
+            GameSession inserted = call.getArgument(0);
+            inserted.setId(SESSION);
+            return 1;
+        });
+        when(runtimeMapper.selectStations(SESSION)).thenReturn(Collections.singletonList(station(MERCHANT, GameStationRun.INVITED)));
+        stubReceiptPersistence("module-metadata");
+        service.command(GameActorContext.club(PLAYER), command("module-metadata", 0, "PREPARE", Collections.emptyMap()));
+        org.mockito.ArgumentCaptor<GameSession> inserted = org.mockito.ArgumentCaptor.forClass(GameSession.class);
+        verify(runtimeMapper).insertSession(inserted.capture());
+        assertTrue(inserted.getValue().getModuleConfigSnapshotJson().contains("\"freeCollect\":false"));
+        verify(runtimeMapper, never()).readyRouteCheckpoints(anyLong(), any(), any(), any());
+    }
+
+    @Test
+    void freeCollectExecutorPreparesStartsAndFinishesWithoutEnablingSoloDirector() {
+        CmsTopic topic = configuredTopic();
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setClubId(CLUB + 1);
+        topic.setGameModuleConfigJson(null);
+        topic.setPublishedConfigVersion(1L);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        assertFalse(service.isGameSessionEnabled(topic), "散客入口不能因带队修复启用导演运行时");
+        when(clubMemberService.isSessionDirector(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        com.chengyinhub.business.mapper.ClubLeadMapper leads = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
+        ReflectionTestUtils.setField(service, "clubLeadMapper", leads);
+        com.chengyinhub.business.domain.ClubLeadState lead = new com.chengyinhub.business.domain.ClubLeadState();
+        lead.setActivityId(ACTIVITY);
+        lead.setLeaderMemberId(PLAYER); // 主理人可委派领队，不能强制两人为同一人。
+        lead.setStatus(2);
+        when(leads.selectByActivity(ACTIVITY)).thenReturn(lead);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
+        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"journeyRules\":{\"schemaVersion\":1}}");
+        when(runtimeMapper.insertSession(any())).thenAnswer(call -> {
+            GameSession inserted = call.getArgument(0);
+            inserted.setId(SESSION);
+            return 1;
+        });
+        stubRouteChapters();
+        List<GameStationRun> stations = runtimeMapper.selectStations(SESSION);
+        for (GameStationRun station : stations) station.setStatus(GameStationRun.READY);
+        stubReceiptPersistence("free-prepare");
+        assertEquals("APPLIED", service.command(GameActorContext.club(DIRECTOR),
+                command("free-prepare", 0, "PREPARE", Collections.emptyMap())).getOutcome());
+        org.mockito.ArgumentCaptor<GameSession> inserted = org.mockito.ArgumentCaptor.forClass(GameSession.class);
+        verify(runtimeMapper).insertSession(inserted.capture());
+        GameSession session = inserted.getValue();
+        assertTrue(session.getModuleConfigSnapshotJson().contains("\"freeCollect\":true"));
+        assertNull(session.getCurrentChapterId());
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(runtimeMapper.countActiveTeams(ACTIVITY)).thenReturn(1);
+        when(runtimeMapper.activateReadyStations(eq(SESSION), any())).thenReturn(2);
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any())).thenReturn(1);
+        stubReceiptPersistence("free-start");
+        assertEquals("APPLIED", service.command(GameActorContext.club(DIRECTOR),
+                command("free-start", 0, "START", Collections.emptyMap())).getOutcome());
+        assertEquals(GameSession.RUNNING, service.routeSessionStatus(ACTIVITY));
+        assertNull(session.getCurrentChapterId(), "多章自由探索也不能加线性章节闸");
+        GameSessionView view = service.view(GameActorContext.club(DIRECTOR), ACTIVITY);
+        assertTrue(view.getAvailableActions().contains("FINISH"));
+        assertFalse(view.getAvailableActions().contains("UNLOCK_CHAPTER"));
+        assertTrue(((List<?>) view.getClub().get("chapterOptions")).isEmpty());
+        when(runtimeMapper.selectClubRecapAggregate(SESSION, ACTIVITY)).thenReturn(clubRecapAggregate());
+        when(runtimeMapper.selectClubStationRecaps(SESSION)).thenReturn(Collections.singletonList(clubStationRecap()));
+        when(runtimeMapper.selectClubRoleCollaboration(SESSION, ACTIVITY)).thenReturn(Collections.emptyList());
+        stubReceiptPersistence("free-finish");
+        assertEquals("APPLIED", service.command(GameActorContext.club(DIRECTOR),
+                command("free-finish", 1, "FINISH", Collections.emptyMap())).getOutcome());
+        assertEquals(GameSession.FINISHED, service.routeSessionStatus(ACTIVITY));
+        verify(runtimeMapper).closeStations(eq(SESSION), any());
+        stubReceiptPersistence("free-finish-again");
+        assertThrows(GameSessionException.class, () -> service.command(GameActorContext.club(DIRECTOR),
+                command("free-finish-again", 2, "FINISH", Collections.emptyMap())));
+        verify(runtimeMapper).closeStations(eq(SESSION), any());
+        verify(runtimeMapper, never()).insertPlayerNodeOutcome(any());
+        verify(clubMemberService, never()).isTopicOwner(TOPIC, CLUB + 1, DIRECTOR);
+    }
+
+    @Test
+    void freeCollectWithoutExistingLeadOrWithEndedLeadCannotPrepare() {
+        CmsTopic topic = configuredTopic();
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setGameModuleConfigJson(null);
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(clubMemberService.isSessionDirector(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        com.chengyinhub.business.mapper.ClubLeadMapper leads = mock(com.chengyinhub.business.mapper.ClubLeadMapper.class);
+        ReflectionTestUtils.setField(service, "clubLeadMapper", leads);
+        stubReceiptPersistence("free-no-lead");
+        assertEquals("GAME_CONFIG_INVALID", assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(DIRECTOR), command("free-no-lead", 0, "PREPARE", Collections.emptyMap()))).getErrorCode());
+        com.chengyinhub.business.domain.ClubLeadState ended = new com.chengyinhub.business.domain.ClubLeadState();
+        ended.setStatus(3);
+        when(leads.selectByActivity(ACTIVITY)).thenReturn(ended);
+        assertThrows(GameSessionException.class, () -> service.command(GameActorContext.club(DIRECTOR),
+                command("free-ended-lead", 0, "PREPARE", Collections.emptyMap())));
+        verify(runtimeMapper, never()).insertSession(any());
+    }
+
+    @Test
+    void freeCollectForeignClubAndNonOwnerCannotPrepare() {
+        CmsActivity activity = activeActivity();
+        activity.setClubId(CLUB + 1);
+        when(activityMapper.selectCmsActivityById(ACTIVITY)).thenReturn(activity);
+        when(clubMemberService.isSessionDirector(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        assertEquals("GAME_FORBIDDEN_SCOPE", assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(DIRECTOR), command("free-foreign", 0, "PREPARE", Collections.emptyMap()))).getErrorCode());
+        assertEquals("GAME_FORBIDDEN_SCOPE", assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(TARGET_PLAYER), command("free-stranger", 0, "PREPARE", Collections.emptyMap()))).getErrorCode());
+        verify(runtimeMapper, never()).insertSession(any());
+        verify(topicMapper, never()).selectCmsTopicByIdForUpdate(anyLong());
+    }
+
+    @Test
+    void freeCollectSkipsLinearChapterAndPreviousMerchantReceptionGates() {
+        GameSession session = runningSession(4);
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\",\"freeCollect\":true}");
+        session.setCurrentChapterId(48L);
+        stubRouteChapters();
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(runtimeMapper.selectStation(SESSION, FALLBACK_NODE)).thenReturn(station(MERCHANT, GameStationRun.ACTIVE));
+        when(runtimeMapper.countMissingRouteReception(SESSION, FALLBACK_NODE)).thenReturn(1);
+        assertNull(service.routeChapterGateError(ACTIVITY, FALLBACK_NODE));
+        service.assertRoutePlayable(ACTIVITY, FALLBACK_NODE);
+        service.assertRouteReception(ACTIVITY, FALLBACK_NODE);
+        assertNull(service.routeReceptionError(ACTIVITY, FALLBACK_NODE));
+        verify(runtimeMapper, never()).countMissingRouteReception(anyLong(), anyLong());
+        session.setStatus(GameSession.FINISHED);
+        assertThrows(IllegalStateException.class, () -> service.assertRoutePlayable(ACTIVITY, FALLBACK_NODE));
+    }
+
+    @Test
     void ordinaryRoutePreparesFromRealNodesAndStartsWithoutStoryRoles() {
         CmsTopic topic = configuredTopic();
         topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
@@ -3567,7 +3704,7 @@ class GameSessionRuntimeServiceImplTest {
         topic.setPublishedConfigVersion(1L);
         com.chengyinhub.business.service.ITopicRouteRuntimeService routeRuntime = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
         ReflectionTestUtils.setField(service, "topicRouteRuntimeService", routeRuntime);
-        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"startNodeId\":5001,\"terminalNodeIds\":[5001],\"journeyRules\":{\"schemaVersion\":1}}");
+        when(routeRuntime.freezePublishedJourney(topic)).thenReturn("{\"schemaVersion\":1,\"freeCollect\":true,\"startNodeId\":5001,\"terminalNodeIds\":[5001],\"journeyRules\":{\"schemaVersion\":1}}");
         when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
         assertTrue(service.isGameSessionEnabled(topic));
         topic.setGameModuleConfigJson("{broken");
@@ -3589,6 +3726,7 @@ class GameSessionRuntimeServiceImplTest {
         verify(runtimeMapper).insertSession(inserted.capture());
         GameSession session = inserted.getValue();
         assertTrue(session.getModuleConfigSnapshotJson().contains("ROUTE"));
+        assertTrue(session.getModuleConfigSnapshotJson().contains("\"freeCollect\":false"), "发布快照不能把定向路线伪装成自由探索");
         assertFalse(session.getModuleConfigSnapshotJson().contains("roles"));
         verify(runtimeMapper).readyRouteCheckpoints(eq(SESSION), any(), any(), any());
         checkpoint.setStatus(GameStationRun.READY);

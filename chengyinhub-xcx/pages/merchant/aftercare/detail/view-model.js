@@ -93,6 +93,44 @@ const ACTOR_VIEW = {
 
 const EVIDENCE_OBJECT_KEY = /^upload\/merchant-aftercare-evidence\/[0-9a-f]{32}\.(?:jpe?g|png|gif)$/;
 
+const MANUAL_CASE_STATUS = {
+  PENDING_ASSESSMENT: '玩家申请退款 · 平台评估中',
+  MANUAL_REFUND_REQUIRED: '平台已评估，待人工处理',
+  MANUAL_REFUND_RECORDED: '已登记人工退款，待平台复核',
+  MANUAL_REFUND_EVIDENCE_VERIFIED: '平台已复核人工退款凭证',
+  NO_REFUND: '平台评估无需退款',
+};
+
+function shapeManualCase(source) {
+  const id = Number(source.manualCaseId);
+  const status = Object.prototype.hasOwnProperty.call(MANUAL_CASE_STATUS, source.manualCaseStatus)
+    ? MANUAL_CASE_STATUS[source.manualCaseStatus] : null;
+  const title = optionalText(source.activityTitle);
+  const completed = ['NO_REFUND', 'MANUAL_REFUND_EVIDENCE_VERIFIED'].includes(source.manualCaseStatus);
+  const bucket = completed ? 'COMPLETED' : 'PROCESSING';
+  if (source.recordType !== 'MANUAL_CASE' || !['number', 'string'].includes(typeof source.manualCaseId)
+      || !Number.isSafeInteger(id) || id <= 0 || !status
+      || source.processing !== source.manualCaseStatus || source.merchantOpinion !== 'NOT_REQUIRED'
+      || source.refundId != null || source.refundAmount != null || source.customerNickname
+      || source.canRespond !== false || source.refunded === true || title === null
+      || (source.bucket != null && source.bucket !== bucket)
+      || (source.allowedDecisions != null && (!Array.isArray(source.allowedDecisions) || source.allowedDecisions.length))
+      || (source.responses != null && (!Array.isArray(source.responses) || source.responses.length))) return null;
+  const createTimeText = formatMinute(source.createTime);
+  const label = `人工退款工单 #${id}`;
+  return Object.assign(listRowView({ createTime: source.createTime, refundNo: label, activityTitle: title }, null), {
+    recordType: 'MANUAL_CASE', recordKey: `MANUAL_CASE:${id}`, isManualCase: true,
+    manualCaseId: id, manualCaseStatus: source.manualCaseStatus, refundId: null,
+    processing: source.manualCaseStatus, processingText: status, processingVariant: completed ? 'neutral' : 'warning',
+    merchantOpinion: 'NOT_REQUIRED', canRespond: false, refunded: false, allowedDecisions: [], responses: [], bucket,
+    hasRefundAmount: false, refundAmountText: '', refundNoText: label, titleText: label,
+    sourceText: '人工退款工单', activityTitleText: title, customerNicknameText: '',
+    statusText: status, createTimeText, headSubtitle: title,
+    timelineNodes: [{ title: '玩家申请退款', time: createTimeText, status: 'done' },
+      { title: status, status: completed ? 'done' : 'doing' }],
+  });
+}
+
 function isEvidenceObjectKey(value) {
   return typeof value === 'string' && EVIDENCE_OBJECT_KEY.test(value.trim());
 }
@@ -105,6 +143,8 @@ function safeEvidencePreviewUrl(value) {
 
 function shapeAftercareDetail(raw) {
   const source = raw || {};
+  if (source.recordType === 'MANUAL_CASE') return shapeManualCase(source);
+  if (source.recordType != null && source.recordType !== 'REFUND') return null;
   const refundId = Number(source.refundId);
   const refundAmount = money(source.refundAmount);
   const policyCode = typeof source.refundPolicyCode === 'string' ? source.refundPolicyCode.trim() : '';
@@ -143,6 +183,8 @@ function shapeAftercareDetail(raw) {
   const responses = source.responses.map(row => shapeResponse(row, refundId));
   if (responses.some(row => row == null)) return null;
   return Object.assign({}, source, {
+    recordType: 'REFUND',
+    isManualCase: false,
     refundId,
     processingText: processing.text,
     processingHint: processing.hint,
@@ -403,6 +445,10 @@ function shapeAftercareListPage(raw, expectedBucket) {
   if (!Number.isSafeInteger(offset)) return null;
   const items = source.items.map(function (rawItem) {
     const item = rawItem || {};
+    if (item.recordType === 'MANUAL_CASE') {
+      return item.bucket === expectedBucket ? shapeManualCase(item) : null;
+    }
+    if (item.recordType != null && item.recordType !== 'REFUND') return null;
     const refundId = Number(item.refundId);
     const amount = money(item.refundAmount);
     const processing = PROCESSING[item.processing];
@@ -416,6 +462,8 @@ function shapeAftercareListPage(raw, expectedBucket) {
         || (item.refundAmount !== null && item.refundAmount !== undefined
           && item.refundAmount !== '' && amount == null)) return null;
     return Object.assign({}, item, {
+      recordType: 'REFUND',
+      recordKey: `REFUND:${refundId}`,
       refundId,
       processingText: processing.text,
       processingVariant: processing.variant,

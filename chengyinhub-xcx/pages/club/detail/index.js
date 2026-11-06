@@ -303,7 +303,7 @@ function eventTimeText(raw) {
 
 // 2026-10-27 P-14 owner:标签只写时间 +「已开始 / 未开始」(拼成 decorateTopicCard 的 tagText)。
 // 色沿用稿:未开始 = warning、已开始 = success、已结束 = tertiary(已结束不在活动 tab 出现)。
-// ⚠️ 只用本页真拿得到的字段判:ended(后端 endDate 比出来的)+ startDate。
+// ⚠️ 只用本页真拿得到的字段判:ended + 本俱乐部场次时间(无场次时用主题日期)。
 function topicStatusOf(t) {
   if (t.ended) return { statusText: '已结束', statusTone: 'muted' };
   // C-19:有本俱乐部真实场次时按场次判,不再拿主题日期范围的起点说「已开始」。
@@ -2297,7 +2297,8 @@ Page({
           const end = t.endDate ? toTimestamp(String(t.endDate)) : 0;
           return decorateTopicCard(Object.assign({}, t, {
             dateText: dateOf(t.startDate),
-            ended: end > 0 && end < now,
+            // nextSessionStart 只含服务端筛出的未结束、未取消场次,优先于主题日期范围。
+            ended: !t.nextSessionStart && end > 0 && end < now,
           }));
         });
         that._topics = list;

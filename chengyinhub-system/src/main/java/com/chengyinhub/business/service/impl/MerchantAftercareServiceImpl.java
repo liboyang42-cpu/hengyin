@@ -109,6 +109,25 @@ public class MerchantAftercareServiceImpl implements IMerchantAftercareService {
     }
 
     @Override
+    public MerchantAftercareDetailVO manualCaseDetail(Long principalMemberId, Long manualCaseId) {
+        MerchantAccessContext access = merchantAccessService.require(
+                principalMemberId, MerchantPermission.AFTERCARE_READ);
+        if (manualCaseId == null || manualCaseId <= 0) throw badRequest("manualCaseId 不合法");
+        MerchantAftercareListRow row = merchantAftercareMapper.selectOwnedManualCaseDisplay(
+                access.getMerchantId(), access.getOwnerMemberId(), manualCaseId);
+        if (row == null) throw notFound();
+        MerchantAftercareDetailVO out = new MerchantAftercareDetailVO();
+        out.setRecordType("MANUAL_CASE");
+        out.setManualCaseId(row.getManualCaseId());
+        out.setManualCaseStatus(row.getManualCaseStatus());
+        out.setProcessing(row.getManualCaseStatus());
+        out.setMerchantOpinion("NOT_REQUIRED");
+        out.setCreateTime(row.getCreateTime());
+        out.setActivityTitle(row.getActivityTitle());
+        return out;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public MerchantAftercareResponseVO respond(Long principalMemberId, Long refundId,
                                                MerchantAftercareRespondRequest request) {
@@ -288,6 +307,19 @@ public class MerchantAftercareServiceImpl implements IMerchantAftercareService {
     private MerchantAftercareListItemVO listItem(MerchantAccessContext access,
                                                   MerchantAftercareListRow row) {
         MerchantAftercareListItemVO out = new MerchantAftercareListItemVO();
+        if ("MANUAL_CASE".equals(row.getRecordType())) {
+            out.setRecordType("MANUAL_CASE");
+            out.setManualCaseId(row.getManualCaseId());
+            out.setManualCaseStatus(row.getManualCaseStatus());
+            out.setProcessing(row.getManualCaseStatus());
+            out.setMerchantOpinion("NOT_REQUIRED");
+            out.setBucket("NO_REFUND".equals(row.getManualCaseStatus())
+                    || "MANUAL_REFUND_EVIDENCE_VERIFIED".equals(row.getManualCaseStatus())
+                    ? "COMPLETED" : "PROCESSING");
+            out.setCreateTime(row.getCreateTime());
+            out.setActivityTitle(row.getActivityTitle());
+            return out;
+        }
         out.setRefundId(row.getId());
         out.setRefundNo(row.getRefundNo());
         out.setSourceType(row.getSourceType());

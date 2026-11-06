@@ -1541,7 +1541,9 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         // mybiz=合作分润工作台:只展示承接方/商家应收(LEAD_FEE/MERCHANT_VERIFY);发起人保底/毛利(INITIATOR)
         // 属发起人自身主题收入(走 clubFinance/finance),不进商家工作台。旧数据 payee_type=null(=商家)照常展示;平台行 merchant_id=null 本就不会命中。
         List<CoopSettlement> filtered = new ArrayList<>();
-        for (CoopSettlement s : coopSettlementMapper.selectByMerchant(merchantId)) {
+        if (merchantId == null) return filtered;
+        for (CoopSettlement s : coopSettlementMapper.selectSummaryByMerchant(merchantId)) {
+            if (s == null || !merchantId.equals(s.getMerchantId())) continue;
             String pt = s.getPayeeType();
             if (pt == null || "merchant".equals(pt) || "club".equals(pt)) filtered.add(s);
         }

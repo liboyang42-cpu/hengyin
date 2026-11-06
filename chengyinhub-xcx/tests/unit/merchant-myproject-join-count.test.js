@@ -105,6 +105,11 @@ test('工作台「全部 N」== 我的项目(商家)里未结束的项目卡数,
   assert.equal(join._canDelete || join._canToggle || join._canEdit || join._canCancel, false, '承接卡只读');
   assert.equal(list.vm.data.projectState, 'ready');
   assert.equal(list.vm.data.list.length, 3, '主题 tab 直接看到三张卡');
+  const navigations = [];
+  global.wx.navigateTo = options => navigations.push(options.url);
+  list.vm.onCardTap({ currentTarget: { dataset: { item: join } } });
+  assert.equal(navigations[0], '/pages/topic/merchantinfo/merchantinfo?topicId=11&scope=MERCHANT',
+    '已承接项目继续走服务端private项目主页');
 });
 
 test('任一路承接读取失败:落错误态,不出半截列表', () => {
@@ -125,4 +130,33 @@ test('非商家态不读承接接口', () => {
   respond(list.requests, '/api/project/my', HOST);
   assert.equal(list.requests.length, 1);
   assert.equal(list.vm.data.list.length, 1);
+});
+
+
+test('本人待接受章节邀请在全部项目可见且保持只读，不冒称已承接', () => {
+  const list = harness('subpackageA/pages/myproject/index.js');
+  list.vm.setData({ operationScope: 'MERCHANT' });
+  list.vm.loadProjects();
+  respond(list.requests, '/api/project/my', { rows: [], total: 0, activeTotal: 0 });
+  respond(list.requests, '/api/registration/merchant/list', { rows: [
+    { id: 9, topicId: 990041, status: 1, endDate: iso(3) },
+  ] });
+  respond(list.requests, '/api/merchant/chapter-application/mine', [
+    { id: 5, topicId: 990041, status: 1, offerActive: true },
+    { id: 1, topicId: 990041, topicName: '待接受邀请', status: '0', source: '1', offerActive: false },
+    { id: 2, topicId: 990042, status: 0, source: 0 },
+    { id: 3, topicId: 990043, status: 2, source: 1 },
+  ]);
+  assert.equal(list.vm.data.list.length, 1);
+  const card = list.vm.data.list[0];
+  assert.equal(card.id, 990041);
+  assert.equal(card.stateText, '待接受');
+  assert.equal(card.acceptStatusText, '待接受邀请');
+  assert.equal(card._roleText, '受邀');
+  assert.equal(card._canDelete || card._canToggle || card._canEdit || card._canCancel, false);
+  const navigations = [];
+  global.wx.navigateTo = options => navigations.push(options.url);
+  list.vm.onCardTap({ currentTarget: { dataset: { item: card } } });
+  assert.equal(navigations[0], '/pages/topic/merchantinfo/merchantinfo?id=990041&scope=MERCHANT',
+    '同topic已有legacy承接时，新邀请仍进入既有招商浏览/邀请处理入口');
 });

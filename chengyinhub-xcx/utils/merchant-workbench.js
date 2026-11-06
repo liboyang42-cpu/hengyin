@@ -157,6 +157,10 @@ function makeProjectCard(base, todoByProject, eventCount, todoError) {
   });
 }
 
+function isPendingChapterInvite(row) {
+  return !!row && (row.status === 0 || row.status === '0') && (row.source === 1 || row.source === '1');
+}
+
 // 工作台项目卡:承接的主题、主办的主题、主办的活动三种来源合成同一列卡片,
 // 活动和主题平起平坐 —— 只有身份(承接/主办)分,不按业务类型分档。
 function buildProjectCards(input) {
@@ -174,19 +178,21 @@ function buildProjectCards(input) {
     const accepted = Number(item.status) === 1 && (projectSource === 'registration'
       || (projectSource === 'chapter' && (item.offerActive === true || Number(item.offerActive) === 1)));
     const dateStatus = statusLabelOf(item.startDate, item.endDate, today);
+    const pendingInvite = projectSource === 'chapter' && isPendingChapterInvite(item);
     const pendingReview = Number(item.status) === 0;
     const needsSupply = projectSource === 'chapter' && Number(item.status) === 1 && [false, 0, '0'].includes(item.offerActive);
     // 已确认但档期未知:不编「报名中 / 进行中」,仍写关系本身「承接中」(灰点);未确认关系不写状态
     const [statusLabel, statusTone] = dateStatus === '已结束' ? ['已结束', '']
-      : pendingReview ? ['待审核', 'wait']
-        : needsSupply ? ['还差一步：设置到店权益', 'fix']
-          : !accepted ? ['', '']
-            : DATE_STATE_LABELS[dateStatus] || ['承接中', 'wait'];
+      : pendingInvite ? ['待接受', 'wait']
+        : pendingReview ? ['待审核', 'wait']
+          : needsSupply ? ['还差一步：设置到店权益', 'fix']
+            : !accepted ? ['', '']
+              : DATE_STATE_LABELS[dateStatus] || ['承接中', 'wait'];
     cards.push(makeProjectCard({
-      key: 'join-' + item.id,
+      key: (projectSource === 'chapter' ? 'chapter-' : 'join-') + item.id,
       role: 'join',
-      roleName: '承接',
-      roleLabel: '我承接的',
+      roleName: pendingInvite ? '受邀' : '承接',
+      roleLabel: pendingInvite ? '待接受邀请' : '我承接的',
       title: item.topicName || item.addressName || '未命名项目',
       meta: item.assignmentText || '',
       metaNoDate: item.assignmentPlaceText || '',
@@ -329,6 +335,7 @@ module.exports = {
   pickTodayProject,
   localToday,
   isEndedProject,
+  isPendingChapterInvite,
   // 卡面状态签的单一真源:商家工作台与「我的」主页项目预览都从这里取,别各写一套日期判定。
   statusLabelOf,
 };

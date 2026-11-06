@@ -262,3 +262,4 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # W8 原申诉回执读�
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 第十轮 f1 p2 F-3 商家态承接项目两路只读(报名承接/章节承接):任一路业务/网络/畸形失败走 readFailure(project) 落页内错误态或登录/权限态,不出半截列表;迟到或换号回包被 current/seq 丢弃,通用 toast 会双弹。merchant-myproject-join-count 覆盖。
 
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-11-05 _fillPeerName POST /api/im/conversations 只补链接缺失的昵称；失败保留「对话」标题，不清消息、不禁用发送、不报成功；viewGuard 与本人会话检查淘汰旧凭据/旧页面回包，本页只读一次，重进可再读。该调用单独审核，不增加既有条目或冻结基线。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # B04 项目管理菜单 /api/project/home 编辑资格读取：同账号/scope 与 opsSeq 仍有效时，业务、网络、异常状态失败均由 failed 显式 toast 精确原因；服务端 host.canEdit===true 前禁止编辑，关闭通道 toast 避免重复或旧账号提示；myproject-activity-edit-sold 覆盖失败与迟到回包。

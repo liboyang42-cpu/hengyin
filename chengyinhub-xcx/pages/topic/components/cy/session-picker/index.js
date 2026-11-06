@@ -239,8 +239,8 @@ Component({
       const id = Number(e.currentTarget.dataset.id) || 0;
       const ticket = this.data.tickets.filter((t) => t.id === id)[0];
       if (!ticket) return;
-      // 售罄的不给选:让人选中再到结算页被拦是白走一趟
-      if (ticket.remaining === 0 || ticketWindowText(ticket)) return;
+      // 售罄票仍需进入原结算页，由服务端读取候补资格。
+      if (ticketWindowText(ticket)) return;
       this.setData({
         pickedTicketId: id,
         totalText: ticket.price == null ? '' : ('¥' + ticket.price),
@@ -253,7 +253,7 @@ Component({
       const { pickedActivityId, pickedTicketId } = this.data;
       if (!pickedActivityId || !pickedTicketId) return;
       const ticket = this.data.tickets.find((t) => t.id === pickedTicketId);
-      if (!ticket || ticket.remaining === 0 || ticketWindowText(ticket)) {
+      if (!ticket || ticketWindowText(ticket)) {
         this.pickActivity(pickedActivityId);
         return;
       }

@@ -6961,6 +6961,9 @@ Page({
     // 基础到达/凭证不等于正式结算；照片机审仍可能返回 advanceProgress 的完整回执。
     const returnedNodeState = data && data.routeState && data.routeState.nodeStates && data.routeState.nodeStates[String(nodeId)];
     const completedReceipt = data && typeof data.firstTime === 'boolean' && Number.isInteger(data.done) && String(data.nodeId) === String(nodeId);
+    const completionNode = this.data.nodes.find(n => String(n.nodeId) === String(nodeId));
+    const shopGameReceipt = completedReceipt && Number(this.data.mode) === 2
+      && Number(completionNode && completionNode.merchantId) > 0;
     if (this._hasGenericProofFlow() && !completedReceipt || returnedNodeState && returnedNodeState !== 'COMPLETED'
       || data && (data.done === false || data.themeRuntime || data.sharedRuntime || data.disabledReason === 'PROOF_PENDING')) {
       data = data || {};
@@ -6988,9 +6991,10 @@ Page({
     }
     // 完成事实来自本次服务端成功回执；BRANCH_GRAPH 的下一站仍只认随回执返回或只读刷新得到的 routeState。
     const patchCompleted = (n) => n.nodeId === nodeId ? Object.assign({}, n, {
-      done: true,
-      doneAt: parseGameCompletedAt(data && data.completedAt) || n.doneAt || 0,
-      earnedXp: (data && (data.xp != null || data.score != null))
+      done: shopGameReceipt ? !!completionNode.done : true,
+      doneAt: shopGameReceipt ? (completionNode.doneAt || 0) : parseGameCompletedAt(data && data.completedAt) || n.doneAt || 0,
+      gameDone: shopGameReceipt ? true : n.gameDone,
+      earnedXp: shopGameReceipt && data.firstTime === false ? n.earnedXp : (data && (data.xp != null || data.score != null))
         ? Number(data.xp != null ? data.xp : data.score) : n.earnedXp,
       routeNodeState: this._routeState.routeMode === 'BRANCH_GRAPH' ? 'COMPLETED' : n.routeNodeState,
       playable: false,
@@ -7007,6 +7011,13 @@ Page({
     const nodes = hasRouteProjection
       ? applyRouteStateToNodes(catalog, routeState)
       : this.data.nodes.map(patchCompleted);
+    // 自由探索的玩法结算不代表商家核销；路线投影也不能覆盖已读回的权益事实。
+    if (shopGameReceipt) {
+      const index = nodes.findIndex(n => String(n.nodeId) === String(nodeId));
+      if (index >= 0) nodes[index] = Object.assign({}, nodes[index], {
+        done: !!completionNode.done, doneAt: completionNode.doneAt || 0, gameDone: true,
+      });
+    }
     if (data && data.puzzlePersonalBest != null) {
       this._puzzlePersonalBest = Number(data.puzzlePersonalBest) || 0;
     }
@@ -7040,7 +7051,7 @@ Page({
       if (data && data.nightWarning === true) this._flashNightHint();
       // mode2 碎片翻卡:完成即翻出该节点碎片(空则不弹)
       if (this.data.mode === 2) {
-        const done = nodes.filter((n) => n.done);
+        const done = nodes.filter((n) => n.done || n.gameDone);
         const frText = node.fragmentText || '';
         // 剩余点位半屏已删(用户裁决):碎片翻卡恢复常弹,剩余点看地点卡层
         if (frText) this.setData({ frag: { show: true, text: frText, step: '我的第 ' + done.length + ' 步 · ' + (node.name || '') } });
@@ -7092,7 +7103,7 @@ Page({
       this.setData({ journalDot: !this.data.showJournal });
       if (storyOpen && (this.data.isPreview || this.data.isMock)) this.openChapterFull();
       // 城市定向逐站解锁:下一站的 locked 与本站剧情段都在 /nodes 里,完成后同页重读,不等玩家退出重进(实走 A10)。
-      if ((this._routeState.routeMode === 'BRANCH_GRAPH' || storyOpen || this.data.mode === 1) && !this.data.isPreview && !this.data.isMock) {
+      if ((this._routeState.routeMode === 'BRANCH_GRAPH' || storyOpen || this.data.mode === 1 || shopGameReceipt) && !this.data.isPreview && !this.data.isMock) {
         // routeState 只描述节点状态，未包含本次刚从 HIDDEN 解锁节点的地点/玩法资料。
         // 必须同页重读 /nodes，不能等玩家重新进入页面才看见下一站。
         this.loadData(false);

@@ -97,6 +97,26 @@ for (const ownOrder of [true, false, 'true', undefined]) {
     assert.equal(h.page.data.canConfirmSignup, false);
   });
 }
+test('cancelled own-order action opens order history rather than the usable-ticket wallet, with a navigation lock', () => {
+  const h = mount('cancelled'); const routes = [];
+  global.wx.navigateTo = options => routes.push(options);
+  h.load(); reply(h.requests[0], 200, h.body());
+  h.page.onCancelledAction(); h.page.onCancelledAction();
+  assert.deepEqual(routes.map(r => r.url), ['/subpackageMember/order/order']);
+  routes[0].complete(); h.page.onCancelledAction();
+  assert.equal(routes.length, 2, 'completed or failed navigation must allow a later retry');
+});
+test('cancelled action without a typed own-order grant closes; ordinary ticket action retains its wallet route', () => {
+  for (const grant of [false, 'true', undefined]) {
+    const h = mount('cancelled'); const routes = []; let closed = 0;
+    global.wx.navigateTo = options => routes.push(options);
+    h.page.close = () => { closed++; };
+    h.load(); reply(h.requests[0], 200, { code: 500, errorCode: 'ACTIVITY_CANCELLED', canViewOwnOrders: grant });
+    h.page.onCancelledAction();
+    assert.equal(closed, 1); assert.equal(routes.length, 0);
+    h.page.goPlay(); assert.deepEqual(routes.map(r => r.url), ['/subpackageMember/signup/index']);
+  }
+});
 test('ordinary activity failure mentioning cancellation cannot impersonate the typed cancelled state', () => {
   const h = mount('cancelled'); h.load(); reply(h.requests[0], 500, { code: 500, msg: '取消状态暂不可用' });
   assert.equal(h.page.data.state, 'error'); assert.equal(h.page.data.cancelledHasOwnOrder, false);

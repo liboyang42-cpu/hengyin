@@ -11,6 +11,7 @@ import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.Redemption;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.domain.vo.MerchantFinancePage;
+import com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow;
 import com.chengyinhub.business.domain.vo.MerchantRedemptionSummary;
 import com.chengyinhub.business.domain.vo.MerchantRedemptionView;
 import com.chengyinhub.business.domain.vo.MerchantSettlementEntry;
@@ -413,7 +414,7 @@ public class MerchantFinanceQueryService {
         Map<String, MerchantPayableBatch> batches = batchesByPeriod(memberId);
         List<MerchantSettlementEntry> all = new ArrayList<MerchantSettlementEntry>();
         addPayables(all, safeList(payableMapper.selectByMerchant(memberId)), batches);
-        addCoopSettlements(all, safeList(coopSettlementMapper.selectByMerchant(memberId)));
+        addCoopSettlements(all, safeList(coopSettlementMapper.selectSummaryByMerchant(memberId)), memberId);
         addExecutedClawbacks(all, safeList(clawbackMapper.selectByMerchantMemberId(memberId)), batches);
         addPersonalArrivals(all, memberId);
         filterBySource(all, source);
@@ -459,13 +460,21 @@ public class MerchantFinanceQueryService {
         }
     }
 
-    private void addCoopSettlements(List<MerchantSettlementEntry> target, List<CoopSettlement> settlements) {
-        for (CoopSettlement settlement : settlements) {
-            if (settlement == null || settlement.getId() == null || settlement.getAmount() == null) continue;
-            if (settlement.getAmount().compareTo(BigDecimal.ZERO) == 0) continue;
+    private void addCoopSettlements(List<MerchantSettlementEntry> target, List<ClubSettlementSummaryRow> settlements, Long memberId) {
+        for (ClubSettlementSummaryRow settlement : settlements) {
+            if (settlement == null || settlement.getId() == null || settlement.getAmount() == null
+                    || memberId == null || !memberId.equals(settlement.getMerchantId())) continue;
+            BigDecimal net = settlement.getNetAmount();
+            if (settlement.getAmount().signum() == 0 && net != null && net.signum() == 0) continue;
             MerchantSettlementEntry entry = base("coop:" + settlement.getId(), "COOP_ORDER", "EARNING", "COOP_SHARE",
-                    String.valueOf(settlement.getId()), "PERSONAL_ACCOUNT", settlement.getAmount(), settlement.getCreateTime(),
+                    String.valueOf(settlement.getId()), "PERSONAL_ACCOUNT", net, settlement.getCreateTime(),
                     settlement.getPayoutTime(), "coop_settlement", settlement.getId());
+            if (net == null) entry.setSignedAmount(null);
+            entry.setOriginalAmount(money(settlement.getOriginalAmount()));
+            entry.setExecutedAdjustmentAmount(settlement.getExecutedAdjustmentAmount() == null
+                    ? null : money(settlement.getExecutedAdjustmentAmount()));
+            entry.setPayeeType(settlement.getPayeeType());
+            entry.setTopicName(settlement.getTopicName());
             entry.setHeadCount(settlement.getVerifiedHeads());
             Map<String, Object> group = new HashMap<String, Object>();
             group.put("type", "GROUP");

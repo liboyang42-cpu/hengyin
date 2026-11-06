@@ -183,10 +183,14 @@
 
     <!-- 分润展示唯一口径:净额 = 原额 + 已执行调整;已入账以实付流水为准。俱乐部汇总与发起人分润页(clubFinance)共用。 -->
     <sql id="summarySelectFrom">
-        select s.id, s.topic_id, s.payee_type, s.amount, s.status, s.payable_time, s.settle_time, s.payout_time,
+        select s.id, s.topic_id, s.payee_type, s.line_type, s.amount, s.status, s.payable_time, s.settle_time, s.payout_time,
                case when a.settlement_id is null then 0 else a.executed_amount end as executed_adjustment_amount,
                paid.change_balance as actual_paid_amount, paid.create_time as actual_payout_time,
                t.name as topic_name
+        <include refid="summaryFrom"/>
+    </sql>
+
+    <sql id="summaryFrom">
         from coop_settlement s
         left join cms_topic t on t.id = s.topic_id
         left join (
@@ -198,6 +202,16 @@
           on paid.coop_settlement_payout_id = s.id
          and paid.member_id = s.merchant_id and paid.change_type = 1 and paid.del_flag = 0
     </sql>
+
+    <select id="selectSummaryByMerchant" resultMap="ClubSummaryResult">
+        select s.*,
+               case when a.settlement_id is null then 0 else a.executed_amount end as executed_adjustment_amount,
+               paid.change_balance as actual_paid_amount, paid.create_time as actual_payout_time,
+               t.name as topic_name
+        <include refid="summaryFrom"/>
+        where s.del_flag = 0 and s.merchant_id = #{merchantId}
+        order by s.create_time desc, s.id desc
+    </select>
 
     <select id="selectSummaryByBeneficiary" resultMap="ClubSummaryResult">
         <include refid="summarySelectFrom"/>

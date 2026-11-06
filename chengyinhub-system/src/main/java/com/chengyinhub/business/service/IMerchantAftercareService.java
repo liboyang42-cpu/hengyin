@@ -10,6 +10,8 @@ public interface IMerchantAftercareService {
 
     MerchantAftercareDetailVO detail(Long principalMemberId, Long refundId);
 
+    MerchantAftercareDetailVO manualCaseDetail(Long principalMemberId, Long manualCaseId);
+
     MerchantAftercareResponseVO respond(Long principalMemberId, Long refundId,
                                         MerchantAftercareRespondRequest request);
 

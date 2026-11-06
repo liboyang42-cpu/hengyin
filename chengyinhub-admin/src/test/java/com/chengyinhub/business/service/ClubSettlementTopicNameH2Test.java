@@ -46,6 +46,7 @@ class ClubSettlementTopicNameH2Test {
 
     private JdbcTemplate jdbc;
     private ApiClubSettlementController api;
+    private CoopSettlementMapper settlements;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -57,7 +58,7 @@ class ClubSettlementTopicNameH2Test {
         jdbc = new JdbcTemplate(ds);
         jdbc.execute("create table coop_settlement ("
                 + "id bigint primary key, topic_id bigint, merchant_id bigint, payee_type varchar(20),"
-                + "beneficiary_role varchar(20), beneficiary_id bigint, amount decimal(12,2), status int,"
+                + "beneficiary_role varchar(20), beneficiary_id bigint, line_type varchar(32), amount decimal(12,2), status int,"
                 + "payable_time datetime, settle_time datetime, payout_time datetime,"
                 + "del_flag int default 0, create_time datetime)");
         jdbc.execute("create table coop_settlement_adjustment ("
@@ -79,7 +80,7 @@ class ClubSettlementTopicNameH2Test {
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/CoopSettlementMapper.xml"));
         SqlSessionFactory sqlSessionFactory = factory.getObject();
-        CoopSettlementMapper settlements = new SqlSessionTemplate(sqlSessionFactory).getMapper(CoopSettlementMapper.class);
+        settlements = new SqlSessionTemplate(sqlSessionFactory).getMapper(CoopSettlementMapper.class);
 
         IClubService clubService = mock(IClubService.class);
         IClubAccessService clubAccessService = mock(IClubAccessService.class);
@@ -111,7 +112,27 @@ class ClubSettlementTopicNameH2Test {
     }
 
     @Test
+    void merchantReadKeepsOriginalAndOnlyDeductsItsOwnExecutedAdjustments() {
+        jdbc.update("update coop_settlement set amount=40 where id=31");
+        jdbc.update("update coop_settlement set merchant_id=2 where id=32");
+        jdbc.update("insert into coop_settlement_adjustment values (31,-10,'EXECUTED'),(31,-7,'PENDING'),(32,-20,'EXECUTED')");
+        var mine = settlements.selectSummaryByMerchant(1L);
+        assertEquals(1, mine.size());
+        assertEquals(31L, mine.get(0).getId());
+        assertEquals(new java.math.BigDecimal("40.00"), mine.get(0).getAmount());
+        assertEquals(new java.math.BigDecimal("40.00"), mine.get(0).getOriginalAmount());
+        assertEquals(new java.math.BigDecimal("-10.00"), mine.get(0).getExecutedAdjustmentAmount());
+        assertEquals(new java.math.BigDecimal("30.00"), mine.get(0).getNetAmount());
+        assertEquals("E2E 探店日一期", mine.get(0).getTopicName());
+        assertEquals(32L, settlements.selectSummaryByMerchant(2L).get(0).getId());
+        assertEquals(0, settlements.selectSummaryByMerchant(3L).size());
+        jdbc.update("delete from coop_settlement_adjustment where status='EXECUTED'");
+        assertEquals(new java.math.BigDecimal("40.00"), settlements.selectSummaryByMerchant(1L).get(0).getNetAmount());
+    }
+
+    @Test
     void summaryCarriesTheTopicNameFromCmsTopicAndOnlyFallsBackWhenMissing() {
+        jdbc.update("update coop_settlement set line_type='INITIATOR_GUARANTEE' where id=31");
         Map<String, Object> body = new HashMap<>();
         body.put("clubId", CLUB);
 
@@ -123,6 +144,8 @@ class ClubSettlementTopicNameH2Test {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> topics = (List<Map<String, Object>>) data.get("topics");
         assertEquals(2, topics.size());
+        assertEquals("INITIATOR_GUARANTEE", topics.stream().filter(row -> Long.valueOf(31L).equals(row.get("id")))
+                .findFirst().orElseThrow().get("lineType"));
 
         Map<Long, String> nameByTopic = new HashMap<>();
         for (Map<String, Object> row : topics) {

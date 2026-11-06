@@ -438,7 +438,11 @@ Page({
       // 文字按纯文本展示:服务端过滤会把 x<y 存成 x&lt;y。content 保留原值(重排时会再过一遍 decorate,
       // 不能在原字段上反复解码),气泡读 displayContent。图片消息的 content 是地址,不动。
       const displayContent = m.msgType == 2 ? m.content : decodeDisplayText(m.content);
-      if (m.msgType == 3) {
+      const activityNotice = [2, '2'].includes(that.data.type) ? systemCard.activityNoticeUrl(m) : '';
+      if (activityNotice) {
+        const lines = String(displayContent || '').split('\n');
+        card = { cardType: 'generic', title: lines.shift() || '活动通知', sub: lines.join('\n') };
+      } else if (m.msgType == 3) {
         try { card = JSON.parse(m.extraJson || '{}'); } catch (e) { card = {}; }
         if (!card || typeof card !== 'object' || Array.isArray(card)) card = {};
         if (!card.cardType) card.cardType = 'generic';
@@ -446,13 +450,13 @@ Page({
       }
       const projected = Object.assign({}, m, { card });
       const systemRecord = !!systemCard.recordOf(projected), currentOriginalUrl = systemCard.originalUrl(projected);
-      const genericAction = systemCard.genericActionInfo(projected);
+      const genericAction = m.msgType == 3 || activityNotice ? systemCard.genericActionInfo(projected) : null;
       const genericButtons = !systemRecord && Array.isArray(card && card.buttons) ? card.buttons.map((button, index) =>
         systemCard.genericActionInfo(projected, index) ? { index, text: button.text || '查看详情', type: button.type } : null).filter(Boolean) : [];
       const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
+      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', activityNotice: !!activityNotice, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();

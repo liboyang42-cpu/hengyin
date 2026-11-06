@@ -718,7 +718,7 @@ function decorateCard(extraJson, overrides, transform) {
 }
 
 function assertGenericCardAffordance(wxml) {
-  const card = wxml.match(/<cy-card wx:elif="\{\{item\.msgType == 3\}\}"[^>]*>/)
+  const card = wxml.match(/<cy-card wx:elif="\{\{item\.msgType == 3 \|\| item\.activityNotice\}\}"[^>]*>/)
   assert.ok(card, '通用卡片节点必须存在')
   assert.match(card[0], /interactive="\{\{item\.cardTarget\}\}"/,
     '通用卡的可点性必须由 decorate 算出的 cardTarget 决定:' + card[0])

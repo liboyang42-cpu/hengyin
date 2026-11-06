@@ -14,6 +14,9 @@
                   title="链接已失效"
                   primary="返回工作台" bind:primary="onNavBack" />
   <block wx:elif="{{view === 'redemptions'}}">
+    <view wx:if="{{merchantAccess.canReadFinance}}" class="ledger-action" bindtap="goCoopSettlements" aria-role="button" aria-label="查看合作分润" hover-class="cy-pressed">
+      <text class="ledger-action-title">合作分润</text><cy-icon name="arrow-right" size="24" />
+    </view>
     <!-- 退款售后不再单独一张卡(UI-06,2026-09-18 用户走查):退款条目并进下面的状态 tab,
          待处理/已处理与核销记录同列展示,点条目进售后详情。 -->
     <!-- 固定四段筛选显式开启 shared slab；切换期间 shell 不卸载，只替换下方内容区。 -->
@@ -127,11 +130,12 @@
                        
                        action="重试此部分" bind:action="retrySettlementEntries" />
       <view class="fin-card" wx:if="{{entries.length}}">
-        <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey">
+        <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey" bindtap="goSettlementDetail" data-id="{{item.coopDetailId}}" aria-role="{{item.coopDetailId ? 'button' : ''}}">
           <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.sourceText}}</text>
             <view class="fin-row__t2"><text>{{item.timeText}}</text><cy-badge class="fin-row__chip" type="status" variant="{{item.stateVariant}}" label="{{item.stateText}}" /></view>
+            <text class="fin-row__t2" wx:if="{{item.coopBreakdown}}">{{item.coopBreakdown}}</text>
           </view>
           <text class="fin-row__v fin-row__v--{{item.amountTone}}">{{item.amountDisplay}}</text>
         </view>

@@ -43,7 +43,7 @@ const { resolveVerificationResult, verificationSheetView, classifyVerificationOu
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
-const { hasTodoSummaryPayload, buildProjectCards, isHiddenProjectCard, sortProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
+const { hasTodoSummaryPayload, buildProjectCards, isHiddenProjectCard, sortProjectCards, isEndedProject, isPendingChapterInvite, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
 const { resolveApplicationResponse, decorateApplication } = require('../../../utils/merchant-identity-policy.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
@@ -391,8 +391,16 @@ Page({
     const legacyTopics = new Set((this.data.projectList || []).map((item) => String(item.topicId)));
     const chapterProjects = (this._chapterProjectList || [])
       .filter((item) => !legacyTopics.has(String(item.topicId)));
+    const invitedTopics = new Set();
     const projectCards = buildProjectCards({
-      joinList: (this.data.projectList || []).concat(chapterProjects),
+      joinList: (this.data.projectList || []).map(item => {
+        const topicId = String(item.topicId);
+        if (invitedTopics.has(topicId)) return item;
+        const invite = (this._chapterProjectList || []).find(row => String(row.topicId) === topicId && isPendingChapterInvite(row));
+        if (!invite) return item;
+        invitedTopics.add(topicId);
+        return invite;
+      }).concat(chapterProjects),
       hostList: this.data.hostProjectList,
       todoByProject: this.data.todo.byProject,
       events: this._notifications || [],
@@ -1097,14 +1105,14 @@ Page({
         const byTopic = {};
         res.data.forEach((row) => {
           const topicId = row && Number(row.topicId);
-          if (!topicId || Number(row.status) !== 1) return;
+          if (!Number.isSafeInteger(topicId) || topicId <= 0 || (Number(row.status) !== 1 && !isPendingChapterInvite(row))) return;
           const key = String(topicId);
-          if (!byTopic[key]) {
+          if (!byTopic[key] || (isPendingChapterInvite(row) && !isPendingChapterInvite(byTopic[key]))) {
             byTopic[key] = Object.assign({}, row, {
               topicId,
               projectSource: 'chapter',
               chapterName: '',
-              _chapterNames: [],
+              _chapterNames: byTopic[key] ? byTopic[key]._chapterNames : [],
             });
           }
           if (row.chapterName && byTopic[key]._chapterNames.indexOf(row.chapterName) < 0) {
@@ -1530,7 +1538,9 @@ Page({
   goHostProject(e) {
     const topicId = Number(e.currentTarget.dataset.topicid);
     if (!Number.isSafeInteger(topicId) || topicId <= 0 || this._navigating) return; // 跳转中不响应连点,免得叠两层项目页
-    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
+    const pendingInvite = e.currentTarget.dataset.source === 'chapter' && (this._chapterProjectList || [])
+      .some(row => Number(row.topicId) === topicId && isPendingChapterInvite(row));
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?' + (pendingInvite ? 'id=' : 'topicId=') + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   openProjectCard(e) {

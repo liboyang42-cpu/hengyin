@@ -28,9 +28,136 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>两层:静态合同钉住「只读、同一归属范围、不取 PII」;H2 实跑钉住「标量子查询不放大行、别家门店的单看不到、取不到为 null」。
  */
-class MerchantAftercareDisplayColumnsContractTest {
+public class MerchantAftercareDisplayColumnsContractTest {
     private static final String XML = "mapper/business/MerchantAftercareMapper.xml";
     private static final String NS = "com.chengyinhub.business.mapper.MerchantAftercareMapper.";
+
+    @Test
+    void manualCasesRequireFrozenFulfilledChapterAndExactCurrentMerchantWithoutPiiOrMoney() throws Exception {
+        Configuration configuration = parse();
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:aftercare_manual_" + System.nanoTime()
+                + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE");
+        try (Connection connection = dataSource.getConnection(); Statement ddl = connection.createStatement()) {
+            // 只替代 MySQL JSON 函数，查询本身直接执行生产 mapper；真实 MySQL 仍由运行态复测。
+            String aliases = getClass().getName();
+            ddl.execute("create alias JSON_VALID for \"" + aliases + ".jsonValid\"");
+            ddl.execute("create alias JSON_TYPE for \"" + aliases + ".jsonType\"");
+            ddl.execute("create alias JSON_CONTAINS for \"" + aliases + ".jsonContains\"");
+            ddl.execute("create table refund_application(id bigint primary key, refund_no varchar(40), source_type varchar(32),"
+                    + "source_id bigint, merchant_id bigint, member_id bigint, refund_amount decimal(10,2), status int,"
+                    + "reason varchar(200), payout_status int, del_flag int, create_time timestamp, update_time timestamp, platform_takeover_at timestamp)");
+            ddl.execute("create table merchant_aftercare_response(id bigint primary key, refund_application_id bigint, merchant_id bigint, decision varchar(16))");
+            ddl.execute("create table mms_merchant(id bigint primary key, member_id bigint, status int, account_status int, del_flag int)");
+            ddl.execute("create table cms_registration(id bigint primary key, owner_type int, owner_id bigint, parent_order_no varchar(64), activity_title varchar(200))");
+            ddl.execute("create table cms_activity(id bigint primary key, topic_id bigint, name varchar(255))");
+            ddl.execute("create table cms_topic(id bigint primary key, name varchar(255))");
+            ddl.execute("create table ums_member(id bigint primary key, nickname varchar(64), del_flag int)");
+            ddl.execute("create table redemption(id bigint primary key, registration_id bigint, chapter_id bigint, topic_id bigint, merchant_id bigint, status varchar(16))");
+            ddl.execute("create table activity_cancel_manual_refund_case(id bigint primary key, case_type varchar(32), status varchar(48),"
+                    + "activity_id bigint, topic_id bigint, payer_registration_id bigint, parent_order_no varchar(64),"
+                    + "chapter_snapshot_json varchar(4000), create_time timestamp, owner_member_id bigint)");
+            ddl.execute("insert into mms_merchant values(77,900,1,1,0),(88,901,1,1,0)");
+            ddl.execute("insert into cms_topic values(401,'探店主题'),(402,'另一主题')");
+            ddl.execute("insert into cms_activity values(301,401,'探店场次')");
+            ddl.execute("insert into cms_registration values(501,1,401,'ORDER-1','主题'),(502,1,401,'ORDER-2','主题'),"
+                    + "(503,1,401,'ORDER-3','主题'),(504,2,301,'ORDER-4','场次')");
+            ddl.execute("insert into redemption values(1,501,31,401,900,'ACTIVE'),(2,503,31,401,900,'REVERSED'),"
+                    + "(3,504,31,401,900,'ACTIVE')");
+            ddl.execute("insert into refund_application values(41,'RF-41','registration',501,900,1001,25.00,0,'普通退款',"
+                    + "null,0,timestamp '2026-11-06 10:00:00',null,null)");
+            ddl.execute("insert into merchant_aftercare_response values(1,41,77,'AGREE')");
+            insertCase(connection, 41, 501, 401L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT", snapshot(501, 1));
+            insertCase(connection, 42, 502, 401L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT", snapshot(502, 1)); // 无核销
+            insertCase(connection, 43, 501, 401L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT", snapshot(501, 0)); // 本店章未履约
+            insertCase(connection, 44, 501, 401L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT", "broken");
+            insertCase(connection, 45, 503, 401L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT", snapshot(503, 1)); // 撤销核销
+            insertCase(connection, 46, 501, 402L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT", snapshot(501, 1)); // 不同主题
+            insertCase(connection, 47, 501, 401L, null, "MIXED_TICKETS", "PENDING_ASSESSMENT", snapshot(501, 1));
+            insertCase(connection, 48, 501, 401L, null, "PARTIAL_CHAPTERS", "NO_REFUND", snapshot(501, 1));
+            insertCase(connection, 49, 501, 401L, null, "PARTIAL_CHAPTERS", "UNKNOWN", snapshot(501, 1));
+            insertCase(connection, 50, 501, 401L, null, "PARTIAL_CHAPTERS", "PENDING_ASSESSMENT",
+                    "{\"registrationId\":501,\"chapterId\":31,\"status\":1}"); // 非数组
+            insertCase(connection, 51, 504, null, 301L, "PARTIAL_CHAPTERS", "MANUAL_REFUND_EVIDENCE_VERIFIED", snapshot(504, 1));
+
+            Map<String, Object> processing = params("PROCESSING");
+            List<Map<String, Object>> rows = run(connection, bound(configuration, "selectOwnedRefundList", processing));
+            assertEquals(2, rows.size(), "普通退款与本店人工工单各一行，不因章数放大");
+            assertEquals(2L, ((Number) run(connection, bound(configuration, "countOwnedRefundList", processing))
+                    .get(0).values().iterator().next()).longValue());
+            Map<String, Object> manual = rows.stream().filter(r -> "MANUAL_CASE".equals(r.get("record_type"))).findFirst().orElseThrow();
+            assertEquals(41L, ((Number) manual.get("manual_case_id")).longValue());
+            assertNull(manual.get("id"), "manualCaseId不冒充普通refundId，即使两类同号");
+            assertNull(manual.get("refund_amount"));
+            assertNull(manual.get("customer_nickname"));
+            assertNull(manual.get("reason"));
+            assertEquals("探店主题", manual.get("activity_title"));
+            assertFalse(manual.containsKey("chapter_snapshot_json"));
+            assertFalse(manual.containsKey("payer_registration_id"));
+            assertEquals(2, run(connection, bound(configuration, "selectOwnedRefundList", params("COMPLETED"))).size());
+            assertTrue(run(connection, bound(configuration, "selectOwnedRefundList", params("PENDING"))).isEmpty());
+
+            processing.put("manualCaseId", 41L);
+            assertEquals(1, run(connection, bound(configuration, "selectOwnedManualCaseDisplay", processing)).size());
+            for (long id = 42; id <= 47; id++) {
+                processing.put("manualCaseId", id);
+                assertTrue(run(connection, bound(configuration, "selectOwnedManualCaseDisplay", processing)).isEmpty(), "拒绝未履约/坏快照工单" + id);
+            }
+            processing.put("manualCaseId", 50L);
+            assertTrue(run(connection, bound(configuration, "selectOwnedManualCaseDisplay", processing)).isEmpty());
+            processing.put("manualCaseId", 41L);
+            processing.put("merchantId", 88L);
+            processing.put("ownerMemberId", 901L);
+            assertTrue(run(connection, bound(configuration, "selectOwnedManualCaseDisplay", processing)).isEmpty(), "他店只有未履约章不得读取");
+            assertTrue(run(connection, bound(configuration, "selectOwnedRefundList", processing)).isEmpty());
+            processing.put("merchantId", 77L);
+            assertTrue(run(connection, bound(configuration, "selectOwnedManualCaseDisplay", processing)).isEmpty(), "不能伪造门店与owner组合");
+            processing.put("ownerMemberId", 900L);
+            ddl.execute("insert into mms_merchant values(79,900,1,1,0)");
+            assertTrue(run(connection, bound(configuration, "selectOwnedManualCaseDisplay", processing)).isEmpty(), "只有member绑定的旧核销在同owner多门店时fail closed");
+            assertEquals(1, run(connection, bound(configuration, "selectOwnedRefundList", processing)).size(), "已绑定具体门店的普通退款保持原行为");
+        }
+    }
+
+    private static String snapshot(long registration, int ownStatus) {
+        return "[{\"registrationId\":" + registration + ",\"chapterId\":31,\"chapterName\":\"本店章\",\"status\":"
+                + ownStatus + "},{\"registrationId\":" + registration + ",\"chapterId\":32,\"chapterName\":\"他店章\",\"status\":"
+                + (ownStatus == 1 ? 0 : 1) + "}]";
+    }
+
+    private void insertCase(Connection connection, long id, long registration, Long topic, Long activity,
+                            String type, String status, String snapshot) throws Exception {
+        try (PreparedStatement ps = connection.prepareStatement("insert into activity_cancel_manual_refund_case"
+                + "(id,case_type,status,activity_id,topic_id,payer_registration_id,parent_order_no,chapter_snapshot_json,create_time,owner_member_id)"
+                + " values(?,?,?,?,?,?,?,?,timestamp '2026-11-06 10:01:00',555)")) {
+            ps.setLong(1, id); ps.setString(2, type); ps.setString(3, status); ps.setObject(4, activity);
+            ps.setObject(5, topic); ps.setLong(6, registration); ps.setString(7, "CASE:" + id);
+            ps.setString(8, snapshot);
+            ps.executeUpdate();
+        }
+    }
+
+    public static boolean jsonValid(String json) {
+        try { return json != null && new com.fasterxml.jackson.databind.ObjectMapper().readTree(json) != null; }
+        catch (Exception invalid) { return false; }
+    }
+
+    public static String jsonType(String json) throws Exception {
+        return new com.fasterxml.jackson.databind.ObjectMapper().readTree(json).isArray() ? "ARRAY" : "OBJECT";
+    }
+
+    public static boolean jsonContains(String json, String target) throws Exception {
+        if (json == null || target == null) return false;
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(json), expected = mapper.readTree(target);
+        if (!root.isArray()) return false;
+        for (com.fasterxml.jackson.databind.JsonNode item : root) {
+            if (item.path("registrationId").equals(expected.path("registrationId"))
+                    && item.path("chapterId").equals(expected.path("chapterId"))
+                    && item.path("status").equals(expected.path("status"))) return true;
+        }
+        return false;
+    }
 
     @Test
     void displayColumnsAreReadOnlySameScopeAndNeverSelectPii() throws Exception {

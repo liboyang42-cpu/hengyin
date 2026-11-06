@@ -98,6 +98,7 @@ class ApiClubSettlementControllerTest {
     @Test
     void summaryTopicRowsCarryTopicIdSoFinanceDetailLinkResolves() {
         ClubSettlementSummaryRow row = new ClubSettlementSummaryRow();
+        row.setLineType("INITIATOR_GUARANTEE");
         row.setId(31L);
         row.setTopicId(9001L);
         row.setAmount(new BigDecimal("130.00"));
@@ -116,6 +117,7 @@ class ApiClubSettlementControllerTest {
         assertEquals(9001L, topics.get(0).get("topicId"),
                 "结算行必须带 topicId —— 明细页按它匹配 /api/coop/finance 的主题行");
         assertEquals(31L, topics.get(0).get("id"), "结算行 id 原样保留");
+        assertEquals("INITIATOR_GUARANTEE", topics.get(0).get("lineType"));
     }
 
     /** CU-C-40:卡片上的主题名来自 cms_topic(summarySelectFrom 左连一次带出),不是展示层拼编号。 */

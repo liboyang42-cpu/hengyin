@@ -34,6 +34,10 @@ public interface CoopSettlementMapper {
     /** 某商家的结算记录(工作台) */
     public List<CoopSettlement> selectByMerchant(@Param("merchantId") Long merchantId);
 
+    /** 只读展示投影，原始结算金额保持不变；仅汇总本行已执行调整。 */
+    List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectSummaryByMerchant(
+            @Param("merchantId") Long merchantId);
+
     /** T7:某主题的全部结算单(俱乐部财务页按主题聚合商家应收/打款状态) */
     public List<CoopSettlement> selectByTopicId(@Param("topicId") Long topicId);
 

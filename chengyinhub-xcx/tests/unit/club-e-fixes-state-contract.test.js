@@ -44,7 +44,8 @@ function loadPage(rel, appOverrides) {
       stopPullDownRefresh() {}, getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
     },
     require(id) {
-      if (/utils\/(toast|loading|modal)\.js$/.test(id)) return { show() {}, hide() {} };
+      if (/utils\/toast\.js$/.test(id)) return Object.assign(() => {}, { success() {} });
+      if (/utils\/(loading|modal)\.js$/.test(id)) return { show() {}, hide() {} };
       return require(path.resolve(path.dirname(file), id));
     },
   }, { filename: rel });
@@ -154,4 +155,84 @@ test('C-17/C-02 开一场:选中主题下显示票价与集合点;非平台付�
   assert.match(wxml, /\{\{topics\[topicIndex\]\.factsText\}\}/);
   assert.match(wxml, /\{\{topics\[topicIndex\]\.paymentNotice\}\}/);
   assert.match(wxml, /\{\{seriesWindowWarning\}\}/);
+});
+
+test('C-21 创建非首项主题后保留主题与真实窗外警告', () => {
+  const { page, requests } = loadPage('pages/club/event-ops/index.js');
+  const tomorrow = require('../../utils/datetime.js').chinaDateKey(new Date(Date.now() + 86400000));
+  page.setData({ clubId: 9, canManage: true, topics: [{ id: 30 }, { id: 31 }], topicIndex: 1,
+    startDate: tomorrow, startTime: '18:00' });
+  page.submitSeries();
+  const create = requests.find(r => r.url === '/api/club/event-ops/series/create');
+  assert.equal(JSON.parse(create.data).topicId, 31);
+  create.success({ code: 200, data: { id: 3, windowWarning: '这一场不在主题日期内，请确认' } });
+  assert.equal(page.data.topics[page.data.topicIndex].id, 31);
+  assert.equal(page.data.seriesWindowWarning, '这一场不在主题日期内，请确认');
+});
+
+test('C-21 刷新主题按回包时真实选择ID保留，不被原聚焦或列表顺序覆盖', () => {
+  const { page, requests } = loadPage('pages/club/event-ops/index.js');
+  page._focusTopicId = 30;
+  page.setData({ clubId: 9, topics: [{ id: 30 }, { id: 31 }], topicIndex: 1,
+    seriesWindowWarning: '目标主题警告' });
+  page.loadTopics();
+  requests.at(-1).success({ code: 200, data: [{ id: 31 }, { id: 30 }] });
+  assert.equal(page.data.topicIndex, 0);
+  assert.equal(page.data.seriesWindowWarning, '目标主题警告');
+  page.loadTopics();
+  page.onTopicChange({ detail: { value: 1 } });
+  requests.at(-1).success({ code: 200, data: [{ id: 30 }, { id: 31 }] });
+  assert.equal(page.data.topics[page.data.topicIndex].id, 30);
+  assert.equal(page.data.seriesWindowWarning, '');
+});
+
+test('C-21 已选主题不再可开场时沿用首项/空列表回退并清旧警告', () => {
+  for (const rows of [[{ id: 30 }], []]) {
+    const { page, requests } = loadPage('pages/club/event-ops/index.js');
+    page.setData({ clubId: 9, topics: [{ id: 30 }, { id: 31 }], topicIndex: 1,
+      seriesWindowWarning: '已移除主题警告' });
+    page.loadTopics();
+    requests.at(-1).success({ code: 200, data: rows });
+    assert.equal(page.data.topicIndex, 0);
+    assert.equal(page.data.seriesWindowWarning, '');
+    assert.equal(page.data.topics.length, rows.length);
+  }
+});
+
+test('C-21 切换主题后旧创建回执不把警告贴到新主题', () => {
+  const { page, requests } = loadPage('pages/club/event-ops/index.js');
+  const tomorrow = require('../../utils/datetime.js').chinaDateKey(new Date(Date.now() + 86400000));
+  page.setData({ clubId: 9, canManage: true, topics: [{ id: 30 }, { id: 31 }], topicIndex: 1,
+    startDate: tomorrow, startTime: '18:00', seriesWindowWarning: '旧警告' });
+  page.submitSeries();
+  const create = requests.find(r => r.url === '/api/club/event-ops/series/create');
+  page.onTopicChange({ detail: { value: 0 } });
+  assert.equal(page.data.seriesWindowWarning, '');
+  create.success({ code: 200, data: { id: 3, windowWarning: '主题31的警告' } });
+  assert.equal(page.data.topics[page.data.topicIndex].id, 30);
+  assert.equal(page.data.seriesWindowWarning, '');
+});
+
+test('C-21 退出系列编辑后保留实际编辑主题，清旧回执并重置版本', () => {
+  const { page } = loadPage('pages/club/event-ops/index.js');
+  page.setData({ topics: [{ id: 30 }, { id: 31 }], topicIndex: 0, editingSeriesId: 3,
+    editingTopicId: 31, seriesWindowWarning: '旧警告' });
+  page._expectedVersion = 2;
+  page.cancelSeriesEdit();
+  assert.equal(page.data.topics[page.data.topicIndex].id, 31);
+  assert.equal(page.data.seriesWindowWarning, '');
+  assert.equal(page._expectedVersion, null);
+  assert.equal(page.data.editingSeriesId, null);
+});
+
+test('C-21 打开另一系列编辑时清除先前创建回执的警告', () => {
+  const { page, requests } = loadPage('pages/club/event-ops/index.js');
+  page.setData({ clubId: 9, canManage: true, topics: [{ id: 30 }, { id: 31 }], topicIndex: 0,
+    seriesWindowWarning: '主题30的旧回执' });
+  page.loadSeriesDetail(3);
+  requests.at(-1).success({ code: 200, data: { id: 3, clubId: 9, topicId: 31,
+    recurrenceType: 'ONCE', defaultLeadMemberId: 9008, defaultCapacity: null,
+    waitlistEnabled: true, offerMinutes: 1440, version: 0, futureDates: [] } });
+  assert.equal(page.data.editingTopicId, 31);
+  assert.equal(page.data.seriesWindowWarning, '');
 });

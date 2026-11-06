@@ -571,16 +571,14 @@ Page({
             ? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : '',
         }))
         // topics 可能晚于 series 到,补一次装饰,否则清单会一直停在 `主题 #3`
-        // E-07:带 topicId 进来时把下拉预选到它(找不到就维持第一个,不静默改口径)
-        let topicIndex = 0
-        if (that._focusTopicId != null) {
-          const focusIndex = topics.findIndex(item => item.id === that._focusTopicId)
-          if (focusIndex >= 0) topicIndex = focusIndex
-        }
+        const selectedTopic = that.data.topics[that.data.topicIndex]
+        const selectedId = positiveId(selectedTopic && selectedTopic.id) || that._focusTopicId
+        const selectedIndex = topics.findIndex(item => item.id === selectedId)
         that.setData({
           topics,
           topicsLoaded: true,
-          topicIndex,
+          topicIndex: Math.max(0, selectedIndex),
+          seriesWindowWarning: selectedIndex >= 0 ? that.data.seriesWindowWarning : '',
           seriesRows: decorateSeriesRows(that.data.seriesRows, topics),
         })
       },
@@ -718,6 +716,7 @@ Page({
           futureMinDate,
           editingSeriesId: series.id,
           editingTopicId: series.topicId,
+          seriesWindowWarning: '',
           recurrenceType: series.recurrenceType,
           startDate: dates[0],
           // 未知或混合时刻保持空值，由既有必填校验要求显式选择。
@@ -748,11 +747,14 @@ Page({
     this._expectedVersion = null
     const slot = defaultSlot()
     const today = slot.date < this.data.minDate ? this.data.minDate : slot.date
+    const selectedTopic = this.data.topics[this.data.topicIndex]
+    const topicId = positiveId(this.data.editingTopicId) || positiveId(selectedTopic && selectedTopic.id)
     this.setData({
       editingSeriesId: null,
       editingTopicId: null,
       recurrenceType: 'ONCE',
-      topicIndex: 0,
+      topicIndex: Math.max(0, this.data.topics.findIndex(item => item.id === topicId)),
+      seriesWindowWarning: '',
       startDate: today,
       startTime: slot.time,
       occurrenceCount: 4,
@@ -771,7 +773,7 @@ Page({
     const type = String(e.currentTarget.dataset.type || '')
     if (RECURRENCES.some(item => item.value === type)) this.setData({ recurrenceType: type })
   },
-  onTopicChange(e) { this.setData({ topicIndex: Number(e.detail.value) || 0 }) },
+  onTopicChange(e) { this.setData({ topicIndex: Number(e.detail.value) || 0, seriesWindowWarning: '' }) },
   onStartDateChange(e) { this.setData({ startDate: e.detail.value }) },
   onStartTimeChange(e) { this.setData({ startTime: e.detail.value }) },
   onCountInput(e) { this.setData({ occurrenceCount: e.detail.value }) },
@@ -910,9 +912,11 @@ Page({
         if (ok(res) && positiveId(res.data && res.data.id)) {
           motion.haptic({ type: 'light', reducedMotion: readReducedMotion() })
           toast.success(editingSeriesId ? '未来场次已更新' : '系列场次已创建')
-          // C-21:场次落在主题日期之外时服务端回一句提醒,留在表单上方,不拦创建
-          that.setData({ seriesWindowWarning: typeof res.data.windowWarning === 'string' ? res.data.windowWarning : '' })
           that.resetSeriesForm()
+          // C-21:回执警告只属于本次提交的主题,不能贴到等待时另选的主题上。
+          const selectedTopic = that.data.topics[that.data.topicIndex]
+          that.setData({ seriesWindowWarning: selectedTopic && selectedTopic.id === topicId
+            && typeof res.data.windowWarning === 'string' ? res.data.windowWarning : '' })
           that.loadSeries()
           return
         }

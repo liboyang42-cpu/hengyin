@@ -19,6 +19,7 @@ const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const phoneReminder = require('../../utils/phone-reminder.js');
 const identitySync = require('../../utils/identity-sync.js');
+const { normalizeMerchantAccess } = require('../../utils/merchant-access-policy.js');
 const { avatarSrc } = identitySync;
 const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 
@@ -344,6 +345,7 @@ Page({
         }
       }
       that.setData({ isAppReady: true });
+      that.loadOperatorAccess();
       that.loadPageData();
       that.getHomeCityLocation();
       that.retryPendingInviter();
@@ -556,6 +558,7 @@ Page({
 
     // onShow 也要复位旧快照留下的隐藏闸，确保角色切换后页面可见。
     this.setData({ _needsRedirect: false });
+    this.loadOperatorAccess();
 
     // 确认留在首页后,保持深色:状态栏/导航切深色(白字)。离开首页时 onHide 复位浅色。
     applyTheme('dark');
@@ -599,11 +602,35 @@ Page({
     }, 100);
   },
 
+  loadOperatorAccess() {
+    const memberId = normalizeMemberId(app.getUserID());
+    const requestEpoch = capturePrivateRequest(this, memberId);
+    const accessEpoch = this._operatorAccessEpoch = (this._operatorAccessEpoch || 0) + 1;
+    if (!memberId || wx.getStorageSync('debug_user_view') === 'user') return;
+    app.sendRequest({
+      hideLoading: true,
+      url: '/api/merchant/access/me',
+      method: 'POST',
+      success: (res) => {
+        if (this._unloaded || this._homeLocationHidden || accessEpoch !== this._operatorAccessEpoch
+            || !isCurrentPrivateRequest(this, memberId, requestEpoch)
+            || wx.getStorageSync('debug_user_view') === 'user') return;
+        const access = normalizeMerchantAccess(res && res.code == '200' ? res.data : null);
+        const stack = getCurrentPages();
+        if (access.active && access.canVerify && stack[stack.length - 1] === this) {
+          this.setData({ _needsRedirect: true });
+          goMerchantHome();
+        }
+      },
+    });
+  },
+
   /**
    * 页面隐藏时
    */
   onHide() {
     this._homeLocationHidden = true;
+    this._operatorAccessEpoch = (this._operatorAccessEpoch || 0) + 1;
     this._locationEpoch = (this._locationEpoch || 0) + 1;
     if (this._locationLoadingEpoch != null) {
       this._locationLoadingEpoch = null;

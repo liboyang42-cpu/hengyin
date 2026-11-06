@@ -573,3 +573,27 @@ test('本人历史分润明细保持收款人视角，服务端撤销访问后�
   assert.equal(e.page.data.detail, null)
   assert.equal(e.page.data.loadState, 'error')
 })
+
+test('商家合作详情保留原额，只显示已执行调整后的净额', () => {
+  const detail = buildMerchantSettlementDetail(merchantRow({
+    amount: 40, originalAmount: 40, executedAdjustmentAmount: -10, netAmount: 30,
+  }))
+  assert.equal(detail.amount, '¥30.00')
+  assert.equal(detail.lines.find(row => row.key === 'original').value, '¥40.00')
+  assert.equal(detail.lines.find(row => row.key === 'adjustment').value, '−¥10.00')
+  assert.equal(detail.lines.find(row => row.key === 'income').value, '¥30.00')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: 40 })).amount, '¥40.00')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: null })).amount, '—')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: -2 })).amount, '−¥2.00')
+})
+
+test('俱乐部同主题的保底与分成详情沿真实行类型显示，不猜未知类型', () => {
+  for (const [lineType, label] of [['INITIATOR_GUARANTEE', '主办保底'], ['INITIATOR_MARGIN', '主办分成']]) {
+    const detail = buildClubSettlementDetail(clubRow({ lineType }))
+    assert.equal(detail.lines.find(row => row.key === 'lineType').value, label)
+    assert.equal(detail.amount, '¥ 128.00')
+  }
+  for (const lineType of ['UNKNOWN', '__proto__', 'constructor', null]) {
+    assert.equal(buildClubSettlementDetail(clubRow({ lineType })).lines.some(row => row.key === 'lineType'), false)
+  }
+})

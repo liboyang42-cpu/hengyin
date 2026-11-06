@@ -319,7 +319,8 @@ Page({
         const shaped = res && (res.code === 200 || res.code === '200')
           ? shapeAftercareListPage(res.data, bucket) : null;
         if (!shaped) { failed = true; finish(); return; }
-        items.push.apply(items, shaped.items);
+        items.push.apply(items, shaped.items.filter(item => item.recordType === 'REFUND'
+          && Number.isSafeInteger(item.refundId) && item.refundId > 0));
         finish();
       });
     });
@@ -534,8 +535,14 @@ Page({
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(5, 10) : '';
     item.sourceText = { REDEMPTION_FEE: '核销计酬', COOP_SHARE: '合作分润', ACTIVITY_SHARE: '活动分润', MERCHANT_CLAWBACK: '已执行扣划' }[row.source] || '调整';
+    if (row.source === 'COOP_SHARE' && row.topicName) item.sourceText += ' · ' + row.topicName;
     item.stateText = financeStateText(row);
     item.stateVariant = stateVariant(row.displayState);
+    item.coopDetailId = row.source === 'COOP_SHARE' && row.refKind === 'coop_settlement'
+      && (row.payeeType == null || row.payeeType === 'merchant' || row.payeeType === 'club')
+      && /^[1-9]\d*$/.test(String(row.refId || '')) && Number.isSafeInteger(Number(row.refId)) ? String(row.refId) : '';
+    item.coopBreakdown = row.source === 'COOP_SHARE' && row.originalAmount != null
+      ? '原始应结 ' + yuan(row.originalAmount) + ' · 已执行调整 ' + (row.executedAdjustmentAmount == null ? '—' : yuan(row.executedAdjustmentAmount)) : '';
     return item;
   },
   batchRow(row) {
@@ -548,6 +555,17 @@ Page({
       : (row.paymentState === 'PAID' ? 'success' : 'warning');
     item.invoiceText = { NONE: '未开票', ISSUED: '已开票', RED: '已红冲' }[row.invoiceState] || '';
     return item;
+  },
+
+  goCoopSettlements() {
+    if (!this.data.merchantAccess.canReadFinance || !this._isCurrentMemberScope(this._scopeMemberId)) return;
+    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement&source=coop' });
+  },
+  goSettlementDetail(event) {
+    if (!this.data.merchantAccess.canReadFinance || !this._isCurrentMemberScope(this._scopeMemberId)) return;
+    const id = event && event.currentTarget && event.currentTarget.dataset.id;
+    if (!id || !this.data.entries.some(row => row.coopDetailId === String(id))) return;
+    wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=ledger&id=' + id });
   },
 
   onRedemptionFilter(event) {
@@ -757,7 +775,7 @@ function financeStateText(item) {
     return '本次不产生现金结算';
   }
   return {
-    PENDING_SETTLEMENT: item.settlementRoute === 'COOP_ORDER' ? '待主题结算' : '待结算',
+    PENDING_SETTLEMENT: item.source === 'COOP_SHARE' ? '待入账' : (item.settlementRoute === 'COOP_ORDER' ? '待主题结算' : '待结算'),
     SETTLED: item.destination === 'PERSONAL_ACCOUNT' ? '已入个人账户' : '平台已打款',
     ADJUSTMENT_PENDING: '调整中', ADJUSTED: '已调整', REVERSED_BEFORE_SETTLEMENT: '核销已撤销', LEDGER_ERROR: '结算数据对不上，请联系客服',
   }[item.displayState] || '状态待确认';

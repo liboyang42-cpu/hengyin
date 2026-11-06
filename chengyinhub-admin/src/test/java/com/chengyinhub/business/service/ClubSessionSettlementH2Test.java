@@ -46,7 +46,7 @@ class ClubSessionSettlementH2Test {
         ds.setUser("sa");
         jdbc = new JdbcTemplate(ds);
         jdbc.execute("create table coop_settlement (id bigint primary key, topic_id bigint, merchant_id bigint,"
-                + " payee_type varchar(20), beneficiary_role varchar(20), beneficiary_id bigint, amount decimal(12,2),"
+                + " payee_type varchar(20), line_type varchar(32), beneficiary_role varchar(20), beneficiary_id bigint, amount decimal(12,2),"
                 + " status int, payable_time datetime, settle_time datetime, payout_time datetime,"
                 + " del_flag int default 0, create_time datetime)");
         jdbc.execute("create table coop_settlement_adjustment (settlement_id bigint, amount decimal(12,2), status varchar(20))");

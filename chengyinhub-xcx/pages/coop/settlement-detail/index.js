@@ -56,6 +56,9 @@ function isMerchantSettlement(record) {
       || !isCanonicalStatus(record.shareMode)) {
     return false;
   }
+  for (const key of ['originalAmount', 'executedAdjustmentAmount', 'netAmount']) {
+    if (Object.prototype.hasOwnProperty.call(record, key) && record[key] !== null && !isFiniteNumber(record[key])) return false;
+  }
   const shareMode = Number(record.shareMode);
   if (shareMode === 1) {
     return isNonNegativeNumber(record.shareRate) && Number(record.shareRate) <= 100;

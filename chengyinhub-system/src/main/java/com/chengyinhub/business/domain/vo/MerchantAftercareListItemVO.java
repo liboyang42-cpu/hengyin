@@ -7,6 +7,16 @@ import java.util.Date;
 
 /** 商家售后列表白名单；不下发商家主体、打款凭证及申请人手机号/openid 等敏感字段(申请人仅昵称,受 CRM 读权限约束)。 */
 public class MerchantAftercareListItemVO {
+    private String recordType = "REFUND";
+    private Long manualCaseId;
+    private String manualCaseStatus;
+
+    public String getRecordType() { return recordType; }
+    public void setRecordType(String recordType) { this.recordType = recordType; }
+    public Long getManualCaseId() { return manualCaseId; }
+    public void setManualCaseId(Long manualCaseId) { this.manualCaseId = manualCaseId; }
+    public String getManualCaseStatus() { return manualCaseStatus; }
+    public void setManualCaseStatus(String manualCaseStatus) { this.manualCaseStatus = manualCaseStatus; }
     private Long refundId;
     private String refundNo;
     private String sourceType;

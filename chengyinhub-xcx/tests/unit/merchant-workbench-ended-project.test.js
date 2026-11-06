@@ -290,3 +290,70 @@ test('负控:把已结束项目重新算进「全部 N」时必须判红', () =>
   assert.equal(page._chapterProjectList.length, 1)
   assert.equal(page.data.projectCards[0].ownerId, 990028)
 })
+
+
+test('不同表相同ID的承接与章节在工作台和全部项目均有唯一key', () => {
+  const page = loadPage();
+  const legacy = [{ id: 101, topicId: 77, status: 1, addressName: '原点位', endDate: '2999-12-31' }];
+  const chapter = [{ id: 101, topicId: 88, status: 0, source: 1 }];
+  page.loadJoinList(1);
+  requests.find(r => r.url === '/api/registration/merchant/list').success({ code: 200, data: { rows: legacy } });
+  page.loadChapterProjectList(1);
+  requests.find(r => r.url === '/api/merchant/chapter-application/mine').success({ code: 200, data: chapter });
+  assert.equal(page.data.joinTotal, 2);
+  assert.equal(new Set(page.data.projectCards.map(card => card.key)).size, 2);
+  assert.deepEqual(new Set(page.data.projectCards.map(card => card.ownerId)), new Set([77, 88]));
+  assert.equal(page.data.projectCards.find(card => card.ownerId === 77).acceptorName, '原点位');
+  const { joinProjects } = require('../../subpackageA/utils/merchant-join-projects.js');
+  const all = joinProjects(legacy, chapter);
+  assert.equal(all.total, 2);
+  assert.equal(new Set(all.items.map(card => card.key)).size, 2);
+});
+
+test('同主题多个已承接点位只覆盖首张邀请卡，其余点位与全部项目一致保留', () => {
+  const page = loadPage();
+  const legacy = [
+    { id: 101, topicId: 77, status: 1, topicName: '双点主题', addressName: '书店', endDate: '2999-12-31' },
+    { id: 102, topicId: 77, status: 1, topicName: '双点主题', addressName: '咖啡', endDate: '2999-12-31' },
+  ];
+  const invite = { id: 501, topicId: 77, topicName: '双点主题', status: 0, source: 1 };
+  page.loadJoinList(1);
+  requests.find(r => r.url === '/api/registration/merchant/list').success({ code: 200, data: { rows: legacy } });
+  page.loadChapterProjectList(1);
+  requests.find(r => r.url === '/api/merchant/chapter-application/mine').success({ code: 200, data: [invite] });
+  const cards = page.data.projectCards;
+  assert.equal(cards.length, 2);
+  assert.equal(new Set(cards.map(card => card.key)).size, 2, 'wx:key 不得重复');
+  assert.equal(cards.filter(card => card.roleLabel === '待接受邀请').length, 1);
+  assert.equal(cards.find(card => card.id === 102).acceptorName, '咖啡', '第二个已承接点位仍保留');
+  const { joinProjects } = require('../../subpackageA/utils/merchant-join-projects.js');
+  const all = joinProjects(legacy, [invite]);
+  assert.equal(all.total, cards.length);
+  assert.equal(all.items.filter(card => card._pendingChapterInvite).length, 1);
+  assert.equal(all.items.find(card => card.key === 'join-102').addressName, '咖啡');
+});
+
+test('本人待接受章节邀请进入项目卡，普通待审申请不得混入', () => {
+  const page = loadPage();
+  page.loadJoinList(1);
+  requests.find(r => r.url === '/api/registration/merchant/list').success({ code: 200, data: { rows: [
+    { id: 9, topicId: 990041, status: 1, endDate: '2999-12-31' },
+  ] } });
+  page.loadChapterProjectList(1);
+  requests.find(r => r.url === '/api/merchant/chapter-application/mine').success({ code: 200, data: [
+    { id: 5, topicId: 990041, status: 1, offerActive: true, chapterName: '已有承接章节' },
+    { id: 1, topicId: 990041, chapterId: 173, chapterName: '咖啡章节', topicName: '待接受邀请', status: '0', source: '1', offerActive: false },
+    { id: 2, topicId: 990042, status: 0, source: 0 },
+    { id: 3, topicId: 990043, status: 2, source: 1 },
+    { id: 4, topicId: 0, status: 0, source: 1 },
+  ] });
+  assert.deepEqual(page.data.projectCards.map(card => card.ownerId), [990041]);
+  assert.equal(page.data.projectCards[0].statusLabel, '待接受');
+  assert.equal(page.data.projectCards[0].roleLabel, '待接受邀请');
+  assert.equal(page.data.joinTotal, 1, '同主题有已承接章节和新邀请仍只是一项目');
+  const navigations = [];
+  global.wx.navigateTo = options => navigations.push(options.url);
+  page.openProjectCard({ currentTarget: { dataset: { topicid: 990041, source: 'chapter' } } });
+  assert.equal(navigations[0], '/pages/topic/merchantinfo/merchantinfo?id=990041&scope=MERCHANT',
+    '待接受邀请走原招商浏览入口，不能先要求已承接的private home');
+});

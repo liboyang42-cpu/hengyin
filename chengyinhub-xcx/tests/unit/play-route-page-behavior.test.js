@@ -281,3 +281,71 @@ test('P-37:自由探索的下一站跳过玩法已做完、只等核销的店', 
   assert.equal(free.computeNext(shops, null).nodeId, 72)
   assert.equal(free.computeNext([shops[0], shops[2]], null), null, '只剩等核销的店时不再指路')
 })
+
+function completionPage(mode, node) {
+  const { definition } = loadPage()
+  const page = context(definition, {
+    mode, activityId: 88, topicId: 9, nodes: [Object.assign({ nodeId: 71 }, node)],
+    routeState: { routeMode: 'LINEAR' },
+  })
+  page._routeNodeCatalog = page.data.nodes.slice()
+  page._captureCompletionEffects = () => ({})
+  page._isCompletionEffectCurrent = () => true
+  for (const method of ['clearGameNetworkError', 'stopNav', '_animateCompletedSegment',
+    '_triggerCelebration', 'markJustWrote', 'probeCelebrateEntry']) page[method] = () => {}
+  page.rebuild = () => { page.data.doneCount = page.data.nodes.filter(n => n.done).length }
+  page.loadData = (force) => { page.readbackRequested = force === false }
+  return page
+}
+
+test('FREE 商店真实答题回执只完成玩法，不把待核销权益显示为已核销', () => {
+  const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false, doneAt: 0,
+    fragmentText: '本店的故事碎片' })
+  page.onComplete(71, { nodeId: 71, firstTime: true, done: 1, total: 4, completed: false, xp: 10 })
+  assert.equal(page.data.nodes[0].done, false)
+  assert.equal(page.data.nodes[0].gameDone, true)
+  assert.equal(page.data.nodes[0].earnedXp, 10)
+  assert.equal(page.data.doneCount, 0)
+  assert.equal(page.data.frag.step, '我的第 1 步 · ')
+  assert.equal(page.readbackRequested, true, '核销完成态必须重读当前服务端权益')
+})
+
+test('FREE 商店重复玩法回执保留已经权威读回的核销事实与历史探索值', () => {
+  const page = completionPage(2, { merchantId: 8001, done: true, gameDone: true,
+    doneAt: 1787500000001, earnedXp: 10 })
+  page.onComplete(71, { nodeId: 71, firstTime: false, done: 1, total: 4, completed: false, xp: 0 })
+  assert.equal(page.data.nodes[0].done, true)
+  assert.equal(page.data.nodes[0].doneAt, 1787500000001)
+  assert.equal(page.data.nodes[0].gameDone, true)
+  assert.equal(page.data.nodes[0].earnedXp, 10)
+  assert.equal(page.data.flyScore, false)
+  assert.equal(page.readbackRequested, true)
+})
+
+test('CITY 与没有商家的纯线上 FREE 节点仍沿用原完成语义', () => {
+  for (const [mode, merchantId] of [[1, 8001], [2, 0]]) {
+    const page = completionPage(mode, { merchantId, done: false })
+    page.onComplete(71, { nodeId: 71, firstTime: true, done: 1, total: 4, completed: false, xp: 10 })
+    assert.equal(page.data.nodes[0].done, true)
+    assert.equal(page.data.doneCount, 1)
+  }
+})
+
+test('FREE 商店的路线完成投影不能充当尚未核销的权益', () => {
+  const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false })
+  page.onComplete(71, { nodeId: 71, firstTime: true, done: 1, completed: false, xp: 10,
+    routeState: { routeMode: 'LINEAR', status: 'ACTIVE', version: 1, nodeStates: { 71: 'COMPLETED' } } })
+  assert.equal(page.data.nodes[0].done, false)
+  assert.equal(page.data.nodes[0].gameDone, true)
+})
+
+test('FREE 权威 nodes 读回已核销后，重复答题回执不会翻回待核销', () => {
+  const page = completionPage(2, { merchantId: 8001, done: false })
+  page.data.nodes = [page.normNode({ nodeId: 71, merchantId: 8001, done: true, gameDone: true,
+    doneAt: 1787500000001 }, 0, 2)]
+  page._routeNodeCatalog = page.data.nodes.slice()
+  page.onComplete(71, { nodeId: 71, firstTime: false, done: 1, completed: false, xp: 0 })
+  assert.equal(page.data.nodes[0].done, true)
+  assert.equal(page.data.nodes[0].doneAt, 1787500000001)
+  assert.equal(page.data.doneCount, 1)
+})

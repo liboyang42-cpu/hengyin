@@ -82,12 +82,30 @@ test('多场重开保留场次并重读库存，可见期间不重置选票，�
   assert.equal(vm.data.totalText, '')
   requests[1].success({ code: 200, data: { omsTicketList: [{ id: 5, name: '售罄', price: 0, remainingInventory: 0 }] } })
   vm.onPickTicket({ currentTarget: { dataset: { id: 5 } } })
-  assert.equal(vm.data.pickedTicketId, 0)
+  assert.equal(vm.data.pickedTicketId, 5)
   observe(true, [{ id: 11 }, { id: 12 }])
   assert.equal(vm.data.pickedActivityId, 0)
   assert.equal(vm.data.ticketsState, 'idle')
   requests[1].success({ code: 200, data: TICKETS })
   assert.equal(vm.data.ticketsState, 'idle')
+})
+
+test('C-24:未来售罄票仍可进原结算页读取候补资格，不丢失真实场次与票种', () => {
+  const { vm, requests } = loadComponent()
+  const confirmed = []
+  vm.triggerEvent = (name, data) => confirmed.push({ name, data })
+  vm.pickActivity(30)
+  requests[0].success({ code: 200, data: { omsTicketList: [
+    { id: 118, name: '城市定向票', price: 0, remainingInventory: 0, startTime: '2999-11-06 18:00:00' }
+  ] } })
+  vm.onPickTicket({ currentTarget: { dataset: { id: 118 } } })
+  vm.onNext()
+  assert.deepEqual(confirmed.map(e => [e.name, e.data.activityId, e.data.ticketId]), [['confirm', 30, 118]])
+  assert.equal(requests.length, 1, '选票只交给原结算页，不创建报名或候补')
+  vm.data.tickets[0].startTime = '2020-11-06 18:00:00'
+  vm.onNext()
+  assert.equal(confirmed.length, 1, '售罄可候补不放开已开始场次')
+  assert.equal(vm.data.pickedTicketId, 0)
 })
 
 test('关闭期间的回包失效，重试同场次只接受最新请求', () => {

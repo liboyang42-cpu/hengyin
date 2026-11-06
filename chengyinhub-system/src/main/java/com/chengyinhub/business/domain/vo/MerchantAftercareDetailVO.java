@@ -9,6 +9,16 @@ import java.util.List;
 
 /** 商家售后详情白名单；平台处理态与商家意见态明确拆开。 */
 public class MerchantAftercareDetailVO {
+    private String recordType = "REFUND";
+    private Long manualCaseId;
+    private String manualCaseStatus;
+
+    public String getRecordType() { return recordType; }
+    public void setRecordType(String recordType) { this.recordType = recordType; }
+    public Long getManualCaseId() { return manualCaseId; }
+    public void setManualCaseId(Long manualCaseId) { this.manualCaseId = manualCaseId; }
+    public String getManualCaseStatus() { return manualCaseStatus; }
+    public void setManualCaseStatus(String manualCaseStatus) { this.manualCaseStatus = manualCaseStatus; }
     private Long refundId;
     private String refundNo;
     private String sourceType;

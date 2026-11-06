@@ -32,10 +32,10 @@
     <cy-empty wx:elif="{{ticketsState === 'idle'}}" kind="empty" size="lg"
               title="先选一个日期" />
     <view wx:else>
-      <view class="sp-ticket {{pickedTicketId === item.id ? 'is-on' : ''}} {{(item.remaining === 0 || item.windowText) ? 'is-off' : ''}}"
+      <view class="sp-ticket {{pickedTicketId === item.id ? 'is-on' : ''}} {{item.windowText ? 'is-off' : ''}}"
             wx:for="{{tickets}}" wx:key="id" data-id="{{item.id}}" bindtap="onPickTicket"
-            aria-role="button" aria-label="选择 {{item.name}}" aria-disabled="{{(item.remaining === 0 || item.windowText)}}"
-            hover-class="{{(item.remaining === 0 || item.windowText) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+            aria-role="button" aria-label="选择 {{item.name}}" aria-disabled="{{!!item.windowText}}"
+            hover-class="{{item.windowText ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         <view class="sp-ticket-main">
           <text class="sp-ticket-n">{{item.name}}</text>
           <text class="sp-ticket-r" wx:if="{{item.rule}}">{{item.rule}}</text>

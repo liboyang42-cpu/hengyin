@@ -9,6 +9,9 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface MerchantAftercareMapper {
+    MerchantAftercareListRow selectOwnedManualCaseDisplay(@Param("merchantId") Long merchantId,
+                                                         @Param("ownerMemberId") Long ownerMemberId,
+                                                         @Param("manualCaseId") Long manualCaseId);
     Long lockActiveMerchantOwner(@Param("merchantId") Long merchantId,
                                  @Param("ownerMemberId") Long ownerMemberId);
 

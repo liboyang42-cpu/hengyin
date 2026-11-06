@@ -2895,7 +2895,7 @@ Page({
       merchantPoolEditable: editable,
       medalEditable: !roleGuard.hasSnapshot() || roleGuard.can('canDesignMedal'),
     };
-    if (!editable && this.data.formData && this.data.formData.openMerchantPool) {
+    if (this.data.editScope !== 'WHITELIST' && !editable && this.data.formData && this.data.formData.openMerchantPool) {
       patch['formData.openMerchantPool'] = false;
     }
     this.setData(patch);
@@ -3845,6 +3845,7 @@ Page({
   },
   // 举办方式：是否允许路线进入商家池
   onMerchantPoolChange(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     this.setData({
       'formData.openMerchantPool': e.detail.value
     });
@@ -3852,6 +3853,7 @@ Page({
 
   // 开放范围·俱乐部承接(2026-09-15 裁决 12B:默认开,主办可手动关)
   onClubPoolChange(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     this.setData({
       'formData.openClubPool': e.detail.value
     });
@@ -6610,11 +6612,13 @@ Page({
   },
 
   onPreviewClubPool(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     this.setData({ 'formData.openClubPool': !!(e.detail && e.detail.value) }, () => this._refreshStoryPreview());
   },
 
   // 商家承接:城市定向 = 主题级商家池;自由探索 = 每一章的「开放商家承接」一起开 / 关(条款与品类回章节里设)
   onPreviewMerchantRecruit(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     const on = !!(e.detail && e.detail.value);
     if (Number(this.data.formData.productType) !== 2) {
       this.setData({ 'formData.openMerchantPool': on }, () => this._refreshStoryPreview());
@@ -6668,6 +6672,9 @@ Page({
       on: recruitOn, note: '每一站按档位邀商家（' + (fd.clubId ? '权益 / 计酬 / 引流' : '权益 / 引流') + '）' });
     else if (!freeExplore && merchantScope) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', locked: true, reason: lockReason });
     else if (!freeExplore && this.data.merchantPoolEditable) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', on: !!fd.openMerchantPool });
+    if (this.data.editScope === 'WHITELIST') switches.forEach(row => {
+      if (!row.fixed) { row.locked = true; row.reason = '主题已过审，合作设置不能在内容编辑器中修改'; }
+    });
     // 直接重算,不读 this.data.totalStats:那个字段全页零渲染(U4 存量债务 A1),
     // 读它只会把一条死字段升级成「内部状态」,而算一次的成本本来就可以忽略。
     const stats = this.calculateTotalStats() || {};
@@ -7718,12 +7725,16 @@ Page({
   },
   // 主题写接口:专业版故事流走 v2,其余走旧接口;有主题号就 update,否则 create
   _topicEndpoint(payload, editingId) {
-    const hasChapterBlocks = (payload.chapters || []).some(chapter =>
+    // 白名单请求不带章节，协议仍按已回填的章流元数据选择，不能退回会拒收章流的旧入口。
+    const metadata = editingId && this.data.editScope === 'WHITELIST'
+      ? { chapters: this.data.formData.chapters, productType: this.data.formData.productType,
+        publishMode: this.data.aiSimple ? 'ai_simple' : 'pro' } : payload;
+    const hasChapterBlocks = (metadata.chapters || []).some(chapter =>
       Array.isArray(chapter.blocks) && chapter.blocks.length > 0);
-    const professionalStory = (payload.publishMode === 'pro'
-      && (Number(payload.productType) === 1 || (payload.chapters || []).some(chapter => chapter.opening
+    const professionalStory = (metadata.publishMode === 'pro'
+      && (Number(metadata.productType) === 1 || (metadata.chapters || []).some(chapter => chapter.opening
         || chapter.ending || (Array.isArray(chapter.blocks) && chapter.blocks.length > 0))))
-      || (Number(payload.productType) === 2 && hasChapterBlocks);
+      || (Number(metadata.productType) === 2 && hasChapterBlocks);
     return professionalStory
       ? (editingId ? '/api/topic/v2/update' : '/api/topic/v2/create')
       : (editingId ? '/api/topic/update' : '/api/topic/create');

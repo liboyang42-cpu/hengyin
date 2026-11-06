@@ -438,8 +438,10 @@ Component({
     },
 
     onCancelledAction() {
-      if (this.data.cancelledHasOwnOrder) this.goPlay()
-      else this.close()
+      if (!this.data.cancelledHasOwnOrder) { this.close(); return }
+      if (this._navigating) return
+      this._navigating = true
+      wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false } })
     },
 
     goPlay() {
