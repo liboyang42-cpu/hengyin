@@ -859,7 +859,7 @@
     <update id="claimNotificationOutbox">
         update club_event_notification_outbox
         set next_attempt_at = #{leaseUntil}, update_time = now()
-        where delivery_id = #{deliveryId} and status = 'PENDING' and next_attempt_at &lt;= now()
+        where delivery_id = #{deliveryId} and status = 'PENDING' and next_attempt_at &lt;= #{now}
     </update>
 
     <select id="selectDispatchableByCampaign" resultMap="deliveryResult">
@@ -867,7 +867,7 @@
                d.attempt_count, d.message_id, d.last_error, d.sent_at, d.version
         from club_event_notification_delivery d
         inner join club_event_notification_outbox o on o.delivery_id = d.id
-          and o.status = 'PENDING' and o.next_attempt_at &lt;= now()
+          and o.status = 'PENDING' and o.next_attempt_at &lt;= #{now}
         where d.campaign_id = #{campaignId} and d.status in ('PENDING','FAILED') and d.attempt_count &lt; 5
         order by d.id asc limit #{limit} for update
     </select>

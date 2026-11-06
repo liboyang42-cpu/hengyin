@@ -1,5 +1,11 @@
 # l6-club: the club leader's session, opening to settlement
 
+## 2026-11-06 C08 通知认领时基修复
+
+通知到期筛选使用应用时间，而投递选择与租约认领使用数据库 `NOW()`，两种时基不一致会造成提前选择或到期仍无法认领。两处判定现统一使用本次认领捕获的同一个应用时间参数，保留行锁、状态条件、尝试上限和租约门禁。
+
+新增 `ClubEventNotificationClockMyBatisTest` 执行真实 Mapper XML，分别覆盖应用时间领先和落后数据库八小时，并验证未到期、租约防重复和过期恢复。旧实现两个用例均断言失败；测试 VPS 的预算入口完成修复后四类定向回归，37/37 通过、零跳过。此处是 H2/单元与事务证据；本提交的完整 CI 以 PR 最新检查为准。共享定时任务仍未启用，真实支付、手机与生产运行不由这些结果证明。
+
 Branch `claude/walk-fix-1102-l6-club` from `origin/master` 014fc0d8. Findings are from `docs/delivery/cloud-walk-20261101/club/REPORT.md` (branch `claude/cloud-walk-20261101-club`).
 
 Screenshots come from the walkthrough rig (real backend, real MySQL and Redis, the real mini-program bundle in the rig's browser runtime). They are not from a phone. `-before` shots are master 014fc0d8 and `-after` shots are this branch, replayed with the same fixtures and steps (`shots/`). HTTP records with database read-backs are in `http/`. The replay scripts are in `rig-replay/` (run against a fresh rig with `CAND=<candidate worktree> bash rig-replay/run-all.sh <before|after>`). The rig's MySQL runs at `+00:00` while Java writes Shanghai wall time; production runs `+08:00`. The club walk hit the same mismatch, and it is why `NO_SHOW` reads 0 through the API in the rig. `noshow_check.py` runs this branch's SQL with the session clock at `+08:00`.

@@ -1,5 +1,10 @@
 # l3-sell result: selling, checkout, publishing and honest errors
 
+## 2026-11-06 P16 / P31 补充状态
+
+- P16 原生选点尚未验证：正常节点地点入口调用 `chooseLocation` 返回 `errno 112`，提示平台隐私指引未声明该接口；源码 `requiredPrivateInfos` 已声明。按用户要求暂缓后台登录与该项复测，保留阻塞记录，继续原清单其他项目。
+- P31 已在微信开发者工具模拟器正常登录后的免费活动结算页验证：勾选后绿色对勾可见、按钮变为“确认报名”；取消勾选及退出重新进入均恢复禁用。没有提交报名或付款；此结果不等于手机真机或发布验收。
+
 Branch `claude/walk-fix-1102-l3-sell`, from `origin/master` 014fc0d8. Draft PR to master; not merged.
 
 Evidence in this folder:

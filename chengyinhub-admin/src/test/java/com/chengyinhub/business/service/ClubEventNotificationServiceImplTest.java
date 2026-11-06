@@ -59,7 +59,7 @@ class ClubEventNotificationServiceImplTest {
         ReflectionTestUtils.setField(service, "wxContentSecurityService", mock(com.chengyinhub.business.service.IWxContentSecurityService.class));
         ReflectionTestUtils.setField(service, "umsMemberService", mock(com.chengyinhub.business.service.IUmsMemberService.class));
         when(mapper.isEligibleNotificationRecipient(any(), any(), any(), any(), any())).thenReturn(1);
-        when(mapper.claimNotificationOutbox(any(), any())).thenReturn(1);
+        when(mapper.claimNotificationOutbox(any(), any(), any())).thenReturn(1);
         when(access.require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_OPERATE))
                 .thenReturn(eventAccess());
         when(clubs.selectClubByIdForUpdate(CLUB)).thenReturn(activeClub());
@@ -180,7 +180,7 @@ class ClubEventNotificationServiceImplTest {
                 () -> service.retryFailed(ACTOR, 61L));
 
         assertEquals(HttpStatus.FORBIDDEN, error.getCode());
-        verify(mapper, never()).selectDispatchableByCampaign(any(), any(Integer.class));
+        verify(mapper, never()).selectDispatchableByCampaign(any(), any(Integer.class), any());
         verify(im, never()).sendSystem(any(), any(), any(), any());
     }
 
@@ -276,7 +276,7 @@ class ClubEventNotificationServiceImplTest {
         when(mapper.insertOutbox(any(), any())).thenReturn(1);
         ClubEventDelivery first = delivery(121L, 51L);
         ClubEventDelivery second = delivery(122L, 52L);
-        when(mapper.selectDispatchableByCampaign(61L, 500)).thenReturn(Arrays.asList(first, second));
+        when(mapper.selectDispatchableByCampaign(eq(61L), eq(500), any())).thenReturn(Arrays.asList(first, second));
         when(mapper.selectDeliveryByIdForUpdate(121L)).thenReturn(first);
         when(mapper.selectDeliveryByIdForUpdate(122L)).thenReturn(second);
         when(im.sendSystem(eq(51L), eq(1), any(), any())).thenReturn(501L);
@@ -315,7 +315,7 @@ class ClubEventNotificationServiceImplTest {
         });
         when(mapper.insertOutbox(any(), any())).thenReturn(1);
         ClubEventDelivery delivery = delivery(121L, 51L);
-        when(mapper.selectDispatchableByCampaign(61L, 500)).thenReturn(Collections.singletonList(delivery));
+        when(mapper.selectDispatchableByCampaign(eq(61L), eq(500), any())).thenReturn(Collections.singletonList(delivery));
         when(mapper.selectDeliveryByIdForUpdate(121L)).thenReturn(delivery);
         when(mapper.isEligibleNotificationRecipient(61L, CLUB, ACTIVITY, "REGISTERED", 51L)).thenReturn(0);
         when(mapper.markDeliverySkippedIneligibleCas(121L, 0)).thenReturn(1);
@@ -349,7 +349,7 @@ class ClubEventNotificationServiceImplTest {
         delivery.setAttemptCount(1);
         delivery.setVersion(1);
         when(mapper.selectCampaignById(61L)).thenReturn(pending, pending, refreshed);
-        when(mapper.selectDispatchableByCampaign(61L, 500)).thenReturn(Collections.singletonList(delivery));
+        when(mapper.selectDispatchableByCampaign(eq(61L), eq(500), any())).thenReturn(Collections.singletonList(delivery));
         when(mapper.selectDeliveryByIdForUpdate(121L)).thenReturn(delivery);
         when(im.sendSystem(eq(51L), eq(1), any(), any())).thenReturn(501L);
         when(mapper.markDeliverySentCas(eq(121L), eq(1), eq(501L), any())).thenReturn(1);
@@ -360,7 +360,7 @@ class ClubEventNotificationServiceImplTest {
 
         assertEquals(ClubEventCampaign.COMPLETED, result.getStatus());
         InOrder durableBeforeExternal = inOrder(mapper, im);
-        durableBeforeExternal.verify(mapper).claimNotificationOutbox(eq(121L), any());
+        durableBeforeExternal.verify(mapper).claimNotificationOutbox(eq(121L), any(), any());
         durableBeforeExternal.verify(im).sendSystem(eq(51L), eq(1), any(), any());
     }
 
@@ -508,8 +508,8 @@ class ClubEventNotificationServiceImplTest {
         assertEquals(Integer.valueOf(3), result.getSuccessCount(),
                 "刷新要读到投递推进后的数,不能把页面里那份旧快照再吐回去");
         verify(access).require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_OPERATE);
-        verify(mapper, never()).claimNotificationOutbox(any(), any());
-        verify(mapper, never()).selectDispatchableByCampaign(any(), any(Integer.class));
+        verify(mapper, never()).claimNotificationOutbox(any(), any(), any());
+        verify(mapper, never()).selectDispatchableByCampaign(any(), any(Integer.class), any());
         verify(mapper, never()).refreshCampaignCounts(any());
         verify(im, never()).sendSystem(any(), any(), any(), any());
     }
