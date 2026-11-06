@@ -294,7 +294,7 @@ public class TopicPublicationService {
             return false;
         }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
-        if (quotaError != null) throw new ServiceException(quotaError);
+        if (quotaError != null) throw new ServiceException(quotaError, com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST);
         publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId), declarations);
         CmsTopic published = new CmsTopic();
         published.setId(topicId);

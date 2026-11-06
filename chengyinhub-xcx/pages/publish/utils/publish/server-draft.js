@@ -245,7 +245,7 @@ function storedBlock(block, nodes, submitted, keepKey) {
   if (block.type === 'dream') {
     if (row.title != null) { row.title = row.title.trim(); if (!row.title) delete row.title; }
     row.images = row.images.map(image => {
-      const out = { url: image.url };
+      const out = { url: imageIdentity(image.url) };
       if (String(image.line || '').trim()) out.line = image.line;
       return out;
     });

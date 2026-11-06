@@ -218,7 +218,12 @@ class ApiTopicSaveDraftContractTest {
         editDetail(1, 0);
         CmsTopic topic = topicService.selectCmsTopicById(TOPIC_ID);
         topic.setStartDate(new java.util.Date(System.currentTimeMillis() - 60_000));
-        assertNotEquals(200, controller.authorEditDetail(String.valueOf(TOPIC_ID), null).get(AjaxResult.CODE_TAG));
+        for (int userStatus : new int[]{1, 0}) {
+            topic.setUserStatus(userStatus);
+            AjaxResult denied = controller.authorEditDetail(String.valueOf(TOPIC_ID), null);
+            assertNotEquals(200, denied.get(AjaxResult.CODE_TAG));
+            assertEquals("主题已开始，内容已锁定；如需调整，请新建未来档期主题", denied.get(AjaxResult.MSG_TAG));
+        }
         AjaxResult saved = controller.authorSavedDetail(String.valueOf(TOPIC_ID), null);
         assertEquals(200, saved.get(AjaxResult.CODE_TAG));
         com.fasterxml.jackson.databind.JsonNode data = (com.fasterxml.jackson.databind.JsonNode) saved.get(AjaxResult.DATA_TAG);

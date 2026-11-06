@@ -435,6 +435,7 @@ Page({
     if (!item) return;
     if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
       && !item._canAudit && !item._canSaveAsTemplate) return;
+    const opsSeq = this._opsSeq = (this._opsSeq || 0) + 1;
     this.setData({
       opsSheet: {
         show: true,
@@ -445,11 +446,32 @@ Page({
         canToggle: !!item._canToggle,
         canDelete: !!item._canDelete,
         canViewApplies: !!item._canViewApplies,
-        canEdit: !!item._canEdit,
+        canEdit: item.bizType !== 'topic' && !!item._canEdit,
         canCancel: !!item._canCancel, canAudit: !!item._canAudit, state: item.state,
         canSaveAsTemplate: !!item._canSaveAsTemplate,
         toggleLabel: item._toggleLabel || '下架',
       }
+    });
+    if (item.bizType !== 'topic' || !item._canEdit) return;
+    // 主题资格复用主页的服务端编辑窗口，下架不代表窗口重开。
+    const current = currentRead(this);
+    const active = () => current() && this._opsSeq === opsSeq && this.data.opsSheet.show;
+    const failed = res => {
+      if (active()) toast(app.getRequestErrorMessage(res, '编辑资格加载失败，请重试'));
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/project/home', method: 'POST',
+      data: JSON.stringify({ topicId: item.id, scope: this.data.operationScope }),
+      header: { 'Content-Type': 'application/json' },
+      success: res => {
+        if (!active()) return;
+        if (!res || res.code != '200') { failed(res); return; }
+        const d = res.data;
+        this.setData({ 'opsSheet.canEdit': !!(d && d.role === 'host' && d.host && d.host.canEdit === true) });
+      },
+      fail: failed,
+      successStatusAbnormal: failed
     });
   },
 

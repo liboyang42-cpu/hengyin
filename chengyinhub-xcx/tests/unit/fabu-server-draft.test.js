@@ -50,6 +50,45 @@ test('不同配置的OSS桶也可刷新同一对象签名，但桶和对象不�
   }
 });
 
+test('相册回读接受同对象重签，图片、配文、顺序和节点引用变化仍拒绝', () => {
+  const asset = 'https://author-media.oss-cn-beijing.aliyuncs.com/upload/' + 'c'.repeat(32) + '.png';
+  const signed = asset + '?Expires=100&OSSAccessKeyId=old&Signature=one';
+  const refreshed = asset + '?Signature=two&Expires=200&OSSAccessKeyId=new';
+  const blocks = [
+    { type: 'dream', key: 'lid29', title: '相册', images: [
+      { url: signed, line: '城市观察1' }, { url: signed.replace('c'.repeat(32), 'd'.repeat(32)), line: '城市观察2' },
+    ] },
+    { type: 'node', key: 'node1', nodeIndex: 0 },
+  ];
+  const sent = { ...payload, chapters: [{ ...payload.chapters[0], blocks }] };
+  const back = () => {
+    const result = detail();
+    result.chapters[0].blocks = structuredClone(blocks);
+    result.chapters[0].blocks[0].images[0].url = refreshed;
+    result.chapters[0].blocks[0].images[1].url = refreshed.replace('c'.repeat(32), 'd'.repeat(32));
+    result.chapters[0].blocks[1] = { type: 'node', key: 'node1', nodeId: 11 };
+    return result;
+  };
+  assert.equal(readbackIssue(sent, back(), true), '');
+  for (const changed of [
+    refreshed.replace('c'.repeat(32), 'a'.repeat(32)), refreshed.replace('author-media.', 'other-media.'),
+    refreshed.replace('oss-cn-beijing', 'oss-cn-shanghai'), refreshed + '&versionId=2',
+    refreshed + '&Signature=duplicate', refreshed.replace('&Expires=200', ''),
+    refreshed.replace('two', '%ZZ'), refreshed + '#fragment',
+  ]) {
+    const result = back(); result.chapters[0].blocks[0].images[0].url = changed;
+    assert.match(readbackIssue(sent, result, true), /剧情块/);
+  }
+  for (const change of [
+    b => { b[0].images[0].line = '配文已改'; }, b => { b[0].title = '其他相册'; },
+    b => { b[0].images.reverse(); }, b => { b[0].images.pop(); },
+    b => { b[0].key = 'other'; }, b => { b[1].nodeId = 12; },
+  ]) {
+    const result = back(); change(result.chapters[0].blocks);
+    assert.match(readbackIssue(sent, result, true), /剧情块/);
+  }
+});
+
 test('进行方式自动生成真实任务后回读按成员核对，重建编号不误报，缺站跨章额外站仍拦下', () => {
   const sent = Object.assign({}, payload, {
     chapters: [{ id: 10, nodes: [{ id: 101, name: '甲' }, { id: 102, name: '乙' }] }, { id: 20, nodes: [{ id: 201, name: '丙' }] }],

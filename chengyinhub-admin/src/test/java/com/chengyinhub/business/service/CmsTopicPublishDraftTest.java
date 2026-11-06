@@ -451,8 +451,12 @@ class CmsTopicPublishDraftTest {
         when(cmsTopicMapper.selectCmsTopicById(2L)).thenReturn(topic);
         IQuotaService quota = (IQuotaService) com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(svc, "quotaService");
         when(quota.lockAndCheckThemeOnline(100L, 2L)).thenReturn("在架额度已满");
-        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+        ServiceException error = org.junit.jupiter.api.Assertions.assertThrows(ServiceException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.shared(svc).publishDraftWithReview(2L));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, error.getCode());
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST,
+                new com.chengyinhub.framework.web.exception.GlobalExceptionHandler()
+                        .handleServiceException(error, new org.springframework.mock.web.MockHttpServletRequest()).get("code"));
         verify(cmsTopicMapper, never()).updateCmsTopic(any());
         verify(cmsTopicMapper, never()).publishRouteSnapshot(anyLong(), nullable(String.class), any());
     }

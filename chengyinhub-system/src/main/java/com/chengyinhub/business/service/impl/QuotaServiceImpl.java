@@ -164,7 +164,7 @@ public class QuotaServiceImpl implements IQuotaService
         String err = lockAndCheckThemeOnline(memberId, excludeTopicId);
         if (err != null)
         {
-            throw new ServiceException(err);
+            throw new ServiceException(err, com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST);
         }
         // ③ 同事务内写库,提交后方释放锁
         return writeAction.get();

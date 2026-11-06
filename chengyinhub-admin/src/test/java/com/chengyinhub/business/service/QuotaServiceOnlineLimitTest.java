@@ -217,6 +217,7 @@ class QuotaServiceOnlineLimitTest {
         // 负控:达上限时必须抛错且绝不执行写操作,否则并发下会真实超发(资损)
         ServiceException ex = assertThrows(ServiceException.class,
                 () -> svc.runWithThemeOnlineGuard(100L, null, () -> { ran.set(true); return "ok"; }));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, ex.getCode());
         assertTrue(ex.getMessage().contains("上限"), "异常应含上限文案: " + ex.getMessage());
         assertFalse(ran.get(), "达上限必须跳过写操作(防超发)");
         verify(umsMemberService).lockMemberById(100L); // 校验前也已加锁
