@@ -5995,7 +5995,9 @@ Page({
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('arrive', nodeId);
           that.setData({ arrivalGuard: null });
-          if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }
+          // 完整结算回执的 done 是完成计数；只有纯到店回执才进入商家三步条。
+          const completedReceipt = r.data && typeof r.data.firstTime === 'boolean' && Number.isInteger(r.data.done) && String(r.data.nodeId) === String(nodeId);
+          if (that.data.mode === 2 && !completedReceipt) { that.onShopDayArrived(nodeId, r.data); return; }
           that.onComplete(nodeId, r.data);
         }
         else if (r.errorCode === 'CHECK_REQUIRED') {

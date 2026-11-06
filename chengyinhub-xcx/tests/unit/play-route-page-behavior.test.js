@@ -7,6 +7,7 @@ const PAGE_PATH = path.resolve(__dirname, '../../pages/play/index.js')
 
 function loadPage() {
   const requests = []
+  const navigations = []
   const app = {
     sendRequest(options) {
       requests.push(options)
@@ -19,11 +20,12 @@ function loadPage() {
     nextTick(callback) { if (callback) callback() },
     showToast() {},
     vibrateShort() {},
+    navigateTo(options) { navigations.push(options.url) },
   }
   delete require.cache[PAGE_PATH]
   require(PAGE_PATH)
   assert.ok(definition, 'play page definition was not registered')
-  return { definition, app, requests }
+  return { definition, app, requests, navigations }
 }
 
 function context(definition, data) {
@@ -283,7 +285,7 @@ test('P-37:自由探索的下一站跳过玩法已做完、只等核销的店', 
 })
 
 function completionPage(mode, node) {
-  const { definition } = loadPage()
+  const { definition, requests, navigations } = loadPage()
   const page = context(definition, {
     mode, activityId: 88, topicId: 9, nodes: [Object.assign({ nodeId: 71 }, node)],
     routeState: { routeMode: 'LINEAR' },
@@ -295,8 +297,69 @@ function completionPage(mode, node) {
     '_triggerCelebration', 'markJustWrote', 'probeCelebrateEntry']) page[method] = () => {}
   page.rebuild = () => { page.data.doneCount = page.data.nodes.filter(n => n.done).length }
   page.loadData = (force) => { page.readbackRequested = force === false }
+  page.requests = requests
+  page.navigations = navigations
   return page
 }
+
+test('arrive 实际回调区分 FREE 游戏完成计数、纯到店与已核销重放', async () => {
+  for (const scenario of [
+    { mode: 2, firstTime: true, redeemed: false },
+    { mode: 2, firstTime: false, redeemed: false },
+    { mode: 2, firstTime: false, redeemed: true },
+    { mode: 2, arrivalOnly: true, redeemed: false },
+    { mode: 2, online: true, firstTime: true, redeemed: false },
+    { mode: 1, firstTime: true, redeemed: false },
+  ]) {
+    const page = completionPage(scenario.mode, { merchantId: scenario.online ? 0 : 8001, arrived: true,
+      done: scenario.redeemed, gameDone: scenario.redeemed || scenario.firstTime === false,
+      doneAt: scenario.redeemed ? 1787500000001 : 0, earnedXp: 12 })
+    page.arrive(71, 'test')
+    assert.equal(page.requests[0].url, '/api/play/action-context')
+    page.requests[0].success({ code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } })
+    await new Promise(resolve => setImmediate(resolve))
+    const request = page.requests[1]
+    assert.equal(request.url, '/api/play/arrive')
+    const data = scenario.arrivalOnly
+      ? { nodeId: 71, arrived: true, arrivedAt: 1787500000000, done: false }
+      : { nodeId: 71, firstTime: scenario.firstTime, done: 1, total: 2,
+        completed: false, xp: scenario.firstTime ? 12 : 0 }
+    request.success({ code: 200, intentTerminal: true, data })
+    await new Promise(resolve => setImmediate(resolve))
+    const node = page.data.nodes[0]
+    assert.equal(node.done, scenario.mode === 1 || !!scenario.online || scenario.redeemed, JSON.stringify(scenario))
+    assert.equal(node.gameDone, !scenario.arrivalOnly && !scenario.online && scenario.mode === 2, JSON.stringify(scenario))
+    assert.equal(page._arrivalWriteInFlight, false)
+    if (scenario.arrivalOnly) {
+      assert.deepEqual(page.navigations, ['/pages/play/merchant/index?nodeId=71&justScanned=1'])
+      assert.equal(node.arrivedAt, 1787500000000)
+      assert.equal(page.readbackRequested, undefined)
+    } else {
+      assert.deepEqual(page.navigations, [], '游戏结算不得跳到核销页')
+      assert.equal(page.readbackRequested, scenario.online ? undefined : true)
+      assert.equal(node.earnedXp, 12, '重放不得用 xp0 抹掉历史探索值')
+      if (scenario.redeemed) assert.equal(node.doneAt, 1787500000001)
+    }
+  }
+})
+
+test('静态 checkin 仍只到店，游戏 checkin 仍使用独立玩法完成态', async () => {
+  for (const source of [undefined, 'game']) {
+    const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false })
+    page.checkin(71, 'TEST-ONLY-CODE', source)
+    assert.equal(page.requests[0].url, '/api/play/action-context')
+    page.requests[0].success({ code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } })
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(page.requests[1].url, '/api/play/checkin')
+    page.requests[1].success({ code: 200, intentTerminal: true, data: source === 'game'
+      ? { nodeId: 71, firstTime: true, done: 1, total: 2, completed: false, xp: 12 }
+      : { nodeId: 71, arrived: true, done: false } })
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(page.data.nodes[0].done, false)
+    assert.equal(page.data.nodes[0].gameDone, source === 'game')
+    assert.equal(page.navigations.length, source === 'game' ? 0 : 1)
+  }
+})
 
 test('FREE 商店真实答题回执只完成玩法，不把待核销权益显示为已核销', () => {
   const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false, doneAt: 0,
