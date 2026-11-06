@@ -185,6 +185,8 @@ function resolvePrimaryCta(info) {
   if (value.orderStateKey === 'pending_payment') return 'pay';
   if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
     && PLAYABLE_STATES.indexOf(value.orderStateKey) >= 0 && playQuery(value) && ticketHasGame(value)) return 'play';
+  if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
+    && value.orderStateKey === 'completed' && resolveExploreOrder(value) && playQuery(value) && ticketHasGame(value)) return 'record';
   return '';
 }
 

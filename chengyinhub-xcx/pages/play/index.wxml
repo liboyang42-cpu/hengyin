@@ -505,7 +505,7 @@
        paused  读数=用时/已完成/路程     按钮=继续(绿) · 结束(红)
      卡右上角的展开钮任何状态都能点,展开看本章剧情(见 openJournalFromTools)。
      「核销」两个模式都需要 ⇒ 提到地图右侧常驻圆钮,不跟模式相关的动作挤同一排。 -->
-<block wx:if="{{!screen && !allDone && !emptyTip && !loading && !chapterFull}}">
+<block wx:if="{{!screen && (!allDone || canContinueGames) && !emptyTip && !loading && !chapterFull}}">
   <!-- ===== 章节选择弹窗(自由探索:切换章节先选章,选完白卡换成该章的商家/地点)===== -->
 <view class="chpick-mask" catchtouchmove="noop" wx:if="{{chapterPick.show}}" bindtap="closeChapterPick" aria-role="button" aria-label="关闭章节选择" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="chpick" wx:if="{{chapterPick.show}}">
@@ -982,7 +982,7 @@
     <view class="rdrop__next" bindtap="closeRewardDrop" aria-role="button" aria-label="继续下一步" hover-class="cy-pressed" hover-stay-time="80">继续</view>
   </view>
 </view>
-<view class="banner" wx:if="{{hud.bottomCard(screen, allDone, nav, nextNode, null) === 'banner'}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
+<view class="banner" wx:if="{{hud.bottomCard(screen, allDone && !canContinueGames, nav, nextNode, null) === 'banner'}}" bindtap="openFinish" hover-class="cy-pressed" hover-stay-time="80">
   <view class="b1">{{mode==2 ? '本轮探索已完成' : doneCount + '处旧址已点亮'}}</view>
   <view class="b2 serif">{{mode==2 ? '看看这一天的收获' : '领取你的城市足迹卡'}}</view>
 </view>
@@ -1353,7 +1353,7 @@
     </view>
   </view>
   <view class="finsheet__grid" wx:if="{{mode==2}}">
-    <view class="fst fst--hero"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
+    <view class="fst fst--hero"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">到访完成</text></view>
     <view class="fst"><cy-icon class="fst__ic" name="walk" size="36" /><text class="fst__v">{{finishStamps.length}}</text><text class="fst__l">本期足迹</text></view>
   </view>
   <!-- 文档二 L5 A p-finish:RPG 小结(主题开着 d20 才有),同一 .finsheet__grid 三格 -->

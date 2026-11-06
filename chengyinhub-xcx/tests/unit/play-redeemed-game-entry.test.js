@@ -8,6 +8,7 @@ const { createRequire } = require('node:module');
 const test = require('node:test');
 
 const file = path.resolve(__dirname, '../../pages/play/index.js');
+const hud = require('../../utils/wxs/hud-slots.wxs');
 const wxml = fs.readFileSync(path.join(path.dirname(file), 'index.wxml'), 'utf8');
 const raw = {
   nodeId: 9170502, chapterId: 9170302, merchantId: 9002,
@@ -22,7 +23,7 @@ function page(mode = 2) {
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
     require: createRequire(file), getApp: () => app, Page(value) { definition = value; },
     wx: { getStorageSync: () => '', nextTick() {}, navigateTo() {} },
-    console, setTimeout, clearTimeout, setInterval, clearInterval,
+    console, setTimeout() {}, clearTimeout, setInterval, clearInterval,
   }, { filename: file });
   const instance = Object.assign({}, definition, {
     data: Object.assign(JSON.parse(JSON.stringify(definition.data)), { mode, packOpen: true }),
@@ -134,4 +135,89 @@ test('authoritative rebuild refreshes an open hero without losing its animation 
 test('duplicate-redemption warning and QR visibility still use redemption done', () => {
   assert.match(wxml, /hero\.node\.done[^\n]*class="fx-shop__off">已核销/);
   assert.match(wxml, /hero\.node\.isMerchant && !hero\.node\.done && regId/);
+});
+
+
+function rebuildFree(overrides = {}, mode = 2) {
+  const instance = page(mode);
+  instance._playable = true;
+  instance.data.loading = false;
+  instance.computeNext = () => null;
+  instance.data.nodes = [nodeFor(instance, overrides), nodeFor(instance, { nodeId: 9170501, gameDone: true })];
+  instance.rebuild();
+  return instance;
+}
+
+function bannerVisible(instance) {
+  const expression = wxml.match(/class="banner" wx:if="{{([^}]+)}}"/)[1];
+  return vm.runInNewContext(expression, Object.assign({ hud }, instance.data));
+}
+
+function packVisible(instance) {
+  const expression = wxml.match(/<block wx:if="{{([^}]+)}}">\s*<!-- ===== 章节选择弹窗/)[1];
+  return vm.runInNewContext(expression, instance.data);
+}
+
+test('all redeemed FREE keeps unfinished configured merchant game count and normal card entry', () => {
+  const instance = rebuildFree();
+  assert.equal(instance.data.allDone, true);
+  assert.equal(instance.data.doneCount, 2);
+  assert.equal(instance.data.remainingGameCount, 1);
+  assert.equal(packVisible(instance), true);
+  instance.heroEnter({ currentTarget: { dataset: { id: 9170502 } } });
+  assert.equal(instance.data.advancedPlay.show, true);
+  assert.equal(instance.data.nodes[0].gameDone, false);
+  assert.equal(instance.data.nodes[0].done, true);
+});
+
+test('partial redemption count follows gameDone for merchants and done for ordinary nodes/CITY', () => {
+  const partial = rebuildFree({ done: false });
+  assert.equal(partial.data.remainingGameCount, 1);
+  assert.equal(partial.data.allDone, false);
+  assert.equal(packVisible(partial), true);
+  const played = rebuildFree({ done: false, gameDone: true });
+  assert.equal(played.data.remainingGameCount, 0);
+  for (const mode of [1, 2]) {
+    const ordinary = rebuildFree({ merchantId: 0 }, mode);
+    assert.equal(ordinary.data.remainingGameCount, 0);
+  }
+});
+
+test('summary Continue stays in the normal pack only while current FREE merchant games remain playable', () => {
+  for (const scenario of [
+    { patch: {}, mode: 2, playable: true, leaves: 0 },
+    { patch: { gameDone: true }, mode: 2, playable: true, leaves: 1 },
+    { patch: {}, mode: 2, playable: false, leaves: 1 },
+    { patch: { merchantId: 0 }, mode: 2, playable: true, leaves: 1 },
+    { patch: {}, mode: 1, playable: true, leaves: 1 },
+  ]) {
+    const instance = rebuildFree(scenario.patch, scenario.mode);
+    instance._playable = scenario.playable;
+    instance.rebuild();
+    let leaves = 0;
+    instance.goBackDetail = () => { leaves += 1; };
+    instance._hideFinish = callback => callback();
+    instance.closeFinish();
+    assert.equal(leaves, scenario.leaves, JSON.stringify(scenario));
+    assert.equal(packVisible(instance), scenario.leaves === 0, JSON.stringify(scenario));
+    assert.equal(bannerVisible(instance), scenario.leaves === 1, JSON.stringify(scenario));
+    assert.equal(instance.data.allDone, true);
+  }
+});
+
+test('FREE finale waits for the final game receipt; expired FREE keeps the original read-only finale', () => {
+  for (const scenario of [{ gameDone: false, playable: true, expected: false },
+    { gameDone: true, playable: true, expected: true }, { gameDone: false, playable: false, expected: true }]) {
+    const instance = rebuildFree({ gameDone: scenario.gameDone });
+    instance._playable = scenario.playable;
+    instance._sawIncomplete = true;
+    instance.rebuild();
+    assert.equal(!!instance._finCelebrated, scenario.expected, JSON.stringify(scenario));
+  }
+});
+
+test('FREE summary reports visits and keeps CITY presentation unchanged', () => {
+  const label = wxml.match(/{{doneCount}}\/{{total}}<\/text><text class="fst__l">([^<]+)<\/text>/)[1];
+  assert.equal(label, '到访完成');
+  assert.match(wxml, /mode!=2[\s\S]*?点亮坐标/);
 });

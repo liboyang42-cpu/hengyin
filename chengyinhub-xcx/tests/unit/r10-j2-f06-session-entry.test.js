@@ -62,7 +62,11 @@ test('F-06 ③ 订单页:已付未开始的场次票底部「开始游戏」直�
   vm.startPlay()
   assert.equal(sandbox.navs[0], '/pages/play/index?activityId=9&registrationId=74&entry=ticket&topicName=' + encodeURIComponent('沪上慢走'))
   const wxml = read(DIR + 'index.wxml')
-  assert.match(wxml, /wx:elif="\{\{primaryCta === 'play'\}\}">\s*<view class="primary-cta" bindtap="startPlay"[^>]*>开始游戏<\/view>/)
+  const button = wxml.match(/wx:elif="{{([^}]+)}}">\s*<view class="primary-cta" bindtap="startPlay"[^>]*>{{([^}]+)}}<\/view>/)
+  assert.ok(button)
+  const evaluate = require('node:vm').runInNewContext
+  assert.equal(evaluate(button[1], vm.data), true)
+  assert.equal(evaluate(button[2], vm.data), '开始游戏')
 })
 
 test('F-06 ③ 待支付仍是「去支付」;已取消、已完成不出「开始游戏」', () => {
@@ -70,3 +74,41 @@ test('F-06 ③ 待支付仍是「去支付」;已取消、已完成不出「开�
   assert.equal(load({ id: 2, ownerType: 2, registrationStatus: 3, paymentStatus: 4, cmsActivity: { id: 9 } }).data.primaryCta, '')
   assert.equal(load({ id: 3, ownerType: 2, registrationStatus: 2, paymentStatus: 2, verificationStatus: 1, cmsActivity: { id: 9 } }).data.primaryCta, '')
 })
+
+
+test('completed exploration order reuses exact registered play route as View Records, including historical records', () => {
+  const evaluate = require('node:vm').runInNewContext;
+  for (const endDate of ['2099-11-04 18:00:00', '2020-11-04 18:00:00']) {
+    const instance = load({ id: 9350807, ownerType: 2, ownerId: 9350605, purchaseKind: 3,
+      registrationStatus: 2, paymentStatus: 2, verificationStatus: 1,
+      cmsActivity: { id: 9350605, name: '双店', topicId: 9170200, productType: 2, endDate },
+      exploreProgress: { required: 2, redeemed: 2, completed: true, active: false } });
+    assert.equal(instance.data.info.orderStateKey, 'completed');
+    assert.equal(instance.data.primaryCta, 'record');
+    const wxml = read(DIR + 'index.wxml');
+    const element = wxml.match(/<view class="bp-cta-bar" wx:elif="{{([^}]+)}}">\s*<view class="primary-cta" bindtap="startPlay"[^>]*>([\s\S]*?)<\/view>/);
+    assert.ok(element);
+    assert.equal(evaluate(element[1], instance.data), true);
+    const label = element[2].match(/^{{([^}]+)}}$/);
+    assert.ok(label);
+    assert.equal(evaluate(label[1], instance.data), '查看记录');
+    instance.startPlay();
+    assert.equal(sandbox.navs.at(-1), '/pages/play/index?activityId=9350605&registrationId=9350807&entry=ticket&topicName=' + encodeURIComponent('双店'));
+    assert.equal(instance.data.info.verificationStatus, 1);
+  }
+});
+
+test('record projection requires real exploration purchase/entitlement, registered paid owner and game source', () => {
+  const base = { id: 74, ownerType: 2, ownerId: 9, purchaseKind: 3,
+    registrationStatus: 2, paymentStatus: 2, verificationStatus: 1,
+    cmsActivity: { id: 9, topicId: 5, productType: 2, endDate: future } };
+  for (const patch of [
+    { purchaseKind: 1, cmsActivity: { id: 9, topicId: 5, productType: 1 } },
+    { registrationStatus: 3 }, { paymentStatus: 4 },
+    { cmsActivity: { id: 9, productType: 2 } },
+    { ownerId: 0, cmsActivity: { topicId: 5 } },
+    { purchaseKind: null, entitlements: [{ id: 1 }] },
+  ]) assert.equal(load({ ...base, ...patch }).data.primaryCta, '', JSON.stringify(patch));
+  const legacy = load({ ...base, purchaseKind: null, entitlements: [{ chapterId: 9170301 }] });
+  assert.equal(legacy.data.primaryCta, 'record');
+});

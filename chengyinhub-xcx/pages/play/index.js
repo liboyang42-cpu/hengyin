@@ -543,7 +543,7 @@ Page({
     blastRays: [], blastShards: [], measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
     nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
-    remainingGameCount: 0,
+    remainingGameCount: 0, canContinueGames: false,
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
@@ -2438,6 +2438,11 @@ Page({
     wx.openLocation({ longitude: lng, latitude: lat, name: node.name || '', address: node.address || '', scale: 18 });
   },
 
+  _canContinueMerchantGames() {
+    return Number(this.data.mode) === 2 && this._playable === true
+      && (this.data.nodes || []).some((node) => Number(node.merchantId) > 0
+        && node.arrived && node.hasGame && node.hasTemplate && !node.gameDone);
+  },
   _heroEntryDisabled(node) {
     // 自由探索核销是服务开始，已到店的未完成玩法仍走原游戏入口。
     return !!node.done && !(Number(this.data.mode) === 2 && Number(node.merchantId) > 0
@@ -4743,6 +4748,7 @@ Page({
       ? branchFinished
       : branchFinished || nodes.length > 0 && nodes.every((x) => x.done));
     const doneCount = nodes.filter((x) => x.done).length;
+    const canContinueGames = this._canContinueMerchantGames();
     // 凭证三态文案的唯一实现:剧本 tab 方卡与 mode2 六宫格共用 —— 别各写一份,会漂移。
     // 现场状态未知(crowded=null)给空串:WXML 里角标按「有内容才出」渲染。原来的「现场状态待同步」
     // 是占位不是信息,2026-09-05 用户拍板删掉。
@@ -4841,14 +4847,15 @@ Page({
       && nodes.find((node) => String(node.nodeId) === String(this.data.hero.node.nodeId));
     this.setData({ fmNodes, fmPolyline, fmPlayer, fmCenter, nextNode, storyDistText, storyThoughts, chapter: activeChapter, allDone, doneCount,
       'hero.node': heroNode ? Object.assign({}, seatTiles.find((tile) => String(tile.nodeId) === String(heroNode.nodeId)), this._heroView(heroNode)) : this.data.hero.node,
-      remainingGameCount: nodes.filter((node) => node.hasTemplate && !node.done).length,
+      remainingGameCount: nodes.filter((node) => node.hasTemplate && (mode === 2 && Number(node.merchantId) > 0
+        ? node.hasGame && !node.gameDone : !node.done)).length, canContinueGames,
       total: visibleNodes.length, merchantCount, seatTiles, ringSegs, searchPlaces }, () => {
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
       // 重进一个早已完成的主题不重放仪式。经典定向有自己的 completed→openFinish 链,不走这里。
       if (mode === 2 && !this.data.isPreview) {
-        if (!allDone) { this._sawIncomplete = true; }
+        if (!allDone || canContinueGames) { this._sawIncomplete = true; }
         else if (this._sawIncomplete && !this._finCelebrated) {
           this._finCelebrated = true;
           setTimeout(() => this.openFinish(), 400);
@@ -8401,7 +8408,7 @@ Page({
   },
   closeFinish() {
     this._hideFinish(() => {
-      if (this.data.allDone && !this.data.isPreview && !this.data.isMock) this.goBackDetail();
+      if (this.data.allDone && !this._canContinueMerchantGames() && !this.data.isPreview && !this.data.isMock) this.goBackDetail();
     });
   },
   _hideFinish(callback) {
