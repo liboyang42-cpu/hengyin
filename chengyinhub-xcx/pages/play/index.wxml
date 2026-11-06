@@ -47,13 +47,13 @@
                        top="{{chrome.contentTop}}" places="{{searchPlaces}}" placeholder="输入地址"
                        bind:pick="onSearchPick" />
 
-<view class="play-topstack" wx:if="{{!screen && !showJournal && !showFinish}}" style="top:{{chrome.contentTop + 56}}px">
+<view class="play-topstack" wx:if="{{!screen && !showJournal && !showFinish}}" style="top:{{chrome.contentTop + (lead.exists && lead.freeEntry && lead.ended ? 0 : 56)}}px">
   <!-- 章节条(cy-play-header)与读数芯片(cy-play-hud)已按新稿删除:
        它们说的是同两件事(章节名 / 进度),新稿里都归底部那张 .pcard 了 —— 一屏两份正是要改掉的毛病。
        各自承载过的入口去处:「更多」→ .pbar 的上滑横杠;用时与完成数 → .pcard 的暂停态读数。
        退出钮按新稿一并删除(稿上地图是满屏的),返回走系统手势 / 结束后的结算页。 -->
 <!-- 带领行进条:顶部状态条下方的团队状态 -->
-<view class="leadbar glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadbar' && !lead.freeEntry}}">
+<view class="leadbar glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadbar' && (!lead.freeEntry || lead.ended)}}">
   <view class="lb-left">
     <view class="lb-dot"></view>
     <text class="lb-txt" wx:if="{{lead.ended}}">本场已结束 · 你完成了 {{doneCount}}/{{total}} 站</text>
@@ -551,7 +551,7 @@
        ★ 卡包发牌是把「洗牌」演给用户看,顺序仍然是后端给的(nodes 的下发次序),
          前端一律按 seatTiles 原序渲染,不许自己 shuffle —— 否则商家看板的曝光对不上账。 -->
   <scroll-view class="fx" wx:if="{{mode==2 && !freeMap}}" scroll-y enhanced show-scrollbar="{{false}}"
-               style="padding-top:{{chrome.contentTop + (lead.exists && !lead.freeEntry ? 64 : 0)}}px">
+               style="padding-top:{{chrome.contentTop + (lead.exists && (!lead.freeEntry || lead.ended) ? 64 : 0)}}px">
     <!-- 页面底:主题封面 + 模糊 + 压暗蒙版。主题封面(topicCover)优先,没有退回章节封面链;都缺时整层不渲染,退回纯深色底。
          图放大到 120% 是因为 blur 会把边缘糊出透明边,不撑开就露出一圈亮边。减淡档判据见 wxss .fx-bg--pack。 -->
     <view class="fx-bg {{headIn || packOpen ? '' : 'fx-bg--pack'}}" wx:if="{{topicCover || chapter.cover}}">

@@ -559,7 +559,8 @@ public class PlayBasicCommandApplication {
         if (ctx.error != null) return ctx.error;
         Long actId = ctx.actId;
         int mode = playNodeContext.resolveMode(actId, ctx.topicId);
-        if (mode == PlayMode.FREE_COLLECT) {
+        boolean freeCollectStore = mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node);
+        if (mode == PlayMode.FREE_COLLECT && !freeCollectStore) {
             // C1「进店用玩家扫店内静态码，不用 GPS(不准)」：③ 的进店事实只有 /checkin 一条来源。
             //
             // ⚠️ 这里曾经写过到店凭证。删掉的理由不是「GPS 不够准」，而是**它给同一个事实开了第二条来源**：
@@ -574,10 +575,7 @@ public class PlayBasicCommandApplication {
             //   也不存在可被伪造的到店事实 —— queue_joined_at / in_store_load 全挂在商家
             //   节点上,这类节点没有商家。放行语义与 /checkin 的 ③ 分支逐字一致:
             //   只记 shop-day 凭证、不发分、不判通关(③ 的完成经济仍由章节核销承担)。
-            //   有商家或有坐标的节点一字不动,仍只认 /checkin。
-            if (!playNodeContext.isPureOnlineNode(node)) {
-                return error("请扫店内的码");
-            }
+            //   实体店的到店事实仍只认 /checkin；已到店的高级玩法按下面严格 proof 收尾。
             if (playCompletionFacts.isExploreChapterRedeemed(memberId, actId, node.getChapterId())) {
                 return error("该章节已核销，不能补写到店时间");
             }
@@ -591,6 +589,9 @@ public class PlayBasicCommandApplication {
         // 线性解锁校验（仅 mode=1 经典定向；mode=2 自由定向跳过）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return error(unlockErr);
+        if (freeCollectStore && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
+            return error("请扫店内的码");
+        }
 
         // 验证方式闸：答题(1)/拍照(2)/选项(3)/扫码(4) 类节点必须走对应接口完成，
         // 不能用"到达/到点"绕过任务白拿分+券+勋章+通关(反作弊)。仅 0/null(到点即完成) 或 5(GPS) 放行。
@@ -616,6 +617,9 @@ public class PlayBasicCommandApplication {
                 return error("该站需完成对应任务后才能打卡");
             }
         }
+
+        // 到店不等于游戏完成；实体免费收集只接受原局已核验的拍照/扫码玩法 proof。
+        if (freeCollectStore && !stationGameProof) return error("请扫店内的码");
 
         // GPS 围栏：节点有坐标才校验（gcj02，Haversine 50m）；无坐标则按到点即完成放行（前端引导走扫码）。
         // ⚠️ GPS(vm=5)节点是例外:它必须靠站点坐标才能判定"到没到",缺经或缺纬不能退化成
@@ -682,11 +686,11 @@ public class PlayBasicCommandApplication {
             }
         }
 
-        if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
+        if(!freeCollectStore && (personalArrival || sharedArrival!=null)) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
-        if (solvedGame && topicRouteRuntimeService != null
+        if (!freeCollectStore && solvedGame && topicRouteRuntimeService != null
                 && topicRouteRuntimeService.pendingCompassCheck(memberId,ctx.topicId,actId,node.getId())) {
             shopDayProofService.markArrived(memberId,actId,node);
             return error("请先完成本站 D20 检定").put("errorCode","CHECK_REQUIRED");
@@ -703,7 +707,8 @@ public class PlayBasicCommandApplication {
         }
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
-                RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);
+                freeCollectStore ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL,
+                routeActionId, expectedRouteVersion, null, null, originalRun);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);

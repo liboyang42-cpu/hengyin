@@ -4,6 +4,7 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
 const js = fs.readFileSync(path.join(ROOT, 'pages/play/index.js'), 'utf8')
@@ -19,9 +20,25 @@ test('team-progress 的 freeEntry 只认服务端的 true', () => {
   assert.match(js, /freeEntry: d\.freeEntry === true/)
 })
 
-test('P-13:自由探索不显示「带领中 · 队长带队中」条,也不为它让出顶部空位', () => {
-  assert.match(wxml, /<view class="leadbar glass" wx:if="\{\{hud\.topBanner\([^)]*\) === 'leadbar' && !lead\.freeEntry\}\}">/)
-  assert.match(wxml, /lead\.exists && !lead\.freeEntry \? 64 : 0/)
+test('P-13/C-12:自由探索进行中不显示带队条，结束时显示结果并让出顶部空位', () => {
+  const context = { module: { exports: {} } }
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'utils/wxs/hud-slots.wxs'), 'utf8'), context)
+  const banner = wxml.match(/<view class="leadbar glass" wx:if="\{\{([^}]*)\}\}">/)[1]
+  const spacer = wxml.match(/class="fx"[\s\S]*?style="padding-top:\{\{([^}]*)\}\}px"/)[1]
+  const top = wxml.match(/class="play-topstack"[^>]*style="top:\{\{([^}]*)\}\}px"/)[1]
+  const cases = [
+    [{ exists: true, freeEntry: true, status: 2, ended: false }, false, 0, 56],
+    [{ exists: true, freeEntry: true, status: 3, ended: true }, true, 64, 0],
+    [{ exists: true, freeEntry: false, status: 2, ended: false }, true, 64, 56],
+    [{ exists: true, freeEntry: false, status: 3, ended: true }, true, 64, 56],
+    [{ exists: false, freeEntry: true, status: 3, ended: true }, false, 0, 56],
+  ]
+  for (const [lead, visible, space, offset] of cases) {
+    const input = { hud: context.module.exports, couponToast: '', screen: '', leadLoadError: false, lead, chrome: { contentTop: 94 } }
+    assert.equal(vm.runInNewContext(banner, input), visible, JSON.stringify(lead))
+    assert.equal(vm.runInNewContext(spacer, input), 94 + space, JSON.stringify(lead))
+    assert.equal(vm.runInNewContext(top, input), 94 + offset, JSON.stringify(lead))
+  }
 })
 
 test('P-28:游玩工具在页面层,自由探索卡包页有入口打开同一份菜单', () => {
