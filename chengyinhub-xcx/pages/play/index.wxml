@@ -823,9 +823,8 @@
       <view class="fx-hero__pad"></view>
     </scroll-view>
     <view class="fx-hero__cta fx-hero__in" style="--i:3">
-      <!-- 已核销就是禁用态:这一家的事已经结束了,按钮不该再是能点的样子 -->
-      <cy-btn variant="{{hero.node.done ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter"
-              accessibility-label="{{hero.node.done ? '这一家已核销' : '到店打卡，进入本店玩法'}}">{{hero.node.done ? '已核销' : '到店打卡'}}</cy-btn>
+      <cy-btn variant="{{hero.node.entryDisabled ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter"
+              accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法')}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')}}</cy-btn>
     </view>
   </view>
 

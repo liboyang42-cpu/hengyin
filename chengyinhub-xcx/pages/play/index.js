@@ -2438,6 +2438,11 @@ Page({
     wx.openLocation({ longitude: lng, latitude: lat, name: node.name || '', address: node.address || '', scale: 18 });
   },
 
+  _heroEntryDisabled(node) {
+    // 自由探索核销是服务开始，已到店的未完成玩法仍走原游戏入口。
+    return !!node.done && !(Number(this.data.mode) === 2 && Number(node.merchantId) > 0
+      && node.arrived && node.hasGame && node.hasTemplate && !node.gameDone);
+  },
   /** 卡片详情的正文投影。三件事分明:章节是章节的、店铺是店铺的、游戏是游戏的 ——
    *  混着写玩家分不清「这段讲的是这一章」还是「这段讲的是这个玩法」。
    *  ⚠️ 只读已下发字段,不在这里补默认文案:没有的段直接不渲染,比编一句占位诚实。 */
@@ -2455,6 +2460,7 @@ Page({
       nodeId: node.nodeId,
       chapterId: node.chapterId, isMerchant: Number(node.merchantId) > 0,
       name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], done: !!node.done,
+      entryDisabled: this._heroEntryDisabled(node),
       // ① 章节
       chapMeta: chap ? ('本章 · ' + (chap.meta || '')) : '',
       chapNo: chap ? (chap.meta || '') : '',      // 卡面眉标用的是不带「本章」前缀的那一版
@@ -2537,7 +2543,7 @@ Page({
       ? e.currentTarget.dataset.id : (this.data.hero.node && this.data.hero.node.nodeId);
     if (id == null) return;
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(id));
-    if (node && node.done) return;      // 已核销:按钮是禁用态,点不动
+    if (node && this._heroEntryDisabled(node)) return;
     if (this._heroTimer) clearTimeout(this._heroTimer);
     this.setData({ hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 } });
     // 「开始互动 获得奖励!」直接进玩法面板,不再经商家页中转 ——
@@ -4831,7 +4837,10 @@ Page({
     if (mode === 2 && !this.data.packOpen && !this.data.isPreview && storyResume.read(this._runSessionScope()).packOpened) {
       this.setData({ packOpen: true, headIn: true });
     }
+    const heroNode = this.data.hero.show && this.data.hero.node
+      && nodes.find((node) => String(node.nodeId) === String(this.data.hero.node.nodeId));
     this.setData({ fmNodes, fmPolyline, fmPlayer, fmCenter, nextNode, storyDistText, storyThoughts, chapter: activeChapter, allDone, doneCount,
+      'hero.node': heroNode ? Object.assign({}, seatTiles.find((tile) => String(tile.nodeId) === String(heroNode.nodeId)), this._heroView(heroNode)) : this.data.hero.node,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && !node.done).length,
       total: visibleNodes.length, merchantCount, seatTiles, ringSegs, searchPlaces }, () => {
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
