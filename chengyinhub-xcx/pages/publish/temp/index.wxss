@@ -1431,12 +1431,13 @@ page {
   background: var(--cy-color-status-danger-soft);
 }
 
-.cg-pv-inline-scroll { position:absolute; inset:0; height:100%; padding-top:calc(env(safe-area-inset-top) + 160rpx); box-sizing:border-box;
-  background:#000000; color:var(--cy-color-text-inverse); } /* ds-ok 160rpx 让开胶囊与翻页条;#000 = 玩家暗色 --cy-color-bg-page(故事流 .chfull 的底)。本分包是浅色主题,令牌在这里解析成浅灰,只能写死 */
+/* 顶部让位与退出键共用真实状态栏高度,不依赖模拟器中可能为 0 的 env(safe-area-inset-top)。 */
+.cg-pv-inline-scroll { position:absolute; inset:0; height:100%; padding-top:var(--cg-pv-inline-top); box-sizing:border-box;
+  background:#000000; color:var(--cy-color-text-inverse); } /* ds-ok #000 = 玩家暗色 --cy-color-bg-page(故事流 .chfull 的底)。本分包是浅色主题,令牌在这里解析成浅灰,只能写死 */
 /* 与玩家故事流 pages/play/index.wxss 的 .chfull__kit 逐条一致(契约测试钉着)。 */
 .cg-pv-inline-kit { margin:0 var(--cy-page-x); --pe-unfold:1; --pk-card-h:1000rpx; --pk-card-h-tall:1200rpx; --pk-card-radius:var(--cy-radius-lg); --pk-card-pad:56rpx 44rpx 48rpx; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 同 .chfull__kit */
 /* 2026-09-23 用户:题目和作答放到页面中间(与玩家故事流内嵌玩法同一口径) */
-.cg-pv-inline-kit { min-height:calc(100vh - env(safe-area-inset-top) - 160rpx - 300rpx); display:flex; flex-direction:column; }
+.cg-pv-inline-kit { min-height:calc(100vh - var(--cg-pv-inline-top) - 300rpx); display:flex; flex-direction:column; }
 /* 2026-10-23 复查:用上下 auto 外边距居中,不用 justify-content:center —— 内容比容器高时(D20 掷出后多一条难度线)
    后者会往上溢出,把标题顶到退出键底下;auto 外边距只在有余量时才居中 */
 .cg-pv-inline-kit > cy-playkit, .cg-pv-inline-kit > cy-playkit-journey-check { margin-top: auto; margin-bottom: auto; }

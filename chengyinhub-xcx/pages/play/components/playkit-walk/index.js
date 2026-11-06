@@ -83,7 +83,7 @@ Component({
     _stepUnit: () => STEP_UNIT,
 
     _paint(goal, steps) {
-      this._goal = Math.max(STEP_UNIT, Math.round(goal / STEP_UNIT) * STEP_UNIT);
+      this._goal = this.data.goalLocked ? goal : Math.max(STEP_UNIT, Math.round(goal / STEP_UNIT) * STEP_UNIT);
       const left = remain(steps, this._goal);
       const done = steps > 0 && left === 0;
       this.setData({

@@ -1409230,7 +1409230,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:189:bindtap:goProject:16",
+      "id": "subpackageMember/components/cy/profile/index.wxml:188:bindtap:goProject:16",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1409275,7 +1409275,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goProject",
-        "line": 189,
+        "line": 188,
         "selectorHint": ".pc-sec-link",
         "visibleCondition": null,
         "disabledCondition": null,
