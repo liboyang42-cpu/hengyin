@@ -1023,6 +1023,11 @@ public class ClubEventTransferCancellationMySqlIT {
         }
 
         @Override
+        public ClubAccessContext resolveReadOnly(Long principalMemberId, Long clubId, Long activityId) {
+            return context(principalMemberId, clubId, activityId, false);
+        }
+
+        @Override
         public ClubAccessContext resolveWithEventAccesses(Long principalMemberId, Long clubId) {
             return context(principalMemberId, clubId, null, false);
         }

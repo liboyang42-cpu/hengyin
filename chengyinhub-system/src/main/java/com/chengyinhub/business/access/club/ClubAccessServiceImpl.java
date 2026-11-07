@@ -42,24 +42,36 @@ public class ClubAccessServiceImpl implements IClubAccessService {
 
     @Override
     public ClubAccessContext resolve(Long principalMemberId, Long clubId, Long activityId) {
-        return resolve(principalMemberId, clubId, activityId, false);
+        return resolve(principalMemberId, clubId, activityId, false, false);
+    }
+
+    @Override
+    public ClubAccessContext resolveReadOnly(Long principalMemberId, Long clubId, Long activityId) {
+        return resolve(principalMemberId, clubId, activityId, false, true);
     }
 
     @Override
     public ClubAccessContext resolveWithEventAccesses(Long principalMemberId, Long clubId) {
-        return resolve(principalMemberId, clubId, null, true);
+        return resolve(principalMemberId, clubId, null, true, false);
     }
 
     private ClubAccessContext resolve(Long principalMemberId, Long clubId, Long activityId,
-                                      boolean includeEventAccesses) {
+                                      boolean includeEventAccesses, boolean readOnly) {
         if (!positive(principalMemberId) || !positive(clubId) || (activityId != null && !positive(activityId))) {
             throw forbidden();
         }
         Club club = clubMapper.selectClubById(clubId);
         if (!isActiveClub(club, clubId)) throw forbidden();
         if (activityId != null) requireOwnedActivity(activityId, clubId);
-        Long lockedPrincipal = umsMemberMapper.lockActiveMemberById(principalMemberId);
-        if (!principalMemberId.equals(lockedPrincipal)) throw forbidden();
+        if (readOnly) {
+            com.chengyinhub.business.domain.UmsMember principal = umsMemberMapper.selectRolePermissionSubject(principalMemberId);
+            if (principal == null || !principalMemberId.equals(principal.getId())
+                    || !Long.valueOf(1L).equals(principal.getStatus())
+                    || !Integer.valueOf(0).equals(principal.getDelFlag())) throw forbidden();
+        } else {
+            Long lockedPrincipal = umsMemberMapper.lockActiveMemberById(principalMemberId);
+            if (!principalMemberId.equals(lockedPrincipal)) throw forbidden();
+        }
         if (principalMemberId.equals(club.getMemberId())) {
             com.chengyinhub.business.domain.UmsMember owner = umsMemberMapper.selectRolePermissionSubject(principalMemberId);
             if (owner == null || !com.chengyinhub.business.service.IRoleService.ROLE_CLUB.equals(owner.getRole())) throw forbidden();

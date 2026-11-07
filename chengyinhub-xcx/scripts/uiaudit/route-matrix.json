@@ -1638,7 +1638,7 @@
       "pkg": "subpackageMember",
       "tabBar": false,
       "role": "player",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": true,
       "dataKeys": [
         "id"

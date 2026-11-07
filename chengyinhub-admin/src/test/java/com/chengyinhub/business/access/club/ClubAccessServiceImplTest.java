@@ -359,6 +359,56 @@ class ClubAccessServiceImplTest {
         return club;
     }
 
+    @Test
+    void readOnlyOwnerUsesOrdinaryPrincipalReadAndOriginalResolveStillLocks() {
+        when(clubs.selectClubById(11L)).thenReturn(activeClub(11L, 900L));
+        ClubAccessContext read = service.resolveReadOnly(900L, 11L, null);
+        assertEquals(900L, read.getPrincipalMemberId());
+        verify(accounts, never()).lockActiveMemberById(any());
+        ClubAccessContext original = service.resolve(900L, 11L, null);
+        verify(accounts).lockActiveMemberById(900L);
+        assertEquals(original.getRoleCodes(), read.getRoleCodes());
+        assertEquals(original.getPermissions(), read.getPermissions());
+    }
+
+    @Test
+    void readOnlyRejectsInactiveDeletedAndMismatchedPrincipalsWithoutLocks() {
+        when(clubs.selectClubById(11L)).thenReturn(activeClub(11L, 900L));
+        com.chengyinhub.business.domain.UmsMember principal = new com.chengyinhub.business.domain.UmsMember();
+        principal.setId(900L); principal.setRole("club"); principal.setStatus(0L); principal.setDelFlag(0);
+        when(accounts.selectRolePermissionSubject(900L)).thenReturn(principal);
+        assertThrows(ServiceException.class, () -> service.resolveReadOnly(900L, 11L, null));
+        principal.setStatus(1L); principal.setDelFlag(2);
+        assertThrows(ServiceException.class, () -> service.resolveReadOnly(900L, 11L, null));
+        principal.setDelFlag(0); principal.setId(901L);
+        assertThrows(ServiceException.class, () -> service.resolveReadOnly(900L, 11L, null));
+        principal.setId(900L); principal.setRole("player");
+        assertThrows(ServiceException.class, () -> service.resolveReadOnly(900L, 11L, null));
+        verify(accounts, never()).lockActiveMemberById(any());
+        verify(members, never()).selectByClubAndMember(any(), any());
+    }
+
+    @Test
+    void readOnlyPreservesActiveClubAndExactMembershipChecks() {
+        Club club = activeClub(11L, 900L); when(clubs.selectClubById(11L)).thenReturn(club);
+        ClubMember member = activeMember(11L, 901L, 0);
+        when(members.selectByClubAndMember(11L, 901L)).thenReturn(member);
+        assertTrue(service.resolveReadOnly(901L, 11L, null).getRoleCodes().contains(ClubRoleCode.CLUB_MEMBER));
+        member.setStatus(0);
+        org.junit.jupiter.api.Assertions.assertNull(service.resolveReadOnly(901L, 11L, null));
+        member.setStatus(1); member.setDelFlag(2);
+        org.junit.jupiter.api.Assertions.assertNull(service.resolveReadOnly(901L, 11L, null));
+        member.setDelFlag(0); member.setClubId(12L);
+        org.junit.jupiter.api.Assertions.assertNull(service.resolveReadOnly(901L, 11L, null));
+        member.setClubId(11L); member.setMemberId(902L);
+        org.junit.jupiter.api.Assertions.assertNull(service.resolveReadOnly(901L, 11L, null));
+        club.setStatus(0L);
+        assertThrows(ServiceException.class, () -> service.resolveReadOnly(901L, 11L, null));
+        club.setStatus(1L); club.setDelFlag(2);
+        assertThrows(ServiceException.class, () -> service.resolveReadOnly(901L, 11L, null));
+        verify(accounts, never()).lockActiveMemberById(any());
+    }
+
     private ClubMember activeMember(Long clubId, Long memberId, Integer legacyRole) {
         ClubMember member = new ClubMember();
         member.setId(70L);

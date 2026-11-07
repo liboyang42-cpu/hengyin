@@ -772,8 +772,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             amount.setCurrency("CNY");
             Payer payer = new Payer();
             payer.setOpenid(openid);
-            String body = description == null ? "城瘾" : description;
-            if (body.length() > 128) body = body.substring(0, 125) + "...";
+            String body = jsapiDescription(description == null ? "城瘾" : description);
             request.setAmount(amount);
             request.setPayer(payer);
             request.setOutTradeNo(outTradeNo);
@@ -807,10 +806,7 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         payer.setOpenid(getMemberOpenid(registration.getMemberId()));
 
         // 商品描述（注意长度限制）
-        String body = registration.getActivityTitle() + "-" + registration.getTicketName();
-        if (body.length() > 128) {
-            body = body.substring(0, 125) + "...";
-        }
+        String body = jsapiDescription(registration.getActivityTitle() + "-" + registration.getTicketName());
 
         request.setAmount(amount);
         request.setPayer(payer);
@@ -821,6 +817,21 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         request.setNotifyUrl(requireNotifyUrl());
 
         return request;
+    }
+
+    private static String jsapiDescription(String value) {
+        if (value.length() <= 127) return value;
+        int end = Character.isHighSurrogate(value.charAt(123)) ? 123 : 124;
+        return value.substring(0, end) + "...";
+    }
+
+    /** Local lookup only; order ownership remains with the calling business reader. */
+    public String resolveBusinessOrderNo(String wxOutTradeNo) {
+        String merchantId = wxPayConfig.getMerchantId();
+        if (merchantId == null || merchantId.isBlank()) {
+            throw new IllegalStateException("订单查询商户配置缺失");
+        }
+        return intents.businessPaymentOrderNo(wxOutTradeNo, merchantId);
     }
 
     private int toWechatPaymentCents(java.math.BigDecimal amount) {

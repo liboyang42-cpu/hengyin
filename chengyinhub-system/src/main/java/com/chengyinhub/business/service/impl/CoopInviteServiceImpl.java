@@ -1801,6 +1801,43 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     // —— 保证金 ——
 
     @Override
+    @Transactional(readOnly = true)
+    public CoopInvite readOwnedDeposit(Long principalMemberId, String outTradeNo) {
+        if (principalMemberId == null || principalMemberId <= 0) {
+            throw new ServiceException("请先登录", HttpStatus.UNAUTHORIZED);
+        }
+        CoopInvite invite = coopInviteMapper.selectByDepositOutTradeNo(outTradeNo);
+        if (invite == null || !Integer.valueOf(0).equals(invite.getDelFlag())
+                || !principalMemberId.equals(depositOwedParty(invite))) {
+            throw new ServiceException("无权查看该保证金订单", HttpStatus.FORBIDDEN);
+        }
+        try {
+            merchantAccessService.require(principalMemberId, MerchantPermission.COOP_MANAGE);
+        } catch (ServiceException denied) {
+            // 与合作列表一致：有商家档案时不得降级为普通用户绕过停用或权限限制。
+            if (mmsMerchantMapper.selectMmsMerchantByMemberId(principalMemberId) != null) throw denied;
+        }
+        if (invite.getInviteType() != null && invite.getInviteType() == 0
+                && CoopInvite.TO_MERCHANT.equals(invite.getToType())) {
+            assertActiveMerchant(invite.getToId());
+        } else if (invite.getInviteType() != null && invite.getInviteType() == 1
+                && invite.getOriginApplyId() != null && "merchant".equals(invite.getFromType())) {
+            assertActiveMerchant(invite.getFromId());
+        }
+        if ("club".equals(invite.getToType()) && clubMapper.selectClubById(invite.getToId()) == null) {
+            throw new ServiceException("合作不可用", HttpStatus.FORBIDDEN);
+        }
+        if (invite.getTopicId() != null) {
+            CmsTopic topic = cmsTopicMapper.selectCmsTopicById(invite.getTopicId());
+            if (topic == null || (topic.getClubId() != null && topic.getClubId() > 0
+                    && clubMapper.selectClubById(topic.getClubId()) == null)) {
+                throw new ServiceException("合作不可用", HttpStatus.FORBIDDEN);
+            }
+        }
+        return invite;
+    }
+
+    @Override
     public Long depositOwedParty(CoopInvite inv) {
         if (inv == null || inv.getInviteType() == null) return null;
         if (inv.getInviteType() == 1 && inv.getOriginApplyId() != null) return resolveInviterOwner(inv);
