@@ -69,6 +69,8 @@ MYBATIS_ITS=(
   CircleThemeSeedMySqlIT
   TemplatePreferenceJsonMySqlIT
   TemplateMarketLifecycleMySqlIT
+  TemplateAdoptionReceiptMyBatisIT
+  TemplateAdoptionRoundTripMySqlIT
   AdvancedGameRuntimeMySqlIT
   ThemeRuntimeMySqlIT
   GenericRouteRuntimeMySqlIT

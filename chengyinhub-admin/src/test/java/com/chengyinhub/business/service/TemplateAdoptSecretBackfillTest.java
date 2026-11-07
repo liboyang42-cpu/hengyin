@@ -65,6 +65,8 @@ class TemplateAdoptSecretBackfillTest {
             + "\"options\":[{\"key\":\"A\",\"label\":\"桂花乌龙\"},{\"key\":\"B\",\"label\":\"茉莉雪芽\"}]},"
             + "\"dailySign\":{\"enabled\":true,\"signer\":\"猫向导\"}}";
 
+    private static final String LOCKED_TIMER_CONFIG = "{\"schemaVersion\":1,\"timer\":{\"enabled\":true,"
+            + "\"durationSeconds\":60,\"timeoutResult\":\"EXPIRED\"}}";
     private ICmsTemplateLibraryService libraryService;
     private TemplatePublishServiceImpl service;
     private final AtomicReference<CmsMemberTemplate> inserted = new AtomicReference<>();
@@ -74,10 +76,7 @@ class TemplateAdoptSecretBackfillTest {
         ICmsMemberTemplateService memberService = mock(ICmsMemberTemplateService.class);
         libraryService = mock(ICmsTemplateLibraryService.class);
         IAuditTaskService auditService = mock(IAuditTaskService.class);
-        // 能力位闸(X03)在发布路径上,契约是「放行返回 null」—— Mockito 对 String 默认就返回 null,
-        // 所以这个裸 mock 等于「四项能力位全部放行」。本用例验的是采用场景的秘密字段回填,
-        // 不是能力位门禁;把闸配成放行,才不会让别的关注点混进这条断言里。
-        // 能力位本身的正/负控在 CapabilityGuardImplTest,不在这里重复。
+        // 默认放行；采用能力边界用例显式设置拒绝，完整能力矩阵仍由 CapabilityGuardImplTest 覆盖。
         ICapabilityGuard capabilityGuard = mock(ICapabilityGuard.class);
         service = new TemplatePublishServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(service, "mediaPublicationGuard", com.chengyinhub.business.service.support.MediaPublicationTestFixtures.template(7L, 1L, 2L, 3L));
@@ -94,6 +93,12 @@ class TemplateAdoptSecretBackfillTest {
         ReflectionTestUtils.setField(service, "templateLibraryService", libraryService);
         ReflectionTestUtils.setField(service, "auditTaskService", auditService);
         ReflectionTestUtils.setField(service, "capabilityGuard", capabilityGuard);
+        when(memberService.updateCmsMemberTemplate(any())).thenAnswer(invocation -> {
+            CmsMemberTemplate row = invocation.getArgument(0);
+            when(memberService.selectCmsMemberTemplateById(row.getId())).thenReturn(row);
+            inserted.set(row);
+            return 1;
+        });
         when(memberService.insertCmsMemberTemplate(any())).thenAnswer(invocation -> {
             CmsMemberTemplate row = invocation.getArgument(0);
             row.setId(91L);
@@ -133,6 +138,164 @@ class TemplateAdoptSecretBackfillTest {
         assertEquals(9001L, saved.getOriginalTemplateId()); assertEquals(0L, saved.getPublishStatus());
         assertEquals("MERCHANT", request.getScope());
         assertFalse(AdvancedGamePublicProjection.safeConfigJson(saved.getAdvancedConfigJson()).contains("answerOrder"));
+    }
+
+    @Test
+    void sourceOnlyDraftCopiesLockedMechanicsWithoutAcceptingClientConfiguration() throws Exception {
+        ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
+        when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
+        String timer = "{\"schemaVersion\":1,\"timer\":{\"enabled\":true,"
+                + "\"durationSeconds\":60,\"timeoutResult\":\"EXPIRED\"}}";
+        String branch = "{\"schemaVersion\":1,\"branch\":{\"enabled\":true,\"startStepId\":\"s1\","
+                + "\"steps\":[{\"id\":\"s1\",\"title\":\"起点\",\"options\":["
+                + "{\"id\":\"o1\",\"label\":\"往左\",\"nextStepId\":\"s2\"}]},"
+                + "{\"id\":\"s2\",\"terminal\":true,\"outcomeCode\":\"END_A\",\"options\":[]}]}}";
+        for (String config : new String[] {timer, branch}) {
+            when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(visibleSource(config));
+            CmsTemplatePublishRequest request = adoptedRequest(9001L, "invalid client config");
+            request.setAdoptSourceOnly(true);
+
+            assertEquals(91L, service.saveOrUpdateDraft(request, 7L, "member7"));
+            CmsMemberTemplate saved = inserted.get();
+            assertEquals(new ObjectMapper().readTree(config), new ObjectMapper().readTree(saved.getAdvancedConfigJson()));
+            assertEquals(7L, saved.getMemberId());
+            assertEquals(9001L, saved.getOriginalTemplateId());
+            assertEquals(0, saved.getDraftStatus());
+            assertEquals(0L, saved.getStatus());
+            assertEquals(0L, saved.getPublishStatus());
+        }
+        org.mockito.Mockito.verifyNoInteractions(guard);
+    }
+
+    @Test
+    void sourceOnlyDraftStillRejectsInvalidSourceMechanicsBeforeWriting() {
+        when(libraryService.selectCmsTemplateLibraryById(9001L))
+                .thenReturn(visibleSource("{\"schemaVersion\":999}"));
+        CmsTemplatePublishRequest request = adoptedRequest(9001L, SOURCE_CONFIG);
+        request.setAdoptSourceOnly(true);
+
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        org.junit.jupiter.api.Assertions.assertNull(inserted.get());
+    }
+
+    @Test
+    void sourceIdOrCopyFlagCannotBypassCapabilitiesForAuthoringOrPublishing() {
+        ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
+        String rejection = "当前身份未解锁分支或计时能力";
+        when(guard.checkAdvancedMechanics(any(), any())).thenReturn(rejection);
+        for (Long sourceId : new Long[] {null, 9001L}) {
+            CmsTemplatePublishRequest request = adoptedRequest(sourceId, SOURCE_CONFIG);
+            assertEquals(rejection, assertThrows(IllegalArgumentException.class,
+                    () -> service.saveOrUpdateDraft(request, 7L, "member7")).getMessage());
+            request.setAdoptSourceOnly(true);
+            assertEquals(rejection, assertThrows(IllegalArgumentException.class,
+                    () -> service.publishTemplateWithTransaction(request, 7L, "member7")).getMessage());
+        }
+        org.junit.jupiter.api.Assertions.assertNull(inserted.get());
+    }
+
+    @Test
+    void ownedAdoptionSavesAndSubmitsOnlyUnchangedInheritedConfigAfterSourceChanges() {
+        CmsTemplateLibrary source = visibleSource(LOCKED_TIMER_CONFIG);
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest copy = adoptedRequest(9001L, null);
+        copy.setAdoptSourceOnly(true);
+        assertEquals(91L, service.saveOrUpdateDraft(copy, 7L, "member7"));
+        ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
+        when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
+        var receipts = mock(com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper.class);
+        ReflectionTestUtils.setField(service, "adoptionReceiptMapper", receipts);
+        String hash = com.chengyinhub.business.service.support.TemplateAdoptionService
+                .inheritedAdvancedConfigHash(inserted.get().getAdvancedConfigJson());
+        when(receipts.countCompletedInheritedConfig(7L, 91L, 9001L, hash)).thenReturn(1);
+        source.setPublishStatus(0L);
+        source.setAdvancedConfigJson(LOCKED_TIMER_CONFIG.replace(":60", ":90"));
+        org.mockito.Mockito.clearInvocations(libraryService);
+        CmsTemplatePublishRequest edit = adoptedRequest(9001L,
+                "{\"timer\":{\"timeoutResult\":\"EXPIRED\",\"durationSeconds\":60,\"enabled\":true},\"schemaVersion\":1}");
+        edit.setId(91L); edit.setTitle("只修改自己的标题");
+
+        assertEquals(91L, service.saveOrUpdateDraft(edit, 7L, "member7"));
+        assertEquals(91L, service.publishTemplateWithTransaction(edit, 7L, "member7"));
+        assertEquals("只修改自己的标题", inserted.get().getTitle());
+        assertEquals(9001L, inserted.get().getOriginalTemplateId());
+        assertEquals(0L, inserted.get().getStatus(), "仍须走发布审核");
+        assertEquals(0L, inserted.get().getPublishStatus(), "不自动上架");
+        org.mockito.Mockito.verify(receipts, org.mockito.Mockito.times(2))
+                .countCompletedInheritedConfig(7L, 91L, 9001L, hash);
+        org.mockito.Mockito.verify(libraryService, org.mockito.Mockito.never()).selectCmsTemplateLibraryById(any());
+    }
+
+    @Test
+    void inheritedConfigDoesNotAuthorizeTamperingLegacyReceiptsOrAnotherIdentity() {
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(visibleSource(LOCKED_TIMER_CONFIG));
+        CmsTemplatePublishRequest copy = adoptedRequest(9001L, null);
+        copy.setAdoptSourceOnly(true);
+        service.saveOrUpdateDraft(copy, 7L, "member7");
+        ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
+        when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
+        var receipts = mock(com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper.class);
+        ReflectionTestUtils.setField(service, "adoptionReceiptMapper", receipts);
+        String hash = com.chengyinhub.business.service.support.TemplateAdoptionService
+                .inheritedAdvancedConfigHash(inserted.get().getAdvancedConfigJson());
+        CmsTemplatePublishRequest edit = adoptedRequest(9001L, LOCKED_TIMER_CONFIG);
+        edit.setId(91L);
+        // A legacy receipt has no trusted baseline, even if the client supplies source/copy identity.
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(edit, 7L, "member7"));
+        assertThrows(IllegalArgumentException.class, () -> service.publishTemplateWithTransaction(edit, 7L, "member7"));
+        when(receipts.countCompletedInheritedConfig(7L, 91L, 9001L, hash)).thenReturn(1);
+        edit.setAdvancedConfigJson(LOCKED_TIMER_CONFIG.replace(":60", ":90"));
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(edit, 7L, "member7"));
+        assertThrows(IllegalArgumentException.class, () -> service.publishTemplateWithTransaction(edit, 7L, "member7"));
+        edit.setAdvancedConfigJson(LOCKED_TIMER_CONFIG);
+        assertThrows(RuntimeException.class, () -> service.saveOrUpdateDraft(edit, 8L, "other"));
+        edit.setId(92L);
+        assertThrows(RuntimeException.class, () -> service.saveOrUpdateDraft(edit, 7L, "member7"));
+        edit.setId(91L); edit.setOriginalTemplateId(9002L);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(edit, 7L, "member7"));
+        edit.setOriginalTemplateId(9001L); edit.setAdoptSourceOnly(true);
+        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(edit, 7L, "member7"));
+        ICmsMemberTemplateService members = (ICmsMemberTemplateService) ReflectionTestUtils.getField(service, "memberTemplateService");
+        org.mockito.Mockito.verify(members, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void inheritanceLookupFailureCannotGrantAuthoringOrWriteDraft() {
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(visibleSource(LOCKED_TIMER_CONFIG));
+        CmsTemplatePublishRequest copy = adoptedRequest(9001L, null);
+        copy.setAdoptSourceOnly(true);
+        service.saveOrUpdateDraft(copy, 7L, "member7");
+        ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
+        when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
+        var receipts = mock(com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper.class);
+        ReflectionTestUtils.setField(service, "adoptionReceiptMapper", receipts);
+        var failure = new org.springframework.dao.DataAccessResourceFailureException("controlled receipt read failure");
+        when(receipts.countCompletedInheritedConfig(any(), any(), any(), any())).thenThrow(failure);
+        CmsTemplatePublishRequest edit = adoptedRequest(9001L, LOCKED_TIMER_CONFIG);
+        edit.setId(91L);
+        org.junit.jupiter.api.Assertions.assertSame(failure, assertThrows(
+                org.springframework.dao.DataAccessResourceFailureException.class,
+                () -> service.saveOrUpdateDraft(edit, 7L, "member7")));
+        ICmsMemberTemplateService members = (ICmsMemberTemplateService) ReflectionTestUtils.getField(service, "memberTemplateService");
+        org.mockito.Mockito.verify(members, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
+    }
+
+    @Test
+    void sourceOnlyCopyStillRejectsAnotherOwnersUnreviewedRegisteredMedia() {
+        var publication = ReflectionTestUtils.getField(service, "mediaPublicationGuard");
+        var references = ReflectionTestUtils.getField(publication, "references");
+        var assets = (com.chengyinhub.business.mapper.AppMediaAssetMapper) ReflectionTestUtils.getField(references, "mapper");
+        when(assets.select(99L)).thenReturn(java.util.Map.of("id", 99L, "memberId", 99L,
+                "ownerType", "APP", "reviewState", "PENDING", "mediaType", "IMAGE"));
+        CmsTemplateLibrary source = visibleSource(LOCKED_TIMER_CONFIG);
+        source.setStoryImg("media-asset:99");
+        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+        CmsTemplatePublishRequest copy = adoptedRequest(9001L, null);
+        copy.setAdoptSourceOnly(true);
+
+        assertEquals(403, assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.saveOrUpdateDraft(copy, 7L, "member7")).getCode());
+        org.junit.jupiter.api.Assertions.assertNull(inserted.get());
     }
 
     @Test
@@ -378,10 +541,10 @@ class TemplateAdoptSecretBackfillTest {
         String ownedConfig = SOURCE_CONFIG.replace("\"answerKey\":\"B\"", "\"answerKey\":\"A\"");
         owned.setAdvancedConfigJson(ownedConfig);
         when(members.selectCmsMemberTemplateById(71L)).thenReturn(owned);
-        when(members.updateCmsMemberTemplate(any())).thenAnswer(call -> {
+        org.mockito.Mockito.doAnswer(call -> {
             inserted.set(call.getArgument(0));
             return 1;
-        });
+        }).when(members).updateCmsMemberTemplate(any());
         when(libraryService.selectCmsTemplateLibraryById(9001L))
                 .thenThrow(new IllegalStateException("live 来源不可用或已被修改"));
         CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG); request.setId(71L);

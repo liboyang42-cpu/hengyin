@@ -128,7 +128,7 @@ class ApiTemplateMerchantOperatorScopeTest {
         });
         when(receipts.lock(eq(PRINCIPAL), any())).thenAnswer(call -> new HashMap<>(row));
         when(receipts.read(eq(PRINCIPAL), any())).thenAnswer(call -> new HashMap<>(row));
-        when(receipts.finish(eq(PRINCIPAL), any(), any(), any(), any(), any())).thenAnswer(call -> {
+        when(receipts.finish(eq(PRINCIPAL), any(), any(), any(), any(), any(), any())).thenAnswer(call -> {
             assertEquals(row.get("requestId"), call.getArgument(1));
             row.put("status", call.getArgument(2)); row.put("draftId", call.getArgument(3));
             row.put("reason", call.getArgument(4)); row.put("draftVersion", call.getArgument(5));
@@ -137,11 +137,11 @@ class ApiTemplateMerchantOperatorScopeTest {
         CmsTemplateLibrary source = new CmsTemplateLibrary();
         source.setId(16L); source.setMemberTemplateId(116L); source.setMemberId(800L);
         source.setTitle("原公共内容"); source.setDelFlag(0); source.setStatus(1L); source.setPublishStatus(1L);
-        source.setQuestionAnswer("原服务端答案"); source.setAdvancedConfigJson("{}");
+        source.setQuestionAnswer("原服务端答案"); source.setAdvancedConfigJson("{\"schemaVersion\":1}");
         CmsMemberTemplate canonical = draft(800L);
         canonical.setId(116L); canonical.setTitle(source.getTitle()); canonical.setDraftStatus(1);
         canonical.setStatus(1L); canonical.setPublishStatus(1L);
-        canonical.setQuestionAnswer(source.getQuestionAnswer()); canonical.setAdvancedConfigJson("{}");
+        canonical.setQuestionAnswer(source.getQuestionAnswer()); canonical.setAdvancedConfigJson("{\"schemaVersion\":1}");
         when(receipts.sourceCanonicalId(16L)).thenReturn(116L);
         when(receipts.lockSource(16L)).thenReturn(source);
         when(receipts.lockDraft(116L)).thenReturn(canonical);

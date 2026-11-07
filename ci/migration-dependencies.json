@@ -63,6 +63,7 @@
     "20261026_team_event_command_receipt": [],
     "20261026_theme_attribute_registry_version": [],
     "20261027_template_adoption_receipt": [],
+    "20261107_template_adoption_inherited_config_hash": ["20261027_template_adoption_receipt"],
     "doc2_f3_refund_hold_20261026": [],
     "orient_score_recovery_20261026": [],
     "orient_score_sync_receipt_20261026": [],
