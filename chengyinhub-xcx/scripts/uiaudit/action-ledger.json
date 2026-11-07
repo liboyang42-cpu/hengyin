@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5748,
+  "controlCount": 5751,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -76012,6 +76012,132 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -105370,6 +105496,44 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -156978,6 +157142,10 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -156991,7 +157159,24 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
               "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty.order-load-loading",
               "index": 0
             }
           ]
@@ -189340,6 +189525,23 @@
             },
             {
               "selector": "cy-inline-error.mh__error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error",
               "index": 0
             }
           ]
@@ -306633,6 +306835,23 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -307055,6 +307274,23 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -307501,6 +307737,23 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -307923,6 +308176,23 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -330465,6 +330735,23 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -344249,6 +344536,23 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -358057,6 +358361,23 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -371853,6 +372174,23 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -385637,6 +385975,23 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -464697,6 +465052,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -504736,6 +505175,90 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -544806,6 +545329,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -584844,6 +585451,90 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -624914,6 +625605,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -664952,6 +665727,90 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -705023,6 +705882,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -745062,6 +746005,90 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -785133,6 +786160,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -825172,6 +826283,90 @@
             },
             {
               "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -865243,6 +866438,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -905298,6 +906577,90 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             },
@@ -915838,6 +917201,23 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            },
+            {
+              "selector": "cy-switch",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             },
             {
@@ -1408039,6 +1409419,287 @@
       }
     },
     {
+      "id": "subpackageMember/components/cy/order-center-entry/index.wxml:2:bind:back:backToOrderList:0",
+      "route": "component:subpackageMember/components/cy/order-center-entry/index",
+      "hostRoutes": [
+        "subpackageMember/orderinfo/orderinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/order-center-entry/index.wxml",
+        "js": "subpackageMember/components/cy/order-center-entry/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-member-order-detail",
+        "event": "bind:back",
+        "handler": "backToOrderList",
+        "line": 2,
+        "selectorHint": "#orderDetail",
+        "visibleCondition": "{{id}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/order-center-entry/index.js:139"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/order-center-entry/index.wxml:2:bind:close:backToOrderList:1",
+      "route": "component:subpackageMember/components/cy/order-center-entry/index",
+      "hostRoutes": [
+        "subpackageMember/orderinfo/orderinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/order-center-entry/index.wxml",
+        "js": "subpackageMember/components/cy/order-center-entry/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-member-order-detail",
+        "event": "bind:close",
+        "handler": "backToOrderList",
+        "line": 2,
+        "selectorHint": "#orderDetail",
+        "visibleCondition": "{{id}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/order-center-entry/index.js:139"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/order-center-entry/index.wxml:4:bind:cta:onEntryAction:2",
+      "route": "component:subpackageMember/components/cy/order-center-entry/index",
+      "hostRoutes": [
+        "subpackageMember/orderinfo/orderinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/order-center-entry/index.wxml",
+        "js": "subpackageMember/components/cy/order-center-entry/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "onEntryAction",
+        "line": 4,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{entryState !== 'ready'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/order-center/detail",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/order-center/detail"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/order-center/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/order-center-entry/index.js:131"
+      }
+    },
+    {
       "id": "subpackageMember/components/cy/profile/index.wxml:108:bindtap:goSignup:6",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
@@ -1423557,6 +1425218,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1423675,6 +1425349,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1423784,6 +1425471,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1423918,6 +1425618,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1424064,6 +1425777,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1424202,6 +1425928,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1424322,6 +1426061,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1424434,6 +1426186,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1424595,6 +1426360,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1424765,6 +1426543,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1424877,6 +1426668,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1425095,6 +1426899,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1425214,6 +1427031,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1425406,6 +1427236,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1425526,6 +1427369,19 @@
           "route": "subpackageMember/orderinfo/orderinfo",
           "segments": [
             {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
               "selector": "#orderDetail",
               "index": 0
             }
@@ -1425635,6 +1427491,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1425772,6 +1427641,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1425955,6 +1427837,19 @@
           "segments": [
             {
               "selector": "cy-scene-member-order-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/orderinfo/orderinfo",
+          "segments": [
+            {
+              "selector": "#orderCenterEntry",
+              "index": 0
+            },
+            {
+              "selector": "#orderDetail",
               "index": 0
             }
           ]
@@ -1461964,7 +1463859,7 @@
         "handler": "backToOrderList",
         "line": 10,
         "selectorHint": "#orderDetail",
-        "visibleCondition": "{{!orderCenter || id}}",
+        "visibleCondition": "{{!orderCenter}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1462005,7 +1463900,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:140"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:25"
       }
     },
     {
@@ -1462034,7 +1463929,7 @@
         "handler": "backToOrderList",
         "line": 10,
         "selectorHint": "#orderDetail",
-        "visibleCondition": "{{!orderCenter || id}}",
+        "visibleCondition": "{{!orderCenter}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1462075,11 +1463970,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:140"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:25"
       }
     },
     {
-      "id": "subpackageMember/orderinfo/orderinfo.wxml:12:bind:cta:onEntryAction:3",
+      "id": "subpackageMember/orderinfo/orderinfo.wxml:11:bind:back:backToOrderList:3",
       "route": "subpackageMember/orderinfo/orderinfo",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1462099,12 +1463994,12 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "onEntryAction",
-        "line": 12,
-        "selectorHint": "cy-empty[bind:cta]",
-        "visibleCondition": "{{entryState !== 'ready'}}",
+        "tag": "cy-order-center-entry",
+        "event": "bind:back",
+        "handler": "backToOrderList",
+        "line": 11,
+        "selectorHint": "#orderCenterEntry",
+        "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1462117,76 +1464012,35 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "navigation",
       "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "baseActionClass": "navigation",
       "effectClasses": [
-        "read",
-        "navigation",
-        "state"
+        "navigation"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index",
           "subpackageMember/order/order"
         ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/order-center/detail",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/order-center/detail"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/order-center/detail",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:125"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:25"
       }
     },
     {
@@ -1462256,7 +1464110,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/orderinfo/orderinfo.js:140"
+        "staticSource": "subpackageMember/orderinfo/orderinfo.js:25"
       }
     },
     {

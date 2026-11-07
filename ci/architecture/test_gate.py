@@ -1935,8 +1935,12 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
             self.assertTrue(added[key]["forbidden_backrefs"])
         old = before["technical_dependency_policy"]
         now = current["technical_dependency_policy"]
-        for key in old.keys() - {"owners", "allowed_directions"}:
+        r28_owners = {"B_ORDER_CENTER_API", "B_ORDER_CENTER_QUERY"}
+        for key in old.keys() - {"owners", "allowed_directions", "exact_directions"}:
             self.assertEqual(old[key], now[key], key)
+        self.assertEqual(old["exact_directions"], [c for c in now["exact_directions"]
+                         if c["source_owner"] not in r28_owners])
+        self.assertEqual(r28_owners, {o["id"] for o in now["owners"] if o["id"] in r28_owners})
         l8_owners = {"L8_RECHECK_STORAGE", "L8_RECHECK", "L8_SENSITIVE_STORAGE", "L8_SENSITIVE_LIBRARY", "L8_SENSITIVE_RESCAN"}
         l8_edges = {("L8_RECHECK", "L8_RECHECK_STORAGE"), ("L8_RECHECK", "L8_SENSITIVE_LIBRARY"),
                     ("L8_SENSITIVE_LIBRARY", "L8_SENSITIVE_STORAGE"), ("L8_SENSITIVE_RESCAN", "L8_SENSITIVE_STORAGE"),
@@ -1948,10 +1952,11 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         r9_owners = {"R9_MAP_WEATHER", "R9_TEAM_TRAIL"}
         self.assertEqual(r9_owners, {o["id"] for o in now["owners"] if o["id"] in r9_owners})
         self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_")
-                                         and o["id"] not in l8_owners and o["id"] not in r9_owners])
+                                         and o["id"] not in l8_owners and o["id"] not in r9_owners
+                                         and o["id"] not in r28_owners])
         self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"]
                          if not any(n.startswith("M_") for n in e) and tuple(e) not in self.original_intent_edges
-                         and tuple(e) not in l8_edges])
+                         and tuple(e) not in l8_edges and not any(n in r28_owners for n in e)])
         self.assertEqual(self.original_intent_edges, {tuple(e) for e in now["allowed_directions"]
                                                     if tuple(e) in self.original_intent_edges})
 
