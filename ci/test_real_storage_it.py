@@ -345,7 +345,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_reuse_publication_and_declarations_cannot_omit_real_storage_source_cases(self):
         reg = registry()
         expected = {
-            'com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT': 6,
+            'com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT': 7,
             'com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT': 6,
             'com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT': 9,
         }
@@ -494,9 +494,9 @@ class RegistryContractTest(unittest.TestCase):
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 137,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 138,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 137,
+                    "port-extra-storage": 138,
                     "port-core-funds": 27, "port-ai-quota": 24,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 40,
@@ -538,7 +538,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 76,
-                    "architecture-day-integrated-changes": 954,  # R14 historical payee isolation: seven explicit MySQL cases
+                    "architecture-day-integrated-changes": 955,  # R14 payee isolation seven; R30 real adoption receipt/draft seam +1
                     "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
@@ -552,7 +552,7 @@ class RegistryContractTest(unittest.TestCase):
             "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT": (5, "CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT"),
             "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT": (1, None),
             "com.chengyinhub.business.it.CoopServiceRealDbIT": (1, None),
-            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (6, None),
+            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (7, None),
             "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT": (1, None),
             "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT": (3, None),
             "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": (1, None),

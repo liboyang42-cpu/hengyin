@@ -149,8 +149,25 @@ test('玩法标签：分类页 = 两列方块，选中标签只换标签下方�
 // ---------------- 主题：时长、状态、封面、标签 ----------------
 
 function topic(id, name, extra) {
-  return Object.assign({ id, name, subtitle: '副标题', totalTime: 5400, templateCount: 5, chapterCount: 1, productType: 2, templateStatus: 'EXPERIMENTAL' }, extra || {});
+  return Object.assign({ id, name, subtitle: '副标题', totalTime: 5400, templateCount: 5, gameCount: 5, chapterCount: 1, productType: 2, templateStatus: 'EXPERIMENTAL' }, extra || {});
 }
+
+test('主题货架玩法数使用去重 gameCount，不把节点引用数当成不同玩法', async () => {
+  const { vm, requests } = mountShelf();
+  // 2026-11-07 公开目录：风味巡游 4 点共用 1 玩法；生活不掉线 11 点共用 7 玩法。
+  const rows = [
+    { id: 990047, name: '风味巡游', templateCount: 4, gameCount: 1, chapterCount: 1, productType: 2 },
+    { id: 990012, name: '生活不掉线', templateCount: 11, gameCount: 7, chapterCount: 4, productType: 2 },
+    { id: 990040, name: '一起动起来', templateCount: 0, gameCount: 0, chapterCount: 8, productType: 2 }
+  ];
+  await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok(rows));
+  assert.equal(vm._topics.find((t) => t.id === 990047).meta, '实验模板 · 1 个玩法');
+  assert.equal(vm._topics.find((t) => t.id === 990012).meta, '实验模板 · 4 章 · 7 个玩法');
+  assert.equal(vm._topics.find((t) => t.id === 990040).meta, '实验模板 · 8 章');
+  assert.deepEqual(rows.map((t) => [t.id, t.templateCount, t.gameCount]), [
+    [990047, 4, 1], [990012, 11, 7], [990040, 0, 0]
+  ]);
+});
 
 test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),未验证的主题标「实验模板」', async () => {
   const { vm, requests } = mountShelf();

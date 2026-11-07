@@ -31,7 +31,7 @@ function columns(list, size) {
 
 function decorateTopic(item) {
   const a = art.topicArt(item.name);
-  const games = Number(item.templateCount || 0);
+  const games = Number(item.gameCount || 0);
   const chapters = Number(item.chapterCount || 0);
   const meta = [];
   // 未经试走的主题不能看起来像已验证:非 VERIFIED(含未下发)一律标「实验模板」

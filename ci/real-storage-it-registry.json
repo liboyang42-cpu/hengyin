@@ -1246,7 +1246,7 @@
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": {
-      "tests": 6,
+      "tests": 7,
       "storage": [
         "mysql"
       ],
