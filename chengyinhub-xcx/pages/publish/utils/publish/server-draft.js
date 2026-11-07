@@ -113,6 +113,9 @@ function authoredConfig(cfg, pos, inferChapters) {
     chapters,
     bindings,
     quests,
+    // 地点和引导是稳定键，后端只重映射数值型备用节点引用。
+    arrivals: tasks.map(q => ({ node: at(q.nodeId), locationKey: q.locationKey, guideKey: q.guideKey || '',
+      fallbacks: (q.approvedFallbackNodeIds || []).map(at).sort() })),
     rations: ((game.survival || {}).rations || []).map(r => [r.actKey, r.itemId, r.quantity, r.fallbackHpCost || 0,
       r.fallback ? r.fallback.statKey + '=' + r.fallback.amount : ''].join('|')).sort(),
     items: (cfg.items || []).map(i => i.id + ':' + (i.name || '') + ':' + (i.slotCost || 1)).sort(),
@@ -390,6 +393,12 @@ function readbackIssue(sent, detail, expectDraft) {
   for (const key of Object.keys(CONFIG_LABELS)) {
     if (JSON.stringify(want[key]) !== JSON.stringify(have[key])) return '云端保存的' + CONFIG_LABELS[key] + '与本机不一致';
   }
+  if (want.arrivals.some(q => {
+    const saved = have.arrivals.find(row => row.node === q.node);
+    // 未编写任务时允许编译器生成到达设置；显式地点不得被默认值掩盖。
+    return !saved || q.locationKey != null && q.locationKey !== saved.locationKey
+      || q.guideKey !== saved.guideKey || JSON.stringify(q.fallbacks) !== JSON.stringify(saved.fallbacks);
+  })) return '云端保存的到达配置与本机不一致';
   try {
     require('./attribute-binding.js').frozenReadback(detail.journeyRules || detail.topic.journeyRulesJson,
       detail.topic.configVersion, detail.topic.id);

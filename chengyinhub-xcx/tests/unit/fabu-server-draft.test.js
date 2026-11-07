@@ -133,6 +133,101 @@ test('未选进行方式先保存互斥章节，接受编译器默认个人任�
   }
 });
 
+function arrivalFixture() {
+  const game = { runtimeScope: 'TEAM', worldMode: 'TEAM_INDEPENDENT', quests: [
+    { nodeId: 101, actKey: 'chapter_10', locationKey: 'node_102', guideKey: 'guide_101', approvedFallbackNodeIds: [102, 201] },
+    { nodeId: 102, actKey: 'chapter_10', locationKey: 'shared_square' },
+    { nodeId: 201, actKey: 'chapter_20', locationKey: 'shared_square' },
+  ] };
+  const sent = { name: '到达回读', chapters: [
+    { id: 10, nodes: [{ id: 101, name: '甲', templateId: '31' }, { id: 102, name: '乙' }] },
+    { id: 20, nodes: [{ id: 201, name: '丙' }] },
+  ], themeRuntimeConfig: { gameplayRuntime: game } };
+  const back = { isDraft: true, topic: { id: 501, status: 0, name: sent.name }, chapters: [
+    { id: 30, topicId: 501, cmsTopicNodeList: [
+      { id: 901, topicId: 501, chapterId: 30, name: '甲', templateId: '31' },
+      { id: 902, topicId: 501, chapterId: 30, name: '乙' }] },
+    { id: 40, topicId: 501, cmsTopicNodeList: [{ id: 903, topicId: 501, chapterId: 40, name: '丙' }] },
+  ], themeRuntimeConfig: { gameplayRuntime: structuredClone(game) } };
+  back.themeRuntimeConfig.gameplayRuntime.quests.forEach((quest, index) => {
+    quest.nodeId = [901, 902, 903][index]; quest.actKey = index < 2 ? 'chapter_30' : 'chapter_40';
+  });
+  back.themeRuntimeConfig.gameplayRuntime.quests[0].approvedFallbackNodeIds = [902, 903];
+  return { sent, back };
+}
+
+for (const [field, changed] of [['locationKey', 'another_square'], ['guideKey', 'another_guide'], ['approvedFallbackNodeIds', [901, 903]]]) {
+  test('到达回读拒绝作者明确设置的 ' + field + ' 丢失或改变', () => {
+    for (const value of [undefined, null, changed]) {
+      const { sent, back } = arrivalFixture();
+      const quest = back.themeRuntimeConfig.gameplayRuntime.quests[0];
+      if (value === undefined) delete quest[field]; else quest[field] = value;
+      assert.match(readbackIssue(sent, back, true), /到达/);
+    }
+  });
+}
+
+test('到达回读接受章节节点换号及备用点重排，地点和引导键按后端合同原样保留', () => {
+  const { sent, back } = arrivalFixture();
+  back.themeRuntimeConfig.gameplayRuntime.quests.reverse();
+  back.themeRuntimeConfig.gameplayRuntime.quests[2].approvedFallbackNodeIds.reverse();
+  assert.equal(readbackIssue(sent, back, true), '');
+  const stale = structuredClone(back);
+  stale.themeRuntimeConfig.gameplayRuntime.quests[2].approvedFallbackNodeIds = [102, 201];
+  assert.match(readbackIssue(sent, stale, true), /到达/);
+  sent.themeRuntimeConfig = JSON.stringify(sent.themeRuntimeConfig);
+  back.topic.themeRuntimeConfigJson = JSON.stringify(back.themeRuntimeConfig);
+  delete back.themeRuntimeConfig;
+  assert.equal(readbackIssue(sent, back, true), '');
+  for (const [field, key] of [['locationKey', 'node_902'], ['guideKey', 'guide_901']]) {
+    const altered = structuredClone(back), cfg = JSON.parse(altered.topic.themeRuntimeConfigJson);
+    cfg.gameplayRuntime.quests[2][field] = key;
+    altered.topic.themeRuntimeConfigJson = JSON.stringify(cfg);
+    assert.match(readbackIssue(sent, altered, true), /到达/);
+  }
+});
+
+test('到达回读兼容未编写任务的服务端编译和空备用点缺省，不要求服务端生成字段逐字相同', () => {
+  const { sent, back } = arrivalFixture();
+  delete sent.themeRuntimeConfig.gameplayRuntime.quests;
+  back.themeRuntimeConfig.gameplayRuntime.quests.forEach(q => {
+    q.locationKey = 'node_' + q.nodeId; delete q.guideKey; delete q.approvedFallbackNodeIds;
+  });
+  assert.equal(readbackIssue(sent, back, true), '');
+  sent.themeRuntimeConfig.gameplayRuntime.quests = [{ nodeId: 101, actKey: 'chapter_10' },
+    { nodeId: 102, actKey: 'chapter_10', approvedFallbackNodeIds: [] }, { nodeId: 201, actKey: 'chapter_20' }];
+  back.themeRuntimeConfig.gameplayRuntime.quests[0].approvedFallbackNodeIds = [];
+  assert.equal(readbackIssue(sent, back, true), '');
+});
+
+test('到达回读继续拒绝模式、模板、归属和任务成员漂移', () => {
+  for (const mutate of [
+    d => { d.themeRuntimeConfig.gameplayRuntime.worldMode = 'WORLD_SHARED'; },
+    d => { d.chapters[0].cmsTopicNodeList[0].templateId = '32'; },
+    d => { d.chapters[0].cmsTopicNodeList[0].chapterId = 999; },
+    d => { d.themeRuntimeConfig.gameplayRuntime.quests.pop(); },
+  ]) {
+    const { sent, back } = arrivalFixture(); mutate(back);
+    assert.notEqual(readbackIssue(sent, back, true), '');
+  }
+});
+
+test('到达配置丢失不确认保存或继续发布，未知发布恢复仍保留本机差异', () => {
+  for (const field of ['locationKey', 'guideKey', 'approvedFallbackNodeIds']) {
+    const { sent, back } = arrivalFixture(); delete back.themeRuntimeConfig.gameplayRuntime.quests[0][field];
+    let success = 0, published = 0, failure, recovered, saves = 0;
+    const deps = { save: (p, cb) => { saves++; cb({ ok: true, data: 501 }); },
+      readback: (id, cb) => cb({ ok: true, data: back }), publish: () => { published++; } };
+    createServerDraftSaver(deps).saveAndPublish(sent, { onSuccess: () => success++, onFail: r => { failure = r; } });
+    assert.equal(success, 0); assert.equal(published, 0); assert.equal(saves, 1);
+    assert.equal(failure.stage, 'readback'); assert.match(failure.msg, /到达/);
+    back.isDraft = false; back.topic.status = 1;
+    createServerDraftSaver({ ...deps, pendingPublish: () => 501 }).saveAndPublish(sent, { onSuccess: r => { recovered = r; } });
+    assert.equal(recovered.published.recovered, true); assert.equal(recovered.localChanges, true);
+    assert.equal(published, 0); assert.equal(saves, 1);
+  }
+});
+
 test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发一次；失败可重试；存不进去就不发布', () => {
   const calls = [];
   const saver = createServerDraftSaver({
