@@ -2,6 +2,7 @@
   "navigationBarTitleText": "优惠券出示",
   "navigationBarTextStyle": "white",
   "usingComponents": {
+    "cy-empty": "/components/cy/empty/index",
     "cy-card": "/components/cy/card/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-inline-error": "/components/cy/inline-error/index",

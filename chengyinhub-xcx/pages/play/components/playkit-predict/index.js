@@ -44,6 +44,17 @@ function cardAngle(i, angle, n) {
   return a;
 }
 
+/** 从当前角度转到第 i 张正中还差多少度(走近路;周期 N×STEP)。 */
+function parkDelta(angle, i, n) {
+  return cardAngle(i, angle, n || 1);
+}
+
+/** 服务端记下的本人选项在第几张;没有或对不上就是 -1。 */
+function mineIndex(options, key) {
+  if (!key) return -1;
+  return (options || []).findIndex((o, i) => String(o.key || ('k' + i)) === String(key));
+}
+
 /** 一张卡的十条竖条。每条里放一份整张卡,往左错开自己那一格再裁掉多余的。 */
 function slicesFor() {
   const out = [];
@@ -90,14 +101,21 @@ Component({
     settledOption: { type: String, value: '' },
     won: { type: Boolean, value: false },
     myOptionKey: { type: String, value: '' },
+    /* R11 g1 F1:今天这一轮已关(过了截止整点或已揭晓)且本人没选。服务端下发,
+       此时只给「不选，继续」—— 一条线性路线不能停在「明天再来」上。 */
+    closed: { type: Boolean, value: false },
+    /* 本站有承接商家才说「由商家给出答案」。默认 true:老服务端不下发这个字段时口径不变 */
+    shopAnswers: { type: Boolean, value: true },
+    /* 第十一轮 g4:这一轮已经「不选，继续」过(服务端 predict.skipped)。不再邀请选,也不出「就选这个」 */
+    skipped: { type: Boolean, value: false },
   },
   data: {
-    cards: [], picked: -1, committed: false, waitLabel: '',
+    cards: [], picked: -1, committed: false, skipping: false, waitLabel: '',
     // 派生:换个键名,别写回被 observer 监听的那几个属性
     revealKind: '', revealHead: '', revealText: '',
   },
   observers: {
-    'show, settleStatus, settledOption, won': function (show) {
+    'show, settleStatus, settledOption, won, shopAnswers': function (show) {
       if (!show) return;
       // 字段写死成字面量:动态 setData 门禁核不出写了哪些顶层字段
       const reveal = revealOf(this.data);
@@ -107,24 +125,29 @@ Component({
         revealText: reveal.revealText,
       });
     },
-    'show, options, closeAtHour, revealDays, revealHour': function (show) {
+    'show, options, closeAtHour, revealDays, revealHour, shopAnswers, myOptionKey': function (show) {
       if (!show) { this._stop(); return; }
       const d = this.data;
       this._angle = 0;
       this._n = (d.options || []).length || 1;
       this._slices = slicesFor();
+      // 第十二轮 k7 N1:服务端已记下本人选的那一张 ⇒ 转盘停在那张上、印盖在那张上,屏上就是发出去的那个
+      const mine = mineIndex(d.options, d.myOptionKey);
+      if (mine >= 0) this._angle = mine * STEP;
       this.setData({
-        picked: -1, committed: false,
-        waitLabel: waitLabelOf(d.closeAtHour, d.revealDays, d.revealHour),
+        picked: mine, committed: mine >= 0, skipping: false,
+        waitLabel: waitLabelOf(d.closeAtHour, d.revealDays, d.revealHour, d.shopAnswers),
       });
       this._paint();
-      if (!d.reducedMotion) this._spin();
+      if (!d.reducedMotion && mine < 0) this._spin();
     },
   },
   lifetimes: { detached() { this._stop(); } },
   pageLifetimes: { hide() { this._stop(); } },
   methods: {
     _speedAt: speedAt,        // 纯算法出口,供单测
+    _parkDelta: parkDelta,
+    _mineIndex: mineIndex,
     _cardAngle: cardAngle,
     _slicesFor: slicesFor,
     _geometry: () => ({ ARC, GAP, STEP, CW, CH, K, R: Number(R.toFixed(2)) }),
@@ -137,9 +160,19 @@ Component({
       this._stop();
       this._timer = setInterval(() => {
         if (this.data.committed) return;
-        this._angle += speedAt(this._angle);
+        // 第十二轮 k7 N1:点中一张后转盘把它转到正中停住,不再自己转走 ——
+        // 「选」印盖在正中那张上,停住才保证印下就是点中、发出去的那一张
+        if (this.data.picked >= 0) {
+          const left = parkDelta(this._angle, this.data.picked, this._n);
+          if (Math.abs(left) < 0.01) return;
+          this._angle += Math.sign(left) * Math.min(Math.abs(left), V_MAX * 4);
+        } else this._angle += speedAt(this._angle);
         this._paint();
       }, TICK_MS);
+    },
+    /** 停到第 i 张(降低动态时直接停到位,不转) */
+    _park(i) {
+      if (this.data.reducedMotion || !this._timer) { this._angle = i * STEP; this._paint(); }
     },
 
     _paint() {
@@ -164,15 +197,27 @@ Component({
     },
 
     onPick(e) {
-      if (this.data.committed) return;
-      this.setData({ picked: Number(e.currentTarget.dataset.i) });
+      if (this.data.committed || this.data.closed || this.data.skipped) return;
+      const i = Number(e.currentTarget.dataset.i);
+      this.setData({ picked: i });
+      this._park(i);
       this._paint();
     },
     onCommit() {
+      // 这一轮已关:不选，继续。服务端复核确实已关才记跳过,0 分、不发这一段的奖励
+      if (this.data.closed && !this.data.myOptionKey) {
+        if (this.data.skipping) return;
+        this.setData({ skipping: true });
+        this.triggerEvent('skip', {});
+        return;
+      }
       if (this.data.committed || this.data.picked < 0) return;
       // 「做成了」= 押定这一下。它不可逆,给 medium
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this._stop();
+      // 印只盖在正中那张上:先把点中的那张摆正再落印(还在转向途中也一样)
+      this._angle = this.data.picked * STEP;
+      this._paint();
       this.setData({ committed: true });
       const opt = (this.data.options || [])[this.data.picked] || {};
       this.triggerEvent('submit', { key: opt.key, index: this.data.picked });
@@ -193,16 +238,20 @@ function revealOf(d) {
   if (Number(status) === 2) {
     return {
       revealKind: 'void', revealHead: '这一轮作废了',
-      revealText: '商家没有在期限内给出答案。这一轮不发奖，你押的那一下不算数。',
+      revealText: d.shopAnswers === false
+        ? '这一轮没有公布答案。这一轮不发奖，你选的那一下不算数。'
+        : '商家没有在期限内给出答案。这一轮不发奖，你选的那一下不算数。',
     };
   }
   if (Number(status) === 1) {
     const answer = pickLabel(d.options, d.settledOption);
     const mine = pickLabel(d.options, d.myOptionKey);
     return d.won
-      ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你押的就是它。' }
-      : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你押的是「' + mine + '」。' };
+      ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你选的就是它。' }
+      : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你选的是「' + mine + '」。' };
   }
+  // 本站没有承接商家:没人会给答案,不许诺「等商家」
+  if (d.shopAnswers === false) return { revealKind: '', revealHead: '', revealText: '' };
   return { revealKind: 'wait', revealHead: '等商家给答案', revealText: '答案给出来之后，这里会告诉你中没中。' };
 }
 
@@ -232,8 +281,10 @@ function dayText(days) {
   return '第 ' + days + ' 天';
 }
 
-function waitLabelOf(closeAtHour, revealDays, revealHour) {
+function waitLabelOf(closeAtHour, revealDays, revealHour, shopAnswers) {
   const close = hourText(closeAtHour);
+  // 本站没有承接商家:只说截止,不承诺谁给答案
+  if (shopAnswers === false) return close ? '今天 ' + close + ' 截止。' : '';
   const reveal = hourText(revealHour);
   const days = typeof revealDays === 'number' && Number.isInteger(revealDays)
     && revealDays >= 0 && revealDays <= 30 ? revealDays : -1;

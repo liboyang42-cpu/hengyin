@@ -150,7 +150,8 @@ test('E-12 topic-detail:缺 topicId 是终态,重试=返回而不是再打一次
   page.onRetry();
   assert.equal(requests.length, before, '缺参时不许重发请求');
   assert.deepEqual(navigations, ['__back__'], '出口是返回');
-  assert.match(read('pages/club/topic-detail/index.wxml'), /missingParam \? '返回上一页' : '重新加载'/);
+  // 第十轮 f3 p3 F3:缺参不再落 load-failure 空白,可见「链接已失效 · 返回」
+  assert.match(read('pages/club/topic-detail/index.wxml'), /wx:if="\{\{loadError && \(missingParam \|\| loadRefusal\)\}\}"[\s\S]*?cta="返回" bind:cta="goBack"/);
 });
 
 test('E-12 topic-story:缺 topicId 是终态,重试=回去而不是死循环', () => {
@@ -236,7 +237,7 @@ test('E-15f 场次工具加载失败不再谎报「没有可管理的具体场�
 
 test('E-15g 解散确认框带的是俱乐部真名,而不是回退成「这一项」', () => {
   let opened = null;
-  const { page } = mountWithLastPage('components/cy/scene-club-edit/index.js', {}, {
+  const { page } = mountWithLastPage('pages/club/components/cy/scene-club-edit/index.js', {}, {
     './danger-actions.js': { open() {} },
     '../../../utils/danger-actions.js': { open() {} },
   });

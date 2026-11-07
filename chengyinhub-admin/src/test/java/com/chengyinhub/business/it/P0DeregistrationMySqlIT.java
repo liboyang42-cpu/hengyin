@@ -133,7 +133,14 @@ class P0DeregistrationMySqlIT {
         members = new UmsMemberServiceImpl();
         ReflectionTestUtils.setField(members, "umsMemberMapper", sql.getMapper(UmsMemberMapper.class));
         ReflectionTestUtils.setField(members, "pointsDetailService", gifts);
-        ReflectionTestUtils.setField(members, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
+        var welcome = new com.chengyinhub.business.domain.CmsPointsSetting();
+        welcome.setId(1L);
+        welcome.setStatus(1L);
+        welcome.setDelFlag(0L);
+        welcome.setValue(new java.math.BigDecimal("50"));
+        ICmsPointsSettingService pointRules = mock(ICmsPointsSettingService.class);
+        when(pointRules.selectCmsPointsSettingById(1L)).thenReturn(welcome);
+        ReflectionTestUtils.setField(members, "cmsPointsSettingService", pointRules);
         ReflectionTestUtils.setField(members, "transactionManager", tx);
         ReflectionTestUtils.setField(members, "appSessionRegistryService", mock(IAppSessionRegistryService.class));
         ReflectionTestUtils.setField(members, "defaultAvatarUrl", "");
@@ -186,6 +193,7 @@ class P0DeregistrationMySqlIT {
 
         // ④ 同一 openid 重新注册:新会员、新 id,看不到旧单,旧单仍挂在旧 id。
         UmsMember again = members.getOrCreateWechatMember(OPENID_A);
+        assertEquals(Long.valueOf(50L), again.getPoint());
         assertNotEquals(A, again.getId());
         assertEquals(Integer.valueOf(0), again.getDelFlag());
         assertEquals(List.of(again.getId()), db.queryForList(

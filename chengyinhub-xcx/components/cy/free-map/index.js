@@ -1,6 +1,15 @@
 const BRAND = '#FFFFFF';
 const { getPlayMapState } = require('../../../utils/play-state-contract.js');
+const { readFontScale, mapFontSize } = require('../../../utils/font-scale.js');
 const { drawPlayStateMarker, drawNumberedMarker } = require('../../../utils/play-marker-draw.js');
+const { toneLines, toneCircle, ROAM_3D } = require('../../../utils/map-style.js');
+const TEAM_PIN_NEAR_NODE_M = 40;
+const TEAM_PIN_NUDGE_PX = 42;
+function nearM(lat1, lng1, lat2, lng2) {
+  const k = Math.cos(((lat1 + lat2) / 2) * Math.PI / 180);
+  const dy = (lat2 - lat1) * 111320, dx = (lng2 - lng1) * 111320 * k;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 // 保留 marker id(非真实 nodeId),onMarkerTap 需一并过滤,避免撞上真实 nodeId 误触发 pintap
 const PLAYER_MARKER_ID = 99999;
 const ARROW_MARKER_ID = 99998;
@@ -49,9 +58,15 @@ Component({
     center: { type: Object, value: { lat: 31.2304, lng: 121.4737 } },
     scale:  { type: Number, value: 16 },
     mapMarkers:   { type: Array, value: [] },
-    mapPolyline:  { type: Array, value: [] },
+    mapPolyline:  { type: Array, value: [], observer() { this._mergeLines(); } },
+    // 第九轮 m2:叠在路线之上的「走过的路 / 同场队伍」线,调用方不传就和以前一样
+    trailPolyline: { type: Array, value: [], observer() { this._mergeLines(); } },
     mapPolygons:  { type: Array, value: [] },
     mapCircles:   { type: Array, value: [] },
+    // 第九轮 m1 第 2 项:explore 场景的照片图钉 [{id,img,label,size,done}],id 与 mapMarkers 里同 id 的 marker 配对
+    explorePins:  { type: Array, value: [] },
+    // 第九轮 m2 第 2 项:同场其他队伍 [{id,lat,lng,img,color,tag}]。位置变了用 translateMarker 平滑挪过去
+    teamPins: { type: Array, value: [], observer(next, prev) { this._moveTeamPins(next, prev); } },
     showControls: { type: Boolean, value: true },
     showPhotoCallouts: { type: Boolean, value: true },
     interactive:  { type: Boolean, value: true },
@@ -76,10 +91,15 @@ Component({
     // 用户在控制台建好暗色样式后,把拿到的 subkey/编号通过 pages/play 的 MAP_DARK 常量传入即可点亮暗色。
     subkey:     { type: String, value: '' },
     layerStyle: { type: Number, value: 1 },
+    // 第九轮 m4 第 2 项:底图是哪一套(black / white / paper / 2077;'' = 没配 key 的官方默认底图)。
+    // 浅底上把白线白圈换成墨色,见 utils/map-style.js toneLines / toneCircle。
+    tone: { type: String, value: '', observer() { this._mergeLines(); this._rebuild(); } },
+    // 第九轮 m4:漫游 16 级以上的 3D 楼块 + 俯仰(试做,默认关;开关在 utils/map-style.js ROAM_3D)
+    tilt3d: { type: Boolean, value: false },
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [] },
+  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew },
   lifetimes: {
     attached() {
       if (this.data.scene === 'explore') { this._icons = {}; return; }
@@ -90,6 +110,10 @@ Component({
   },
   methods: {
     onExitTap() { this.triggerEvent('exit'); },
+    _mergeLines() {
+      const base = this.data.mapPolyline || [], trail = this.data.trailPolyline || [];
+      this.setData({ lines: toneLines(trail.length ? base.concat(trail) : base, this.data.tone) });
+    },
     // 五种点位态 + 玩家图标离屏生成；定位/离线/打卡失败由地图外的状态卡承载。
     async _genIcons() {
       this._icons = {};
@@ -112,6 +136,9 @@ Component({
         g.beginPath(); g.arc(S / 2, S / 2, 20, 0, 7); g.fillStyle = '#FFFFFF'; g.fill();
         g.lineWidth = 8; g.strokeStyle = '#111111'; g.stroke();
         this._icons.player = await save();
+        g.clearRect(0, 0, S, S);
+        g.beginPath(); g.arc(S / 2, S / 2, 30, 0, 7); g.fillStyle = '#111111'; g.fill(); /* ds-ok 队伍图钉底圆,canvas 拿不到 var() */
+        this._icons.team = await save();
         // S2 方向箭头(简单三角,尖端朝上/正北;实际朝向由 marker.rotate=bearing 顺时针转出)
         g.clearRect(0, 0, S, S);
         g.beginPath();
@@ -172,6 +199,7 @@ Component({
       const mk = [];
       const photoCallouts = [];
       const needNum = [];
+      const fontScale = readFontScale();
       (this.data.nodes || []).forEach(n => {
         if (!n.lat || !n.lng) return;
         const isTarget = !!(t && t.nodeId != null && String(t.nodeId) === String(n.nodeId));
@@ -200,7 +228,7 @@ Component({
           // 标签为空就整个不挂 callout —— 自由探索不编号(调用方给 num=''),
           // 挂一个空胶囊等于在每个点上贴一块没有字的黑色小牌子。
           if (label && !this.data.compact && (n.reviewLabel || !numKey || !this._iconCanvas || this._numIcons[numKey] === '')) {
-            m.callout = { content: label, color: highlighted ? '#111111' : '#fff', fontSize: n.reviewLabel ? 10 : 11,  /* ds-ok 原样搬进 if 的既有行,色值一字未改;原生 callout 只吃字面量,拿不到 var() */
+            m.callout = { content: label, color: highlighted ? '#111111' : '#fff', fontSize: mapFontSize(n.reviewLabel ? 10 : 11, fontScale),  /* ds-ok 原样搬进 if 的既有行,色值一字未改;原生 callout 只吃字面量,拿不到 var() */
               bgColor: highlighted ? BRAND : 'rgba(20,20,20,.9)',
               padding: n.reviewLabel ? 6 : 5, borderRadius: 8, display: 'ALWAYS', anchorY: -2 };
           }
@@ -220,23 +248,50 @@ Component({
           anchor: { x: .5, y: .5 }, iconPath: this._icons.arrow,
           rotate: bearingDeg(p.lat, p.lng, t.lat, t.lng), zIndex: 11 });
       }
+      const teamCallouts = [];
+      (this.data.teamPins || []).forEach((tp) => {
+        if (!tp || !Number.isFinite(Number(tp.lat)) || !Number.isFinite(Number(tp.lng)) || !this._icons.team) return;
+        const tsz = this.data.compact ? 18 : 30;
+        // 第十二轮 k7(j4 F16):队伍头像落在某一站旁边时往右让开一个头像宽,不盖住站号
+        const nearNode = (this.data.nodes || []).some((n) => n && n.lat && n.lng && nearM(Number(tp.lat), Number(tp.lng), Number(n.lat), Number(n.lng)) < TEAM_PIN_NEAR_NODE_M);
+        mk.push({ id: Number(tp.id), latitude: Number(tp.lat), longitude: Number(tp.lng), width: tsz, height: tsz,
+          anchor: { x: .5, y: .5 }, iconPath: this._icons.team, zIndex: 8,
+          customCallout: { display: 'ALWAYS', anchorX: nearNode && !this.data.compact ? TEAM_PIN_NUDGE_PX : 0, anchorY: tsz } });
+        teamCallouts.push({ id: Number(tp.id), img: tp.img || '', initial: tp.img ? '' : (tp.initial || ''), color: tp.color || '', tag: this.data.compact ? '' : (tp.tag || '') });
+      });
       const circles = [];
       // 非强制候选用柔光外圈，与当前目标/已完成/受限态区分。
       (this.data.nodes || []).forEach(n => {
         const isTarget = !!(t && t.nodeId != null && String(t.nodeId) === String(n.nodeId));
         if (!this.data.compact && getPlayMapState(n.state, isTarget).key === 'candidate' && n.lat && n.lng && !isTarget) {
-          circles.push({ latitude: n.lat, longitude: n.lng, radius: 22,
-            fillColor: 'rgba(255,255,255,.16)', color: 'rgba(255,255,255,.4)', strokeWidth: 1 });
+          circles.push(Object.assign({ latitude: n.lat, longitude: n.lng, radius: 22, strokeWidth: 1 }, toneCircle('candidate', this.data.tone)));
         }
       });
       // 目标光晕:选中目标放大并加高亮外圈
       if (t && t.lat && t.lng) {
-        circles.push({ latitude: t.lat, longitude: t.lng, radius: 34,
-          fillColor: 'rgba(255,255,255,.22)', color: 'rgba(255,255,255,.55)', strokeWidth: 2 });
+        circles.push(Object.assign({ latitude: t.lat, longitude: t.lng, radius: 34, strokeWidth: 2 }, toneCircle('target', this.data.tone)));
       }
-      this.setData({ markers: mk, circles, photoCallouts });
+      this.setData({ markers: mk, circles, photoCallouts, teamCallouts });
       this._fit(mk);
       this._ensureNumIcons(Array.from(new Set(needNum)));
+    },
+    _moveTeamPins(next, prev) {
+      const before = {};
+      (prev || []).forEach((p) => { if (p) before[p.id] = p; });
+      const moved = (next || []).filter((p) => p && before[p.id] && (before[p.id].lat !== p.lat || before[p.id].lng !== p.lng));
+      const same = (next || []).length === (prev || []).length && (next || []).every((p) => p && before[p.id]);
+      if (!moved.length || !same || this.data.reducedMotion) { this._rebuild(); return; }
+      let ctx = null;
+      try { ctx = wx.createMapContext('fmap', this); } catch (e) { ctx = null; }
+      if (!ctx || !ctx.translateMarker) { this._rebuild(); return; }
+      let left = moved.length;
+      const settle = () => { left -= 1; if (left <= 0) this._rebuild(); };
+      moved.forEach((p) => {
+        try {
+          ctx.translateMarker({ markerId: Number(p.id), destination: { latitude: Number(p.lat), longitude: Number(p.lng) },
+            autoRotate: false, rotate: 0, duration: 1600, animationEnd: settle, fail: settle });
+        } catch (e) { settle(); }
+      });
     },
     onMarkerTap(e) {
       const id = e.detail.markerId;
@@ -246,6 +301,12 @@ Component({
       }
       if (id === PLAYER_MARKER_ID || id === ARROW_MARKER_ID) return; // 保留 id 钉(玩家/方向箭头)不响应,防撞上真实 nodeId
       this.triggerEvent('pintap', { nodeId: id });
+    },
+    // 照片图钉是 customCallout:点在照片上派发的是 callouttap,按点 marker 同一条路走
+    onCalloutTap(e) {
+      const markerId = e && e.detail && e.detail.markerId;
+      if (markerId == null) return;
+      this.onMarkerTap({ detail: { markerId } });
     },
     onUpdated(e) {
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }

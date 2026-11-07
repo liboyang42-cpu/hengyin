@@ -1,0 +1,276 @@
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+09:18:34.001 WARN  c.c.w.c.api.ApiTopicController - 主题机审未完成,留置为仅作者可见并自动复检 topicId=7001 reason=MEDIA_UNCHECKED
+09:18:34.056 WARN  c.c.w.c.api.ApiTopicController - 主题机审未完成,留置为仅作者可见并自动复检 topicId=7001 reason=MEDIA_UNCHECKED
+09:18:34.079 WARN  c.c.w.c.api.ApiTopicController - 主题发布被业务闸拒绝: memberId=901, reason=在架额度已满
+09:18:34.097 WARN  c.c.w.c.api.ApiTopicController - 主题机审未完成,留置为仅作者可见并自动复检 topicId=7001 reason=MEDIA_UNCHECKED
+09:18:34.130 WARN  c.c.w.c.api.ApiTopicController - 主题机审未完成,留置为仅作者可见并自动复检 topicId=7001 reason=MEDIA_UNCHECKED
+09:18:34.739 WARN  c.c.w.c.api.ApiTopicController - 主题机审未完成,留置为仅作者可见并自动复检 topicId=7001 reason=MEDIA_UNCHECKED
+09:18:34.789 WARN  c.c.w.c.api.ApiTopicController - 主题机审未完成,留置为仅作者可见并自动复检 topicId=7001 reason=MEDIA_UNCHECKED
+[ERROR] Tests run: 13, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 5.131 s <<< FAILURE! -- in com.chengyinhub.web.controller.api.ApiTopicSaveDraftContractTest
+[ERROR] com.chengyinhub.web.controller.api.ApiTopicSaveDraftContractTest.publishedStartedThemeCanBeReadBackWithoutOpeningItsEditWindow -- Time elapsed: 0.250 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "com.fasterxml.jackson.databind.ObjectMapper.valueToTree(Object)" because "mapper" is null
+	at com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(TemplateAdoptionWire.java:16)
+	at com.chengyinhub.web.controller.api.ApiTopicController.authorDetailWire(ApiTopicController.java:1014)
+	at com.chengyinhub.web.controller.api.ApiTopicController.authorSavedDetail(ApiTopicController.java:1007)
+	at com.chengyinhub.web.controller.api.ApiTopicSaveDraftContractTest.publishedStartedThemeCanBeReadBackWithoutOpeningItsEditWindow(ApiTopicSaveDraftContractTest.java:221)
+
+[ERROR] Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.750 s <<< FAILURE! -- in com.chengyinhub.business.service.impl.TopicRoutePublicationOutcomeScopeTest
+[ERROR] com.chengyinhub.business.service.impl.TopicRoutePublicationOutcomeScopeTest.ordinaryPhotoWithEggAndRestoredAllChapterCanSaveAndFreeze -- Time elapsed: 0.068 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception thrown: java.lang.IllegalArgumentException: 通用局章节彩蛋触发尚未接通
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:159)
+	at org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:90)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:80)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:61)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3355)
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationOutcomeScopeTest.ordinaryPhotoWithEggAndRestoredAllChapterCanSaveAndFreeze(TopicRoutePublicationOutcomeScopeTest.java:78)
+Caused by: java.lang.IllegalArgumentException: 通用局章节彩蛋触发尚未接通
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler.validateGameplayRuntime(TopicRoutePublicationCompiler.java:643)
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler.freezeCurrentPublication(TopicRoutePublicationCompiler.java:608)
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler.lambda$freezePublication$6(TopicRoutePublicationCompiler.java:546)
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler.withCurrentContent(TopicRoutePublicationCompiler.java:85)
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationCompiler.freezePublication(TopicRoutePublicationCompiler.java:546)
+	at com.chengyinhub.business.service.impl.TopicRoutePublicationOutcomeScopeTest.lambda$ordinaryPhotoWithEggAndRestoredAllChapterCanSaveAndFreeze$2(TopicRoutePublicationOutcomeScopeTest.java:78)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:76)
+	... 3 more
+
+[ERROR] Tests run: 216, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 4.685 s <<< FAILURE! -- in com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImplTest
+[ERROR] com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImplTest.ordinaryPhotoVerifiesUploadBeforeRecordingGenericTaskFact -- Time elapsed: 0.037 s <<< FAILURE!
+Argument(s) are different! Wanted:
+iTopicRouteRuntimeService.recordNodeResult(
+    <any>,
+    <any>,
+    <any>,
+    <any>,
+    "quest:photo",
+    "photo",
+    true,
+    false,
+    0,
+    <any>
+);
+-> at com.chengyinhub.business.service.ITopicRouteRuntimeService.recordNodeResult(ITopicRouteRuntimeService.java:52)
+Actual invocations have different arguments at position [5]:
+iTopicRouteRuntimeService.canPlay(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.requireRouteNodeAccess(AdvancedGameRuntimeServiceImpl.java:3670)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.gameplayInstance(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.requireOpeningAccess(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:461)
+iTopicRouteRuntimeService.canPlay(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.requireRouteNodeAccess(AdvancedGameRuntimeServiceImpl.java:3670)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.gameplayInstance(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.requireOpeningAccess(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:461)
+iTopicRouteRuntimeService.nodeRuntimeConfig(
+    7L,
+    19L,
+    29L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:639)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:658)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:660)
+iTopicRouteRuntimeService.recordNodeResult(
+    7L,
+    19L,
+    9L,
+    29L,
+    "quest:photo",
+    "theme:51:55c64d0fcd6f9d5f7c828093857e3fdf",
+    true,
+    false,
+    0,
+    [[Ljava.lang.String;@5d449307]
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:669)
+iTopicRouteRuntimeService.vitals(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.journeyVitals(AdvancedGameRuntimeServiceImpl.java:1021)
+
+	at com.chengyinhub.business.service.ITopicRouteRuntimeService.recordNodeResult(ITopicRouteRuntimeService.java:52)
+	at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImplTest.ordinaryPhotoVerifiesUploadBeforeRecordingGenericTaskFact(AdvancedGameRuntimeServiceImplTest.java:2241)
+
+[ERROR] Failures: 
+[ERROR]   AdvancedGameRuntimeServiceImplTest.ordinaryPhotoVerifiesUploadBeforeRecordingGenericTaskFact:2241 
+Argument(s) are different! Wanted:
+iTopicRouteRuntimeService.recordNodeResult(
+    <any>,
+    <any>,
+    <any>,
+    <any>,
+    "quest:photo",
+    "photo",
+    true,
+    false,
+    0,
+    <any>
+);
+-> at com.chengyinhub.business.service.ITopicRouteRuntimeService.recordNodeResult(ITopicRouteRuntimeService.java:52)
+Actual invocations have different arguments at position [5]:
+iTopicRouteRuntimeService.canPlay(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.requireRouteNodeAccess(AdvancedGameRuntimeServiceImpl.java:3670)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.gameplayInstance(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.requireOpeningAccess(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:461)
+iTopicRouteRuntimeService.canPlay(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.requireRouteNodeAccess(AdvancedGameRuntimeServiceImpl.java:3670)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.gameplayInstance(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:434)
+iTopicRouteRuntimeService.requireOpeningAccess(
+    7L,
+    19L,
+    9L,
+    29L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:461)
+iTopicRouteRuntimeService.nodeRuntimeConfig(
+    7L,
+    19L,
+    29L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:639)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:658)
+iTopicRouteRuntimeService.genericPlayer(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:660)
+iTopicRouteRuntimeService.recordNodeResult(
+    7L,
+    19L,
+    9L,
+    29L,
+    "quest:photo",
+    "theme:51:55c64d0fcd6f9d5f7c828093857e3fdf",
+    true,
+    false,
+    0,
+    [[Ljava.lang.String;@5d449307]
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.actInTransaction(AdvancedGameRuntimeServiceImpl.java:669)
+iTopicRouteRuntimeService.vitals(
+    7L,
+    19L,
+    9L
+);
+-> at com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl.journeyVitals(AdvancedGameRuntimeServiceImpl.java:1021)
+
+[ERROR]   TopicRoutePublicationOutcomeScopeTest.ordinaryPhotoWithEggAndRestoredAllChapterCanSaveAndFreeze:78 Unexpected exception thrown: java.lang.IllegalArgumentException: 通用局章节彩蛋触发尚未接通
+[ERROR] Errors: 
+[ERROR]   ApiTopicSaveDraftContractTest.publishedStartedThemeCanBeReadBackWithoutOpeningItsEditWindow:221 » NullPointer Cannot invoke "com.fasterxml.jackson.databind.ObjectMapper.valueToTree(Object)" because "mapper" is null
+[ERROR] Tests run: 285, Failures: 2, Errors: 1, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project chengyinhub-admin: There are test failures.
+[ERROR] 
+[ERROR] See /home/ubuntu/previews/codex-play-map-followup-20261105/source/chengyinhub-admin/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :chengyinhub-admin

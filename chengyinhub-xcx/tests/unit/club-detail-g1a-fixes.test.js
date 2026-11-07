@@ -104,6 +104,39 @@ test('俱乐部活动卡的日期、星期和时刻都按上海显示', () => {
   }
 });
 
+test('C-19 本团未结束场次不被主题结束日期过滤，主理人与成员看到同一状态', () => {
+  const previousNow = Date.now;
+  const previousTZ = process.env.TZ;
+  Date.now = () => Date.parse('2026-11-06T16:40:00+08:00');
+  try {
+    for (const zone of ['America/Los_Angeles', 'UTC', 'Asia/Shanghai']) {
+      process.env.TZ = zone;
+      for (const isOwner of [true, false]) {
+        const page = loadPage();
+        page.data.club = { id: 9, isOwner, isJoined: !isOwner };
+        page.data.clubId = 9;
+        routes['/api/club/topics'] = (r) => r.success({ code: 200, data: [
+          { id: 1, startDate: '2026-11-05', endDate: '2026-11-06', nextSessionStart: '2026-11-06 18:00:00' },
+          { id: 2, startDate: '2026-11-04', endDate: '2026-11-05', nextSessionStart: '2026-11-06 15:00:00' },
+          { id: 3, startDate: '2026-11-04', endDate: '2026-11-05', nextSessionStart: null },
+          { id: 4, startDate: '2026-11-09', endDate: '2026-11-10' },
+        ] });
+        page.loadTopics();
+        assert.deepEqual(page.data.upcomingTopics.map((item) => [item.id, item.tagText]), [
+          [1, '周五 11月6日, 18:00 · 未开始'],
+          [2, '周五 11月6日, 15:00 · 已开始'],
+          [4, '周一 11月9日 · 未开始'],
+        ], zone + ' owner=' + isOwner);
+        assert.deepEqual(page.data.manageTopics.map((item) => item.id), isOwner ? [1, 2, 3, 4] : []);
+      }
+    }
+  } finally {
+    Date.now = previousNow;
+    if (previousTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTZ;
+  }
+});
+
 test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能展开', () => {
   const page = loadPage();
   const scrolls = [];
@@ -448,13 +481,12 @@ test('CU-C-97 管理 tab 的圆钮叫「设置」,不与页签同名', () => {
   assert.match(label, /设置<\/text>/);
 });
 
-test('CU-C-51 概况卡写明统计范围,「参与人次」改称「游玩人次」', () => {
+// 2026-11-02 第二轮(业主规则 3):口径说明行属于无数据的辅助小字,已撤;范围靠标签「游玩人次」本身说清。
+test('CU-C-51 概况卡「参与人次」改称「游玩人次」,不留口径小字', () => {
   const wxml = readDetailWxml();
-  const wxss = fs.readFileSync(path.join(__dirname, CLUB_WXSS), 'utf8');
   assert.doesNotMatch(wxml, /club-stat-label">参与人次</, '「参与人次」数的是节点游玩人数，不是报名人数');
   assert.match(wxml, /club-stat-label">游玩人次</);
-  assert.match(wxml, /club-stats-note">仅统计本俱乐部自办项目/, '口径要写在卡上，否则跟下方项目卡的报名数看起来是两个数');
-  assert.match(wxss, /\.club-stats-note \{/);
+  assert.doesNotMatch(wxml, /class="(club-stats-note|ov-lb-note)"/, '业主规则 3:无数据的辅助小字不出');
 });
 
 // 集成复审:CU-C-71 改文案时把加入按钮的 wx:else 弄丢了 ⇒ 审核中的人同时看到「等待审核」和可点的「加入俱乐部」,能重复申请。

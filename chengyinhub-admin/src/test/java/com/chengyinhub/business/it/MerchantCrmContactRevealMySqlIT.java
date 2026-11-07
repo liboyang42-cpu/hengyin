@@ -373,6 +373,9 @@ class MerchantCrmContactRevealMySqlIT {
                         + " topic_id BIGINT, member_id BIGINT, audit_status INT, del_flag INT) ENGINE=InnoDB");
                 statement.execute("CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT,"
                         + " topic_id BIGINT, del_flag INT) ENGINE=InnoDB");
+                statement.execute("CREATE TABLE merchant_chapter_application (id BIGINT PRIMARY KEY AUTO_INCREMENT,"
+                        + " topic_id BIGINT, chapter_id BIGINT, merchant_id BIGINT, status TINYINT, del_flag TINYINT)"
+                        + " ENGINE=InnoDB");
                 statement.execute("CREATE TABLE coop_invite (id BIGINT PRIMARY KEY AUTO_INCREMENT,"
                         + " topic_id BIGINT, to_type VARCHAR(16), status INT, del_flag INT) ENGINE=InnoDB");
                 statement.execute("CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, member_id BIGINT NOT NULL,"

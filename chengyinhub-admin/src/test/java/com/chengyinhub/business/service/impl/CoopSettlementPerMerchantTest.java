@@ -74,7 +74,7 @@ class CoopSettlementPerMerchantTest {
         coopSettlementMapper = mock(CoopSettlementMapper.class);
         when(coopSettlementMapper.insertCoopSettlement(any())).thenReturn(1);
         clubService = mock(IClubService.class);
-        IPricingService pricingService = new PricingServiceImpl(); // 真实保底率/平台率(纯计算)
+        IPricingService pricingService = com.chengyinhub.business.service.PricingTestRules.withTopicRule(new PricingServiceImpl()); // 真实保底率/平台率(纯计算)
         CoopComplaintMapper coopComplaintMapper = mock(CoopComplaintMapper.class);
         CoopInviteMapper coopInviteMapper = mock(CoopInviteMapper.class);
         when(coopComplaintMapper.countOpenByTopicId(any())).thenReturn(0);

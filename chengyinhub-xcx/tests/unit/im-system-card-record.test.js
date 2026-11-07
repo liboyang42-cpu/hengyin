@@ -24,7 +24,7 @@ function harness(t, card = { title: '审核未通过', result: result() }, sende
 }
 test('signup and record sheet explicitly separate generation-time record from current audit readback', () => {
   const wxml = fs.readFileSync(CHAT.replace(/\.js$/, '.wxml'), 'utf8');
-  assert.match(wxml, /发送时：报名成功/); assert.match(wxml, /title="生成时记录"/);
+  assert.match(wxml, /class="rcard-flag">报名成功</); assert.doesNotMatch(wxml, /发送时：/); assert.match(wxml, /title="生成时记录"/);
   assert.match(wxml, /当前审核记录/); assert.match(wxml, /查看当前原单/);
 });
 test('result plus controlled action has separate record and original navigation, without second detail GET', t => {
@@ -121,6 +121,54 @@ for (const body of ['null', '[]', 'true']) test('malformed card JSON cannot crea
   assert.equal(h.page.data.msgs[0].cardTarget, false); assert.equal(h.nav.length, 0);
 });
 const flush = () => new Promise(resolve => setImmediate(resolve));
+const activityNotice = {
+  id: 61, conversationId: 10, senderId: 0, receiverId: 1, msgType: 1,
+  content: '场次取消通知\n活动已取消：R22-NOTICE 场地临时关闭。报名与款项处理请查看订单状态。',
+  extraJson: JSON.stringify({ type: 'CLUB_CAMPAIGN', campaignId: 1, clubId: 7002, activityId: 31 })
+};
+test('C-08 real cancellation notice61 uses existing activity card without rewriting wire data or losing target on redecorate', t => {
+  const h = harness(t);
+  h.page.data.msgs = h.page.decorate([activityNotice]);
+  const row = h.page.data.msgs[0];
+  assert.equal(row.activityNotice, true); assert.equal(row.msgType, 1);
+  assert.equal(row.extraJson, activityNotice.extraJson); assert.equal(row.content, activityNotice.content);
+  assert.equal(row.card.title, '场次取消通知'); assert.match(row.card.sub, /R22-NOTICE 场地临时关闭/);
+  assert.equal(row.genericAction.url, '/pages/activity/detail/index?id=31');
+  h.page.data.msgs = h.page.decorate(h.page.data.msgs);
+  h.page.onCardTap({ currentTarget: { dataset: { msg: 61, url: '/pages/privacy/index' } } });
+  assert.equal(h.nav.length, 1); assert.equal(h.nav[0].url, '/pages/activity/detail/index?id=31');
+  assert.equal(h.requests.length, 0);
+});
+test('standalone ACTIVITY_CANCELLED notice binds canonical positive activity ID to existing activity consumer', t => {
+  const h = harness(t);
+  h.page.data.msgs = h.page.decorate([{ ...activityNotice,
+    extraJson: JSON.stringify({ type: 'ACTIVITY_CANCELLED', activityId: '31', topicId: 990037 }) }]);
+  h.page.onCardTap({ currentTarget: { dataset: { msg: 61 } } });
+  assert.equal(h.nav[0].url, '/pages/activity/detail/index?id=31');
+});
+const invalidActivityNotices = [
+  { senderId: 9 }, { senderId: null }, { senderId: false }, { msgType: 2 },
+  { extraJson: '' }, { extraJson: 'null' }, { extraJson: '[]' }, { extraJson: '{' },
+  ...['UNKNOWN', 'TOPIC'].map(type => ({ extraJson: JSON.stringify({ type, activityId: 31 }) })),
+  ...[0, -1, '0', '-1', '031', '31x', '31&redirect=x', 'https://invalid.example', 1.5, true, {}, []]
+    .map(activityId => ({ extraJson: JSON.stringify({ type: 'ACTIVITY_CANCELLED', activityId }) })),
+  ...['action', 'url', 'path'].map(key => ({ extraJson: JSON.stringify({ type: 'ACTIVITY_CANCELLED', activityId: 31, [key]: '/pages/privacy/index' }) })),
+  { extraJson: JSON.stringify({ type: 'CLUB_CAMPAIGN', activityId: 31, campaignId: 1 }) }
+];
+for (const [i, change] of invalidActivityNotices.entries()) test('activity notice refuses spoofed/ordinary/unknown/bad-ID/URL payload ' + i, t => {
+  const h = harness(t);
+  h.page.data.msgs = h.page.decorate([{ ...activityNotice, ...change }]);
+  assert.equal(h.page.data.msgs[0].cardTarget, false);
+  h.page.onCardTap({ currentTarget: { dataset: { msg: 61, url: '/pages/activity/detail/index?id=31' } } });
+  assert.equal(h.nav.length, 0);
+});
+test('activity notice in non-system conversation stays ordinary text and cannot navigate', t => {
+  const h = harness(t); h.page.data.type = 1;
+  h.page.data.msgs = h.page.decorate([activityNotice]);
+  assert.equal(h.page.data.msgs[0].cardTarget, false);
+  h.page.onCardTap({ currentTarget: { dataset: { msg: 61 } } });
+  assert.equal(h.nav.length, 0);
+});
 for (const code of [200, 403]) test('original URL feeds real post Page and canonical consumer without bypassing read policy: ' + code, async t => {
   const h = harness(t); h.page.onCurrentCard(event());
   const url = new URL(h.nav[0].url, 'https://fixture.invalid');

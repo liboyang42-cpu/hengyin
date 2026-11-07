@@ -163,7 +163,7 @@ test('② 退出账号不得用 danger 红(可逆操作)', () => {
 })
 
 test('② 注销(不可逆)必须保留 danger 红 —— 红色语义不能被清空', () => {
-  assert.match(read('components/cy/scene-settings-deregister/index.wxml'), /variant="danger"/,
+  assert.match(read('pages/deregister/components/scene-settings-deregister/index.wxml'), /variant="danger"/,
     'deregister 的确认注销必须仍是 danger,否则整组没有任何红色破坏语义了')
 })
 

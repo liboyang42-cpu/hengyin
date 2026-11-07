@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -310,6 +312,39 @@ class ApiCouponControllerMerchantAccessTest {
         verify(viewCouponHistoryService).selectViewCouponHistoryList(query.capture());
         assertEquals(PRINCIPAL_MEMBER_ID, query.getValue().getMemberId());
         verify(merchantAccessService, never()).require(any(), anyString());
+    }
+
+    /** 第九轮 m1-9:钱包里的券带发券门店的店名 / 地址 / 坐标;不公开的门店不投影;同一张券只查一次。 */
+    @Test
+    void receivedCouponsCarryThePublicShopPlace() {
+        ViewCouponHistory a = new ViewCouponHistory(); a.setCouponId(40L); a.setUseStatus(0L);
+        ViewCouponHistory b = new ViewCouponHistory(); b.setCouponId(40L); b.setUseStatus(1L);
+        ViewCouponHistory hidden = new ViewCouponHistory(); hidden.setCouponId(41L); hidden.setUseStatus(0L);
+        when(viewCouponHistoryService.selectViewCouponHistoryList(any())).thenReturn(Arrays.asList(a, b, hidden));
+        when(couponService.selectCouponStatuses(any())).thenReturn(Collections.emptyMap());
+        SmsCoupon open = new SmsCoupon(); open.setId(40L); open.setMerchantId(MERCHANT_ROW_ID);
+        SmsCoupon closed = new SmsCoupon(); closed.setId(41L); closed.setMerchantId(12L);
+        when(couponService.selectSmsCouponById(40L)).thenReturn(open);
+        when(couponService.selectSmsCouponById(41L)).thenReturn(closed);
+        com.chengyinhub.business.service.IMmsMerchantService shops = mock(com.chengyinhub.business.service.IMmsMerchantService.class);
+        com.chengyinhub.business.domain.MmsMerchant shop = new com.chengyinhub.business.domain.MmsMerchant();
+        shop.setStatus(1L); shop.setAccountStatus(1L); shop.setDelFlag(0);
+        shop.setName("城瘾咖啡"); shop.setAddress("上海市黄浦区某路 1 号"); shop.setLocationLat(31.23); shop.setLocationLng(121.47);
+        com.chengyinhub.business.domain.MmsMerchant pending = new com.chengyinhub.business.domain.MmsMerchant();
+        pending.setStatus(0L); pending.setAccountStatus(1L); pending.setDelFlag(0); pending.setAddress("不该出现");
+        when(shops.selectMmsMerchantById(MERCHANT_ROW_ID)).thenReturn(shop);
+        when(shops.selectMmsMerchantById(12L)).thenReturn(pending);
+        ReflectionTestUtils.setField(controller, "mmsMerchantService", shops);
+
+        AjaxResult result = controller.myPublishCouponList((String) null);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        assertEquals("城瘾咖啡", a.getShopName());
+        assertEquals("上海市黄浦区某路 1 号", b.getShopAddress());
+        assertEquals(31.23D, a.getShopLat());
+        assertEquals(121.47D, a.getShopLng());
+        assertEquals(null, hidden.getShopAddress(), "未公开门店不投影地址");
+        verify(couponService, times(1)).selectSmsCouponById(40L);
     }
 
     @Test

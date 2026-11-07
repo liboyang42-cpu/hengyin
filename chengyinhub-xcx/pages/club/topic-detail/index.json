@@ -1,6 +1,7 @@
 {
   "navigationStyle": "custom",
-  "usingComponents": {"cy-inline-error": "/components/cy/inline-error/index",
+  "usingComponents": {
+    "cy-inline-error": "/components/cy/inline-error/index",
     "cy-club-director-broadcast-sheet": "/pages/club/components/club-director-broadcast-sheet/index",
     "cy-club-director-chapter-sheet": "/pages/club/components/club-director-chapter-sheet/index",
     "cy-club-director-end-confirm": "/pages/club/components/club-director-end-confirm/index",
@@ -24,7 +25,8 @@
     "cy-club-director-chip-group": "/pages/club/components/club-director-chip-group/index",
     "cy-club-topic-end-confirm": "/pages/club/components/cy/club-topic-end-confirm/index",
     "cy-date-field": "/components/cy/date-field/index",
-    "cy-result-sheet": "/components/cy/result-sheet/index"
+    "cy-result-sheet": "/components/cy/result-sheet/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   },
   "navigationBarTitleText": "活动详情",
   "navigationBarBackgroundColor": "#000000",

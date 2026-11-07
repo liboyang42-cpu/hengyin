@@ -1,0 +1,29 @@
+TEXT[revealed] 出发 | 17:46 | 留签人 | 城隍 | 留于 | 这一站开场 | 留给你的一句 | 收下这张签 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT daily-revealed
+TEXT[claimed] 出发 | 17:46 | 留签人 | 城隍 | 留于 | 这一站开场 | 留给你的一句 | 今日宜慢行 | 保存到相册 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT daily-claimed
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990031 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990031 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990031 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990031 200 200 操作成功 
+NET GET /api/orient/scoring/session/6 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/6/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871984898-vapwxhc1"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871984898-eeqfq5uh"}
+NET POST /api/play/journey/opening/complete 200 200 操作成功 {"topicId":990031,"chapterId":82,"expectedVersion":0}
+NET GET /api/play/nodes?topicId=990031 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990031 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990031 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990031 200 200 操作成功 
+NET GET /api/orient/scoring/session/6 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/6/leaderboard 200 500 城市定向计分暂未开放 
+NET GET /api/play/encounter?topicId=990031&activityId=0&nodeId=117 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990031","nodeId":"117"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":15,"version":0,"idempotencyKey":"TEST_ACTION","action":"CLAIM_DAILY_SIGN","payload":{}}

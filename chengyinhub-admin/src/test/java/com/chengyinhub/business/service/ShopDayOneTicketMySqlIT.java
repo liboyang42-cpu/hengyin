@@ -6,7 +6,7 @@ import com.chengyinhub.business.mapper.ProductRoleMapper;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.ProductRole;
 import com.chengyinhub.business.service.impl.ProductRoleServiceImpl;
-import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
+import com.chengyinhub.business.service.support.ExploreSaleSnapshotGate;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1;
 import com.chengyinhub.common.constant.ProductType;
@@ -45,7 +45,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -110,7 +109,7 @@ class ShopDayOneTicketMySqlIT {
             statement.setLong(3, 1L);
             statement.setLong(4, 701L);
             statement.setString(5, com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(
-                    TopicSaleCanonicalTestFixture.canonical()));
+                    TopicSaleCanonicalTestFixture.ordinaryCanonical(), 2));
             statement.executeUpdate();
         }
     }
@@ -124,7 +123,8 @@ class ShopDayOneTicketMySqlIT {
     }
 
     @Test
-    void concurrentDoubleOrderAcrossShellsCreatesExactlyOneTicket() throws Exception {
+    /** C-22(2026-11-02 业主裁决)：取消每人限 1 张；同一人跨场次并发两单都能建。 */
+    void concurrentDoubleOrderAcrossShellsCreatesBothTickets() throws Exception {
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -134,21 +134,21 @@ class ShopDayOneTicketMySqlIT {
             ready.await();
             start.countDown();
 
-            assertTrue(first.get() ^ second.get(), "并发双下单必须且只能一笔成功");
-            assertEquals(1, number("SELECT COUNT(*) FROM cms_registration"));
+            assertTrue(first.get() && second.get(), "取消每人限 1 张后并发两单都应成功");
+            assertEquals(2, number("SELECT COUNT(*) FROM cms_registration"));
         } finally {
             pool.shutdownNow();
         }
     }
 
     @Test
-    void existingTicketInAnotherActivityShellIsVisibleToCurrentRead() throws Exception {
+    void existingTicketInAnotherActivityShellNoLongerBlocksANewOne() throws Exception {
         execute("INSERT INTO cms_registration(id,owner_type,owner_id,member_id,ticket_id,"
                 + "registration_status,payment_status,pay_expire_time)"
                 + " VALUES (7001,2,501,901,61,2,1,NULL)");
 
-        assertFalse(attempt(7102L, 502L, new CountDownLatch(0), new CountDownLatch(0)));
-        assertEquals(1, number("SELECT COUNT(*) FROM cms_registration"));
+        assertTrue(attempt(7102L, 502L, new CountDownLatch(0), new CountDownLatch(0)));
+        assertEquals(2, number("SELECT COUNT(*) FROM cms_registration"));
     }
 
     @Test
@@ -157,7 +157,7 @@ class ShopDayOneTicketMySqlIT {
             com.chengyinhub.business.domain.TopicSaleSnapshot snapshot =
                     session.getMapper(TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC);
             String retailValue = com.chengyinhub.business.service.support.TopicSaleCanonicalCodec
-                    .read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson())
+                    .read(snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), 2)
                     .getMicroExperienceCatalog().path("perks").get(0).path("retailValue").asText();
             assertEquals("20", retailValue, "持久化回读不得变成 2E+1");
         }
@@ -187,7 +187,7 @@ class ShopDayOneTicketMySqlIT {
             try (PreparedStatement update = session.getConnection().prepareStatement(
                     "UPDATE topic_sale_snapshot SET canonical_json=? WHERE topic_id=?")) {
                 update.setString(1, TopicSaleCanonicalCodec.write(
-                        new com.fasterxml.jackson.databind.ObjectMapper().treeToValue(frozen, TopicSaleCanonicalV1.class)));
+                        new com.fasterxml.jackson.databind.ObjectMapper().treeToValue(frozen, TopicSaleCanonicalV1.class), 2));
                 update.setLong(2, TOPIC);
                 assertEquals(1, update.executeUpdate());
             }
@@ -204,7 +204,7 @@ class ShopDayOneTicketMySqlIT {
             com.chengyinhub.business.domain.TopicSaleSnapshot readback =
                     session.getMapper(TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC);
             com.fasterxml.jackson.databind.JsonNode frozenActor = TopicSaleCanonicalCodec
-                    .read(readback.getSchemaVersion(), readback.getCanonicalJson())
+                    .read(readback.getSchemaVersion(), readback.getCanonicalJson(), 2)
                     .getClubWorkPackage().path("organizerActor");
             assertEquals(live.getId().longValue(), frozenActor.path("roleId").asLong());
             assertEquals("PLATFORM", frozenActor.path("actorType").asText());
@@ -242,15 +242,9 @@ class ShopDayOneTicketMySqlIT {
             CmsTopic topic = new CmsTopic();
             topic.setId(TOPIC);
             topic.setProductType(ProductType.FREE_EXPLORE);
-            try {
-                ExploreAccountTicketGate.assertAvailable(topic, MEMBER,
-                        session.getMapper(TopicSaleSnapshotMapper.class),
-                        session.getMapper(CmsRegistrationMapper.class));
-            } catch (IllegalStateException e) {
-                if (!"SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED".equals(e.getMessage())) throw e;
-                session.rollback();
-                return false;
-            }
+            ExploreSaleSnapshotGate.assertSnapshotFrozen(topic,
+                    session.getMapper(TopicSaleSnapshotMapper.class),
+                    session.getMapper(CmsRegistrationMapper.class));
             try (Statement statement = session.getConnection().createStatement()) {
                 statement.executeUpdate("INSERT INTO cms_registration(id,owner_type,owner_id,member_id,ticket_id,"
                         + "registration_status,payment_status,pay_expire_time) VALUES ("

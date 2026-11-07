@@ -204,6 +204,26 @@ class PlayKitPhotoCheckRuntimeTest {
         assertEquals(2, kit(second).get("tries"));
     }
 
+    /* R11 g1 F3:审核通道一直不可用时,重拍机会用完就放玩家往下走 —— 不判通过、不给分、奖励封顶 */
+    @Test
+    void 降级且重拍机会用完时放行往下走_不算核验也不给分() {
+        session = running(CHECK_CONFIG);
+        arm();
+        modelHasNoKey();
+        act("photo-down-1");
+        act("photo-down-2");
+        Map<String, Object> third = act("photo-down-3");
+        Map<?, ?> kit = kit(third);
+        assertEquals(3, kit.get("tries"));
+        assertEquals(true, kit.get("passed"), "第三次仍降级:机会用完就放行,不留死路:" + third);
+        assertEquals(true, kit.get("degraded"), "放行的这张仍是没审过的");
+        assertEquals(0, third.get("score"), "降级放行不给分");
+        assertFalse(AdvancedGameRuntimeServiceImpl.untrustedCompletionEvidence(
+                new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(java.util.Collections.singletonMap("photoCheck", java.util.Collections.singletonMap("enabled", true))),
+                new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(java.util.Collections.singletonMap("photoCheck", java.util.Collections.singletonMap("verdict", "DEGRADED")))).isEmpty(),
+                "降级放行的完成证据不可信 ⇒ 奖励封顶到探索值与徽章");
+    }
+
     // ==================== 负控③:模型回非 JSON ====================
 
     @Test

@@ -1,14 +1,15 @@
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js'); const pageMotion = require('../../../utils/page-motion.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession } = require('../utils/session/ensure-session.js'); const { retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const { openOpportunityCount } = require('../utils/recruit-routes.js');
 const { isRecord } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 
+// M-10(2026-11-02 业主):商家的内容只有主题和活动。自由探索是主题的一种玩法,计入主题;
+// 活动是组织者自己办的一场。没有第三类,也没有「营销」这一类。
 const CONTENT_TYPES = [
   { key: 'topic', title: '主题' },
-  { key: 'free', title: '自由探索' },
   { key: 'activity', title: '活动' },
 ];
 
@@ -44,7 +45,7 @@ function entriesForAccess(access) {
   });
 }
 
-// 4-10(S22):hero 数字来自 analytics.stages 的**窗口**计数(近 7/30 天完整自然日),
+// 4-10(S22):hero 数字来自 analytics.stages 的**窗口**计数(近 7/30 天,含今天),
 // 切窗口数字就变 —— 文案必须跟着窗口写「近 N 天报名」,写「累计」就是在说假话。
 function heroWindowLabel(windowDays) {
   return '近 ' + (Number(windowDays) === 7 ? 7 : 30) + ' 天报名';
@@ -207,21 +208,17 @@ Page({
     if (this._unloaded) return;
     this._authRetryUsed = authRetryUsed === true;
     if (!currentMemberId()) {
-      const that = this;
-      ensureSession(app).then(function (ok) {
-        if (that._unloaded) return;
-        if (!ok) {
-          that.setData({ entryError: '登录失败，请重试', accessState: 'checking', funnelLoading: false });
-          return;
-        }
-        that._scopeMemberId = currentMemberId();
-        that.enterMarketing(that._authRetryUsed);
-      });
+      // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1);落「登录后查看」,点「登录」才登录。
+      this.setData({ guestLogin: true, entryError: '', accessState: 'checking', funnelLoading: false });
+      waitForInitialSession(this, app, function () { this.enterMarketing(false); });
       return;
     }
+    if (this.data.guestLogin) this.setData({ guestLogin: false });
     this._scopeMemberId = currentMemberId();
     this.loadMerchantAccess();
   },
+
+  onGuestLogin() { retryLogin(this, app, function () { this.enterMarketing(false); }); },
 
   // 会话失效(401):静默重登一次,成功重走权限确认;失败落页内错误,不整屏「去登录」。
   recoverSession() {
@@ -232,7 +229,7 @@ Page({
     }
     this._authRetryUsed = true;
     const that = this;
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._unloaded) return;
       if (!ok) {
         that.setData({ entryError: '登录失败，请重试', funnelLoading: false });
@@ -384,9 +381,10 @@ Page({
   },
 
   _buildContentItems(content) {
+    const topicCount = finiteNonNegative(content.topicCount);
+    const freeCount = finiteNonNegative(content.freeExploreCount);
     const countByKey = {
-      topic: content.topicCount,
-      free: content.freeExploreCount,
+      topic: topicCount === null && freeCount === null ? null : (topicCount || 0) + (freeCount || 0),
       activity: content.activityCount,
     };
     return CONTENT_TYPES.map(function (item) {

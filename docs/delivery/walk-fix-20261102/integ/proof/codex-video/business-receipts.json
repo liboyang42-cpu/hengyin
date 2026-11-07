@@ -1,0 +1,54 @@
+[
+  {
+    "url": "/__api/api/common/uploadOSS",
+    "status": 200,
+    "code": 200,
+    "msg": "操作成功",
+    "assetId": 22,
+    "reviewState": "HOLD",
+    "receiptTruncated": false
+  },
+  {
+    "url": "/__api/api/topic/publish-draft",
+    "status": 200,
+    "code": 200,
+    "msg": "已发布",
+    "receiptTruncated": false
+  },
+  {
+    "url": "/__api/api/project/home",
+    "status": 200,
+    "code": 403,
+    "msg": "商家身份无效或权限不足",
+    "receiptTruncated": false
+  },
+  {
+    "url": "/__api/api/common/uploadOSS",
+    "status": 200,
+    "code": 200,
+    "msg": "操作成功",
+    "assetId": 23,
+    "reviewState": "APPROVED",
+    "receiptTruncated": false
+  },
+  {
+    "url": "/__api/api/play/advanced/action",
+    "status": 200,
+    "code": 200,
+    "msg": "操作成功",
+    "nodeId": 124,
+    "readyForBase": true,
+    "photoPassed": true,
+    "receiptTruncated": false
+  },
+  {
+    "url": "/__api/api/play/arrive",
+    "status": 200,
+    "code": 200,
+    "msg": "已到达，打卡成功",
+    "nodeId": 124,
+    "done": 1,
+    "total": 2,
+    "receiptTruncated": false
+  }
+]

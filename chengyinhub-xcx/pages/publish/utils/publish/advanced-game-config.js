@@ -566,7 +566,7 @@ function defaultConfig() {
     /* 罗盘指向(现场感契约 §3):bearing 初始留空 —— 它没有「没填也能过」的默认方向,
        编辑页的「对准当前方向取值」按钮(或手填 0 至 359)才是它的来源。
        容差与保持时长有合法默认,商家看得见、改得动,不算凭空代填。 */
-    compass: { enabled: false, kicker: '', bearing: '', tolerance: 15, holdSeconds: 3, hint: '', xp: 0 },
+    compass: { enabled: false, kicker: '', bearing: '', tolerance: 15, holdSeconds: 3, hint: '', xp: 0, allowSkip: false },
     /* 喊一嗓子(现场感契约 §4):阈值不入配置,由客户端开局现场校准 —— 与 quietHold 同一把尺。
        seconds 是「要连续喊满几秒」,掉线清零。 */
     shout: { enabled: false, kicker: '', seconds: 5, xp: 10 },
@@ -1005,6 +1005,8 @@ function normalize(model) {
     cmp.xp = num(cmp.xp, 0);
     cmp.tolerance = num(cmp.tolerance, 15);
     cmp.holdSeconds = num(cmp.holdSeconds, 3);
+    // P-23:读不出方向时允许 0 分跳过,默认关
+    cmp.allowSkip = cmp.allowSkip === true;
     const bearing = Number(cmp.bearing);
     if (cmp.bearing !== '' && cmp.bearing != null && Number.isFinite(bearing)) {
       cmp.bearing = bearing;
@@ -1330,15 +1332,15 @@ function validateNormalized(model, opts) {
   }
   if (model.random.enabled) {
     const items = Array.isArray(model.random.items) ? model.random.items : [];
-    if (!items.length) return '盲盒至少配置 1 个物品';
+    if (!items.length) return '随机卡至少配置 1 张卡片';
     const ids = new Set();
     for (const item of items) {
-      if (!item.id || !item.label || Number(item.weight) < 1) return '盲盒物品的 ID、名称和权重不能为空';
-      if (ids.has(item.id)) return '盲盒物品 ID 不能重复';
+      if (!item.id || !item.label || Number(item.weight) < 1) return '卡片的 ID、名称和权重不能为空';
+      if (ids.has(item.id)) return '卡片 ID 不能重复';
       ids.add(item.id);
     }
     const draws = Number(model.random.drawCount);
-    if (!Number.isInteger(draws) || draws < 1 || draws > items.length) return '盲盒抽取数量须在物品数量范围内';
+    if (!Number.isInteger(draws) || draws < 1 || draws > items.length) return '翻开数量须在卡片数量范围内';
     if (text(model.random.deckName).length > 20) return '卡池名称不能超过 20 字';
   }
   if (model.branch.enabled) {
@@ -1851,39 +1853,39 @@ function validateNormalized(model, opts) {
   const predict = model.predict || {};
   if (predict.enabled) {
     const question = text(predict.question);
-    if (!question) return '竞猜问题不能为空';
-    if (question.length > 120) return '竞猜问题不能超过 120 字';
-    if (text(predict.hint).length > 60) return '竞猜说明不能超过 60 字';
+    if (!question) return '预测问题不能为空';
+    if (question.length > 120) return '预测问题不能超过 120 字';
+    if (text(predict.hint).length > 60) return '预测说明不能超过 60 字';
     const options = Array.isArray(predict.options) ? predict.options : [];
-    if (options.length < 2 || options.length > 4) return '竞猜选项须为 2 至 4 个';
+    if (options.length < 2 || options.length > 4) return '预测选项须为 2 至 4 个';
     const keys = new Set();
     for (const option of options) {
       const key = text(option && option.key);
-      if (!KEY_PATTERN.test(key)) return '竞猜选项 key 只能使用 1 至 64 位字母、数字、下划线或短横线';
-      if (keys.has(key)) return '竞猜选项 key 不能重复';
+      if (!KEY_PATTERN.test(key)) return '预测选项 key 只能使用 1 至 64 位字母、数字、下划线或短横线';
+      if (keys.has(key)) return '预测选项 key 不能重复';
       keys.add(key);
       const label = text(option && option.label);
-      if (!label) return '竞猜选项文案不能为空';
-      if (label.length > 32) return '竞猜选项文案不能超过 32 字';
+      if (!label) return '预测选项文案不能为空';
+      if (label.length > 32) return '预测选项文案不能超过 32 字';
     }
     const closeAtHour = Number(predict.closeAtHour);
     if (!Number.isInteger(closeAtHour) || closeAtHour < 0 || closeAtHour > 23) {
-      return '竞猜截止时间须为 0 到 23 点之间的整点';
+      return '预测截止时间须为 0 到 23 点之间的整点';
     }
     const revealDays = Number(predict.revealDays);
     if (!Number.isInteger(revealDays) || revealDays < 0 || revealDays > 30) {
-      return '竞猜揭晓天数须为 0 至 30 天(0 表示当天)';
+      return '预测揭晓天数须为 0 至 30 天(0 表示当天)';
     }
     const revealHour = Number(predict.revealHour);
     if (!Number.isInteger(revealHour) || revealHour < 0 || revealHour > 23) {
-      return '竞猜揭晓时间须为 0 到 23 点之间的整点';
+      return '预测揭晓时间须为 0 到 23 点之间的整点';
     }
     // 截止之后才揭晓:同一天里先公布答案再收注,那就不是猜了
     if (revealDays === 0 && revealHour < Number(predict.closeAtHour)) {
       return '当天揭晓的话,揭晓时间要晚于收注截止时间';
     }
     const xp = Number(predict.xp);
-    if (!Number.isInteger(xp) || xp < 0 || xp > 1000) return '竞猜奖励分须为 0 至 1000';
+    if (!Number.isInteger(xp) || xp < 0 || xp > 1000) return '预测奖励分须为 0 至 1000';
   }
 
   /* ===== 《预制人生》五段(契约 §2)。只查契约里写死的取值范围 ——

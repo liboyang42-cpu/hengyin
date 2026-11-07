@@ -1,0 +1,38 @@
+route ["pages/publish/fabu/index"]
+ok   tap "创建章节"
+ok   tap "退出"
+ok   tap "添加序章"
+ok   tap "下一步"
+eval {"tempFilePath":"http://127.0.0.1:18108/__fixture/clip.mp4","thumbTempFilePath":"http://127.0.0.1:18108/__fixture/poster.jpg","duration":31,"size":30000}
+ok   eval "MPWEB.nextVideo={tempFilePath:location.origin+\"/__fixture/clip.mp4\",thumbTempFilePath:location.origin+\"/__fixture/poster.jpg\",duration:31,size:30000}"
+ok   tap "添加视频"
+shot /private/tmp/codex-video-proof/video-duration-refused.jpg
+ok   shot "video-duration-refused"
+text: * | 已存本机 | 主题详情 | 还有 4 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 还有 5 项未填 | * | 章节 | 第1章 序章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 第1章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 退出 | 第1章 · 故事流 | 完成 | 下一步 | 文字说明 | 未命名地点 | 完成 | 退出 | 编辑章节 | 完成 | 章节名称 | * | 完成要求 | 关闭后可设最少完成节点数 | 全部完成 | 章末配给 | 本章结束时消耗物品，不够时扣数值 | 不消耗物品 | 请先选择进行方式 | 互斥选项 | 同组节点只能完成其中一个 | 添加互斥组 | 先保存草稿，再选择本章节点。 | 章节音频 | 添加音频 | 开场视频 | 添加视频 | 视频不能超过 30 秒 | 章节配色 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump true
+eval {"tempFilePath":"http://127.0.0.1:18108/__fixture/clip.mp4","thumbTempFilePath":"http://127.0.0.1:18108/__fixture/poster.jpg","duration":3,"size":10485761}
+ok   eval "MPWEB.nextVideo={tempFilePath:location.origin+\"/__fixture/clip.mp4\",thumbTempFilePath:location.origin+\"/__fixture/poster.jpg\",duration:3,size:10485761}"
+ok   tap "添加视频"
+shot /private/tmp/codex-video-proof/video-size-refused.jpg
+ok   shot "video-size-refused"
+text: * | 已存本机 | 主题详情 | 还有 4 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 还有 5 项未填 | * | 章节 | 第1章 序章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 第1章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 退出 | 第1章 · 故事流 | 完成 | 下一步 | 文字说明 | 未命名地点 | 完成 | 退出 | 编辑章节 | 完成 | 章节名称 | * | 完成要求 | 关闭后可设最少完成节点数 | 全部完成 | 章末配给 | 本章结束时消耗物品，不够时扣数值 | 不消耗物品 | 请先选择进行方式 | 互斥选项 | 同组节点只能完成其中一个 | 添加互斥组 | 先保存草稿，再选择本章节点。 | 章节音频 | 添加音频 | 开场视频 | 添加视频 | 视频不能超过 10 MB | 章节配色 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump true
+route ["pages/publish/fabu/index"]
+--- network (11)
+200 290ms POST /__api/api/config/features
+200 487ms GET /__api/api/play/theme/support-matrix
+200 484ms POST /__api/api/role/info
+200 497ms POST /__api/api/user/info
+200 534ms POST /__api/api/club/my
+200 496ms POST /__api/api/template/my-list
+200 494ms POST /__api/api/template/list
+200 687ms POST /__api/api/publisher/identity/status
+200 276ms POST /__api/api/config/features
+200 214ms POST /__api/api/compliance/consents
+200 217ms POST /__api/api/compliance/consents
+--- page errors (0)
+--- console errors/warnings (2)
+[error] HTTP 404 http://127.0.0.1:18108/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+--- runtime log (1)
+open-type agreePrivacyAuthorization

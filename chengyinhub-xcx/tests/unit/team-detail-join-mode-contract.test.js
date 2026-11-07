@@ -1,3 +1,4 @@
+// 第十一轮 g2(j4 F4):队长打开招募中的队伍会读入队申请;本文件不测这条读取,夹具直接答空列表,不占请求序号。
 'use strict';
 
 // C-02b:队长建队后没有任何前端入口把「公开招募」改回「仅邀请」。
@@ -32,7 +33,7 @@ function loadPage(source) {
     getUserID: () => '71', getAuthorization: () => 'token-a',
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
-    sendRequest(options) { requests.push(options); return { abort() {}, aborted: false }; },
+    sendRequest(options) { if (options.url === '/api/team/applications') { options.success({ code: 200, data: [] }); return { abort() {}, aborted: false }; } requests.push(options); return { abort() {}, aborted: false }; },
   };
   const wxApi = { ...platform(),
     stopPullDownRefresh() {}, navigateBack() {}, switchTab() {}, showToast() {},
@@ -111,6 +112,13 @@ test('C-02b:业务拒绝终态和网络UNKNOWN都不乐观修改；UNKNOWN不放
     const update = requests.at(-1);
     if (state === 'UNKNOWN') update.fail({}); else update.success(receipt(update, state));
     assert.equal(page.data.joinModePublic, true);
+    // 第十一轮 g2(j4 F1):被拒是确定结果,回执静默归档、理由贴在开关下(commandReject);只有 UNKNOWN 留恢复卡并挡住新输入。
+    if (state === 'REJECTED') {
+      assert.equal(page.data.commandRecovery.state, '');
+      assert.equal(page.data.commandReject.action, 'join-mode');
+      assert.equal(page.data.recoveryShown, false);
+      continue;
+    }
     assert.equal(page.data.commandRecovery.state, state);
     const count = requests.length;
     await page.onJoinModeChange({ detail: { value: false } }); assert.equal(requests.length, count);

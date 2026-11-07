@@ -22,7 +22,7 @@ const PAGES = {
   merchantInfo: 'pages/topic/merchantinfo/merchantinfo.js',
   earnings: 'subpackageA/pages/assetcenter/earnings/index.js',
   standaloneWithdraw: 'subpackageMember/tixian/tixian.js',
-  sceneRoute: 'components/cy/scene-route-content/index.js',
+  sceneRoute: 'subpackageMember/components/cy/scene-route-content/index.js',
 }
 
 function read(relativePath) {
@@ -83,7 +83,7 @@ test('工作台分润明细就地弹出，全部收益进商家浅色账户收�
 // 2026-09-15 退役:三处原写入口里,两份仍有显式能力门禁,scene-route 场景表单不按能力展示
 // (它在表单渲染上就带 form:true 契约,不再重复角色判断),所以只钉这三份现码的读法一致。
 function assertWithdrawalCapabilityGuards(sources = {}) {
-  const component = sources.component || read('components/cy/scene-asset-earnings/index.js')
+  const component = sources.component || read('subpackageA/components/scene-asset-earnings/index.js')
   const earnings = sources.earnings || read(PAGES.earnings)
   const standalone = sources.standalone || read(PAGES.standaloneWithdraw)
   for (const [name, source] of Object.entries({ component, earnings, standalone })) {
@@ -97,7 +97,7 @@ test('提现能力门禁仍统一读取 withdrawable,不再按玩家角色硬拦
 })
 
 test('负控:任一入口退回 player 角色判断时能力门禁必须判红', () => {
-  const component = read('components/cy/scene-asset-earnings/index.js')
+  const component = read('subpackageA/components/scene-asset-earnings/index.js')
     .replace("roleGuard.can('withdrawable')", "roleGuard.role() !== 'player'")
   assert.throws(
     () => assertWithdrawalCapabilityGuards({ component }),

@@ -1,0 +1,8 @@
+member header /api/club/lead/team-progress arrived/total: 3 / 5
+roster /api/club/event-ops/roster registered/arrived/noShow: 1 3 0
+roster names: ['王小雨', '周一鸣', '吴佳怡', '郑浩然']
+recap funnel arrivedPlayers: 3
+audience-counts: {"msg": "操作成功", "code": 200, "data": {"counts": {"ALL_MEMBERS": 6, "ADMINS": 1, "INACTIVE": 2, "REGISTERED": 4, "WAITLIST": 0, "NO_SHOW": 0}, "activityScoped": true}, "_status": 200}
+clock (now, start, end): ((datetime.datetime(2026, 11, 2, 16, 59, 30), datetime.datetime(2026, 11, 2, 16, 55, 55), datetime.datetime(2026, 11, 2, 23, 19, 54)),)
+NO_SHOW recipients (session started, not arrived): ((990008,),)
+who: ((990008, '城瘾用户'),)

@@ -471,6 +471,26 @@ class MerchantCrmAppServiceImplTest {
         verify(consentRecordService, never()).hasCurrentAgreement(anyLong(), any(), any(), any());
     }
 
+    // 第十二轮 k9(p2 N-17):自由探索参与店的每一行不再挂「联系方式在主题名单按客户授权查看」
+    @Test
+    void freeExploreShopRowsCarryNoRepeatedContactHint() {
+        MerchantCrmCustomerRowVO row = new MerchantCrmCustomerRowVO();
+        row.setMemberId(CUSTOMER);
+        row.setPhone("13800138000");
+        row.setMerchantResponsibleForContact(Boolean.FALSE);
+        row.setFreeExploreShopContact(Boolean.TRUE);
+        when(mapper.selectOwnedCustomerPage(any(), any(), any(), any()))
+                .thenReturn(Collections.singletonList(row));
+        when(mapper.selectOwnedCustomerCount(any(), any())).thenReturn(1L);
+        when(mapper.selectOwnedSegmentCounts(any(), any())).thenReturn(new MerchantCrmSegmentCountsVO());
+        when(customerTagMapper.selectTagList(any())).thenReturn(Collections.emptyList());
+
+        MerchantCrmCustomerPageVO out = service.listCustomers(PRINCIPAL, new MerchantCrmCustomerQuery());
+
+        assertNull(out.getRows().get(0).getPhone());
+        assertNull(out.getRows().get(0).getContactHint());
+    }
+
     /* ---- F15 联系号码接口:列表继续只给脱敏号,明文只从显式接口出。 ---- */
 
     @Test

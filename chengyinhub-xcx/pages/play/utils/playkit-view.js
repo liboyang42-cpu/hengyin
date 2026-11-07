@@ -144,6 +144,12 @@ function buildSteps(seg) {
     steps: seg.todaySteps > 0 ? seg.todaySteps : 0,
     goal: seg.goal > 0 ? seg.goal : 0,
     goalLocked: true,
+    // 第十一轮 i1:微信运动读不到时的出路,与罗盘同口径,只听服务端。计步只在读不到微信运动时报失败,
+    // 所以「报过失败、还没同步到步数」就是读不到 —— 重建 kit 后这句话也不能丢
+    readError: Number(seg.failedReads) > 0 && !(seg.todaySteps > 0) && !seg.reached && seg.skipped !== true
+      ? '需要授权微信运动才能计步' : '',
+    canSkip: seg.canSkip === true,
+    skipped: seg.skipped === true,
   };
 }
 
@@ -158,20 +164,28 @@ function buildDailySign(seg, now) {
     signer: seg.signer || '',
     leftAt: seg.leftAt || '',
     photoUrl: seg.photoUrl || '',          // 上一个人拍的,印在票上;没给就不印
-    serialLabel: 'NO. ' + pad4(seg.serial),
-    textMax: Number(seg.textMax) || 40,
-    myText: seg.myText || '',
-    myPhotoUrl: seg.myPhotoUrl || '',
+    serialLabel: Number(seg.serial) > 0 ? 'NO. ' + pad4(seg.serial) : '',   // 第十二轮 k7 N10:服务端没给签号就不印「NO. 0000」
     claimed: !!seg.claimedDate,
     revealed: !!seg.claimedDate,
   };
+}
+
+/** 第十二轮 k8 N2:猜数字终局屏那一行「你猜 X · 实际 Y」。真值只有交过之后服务端才给;缺任一项就不出这一行。 */
+function estimateTerminalDetail(seg) {
+  const s = seg || {};
+  const fmt = (v) => String(Math.round(Number(v) * 100) / 100);
+  if (!s.submitted || s.guess == null || s.answer == null || s.guess === '' || s.answer === ''
+    || !Number.isFinite(Number(s.guess)) || !Number.isFinite(Number(s.answer))) return '';
+  const unit = s.unit ? ' ' + s.unit : '';
+  return '你猜 ' + fmt(s.guess) + unit + ' · 实际 ' + fmt(s.answer) + unit;
 }
 
 function segmentComplete(name, seg) {
   // 走到终点那一步就算这段剧情完了 —— 终点没有选项,再弹一次也没得选
   if (name === 'branch') return !!(seg.currentStep && seg.currentStep.terminal);
   // 押过就算完:答案由商家事后给,玩家这边没有第二个动作
-  if (name === 'predict') return !!String(seg.myOptionKey || '').trim();
+  // R11 g1 F1:这一轮已截止、玩家不选直接走,服务端记 skipped,同样算完
+  if (name === 'predict') return !!String(seg.myOptionKey || '').trim() || seg.skipped === true;
   // 抽满次数才算完。还能抽就该继续弹,不然剩下的次数玩家永远用不掉
   if (name === 'random') return ((seg.drawn || []).length >= (seg.drawCount || 0));
   // 问答:答完就算(答错次数用完也算完),与猜数字同一条口径
@@ -191,7 +205,7 @@ function segmentComplete(name, seg) {
   if (name === 'hiddenObject') return ((seg.foundIds || []).length >= (seg.total || 0));
   if (name === 'blindTaste') return !!seg.solved;
   if (name === 'diyName') return !!String(seg.name || '').trim();
-  if (name === 'steps') return !!seg.reached;
+  if (name === 'steps') return !!seg.reached || seg.skipped === true;
   if (name === 'slowTask') return !!seg.claimed;
   if (name === 'dailySign') return !!seg.claimedDate;
   /* 九宫格全亮就算这段完了 —— 它垫底且只呈现进度,没有"再做一次"的动作;
@@ -208,14 +222,15 @@ function segmentComplete(name, seg) {
      · 打字:打对算完,限次用尽也算(tries=0 表示不限,永远不会用尽)。 */
   if (name === 'profile') return !!seg.done;
   if (name === 'album') return !!seg.done;
-  if (name === 'photoCheck') return !!seg.passed || !!seg.flagged;
+  // R11 g1 F3:只认服务端 passed(服务端 mechanicsReady 同口径)。flagged 是降级痕迹,降级后还要重拍
+  if (name === 'photoCheck') return !!seg.passed;
   if (name === 'note') return !!seg.done;
   if (name === 'typeIn') {
     const tries = Number(seg.tries) || 0;
     return !!seg.passed || (tries > 0 && (Number(seg.attempts) || 0) >= tries);
   }
   if (name === 'reaction' || name === 'ballShake' || name === 'quietHold'
-      || name === 'shout' || name === 'countdown' || name === 'stopwatch') return !!seg.submitted;
+      || name === 'shout' || name === 'countdown' || name === 'stopwatch') return !!seg.submitted || seg.skipped === true;
   // 罗盘:对准过一次就算走完 —— 没有对错、没有次数上限(契约 §3.4)
   if (name === 'compass') return !!seg.done;
   return false;
@@ -500,9 +515,11 @@ function pickPlayKit(view, now) {
   const feedback = feedbackBranch(view);
   const present = KIT_PRIORITY.filter((name) => !!playKit[name]
     && (name !== 'branch' || !isR5(view) || !!feedback)
-    && (name !== 'album' || isR5(view)));
+    && (name !== 'album' || isR5(view) || !!playKit.random));
   if (!present.length) return null;
-  const name = feedback ? 'branch' : present.find((item) => !segmentComplete(item, playKit[item])) || present[0];
+  const albumBeforeCard = !isR5(view) && !!playKit.album && !!playKit.random;
+  const name = albumBeforeCard && !playKit.album.done ? 'album'
+    : feedback ? 'branch' : present.find((item) => !segmentComplete(item, playKit[item])) || (albumBeforeCard ? 'random' : present[0]);
   const seg = playKit[name];
 
   // sessionId / version 必须跟着走:提交动作要用它们做幂等键与 CAS
@@ -514,8 +531,11 @@ function pickPlayKit(view, now) {
     present: presentOf(view),
   };
   if ((['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.challenge && view.canRetry === true)
-      && (!isR5(view) || !!view.challenge)) {
+      && (!isR5(view) || !!view.challenge || view.plainOutcome === true)) { // 没有通用局的主题:结果反馈没过就在本站重来
     base.terminal = true;
+    base.terminalFeedback = view.outcomeFeedback && view.outcomeFeedback.reply || '';
+    base.terminalImages = view.outcomeFeedback && view.outcomeFeedback.images || [];
+    if (playKit.qa && playKit.qa.finished && playKit.qa.answerText) base.terminalDetail = playKit.qa.answerText;
     base.sessionStatus = view.status;
     base.canRetry = view.canRetry === true;
     base.retryLabel = view.challenge ? (view.ownerType === 2 ? '队长再次挑战' : '再次挑战')
@@ -542,6 +562,7 @@ function pickPlayKit(view, now) {
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,
         failureSeq: 0,
+        answerText: seg.finished ? (seg.answerText || '') : '',
         lastOptionId: seg.lastOptionId || '',
         lastOptionIds: seg.lastOptionIds || [],
         // 每个所选选项最多 3 张已由服务端逐项校验;多选按选择顺序拼接,这里不再合计截断
@@ -561,6 +582,9 @@ function pickPlayKit(view, now) {
         answerId: seg.judge !== false ? (seg.answerId || '') : '',
         answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
         feedback: seg.lastFeedback || '',
+        // P-10:作者在「结果反馈」里给这次结果写了话(服务端判完才给 outcomeFeedback)→ 由结算判定屏摆作者的话,
+        // 这一屏不再写自己的兜底句;没写时为空串,兜底照旧
+        authoredOutcome: view.outcomeFeedback && ['PASS', 'FAIL'].includes(view.outcomeFeedback.outcome) ? view.outcomeFeedback.outcome : '',
       });
     }
     if (name === 'scan') {
@@ -590,10 +614,12 @@ function pickPlayKit(view, now) {
         attempts: seg.attempts || 0,
         finished: !!seg.finished,
         passed: !!seg.passed,
-        answerId: seg.answerId || '',
+        answerId: seg.answerId || '', lastPickId: seg.lastPickId || '',
       });
     }
-    if (name === 'album') return Object.assign(base, albumKit(seg));
+    if (name === 'album') return Object.assign(base, albumBeforeCard
+      ? { title: '相册', images: seg.images || [], completionEnabled: false, beforeCard: true, done: !!seg.done }
+      : albumKit(seg));
     if (name === 'branch') {
       const step = (feedback || seg).currentStep || {};
       return Object.assign(base, {
@@ -624,6 +650,12 @@ function pickPlayKit(view, now) {
         settleStatus: seg.settleStatus,
         settledOption: seg.settledOption || '',
         won: !!seg.won,
+        // R11 g1 F1:这一轮已关(过了截止整点或已揭晓)且没选 ⇒ 只给「不选，继续」
+        closed: seg.closed === true,
+        // 本站有承接商家才说「由商家给出答案」;没有就不承诺
+        shopAnswers: seg.shopAnswers !== false,
+        // 第十一轮 g4:已「不选，继续」过,卡面不再邀请选
+        skipped: seg.skipped === true,
       });
     }
     if (name === 'random') {
@@ -703,6 +735,14 @@ function pickPlayKit(view, now) {
       max: Number(seg.max) || 0,
       maxTries: seg.maxAttempts || 0,
       limitSeconds: limitSeconds,
+      // P-09:交过之后服务端才给你的估数、真值与揭示
+      submitted: !!seg.submitted,
+      tier: seg.tier || '',
+      guess: seg.submitted && Number.isFinite(Number(seg.guess)) ? Number(seg.guess) : 0,
+      answer: seg.submitted && Number.isFinite(Number(seg.answer)) ? Number(seg.answer) : 0,
+      reveal: seg.submitted ? (seg.reveal || '') : '',
+      // 第十二轮 k8 N2:没过的终局屏也给出你猜的数和真值(不带结果反馈时那一行本来就有)
+      ...(base.terminal ? { terminalDetail: estimateTerminalDetail(seg) } : {}),
     });
   }
   /* ===== R3 排序 / 连线 / 分类 =====
@@ -809,6 +849,8 @@ function pickPlayKit(view, now) {
       goal: seg.goal || 0,
       timed: !!seg.timed,
       seconds: seg.seconds || 0,
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   if (name === 'quietHold') {
@@ -816,6 +858,8 @@ function pickPlayKit(view, now) {
       kicker: seg.kicker || '',
       sub: seg.sub || '',
       seconds: seg.seconds || 0,
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   /* 罗盘指向:bearing/tolerance/holdSeconds 全是题面(服务端开局就下发),
@@ -828,6 +872,9 @@ function pickPlayKit(view, now) {
       holdSeconds: seg.holdSeconds || 3,
       hint: seg.hint || '',
       done: !!seg.done,
+      // P-23:能不能跳、是不是跳过的,都只听服务端
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   /* 喊一嗓子:下发要喊满的秒数与标题。阈值不下发,由组件开局现场校准(与 quietHold 同一把尺)。 */
@@ -835,6 +882,8 @@ function pickPlayKit(view, now) {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       seconds: seg.seconds || 0,
+      canSkip: seg.canSkip === true,
+      skipped: seg.skipped === true,
     }, sensorContract.kitFields(seg));
   }
   if (name === 'countdown') {
@@ -850,6 +899,7 @@ function pickPlayKit(view, now) {
       targetSeconds: seg.targetSeconds || 0,
       toleranceMs: seg.toleranceMs || 0,
       tries: seg.tries || 0,
+      used: Number(seg.attempts) > 0 ? Number(seg.attempts) : 0,   // 第十二轮 k8 N9:已用掉的次数,重进时剩余次数从这里扣
     }, sensorContract.kitFields(seg));
   }
   /* 推理类三玩法:答案字段(answerOrder/pairs/answer)服务端不投影,这里也没有。
@@ -910,6 +960,7 @@ const ACTION_OF = {
   'walk:sync': 'SUBMIT_STEPS',
   'walk:claim': 'SUBMIT_STEPS',
   'dailysign:accept': 'CLAIM_DAILY_SIGN',
+  'album:ack': 'SUBMIT_ALBUM',
   /* 时段限定的开播提醒:玩家在前端点过订阅按钮,服务端才知道该不该给他推。
      以前这一条不在册,票面上的「已开启」只活在内存里。 */
   'timewindow:subscribe': 'SUBSCRIBE_TIME_WINDOW',
@@ -930,6 +981,7 @@ const ACTION_OF = {
   'compare:submit': 'SUBMIT_COMPARE',
   'hidden:submit': 'SUBMIT_HIDDEN_OBJECT',
   'predict:submit': 'SUBMIT_PREDICT',
+  'predict:skip': 'SKIP_CLOSED_PREDICT',
   /* 七个挑战类都要先开表(原来六个 + 喊一嗓子):服务端拿 START_CHALLENGE 那一刻的**服务器时间**复核成绩,
      不先发这一条,提交会被判成「还没开始」。设备时钟玩家改得动,所以不能只信客户端报的毫秒。 */
   'reaction:start': 'START_CHALLENGE',
@@ -946,6 +998,21 @@ const ACTION_OF = {
   /* 罗盘指向没有「用时」要按服务器时间复核 —— 服务端只复核报来的方位在不在容差内(防误发);
      上面那条开表只为领挑战身份,做完那一下 SUBMIT_COMPASS 带上它。 */
   'compass:submit': 'SUBMIT_COMPASS',
+  /* P-23:读不出方向报一次失败;服务端记够两次、且作者允许或队长放行后,才收「跳过这一站」 */
+  'compass:readfail': 'REPORT_SENSOR_FAILURE',
+  'compass:skip': 'SKIP_SENSOR_STATION',
+  /* 第十一轮 i1:弹球、安静挑战、喊一嗓子、计步同一条规则。拒了麦克风 / 微信运动 = 拒了权限,
+     服务端一次就记到门槛(payload.denied);读不出数照常每次记一次。 */
+  'ballshake:readfail': 'REPORT_SENSOR_FAILURE',
+  'ballshake:skip': 'SKIP_SENSOR_STATION',
+  'quiethold:readfail': 'REPORT_SENSOR_FAILURE',
+  'quiethold:micdenied': 'REPORT_SENSOR_FAILURE',
+  'quiethold:skip': 'SKIP_SENSOR_STATION',
+  'shout:readfail': 'REPORT_SENSOR_FAILURE',
+  'shout:micdenied': 'REPORT_SENSOR_FAILURE',
+  'shout:skip': 'SKIP_SENSOR_STATION',
+  'walk:readfail': 'REPORT_SENSOR_FAILURE',
+  'walk:skip': 'SKIP_SENSOR_STATION',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
   'stopwatch:submit': 'SUBMIT_STOPWATCH',
@@ -991,6 +1058,15 @@ const CHALLENGE_GAME = {
   typein: 'typeIn',
 };
 
+/** 可跳过的传感器屏 → 服务端玩法段名(SKIPPABLE_SENSOR_SECTIONS) */
+const SENSOR_GAME_OF = {
+  compass: 'compass',
+  ballshake: 'ballShake',
+  quiethold: 'quietHold',
+  shout: 'shout',
+  walk: 'steps',
+};
+
 function serverAction(type, action) {
   return ACTION_OF[type + ':' + action] || '';
 }
@@ -1008,6 +1084,8 @@ function serverPayload(type, action, detail) {
     const game = CHALLENGE_GAME[type];
     return game ? { game: game } : {};
   }
+  if (SENSOR_GAME_OF[type] && (action === 'readfail' || action === 'skip')) return { game: SENSOR_GAME_OF[type] };
+  if (SENSOR_GAME_OF[type] && action === 'micdenied') return { game: SENSOR_GAME_OF[type], denied: true };
   switch (type + ':' + action) {
     case 'estimate:submit': return { value: d.guess };
     case 'pricepair:submit': return { pickId: d.pickId };
@@ -1039,7 +1117,8 @@ function serverPayload(type, action, detail) {
     case 'typein:submit': return { text: d.text || '', elapsedMs: Math.round(d.elapsedMs || 0) };
     /* 接力签:留下的那句和可选照片。现网 CLAIM_DAILY_SIGN 还不消费这两字段,多带无害;
        后端接上之后不必再改小程序。 */ 
-    case 'dailysign:accept': return { text: d.text || '', photoUrl: d.photoUrl || '' };
+    case 'dailysign:accept': return {};
+    case 'album:ack': return { viewed: true };
     // 抽卡不带参数:抽哪一件由服务端按权重定,客户端说了不算
     case 'random:draw': return {};
     // C1:设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)

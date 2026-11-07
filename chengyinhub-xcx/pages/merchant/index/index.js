@@ -9,7 +9,7 @@ const merchantTheme = require('../../../utils/merchant-theme.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession } = require('../utils/session/ensure-session.js'); const { retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const identitySync = require('../../../utils/identity-sync.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
@@ -39,11 +39,11 @@ function clearInvalidSession() {
   if (session && typeof session.clearSession === 'function') session.clearSession();
 }
 
-const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, verificationSheetView, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
-const { hasTodoSummaryPayload, buildProjectCards, isHiddenProjectCard, sortProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
+const { hasTodoSummaryPayload, buildProjectCards, isHiddenProjectCard, sortProjectCards, isEndedProject, isPendingChapterInvite, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
 const { resolveApplicationResponse, decorateApplication } = require('../../../utils/merchant-identity-policy.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
@@ -90,7 +90,7 @@ Page({
     // 默认 fail closed，避免首帧把上一商家或假零报表先露出来。
     merchantAccess: inactiveAccess(),
     // 身份/加载没能确认时的页内错误(cy-inline-error 承接),不再是整屏身份闸。
-    consoleError: '',
+    consoleError: '', consoleLogin: false,
     // 入驻申请审核中/未通过/停用时的页内状态卡(来源 /api/merchant/info + decorateApplication)。
     // 无商家身份的普通玩家仍走静默 switchTab,不在这里渲染。
     consoleStatus: null,
@@ -165,8 +165,25 @@ Page({
   // 切换营业状态是资料写操作；员工页即使误触方法也必须在请求前关闭。
   toggleBusiness() {
     if (!this.data.merchantAccess.canWriteProfile) return;
-    const that = this;
     const next = this.data.businessStatus === 1 ? 0 : 1;
+    if (next === 0) {
+      // M-13:一次误触就打烊,先确认;打烊不挡核销,话要说实。
+      const that = this;
+      modal.show({
+        title: '暂停营业？',
+        content: '玩家会看到本店今日已打烊，到店仍可核销。',
+        confirmText: '暂停营业',
+        cancelText: '继续营业',
+        success(r) { if (r && r.confirm) that._applyBusinessStatus(0); },
+      });
+      return;
+    }
+    this._applyBusinessStatus(next);
+  },
+
+  _applyBusinessStatus(next) {
+    if (!this.data.merchantAccess.canWriteProfile) return;
+    const that = this;
     const actionEpoch = (this._businessActionEpoch || 0) + 1;
     this._businessActionEpoch = actionEpoch;
     const scopeKey = this._merchantScopeKey || '';
@@ -222,12 +239,15 @@ Page({
       const assignment = [];
       if (item.chapterName) assignment.push(item.chapterName);
       if (item.nodeName && item.nodeName !== item.chapterName) assignment.push(item.nodeName);
+      // M-04 第4轮:不带日期的那半段单独留一份,卡上出现「今天 几点」时只写它,免得一张卡两个日期。
+      const placeText = assignment.join(' · ');
       if (item.startDateStr) assignment.push(item.startDateStr);
       // ⚠️ 这里曾按 searchStatus 编出 62/38 两个数,当「售出/购买比例」渲染给商家看 ——
       // 后端从来不下发这个数据,它是纯捏造的。真实数据到位前一律不显示。
       return Object.assign({}, item, {
         reportVolume: reportVolume,
         assignmentText: assignment.join(' · '),
+        assignmentPlaceText: placeText,
         // 类型标签只在后端确实下发 productType 时才出;拿不到就不显示,别猜
         productTypeText: PRODUCT_TYPE_TEXT[item.productType] || '',
       });
@@ -371,8 +391,16 @@ Page({
     const legacyTopics = new Set((this.data.projectList || []).map((item) => String(item.topicId)));
     const chapterProjects = (this._chapterProjectList || [])
       .filter((item) => !legacyTopics.has(String(item.topicId)));
+    const invitedTopics = new Set();
     const projectCards = buildProjectCards({
-      joinList: (this.data.projectList || []).concat(chapterProjects),
+      joinList: (this.data.projectList || []).map(item => {
+        const topicId = String(item.topicId);
+        if (invitedTopics.has(topicId)) return item;
+        const invite = (this._chapterProjectList || []).find(row => String(row.topicId) === topicId && isPendingChapterInvite(row));
+        if (!invite) return item;
+        invitedTopics.add(topicId);
+        return invite;
+      }).concat(chapterProjects),
       hostList: this.data.hostProjectList,
       todoByProject: this.data.todo.byProject,
       events: this._notifications || [],
@@ -606,6 +634,8 @@ Page({
   },
 
   // 重新加载:清掉页内错误再走一遍 onShow 的身份+数据链路。
+  onConsoleLogin() { retryLogin(this, app, this.enterConsole); },
+
   reloadConsole() {
     this.setData({ consoleError: '' });
     this.onShow();
@@ -726,18 +756,13 @@ Page({
       this._dataMemberId = '';
       this._accessMemberId = '';
       this.closeScene();
-      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess() });
-      // 静默登录:成功自动继续加载;失败只留页内错误,由 reloadConsole 重试。
-      ensureSession(app).then((ok) => {
-        if (version !== this._consoleVersion) return;
-        if (!ok || !String(app.getUserID() || '')) {
-          this.setData({ consoleError: '登录失败，请重试' });
-          return;
-        }
-        this.enterConsole(authRetryUsed === true);
-      });
+      // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1)。落「登录后查看」,
+      // 点「登录」才走 retryLogin;冷启动还在恢复缓存会话时,恢复完自动重进。
+      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess(), consoleLogin: true });
+      waitForInitialSession(this, app, this.enterConsole);
       return;
     }
+    if (this.data.consoleLogin) this.setData({ consoleLogin: false });
     const dataEpoch = (this._dataEpoch || 0) + 1;
     this._dataEpoch = dataEpoch;
     this._dataMemberId = identityMemberId;
@@ -768,7 +793,7 @@ Page({
       return;
     }
     clearInvalidSession();
-    ensureSession(app).then((ok) => {
+    ensureSession(app, true).then((ok) => {
       if (version !== this._consoleVersion) return;
       if (!ok) {
         this.setData({ consoleError: '登录失败，请重试' });
@@ -956,7 +981,7 @@ Page({
               pendingOrders: finiteCount(res.data.pendingOrders),
             },
           });
-          if (expectsRevenue) that.countRevenueTo(revenue);
+          if (expectsRevenue) { clearTimeout(that._revHoldTimer); if (that.data.pmPage) that._revHoldTimer = setTimeout(() => that.countRevenueTo(revenue), 150); else that.countRevenueTo(revenue); } // M-06:首屏还在浮上时先停 150ms 再数(同 countIn),慢起步不再耗在隐身里
         } else {
           that.setData({ dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
         }
@@ -1080,14 +1105,14 @@ Page({
         const byTopic = {};
         res.data.forEach((row) => {
           const topicId = row && Number(row.topicId);
-          if (!topicId || Number(row.status) !== 1) return;
+          if (!Number.isSafeInteger(topicId) || topicId <= 0 || (Number(row.status) !== 1 && !isPendingChapterInvite(row))) return;
           const key = String(topicId);
-          if (!byTopic[key]) {
+          if (!byTopic[key] || (isPendingChapterInvite(row) && !isPendingChapterInvite(byTopic[key]))) {
             byTopic[key] = Object.assign({}, row, {
               topicId,
               projectSource: 'chapter',
               chapterName: '',
-              _chapterNames: [],
+              _chapterNames: byTopic[key] ? byTopic[key]._chapterNames : [],
             });
           }
           if (row.chapterName && byTopic[key]._chapterNames.indexOf(row.chapterName) < 0) {
@@ -1204,6 +1229,11 @@ Page({
     const key = String(((e && e.currentTarget && e.currentTarget.dataset) || {}).key || '');
     const item = (this.data.inboxItems || []).find((row) => row.key === key);
     if (!item) return; if (!this.data.msgOpen && this.data.inboxItems.length > 1) { this.setData({ msgOpen: true }); return; } // 叠着时先展开(业主 10-23:像券包一样分层叠放、点开展开)
+    if (item.kind === 'event' && item.gameActivityId) {
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: '/pages/merchant/game-node/index?activityId=' + item.gameActivityId, complete: () => { this._navigating = false; } });
+      return;
+    }
     if (item.kind === 'event') { this.goEvent({ currentTarget: { dataset: { type: item.type } } }); return; }
     if (this._navigating) return;
     let url = '';
@@ -1343,7 +1373,8 @@ Page({
               },
             });
           } else {
-            cyToast(scan.message);
+            // M-25:不是城瘾的码也走同一张结果面板,不再是 2 秒就消失的 toast。
+            that.showRejectedScan(scan.message === '二维码格式错误' ? '这不是城瘾的核销码' : scan.message);
           }
           return;
         }
@@ -1400,12 +1431,31 @@ Page({
   },
 
   showVerificationResult(response, action) {
-    this.setData({ verificationResult: resolveVerificationResult(response, action) });
+    const result = resolveVerificationResult(response, action);
+    this.setData({ verificationResult: Object.assign(result, verificationSheetView(result)) });
     this.openScene('merchant-verification-result');
   },
 
   closeVerificationResult() {
     this.closeScene();
+  },
+
+  showRejectedScan(message) {
+    const result = { state: 'rejected', title: '未核销', message: message, show: true };
+    this.setData({ verificationResult: Object.assign(result, verificationSheetView(result)) });
+    this.openScene('merchant-verification-result');
+  },
+
+  // 结果面板主按钮:能核销的账号是「继续扫码」,其余只有「完成」。
+  onVerificationPrimary() {
+    if (this.data.merchantAccess && this.data.merchantAccess.canVerify) this.continueScan();
+    else this.closeVerificationResult();
+  },
+
+  // M-23:柜台排队时一次点按就接着扫下一位。
+  continueScan() {
+    this.closeScene();
+    wx.nextTick(() => this.goScanQR());
   },
 
   onChapterPick(e) {
@@ -1488,11 +1538,20 @@ Page({
   goHostProject(e) {
     const topicId = Number(e.currentTarget.dataset.topicid);
     if (!Number.isSafeInteger(topicId) || topicId <= 0 || this._navigating) return; // 跳转中不响应连点,免得叠两层项目页
-    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
+    const pendingInvite = e.currentTarget.dataset.source === 'chapter' && (this._chapterProjectList || [])
+      .some(row => Number(row.topicId) === topicId && isPendingChapterInvite(row));
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?' + (pendingInvite ? 'id=' : 'topicId=') + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   openProjectCard(e) {
     const ds = e.currentTarget.dataset;
+    // 第十轮 f2 第 5 项(j2 F-01d):场次里有本店站点的卡(/api/game/session/merchant/entries)直接进本站页
+    // 接受与准备 —— 不经过报名窗口会关掉的合作中心与承接页。
+    if (ds.gameactivityid) {
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: '/pages/merchant/game-node/index?activityId=' + ds.gameactivityid, complete: () => { this._navigating = false; } });
+      return;
+    }
     if (ds.biztype === 'activity') {
       if (ds.id == null || ds.id === '') return;
       return this.openScene('play-activity-detail', { id: ds.id });

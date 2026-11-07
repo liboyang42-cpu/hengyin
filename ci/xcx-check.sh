@@ -10,6 +10,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 
 XCX_DIR="chengyinhub-xcx"
 [ -d "$XCX_DIR" ] || { echo "找不到 $XCX_DIR"; exit 1; }
+command -v rg >/dev/null 2>&1 || { echo "[xcx-check] Missing required ripgrep (rg); static checks cannot run" >&2; exit 1; }
 
 # 子门禁的错误输出写进本次独占的临时目录，不写固定的 /tmp 文件名（并发互相覆盖、
 # 沙箱里 /tmp 不可写时会把每个文件都误判红）。mktemp 失败或返回空/仓库内路径时立即停止，

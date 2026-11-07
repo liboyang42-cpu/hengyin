@@ -5,13 +5,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="com.chengyinhub.business.mapper.MemberLeaderboardMapper">
 
     <!-- ===== 列表:前 N 名 ===== -->
+    <!-- R11 p1 F-4:榜上只有玩家账号(role='player'),0 分不上榜;我的名次在 0 分时由 GrowthServiceImpl 给 null。 -->
 
     <!-- 积分总榜 -->
     <select id="selectPointTotalTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
         select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
                ifnull(m.point, 0) as score
         from ums_member m
-        where m.del_flag = 0
+        where m.del_flag = 0 and m.role = 'player' and ifnull(m.point, 0) &gt; 0
         order by ifnull(m.point, 0) desc, m.create_time asc, m.id asc
         limit #{limit}
     </select>
@@ -26,7 +27,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             where change_type = 1 and del_flag = 0 and create_time &gt;= #{weekStart}
             group by member_id
         ) d
-        join ums_member m on m.id = d.member_id and m.del_flag = 0
+        join ums_member m on m.id = d.member_id and m.del_flag = 0 and m.role = 'player'
         order by d.score desc, m.create_time asc, m.id asc
         limit #{limit}
     </select>
@@ -36,7 +37,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
                ifnull(g.exp_value, 0) as score
         from member_growth g
-        join ums_member m on m.id = g.member_id and m.del_flag = 0
+        join ums_member m on m.id = g.member_id and m.del_flag = 0 and m.role = 'player'
+        where g.exp_value &gt; 0
         order by g.exp_value desc, g.member_id asc
         limit #{limit}
     </select>
@@ -52,7 +54,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectExpWeekTop" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
         select m.id as memberId, m.nickname as nickname, m.avatar as avatar, p.s as score
         from (<include refid="expWeekScores"/>) p
-        join ums_member m on m.id = p.member_id and m.del_flag = 0
+        join ums_member m on m.id = p.member_id and m.del_flag = 0 and m.role = 'player'
+        where p.s &gt; 0
         order by p.s desc, m.create_time asc, m.id asc
         limit #{limit}
     </select>
@@ -64,16 +67,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <![CDATA[
         select
             (select count(*) from ums_member x
-              where x.del_flag = 0
+              where x.del_flag = 0 and x.role = 'player'
                 and (ifnull(x.point, 0) > base.s
                      or (ifnull(x.point, 0) = base.s
                          and (x.create_time < base.created
                               or (x.create_time = base.created and x.id < base.memberId))))) + 1 as userRank,
-            (select count(*) from ums_member where del_flag = 0) as totalUsers,
+            (select count(*) from ums_member where del_flag = 0 and role = 'player' and ifnull(point, 0) > 0) as totalUsers,
             base.s as score
         from (
             select id as memberId, ifnull(point, 0) as s, create_time as created
-              from ums_member where id = #{memberId} and del_flag = 0
+              from ums_member where id = #{memberId} and del_flag = 0 and role = 'player'
         ) base
         ]]>
     </select>
@@ -87,7 +90,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 from ums_member_points_detail
                 where change_type = 1 and del_flag = 0 and create_time >= #{weekStart}
                 group by member_id
-            ) t join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0
+            ) t join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0 and ranked.role = 'player'
               where t.s > base.s
                  or (t.s = base.s
                      and (ranked.create_time < base.created
@@ -97,7 +100,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 from ums_member_points_detail
                 where change_type = 1 and del_flag = 0 and create_time >= #{weekStart}
                 group by member_id
-            ) c join ums_member counted on counted.id = c.member_id and counted.del_flag = 0) as totalUsers,
+            ) c join ums_member counted on counted.id = c.member_id and counted.del_flag = 0 and counted.role = 'player') as totalUsers,
             base.s as score
         from (
             select d.member_id as memberId, d.s, m.create_time as created
@@ -107,7 +110,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                      where change_type = 1 and del_flag = 0 and create_time >= #{weekStart}
                      group by member_id
               ) d
-              join ums_member m on m.id = d.member_id and m.del_flag = 0
+              join ums_member m on m.id = d.member_id and m.del_flag = 0 and m.role = 'player'
              where d.member_id = #{memberId}
         ) base
         ]]>
@@ -118,11 +121,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <![CDATA[
         select
             (select count(*) from member_growth x
-              join ums_member active_member on active_member.id = x.member_id and active_member.del_flag = 0
+              join ums_member active_member on active_member.id = x.member_id and active_member.del_flag = 0 and active_member.role = 'player'
               where x.exp_value > base.s
                  or (x.exp_value = base.s and x.member_id < base.memberId)) + 1 as userRank,
             (select count(*) from member_growth counted_growth
-              join ums_member counted on counted.id = counted_growth.member_id and counted.del_flag = 0) as totalUsers,
+              join ums_member counted on counted.id = counted_growth.member_id and counted.del_flag = 0 and counted.role = 'player') as totalUsers,
             base.s as score
         from (
             select member_id as memberId, exp_value as s
@@ -135,18 +138,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectExpWeekMyRank" resultType="java.util.HashMap">
         select
             (select count(*) from (<include refid="expWeekScores"/>) t
-              join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0
+              join ums_member ranked on ranked.id = t.member_id and ranked.del_flag = 0 and ranked.role = 'player'
               where t.s &gt; base.s
                  or (t.s = base.s
                      and (ranked.create_time &lt; base.created
                           or (ranked.create_time = base.created and ranked.id &lt; base.memberId)))) + 1 as userRank,
             (select count(*) from (<include refid="expWeekScores"/>) c
-              join ums_member counted on counted.id = c.member_id and counted.del_flag = 0) as totalUsers,
+              join ums_member counted on counted.id = c.member_id and counted.del_flag = 0 and counted.role = 'player') as totalUsers,
             base.s as score
         from (
             select p.member_id as memberId, p.s, m.create_time as created
               from (<include refid="expWeekScores"/>) p
-              join ums_member m on m.id = p.member_id and m.del_flag = 0
+              join ums_member m on m.id = p.member_id and m.del_flag = 0 and m.role = 'player'
              where p.member_id = #{memberId}
         ) base
     </select>

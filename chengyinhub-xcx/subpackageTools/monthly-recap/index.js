@@ -2,7 +2,7 @@ const { page } = require('../cloud-ten-runtime');
 const { createMonthlyRecapClient } = require('../utils/features/monthly-recap-client');
 const { toTimestamp } = require('../../utils/datetime');
 const occurredAt = item => toTimestamp(item.occurredAtMs == null ? item.occurredAt : item.occurredAtMs);
-const COVERAGE = '仅权威完成路线会话、已结算漫游地点与本人有效城市签；不从报名或客户端进度推测完成';
+const COVERAGE = '仅权威完成路线会话、主题首次通关、已结算漫游地点与本人有效城市签；不从报名或客户端进度推测完成';
 function shanghai(ms) { return new Date(Number(ms) + 8 * 3600000); }
 function thisMonth() { const d = shanghai(Date.now()); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'); }
 function shift(month, delta) { const [y, m] = month.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 + delta, 1)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0'); }

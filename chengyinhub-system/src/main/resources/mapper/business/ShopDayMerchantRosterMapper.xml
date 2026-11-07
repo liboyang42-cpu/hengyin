@@ -32,7 +32,9 @@
         select r.id registration_id, r.member_id, r.registration_no ticket_no,
                t.start_time ticket_start, t.end_time ticket_end,
                r.real_name, m.nickname, m.avatar, r.phone,
-               case when min(rd.create_time) is null then 'ARRIVED' else 'REDEEMED' end entitlement_status,
+               case when min(rd.create_time) is not null then 'REDEEMED'
+                    when min(p.checkin_time) is not null then 'ARRIVED'
+                    else 'NOT_ARRIVED' end entitlement_status,
                min(p.checkin_time) checkin_at, min(rd.create_time) service_started_at
           from merchant_chapter_offer o
           join mms_merchant mm on mm.member_id = o.merchant_id and mm.status = 1
@@ -53,7 +55,6 @@
              and rd.chapter_id = o.chapter_id and rd.merchant_id = o.merchant_id and rd.status = 'ACTIVE'
          where o.topic_id = #{topicId} and o.merchant_id = #{merchantMemberId}
            and o.status = 1 and (o.valid_end is null or o.valid_end &gt; now())
-           and (p.id is not null or rd.id is not null)
          group by r.id, r.member_id, r.registration_no, t.start_time, t.end_time,
                   r.real_name, m.nickname, m.avatar, r.phone
          order by coalesce(min(rd.create_time), min(p.checkin_time)) desc, r.id desc

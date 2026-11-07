@@ -51,6 +51,13 @@ public class CmsTopicChapter extends BaseEntity
     /** 本章背景旁白；玩家进入本章自动播放。一章最多一段（2026-09-04 起音频不再是 blocks 里的块）。 */
     private String audioUrl;
 
+    private String videoUrl;
+    private String videoPosterUrl;
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String value) { videoUrl = value; }
+    public String getVideoPosterUrl() { return videoPosterUrl; }
+    public void setVideoPosterUrl(String value) { videoPosterUrl = value; }
+
     /** 图片（多张）分号隔开 */
     @Excel(name = "图片", readConverterExp = "多=张")
     private String imgArr;

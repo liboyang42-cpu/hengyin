@@ -59,8 +59,8 @@ class RefundPolicyTest {
     void activity_afterStart_notRefundable() {
         Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null, past, now);
         assertFalse(v.refundable);
-        // 5.9 文案:不再是「已错过活动开始时间」——场次票的窗口是集合时间前 24h。
-        assertTrue(v.reason.contains("集合前24小时"), "实际:" + v.reason);
+        // 2026-11-02 退款档位:开始后不退;24 小时内退 50% 另有用例。
+        assertEquals("场次已开始，不可退款", v.reason);
     }
 
     @Test
@@ -200,9 +200,9 @@ class RefundPolicyTest {
         assertTrue(RefundPolicy.evaluate(2L, 2, 0, null, null, null,
                 assembly.getTime(), beforeCutoff.getTime()).refundable,
                 "存量 00:00 场次在前一日 00:00 之前仍可退");
-        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null,
-                assembly.getTime(), afterCutoff.getTime()).refundable,
-                "存量 00:00 场次过了前一日 00:00 仍不可退(不回溯改写)");
+        assertTrue(RefundPolicy.evaluate(2L, 2, 0, null, null, null,
+                assembly.getTime(), afterCutoff.getTime()).partial(),
+                "存量 00:00 场次过了前一日 00:00、未开始:退 50%(2026-11-02 档位)");
     }
 
     /** 恰好集合前 24h(now == 截止点)⇒ 仍在窗口内(半开区间,相等即关闭的反面)。 */
@@ -224,12 +224,13 @@ class RefundPolicyTest {
 
     /** 过了 24h 截止点 1 分钟 ⇒ 不可退(规则终局,不是「算不出来」)。 */
     @Test
-    void session_1minAfterCutoff_notRefundable() {
+    void session_1minAfterCutoff_refundsHalf() {
         Date assembly = new Date(now.getTime() + 24 * H - 60_000L);
         Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null, assembly, now);
-        assertFalse(v.refundable, "过了集合前 24h 应不可退");
-        assertFalse(v.manualReview, "超过窗口是终局判定,不该转人工");
-        assertEquals(new Date(assembly.getTime() - 24 * H), v.deadline);
+        // 2026-11-02 退款档位:过了集合前 24h、未开始 ⇒ 退 50%,截止点 = 集合时间
+        assertTrue(v.partial(), "过了集合前 24h 未开始应退 50%");
+        assertFalse(v.manualReview, "档位是终局判定,不该转人工");
+        assertEquals(assembly, v.deadline);
     }
 
     /** 无集合时间(start_date 缺失)⇒ fail-closed:不自动退、转人工并给提示。 */
@@ -301,11 +302,76 @@ class RefundPolicyTest {
 
     /** F-W5-07 负控:付费或用了积分的场次单仍守集合前 24h。 */
     @Test
-    void paidOrPointSessionOrder_within24h_notRefundable() {
+    void paidOrPointSessionOrder_within24h_refundsHalf() {
         Date in2h = new Date(now.getTime() + 2 * H);
-        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
-                new java.math.BigDecimal("9.90"), 0L, now).refundable);
-        assertFalse(RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
-                java.math.BigDecimal.ZERO, 100L, now).refundable);
+        // 2026-11-02 退款档位:24 小时内收费/积分单退 50%(不再拒绝)
+        assertTrue(RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
+                new java.math.BigDecimal("9.90"), 0L, now).partial());
+        assertTrue(RefundPolicy.evaluate(2L, 2, 0, null, null, null, in2h, null, null,
+                java.math.BigDecimal.ZERO, 100L, now).partial());
+    }
+
+    // ---- 2026-11-02 退款档位:集合前 24 小时以上 100%,24 小时内 50%,开始后不退 ----
+
+    private static Verdict sessionAt(Date start, Date now) {
+        return RefundPolicy.evaluate(2L, 2, 0, null, null, null, start, null, null,
+                new java.math.BigDecimal("69.00"), 0L, now);
+    }
+
+    @Test
+    void sessionTiers_fullMoreThan24hBefore() {
+        Date start = new Date(1_800_000_000_000L);
+        Verdict v = sessionAt(start, new Date(start.getTime() - 25L * 3600_000L));
+        assertTrue(v.refundable);
+        assertEquals(0, java.math.BigDecimal.ONE.compareTo(v.ratio));
+        assertFalse(v.partial());
+    }
+
+    @Test
+    void sessionTiers_halfWithin24hBeforeStart() {
+        Date start = new Date(1_800_000_000_000L);
+        Verdict v = sessionAt(start, new Date(start.getTime() - 3L * 3600_000L));
+        assertTrue(v.refundable, "旧口径在这里不可退;新口径退 50%");
+        assertTrue(v.partial());
+        assertEquals(0, new java.math.BigDecimal("0.50").compareTo(v.ratio));
+        assertEquals(start, v.deadline);
+    }
+
+    @Test
+    void sessionTiers_noneAfterStart() {
+        Date start = new Date(1_800_000_000_000L);
+        Verdict v = sessionAt(start, new Date(start.getTime() + 60_000L));
+        assertFalse(v.refundable);
+        assertEquals("场次已开始，不可退款", v.reason);
+    }
+
+    @Test
+    void sessionTiers_exactly24hBeforeIsStillFull() {
+        Date start = new Date(1_800_000_000_000L);
+        Verdict v = sessionAt(start, RefundPolicy.sessionRefundDeadline(start));
+        assertTrue(v.refundable);
+        assertFalse(v.partial());
+    }
+
+    @Test
+    void sessionRefundRatioAt_matchesTiers() {
+        Date start = new Date(1_800_000_000_000L);
+        assertEquals(0, java.math.BigDecimal.ONE.compareTo(
+                RefundPolicy.sessionRefundRatioAt(start, new Date(start.getTime() - 30L * 3600_000L))));
+        assertEquals(0, new java.math.BigDecimal("0.50").compareTo(
+                RefundPolicy.sessionRefundRatioAt(start, new Date(start.getTime() - 3600_000L))));
+        assertEquals(0, java.math.BigDecimal.ZERO.compareTo(
+                RefundPolicy.sessionRefundRatioAt(start, new Date(start.getTime() + 1L))));
+        assertNull(RefundPolicy.sessionRefundRatioAt(null, new Date()));
+    }
+
+    @Test
+    void exploreSnapshotOrdersKeepAllOrNothing() {
+        Date start = new Date(1_800_000_000_000L);
+        Date snapshot = new Date(start.getTime() - 48L * 3600_000L);
+        Verdict v = RefundPolicy.evaluate(2L, 2, 0, null, null, null, start,
+                PurchaseKind.EXPLORE_PASS, snapshot, new java.math.BigDecimal("69.00"), 0L,
+                new Date(start.getTime() - 3600_000L));
+        assertFalse(v.refundable, "③ 快照单的钟不是集合时间,不进 50% 档");
     }
 }

@@ -45,21 +45,21 @@
           <text class="ac-kv-k">平台处理</text>
           <cy-badge type="status" variant="{{detail.processingVariant}}" label="{{detail.processingText}}" />
         </view>
-        <view class="ac-kv ac-status-row">
+        <view class="ac-kv ac-status-row" wx:if="{{!detail.isManualCase}}">
           <text class="ac-kv-k">商家意见</text>
           <cy-badge type="status" variant="{{detail.merchantOpinionVariant}}" label="{{detail.merchantOpinionText}}" />
         </view>
-        <view class="ac-kv ac-status-row">
+        <view class="ac-kv ac-status-row" wx:if="{{!detail.isManualCase}}">
           <text class="ac-kv-k">款项结果</text>
           <cy-badge type="status" variant="{{detail.refundedVariant}}" label="{{detail.refundedText}}" />
         </view>
-        <view class="ac-kv" wx:if="{{!detail.hasRefundAmount}}">
+        <view class="ac-kv" wx:if="{{!detail.isManualCase && !detail.hasRefundAmount}}">
           <text class="ac-kv-k">退款金额</text>
           <text class="ac-kv-v ac-kv-v--mute">{{detail.refundAmountText}}</text>
         </view>
-        <view class="ac-kv ac-kv--tap" bindtap="copyRefundNo" aria-role="button" aria-label="复制退款单号 {{detail.refundNoText}}"
+        <view class="ac-kv ac-kv--tap" bindtap="copyRefundNo" aria-role="button" aria-label="复制{{detail.isManualCase ? '工单编号' : '退款单号'}} {{detail.refundNoText}}"
               hover-class="cy-pressed" hover-stay-time="80">
-          <text class="ac-kv-k">退款单号</text>
+          <text class="ac-kv-k">{{detail.isManualCase ? '工单编号' : '退款单号'}}</text>
           <view class="ac-kv-v ac-kv-v--copy"><cy-icon name="copy" size="28" /><text>{{detail.refundNoText}}</text></view>
         </view>
         <view class="ac-kv" wx:if="{{detail.createTimeText}}">
@@ -183,7 +183,7 @@
           </view>
         </view>
       </block>
-      <cy-inline-error class="ac-field-error" wx:if="{{submitError}}" kind="data"
+      <cy-inline-error class="ac-field-error" wx:if="{{submitError}}" kind="error"
         title="售后处理未提交" sub="{{submitError}}" />
     </view>
     <view slot="footer" class="ac-sheet-footer">

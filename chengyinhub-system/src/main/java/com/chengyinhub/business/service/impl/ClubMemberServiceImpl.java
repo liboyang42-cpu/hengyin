@@ -142,6 +142,20 @@ public class ClubMemberServiceImpl implements IClubMemberService
         return false;
     }
 
+    @Override
+    public boolean isSessionDirector(Long topicId, Long clubId, Long memberId) {
+        if (isTopicOwner(topicId, clubId, memberId)) return true;
+        if (topicId == null || clubId == null || memberId == null) return false;
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null || !Integer.valueOf(0).equals(topic.getDelFlag())) return false;
+        for (CoopOrder o : coopOrderMapper.selectEffectiveOrdersByTopicId(topicId)) {
+            if ("club".equals(o.getToType()) && clubId.equals(o.getToId())) {
+                return activeClubOwnedBy(clubId, memberId);
+            }
+        }
+        return false;
+    }
+
     private boolean activeClubOwnedBy(Long clubId, Long memberId) {
         Club club = clubMapper.selectClubById(clubId);
         return club != null && Long.valueOf(1L).equals(club.getStatus())

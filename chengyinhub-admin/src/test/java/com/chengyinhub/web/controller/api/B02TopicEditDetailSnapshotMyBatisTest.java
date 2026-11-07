@@ -312,7 +312,7 @@ class B02TopicEditDetailSnapshotMyBatisTest {
                 + " ADD theme_runtime_config_json LONGTEXT, ADD published_theme_runtime_config_json LONGTEXT,"
                 + " ADD beta_flag TINYINT, ADD team_mode TINYINT, ADD team_max_members INT,"
                 + " ADD club_coop_open TINYINT, ADD club_pinned TINYINT, ADD club_member_only TINYINT");
-        jdbc.execute("ALTER TABLE cms_topic_chapter ADD atmosphere_preset VARCHAR(32), ADD audio_url VARCHAR(500),"
+        jdbc.execute("ALTER TABLE cms_topic_chapter ADD video_url VARCHAR(512), ADD video_poster_url VARCHAR(512), ADD atmosphere_preset VARCHAR(32), ADD audio_url VARCHAR(500),"
                 + " ADD finish_time DATETIME, ADD circle_candidate_code VARCHAR(24), ADD circle_role VARCHAR(24),"
                 + " ADD circle_policy VARCHAR(24), ADD circle_enabled TINYINT, ADD need_group TINYINT");
         jdbc.execute("ALTER TABLE cms_topic_node ADD unlock_after_node_id BIGINT");

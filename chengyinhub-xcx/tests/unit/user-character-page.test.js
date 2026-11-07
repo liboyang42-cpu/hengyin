@@ -227,7 +227,8 @@ test('page markup uses real cy components, separate state text and no attribute 
     assert.ok(fs.existsSync(path.join(ROOT, target.slice(1) + '.js')), name + ' exists');
   }
   assert.match(wxml, /角色模板/);
-  assert.match(wxml, /模板暂无可展示属性/);
+  // 第十二轮 k9(p1 N-8):主题没有可见属性时整页是「链接已失效 · 返回」,不再叠「模板暂无可展示属性」等四行
+  assert.match(wxml, /title="链接已失效" cta="返回" bind:cta="backToParticipation"/);
   assert.match(wxml, /item.scopeText/);
   assert.match(wxml, /card.rpg.clocks/);
   assert.doesNotMatch(wxml, /<(input|slider|textarea|switch)\b|bindchange|冻结定义/);

@@ -26,14 +26,14 @@
       </view>
     </view>
     <view class="gc-score-rank" bindtap="goLeaderboard" aria-role="button" aria-label="查看完整排行榜" hover-class="gc-row--press" hover-stay-time="80">
-      <text wx:if="{{me}}" class="gc-rank-label">总积分榜 · 第 {{me.rank || '—'}} 名</text>
-      <text wx:elif="{{rankLoaded}}" class="gc-rank-label">暂无排名</text>
+      <text wx:if="{{me && me.rank}}" class="gc-rank-label">总积分榜 · 第 {{me.rank || 0}} 名</text>
+      <text wx:elif="{{rankLoaded}}" class="gc-rank-label">总积分榜</text>
       <text wx:elif="{{rankState === 'loading'}}" class="gc-rank-label gc-muted">正在加载我的排名</text>
       <text wx:else class="gc-rank-label gc-muted">总积分榜</text>
       <view class="gc-score-link"><text>查看榜单</text><cy-icon class="gc-arrow-icon" name="chevron-right" size="32" /></view>
     </view>
   </view>
-  <view class="gc-section">
+  <view class="gc-section" wx:if="{{!footprintEmpty}}">
     <view class="gc-section-head"><text class="gc-section-title">我的足迹</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{overview.levelText}}</text></view>
     <view wx:if="{{overviewState === 'loading' && !overviewLoaded}}" class="gc-metric-list" aria-label="正在加载足迹">
       <view class="gc-metric-row" wx:for="{{overview.stats}}" wx:key="key"><view class="gc-skeleton-label" /><view class="gc-skeleton-value" /></view>

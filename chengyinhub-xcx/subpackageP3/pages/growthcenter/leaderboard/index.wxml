@@ -36,7 +36,7 @@
     fill
     size="lg"
     title="{{boardAuthRequired ? '登录后查看排行榜' : boardAccessDenied ? '当前账号无法查看排行榜' : '排行榜加载失败'}}"
-    sub="{{errorMsg}}"
+    sub="{{boardAuthRequired || boardAccessDenied ? '' : errorMsg}}"
     retry="{{boardAuthRequired ? '登录' : '重新加载'}}"
     bind:retry="onRetry"
   />

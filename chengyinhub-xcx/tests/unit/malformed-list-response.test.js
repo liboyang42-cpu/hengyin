@@ -57,14 +57,14 @@ function harness(relativePath, kind) {
 }
 
 test('分润详情的 topics 非数组时进入错误态而不崩溃', () => {
-  const h = harness('components/cy/scene-merchant-profit/index.js', 'component');
+  const h = harness('subpackageA/components/scene-merchant-profit/index.js', 'component');
   h.vm.load();
   assert.doesNotThrow(() => h.requests[0].success({ code: 200, data: { topics: {} } }));
   assert.equal(h.vm.data.loadErr, true);
 });
 
 test('分润详情 topics 包含空元素时进入错误态而不崩溃', () => {
-  const h = harness('components/cy/scene-merchant-profit/index.js', 'component');
+  const h = harness('subpackageA/components/scene-merchant-profit/index.js', 'component');
   h.vm.load();
   assert.doesNotThrow(() => h.requests[0].success({ code: 200, data: { topics: [null] } }));
   assert.equal(h.vm.data.loadErr, true);
@@ -372,7 +372,7 @@ test('主题详情的票务非数组时归一为空数组', () => {
 });
 
 test('漫游商家和印章列表含空元素时都进入错误态', () => {
-  const discover = harness('components/cy/scene-roam-discover/index.js', 'component');
+  const discover = harness('pages/play/components/scene-roam-discover/index.js', 'component');
   discover.vm.load();
   assert.doesNotThrow(() => discover.requests[0].success({ code: '200', data: { rows: [null] } }));
   assert.equal(discover.vm.data.state, 'error');

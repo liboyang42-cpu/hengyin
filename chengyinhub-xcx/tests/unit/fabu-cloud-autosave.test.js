@@ -78,7 +78,7 @@ function loadPage(options = {}) {
     const body = JSON.parse(write.data);
     write.success({ code: 200, data: { topicId: options2.topicId || 501 } });
     const back = sent[sent.length - 1];
-    assert.equal(back.url, '/api/topic/author-edit-detail');
+    assert.equal(back.url, '/api/topic/author-saved-detail');
     if (options2.beforeReadback) options2.beforeReadback();
     back.success({ code: 200, data: options2.detail || detailFor(body, options2) });
     return body;
@@ -205,7 +205,7 @@ test('保存中继续编辑：不换上回读版本、不标已存云端，接�
   assert.equal(body.id, '501'); assert.equal(body.name, '第二版'); assert.equal(Number(body.configVersion), 5);
   answer(writes()[1], { configVersion: 6 });
   assert.equal(page.data.themeSaveLabel, '已存云端');
-  assert.equal(requests('/api/topic/author-edit-detail').length, 2);
+  assert.equal(requests('/api/topic/author-saved-detail').length, 2);
 });
 
 test('保存与发布竞争：自动保存在途时发布不并发写；发布在途时定时器不起保存', (t) => {

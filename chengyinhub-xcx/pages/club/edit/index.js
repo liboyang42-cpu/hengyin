@@ -11,10 +11,13 @@ Page({
     dirty: false,
     confirm: { show: false },
     backGuardOff: false,
+    gateDenied: false,
   },
   onUnload() { this._destroyed = true; },
   onShow() { this._navigating = false; }, // 从治理页返回时兜底清跳转锁
   onLoad(options) { this.setData({ clubId: (options && (options.id || options.clubId)) || '', routeReady: true }); },
+  // j6 F8:守卫拒绝时只留守卫这一屏,底下不再叠「暂无编辑权限」。
+  onGateState(event) { const denied = !!(event.detail && event.detail.state === 'deny'); if (denied !== this.data.gateDenied) this.setData({ gateDenied: denied, dirty: denied ? false : this.data.dirty }); },
   onDirtyChange(event) { this.setData({ dirty: !!(event.detail && event.detail.dirty) }); },
   onSaved() { this.setData({ dirty: false }); },
   onDissolved() {

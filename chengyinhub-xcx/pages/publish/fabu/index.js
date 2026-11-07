@@ -24,6 +24,11 @@ function writeAiDraft(draft) {
 }
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const analytics = require('../../../utils/analytics.js');
+const { firstImage: firstTemplateImage } = require('../../../utils/discover-search.js');
+function templateCardImage(item) {
+  if (!item.imgUrl) return item;
+  return Object.assign({}, item, { imgUrl: app.getImgUrl(firstTemplateImage(item.imgUrl)) });
+}
 const roleGuard = require('../../../utils/roleGuard.js');
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js');
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('../utils/publish/publish-ticket-schedule.js');
@@ -51,6 +56,7 @@ function emptyChapterForm(name = '', opening = false) {
     maxMerchant: 0,
     atmospherePreset: 'DEFAULT',
     // 章节背景旁白,一章最多一段(2026-09-04 拍板)。玩家进入本章自动播放。
+    videoUrl: '', videoPosterUrl: '',
     audioUrl: '',
     audioDuration: 0,
     audioFileName: '',
@@ -118,7 +124,9 @@ const templateAuthorFields = require('../utils/publish/template-author-fields.js
 const storyEnding = require('../utils/publish/story-ending');
 const routeMapView = require('../utils/publish/route-map-view.js');
 const { drawPlayStateMarker } = require('../../../utils/play-marker-draw.js');
-const { MAP_STYLE } = require('../../../utils/map-style.js');
+const { lightMapStyle } = require('../../../utils/map-style.js');
+// 第九轮 m1:编辑器地图保持浅色。同一个 subkey,浅色样式序号(见 utils/map-style.js)
+const EDITOR_MAP_STYLE = lightMapStyle();
 const publishValidationBag = require('../utils/publish/publish-validation-bag.js');
 const publisherIdentity = require('../../../utils/publisher-identity.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
@@ -230,7 +238,9 @@ const structure = require('./theme-runtime-structure.js'); // structure
 const survivalEditor = require('./theme-runtime-survival.js'); /* survival */ const lookEditor = require('./theme-look-editor.js'); /* 主题画面风格 */
 const zeroHpEditor = require('./theme-runtime-zero-hp.js'); // R5 HP 归零面板（与 runtimeEditor 内同一组方法，直接展开便于 handler 溯源）
 const ownership = require('./theme-ownership.js'); const d20Page = require('./theme-d20-page.js'); const keysItems = require('./theme-keys-items.js'); const initialCarry = require('./theme-initial-carry.js'); // 文档二 L1;L2 线索与物品 · 物品一组;初始状态 · 开局带着
+const themeMedia = require('./theme-media.js');
 Page({
+  ...themeMedia.methods,
   ...runtimeEditor.methods, ...routeNames.methods,
   ...structure.methods, // structure
   ...survivalEditor.methods, // survival
@@ -436,6 +446,7 @@ Page({
     // 只列已经有服务端编号的站点:新建的站点只有 _localId,选了条件永远不成立且不报错。
     endingNodeOptions: [],
     formData: {
+      audioUrl: '', audioDuration: 0,
       name: '',
       subtitle: '',
       description: '',
@@ -511,6 +522,7 @@ Page({
     editLoadIsAccess: false,
     submitting: false,
     submitError: '',
+    submitErrorNeedsEdit: false,
     /* 动作结果面板(cy-result-sheet)。loading 不自愈,终态 2s 自收。
        duration=0 表示不自愈 —— 失败原因要留够读的时间。 */
     resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: 2000 },
@@ -566,9 +578,9 @@ Page({
     mapInclude: [MAP_DEFAULT_CENTER], // include-points 自动适配视野;空数组会让腾讯 SDK fitBounds 崩,兜底中心点
     mapCenter: MAP_DEFAULT_CENTER,
     mapScale: 12,
-    // P-45 / G-12:编辑器地图与玩家地图同一套个性化样式(utils/map-style.js;key 未配置时是官方默认底图)
-    mapSubkey: MAP_STYLE.subkey,
-    mapLayerStyle: MAP_STYLE.layerStyle,
+    // 第九轮 m1:编辑器地图用同一个 key 上的浅色样式(utils/map-style.js;key 未配置时是官方默认底图)
+    mapSubkey: EDITOR_MAP_STYLE.subkey,
+    mapLayerStyle: EDITOR_MAP_STYLE.layerStyle,
     hasRoute: false,       // 是否已有有效坐标节点(空态判断)
     selectedNodeLid: '',   // 列表↔地图双向高亮选中的节点 _localId
     rowHpx: 0,             // 节点卡片行高(px),movable-view y 用 px,onLoad 由 rpx 折算
@@ -687,7 +699,7 @@ Page({
     this._draftAutosaveReady = true;
     this._resultSheetNext = '';
     const reason = '本次提交的结果已确认，但当前修改未能保存到本机。请勿退出，腾出存储空间后继续编辑以重试保存。';
-    this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason,
+    this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
       themeSaveState: 'localFailed', themeSaveLabel: SAVE_STATE_LABELS.localFailed,
       resultSheet: { show: true, kind: 'fail', title: rejected ? '审核未通过，修改尚未保存' : '后续修改尚未保存',
         sub: '请勿离开本页', meta: '当前修改尚未保存',
@@ -2255,7 +2267,7 @@ Page({
     const that = this;
     // pickLocation 已经保证:回调进来的 poi 一定带可用坐标(没坐标它自己 toast + 走 onFail),
     // 所以这里不再判空写空串 —— 那正是「地址显示得好好的、下一步却说没加地点」的成因。
-    pickLocation({
+    pickLocation({ latitude: pickedNodeAt(that, chapterindex, nodeindex).latitude, longitude: pickedNodeAt(that, chapterindex, nodeindex).longitude, // 第九轮 m1-9:选点器从原来的点打开
       onPick(poi) {
         that._commitInlineNodeAt(chapterindex, nodeindex, {
           name: ((that.data.formData.chapters || [])[chapterindex].nodes || [])[nodeindex].name || poi.name || '',
@@ -2476,7 +2488,7 @@ Page({
   saveNodeLocation() {
     const that = this;
     const proceed = (center) => {
-      const state = that.data.editorState;
+      if (routeMapView.isUntouchedDefaultCenter(center)) { cyToast('请先拖动地图对准站点'); return; } const state = that.data.editorState; // P-16
       if (state === 'addNode') {
         const ie = that.data.inlineEdit;
         if (ie) {
@@ -2800,6 +2812,8 @@ Page({
       aiSimple: topic.publishMode === 'ai_simple',
       'formData.name': topic.name || '',
       'formData.subtitle': topic.subtitle || '',
+      'formData.audioUrl': topic.audioUrl || '',
+      'formData.audioDuration': topic.audioDuration || 0,
       'formData.description': topic.description || '',
       'formData.startDate': topic.startDate || '',
       'formData.endDate': topic.endDate || '',
@@ -2847,7 +2861,7 @@ Page({
     this.captureEntryTicketSnapshot();
     this._captureLockedSnapshot();
     this.updateAllStatistics();
-    this.refreshRouteGraph();
+    this.refreshRouteGraph(); reconcileClubPick(this);   // 第十二轮 k3(p3 N6):草稿回填的空 clubId 不能盖掉唯一俱乐部的默认选中
     this._syncMerchantPoolEligibility();   // 回填之后复核:存量主题可能是无资格者开的池
     this._finishEditingDraftBootstrap(detail);
     try {
@@ -2886,7 +2900,7 @@ Page({
       merchantPoolEditable: editable,
       medalEditable: !roleGuard.hasSnapshot() || roleGuard.can('canDesignMedal'),
     };
-    if (!editable && this.data.formData && this.data.formData.openMerchantPool) {
+    if (this.data.editScope !== 'WHITELIST' && !editable && this.data.formData && this.data.formData.openMerchantPool) {
       patch['formData.openMerchantPool'] = false;
     }
     this.setData(patch);
@@ -3537,6 +3551,7 @@ Page({
     const chapters = (sourceData.chapters || []).map(ch => ({
       name: ch.name || '第1章',
       description: ch.description || '',
+      audioUrl: ch.audioUrl || '', videoUrl: ch.videoUrl || '', videoPosterUrl: ch.videoPosterUrl || '',
       atmospherePreset: normalizeAtmosphere(ch.atmospherePreset),
       schemaVersion: ch.schemaVersion,
       blocks: ch.blocks,
@@ -3602,6 +3617,8 @@ Page({
       startDateTime: restoredStartDate, endDateTime: restoredEndDate,
       'formData.name': sourceData.name || '',
       'formData.subtitle': sourceData.subtitle || '',
+      'formData.audioUrl': sourceData.audioUrl || '',
+      'formData.audioDuration': sourceData.audioDuration || 0,
       'formData.description': (sourceData.description || '') + (draft.aiTraceId ? '  [AI 辅助生成]' : ''),
       'formData.startDate': restoredStartDate,
       'formData.endDate': restoredEndDate,
@@ -3743,7 +3760,7 @@ Page({
 
     this.setData({
       popChapterAction: 0,
-      popChapter: true,
+      popChapter: true, chapterVideoError: '',
       popChapterIndex: chapterIndex,
       assignPendingLocalId: '',
       chapterForm: emptyChapterForm(defaultChapterName)
@@ -3817,7 +3834,7 @@ Page({
     });
     this.setData({
       chapterForm: chapterForm,
-      popChapter: true,
+      popChapter: true, chapterVideoError: '',
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: ''
@@ -3833,6 +3850,7 @@ Page({
   },
   // 举办方式：是否允许路线进入商家池
   onMerchantPoolChange(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     this.setData({
       'formData.openMerchantPool': e.detail.value
     });
@@ -3840,6 +3858,7 @@ Page({
 
   // 开放范围·俱乐部承接(2026-09-15 裁决 12B:默认开,主办可手动关)
   onClubPoolChange(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     this.setData({
       'formData.openClubPool': e.detail.value
     });
@@ -3868,7 +3887,7 @@ Page({
       hideLoading: true,
       url: '/api/category/list',
       method: 'POST',
-      data: { type: 1, parentid: '0' },
+      data: { type: 'MERCHANT', parentid: '0' }, // M-16:章节招募品类 = 商家行业(type 1 + 6),不是主题类别
       success(res) {
         if (res.code == '200' && Array.isArray(res.data)) {
           that.setData({ merchantCategoryList: res.data });
@@ -4150,6 +4169,7 @@ Page({
     let newChapter = {
       ...this.data.chapterForm
     };
+    if (!newChapter.opening && !newChapter.ending) { newChapter.videoUrl = ''; newChapter.videoPosterUrl = ''; }
     newChapter.atmospherePreset = normalizeAtmosphere(newChapter.atmospherePreset);
     if (!this.normalizeChapterMerchantConfig(newChapter)) {
       return false;
@@ -5193,9 +5213,7 @@ Page({
   },
 
   // ===== 章节音频(2026-09-04 拍板:一章最多一段,挂在章节上而不是故事流的块里)=====
-  // ⚠️ 这三个方法原来写的是主题级 formData.audioUrl,但 fabu 里从来没有任何 WXML 绑定它们
-  //    (ui-integrity 把 onPreviewAudio 记成零绑定债务)。这次改挂 chapterForm ——
-  //    主题级 audioUrl 已按 2026-09-15 拍板清理(小程序不再读写;后端字段保留,存量数据不受影响)。
+  // 章节旁白与主题循环配乐各自保存。
   uploadChapterAudio() {
     const that = this;
     const chapterForm = this.data.chapterForm;
@@ -6599,11 +6617,13 @@ Page({
   },
 
   onPreviewClubPool(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     this.setData({ 'formData.openClubPool': !!(e.detail && e.detail.value) }, () => this._refreshStoryPreview());
   },
 
   // 商家承接:城市定向 = 主题级商家池;自由探索 = 每一章的「开放商家承接」一起开 / 关(条款与品类回章节里设)
   onPreviewMerchantRecruit(e) {
+    if (this.data.editScope === 'WHITELIST') return;
     const on = !!(e.detail && e.detail.value);
     if (Number(this.data.formData.productType) !== 2) {
       this.setData({ 'formData.openMerchantPool': on }, () => this._refreshStoryPreview());
@@ -6657,6 +6677,9 @@ Page({
       on: recruitOn, note: '每一站按档位邀商家（' + (fd.clubId ? '权益 / 计酬 / 引流' : '权益 / 引流') + '）' });
     else if (!freeExplore && merchantScope) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', locked: true, reason: lockReason });
     else if (!freeExplore && this.data.merchantPoolEditable) switches.push({ key: 'merchant', icon: 'discover-shop', label: '商家承接', on: !!fd.openMerchantPool });
+    if (this.data.editScope === 'WHITELIST') switches.forEach(row => {
+      if (!row.fixed) { row.locked = true; row.reason = '主题已过审，合作设置不能在内容编辑器中修改'; }
+    });
     // 直接重算,不读 this.data.totalStats:那个字段全页零渲染(U4 存量债务 A1),
     // 读它只会把一条死字段升级成「内部状态」,而算一次的成本本来就可以忽略。
     const stats = this.calculateTotalStats() || {};
@@ -6698,6 +6721,8 @@ Page({
       ],
       switches,
       look: look.look || null,
+      lookSample: { kick: fd.name || '', title: ((fd.chapters || [])[0] || {}).name || '',
+        story: ((fd.chapters || [])[0] || {}).description || '', opt: '' },
       lookRows: [
         { k: '风格', v: lookOn(look.styles) },
         { k: '主题配色', v: lookOn(look.palettes) },
@@ -7503,7 +7528,7 @@ Page({
     }
 
     // 经典定向团(含 mode==1 票种)且拥有俱乐部时,必须选归属俱乐部(D3/D12 一人多俱乐部)
-    const isCityOrienteering = Number(this.data.formData.productType) === 1;
+    const isCityOrienteering = Number(this.data.formData.productType) === 1; reconcileClubPick(this);
     if (isCityOrienteering && this.data.myClubs.length > 0 && !this.data.formData.clubId) {
       this._scrollSheetTo('fieldClub');
       cyToast('请选择路线归属的俱乐部');
@@ -7610,6 +7635,8 @@ Page({
       name: this.data.formData.name,
       subtitle: this.data.formData.subtitle,
       description: this.data.formData.description,
+      audioUrl: this.data.formData.audioUrl || '',
+      audioDuration: this.data.formData.audioDuration || 0,
       // [P1-41] 写入点格式不一('HH:mm'/'HH:mm:ss'/纯日期),原 +':00' 对后两种拼出非法串
       startDate: this._normalizeDateTime(this.data.formData.startDate, '00:00:00'),
       endDate: this._normalizeDateTime(this.data.formData.endDate, '23:59:59'),
@@ -7634,7 +7661,7 @@ Page({
       // (_buildCopiedDraft)、编辑回填三条路都可能把 formData 带到自由探索上,
       // 而自由探索上送 1 会撞服务端 assertClubLeadOnlyForCityOrienteering 直接抛。
       openClubPool: (productType === 1 && !this.data.formData.clubId && this.data.operationScope !== 'MERCHANT' && this.data.formData.openClubPool) ? 1 : 0,
-      recruitDeadline: Number(this.data.formData.productType) === 2
+      recruitDeadline: Number(this.data.formData.productType) === 2 || this.data.formData.openMerchantPool
         ? this._normalizeDateTime(this.data.formData.recruitDeadline, '23:59:59') : null,
       publishToCreative: this.data.publishToCreative ? 1 : 0, // 1=同步到创意广场 0=否(后端 ApiTopicController.createTopic 已处理:开关开则插 dataType=2 创意广场帖)
       clubId: this.data.formData.clubId || '', // 归属俱乐部(任何 mode 传了即挂靠;经典定向未传后端自动兜底)
@@ -7703,12 +7730,16 @@ Page({
   },
   // 主题写接口:专业版故事流走 v2,其余走旧接口;有主题号就 update,否则 create
   _topicEndpoint(payload, editingId) {
-    const hasChapterBlocks = (payload.chapters || []).some(chapter =>
+    // 白名单请求不带章节，协议仍按已回填的章流元数据选择，不能退回会拒收章流的旧入口。
+    const metadata = editingId && this.data.editScope === 'WHITELIST'
+      ? { chapters: this.data.formData.chapters, productType: this.data.formData.productType,
+        publishMode: this.data.aiSimple ? 'ai_simple' : 'pro' } : payload;
+    const hasChapterBlocks = (metadata.chapters || []).some(chapter =>
       Array.isArray(chapter.blocks) && chapter.blocks.length > 0);
-    const professionalStory = (payload.publishMode === 'pro'
-      && (Number(payload.productType) === 1 || (payload.chapters || []).some(chapter => chapter.opening
+    const professionalStory = (metadata.publishMode === 'pro'
+      && (Number(metadata.productType) === 1 || (metadata.chapters || []).some(chapter => chapter.opening
         || chapter.ending || (Array.isArray(chapter.blocks) && chapter.blocks.length > 0))))
-      || (Number(payload.productType) === 2 && hasChapterBlocks);
+      || (Number(metadata.productType) === 2 && hasChapterBlocks);
     return professionalStory
       ? (editingId ? '/api/topic/v2/update' : '/api/topic/v2/create')
       : (editingId ? '/api/topic/update' : '/api/topic/create');
@@ -7869,13 +7900,13 @@ Page({
         const issue = publishIssueTarget.fromMessage(message,
           that.data.formData.chapters, that._templateDetailsById);
         if (issue) {
-          that.setData({ submitting: false, submitError: reason });
+          that.setData({ submitting: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason) });
           that._showBackendPublishIssue(issue);
           return;
         }
         that.setData({
           submitting: false,
-          submitError: reason,
+          submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
           // 面板只负责「说清楚发生了什么」,它自愈;重试出口是页内那条 cy-inline-error,
           // 它跟着 submitError 一直留在页上 —— 把恢复动作放进会自己消失的面板里是丢出口。
           // meta 带「草稿仍在本机」(稿 D):失败这一刻用户最想知道的是"我白写了吗",
@@ -7964,7 +7995,7 @@ Page({
             }
             cb(result);
           }, isEditingTopicPayload);
-          app.sendRequest({ url: '/api/topic/author-edit-detail', hideLoading: true,
+          app.sendRequest({ url: '/api/topic/author-saved-detail', hideLoading: true,
             method: 'POST',
             data: { id: topicId, scope: this.data.operationScope },
             success: handlers.success,
@@ -8164,7 +8195,7 @@ Page({
     const creating = !this.data.editingTopicId;
     const reason = res.unknown
       ? (res.stage === 'publish'
-        ? '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态'
+        ? (res.msg ? res.msg + '；回读时仍是草稿，改好后重试会先查询真实状态' : '网络中断，暂时确认不了是否已发布；稍后重试会先查询真实状态') // 服务端说了拒绝原因就先给原因,别说成网络中断
         : creating ? '网络中断，暂时确认不了是否已保存；已保留原请求和内容，请勿另建草稿'
           : (res.msg ? res.msg + '；' : '') + '暂时确认不了原保存结果；重试只核对原主题，当前修改仍在本机')
       : res.networkError ? '网络暂时不可用，当前内容仍在本机，请重试'
@@ -8204,7 +8235,10 @@ Page({
     }
     const issue = res.stage === 'save' && !res.networkError && publishIssueTarget.fromMessage(reason,
       this.data.formData.chapters, this._templateDetailsById);
-    this.setData({ draftSaving: false, submitting: false, submitError: reason,
+    // 服务端点了某一站(「豆浆摊」：…)就给「去修改」直达这一站
+    const station = res.stage === 'publish' && !res.unknown ? this._stationFromReason(reason) : null;
+    this._submitErrorStation = station;
+    this.setData({ draftSaving: false, submitting: false, submitError: reason, submitErrorNeedsEdit: !!station || publishIssueTarget.isContentRejection(reason),
       themeSaveState: saveState, themeSaveLabel: SAVE_STATE_LABELS[saveState] });
     if (issue) {
       this._showBackendPublishIssue(issue);
@@ -8274,7 +8308,7 @@ Page({
     const reason = this.data.editingTopicId
       ? '发布结果暂时无法确认，请到项目列表确认原主题。采用已保存版本前不会再次发布，本地草稿已保留。'
       : '发布结果暂时无法确认，请到项目列表确认。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
-    this.setData({ submitting: false, submitError: reason,
+    this.setData({ submitting: false, submitError: reason, submitErrorNeedsEdit: publishIssueTarget.isContentRejection(reason),
       resultSheet: { show: true, kind: 'fail', title: '发布结果待确认',
         sub: '请先确认项目列表', meta: '草稿仍在本机', why: reason, duration: RESULT_SHEET_MS } });
   },
@@ -8290,6 +8324,26 @@ Page({
   },
 
   // 稿 S15/S16 的「为什么会这样」:出错时除了那一句结果,还得能展开看到人能照做的下一步。
+  editRejectedContent() {
+    this.closePublishCheck();
+    const station = this._submitErrorStation;
+    this._submitErrorStation = null;
+    this.setData({ submitError: '', submitErrorNeedsEdit: false });
+    if (station) this.showEditNodes({ currentTarget: { dataset: { chapterindex: station.chapterIndex, nodeindex: station.nodeIndex } } });
+  },
+
+  /* 服务端发布被拒的原因以「站名」开头时,找到这一站(同名取第一个) */
+  _stationFromReason(reason) {
+    const hit = /^「([^」]{1,40})」/.exec(String(reason || ''));
+    if (!hit) return null;
+    const chapters = this.data.formData.chapters || [];
+    for (let chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
+      const nodeIndex = ((chapters[chapterIndex] && chapters[chapterIndex].nodes) || []).findIndex(node => node && node.name === hit[1]);
+      if (nodeIndex >= 0) return { chapterIndex, nodeIndex };
+    }
+    return null;
+  },
+
   toggleSubmitErrorWhy() { this.setData({ submitErrorWhy: !this.data.submitErrorWhy }); },
 
   /**
@@ -8464,7 +8518,7 @@ Page({
     const options = matrix ? nodeGameCatalog.ALL.filter(item =>
       !ctx.settled && !ctx.challenge || ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].includes(item.key)
       || matrix.types.some(row => row.key === item.key && (ctx.challenge
-        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof))) : this.data.storyGameOptions;
+        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof || row.r5CompletionProof && !supportMatrix.choice(matrix, item.key, {}, ctx)))) : this.data.storyGameOptions;   // 第十三轮 m1:任务站也列出选中就会带上结果规则的玩法
     const reasons = list => {
       const out = {};
       (list || []).forEach(item => {
@@ -8497,6 +8551,8 @@ Page({
   selectTemp: function (e) {
     const item = e.currentTarget.dataset.item;
     if (!isRecord(item) || !item.id) return;
+    if (e.currentTarget.dataset.source !== 'public' && (item.draftStatus != null && Number(item.draftStatus) !== 1
+        || item.status != null && Number(item.status) !== 1)) { cyToast('请先选择一个模板'); return; }
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     const reason = this._templateSupportReason(item);
     if (reason) { cyToast(reason); return; }
@@ -8525,6 +8581,8 @@ Page({
       return;
     }
     const selectedTemplate = this.data.selectedTempInfo;
+    if (this.data.selectedTempSource !== 'public' && (selectedTemplate.draftStatus != null && Number(selectedTemplate.draftStatus) !== 1
+        || selectedTemplate.status != null && Number(selectedTemplate.status) !== 1)) { cyToast('请先选择一个模板'); return; }
     const reason = this._templateSupportReason(selectedTemplate);
     if (reason) { cyToast(reason); return; }
     if (this._insertAlbumTemplate(selectedTemplate)) return;
@@ -8572,8 +8630,8 @@ Page({
       typeof app.getAuthorization === 'function' ? app.getAuthorization() : '',
       this.data.draftUuid, this.data.editingTopicId, this._editLoadToken,
       this.data.nodesForm, this.data.selectedTempSource, this.data.selectedTempId, this._loginContinuationEpoch]);
-    const originalContext = context();
-    const current = () => !this._hidden && !this._unloaded && context() === originalContext;
+    const originalContext = context(), targetCurrent = this._nodeTemplateTargetCurrent();
+    const current = () => targetCurrent() && context() === originalContext;
     let record;
     try { record = templateAdoption.read(wx, owner, scope, sourceId); }
     catch (invalid) { error(invalid.message); return; }
@@ -8709,7 +8767,8 @@ Page({
         success(res) {
           if (token === that._nodeTemplateLoadToken) that._loadingSelectedTemplate = 0;
           if (!current()) return;
-          if (res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === templateAdoption.id(selectedTemplate.id))
+          if (res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === templateAdoption.id(selectedTemplate.id)
+              && Object.prototype.hasOwnProperty.call(res.data, 'advancedConfigJson'))
             that._bindNodeTemplate(res.data);
           else cyToast('玩法详情未加载，请重新选择');
         },
@@ -9094,7 +9153,7 @@ Page({
         if (new Set(data.rows.map(item => String(item.id))).size !== data.rows.length
           || data.rows.some(item => !templateAdoption.id(item.id)
           || seen.has(String(item.id))) || (!data.rows.length && received < total)) { fail(); return; }
-        data.rows.forEach(item => { seen.add(String(item.id)); rows.push(item); });
+        data.rows.forEach(item => { seen.add(String(item.id)); rows.push(templateCardImage(item)); });
         received += data.rows.length;
         if (received < total) { load(pageNum + 1); return; }
         that.setData({ publicTempList: rows, publicTempState: 'ready' });
@@ -9105,47 +9164,11 @@ Page({
     load(1);
   },
 
-  /* 我的故事玩法草稿(W-10):从发布页存下的故事玩法是 status=0 草稿,「我的模板」按 is_quote
-     只列已发布,绑定一旦丢了(关了弹层、页面被重置)就再也选不回来,作者只能重配、库里留孤儿。
-     每次打开面板都重拉 —— 刚存的那条要马上看得到。拉不到就不出这一段,不塞占位。 */
-  // 草稿列表分页读取全部（接口默认每页 10 条；只取首页时第 11 个起的草稿在站点里选不到）
+  // V3-41：选择器不再展示草稿；采用回执仍按原请求恢复，不依赖此列表。
   getStoryDraftList: function () {
-    const that = this, collected = [], pageSize = 100;
-    const owner = memberId(app);
-    const scope = this.data.operationScope;
-    const token = this._storyDraftListToken = (this._storyDraftListToken || 0) + 1;
-    // 换号 / 换经营身份 / 页面卸载 / 被更新一次读取取代后,旧响应一律作废;
-    // 列表不属于当前账号+身份(或来历不明)时先清空,同一账号重读则保留旧列表直到新结果到
-    const listKey = owner + '|' + (scope || '');
-    const isCurrent = () => !that._unloaded && token === that._storyDraftListToken
-      && owner === memberId(app) && scope === that.data.operationScope;
-    if (this._storyDraftListKey !== listKey) {
-      this._storyDraftListKey = '';
-      this.setData({ storyDraftList: [] });
-    }
-    const settle = function () {
-      that._storyDraftListKey = listKey;
-      that.setData({ storyDraftList: collected });
-    };
-    const load = function (pageNum) {
-      app.sendRequest({
-        hideLoading: true,
-        url: '/api/template/my-list',
-        method: 'POST',
-        data: { draft_status: 0, scope: scope, pageNum: pageNum, pageSize: pageSize },
-        success: function (res) {
-          if (!isCurrent()) return;
-          const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : [];
-          rows.forEach(row => collected.push(row));
-          const total = Number(res && res.data && res.data.total) || 0;
-          if (rows.length === pageSize && collected.length < total && pageNum < 10) { load(pageNum + 1); return; }
-          settle();
-          that._refreshSupportMatrix();
-        },
-        fail: function () { if (isCurrent()) settle(); },
-      });
-    };
-    load(1);
+    this._storyDraftListToken = (this._storyDraftListToken || 0) + 1;
+    this._storyDraftListKey = '';
+    this.setData({ storyDraftList: [] });
   },
 
   getTempList: function () {
@@ -9164,6 +9187,7 @@ Page({
       method: "POST",
       data: {
         is_quote: 1,
+        draft_status: 1,
         keyword: that.data.searchKeyword,
         scope: that.data.operationScope,
       },
@@ -9171,7 +9195,7 @@ Page({
         if (!isCurrent()) return;
         if (res.code == "200" && res.data && isRecordList(res.data.rows)) {
           that.setData({
-            tempList: res.data.rows,
+            tempList: res.data.rows.filter(item => Number(item.draftStatus) === 1 && Number(item.status) === 1).map(templateCardImage),
           });
           that._refreshSupportMatrix();
         } else {
@@ -9192,7 +9216,7 @@ Page({
   choosePoiForNode() {
     const that = this;
     // wx.chooseLocation(经 pickLocation)返回坐标系为 gcj02,与 <map> 一致,无需转换
-    pickLocation({
+    pickLocation({ latitude: (that.data.nodesForm || {}).latitude, longitude: (that.data.nodesForm || {}).longitude, // 第九轮 m1-9:选点器从原来的点打开
       onPick(poi) {
         // 更新节点表单数据(保留 nodesForm 其它字段)
         that.setData({
@@ -9389,3 +9413,31 @@ Page({
     });
   },
 });
+
+// 第九轮 m1-9:行内节点已选的点(放文件尾:上方 UI 基线按行号锚定,不挪既有行)
+function pickedNodeAt(page, chapterIndex, nodeIndex) {
+  const chapter = ((page.data.formData && page.data.formData.chapters) || [])[chapterIndex] || {};
+  return (chapter.nodes || [])[nodeIndex] || {};
+}
+
+/**
+ * 第十二轮 k3(p3 N6):归属俱乐部的「看上去选中」(clubIndex)与「提交值」(formData.clubId)必须是同一件事。
+ * 模板复制出的草稿没有 clubId,草稿回填晚于 loadMyClubs 时把默认选中的值清空,而行上仍显示该俱乐部,
+ * 点完成却被要求「请选择路线归属的俱乐部」。按两者现状对齐:有 id 就定位下标;没 id 但只有一个俱乐部就选它;
+ * 否则显示未选。(放文件尾:上方 UI 基线按行号锚定,不挪既有行)
+ */
+function reconcileClubPick(page) {
+  const clubs = page.data.myClubs || [];
+  const id = page.data.formData && page.data.formData.clubId;
+  if (id) {
+    let idx = -1;
+    for (let i = 0; i < clubs.length; i++) if (String(clubs[i].id) === String(id)) { idx = i; break; }
+    if (idx >= 0 && idx !== page.data.clubIndex) page.setData({ clubIndex: idx });
+    return;
+  }
+  if (clubs.length === 1) {
+    page.setData({ clubIndex: 0, 'formData.clubId': clubs[0].id }, () => page.refreshPrimaryActionState());
+  } else if (page.data.clubIndex !== -1) {
+    page.setData({ clubIndex: -1 });
+  }
+}

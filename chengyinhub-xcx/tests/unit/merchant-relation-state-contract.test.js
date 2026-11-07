@@ -22,9 +22,11 @@ function createPage(overrides) {
     getRequestErrorMessage(_res, fallback) { return fallback },
     getUserID() { return state.memberId },
     getSession() { return { clearSession() { sessionClears += 1 } } },
+    firstLogin() { state.firstLogins = (state.firstLogins || 0) + 1; state.memberId = 'merchant-a'; return Promise.resolve({ ok: true }) },
     getSessionManager() {
       return {
         ensureSession() {
+          state.managerCalls = (state.managerCalls || 0) + 1
           if (state.sessionResult.ok && !state.memberId) state.memberId = 'merchant-a'
           return Promise.resolve(state.sessionResult)
         },
@@ -209,18 +211,20 @@ test('负控:把未登录整屏 cy-empty 加回合作页必须判红', () => {
   assert.throws(() => assertNoLoginGate(mutated), /整屏登录\/无权限闸必须删除/)
 })
 
-test('合作页未登录先静默登录,失败只落页内错误态', async () => {
-  const first = createPage({ memberId: '', sessionResult: { ok: false } })
-  first.page.onLoad({ tab: 'club' })
-  assert.equal(first.requests.length, 0, '登录没成功不该发合作请求')
+// 2026-10-24 owner 规则(app.js:142-144)取代旧「合作页未登录先静默登录」:游客不在打开页面时建号(j6 F1)。
+test('合作页游客落「登录后查看合作」,不静默登录、不发请求;点「登录」后自动加载', async () => {
+  const guest = createPage({ memberId: '' })
+  guest.page.onLoad({ tab: 'club' })
   await flush()
-  assert.equal(first.page.data.pageState, 'error')
-  assert.equal(first.page.data.error, '登录失败，请重试')
+  assert.equal(guest.page.data.guestLogin, true)
+  assert.equal(guest.state.managerCalls || 0, 0, '游客打开页面不得走 wx.login → /api/login/code')
+  assert.equal(guest.requests.length, 0)
 
-  const second = createPage({ memberId: '' })
-  second.page.onLoad({ tab: 'club' })
+  guest.page.onGuestLogin()
   await flush()
-  assert.equal(second.requests.length, 1, '静默登录成功后必须自动加载')
+  assert.equal(guest.state.firstLogins, 1)
+  assert.equal(guest.page.data.guestLogin, false)
+  assert.equal(guest.requests.length, 1, '登录成功后必须自动加载')
 })
 
 test('合作页异常回调与缺少可访问主体的商家卡都不会落成空态', () => {
@@ -281,7 +285,7 @@ test('俱乐部卡所有入口先去主页，保留主题上下文', () => {
 test('合作页默认帖子 tab,拉 /api/club/post/feed;骨架超过 400ms 才出', () => {
   const { page, requests } = createPage()
   page.onLoad({})
-  assert.deepEqual(page.data.tabs.map((t) => t.label), ['帖子', '俱乐部'])
+  assert.deepEqual(page.data.tabs.map((t) => t.label), ['帖文', '俱乐部'])
   assert.equal(page.data.activeTab, 'feed')
   const feedReq = requests.find((r) => r.url === '/api/club/post/feed')
   assert.ok(feedReq, '帖子流请求')
@@ -299,7 +303,7 @@ test('帖子为空/失败状态;刷新失败保留旧内容;切 tab 不重复拉
   const feedReq = () => requests.filter((r) => r.url === '/api/club/post/feed')
   feedReq()[0].success({ code: 200, data: { clubCount: 0, rows: [] } })
   assert.equal(page.data.feedState, 'empty')
-  assert.equal(page.data.feedEmptyTitle, '这里还没有帖子')
+  assert.equal(page.data.feedEmptyTitle, '这里还没有帖文')
   page.onTabChange({ detail: { key: 'club' } })
   page.onTabChange({ detail: { key: 'feed' } })
   assert.equal(feedReq().length, 1, '回到帖子 tab 不重拉,保留已有内容')

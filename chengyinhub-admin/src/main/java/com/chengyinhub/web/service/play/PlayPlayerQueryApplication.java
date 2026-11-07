@@ -249,6 +249,8 @@ public class PlayPlayerQueryApplication {
         data.put("totalCheckins", g.getTotalCheckins());
         data.put("totalMileage", g.getTotalMileage());
         data.put("streakDays", g.getStreakDays());
+        // P-22(2026-11-02 业主批准):「累计打卡 N 处」= 核销过的店 + 完成的城市站点,不重复计。
+        data.put("checkinPlaces", playerProgressionService.countCheckinPlaces(memberId));
         return AjaxResult.success(data);
     }
 

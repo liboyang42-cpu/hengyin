@@ -38,6 +38,7 @@ final class ChapterFlowCompiler
     private static final String TYPE_NODE = "node";
     private static final String TYPE_IMAGE = "image";
     private static final String TYPE_AUDIO = "audio";
+    private static final String TYPE_DIVIDER = "divider";
     /** 梦:一组图 + 每张一句话(预制人生 §3.2)。它是章内块,不改变 description 的首节点截断。 */
     private static final String TYPE_DREAM = "dream";
     private static final String TYPE_MOOD = "mood";
@@ -195,6 +196,16 @@ final class ChapterFlowCompiler
                         }
                         hasProjectedText = true;
                     }
+                }
+                else if (TYPE_DIVIDER.equals(block.getType()))
+                {
+                    if (block.getContent() != null || block.getNodeIndex() != null || block.getUrl() != null
+                            || block.getAltText() != null || block.getImages() != null || block.getTitle() != null
+                            || block.getBeat() != null || block.getField() != null || block.getQid() != null
+                            || block.getNpcId() != null || block.getWhen() != null || block.getClaimLater() != null
+                            || block.getMood() != null || block.getThoughtKey() != null || block.getWho() != null
+                            || block.getLevel() != null)
+                        throw invalid(chapterNumber, "分割线块只能携带类型与内容块标识");
                 }
                 else if (TYPE_NODE.equals(block.getType()))
                 {
@@ -407,7 +418,7 @@ final class ChapterFlowCompiler
                 }
                 else
                 {
-                    throw invalid(chapterNumber, "块类型只允许 text / node / image / audio / dream / mood / thought / voice / odd / reveal");
+                    throw invalid(chapterNumber, "块类型只允许 text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider");
                 }
             }
 
@@ -658,6 +669,10 @@ final class ChapterFlowCompiler
                     {
                         row.put("title", block.getTitle().trim());
                     }
+                }
+                else if (TYPE_DIVIDER.equals(block.getType()))
+                {
+                    // 分割线只保留 type/key，不投影正文或参与节点进度。
                 }
                 else
                 {

@@ -489,6 +489,14 @@ def execute(sql, args=()):
 FIXTURE_OPENID_SQL = ("UPDATE ums_member SET wx_open_id=CONCAT('e2e-openid-', id) "
                       "WHERE id BETWEEN 9001 AND 9009 AND (wx_open_id IS NULL OR wx_open_id='')")
 
+# 平台主题费率规则:PricingServiceImpl 缺规则时拒绝计价(第十二轮 k1 第 7 项,不再静默 10%),
+# 生产库有这条 3% 规则而空库没有;同样由门禁在建库后补,不动被钉住的 seed_fixtures.py。
+FIXTURE_TOPIC_RATE_SQL = (
+    "INSERT INTO settlement_rule (merchant_id,biz_type,rule_name,platform_commission_rate,merchant_rate,status,del_flag) "
+    "SELECT 0,'topic','平台默认-主题',0.0300,0.9700,1,0 FROM dual "
+    "WHERE NOT EXISTS (SELECT 1 FROM settlement_rule WHERE merchant_id=0 AND biz_type='topic' "
+    "AND status=1 AND del_flag=0)")
+
 
 def jsonable(rows):
     return [[value if isinstance(value, (int, str, type(None))) else str(value) for value in row] for row in rows]
@@ -1082,6 +1090,7 @@ def cmd_schema(args, environ):
     readback = {}
     if not problems:
         readback["fixture_openid_bound"] = execute(FIXTURE_OPENID_SQL)
+        readback["fixture_topic_rate_seeded"] = execute(FIXTURE_TOPIC_RATE_SQL)
         expected = {
             "tables": ("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (SCHEMA,), None),
             "sys_user": ("SELECT COUNT(*) FROM sys_user WHERE del_flag='0'", (), None),
@@ -1330,6 +1339,8 @@ def run_post_restart(args, environ, planned, first_proof, first_process, config)
         result["settlement_rejection"] = invoke("settlementReconciliationTask.run()", settlement_negative=True)
         result["final_readback"] = post.restart_effect_state(connect, server)
         result["final_jobs"] = post.restart_rows(connect, server, post.ALL_JOBS)
+        # 内容安全两条暂停行不进六任务效果场景;重启全程不得被动过(与 postdeploy 回读逐字相等,汇总时核对)。
+        result["content_safety_jobs"] = post.read_content_safety_state(connect, server)["rows"]
         result["passive_queues"] = post.passive_queues(connect, server)
         result["local_files"] = restart_local_files(args.work)
     except Exception as error:
@@ -1438,6 +1449,8 @@ def cmd_run(args, environ):
             if planned["through"] == "post_deploy":
                 fixture = post.prepare_operator_fixture(connect, proof["server_uuid"])
             result = post.register_jobs(args.source, connect, proof["server_uuid"])
+            # ROUND10 f4:内容安全两条 sys_job 的 POST_DEPLOY 文件,同一停机窗口内原样执行并独立回读。
+            result["content_safety"] = post.register_content_safety_jobs(args.source, connect, proof["server_uuid"])
         except post.PostDeployError as error:
             stage(args.out, "postdeploy", "FAIL", proof=proof, stopped_before_sql=True,
                   sql_started=True, result=error.evidence)
@@ -1512,6 +1525,7 @@ def summarize(out_dir):
             raise post.PostDeployError("post_stop_proof_missing")
         post.validate_result(result, proof, (receipt.get("plan") or {}).get("source_sha"),
                              stages.get("explode", {}).get("jar_sha256"))
+        post.validate_content_safety_result(result.get("content_safety"), proof.get("server_uuid"))
         if (receipt.get("plan") or {}).get("through") == "post_deploy":
             admin = proof.get("admin") or {}
             post.require(admin.get("status") == "PASS_FIXTURE_SUPERADMIN_HTTP_SQL_ONLY" and
@@ -1563,6 +1577,9 @@ def summarize(out_dir):
             post.require(value["server_uuid"] == proof["server_uuid"], "restart_original_database_changed")
             post.validate_result(result, value["proof"], receipt["plan"]["source_sha"],
                                  stages["explode"]["jar_sha256"])
+            post.require(value.get("content_safety_jobs") ==
+                         ((result.get("content_safety") or {}).get("after") or {}).get("rows"),
+                         "restart_content_safety_jobs_changed")
             if value["proof"]["process"]["pid"] == proof["process"]["pid"]:
                 raise post.PostDeployError("restart_same_pid")
         except Exception:

@@ -6,7 +6,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '../..')
-const COMPONENT = path.join(ROOT, 'components/cy/scene-club-edit/index.js')
+const COMPONENT = path.join(ROOT, 'pages/club/components/cy/scene-club-edit/index.js')
 const U = (type, id) => '/pages/club/dissolution-blockers/index?clubId=7&type=' + type + '&id=' + id
 const ITEMS = [
   { title: '保证金 #9', url: U('deposit', 9) },

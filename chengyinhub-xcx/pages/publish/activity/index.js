@@ -1,8 +1,10 @@
+const priceInput = require('../../../utils/price-input.js')
 const modal = require('../../../utils/modal.js');
 const authorWrites = require('../../../utils/author-write-recovery.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const cyToast = require('../../../utils/toast.js');
 const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../utils/album-template.js');
+const { isContentRejection } = require('../utils/publish/publish-issue-target.js')
 const app = getApp()
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js')
 const publisherIdentity = require('../../../utils/publisher-identity.js')
@@ -10,7 +12,6 @@ const publisherIdentity = require('../../../utils/publisher-identity.js')
 const RESULT_SHEET_MS = 2000
 /* CU-M-05 商家主办免费场的文案单一真源:票务步的常驻说明与提交时的拦截共用这一句,
    不然是两处各写一遍,改一处漏一处。 */
-const MERCHANT_FREE_ONLY_MSG = '商家主办活动还没开通收款，票价只能是 0'
 const analytics = require('../../../utils/analytics.js')
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js')
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js')
@@ -34,7 +35,7 @@ const STEPS = [
   { key: 'basic', title: '基本信息', heading: '这场活动叫什么、在哪儿办？',
     fields: ['name', 'addressName', 'startDate', 'endDate', 'categoryIds'] },
   { key: 'content', title: '活动内容', heading: '这场活动玩什么？',
-    fields: ['description', 'imgUrl', 'templateId'] },
+    fields: ['content', 'description', 'imgUrl', 'templateId'] },
   { key: 'ticket', title: '票务与合作', heading: '这场活动怎么卖票？',
     fields: ['ticket*'] },
 ]
@@ -111,9 +112,6 @@ Page({
     pageTitle: '发布活动',
     submitLabel: '发布',
     // CU-M-05 商家主办:scope=MERCHANT 从品牌中心/我的项目(商家)带进来。
-    // merchantHost 只决定「问哪个接口、说什么话」,放行与否一律由权威回包判(见 guardPublisherRole)。
-    merchantHost: false,
-    merchantFreeOnlyMsg: MERCHANT_FREE_ONLY_MSG,
     deniedReason: '发布单场活动需要俱乐部主理人身份。',
     activityLoadError: '',
     editingActivityId: 0,
@@ -147,7 +145,7 @@ Page({
       tickets: [ // 票务信息 - 初始一个空票单
         {
           name: '',
-          price: 0,
+          price: '', // j1 F6(第十轮 f3):不预填 0,票价必须由发布者自己写(写 0 即免费)
           totalStock: 0,
           description: '',
           startTime: '',
@@ -285,8 +283,9 @@ Page({
     const value = e.detail.value
 
     this.data.dirty = true
-    const fieldValue = field === 'price' && String(value).trim() === ''
-      ? '' : (field === 'price' || field === 'totalStock' ? Number(value) : value)
+    // j1 N2:价格打字时保留字符串(只留数字、一个小数点、两位小数),提交时再数值化
+    const fieldValue = field === 'price' ? priceInput.typingPrice(value)
+      : (field === 'totalStock' ? Number(value) : value)
     if (field === 'name') {
       this.setData({
         [`formData.tickets[${index}].${field}`]: fieldValue,
@@ -332,7 +331,7 @@ Page({
     const { tickets } = this.data.formData
     const newTickets = [...tickets, {
       name: '',
-      price: 0,
+      price: '',
       totalStock: 0,
       description: '',
       startTime: '',
@@ -377,7 +376,6 @@ Page({
     clearError('description', nonEmpty(f.description));
     clearError('startDate', nonEmpty(f.startDate, '开始日期'));
     clearError('endDate', nonEmpty(f.endDate, '结束日期'));
-    clearError('templateId', Number(f.templateId) > 0);
     clearError('imgUrl', coverReady(d));
     clearError('categoryIds', d.selectedCategoryIds.length > 0);
     f.tickets.forEach((ticket, index) => {
@@ -387,7 +385,7 @@ Page({
     });
     const canContinue = this.stepIsComplete(d.step, d);
     const dateText = nonEmpty(f.startDate, '开始日期') && nonEmpty(f.endDate, '结束日期')
-      ? `${f.startDate} 至 ${f.endDate}` : '时间待补充';
+      ? `${String(f.startDate).slice(0, 16)} 至 ${String(f.endDate).slice(0, 16)}` : '时间待补充'; // j1 F6:摘要不露秒
     const publishSummary = `${f.name || '未命名活动'}，${dateText}，地点：${f.addressName || '待选择'}，共 ${f.tickets.length} 种票单。`;
     if (errorsChanged || canContinue !== d.canContinue || publishSummary !== d.publishSummary) {
       this.setData({ errors, canContinue, publishSummary });
@@ -404,7 +402,8 @@ Page({
         && d.selectedCategoryIds.length > 0;
     }
     if (step === 1) {
-      return nonEmpty(f.description) && coverReady(d) && Number(f.templateId) > 0;
+      // 2026-11-04 owner:商家发活动不必带玩法,模板选填。
+      return nonEmpty(f.description) && coverReady(d);
     }
     return f.tickets.length > 0
       && f.tickets.every((ticket) => nonEmpty(ticket.name) && Number(ticket.totalStock) > 0
@@ -432,7 +431,6 @@ Page({
     bag.require(nonEmpty(formData.description), 'description', '请填写活动说明')
     bag.require(nonEmpty(formData.startDate, '开始日期'), 'startDate', '请选择开始日期')
     bag.require(nonEmpty(formData.endDate, '结束日期'), 'endDate', '请选择结束日期')
-    bag.require(!!formData.templateId && formData.templateId !== 0, 'templateId', '请选择模板')
     bag.require(coverReady(this.data), 'imgUrl', nonEmpty(formData.imgUrl)
       ? '封面上传未完成，请重试或删除' : '请上传活动封面')
     bag.require(selectedCategoryIds.length > 0, 'categoryIds', '请选择至少一个活动类型')
@@ -489,6 +487,7 @@ Page({
       startDate: '#field-date',
       endDate: '#field-date',
       categoryIds: '#field-category',
+      content: '#field-content',
       description: '#field-description',
       imgUrl: '#field-cover',
       templateId: '#field-template'
@@ -508,22 +507,16 @@ Page({
 
   // 提交表单
   submitForm() {
-    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.editingActivityId, this.data.merchantHost, this.data.formData.templateId] })) return; // 2026-10-24 游客写前登录
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.submitForm(), { owner: this, target: () => [this.editingActivityId, this.merchantHost, this.data.formData.templateId] })) return; // 2026-10-24 游客写前登录
     // 防重复发布:发布键收编 cy-btn 后视觉 disabled 不拦点击,提交中须早退(原靠原生 <button disabled> 拦)
     if (this.data.submitting) return;
     try {
       const original = authorWrites.pending(wx, authorWrites.ownerOf(app), this._activityWriteBucket());
       if (original) { this.sendData(original.body); return; }
     } catch (error) { this.setData({ submitError: error.message }); return; }
-    if (!this.validateForm()) {
-      cyToast('请完善表单信息')
-      return
-    }
-    if (this.data.merchantHost && this.hasPaidTicket()) {
-      cyToast(MERCHANT_FREE_ONLY_MSG)
-      return
-    }
-
+    // 第四轮(业主:输入问题只在字段下方红字说):validateForm 已把每条问题写在对应字段下面,不再另弹提示。
+    // (商家主办「票价只能是 0」的拦截已由 pay-gate 撤掉,这里不再带回。)
+    if (!this.validateForm()) return
     this.syncActivityIdentity()
     if (this.data.identityRequired && !this.data.identityRegistered) {
       this.registerActivityIdentity()
@@ -547,6 +540,7 @@ Page({
       collaborators: this.data.formData.collaborators,
       tickets: this.data.formData.tickets.map(ticket => ({
         ...ticket,
+        price: String(ticket.price).trim() === '' ? ticket.price : Number(ticket.price),
         startTime: this.data.formData.startDate,
         endTime: this.data.formData.endDate
       }))
@@ -555,16 +549,14 @@ Page({
       apiData.id = this.editingActivityId
     }
     // 主办身份跟着写进 body,后端据此把活动落到商家主体名下(不按「谁点的发布」记主办)。
-    if (this.data.merchantHost) {
+    if (this.merchantHost) {
       apiData.scope = 'MERCHANT'
     }
 
     this.sendData(apiData)
   },
 
-  /* CU-M-05 收款缺口:全仓没有 sub_mchid,下单一律进平台商户号,商家主办收钱等于替平台收。
-     9-15 定稿「钱进商家子商户号」尚未落地 ⇒ 商家这一路先只放开免费场。这是真闸不是提示:
-     服务端同样拒(见 ApiActivityController#merchantHostViolation),客户端提前挡是为了当场看得见。 */
+  /* 2026-11-02 pay-gate:商家主办也可发收费场,票款走平台商户号(原「票价只能是 0」已撤)。 */
   hasPaidTicket() {
     return (this.data.formData.tickets || []).some(function (ticket) {
       return Number(ticket && ticket.price) > 0
@@ -572,8 +564,8 @@ Page({
   },
 
   validTicketPrice(price) {
-    return (typeof price === 'number' || (typeof price === 'string' && price.trim() !== ''))
-      && Number.isFinite(Number(price)) && Number(price) >= 0
+    return (typeof price === 'number' && Number.isFinite(price) && price >= 0 && priceInput.isValidPrice(String(price)))
+      || (typeof price === 'string' && priceInput.isValidPrice(price))
   },
 
   activityIdentityForm() {
@@ -584,7 +576,7 @@ Page({
   },
 
   syncActivityIdentity() {
-    const required = !this.data.merchantHost && this.hasPaidTicket()
+    const required = !this.merchantHost && this.hasPaidTicket()
     const ready = !required || publisherIdentity.identitySatisfied(this.activityIdentityForm())
     if (required !== this.data.identityRequired || ready !== this.data.identityReady) {
       this.setData({ identityRequired: required, identityReady: ready })
@@ -635,7 +627,7 @@ Page({
   },
 
   // 发布提交状态机(防重/失败回退/销毁守卫走共享 publish-workflow;url/analytics/toast/跳转保持本页)
-  _activityWriteBucket() { return 'activity:' + (this.data.merchantHost ? 'MERCHANT' : '') + ':' + (this.editingActivityId || 'new'); },
+  _activityWriteBucket() { return 'activity:' + (this.merchantHost ? 'MERCHANT' : '') + ':' + (this.editingActivityId || 'new'); },
 
   getPublishWorkflow() {
     if (!this._publishWorkflow) {
@@ -716,7 +708,12 @@ Page({
         const message = res && res.networkError
           ? (res.msg || '还没确认是否保存成功，再提交一次即可，不会重复保存')
           : (app.getRequestErrorMessage ? app.getRequestErrorMessage(res, that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试') : ((res && res.msg) || (that.editingActivityId ? '保存失败，请重试' : '发布失败，请重试')))
-        that.setData({ submitting: false, submitError: message })
+        if (!(res && res.networkError) && isContentRejection(message)) {
+          that.setData({ submitting: false, submitError: '', 'errors.content': message })
+          that.scrollToError('content')
+        } else {
+          that.setData({ submitting: false, submitError: message })
+        }
       }
     })
     // submit 在途会返回 false(防重),仅真正发起时点亮 loading
@@ -732,13 +729,16 @@ Page({
     // CU-M-05:商家主办的活动记在主体店主名下,不带 scope 回列表会读成个人/俱乐部那一份,
     // 刚发的那场根本不在里面(/api/project/my 的 scope 就是按这个分流)。
     wx.redirectTo({
-      url: '/subpackageA/pages/myproject/index'
-        + (this.data.merchantHost ? '?scope=MERCHANT' : '')
+      // 第十二轮 k3(j1 N6):落在「活动」tab,刚发的这场就在眼前,不再停在空的「主题」tab。
+      url: '/subpackageA/pages/myproject/index?type=club_activity'
+        + (this.merchantHost ? '&scope=MERCHANT' : '')
     })
   },
 
+  // 去建玩法时本页留在栈里,编辑器发布后回到这里(temp backToActivityDraft),草稿不丢。
   createTemplate() {
-    wx.navigateTo({ url: '/pages/publish/template-intro/index' })
+    this._leftForTemplate = true
+    wx.navigateTo({ url: '/pages/publish/template-intro/index' + (this.merchantHost ? '?scope=MERCHANT' : '') })
   },
 
   // 取消按钮
@@ -754,9 +754,12 @@ Page({
     this.setData({ accessState: 'checking', accessError: '', activityLoadError: '' })
     // CU-M-05:商家主办入口带 scope=MERCHANT 进来。判据换成岗位权限(店主的「项目管理」),
     // 因为商家域里「能发活动」的人不一定是登录过商家页的人 —— 核销员没有这个权。
-    const merchantHost = !!(options && options.scope === 'MERCHANT')
+    // 商家账号从没带 scope 的链接进来(分享/老入口)也走商家主办,不再对商家说「需要俱乐部主理人身份」
+    const merchantHost = !!(options && options.scope === 'MERCHANT') || (typeof app.getUserType === 'function' && Number(app.getUserType()) === 2)
+    // merchantHost 只决定「问哪个接口、说什么话」,放行与否一律由权威回包判(见 guardPublisherRole)。
+    // 不进 data:页面不渲染它(2026-11-02 pay-gate 撤掉了票价说明),与 editingActivityId 同为实例字段。
+    this.merchantHost = merchantHost
     this.setData({
-      merchantHost: merchantHost,
       deniedReason: merchantHost
         ? '发布单场活动需要店主的「项目管理」权限，请让店主在团队里给你开通。'
         : '发布单场活动需要俱乐部主理人身份。'
@@ -808,7 +811,7 @@ Page({
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: this.data.merchantHost ? '/api/merchant/access/me' : '/api/publish/home',
+      url: this.merchantHost ? '/api/merchant/access/me' : '/api/publish/home',
       method: 'POST',
       data: {},
       success(res) {
@@ -830,17 +833,45 @@ Page({
     if (!(res && res.code == '200' && isRecord(res.data))) {
       return this._showAccessError(res)
     }
-    if (this.data.merchantHost) {
+    if (this.merchantHost) {
       const access = merchantAccessPolicy.normalizeMerchantAccess(res.data)
       // 回包脏到判不出身份 ⇒ 停在可重试错误态。「读不懂」不能说成「没权限」,
       // 与俱乐部线 role 字段缺失同口径;真正无权的店员才给 denied。
       if (access.invalid) return this._showAccessError(res)
-      return access.canManageProjects ? onAllow() : this.rejectNonPublisher()
+      // j1 F14:商家主办时合作者首行署店铺名(主办方是店,不是登录人的昵称)
+      const shop = isRecord(res.data.merchant) && String(res.data.merchant.name || '').trim()
+      this._hostShop = shop ? { name: shop, logo: res.data.merchant.logo || '' } : null
+      return access.canManageProjects ? this._precheckPublish(onAllow) : this.rejectNonPublisher()
     }
     if (typeof res.data.role !== 'string') {
       return this._showAccessError(res)
     }
-    return res.data.role === 'club' ? onAllow() : this.rejectNonPublisher()
+    return res.data.role === 'club' ? this._precheckPublish(onAllow) : this.rejectNonPublisher()
+  },
+
+  // j1 F1/F2:新建前再问后端能不能发(入驻审核 / 活动配额,与发布同一套判据),
+  // 拒了就在进页时停在 denied 态讲原因,不让人填完三步才在「发布」时被拒。编辑已有活动不占新配额,不问。
+  _precheckPublish(onAllow) {
+    if (this.editingActivityId) return onAllow()
+    const that = this
+    const token = this._accessRequestToken
+    const owner = memberId(app)
+    const stale = () => that._unloaded || token !== that._accessRequestToken || owner !== memberId(app)
+    const refuse = (res, status) => { if (!stale()) that._showAccessError({ code: failureStatus(res, status), msg: res && res.msg }) }
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/activity/publish_precheck',
+      method: 'POST',
+      data: this.merchantHost ? { scope: 'MERCHANT' } : {},
+      success(res) {
+        if (stale()) return
+        if (res && res.code == '200') { onAllow(); return }
+        refuse(res)
+      },
+      fail(res, status) { if (!stale()) that._showAccessError({ code: failureStatus(res, status), msg: res && res.msg }) },
+      successStatusAbnormal: refuse
+    })
   },
 
   _showAccessError(res) {
@@ -875,7 +906,8 @@ Page({
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this._hidden = true },
-  onShow() { this._hidden = false; if (this._readSessionChanged) { this._readSessionChanged = false; this.retryAccessCheck() } },
+  onShow() { this._hidden = false; if (this._readSessionChanged) { this._readSessionChanged = false; this.retryAccessCheck() }
+    if (this._leftForTemplate && this._formBootstrapped) { this._leftForTemplate = false; this.getTempList() } },
   onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._unloaded = true
     this._activityIdentityToken = (this._activityIdentityToken || 0) + 1
@@ -1312,10 +1344,12 @@ Page({
         if (res && res.code == "200" && isRecord(res.data)
             && Number.isSafeInteger(ownerId) && ownerId > 0
             && String(res.data.nickname || '').trim()) {
+          const shop = that.merchantHost ? that._hostShop : null
           let userData = {
-            name: res.data.nickname,
-            nickname: res.data.nickname,
-            avatar: res.data.avatar,
+            name: shop ? shop.name : res.data.nickname,
+            nickname: shop ? shop.name : res.data.nickname,
+            avatar: shop ? shop.logo : res.data.avatar,
+            ownerLabel: shop ? '商家' : '',
             id: ownerId,
             isOwner: 1
           }
@@ -1431,8 +1465,10 @@ Page({
 
   // 完成按钮事件 
   confirmTemp: function () {
+    // 模板选填:取消选中后点完成 = 这场不带玩法。
     if (!this.data.selectedTempInfo) {
-      cyToast('请先选择一个模板');
+      this.data.dirty = true;
+      this.setData({ popTemp: false, 'formData.templateId': 0 }, () => this.refreshPrimaryActionState());
       return;
     }
 
@@ -1523,6 +1559,7 @@ Page({
     }
     const that = this;
     pickLocation({
+      latitude: that.data.formData.latitude, longitude: that.data.formData.longitude,
       onPick(poi) {
         // 更新表单数据
         that.data.dirty = true;

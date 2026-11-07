@@ -34,6 +34,6 @@ test('未启用属性的真实Page也持久化原发布版本，正回包需回�
  assert.equal(publish.data.configVersion,'4');assert.equal(p._publishAttempt.configVersion,'4');
  assert.ok(Object.values(h.stored).some(v=>v && v.publishAttempt && v.publishAttempt.configVersion==='4'));
  publish.success({code:200,data:{topicId:501,published:true}});assert.equal(results.length,0);
- assert.equal(h.sent.at(-1).url,'/api/topic/author-edit-detail');
+ assert.equal(h.sent.at(-1).url,'/api/topic/author-saved-detail');
  detail.isDraft=false;detail.topic.status=1;h.sent.at(-1).success({code:200,data:detail});assert.equal(results.length,1);
 });

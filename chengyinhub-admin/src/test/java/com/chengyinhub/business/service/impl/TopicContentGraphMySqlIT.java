@@ -112,7 +112,7 @@ class TopicContentGraphMySqlIT {
             f.db.update("update cms_member_template set member_id=42,del_flag='2' where id=701");
             assertTrue(f.failure("deleted-template",()->f.create(f.create(false,1),false)).getMessage().contains("已删除"));
             f.db.update("update cms_member_template set del_flag='0',status=0 where id=701");
-            assertTrue(f.failure("unapproved-template",()->f.create(f.create(false,1),false)).getMessage().contains("尚未通过审核"));
+            assertTrue(f.failure("unapproved-template",()->f.create(f.create(false,1),false)).getMessage().contains("还在审核中")); // P-15 (89ab0186) 用户可读文案
             status.setRollbackOnly();return null;
         });f.unchanged();
     }
@@ -121,7 +121,7 @@ class TopicContentGraphMySqlIT {
         f.db.update("update cms_member_template set status=0,draft_status=0,publish_status=0,check_status=0 where id=701");f.mark();
         TopicCreateDTO simple=f.create(true,1);simple.setSaveDraft(0);simple.setPublishMode("simple");
         Throwable error=f.failure("simple-private-template-rejected",()->f.create(simple,true));
-        assertTrue(error.getMessage().contains("模板尚未通过审核"));f.unchanged();
+        assertTrue(error.getMessage().contains("还在审核中，审核通过后才能用于发布"), error.getMessage()); // P-15 (89ab0186)f.unchanged();
         long id=f.success("private-template-allowed-in-draft-bundle",()->f.create(f.create(true,1),true));
         assertEquals(3,f.topicNodes(id).size());f.originalRowsUnchanged();
     }
@@ -164,7 +164,7 @@ class TopicContentGraphMySqlIT {
         TopicUpdateDTO unsupported=f.update(true,1);unsupported.getChapters().get(1).getNodes().get(0).setId(null);
         unsupported.setRouteMode("LINEAR");unsupported.setConfigVersion(7L);unsupported.setThemeRuntimeConfig(runtime.toString());
         assertTrue(f.failure("resource-costs-without-proof",()->f.update(unsupported,true))
-                .getMessage().contains("尚无通用结算完成证明"));f.unchanged();
+                .toString().contains("尚无通用结算完成证明"));f.unchanged();
         // This fixture's nodes have GPS coordinates. Method 5 is the existing GPS completion bridge.
         assertEquals(1,f.db.update("update cms_member_template set validation_method=5 where id=701"));f.mark();
         f.success("runtime-bindings",()->f.update(dto,true));

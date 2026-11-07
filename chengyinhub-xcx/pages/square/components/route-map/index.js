@@ -2,6 +2,8 @@
 // 与主题详情复用同一分章投影；只有明确验证的供应商几何可画为道路。
 const toast = require('../../../../utils/toast.js');
 const routePreview = require('../../../../utils/topic-route-preview.js');
+const { lightMapStyle } = require('../../../../utils/map-style.js');
+const LIGHT_MAP_STYLE = lightMapStyle();
 const app = getApp();
 
 Component({
@@ -24,6 +26,8 @@ Component({
   },
 
   data: {
+    mapSubkey: LIGHT_MAP_STYLE.subkey,
+    mapLayerStyle: LIGHT_MAP_STYLE.layerStyle,
     routeReady: false,
     routeIsRoad: false,
     routeSourceText: '',

@@ -45,13 +45,20 @@ function assertContract(overrides = {}) {
     assert.doesNotMatch(wxml, new RegExp(stale), `按入口切的旧文案还在:${stale}`)
   }
 
-  // ③ 招商截止日期只由 productType 决定,不许挂 openMerchantPool
+  // ③ 招商截止日期对自由探索无条件露出;第十轮 f2 第 4 项(ROUND10 业主口径)起,城市定向开了商家承接
+  //    也要露出并上送(否则立项后直接锁价、合作邀约被拒)。条件只能是「自由探索 或 开了商家承接」,
+  //    不能变成单挂商家开关(那会让自由探索关了开关就不用填)。
   const deadlineAt = wxml.indexOf('招商截止日期')
   assert.ok(deadlineAt > 0, '缺少招商截止日期')
   const recruitSectionAt = wxml.indexOf('>商家招商<')
   assert.ok(deadlineAt < recruitSectionAt, '招商截止日期必须留在档期块，不能挪到商家招商块之后')
   const block = wxml.slice(Math.max(0, deadlineAt - 1200), deadlineAt)
-  assert.doesNotMatch(block, /openMerchantPool/, '招商截止日期不许挂在商家开关的条件上：它是无条件必填')
+  const conditions = [...block.matchAll(/wx:if="\{\{([^}]*)\}\}"/g)].map((m) => m[1].trim())
+  const gate = conditions[conditions.length - 1] || ''
+  assert.ok(/formData\.productType === 2/.test(gate), '招商截止日期对自由探索必须无条件露出：' + gate)
+  if (/openMerchantPool/.test(gate)) {
+    assert.equal(gate, 'formData.productType === 2 || formData.openMerchantPool', '商家开关只能作为城市定向的附加条件：' + gate)
+  }
 }
 
 test('档期与商家招商拆成两块，标题固定、文案不按入口切', () => {

@@ -67,7 +67,7 @@ function sorted(obj) {
 }
 
 /* 只比作者写下的规则;编号、slotDigest、服务端编译出的字段不参与。 */
-function authoredConfig(cfg, pos) {
+function authoredConfig(cfg, pos, inferChapters) {
   const at = id => pos.get(String(id)) || ('?' + id);
   const chapters = (cfg.chapters || []).map((ch) => {
     const completion = ch.completion && ch.completion.type === 'ANY_N'
@@ -89,10 +89,33 @@ function authoredConfig(cfg, pos) {
     return at(key) + ':' + templateIdOf(value.templateId) + ':' + sorted(value.values) + sorted(value.items);
   }).sort();
   const game = cfg.gameplayRuntime || {};
+  const tasks = game.quests || [];
+  // 编译幕的编号可随章节重建；按真实任务成员核对分组，手写幕键仍逐字核对。
+  const act = key => /^chapter_[0-9]+$/.test(String(key))
+    ? 'nodes@' + tasks.filter(q => q.actKey === key).map(q => at(q.nodeId)).sort().join(',') : key;
+  let quests = tasks.map(q => at(q.nodeId) + '>' + act(q.actKey)).sort();
+  if (inferChapters && !tasks.length && ['PLAYER', 'TEAM'].includes(game.runtimeScope)) {
+    const survival = game.survival || {}, challenge = survival.zeroChallenge || {};
+    const excluded = survival.zeroHpPolicy === 'CHALLENGE' && challenge.version === 2
+      ? [challenge.challengeNodeId].concat(challenge.alternativeNodeIds || []).map(String) : [];
+    let groupIndex = 0;
+    quests = inferChapters.flatMap((chapter, ci) => {
+      const members = (chapter.nodes || []).map((node, ni) => ({ node, at: ci + '.' + ni }))
+        .filter(row => !excluded.includes(String(row.node.id)) && !excluded.includes(templateBinding.nodeKey(row.node)));
+      if (!members.length) return [];
+      const group = (game.acts || [])[groupIndex++], key = group && group.actKey;
+      const identity = key && !/^chapter_[0-9]+$/.test(String(key))
+        ? key : 'nodes@' + members.map(row => row.at).sort().join(',');
+      return members.map(row => row.at + '>' + identity);
+    }).sort();
+  }
   return {
     chapters,
     bindings,
-    quests: (game.quests || []).map(q => at(q.nodeId) + '>' + q.actKey).sort(),
+    quests,
+    // 地点和引导是稳定键，后端只重映射数值型备用节点引用。
+    arrivals: tasks.map(q => ({ node: at(q.nodeId), locationKey: q.locationKey, guideKey: q.guideKey || '',
+      fallbacks: (q.approvedFallbackNodeIds || []).map(at).sort() })),
     rations: ((game.survival || {}).rations || []).map(r => [r.actKey, r.itemId, r.quantity, r.fallbackHpCost || 0,
       r.fallback ? r.fallback.statKey + '=' + r.fallback.amount : ''].join('|')).sort(),
     items: (cfg.items || []).map(i => i.id + ':' + (i.name || '') + ':' + (i.slotCost || 1)).sort(),
@@ -225,7 +248,7 @@ function storedBlock(block, nodes, submitted, keepKey) {
   if (block.type === 'dream') {
     if (row.title != null) { row.title = row.title.trim(); if (!row.title) delete row.title; }
     row.images = row.images.map(image => {
-      const out = { url: image.url };
+      const out = { url: imageIdentity(image.url) };
       if (String(image.line || '').trim()) out.line = image.line;
       return out;
     });
@@ -233,10 +256,10 @@ function storedBlock(block, nodes, submitted, keepKey) {
   return row;
 }
 
-// 本站已审核图片会按每次读取重新签名；只去掉传输签名，保留对象及其它查询参数。
+// OSS 图片会按每次读取重新签名；只去掉完整传输签名，保留桶、对象及其它查询参数。
 function imageIdentity(raw) {
   const value = raw == null ? '' : String(raw);
-  const match = value.match(/^(https:\/\/chengyin-oss\.oss-cn-shanghai\.aliyuncs\.com\/upload\/[0-9a-f]{32}\.(?:jpg|jpeg|png|gif))\?([^#]+)$/);
+  const match = value.match(/^(https:\/\/[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\.oss-[a-z0-9-]+\.aliyuncs\.com\/upload\/[0-9a-f]{32}\.(?:jpg|jpeg|png|gif))\?([^#]+)$/);
   if (!match) return value;
   const signed = {}, rest = [];
   for (const pair of match[2].split('&')) {
@@ -355,14 +378,27 @@ function readbackIssue(sent, detail, expectDraft) {
       } catch (error) { return '云端保存的路线配置无法确认'; }
     }
   }
-  const sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
+  let sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
   const gotConfig = parseConfig(detail.themeRuntimeConfig || detail.topic.themeRuntimeConfigJson);
   if (!sentConfig || !gotConfig) return '云端保存的玩法配置无法解析';
-  const want = authoredConfig(sentConfig, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey));
+  // 章节完成规则会让编译器补默认个人任务；显式进行方式仍须逐字核对。
+  const sentGame = sentConfig.gameplayRuntime || {};
+  if (!Object.prototype.hasOwnProperty.call(sentGame, 'runtimeScope')
+      && (gotConfig.gameplayRuntime || {}).runtimeScope === 'PLAYER'
+      && (sentConfig.chapters || []).some(ch => ch.completion || ch.exclusiveGroups || ch.extraNodes)) {
+    sentConfig = Object.assign({}, sentConfig, { gameplayRuntime: Object.assign({ runtimeScope: 'PLAYER' }, sentGame) });
+  }
+  const want = authoredConfig(sentConfig, positionsOf(sentChapters, 'nodes', templateBinding.nodeKey), sentChapters);
   const have = authoredConfig(gotConfig, positionsOf(got, 'cmsTopicNodeList', node => String(Number(node && node.id) || '')));
   for (const key of Object.keys(CONFIG_LABELS)) {
     if (JSON.stringify(want[key]) !== JSON.stringify(have[key])) return '云端保存的' + CONFIG_LABELS[key] + '与本机不一致';
   }
+  if (want.arrivals.some(q => {
+    const saved = have.arrivals.find(row => row.node === q.node);
+    // 未编写任务时允许编译器生成到达设置；显式地点不得被默认值掩盖。
+    return !saved || q.locationKey != null && q.locationKey !== saved.locationKey
+      || q.guideKey !== saved.guideKey || JSON.stringify(q.fallbacks) !== JSON.stringify(saved.fallbacks);
+  })) return '云端保存的到达配置与本机不一致';
   try {
     require('./attribute-binding.js').frozenReadback(detail.journeyRules || detail.topic.journeyRulesJson,
       detail.topic.configVersion, detail.topic.id);

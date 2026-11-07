@@ -73,3 +73,10 @@ test('API 缺失时静默降级,不抛', () => {
   const s2 = createAudioSession(fakeWx(false));
   assert.doesNotThrow(() => s2.keepAwake('s', true));
 });
+
+test('游玩音轨不受静音键限制；结束/卸载后不再被回前台或打断结束复活', () => {
+  const w=fakeWx(), s=createAudioSession(w), bgm=s.register(fakeCtx(true), {kind:'bgm'});
+  assert.equal(bgm.obeyMuteSwitch,false);
+  fire(w.begin); s.pauseAll(false); fire(w.end); s.resumeAll();
+  assert.deepEqual(bgm.calls,['pause']);
+});

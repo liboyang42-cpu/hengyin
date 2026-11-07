@@ -1,21 +1,9 @@
-// cy-playkit-dailysign · 今日城市签(接力签)
-//
-// 2026-09-05 重做:签是一张**从打印机里打出来的白色热敏小票**(参考 @heydamir 的登机牌打印稿,逐帧看过):
-//   出纸(1.5s 从槽里滚出来)→ 按住往下拉,纸跟着手歪 → 拉过 TEAR_PX 松手撕断、往下一甩落到手里
-//   → 刮开签文 → 留一句 → 收下。撕下来之前刮不动:纸还连在机器上,刮它没有意义。
-// 2026-09-06 改成接力:票面上那句是**上一个来这里的人**留的(没人来过是发起人的开场签),
-//   出发地址是这一站的地址;收下的条件是也给下一个人留一句(可顺手拍一张)。票面上没有任何写死的数据。
-// 文案/照片/地址全由服务端下发,组件只排版。lines 传数组而不是让组件按标点断行 —— 断在哪是文案的事。
-//
-// ⚠️ 「拉」和「刮」都是运动能力要求。开了「减少动态效果」→ 不打印动画、不要求拉(直接算撕下),
-// 刮层由 cy-scratch 自己按同一开关整层不挂;没开开关但一时拉不动的人,底部有可见的「撕不下来?点这里」。
-//
-// 2026-09-19 接上断掉的那根线:票面右下角的「保存到相册」原本只往父级抛一个 save 事件,
-// 全链路无人接收 —— 玩家点了没反应、没 toast、没图。保存是**一张纸的事**,不该问父级要:
-// 现在组件自己用 canvas 把票面复刻一张导出相册(见下方「保存到相册」一段)。
+// cy-playkit-dailysign · 每日签：出票、撕下、刮开、收下，可保存签图。
+// launch 只保留领取签文；不采集留言或照片。
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
 const toast = require('../../../../utils/toast.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js');
 
@@ -27,9 +15,9 @@ const PRINT_MS = 1500;       // 出纸时长(和 wxss 的 .is-printing 同一个
 const HINT = {
   print: '出票中',
   pull: '按住小票，往下拉',
-  scratch: '刮开 TA 留给你的那句',
-  write: '也给下一个来这里的人留一句',
-  done: '留下了，下一个来的人会看到',
+  scratch: '刮开今日签文',
+  write: '',
+  done: '',
 };
 
 /* ── 保存到相册:票面在 canvas 上复刻一张 ──
@@ -37,7 +25,7 @@ const HINT = {
  * 每个值都能在本文件对应的 wxss 选择器上找到同一个数(契约测试逐条钉住:wxss 改了没同步这里就判红)。
  * 1 画布单位 = 1rpx —— 尺寸与 index.wxss 同一把尺,保存下来的才是刚才看到的那张纸。 */
 const DAILY_SIGN_CARD = Object.freeze({
-  deskTop: '#F6F7F9', deskMid: '#EEF0F3', deskBottom: '#E6E8EC',   /* .ds__bg 三段渐变 */
+  deskTop: '#050505', deskMid: '#050505', deskBottom: '#050505',   /* .ds__bg 的深色台面,同 play-page */
   paper: '#FFFFFF',      /* .ds__slip 热敏纸 */
   ink: '#17191C',        /* .ds__slip 的热敏字 / .ds__bar 条码 */
   ink2: '#5B6169',       /* .ds__d / .ds__sm 次级墨 */
@@ -86,23 +74,19 @@ Component({
     dateLabel:   { type: String,  value: '' },
     /* 出发 = 这一站的地址(服务端从节点取,谁发的就是哪个地址) */
     address:     { type: String,  value: '' },
-    /* 上一个人留的那句;开场签是发起人配的 */
+    /* 服务端下发的签文 */
     lines:       { type: Array,   value: [] },
     /* 留签人昵称;开场签是发起人落款;都没有时票面写「这一站的发起人」 */
     signer:      { type: String,  value: '' },
     /* 上一张留下的时刻;开场签没有 */
     leftAt:      { type: String,  value: '' },
     serialLabel: { type: String,  value: '' },
-    textMax:     { type: Number,  value: 40 },
-    ctaLabel:    { type: String,  value: '留下，出发' },
     /* 已经留过的签不该再盖一层刮层 —— 昨天擦过的今天重开还要再擦一遍是折磨 */
     revealed:    { type: Boolean, value: false },
     /* 上一个人拍的那张,印在票上。服务端没给就没有这一段,不放占位图 */
     photoUrl:    { type: String,  value: '' },
-    /* 我已经留过一句(服务端 claimedDate 非空):留言条变成只读回看,CTA 变「出发」 */
+    /* 服务端已确认领取 */
     claimed:     { type: Boolean, value: false },
-    myText:      { type: String,  value: '' },
-    myPhotoUrl:  { type: String,  value: '' },
   },
   data: {
     printing: false,     // 正在出纸(这段时间抓不动,过渡也用 1.5s 档)
@@ -110,16 +94,12 @@ Component({
     torn: false,         // 已撕断
     dragging: false,     // 手正按着(关掉过渡,纸跟手)
     paperStyle: '',      // 拖拽中的 transform;松手清空,交回给 css 过渡
-    writing: false,      // 留言条在写:_unlocked 且还没留过
-    ctaDisabled: true,   // 写了字才能「留下」;留过之后「出发」随时能按
-    cta: '',
+    writing: false,      // 签文已揭示,等待收下
+    ctaDisabled: true,   // 揭示后才能收下
     bars: [],            // 条形码:按签号种子生成,同一张签每次一样
     timeLabel: '',       // 出票时刻 HH:MM
     hint: '',
-    text: '',            // 留言草稿
-    shotUrl: '',         // 顺手拍的那张(已上传的 https 地址)
     saving: false,       // 正在画票 / 写相册:这段时间按钮是「生成中…」的禁用态,不许连点
-    noteStyle: '',       // 键盘弹起时把留言条整体抬起(只动 transform)
     stagePadTop: 0,      // 胶囊底实测 + 48px 台面留白;0=走 wxss 的 --cy-safe-top 兜底(env 在无刘海机解析为 0,裸 token 会顶太浅)
   },
   observers: {
@@ -134,6 +114,8 @@ Component({
     detached() { this._clearTimers(); },
   },
   methods: {
+    // 第九轮 m1-9:这一站的地址一点开地图(签上只有文字,走缓存的地址解析)
+    onAddressTap() { openAddress().openAddress({ address: this.data.address }, { geocode: true }); },
     _open() {
       this._clearTimers();
       if (!this.data.stagePadTop) {
@@ -153,7 +135,7 @@ Component({
       this._unlocked = revealed;
       this.setData({
         printing: false, printed: skip, torn: skip, dragging: false, paperStyle: '',
-        timeLabel, text: '', shotUrl: '', noteStyle: '',
+        timeLabel,
         bars: buildBars(this.data.serialLabel),
         hint: skip ? '' : HINT.print,
       });
@@ -170,7 +152,7 @@ Component({
       this._unlocked = false;
       this.setData({
         printing: false, printed: false, torn: false, dragging: false, paperStyle: '',
-        writing: false, ctaDisabled: true, hint: '', text: '', shotUrl: '', noteStyle: '',
+        writing: false, ctaDisabled: true, hint: '',
       });
     },
     _clearTimers() {
@@ -178,7 +160,7 @@ Component({
       if (this._printDoneTimer) { clearTimeout(this._printDoneTimer); this._printDoneTimer = null; }
       if (this._tearTimer) { clearTimeout(this._tearTimer); this._tearTimer = null; }
     },
-    /** 三段式的唯一裁决点:没刮开 → 等;刮开没留 → 写;留过 → 出发 */
+    /** 揭示后才能收下，领取后可回看。 */
     _syncStep(hintOverride) {
       const claimed = !!this.data.claimed;
       const unlocked = !!this._unlocked;
@@ -186,8 +168,7 @@ Component({
       const hint = hintOverride || (claimed ? HINT.done : writing ? HINT.write : this.data.hint);
       this.setData({
         writing,
-        cta: claimed ? '出发' : this.data.ctaLabel,
-        ctaDisabled: claimed ? false : !(writing && this.data.text.trim().length > 0),
+        ctaDisabled: claimed ? false : !writing,
         hint,
       });
     },
@@ -249,33 +230,12 @@ Component({
 
     /* ── 刮开 / 留一句 / 收下 ── */
     onReveal() { this._unlock(); },
-    onTextInput(e) {
-      this.setData({ text: (e.detail && e.detail.value) || '' });
-      this._syncStep();
-    },
-    /** 键盘弹起时把留言条抬到键盘上方;fixed 浮层不跟系统的页面上推走 */
-    onKeyboard(e) {
-      const h = Number(e.detail && e.detail.height) || 0;
-      this.setData({ noteStyle: h > 0 ? 'transform:translateY(-' + h + 'px)' : '' });
-    },
-    onShoot() {
-      if (!this.data.writing) return;
-      const app = getApp();
-      // 走统一上传通道(裁剪 + 会话认证):回来的是 https 地址,服务端只认它
-      app.chooseImage((urls) => {
-        const url = String((Array.isArray(urls) && urls[0]) || '').trim();
-        if (!url.toLowerCase().startsWith('https://')) return;
-        this.setData({ shotUrl: url });
-      }, 1);
-    },
     onAccept() {
       if (this.data.claimed) { this.triggerEvent('close'); return; }
       if (!this.data.writing) return;                     // cy-btn disabled 已拦,这里是第二道
-      const text = this.data.text.trim();
-      if (!text) { toast('先给下一个人留一句'); return; }
       // 留下这一句是仪式的收尾,用 medium:比普通点击重一档,和「敲木鱼」同级
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      this.triggerEvent('accept', { text, photoUrl: this.data.shotUrl });
+      this.triggerEvent('accept', {});
     },
     /* ── 保存到相册 ──
      * 这是一张纸的事:组件自己把票面画到离屏 canvas 上导出,不往父级抛事件 ——

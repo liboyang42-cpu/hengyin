@@ -1,5 +1,6 @@
 /* 骨架屏→内容淡切:isolated 组件收不到全局 components.wxss,@import 同一份定义 */
 @import '../../../../style/fade-in.wxss';
+@import '../../../../style/addr-tap.wxss';
 :host { display: block; height: 100%; }
 .wallet-body { height: 100%; min-height: 0; display: flex; flex-direction: column; }
 .wallet-tabs { display: flex; gap: var(--cy-space-1); padding: var(--cy-space-1) 0 var(--cy-space-3); flex: none; }
@@ -26,3 +27,8 @@
 
 /* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
 .wallet-card { filter: opacity(calc(1 - var(--pm-c, 0))); translate: 0 calc(var(--pm-c, 0) * 31rpx); transition: filter var(--pm-c-d, 0s) ease, translate var(--pm-c-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-c-s, 0) * (0ms + min(var(--pmi, 0), 8) * 33ms)), calc(var(--pm-c-s, 0) * (0ms + min(var(--pmi, 0), 8) * 33ms)), 0s, 0s; }
+
+/* 第九轮 m1-9:发券门店地址一点开地图,「导航」与卡上动作同一字重 */
+.wallet-card__shop { margin-top: var(--cy-space-2); display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.wallet-card__addr { flex: 1; min-width: 0; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); }
+.wallet-card__nav { flex: none; min-height: var(--cy-btn-h-sm); display: inline-flex; align-items: center; gap: var(--cy-space-1); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); font-size: var(--cy-type-caption); font-weight: 600; }

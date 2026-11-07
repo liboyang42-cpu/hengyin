@@ -104,9 +104,9 @@
                topic.name as topicName,
                verify.coop_order_id as coopOrderId,
                verify.merchant_member_id as merchantMemberId,
-               coalesce(nullif(merchant.nickname, ''), nullif(merchant.name, ''), concat('成员#', verify.merchant_member_id)) as merchantDisplayName,
+               coalesce(nullif(merchant.nickname, ''), nullif(merchant.name, ''), '城瘾用户') as merchantDisplayName,
                verify.leader_member_id as leaderMemberId,
-               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), concat('成员#', verify.leader_member_id)) as leaderDisplayName,
+               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), '城瘾用户') as leaderDisplayName,
                verify.verify_time as verifyTime
         from coop_group_verify verify
         inner join cms_activity ca on verify.activity_id = ca.id and verify.topic_id = ca.topic_id and ca.del_flag = 0

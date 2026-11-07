@@ -1,5 +1,6 @@
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
@@ -107,15 +108,15 @@
           <text class="row-title">封禁原因</text>
           <text class="row-act row-act--danger">填写原因并封禁</text>
         </view>
-        <view wx:if="{{isOwner}}" class="row {{!selectedMemberId || actingKey ? 'row--disabled' : ''}}"
+        <view wx:if="{{isOwner}}" class="row {{actingKey ? 'row--disabled' : ''}}"
           bindtap="transferSelectedOwner" aria-role="button"
-          aria-disabled="{{!selectedMemberId || actingKey !== ''}}"
-          hover-class="{{!selectedMemberId || actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+          aria-disabled="{{actingKey !== ''}}"
+          hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
           <view class="row-text">
             <text class="row-title">转让主理人</text>
             <text class="row-desc">转让后你将失去主理人权限</text>
           </view>
-          <text class="row-act row-act--warning">转让给所选成员</text>
+          <text class="row-act row-act--warning">选择成员</text>
         </view>
       </view>
     </view>
@@ -141,13 +142,13 @@
 
 <cy-sheet show="{{memberPickerVisible}}" title="选择成员" closable maskClosable bind:close="closeMemberPicker">
   <view class="picker">
-    <view class="picker-row {{selectedMemberId == item.memberId ? 'picker-row--on' : ''}}"
+    <view class="picker-row {{memberPickerFor === 'ban' && selectedMemberId == item.memberId ? 'picker-row--on' : ''}}"
       wx:for="{{members}}" wx:key="memberId" data-member-id="{{item.memberId}}" bindtap="pickMember"
-      aria-role="button" aria-pressed="{{selectedMemberId == item.memberId}}"
+      aria-role="button" aria-pressed="{{memberPickerFor === 'ban' && selectedMemberId == item.memberId}}"
       aria-label="选择成员 {{item.nickname}}" hover-class="cy-pressed" hover-stay-time="80">
       <cy-avatar size="72" src="{{item.avatar || '/images/d_profile.png'}}" name="{{item.nickname}}" />
       <text class="picker-name">{{item.nickname}}</text>
-      <text class="picker-mark">{{selectedMemberId == item.memberId ? '已选' : '选择'}}</text>
+      <text class="picker-mark">{{memberPickerFor === 'ban' && selectedMemberId == item.memberId ? '已选' : '选择'}}</text>
     </view>
   </view>
 </cy-sheet>

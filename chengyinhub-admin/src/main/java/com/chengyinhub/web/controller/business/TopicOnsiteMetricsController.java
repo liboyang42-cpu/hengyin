@@ -35,7 +35,7 @@ public class TopicOnsiteMetricsController extends BaseController {
             return error("主题不存在");
         }
         if (!Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
-            return error("该主题不是探店日活动");
+            return error("该主题不是自由探索活动");
         }
         return success(topicOnsiteMetricsService.get(topicId));
     }

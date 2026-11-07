@@ -51,7 +51,8 @@ test('详情照 Revolut 313:大金额头 + 操作胶囊 + 键值卡 + 处理记�
   const wxml = read('pages/merchant/aftercare/detail/index.wxml');
   const json = JSON.parse(read('pages/merchant/aftercare/detail/index.json'));
   assert.match(wxml, /<cy-page-title title="\{\{pageTitle\}\}"/, '顶部大字由 pageTitle 持有');
-  assert.match(wxml, /<view class="ac-kv" wx:if="\{\{!detail\.hasRefundAmount\}\}">[\s\S]*?ac-kv-v--mute/, '金额未知在状态卡弱色显示');
+  assert.match(wxml, /<view class="ac-kv" wx:if="\{\{!detail\.isManualCase && !detail\.hasRefundAmount\}\}">[\s\S]*?ac-kv-v--mute/,
+    '普通退款金额未知在状态卡弱色显示；人工工单不泄露整单退款金额');
   const actions = wxml.match(/<view class="ac-actions" wx:if="\{\{canRespond\}\}">[\s\S]*?\n        <\/view>/);
   assert.ok(actions, '操作胶囊只在可回应时出现');
   ['同意', '不同意', '补充凭证'].forEach(label => assert.match(actions[0], new RegExp(`<text>${label}</text>`)));

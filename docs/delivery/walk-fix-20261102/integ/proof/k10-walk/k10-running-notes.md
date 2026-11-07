@@ -1,0 +1,31 @@
+# k10 running findings
+- E1 editor: no theme-level music field; no video anywhere (editor insert menu 文字/图片/音频/地点; no <video> in player; no backend field). Opening/ending video = missing feature.
+- E2 editor: audio upload -> HOLD human review; modal 「上传失败：文件已提交审核，通过后请重试此文件」; author must re-pick same file from WeChat chat later. Confusing.
+- E3 editor: audio pick via chooseMessageFile (WeChat chat files) only.
+- E4 captions: 玩法支持 「支持状态以玩法支持矩阵为准。反馈或工单是独立渠道…」; 值域 「开局值在第一章「初始状态」配置」; 进行方式 option descriptions + 「与票务人数、自由探索的设置互不影响。」; 「节点玩法已保存…已绑定当前主题，将随主题一起审核。」; chapter edit row hints.
+- E5 temp editor: 语音讲解 sheet shows file name 「k10-narr1.mp3.mp3」 (double extension).
+- E6 temp editor: 添加互动工具 / 保存并绑定 sit under the fixed bottom bar; first tap hits nothing (needs extra scroll).
+- E7 BUG 到达与引导 on a new (unsaved) station opens a blank sheet: structureError is rendered only inside the quest block (runtime-structure-editor.wxml:58), quest null -> nothing.
+- E8 temp editor placeholder 「例如 这座桥建于哪一年?」 ASCII ?
+- HARNESS: imageIdentity hardcodes prod bucket host -> rig must use that host; audio HOLD needs admin approve (tools/approve.py, real /business/audit/review)
+- E9 BUG temp editor 玩法规则 step textarea wx:key="*this" (temp/index.wxml:160): every keystroke changes the key, the textarea is re-created, typing stops after 1 char (rig: saved rule_instructions = 1 char).
+- E10 HIGH dead end: theme with 进行方式「个人独立进行」+ any 拍照打卡 station -> once quests sync (adding 互斥组 / any later save) save fails 「节点 78（报亭） 玩法 qaShot 工具 genericSettlement：尚无通用结算完成证明」 (GameplaySupportMatrix.java:144). Raw developer text; no way to unset 进行方式; template binding gave no warning. Same root as j3 「generic themes refuse photoCheck」 (k8 lane). shot k10-d15-savefail.
+- E11 save-failure banner's 「为什么会这样」 link renders at the top-left over the status bar (k10-d15-savefail).
+- E12 chapter edit: 完成要求「全部完成」 stays on with a 互斥组 -> both stations required but only one can be completed? (check in play)
+- E13 chapter edit: 「请先保存本章节点」 shown although nodes are saved.
+- E14 template picker 「我的故事玩法草稿」: picked item shows no selected state (text only, no card); a second tap silently unselects (k10-e03-selected)
+- E15 途中彩蛋: trigger is only 时间 (minutes after chapter start) or 步数; content is text + reward. No place-, photo- or scan-triggered egg, no audio/image in an egg. Needs owner choice.
+- E16 BLOCKER for the owner's game: any chapter runtime feature (互斥组 branch, 途中彩蛋, 章末配给, 背包) makes TopicRoutePublicationCompiler compile a gameplayRuntime with a quest per node (chapterRequirements), and GameplaySupportMatrix then refuses every 拍照打卡 (qaShot NO_BRIDGE) station: save fails 「节点 85（报亭） 玩法 qaShot 工具 genericSettlement：尚无通用结算完成证明」. So photo check-in + branch + easter egg cannot coexist. qaShot has r5CompletionProof only with 结果反馈 outcomeRules.
+- E17 HIGH: the save-failure banner (fixed, ~190px) covers the last chapter card's 编辑故事流/编辑章节 buttons and the page cannot scroll further; the author cannot reach the chapter setting that caused the failure (k10-e12, k10-e13).
+- E18 HIGH: after removing the 互斥组 and 彩蛋 the theme config keeps chapters[{index:2,completion:ALL,eggs:[]}] and saves still fail with the qaShot error; nothing in the UI removes it -> draft stuck (990016).
+- E19 BUG: an ending chapter (设为结局) with story + audio only is blocked at preview 「第N章至少需要一个节点」 (pro-editor-policy chapterHasRequiredNodes exempts opening, not ending). FIXED in client.
+- E20 GAP: no button creates the opening chapter (序章, chapter.opening) — openTopicOpening() exists and is unit-tested but nothing in the WXML calls it; a station-less intro chapter is refused 「第1章至少需要一个节点」. Needs owner: where to put the entry.
+- E21 BUG: publishing a theme whose 档期 has already started succeeds (publish-draft 「已发布」, PENDING) but the editor shows 「这次还没有保存 | 网络中断，暂时确认不了是否已发布」: the read-back /api/topic/author-edit-detail answers 「主题已开始，不能再编辑」 (k10-f05-publish).
+- P1 solo free theme shows the 「同场路线 / 让同场队伍看到我的路线 / 开始」 sheet on 开启定位 (editor's 同场路线 switch is on by default even for 个人). Immersion breaker for a solo walk (k10-h04).
+- A1 BUG station BGM restarts from 0 when the kit view refreshes: _syncStationBgm dedupes on the full signed URL (Expires/Signature change on every read) (log: id2 stop/destroy -> id3 play at 0 right after the photo verdict).
+- A2 BUG chapter narration replays from 0 every time the story flow is laid out again (openChapterFull -> playChapterAudio); after the intro ended, 开始任务 replayed the whole chapter audio under the station music.
+- A3 BUG station 语音讲解 (template audioUrl, node.audio) is never played or offered in v5/inline stations; the only button is in the legacy gamePlay sheet.
+- A4 no ducking: narration 1.0 over station BGM 0.35 / theme BGM 0.25, constant.
+- A5 photo verdict says 「答对了」 for a photo check-in.
+- P2 HIGH UX: every station asks for its proof twice. 拍照打卡 station: in-story 「拍一张」 then a second sheet 「拍照上传」. 扫码参与 station: kit scan 「扫一下门口的码」 then a second sheet 「扫描现场那枚二维码…」 + 扫码. The template choice also sets validationMethod 2/4, so the legacy station check-in runs after the kit (k10-r05-legacy, k10-r13-after-bridge).
+- P3 copy: kit scan says 「扫一下门口的码 / 仅确认这一站的任务码」 on a bridge (shop wording) + caption; legacy scan caption 「扫描现场那枚二维码，让这一关的答案落到你手里。」; 「线索藏在声音里 ·」 trailing dot when duration unknown.

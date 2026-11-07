@@ -72,7 +72,7 @@ public class CommentPublicationService {
         List<UmsComment> existing = comments.selectUmsCommentList(query);
         if (existing != null && existing.size() > 1) return null;
         CmsPointsSetting setting = settings.selectCmsPointsSettingById(4L);
-        int points = setting == null || setting.getValue() == null ? 0 : setting.getValue().intValue();
+        int points = com.chengyinhub.business.service.support.PointsRuleSwitch.activeValue(setting);
         if (points == 0) return null;
         UmsMember member = members.selectUmsMemberById(comment.getMemberId());
         if (member == null) return null;

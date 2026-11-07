@@ -336,7 +336,8 @@ test('官方活动详情区分网络失败与内容不可用', () => {
   missing.page.setData({ id: 12 });
   missing.page.fetch();
   missing.requests[0].success({ code: 404, msg: 'not found' });
-  assert.equal(missing.page.data.loadErrKind, 'data');
+  // 第十轮 f3:内容没了是终态,用 missing-param(讲原因并返回),不再是加载失败留白类 data
+  assert.equal(missing.page.data.loadErrKind, 'missing-param');
   assert.match(missing.page.data.loadErrTitle, /内容/);
 
   const businessMissing = loadOfficialDetailPage();
@@ -399,9 +400,10 @@ test('官方活动刷新失败保留旧详情并原位提供恢复动作', () =>
 
 test('官方活动详情错误动作随错误类型变化，指标栏只保留一处状态文案', () => {
   const wxml = source('pages/activity/official-detail/index.wxml');
-  assert.match(wxml, /class="theme-merchant od-root"/,
-    '官方活动详情是商家工作域，必须固定使用商家浅色主题');
-  assert.doesNotMatch(wxml, /theme-dark/);
+  // 第十一轮 i1(p1 F-9,业主规则:玩家深色、商家浅色):原先固定商家浅色,玩家打开也是浅的;
+  // 现在与「我发布的」同一口径,商家看浅色、玩家看深色
+  assert.match(wxml, /class="\{\{isMerchantViewer \? 'theme-merchant' : 'theme-dark'\}\} od-root"/,
+    '官方活动详情按身份选主题:商家浅色、玩家深色');
   assert.match(wxml, /<cy-state-shell[^>]*kind="\{\{loadErrKind\}\}"[^>]*primary="\{\{loadErrAction\}\}"[^>]*bind:primary="onLoadErrorAction"/);
   assert.equal((wxml.match(/\{\{countdown\s*\|\|\s*e\._statusText\}\}/g) || []).length, 1);
   assert.doesNotMatch(wxml, /e\.status===1\?'即将开始'/);
@@ -410,8 +412,8 @@ test('官方活动详情错误动作随错误类型变化，指标栏只保留�
 function assertOfficialDetailMediaContrast(wxml, wxss, pageConfig) {
   assert.match(
     wxml,
-    /tint="\{\{\(!e\s*\|\|\s*navScrolled\)\s*\?\s*'dark'\s*:\s*'light'\}\}"/,
-    '封面态使用浅色返回箭头，滚动到商家实底导航后切换深色箭头',
+    /tint="\{\{\(!e\s*\|\|\s*navScrolled\)\s*&&\s*isMerchantViewer\s*\?\s*'dark'\s*:\s*'light'\}\}"/,
+    '封面态使用浅色返回箭头，滚动到商家实底导航后切换深色箭头;玩家深色实底仍用浅色箭头(第十一轮 i1 p1 F-9)',
   );
   for (const selector of ['od-refresh-state', 'od-hero-placeholder', 'od-organizer', 'od-card-state']) {
     assert.match(

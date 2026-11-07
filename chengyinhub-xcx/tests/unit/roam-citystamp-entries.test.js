@@ -26,7 +26,7 @@ test('深链宿主「投一张」:先收起深链页,再进城市签', () => {
   global.Component = c => { def = c }
   global.getApp = () => ({ globalData: {} })
   global.wx = { navigateTo: o => nav.push(o.url), navigateBack() {} }
-  const mod = require.resolve('../../components/cy/scene-deep-link/index.js')
+  const mod = require.resolve('../../subpackageMember/components/cy/scene-deep-link/index.js')
   delete require.cache[mod]
   require(mod)
   const vm = Object.assign({}, def.methods, { data: { sceneId: 'roam-poi-detail' }, _rootOpened: true,

@@ -30,6 +30,9 @@ function formatActivityStart(activity) {
 
 function listGroupCodeActivities(activities) {
   return (Array.isArray(activities) ? activities : []).map((activity) => {
+    // 第十二轮 k3(p3 N5):主题自办壳(发布者本人、不挂俱乐部)不是带队场次,服务端也拒绝给它出团码;
+    // 列出来只会多一个不存在的「11月5日 10:18」,并在只剩它时自动打开、显示一个永远重试不成的错误。
+    if (activity && activity.selfHostShell === true) return null;
     const payload = buildGroupCodeIssuePayload(activity && activity.id);
     if (!payload) return null;
     const name = activity.name || ('场次 ' + payload.activityId);

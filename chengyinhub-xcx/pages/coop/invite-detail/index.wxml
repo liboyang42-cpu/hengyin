@@ -8,6 +8,7 @@
      要翻就整域一起翻。theme-merchant 重映射的是同名 token,所以下面的样式与暗色版一致。 -->
 <view class="coop-detail theme-merchant">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <!-- E-01(2026-09-16 P0):去掉页面级 cy-access-gate kind="merchant"。
@@ -23,7 +24,8 @@
   <cy-page-title title="协作详情" safe-top="{{false}}" flush="{{true}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="3" loading-label="正在加载协作详情" />
-  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约" sub="{{errorText}}"
+  <!-- p2 F-9:缺参不是加载失败,不能挂 load-failure 留白;只给原因标题 + 一个返回 -->
+  <cy-error wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条邀约"
             retry="回协作邀请" bind:retry="goBack" />
   <cy-error wx:elif="{{state === 'notfound'}}" fill size="lg" title="这条邀约不在当前列表里了"
             sub=""
@@ -70,7 +72,9 @@
       <text class="card-title">合作条款</text>
       <view class="kv" wx:if="{{invite.viewerPartyName}}"><text class="k">{{box === 'received' ? '接收俱乐部' : '发起俱乐部'}}</text><text class="v">{{invite.viewerPartyName}}</text></view>
       <!-- 联系方式给不给由后端定(§3.8 只在已接受时下发)。没下发就照实说明,不留空、也不假装有 -->
-      <view class="kv meta-contact">
+      <!-- 第十二轮 k9(p2 N-14):已接受却没下发联系方式时整行不出 —— 原来那句「可用下方「联系合作方」站内沟通」
+           只是在复述下面那一行按钮 -->
+      <view class="kv meta-contact" wx:if="{{invite.partnerContact || invite.status !== 1}}">
         <text class="k">联系方式</text>
         <block wx:if="{{invite.partnerContact}}">
           <view class="v kv-contact"><text>{{invite.partnerContact}}</text>
@@ -79,8 +83,6 @@
         </block>
         <!-- CU-M-90:内部条款号(§3.8)只留在上面那条注释里,用户可见文案不出现 -->
         <text wx:elif="{{invite.status === 0}}" class="v v--muted">{{box === 'received' ? '接受合作后可查看联系方式' : '对方接受后可查看联系方式'}}</text>
-        <!-- CU-C-09/25:已接受却没下发 = 对方没留联系方式,不是「未接受」;站内会话仍可用 -->
-        <text wx:elif="{{invite.status === 1}}" class="v v--muted">对方没有留联系方式，可用下方「联系合作方」站内沟通</text>
         <text wx:else class="v v--muted">邀约已结束，无法联系对方</text>
       </view>
       <view class="kv"><text class="k">合作双方</text><text class="v">{{invite.typeText}}</text></view>
@@ -112,12 +114,11 @@
 
       <block wx:if="{{inputKind}}">
         <text class="field-label">{{inputLabel}}</text>
-        <textarea class="field" value="{{draft}}" placeholder="{{inputPlaceholder}}" placeholder-class="field-ph"
-                  maxlength="100" bindinput="onDraftInput" auto-height="{{false}}" />
-        <cy-inline-error wx:if="{{draftError}}" kind="data" title="{{inputKind === 'withdraw' ? '撤回要写个理由' : '拒绝要写个理由'}}" sub="{{draftError}}" />
+        <textarea id="inviteDraftField" class="field" value="{{draft}}" placeholder="{{inputPlaceholder}}" placeholder-class="field-ph"
+                  maxlength="100" bindinput="onDraftInput" auto-height="{{false}}" focus="{{draftFocus}}" />
+        <cy-inline-error wx:if="{{draftError}}" kind="field" title="{{draftError}}" />
         <text class="field-count">{{draft.length}} / 100</text>
       </block>
-      <text wx:elif="{{invite.status === 1}}" class="bubble-empty">需要对齐事项时，请点击上方“联系合作方”进入单聊。</text>
       <!-- CU-C-124:失效邀约不再在这里补一句「不能再留言」—— 上面那条「还没有留言」已经把
            这一栏说清，页底动作条还留着唯一一句「没有可执行的操作」对应实际可做的事。 -->
     </view>
@@ -187,14 +188,14 @@
         <view wx:else class="act act--dead">合作进行中{{invite.termsFrozen ? '，条款已锁定' : ''}}</view>
       </block>
       <block wx:else>
-        <view class="act act--dead">这条邀约已失效，没有可执行的操作</view>
+        <view class="act act--dead">这条邀约{{statusText || '已结束'}}</view>
       </block>
     </view>
   </block>
 
   <!-- 供给申报勾选浮层:随卡片动作从 pages/coop/list 搬来,口径原样(ds 主题宿主 class 同样兜住变量继承) -->
   <cy-sheet variant="full" class="theme-merchant" show="{{showPerkPick}}" title="申报本次供给" handle closable maskClosable bind:close="closePerkPick">
-  <view class="pk-hint">勾选本次提供的权益，按核销人数结算</view>
+  <!-- 第十二轮 k6(p2 N-5):删去申报浮层的结算说明句:引流型合同不结算,标题「申报本次供给」已说清要做什么 -->
   <cy-skeleton wx:if="{{perkState === 'loading'}}" type="list" count="3" />
   <cy-error load-failure wx:elif="{{perkState === 'error'}}" title="常备权益加载失败" sub="{{perkErrorText}}" bind:retry="retryPerkPick" />
   <scroll-view wx:elif="{{perkState === 'ready'}}" scroll-y class="pk-list">

@@ -14,7 +14,7 @@
    <view wx:if="{{survivalEditor.kind && survivalEditor.section !== 'card'}}" bindtap="backSurvivalList" aria-role="button" aria-label="返回列表，不保存此项" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="32" /></view>
    <text>{{survivalEditor.kind === 'recoveries' ? (survivalEditor.row.kind === 'RESCUE' ? '救助' : '休整') : survivalEditor.kind === 'rations' ? '幕配给' : survivalEditor.kind === 'facilities' ? '设施' : survivalEditor.section === 'card' ? '结果卡' : survivalEditor.section === 'facility' ? '公共设施' : '恢复与配给'}}</text>
   </view>
-  <cy-inline-error wx:if="{{survivalEditor.error}}" title="{{survivalEditor.error}}" />
+  <cy-inline-error kind="error" wx:if="{{survivalEditor.error}}" title="{{survivalEditor.error}}" />
 
   <!-- 分区列表：恢复与配给 -->
   <block wx:if="{{!survivalEditor.kind && survivalEditor.section === 'recovery'}}">

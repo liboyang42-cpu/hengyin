@@ -17,7 +17,7 @@ function mount(relative, component) {
 }
 
 test('解散阻断收到支付待确认200仍保留原事项并显示真实反馈', () => {
-  const { vm, requests } = mount('components/cy/scene-club-edit/index.js', true)
+  const { vm, requests } = mount('pages/club/components/cy/scene-club-edit/index.js', true)
   const item = { title: '保证金 #8', url: '/pages/club/dissolution-blockers/index?clubId=7&type=deposit&id=8' }
   vm.data.clubId = '7'
   vm.data.dissolutionBlockerItems = [item]
@@ -53,7 +53,7 @@ test('两入口全部有事实的200沿用消息，解散阻断不按成功壳�
     [5, 'UNPAID', '保证金尚未缴纳，无需发起退款'],
   ]) {
     for (const component of [false, true]) {
-      const { vm, requests } = mount(component ? 'components/cy/scene-club-edit/index.js' : 'pages/coop/list/index.js', component)
+      const { vm, requests } = mount(component ? 'pages/club/components/cy/scene-club-edit/index.js' : 'pages/coop/list/index.js', component)
       const item = { id: 8 }
       vm.data.dissolutionBlockerItems = [item]
       let reload = 0
@@ -84,7 +84,7 @@ test('拒权、冻结失败、畸形200与HTTP/网络未知均释放等待但不
   ]
   for (const component of [false, true]) {
     for (const [callback, value, expected] of failures) {
-      const { vm, requests } = mount(component ? 'components/cy/scene-club-edit/index.js' : 'pages/coop/list/index.js', component)
+      const { vm, requests } = mount(component ? 'pages/club/components/cy/scene-club-edit/index.js' : 'pages/coop/list/index.js', component)
       const item = { id: 8 }
       vm.data.dissolutionBlockerItems = [item]
       vm.load = () => assert.fail('未知或失败不得刷新成成功流程')
@@ -105,7 +105,7 @@ test('拒权、冻结失败、畸形200与HTTP/网络未知均释放等待但不
 
 
 test('历史4入口明确只查原退款，缺事实仍留阻断且客服路由实际已注册', () => {
-  const { vm, requests } = mount('components/cy/scene-club-edit/index.js', true)
+  const { vm, requests } = mount('pages/club/components/cy/scene-club-edit/index.js', true)
   const item = { actionText: '核对退款结果', url: '/pages/club/dissolution-blockers/index?clubId=7&type=deposit&id=8' }
   vm.data.dissolutionBlockerItems = [item]
   vm.openDissolutionBlockerItem({ currentTarget: { dataset: { index: 0 } } })

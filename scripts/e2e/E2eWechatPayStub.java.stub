@@ -60,6 +60,12 @@ public class E2eWechatPayStub implements IWechatPayService {
     private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedPaymentFacts;
 
     @Override
+    public String resolveBusinessOrderNo(String wxOutTradeNo) {
+        // 夹具没有真实支付尝试，不伪造持久化订单映射。
+        return null;
+    }
+
+    @Override
     public boolean isReady() {
         return true;
     }

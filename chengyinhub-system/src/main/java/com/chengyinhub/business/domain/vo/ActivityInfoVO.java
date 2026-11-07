@@ -89,6 +89,14 @@ public class ActivityInfoVO {
     private Boolean merchantClosed = Boolean.FALSE;
     /** U-168:本次读的服务端时刻(epoch ms,瞬态);报名页据此算时钟偏移来置灰,不入库。 */
     private Long serverNow;
+    /** check-1104 j1 F14:商家自己发的活动,主办方显示店铺名与店铺头像;非商家场次为 null。 */
+    private String organizerShopName;
+    private String organizerShopLogo;
+
+    public String getOrganizerShopName() { return organizerShopName; }
+    public void setOrganizerShopName(String organizerShopName) { this.organizerShopName = organizerShopName; }
+    public String getOrganizerShopLogo() { return organizerShopLogo; }
+    public void setOrganizerShopLogo(String organizerShopLogo) { this.organizerShopLogo = organizerShopLogo; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

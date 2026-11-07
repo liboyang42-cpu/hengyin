@@ -132,16 +132,15 @@ test('活动 missing 与 empty 终态都通过组件事件返回来源列表', (
   assert.deepEqual(events, ['close', 'close'], '两种不可恢复终态都应交给宿主返回来源列表')
 })
 
-test('帖文空态按主页归属切换口吻且不虚构发布动作', () => {
+// 第十轮 f3(j5 L9):业主「去掉副文案」规则取代了本人/他人两档副文案,空态只留标题;
+// 不虚构发布动作的约束不变。j5 H4:本人俱乐部帖文也算「有帖文」,空态条件为 nodata 且无俱乐部帖文。
+test('帖文空态只留标题且不虚构发布动作', () => {
   const wxml = read(PROFILE_WXML)
   const tag = (wxml.match(/<cy-empty\b[^>]*\/>/g) || [])
-    .find((candidate) => candidate.includes('wx:elif="{{nodata}}"'))
+    .find((candidate) => candidate.includes('wx:elif="{{nodata && !clubPostList.length}}"'))
   assert.ok(tag, '帖文列表必须保留 nodata 空态')
-
-  const copyBinding = attr(tag, 'sub')
-  const branches = copyBinding.match(/^\{\{isSelf\s*\?\s*'([^']+)'\s*:\s*'([^']+)'\}\}$/)
-  assert.ok(branches, '空态说明必须由 isSelf 在本人和他人主页间分档')
-  assert.notEqual(branches[1], branches[2], '本人和他人主页不得复用同一口吻')
+  assert.ok(attr(tag, 'title').trim(), '空态必须有标题')
+  assert.equal(attr(tag, 'sub'), '', '空态不再带副文案')
   assert.equal(attr(tag, 'cta'), '', '纯文案修复不得新增无实现的发布动作')
   assert.doesNotMatch(tag, /\sbind(?::|tap=)/, '纯文案修复不得新增事件绑定')
 })

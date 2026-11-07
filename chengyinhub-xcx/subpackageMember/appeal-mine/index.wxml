@@ -8,7 +8,7 @@
     <cy-nav-bar plain custom-back bind:back="goBack" />
     <cy-page-title title="我的申诉" safe-top="{{false}}" />
     <view class="rp__body">
-      <cy-state-shell wx:if="{{state === 'login'}}" kind="data" title="登录后查看申诉" primary="微信登录" bind:primary="login" />
+      <cy-state-shell wx:if="{{state === 'login'}}" kind="no-permission" title="登录后查看申诉" primary="微信登录" bind:primary="login" />
       <block wx:else>
         <view class="rp-row" wx:if="{{reputation}}" bindtap="openReputation" aria-role="button" aria-label="账号信誉，{{reputation.text}}"
               hover-class="cy-pressed" hover-stay-time="80">

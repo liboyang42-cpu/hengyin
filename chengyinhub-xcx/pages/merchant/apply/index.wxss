@@ -142,6 +142,8 @@ page { background: var(--cy-color-bg-page); }
 }
 .wizard-secondary { --cy-comp-btn-secondary-bg: var(--cy-color-action-secondary-bg); }
 .wizard-primary { --cy-bg-subtle: var(--cy-color-bg-surface-subtle); }
+/* j1 F10:提交成功页「返回首页」撑满底栏,与向导主按钮同宽(用类而非行内 style,不混入向导操作条契约) */
+.done-home { flex: 1; }
 
 /* ===== 提交成功 ===== */
 .success { text-align: center; padding: var(--cy-space-6) 0 var(--cy-space-4); }
@@ -211,3 +213,10 @@ page { background: var(--cy-color-bg-page); }
  * 兜住 —— 生效前提是根节点真的挂得上 cy-motion-reduced(见 wxml 与 onShow)。 */
 
 .intro__claim { margin-top: var(--cy-space-3); text-decoration: underline; }
+
+/* 第五轮 D:字段下方红字 */
+.field-err { display: block; margin-top: var(--cy-space-1); }
+.hp-err { display: block; margin-top: var(--cy-space-1); margin-bottom: var(--cy-space-4); }
+
+/* 第十二轮 k9(j1 N11):开场只剩标题后,标题贴着「开始入驻」;与俱乐部开场同一个间距 */
+.intro__title + .intro-cta { margin-top: var(--cy-space-6); }

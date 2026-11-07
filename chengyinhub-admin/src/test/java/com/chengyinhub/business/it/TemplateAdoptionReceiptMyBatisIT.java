@@ -31,7 +31,8 @@ class TemplateAdoptionReceiptMyBatisIT {
         var ds = new DriverManagerDataSource(MybatisItDatabase.url("template_adoption_receipt"), MybatisItDatabase.user(), MybatisItDatabase.password());
         var jdbc = new JdbcTemplate(ds);
         try (var connection = ds.getConnection()) {
-            ItSchema.applyMigrations(connection, "sql/migration_20261027_template_adoption_receipt.sql");
+            ItSchema.applyMigrations(connection, "sql/migration_20261027_template_adoption_receipt.sql",
+                    "sql/migration_20261107_template_adoption_inherited_config_hash.sql");
         }
         createFixtureTable(jdbc,"CmsTemplateLibraryMapper","CmsTemplateLibraryResult","cms_template_library");
         createFixtureTable(jdbc,"CmsMemberTemplateMapper","CmsMemberTemplateResult","cms_member_template");
@@ -63,6 +64,18 @@ class TemplateAdoptionReceiptMyBatisIT {
         assertEquals("9007199254740993",service.adopt(101L,101L,command,"test").get("draftId"));
         var completed = service.receipt(101L,101L,"",command.getRequestId());
         assertTrue(service.matchesDraft(completed,mapper.lockDraft(9007199254740993L)));
+        String inheritedHash = TemplateAdoptionService.inheritedAdvancedConfigHash(null);
+        assertEquals(1, mapper.countCompletedInheritedConfig(101L, 9007199254740993L, 7L, inheritedHash));
+        assertEquals(0, mapper.countCompletedInheritedConfig(102L, 9007199254740993L, 7L, inheritedHash));
+        assertEquals(0, mapper.countCompletedInheritedConfig(101L, 9007199254740994L, 7L, inheritedHash));
+        assertEquals(0, mapper.countCompletedInheritedConfig(101L, 9007199254740993L, 8L, inheritedHash));
+        assertEquals(0, mapper.countCompletedInheritedConfig(101L, 9007199254740993L, 7L, "b".repeat(64)));
+        // Old receipts and non-completed reservations never authorize inherited configuration.
+        jdbc.update("update template_adoption_receipt set inherited_advanced_config_hash=null where request_id=?", command.getRequestId());
+        assertEquals(0, mapper.countCompletedInheritedConfig(101L, 9007199254740993L, 7L, inheritedHash));
+        jdbc.update("update template_adoption_receipt set inherited_advanced_config_hash=?,status='PENDING' where request_id=?", inheritedHash, command.getRequestId());
+        assertEquals(0, mapper.countCompletedInheritedConfig(101L, 9007199254740993L, 7L, inheritedHash));
+        jdbc.update("update template_adoption_receipt set status='COMPLETED' where request_id=?", command.getRequestId());
         jdbc.update("update cms_member_template set question_answer='edited' where id=9007199254740993");
         assertFalse(service.matchesDraft(completed,mapper.lockDraft(9007199254740993L)), "Do not silently bind a later edited draft");
         verify(drafts,times(1)).saveOrUpdateDraft(any(),any(),any());

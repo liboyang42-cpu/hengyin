@@ -1,0 +1,113 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-R2-legacy-68 | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 开启定位 | 仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。 | 先用扫码 | 开启定位 | N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 1 | 第 | 1 | 章 | / | 共 | 2 | 章 | 合 | 成 | 章 | 节 | 1 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 9 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | 117m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 1 | 第 | 1 | 章 | / | 共 | 2 | 章 | 合 | 成 | 章 | 节 | 1 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 9 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | 117m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 4 N | 0m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 第 7 站 | 合成站 9 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-R2-legacy-68-9 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 PLAY-MAP-1105-R2-legacy-68-9 | 拍摄测试图片 | 拍照上传 | 拍照上传 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 7 提交中 | PLAY-MAP-1105-R2-legacy-68-9 | 拍摄测试图片 | 拍照上传 | 拍照上传 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 8 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 1 | +1800 探索值 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 9 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 继续探索 | 第 | 1 | 章 | · | 完 | 成 | 合 | 成 | 章 | 节 | 1 | 9 | / | 9 | 坐 | 标 | 2 | 0 | 0 | 解 | 谜 | 分 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 10 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 继续探索 | 第 | 2 | 章 | / | 共 | 2 | 章 | 合 | 成 | 章 | 节 | 2 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 8 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 11 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 12 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 第 9 站 | 合成站 11 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-R2-legacy-68-11 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 13 钟面直径大约几米？ | 10 | 11 | 12 | 米 | 就这个数 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990020-estimate
+FLOW 14 钟面直径大约几米？ | 4 | 5 | 6 | 米 | 猜中了 | 正好 5 米 | 约 5 米。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 15 N | 29m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 16 N | 29m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 第 10 站 | 合成站 12 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-R2-legacy-68-12 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 17 找出画里的猫 | 猫1 | 猫2 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990020-hidden
+TEXT[hidden-result] 找出画里的猫 | 猫1 | 猫2 | 猫3 | 0 / 3 | 点一下你觉得藏着的地方。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235574&OSSAccessKeyId=rig-only-dummy-id&Signature=R50Bg4MSOyMYT0krzi%2Fp%2FAi0kr4%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235592&OSSAccessKeyId=rig-only-dummy-id&Signature=xTxV9quh5Ot8pz0xF%2BZpYSo6xoc%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235595&OSSAccessKeyId=rig-only-dummy-id&Signature=CrvgqRL3BGf3q00vOU%2BcOWb8lf4%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235596&OSSAccessKeyId=rig-only-dummy-id&Signature=g1IATQ5ve1WjAZ5zk5qOLUV9gqw%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235611&OSSAccessKeyId=rig-only-dummy-id&Signature=8azXi5BtEsqmZNXHjmrtj2uPSoU%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)"]
+NET GET /api/play/encounter?topicId=990020&activityId=0&nodeId=82 200 500 这一局还没开始 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990020 200   
+NET UPLOAD /api/common/uploadOSS 200 200 操作成功 file
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990020&nodeId=82 200 200 操作成功 
+NET POST /api/play/photo 200 200 已提交,打卡成功 topicId=990020&nodeId=82&picUrl=https%3A%2F%2Frig-offline.oss-cn-shanghai.aliyuncs.com%2Fupload%2F77322519b15d41d0988b7a18ca1ad92d.jpeg%3FExpires%3D2109235593%2
+NET GET /api/play/nodes?topicId=990020 200   
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990020&nodeId=83 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990020&activityId=0&nodeId=83 200 500 这一局还没开始 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990020&nodeId=83&longitude=121.4909&latitude=31.2389&accuracy=8&routeActionId=route-mw3f7nro-gv4ob4c80a&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/nodes?topicId=990020 200   
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990020&activityId=0&nodeId=84 200 500 这一局还没开始 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990020","nodeId":"84"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":7,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_ESTIMATE","payload":{"value":5}}
+NET GET /api/play/action-context?topicId=990020&nodeId=84 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990020&nodeId=84&longitude=121.4909&latitude=31.2389&accuracy=8&routeActionId=route-mw3f7z27-bfp1uouuxh&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/nodes?topicId=990020 200   
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990020&activityId=0&nodeId=85 200 500 这一局还没开始 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990020","nodeId":"85"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":8,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_HIDDEN_OBJECT","payload":{"x":0.2473,"y":0.2977}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":8,"version":1,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_HIDDEN_OBJECT","payload":{"x":0.698,"y":0.4475}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":8,"version":2,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_HIDDEN_OBJECT","payload":{"x":0.4483,"y":0.7498}}
+FLOW 18 找出画里的猫 | 猫1 | 猫2 | 猫3 | 0 / 3 | 点一下你觉得藏着的地方。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 19 N | 44m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 20 N | 44m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 第 11 站 | 合成站 13 | 上海市黄浦区中山东一路1号 | 我已到达此站 | 定位已开启 · 靠近后会自动点亮 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 21 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 22 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 继续探索 | 第 12 站 | 合成站 14 | 上海市黄浦区中山东一路1号 | 合成站：1873 或选 A | PLAY-MAP-1105-R2-legacy-68-14 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 23 PLAY-MAP-1105-R2-legacy-68-14 | 合成站：1873 或选 A | 当前最高 100 解谜分 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990020-text-reveal
+FLOW 24 PLAY-MAP-1105-R2-legacy-68-14 | 合成站：1873 或选 A | 合成完成反馈。 | 合成揭示：1873 是这题的正确答案。 | 当前最高 100 解谜分 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 25 N | 29m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 26 N | 0m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 第 13 站 | 合成站 15 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-R2-legacy-68-15 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 27 PLAY-MAP-1105-R2-legacy-68-15 | 拍摄测试图片 | 拍照上传 | 拍照上传 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 28 裁剪 | 取消 | 还原 | 选取 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 29 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | +1800 探索值 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 30 N | 15m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 31 N | 0m | PLAY-MAP-1105-R2-legacy-68 · 合成章节 2 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 合成站手记。 | 第 15 站 | 合成站 17 | 上海市黄浦区中山东一路1号 | PLAY-MAP-1105-R2-legacy-68-17 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 32 钟面直径大约几米？ | 10 | 11 | 12 | 米 | 就这个数 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990020-estimate
+FLOW 33 钟面直径大约几米？ | 4 | 5 | 6 | 米 | 猜中了 | 正好 5 米 | 约 5 米。 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 34 N | PLAY-MAP-1105-R2-legacy-68 · 合成章节 1 | 17处旧址已全部点亮 | 领取你的城市足迹卡 | 保存图片 | 分享 | 11月5日 周四 | PLAY-MAP-1105-R2-legacy-68 | 已通关 | 17 | 点亮坐标 | 继续 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990020-step34
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235647&OSSAccessKeyId=rig-only-dummy-id&Signature=7BNx8vwDfK%2BGyRcnzDnCRX%2Boy7I%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235648&OSSAccessKeyId=rig-only-dummy-id&Signature=oIMDWuHViXo1oUD7tnhBGPbnKoM%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235650&OSSAccessKeyId=rig-only-dummy-id&Signature=C7x9ELHuO%2B8fdus1vIHazmyNNfA%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3?Expires=2109235662&OSSAccessKeyId=rig-only-dummy-id&Signature=4b8fhdOkD5%2B%2BlLSvG7HIV62PSHE%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/ccc5bade4dba4cdd93d330b9e00e5820.jpeg?Expires=2109235662&OSSAccessKeyId=rig-only-dummy-id&Signature=jEFov%2F6xPUausK03RcNNB1ZPNlY%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/77322519b15d41d0988b7a18ca1ad92d.jpeg?Expires=2109235662&OSSAccessKeyId=rig-only-dummy-id&Signature=QS9McW4v3QcXNnJpAu0VYPnZK7w%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)","[error] HTTP 502 http://127.0.0.1:18097/__oss/upload/e9a5c7f4bd0f408f977cd1db3529d438.jpeg?Expires=2109235662&OSSAccessKeyId=rig-only-dummy-id&Signature=kSMq645M2CnFz1V1ar2areapMVA%3D","[error] Failed to load resource: the server responded with a status of 502 (Bad Gateway)"]
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET POST /api/play/photo 200 200 已提交,打卡成功 topicId=990020&nodeId=88&picUrl=https%3A%2F%2Frig-offline.oss-cn-shanghai.aliyuncs.com%2Fupload%2Fe9a5c7f4bd0f408f977cd1db3529d438.jpeg%3FExpires%3D2109235647%2
+NET GET /api/play/nodes?topicId=990020 200   
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990020&nodeId=89 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990020&nodeId=89&longitude=121.49149999999999&latitude=31.2395&accuracy=8&routeActionId=route-mw3f8td3-isdxdetqrj&expectedRouteVersion=0&routeSessionId=
+NET GET /api/play/encounter?topicId=990020&activityId=0&nodeId=89 200 500 这一局还没开始 
+NET GET /api/play/nodes?topicId=990020 200   
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990020 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990020&activityId=0&nodeId=90 200 500 这一局还没开始 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990020","nodeId":"90"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":9,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_ESTIMATE","payload":{"value":5}}
+NET GET /api/play/action-context?topicId=990020&nodeId=90 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990020&nodeId=90&longitude=121.49159999999999&latitude=31.2396&accuracy=8&routeActionId=route-mw3f92k6-hlh6pibq67&expectedRouteVersion=0&routeSessionId=
+NET GET /api/play/nodes?topicId=990020 200   
+NET GET /api/play/journey/casebook?topicId=990020 200 500 这一局还没开始 
+NET GET /api/play/journey/ending?topicId=990020&activityId=0 200 500 本主题未配置剧情 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793875662076&topicId=990020
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990020
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.239&longitude=121.491
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793875662076&topicId=990020
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990020
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.239&longitude=121.491
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793875662148&topicId=990020
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793875662722&topicId=990020

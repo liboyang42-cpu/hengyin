@@ -72,11 +72,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/talent/list/index` | 是 | `chengyinhub-xcx/components/tabBar/index.js:20` | KEEP |
 | `pages/member/index/index` | 是 | `chengyinhub-xcx/components/cy/profile-loading/index.js:50` | KEEP |
 | `pages/roam/index` | 是 | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java:301` | KEEP |
-| `pages/privacy/index` | 否 | `chengyinhub-xcx/app.js:349` | KEEP |
-| `pages/agreement/index` | 否 | `chengyinhub-xcx/components/cy/danger-confirm/index.wxml:5` | KEEP |
-| `pages/deregister/index` | 否 | `chengyinhub-xcx/pages/agreement/index.js:9` | KEEP |
-| `pages/team/detail/index` | 否 | `chengyinhub-xcx/pages/team/join/index.js:119` | KEEP |
-| `pages/team/join/index` | 否 | `chengyinhub-xcx/pages/team/detail/index.js:172` | KEEP |
 | `pages/play/index` | 否 | `chengyinhub-admin/sql/migration_20260825_named_mechanic_advanced_config.sql:8` | KEEP |
 | `pages/play/merchant/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:317` | KEEP |
 | `pages/play/circle/index` | 否 | 旧分享；`chengyinhub-xcx/pages/play/circle/index.js:2` | KEEP |
@@ -224,6 +219,11 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageTools/exploration-goals/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:720` | KEEP |
 | `subpackageTools/anniversary/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:738` | KEEP |
 | `subpackageTools/exploration-export/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:740` | KEEP |
+| `pages/privacy/index` | 否 | `chengyinhub-xcx/app.js:349` | KEEP |
+| `pages/agreement/index` | 否 | `chengyinhub-xcx/components/cy/danger-confirm/index.wxml:5` | KEEP |
+| `pages/deregister/index` | 否 | `chengyinhub-xcx/pages/agreement/index.js:9` | KEEP |
+| `pages/team/detail/index` | 否 | `chengyinhub-xcx/pages/team/join/index.js:119` | KEEP |
+| `pages/team/join/index` | 否 | `chengyinhub-xcx/pages/team/detail/index.js:172` | KEEP |
 
 ## 验证与未验证
 

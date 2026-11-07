@@ -28,8 +28,8 @@ function shapeRound(row) {
     options: options,
     betCount: Number((row && row.betCount) || 0),
     betText: Number((row && row.betCount) || 0) > 0
-      ? (row.betCount + ' 个人押了这一轮')
-      : '这一轮还没有人押',
+      ? (row.betCount + ' 个人选了这一轮')
+      : '这一轮还没有人选',
     optionText: options.length + ' 个选项',
     daysLeft: days,
     // 0 天不是「还剩 0 天」,是「今天不给就没了」—— 后者才让人现在就动手
@@ -189,7 +189,7 @@ Page({
         show: true, rid: rid, key: this.data.pickedKey, label: picked.label || '',
         /* 把后果写全:结算是一次性的,而且会按规则发券 —— 这两件事
            点下去之后都撤不回来,不能等玩家来问才发现。 */
-        content: '押中的人会按你配的规则拿到奖励。这一轮只能公布一次，公布后不能改。',
+        content: '选对的人会按你配的规则拿到奖励。这一轮只能公布一次，公布后不能改。',
       },
     });
   },

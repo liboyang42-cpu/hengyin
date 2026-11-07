@@ -1,6 +1,7 @@
 // 商家「我承接的这一站」视图 —— 纯展示组件。
 // 属性一一列出而不是塞一个 vm 对象:页面的 data 是扁平的,一个 vm 会逼着页面
 // 再维护一份镜像,两份状态迟早漂移。这里啰嗦一点,换页面那边零改动。
+function openAddress() { return require('../../../../utils/open-address.js') }
 Component({
   options: { addGlobalClass: true },
   properties: {
@@ -80,6 +81,8 @@ Component({
     },
   },
   methods: {
+    // 第九轮 m1-9:节点地址一点开地图
+    onAddressTap(e) { openAddress().openFromEvent(e); },
     onSwitchStation(e) {
       // 形状照既有约定:{act, dataset},页面 onJoinAct 统一分发。别新造一套。
       this.triggerEvent('act', { act: 'switchStation', dataset: { id: e.currentTarget.dataset.id } })

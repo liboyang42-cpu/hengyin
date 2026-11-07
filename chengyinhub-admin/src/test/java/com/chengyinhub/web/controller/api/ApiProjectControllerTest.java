@@ -77,6 +77,8 @@ class ApiProjectControllerTest {
         controller = spy(new ApiProjectController());
         doReturn(ME).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper",
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantService", cmsRegistrationMerchantService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", merchantAccessService);
@@ -133,6 +135,30 @@ class ApiProjectControllerTest {
         verify(merchantAccessService, never()).require(anyLong(), anyString());
     }
 
+    /** 第十三轮 m1 P5:个人入口发布完跳项目页,商家身份不可用时回到本人的项目;明确的商家入口照旧拒绝。 */
+    @Test
+    void personalScopeFallsBackToSelfWhenMerchantIdentityIsUnavailable() {
+        MmsMerchant merchant = new MmsMerchant();
+        merchant.setMemberId(ME);
+        when(mmsMerchantService.selectMmsMerchantByMemberId(ME)).thenReturn(merchant);
+        when(merchantAccessService.require(ME, MerchantPermission.PROJECT_MANAGE))
+                .thenThrow(new com.chengyinhub.common.exception.ServiceException("商家身份无效或权限不足", 403));
+        Map<String, Object> expected = Collections.<String, Object>singletonMap("role", "host");
+        when(projectHomeReadService.getProjectHome(ME, SELF_TOPIC_ID)).thenReturn(expected);
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("topicId", SELF_TOPIC_ID);
+        body.put("scope", "");
+
+        AjaxResult response = controller.home(body);
+        assertEquals(200, response.get("code"));
+        assertEquals(expected, response.get("data"));
+        verify(projectHomeReadService).getProjectHome(ME, SELF_TOPIC_ID);
+
+        body.put("scope", "MERCHANT");
+        assertEquals(403, controller.home(body).get("code"));
+        verify(projectHomeReadService).getProjectHome(ME, SELF_TOPIC_ID);
+    }
+
     @Test
     void member_tab_returns_personal_topic_and_self_activity_only() {
         List<Map<String, Object>> rows = rows(call("member"));
@@ -151,6 +177,16 @@ class ApiProjectControllerTest {
             assertEquals("club", r.get("ownerType"));
         }
         assertTrue(ids(rows).containsAll(Arrays.asList(2L, 101L)));
+    }
+
+    /** check-1104 j1 F14:不挂俱乐部的活动(商家/个人自己发的)不再标「俱乐部活动」;projectType 键不变。 */
+    @Test
+    void onlyClubActivitiesAreLabelledClubActivity() {
+        List<Map<String, Object>> rows = rows(call(null));
+        assertEquals("俱乐部活动", rowById(rows, 101L).get("projectTypeText"));
+        assertEquals("活动", rowById(rows, 103L).get("projectTypeText"));
+        assertEquals("活动", rowById(rows, 102L).get("projectTypeText"));
+        assertEquals("club_activity", rowById(rows, 103L).get("projectType"), "活动 tab / 营销「管理活动」按这个键过滤,不改");
     }
 
     @Test
@@ -401,6 +437,40 @@ class ApiProjectControllerTest {
         AjaxResult result = call(null);
         Map<String, Object> row = rowById(rows(result), 2L);
         assertEquals(18, row.get("signupCount"));
+    }
+
+    /** 第九轮 m1-9:活动卡带选点坐标,地址一点开地图;没选过点就是空,前端走文字地址。 */
+    @Test
+    void activityRowsCarryPickedCoordinatesForTheAddressTap() {
+        CmsActivity picked = activity(104L, null, null);
+        picked.setAddressName("海星市场");
+        picked.setLatitude("31.11");
+        picked.setLongitude("121.38");
+        when(cmsActivityService.selectCmsActivityList(any(CmsActivity.class)))
+                .thenReturn(new ArrayList<>(Collections.singletonList(picked)));
+        Map<String, Object> row = rowById(rows(call(null)), 104L);
+        assertEquals("31.11", row.get("latitude"));
+        assertEquals("121.38", row.get("longitude"));
+        assertEquals("海星市场", row.get("addressName"));
+    }
+
+    @Test
+    void projectsExposeTemplateCopyWithoutChangingLiveTheme() {
+        CmsTopic live = topic(51L, null, "pro");
+        CmsTopic copy = topic(52L, null, "pro");
+        com.chengyinhub.business.mapper.CmsTopicMapper mapper = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        when(mapper.selectTemplateTopicIdsByMemberId(ME)).thenReturn(Collections.singletonList(52L));
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper", mapper);
+        when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
+                .thenAnswer(invocation -> {
+                    CmsTopic query = invocation.getArgument(0);
+                    return new ArrayList<>(Boolean.TRUE.equals(query.getExcludeTemplates())
+                            ? Collections.singletonList(live) : Arrays.asList(live, copy));
+                });
+        List<Map<String, Object>> result = rows(call(null));
+        assertEquals(false, rowById(result, 51L).get("isTemplate"));
+        assertEquals(true, rowById(result, 52L).get("isTemplate"));
+        assertEquals(live.getStatus(), copy.getStatus());
     }
 
     // ---- helpers ----

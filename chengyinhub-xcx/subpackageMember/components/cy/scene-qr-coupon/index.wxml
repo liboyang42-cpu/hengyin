@@ -1,5 +1,6 @@
 <view class="coupon-qr-body">
-  <cy-empty wx:if="{{state === 'missing'}}" fill size="lg" title="这个核销码无法打开" sub="请返回重新进入" cta="返回" bind:cta="close" />
+  <cy-empty wx:if="{{state === 'missing'}}" fill size="lg" title="这个核销码无法打开" cta="返回" bind:cta="close" />
+  <cy-empty wx:elif="{{state === 'notmine'}}" fill size="lg" title="这张券不在你的券包里" cta="返回" bind:cta="close" />
   <cy-empty wx:elif="{{useStatus === 0 && notStarted}}" fill size="lg" title="还没到可用时间" sub="{{errorText || (startText ? startText + ' 起可用' : '')}}" cta="重新获取" bind:cta="retryNow" />
   <block wx:elif="{{useStatus === 0}}">
     <cy-qr-voucher embedded="{{true}}" show="{{true}}" state="{{qrState}}" qr="{{qr}}" title="{{couponName}}" desc="出示给商家扫码核销" countdown="{{qrState === 'ready' ? '二维码 ' + countdown + 's 后自动刷新' : ''}}" error-text="{{errorText || '二维码未加载'}}" secondary-text="{{qrState === 'ready' ? '刷新二维码' : ''}}" mask-closable="{{false}}" bind:close="close" bind:retry="retryNow" bind:secondary="retryNow" />

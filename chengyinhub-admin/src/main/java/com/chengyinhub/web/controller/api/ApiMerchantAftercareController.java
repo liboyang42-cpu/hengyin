@@ -46,6 +46,18 @@ public class ApiMerchantAftercareController extends BaseController {
         }
     }
 
+    @Operation(summary = "商家人工退款工单只读进度")
+    @PostMapping("/manual-case-detail")
+    public AjaxResult manualCaseDetail(@RequestParam(value = "manualCaseId", required = false) Long manualCaseId) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        try {
+            return success(merchantAftercareService.manualCaseDetail(principal, manualCaseId));
+        } catch (ServiceException e) {
+            return serviceError(e);
+        }
+    }
+
     @Operation(summary = "追加商家退款意见或凭证（不改变审核/打款状态）")
     @PostMapping("/respond")
     public AjaxResult respond(@RequestParam(value = "refundId", required = false) Long refundId,

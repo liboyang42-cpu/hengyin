@@ -72,6 +72,26 @@ function mountPage() {
   return { page, requests, navigations, toasts, imageSelections, previews, modals, modalMock };
 }
 
+test('人工工单详情使用manualCaseId只读端点且不能进入回应或上传流程', () => {
+  const mounted = mountPage();
+  mounted.page.onLoad({ recordType: 'MANUAL_CASE', manualCaseId: '81' });
+  mounted.requests[0].success({ code: 200,
+    data: { active: true, canReadAftercare: true, canRespondAftercare: true } });
+  assert.equal(mounted.requests[1].url, '/api/merchant/aftercare/manual-case-detail?manualCaseId=81');
+  mounted.requests[1].success({ code: 200, data: { recordType: 'MANUAL_CASE', manualCaseId: 81,
+    manualCaseStatus: 'PENDING_ASSESSMENT', refundId: null, processing: 'PENDING_ASSESSMENT',
+    merchantOpinion: 'NOT_REQUIRED', canRespond: false, allowedDecisions: [], responses: [] } });
+  assert.equal(mounted.page.data.pageState, 'ready');
+  assert.equal(mounted.page.data.canRespond, false);
+  assert.match(mounted.page.data.respondBlockedText, /平台处理/);
+  mounted.page.onDecisionTap({ currentTarget: { dataset: { decision: 'AGREE' } } });
+  mounted.page.chooseEvidence();
+  mounted.page.submitResponse();
+  assert.equal(mounted.page.data.respondOpen, false);
+  assert.equal(mounted.imageSelections.length, 0);
+  assert.equal(mounted.requests.length, 2);
+});
+
 test('售后页先校验商家权限，无读取权限时不请求详情', () => {
   const denied = mountPage();
   denied.page.onLoad({ refundId: '81' });
@@ -173,12 +193,17 @@ test('回应失败重试复用 requestId，编辑草稿后生成新的 requestId
   assert.notEqual(changedBody.requestId, firstBody.requestId, '不同草稿不能复用旧 requestId');
 });
 
-test('缺 refundId 直接回售后列表，不请求任何接口也不出查单表单', () => {
-  const mounted = mountPage();
-  mounted.page.onLoad({});
-  assert.deepEqual(mounted.navigations, ['/pages/merchant/aftercare/index']);
-  assert.equal(mounted.requests.length, 0);
-  assert.equal(Object.prototype.hasOwnProperty.call(mounted.page, 'findAftercare'), false);
+test('缺所属资源ID、混用ID或未知类型直接回售后列表，不请求接口也不出查单表单', () => {
+  for (const options of [{}, { recordType: 'MANUAL_CASE' },
+    { recordType: 'MANUAL_CASE', manualCaseId: '81', refundId: '82' },
+    { recordType: 'REFUND', refundId: '81', manualCaseId: '82' },
+    { recordType: 'UNKNOWN', refundId: '81' }]) {
+    const mounted = mountPage();
+    mounted.page.onLoad(options);
+    assert.deepEqual(mounted.navigations, ['/pages/merchant/aftercare/index']);
+    assert.equal(mounted.requests.length, 0);
+    assert.equal(Object.prototype.hasOwnProperty.call(mounted.page, 'findAftercare'), false);
+  }
 
   // 负控:带合法 refundId 时不能被误重定向
   const ok = mountPage();

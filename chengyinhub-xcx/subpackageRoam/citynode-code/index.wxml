@@ -17,7 +17,6 @@
     fill="{{true}}"
     size="lg"
     title="这个核销码无法打开"
-    sub="请返回重新进入"
     cta="返回"
     bind:cta="onMissingBack"
   />

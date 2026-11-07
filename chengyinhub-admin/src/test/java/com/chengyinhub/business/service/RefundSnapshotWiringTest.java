@@ -79,8 +79,11 @@ class RefundSnapshotWiringTest {
         // 抹掉所有空白再比 —— 断言的是「喂了哪个字段」,不是「怎么换行的」。
         // 绑死排版会让一次 IDE 格式化把测试弄红,而错误信息还指着业务逻辑,把排查者带偏。
         String src = sourceOf(REG_SERVICE).replaceAll("\\s+", "");
-        assertTrue(src.contains("snapshotOnPurchase(registration.getPurchaseKind(),ticket.getEndTime())"),
-                "③ 的锚点源 = ticket.getEndTime();喂 startTime/主题 endDate 都会冻出一个错的截止点");
+        // 2026-11-03 通行证三档:锚 = 票的开始时间(履约窗开始);缺开始时间时仍按旧码冻 end_time。
+        assertTrue(src.contains("snapshotOnPurchase(registration.getPurchaseKind(),ticket.getStartTime(),ticket.getEndTime())"),
+                "③ 的锚点源 = ticket.getStartTime()(三档)/ ticket.getEndTime()(旧码兜底)");
+        assertTrue(src.contains("RefundPolicy.snapshotSelfPlayPass(topic)"),
+                "② 自玩通行证下单也要冻三档快照,否则新单仍按旧口径全额退");
     }
 
     /**
@@ -107,9 +110,13 @@ class RefundSnapshotWiringTest {
         String api = sourceOf(
                 "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/registration/RegistrationQueryApplication.java");
 
-        assertEquals(1, countOccurrences(team, "r.getRefundDeadline()"),
-                "活动仍读取快照；主题退款改由 FulfillmentWindowResolver 统一履约窗");
-        assertEquals(countOccurrences(api, "RefundPolicy.evaluate("),
+        // 2026-11-03:主题退款(②/③ 三档)也读下单快照 ⇒ 活动一处 + 主题一处。
+        assertEquals(2, countOccurrences(team, "r.getRefundDeadline()"),
+                "活动与主题退款都读下单快照;多出来的读点 = 将来只改一处");
+        assertEquals(2, countOccurrences(team, "r.getRefundPolicyCode()"),
+                "快照码与快照时刻成对传,缺码 = 三档单按旧口径退");
+        assertEquals(countOccurrences(api, "RefundPolicy.evaluate(")
+                        + countOccurrences(api, "RefundPolicy.evaluateTopicFulfillmentWindow("),
                 countOccurrences(api, "registration.getRefundDeadline()"),
                 "每个退款展示/列表调用点都要传快照 —— 展示与执行不同口径 = 页面说可退、点了退不了");
     }
@@ -141,14 +148,14 @@ class RefundSnapshotWiringTest {
     @Test
     void legacyOverloadsAndNullSnapshotOrFreeCancellationFactsFailTheContract() {
         List<String> valid = arguments("2L,r.getPaymentStatus(),r.getVerificationStatus(),null,null,null,"
-                + "activity.getStartDate(),r.getPurchaseKind(),r.getRefundDeadline(),"
+                + "activity.getStartDate(),r.getPurchaseKind(),r.getRefundDeadline(),r.getRefundPolicyCode(),"
                 + "r.getPayableAmount(),r.getPointUsed(),new Date())", 0);
         assertSnapshotAndFreeCancellationArguments(valid, "fixture");
-        for (int count : new int[]{8, 10}) {
+        for (int count : new int[]{8, 10, 12}) {
             assertThrows(AssertionError.class, () -> assertSnapshotAndFreeCancellationArguments(
                     valid.subList(0, count), "legacy"));
         }
-        for (int position : new int[]{8, 9, 10}) {
+        for (int position : new int[]{8, 9, 10, 11}) {
             List<String> missing = new ArrayList<>(valid);
             missing.set(position, "null");
             assertThrows(AssertionError.class, () -> assertSnapshotAndFreeCancellationArguments(missing, "null"));
@@ -156,10 +163,11 @@ class RefundSnapshotWiringTest {
     }
 
     private static void assertSnapshotAndFreeCancellationArguments(List<String> args, String file) {
-        assertEquals(12, args.size(), file + " 必须同时传已售快照和免费取消的现金/积分事实");
+        assertEquals(13, args.size(), file + " 必须同时传已售快照(时刻+码)和免费取消的现金/积分事实");
         assertTrue(args.get(8).matches("(?:r|registration)\\.getRefundDeadline\\(\\)"), file + " 未读已售快照");
-        assertTrue(args.get(9).matches("(?:r|registration)\\.getPayableAmount\\(\\)"), file + " 未读实际应付额");
-        assertTrue(args.get(10).matches("(?:r|registration)\\.getPointUsed\\(\\)"), file + " 未读实际积分使用额");
+        assertTrue(args.get(9).matches("(?:r|registration)\\.getRefundPolicyCode\\(\\)"), file + " 未读已售快照码");
+        assertTrue(args.get(10).matches("(?:r|registration)\\.getPayableAmount\\(\\)"), file + " 未读实际应付额");
+        assertTrue(args.get(11).matches("(?:r|registration)\\.getPointUsed\\(\\)"), file + " 未读实际积分使用额");
     }
 
     /** 读取调用的顶层实参，嵌套getter/构造调用内的逗号不算分隔符。 */

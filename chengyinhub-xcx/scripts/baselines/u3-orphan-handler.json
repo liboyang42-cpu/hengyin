@@ -8,7 +8,7 @@
     "subpackageMember/components/cy/profile/index.js::onCompare",
     "subpackageMember/components/cy/profile/index.js::onThemeTap",
     "components/cy/qr-voucher/index.js::onMask",
-    "components/cy/scene-route-content/index.js::onFilterTap",
+    "subpackageMember/components/cy/scene-route-content/index.js::onFilterTap",
     "pages/addressinfo/addressinfo.js::onDefaultChange",
     "pages/gerenziliao/gerenziliao.js::onCaseIntroductonChange",
     "pages/merchant/index/index.js::goCoopProfile",

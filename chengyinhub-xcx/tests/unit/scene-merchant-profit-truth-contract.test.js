@@ -5,8 +5,8 @@ const path = require('node:path')
 const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
-const JS_PATH = 'components/cy/scene-merchant-profit/index.js'
-const WXSS_PATH = 'components/cy/scene-merchant-profit/index.wxss'
+const JS_PATH = 'subpackageA/components/scene-merchant-profit/index.js'
+const WXSS_PATH = 'subpackageA/components/scene-merchant-profit/index.wxss'
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
 function loadScene(mutate) {
@@ -24,7 +24,7 @@ function loadScene(mutate) {
   let definition
   vm.runInNewContext(source, {
     getApp: () => app,
-    require: p => p.includes('login-reload') ? require('../../utils/session/login-reload.js') : (p.includes('page-motion') ? require('../../utils/page-motion.js') : ({ showWithdrawCsPopup: () => popups.push(true) })),
+    require: p => p.includes('money-format') ? require('../../utils/money-format.js') : p.includes('login-reload') ? require('../../utils/session/login-reload.js') : (p.includes('page-motion') ? require('../../utils/page-motion.js') : ({ showWithdrawCsPopup: () => popups.push(true) })),
     Component: (value) => { definition = value },
     wx: { navigateTo(o) { navigations.push(o.url) } },
   }, { filename: JS_PATH })

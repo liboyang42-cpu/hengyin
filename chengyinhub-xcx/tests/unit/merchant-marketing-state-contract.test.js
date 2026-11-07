@@ -16,6 +16,8 @@ let requests
 let navigations
 let memberId
 let sessionResult
+let managerCalls = 0
+let firstLogins = 0
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -24,9 +26,11 @@ function currentApp() {
     globalData: { statusBarHeight: 44, navBarHeight: 44 },
     getUserID: () => memberId,
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
+    firstLogin: () => { firstLogins += 1; memberId = 'merchant-a'; return Promise.resolve({ ok: true }) },
     getSessionManager: () => ({
       // 成功等价于 session-store 落地(真实 session-manager 会写 user_id)。
       ensureSession: () => {
+        managerCalls += 1
         if (sessionResult.ok && !memberId) memberId = 'merchant-a'
         return Promise.resolve(sessionResult)
       },
@@ -63,6 +67,8 @@ function loadPage() {
   navigations = []
   memberId = 'merchant-a'
   sessionResult = { ok: true }
+  managerCalls = 0
+  firstLogins = 0
   delete require.cache[require.resolve(PAGE_PATH)]
   require(PAGE_PATH)
   const page = Object.assign({}, pageDefinition)
@@ -84,7 +90,7 @@ function analyticsPayload(windowDays = 30) {
     semantics: 'INDEPENDENT_EVENT_COUNTS',
     windowDays,
     window: {
-      timezone: 'Asia/Shanghai', basis: 'COMPLETE_CALENDAR_DAYS',
+      timezone: 'Asia/Shanghai', basis: 'DAYS_INCL_TODAY',
       previousStartInclusive, currentStartInclusive, endExclusive,
     },
     stages: [
@@ -163,11 +169,13 @@ function assertStateMarkup(wxml) {
     '未知优惠券数量不得被 || 0 冒充成真实零值')
   assert.match(wxml, /funnelLoading\s*&&\s*!marketingLoaded[\s\S]{0,300}?class="mine" wx:else/,
     '我的内容空态只能出现在首载成功之后')
-  // 2026-09-16 去闸:未登录不再整屏「登录后查看商家营销」,静默登录后加载;
-  // 登录/身份确认失败落 entryError 内联错误,岗位拒权落页内 denied 说明。
+  // 2026-09-16 去闸:不再整屏「登录后查看商家营销 / 去登录」状态壳;身份确认失败落 entryError 内联错误,
+  // 岗位拒权落页内 denied 说明。2026-10-24 owner 规则(app.js:142-144)取代旧「游客静默登录」:
+  // 游客落全站同款「登录后查看营销 · 登录」(cy-empty),点了才登录(j6 F1)。
   assert.doesNotMatch(wxml, /cy-state-shell/, '整屏状态壳必须删除')
   assert.doesNotMatch(wxml, /accessState\s*===\s*'anonymous'/, '未登录不得再有整屏态')
-  assert.doesNotMatch(wxml, /登录后查看|去登录/, '整屏闸文案必须删除')
+  assert.doesNotMatch(wxml, /登录后查看商家营销|去登录/, '整屏闸文案必须删除')
+  assert.match(wxml, /<cy-empty wx:if="\{\{guestLogin\}\}"[^>]*title="登录后查看营销" cta="登录" bind:cta="onGuestLogin"/)
   assert.match(wxml, /<cy-inline-error[^>]*wx:if="\{\{entryError\}\}"[^>]*bind:action="retryAll"/,
     '登录/身份确认失败必须落页内内联错误并可重试')
   assert.match(wxml, /<cy-inline-error[^>]*wx:elif="\{\{accessState === 'denied'\}\}"[^>]*bind:action="retryAll"/,
@@ -186,7 +194,7 @@ test('首载呈现骨架;未确认的数字位写 0、状态位说实话', () =>
   assert.equal(page.data.couponCard.sub, '数据待同步')
   assert.equal(page.data.myContent.every((item) => item.count === null), true,
     '内部真值仍是 null:零内容与未确认在路由上必须可分(见「未知内容数量不会被当作零内容」)')
-  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0', '0'])
+  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0'])
   assert.equal(page.data.funnelLoading, true)
   assertStateMarkup(fs.readFileSync(WXML_PATH, 'utf8'))
 })
@@ -200,7 +208,7 @@ test('服务端明确全零后才进入业务空态，零值仍保留为已确�
 
   assert.equal(page.data.marketingLoaded, true)
   assert.equal(page.data.couponCard, null, '服务端明确回零张才允许是 null(落虚线空态)')
-  assert.deepEqual(page.data.myContent.map((item) => item.count), [0, 0, 0])
+  assert.deepEqual(page.data.myContent.map((item) => item.count), [0, 0])
   assert.equal(page.data.funnelLoading, false)
 
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
@@ -386,15 +394,26 @@ test('聚合身份错误后的重新确认若遇到断网，不能继续沿用�
   assert.notEqual(page.data.accessState, 'denied', '断网不是拒权,重试入口必须留着')
 })
 
-test('未登录不再整屏拦:静默登录成功后自动确认权限并加载营销', async () => {
+test('游客打开营销:不静默建号,落「登录后查看营销」,不发请求(j6 F1)', async () => {
   const page = loadPage()
   memberId = ''
   page.onLoad()
-  assert.equal(page.data.entryError, '', '静默登录期间不先摆错误态')
-
   await flush()
+  assert.equal(page.data.guestLogin, true)
+  assert.equal(page.data.entryError, '')
+  assert.equal(managerCalls, 0, '游客打开页面不得走 wx.login → /api/login/code')
+  assert.equal(requests.length, 0)
+})
+
+test('游客点「登录」才登录,登录后自动确认权限并加载营销', async () => {
+  const page = loadPage()
+  memberId = ''
+  page.onLoad()
+  page.onGuestLogin()
+  await flush()
+  assert.equal(firstLogins, 1)
   const access = requests.find((request) => request.url === '/api/merchant/access/me')
-  assert.ok(access, '静默登录成功后必须自动继续权限确认')
+  assert.ok(access, '登录成功后必须自动继续权限确认')
   access.success({
     code: 200,
     data: {
@@ -404,19 +423,8 @@ test('未登录不再整屏拦:静默登录成功后自动确认权限并加载�
       permissions: ['merchant:basic:read', 'merchant:marketing:read'],
     },
   })
+  assert.equal(page.data.guestLogin, false)
   assert.ok(marketingRequest(), '权限确认后必须自动拉营销数据')
-})
-
-test('静默登录失败落 entryError 内联错误,不发权限请求', async () => {
-  const page = loadPage()
-  memberId = ''
-  sessionResult = { ok: false, reason: 'networkFail' }
-  page.onLoad()
-  await flush()
-
-  assert.equal(page.data.entryError, '登录失败，请重试')
-  assert.equal(requests.length, 0, '登录没成功不该发营销请求')
-  assert.equal(page.data.accessState, 'checking')
 })
 
 test('身份 401 静默重登一次后自动重拉,不落整屏去登录', async () => {
@@ -433,17 +441,19 @@ test('身份 401 静默重登一次后自动重拉,不落整屏去登录', async
 
 test('重新确认会清掉 entryError 并真的再走一次入口链路', async () => {
   const page = loadPage()
+  const request = startMarketing(page)
   memberId = ''
   sessionResult = { ok: false }
-  page.onLoad()
+  request.fail({ code: 401, msg: '登录状态失效' }, 401)
   await flush()
   assert.ok(page.data.entryError)
 
+  memberId = 'merchant-a'
   sessionResult = { ok: true }
   page.retryAll()
   assert.equal(page.data.entryError, '')
   await flush()
-  assert.ok(requests.some((r) => r.url === '/api/merchant/access/me'), '重试必须真的再走一次权限确认')
+  assert.ok(requests.filter((r) => r.url === '/api/merchant/access/me').length >= 2, '重试必须真的再走一次权限确认')
 })
 
 // 2026-09-17 拍板 #25:岗位没开营销权限时,页面只留一句说明,不再渲染
@@ -555,7 +565,7 @@ test('营销页数字位不许出现横杠占位(用户裁决 2026-09-19)', () =
   const page = loadPage()
   startMarketing(page)
   assert.equal(page.data.hero.value, '0')
-  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0', '0'])
+  assert.deepEqual(page.data.myContent.map((item) => item.countText), ['0', '0'])
   assert.equal(page.data.couponCard.title, '0 张在投放')
   // 负控:把未知态改回横杠,上面那条扫描必须抓到(证明它不是恒绿的空扫)
   // 锚点跟的是 heroPlaceholder 的返回字面量(#1088 把 HERO_UNKNOWN 常量重构成了函数,
@@ -563,4 +573,14 @@ test('营销页数字位不许出现横杠占位(用户裁决 2026-09-19)', () =
   const regressed = js.replace("return { value: '0', sub: '', label: label", "return { value: '—', sub: '', label: label")
   assert.notEqual(regressed, js, '负控锚点失效:heroPlaceholder 字面量已改名,扫描口径需同步')
   assert.match(regressed, /(['"])—+\1/, '把未知态改回横杠时裁决必须转红')
+})
+
+test('M-10 我的内容只有主题和活动：自由探索计入主题', () => {
+  const page = loadPage()
+  const items = page._buildContentItems({ topicCount: 1, freeExploreCount: 2, activityCount: 3 })
+  assert.deepEqual(items.map((item) => [item.key, item.title, item.count]), [['topic', '主题', 3], ['activity', '活动', 3]])
+  assert.equal(page._buildContentItems({}).every((item) => item.count == null), true, '未读到仍是 null,不当成零')
+  const wxml = fs.readFileSync(WXML_PATH, 'utf8')
+  assert.doesNotMatch(wxml, /title="还没有营销数据"/)
+  assert.match(wxml, /title="还没有主题和活动"/)
 })

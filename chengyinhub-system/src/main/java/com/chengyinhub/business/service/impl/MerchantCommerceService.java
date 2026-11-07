@@ -112,16 +112,22 @@ public class MerchantCommerceService implements IMerchantCommerceService {
 
     @Override
     public Map<String, String> orderStatus(Long memberId, Long merchantId, String orderSn) {
+        OmsOrder order = readOwnedOrder(memberId, merchantId, orderSn);
+        Map<String, String> result = new LinkedHashMap<>();
+        result.put("orderSn", order.getOrderSn());
+        result.put("paymentStatus", statusOf(order));
+        return result;
+    }
+
+    /** 普通 SELECT；订单中心和原状态入口共用同一归属校验。 */
+    public OmsOrder readOwnedOrder(Long memberId, Long merchantId, String orderSn) {
         if (orderSn == null || orderSn.trim().isEmpty()) throw new IllegalArgumentException("订单编号不合法");
         OmsOrder order = orderMapper.selectOmsOrderByOrderSn(orderSn.trim());
         if (order == null || order.getBizType() == null
                 || !memberId.equals(order.getMemberId()) || !merchantId.equals(order.getMmsMerchantId())) {
             throw new IllegalArgumentException("无权查看该订单");
         }
-        Map<String, String> result = new LinkedHashMap<>();
-        result.put("orderSn", order.getOrderSn());
-        result.put("paymentStatus", statusOf(order));
-        return result;
+        return order;
     }
 
     @Override
@@ -310,7 +316,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         return result;
     }
 
-    private String statusOf(OmsOrder order) {
+    public String statusOf(OmsOrder order) {
         if (Long.valueOf(1L).equals(order.getStatus())) return "success";
         if (Long.valueOf(5L).equals(order.getStatus()) || Long.valueOf(6L).equals(order.getStatus())) return "failed";
         return "pending";

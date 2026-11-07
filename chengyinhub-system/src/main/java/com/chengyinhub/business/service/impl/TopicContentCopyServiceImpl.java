@@ -13,6 +13,8 @@ import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsCollaboratorsMapper;
 import com.chengyinhub.business.mapper.NpcProfileMapper;
+import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.service.ITopicContentCopyService;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.IProductRoleService;
@@ -30,6 +32,9 @@ import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +58,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     @Autowired private CmsMemberTemplateMapper cmsMemberTemplateMapper;
     @Autowired private CmsCollaboratorsMapper cmsCollaboratorsMapper;
     @Autowired private NpcProfileMapper npcProfileMapper;
+    @Autowired private OmsTicketMapper omsTicketMapper;
     @Autowired private ISysCategoryService sysCategoryService;
     @Autowired private IProductRoleService productRoleService;
     @Autowired private ICmsMemberTemplateService cmsMemberTemplateService;
@@ -117,12 +123,19 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
             remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
-            preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
+            preserveCopiedCompletionRule(originalTopic, newTopic);
             // 站点玩法里引用的状态键要跟着走:副本不注册,发布闸「以下状态键未注册」把套模板的人整个挡住
             copyStateKeys(id, newTopicId);
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
+            // p3 N6(第十二轮 k9):「应用」模板后票种丢了,草稿只剩空票务。整包复制把主题票种一起带上;
+            // 只抄票的设定,库存回满,不带场次票、报名与售出。副本是草稿,未上架,不会开卖。
+            copyTopicTicketTypes(id, newTopic);
+        }
+        if (params != null && Boolean.TRUE.equals(params.get("saveDraft"))
+                && cmsTopicMapper.updateTopicDraftState(newTopicId, 1) != 1) {
+            throw new IllegalStateException("复制主题草稿保存失败");
         }
         return newTopicId;
     }
@@ -152,9 +165,10 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         themeStateKeyService.register(copyTopicId, copies);
     }
 
-    private void preserveSameOwnerCopiedCompletionRule(CmsTopic original, CmsTopic copy) {
-        if (original.getMemberId() == null || !original.getMemberId().equals(copy.getMemberId())
-                || StringUtils.isBlank(original.getCompleteRuleJson())) return;
+    private void preserveCopiedCompletionRule(CmsTopic original, CmsTopic copy) {
+        if (StringUtils.isBlank(original.getCompleteRuleJson())) return;
+        boolean sameOwner = original.getMemberId() != null && original.getMemberId().equals(copy.getMemberId());
+        if (!sameOwner && !Integer.valueOf(ProductType.ORIENTEERING).equals(copy.getProductType())) return;
         if (copy.getId() == null || copy.getId() <= 0L) {
             throw new IllegalStateException("完整复制失败，副本主题身份缺失");
         }
@@ -167,10 +181,29 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         if (sourceCount != copiedCount) {
             throw new IllegalStateException("完整复制节点数量不一致，未保留通关规则");
         }
+        String rule = topicCompletionRulePolicy.validateAndNormalize(
+                original.getCompleteRuleJson(), copiedCount, copy.getProductType());
+        if (!sameOwner) {
+            // 跨作者只带节点数量合同，奖励、核销及其他配置仍须由副本作者自行配置。
+            try {
+                ObjectMapper json = new ObjectMapper();
+                JsonNode root = json.readTree(rule);
+                JsonNode source = root.get("nodeCompletion");
+                if (source == null || source.isNull()) return;
+                ObjectNode safe = json.createObjectNode();
+                ObjectNode node = safe.putObject("nodeCompletion");
+                node.put("mode", source.path("mode").asText("ALL"));
+                if ("AT_LEAST".equals(node.path("mode").asText())) {
+                    node.put("requiredCount", source.path("requiredCount").asInt());
+                }
+                rule = safe.toString();
+            } catch (java.io.IOException e) {
+                throw new IllegalArgumentException("主题通关规则不是合法 JSON", e);
+            }
+        }
         CmsTopic patch = new CmsTopic();
         patch.setId(copy.getId());
-        patch.setCompleteRuleJson(topicCompletionRulePolicy.validateAndNormalize(
-                original.getCompleteRuleJson(), copiedCount, copy.getProductType()));
+        patch.setCompleteRuleJson(rule);
         if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
             throw new IllegalStateException("副本通关规则保存失败");
         }
@@ -271,6 +304,8 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             newChapter.setBlocksJson(originalChapter.getBlocksJson());
             newChapter.setAtmospherePreset(originalChapter.getAtmospherePreset());
             newChapter.setAudioUrl(originalChapter.getAudioUrl());
+            newChapter.setVideoUrl(originalChapter.getVideoUrl());
+            newChapter.setVideoPosterUrl(originalChapter.getVideoPosterUrl());
             newChapter.setImgArr(originalChapter.getImgArr());
             newChapter.setTotalTime(originalChapter.getTotalTime());
             newChapter.setTotalMileage(originalChapter.getTotalMileage());
@@ -567,6 +602,50 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             copy.setVoiceStatus(NodeNpcService.VOICE_NONE);
         }
         return copy;
+    }
+
+    private static final Long OWNER_TYPE_TOPIC = 1L;
+
+    private void copyTopicTicketTypes(Long originalTopicId, CmsTopic newTopic) {
+        if (omsTicketMapper == null) return; // 手工 new 的旧单测未注入;Spring 运行态必注入
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(OWNER_TYPE_TOPIC);
+        query.setOwnerId(originalTopicId);
+        query.setDelFlag(0);
+        for (OmsTicket source : nullToEmpty(omsTicketMapper.selectOmsTicketList(query))) {
+            OmsTicket copy = new OmsTicket();
+            copy.setMemberId(newTopic.getMemberId());
+            copy.setOwnerType(OWNER_TYPE_TOPIC);
+            copy.setOwnerId(newTopic.getId());
+            copy.setName(source.getName());
+            copy.setPrice(source.getPrice());
+            copy.setTotalInventory(source.getTotalInventory());
+            copy.setRemainingInventory(source.getTotalInventory());
+            copy.setStartTime(source.getStartTime());
+            copy.setEndTime(source.getEndTime());
+            copy.setSaleStartTime(source.getSaleStartTime());
+            copy.setSaleEndTime(source.getSaleEndTime());
+            copy.setMode(source.getMode());
+            copy.setSubType(source.getSubType());
+            copy.setMeetingPoint(source.getMeetingPoint());
+            copy.setMeetingPointAddress(source.getMeetingPointAddress());
+            copy.setTeamSize(source.getTeamSize());
+            copy.setMinPeople(source.getMinPeople());
+            copy.setMaxPeople(source.getMaxPeople());
+            copy.setSignupDeadline(source.getSignupDeadline());
+            copy.setGatherLng(source.getGatherLng());
+            copy.setGatherLat(source.getGatherLat());
+            copy.setRefundRule(source.getRefundRule());
+            copy.setRefundSupported(source.getRefundSupported());
+            copy.setSyncWithTheme(source.getSyncWithTheme());
+            copy.setNeedAudit(source.getNeedAudit());
+            copy.setDelFlag(0);
+            copy.setCreateBy("system_copy");
+            copy.setCreateTime(new Date());
+            if (omsTicketMapper.insertOmsTicket(copy) != 1) {
+                throw new IllegalStateException("复制主题票种失败");
+            }
+        }
     }
 
     private void copyCollaborators(Long originalTopicId, Long newTopicId) {

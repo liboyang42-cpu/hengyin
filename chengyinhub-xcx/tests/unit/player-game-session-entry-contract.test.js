@@ -235,7 +235,8 @@ test('D05 暂停节点把服务端批准的替代行动展示给玩家', () => {
   assert.match(wxml, /item\.status === 'PAUSED'/)
   assert.match(wxml, /\{\{item\.fallback\.playerMessage\}\}/)
   assert.match(wxml, /\{\{item\.fallback\.targetNodeName\}\}/)
-  assert.match(wxml, /\{\{item\.fallback\.planCode\}\} v\{\{item\.fallback\.planVersion\}\}/)
+  // walk-fix Round5 #4/#9:备用方案代码 planCode / 版本号是后台代码,玩家只看「前往 某站」
+  assert.doesNotMatch(wxml, /\{\{item\.fallback\.planCode\}\}/)
 })
 
 test('R9-38 暂停节点无保底路线也展示暂停安排与退款去处', () => {

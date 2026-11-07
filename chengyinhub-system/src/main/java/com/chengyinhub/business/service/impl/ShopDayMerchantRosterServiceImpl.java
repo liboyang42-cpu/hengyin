@@ -42,7 +42,7 @@ public class ShopDayMerchantRosterServiceImpl implements IShopDayMerchantRosterS
                                     boolean sensitiveContactVisible) {
         if (merchantMemberId == null || merchantMemberId <= 0L || topicId == null || topicId <= 0L
                 || rosterMapper.countLiveMerchantScope(topicId, merchantMemberId) <= 0) {
-            throw new RuntimeException("无权查看该探店日门店名单");
+            throw new RuntimeException("无权查看该自由探索门店名单");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
         List<ShopDayMerchantRosterFact> facts = rosterMapper.selectRoster(topicId, merchantMemberId);

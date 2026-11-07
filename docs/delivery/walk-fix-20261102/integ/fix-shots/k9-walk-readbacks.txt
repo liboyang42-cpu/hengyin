@@ -1,0 +1,174 @@
+FIXTURE TIME SHIFT cms_activity 9: 2026-11-05 16:00:00..2026-11-05 23:59:59 -> 2026-11-05 14:38:55..2026-11-05 22:38:54 (Shanghai wall time; mysql NOW()=2026-11-05 06:18:55 UTC)
+Redis caches may hold the old window; if a page still says 未开始, re-open it.
+FIXTURE TIME SHIFT cms_activity 9: 2026-11-05 14:38:55..2026-11-05 22:38:54 -> 2026-11-05 14:21:03..2026-11-05 22:21:02 (Shanghai wall time; mysql NOW()=2026-11-05 06:22:03 UTC)
+Redis caches may hold the old window; if a page still says 未开始, re-open it.
+((1, 71, datetime.datetime(2026, 11, 5, 9, 0), datetime.datetime(2026, 11, 5, 18, 0)), (2, 72, datetime.datetime(2026, 11, 5, 14, 18, 55), datetime.datetime(2026, 11, 5, 22, 38, 54)), (3, 73, datetime.datetime(2026, 11, 5, 14, 18, 55), datetime.datetime(2026, 11, 5, 22, 38, 54)))
+SELECT id,start_date,end_date,is_settlement -> ((9, datetime.datetime(2026, 10, 27, 14, 21, 3), datetime.datetime(2026, 10, 27, 22, 21, 2), 0),)
+SELECT id,balance -> ((9001, Decimal('0.00')), (9002, Decimal('0.00')), (990005, Decimal('0.00')), (990006, Decimal('0.00')))
+145 分润结算（活动+主题） {"msg": "操作成功", "code": 200, "_status": 200}
+146 商家结算T+7打款 {"msg": "操作成功", "code": 200, "_status": 200}
+SELECT job_log_id,job_name,status,LEFT(exception_info,200) -> ((70581, '商家结算T+7打款', '0', ''), (70580, '分润结算（活动+主题）', '0', ''))
+SELECT id,is_settlement -> ((9, 0),)
+SELECT id,balance -> ((9001, Decimal('0.00')), (9002, Decimal('0.00')), (990005, Decimal('0.00')), (990006, Decimal('0.00')))
+SELECT member_id,event_type,event_id,change_balance,after_ba -> ()
+SELECT * -> ((1, 4, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 74, 'merchant', 990005, Decimal('37.83'), Decimal('0.00'), Decimal('37.83'), 0, None, 'registration:74:merchant:990005', datetime.datetime(2026, 11, 5, 6, 11, 7), None), (2, 5, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 74, 'platform', 0, Decimal('1.17'), Decimal('0.00'), Decimal('1.17'), 0, None, 'registration:74:platform:0', datetime.datetime(2026, 11, 5, 6, 11, 7), None), (3, 6, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 75, 'merchant', 990005, Decimal('37.83'), Decimal('0.00'), Decimal('37.83'), 0, None, 'registration:75:merchant:990005', datetime.datetime(2026, 11, 5, 6, 12, 2), None), (4, 7, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 75, 'platform', 0, Decimal('1.17'), Decimal('0.00'), Decimal('1.17'), 0, None, 'registration:75:platform:0', datetime.datetime(2026, 11, 5, 6, 12, 2), None), (5, 8, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 76, 'merchant', 990005, Decimal('37.83'), Decimal('0.00'), Decimal('37.83'), 0, None, 'registration:76:merchant:990005', datetime.datetime(2026, 11, 5, 6, 12, 50), None), (6, 9, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 76, 'platform', 0, Decimal('1.17'), Decimal('0.00'), Decimal('1.17'), 0, None, 'registration:76:platform:0', datetime.datetime(2026, 11, 5, 6, 12, 50), None), (7, 10, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 77, 'merchant', 990005, Decimal('37.83'), Decimal('0.00'), Decimal('37.83'), 0, None, 'registration:77:merchant:990005', datetime.datetime(2026, 11, 5, 6, 13, 40), None), (8, 11, 'ORIGIN', 'ORIGIN', 0, 990005, 'registration', 77, 'platform', 0, Decimal('1.17'), Decimal('0.00'), Decimal('1.17'), 0, None, 'registration:77:platform:0', datetime.datetime(2026, 11, 5, 6, 13, 40), None))
+SELECT id,coop_order_id,status -> ()
+SELECT * -> ()
+SELECT * -> ()
+--- r2 second settle run, extra shift 7 days (total 16)
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-hengyin/56eae147-f476-5efe-accc-4af235dd1b41/scratchpad/tools/j2/tools/k_settle.py", line 10, in <module>
+    q("SELECT id,start_date,end_date,is_settlement FROM cms_activity WHERE id=9" % (SHIFT, SHIFT))
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+TypeError: not all arguments converted during string formatting
+SELECT id,start_date,end_date,is_settlement -> ((9, datetime.datetime(2026, 10, 20, 14, 21, 3), datetime.datetime(2026, 10, 20, 22, 21, 2), 0),)
+SELECT id,balance -> ((9001, Decimal('0.00')), (9002, Decimal('0.00')), (990005, Decimal('0.00')), (990006, Decimal('0.00')))
+145 分润结算（活动+主题） {"msg": "操作成功", "code": 200, "_status": 200}
+146 商家结算T+7打款 {"msg": "操作成功", "code": 200, "_status": 200}
+SELECT job_log_id,job_name,status,LEFT(exception_info,200) -> ((70586, '玩家队伍超时结束', '0', ''), (70585, '商家结算T+7打款', '0', ''))
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-hengyin/56eae147-f476-5efe-accc-4af235dd1b41/scratchpad/tools/j2/tools/k_settle.py", line 18, in <module>
+    q("SELECT id,is_settlement FROM cms_activity WHERE id=9" % (SHIFT, SHIFT))
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+TypeError: not all arguments converted during string formatting
++----+---------------+
+| id | is_settlement |
++----+---------------+
+|  9 |             1 |
++----+---------------+
++--------+---------+
+| id     | balance |
++--------+---------+
+|   9001 |    4.68 |
+|   9002 |   20.00 |
+| 990005 |  131.32 |
+| 990006 |    0.00 |
++--------+---------+
++-----------+------------+----------+----------------+---------------+------------------------------------------------------+
+| member_id | event_type | event_id | change_balance | after_balance | change_reason                                        |
++-----------+------------+----------+----------------+---------------+------------------------------------------------------+
+|    990005 |          3 |        9 |         131.32 |        131.32 | 活动分润 - 人民广场 · 喷泉报时                       |
+|      9002 |         95 |        9 |          20.00 |         20.00 | 合作商家核销费 - 人民广场 · 喷泉报时                 |
+|      9001 |          7 |        9 |           4.68 |          4.68 | 活动平台分润 - 人民广场 · 喷泉报时                   |
++-----------+------------+----------+----------------+---------------+------------------------------------------------------+
++----+--------------+-----------+---------------+-------------+--------------+-------------------+--------+------------+
+| id | source_type  | source_id | receiver_type | receiver_id | gross_amount | settlement_amount | status | entry_kind |
++----+--------------+-----------+---------------+-------------+--------------+-------------------+--------+------------+
+|  1 | registration |        74 | merchant      |      990005 |        32.83 |             32.83 |      1 | ORIGIN     |
+|  2 | registration |        74 | platform      |           0 |         1.17 |              1.17 |      1 | ORIGIN     |
+|  3 | registration |        75 | merchant      |      990005 |        32.83 |             32.83 |      1 | ORIGIN     |
+|  4 | registration |        75 | platform      |           0 |         1.17 |              1.17 |      1 | ORIGIN     |
+|  5 | registration |        76 | merchant      |      990005 |        32.83 |             32.83 |      1 | ORIGIN     |
+|  6 | registration |        76 | platform      |           0 |         1.17 |              1.17 |      1 | ORIGIN     |
+|  7 | registration |        77 | merchant      |      990005 |        32.83 |             32.83 |      1 | ORIGIN     |
+|  8 | registration |        77 | platform      |           0 |         1.17 |              1.17 |      1 | ORIGIN     |
+|  9 | registration |        74 | coop_merchant |        9002 |         5.00 |              5.00 |      1 | ORIGIN     |
+| 10 | registration |        75 | coop_merchant |        9002 |         5.00 |              5.00 |      1 | ORIGIN     |
+| 11 | registration |        76 | coop_merchant |        9002 |         5.00 |              5.00 |      1 | ORIGIN     |
+| 12 | registration |        77 | coop_merchant |        9002 |         5.00 |              5.00 |      1 | ORIGIN     |
++----+--------------+-----------+---------------+-------------+--------------+-------------------+--------+------------+
+--- r2 after refund of reg 77
++----+----------------+---------------------+
+| id | payment_status | registration_status |
++----+----------------+---------------------+
+| 74 |              2 |                   2 |
+| 75 |              2 |                   2 |
+| 76 |              2 |                   2 |
+| 77 |              4 |                   3 |
++----+----------------+---------------------+
++--------+---------+
+| id     | balance |
++--------+---------+
+|   9001 |    4.68 |
+|   9002 |   15.00 |
+| 990005 |   98.49 |
+| 990006 |    0.00 |
++--------+---------+
++-----------+------------+----------+----------------+---------------+------------------------------------------------------+
+| member_id | event_type | event_id | change_balance | after_balance | change_reason                                        |
++-----------+------------+----------+----------------+---------------+------------------------------------------------------+
+|    990005 |          3 |        9 |         131.32 |        131.32 | 活动分润 - 人民广场 · 喷泉报时                       |
+|      9002 |         95 |        9 |          20.00 |         20.00 | 合作商家核销费 - 人民广场 · 喷泉报时                 |
+|      9001 |          7 |        9 |           4.68 |          4.68 | 活动平台分润 - 人民广场 · 喷泉报时                   |
+|      9002 |          6 |        1 |          -5.00 |         15.00 | 退款冲销                                             |
+|    990005 |          6 |        1 |         -32.83 |         98.49 | 退款冲销                                             |
++-----------+------------+----------+----------------+---------------+------------------------------------------------------+
++----+-------------+-----------+---------------+-------------+--------------+-------------------+--------+------------+
+| id | source_type | source_id | receiver_type | receiver_id | gross_amount | settlement_amount | status | entry_kind |
++----+-------------+-----------+---------------+-------------+--------------+-------------------+--------+------------+
+| 13 | refund      |         1 | platform      |           0 |        -1.17 |             -1.17 |      1 | NULL       |
+| 14 | refund      |         1 | coop_merchant |        9002 |        -5.00 |             -5.00 |      1 | NULL       |
+| 15 | refund      |         1 | merchant      |      990005 |       -32.83 |            -32.83 |      1 | NULL       |
++----+-------------+-----------+---------------+-------------+--------------+-------------------+--------+------------+
+ERROR 1054 (42S22) at line 1: Unknown column 'registration_id' in 'field list'
+*************************** 1. row ***************************
+                       id: 1
+                refund_no: RF77
+              source_type: registration
+                source_id: 77
+               owner_type: 2
+                 owner_id: 9
+                member_id: 990009
+              merchant_id: 990005
+              paid_amount: 39.00
+            refund_amount: 39.00
+                   status: 1
+                   reason: 主理人取消报名并退款
+            reject_reason: 主理人取消报名并退款
+              reviewer_id: 0
+              reviewed_at: 2026-11-05 14:38:51
+       adjustment_created: 0
+          idempotency_key: registration:77
+                 del_flag: 0
+              create_time: 2026-11-05 06:38:51
+              update_time: 2026-11-05 06:38:51
+     platform_takeover_at: NULL
+            payout_status: 6
+  payout_submission_state: LEGACY_RECONCILE
+            payout_method: NULL
+       payout_receipt_url: NULL
+        payout_handler_id: NULL
+        payout_handled_at: NULL
+      payout_reviewer2_id: NULL
+      payout_reviewed2_at: NULL
+149 {"msg": "操作成功", "code": 200, "_status": 200}
+((990015, 2, datetime.datetime(2026, 11, 4, 6, 52, 37), Decimal('0.0300')),)
+((70624, '0', '双死线-招募到期判定 总共耗时：52毫秒 jobId=149 jobRunId=6a492548d8c148319f276fc77e0a0d80', ''),)
++--------+---------+-----------------+--------------+
+| id     | balance | wx_open_id      | nickname     |
++--------+---------+-----------------+--------------+
+|   9001 |    4.68 | e2e-openid-9001 | 平台运营     |
+|   9002 |   15.00 | e2e-openid-9002 | 商家老板     |
+|   9005 |    0.00 | e2e-openid-9005 | 商家二号     |
+| 990005 |   98.49 | j2b-lead        | 城瘾用户     |
+| 990006 |    0.00 | j2b-m1          | 城瘾用户     |
+| 990007 |    0.00 | j2b-m2          | 城瘾用户     |
+| 990008 |    0.00 | j2b-m3          | 城瘾用户     |
+| 990009 |    0.00 | j2b-m4          | 城瘾用户     |
++--------+---------+-----------------+--------------+
++--------+-----------------+-----------+
+| id     | name            | member_id |
++--------+-----------------+-----------+
+| 990004 | 沪上慢走社      |    990006 |
++--------+-----------------+-----------+
++----+-----------+-----------------+---------------+----------------+------------------------------------------------------+------------+----------+---------------------------+-------------+----------+-----------+---------------------+-----------+-------------+
+| id | member_id | current_balance | after_balance | change_balance | change_reason                                        | event_type | event_id | coop_settlement_payout_id | change_type | del_flag | create_by | create_time         | update_by | update_time |
++----+-----------+-----------------+---------------+----------------+------------------------------------------------------+------------+----------+---------------------------+-------------+----------+-----------+---------------------+-----------+-------------+
+| 39 |    990005 |            0.00 |        131.32 |         131.32 | 活动分润 - 人民广场 · 喷泉报时                       |          3 |        9 |                      NULL |           1 |        0 | NULL      | 2026-11-05 14:37:21 | NULL      | NULL        |
+| 40 |      9002 |            0.00 |         20.00 |          20.00 | 合作商家核销费 - 人民广场 · 喷泉报时                 |         95 |        9 |                      NULL |           1 |        0 | NULL      | 2026-11-05 14:37:21 | NULL      | NULL        |
+| 41 |      9001 |            0.00 |          4.68 |           4.68 | 活动平台分润 - 人民广场 · 喷泉报时                   |          7 |        9 |                      NULL |           1 |        0 | NULL      | 2026-11-05 14:37:21 | NULL      | NULL        |
+| 42 |      9002 |           20.00 |         15.00 |          -5.00 | 退款冲销                                             |          6 |        1 |                      NULL |           2 |        0 | NULL      | 2026-11-05 14:38:51 | NULL      | NULL        |
+| 43 |    990005 |          131.32 |         98.49 |         -32.83 | 退款冲销                                             |          6 |        1 |                      NULL |           2 |        0 | NULL      | 2026-11-05 14:38:51 | NULL      | NULL        |
++----+-----------+-----------------+---------------+----------------+------------------------------------------------------+------------+----------+---------------------------+-------------+----------+-----------+---------------------+-----------+-------------+
+
+--- k9 own walks (jar + bundle rebuilt from f1bd03ccc, then e495f79d1; same database) ---
+FIXTURE club 990004 join_policy 0 -> 1 (to get a pending join request); applicant k9-applicant (member 990010) via real /api/club/join
+POST /api/club/join-request/reject {"clubId":990004,"memberId":990010} -> 200 已拒绝入会申请 (one sheet, no extra confirm)
+POST /api/club/governance/owner/transfer {"clubId":990004,"targetMemberId":990007} -> 200; toast 「主理人已转让给 周小雨」 shown on the page before it left (route -> pages/club/detail/index)
+POST /api/club/event-notification/audience-counts {"clubId":990004} -> 全部成员 4 · 管理员 1 · 近 90 天未活跃 0 (all joined/paid today)
+POST /api/template/topic-template/save-as {id:990014} as 990005 -> templateId 990016 (no tickets on the template row, k1 design)
+FIXTURE oms_ticket 78 on template 990016 (owner_type 1, 领队场 ¥39 ×20) to stand for a template that carries ticket types (legacy in-place templates and official templates do)
+POST /api/template/topic-template/use {id:990016} as 990007 -> draft 990018; editor data: selectedCategoryIds ["21"], clubId 990004, tickets [["领队场",39,20]]
+  主题详情 「还有 1 项未填」 = subtitle (source theme 990014 has an empty subtitle; not a copy loss)
+GET /api/project/my as 990005: before e495f79d1 two rows [990016 template copy, 990014]; after: one row [990014]
+pages/merchant/game-node?activityId=9 as 9002: station 1 CLOSED, recap 到站玩家 2, 正常完成 0/0 (all four players answered station 1 in i1)

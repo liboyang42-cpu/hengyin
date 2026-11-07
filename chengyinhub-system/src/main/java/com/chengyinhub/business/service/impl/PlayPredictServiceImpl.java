@@ -97,7 +97,7 @@ public class PlayPredictServiceImpl implements IPlayPredictService {
         CmsMemberTemplate template = templateOf(nodeId);
         JsonNode predict = predictConfig(template);
         if (predict == null) {
-            throw new IllegalArgumentException("这个点位不是竞猜玩法");
+            throw new IllegalArgumentException("这个点位不是预测玩法");
         }
         if (findOption(predict, settledOption) == null) {
             throw new IllegalArgumentException("这个选项不在本题里");
@@ -130,7 +130,7 @@ public class PlayPredictServiceImpl implements IPlayPredictService {
             winners++;
             if (wonRule == null) continue;
             int xp = wonRule.path("xp").asInt(0);
-            if (xp > 0) growthService.addExp(bet.getMemberId(), xp, "竞猜猜中");
+            if (xp > 0) growthService.addExp(bet.getMemberId(), xp, "预测选对");
             long couponId = wonRule.path("couponId").asLong(0L);
             // C-30:券已失效(3)/已停发(4) 不可发放 → 跳过发券,结算照常;只有券不存在/库存耗尽才需人工补发
             if (couponId > 0 && couponHistoryService.isCouponNotIssuable(couponId)) {

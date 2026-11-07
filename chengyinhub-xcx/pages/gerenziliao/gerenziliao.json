@@ -14,7 +14,8 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-field": "/components/cy/field/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   },
   "navigationBarTitleText": "个人资料",
   "navigationStyle": "custom",

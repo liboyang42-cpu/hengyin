@@ -120,6 +120,8 @@ page { background: var(--cy-bg-page); }
 .tm-result { margin: var(--cy-space-2) var(--cy-page-x) 0; font-size: var(--cy-font-label); line-height: 1.5; }
 .tm-invite-landing .tm-result { margin-left: 0; margin-right: 0; }
 .tm-result--error { color: var(--cy-color-status-danger); }
+/* 第十二轮 k3(j1 N10):加入成功不再用错误红 */
+.tm-result--ok { color: var(--cy-color-status-success); }
 
 .tm-role-sheet { padding: 0; }
 .tm-role-option { min-height: 112rpx; display: flex; align-items: center; gap: var(--cy-space-2); }

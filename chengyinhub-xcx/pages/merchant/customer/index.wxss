@@ -12,7 +12,7 @@
 
 /* Figma 23:195：导航只负责返回；页面标题与真实客户总数独立成 Hero。 */
 .cu-hero {
-  padding: 44rpx 40rpx 0; /* ds-ok: Figma 25:124 x=20, title y=119 */
+  padding: 44rpx var(--cy-page-x) 0; /* ds-ok: Figma 25:124 title y=119;左右与搜索框、名单同一页边 */
 }
 .cu-hero-title {
   display: block;
@@ -28,7 +28,7 @@
   color: var(--cy-text-secondary);
 }
 .cu-search {
-  padding: 0 24rpx; /* ds-ok: Figma 搜索框 x=12 */
+  padding: 0 var(--cy-page-x); /* 与标题同一左边(原 12px 对 20px 两条边) */
 }
 
 .cu-inline-button {
@@ -95,7 +95,7 @@
   width: 100%;
   box-sizing: border-box;
   gap: var(--cy-space-2);
-  padding: var(--cy-space-3) 40rpx; /* ds-ok: 与标题 Figma x=20 对齐 */
+  padding: var(--cy-space-3) var(--cy-page-x); /* 与标题对齐 */
 }
 .cu-seg {
   display: inline-flex;
@@ -134,9 +134,10 @@
   align-items: flex-start;
   gap: 24rpx;
   min-height: 186rpx;
-  padding: 0 40rpx;
+  padding: var(--cy-space-3) var(--cy-page-x); /* 上下留白:名字不贴分隔线,内容多的行也不压线;左右与标题同一页边 */
   box-sizing: border-box;
 }
+.cu-row:first-child { min-height: calc(186rpx - var(--cy-space-3)); padding-top: 0; } /* 第一行上面没有分隔线:与搜索框的距离、行高都保持原样 */
 
 .cu-check {
   width: 40rpx;
@@ -158,8 +159,8 @@
 .cu-row:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 152rpx;
-  right: 40rpx;
+  left: calc(var(--cy-page-x) + 112rpx); /* 页边 + 头像 88 + 间距 24:分隔线从名字下方开始 */
+  right: var(--cy-page-x);
   bottom: 0;
   height: 1rpx;
   background: var(--cy-border-card);

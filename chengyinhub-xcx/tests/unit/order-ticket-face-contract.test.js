@@ -8,7 +8,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8')
 
 function assertOrderDetailContract(js, wxml) {
   // 探店日订单必须有自己的字面与集合信息,不得再被标成「经典定向场次」
-  assert.match(js, /'探店日'/)
+  assert.match(js, /'自由探索'/)
   assert.match(js, /'进入游玩'/)
   assert.match(js, /info\.sessionTimeText/)
   assert.match(js, /info\.meetingPointText/)
@@ -65,7 +65,8 @@ function assertWalletContract(wxml, wxss, json) {
     '短屏容不下固定票卡和队伍入口时必须允许纵向滚动')
   /* 2026-10-28 业主:票夹只放能用的票,进游戏走底部「开始游戏」,卡面不再有 cta / 状态 / 「去支付」 */
   assert.match(wxml, /bindtap="goTicket" data-index="\{\{currentSwiperTicket\}\}" data-go="1"/)
-  assert.match(wxml, /<text>开始游戏<\/text>/)
+  // P-27(2026-11-02):城市定向通关后同一颗按钮写「查看记录」,其余仍是「开始游戏」
+  assert.match(wxml, /<text>\{\{ticketList\[currentSwiperTicket\]\.topicCompleted \? '查看记录' : '开始游戏'\}\}<\/text>/)
   assert.doesNotMatch(wxml, /去支付|查看详情|wl-tab/, '票夹不放待支付的单,也没有可用/已用/已过期切换')
   assert.equal(json.usingComponents?.['cy-icon'], '/components/cy/icon/index')
 }

@@ -92,7 +92,7 @@
   <!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
   <cy-back-guard show="{{!!sheet}}" bind:back="closeSheet" />
   <block wx:if="{{sheet === 'team' && current}}">
-  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="none"></view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
     <view class="psheet__grab"></view>
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
@@ -115,7 +115,7 @@
 
   <!-- P5 队长审批(稿 594:1090) -->
   <block wx:if="{{sheet === 'leader' && current}}">
-  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="none"></view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
     <view class="psheet__grab"></view>
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
@@ -141,7 +141,7 @@
 
   <!-- P6 我的队伍(稿 595:1015):已加入 / 申请中 / 队长未同意 -->
   <block wx:if="{{sheet === 'mine'}}">
-  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="none"></view>
   <view class="psheet psheet--half {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
     <view class="psheet__grab"></view>
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
@@ -158,14 +158,14 @@
         </view>
         <view class="mt-sbtn mt-sbtn--{{item.action.kind === 'primary' ? 'w' : 's'}} {{busy ? 'is-busy' : ''}}" data-index="{{index}}" bindtap="onMyRowAction" aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
       </view>
-      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">暂无队伍</text>
+      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">暂无队伍</text><text class="mt-foot" wx:if="{{myLoading && !myRows.length}}" aria-role="status">正在读取你的队伍…</text>
     </view>
   </view>
   </block>
 
   <!-- 主题半屏(原型 topicSheet / h-topic) -->
   <block wx:if="{{sheet === 'topic' && topic}}">
-  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭主题" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim {{sheetIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeSheet" aria-role="button" aria-label="关闭主题" hover-class="none"></view>
   <scroll-view class="tstrip {{sheetIn ? 'is-in' : ''}}" style="{{tstripStyle}}" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{topic.pics.length}}">
     <image class="tstrip__i" wx:for="{{topic.pics}}" wx:key="index" src="{{item}}" mode="aspectFill" />
   </scroll-view>
@@ -187,7 +187,7 @@
   </block>
 
   <!-- v13 下拉:贴在筛选按钮下面的深色菜单,每项带个数,选中打勾;点空白收起 -->
-  <view class="mdd-mask" wx:if="{{layerSheet}}" bindtap="closeLayerSheet" aria-role="button" aria-label="收起选项" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="mdd-mask" wx:if="{{layerSheet}}" bindtap="closeLayerSheet" aria-role="button" aria-label="收起选项" hover-class="none"></view>
   <view class="mdd {{mddIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{layerSheet}}" style="top:{{hudTop + 10 + 40}}px; left:{{mddLeft}}px;" aria-role="listbox">
     <view wx:for="{{layerItems}}" wx:key="label" class="mdd__i {{item.on ? 'on' : ''}}" data-index="{{index}}" bindtap="onLayerPickTap" aria-role="option" aria-selected="{{item.on}}" aria-label="{{item.label}}" hover-class="mdd__i--press" hover-stay-time="60">
       <text>{{item.label}}</text><text class="mdd__hot" wx:if="{{item.hot}}">{{item.hot}}</text><text class="mdd__n">{{item.count}}</text>
@@ -197,7 +197,7 @@
   <!-- v13 点位卡:地图把点位移到卡片下面,卡片在屏幕正中长出来(上方小牌写类型);点卡片翻面看介绍,
        背面上滑展开到胶囊下面;点地图收回。队伍卡点一下进原来的队伍半屏(申请 / 审批都在那儿)。 -->
   <block wx:if="{{sheet === 'poi' && poiCard}}">
-  <view class="pdim pdim--clear {{poiCardIn ? 'is-in' : ''}}" bindtap="closePoiCard" aria-role="button" aria-label="收起卡片" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim pdim--clear {{poiCardIn ? 'is-in' : ''}}" bindtap="closePoiCard" aria-role="button" aria-label="收起卡片" hover-class="none"></view>
   <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{camOpen ? 'is-cam' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
         bindtouchstart="onPcStart" bindtouchend="onPcEnd">
     <view class="pc__chip" wx:if="{{!poiExpand}}"><text class="pc__chip-i" style="background:{{poiCard.chipColor}};">{{poiCard.chipLetter}}</text><text>{{poiCard.chipText}}</text></view>
@@ -224,7 +224,8 @@
       </view>
       <view class="pc__b">
         <view class="pb__hd"><text class="pb__t">{{poiCard.title}}</text><view class="pb__x" bindtap="closePoiCard" aria-role="button" aria-label="收起" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__xi"></view></view></view>
-        <text class="pb__sub" wx:if="{{poiCard.address}}">{{poiCard.address}}</text>
+        <text class="pb__sub cy-addr-tap" wx:if="{{poiCard.address && poiCard.lat != null && poiCard.lng != null}}" bindtap="onPoiNavigate" aria-role="button" aria-label="在地图中打开 {{poiCard.address}}" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.address}}</text>
+        <text class="pb__sub" wx:elif="{{poiCard.address}}">{{poiCard.address}}</text>
         <text class="pb__rt" wx:if="{{poiCard.ratingText || poiCard.metaStrong}}">{{poiCard.ratingText}}{{poiCard.ratingText && poiCard.metaStrong ? ' · ' : ''}}{{poiCard.metaStrong}}</text>
         <scroll-view class="pb__sc" scroll-y="{{poiExpand}}" enhanced show-scrollbar="{{false}}">
           <!-- 官方地点展开后:照片在最上面左右滑,点开看原图 -->

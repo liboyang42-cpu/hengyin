@@ -79,7 +79,8 @@ test('负控：卡片、灰填充、进度或双动作回退时契约必须判�
   }
   const wrongActions = {
     ...original,
-    onboardingWxml: original.onboardingWxml.replace('style="width:100%"', 'style="width:70%"'),
+    // 第十轮 f3(da26161be)起「返回首页」也是全宽;负控要把每一处都改掉,否则正则会落到第二处而判不红。
+    onboardingWxml: original.onboardingWxml.replaceAll('style="width:100%"', 'style="width:70%"'),
   }
   assert.notEqual(wrongRadius.onboardingWxss, original.onboardingWxss, '负控锚点失效：入驻大圆角不存在')
   assert.notEqual(wrongFill.signupSheetWxss, original.signupSheetWxss, '负控锚点失效：单页报名灰填充不存在')

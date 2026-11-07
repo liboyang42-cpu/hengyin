@@ -106,7 +106,10 @@ class ProjectHomeVisibilityTest {
                 invite("club", CLUB_PENDING, 0, 0, null),
                 invite("club", 402L, 2, 1, 30)      // 已拒绝 → 不算合作方
         ));
-        when(clubSvc.selectClubById(CLUB_ACCEPTED)).thenReturn(club(CLUB_ACCEPTED, "夜行者俱乐部", "张明", "13800000001"));
+        Club accepted = club(CLUB_ACCEPTED, "夜行者俱乐部", "入驻实名", "13800000001");
+        when(clubSvc.selectClubById(CLUB_ACCEPTED)).thenReturn(accepted);
+        // 业主 2026-11-05:主理人名一律走 ownerDisplayName(昵称),不再下发 leader_name。
+        when(clubSvc.ownerDisplayName(accepted)).thenReturn("张明");
         when(clubSvc.selectClubById(CLUB_PENDING)).thenReturn(club(CLUB_PENDING, "待定俱乐部", "李四", "13800000002"));
         when(clubSvc.selectClubById(402L)).thenReturn(club(402L, "被拒俱乐部", "王五", "13800000003"));
 

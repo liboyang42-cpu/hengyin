@@ -43,7 +43,11 @@ test('客户页的四类业务筛选统一放入底部弹窗', () => {
   assert.match(js, /wx\.setClipboardData\(\{ data: phone \}\)/);
   assert.match(wxml, /<cy-icon class="cu-arrow" name="arrow-right"/);
   assert.match(wxss, /\.cu-seg\s*\{[^}]*border-radius:\s*var\(--cy-radius-pill\)/s);
-  assert.match(wxss, /\.cu-search\s*\{[^}]*padding:\s*0 24rpx/s);
+  assert.match(wxss, /\.cu-search\s*\{[^}]*padding:\s*0 var\(--cy-page-x\)/s);
+  // 打磨第 3 轮:标题、筛选、搜索、名单同一左边
+  assert.match(wxss, /\.cu-hero\s*\{[^}]*padding:\s*44rpx var\(--cy-page-x\) 0/s);
+  assert.match(wxss, /\.cu-segs\s*\{[^}]*padding:\s*var\(--cy-space-3\) var\(--cy-page-x\)/s);
+  assert.match(wxss, /\.cu-row\s*\{[^}]*padding:\s*var\(--cy-space-3\) var\(--cy-page-x\)/s);
 });
 
 test('项目客户抽屉贴住安全区且只有一层面板背景', () => {

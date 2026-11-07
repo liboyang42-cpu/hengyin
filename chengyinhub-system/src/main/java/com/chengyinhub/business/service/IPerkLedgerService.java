@@ -153,6 +153,12 @@ public interface IPerkLedgerService {
     /** 扫码候选：应得章映射 null；本商家真正已核销章映射原流水，仅供回读选择。 */
     Map<Long, Long> resolveScannableChapters(Long registrationId, Long topicId, Long merchantId);
 
+    /**
+     * M-05:本商家在该章节生效供给所挂权益的名称,只读、只供核销回执展示;没有或读不到返回 null。
+     * merchantId = 店主 memberId(与 findLiveOffer 同口径)。
+     */
+    default String livePerkName(Long chapterId, Long merchantId) { return null; }
+
     /** 调用方须先按 activity→registration 锁序复核有效票；锁读同 key 的真实回执与权益。 */
     Long findReplayableChapterRedemptionIdForUpdate(Long registrationId, Long topicId,
                                                    Long chapterId, Long merchantId);

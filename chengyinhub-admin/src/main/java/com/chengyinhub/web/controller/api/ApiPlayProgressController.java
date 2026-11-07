@@ -63,6 +63,15 @@ public class ApiPlayProgressController extends BaseController {
         return playHistoryQueryApplication.ending(currentMemberId(), activityId, topicId);
     }
 
+    @Operation(summary = "只读原游玩会话的已完成剧情与结果")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
+    @GetMapping("/history")
+    public AjaxResult history(@RequestParam Long activityId, @RequestParam Long topicId,
+            @RequestParam Long routeSessionId)
+    {
+        return playHistoryQueryApplication.history(currentMemberId(), activityId, topicId, routeSessionId);
+    }
+
     @Operation(summary = "自由定向途中台词(NPC气泡)")
     @GetMapping("/companionLine")
     public AjaxResult companionLine(Long activityId, Long topicId)

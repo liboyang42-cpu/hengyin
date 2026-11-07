@@ -1,0 +1,6 @@
+2026-11-05 20:43:12,704 ERROR [quartzScheduler_Worker-9] com.chengyinhub.business.service.impl.CmsActivityServiceImpl - 【结算告警】自由探索实收没有结算路径,未入账 activityId=17, topicId=990018, 实收=69.00, 原因=四店探店日(FOUR_STORE_REDEEM)待期级 FINAL,分钱规则待业主拍板
+2026-11-05 20:43:12,710 ERROR [quartzScheduler_Worker-9] com.chengyinhub.business.service.impl.AlarmService - [ALARM] 活动结算失败 (detail len=173)
+2026-11-05 20:43:12,718 ERROR [quartzScheduler_Worker-9] com.chengyinhub.business.service.impl.AlarmService - [ALARM] 定时任务失败 (detail len=106)
+2026-11-05 21:02:09,716 ERROR [quartzScheduler_Worker-3] com.chengyinhub.business.service.impl.CmsActivityServiceImpl - 【结算告警】自由探索实收没有结算路径,未入账 activityId=15, topicId=990016, 实收=69.00, 原因=四店探店日(FOUR_STORE_REDEEM)待期级 FINAL,分钱规则待业主拍板
+2026-11-05 21:02:09,724 ERROR [quartzScheduler_Worker-3] com.chengyinhub.business.service.impl.AlarmService - [ALARM] 活动结算失败 (detail len=173)
+2026-11-05 21:02:09,732 ERROR [quartzScheduler_Worker-3] com.chengyinhub.business.service.impl.AlarmService - [ALARM] 定时任务失败 (detail len=106)

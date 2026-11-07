@@ -539,7 +539,7 @@ public class JourneyStoryValidator {
             // sys.outcome 只有分支玩法和随机类玩法会写;指向别的节点 = 条件永远不成立且不报错。
             if (ctx.outcomeNodeIds != null && !ctx.outcomeNodeIds.contains(nodeId)) {
                 throw new IllegalArgumentException(path + ".var 引用的节点不会产生结果序号"
-                        + "(只有分支剧情 / 抛硬币 / 掷骰子 / 抽卡会写):nodeId=" + nodeId);
+                        + "(只有分支剧情 / 抛硬币 / 掷骰子 / 翻卡会写):nodeId=" + nodeId);
             }
             return;
         }

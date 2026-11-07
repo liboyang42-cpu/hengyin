@@ -1,0 +1,105 @@
+{
+ "topic": [
+  [
+   990015,
+   7002,
+   1,
+   3,
+   1,
+   1,
+   1,
+   "29.99",
+   "2026-11-02 09:00:00",
+   "2026-12-03 09:00:00",
+   "2026-12-02 09:00:00"
+  ]
+ ],
+ "ticket": [
+  [
+   77,
+   1,
+   990015,
+   "39.99",
+   "2026-11-02 09:00:00",
+   "2026-12-03 09:00:00"
+  ]
+ ],
+ "quote": {
+  "payAmount": 29.99,
+  "pointsUsed": 0,
+  "pointsDeductYuan": 0.0,
+  "couponDeductYuan": 0,
+  "quoteSign": "5ee6b934fd50a8cb551642c8e2a866d1",
+  "memberDiscountYuan": 0.0,
+  "clubMember": true,
+  "prioritySignupEnabled": false,
+  "refundDeadline": "2026-11-01T00:00:00.000+08:00",
+  "refundableNow": false,
+  "refundPercentNow": 0
+ },
+ "create": {
+  "code": 200,
+  "msg": "报名创建成功",
+  "data": {
+   "registrationId": 75,
+   "registrationNo": "T20261103C4CB2E26",
+   "payableAmount": 29.99,
+   "expireTime": "2026-11-03T19:38:29.940+08:00",
+   "expiresAt": "2027-02-01T19:08:29.940+08:00",
+   "paymentType": 1,
+   "registrationIds": [
+    75
+   ],
+   "payParams": {
+    "appId": "e2e-stub-appid",
+    "timeStamp": "0",
+    "nonceStr": "e2estub",
+    "package": "prepay_id=e2e-stub",
+    "signType": "RSA",
+    "paySign": "e2e-stub"
+   }
+  }
+ },
+ "callback": 204,
+ "registration": [
+  [
+   75,
+   "29.99",
+   "29.99",
+   0,
+   2,
+   "START_24H_100_50_0",
+   "2026-11-02 00:00:00",
+   2,
+   2
+  ]
+ ],
+ "checks": {
+  "quote.payAmount == payable_amount": [
+   "29.99",
+   "29.99",
+   true
+  ],
+  "quote.pointsUsed == point_used": [
+   0,
+   0,
+   true
+  ],
+  "quote.refundDeadline == frozen start - 24h": [
+   "2026-11-01T00:00:00.000+08:00",
+   "2026-11-01 00:00:00",
+   true
+  ],
+  "quote.refundPercentNow == tier at frozen anchor": [
+   0,
+   0,
+   true
+  ],
+  "quote.refundableNow == (tier > 0)": [
+   false,
+   false,
+   true
+  ]
+ },
+ "pass": true
+}

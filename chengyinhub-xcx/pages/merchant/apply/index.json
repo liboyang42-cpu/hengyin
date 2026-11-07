@@ -13,6 +13,7 @@
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-sheet": "/components/cy/sheet/index",
+    "cy-tag-sheet": "/pages/merchant/components/cy/tag-sheet/index",
     "cy-date-field": "/components/cy/date-field/index",
     "cy-state-shell": "/components/cy/state-shell/index",
     "cy-inline-error": "/components/cy/inline-error/index",

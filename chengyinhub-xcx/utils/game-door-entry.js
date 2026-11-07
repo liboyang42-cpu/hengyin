@@ -40,6 +40,15 @@ function parseActivityScene(scene) {
   return m ? m[1] : null
 }
 
+// 第九轮 m1-9:商家主页分享卡上的店铺码,scene = sh.<商家会员ID>
+function parseShopScene(scene) {
+  if (scene == null || scene === '') return null
+  let raw = String(scene)
+  try { raw = decodeURIComponent(raw) } catch (e) { /* already decoded */ }
+  const m = /^sh\.(\d{1,18})$/.exec(raw.trim())
+  return m ? m[1] : null
+}
+
 function isWxacodeEnter(scene) {
   const n = Number(scene)
   return n === 1047 || n === 1048 || n === 1049
@@ -49,11 +58,13 @@ function captureDoorScene(e, currentPending) {
   const query = (e && e.query) || {}
   const topicId = parseTopicScene(query.scene)
   const activityId = parseActivityScene(query.scene)
+  const shopId = parseShopScene(query.scene)
   const code = parseDoorScene(query.scene) || (topicId ? 'tp.' + topicId : null) || (activityId ? 'ac.' + activityId : null)
+    || (shopId ? 'sh.' + shopId : null)
   if (!code || !isWxacodeEnter(e && e.scene)) {
     return currentPending || null
   }
   return code
 }
 
-module.exports = { parseDoorScene, parseTopicScene, pathForScanEntry, captureDoorScene, parseActivityScene }
+module.exports = { parseDoorScene, parseTopicScene, pathForScanEntry, captureDoorScene, parseActivityScene, parseShopScene }

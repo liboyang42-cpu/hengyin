@@ -27,8 +27,11 @@ class TopicTemplateVisibilityContractTest {
                         + "publictopictemplateeligibility.*?</select>.*"),
                 "模板复制直链必须复用统一公共 eligibility");
         assertTrue(xml.matches("(?s).*<sql id=\"publictopictemplateeligibility\">"
-                        + "[^<]*del_flag = 0 and is_template = 1 and status = 1 and user_status = 1 </sql>.*"),
-                "匿名模板 eligibility 要求 未删除、是模板、审核通过、在架，且不再依赖 cms_topic_template_meta");
+                        + " del_flag = 0 and is_template = 1 and status = 1 and user_status = 1"
+                        + " and not exists \\( select 1 from cms_topic_template_meta template_meta"
+                        + " where template_meta.topic_id = cms_topic.id and template_meta.del_flag = 0"
+                        + " and template_meta.template_status = 'retired' \\) </sql>.*"),
+                "公共模板保留四项门禁，只排除有效 RETIRED 元数据；EXPERIMENTAL 与无元数据仍可采用");
         assertTrue(xml.matches("(?s).*<select id=\"selectpublictopictemplatebyid\".*?"
                         + "publictopictemplateeligibility.*?</select>.*"),
                 "匿名模板详情必须用一条 fail-closed 查询同时读取 eligibility 与详情快照");

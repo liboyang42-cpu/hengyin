@@ -37,6 +37,15 @@ public interface IPricingService {
                      Integer guidedInventory, BigDecimal leadCost, Integer teamSize);
 
     /**
+     * 第四轮(多票价):城市定向作者发了几张票时,逐张确认终价。{@code ticketPrices} 为 票 id → 终价,
+     * 必须恰好覆盖该主题作者自己发的全部票,每张都不低于有人带地板价;只改价,不动库存。
+     * 为空时与 {@link #confirmPrice(Long, BigDecimal, BigDecimal, Integer, BigDecimal, Integer)} 相同。
+     */
+    int confirmPrice(Long topicId, BigDecimal guidedPrice, BigDecimal selfPrice,
+                     Integer guidedInventory, BigDecimal leadCost, Integer teamSize,
+                     java.util.Map<Long, BigDecimal> ticketPrices);
+
+    /**
      * 冻结平台侧费率快照(幂等:已冻结则原样返回 0,绝不覆盖)。
      *
      * <p>给**零现金自动开售**路径用。confirmPrice 是 {@code cms_topic.fee_platform_rate} 原本的

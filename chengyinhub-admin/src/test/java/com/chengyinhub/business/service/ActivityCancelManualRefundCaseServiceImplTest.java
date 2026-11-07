@@ -39,6 +39,7 @@ class ActivityCancelManualRefundCaseServiceImplTest {
     private BusinessAuditEventMapper auditMapper;
     private IActivityCancelManualRefundEvidenceStore evidenceStore;
     private ActivityCancelManualRefundCaseServiceImpl service;
+    private IRefundService refunds;
 
     private static final String EVIDENCE_KEY =
             "upload/merchant-aftercare-evidence/0123456789abcdef0123456789abcdef.jpg";
@@ -56,6 +57,8 @@ class ActivityCancelManualRefundCaseServiceImplTest {
         ReflectionTestUtils.setField(service, "mapper", mapper);
         ReflectionTestUtils.setField(service, "auditMapper", auditMapper);
         ReflectionTestUtils.setField(service, "evidenceStore", evidenceStore);
+        refunds = mock(IRefundService.class);
+        ReflectionTestUtils.setField(service, "refundService", refunds);
         when(evidenceStore.sha256(EVIDENCE_KEY, EVIDENCE_VERSION_ID)).thenReturn(EVIDENCE_SHA256);
         when(auditMapper.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
         when(auditMapper.selectByDomainActionRequestForUpdate(
@@ -314,6 +317,7 @@ class ActivityCancelManualRefundCaseServiceImplTest {
         assertEquals(EVIDENCE_SHA256, result.getEvidenceSha256());
         verify(evidenceStore, times(2)).sha256(EVIDENCE_KEY, EVIDENCE_VERSION_ID);
         assertEquals("凭证已复核不等于银行或微信到账", result.getEvidenceVerificationNotice());
+        verify(refunds, never()).recordVerifiedExploreManualRefund(any());
     }
 
     @Test
@@ -361,6 +365,10 @@ class ActivityCancelManualRefundCaseServiceImplTest {
                 result.getStatus());
         verify(evidenceStore, times(2)).sha256(EVIDENCE_KEY, EVIDENCE_VERSION_ID);
         assertEquals("凭证已复核不等于银行或微信到账", result.getEvidenceVerificationNotice());
+        verify(refunds).recordVerifiedExploreManualRefund(verified);
+        when(mapper.selectByVerifyRequestId("finance-verify-1")).thenReturn(verified);
+        service.verify(9L, verifyRequest());
+        verify(refunds, times(1)).recordVerifiedExploreManualRefund(any());
     }
 
     @Test

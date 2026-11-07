@@ -167,65 +167,70 @@ class ContentSafetyGateImplTest {
         assertEquals("PRE_REVIEW", new PublishSafetyRequest().getReviewMode());
     }
 
+    /** Round5B-3:先发后审「审不了」不再打标公开,HOLD 进审核台(不公开)。 */
     @Test
-    void postReview_reviewRequired_passFlagged_noAuditTask() {
+    void postReview_reviewRequired_holdForHumanReview() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
 
-        SafetyDecision d = gate.decide(postReq("疑似风险内容"));
+        SafetyDecision d = gate.decide(postReq("待审内容"));
 
-        assertTrue(d.isPass());
-        assertTrue(d.isVisible());
-        assertTrue(d.isFlagged());
-        assertEquals("TEXT_REVIEW", d.getFlagReason());
-        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        assertEquals("TEXT_REVIEW", d.getReasonCode());
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), anyString(), any());
     }
 
+    /** Round5B-3:先发后审「审不了」不再打标公开,HOLD 进审核台(不公开)。 */
     @Test
-    void postReview_detectionBusy_passFlagged() {
+    void postReview_detectionBusy_holdForHumanReview() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
 
-        SafetyDecision d = gate.decide(postReq("机审繁忙"));
+        SafetyDecision d = gate.decide(postReq("待审内容"));
 
-        assertTrue(d.isPass());
-        assertTrue(d.isFlagged());
-        assertEquals("TEXT_REVIEW", d.getFlagReason());
-        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        assertEquals("TEXT_REVIEW", d.getReasonCode());
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), anyString(), any());
     }
 
+    /** Round5B-3:先发后审「审不了」不再打标公开,HOLD 进审核台(不公开)。 */
     @Test
-    void postReview_detectionThrows_passFlagged() {
+    void postReview_detectionThrows_holdForHumanReview() {
         when(wxSec.checkText(anyString(), anyString())).thenThrow(new RuntimeException("接口挂了"));
 
-        SafetyDecision d = gate.decide(postReq("检测异常"));
+        SafetyDecision d = gate.decide(postReq("待审内容"));
 
-        assertTrue(d.isPass());
-        assertTrue(d.isFlagged());
-        assertEquals("DETECT_ERROR", d.getFlagReason());
-        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        assertEquals("DETECT_ERROR", d.getReasonCode());
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), anyString(), any());
     }
 
+    /** Round5B-3:缺 openid 审不了 → HOLD,不送检也不公开。 */
     @Test
-    void postReview_missingOpenid_passFlagged() {
+    void postReview_missingOpenid_holdForHumanReview() {
         PublishSafetyRequest r = postReq("App 发布");
         r.setOpenid(" ");
 
         SafetyDecision d = gate.decide(r);
 
-        assertTrue(d.isPass());
-        assertTrue(d.isFlagged());
-        assertEquals("IDENTITY_REVIEW", d.getFlagReason());
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        assertEquals("IDENTITY_REVIEW", d.getReasonCode());
         verify(wxSec, never()).checkText(anyString(), anyString());
     }
 
+    /** Round5B-3:先发后审「审不了」不再打标公开,HOLD 进审核台(不公开)。 */
     @Test
-    void postReview_detectionDisabled_passFlagged() {
+    void postReview_detectionDisabled_holdForHumanReview() {
         when(wxSec.isEnabled()).thenReturn(false);
 
-        SafetyDecision d = gate.decide(postReq("检测关了"));
+        SafetyDecision d = gate.decide(postReq("待审内容"));
 
-        assertTrue(d.isPass());
-        assertTrue(d.isFlagged());
-        assertEquals("DETECT_DISABLED", d.getFlagReason());
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        assertEquals("DETECT_DISABLED", d.getReasonCode());
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), anyString(), any());
     }
 
     @Test
@@ -254,6 +259,7 @@ class ContentSafetyGateImplTest {
     @Test
     void postReview_imagesPriceSignupGeo_pass_noAuditTask() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        when(wxSec.canSubmitMedia("openid-x")).thenReturn(true);
         PublishSafetyRequest r = postReq("收费路线活动");
         r.setHasPrice(true);
         r.setHasSignup(true);
@@ -265,6 +271,20 @@ class ContentSafetyGateImplTest {
         assertTrue(d.isPass());
         assertFalse(d.isFlagged());
         verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    /** Round5B-3:先发后审带图但图片送不了检(总开关关 / 缺 openid)→ HOLD,不能静默公开。 */
+    @Test
+    void postReview_imagesThatCannotBeChecked_hold() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        when(wxSec.canSubmitMedia("openid-x")).thenReturn(false);
+        PublishSafetyRequest r = postReq("带图活动");
+        r.setMediaUrls(Collections.singletonList("https://oss/x.jpg"));
+
+        SafetyDecision d = gate.decide(r);
+
+        assertTrue(d.isHold());
+        assertEquals("MEDIA_UNCHECKED", d.getReasonCode());
     }
 
     @Test
@@ -335,5 +355,28 @@ class ContentSafetyGateImplTest {
                 ContentSafetyGateImpl.withGateReason("[1,2]", "DETECT_ERROR", "HIGH"));
         assertEquals("[1,2]", wrapped.getString("_raw"));
         assertEquals("HIGH", wrapped.getJSONObject("_gate").getString("riskLevel"));
+    }
+
+    /** Round5C:机审没结论的 HOLD 自动进复检队列;业务审批类(结构化字段)不进,仍由人工。 */
+    @Test
+    void uncheckedHoldIsQueuedForAutomaticRecheckButStructuredReviewIsNot() {
+        com.chengyinhub.business.service.IContentSafetyRecheckService recheck =
+                mock(com.chengyinhub.business.service.IContentSafetyRecheckService.class);
+        ReflectionTestUtils.setField(gate, "recheckService", recheck);
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
+
+        PublishSafetyRequest busy = postReq("正常文本");
+        SafetyDecision d = gate.decide(busy);
+
+        assertTrue(d.isHold());
+        assertFalse(d.isVisible());
+        verify(recheck).enqueue(busy, 1L);
+
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        PublishSafetyRequest structured = req("正常文本");
+        structured.setHasPrice(true);
+        SafetyDecision s2 = gate.decide(structured);
+        assertEquals("STRUCTURED_REVIEW", s2.getReasonCode());
+        verify(recheck, never()).enqueue(structured, 1L);
     }
 }

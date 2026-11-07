@@ -128,28 +128,6 @@ public class TopicSaleCanonicalV1 {
                 "SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY");
     }
 
-    /** 严格版:产品类型未知时不豁免任何一项。 */
-    public int maxTicketPerAccount() {
-        return maxTicketPerAccount(null);
-    }
-
-    /**
-     * 按产品类型收口后再取一账号限购。
-     *
-     * <p>⚠️ 这里必须跟着分档:它自己也会跑一遍 {@code validateComplete}。
-     * 2026-08-18 实测,漏了这一处就等于豁免没生效 —— {@code TopicSaleCanonicalBuilder.rebuild}
-     * 先用产品类型校验通过、紧接着调它又按严格档重验一次,③ 照旧红在
-     * SALE_SNAPSHOT_MISSING_MICRO_EXPERIENCES,而错误码与豁免前一模一样,极难看出是这里。
-     */
-    public int maxTicketPerAccount(Integer productType) {
-        validateComplete(productType);
-        JsonNode value = participationUnitPolicy.get("maxTicketPerAccount");
-        if (value == null || !value.canConvertToInt() || value.intValue() != 1) {
-            throw new IllegalStateException("SALE_SNAPSHOT_INVALID_MAX_TICKET_PER_ACCOUNT");
-        }
-        return value.intValue();
-    }
-
     public JsonNode field(String name) {
         if ("storeCount".equals(name)) return IntNode.valueOf(storeCount);
         if ("ticketPricingPolicy".equals(name)) return ticketPricingPolicy;
@@ -205,10 +183,10 @@ public class TopicSaleCanonicalV1 {
     private void validateParticipationUnit() {
         String code = "SALE_SNAPSHOT_MISSING_PARTICIPATION_UNIT";
         requireObjectFields(participationUnitPolicy, code, "adultCount", "petMax", "childrenPolicy",
-                "extraAdultPolicy", "companionPolicy", "maxTicketPerAccount");
+                "extraAdultPolicy", "companionPolicy");
+        // 2026-11-02 业主裁决(C-22)取消每人限 1 张：旧快照里的 maxTicketPerAccount 原样保留、不再校验或执行。
         if (participationUnitPolicy.path("adultCount").asInt(0) <= 0
-                || participationUnitPolicy.path("petMax").asInt(-1) < 0
-                || participationUnitPolicy.path("maxTicketPerAccount").asInt(0) != 1) fail(code);
+                || participationUnitPolicy.path("petMax").asInt(-1) < 0) fail(code);
     }
 
     private void validateSessionVenues() {
@@ -365,7 +343,8 @@ public class TopicSaleCanonicalV1 {
         for (JsonNode offer : offers) {
             String mode = offer.path("termsMode").asText();
             if ("REVSHARE".equals(mode)) {
-                if (!"CLUB_DIRECT".equals(offer.path("paymentRoute").asText())
+                if (!("CLUB_DIRECT".equals(offer.path("paymentRoute").asText())
+                        || "SESSION_SETTLEMENT".equals(offer.path("paymentRoute").asText()))
                         || !offer.path("payerClubId").canConvertToLong() || offer.path("payerClubId").asLong() <= 0
                         || !offer.hasNonNull("perHeadFee")
                         || !offer.path("perHeadFee").isValueNode()) fail(settlementCode);

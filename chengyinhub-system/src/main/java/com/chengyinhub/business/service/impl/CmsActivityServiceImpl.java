@@ -79,6 +79,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private CmsTopicMapper cmsTopicMapper;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.TopicSaleSnapshotMapper topicSaleSnapshotMapper;
+
+    /** 第十三轮 m6:俱乐部自有自由探索场次结算时补记逐张分账行(结算后退款按它冲回)。 */
+    @Autowired
+    private com.chengyinhub.business.service.ISettlementEntryService settlementEntryService;
+
     /** 9-15 拍板:已发布免费主题的派生活动不能加收费票(= 转商业)。 */
     @Autowired
     private CommercialTopicPolicy commercialTopicPolicy;
@@ -103,9 +110,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private PlatformTransactionManager transactionManager;
 
-    /** 与报名二清闸同一判据：独立活动只有平台自办（发布者=平台会员）才可收费。 */
+    /** 平台会员 id(测试经反射注入;2026-11-02 起独立活动收费不再按它判)。 */
     @org.springframework.beans.factory.annotation.Value("${chengyin.platform.member-id:100000}")
     private Long platformMemberId;
+
+    /** 俱乐部场次的收款人 = 俱乐部当前主理人。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubPrincipalPayee clubPrincipalPayee;
 
     /** 客诉期提现闸:涉诉报名单结算暂扣,客诉关闭后补结。 */
     @Autowired
@@ -114,6 +125,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     /** 收款方欠款:结算入账先抵欠款;逾期未清不能发布新活动。 */
     @Autowired
     private com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
+
+    /** 第十二轮 k5:俱乐部场次按核销付费的商家费,从主理人份额里付。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee;
 
     /**
      * 获取需要结算的活动列表
@@ -134,7 +149,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         List<CmsActivity> activities = selectActivitiesForSettlement();
         List<com.chengyinhub.business.domain.ActivitySettlementHold> releasable =
                 activitySettlementHoldMapper.selectReleasableHolds();
+        // 第十三轮 m6:到了结算时点却没有结算路径的自由探索实收,不能「没有需要结算的活动」就静默收工。
+        List<String> stranded = strandedFreeExploreSales();
         if (activities.isEmpty() && releasable.isEmpty()) {
+            if (!stranded.isEmpty()) throw strandedFailure(stranded, 0);
             logger.info("没有需要结算的活动");
             return 0;
         }
@@ -189,6 +207,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 failure.addSuppressed(e);
             }
         }
+        failures.addAll(stranded);
         // R9-46 §4:逐活动失败不能被吞成 SUCCESS。其余活动已各自提交,末端再抛让 Quartz 记 FAIL 并点名。
         if (!failures.isEmpty()) {
             IllegalStateException visible = new IllegalStateException("活动结算失败 " + failures.size()
@@ -237,16 +256,57 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     }
 
     /**
+     * 第十三轮 m6(2026-11-05):已到结算时点、场次结算又付不了的自由探索场次,按「已付未退 + 部分退款留存」
+     * 算实收;有钱就逐场点名(原因、实收),由结算任务记 FAIL 并告警,下轮仍在就继续告警。不动钱、不置已结算:
+     * 四店探店日的钱按代码本意归期级 FINAL(/business/edition-final),跨俱乐部场次代码里没有分钱规则,
+     * 都等业主拍板,见 integ/ROUND13-M6-RESULT.md。没有实收的场次不告警。
+     */
+    List<String> strandedFreeExploreSales() {
+        List<CmsActivity> rows = cmsActivityMapper.selectFreeExploreActivitiesWithoutSettlementPath();
+        List<String> stranded = new java.util.ArrayList<>();
+        if (rows == null) return stranded;
+        for (CmsActivity activity : rows) {
+            BigDecimal paid = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
+            BigDecimal retained = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
+            BigDecimal money = (paid == null ? BigDecimal.ZERO : paid).add(retained == null ? BigDecimal.ZERO : retained);
+            if (money.signum() <= 0) continue;
+            String reason = strandedReason(activity);
+            logger.error("【结算告警】自由探索实收没有结算路径,未入账 activityId={}, topicId={}, 实收={}, 原因={}",
+                    activity.getId(), activity.getTopicId(), money, reason);
+            stranded.add("activityId=" + activity.getId() + ": FREE_EXPLORE_SALE_HAS_NO_SETTLEMENT_PATH topicId="
+                    + activity.getTopicId() + ", 实收=" + money.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()
+                    + ", " + reason);
+        }
+        return stranded;
+    }
+
+    private String strandedReason(CmsActivity activity) {
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+        TopicSaleSnapshot snapshot = topic == null ? null : topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
+        if (snapshot == null) return "缺冻结开售合同";
+        boolean fourStore;
+        try {
+            fourStore = com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                    snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract();
+        } catch (RuntimeException unreadable) {
+            return "开售合同无法读取";
+        }
+        if (fourStore) return "四店探店日(FOUR_STORE_REDEEM)待期级 FINAL,分钱规则待业主拍板";
+        return "场次俱乐部 " + activity.getClubId() + " 不是主题俱乐部 " + topic.getClubId() + ",分钱规则待业主拍板";
+    }
+
+    private IllegalStateException strandedFailure(List<String> stranded, int settledCount) {
+        return new IllegalStateException("活动结算失败 " + stranded.size() + " 个(成功 " + settledCount + " 个): "
+                + String.join("; ", stranded));
+    }
+
+    /**
      * 结算单个活动
      */
     private boolean settleActivity(CmsActivity activity, CmsSetting setting, SettlementRule rule) {
         CmsTopic topic = activity.getTopicId() == null
                 ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
-        if (topic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
-            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId="
-                    + activity.getId() + ", topicId=" + activity.getTopicId()
-                    + ", productType=" + (topic == null ? null : topic.getProductType()));
-        }
+        requireSessionSettlementContract(activity, topic);
         // HF-02(A-29): 原子领取——仅当 is_settlement 由 0 翻 1 成功才继续,防并发/重复触发导致重复入账
         if (cmsActivityMapper.claimActivityForSettlement(activity.getId()) == 0) {
             logger.info("活动 {} 已被结算或正在结算,跳过", activity.getId());
@@ -256,7 +316,13 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 1. 计算活动总销售额（已支付且未退款的报名记录，owner_type=2）
         // 客诉期提现闸(9-16 拍板第 3 条):还有未结客诉的报名单只暂扣它自己那部分,其余照放。
         activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
+        recordFreeExploreSessionLedger(activity, topic);
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
+        // 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名,未退回的那一半归主办方,在这里补回。
+        BigDecimal retainedSales = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
+        if (retainedSales != null && retainedSales.signum() > 0) {
+            totalSales = totalSales == null ? retainedSales : totalSales.add(retainedSales);
+        }
         BigDecimal heldSales = activitySettlementHoldMapper.selectHeldSalesByActivityId(activity.getId());
         if (totalSales != null && heldSales != null) {
             totalSales = totalSales.subtract(heldSales);
@@ -275,15 +341,26 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 2. 计算各项佣金（含主题设计者，无主题来源时其份额并入商户）
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, totalSales, rule);
 
-        // 3. 分配商户分润（活动归属商户）
-        payActivityCommission(activity.getMemberId(), settlement.getMerchantCommissionAmount(),
+        // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,其余给创建人,见 ClubPrincipalPayee）
+        Long payee = activityPayee(activity);
+        // 第十二轮 k5(2026-11-05 业主):俱乐部场次上按核销付费的商家,按参加人数从主理人份额里拿冻结单价。
+        com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
+                merchantFeePlan(activity, payee, null);
+        if (!feePlan.isEmpty()) {
+            clubSessionMerchantFee().requireWithinPayeeShare(activity, feePlan, settlement.getMerchantCommissionAmount());
+        }
+        BigDecimal payeeAmount = settlement.getMerchantCommissionAmount().subtract(feePlan.total());
+        payActivityCommission(payee, payeeAmount,
                 "活动分润 - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(activity.getMemberId(),
-                settlement.getMerchantCommissionAmount(), activity.getId());
+        settlementDebtLedger.offsetFromSettlement(payee, payeeAmount, activity.getId());
+        payMerchantFees(activity, feePlan, "");
 
         // 4. 分配平台分润（打入平台账户）。前置校验失败会抛异常并回滚本活动的原子领取。
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润 - " + activity.getName(), 7L, activity.getId());
+        // 第十二轮 k11:平台结算后退款扣不够记的欠款,与其他收款方同一规则,从后续平台分润先抵。
+        settlementDebtLedger.offsetFromSettlement(setting.getPlatformMemberId(),
+                settlement.getPlatformCommissionAmount(), activity.getId());
 
         // 5. 同步纯账本:系统1是唯一真实打款方,打款成功后把本次覆盖的报名明细置已结算。
         // 与余额更新同处本活动事务;任一步失败都会连同 is_settlement 领取一起回滚。
@@ -352,16 +429,116 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (activity == null) {
             throw new ServiceException("暂扣补结的活动不存在 holdId=" + hold.getId());
         }
+        requireSessionSettlementContract(activity, activity.getTopicId() == null
+                ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId()));
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
-        payActivityCommission(activity.getMemberId(), settlement.getMerchantCommissionAmount(),
+        Long payee = activityPayee(activity);
+        com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
+                merchantFeePlan(activity, payee, registration.getId());
+        if (!feePlan.isEmpty()) {
+            clubSessionMerchantFee().requireWithinPayeeShare(activity, feePlan, settlement.getMerchantCommissionAmount());
+        }
+        BigDecimal payeeAmount = settlement.getMerchantCommissionAmount().subtract(feePlan.total());
+        payActivityCommission(payee, payeeAmount,
                 "活动分润(客诉结案补结) - " + activity.getName(), 3L, activity.getId());
-        settlementDebtLedger.offsetFromSettlement(activity.getMemberId(),
-                settlement.getMerchantCommissionAmount(), activity.getId());
+        settlementDebtLedger.offsetFromSettlement(payee, payeeAmount, activity.getId());
+        payMerchantFees(activity, feePlan, "(客诉结案补结)");
         payActivityCommission(setting.getPlatformMemberId(), settlement.getPlatformCommissionAmount(),
                 "活动平台分润(客诉结案补结) - " + activity.getName(), 7L, activity.getId());
+        settlementDebtLedger.offsetFromSettlement(setting.getPlatformMemberId(),
+                settlement.getPlatformCommissionAmount(), activity.getId());
         settlementDetailMapper.markRegistrationDetailsSettled(registration.getId());
         return true;
+    }
+
+    /** 俱乐部场次才有商家费;其余活动不碰合作单(纯单元装配未注入时也照旧)。 */
+    private com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan merchantFeePlan(
+            CmsActivity activity, Long payee, Long registrationId) {
+        if (activity.getClubId() == null || activity.getClubId() <= 0 || activity.getTopicId() == null) {
+            return com.chengyinhub.business.service.support.ClubSessionMerchantFee.emptyPlan();
+        }
+        return clubSessionMerchantFee().plan(activity, payee, registrationId);
+    }
+
+    private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee() {
+        if (clubSessionMerchantFee == null) {
+            // 俱乐部场次的商家费不能因为装配缺失被静默跳过(那会把商家的钱整笔记给主理人)。
+            throw new ServiceException("CLUB_SESSION_MERCHANT_FEE_UNWIRED: 俱乐部场次商家费组件未装配,拒绝结算");
+        }
+        return clubSessionMerchantFee;
+    }
+
+    /**
+     * 商家费:先写账本(主理人分账行减额 + 商家行),再按商家入余额(event_type=95,event_id=活动 id)并先抵欠款。
+     * 账本行随后与本场其它分账行一起置已结算。
+     */
+    private void payMerchantFees(CmsActivity activity,
+                                 com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan plan,
+                                 String reasonSuffix) {
+        if (plan == null || plan.isEmpty()) {
+            return;
+        }
+        clubSessionMerchantFee().writeLedger(activity, plan);
+        for (Map.Entry<Long, BigDecimal> e : plan.byMerchant().entrySet()) {
+            payActivityCommission(e.getKey(), e.getValue(), "合作商家核销费" + reasonSuffix + " - " + activity.getName(),
+                    com.chengyinhub.business.service.support.ClubSessionMerchantFee.EVENT_TYPE_SESSION_MERCHANT_FEE,
+                    activity.getId());
+            settlementDebtLedger.offsetFromSettlement(e.getKey(), e.getValue(), activity.getId());
+        }
+    }
+
+    /**
+     * 活动现金收款人(2026-11-02 业主口径:钱给人,不给俱乐部实体)。俱乐部场次 = 俱乐部当前主理人,
+     * 转让后新主理人收;非俱乐部场次仍是 cms_activity.member_id。退款冲回按实际入账人扣,见 RefundServiceImpl。
+     */
+    private Long activityPayee(CmsActivity activity) {
+        if (activity.getClubId() == null || activity.getClubId() <= 0) {
+            return activity.getMemberId();
+        }
+        return clubPrincipalPayee.forActivity(activity);
+    }
+
+    /**
+     * 第十三轮 m6(2026-11-05):俱乐部自有自由探索的 ③ 探索票支付时不落分账行(SettlementEntryServiceImpl
+     * 「执行商家逐章核销才定」),于是本场按整场票款结给主理人与平台之后,结算后退款找不到可冲销的行,
+     * 主理人与平台的份额一分不退(rig 走查:¥69 退款后两边余额不动)。这里在本场结算事务里、
+     * 已过 requireSessionSettlementContract 之后,给每张已付未退的票按支付时同一口径补记主理人 / 平台两行,
+     * 随本场一起置已结算(涉诉暂扣的那张留待补结时再置),之后的退款就走既有 clawBackSettledShares 按比例冲回。
+     */
+    private void recordFreeExploreSessionLedger(CmsActivity activity, CmsTopic topic) {
+        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
+        if (settlementEntryService == null) {
+            throw new ServiceException("FREE_EXPLORE_SESSION_LEDGER_UNWIRED: 自由探索场次分账组件未装配,拒绝结算 activityId="
+                    + activity.getId());
+        }
+        Long payee = activityPayee(activity);
+        List<Long> ids = cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(activity.getId());
+        if (ids == null) return;
+        for (Long id : ids) {
+            CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(id);
+            if (registration == null || !Integer.valueOf(2).equals(registration.getPaymentStatus())
+                    || !Integer.valueOf(2).equals(registration.getRegistrationStatus())) {
+                continue;
+            }
+            settlementEntryService.recordClubFreeExploreSessionSettlement(registration, payee);
+        }
+    }
+
+    private void requireSessionSettlementContract(CmsActivity activity, CmsTopic topic) {
+        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
+        if (topic.getClubId() == null || topic.getClubId() <= 0 || !topic.getClubId().equals(activity.getClubId())) {
+            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
+        }
+        TopicSaleSnapshot snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
+        if (snapshot == null || !topic.getId().equals(snapshot.getTopicId())) {
+            throw new ServiceException("自由探索缺少冻结开售合同，拒绝结算 activityId=" + activity.getId());
+        }
+        // 四店专用合同仍走原 FINAL；普通俱乐部自由探索按场次结算，不能按产品编号一并拒绝。
+        if (com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract()) {
+            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
+        }
     }
 
     private void requireUsablePlatformSettlementAccount(CmsSetting setting, SettlementRule rule, Long activityId) {
@@ -409,16 +586,24 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 totalSales.multiply(settlement.getPlatformCommissionRate()).setScale(2, RoundingMode.HALF_UP)
         );
 
-        BigDecimal merchantAmount = totalSales.multiply(settlement.getMerchantCommissionRate()).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal designerAmount = totalSales.multiply(settlement.getDesignerCommissionRate()).setScale(2, RoundingMode.HALF_UP);
-
-        if (designerMemberId == null) {
-            // 无主题设计者（独立活动）：设计者份额并入商户
-            merchantAmount = merchantAmount.add(designerAmount);
-            designerAmount = BigDecimal.ZERO;
-        }
+        // 商户份额取余数(ROUND10 j1 F3):各份分别 HALF_UP 时,半分值会让三份之和多出 1 分
+        //(¥97.50×3%=2.925→2.93,×97%=94.575→94.58,合计 97.51)。平台与设计者各自四舍五入,
+        // 商户拿「销售额 − 平台 − 设计者」,三份之和恒等于销售额。
+        // 无主题设计者（独立活动）：设计者份额为 0,即并入商户余数。
+        BigDecimal designerAmount = designerMemberId == null ? BigDecimal.ZERO
+                : totalSales.multiply(settlement.getDesignerCommissionRate()).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal merchantAmount = totalSales
+                .subtract(settlement.getPlatformCommissionAmount())
+                .subtract(designerAmount);
         settlement.setMerchantCommissionAmount(merchantAmount);
         settlement.setDesignerCommissionAmount(designerAmount);
+        // 第十一轮 h4 L6:活动结算(settleActivity / 客诉补结)只给商户与平台两方打款,没有设计者打款步骤。
+        // 设计者份额一旦非零就会被静默扣下不付;在算出它的地方就拒绝结算(回滚本活动领取),不依赖批前闸。
+        // 不改分润规则:H8 要求 creator_rate=0,这里只把违反它的情况从「静默丢钱」变成「拒结」。
+        if (designerAmount.signum() != 0) {
+            throw new ServiceException("活动设计者份额 " + designerAmount + " 没有打款步骤，拒绝结算 activityId="
+                    + activity.getId() + "(settlement_rule biz_type=activity 的 creator_rate 必须为 0)");
+        }
 
         // 验证佣金分配是否合理
         validateActivityCommissionDistribution(settlement, totalSales);
@@ -451,9 +636,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
         BigDecimal difference = totalSales.subtract(distributedAmount);
 
-        if (difference.abs().compareTo(new BigDecimal("0.01")) > 0) {
-            logger.warn("活动佣金分配存在差异: 总销售额={}, 已分配金额={}, 差异={}",
+        // 商户取余数后三份必须分毫不差;商户为负说明费率越界。任一不成立就拒绝结算(回滚本活动的领取)。
+        if (difference.signum() != 0 || settlement.getMerchantCommissionAmount().signum() < 0) {
+            logger.error("活动佣金分配不守恒: 总销售额={}, 已分配金额={}, 差异={}",
                     totalSales, distributedAmount, difference);
+            throw new ServiceException("活动佣金分配不守恒，拒绝结算 activityId=" + settlement.getActivityId());
         }
     }
 
@@ -845,6 +1032,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     public int selectCmsActivityNumByMemberId(Long member_id){
         return cmsActivityMapper.selectCmsActivityNumByMemberId(member_id);
     }
+
+    @Override
+    public int selectActivityQuotaUsedByMemberId(Long memberId){
+        return cmsActivityMapper.selectActivityQuotaUsedByMemberId(memberId);
+    }
     /**
      * 活动发布
      * @param request CmsActivityPublishRequest
@@ -868,8 +1060,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             }
         }
         requirePaidPublisherIdentity(request, memberId);
-        // 发布入口建的都是独立活动(topic_id 为空)。
-        assertStandalonePaidTicketsCollectible(request, memberId);
+        // 2026-11-02 拍板:没有自己商户号的主办方也可发收费独立活动,票款走平台商户号收;
+        // 原「非平台发布者票价只能是 0」的发布闸已撤(与 CmsRegistrationServiceImpl#assertCollectible 同口径)。
         // 1. 构建活动实体
         CmsActivity activity = new CmsActivity();
 
@@ -984,10 +1176,6 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         assertNoPaidTicketOnFreeTopic(request);
         requirePaidPublisherIdentity(request, memberId);
         CmsActivity currentForCollect = cmsActivityMapper.selectCmsActivityById(request.getId());
-        if (currentForCollect != null && currentForCollect.getTopicId() == null) {
-            // PR10 复审:存量收费独立活动不能因收款闸连文字都改不了;编辑只拦「新增收费票/0 元改收费/涨价」。
-            assertStandaloneEditKeepsCollectible(request, memberId);
-        }
         syncLiveActivityTickets(request, request.getId(), memberId, username);
         int rows = cmsActivityMapper.updateCmsActivityByOwner(editable);
         if (rows <= 0) {
@@ -1087,51 +1275,6 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     private static boolean changedSecond(Date before, Date requested) {
         if (requested == null) return false;
         return before == null || before.getTime() / 1000L != requested.getTime() / 1000L;
-    }
-
-    /**
-     * F-L4-01/F-W2-01：独立活动没有主题内容槽，收款主体只能按发布者判。非平台发布的收费独立活动
-     * 下单必被 CmsRegistrationServiceImpl.assertCollectible 拒绝(二清)，发布时就拒，
-     * 与商家主办「票价只能是 0」同口径，避免上架一场玩家付不了款的活动。
-     */
-    private void assertStandalonePaidTicketsCollectible(CmsActivityPublishRequest request, Long memberId) {
-        if (request.getTickets() == null) return;
-        boolean paid = false;
-        for (ActivityTicketRequest ticket : request.getTickets()) {
-            if (ticket != null && ticket.getPrice() != null && ticket.getPrice().signum() > 0) {
-                paid = true;
-                break;
-            }
-        }
-        if (!paid) return;
-        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
-        throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
-    }
-
-    /**
-     * 编辑口径的收款闸:存量已收费且价格不升的票原样放行(玩家下单仍由 assertCollectible 兜底),
-     * 只拒绝把收费面扩大的改动 —— 新增收费票、0 元票改收费、在库价基础上涨价。发布仍走全量闸。
-     */
-    private void assertStandaloneEditKeepsCollectible(CmsActivityPublishRequest request, Long memberId) {
-        if (request.getTickets() == null) return;
-        if (platformMemberId != null && platformMemberId > 0L && platformMemberId.equals(memberId)) return;
-        List<OmsTicket> live = null;
-        for (ActivityTicketRequest ticket : request.getTickets()) {
-            if (ticket == null || ticket.getPrice() == null || ticket.getPrice().signum() <= 0) continue;
-            if (live == null) {
-                OmsTicket query = new OmsTicket();
-                query.setOwnerType(2L);
-                query.setOwnerId(request.getId());
-                query.setDelFlag(0);
-                live = omsTicketMapper.selectOmsTicketList(query);
-                if (live == null) live = java.util.Collections.emptyList();
-            }
-            OmsTicket existing = findLiveTicket(live, ticket.getId());
-            if (existing == null || existing.getPrice() == null || existing.getPrice().signum() <= 0
-                    || ticket.getPrice().compareTo(existing.getPrice()) > 0) {
-                throw new ServiceException("独立活动暂不支持在线收款(平台正在办理支付资质)，票价只能是 0");
-            }
-        }
     }
 
     private void requirePaidPublisherIdentity(CmsActivityPublishRequest request, Long memberId) {

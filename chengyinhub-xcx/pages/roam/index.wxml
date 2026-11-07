@@ -15,6 +15,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <cy-roam-city-guide show="{{cityGuideOpen}}" bind:close="closeCityGuide" />
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
 <!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
@@ -85,6 +86,7 @@
 <view class="intro" wx:if="{{screen=='entry-map'||screen=='intro'}}">
   <view class="intro-head" style="padding-top:{{chrome.actionTop}}px;">
     <view class="intro-ava-hit" bindtap="goProfile" aria-role="button" aria-label="打开我的" hover-class="cy-pressed" hover-stay-time="80"><image class="intro-ava" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" /></view>
+    <view class="intro-guide-hit" bindtap="openCityGuide" aria-role="button" aria-label="按城市浏览街道、推荐店铺和公园" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="40" /></view>
   </view>
   <!-- 2026-10-27 owner P-25:头部结构与间距还原到 7f4bcee9(票根卡)之前,只保留票根卡本身 -->
   <view class="intro-top"><view class="intro-title">漫游</view></view>
@@ -113,8 +115,8 @@
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[0].title}}</text></view>
-            <text class="intro-card__sub">{{introCards[0].sub}}</text>
-            <text class="intro-card__livetx">{{introStartLive || '城瘾 · CITY ROAM'}}</text>
+            <text class="intro-card__sub" wx:if="{{introCards[0].sub}}">{{introCards[0].sub}}</text>
+            <text class="intro-card__livetx" wx:if="{{introStartLive}}">{{introStartLive}}</text>
           </view>
         </view>
       </swiper-item>
@@ -127,8 +129,8 @@
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[1].title}}</text></view>
-            <text class="intro-card__sub">{{introCards[1].sub}}</text>
-            <text class="intro-card__livetx">{{introTeamsLive || '城瘾 · CITY ROAM'}}</text>
+            <text class="intro-card__sub" wx:if="{{introCards[1].sub}}">{{introCards[1].sub}}</text>
+            <text class="intro-card__livetx" wx:if="{{introTeamsLive}}">{{introTeamsLive}}</text>
           </view>
         </view>
       </swiper-item>
@@ -141,8 +143,7 @@
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[2].title}}</text></view>
-            <text class="intro-card__sub">{{introCards[2].sub}}</text>
-            <text class="intro-card__livetx">城瘾 · CITY ROAM</text>
+            <text class="intro-card__sub" wx:if="{{introCards[2].sub}}">{{introCards[2].sub}}</text>
           </view>
         </view>
       </swiper-item>
@@ -151,7 +152,7 @@
     <view class="intro-map-space"></view>
   <!-- 2026-10-27 owner P-26(取代 10-22「整块不出」):「附近活动」始终显示,附近没有活动时出一张空态卡 -->
   <view class="entry-peek">
-    <view class="entry-peek__head"><text>附近活动</text></view>
+    <view class="entry-peek__head"><text>附近活动</text><view wx:if="{{!entryLocated && !entryReadAccess}}" class="entry-peek__locate" bindtap="enableEntryLocation" aria-role="button" aria-label="开启定位" hover-class="cy-pressed" hover-stay-time="80">开启定位</view></view>
     <!-- 2026-10-17 合并 master:附近内容读权限态(未登录 / 无权)先于错误与列表 -->
     <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"
                     title="{{entryReadAccess === 'login' ? '登录后查看附近活动与队伍' : '当前账号无法查看'}}"
@@ -222,10 +223,15 @@
 <view class="map-stack">
   <free-map id="roamMap" class="rmap" scene="explore"
        center="{{center}}" scale="{{mapScale}}" show-controls="{{false}}"
-       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
-       map-markers="{{markers}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
+       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tilt3d="{{map3d}}"
+       map-markers="{{markers}}" explore-pins="{{explorePins}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
        accessibility-label="{{roamMapA11y}}" reduced-motion="{{reducedMotion}}"
        bind:updated="onMapUpdated" bind:markertap="onMarkerTap" bind:regionchange="onRegionChange" bind:poitap="onPoiTap" />
+  <!-- 第九轮 m1 第 6 项(m-drag):薄云比地图慢一拍。只是画面,不吃手势;减弱动态时不出现。 -->
+  <view wx:if="{{!reducedMotion && screen=='map'}}" class="roam-clouds {{cloudOn ? 'is-on' : ''}}" style="{{cloudStyle}}" aria-hidden="true">
+    <view class="roam-cloud roam-cloud--a"></view>
+    <view class="roam-cloud roam-cloud--b"></view>
+  </view>
   <canvas type="2d" id="fogscreen" class="fogscreen-buffer"></canvas>
   <!-- P-32:设置里关掉迷雾时整层不画(足迹照常记录) -->
   <block wx:if="{{!fogOff}}">
@@ -235,6 +241,7 @@
          data-generation="{{item.generation}}" data-version="{{item.version}}"
          bindload="onFogScreenLoad" binderror="onFogScreenError" />
   </block>
+  <cy-map-weather lat="{{center.lat}}" lng="{{center.lng}}" active="{{roamPageShown}}" reduced-motion="{{reducedMotion}}" />
 </view>
 <view class="vignette"></view>
 <!-- GO → 地图：粗弧线切场 → 品牌开场 → 露出已预热的真实地图。结构对齐 docs/prototypes/roam-opening-animation.html -->
@@ -284,6 +291,9 @@
                        placeholder="输入地址" bind:pick="onSearchPick" />
 
 <view class="roam-topstack" style="top:{{promptTop}}px">
+
+<!-- 第九轮 m1 第 5 项(m-zoom):拉远时的附近真实点数,数少时不出 -->
+<view class="pin-count" wx:if="{{screen=='map' && pinCountLabel}}" bindtap="onPinCountTap" aria-role="button" aria-label="{{pinCountLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{pinCountLabel}}</view>
 
 <!-- 2026-09-15 地图组队 P 方案:原型 f-hangout「在雾里发现一个局」整卡退场 —— 搭子局已下线,
      这条 120 s 轮询永远推不出东西,留着就是一张点进去落空的死入口。附近的队伍走
@@ -347,7 +357,7 @@
         <view class="zc-tagrow">
           <!-- demo=演示种子点(_initWorld 造的,不是后端真商家)。必须说出来:
                否则用户会走过去打卡一家根本不存在的店。 -->
-          <text class="zc-tag">{{item.demo ? '演示点 · 非真实商家' : (item.catLabel || '附近商家')}}{{item.distM ? ' · ' + item.distM + 'M' : ''}}</text>
+          <text class="zc-tag">{{item.demo ? '演示点 · 非真实商家' : (item.catLabel || '附近商家')}}{{item.distM ? ' · ' + item.distM + ' 米' : ''}}</text>
           <!-- 拍板 9-16:距离不够就是不能打卡,按钮不可用并只提示还差多远(不产生失败态) -->
           <text class="zc-far" wx:if="{{item.canCheckin === false}}">还差 {{item.gapM || 0}} 米才能打卡</text>
           <!-- #22 逐卡集章进度:本店状态 + 附近集章数 -->
@@ -377,9 +387,15 @@
       <view class="pc-close" bindtap="closePaceCard" aria-role="button" aria-label="关闭地点提示" hover-class="cy-pressed" hover-stay-time="80"><view class="pc-close__glyph"><cy-icon name="close-sm" size="32" /></view></view>
     </view>
     <text class="pc-demo" wx:if="{{paceCard.demo}}">演示点 · 仅浏览（非真实地点）</text>
+    <text class="pc-body cy-addr-tap" wx:if="{{paceCard.address}}" catchtap="onAddrTap" data-lat="{{paceCard.lat}}" data-lng="{{paceCard.lng}}" data-name="{{paceCard.title}}" data-address="{{paceCard.address}}" aria-role="link" aria-label="{{paceCard.address}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{paceCard.address}}</text>
     <text class="pc-body" wx:if="{{paceCard.body}}">{{paceCard.body}}</text>
-    <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
-    <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
+    <text class="pc-body" wx:if="{{paceCard.reason}}">{{paceCard.reason}}</text>
+    <text class="pc-body" wx:if="{{paceCard.sources}}" user-select>{{paceCard.sources}}</text>
+    <cy-roam-place-note wx:if="{{paceCard.tags}}" tags="{{paceCard.tags}}" bind:note="onPlaceNote" />
+    <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
+    <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
+    <!-- R11 g1(j4 F11):服务端确认到点后,按钮原地换成完成态 -->
+    <view class="pc-action pc-action--done" wx:if="{{paceCard.canDiscover && paceCard.confirmed}}" aria-role="text" aria-label="已到达">已到达</view>
     <!-- 只在服务器确认到点且后端返回独立审核内容时出现；无来源不留空壳。 -->
     <view class="pc-meaning" wx:if="{{paceCard.meaning}}">
       <text class="pc-meaning-label">地点记忆</text>
@@ -481,11 +497,7 @@
           <view class="poi__title">
             <text class="poi__name">{{item.name}}</text>
           </view>
-          <text class="poi__addr">{{item.address}}</text>
-          <view class="poi__biz">
-            <view class="poi__dot" style="background:{{item.dot}}"></view>
-            <text>{{item.meta}}</text>
-          </view>
+          <text class="poi__addr poi__dist cy-addr-tap" wx:if="{{item.dist}}" catchtap="onAddrTap" data-lat="{{item.lat}}" data-lng="{{item.lng}}" data-name="{{item.name}}" data-address="{{item.address}}" aria-role="link" aria-label="{{item.name}} {{item.dist}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{item.dist}}</text>
           <view class="poi__last">
             <view class="poi__go" catchtap="onShopStripGo" data-id="{{item.id}}"
                   aria-role="button" aria-label="去{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">去这儿</view>
@@ -594,6 +606,10 @@
 <!-- 原型 f-cam 的取景卡:浮在地图上,地图与三键都还在,不是另开一页。
      与组局(citystamp)、集邮册用同一件 cy-proto-cam。 -->
 <cy-proto-cam show="{{camOpen}}" bind:shot="onProtoCamShot" bind:close="closeProtoCam" />
+
+<!-- 第九轮 m1 第 3 项(m-card):点图钉打开的地点卡。分包组件,异步加载;没加载出来时点卡片退回原详情 -->
+<cy-roam-place-card wx:if="{{screen=='map' && placeCard}}" place="{{placeCard}}" top="{{placeCardTop}}" origin-y="{{placeCardOrigin}}"
+                    reduced-motion="{{reducedMotion}}" bind:open="onPlaceCardOpen" bind:close="closePlaceCard" />
 
 <!-- ══ 点主题针 · 主题半屏(原型 f-topic 自由探索 / f-city 城市定向)══
      与组局的 h-topic 同构,共用 style/proto-sheet.wxss 里那一套。 -->
@@ -1008,7 +1024,7 @@
       </view>
       <view class="dr-opt" wx:if="{{discoverReward.exploreDay}}" bindtap="onDiscoverExploreDay" hover-class="cy-pressed" hover-stay-time="80">
         <view class="dr-oi"><cy-icon name="route" size="40" /></view>
-        <view class="dr-ot">{{discoverReward.exploreDay.title || '看看探店日'}}</view>
+        <view class="dr-ot">{{discoverReward.exploreDay.title || '看看自由探索'}}</view>
         <view class="dr-od">{{discoverReward.exploreDay.distanceM}}m · 自由探索</view>
       </view>
     </view>
@@ -1134,3 +1150,6 @@
     <view class="pp-open__tx"><text class="pp-open__t">{{ppOpen.title}}</text><text class="pp-open__s">{{ppOpen.value}}</text></view>
   </view>
 </view>
+
+<!-- 第九轮 m1 第 8 项:首次进漫游的大气层转场(分包组件,地址为空时不挂) -->
+<cy-roam-atmos-entry wx:if="{{atmosOn && atmosSrc}}" src="{{atmosSrc}}" reduced-motion="{{reducedMotion}}" bind:done="onAtmosDone" />

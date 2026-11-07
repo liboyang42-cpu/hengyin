@@ -32,7 +32,10 @@ const DOMAIN_RULES = [
     // 玩家从「我的收益」进来仍是暗色;根节点按 merchantView 二选一。
     // 2026-11-02 业主:我的项目进共享域 —— 玩家/俱乐部进来是深色,商家(scope=MERCHANT)是浅色。
     // 2026-10-29 G-10 / M-35:收益明细随账户收益进共享域 —— 商家从「明细」带 ?theme=merchant 进来是浅色。
-    route: /^(?:pages\/(?:template|templatedetail|talent|shezhi|mylike|crop)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    // 2026-11-05 第十一轮 i1(p1 F-9,业主规则「玩家深色、商家浅色」):官方活动详情与主办控制台进共享域,
+    // 与「我发布的」同一做法 —— 根节点按 policy.isMerchantView 在 theme-merchant / theme-dark 间二选一。
+    // 搜索地图也按 roleGuard.isMerchantView 选择根主题与地图样式。
+    route: /^(?:pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',
@@ -263,7 +266,8 @@ function runSelfTest() {
     //   · official-detail:master 侧已把它并进 merchant 域的 route 正则,
     //     本 PR 那侧写的 'shared' 是它旧基线上的值,不是它的改动意图。
     || classifyPageDomain('pages/club/game-director/index') !== 'player'
-    || classifyPageDomain('pages/activity/official-detail/index') !== 'merchant'
+    // 2026-11-05 第十一轮 i1:官方活动详情按业主规则改为共享域(商家浅色、玩家深色)
+    || classifyPageDomain('pages/activity/official-detail/index') !== 'shared'
     || hasPageEntityMarkup('<!-- redirect shell -->')
     || !hasPageEntityMarkup('<view class="theme-merchant"></view>')
     || !badMatch || badMatch[1].includes('||') || !goodMatch || !goodMatch[1].includes('||')) {

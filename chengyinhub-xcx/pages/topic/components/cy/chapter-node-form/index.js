@@ -4,6 +4,7 @@ const { isAlbumTemplate, ALBUM_ONLY_IN_STORY } = require('../../../../../utils/a
 const cyToast = require('../../../../../utils/toast.js');
 const cyModal = require('../../../../../utils/modal.js');
 const { pickLocation, hasCoords } = require('../../../../../utils/location/location-manager.js');
+function openAddress() { return require('../../../../../utils/open-address.js') }
 const { resolveMenuChrome } = require('../../../../../utils/nav-safe-area.js');
 
 function emptyForm(address) {
@@ -49,6 +50,8 @@ Component({
     presetTemplateId: { type: Number, value: 0 },
     presetTemplateName: { type: String, value: '' },
     termsMode: { type: String, value: '' },
+    // 本章节的权益零售价门槛(元);空 = 不设门槛。服务端 MerchantOfferServiceImpl 按同一门槛拒收
+    perkMinValue: { type: String, value: '' },
     formMode: { type: String, value: 'application' },
     /* CU-M-58:同一个(商家 + 章节)在后端是唯一键原地覆盖(findMine → update,并回待审核),
        所以再次打开不是「新申请」。调用方把我已有的那个点位传进来,表单据此回填
@@ -68,6 +71,8 @@ Component({
     templatesLoading: false,
     perkTemplates: [],
     perkTemplatesLoading: false,
+    perkMinText: '',
+    perkBelowMin: false,
     canSubmit: false,
     locationReady: false,
     supplyKinds: [
@@ -220,7 +225,7 @@ Component({
                 && Number.isInteger(quota) && quota > 0;
             })
             : [];
-          that.setData({ perkTemplates: rows });
+          that.setData({ perkTemplates: rows }, () => that.refreshSubmitState());
         },
         fail() {
           that.setData({ perkTemplates: [] });
@@ -263,6 +268,8 @@ Component({
         success: (res) => {
           if (!res || !res.confirm || !isCurrent()) return;
           pickLocation({
+            latitude: this.data.locationReady ? this.data.form.latitude : '',
+            longitude: this.data.locationReady ? this.data.form.longitude : '',
             onPick: (poi) => {
               if (!isCurrent()) return;
                const address = String(poi.address || '').trim() || String(poi.name || '').trim();
@@ -281,6 +288,12 @@ Component({
           });
         },
       });
+    },
+
+    // 第九轮 m1-9:已确认的到店位置点开地图看;改位置走「地图选点」
+    viewNodeLocation() {
+      const f = this.data.form || {};
+      if (this.data.locationReady) openAddress().openAddress({ latitude: f.latitude, longitude: f.longitude, name: f.name, address: f.address });
     },
 
     onTemplatePick(e) {
@@ -327,7 +340,20 @@ Component({
 
     goCreateTemplate() {
       if (this.data.submitting) return;
-      wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT' });
+      // M-09:from=join ⇒ 发布后回到本表单(不再 reLaunch 去模板库),新玩法直接选上
+      const version = this._formVersion;
+      wx.navigateTo({
+        url: '/pages/publish/temp/index?scope=MERCHANT&from=join',
+        events: {
+          templateCreated: (tpl) => {
+            if (version !== this._formVersion || !this.data.show || !tpl || !Number(tpl.id)) return;
+            this.setData({
+              'form.templateId': Number(tpl.id),
+              'form.templateName': String(tpl.title || ''),
+            }, () => this.refreshSubmitState());
+          },
+        },
+      });
     },
 
     goCreatePerkTemplate() {
@@ -341,8 +367,16 @@ Component({
       const quotaValid = Number.isInteger(quota) && quota >= 1;
       const fee = Number(form.perHeadFee);
       const feeValid = form.perHeadFee !== '' && Number.isFinite(fee) && fee >= 0;
+      const perkMin = Number(this.data.perkMinValue);
+      const perkMinText = this.data.termsMode === 'PERK' && this.data.perkMinValue !== '' && Number.isFinite(perkMin) && perkMin > 0
+        ? (perkMin % 1 === 0 ? String(perkMin) : perkMin.toFixed(2)) : '';
+      const pickedPerk = (this.data.perkTemplates || []).filter((p) => Number(p.id) === Number(form.perkTemplateId))[0];
+      const perkBelowMin = !!perkMinText && !!pickedPerk && Number(pickedPerk.retailValue) < perkMin;
+      if (perkMinText !== this.data.perkMinText || perkBelowMin !== this.data.perkBelowMin) {
+        this.setData({ perkMinText, perkBelowMin });
+      }
       const termsSupplyValid = this.data.termsMode === 'PERK'
-        ? !!Number(form.perkTemplateId) && quotaValid
+        ? !!Number(form.perkTemplateId) && quotaValid && !perkBelowMin
         : this.data.termsMode === 'REVSHARE'
           ? feeValid
           : this.data.termsMode === 'TRAFFIC';
@@ -413,6 +447,8 @@ Component({
         app.tips('请选择实际供给的权益');
         return;
       }
+      // 低于门槛的提示已经红字挂在字段下,这里只拦,不再弹
+      if (termsMode === 'PERK' && this.data.perkBelowMin) return;
       const perHeadFee = Number(form.perHeadFee);
       if (termsMode === 'REVSHARE'
           && (form.perHeadFee === '' || !Number.isFinite(perHeadFee) || perHeadFee < 0)) {

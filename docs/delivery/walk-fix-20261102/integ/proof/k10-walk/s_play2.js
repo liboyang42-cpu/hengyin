@@ -1,0 +1,14 @@
+const A = async () => { const a = await h.audio(); return { st: a.state.map(s => [s.id, s.src.slice(0, 8), s.paused ? 'paused' : 'PLAY', s.volume, s.t]), log: a.log.map(l => [l.id, l.ev, l.at, l.v, (l.src || '').slice(0, 8)].filter(x => x != null && x !== '')) }; };
+const clr = () => w.page.evaluate(() => { window.MPWEB.audioLog.length = 0; });
+const out = {};
+await clr();
+await h.tap("拍一张"); await sleep(1500); await w.sheet(0).catch(() => {}); await sleep(4000);
+await w.shot("k10-r04-verdict"); out.afterKitPhoto = await A(); out.t1 = (await h.say()).slice(-120); await clr();
+await h.tap("继续故事"); await sleep(5000);
+await w.shot("k10-r05-legacy"); out.legacy = await A(); out.t2 = (await h.say()).slice(-160); await clr();
+await w.page.mouse.click(195, 766); await sleep(1500); await w.sheet(0).catch(() => {}); await sleep(2500);
+out.inCrop = await A(); out.r = await w.route(); await clr();
+await h.tap("选取", { exact: true }).catch(() => {}); await sleep(6000);
+await w.shot("k10-r06-back"); out.back = await A(); out.t3 = (await h.say()).slice(-200);
+const n = await w.net(); out.net = n.filter(x => /play\/photo|uploadOSS|arrive|checkin/.test(x.url)).slice(-3).map(x => [x.url.slice(0, 40), x.status, String(x.resBody).slice(0, 120)]);
+return out;

@@ -34,6 +34,11 @@ import org.mockito.ArgumentCaptor;
 /**
  * 验收场景 #22 · 二清硬闸 —— <b>行为测试,必须真的把方法调进去</b>。
  *
+ * <p><b>2026-11-02 口径变更(walk-fix ROUND2 pay-gate)</b>:主办方没有自己商户号时,收费主题/活动
+ * 照常收款,钱走平台商户号。下面原「第三方 ⇒ 拒」的用例已改为「第三方 ⇒ 过收款闸」;
+ * 仍拒的只有查不到票款归属的单(无主题且非有发布者的独立活动 / 承办活动的主题已删)。
+ * 以下历史说明保留作背景。
+ *
  * <p><b>闸在管什么</b>:平台把玩家的钱收进自己的商户号,再从库里记账分给第三方主理人 = 二清
  * (F8;判例:非法经营罪 8 年 + 127 万)。根治是收付通(P0-43,行政流程 ≥2 个月),
  * 在它落地前,<b>票款不归平台的产品一律不得真实收款</b>(D11/D16 写死:「别在过渡期用『量小没事』放行」)。
@@ -161,11 +166,21 @@ class ErqingGateTest {
 
     // ------------------------------------------------- 闸本身的契约
 
-    /** 第三方主题 + 真实收款 ⇒ 拒。这是本闸的存在理由。 */
+    /** 2026-11-02:第三方主题 + 真实收款 ⇒ 过闸(票款走平台商户号)。 */
     @Test
-    void thirdParty_paid_rejected() {
-        RuntimeException e = assertThrows(RuntimeException.class,
-                () -> gate(topic(), new BigDecimal("100.00")));
+    void thirdParty_paid_collectsThroughPlatformMerchant() {
+        gate(topic(), new BigDecimal("100.00"));
+    }
+
+    /** 承办活动的主题已查不到 ⇒ 票款归属不明 ⇒ 仍拒(fail-closed)。 */
+    @Test
+    void activityWhoseTopicVanished_stillRejected() {
+        CmsActivity a = new CmsActivity();
+        a.setId(ACTIVITY);
+        a.setTopicId(TOPIC);
+        a.setMemberId(7L);
+        RuntimeException e = assertThrows(RuntimeException.class, () -> ReflectionTestUtils.invokeMethod(
+                service, "assertCollectible", (CmsTopic) null, new BigDecimal("100.00"), a));
         assertTrue(e.getMessage().contains("暂不支持在线支付"), "实际:" + e.getMessage());
     }
 
@@ -197,28 +212,35 @@ class ErqingGateTest {
      * 这是今天在用的售票路径(生产实测 2 笔付费单走这条)。
      */
     @Test
-    void activityCarryingThirdPartyTopic_rejected() {
+    void activityCarryingThirdPartyTopic_passesCollectGate() {
         givenActivityCarrying(TOPIC);
-        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic());
+        CmsTopic thirdParty = topic();
+        thirdParty.setFeePlatformRate(new BigDecimal("0.0300"));
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(thirdParty);
         givenTicket(new BigDecimal("100.00"));
         givenMember();
+        when(registrationMapper.insertCmsRegistration(any(CmsRegistration.class))).thenReturn(1);
+        when(ticketMapper.deductInventory(TICKET, 1L)).thenReturn(1);
 
-        RuntimeException e = assertThrows(RuntimeException.class,
-                () -> service.createRegistration(MEMBER, 2, ACTIVITY, TICKET, 0, "张三", "13800000000", null, null));
-        assertTrue(e.getMessage().contains("暂不支持在线支付"),
-                "票款归第三方的活动必须拒收 —— 平台代收再分账 = 二清。实际:" + e.getMessage());
+        service.createRegistration(MEMBER, 2, ACTIVITY, TICKET, 0, "张三", "13800000000", null, null);
+
+        ArgumentCaptor<CmsRegistration> inserted = ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationMapper).insertCmsRegistration(inserted.capture());
+        assertEquals(0, new BigDecimal("100.00").compareTo(inserted.getValue().getPayableAmount()));
     }
 
     @Test
-    void thirdPartyStandaloneActivityIsRejectedBeforeCreatingOrder() {
+    void thirdPartyStandaloneActivityPassesCollectGate() {
         givenActivityCarrying(null);
         givenTicket(new BigDecimal("100.00"));
         givenMember();
         activityMapper.selectCmsActivityById(ACTIVITY).setMemberId(7L);
-        RuntimeException error = assertThrows(RuntimeException.class,
-                () -> service.createRegistration(MEMBER, 2, ACTIVITY, TICKET, 0, "张三", "13800000000", null, null));
-        assertTrue(error.getMessage().contains("暂不支持在线支付"));
-        verify(registrationMapper, never()).insertCmsRegistration(any());
+        try {
+            service.createRegistration(MEMBER, 2, ACTIVITY, TICKET, 0, "张三", "13800000000", null, null);
+        } catch (RuntimeException e) {
+            assertTrue(!String.valueOf(e.getMessage()).contains("暂不支持在线支付"),
+                    "有发布者的收费独立活动应过收款闸。实际:" + e.getMessage());
+        }
     }
 
     @Test
@@ -312,17 +334,19 @@ class ErqingGateTest {
      * 恒为第三方(玩家/俱乐部)⇒ 每一张自玩票都是二清。生产实测 21 笔付费单是 ownerType=1。
      */
     @Test
-    void selfPlayPass_rejected() {
+    void selfPlayPass_thirdParty_passesCollectGate() {
         CmsTopic t = topic();
         t.setSelfPlay(1);
         t.setSelfPlayPrice(new BigDecimal("39.90"));
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(t);
         givenMember();
 
-        RuntimeException e = assertThrows(RuntimeException.class,
-                () -> service.createSelfPlayPass(MEMBER, TOPIC, "张三", "13800000000"));
-        assertTrue(e.getMessage().contains("暂不支持在线支付"),
-                "自玩票款归主理人(第三方)⇒ 平台代收即二清。实际:" + e.getMessage());
+        try {
+            service.createSelfPlayPass(MEMBER, TOPIC, "张三", "13800000000");
+        } catch (RuntimeException e) {
+            assertTrue(!String.valueOf(e.getMessage()).contains("暂不支持在线支付"),
+                    "2026-11-02 起第三方自玩票款走平台商户号收。实际:" + e.getMessage());
+        }
     }
 
     // ------------------------------------------------- ★多票整单路径(第四条,自己写的闸自己漏)
@@ -380,10 +404,12 @@ class ErqingGateTest {
         i2.setTicketId(10L);
         i2.setCount(1);
 
+        // 2026-11-02:第三方主题收费已放开 ⇒ 整单闸改为「归属不明才拒」:让主题查不到再验整单层仍拒。
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(null);
         RuntimeException e = assertThrows(RuntimeException.class,
                 () -> service.createMultiTicketRegistrations(MEMBER, 2, ACTIVITY, 0,
                         "张三", "13800000000", null, null, java.util.Arrays.asList(i1, i2)));
-        assertTrue(e.getMessage().contains("暂不支持在线支付"),
+        assertTrue(e.getMessage().contains("暂不支持在线支付") || e.getMessage().contains("主题"),
                 "整单要收 100 元就必须过闸 —— 按行判会被『首票免费』绕过。实际:" + e.getMessage());
     }
 
@@ -412,14 +438,17 @@ class ErqingGateTest {
         exist.setOwnerId(ACTIVITY);
         exist.setPayableAmount(new BigDecimal("100.00"));
 
+        // 2026-11-02:第三方主题放行;主题查不到时重放路径仍拒。
+        service.assertCollectible(exist);
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(null);
         RuntimeException e = assertThrows(RuntimeException.class, () -> service.assertCollectible(exist));
         assertTrue(e.getMessage().contains("暂不支持在线支付"),
                 "幂等重放必须过同一道闸,否则存量待支付单成了绕过通道。实际:" + e.getMessage());
     }
 
-    /** 幂等重放 + 自玩单(ownerType=1)⇒ 同样被拒。 */
+    /** 幂等重放 + 自玩单(ownerType=1):第三方放行,主题查不到仍拒。 */
     @Test
-    void replayExistingOrder_selfPlay_rejected() {
+    void replayExistingOrder_selfPlay_followsSameGate() {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic());
 
         com.chengyinhub.business.domain.CmsRegistration exist =
@@ -428,21 +457,23 @@ class ErqingGateTest {
         exist.setOwnerId(TOPIC);
         exist.setPayableAmount(new BigDecimal("39.90"));
 
+        service.assertCollectible(exist);
+        when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(null);
         assertThrows(RuntimeException.class, () -> service.assertCollectible(exist));
     }
 
     @Test
-    void replayExistingStandaloneOrderRequiresExplicitPlatformOwnership() {
+    void replayExistingStandaloneOrderRequiresKnownPublisher() {
         givenActivityCarrying(null);
         CmsRegistration existing = new CmsRegistration();
         existing.setOwnerType(2L);
         existing.setOwnerId(ACTIVITY);
         existing.setPayableAmount(new BigDecimal("100.00"));
         assertThrows(RuntimeException.class, () -> service.assertCollectible(existing));
-        activityMapper.selectCmsActivityById(ACTIVITY).setMemberId(100000L);
+        activityMapper.selectCmsActivityById(ACTIVITY).setMemberId(7L);
         service.assertCollectible(existing);
         ReflectionTestUtils.setField(service, "platformMemberId", null);
-        assertThrows(RuntimeException.class, () -> service.assertCollectible(existing));
+        service.assertCollectible(existing);
     }
 
     /** 幂等重放 + 免费单 ⇒ 放行(不进资金链)。 */

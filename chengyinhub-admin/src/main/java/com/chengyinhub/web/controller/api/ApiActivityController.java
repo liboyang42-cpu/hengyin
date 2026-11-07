@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
 import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.domain.vo.ActivityGuestProjection;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.PublicRegistrationSummaryVO;
 import com.chengyinhub.business.domain.vo.PublicTicketVO;
@@ -21,6 +22,7 @@ import com.chengyinhub.business.mapper.UmsCommentMapper;
 import com.chengyinhub.business.mapper.UmsMemberFollowMapper;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.util.ActivityLifecycle;
+import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -69,6 +71,8 @@ import com.chengyinhub.business.access.merchant.MerchantPermission;
 @RequestMapping("/api/activity")
 
 public class ApiActivityController extends BaseController {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.IClubService clubService;
     @Autowired
     private com.chengyinhub.business.service.support.AuthorWriteReceiptService authorWriteReceipts;
 
@@ -107,6 +111,17 @@ public class ApiActivityController extends BaseController {
 
     @Autowired
     private IContentSafetyGate contentSafetyGate;
+
+    /** check-1104 j1 F14:商家场次的主办店铺(只读店铺名/头像)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+
+    /** Round5B-6:活动封面 / 图集只收本站登记、本人上传或已审核通过的媒体,不收客户端外链。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
 
     @Autowired
     private com.chengyinhub.business.service.support.ActivityReviewPolicy activityReviewPolicy;
@@ -710,6 +725,28 @@ public class ApiActivityController extends BaseController {
             if (hostedRun != null) {
                 return error(hostedRun);
             }
+            if (!Long.valueOf(1L).equals(cmsActivity.getPublishStatus())
+                    && cmsActivity.getTemplateId() != null && cmsActivity.getTemplateId() > 0) {
+                try {
+                    CmsActivityPublishRequest review = new CmsActivityPublishRequest();
+                    org.springframework.beans.BeanUtils.copyProperties(cmsActivity, review);
+                    PublishSafetyRequest safety = new PublishSafetyRequest();
+                    safety.setContentType(AuditTask.BIZ_ACTIVITY);
+                    safety.setMemberId(publisher.ownerMemberId());
+                    safety.setOpenid(resolveOpenid(memberId));
+                    safety.setText(activitySafetyText(review, cmsActivity.getTemplateId()));
+                    safety.setHasSignup(true);
+                    safety.setReviewMode(activityReviewPolicy.modeOf(review, publisher.reviewSubject()).name());
+                    SafetyDecision decision = contentSafetyGate.decide(safety);
+                    if (decision == null || decision.isBlock()) return error("活动内容包含违规信息，请修改后重试");
+                    if (decision.isHold()) return error("活动内容待审核，请编辑保存后等待审核");
+                } catch (ServiceException invalid) {
+                    return error(invalid.getMessage());
+                } catch (Exception failure) {
+                    logger.error("活动上架内容安全裁决失败: activityId={}", cid, failure);
+                    return error("系统繁忙，请稍后重试");
+                }
+            }
             cmsActivity.setPublishStatus(cmsActivity.getPublishStatus() == 1L ? 0L : 1L);
             int rows = cmsActivityService.updateCmsActivity(cmsActivity);
             if (rows > 0) {
@@ -774,6 +811,43 @@ public class ApiActivityController extends BaseController {
         }
     }
 
+    /**
+     * j1 F1/F2:进「发活动」页先问一次能不能发 —— 身份、入驻审核、活动配额,与 publish 同一套判据、同一套文案,
+     * 别让人填完三步才在「发布」时被拒。只读,不占配额;拒绝一律 403(页面据此落「暂不能发布」态)。
+     */
+    @Operation(summary = "发布活动前置检查(身份/审核/配额)")
+    @PostMapping("/publish_precheck")
+    public AjaxResult publishPrecheck(String scope) {
+        Long memberId = 0L;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+        }
+        if (memberId == null || memberId <= 0) {
+            return AjaxResult.error(401, "请先登录");
+        }
+        try {
+            ActivityPublisher publisher = resolveActivityPublisher(memberId, scope);
+            if (publisher == null) {
+                return AjaxResult.error(403, "仅俱乐部主理人或商家可发布活动");
+            }
+            if (publisher.isMerchant() && !publisher.isMerchantApproved()) {
+                return AjaxResult.error(403, "商家未通过入驻审核，暂不能发布活动");
+            }
+            String quotaErr = quotaService.checkCreate(publisher.ownerMemberId(),
+                    com.chengyinhub.business.service.IQuotaService.TYPE_EVENT);
+            if (quotaErr != null) {
+                return AjaxResult.error(403, quotaErr);
+            }
+            return AjaxResult.success();
+        } catch (ServiceException se) {
+            return AjaxResult.error(403, se.getMessage());
+        } catch (Exception e) {
+            logger.error("发布活动前置检查失败: memberId={}", memberId, e);
+            return AjaxResult.error("系统繁忙，请稍后重试");
+        }
+    }
+
     @Operation(summary = "发布活动")
     @Log(title = "发布活动", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
@@ -825,14 +899,17 @@ public class ApiActivityController extends BaseController {
 
             // UGC 内容安全门禁(2026-10-20 分级审核):活动按内容先发后审;高风险类目 / 未审核商家 / 总闸 → 先审后发。
             // 明确违规两种模式都拦;先审时门禁 HOLD → 落库待审并建 BIZ_ACTIVITY 审核单(活动尚未落库,门禁不建单)。
+            submissionSafety.requireOwnImages(member_id, request.getImgUrl());
+            submissionSafety.requireOwnImages(member_id, request.getImgArr());
             String secOpenid = resolveOpenid(member_id);
             PublishSafetyRequest safety = new PublishSafetyRequest();
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(secOpenid);
-            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setText(activitySafetyText(request, null));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
+            safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
             safety.setReviewMode(activityReviewPolicy.modeOf(request, publisher.reviewSubject()).name());
             SafetyDecision decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
@@ -853,6 +930,7 @@ public class ApiActivityController extends BaseController {
             if (decision.isFlagged()) {
                 flagForSpotCheck(activityId, fOwnerMemberId, decision.getFlagReason(), request, false);
             }
+            enqueueRecheck(decision, safety, activityId);
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
             wxContentSecurityService.submitMediaCheck(
@@ -935,8 +1013,15 @@ public class ApiActivityController extends BaseController {
         }
         // F-L5C-02 / AUDIT-G1-2:改文案与 /publish 同一道统一门禁 + 同一套分级(ActivityReviewPolicy),
         // 不能先发干净文本再改成违规内容。明确违规两种模式都拒;先审模式下改了内容即退回待审(见 service)。
+        try {
+            submissionSafety.requireOwnImages(memberId, request.getImgUrl());
+            submissionSafety.requireOwnImages(memberId, request.getImgArr());
+        } catch (ServiceException invalidMedia) {
+            return error(invalidMedia.getMessage());
+        }
         final boolean preReview;
         final SafetyDecision decision;
+        final PublishSafetyRequest safety = new PublishSafetyRequest();
         try {
             CmsActivityPublishRequest policyView = request;
             if (request.getCategoryIds() == null) {
@@ -947,13 +1032,13 @@ public class ApiActivityController extends BaseController {
             }
             PublishSafetyRequest.ReviewMode mode =
                     activityReviewPolicy.modeOf(policyView, publisher.reviewSubject());
-            PublishSafetyRequest safety = new PublishSafetyRequest();
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(resolveOpenid(memberId));
-            safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
+            safety.setText(activitySafetyText(request, exist.getTemplateId()));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
+            safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
             safety.setReviewMode(mode.name());
             decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
@@ -988,6 +1073,7 @@ public class ApiActivityController extends BaseController {
         try {
             // SQL 的 where 带 member_id,传主体才写得动自家活动(员工只是操作人)。
             cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName(), reReview);
+            enqueueRecheck(decision, safety, cid);
             if (decision.isFlagged() && !preReview) {
                 flagForSpotCheck(cid, publisher.ownerMemberId(), decision.getFlagReason(), request, true);
             } else if (substantiveSpotCheck) {
@@ -1033,6 +1119,56 @@ public class ApiActivityController extends BaseController {
         return left.getTime() / 1000L == right.getTime() / 1000L;
     }
 
+    /** Round5C:机审没结论的待审活动进自动复检(通过自动上架;先审的业务审批仍留人工)。 */
+    /**
+     * 活动送门禁的玩家可见文字:名称、简介、场地名与地址、各票种的名称/说明/集合点/退款说明。
+     * check-1104 j5 B2:原先只送名称+简介,场地与票种文字先发后审模式下不经机审直接公开;
+     * 口径与主题票种(ApiTopicController.combinedThemeReviewTexts)一致。
+     */
+    static String activitySafetyText(CmsActivityPublishRequest request) {
+        java.util.List<String> parts = new java.util.ArrayList<String>();
+        parts.add(request.getName());
+        parts.add(request.getDescription());
+        parts.add(request.getAddressName());
+        parts.add(request.getAddress());
+        if (request.getTickets() != null) for (com.chengyinhub.business.domain.dto.ActivityTicketRequest ticket : request.getTickets()) {
+            if (ticket == null) continue;
+            parts.add(ticket.getName());
+            parts.add(ticket.getDescription());
+            parts.add(ticket.getMeetingPoint());
+            parts.add(ticket.getMeetingPointAddress());
+            parts.add(ticket.getRefundRule());
+        }
+        return IWxContentSecurityService.joinText(parts.toArray(new String[0]));
+    }
+
+    private String activitySafetyText(CmsActivityPublishRequest request, Long storedTemplateId) {
+        Long templateId = request.getTemplateId() == null ? storedTemplateId : request.getTemplateId();
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        parts.add(activitySafetyText(request));
+        if (templateId != null && templateId > 0) {
+            CmsMemberTemplate template = memberTemplateService.selectCmsMemberTemplateById(templateId);
+            if (template == null || Integer.valueOf(2).equals(template.getDelFlag())) {
+                throw new ServiceException("绑定玩法不存在，请重新选择");
+            }
+            for (com.chengyinhub.business.util.JourneyReviewTexts.Entry entry
+                    : com.chengyinhub.business.util.JourneyReviewTexts.collectBoundTemplate(template)) {
+                parts.add(entry.getText());
+            }
+        }
+        return IWxContentSecurityService.joinText(parts.toArray(new String[0]));
+    }
+
+    private void enqueueRecheck(SafetyDecision decision, PublishSafetyRequest safety, Long activityId) {
+        if (recheckService == null || activityId == null
+                || !com.chengyinhub.business.service.IContentSafetyRecheckService.needsRecheck(decision)) return;
+        try {
+            recheckService.enqueue(safety, activityId);
+        } catch (Exception e) {
+            logger.error("活动自动复检进队失败 activityId={}", activityId, e);
+        }
+    }
+
     /** 内容安全送检需要发表者 openid:按 memberId 查会员;查不到返回空串(降级 scene 检测)。 */
     /**
      * 先发后审时机审没给出结论(要人工/审不了/缺 openid/检测关闭):活动照常上架,
@@ -1056,6 +1192,16 @@ public class ApiActivityController extends BaseController {
         } catch (Exception e) {
             logger.error("活动抽检单提交失败 activityId={}", activityId, e);
         }
+    }
+
+    /** Round5B-3:把封面 / 图集交给门禁,图片送不了检时先发后审也要 HOLD。 */
+    static java.util.List<String> safetyMedia(String imgUrl, String imgArr) {
+        java.util.List<String> media = new java.util.ArrayList<>();
+        for (String raw : new String[] {imgUrl, imgArr}) {
+            if (raw == null) continue;
+            for (String item : raw.split("[,;]")) if (!item.trim().isEmpty()) media.add(item.trim());
+        }
+        return media;
     }
 
     private String resolveOpenid(Long memberId) {
@@ -1141,9 +1287,9 @@ public class ApiActivityController extends BaseController {
     /**
      * 商家主办这一路的约束。返 null=可放行。
      * ① club_id 有值就是俱乐部场次(公域不出、收尾走主理人那条线),两种身份不能混挂;
-     * ② 收款:全仓没有 sub_mchid,下单一律走平台商户号(WechatPayServiceImpl#buildPrepayRequest),
-     *    商家主办收钱等于替平台收 —— 9-15 定稿「钱进商家子商户号」尚未落地,故先只放开免费场,
-     *    并给明确提示而不是静默失败。
+     * ② 收款:全仓没有 sub_mchid,下单一律走平台商户号(WechatPayServiceImpl#buildPrepayRequest)。
+     *    2026-11-02 拍板:没有自己商户号的主办方(含商家)照样可发收费活动,票款走平台商户号收,
+     *    原「商家主办票价只能是 0」已撤;商户号只管「承接其他商家」。
      */
     private String merchantHostViolation(ActivityPublisher publisher, CmsActivityPublishRequest request) {
         if (!publisher.isMerchant() || request == null) {
@@ -1151,15 +1297,6 @@ public class ApiActivityController extends BaseController {
         }
         if (request.getClubId() != null && request.getClubId() > 0) {
             return "商家主办活动不能挂到俱乐部";
-        }
-        List<ActivityTicketRequest> tickets = request.getTickets();
-        if (tickets != null) {
-            for (ActivityTicketRequest ticket : tickets) {
-                BigDecimal price = ticket == null ? null : ticket.getPrice();
-                if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
-                    return "商家主办活动还没开通收款，票价只能是 0";
-                }
-            }
         }
         return null;
     }
@@ -1184,6 +1321,9 @@ public class ApiActivityController extends BaseController {
     @Parameters({
             @Parameter(name = "id", description = "活动id")
     })
+    // walk-fix Round5 #6:owner「游客可浏览」—— 分享来的活动详情对游客只读开放。游客 member_id=0:
+    // 只看已审核在架的活动,响应走 ActivityGuestProjection(无报名名单、无评价人明细、无销售态),不记浏览。
+    @Anonymous
     public AjaxResult activityInfo(String id) {
         CmsActivity cmsActivity = new CmsActivity();
 
@@ -1203,6 +1343,10 @@ public class ApiActivityController extends BaseController {
         }
 
         cmsActivity = cmsActivityService.selectCmsActivityDetailById(activityId, member_id);
+        boolean guest = member_id == null || member_id <= 0;
+        if (guest && cmsActivity != null && !ActivityGuestProjection.publiclyVisible(cmsActivity)) {
+            return success(null);
+        }
         if (cmsActivity != null) {
             // M1-3 社群活动门卡:非俱乐部成员(且非创建者)分享落地看到加入引导,不下发完整详情
             if (cmsActivity.getClubId() != null && cmsActivity.getClubId() > 0) {
@@ -1214,7 +1358,11 @@ public class ApiActivityController extends BaseController {
                     gate.put("gate", true);
                     gate.put("clubId", cmsActivity.getClubId());
                     gate.put("activityName", cmsActivity.getName());
-                    gate.put("message", "来自俱乐部的活动，加入后查看");
+                    // P-19:门卡说清是哪个俱乐部执行这一场,与「去加入俱乐部」打开的是同一个
+                    com.chengyinhub.business.domain.Club gateClub = clubService == null ? null : clubService.selectClubById(cmsActivity.getClubId());
+                    String gateClubName = gateClub == null || gateClub.getName() == null ? "" : gateClub.getName().trim();
+                    gate.put("clubName", gateClubName);
+                    gate.put("message", gateClubName.isEmpty() ? "来自俱乐部的活动，加入后查看" : "这一场由「" + gateClubName + "」执行，加入后查看");
                     return AjaxResult.success(gate);
                 }
             }
@@ -1233,10 +1381,11 @@ public class ApiActivityController extends BaseController {
             activityInfoVO.setTimeLocationLocked(cmsActivityService.countOpenSaleRegistrations(activityId) > 0);
 
             Long templateId = cmsActivity.getTemplateId();
-            // 将单个ID转换为List
-            List<Long> idTemplateList = Arrays.asList(templateId);
-            //活动模版
-            List<CmsMemberTemplate> listMemberTemplate = memberTemplateService.selectCmsMemberTemplateByIds(idTemplateList);
+            // 2026-11-04 owner:商家发活动不必带玩法 —— 没选模板(null / 0)就是没有玩法,不去查 id in (null)。
+            List<CmsMemberTemplate> listMemberTemplate = templateId == null || templateId <= 0
+                    ? new ArrayList<>()
+                    : memberTemplateService.selectCmsMemberTemplateByIds(Arrays.asList(templateId));
+            if (listMemberTemplate == null) listMemberTemplate = new ArrayList<>();
             if (listMemberTemplate.size() > 0) {
                 for (CmsMemberTemplate template : listMemberTemplate) {
                     com.chengyinhub.business.util.TemplateSecrets.strip(template);
@@ -1250,6 +1399,12 @@ public class ApiActivityController extends BaseController {
                 activityInfoVO.setPlayNodeCount(cmsTopicNodeService.selectCmsTopicNodeList(nodeProbe).size());
             } else {
                 activityInfoVO.setPlayNodeCount(listMemberTemplate.size());
+            }
+            com.chengyinhub.business.domain.MmsMerchant organizerShop =
+                    com.chengyinhub.business.util.ActivityShopOrganizer.shopOf(mmsMerchantService, cmsActivity);
+            if (organizerShop != null) {
+                activityInfoVO.setOrganizerShopName(organizerShop.getName().trim());
+                activityInfoVO.setOrganizerShopLogo(organizerShop.getLogo());
             }
             //活动阵容
             ViewCollaborators viewCollaborators = new ViewCollaborators();
@@ -1347,15 +1502,17 @@ public class ApiActivityController extends BaseController {
                 activityInfoVO.setRegistrationList(viewRegistrations);
             }
 
-            //增加活动浏览量
-            TmsBrowseRecord tmsBrowseRecord = new TmsBrowseRecord();
-            tmsBrowseRecord.setMemberId(member_id);
-            // browse_type 约定:活动=2、主题=1(读侧见本类 :257/:383 与 ApiTopicController)
-            tmsBrowseRecord.setBrowseType(2L); //活动
-            tmsBrowseRecord.setTargetId(activityId);
-            tmsBrowseRecord.setTargetTitle(activityInfoVO.getName());
-            tmsBrowseRecord.setBrowseTime(new Date());
-            tmsBrowseRecordService.insertTmsBrowseRecord(tmsBrowseRecord);
+            //增加活动浏览量(游客不记:没有会员可归属)
+            if (!guest) {
+                TmsBrowseRecord tmsBrowseRecord = new TmsBrowseRecord();
+                tmsBrowseRecord.setMemberId(member_id);
+                // browse_type 约定:活动=2、主题=1(读侧见本类 :257/:383 与 ApiTopicController)
+                tmsBrowseRecord.setBrowseType(2L); //活动
+                tmsBrowseRecord.setTargetId(activityId);
+                tmsBrowseRecord.setTargetTitle(activityInfoVO.getName());
+                tmsBrowseRecord.setBrowseTime(new Date());
+                tmsBrowseRecordService.insertTmsBrowseRecord(tmsBrowseRecord);
+            }
 
 
             // 查询活动的销售金额
@@ -1400,6 +1557,7 @@ public class ApiActivityController extends BaseController {
 
             // U-168:报名页按服务器时刻置灰场次/票种/候补窗口,与建单闸同一把钟;只读、不入库。
             activityInfoVO.setServerNow(System.currentTimeMillis());
+            if (guest) ActivityGuestProjection.apply(activityInfoVO);
             return success(activityInfoVO);
         } else {
             if (member_id != null && member_id > 0) {

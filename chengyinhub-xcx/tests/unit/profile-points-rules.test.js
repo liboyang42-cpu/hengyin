@@ -13,7 +13,10 @@ const ROOT = path.resolve(__dirname, '../..');
 
 test('启用中的规则按赚/花分拆;数值、次数取自后台', () => {
   const rules = splitPointsRules([
-    { id: 1, title: '完成主题', description: '通关一次', value: 20, eventType: 1, status: 1, pointsNum: 3 },
+    { id: 1, title: '完成主题', description: '通关一次', value: 20, eventType: 1, status: 1, delFlag: 0, pointsNum: 3 },
+    // ROUND11 h3:启用但已删除的规则后端不发分,弹窗也不列
+    { id: 6, title: '已删除规则', value: 100, eventType: 6, status: 1, delFlag: 1 },
+    { id: 7, title: '已删除规则(RuoYi 口径 2)', value: 100, eventType: 7, status: 1, delFlag: 2 },
     { id: 2, title: '停用规则', value: 5, eventType: 2, status: 0, pointsNum: 0 },
     { id: 3, title: '解锁提示', description: '查看一次提示', value: '10.00', eventType: 14, status: 1, pointsNum: 2 },
     { id: 4, title: '', value: null, eventType: 5, status: '1' },

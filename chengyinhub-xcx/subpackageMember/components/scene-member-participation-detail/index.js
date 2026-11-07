@@ -13,6 +13,7 @@ const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/o
 const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
 const { isUnknownHttpStatus } = require('../../../utils/transport/failure-envelope.js');
+const GONE_RECORD_MSG = /无权查看该报名信息|报名记录不存在/;
 
 function nonNegativeNumberOrNull(value) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
@@ -40,10 +41,13 @@ Component({
       bundleRegistrationId: '',
       resultTopicId: '',
       resultEntryError: '',
+      scoreEntry: false,
+      characterEntry: false,
       // R1-C04:本页此前没有加载/失败态,接口失败只弹 toast,页面照样把空值渲染成完整骨架。
       // loadState: loading | missing-param | error | ready —— 四态互斥由 WXML 承接。
       loadState: 'loading',
       loadErrorText: '',
+      missingTitle: '缺少参与记录',
       // R2-C04:错误态动作槽的**标签**。cy-error 只有一个动作位,所以标签必须跟着这一档
       // 真正能做的事变:有 id ⇒ 「重试」,缺 id ⇒ 「返回参与列表」。
       // ⚠️ 不许再退回 R1 的 retry="{{id ? '重试' : ''}}" —— 空标签 = 缺参数时整屏无按钮,
@@ -55,8 +59,12 @@ Component({
       this._cancelDisposed = false;
       this._cancelGeneration = (this._cancelGeneration || 0) + 1;
       this._syncCancellationAccount();
-      this._skipInitialShow = true; this._detailDisposed = false; this._detailGeneration = (this._detailGeneration || 0) + 1;
       const id = trimmedString(String(this.data.recordId == null ? '' : this.data.recordId))
+      // 属性观察器可能先于 attached 触发并已按这个 id 发出请求(rig 2026-11-04 实测):这时再加代号会把在途回包
+      // 判成过期,页面永远停在「加载中」。同一 id 已在途/已落定就不作废它。
+      const inFlight = !!id && String(this.data.id) === id;
+      this._skipInitialShow = true; this._detailDisposed = false;
+      if (!inFlight) this._detailGeneration = (this._detailGeneration || 0) + 1;
       if (!id) {
         // 没有 id 就永远拿不到详情:既不能停在「一直加载中」,也不能把缺参伪装成加载失败
         this.setData({
@@ -192,6 +200,8 @@ Component({
     },
     _bundleEntry() {
       if (!this._resultEntry()) return '';
+      // R11 p1 F-7:套票关着时不摆「自由探索权益」入口(与 /api/free-explore 套票端点同一个开关)
+      if (!(app.globalData && app.globalData.features && app.globalData.features.freeExploreBundle === true)) return '';
       const info = this.data.info || {};
       if (Number(info.ownerType) !== 1 || !info.cmsTopic
           || !(Number(info.purchaseKind) === 3 || Number(info.cmsTopic.productType) === 2)) return '';
@@ -205,6 +215,16 @@ Component({
       this._resultLeaving = true;
       this._leave('/subpackageMember/free-explore/index?registrationId=' + encodeURIComponent(registrationId),
         () => character.sameReader(app, reader));
+    },
+    _probeCharacter(topicId, reader) {
+      const seq = this._characterProbe = (this._characterProbe || 0) + 1;
+      const settle = (res) => {
+        if (this._detailDisposed || seq !== this._characterProbe || !character.sameReader(app, reader)) return;
+        const card = res && character.responseCode(res.code) === 200 ? character.projectCard(res.data, topicId) : null;
+        this.setData({ characterEntry: !!card && (card.created || card.attributes.length > 0) });
+      };
+      app.sendRequest({ url: '/api/play/character', method: 'GET', data: { topicId }, hideLoading: true, autoErrorToast: false,
+        success: settle, fail: () => settle(null), successStatusAbnormal: () => settle(null) });
     },
     goCharacter() { this._openResult('character'); },
     goScore() { this._openResult('score'); },
@@ -225,7 +245,7 @@ Component({
     },
     // 错误态唯一动作位:标签与行为一一对应,不出现「叫重试却在跳转」
     onErrorAction() {
-      if (!this.data.id) {
+      if (!this.data.id || this.data.loadState === 'missing-param') {
         this.backToList();
         return;
       }
@@ -313,6 +333,20 @@ Component({
         && character.sameReader(app, reader) && generation === that._detailGeneration
         && requestEpoch === that._detailRequestEpoch
         && member === (app.getUserID && app.getUserID()) && String(id) === String(that.data.id);
+      const readFailure = (res, statusCode) => {
+        if (!isCurrent()) return;
+        settled = true;
+        that.setData({ info: {}, displayInfo: {} });
+        const code = Number(statusCode || (res && res.code));
+        if (code === 403 || code === 404 || (res && res.code != '200' && GONE_RECORD_MSG.test(String(res.msg || '')))) {
+          that.setData({ loadState: 'missing-param', missingTitle: '链接已失效', errorActionText: '返回' });
+          return;
+        }
+        const msg = app.getRequestErrorMessage
+          ? app.getRequestErrorMessage(res, '参与详情没能打开')
+          : ((res && (res.msg || res.errMsg)) || '参与详情没能打开');
+        that.setData({ loadState: 'error', loadErrorText: msg, errorActionText: '重试' });
+      };
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -321,8 +355,8 @@ Component({
         method: "POST",
         success: function (res) {
           if (!isCurrent()) return;
-          settled = true;
-          if (res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+            settled = true;
             const info = res.data;
             that._cancelRecordPending = false;
 
@@ -337,25 +371,18 @@ Component({
             });
             that._resultReader = reader;
             const entry = that._resultEntry();
+            // R11 p1 F-7:定向成绩只给城市定向;角色卡只在主题真有角色属性时给
+            const source = info.cmsActivity || info.cmsTopic || {};
             that.setData({ bundleRegistrationId: that._bundleEntry(), resultTopicId: entry ? entry.topicId : '',
+              scoreEntry: !!entry && Number(source.productType) === 1, characterEntry: false,
               resultEntryError: entry || !character.hasTopicRelation(info) ? '' : '无法确认当前账号的报名与主题关联，请重新加载参与详情；若仍不可用请联系客服。' });
+            if (entry) that._probeCharacter(entry.topicId, reader);
           } else {
-            const fallback = res && res.code == "200" ? '参与详情数据暂不可用' : '获取参与详情失败，请重试';
-            const msg = app.getRequestErrorMessage
-              ? app.getRequestErrorMessage(res, fallback)
-              : ((res && (res.msg || res.errMsg)) || fallback);
-            that.setData({ loadState: 'error', loadErrorText: msg, errorActionText: '重试' });
+            readFailure(res);
           }
         },
-        fail: function (res) {
-          if (!isCurrent()) return;
-          settled = true;
-          const fallback = '网络异常，请重试';
-          const msg = app.getRequestErrorMessage
-            ? app.getRequestErrorMessage(res, fallback)
-            : ((res && (res.msg || res.errMsg)) || fallback);
-          that.setData({ loadState: 'error', loadErrorText: msg, errorActionText: '重试' });
-        }
+        fail(res, statusCode) { readFailure(res, statusCode); },
+        successStatusAbnormal(res, statusCode) { readFailure(res, statusCode); }
       });
     },
 
@@ -375,7 +402,7 @@ Component({
       displayInfo.formatDateRange = this.formatDateRange(source.startDate, source.endDate);
 
       // 3. 计算时间状态
-      const timeStatus = this.calculateTimeStatus(source.startDate, source.endDate);
+      const timeStatus = this.calculateTimeStatus(source.startDate, source.endDate, isTopic ? '路线' : '活动');
       displayInfo.isActivityEnded = timeStatus.isEnded;
       displayInfo.isActivityStarted = timeStatus.isStarted;
       displayInfo.isInThreeDaysRange = timeStatus.isInThreeDaysRange;
@@ -472,7 +499,7 @@ Component({
     },
 
     // 计算时间状态
-    calculateTimeStatus(startDateStr, endDateStr) {
+    calculateTimeStatus(startDateStr, endDateStr, noun) {
       const result = {
         isEnded: false,
         isStarted: false,
@@ -509,7 +536,12 @@ Component({
           result.daysToStart = diffDays;
 
           if (diffDays > 0) {
-            result.remainingDaysText = `距离路线开始还剩${diffDays}天`;
+            // 第十轮 f4(f1 遗留):12 小时后开始的活动按自然日差会写成「还剩1天」;不足 24 小时按小时说。
+            const hoursLeft = (startDate.getTime() - now.getTime()) / (60 * 60 * 1000);
+            const subject = noun || '路线';
+            result.remainingDaysText = hoursLeft < 24
+              ? `距离${subject}开始还剩${Math.max(1, Math.ceil(hoursLeft))}小时`
+              : `距离${subject}开始还剩${diffDays}天`;
 
             // 检查是否在开始前3天内
             result.isInThreeDaysRange = diffDays <= 3;
@@ -572,12 +604,13 @@ Component({
         // F-W5-07:零元单没有钱可退,确认框与订单详情/列表同用「取消报名」文案。
         dangerKey: paid ? (isFreeOrder(this.data.info) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
         dangerParams: {
-          deadline: (this.data.info || {}).refundDeadlineDisplay || '已核销或已过开始时间不可退',
+          // j1 F7:/api/registration/info 下发 cancelRefundAmount,确认框写明这次退回多少
+          deadline: require('../../utils/order-refund-amount.js').cancelConfirmDeadline(this.data.info),
         },
         success: (res) => {
           if (!finishCancelPrompt() || !isCurrent() || !res.confirm) return;
           // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
-          if (paid && !isFreeOrder(this.data.info)) require('../../../utils/subscribe.js').request(['refund', 'refundRejected']);
+          if (paid && !isFreeOrder(this.data.info)) require('../../../utils/subscribe.js').request(['refund']);
           this.cancelRequest(paid, id);
         },
         fail: finishCancelPrompt,

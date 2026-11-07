@@ -63,6 +63,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="verificationStatus" column="verification_status"/>
     </resultMap>
 
+    <!-- 第十二轮 k4(j2 N-03):俱乐部报名名册专用(只给能治理本俱乐部的人),比公开摘要多报名姓名(密文)与报名时刻;
+         公开摘要 RegistrationSummaryResult 不动,别让姓名流进玩家侧接口。 -->
+    <resultMap type="ViewRegistration" id="RosterSummaryResult" extends="RegistrationSummaryResult" autoMapping="false">
+        <result property="realName" column="real_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
     <sql id="ViewRegistrationFilter">
         <where>  
             <if test="registrationNo != null  and registrationNo != ''"> and registration_no = #{registrationNo}</if>
@@ -115,6 +122,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="ViewRegistrationFilter"/>
     </select>
     
+    <select id="selectRosterSummaries" parameterType="ViewRegistration" resultMap="RosterSummaryResult">
+        select id, member_id, avatar, nickname, payment_status, verification_status, real_name, create_time from view_registration
+        <include refid="ViewRegistrationFilter"/>
+    </select>
+
     <select id="selectViewRegistrationById" parameterType="Long" resultMap="ViewRegistrationResult">
         <include refid="selectViewRegistrationVo"/>
         where id = #{id}

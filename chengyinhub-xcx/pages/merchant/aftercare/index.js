@@ -155,7 +155,16 @@ Page({
   },
 
   openDetail(event) {
-    const refundId = positiveId((event.currentTarget.dataset || {}).refundid);
+    const dataset = event.currentTarget.dataset || {};
+    if (dataset.recordtype === 'MANUAL_CASE') {
+      const manualCaseId = positiveId(dataset.manualcaseid);
+      if (manualCaseId == null || dataset.refundid) return;
+      this._refreshAfterDetail = true;
+      wx.navigateTo({ url: `/pages/merchant/aftercare/detail/index?recordType=MANUAL_CASE&manualCaseId=${manualCaseId}` });
+      return;
+    }
+    if (dataset.recordtype && dataset.recordtype !== 'REFUND') return;
+    const refundId = positiveId(dataset.refundid);
     if (refundId == null) return;
     this._refreshAfterDetail = true;
     wx.navigateTo({ url: `/pages/merchant/aftercare/detail/index?refundId=${refundId}` });

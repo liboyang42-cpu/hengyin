@@ -68,6 +68,11 @@ Page({
         const ok = res && (res.code == '200' || res.code === 200);
         const memberId = ok && res.data ? res.data.memberId : null;
         if (memberId != null && memberId !== '') {
+          const m = res.data || {};
+          const cover = m.coverImage || m.logo || '';
+          // 只给分享卡用,不渲染 ⇒ 不进 data(死字段门禁)
+          that._shareName = typeof m.name === 'string' ? m.name.trim() : '';
+          that._shareCover = cover && app.getImgUrl ? app.getImgUrl(cover) : cover;
           that.setData({ memberId: String(memberId) });
           return that.redirect(merchantHomeUrl(memberId, {
             topicId: that.data.topicId, topicName: that.data.topicName,
@@ -130,8 +135,11 @@ Page({
   },
 
   // 站在旧壳上转发,也只把新 canonical 发出去,不再复制旧路径
+  // 第七轮 C 第 3 项:卡片用真实店名与店铺封面(public-home 已经返回);没解析到就退回泛化标题。
   onShareAppMessage() {
     const url = merchantHomeUrl(this.data.memberId);
-    return { title: '城瘾 · 商家主页', path: url || '/pages/index/index' };
+    const share = { title: this._shareName || '城瘾 · 商家主页', path: url || '/pages/index/index' };
+    if (this._shareCover) share.imageUrl = this._shareCover;
+    return share;
   },
 });

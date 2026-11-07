@@ -5,7 +5,7 @@
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'login'}}" kind="no-permission" fill size="lg" title="登录后查看活动详情" cta="登录" bind:cta="loginRetry" />
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'cancelled'}}" fill size="lg" title="活动已取消"
             sub="退款进度见订单" cta="{{cancelledHasOwnOrder ? '查看我的订单' : '返回活动列表'}}" bind:cta="onCancelledAction" />
-  <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" title="活动链接无效" sub="请返回重新进入" cta="返回活动列表" bind:cta="close" />
+  <cy-empty class="cy-fade-in" wx:elif="{{state === 'missing'}}" fill size="lg" title="活动链接无效" cta="返回活动列表" bind:cta="close" />
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" title="活动不存在" cta="返回活动列表" bind:cta="close" />
   <!-- M1-3 门卡:非俱乐部成员看到的是加入引导,而不是占位标题 + 空票种的假详情 -->
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'gate'}}" fill size="lg" title="{{gateMessage}}" cta="{{gateClubId ? '去加入俱乐部' : '返回活动列表'}}" bind:cta="goGateClub" />
@@ -45,10 +45,10 @@
     </view>
 
     <view wx:if="{{hostName}}" class="activity-section activity-host">
-      <text class="activity-section__title">主理人</text>
+      <text class="activity-section__title">{{hostIsShop ? '主办方' : '主理人'}}</text>
       <view class="activity-host__row" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{info.collaboratorsList[0].memberId}}">
         <cy-avatar size="72" src="{{hostAvatar || ''}}" name="{{hostName}}" />
-        <view class="activity-host__copy"><text class="activity-host__name">{{hostName}}</text><text class="activity-host__role">发起人 · 主理人</text></view>
+        <view class="activity-host__copy"><text class="activity-host__name">{{hostName}}</text><text class="activity-host__role">{{hostIsShop ? '商家' : '发起人 · 主理人'}}</text></view>
       </view>
     </view>
 
@@ -70,7 +70,7 @@
         <view class="activity-node" wx:for="{{info.memberTemplateList}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="activity-row--press" hover-stay-time="80" style="--pmi:{{index}};">
           <image wx:if="{{item._imageUrl}}" class="activity-node__image" src="{{item._imageUrl}}" mode="aspectFill" />
           <view wx:else class="activity-node__placeholder"><cy-icon name="image" size="32" /></view>
-          <view class="activity-node__copy"><text class="activity-node__name">{{item._titleText}}</text><text class="activity-node__meta">{{item._playersText}} · {{item._durationText}}</text></view>
+          <view class="activity-node__copy"><text class="activity-node__name">{{item._titleText}}</text><text wx:if="{{item._metaText}}" class="activity-node__meta">{{item._metaText}}</text></view>
           <cy-icon class="activity-node__arrow" name="arrow-right" size="28" />
         </view>
       </view>
@@ -78,7 +78,7 @@
 
     <view class="activity-section">
       <text class="activity-section__title">票种</text>
-      <view wx:if="{{tickets.length}}" class="ticket-list">
+      <view wx:if="{{tickets.length}}" class="ticket-list {{ticketsAttention ? 'ticket-list--attention' : ''}}">
         <view wx:for="{{tickets}}" wx:key="id" class="ticket {{item._id === selectedTicketId ? 'ticket--selected' : ''}} {{!item._available || item._windowPassed ? 'ticket--disabled' : ''}}" data-id="{{item._id}}" bindtap="selectTicket" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
           <view class="ticket__head"><text class="ticket__name">{{item._nameText}}</text><text class="ticket__price">{{item._priceText}}</text></view>
           <!-- CU-C-32:过期/已开始的场次在卡面上就说清楚(原来只在点下去的那一刻给一句 toast,
@@ -118,7 +118,6 @@
       <cy-empty wx:else size="sm" title="还没有评价" />
     </view>
 
-    <view class="activity-points"><cy-icon class="activity-points__icon" name="star" size="30" /><text class="activity-points__text">首次真实评价的积分以平台当前规则为准</text></view>
 
     <view wx:if="{{cancelShow}}" class="activity-form activity-form--danger">
       <view class="activity-form__head"><text class="activity-form__title">取消活动</text><text class="activity-form__close" bindtap="closeCancel" hover-class="cy-pressed" hover-stay-time="80">关闭</text></view>
@@ -150,7 +149,7 @@
       <button class="activity-share" open-type="share" bindtap="trackShare" data-share-type="activity" data-activity-id="{{activityId}}" data-activity-name="{{info.name}}" data-activity-image="{{info.imgUrl}}"><cy-icon class="activity-share__icon" name="share" size="28" /><text class="activity-share__label">分享</text></button>
       <cy-btn wx:if="{{info.cancelTime}}" class="activity-action__main" variant="primary" disabled="{{true}}">活动已取消</cy-btn>
       <cy-btn wx:elif="{{isOwner}}" class="activity-action__main" variant="danger" bindtap="openCancel">取消活动并退款</cy-btn>
-      <cy-btn wx:elif="{{actionState === 'signup'}}" class="activity-action__main" variant="primary" disabled="{{!canConfirmSignup}}" bindtap="openSignup">立即报名</cy-btn>
+      <cy-btn wx:elif="{{actionState === 'signup'}}" class="activity-action__main" variant="primary" disabled="{{!canConfirmSignup}}" bindtap="openSignup" bind:disabledtap="onSignupDisabledTap">{{noTicketText || '立即报名'}}</cy-btn>
       <cy-btn wx:elif="{{actionState === 'view' || actionState === 'play' || actionState === 'trace'}}" class="activity-action__main" variant="primary" bindtap="goPlay">{{actionText}}</cy-btn>
       <cy-btn wx:else class="activity-action__main" variant="primary" disabled="{{true}}">{{actionText}}</cy-btn>
     </view>

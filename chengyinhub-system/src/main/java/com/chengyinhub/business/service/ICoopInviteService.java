@@ -147,6 +147,9 @@ public interface ICoopInviteService {
     /** 应缴方:type0/type2=受邀方,type1 无溯源=受邀方,type1 有开放报名溯源=发起方。 */
     public Long depositOwedParty(CoopInvite invite);
 
+    /** 仅本地读取保证金订单，保持应缴方及合作访问校验，不查微信或回写。 */
+    CoopInvite readOwnedDeposit(Long principalMemberId, String outTradeNo);
+
     /** 兼容查单确认：先校验原单号/币种/金额/交易号，再将保证金置为已缴冻结(2) */
     public boolean markDepositPaid(String outTradeNo);
 

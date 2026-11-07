@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentSensitiveMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.ContentSensitiveWord" id="WordResult">
+        <id property="id" column="id"/>
+        <result property="word" column="word"/>
+        <result property="category" column="category"/>
+        <result property="action" column="action"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <resultMap type="com.chengyinhub.business.domain.ContentSensitiveAllow" id="AllowResult">
+        <id property="id" column="id"/>
+        <result property="phrase" column="phrase"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <resultMap type="com.chengyinhub.business.domain.ContentSensitiveImage" id="ImageResult">
+        <id property="id" column="id"/>
+        <result property="sha256" column="sha256"/>
+        <result property="dhash" column="dhash"/>
+        <result property="category" column="category"/>
+        <result property="enabled" column="enabled"/>
+        <result property="note" column="note"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+    <resultMap type="com.chengyinhub.business.domain.ContentSensitiveHit" id="HitResult">
+        <id property="id" column="id"/>
+        <result property="source" column="source"/>
+        <result property="contentType" column="content_type"/>
+        <result property="contentId" column="content_id"/>
+        <result property="category" column="category"/>
+        <result property="action" column="action"/>
+        <result property="scanVersion" column="scan_version"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectEnabledWords" resultMap="WordResult">
+        SELECT id, word, category, action, enabled, create_by, create_time, update_by, update_time
+        FROM content_sensitive_word WHERE enabled = 1
+    </select>
+    <select id="selectEnabledAllowPhrases" resultType="string">
+        SELECT phrase FROM content_sensitive_allow WHERE enabled = 1
+    </select>
+    <select id="selectEnabledImages" resultMap="ImageResult">
+        SELECT id, sha256, dhash, category, enabled, note, create_by, create_time, update_time
+        FROM content_sensitive_image WHERE enabled = 1
+    </select>
+    <select id="selectLibraryVersion" resultType="string">
+        SELECT CONCAT_WS('|',
+            (SELECT CONCAT(COUNT(*), '@', IFNULL(MAX(update_time), '')) FROM content_sensitive_word),
+            (SELECT CONCAT(COUNT(*), '@', IFNULL(MAX(update_time), '')) FROM content_sensitive_allow),
+            (SELECT CONCAT(COUNT(*), '@', IFNULL(MAX(update_time), '')) FROM content_sensitive_image))
+    </select>
+
+    <select id="selectWordList" resultMap="WordResult">
+        SELECT id, word, category, action, enabled, create_by, create_time, update_by, update_time
+        FROM content_sensitive_word
+        <where>
+            <if test="word != null and word != ''">AND word LIKE CONCAT('%', #{word}, '%')</if>
+            <if test="category != null and category != ''">AND category = #{category}</if>
+            <if test="enabled != null">AND enabled = #{enabled}</if>
+        </where>
+        ORDER BY id DESC
+    </select>
+    <insert id="insertWord" parameterType="com.chengyinhub.business.domain.ContentSensitiveWord"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_sensitive_word (word, category, action, enabled, create_by, create_time, update_by, update_time)
+        VALUES (#{word}, #{category}, #{action}, #{enabled}, #{createBy}, #{createTime}, #{createBy}, #{createTime})
+        ON DUPLICATE KEY UPDATE category = VALUES(category), action = VALUES(action), enabled = VALUES(enabled),
+            update_by = VALUES(update_by), update_time = VALUES(update_time)
+    </insert>
+    <update id="updateWordEnabled">
+        UPDATE content_sensitive_word SET enabled = #{enabled}, update_by = #{updateBy}, update_time = #{now}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectAllowList" resultMap="AllowResult">
+        SELECT id, phrase, enabled, create_by, create_time, update_by, update_time FROM content_sensitive_allow
+        <where>
+            <if test="phrase != null and phrase != ''">AND phrase LIKE CONCAT('%', #{phrase}, '%')</if>
+        </where>
+        ORDER BY id DESC
+    </select>
+    <insert id="insertAllow" parameterType="com.chengyinhub.business.domain.ContentSensitiveAllow"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_sensitive_allow (phrase, enabled, create_by, create_time, update_by, update_time)
+        VALUES (#{phrase}, #{enabled}, #{createBy}, #{createTime}, #{createBy}, #{createTime})
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), update_by = VALUES(update_by), update_time = VALUES(update_time)
+    </insert>
+    <update id="updateAllowEnabled">
+        UPDATE content_sensitive_allow SET enabled = #{enabled}, update_by = #{updateBy}, update_time = #{now}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectImageList" resultMap="ImageResult">
+        SELECT id, sha256, dhash, category, enabled, note, create_by, create_time, update_time
+        FROM content_sensitive_image ORDER BY id DESC
+    </select>
+    <insert id="insertImage" parameterType="com.chengyinhub.business.domain.ContentSensitiveImage"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_sensitive_image (sha256, dhash, category, enabled, note, create_by, create_time, update_time)
+        VALUES (#{sha256}, #{dhash}, #{category}, 1, #{note}, #{createBy}, #{createTime}, #{createTime})
+        ON DUPLICATE KEY UPDATE category = VALUES(category), enabled = 1, note = VALUES(note),
+            update_time = VALUES(update_time)
+    </insert>
+    <update id="updateImageEnabled">
+        UPDATE content_sensitive_image SET enabled = #{enabled}, update_time = #{now} WHERE id = #{id}
+    </update>
+
+    <insert id="insertHit" parameterType="com.chengyinhub.business.domain.ContentSensitiveHit">
+        INSERT INTO content_sensitive_hit (source, content_type, content_id, category, action, scan_version, create_time)
+        VALUES (#{source}, #{contentType}, #{contentId}, #{category}, #{action}, #{scanVersion}, #{createTime})
+    </insert>
+    <select id="selectRecentHits" resultMap="HitResult">
+        SELECT id, source, content_type, content_id, category, action, scan_version, create_time
+        FROM content_sensitive_hit ORDER BY id DESC LIMIT #{limit}
+    </select>
+    <select id="countRescanHit" resultType="int">
+        SELECT COUNT(*) FROM content_sensitive_hit
+        WHERE source = 'RESCAN' AND content_type = #{contentType} AND content_id = #{contentId}
+          AND scan_version = #{scanVersion} AND action = #{action}
+    </select>
+
+    <!-- 只读公开可见的行;各表的「公开」口径与列表接口一致。text 拼接所有对外可见的文本字段。 -->
+    <select id="selectPublicText" resultType="java.util.HashMap">
+        <choose>
+            <when test="contentType == 'COMMENT'">
+                SELECT id, contents AS text FROM ums_comment
+                WHERE id &gt; #{afterId} AND status = 1 AND del_flag = 0 ORDER BY id LIMIT #{limit}
+            </when>
+            <when test="contentType == 'COMMUNITY_POST'">
+                SELECT id, CONCAT_WS('\n', title, body) AS text FROM community_post
+                WHERE id &gt; #{afterId} AND lifecycle = 'PUBLISHED' ORDER BY id LIMIT #{limit}
+            </when>
+            <when test="contentType == 'CLUB_POST'">
+                SELECT id, content AS text FROM club_post
+                WHERE id &gt; #{afterId} AND del_flag = 0 ORDER BY id LIMIT #{limit}
+            </when>
+            <when test="contentType == 'TOPIC'">
+                SELECT id, CONCAT_WS('\n', name, subtitle, description) AS text FROM cms_topic
+                WHERE id &gt; #{afterId} AND user_status = 1 ORDER BY id LIMIT #{limit}
+            </when>
+            <when test="contentType == 'ACTIVITY'">
+                SELECT id, CONCAT_WS('\n', name, description) AS text FROM cms_activity
+                WHERE id &gt; #{afterId} AND publish_status = 1 ORDER BY id LIMIT #{limit}
+            </when>
+            <when test="contentType == 'MERCHANT_PROFILE'">
+                SELECT id, CONCAT_WS('\n', name, description, slogan, story_title, service_text) AS text FROM mms_merchant
+                WHERE id &gt; #{afterId} AND status = 1 AND del_flag = 0 ORDER BY id LIMIT #{limit}
+            </when>
+            <otherwise><!-- CLUB_PROFILE(调用方只传白名单类型) -->
+                SELECT id, CONCAT_WS('\n', name, description, keywords) AS text FROM club
+                WHERE id &gt; #{afterId} AND status = 1 AND del_flag = 0
+                ORDER BY id LIMIT #{limit}
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

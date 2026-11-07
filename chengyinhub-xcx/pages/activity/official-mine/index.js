@@ -50,6 +50,7 @@ Page({
     refreshing: false,
     hasLoaded: false,
     error: '',
+    refused: false,
     isMerchantViewer: false,
   },
 
@@ -102,19 +103,21 @@ Page({
             error: '',
           });
           this._loaded = true;
-        } else this._setFetchFailure(res, hasLoaded, requestId);
+        } else this._setFetchFailure(res, hasLoaded, requestId, !!(res && res.code != null && res.code != 200));
       },
       fail: (res) => { if(isCurrent())this._setFetchFailure(res, hasLoaded, requestId); },
       successStatusAbnormal: (res) => { if(isCurrent())this._setFetchFailure(res, hasLoaded, requestId); },
     });
   },
 
-  _setFetchFailure(res, hasLoaded, requestId) {
+  // R11 p1 F-6:服务端明确拒绝(如没有官方发布权限)= 原因 + 返回;网络失败照旧空白
+  _setFetchFailure(res, hasLoaded, requestId, refused) {
     if (this._unloaded || requestId !== this._fetchSeq) return;
     const message = app.getRequestErrorMessage(res, '发布记录加载失败');
     if (hasLoaded) this.setData({ loading: false, refreshing: false });
-    else this.setData({ loading: false, refreshing: false, error: message });
+    else this.setData({ loading: false, refreshing: false, error: message, refused: !!refused });
   },
+  goBack() { wx.navigateBack({ fail() { wx.redirectTo({ url: '/pages/activity/list/index' }); } }); },
 
   _decoEvent(event) {
     const status = Number.isInteger(event.status) ? activityStatusText(event.status, 'owner') : '';

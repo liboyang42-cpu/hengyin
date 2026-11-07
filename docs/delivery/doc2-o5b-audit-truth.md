@@ -61,6 +61,7 @@
 | cms_topic#reopenAuditDecision | check_status, status, user_status |
 | cms_topic#markContentSafetyHold | content_safety_hold |
 | cms_topic#clearContentSafetyHold | content_safety_hold |
+| cms_topic#markTopicTemplateCopy | check_status, status, user_status |
 | cms_member_template#approveBundledDraft | check_status, draft_status, publish_status, status |
 | cms_member_template#applyAuditDecision | check_status, publish_status, status |
 | cms_member_template#takeDownReported | check_status, publish_status, status |
@@ -76,7 +77,10 @@
 
 **规则**：新增/改动上表任何一行，探针测试会失败；先在本节登记并说明对 §0 真源的影响，再同步测试里的清单。
 
-### 2.1 通用语句的主要 Java 调用点（不完整，供实施时逐个改造）
+#
+> `cms_topic#markTopicTemplateCopy`(第十二轮 k1 第 6 项,p3 N1):另存为模板只写**刚复制出的副本行**(`is_template = 0` 且本人、未删),沿用原主题已通过的审核态并上架到模板库;原主题的状态位不动。副本内容与原主题逐字相同,审核真源仍是原主题的那次审核。
+
+## 2.1 通用语句的主要 Java 调用点（不完整，供实施时逐个改造）
 
 - 主题：`CmsTopicServiceImpl` 建题/复制/后台建题/简版发布/先发后审（:4217、:646、:2022、:2985、:4552）；`TopicEditionReopenServiceImpl:253`；`AuditTaskServiceImpl.applyModeration`（驳回 :1585 起、过审 :1602 起）；`WxContentSecurityServiceImpl:615-640`（机审留置：user_status=0、check_status=2）。
 - 玩法：`TemplatePublishServiceImpl` 发布/草稿/提审/后台增改/删除；商家节点模板自审直接 1/1/1 且不建单。

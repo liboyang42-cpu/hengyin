@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -82,7 +83,7 @@ class OfficialEventContractTest {
         when(f.audience.selectMerchantMemberIds("成都")).thenReturn(Collections.singletonList(30L));
         assertEquals(4, f.service.dispatch(f.broadcast));
         verify(f.im, times(4)).sendSystem(anyLong(), eq(3), anyString(), anyString());
-        verify(f.wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
         assertEquals(8, f.rows.size());
     }
 
@@ -93,7 +94,7 @@ class OfficialEventContractTest {
         assertEquals(2, f.service.dispatch(f.broadcast));
         assertEquals(2, f.restart().dispatch(f.broadcast)); // Total confirmed inapp receipts, not this-attempt count.
         verify(f.im, times(2)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
-        verify(f.wx, times(2)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(2)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
         assertEquals(4, f.rows.size());
     }
 
@@ -105,7 +106,7 @@ class OfficialEventContractTest {
         when(f.audience.selectPlayerIds("成都")).thenReturn(Collections.singletonList(10L));
         f.service.dispatch(f.broadcast);
         verify(f.im).sendSystem(eq(10L), eq(3), eq("玩家标题"), anyString());
-        verify(f.wx).notifyOfficialBroadcast(10L, "玩家标题", "出门点亮");
+        verify(f.wx).notifyOfficialBroadcast(eq(10L), eq("玩家标题"), eq("出门点亮"), nullable(String.class)); // 第九轮 m2 补充第 7 项:带落地页
     }
 
     @Test
@@ -116,7 +117,7 @@ class OfficialEventContractTest {
         assertEquals(1, f.service.dispatch(f.broadcast));
         verify(f.im).sendSystem(eq(11L), anyInt(), anyString(), anyString());
         verify(f.im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
-        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString());
+        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString(), nullable(String.class));
         assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
     }
 
@@ -128,7 +129,7 @@ class OfficialEventContractTest {
         assertEquals(1, f.service.dispatch(f.broadcast));
         verify(f.im).sendSystem(eq(11L), anyInt(), anyString(), anyString());
         verify(f.im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
-        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString());
+        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString(), nullable(String.class));
     }
 
     @Test

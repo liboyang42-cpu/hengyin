@@ -1,0 +1,11 @@
+Round 12 k9 HTTP read-backs, rig jar built from 95910add7 (not a phone).
+
+1) j6 N8: POST /api/topic/list is_my=1 with an expired/invalid token
+{"msg":"请先登录","code":401}
+   same, no Authorization header
+{"msg":"请先登录","code":401}
+   same, logged-in 9003
+{"msg":"操作成功","code":200,"data":{"total":2,"rows":[{"createBy":"13900000003","createTime":"2026-11-05 15:56:25",
+
+2) p2 N-9 backend message for an unrelated account (client maps it to 链接已失效): 9004 POST /api/project/home topicId=990013
+{"msg":"你既不是该主题的发布者,也没有承接记录","code":500}

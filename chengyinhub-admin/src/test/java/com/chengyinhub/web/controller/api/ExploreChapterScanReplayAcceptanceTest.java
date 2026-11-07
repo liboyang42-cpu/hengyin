@@ -31,7 +31,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -120,6 +122,10 @@ class ExploreChapterScanReplayAcceptanceTest {
         // 首次一份奖励;重放不再发分、成长、收藏,也不经过候选集推断。
         verify(pointsSvc, times(1)).award(eq(77L), eq(11L), eq(REG), any());
         verify(collectibleSvc, times(1)).record(77L, TOPIC, CHAPTER, MERCHANT);
-        verifyNoInteractions(perkSvc);
+        // 候选集推断一次都不走;唯一允许的是 M-05 回执的只读权益名查询(首次与重放各一次)。
+        verify(perkSvc, never()).resolveScannableChapters(any(), any(), any());
+        verify(perkSvc, never()).resolveRedeemableChapters(any(), any(), any());
+        verify(perkSvc, times(2)).livePerkName(CHAPTER, MERCHANT);
+        verifyNoMoreInteractions(perkSvc);
     }
 }

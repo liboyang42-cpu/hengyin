@@ -213,7 +213,7 @@ function mountGate() {
   const app={getUserID:()=>owner,sendRequest:o=>requests.push(o),firstLogin:()=>{owner='9';return Promise.resolve();}};
   global.getApp=()=>app;global.Component=d=>def=d;global.wx={};
   const file=path.join(root,'components/cy/access-gate/index.js');delete require.cache[file];require(file);
-  const gate=Object.assign({},def.methods,{data:Object.assign({},def.data,{kind:'merchant',need:'canReadFinance'}),setData(patch,done){Object.assign(this.data,patch);if(done)done();}});
+  const gate=Object.assign({},def.methods,{data:Object.assign({},def.data,{kind:'merchant',need:'canReadFinance'}),setData(patch,done){Object.assign(this.data,patch);if(done)done();},triggerEvent(){}});
   return {gate,requests,app,owner(id){owner=id;}};
 }
 test('共享守卫游客不读私有access并给登录按钮，登录后仍必须通过真实权限判据',async()=>{

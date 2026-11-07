@@ -12,6 +12,7 @@
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg"
             title="当前岗位没有客户查看权限" sub="{{errorText}}"
             retry="" bind:back="goBack" auto-back custom-back />
+  <cy-empty wx:elif="{{state === 'refused'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" />
   <!-- K2-E 加载失败 -->
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorText}}" retry="重试加载" bind:retry="retry" auto-back />
@@ -32,7 +33,13 @@
       <!-- K2-B:服务端不下发金额时这里是「无查看权限」,不是 ¥0 -->
       <text class="cd-amount-value {{detail.summary.amountVisible ? '' : 'cd-amount-value--locked'}}">{{detail.summary.paidAmountText}}</text>
     </view>
-    <text wx:if="{{detail.summary.phoneText}}" class="cd-phone">{{detail.summary.phoneText}}</text>
+    <view wx:if="{{detail.summary.phoneText}}" class="cd-phone-row">
+      <text class="cd-phone">{{detail.summary.phoneText}}</text>
+      <view wx:if="{{detail.summary.phoneCallable}}" class="cd-call" bindtap="callCustomer"
+        aria-role="button" aria-label="拨打 {{detail.summary.displayName}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon name="phone" size="32" />
+      </view>
+    </view>
 
     <text class="cd-section">客户概览</text>
     <view class="cd-stats">

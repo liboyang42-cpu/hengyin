@@ -44,7 +44,8 @@ Page({
       navBarHeight: (app.globalData && app.globalData.navBarHeight) || 44,
     });
     if (this._customerMemberId == null) {
-      this.setData({ pageState: 'error', errorMessage: '客户ID无效' });
+      // p2 F-9:缺参不是加载失败(load-failure 会留白),单独一个终态:原因 + 返回客户列表
+      this.setData({ pageState: 'missing', errorMessage: '客户ID无效' });
       return;
     }
     this.loadAccess();
@@ -74,7 +75,8 @@ Page({
         const access = normalizeMerchantAccess(res.data);
         this._merchantAccess = access;
         if (!access.active || !access.canReadCrm) {
-          this.setData({ pageState: 'no-permission', detail: null, canEdit: false });
+          // 第十二轮 k9(p2 N-9):玩家没有岗位,不叫他「联系店主开通」
+          this.setData({ pageState: 'no-permission', notMerchant: !access.active, detail: null, canEdit: false });
           return;
         }
         this.setData({ canEdit: access.canSegmentCrm === true });

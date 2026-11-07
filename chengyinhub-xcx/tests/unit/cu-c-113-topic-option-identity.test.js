@@ -103,40 +103,31 @@ test('negative control CU-C-113: 退回「只有名字 + 招商期标记」⇒ �
 // 成员行的管理口径:与面板内 :799 那组按钮逐字同一判据
 const MANAGE_FLAGS = ['club.isOwner', 'club.viewerIsAdmin', 'canManageMembers', 'canManageRoles']
 
+// 第十轮 f3 第 5 项(j2 F-24):owner 删说明小字规则下成员行不再有副文案(旧断言要求副文案在场,是被取代的旧决定)。
+// 诚实口径改由标题承担:能管的身份叫「成员管理」,只读身份叫「成员」;任何副文案承诺都不得回来。
 function assertMemberRowHonest(wxml) {
   const start = wxml.indexOf('wx:if="{{club.isOwner || canReadMembers || canManageMembers || canManageRoles}}"')
   assert.ok(start >= 0, '成员行必须还是那条把 canReadMembers 也算进可见条件的行')
   const end = wxml.indexOf('<view class="cset-panel" wx:if="{{settingsPanel === \'members\'}}">', start)
   assert.ok(end > start, '成员面板必须紧跟在成员行之后(定位锚点没漂)')
   const block = wxml.slice(start, end)
-  const sub = /<text class="cset-sub">([^<]*)<\/text>/.exec(block)
-  assert.ok(sub, '成员行必须有副文案')
-  const text = sub[1].trim()
-  assert.match(text, /^\{\{.*\}\}$/, '副文案必须是随权限分档的三元，不能写死')
-  const body = text.slice(2, -2)
-  const splitAt = body.indexOf('?')
-  assert.ok(splitAt > 0, '副文案三元少了条件:' + text)
-  const [cond, branches] = [body.slice(0, splitAt), body.slice(splitAt + 1)]
-  const colonAt = branches.indexOf(':')
-  assert.ok(colonAt > 0, '副文案三元少了分支:' + text)
-  const [managing, readOnly] = [branches.slice(0, colonAt), branches.slice(colonAt + 1)]
-  MANAGE_FLAGS.forEach((flag) => assert.ok(cond.indexOf(flag) >= 0,
+  assert.doesNotMatch(block, /<text class="cset-sub"/, '成员行不再挂副文案')
+  const title = /<text class="cset-title">\{\{([^}]*)\}\}<\/text>/.exec(block)
+  assert.ok(title, '成员行标题必须随权限分档')
+  MANAGE_FLAGS.forEach((flag) => assert.ok(title[1].indexOf(flag) >= 0,
     `「能管」这一档的判据必须含 ${flag},与面板内按钮同一口径`))
-  assert.match(managing, /设管理员、移除成员、邀请新成员/, '能管的身份仍要看得到真实动作')
-  assert.doesNotMatch(readOnly, /移除|设管理员|邀请/,
-    '只读这一档不许承诺做不到的操作:' + readOnly)
-  assert.match(readOnly, /查看/, '只读要说清楚这里其实能干什么:' + readOnly)
+  assert.match(title[1], /'成员管理'\s*:\s*'成员'/, '只读身份不叫「成员管理」')
 }
 
 test('CU-C-116 静态:只读身份看到的成员行不再承诺移除/设管理员/邀请', () => {
   assertMemberRowHonest(read(CLUB_DETAIL_WXML))
 })
 
-test('negative control CU-C-116: 副文案写死成管理承诺 ⇒ 判红', () => {
+test('negative control CU-C-116: 成员行写回管理承诺副文案 ⇒ 判红', () => {
   const wxml = read(CLUB_DETAIL_WXML)
   const hardcoded = wxml.replace(
-    /<text class="cset-sub">\{\{[^<]*\}\}<\/text>(\s*<\/view>\s*<cy-icon class="cset-chevron \{\{settingsPanel === 'members')/,
-    '<text class="cset-sub">设管理员、移除成员、邀请新成员</text>$1',
+    /(<text class="cset-title">\{\{club\.isOwner \|\| club\.viewerIsAdmin[^<]*<\/text><text class="cset-count">[^<]*<\/text><\/view>)/,
+    '$1<text class="cset-sub">设管理员、移除成员、邀请新成员</text>',
   )
   assert.notEqual(hardcoded, wxml, '变异锚点失效(源码已改动?)')
   assert.throws(() => assertMemberRowHonest(hardcoded), assert.AssertionError)

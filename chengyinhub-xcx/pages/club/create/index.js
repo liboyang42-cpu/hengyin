@@ -5,6 +5,7 @@ const roleGuard = require('../../../utils/roleGuard.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
+const { memberId, retryLogin } = require('../../../utils/session/login-reload.js');
 
 // ⚠️ chip 选中判定必须由 JS 预算好。WXML 表达式**不支持方法调用**,
 // 原来的 activityPrefs.indexOf(item) >= 0 恒为假 —— 2026-09-02 截图对稿实测:
@@ -16,6 +17,11 @@ function buildDirList(options, prefs) {
 }
 
 // 创建俱乐部(D18 表单B,轻量·填完即有)。参考 Strava 创建俱乐部向导:类型→方向→资料→城市。
+// C-14:后端「俱乐部名称已被使用」类拒绝(409 语义)。
+function isNameTaken(msg) {
+  return /名称/.test(String(msg || '')) && /已被使用|已存在|重复/.test(String(msg || ''));
+}
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
@@ -43,6 +49,10 @@ Page({
     clubType: '',
     activityPrefs: [],
     name: '',
+    // C-14:离开名称框或点「下一步」时查名的结果;非空时名称下方显示红 * 与原因
+    nameError: '',
+    typeError: '',
+    cityError: '',
     logo: '',
     cover: '',
     description: '',
@@ -57,6 +67,7 @@ Page({
     submitting: false,
     submitErrorKind: 'data',
     submitError: '',
+    submitNameTaken: false,
     submissionReceipt: null,
     submissionPending: false,
     createdClubId: ''
@@ -170,6 +181,8 @@ Page({
     this._bootstrapChecking = false;
     // 任一预检失败即结束本轮，避免另一条迟到回调把错误态覆盖成 ready。
     this._bootstrapEpoch = epoch + 1;
+    // p3 F2:游客没有会话,「重新检查」永远不会成功;与 club/apply 一致给登录,登录后续上。
+    if (!memberId(app)) { this.setData({ bootstrapState: 'guest', bootstrapError: '' }); return; }
     this.setData({
       bootstrapState: 'error',
       bootstrapErrorKind: kind,
@@ -178,6 +191,8 @@ Page({
   },
 
   retryBootstrap() { this.startBootstrap(); },
+
+  loginBootstrap() { retryLogin(this, app, function () { roleGuard.clear(); this.startBootstrap(); }); },
 
   goApply() {
     const redirectEpoch = (this._redirectEpoch || 0) + 1;
@@ -239,15 +254,65 @@ Page({
 
   onNext() {
     if (this._submitting || this.data.bootstrapState !== 'ready' || !this.data.canNext) return;
+    if (this.data.step === 3) {
+      // C-14:进下一步前先查名;被占就停在这一步并显示原因。创建时服务端仍会再查一次。
+      var that = this;
+      this.checkName(function (free) { if (free && that.data.step === 3) that.refreshStep(4); });
+      return;
+    }
     if (this.data.step < 4) { this.refreshStep(this.data.step + 1); }
     else { this.submit(); }
+  },
+
+  onNameBlur() { this.checkName(); },
+
+  // C-14:只读查名(/api/club/name-check,与创建同一口径)。查不到结果(网络等)不拦人,交给创建时的终检。
+  checkName(done) {
+    var name = String(this.data.name || '').trim();
+    var finish = typeof done === 'function' ? done : function () {};
+    if (!name) { finish(false); return; }
+    // p3 F1:输入框失焦先发起查名,紧接着的「下一步」不能被吞,挂到同一次查名上等结果。
+    if (this._nameCheckPending === name) { this._nameCheckWaiters = (this._nameCheckWaiters || []).concat(finish); return; }
+    this._nameCheckPending = name;
+    this._nameCheckWaiters = [finish];
+    var epoch = (this._nameCheckEpoch || 0) + 1;
+    this._nameCheckEpoch = epoch;
+    var that = this;
+    function settle(reason) {
+      if (epoch !== that._nameCheckEpoch) return;
+      that._nameCheckPending = '';
+      if (String(that.data.name || '').trim() !== name) return;
+      that.setData({ nameError: reason || '' }, that.validate);
+      var waiters = that._nameCheckWaiters || [];
+      that._nameCheckWaiters = [];
+      waiters.forEach(function (fn) { fn(!reason); });
+    }
+    app.sendRequest({
+      url: '/api/club/name-check',
+      method: 'POST',
+      data: JSON.stringify({ name: name }),
+      header: { 'Content-Type': 'application/json' },
+      success: function (res) {
+        var data = res && res.code == '200' ? res.data : null;
+        settle(data && data.available === false ? String(data.reason || '俱乐部名称已被使用，请换一个') : '');
+      },
+      fail: function () { settle(''); },
+    });
+  },
+
+  // 置灰的「下一步」被点:缺的必填写成栏下红字,不让按钮静默不动
+  onNextDisabledTap() {
+    var d = this.data;
+    if (d.step === 1 && !d.clubType) this.setData({ typeError: '请选择俱乐部类型' });
+    else if (d.step === 3 && !d.name) this.setData({ nameError: '请给俱乐部起个名字' });
+    else if (d.step === 4 && !d.city) this.setData({ cityError: '请填写所在城市' });
   },
 
   validate() {
     var d = this.data, ok = false;
     if (d.step === 1) ok = !!d.clubType;
     else if (d.step === 2) ok = true;          // 路线方向选填
-    else if (d.step === 3) ok = !!d.name;      // 名称必填
+    else if (d.step === 3) ok = !!d.name && !d.nameError;      // 名称必填,且未被占用(C-14)
     else ok = !!d.city;                        // 城市必填(地理强相关)
     this.setData({ canNext: ok });
   },
@@ -257,16 +322,23 @@ Page({
     if (this._submitting) return;
     var f = e.currentTarget.dataset.field;
     var value = e.detail.value;
-    if (f === 'name') this.setData({ name: value }, this.validate);
+    if (f === 'name') {
+      // 改了名就作废上一次查名结果,离开输入框时再查
+      this._nameCheckEpoch = (this._nameCheckEpoch || 0) + 1;
+      this._nameCheckPending = '';
+      // l6:提交时撞名的那条错误,改名即清
+      if (this.data.submitNameTaken) this.setData({ name: value, nameError: '', submitError: '', submitNameTaken: false }, this.validate);
+      else this.setData({ name: value, nameError: '' }, this.validate);
+    }
     else if (f === 'description') this.setData({ description: value }, this.validate);
-    else if (f === 'city') this.setData({ city: value }, this.validate);
+    else if (f === 'city') this.setData({ city: value, cityError: '' }, this.validate);
     else if (f === 'keywords') this.setData({ keywords: value }, this.validate);
     else if (f === 'style') this.setData({ style: value }, this.validate);
   },
 
   pickType(e) {
     var val = e.currentTarget.dataset.val;
-    this.setData({ clubType: this.data.clubType === val ? '' : val }, this.validate);
+    this.setData({ clubType: this.data.clubType === val ? '' : val, typeError: '' }, this.validate);
   },
 
   toggleDir(e) {
@@ -303,7 +375,7 @@ Page({
       this.setData({
         step: missingStep,
         canNext: false,
-        submitErrorKind: 'data',
+        submitErrorKind: 'error',
         submitError: '请先' + missingLabel,
       });
       this.validate();
@@ -312,7 +384,7 @@ Page({
     this._submitting = true;
     var submitEpoch = (this._submitEpoch || 0) + 1;
     this._submitEpoch = submitEpoch;
-    this.setData({ submitting: true, submitError: '', submitErrorKind: 'data' });
+    this.setData({ submitting: true, submitError: '', submitErrorKind: 'data', submitNameTaken: false });
     var payload = {
       name: d.name,
       logo: d.logo,
@@ -344,10 +416,13 @@ Page({
             submissionPending: Number(res.data && res.data.status) === 0,
           });
         } else {
+          var msg = (res && res.msg) || '创建没有完成，请稍后重试';
           that.setData({
             submitting: false,
             submitErrorKind: 'data',
-            submitError: (res && res.msg) || '创建没有完成，请稍后重试',
+            submitError: msg,
+            // C-14:名称已被占用时重发同一名称没有意义,入口改为回到名称那一步。
+            submitNameTaken: isNameTaken(msg),
           });
         }
       },
@@ -366,7 +441,10 @@ Page({
     });
   },
 
-  retrySubmit() { this.submit(); },
+  retrySubmit() {
+    if (this.data.submitNameTaken) { this.refreshStep(3); return; }
+    this.submit();
+  },
 
   goCreatedClub() {
     wx.redirectTo({

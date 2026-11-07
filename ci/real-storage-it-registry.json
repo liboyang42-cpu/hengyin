@@ -408,7 +408,7 @@
       "classes": [
         "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
       ],
-      "note": "28 ordinary@Test source declarations: original25 retained plus3 actual coupon-ownership copy/rollback cases. No dynamic count/skip fallback. Source-bound XML/CLEAN required; historical25 execution retains its original source, no mechanical equivalence claim for the new3."
+      "note": "31 ordinary@Test source declarations: original29 retained (original25 plus3 actual coupon-ownership copy/rollback cases and1 cross-owner CITY count-rule zero-write rollback case), plus2 explicit template-use draft persistence/whole-copy rollback cases, NOT_RUN. No dynamic count/skip fallback. Source-bound XML/CLEAN required; historical25 execution retains its original source, no mechanical equivalence claim for the new6."
     },
     "architecture-day-topic-authoring": {
       "registered_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
@@ -690,7 +690,8 @@
         "com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT",
         "com.chengyinhub.business.service.impl.FundsProcessRecoveryMySqlIT",
         "com.chengyinhub.business.it.CrossDomainFaultIsolationMySqlIT",
-        "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT"
+        "com.chengyinhub.business.service.RestoreMoneyDispatchMySqlIT",
+        "com.chengyinhub.business.service.ClubHistoricalSettlementAccessMySqlIT"
       ],
       "note": "Current composed source inventory:76 unique registered storage classes and921 ordinary@Test declarations, including original producer/refund, manual-case read, ASR shared quota, funds process recovery and copied coupon-owner fences. Original65/810 execution belongs to its historical source only. One matrix max-parallel20, no duplicates. Source SHA, original XML, zero skip and independent CLEAN required; source inventory is not execution/HTTP/provider/restart/load/deployment acceptance."
     }
@@ -1245,7 +1246,7 @@
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": {
-      "tests": 6,
+      "tests": 7,
       "storage": [
         "mysql"
       ],
@@ -1515,14 +1516,14 @@
       "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
     },
     "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
-      "tests": 108,
+      "tests": 114,
       "storage": [
         "mysql"
       ],
       "gates": {
         "CHENGYIN_FUNDS_MYSQL_IT": "1"
       },
-      "note": "Exact108 ordinary Test declarations: original101 retained plus7 zero-cash retry controls. Dedicated scratch MySQL. Provider doubles, not full settlement or HTTP authorization acceptance."
+      "note": "Exact114 ordinary Test declarations, including the pending sibling order rejection added in 8bcfc46f3; matches the funds gate. Dedicated scratch MySQL. Provider doubles, not full settlement or HTTP authorization acceptance."
     },
     "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT": {
       "tests": 2,
@@ -1600,12 +1601,12 @@
       "note": "Actual ClubLead table-unavailable503/NOT_RUN, original claim rollback, no branch/journey session on denied GET/POST and real route creation after recovery; catalogue/node/template double."
     },
     "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT": {
-      "tests": 28,
+      "tests": 31,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original25 and adds3 coupon-ownership copy/rollback cases; declarations only, NOT_RUN."
+      "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original29 (original25 plus3 coupon-ownership copy/rollback cases plus1 cross-owner CITY count-rule zero-write rollback) and adds explicitTemplateUseCommitsPersistedDraftAndWholeContentGraph and zeroDraftUpdateRollsBackTopicContentSlotAndEveryCopiedChild; declarations only, NOT_RUN."
     },
     "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
       "tests": 32,
@@ -1735,12 +1736,12 @@
       "note": "9b28: source-owned cy_deposit_it base and class UUID suffix; AfterAll DROP plus schema-absence assertion. Runner independently checks all leftover schemas."
     },
     "com.chengyinhub.business.it.Wp04OriginalProducerMySqlIT": {
-      "tests": 3,
+      "tests": 4,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "G 54c524ca source: actual producer/ledger/mapper and post-rollback manual evidence, inherited exact original-refund scratch admission plus own producer flag. NOT_RUN; no provider or production DDL."
+      "note": "G 54c524ca source: actual producer/ledger/mapper and post-rollback manual evidence, inherited exact original-refund scratch admission plus own producer flag. NOT_RUN; no provider or production DDL. Launch follow-up: club self-play settlement freezes original components and a successful paid refund debits the principal once."
     },
     "com.chengyinhub.business.it.CoopSettlementManualCaseReadMySqlIT": {
       "tests": 3,
@@ -1825,6 +1826,18 @@
       "gates": {},
       "database_base": "architecture_a",
       "note": "A restore-money SOURCE donor197ac0ca: one fixed startup child; canonical RegistrationFunds factory, true mode before all money identity/effect admission, original verified fact retained. Child exact schema <base>_rdispatch_funds_core_it<suffix> absent before creation; old factory full cleanup plus independent outer container/schema readback required. Both original fact approvals are exact-class workflow environment, not silent-skip permissions. All execution NOT_RUN; no provider/wholeT20 acceptance."
+    },
+    "com.chengyinhub.business.service.ClubHistoricalSettlementAccessMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "database_base": "cyit",
+      "nested": [],
+      "note": "R14 historical club payee isolation; same seven H2 behavior assertions on production MyBatis SQL with real MySQL; unique task-owned inline schema per method, no migration or shared data. Source registration is not execution evidence."
     }
   }
 }

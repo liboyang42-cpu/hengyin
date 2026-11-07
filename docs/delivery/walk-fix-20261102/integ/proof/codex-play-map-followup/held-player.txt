@@ -1,0 +1,38 @@
+FLOW 0 输入地址 | 到场 0/1 人 · 待放行章节1 | 队长带队中 | 城瘾 · 城市定向 | PLAY-MAP-1105-held | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 到场 0/1 人 · 待放行章节1 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节1 | 继续探索 | 第 | 1 | 章 | / | 共 | 2 | 章 | 待 | 放 | 行 | 章 | 节 | 1 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 1 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 到场 0/1 人 · 待放行章节1 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 到场 0/1 人 · 待放行章节1 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 故事 | 待放行站1 | 上海市黄浦区中山东一路1号 | 开始 | 到店后出示核销码给商家扫 | · 可扫码到达 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 开启定位 | 仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。 | 先用扫码 | 开启定位 | 到场 0/1 人 · 待放行章节1 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 故事 | 待放行站1 | 上海市黄浦区中山东一路1号 | 开始 | 到店后出示核销码给商家扫 | · 可扫码到达 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 到场 0/1 人 · 待放行章节1 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 故事 | 待放行站1 | 上海市黄浦区中山东一路1号 | 开始 | 到店后出示核销码给商家扫 | 同场路线 | 让同场队伍看到我的路线 | 开始 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 到场 0/1 人 · 待放行章节1 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 故事 | 待放行站1 | 上海市黄浦区中山东一路1号 | 开始 | 到店后出示核销码给商家扫 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 7 到场 1/1 人 · 待放行章节2 | 队长带队中 | N | PLAY-MAP-1105-held · 待放行章节2 | 仅用于存量结构走查的合成内容。 | 继续探索 | 等待放行 | 返回地图 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT held-chapter-player
+GATE {"gate":{"show":true,"held":true,"number":2,"total":2,"title":"待放行章节2","subtitle":"","faces":[{"cover":"","style":"riso","label":"01 · 待放行章节1","photos":[]},{"cover":"","style":"engrave","label":"02 · 待放行章节2","photos":[]},{"cover":"/profile/upload/2026/11/05/j3street.png","style":"gold","label":"通关 · PLAY-M","photos":[]}],"endInfo":{"number":"01","kicker":"第 1 章 · 完成","title":"待放行章节1","desc":"","stats":[{"v":"1/1","k":"坐标"}]},"info":{"kicker":"第 2 章 / 共 2 章","title":"待放行章节2","desc":"仅用于存量结构走查的合成内容。","stats":[{"v":"1","k":"坐标"}]}},"chapter":{"id":81,"opening":false,"idxLabel":"第 2 章","name":"待放行章节2","description":"仅用于存量结构走查的合成内容。","cover":"","mileage":"","timeText":"","blocks":[{"type":"text","content":"仅用于存量结构走查的合成内容。"},{"type":"node","nodeId":116}],"audioUrl":"","atmospherePreset":"DEFAULT","atmosphereClass":"atmosphere--default"},"next":{"nodeId":116,"num":2,"name":"待放行站2","imgUrl":"","metaText":"上海市黄浦区中山东一路1号","_pt":null,"lat":0,"lng":0,"address":"上海市黄浦区中山东一路1号","mapStateLabel":"当前目标","mapA11yLabel":"当前目标，正在前往"},"lead":{"exists":true,"status":2,"isLeader":false,"freeEntry":false,"arrived":1,"total":1,"meArrived":true,"chapterName":"待放行章节1","currentChapterId":80,"nextChapterId":81,"broadcast":"","directorRun":false,"ended":false,"members":[{"memberId":9004,"nickname":"玩家小城","avatar":"","done":1,"arrived":true,"isLeader":false},{"memberId":9008,"nickname":"执行俱乐部主理人","avatar":"","done":0,"arrived":false,"isLeader":true}],"skipRequests":[]}}
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?activityId=19 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990030&activityId=19 200 500 这一局还没开始 
+NET GET /api/play/run-session?activityId=19 200 200 操作成功 
+NET GET /api/club/lead/team-progress?activityId=19 200 200 操作成功 
+NET GET /api/game/session/view?activityId=19&perspective=PLAYER 200 500 本场游戏尚未准备 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871629624-5nhnyw85"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871629624-i05kg3t6"}
+NET GET /api/club/lead/team-progress?activityId=19 200 200 操作成功 
+NET GET /api/club/lead/team-progress?activityId=19 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990030&activityId=19&nodeId=115 200 500 这一局还没开始 
+NET GET /api/club/lead/team-progress?activityId=19 200 200 操作成功 
+NET GET /api/team/trail/state?activityId=19 200 200 操作成功 
+NET POST /api/team/trail/consent 200 200 操作成功 {"activityId":"19","share":true}
+NET GET /api/club/lead/team-progress?activityId=19 200 200 操作成功 
+NET GET /api/play/action-context?nodeId=115&activityId=19 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 activityId=19&nodeId=115&longitude=121.4737&latitude=31.2304&accuracy=8&routeActionId=route-mw3cuznw-1c5i4fzhh3&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/nodes?activityId=19 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990030&activityId=19 200 500 这一局还没开始 
+NET GET /api/play/run-session?activityId=19 200 200 操作成功 
+NET GET /api/club/lead/team-progress?activityId=19 200 200 操作成功 
+NET GET /api/game/session/view?activityId=19&perspective=PLAYER 200 500 本场游戏尚未准备 

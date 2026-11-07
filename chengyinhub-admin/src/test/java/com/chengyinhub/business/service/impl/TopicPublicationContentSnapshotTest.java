@@ -44,6 +44,28 @@ class TopicPublicationContentSnapshotTest {
         assertFalse(answer.path("nodePresentation").has("checkinCode"));
     }
 
+    /** m6 M2:自由探索开放招商可零节点发布进招商,商家建点过审后再刷新快照;其余零节点仍拒。 */
+    @Test void freeExploreRecruitmentPublishesWithoutNodesButOtherThemesStillNeedOne() throws Exception {
+        Fixture f = new Fixture();
+        when(f.nodes.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
+        f.topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        f.chapter.setRecruitEnabled(1);
+        JsonNode frozen = JSON.readTree(f.compiler.freezePublication(f.topic, null));
+        assertEquals(0, frozen.path("routeStations").size());
+        assertFalse(frozen.has("startNodeId"));
+
+        f.chapter.setRecruitEnabled(0);
+        IllegalArgumentException noRecruit = assertThrows(IllegalArgumentException.class,
+                () -> f.compiler.freezePublication(f.topic, null));
+        assertEquals("主题没有可运行节点", noRecruit.getMessage());
+        f.chapter.setRecruitEnabled(1);
+        f.topic.setProductType(1);
+        assertThrows(IllegalArgumentException.class, () -> f.compiler.freezePublication(f.topic, null));
+        f.topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        when(f.chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
+        assertThrows(IllegalArgumentException.class, () -> f.compiler.freezePublication(f.topic, null));
+    }
+
     @Test void legitimateNonTemplateStationHasNoInventedTemplateIdentity() throws Exception {
         Fixture f = new Fixture(); f.node.setTemplateId(null);
         JsonNode answer = JSON.readTree(f.compiler.freezePublication(f.topic, null)).path("nodeAnswers").path("11");
@@ -107,8 +129,12 @@ class TopicPublicationContentSnapshotTest {
         Fixture opening = new Fixture();
         opening.topic.setJourneyStoryJson("{\"schemaVersion\":1,\"openingChapterId\":20}");
         opening.chapter.setBlocksJson("[]");
+        opening.chapter.setVideoUrl("media-asset:41");
+        opening.chapter.setVideoPosterUrl("media-asset:42");
         JsonNode withOpening = JSON.readTree(opening.compiler.freezePublication(opening.topic, null));
         assertFalse(withOpening.has("contentSnapshotOnly"));
+        assertEquals("media-asset:41", withOpening.path("openingChapter").path("videoUrl").asText());
+        assertEquals("media-asset:42", withOpening.path("openingChapter").path("videoPosterUrl").asText());
         assertEquals(Long.valueOf(20L), com.chengyinhub.business.domain.JourneyStory.openingChapterId(withOpening.path("journeyStory").asText()));
         Fixture theme = new Fixture(); theme.topic.setThemeRuntimeConfigJson("{\"schemaVersion\":1,\"capacity\":0,\"endings\":[{\"id\":\"end\",\"title\":\"结束\",\"fallback\":true,\"success\":false}]}");
         JsonNode withTheme = JSON.readTree(theme.compiler.freezePublication(theme.topic, null));

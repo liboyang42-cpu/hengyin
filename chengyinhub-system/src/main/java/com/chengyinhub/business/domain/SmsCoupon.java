@@ -88,6 +88,9 @@ public class SmsCoupon extends BaseEntity
     @Excel(name = "如果scope_type=1", readConverterExp = "商=家券")
     private Long merchantId;
 
+    /** Round5B-3:机审未完成扣下、等人工审核的券;发券 SQL 排除,审核通过转 1。 */
+    public static final int STATUS_PENDING_REVIEW = 5;
+
     /** 状态：0-&gt;未开始；1-&gt;进行中；2-&gt;已结束；3-&gt;手动失效(平台,已领的也不可核销)；4-&gt;已停发(商家,不再新增发放,已领的照常可用可核销) */
     @Excel(name = "状态：0-&gt;未开始；1-&gt;进行中；2-&gt;已结束；3-&gt;手动失效；4-&gt;已停发")
     private Integer status;

@@ -173,6 +173,8 @@ Page({
     selectedMemberName: '',
     selectedRoleCode: '',
     selectedRoleName: '',
+    // 稿 R1:「可见客户手机号」只对活动核销员出现,默认否;服务端按委派逐条授权
+    customerPhoneVisible: false,
     state: 'loading', // loading | no-permission | network-error | error(业务) | empty | ready
     errorText: '',
     members: [],
@@ -183,10 +185,11 @@ Page({
   },
 
   onLoad(options) {
-    const clubId = positiveId(options && options.clubId)
+    // 第十二轮 k9(j6 N4):俱乐部页之间的深链习惯用 id;缺了就是坏链接,给「链接已失效 · 返回」,不是空白的加载失败
+    const clubId = positiveId(options && (options.clubId || options.id))
     const activityId = positiveId(options && options.activityId)
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部ID' })
+      this.setData({ state: 'missing', errorText: '' })
       return
     }
     this._requestedMemberId = positiveId(options && options.memberId)
@@ -342,9 +345,10 @@ Page({
     })
     const assignments = this.data.assignments.map(function (assignment) {
       return Object.assign({}, assignment, {
-        memberName: memberNames[String(assignment.targetMemberId)] || ('成员 #' + assignment.targetMemberId),
+        memberName: memberNames[String(assignment.targetMemberId)] || '城瘾用户',
         roleName: roleNames[assignment.roleCode] || '角色',
-        roleSummary: roleSummaries[assignment.roleCode] || '',
+        roleSummary: (roleSummaries[assignment.roleCode] || '')
+          + (assignment.customerPhoneVisible === true ? ' · 可见客户手机号' : ''),
         // CU-C-57:委派行补上作用期限(后端 VO 一直带着 expiresAt,前端此前没显示)
         expiresText: expiryText(assignment.expiresAt),
       })
@@ -374,7 +378,14 @@ Page({
       selectedRoleCode: roleCode,
       selectedRoleName: (row && row.name) || '',
       rolePickerVisible: false,
+      // 换成别的角色时开关归零:只有活动核销员能带这项授权(服务端同样拒绝)
+      customerPhoneVisible: roleCode === 'EVENT_CHECKIN' ? this.data.customerPhoneVisible : false,
     })
+  },
+
+  toggleCustomerPhoneVisible() {
+    if (this.data.actingKey || this.data.selectedRoleCode !== 'EVENT_CHECKIN') return
+    this.setData({ customerPhoneVisible: !this.data.customerPhoneVisible })
   },
 
   // 稿上是一个「分配」大按钮,成员与角色都已经在上面两行选好了 —— 不再从 dataset 取角色
@@ -391,12 +402,14 @@ Page({
     }
     const payload = { clubId: this.data.clubId, targetMemberId: memberId, roleCode }
     if (role.scopeType === 'EVENT') payload.activityId = this.data.activityId
+    if (roleCode === 'EVENT_CHECKIN' && this.data.customerPhoneVisible) payload.customerPhoneVisible = true
     this.submitAssignment(payload)
   },
 
   submitAssignment(payload) {
     const that = this
     const key = 'assign:' + payload.targetMemberId + ':' + payload.roleCode
+      + (payload.customerPhoneVisible ? ':phone' : '')
     const intentKey = [key, payload.clubId, payload.activityId || 'club'].join(':')
     this._roleRequestIds = this._roleRequestIds || {}
     const requestId = this._roleRequestIds[intentKey]
@@ -421,6 +434,8 @@ Page({
         delete that._roleRequestIds[intentKey]
         clearRequestIntent(intentKey)
         toast.success('角色已分配')
+        // 第十轮 f3 第 4 项(j2 F-21):分配成功后清空成员与角色选择,下一次分配从空表单开始。
+        that.setData({ selectedMemberId: null, selectedMemberName: '', selectedRoleCode: '', selectedRoleName: '', customerPhoneVisible: false })
         that.loadRoleData(that._loadCycle)
       },
       fail() { that.setData({ actingKey: '' }); toast('网络异常，请重试') },

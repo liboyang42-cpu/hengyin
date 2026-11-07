@@ -33,6 +33,28 @@ import org.springframework.test.util.ReflectionTestUtils;
 class MerchantFinanceQueryServiceTest {
 
     @Test
+    void coopListUsesTheSameNetProjectionWithoutChangingOriginalOrLeakingOtherPayees() {
+        MerchantFinanceQueryService service = serviceWithBalanceRows(Collections.emptyList());
+        CoopSettlementMapper mapper = (CoopSettlementMapper) ReflectionTestUtils.getField(service, "coopSettlementMapper");
+        var mine = new com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow();
+        mine.setId(31L); mine.setMerchantId(7L); mine.setStatus(0);
+        mine.setAmount(new BigDecimal("40.00")); mine.setExecutedAdjustmentAmount(new BigDecimal("-10.00"));
+        var other = new com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow();
+        other.setId(32L); other.setMerchantId(8L); other.setAmount(new BigDecimal("99.00"));
+        other.setExecutedAdjustmentAmount(BigDecimal.ZERO);
+        when(mapper.selectSummaryByMerchant(7L)).thenReturn(Arrays.asList(mine, other));
+        var rows = service.settlementEntries(7L, "coop", 1, 20).getRows();
+        assertEquals(1, rows.size());
+        assertEquals("30.00", rows.get(0).getSignedAmount());
+        assertEquals("40.00", rows.get(0).getOriginalAmount());
+        assertEquals("-10.00", rows.get(0).getExecutedAdjustmentAmount());
+        assertEquals("31", rows.get(0).getRefId());
+        assertEquals(new BigDecimal("40.00"), mine.getAmount());
+        mine.setExecutedAdjustmentAmount(null);
+        assertEquals(null, service.settlementEntries(7L, "coop", 1, 20).getRows().get(0).getSignedAmount());
+    }
+
+    @Test
     void calculatesPersonalAccountNetWithServerDecimalArithmetic() {
         MerchantFinanceQueryService service = serviceWithBalanceRows(Arrays.asList(
                 balance("0.10", 2L, new Date()), balance("0.20", 2L, new Date()), balance("-0.05", 2L, new Date())));
@@ -107,6 +129,7 @@ class MerchantFinanceQueryServiceTest {
         ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
         ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
         ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
+        wireEmptyPersonalAccount(service);
 
         Redemption redemption = new Redemption();
         redemption.setId(31L);
@@ -134,6 +157,7 @@ class MerchantFinanceQueryServiceTest {
         ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
         ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
         ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
+        wireEmptyPersonalAccount(service);
         Redemption mine = new Redemption();
         mine.setId(31L);
         mine.setTopicId(990045L);
@@ -152,6 +176,113 @@ class MerchantFinanceQueryServiceTest {
         MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20, 990045L);
         assertEquals(1, page.getTotal());
         assertEquals(1, page.getRows().size());
+    }
+
+    /** M-27 第4轮:台账行显示报名姓名,服务端解密;只问本商家的核销,没有姓名的行留空。 */
+    @Test
+    void ledgerRowsCarryDecryptedSignupNameOnlyForThisMerchantsRedemptions() {
+        MerchantFinanceQueryService service = new MerchantFinanceQueryService();
+        RedemptionMapper redemptionMapper = org.mockito.Mockito.mock(RedemptionMapper.class);
+        MerchantPayableMapper payableMapper = org.mockito.Mockito.mock(MerchantPayableMapper.class);
+        MerchantPayableBatchMapper batchMapper = org.mockito.Mockito.mock(MerchantPayableBatchMapper.class);
+        com.chengyinhub.business.security.PiiCryptoService pii = new com.chengyinhub.business.security.PiiCryptoService(
+                java.util.Base64.getEncoder().encodeToString(new byte[32]), "hmac-secret");
+        ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
+        ReflectionTestUtils.setField(service, "payableMapper", payableMapper);
+        ReflectionTestUtils.setField(service, "batchMapper", batchMapper);
+        wireEmptyPersonalAccount(service);
+        ReflectionTestUtils.setField(service, "piiCryptoService", pii);
+        Redemption named = new Redemption();
+        named.setId(31L);
+        named.setStatus("ACTIVE");
+        named.setCreateTime(atShanghai(2026, Calendar.AUGUST, 20, 9, 0));
+        Redemption nameless = new Redemption();
+        nameless.setId(32L);
+        nameless.setStatus("ACTIVE");
+        nameless.setCreateTime(atShanghai(2026, Calendar.AUGUST, 21, 9, 0));
+        com.chengyinhub.business.domain.vo.RedemptionSignupName signup = new com.chengyinhub.business.domain.vo.RedemptionSignupName();
+        signup.setRedemptionId(31L);
+        signup.setRealName(pii.encrypt("林野"));
+        when(redemptionMapper.selectByMerchant(7L)).thenReturn(java.util.Arrays.asList(named, nameless));
+        when(redemptionMapper.selectSignupNamesByMerchant(7L, null)).thenReturn(Collections.singletonList(signup));
+        when(redemptionMapper.selectByMerchantAndId(7L, 31L)).thenReturn(named);
+        when(redemptionMapper.selectSignupNamesByMerchant(7L, 31L)).thenReturn(Collections.singletonList(signup));
+        when(payableMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayable>emptyList());
+        when(batchMapper.selectByMerchant(7L)).thenReturn(Collections.<MerchantPayableBatch>emptyList());
+
+        MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20);
+        java.util.Map<String, String> byId = new java.util.HashMap<>();
+        for (MerchantRedemptionView row : page.getRows()) byId.put(row.getRecordId(), row.getCustomerDisplayName());
+        assertEquals("林野", byId.get("31"), "密文在服务端解密后下发");
+        assertEquals(null, byId.get("32"), "没有报名姓名就不下发,不写占位");
+        assertEquals("林野", service.redemptionDetail(7L, "redemption", "31").getCustomerDisplayName());
+        org.mockito.Mockito.verify(redemptionMapper, org.mockito.Mockito.never())
+                .selectSignupNamesByMerchant(org.mockito.ArgumentMatchers.argThat(id -> !Long.valueOf(7L).equals(id)),
+                        org.mockito.ArgumentMatchers.any());
+    }
+
+    /** 全店汇总现在带个人账户口径(j1 F13):没有余额流水 / coop 行时按空账户接线。 */
+    private static void wireEmptyPersonalAccount(MerchantFinanceQueryService service) {
+        UmsMemberBalanceDetailMapper balanceMapper = org.mockito.Mockito.mock(UmsMemberBalanceDetailMapper.class);
+        CoopSettlementMapper coopMapper = org.mockito.Mockito.mock(CoopSettlementMapper.class);
+        ReflectionTestUtils.setField(service, "balanceDetailMapper", balanceMapper);
+        ReflectionTestUtils.setField(service, "coopSettlementMapper", coopMapper);
+    }
+
+    /** check-1104 j1 F13:商家自有活动验票进「核销与退款 / 核销记录」,汇总的待结算/已入账与资产页、结算概览同源。 */
+    @Test
+    void activityTicketScansJoinTheLedgerAndSummaryUsesThePersonalAccountSource() {
+        MerchantFinanceQueryService service = serviceWithBalanceRows(Arrays.asList(
+                income("94.57", 3L, 1L, new Date()), income("50.00", 3L, 2L, new Date())));
+        RedemptionMapper redemptionMapper = org.mockito.Mockito.mock(RedemptionMapper.class);
+        ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
+        com.chengyinhub.business.domain.vo.MerchantActivityTicketScan scan =
+                new com.chengyinhub.business.domain.vo.MerchantActivityTicketScan();
+        scan.setRegistrationId(74L);
+        scan.setActivityId(9L);
+        scan.setActivityTitle("梧桐里读书夜");
+        scan.setTicketName("单人票");
+        scan.setVerifiedAt(new Date());
+        scan.setSettlementAmount(new BigDecimal("37.83"));
+        scan.setSettlementStatus(0);
+        when(redemptionMapper.selectByMerchant(7L)).thenReturn(Collections.<Redemption>emptyList());
+        when(redemptionMapper.selectActivityTicketScansByMerchant(7L, null)).thenReturn(Collections.singletonList(scan));
+        when(redemptionMapper.selectActivityTicketScansByMerchant(7L, 74L)).thenReturn(Collections.singletonList(scan));
+        com.chengyinhub.business.service.impl.MemberFundsStageService stages =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.MemberFundsStageService.class);
+        java.util.Map<String, Object> funds = new java.util.LinkedHashMap<>();
+        funds.put("amountsKnown", true);
+        funds.put("pendingSettlement", new BigDecimal("37.83"));
+        java.util.Map<String, Object> period = new java.util.LinkedHashMap<>();
+        period.put("amount", new BigDecimal("18.91"));
+        period.put("availableDate", "2026-11-12");
+        funds.put("complaintPeriod", Collections.singletonList(period));
+        when(stages.stages(org.mockito.ArgumentMatchers.eq(7L), org.mockito.ArgumentMatchers.any(Date.class))).thenReturn(funds);
+        ReflectionTestUtils.setField(service, "fundsStageService", stages);
+
+        MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20);
+
+        assertEquals(1, page.getTotal(), "活动验票必须出现在核销列表(原先 total 0)");
+        MerchantRedemptionView row = page.getRows().get(0);
+        assertEquals("activity_ticket", row.getRecordType());
+        assertEquals("梧桐里读书夜", row.getTopicName());
+        assertEquals("单人票", row.getChapterName());
+        assertEquals("37.83", row.getSettlementAmount());
+        assertEquals("PENDING_SETTLEMENT", row.getDisplayState());
+        com.chengyinhub.business.domain.vo.MerchantRedemptionSummary summary =
+                (com.chengyinhub.business.domain.vo.MerchantRedemptionSummary) page.getSummary();
+        assertEquals(1, summary.getCount());
+        assertEquals("56.74", summary.getPendingAmount(), "待结算 = 资产页同源(未结束 + 客诉期),不再是 0");
+        assertEquals("94.57", summary.getArrivedAmount(), "已入账含活动分润(eventType=3 收入),提现(3/支出)不算");
+        assertEquals("94.57", service.overview(7L).getPersonalArrivedThisMonthGross(), "结算概览与汇总同一份到账口径");
+        assertEquals("单人票", service.redemptionDetail(7L, "activity_ticket", "74").getChapterName());
+        assertEquals(null, service.redemptionDetail(8L, "activity_ticket", "74"), "详情 SQL 层带归属,别人的票不可见");
+    }
+
+    private static UmsMemberBalanceDetail income(String amount, Long eventType, Long changeType, Date createTime) {
+        UmsMemberBalanceDetail detail = balance(amount, eventType, createTime);
+        detail.setChangeType(changeType);
+        return detail;
     }
 
     private static MerchantPayable payable(Long id, String entryType, String amount, Date createTime) {

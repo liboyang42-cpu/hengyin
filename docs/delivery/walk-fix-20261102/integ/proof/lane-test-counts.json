@@ -1,0 +1,88 @@
+{
+ "pay-gate": {
+  "files": 28,
+  "lane": 307,
+  "merged": 309,
+  "missing": [],
+  "fewer": []
+ },
+ "l1-play": {
+  "files": 24,
+  "lane": 394,
+  "merged": 394,
+  "missing": [],
+  "fewer": []
+ },
+ "l2-explore": {
+  "files": 28,
+  "lane": 335,
+  "merged": 339,
+  "missing": [],
+  "fewer": []
+ },
+ "l3-sell": {
+  "files": 49,
+  "lane": 457,
+  "merged": 458,
+  "missing": [
+   "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreAccountTicketGateTest.java",
+   "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayOneTicketGateTest.java"
+  ],
+  "fewer": [
+   [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicPostReviewTest.java",
+    8,
+    7
+   ]
+  ]
+ },
+ "l4-counter": {
+  "files": 23,
+  "lane": 275,
+  "merged": 275,
+  "missing": [],
+  "fewer": []
+ },
+ "l5-onboard": {
+  "files": 15,
+  "lane": 229,
+  "merged": 229,
+  "missing": [],
+  "fewer": []
+ },
+ "l6-club": {
+  "files": 38,
+  "lane": 558,
+  "merged": 562,
+  "missing": [],
+  "fewer": []
+ },
+ "l7-launch": {
+  "files": 14,
+  "lane": 215,
+  "merged": 215,
+  "missing": [],
+  "fewer": []
+ },
+ "l8-safety": {
+  "files": 31,
+  "lane": 423,
+  "merged": 423,
+  "missing": [],
+  "fewer": []
+ },
+ "#710": {
+  "files": 4,
+  "lane": 249,
+  "merged": 255,
+  "missing": [],
+  "fewer": []
+ },
+ "#719": {
+  "files": 3,
+  "lane": 82,
+  "merged": 82,
+  "missing": [],
+  "fewer": []
+ }
+}

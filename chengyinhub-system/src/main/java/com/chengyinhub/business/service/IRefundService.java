@@ -30,6 +30,10 @@ public interface IRefundService {
 
     int reviewRefund(RefundReviewDTO request, Long operatorId);
 
+    /** 人工凭证复核事务内记已退事实并冲原分账；绝不再次派发退款。 */
+    void recordVerifiedExploreManualRefund(com.chengyinhub.business.domain.ActivityCancelManualRefundCase verifiedCase);
+
+
     // ===== §6.1 退款失败人工兜底 =====
 
     RefundApplication getRefundById(Long id);

@@ -14,6 +14,8 @@
 .sc-brand { font-size: var(--cy-type-card-title); font-weight: 800; color: #FFFFFF; } /* ds-ok 卡片压字 */
 .sc-qr { width: 120rpx; height: 120rpx; padding: 8rpx; border-radius: var(--cy-radius-sm); background: #FFFFFF; } /* ds-ok 小程序码白底 */
 .sc-card--act .sc-cover { display: block; width: 560rpx; height: 420rpx; }
+.sc-card--shop .sc-qr { width: 168rpx; height: 168rpx; }
+.sc-card--shop .sc-m { color: rgba(255, 255, 255, .88); text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, .6); } /* ds-ok 照片上的地址行(rig 走查:亮照片上看不清) */
 .sc-when { display: flex; flex-direction: column; margin-top: 16rpx; }
 .sc-date { font-size: var(--cy-type-data-xl); line-height: 1; font-weight: 900; font-style: italic; color: #FFFFFF; } /* ds-ok 卡片压字 */
 .sc-whenl { margin-top: 8rpx; font-size: var(--cy-type-label); color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */

@@ -68,6 +68,11 @@ function normalizeTicket(ticket) {
   }
 }
 
+// Round5 #5:可直接下单的票(有库存且场次未过)。只有一张时自动选中;一张都没有时按钮直接说明。
+function selectableTickets(tickets) {
+  return (tickets || []).filter((ticket) => ticket._available !== false && !ticket._windowPassed)
+}
+
 function actionFor(info) {
   if (!info || (info.isSignUp !== 0 && info.isSignUp !== 1)) return { state: 'unavailable', text: '—' }
   if (info.isSignUp === 0) return { state: 'signup', text: '立即报名' }
@@ -110,6 +115,7 @@ Component({
     dateText: '',
     hostName: '',
     hostAvatar: '',
+    hostIsShop: false,
     categoryText: '',
     titleText: '—',
     registrationCountText: '0',
@@ -127,6 +133,8 @@ Component({
     cancelError: '',
     cancelBlocked: false,
     canConfirmSignup: false,
+    ticketsAttention: false,
+    noTicketText: '',
     voteShow: false,
     starsBox: [1, 1, 1, 1, 1],
     answer: -1,
@@ -155,8 +163,10 @@ Component({
   },
   pageLifetimes: {
     show() {
-      this._hidden = false; this._navigating = false
+      const wasHidden = this._hidden; this._hidden = false; this._navigating = false
       if (this.data.activityId && this._activityReadOwner !== this._activityReadIdentity()) this.load(this.data.activityId)
+      // 报名或加入俱乐部后返回须重读；首次 show 保留 attached/observer 的读取去重。
+      else if (this.data.activityId && (wasHidden || this.data.state === 'gate')) { this._loadingId = ''; this._loadedId = ''; this.load(this.data.activityId) }
     },
     hide() { this._hidden = true },
   },
@@ -205,6 +215,8 @@ Component({
         selectedTicketId: '',
         expandedTicketId: '',
         canConfirmSignup: false,
+        ticketsAttention: false,
+        noTicketText: '',
         cancelShow: false,
         voteShow: false,
         cancelling: false,
@@ -254,8 +266,8 @@ Component({
               ...item,
               _titleText: nonEmptyString(item.title) || '—',
               _imageUrl: nonEmptyString(item.imgUrl),
-              _playersText: players ? (/人$/.test(players) ? players : `${players}人`) : '—',
-              _durationText: duration === null ? '—' : `${duration} 分钟`,
+              // j1 F11:没填的人数/时长(模板已不配时长)不再显示成「— · 0 分钟」
+              _metaText: [players ? (/人$/.test(players) ? players : `${players}人`) : '', duration ? `${duration} 分钟` : ''].filter(Boolean).join(' · '),
             }
           })
           const info = {
@@ -270,6 +282,8 @@ Component({
           const tickets = info.omsTicketList ? info.omsTicketList.map(normalizeTicket) : []
           const host = info.collaboratorsList[0] || {}
           const action = actionFor(info)
+          const selectable = selectableTickets(tickets)
+          const onlyTicket = selectable.length === 1 ? selectable[0]._id : ''
           const latitude = coordinate(info.latitude, 90)
           const longitude = coordinate(info.longitude, 180)
           const averageRating = nonNegativeNumber(info.averageRating)
@@ -288,8 +302,10 @@ Component({
             dateText: info.startDate
               ? `活动时间 · ${dateText(info.startDate)}${info.endDate ? ` - ${dateText(info.endDate)}` : ''}`
               : '时间待定',
-            hostName: nonEmptyString(host.memberRealName),
-            hostAvatar: nonEmptyString(host.memberAvatar),
+            // check-1104 j1 F14:商家自己发的活动,主办方是店铺(服务端给店铺名/头像),不写发起人昵称
+            hostName: nonEmptyString(info.organizerShopName) || nonEmptyString(host.memberRealName),
+            hostAvatar: nonEmptyString(info.organizerShopName) ? nonEmptyString(info.organizerShopLogo) : nonEmptyString(host.memberAvatar),
+            hostIsShop: !!nonEmptyString(info.organizerShopName),
             titleText: nonEmptyString(info.name) || '—',
             categoryText: info.sysCategoryList.map((item) => nonEmptyString(item.categoryName)).filter(Boolean).join(' · '),
             registrationCountText: countText(info.registrationCount),
@@ -298,6 +314,11 @@ Component({
             hasLocation: latitude !== null && longitude !== null,
             actionState: action.state,
             actionText: action.text,
+            selectedTicketId: onlyTicket,
+            expandedTicketId: onlyTicket,
+            canConfirmSignup: !!onlyTicket,
+            ticketsAttention: false,
+            noTicketText: selectable.length ? '' : tickets.length ? '暂无可报名票种' : '暂未开放票种',
             isOwner: info.memberId != null && info.memberId == app.getUserID(),
           })
           this.triggerEvent('loaded', { id: requestedId, name: info.name || '', imgUrl: info.imgUrl || '' })
@@ -358,11 +379,28 @@ Component({
         toast('该票种已售罄')
         return
       }
-      this.setData({ selectedTicketId: id, expandedTicketId: id, canConfirmSignup: true })
+      this.setData({ selectedTicketId: id, expandedTicketId: id, canConfirmSignup: true, ticketsAttention: false })
+    },
+
+    // Round5 #5:多张票还没选时点灰按钮 —— 滚到票种并用红线标出,而不是没反应。
+    onSignupDisabledTap() {
+      if (this.data.canConfirmSignup || this.data.noTicketText || !this.data.tickets.length) return
+      this.setData({ ticketsAttention: true })
+      const query = this.createSelectorQuery()
+      query.select('.ticket-list').boundingClientRect()
+      query.selectViewport().scrollOffset()
+      query.exec((res) => {
+        const rect = res && res[0]
+        const viewport = res && res[1]
+        if (!rect || !viewport || typeof wx.pageScrollTo !== 'function') return
+        wx.pageScrollTo({ scrollTop: Math.max(0, viewport.scrollTop + rect.top - 120), duration: 300 })
+      })
     },
 
     openSignup() {
       if (!this.data.canConfirmSignup || this._navigating) return
+      // Round5 #6:活动详情对游客只读开放后,报名前先登录(写前登录,与主题详情同口径)
+      if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.openSignup(), { owner: this, target: () => [this.data.activityId, this.data.selectedTicketId] })) return
       if (app.getUserType() == 2) {
         toast('商家用户不可报名活动')
         return
@@ -400,8 +438,10 @@ Component({
     },
 
     onCancelledAction() {
-      if (this.data.cancelledHasOwnOrder) this.goPlay()
-      else this.close()
+      if (!this.data.cancelledHasOwnOrder) { this.close(); return }
+      if (this._navigating) return
+      this._navigating = true
+      wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false } })
     },
 
     goPlay() {

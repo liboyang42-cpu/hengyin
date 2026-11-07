@@ -13,6 +13,8 @@
  *   · 标签本身自带按压态(cy-btn / cy-cell / cy-merchant-card / 原生 button)
  *   · hover-class 写了条件式(如 {{canTap ? 'cy-pressed' : 'none'}}) —— 这正是
  *     p1-feedback-wiring-contract「无动作状态不得显示按压反馈」要求的写法
+ *   · 全屏遮罩(class 为 pdim / rolemask / *-mask / *-scrim)显式写 hover-class="none":
+ *     按住遮罩缩放或变暗会让整屏闪一下,遮罩点一下就关,不需要按压态(打磨第 3 轮 §4-2)
  */
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -46,6 +48,14 @@ function stripComments(source) {
   return source.replace(/<!--[\s\S]*?-->/g, '')
 }
 
+/** 全屏遮罩:只有显式 hover-class="none" 才豁免;没写 hover-class 的遮罩照样算缺口 */
+const SCRIM_CLASS = /(?:^|\s)(?:pdim|rolemask|[\w-]+-mask|[\w-]+-scrim)(?:\s|$)/
+function isScrimWithoutPress(attrs, hoverValue) {
+  if (hoverValue !== 'none') return false
+  const cls = /\bclass\s*=\s*"([^"]*)"/.exec(attrs)
+  return !!cls && SCRIM_CLASS.test(cls[1].replace(/\{\{[^}]*\}\}/g, ' '))
+}
+
 function missingPressFeedback(source) {
   let missing = 0
   let tappable = 0
@@ -57,6 +67,7 @@ function missingPressFeedback(source) {
     const hover = /hover-class\s*=\s*"([^"]*)"/.exec(attrs)
     const value = hover ? hover[1].trim() : ''
     if (value && value !== 'none') continue
+    if (isScrimWithoutPress(attrs, value)) continue
     missing += 1
   }
   return { missing, tappable }
@@ -72,6 +83,7 @@ function bareTapHandlers(source) {
     const hover = /hover-class\s*=\s*"([^"]*)"/.exec(attrs)
     const value = hover ? hover[1].trim() : ''
     if (value && value !== 'none') continue
+    if (isScrimWithoutPress(attrs, value)) continue
     const bound = /\b(?:bind|catch)(?::)?tap="([^"]*)"/.exec(attrs)
     handlers.push(bound ? bound[1] : '')
   }
@@ -252,6 +264,14 @@ test('负控：把 hover-class 摘掉必须判红；条件式与自带按压标�
   assert.equal(missingPressFeedback(commented).tappable, 0, '注释里的可点元素不算数')
   assert.equal(missingPressFeedback('<view bindtap="a" hover-class="none">x</view>').missing, 1,
     'hover-class="none" 是显式关掉反馈，仍要留在缺口账上等人判断')
+  // 打磨第 3 轮 §4-2:全屏遮罩显式 none 豁免;非遮罩的 none、没写 hover-class 的遮罩仍算缺口
+  assert.equal(missingPressFeedback('<view class="pdim {{a ? \'is-in\' : \'\'}}" bindtap="c" hover-class="none"></view>').missing, 0)
+  assert.equal(missingPressFeedback('<view class="mdd-mask" bindtap="c" hover-class="none"></view>').missing, 0)
+  assert.equal(missingPressFeedback('<view class="rolemask" bindtap="c" hover-class="none"></view>').missing, 0)
+  assert.equal(missingPressFeedback('<view class="x-scrim" bindtap="c" hover-class="none"></view>').missing, 0)
+  assert.equal(missingPressFeedback('<view class="pdim" bindtap="c"></view>').missing, 1, '遮罩没写 hover-class 仍是缺口')
+  assert.equal(missingPressFeedback('<view class="masked-row" bindtap="c" hover-class="none"></view>').missing, 1, '不是遮罩的 none 仍是缺口')
+  assert.equal(missingPressFeedback('<view class="row {{on ? \'x-mask\' : \'\'}}" bindtap="c" hover-class="none"></view>').missing, 1, '条件里的类名不算遮罩')
 })
 
 test('挡板豁免不能被滥用：登记在册的必须真是吞冒泡的 noop', () => {

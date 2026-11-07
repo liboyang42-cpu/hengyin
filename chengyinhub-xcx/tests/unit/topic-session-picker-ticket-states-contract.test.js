@@ -82,12 +82,30 @@ test('多场重开保留场次并重读库存，可见期间不重置选票，�
   assert.equal(vm.data.totalText, '')
   requests[1].success({ code: 200, data: { omsTicketList: [{ id: 5, name: '售罄', price: 0, remainingInventory: 0 }] } })
   vm.onPickTicket({ currentTarget: { dataset: { id: 5 } } })
-  assert.equal(vm.data.pickedTicketId, 0)
+  assert.equal(vm.data.pickedTicketId, 5)
   observe(true, [{ id: 11 }, { id: 12 }])
   assert.equal(vm.data.pickedActivityId, 0)
   assert.equal(vm.data.ticketsState, 'idle')
   requests[1].success({ code: 200, data: TICKETS })
   assert.equal(vm.data.ticketsState, 'idle')
+})
+
+test('C-24:未来售罄票仍可进原结算页读取候补资格，不丢失真实场次与票种', () => {
+  const { vm, requests } = loadComponent()
+  const confirmed = []
+  vm.triggerEvent = (name, data) => confirmed.push({ name, data })
+  vm.pickActivity(30)
+  requests[0].success({ code: 200, data: { omsTicketList: [
+    { id: 118, name: '城市定向票', price: 0, remainingInventory: 0, startTime: '2999-11-06 18:00:00' }
+  ] } })
+  vm.onPickTicket({ currentTarget: { dataset: { id: 118 } } })
+  vm.onNext()
+  assert.deepEqual(confirmed.map(e => [e.name, e.data.activityId, e.data.ticketId]), [['confirm', 30, 118]])
+  assert.equal(requests.length, 1, '选票只交给原结算页，不创建报名或候补')
+  vm.data.tickets[0].startTime = '2020-11-06 18:00:00'
+  vm.onNext()
+  assert.equal(confirmed.length, 1, '售罄可候补不放开已开始场次')
+  assert.equal(vm.data.pickedTicketId, 0)
 })
 
 test('关闭期间的回包失效，重试同场次只接受最新请求', () => {
@@ -200,3 +218,17 @@ test('same-day sessions expose distinct server names and Beijing assembly times'
   assert.equal(vm.data.days[1].detailText, '19:00 · 俱乐部场次');
   assert.equal(vm.data.days[0].day, vm.data.days[1].day);
 });
+
+test('P-19:场次卡写执行俱乐部名,门卡沿用服务端点名的原因', () => {
+  const { vm, requests, observe } = loadComponent()
+  observe(true, [
+    { id: 9, name: '周六场', startDate: '2099-11-07 14:05:00', clubName: '执行俱乐部' },
+    { id: 10, name: '周日场', startDate: '2099-11-08 14:05:00' },
+  ])
+  assert.equal(vm.data.days[0].detailText, '14:05 · 周六场 · 执行俱乐部')
+  assert.equal(vm.data.days[1].detailText, '14:05 · 周日场')
+  vm.onPickDay({ currentTarget: { dataset: { id: 9 } } })
+  requests.at(-1).success({ code: 200, data: { gate: true, clubId: 7002, clubName: '执行俱乐部', message: '这一场由「执行俱乐部」执行，加入后查看' } })
+  assert.equal(vm.data.ticketsGateText, '这一场由「执行俱乐部」执行，加入后查看')
+  assert.equal(vm.data.gateClubId, 7002)
+})

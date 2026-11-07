@@ -1,0 +1,60 @@
+{
+  "codeBase": "ce84d219dc7c49f03acdff7aef967c836b82142d",
+  "patchDigest": "f03084b46c56ae7d10ec5c6a074086bfb92bd828dde5cc5d4cac786cd5a1170b",
+  "runner": "VPS budget212",
+  "exitCode": 0,
+  "tests": 67,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.service.RefundPlatformShareClawbackTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.SettlementRateConvergenceTest",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.impl.CoopSettlementOriginalProducerTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.support.TopicBundleReviewServiceTest",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.util.JourneyReviewTextsPlainFieldTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.web.controller.api.ThemeBoundTemplateTextSafetyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "sourceFiles": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicBundleReviewService.java": "d69ea7a4946ea7bb55ea319f9b120896df1f48899c3b3407f2c8527aa9140a8f",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/TopicBundleReviewServiceTest.java": "71c4509bada46001e98864e4ad30eb627792ad335111c4deafb27abbeb8f7b58"
+  },
+  "jarBuilt": false,
+  "sharedDatabaseUsed": false
+}

@@ -49,8 +49,9 @@ function merchantInfoPageFrom(source) {
       }
       if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} });
       if (request === '../utils/code-text.js') return require('../../pages/topic/utils/code-text.js');
+      if (request === '../utils/project-progress.js') return require('../../pages/topic/utils/project-progress.js');
       // 2026-10-30 走查 v2 R09:分润明细口径
-      if (request === '../../../utils/profit-split.js') return require('../../utils/profit-split.js');
+      if (request === '../utils/profit-split.js') return require('../../pages/topic/utils/profit-split.js');
       // 2026-10-31 P-6:主办工作台叠层(加载期无副作用)
       if (request === './host-layers.js') return require('../../pages/topic/merchantinfo/host-layers.js');
       // 2026-11-01 定向广播叠层的纯整形(加载期无副作用)

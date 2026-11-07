@@ -221,7 +221,7 @@ test('原发帖组件已离页/隐藏时不登录不dispatch，合法可见入�
   Object.assign(page, { _disposed: false, _composeVisible: true }); page.onPublish(); assert.equal(login, 1);
 });
 test('C 工具层写入口:举报 run() 与建队 createActivityTeam 也先过闸', () => {
-  assert.match(read('utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
+  assert.match(read('pages/topic/utils/content-report.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('report', function \(\) \{ run\(page, app, id, submit\); \}, \{ owner: page, target: \(\) => \[id, page\.data && page\.data\.id, page\.data && page\.data\.clubId\] \}\)\) return false;/);
   assert.match(read('subpackageMember/utils/team-up.js'), /app\.ensureLoginFor && !app\.ensureLoginFor\('team', \(\) => createActivityTeam\(app, activityId, maxMembers, joinMode, callbacks\), callbacks && callbacks\.loginContext\)\) return/);
 });
 
@@ -230,6 +230,8 @@ test('C 漫游开局:游客走 app.requireLogin({ reason: roam }),不再静默 f
   const body = src.slice(src.indexOf('  goStart() {'), src.indexOf('if (this._roamCompleted) this._resetRoamRecoverySession();'));
   assert.match(body, /loginApp\.requireLogin\(\{ reason: 'roam' \}\)/);
   assert.match(body, /if \(ok === false\) return;/);
+  // 第十一轮 g2,j4 F13:登录成功后入口的「附近活动」按新身份重读,不再停在「登录后查看附近活动与队伍」
+  assert.match(body, /getUserID\(\)\) \{ this\._loadEntryMap\(this\.data\.center\); this\.goStart\(\); return; \}/);
 });
 
 test('C 写入口在游客下的真实运行:俱乐部「加入」先弹窗,登录成功后恢复并只发一次 /api/club/join', async () => {

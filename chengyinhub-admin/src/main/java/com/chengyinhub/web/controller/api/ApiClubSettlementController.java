@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow;
+import com.chengyinhub.business.domain.vo.ClubSessionSettlementRow;
 
 import com.chengyinhub.business.access.club.ClubAccessContext;
 import com.chengyinhub.business.access.club.ClubPermission;
@@ -67,15 +68,31 @@ public class ApiClubSettlementController extends BaseController {
         this.cashWithdrawService = cashWithdrawService;
     }
 
+    @PostMapping("/mine")
+    public AjaxResult mine() {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (memberId == null || memberId <= 0L) return error("请先登录");
+        List<Map<String, Object>> rows = coopSettlementMapper.selectPersonalSettlementClubs(memberId);
+        return rows == null ? error("结算数据暂不可用") : AjaxResult.success(rows);
+    }
+
     @PostMapping("/summary")
     public AjaxResult summary(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         Long clubId = body == null ? null : Convert.toLong(body.get("clubId"));
         if (clubId == null || clubId <= 0L) return error("缺少俱乐部信息");
-        if (!belongsToClub(clubId, memberId)) return error("仅主理人与联席主理人可查看分润");
-
-        List<ClubSettlementSummaryRow> rows = coopSettlementMapper.selectSummaryByBeneficiary(ROLE_CLUB, clubId);
+        if (memberId == null || memberId <= 0L) return error("请先登录");
+        boolean personal = Boolean.TRUE.equals(body.get("personal")) || !belongsToClub(clubId, memberId);
+        List<ClubSettlementSummaryRow> rows = personal
+                ? coopSettlementMapper.selectPersonalClubSummary(clubId, memberId)
+                : coopSettlementMapper.selectSummaryByBeneficiary(ROLE_CLUB, clubId);
+        List<ClubSessionSettlementRow> sessionRows = personal
+                ? coopSettlementMapper.selectPersonalClubSessions(clubId, memberId)
+                : coopSettlementMapper.selectClubSessionSettlements(clubId);
+        if (personal && (rows == null || rows.isEmpty()) && (sessionRows == null || sessionRows.isEmpty()))
+            return error("没有本人的历史结算记录");
         if (rows == null) return error("结算数据暂不可用");
         BigDecimal settled = BigDecimal.ZERO;
         int unverified = 0;
@@ -101,6 +118,7 @@ public class ApiClubSettlementController extends BaseController {
             // 不是按本结算行 id —— 只回 id 会让「俱乐部分润 → 结算详情」永远落 missing-record。
             t.put("topicId", row.getTopicId());
             t.put("name", topicName(row));
+            t.put("lineType", row.getLineType());
             t.put("originalAmountText", money(original));
             t.put("executedAdjustmentText", money(adjustment));
             t.put("netAmountText", money(net));
@@ -113,16 +131,80 @@ public class ApiClubSettlementController extends BaseController {
             t.put("status", isVoid ? "void" : isSettled ? "settled" : "pending");
             topics.add(t);
         }
+        Club club = clubService.selectClubById(clubId);
+        List<Map<String, Object>> sessions = personal ? personalSessions(sessionRows)
+                : sessions(sessionRows, memberId, club == null ? null : club.getMemberId());
+        if (sessions == null) return error("结算金额或状态缺失，待核验");
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("settledAmountText", unverified == 0 ? money(settled) : null);
         data.put("settledAmountStatus", unverified == 0 ? "verified" : "unverified");
         data.put("unverifiedSettledCount", unverified);
         data.put("pendingAdjustment", null);
         data.put("topics", topics);
+        data.put("sessions", sessions);
         // 2026-09-17 总控裁定:余额三段只给俱乐部主理人本人看,联席主理人不显示。
-        Club club = clubService.selectClubById(clubId);
         data.put("isOwner", club != null && memberId.equals(club.getMemberId()));
+        data.put("personal", personal);
         return AjaxResult.success(data);
+    }
+
+    /**
+     * F-16:俱乐部场次的钱由活动结算直接入收款人余额,不在 coop_settlement 里。按真实入账流水逐场列出
+     * 销售额、平台服务费与到账,并说明钱入了谁的账户(主理人转让后,前任主理人的场次仍入其本人余额)。
+     * 任一行缺金额返回 null,整页拒收,不按 0 显示。
+     */
+    static List<Map<String, Object>> sessions(List<ClubSessionSettlementRow> rows, Long viewerId, Long ownerId) {
+        if (rows == null) return null;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (ClubSessionSettlementRow row : rows) {
+            if (row == null || row.getActivityId() == null || row.getNetAmount() == null
+                    || row.getPlatformAmount() == null || row.getPayeeMinMemberId() == null
+                    || row.getPayeeMaxMemberId() == null) return null;
+            BigDecimal merchantFee = row.getMerchantFeeAmount() == null ? BigDecimal.ZERO : row.getMerchantFeeAmount();
+            BigDecimal net = row.getNetAmount(), fee = row.getPlatformAmount(), gross = net.add(fee).add(merchantFee);
+            Map<String, Object> s = new LinkedHashMap<>();
+            s.put("activityId", row.getActivityId());
+            String name = row.getActivityName();
+            s.put("name", name == null || name.trim().isEmpty() ? "场次 #" + row.getActivityId() : name);
+            s.put("dateText", row.getStartDate() == null ? "日期待确认" : day(row.getStartDate()));
+            s.put("grossText", money(gross));
+            s.put("feeText", money(fee));
+            s.put("feeRateText", feeRate(gross, fee));
+            s.put("netText", money(net));
+            // 第十二轮 k5:按核销付费的合作商家从主理人份额里拿的钱;没有就不出这一行。
+            s.put("merchantFeeText", merchantFee.signum() == 0 ? null : money(merchantFee));
+            Long payee = row.getPayeeMinMemberId();
+            s.put("payeeText", !payee.equals(row.getPayeeMaxMemberId()) ? "分笔入账"
+                    : payee.equals(viewerId) ? "已入你的账户"
+                    : payee.equals(ownerId) ? "已入主理人账户" : "已入原主理人账户");
+            out.add(s);
+        }
+        return out;
+    }
+
+    private static List<Map<String, Object>> personalSessions(List<ClubSessionSettlementRow> rows) {
+        if (rows == null) return null;
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (ClubSessionSettlementRow row : rows) {
+            if (row == null || row.getActivityId() == null || row.getNetAmount() == null) return null;
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("activityId", row.getActivityId());
+            item.put("name", row.getActivityName() == null || row.getActivityName().trim().isEmpty()
+                    ? "场次 #" + row.getActivityId() : row.getActivityName());
+            item.put("dateText", row.getStartDate() == null ? "日期待确认" : day(row.getStartDate()));
+            item.put("netText", money(row.getNetAmount()));
+            item.put("payeeText", "已入你的账户");
+            out.add(item);
+        }
+        return out;
+    }
+
+    /** 由入账金额反推的平台费率;只有按该费率四舍五入能还原出实际服务费时才给,否则不写比例。 */
+    static String feeRate(BigDecimal gross, BigDecimal fee) {
+        if (gross.signum() <= 0 || fee.signum() < 0) return null;
+        BigDecimal pct = fee.multiply(BigDecimal.valueOf(100)).divide(gross, 1, java.math.RoundingMode.HALF_UP);
+        BigDecimal back = gross.multiply(pct).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
+        return back.compareTo(fee) == 0 ? pct.stripTrailingZeros().toPlainString() + "%" : null;
     }
 
     @PostMapping("/withdraw")
@@ -133,8 +215,12 @@ public class ApiClubSettlementController extends BaseController {
         if (clubId == null || clubId <= 0L) return error("缺少俱乐部信息");
         // 提现是取钱，只有主理人本人可以发起——管理员能看账，不能取钱。
         Club club = clubService.selectClubById(clubId);
+        if (memberId == null || memberId <= 0L) return error("请先登录");
+        List<ClubSettlementSummaryRow> ownRows = coopSettlementMapper.selectPersonalClubSummary(clubId, memberId);
+        List<ClubSessionSettlementRow> ownSessions = coopSettlementMapper.selectPersonalClubSessions(clubId, memberId);
+        boolean hasOwnHistory = (ownRows != null && !ownRows.isEmpty()) || (ownSessions != null && !ownSessions.isEmpty());
         if (club == null || !memberId.equals(club.getMemberId())) {
-            return error("仅俱乐部主理人可发起提现");
+            return error(hasOwnHistory ? "请联系平台客服处理本人历史结算提现" : "没有本人的历史结算记录");
         }
         if (!fastWithdrawEnabled) {
             return error("提现通道暂未开放，请联系平台安排打款");
@@ -142,7 +228,7 @@ public class ApiClubSettlementController extends BaseController {
 
         // 与 /summary 同一取数：已打款行按核验过的实付金额累加；任何一行缺数据或实付未核验，
         // 整笔拒绝（fail closed）——不能让页面显示「待核验」的同时按原始应结金额把钱提走。
-        List<ClubSettlementSummaryRow> rows = coopSettlementMapper.selectSummaryByBeneficiary(ROLE_CLUB, clubId);
+        List<ClubSettlementSummaryRow> rows = ownRows;
         if (rows == null) return error("结算数据暂不可用");
         BigDecimal settled = verifiedSettledTotal(rows);
         if (settled == null) return error("存在入账金额未核验的结算，暂不能提现，请联系平台核对");
@@ -194,8 +280,9 @@ public class ApiClubSettlementController extends BaseController {
     /** 钱的显示口径只有这一处真源，前端不做二次拼装。 */
     private static String money(BigDecimal v) {
         if (v == null) throw new IllegalArgumentException("金额未核验");
-        BigDecimal x = v;
-        return "¥ " + x.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString();
+        // 第十二轮 k4(j2 N-13、ROUND8 线索):与小程序同一写法 ——「¥151.32」不带空格,负数「−¥2.00」(减号 U+2212)
+        BigDecimal x = v.setScale(2, BigDecimal.ROUND_HALF_UP);
+        return (x.signum() < 0 ? "\u2212¥" : "¥") + x.abs().toPlainString();
     }
 
     private static String topicName(ClubSettlementSummaryRow row) {

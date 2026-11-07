@@ -1200,7 +1200,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         ImConversationMember mine = lockReadMember(conversation, memberId, conversationId);
         if (mine == null)
         {
-            return;
+            // 第十二轮 k2(j6 N6):不是会话成员,与读消息同一回答,不再回「操作成功」
+            throw new ServiceException("无权查看该会话", 403);
         }
         Long lastId = latest == null ? 0L : latest.getId();
         String cutoff = latest == null ? "1970-01-01 00:00:00.000000" : latest.getVisibleOrderAt();
@@ -1222,7 +1223,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         ImMessage target = readTo == 0 ? null
                 : messageMapper.selectViewerVisibleByIdForShare(conversationId, memberId, readTo);
         ImConversationMember mine = lockReadMember(conversation, memberId, conversationId);
-        if (mine == null) return;
+        if (mine == null) throw new ServiceException("无权查看该会话", 403);   // 第十二轮 k2(j6 N6)
         ImMessage previous = mine.getLastReadMsgId() == null || mine.getLastReadMsgId() <= 0 ? null
                 : messageMapper.selectViewerVisibleByIdForShare(conversationId, memberId, mine.getLastReadMsgId());
         ImMessage cutoff = target != null && latest != null && compareVisibleOrder(target, latest) > 0 ? latest : target;
@@ -1275,6 +1276,11 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         if (memberId == null || conversationId == null)
         {
             return;
+        }
+        // 第十二轮 k2(j6 N6):外人删别人的会话不再回「操作成功」,与读消息同一回答。
+        if (memberMapper.selectByConvAndMember(conversationId, memberId) == null)
+        {
+            throw new ServiceException("无权查看该会话", 403);
         }
         memberMapper.markDeleted(conversationId, memberId);
     }

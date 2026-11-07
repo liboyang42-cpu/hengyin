@@ -24,4 +24,13 @@ function saveLastCity(city) {
 // V-01:没有记住的城市且自动定位失败时固定落到上海市(取自上面的候选城市,不另设配置)。
 const DEFAULT_CITY = CITY_OPTIONS[CITY_OPTIONS.indexOf('上海市')];
 
-module.exports = { CITY_OPTIONS, DEFAULT_CITY, message, readLastCity, saveLastCity };
+// Round5 #7:点过「暂不定位」就记在本机,之后启动不再自动弹;只有用户点城市才再问。
+const DECLINED_KEY = 'home_city_location_declined';
+function readLocationDeclined() {
+  try { return !!wx.getStorageSync(DECLINED_KEY); } catch (e) { return false; }
+}
+function saveLocationDeclined(declined) {
+  try { if (declined) wx.setStorageSync(DECLINED_KEY, 1); else wx.removeStorageSync(DECLINED_KEY); } catch (e) { /* 存储失败只会多问一次 */ }
+}
+
+module.exports = { CITY_OPTIONS, DEFAULT_CITY, message, readLastCity, saveLastCity, readLocationDeclined, saveLocationDeclined };

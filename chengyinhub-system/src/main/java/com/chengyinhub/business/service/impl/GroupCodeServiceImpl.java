@@ -109,32 +109,32 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult redeem(String code, long merchantMemberId, long actorMemberId,
                              String actorRoleCode) {
-        if (merchantMemberId <= 0) return AjaxResult.error("请先登录");
+        if (merchantMemberId <= 0) return refused("请先登录");
         if (actorMemberId <= 0 || actorRoleCode == null || actorRoleCode.trim().isEmpty()) {
-            return AjaxResult.error("核销操作人无效");
+            return refused("核销操作人无效");
         }
         VerifyDynCodeUtil.Result result = VerifyDynCodeUtil.verify(code, System.currentTimeMillis(), dynSecret);
-        if (!result.valid) return AjaxResult.error(result.reason == null ? "核销码无效" : result.reason);
-        if (result.type == null || !result.type.startsWith("group")) return AjaxResult.error("非团核销码");
-        if (!result.type.startsWith("group_v2_")) return AjaxResult.error("团码版本已过期,请领队重新出码");
+        if (!result.valid) return refused(result.reason == null ? "核销码无效" : result.reason);
+        if (result.type == null || !result.type.startsWith("group")) return refused("非团核销码");
+        if (!result.type.startsWith("group_v2_")) return refused("团码版本已过期,请领队重新出码");
         Long topicId = result.regId;
-        if (topicId == null || topicId <= 0) return AjaxResult.error("核销码格式错误");
+        if (topicId == null || topicId <= 0) return refused("核销码格式错误");
 
         Long activityId;
         long leaderId;
         try {
             String[] parts = result.type.split("_", -1);
             if (parts.length != 4 || !"group".equals(parts[0]) || !"v2".equals(parts[1])) {
-                return AjaxResult.error("核销码格式错误");
+                return refused("核销码格式错误");
             }
             activityId = Long.parseLong(parts[2]);
             leaderId = Long.parseLong(parts[3]);
         } catch (Exception e) {
-            return AjaxResult.error("核销码格式错误");
+            return refused("核销码格式错误");
         }
         CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
         if (!isActiveGroupActivity(activity) || !topicId.equals(activity.getTopicId())) {
-            return AjaxResult.error("团码场次无效");
+            return refused("团码场次无效");
         }
 
         CoopOrder order = null;
@@ -144,9 +144,9 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
                 break;
             }
         }
-        if (order == null) return AjaxResult.error("您在本主题没有生效的合作单,无法核销");
+        if (order == null) return refused("您在本主题没有生效的合作单,无法核销");
         if (!canCheckIn(activity, leaderId)) {
-            return AjaxResult.error("该团码的出示人已不再具备场次团码权限");
+            return refused("该团码的出示人已不再具备场次团码权限");
         }
 
         CoopGroupVerify verification = new CoopGroupVerify();
@@ -185,6 +185,11 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
         data.put("coopOrderId", order.getId());
         data.put("alreadyVerified", inserted == 0);
         return AjaxResult.success(inserted == 0 ? "已记录过" : "已记录接待该团", data);
+    }
+
+    /** 写接待台账之前的拒绝,肯定没有记录:带 notRedeemed,商家端直接显示原因,不按「结果待确认」处理。 */
+    private static AjaxResult refused(String message) {
+        return AjaxResult.error(message, java.util.Collections.singletonMap("notRedeemed", true));
     }
 
     private boolean isActiveGroupActivity(CmsActivity activity) {

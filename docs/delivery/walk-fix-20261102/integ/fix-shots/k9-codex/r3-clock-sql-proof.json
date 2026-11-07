@@ -1,0 +1,44 @@
+{
+  "kind": "READ_ONLY_MYSQL_BOUNDARY_CHECK",
+  "database": "cy_e2e_51",
+  "uuid": "19025e57-d901-11f1-b086-9ae8535e5aec",
+  "sessionZone": "+00:00",
+  "fixedUtcClock": "2026-11-05T16:30:00Z",
+  "businessShanghaiClock": "2026-11-06T00:30:00+08:00",
+  "cases": [
+    [
+      2,
+      1,
+      1
+    ],
+    [
+      2,
+      2,
+      1
+    ],
+    [
+      2,
+      3,
+      0
+    ],
+    [
+      1,
+      4,
+      1
+    ],
+    [
+      1,
+      5,
+      0
+    ]
+  ],
+  "expectedMeaning": [
+    "activity ended earlier",
+    "activity ends exactly now",
+    "activity not yet ended",
+    "theme ended yesterday",
+    "theme ends today and is still valid"
+  ],
+  "writes": 0,
+  "sourceFragmentSha256": "945e725085e3264bd719c719479b528c959fa7bdf2c489d105a44c1f8c1850bf"
+}

@@ -128,11 +128,13 @@ test('★色表就是 wxss 里那批标注过的 ds-ok 值 —— 画布读不�
   same('faint', '.ds__k', 'color')
   same('rule', '.ds__hr', 'border-top')
   same('poemBg', '.ds__scratch', 'background')
-  assert.equal(c.deskTop, '#F6F7F9')
-  assert.match(WXSS, /linear-gradient\(180deg, #F6F7F9 0%, #EEF0F3 45%, #E6E8EC 100%\)/,
-    '台面三段渐变与 .ds__bg 同一批 stop')
-  assert.equal(c.deskMid, '#EEF0F3')
-  assert.equal(c.deskBottom, '#E6E8EC')
+  assert.equal(c.deskTop, '#050505')
+  assert.match(WXSS, /\.ds__bg\s*\{[^}]*background:\s*var\(--cy-color-play-page\)/,
+    '屏上的外层台面遵循玩家深色')
+  const tokens = fs.readFileSync(path.join(ROOT, 'style/tokens.wxss'), 'utf8')
+  assert.match(tokens, new RegExp('--cy-color-play-page:\\s*' + c.deskTop), '导出票的台面色仍与默认玩家台面一致')
+  assert.equal(c.deskMid, c.deskTop)
+  assert.equal(c.deskBottom, c.deskTop)
 })
 
 test('★条码用 buildBars 的宽/间隙逐条画:同一张签每次一样,且不溢出票面', () => {
@@ -454,9 +456,9 @@ test('★离屏 canvas 已挂在组件里,并且不进无障碍树', () => {
   assert.doesNotMatch(WXSS, /^canvas\s*\{/m, '组件 wxss 里不许有 tag selector(选择器门禁)')
 })
 
-test('留过签才给保存出口 —— 没留下的票面存进去是半张', () => {
-  assert.match(WXML, /<block wx:if="\{\{claimed\}\}">[\s\S]*?bindtap="onSave"[\s\S]*?<\/block>/,
-    '保存只在留过之后出现(那时票面才是完整的一张)')
+test('领取签后才给保存出口，未领取不能导出', () => {
+  assert.match(WXML, /<cy-btn wx:if="\{\{claimed\}\}"[^>]*bindtap="onSave"/,
+    '保存按钮只在领取后出现')
   global.wx = fakeWx({})
   const p = page({ claimed: false })
   return C.methods.onSave.call(p).then(() => {

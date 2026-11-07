@@ -119,7 +119,9 @@ class RegistrationSeatReplayBoundaryTest {
     @Test void absentTerminalFactKeepsTheExpiredRefusalAndNeverAttemptsANewUse() {
         committed.setStatus(0); committed.setVerifiedAt(null);
         AjaxResult result = scanner.scanDynamicCode(code(true, 1));
-        assertNotEquals(200, result.get("code")); assertEquals("已过期", result.get("msg")); assertFalse(result.containsKey("data"));
+        assertNotEquals(200, result.get("code")); assertEquals("已过期", result.get("msg"));
+        // M-02:过期码只带「未核销」标记，不带任何席位回执
+        assertEquals(java.util.Map.of("notRedeemed", true), result.get("data"));
         verify(seats, never()).markVerified(any()); verifyNoInteractions(audits, points, growth);
         verify(orders, never()).verifyAndSettle(any(), any(), any(), any(), any(), any());
     }

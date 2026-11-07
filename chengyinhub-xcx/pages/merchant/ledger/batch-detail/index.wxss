@@ -1,1 +1,2 @@
 @import '../order-detail/index.wxss';
+.order-detail__spacer { margin-bottom: var(--cy-space-3); } /* 本页只有导航标题(无 cy-page-title):首卡不贴导航底 */

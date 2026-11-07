@@ -221,7 +221,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
             item.put("cover", club.getCover());
             item.put("clubType", club.getClubType());
             item.put("level", club.getLevel());
-            item.put("leaderName", club.getLeaderName());
+            item.put("leaderName", clubService.ownerDisplayName(club));
             item.put("leaderLevel", club.getLeaderLevel());
             item.put("leaderTags", club.getLeaderTags());
             item.put("canDesignRoute", club.getCanDesignRoute());
@@ -371,7 +371,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         List<CmsTopic> ordered = new ArrayList<>();
         int openRecruitCount = 0;
         for (CmsTopic topic : topics) {
-            if (isRecruitOpenAt(topic, recruitNow) && !isEndedAt(topic, recruitNow)) { ordered.add(topic); openRecruitCount += 1; }
+            if (isRecruitOpenAt(topic, recruitNow) && !isEndedAt(topic, recruitNow) && !chapterTermsFrozen(topic)) { ordered.add(topic); openRecruitCount += 1; }
         }
         List<Map<String, Object>> items = new ArrayList<>();
         for (CmsTopic topic : ordered) {
@@ -432,6 +432,16 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
     private static boolean isEndedAt(CmsTopic topic, Date now) {
         Date end = topic == null ? null : topic.getEndDate();
         return end != null && !end.after(now);
+    }
+
+    /**
+     * M-28(2026-11-02):自由探索主题锁价(开卖)后章节一律不再招募,商家点进去只有「暂时没有开放的章节」,
+     * 不算开放商机。判据与章节招募状态同源(TopicLifecycleState.commercialTermsFrozen)。
+     */
+    static boolean chapterTermsFrozen(CmsTopic topic) {
+        return topic != null && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && topic.getLifecycle() != null
+                && com.chengyinhub.business.domain.enums.TopicLifecycleState.commercialTermsFrozen(topic.getLifecycle());
     }
 
     private static boolean isRecruitOpenAt(CmsTopic topic, Date now) {
@@ -569,7 +579,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         result.put("windowDays", windowDays);
         Map<String, Object> window = new LinkedHashMap<>();
         window.put("timezone", MARKETING_TIMEZONE.getId());
-        window.put("basis", "COMPLETE_CALENDAR_DAYS");
+        window.put("basis", MARKETING_WINDOW_BASIS);
         window.put("previousStartInclusive", previousStart.getTime());
         window.put("currentStartInclusive", currentStart.getTime());
         window.put("endExclusive", endExclusive.getTime());
@@ -596,12 +606,17 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         return result;
     }
 
+    /** 近 N 个自然日,含今天(Asia/Shanghai)。 */
+    static final String MARKETING_WINDOW_BASIS = "DAYS_INCL_TODAY";
+
     static MarketingWindow resolveMarketingWindow(int windowDays, Clock clock) {
         if (windowDays != 7 && windowDays != 30) {
             throw new IllegalArgumentException("windowDays仅支持7或30");
         }
         LocalDate today = clock.instant().atZone(MARKETING_TIMEZONE).toLocalDate();
-        ZonedDateTime endExclusive = today.atStartOfDay(MARKETING_TIMEZONE);
+        // check-1104 p2 F-2:窗口含今天(到明天 0 点为止),与店铺参谋 / 核销台账同一规则;
+        // 原先截到今天 0 点,当天核销在营销页恒为 0。
+        ZonedDateTime endExclusive = today.plusDays(1).atStartOfDay(MARKETING_TIMEZONE);
         ZonedDateTime currentStart = endExclusive.minusDays(windowDays);
         ZonedDateTime previousStart = currentStart.minusDays(windowDays);
         return new MarketingWindow(

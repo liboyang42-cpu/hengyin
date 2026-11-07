@@ -22,21 +22,26 @@ function block(src, marker, len) {
 test('BL-120 POST /api/template/topic-template/save-as:表单参数 id+scope,本人+审核通过,回包无 topicId', () => {
   const src = readRepo(API + 'ApiTopicTemplateController.java')
   assert.ok(src.includes('@RequestMapping("/api/template/topic-template")'))
-  const body = block(src, '@PostMapping("/save-as")')
+  const body = block(src, '@PostMapping("/save-as")', 2400)
   // 不是 @RequestBody:小程序 data 平铺 id/scope 即可
   assert.match(body, /public AjaxResult saveAs\(String id, String scope\)/)
   assert.match(body, /MerchantPermission\.PROJECT_MANAGE/)
   assert.match(body, /只能把自己的主题另存为模板/)
   assert.match(body, /topic\.getStatus\(\) != 1/)
-  assert.match(body, /saveAsTemplate\(tid, memberId, 1\)/)
-  assert.match(body, /success\("已另存为主题模板"\)/)
+  // 第十二轮 k1 第 6 项(p3 N1):另存为模板改为复制,回包只带新模板 templateId
+  assert.match(body, /saveAsTemplate\(tid, memberId\)/)
+  assert.match(body, /AjaxResult\.success\("已另存为主题模板", data\)/)
   const end = body.indexOf('\n    }\n')
   assert.doesNotMatch(body.slice(0, end), /topicId/, '回包没有 topicId,前端不得依赖')
 })
 
-test('BL-120 save-as 是置位 is_template(不复制),前端文案不得写成复制一份', () => {
+test('BL-120 save-as 复制成新模板行,只标副本、不动在售原主题(第十二轮 k1 第 6 项,p3 N1)', () => {
   const xml = readRepo('chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml')
-  assert.match(xml, /<update id="updateTopicIsTemplate">\s*update cms_topic set is_template = #\{flag\}\s*where id = #\{id\} and member_id = #\{memberId\}/)
+  assert.match(xml, /<update id="markTopicTemplateCopy">\s*update cms_topic set is_template = 1, status = 1, user_status = 1, check_status = #\{checkStatus\}\s*where id = #\{id\} and member_id = #\{memberId\} and del_flag = 0 and is_template = 0/)
+  const impl = readRepo('chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java')
+  const save = block(impl, 'public Long saveAsTemplate(Long id, Long memberId)', 1200)
+  assert.match(save, /copyCmsTopic\(id, params\)/)
+  assert.doesNotMatch(save, /updateTopicIsTemplate/)
   const js = read('subpackageA/pages/myproject/index.js')
   const wxml = read('subpackageA/pages/myproject/index.wxml')
   for (const s of [js, wxml]) assert.doesNotMatch(s, /另存[^\n]*(复制一份|原主题不受影响)/)

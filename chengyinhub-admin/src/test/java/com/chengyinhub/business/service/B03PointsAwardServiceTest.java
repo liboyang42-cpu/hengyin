@@ -35,6 +35,7 @@ class B03PointsAwardServiceTest {
         ICmsPointsSettingService settings = mock(ICmsPointsSettingService.class);
         CmsPointsSetting rule = new CmsPointsSetting();
         rule.setValue(new BigDecimal("5"));
+        rule.setStatus(1L); // 第十二轮 k1 第 11 项:只有启用规则才发
         when(settings.selectCmsPointsSettingList(any())).thenReturn(Collections.singletonList(rule));
         when(details.selectUmsMemberPointsDetailList(any())).thenReturn(Collections.emptyList());
         when(members.selectPointsForUpdate(1L)).thenReturn(70L);

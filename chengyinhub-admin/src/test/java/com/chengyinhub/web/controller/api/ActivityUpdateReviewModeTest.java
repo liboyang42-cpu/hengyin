@@ -76,6 +76,7 @@ class ActivityUpdateReviewModeTest {
         ActivityReviewPolicy policy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(policy, "configService", config);
 
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
@@ -113,6 +114,31 @@ class ActivityUpdateReviewModeTest {
         verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(false));
     }
 
+    /** check-1104 j5 B2:编辑同样把场地名/地址、票种名称/说明送门禁。 */
+    @Test
+    void editSendsVenueAndTicketTextToTheGate() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        when(wxSec.checkText(org.mockito.ArgumentMatchers.contains("违规"), anyString())).thenReturn("内容含违规词");
+        CmsActivityPublishRequest risky = edit();
+        com.chengyinhub.business.domain.dto.ActivityTicketRequest ticket =
+                new com.chengyinhub.business.domain.dto.ActivityTicketRequest();
+        ticket.setName("单人票");
+        ticket.setDescription("违规说明");
+        risky.setTickets(java.util.Collections.singletonList(ticket));
+        risky.setAddressName("梧桐里书房");
+
+        AjaxResult refused = controller.update(risky);
+
+        assertEquals("活动内容包含违规信息，请修改后重试", refused.get(AjaxResult.MSG_TAG));
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString(), anyBoolean());
+
+        CmsActivityPublishRequest venue = edit();
+        venue.setAddressName("梧桐里书房");
+        venue.setAddress("违规路1号");
+        assertEquals("活动内容包含违规信息，请修改后重试", controller.update(venue).get(AjaxResult.MSG_TAG));
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), anyLong(), anyString(), anyBoolean());
+    }
+
     @Test
     void preReviewValveSendsEditBackToReview() {
         when(config.selectConfigByKey(ActivityReviewPolicy.CONFIG_PRE_REVIEW_ALL)).thenReturn("true");
@@ -134,15 +160,16 @@ class ActivityUpdateReviewModeTest {
         verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
     }
 
+    /** Round5B-3:先发后审编辑审不了 → 退回待审(reReview=true),不再保持在架 + 抽检单。 */
     @Test
-    void reviewRequiredEditLeavesSpotCheckViaRefresh() {
+    void reviewRequiredEditIsHeldForHumanReview() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
 
         AjaxResult result = controller.update(edit());
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(false));
-        verify(auditTaskService).submitOrRefreshActivity(eq(ACTIVITY), eq(MEMBER_ID), eq("post_review_flag"), anyString());
+        verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
+        verify(auditTaskService, never()).submitOrRefreshActivity(eq(ACTIVITY), eq(MEMBER_ID), eq("post_review_flag"), anyString());
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), any());
     }
 }

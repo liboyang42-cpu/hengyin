@@ -219,9 +219,155 @@ class GuestBrowseAnonymousReadTest {
         ApiClubController controller = clubController(mock(IClubService.class), mock(IClubMemberService.class));
         assertEquals("请先登录", controller.join(club(5L, 1)).get(AjaxResult.MSG_TAG));
         assertEquals("请先登录", controller.home().get(AjaxResult.MSG_TAG));
-        com.chengyinhub.business.domain.ClubMember roster = new com.chengyinhub.business.domain.ClubMember();
-        roster.setClubId(5L);
-        assertEquals("请先登录", controller.members(roster).get(AjaxResult.MSG_TAG));
+    }
+
+    // ---------- 第十二轮 k2:游客看俱乐部页的主题 / 帖文 / 成员 / 贡献榜 ----------
+
+    private static void stubJoinPolicy(IClubService clubs, long clubId, int policy) {
+        when(clubs.isJoinPolicySupported()).thenReturn(true);
+        when(clubs.selectJoinPolicy(clubId)).thenReturn(policy);
+    }
+
+    @Test
+    void anonymousMembersOfLivePublicClubAreProjectedWithoutIds() {
+        IClubService clubs = mock(IClubService.class);
+        IClubMemberService members = mock(IClubMemberService.class);
+        when(clubs.selectClubById(5L)).thenReturn(club(5L, 1));
+        stubJoinPolicy(clubs, 5L, 0);
+        com.chengyinhub.business.domain.ClubMember row = new com.chengyinhub.business.domain.ClubMember();
+        row.setClubId(5L);
+        row.setMemberId(AUTHOR);
+        row.setRole(2);
+        row.setStatus(1);
+        row.setNickname("阿城");
+        row.setJoinMessage("我的手机号 13800000000");
+        row.setReviewReason("内部备注");
+        row.setJoinTime(new java.util.Date(1793860877000L)); // 2026-11-05 14:41:17 北京时间
+        when(members.selectClubMemberList(any())).thenReturn(new ArrayList<>(Collections.singletonList(row)));
+        com.chengyinhub.business.domain.ClubMember body = new com.chengyinhub.business.domain.ClubMember();
+        body.setClubId(5L);
+
+        AjaxResult result = clubController(clubs, members).members(body);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        @SuppressWarnings("unchecked")
+        List<java.util.Map<String, Object>> rows = (List<java.util.Map<String, Object>>) result.get("data");
+        assertEquals(1, rows.size());
+        assertEquals("阿城", rows.get(0).get("nickname"));
+        assertEquals(Boolean.TRUE, rows.get(0).get("isOwner"));
+        // 第十二轮 k7:与登录成员名单同一格式,不是 ISO 原样
+        assertEquals("2026-11-05 14:41:17", rows.get(0).get("joinTime"));
+        for (String hidden : new String[]{"memberId", "joinMessage", "reviewReason", "reviewerMemberId", "phone", "id"}) {
+            assertFalse(rows.get(0).containsKey(hidden), hidden + " 不得给游客");
+        }
+    }
+
+    @Test
+    void anonymousRosterAndBoardStayClosedForReviewJoinPrivateOrClosedClubs() {
+        IClubService clubs = mock(IClubService.class);
+        IClubMemberService members = mock(IClubMemberService.class);
+        when(clubs.selectClubById(5L)).thenReturn(club(5L, 1));
+        stubJoinPolicy(clubs, 5L, 1);              // 需审核的团:与已登录非成员一样不开名单
+        Club closed = club(7L, 1);
+        closed.setStatus(0L);                      // 停业
+        when(clubs.selectClubById(7L)).thenReturn(closed);
+        stubJoinPolicy(clubs, 7L, 0);
+        when(clubs.selectClubById(6L)).thenReturn(club(6L, 0));   // 不对外可见
+        ApiClubController controller = clubController(clubs, members);
+        for (long id : new long[]{5L, 6L, 7L}) {
+            com.chengyinhub.business.domain.ClubMember body = new com.chengyinhub.business.domain.ClubMember();
+            body.setClubId(id);
+            assertNotEquals(200, controller.members(body).get(AjaxResult.CODE_TAG), "club " + id);
+            java.util.Map<String, Object> board = new java.util.HashMap<>();
+            board.put("id", id);
+            assertNotEquals(200, controller.leaderboard(board).get(AjaxResult.CODE_TAG), "club " + id);
+        }
+        verify(members, never()).selectClubMemberList(any());
+        verify(members, never()).selectClubLeaderboard(anyLong(), any());
+    }
+
+    @Test
+    void anonymousLeaderboardDropsMemberIds() {
+        IClubService clubs = mock(IClubService.class);
+        IClubMemberService members = mock(IClubMemberService.class);
+        when(clubs.selectClubById(5L)).thenReturn(club(5L, 1));
+        stubJoinPolicy(clubs, 5L, 0);
+        java.util.Map<String, Object> row = new java.util.HashMap<>();
+        row.put("memberId", AUTHOR);
+        row.put("nickname", "阿城");
+        row.put("score", 12);
+        when(members.selectClubLeaderboard(5L, null)).thenReturn(new ArrayList<>(Collections.singletonList(row)));
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("id", 5L);
+
+        AjaxResult result = clubController(clubs, members).leaderboard(body);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        @SuppressWarnings("unchecked")
+        List<java.util.Map<String, Object>> rows = (List<java.util.Map<String, Object>>) result.get("data");
+        assertEquals("阿城", rows.get(0).get("nickname"));
+        assertEquals(12, rows.get(0).get("score"));
+        assertFalse(rows.get(0).containsKey("memberId"));
+    }
+
+    @Test
+    void guestPostProjectionDropsIdsAndViewerFlags() {
+        com.chengyinhub.business.domain.ClubPost post = new com.chengyinhub.business.domain.ClubPost();
+        post.setId(11L);
+        post.setContent("周末一起走");
+        post.setAuthorMemberId(AUTHOR);
+        post.setIsLiked(false);
+        post.setViewerReposted(false);
+        post.setIsFollowTheUser(0);
+        com.chengyinhub.business.domain.vo.ClubPostRepostItemVO repost = new com.chengyinhub.business.domain.vo.ClubPostRepostItemVO();
+        repost.setReposterMemberId(AUTHOR);
+        ApiClubController.guestPostProjection(Collections.singletonList(post), Collections.singletonList(repost));
+        assertEquals("周末一起走", post.getContent());
+        assertNull(post.getAuthorMemberId());
+        assertNull(post.getIsLiked());
+        assertNull(post.getViewerReposted());
+        assertNull(post.getIsFollowTheUser());
+        assertNull(repost.getReposterMemberId());
+    }
+
+    @Test
+    void anonymousPostsAndTopicsOfClosedOrPrivateClubAreNotServed() {
+        IClubService clubs = mock(IClubService.class);
+        Club closed = club(7L, 1);
+        closed.setStatus(0L);
+        when(clubs.selectClubById(7L)).thenReturn(closed);
+        when(clubs.selectClubById(6L)).thenReturn(club(6L, 0));
+        ApiClubController controller = clubController(clubs, mock(IClubMemberService.class));
+        for (long id : new long[]{6L, 7L}) {
+            com.chengyinhub.business.domain.ClubPost posts = new com.chengyinhub.business.domain.ClubPost();
+            posts.setClubId(id);
+            assertEquals("这个俱乐部只对成员开放", controller.postList(posts).get(AjaxResult.MSG_TAG));
+            assertEquals("这个俱乐部只对成员开放", controller.topics(club(id, null)).get(AjaxResult.MSG_TAG));
+        }
+    }
+
+    @Test
+    void guestTopicProjectionDropsAuthorIdAndViewerFlags() {
+        CmsTopic topic = new CmsTopic();
+        topic.setName("公开主题");
+        topic.setMemberId(AUTHOR);
+        topic.setIsLike(1);
+        ApiClubController.guestTopicProjection(Collections.singletonList(topic));
+        assertEquals("公开主题", topic.getName());
+        assertNull(topic.getMemberId());
+        assertNull(topic.getIsLike());
+    }
+
+    @Test
+    void clubTopicListNeverCarriesTheAuthorsLoginName() {
+        CmsTopic topic = new CmsTopic();
+        topic.setName("公开主题");
+        topic.setCreateBy("13900000003");
+        topic.setUpdateBy("13900000003");
+        ApiClubController.publicTopicAudit(Collections.singletonList(topic));
+        assertEquals("公开主题", topic.getName());
+        assertNull(topic.getCreateBy());
+        assertNull(topic.getUpdateBy());
     }
 
     // ---------- 广场动态详情 ----------
@@ -298,9 +444,13 @@ class GuestBrowseAnonymousReadTest {
                 }
             }
         }
+        // 第十二轮 k2(业主 2026-11-05「游客可看俱乐部页的全部内容」):主题 / 帖文 / 成员 / 贡献榜四条读加入。
         assertEquals(new TreeSet<>(Arrays.asList("ApiClubController#detail", "ApiClubController#list",
+                "ApiClubController#topics", "ApiClubController#postList", "ApiClubController#members",
+                "ApiClubController#leaderboard",
                 "ApiCreativeSquareController#viewCreativeSquareInfo", "ApiTopicController#topicInfo")), anonymous);
         assertEquals(new TreeSet<>(Arrays.asList("/api/club/detail", "/api/club/list",
+                "/api/club/topics", "/api/club/post/list", "/api/club/members", "/api/club/leaderboard",
                 "/api/creativesquare/info", "/api/topic/info-to-user")), anonymousPaths);
         // @Anonymous 的放行不分 HTTP 方法:同一路径上若还挂着别的(写)方法,就会被顺带放行。
         for (String path : anonymousPaths) {

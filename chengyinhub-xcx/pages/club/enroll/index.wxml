@@ -1,5 +1,6 @@
 <view class="theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
@@ -13,7 +14,7 @@
             sub="{{permissionDeniedSub}}" retry="" bind:back="goBack" auto-back custom-back />
 
   <block wx:elif="{{permissionState === 'ready'}}">
-  <view class="sub">{{clubName || '我的俱乐部'}} · {{ teams.length || 0 }} 个团 · 报名费由平台担保托管</view>
+  <view class="sub">{{clubName || '我的俱乐部'}} · {{ teams.length || 0 }} 个团</view>
   <view wx:if="{{refreshing}}" class="refreshing cy-refresh-float" aria-role="status" aria-live="polite">正在更新报名名册…</view>
   <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error" kind="{{staleErrorKind}}" title="报名名册暂未更新"
                    sub="{{staleError}}" action="重试更新" bind:action="retryLoadTeams" />
@@ -49,11 +50,20 @@
         <cy-error load-failure wx:elif="{{team._detailState === 'network-error'}}" title="网络连接失败" retry="重试" bind:retry="retryTeamDetail" data-index="{{ti}}" data-topic-id="{{team.id}}" />
         <block wx:elif="{{team._detailState === 'ready'}}">
           <view class="team-summary" wx:if="{{team.summary}}">
-            {{team.summary.teamStatusText}} · 已支付 {{team.summary.paidCount != null ? team.summary.paidCount + ' 人' : '—'}} · 可退款 {{ team.summary.refundableCount || 0 }} 人
+            已支付 {{team.summary.paidCount != null ? team.summary.paidCount + ' 人' : '—'}} · 可退款 {{ team.summary.refundableCount || 0 }} 人
             <text wx:if="{{team.summary.signupDeadlineText}}"> · 截止 {{team.summary.signupDeadlineText}}</text>
           </view>
+          <!-- C-13:每场票款,与库逐分对账;只有主理人收得到金额。 -->
+          <view class="money" wx:if="{{team.sessionMoney.length}}">
+            <view class="money-row" wx:for="{{team.sessionMoney}}" wx:key="activityId" wx:for-item="m">
+              <view class="money-label ep1">{{m.label || '场次'}}<text class="money-tag" wx:if="{{m.cancelled}}">已取消</text></view>
+              <view class="money-nums">
+                <text>实收 {{m.paidText}}</text><text>已退 {{m.refundedText}}</text><text class="money-net">净额 {{m.netText}}</text>
+              </view>
+            </view>
+          </view>
           <cy-empty wx:if="{{team.tickets.length === 0}}" class="enroll-inline-empty" size="sm" title="该团暂无票种" />
-          <view class="ticket" wx:for="{{team.tickets}}" wx:key="name" wx:for-item="tk">
+          <view class="ticket" wx:for="{{team.tickets}}" wx:key="name" wx:for-item="tk" wx:if="{{!tk.hideEmpty}}">
             <view class="ticket-top">
               <view class="ticket-name ep1">{{tk.name || '票种'}}</view>
               <!-- 「已报名 12 人 · 上限 20」两行压成一行分数:同屏比对多个票种时,
@@ -63,7 +73,7 @@
             <!-- 报名者名单 -->
             <view class="regs" wx:if="{{tk.regs.length > 0}}">
               <view class="reg" wx:for="{{tk.regs}}" wx:key="id" wx:for-item="r">
-                <view class="reg-l" bindtap="goUserInfo" data-id="{{r.memberId}}" aria-role="button" aria-label="查看 {{r.nickname || '玩家'}} 的资料" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="reg-l" bindtap="goCheckinDetail" data-regid="{{r.id}}" aria-role="button" aria-label="查看 {{r.nickname || '玩家'}} 的报名与退款" hover-class="cy-pressed" hover-stay-time="80">
                   <cy-avatar class="reg-ava" size="56" src="{{r.avatar || '/images/d_profile.png'}}" />
                   <text class="reg-name ep1">{{r.nickname || '玩家'}}</text>
                 </view>

@@ -9,8 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -33,7 +33,8 @@ class SettlementRefundDeadlineGateSqlTest {
     void activitySettlementSelectionWaitsForTheSevenDayComplaintPeriod() throws Exception {
         String sql = select("mapper/business/CmsActivityMapper.xml", "selectActivitiesForSettlement");
         assertTrue(sql.contains("activity.end_date <= date_sub(now(), interval ${@com.chengyinhub.business.support.fundsholdpolicy@withdrawable_after_end_days} day)"), sql);
-        assertEquals(14, FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS);
+        assertEquals(14, FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS,
+                "2026-11-05 业主:所有路径结束后 14 天可提现");
     }
 
     @Test

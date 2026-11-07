@@ -67,6 +67,9 @@ public interface CmsRegistrationMapper
 
     public BigDecimal selectTotalSalesByActivityId(Long activityId);
 
+    /** 部分退款(集合前 24 小时内退 50%)后主办方保留的实付部分合计,结算时补进销售额。 */
+    BigDecimal selectRetainedSalesAfterPartialRefundByActivityId(Long activityId);
+
 
     /**
      * 查询活动/主题报名
@@ -76,8 +79,23 @@ public interface CmsRegistrationMapper
      */
     public CmsRegistration selectCmsRegistrationById(Long id);
 
+    /**
+     * j6 N1:同一会员、同一场次(owner)上还能被扣款的订单 —— 已发起微信支付(payment_status=1,过期未对账关单也算,
+     * 微信侧可能仍可付)或尚未发起、未过期的待支付单(payment_status=0)。返回最早一笔的 id,没有返回 null。
+     */
+    public Long selectChargeablePendingOrderId(@org.apache.ibatis.annotations.Param("memberId") Long memberId,
+                                               @org.apache.ibatis.annotations.Param("ownerType") Integer ownerType,
+                                               @org.apache.ibatis.annotations.Param("ownerId") Long ownerId,
+                                               @org.apache.ibatis.annotations.Param("requestId") String requestId);
+
+    /** j6 N1:同会员同场次、比这一单更晚建且已支付成功的另一笔订单数(同一多票父单的兄弟行不算)。 */
+    public int countNewerPaidSiblingOrders(@org.apache.ibatis.annotations.Param("registration") CmsRegistration registration);
+
     /** 事务内当前读；CAS 失败后必须用它看见竞争事务刚提交的终态，不能用 RR 快照普通读。 */
     public CmsRegistration selectCmsRegistrationByIdForUpdate(Long id);
+
+    /** 第十三轮 m6:场次已付未退的报名 id(与 selectTotalSalesByActivityId 同口径)。 */
+    List<Long> selectPaidUnrefundedIdsByActivityId(Long activityId);
 
     /** Parent scope is already locked; current read in stable order, independent of an older RR view. */
     List<CmsRegistration> selectCancellationRowsForUpdate(@Param("ownerType") Long ownerType,
@@ -88,10 +106,6 @@ public interface CmsRegistrationMapper
     int markFirstSuccessfulScan(@Param("id") Long id, @Param("memberId") Long memberId,
                                 @Param("ownerType") Long ownerType, @Param("ownerId") Long ownerId,
                                 @Param("scanTime") java.util.Date scanTime);
-
-    /** 同一源主题的一账号有效探索票；调用方先锁 cms_topic 行，再做当前读。 */
-    public List<Long> selectLiveExploreTicketIdsForUpdate(@Param("topicId") Long topicId,
-                                                          @Param("memberId") Long memberId);
 
     /**
      * 活动(owner_type=2)上仍活着的报名所引用的票 id:payment_status 0待支付/1支付中/2已支付。
@@ -115,7 +129,7 @@ public interface CmsRegistrationMapper
                                   @Param("ownerType") Long ownerType,
                                   @Param("ownerId") Long ownerId);
 
-    /** 一账号一票的全入口串行点；返回空即源 topic 不存在。 */
+    /** ③ 售票入口的源 topic 行锁；返回空即源 topic 不存在。 */
     public Long lockExploreTopicForUpdate(@Param("topicId") Long topicId);
 
     /**
@@ -233,6 +247,10 @@ public interface CmsRegistrationMapper
      * 同一笔订单（parent_order_no）下的全部 registration 记录
      */
     public List<CmsRegistration> selectByParentOrderNo(@Param("parentOrderNo") String parentOrderNo);
+
+    /** 订单详情/列表只读:每个父订单号下有几张报名(一张 = 单票单,可按本行现金算取消退回额)。 */
+    public List<java.util.Map<String, Object>> countByParentOrderNos(
+            @Param("parentOrderNos") java.util.Collection<String> parentOrderNos);
 
     /**
      * 活动取消冻结同一父订单当前全量报名状态，避免核销/支付并发改变人工退款资格快照。

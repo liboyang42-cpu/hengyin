@@ -1,0 +1,22 @@
+{
+ "transfer": {
+  "response": {
+   "code": 200,
+   "msg": "操作成功",
+   "data": {
+    "id": 1,
+    "clubId": 7002,
+    "fromOwnerMemberId": 9008,
+    "toOwnerMemberId": 9004,
+    "reason": "R3D 证明:结算付给当前主理人",
+    "transferredAt": "2026-11-03T11:33:02.243+08:00"
+   }
+  },
+  "club": [
+   [
+    7002,
+    9004
+   ]
+  ]
+ }
+}

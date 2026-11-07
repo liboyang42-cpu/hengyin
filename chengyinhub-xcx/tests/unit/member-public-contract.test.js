@@ -19,8 +19,8 @@ function read(relativePath) {
 // 2026-08-07 D23 按用户裁决恢复为邀请记录；数据仍只能消费 PublicMemberVO 白名单字段。
 test('邀请记录只消费公开昵称/头像，不把私密会员字段带回页面', () => {
   const route = read('subpackageMember/myinvite/myinvite.wxml');
-  const wxml = read('components/cy/scene-member-invite-history/index.wxml');
-  const js = read('components/cy/scene-member-invite-history/index.js');
+  const wxml = read('subpackageA/components/scene-member-invite-history/index.wxml');
+  const js = read('subpackageA/components/scene-member-invite-history/index.js');
   assert.match(route, /邀请记录/);
   assert.match(js, /\/api\/user\/invite_list/);
   assert.match(wxml, /item\.nickname/);

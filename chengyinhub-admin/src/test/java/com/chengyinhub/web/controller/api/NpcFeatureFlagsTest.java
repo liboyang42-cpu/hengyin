@@ -104,7 +104,9 @@ class NpcFeatureFlagsTest {
                         "drops", "roamNpcEvent", "roamNpcChat", "roamDemoPois",
                         "finishNearbyRoute", "clubMembership", "communityPostRead",
                         "communityPostWrite", "shopNpcChat", "shopNpcVoice",
-                        "shopNpcVoiceAvailable", "merchantNpcChat", "merchantDeskProducts")),
+                        "shopNpcVoiceAvailable", "merchantNpcChat", "merchantDeskProducts",
+                        // R11 p1 F-7:小程序设置页「发票」与参与详情「自由探索权益」入口读这两个键
+                        "userInvoice", "freeExploreBundle")),
                 new java.util.TreeSet<>(data.keySet()),
                 "下发键集合必须与小程序/App 的受控功能键逐项一致");
         assertFalse(data.containsKey("selfPlay"), "无人读取的假开关不得再下发(X09)");
@@ -128,6 +130,32 @@ class NpcFeatureFlagsTest {
         Map<String, Object> data = (Map<String, Object>) r.get(AjaxResult.DATA_TAG);
 
         assertEquals(false, data.get("finishNearbyRoute"), "没有配置时不得改变全量用户的完赛体验");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void invoiceAndBundleEntriesFollowTheSameSwitchesAsTheirEndpoints() {
+        // R11 p1 F-7:入口读的就是端点闸那一个开关
+        config("false", "false");
+        ApiConfigController c = new ApiConfigController();
+        ReflectionTestUtils.setField(c, "configService", configService);
+        ReflectionTestUtils.setField(c, "npcFeatureFlags", flags);
+        ReflectionTestUtils.setField(c, "communityPostFeatureGate", communityPostFeatureGate);
+        Map<String, Object> off = (Map<String, Object>) c.features().get(AjaxResult.DATA_TAG);
+        assertEquals(false, off.get("userInvoice"));
+        assertEquals(false, off.get("freeExploreBundle"));
+
+        com.chengyinhub.business.service.compliance.ComplianceFeatureSwitches invoice =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.compliance.ComplianceFeatureSwitches.class);
+        org.mockito.Mockito.when(invoice.userInvoiceOn()).thenReturn(true);
+        com.chengyinhub.business.service.support.FreeExploreBundleSwitches bundle =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.FreeExploreBundleSwitches.class);
+        org.mockito.Mockito.when(bundle.ledgerEnabled()).thenReturn(true);
+        ReflectionTestUtils.setField(c, "complianceFeatureSwitches", invoice);
+        ReflectionTestUtils.setField(c, "freeExploreBundleSwitches", bundle);
+        Map<String, Object> on = (Map<String, Object>) c.features().get(AjaxResult.DATA_TAG);
+        assertEquals(true, on.get("userInvoice"));
+        assertEquals(true, on.get("freeExploreBundle"));
     }
 
     @Test

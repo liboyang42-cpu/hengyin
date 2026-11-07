@@ -561,19 +561,25 @@
         <result property="correctedArrivedAt" column="correctedArrivedAt" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 本场必要名册：只取昵称与到场事实，禁止手机号/邮箱/地址。 -->
+    <!-- 本场必要名册：只取昵称、报名时填写的姓名(C-05,服务端解密后下发 displayName)与到场事实；禁止邮箱/地址。
+         手机号(2026-11-02 用户)只给 Service 判权:有 CUSTOMER_PHONE_READ 才下发完整号码,否则 sanitizeRosterRow 删掉。 -->
     <select id="selectPaidRoster" resultMap="attendanceRowResult">
         select paid.member_id as memberId,
-               coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', paid.member_id)) as nickname,
+               coalesce(nullif(m.nickname, ''), nullif(m.name, ''), '城瘾用户') as nickname,
                coalesce(ck.arrived_at, paid.verified_at, progress.arrived_at) as baseArrivedAt,
                case when ck.arrived_at is not null or paid.verified_count &gt; 0
                       or progress.arrived_count &gt; 0 then 1 else 0 end as baseArrived,
                corr.new_arrived as correctedArrived,
                corr.new_arrived_at as correctedArrivedAt,
-               coalesce(corr.version, 0) as correctionVersion
+               coalesce(corr.version, 0) as correctionVersion,
+               paid.real_name_stored as realNameStored,
+               paid.signed_at as registrationTime,
+               m.phone as phone
         from (
           select member_id, sum(verification_status = 1) as verified_count,
-                 min(case when verification_status = 1 then verification_time else null end) as verified_at
+                 min(case when verification_status = 1 then verification_time else null end) as verified_at,
+                 max(nullif(real_name, '')) as real_name_stored,
+                 min(create_time) as signed_at
           from cms_registration
           where owner_type = 2 and owner_id = #{activityId}
             and payment_status = 2 and registration_status = 2
@@ -596,7 +602,7 @@
 
     <select id="selectWaitlistRoster" resultType="java.util.LinkedHashMap">
         select w.member_id as memberId,
-               coalesce(nullif(m.nickname, ''), nullif(m.name, ''), concat('成员#', w.member_id)) as nickname,
+               coalesce(nullif(m.nickname, ''), nullif(m.name, ''), '城瘾用户') as nickname,
                w.ticket_id as ticketId, w.state, w.joined_at as joinedAt,
                w.offer_expires_at as offerExpiresAt
         from club_event_waitlist w
@@ -770,18 +776,59 @@
         select distinct r.member_id
         from cms_registration r
         inner join cms_activity a on a.id = r.owner_id
-          and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId} and a.del_flag = 0 and a.end_date &lt;= now()
+          and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId} and a.del_flag = 0 and a.start_date &lt;= now()
         left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
         left join club_event_attendance_correction corr on corr.id = (
           select max(c2.id) from club_event_attendance_correction c2
           where c2.activity_id = a.id and c2.member_id = r.member_id
         )
         where r.owner_type = 2 and r.payment_status = 2 and r.registration_status = 2
-          and case when corr.id is not null then corr.new_arrived = 0 else ck.id is null end
+          <!-- C-10/C-25:与本场名册同一个到场事实(签到/核销/节点进度,更正优先);开场后即可通知未到的人,不必等散场。 -->
+          and case when corr.id is not null then corr.new_arrived = 0 else (ck.id is null
+            and not exists (select 1 from cms_registration v where v.owner_type = 2 and v.owner_id = a.id
+              and v.member_id = r.member_id and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+            and not exists (select 1 from player_node_progress p where p.activity_id = a.id
+              and p.member_id = r.member_id and p.status = 1 and p.del_flag = 0)) end
         order by r.member_id asc
     </select>
 
-    <!-- INACTIVE = 正常成员/owner 在本俱乐部最近 90 天没有已支付活动报名。 -->
+    <!-- INACTIVE = 正常成员/owner 近 90 天既没入会(建俱乐部),在本俱乐部也没有报名成功的已支付单。
+         第十二轮 k9(p3 N16):原来只认挂 club_id 的活动场次单、只认 payment_time,
+         今天入会、今天买了本俱乐部主题票(owner_type=1)或主题自办场次票的成员也被算成「未活跃」。
+         报名归属与 ClubCrmMapper.ClubRegistrationScope 及本文件名册同口径:本俱乐部主题 / 本俱乐部场次 /
+         本俱乐部主题发布者自办(club_id 为空)的场次。调用方先把候选集命名为 members。 -->
+    <sql id="inactiveMemberCondition">
+        not exists (
+          select 1 from club_member jm
+          where jm.club_id = #{clubId} and jm.member_id = members.member_id
+            and jm.status = 1 and jm.del_flag = 0
+            and jm.join_time &gt;= date_sub(now(), interval 90 day)
+        )
+        and not exists (
+          select 1 from club jc
+          where jc.id = #{clubId} and jc.member_id = members.member_id
+            and jc.create_time &gt;= date_sub(now(), interval 90 day)
+        )
+        and not exists (
+          select 1 from cms_registration r
+          where r.member_id = members.member_id
+            and r.payment_status = 2 and r.registration_status = 2
+            and coalesce(r.payment_time, r.create_time) &gt;= date_sub(now(), interval 90 day)
+            and (
+              (r.owner_type = 2 and exists (
+                select 1 from cms_activity a
+                where a.id = r.owner_id and a.del_flag = 0
+                  and (a.club_id = #{clubId} or (a.club_id is null and exists (
+                    select 1 from cms_topic t
+                    where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id)))))
+              or
+              (r.owner_type = 1 and exists (
+                select 1 from cms_topic t
+                where t.id = r.owner_id and t.del_flag = 0 and t.club_id = #{clubId}))
+            )
+        )
+    </sql>
+
     <select id="selectInactiveRecipients" resultType="long">
         select members.member_id
         from (
@@ -791,13 +838,7 @@
           select cm.member_id from club_member cm
           where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
         ) members
-        where not exists (
-          select 1 from cms_registration r
-          inner join cms_activity a on a.id = r.owner_id and a.club_id = #{clubId} and a.del_flag = 0
-          where r.owner_type = 2 and r.member_id = members.member_id
-            and r.payment_status = 2 and r.registration_status = 2
-            and r.payment_time &gt;= date_sub(now(), interval 90 day)
-        )
+        where <include refid="inactiveMemberCondition"/>
         order by members.member_id asc
     </select>
 
@@ -818,15 +859,15 @@
     <update id="claimNotificationOutbox">
         update club_event_notification_outbox
         set next_attempt_at = #{leaseUntil}, update_time = now()
-        where delivery_id = #{deliveryId} and status = 'PENDING' and next_attempt_at &lt;= now()
+        where delivery_id = #{deliveryId} and status = 'PENDING' and next_attempt_at &lt;= #{now}
     </update>
 
-    <select id="selectDispatchableByCampaign" resultMap="deliveryResult">
+    <select id="selectDispatchableByCampaign" resultMap="deliveryResult" useCache="false" flushCache="true">
         select d.id, d.campaign_id, d.recipient_member_id, d.channel, d.status,
                d.attempt_count, d.message_id, d.last_error, d.sent_at, d.version
         from club_event_notification_delivery d
         inner join club_event_notification_outbox o on o.delivery_id = d.id
-          and o.status = 'PENDING' and o.next_attempt_at &lt;= now()
+          and o.status = 'PENDING' and o.next_attempt_at &lt;= #{now}
         where d.campaign_id = #{campaignId} and d.status in ('PENDING','FAILED') and d.attempt_count &lt; 5
         order by d.id asc limit #{limit} for update
     </select>
@@ -892,11 +933,18 @@
                   inner join cms_activity a on a.id = nc.activity_id
                     and a.club_id = nc.club_id and a.del_flag = 0
                     and a.cancel_time is not null and a.publish_status = 0
-                  inner join club_event_occurrence o on o.activity_id = a.id and o.status = 'CANCELLED'
-                  inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
                   inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
                   where nc.id = #{campaignId} and nc.club_id = #{clubId}
                     and nc.activity_id = #{activityId} and nc.audience_type = 'REGISTERED'
+                    <!-- C-08:open-session 开的独立场次没有 series/occurrence(F-36),取消后照样要通知已退款的人;
+                         有 occurrence 的场次仍须是本俱乐部系列里已取消的那一行。 -->
+                    and (exists (
+                          select 1 from club_event_occurrence o
+                          inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
+                          where o.activity_id = a.id and o.status = 'CANCELLED'
+                        ) or not exists (
+                          select 1 from club_event_occurrence o2 where o2.activity_id = a.id
+                        ))
                     and nc.request_id like 'cancel-r-%'
                     <include refid="notificationRecipientNotBanned"/>
                   union all
@@ -924,11 +972,18 @@
                   inner join cms_activity a on a.id = nc.activity_id
                     and a.club_id = nc.club_id and a.del_flag = 0
                     and a.cancel_time is not null and a.publish_status = 0
-                  inner join club_event_occurrence o on o.activity_id = a.id and o.status = 'CANCELLED'
-                  inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
                   inner join club c on c.id = a.club_id and c.status = 1 and c.del_flag = 0
                   where nc.id = #{campaignId} and nc.club_id = #{clubId}
                     and nc.activity_id = #{activityId} and nc.audience_type = 'WAITLIST'
+                    <!-- C-08:open-session 开的独立场次没有 series/occurrence(F-36),取消后照样要通知已退款的人;
+                         有 occurrence 的场次仍须是本俱乐部系列里已取消的那一行。 -->
+                    and (exists (
+                          select 1 from club_event_occurrence o
+                          inner join club_event_series s on s.id = o.series_id and s.club_id = a.club_id
+                          where o.activity_id = a.id and o.status = 'CANCELLED'
+                        ) or not exists (
+                          select 1 from club_event_occurrence o2 where o2.activity_id = a.id
+                        ))
                     and nc.request_id like 'cancel-w-%'
                     <include refid="notificationRecipientNotBanned"/>
                   union all
@@ -956,7 +1011,7 @@
                   select 1 from cms_registration r
                   inner join cms_activity a on a.id = r.owner_id
                     and (a.club_id = #{clubId} or (a.club_id is null and exists (select 1 from cms_topic t where t.id = a.topic_id and t.club_id = #{clubId} and t.member_id = a.member_id))) and a.id = #{activityId}
-                    and a.del_flag = 0 and a.end_date &lt;= now()
+                    and a.del_flag = 0 and a.start_date &lt;= now()
                   inner join club c on c.id = #{clubId} and c.status = 1 and c.del_flag = 0
                   left join club_lead_checkin ck on ck.activity_id = a.id and ck.member_id = r.member_id
                   left join club_event_attendance_correction corr on corr.id = (
@@ -965,7 +1020,11 @@
                   )
                   where r.owner_type = 2 and r.member_id = #{recipientMemberId}
                     and r.payment_status = 2 and r.registration_status = 2
-                    and case when corr.id is not null then corr.new_arrived = 0 else ck.id is null end
+                    and case when corr.id is not null then corr.new_arrived = 0 else (ck.id is null
+            and not exists (select 1 from cms_registration v where v.owner_type = 2 and v.owner_id = a.id
+              and v.member_id = r.member_id and v.payment_status = 2 and v.registration_status = 2 and v.verification_status = 1)
+            and not exists (select 1 from player_node_progress p where p.activity_id = a.id
+              and p.member_id = r.member_id and p.status = 1 and p.del_flag = 0)) end
                     <include refid="notificationRecipientNotBanned"/>
                 )
             </when>
@@ -984,14 +1043,7 @@
                       and cm.member_id = #{recipientMemberId}
                       <include refid="notificationRecipientNotBanned"/>
                   ) members
-                  where not exists (
-                    select 1 from cms_registration r
-                    inner join cms_activity a on a.id = r.owner_id
-                      and a.club_id = #{clubId} and a.del_flag = 0
-                    where r.owner_type = 2 and r.member_id = members.member_id
-                      and r.payment_status = 2 and r.registration_status = 2
-                      and r.payment_time &gt;= date_sub(now(), interval 90 day)
-                  )
+                  where <include refid="inactiveMemberCondition"/>
                 )
             </when>
             <otherwise>select 0</otherwise>

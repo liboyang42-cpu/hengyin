@@ -81,9 +81,21 @@ class ClubPostSiteFeedMyBatisTest {
         assertEquals(List.of(11L), ids(VIEWER, 13L, 2));
     }
 
+    @Test
+    void authorFilterReturnsOnlyThatAuthorsVisiblePosts() {
+        // 第十轮 f3 j5 H4:我的主页 → 帖文。只回本人帖文,可见性 / 删除口径不变(14 已删、71 已退出的不公开俱乐部不回)。
+        assertEquals(List.of(42L), ids(VIEWER, null, 50, VIEWER));
+        assertEquals(List.of(81L, 31L, 13L, 11L), ids(VIEWER, null, 50, AUTHOR));
+        assertEquals(List.of(), ids(VIEWER, null, 50, BLOCKED_BY_VIEWER), "拉黑口径不因作者过滤放开");
+    }
+
     private List<Long> ids(long viewer, Long beforeId, int limit) {
+        return ids(viewer, beforeId, limit, null);
+    }
+
+    private List<Long> ids(long viewer, Long beforeId, int limit, Long authorId) {
         try (SqlSession session = factory.openSession(true)) {
-            return session.getMapper(ClubPostMapper.class).selectSiteFeed(viewer, beforeId, limit)
+            return session.getMapper(ClubPostMapper.class).selectSiteFeed(viewer, beforeId, limit, authorId)
                     .stream().map(ClubPost::getId).collect(Collectors.toList());
         }
     }

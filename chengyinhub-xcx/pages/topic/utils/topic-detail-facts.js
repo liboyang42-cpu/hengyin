@@ -1,3 +1,31 @@
+const { chinaParts } = require('../../../utils/datetime.js')
+
+/**
+ * P-30(2026-11-02 第三轮):场次卡写「场次」自己的时间(cms_activity 开始–结束),不写主题票的售卖窗口。
+ * 按开始时间升序;同日压成「MM-DD HH:mm–HH:mm」,跨日两端全写;最多三场,其余写「等 N 场」。
+ * 一场都读不出时间时返回空串,调用方保留原来的票时间。
+ */
+function sessionWindowsText(activities) {
+  const pad = (n) => (n < 10 ? '0' + n : '' + n)
+  const rows = (Array.isArray(activities) ? activities : [])
+    .map((a) => ({ s: chinaParts(a && a.startDate), e: chinaParts(a && a.endDate) }))
+    .filter((r) => r.s)
+    .sort((a, b) => (a.s.year - b.s.year) || (a.s.month - b.s.month) || (a.s.day - b.s.day)
+      || (a.s.hours - b.s.hours) || (a.s.minutes - b.s.minutes))
+  if (!rows.length) return ''
+  const day = (p) => pad(p.month) + '-' + pad(p.day)
+  const clock = (p) => pad(p.hours) + ':' + pad(p.minutes)
+  const one = (r) => {
+    const head = day(r.s) + ' ' + clock(r.s)
+    if (!r.e) return head
+    return day(r.e) === day(r.s) && r.e.year === r.s.year
+      ? head + '–' + clock(r.e)
+      : head + ' ~ ' + day(r.e) + ' ' + clock(r.e)
+  }
+  const shown = rows.slice(0, 3).map(one).join(' / ')
+  return rows.length > 3 ? shown + ' 等 ' + rows.length + ' 场' : shown
+}
+
 function positiveNumber(value) {
   const number = Number(value)
   return Number.isFinite(number) && number > 0 ? number : 0
@@ -77,4 +105,4 @@ function buildTopicStatBar(info, opts) {
   return cells
 }
 
-module.exports = { buildTopicStatBar }
+module.exports = { buildTopicStatBar, sessionWindowsText }

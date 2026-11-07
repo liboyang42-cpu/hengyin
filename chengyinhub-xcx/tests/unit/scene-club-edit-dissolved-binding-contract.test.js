@@ -26,7 +26,7 @@ function walkWxml(dir, out = []) {
 
 // 负控的另一半:事件名要是被改掉/删掉,下面的断言就成了恒真。先钉住事件真的存在。
 test('scene-club-edit 仍然对外抛 dissolved 事件', () => {
-  const componentJs = fs.readFileSync(path.join(ROOT, 'components/cy/scene-club-edit/index.js'), 'utf8')
+  const componentJs = fs.readFileSync(path.join(ROOT, 'pages/club/components/cy/scene-club-edit/index.js'), 'utf8')
   assert.match(
     componentJs,
     /triggerEvent\(\s*['"]dissolved['"]/,

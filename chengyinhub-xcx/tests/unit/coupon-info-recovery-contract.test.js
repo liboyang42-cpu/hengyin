@@ -11,6 +11,8 @@ const ROOT = path.resolve(__dirname, '../..')
 const JS_PATH = 'subpackageMember/couponInfo/couponInfo.js'
 const WXML_PATH = 'subpackageMember/couponInfo/couponInfo.wxml'
 const JSON_PATH = 'subpackageMember/couponInfo/couponInfo.json'
+// 独立测试保留表单的失败恢复合同;上线默认关闭另有回归测试。
+require(path.join(ROOT, 'utils/coupon-form.js')).CREATION_ENABLED = true
 
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8')

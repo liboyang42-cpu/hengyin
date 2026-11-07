@@ -1,0 +1,846 @@
+{
+  "calls": [
+    {
+      "at": 1793875739861,
+      "op": "play",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+      "time": 0,
+      "volume": 0.25
+    },
+    {
+      "at": 1793875744489,
+      "op": "pause",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+      "time": 3.125895,
+      "volume": 0.25
+    },
+    {
+      "at": 1793875744490,
+      "op": "play",
+      "tag": "VIDEO",
+      "src": "[fixture transport]/__oss/upload/8178236e70314225ae853af500003dfa.mp4",
+      "time": 0,
+      "volume": 1
+    },
+    {
+      "at": 1793875747890,
+      "op": "pause",
+      "tag": "VIDEO",
+      "src": "[fixture transport]/__oss/upload/8178236e70314225ae853af500003dfa.mp4",
+      "time": 3,
+      "volume": 1
+    },
+    {
+      "at": 1793875747891,
+      "op": "play",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+      "time": 3.125918,
+      "volume": 0.25
+    },
+    {
+      "at": 1793875747891,
+      "op": "pause",
+      "tag": "AUDIO",
+      "src": "",
+      "time": 0,
+      "volume": 1
+    },
+    {
+      "at": 1793875747891,
+      "op": "play",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+      "time": 0,
+      "volume": 1
+    },
+    {
+      "at": 1793875775550,
+      "op": "pause",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+      "time": 8,
+      "volume": 1
+    },
+    {
+      "at": 1793875779810,
+      "op": "pause",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+      "time": 0,
+      "volume": 1
+    },
+    {
+      "at": 1793875779810,
+      "op": "play",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+      "time": 0,
+      "volume": 1
+    },
+    {
+      "at": 1793875837644,
+      "op": "pause",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+      "time": 8,
+      "volume": 1
+    },
+    {
+      "at": 1793875948442,
+      "op": "pause",
+      "tag": "AUDIO",
+      "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+      "time": 0,
+      "volume": 1
+    }
+  ],
+  "samples": [
+    {
+      "at": 1793875739634,
+      "audio": []
+    },
+    {
+      "at": 1793875739834,
+      "audio": []
+    },
+    {
+      "at": 1793875740034,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 0,
+          "volume": 0.25
+        }
+      ]
+    },
+    {
+      "at": 1793875740234,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 0,
+          "volume": 0.25
+        }
+      ]
+    },
+    {
+      "at": 1793875744234,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 2.871387,
+          "volume": 0.25
+        }
+      ]
+    },
+    {
+      "at": 1793875744434,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 3.071702,
+          "volume": 0.25
+        }
+      ]
+    },
+    {
+      "at": 1793875744634,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": true,
+          "time": 3.125918,
+          "volume": 0.25
+        }
+      ],
+      "video": [
+        {
+          "event": "play",
+          "time": 0,
+          "at": 1793875744493
+        },
+        {
+          "event": "waiting",
+          "time": 0,
+          "at": 1793875744493
+        }
+      ]
+    },
+    {
+      "at": 1793875744835,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": true,
+          "time": 3.125918,
+          "volume": 0.25
+        }
+      ],
+      "video": [
+        {
+          "event": "play",
+          "time": 0,
+          "at": 1793875744493
+        },
+        {
+          "event": "waiting",
+          "time": 0,
+          "at": 1793875744493
+        }
+      ]
+    },
+    {
+      "at": 1793875747635,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": true,
+          "time": 3.125918,
+          "volume": 0.25
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 2.292441,
+          "at": 1793875747161
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.558085,
+          "at": 1793875747427
+        }
+      ]
+    },
+    {
+      "at": 1793875747835,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": true,
+          "time": 3.125918,
+          "volume": 0.25
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 2.558085,
+          "at": 1793875747427
+        },
+        {
+          "event": "timeupdate",
+          "time": 2.823537,
+          "at": 1793875747692
+        }
+      ]
+    },
+    {
+      "at": 1793875748035,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 3.282285,
+          "volume": 0.1
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": false,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875748235,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 3.482231,
+          "volume": 0.1
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": false,
+          "time": 0.016064,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875775235,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 6.170772,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": true,
+          "time": 8,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875775435,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 6.37088,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": true,
+          "time": 8,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875775635,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 6.571107,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875775835,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 6.770963,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875779435,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 2.267595,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875779635,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 2.467051,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8fd037972ac146beb0a80bdb254ac8b1.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875779835,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 2.66731,
+          "volume": 0.1
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": false,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875780035,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 2.867455,
+          "volume": 0.1
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": false,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875837436,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 3.541949,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 8,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875837635,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 3.741709,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 8,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875837836,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 3.942654,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875838036,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 4.142419,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875948234,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 0.888683,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875948435,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 1.088842,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875948637,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 1.291013,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    },
+    {
+      "at": 1793875948837,
+      "audio": [
+        {
+          "src": "[fixture transport]/__oss/upload/dd3b36eb701a4b0682ec40c75406c684.mp3",
+          "paused": false,
+          "time": 1.490804,
+          "volume": 0.25
+        },
+        {
+          "src": "[fixture transport]/__oss/upload/8d37be60e62c447e908f491165807276.mp3",
+          "paused": true,
+          "time": 0,
+          "volume": 1
+        }
+      ],
+      "video": [
+        {
+          "event": "timeupdate",
+          "time": 3,
+          "at": 1793875747890
+        },
+        {
+          "event": "ended",
+          "time": 3,
+          "at": 1793875747890
+        }
+      ]
+    }
+  ],
+  "videos": [
+    {
+      "event": "play",
+      "time": 0,
+      "at": 1793875744493
+    },
+    {
+      "event": "waiting",
+      "time": 0,
+      "at": 1793875744493
+    },
+    {
+      "event": "timeupdate",
+      "time": 0.166128,
+      "at": 1793875745035
+    },
+    {
+      "event": "timeupdate",
+      "time": 0.431484,
+      "at": 1793875745300
+    },
+    {
+      "event": "timeupdate",
+      "time": 0.696718,
+      "at": 1793875745566
+    },
+    {
+      "event": "timeupdate",
+      "time": 0.96232,
+      "at": 1793875745831
+    },
+    {
+      "event": "timeupdate",
+      "time": 1.227873,
+      "at": 1793875746097
+    },
+    {
+      "event": "timeupdate",
+      "time": 1.495459,
+      "at": 1793875746364
+    },
+    {
+      "event": "timeupdate",
+      "time": 1.761061,
+      "at": 1793875746630
+    },
+    {
+      "event": "timeupdate",
+      "time": 2.02607,
+      "at": 1793875746895
+    },
+    {
+      "event": "timeupdate",
+      "time": 2.292441,
+      "at": 1793875747161
+    },
+    {
+      "event": "timeupdate",
+      "time": 2.558085,
+      "at": 1793875747427
+    },
+    {
+      "event": "timeupdate",
+      "time": 2.823537,
+      "at": 1793875747692
+    },
+    {
+      "event": "timeupdate",
+      "time": 3,
+      "at": 1793875747890
+    },
+    {
+      "event": "ended",
+      "time": 3,
+      "at": 1793875747890
+    }
+  ],
+  "route": "pages/play/index"
+}

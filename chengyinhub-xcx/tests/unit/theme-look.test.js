@@ -286,3 +286,17 @@ test('故事文字动效(2026-10-30 业主定稿原型 v3):每段滑进来播一
   assert.equal(page.data.formData.look, '', '回到跟随风格 = 不存')
   assert.match(read('pages/publish/components/look-preview/index.wxml'), /class="lp__story tfx tfx--\{\{fx\}\} \{\{fxIn \? 'is-in' : ''\}\}"/)
 })
+
+test('发布预览使用本主题章节，选风格面板仍使用示例', () => {
+  let config;
+  global.Component = value => { config = value; };
+  const file = '../../pages/publish/components/look-preview/index.js';
+  delete require.cache[require.resolve(file)]; require(file); delete global.Component;
+  const page = { data: {}, properties: {}, _stop() {}, _playText() {}, setData(patch) { Object.assign(this.data, patch); } };
+  const own = { kick: '自己的主题', title: '自己的章节', story: '自己的正文', opt: '' };
+  const observe = config.observers['show, look, content'];
+  observe.call(page, true, null, own); clearTimeout(page._t);
+  assert.deepEqual(page.data.sample, own);
+  observe.call(page, true, null, null); clearTimeout(page._t);
+  assert.equal(page.data.sample.title, '提篮桥的方舟');
+});

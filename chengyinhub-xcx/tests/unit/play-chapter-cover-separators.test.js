@@ -57,3 +57,27 @@ test('无章节及节点图时主章节为空，卡片沿用主章节回退结�
   assert.equal(withNode.cover, nodeCover);
   assert.equal(page.buildChapterCards({}, withNode)[0].cover, nodeCover);
 });
+
+test('主章节切换到卡片读模型时保留本章节点封面，不污染选章卡片或其他章节', () => {
+  const nodes = [{ chapterId: 11, imgUrl: `${nodeCover};${second}` },
+    { chapterId: 12, imgUrl: second }];
+  const page = { ...definition, data: { ...definition.data, nodes } };
+  const chapter = page.buildChapter({ chapters: [{ chapterId: 11 }] }, nodes);
+  const cards = page.buildChapterCards({ chapters: [{ chapterId: 11 }, { chapterId: 12 }, { chapterId: 13 }] }, chapter);
+  page.data.chapterCards = cards;
+  assert.equal(chapter.cover, nodeCover);
+  assert.equal(page._chapterFromCard(cards[0]).cover, nodeCover);
+  assert.equal(page._chapterFromCard(cards[1]).cover, second);
+  assert.equal(page._chapterFromCard(cards[2]).cover, '');
+  assert.deepEqual(cards.map(card => card.cover), ['', '', '']);
+  cards[0].cover = first;
+  assert.equal(page._chapterFromCard(cards[0]).cover, first, '作者章节图仍优先');
+});
+
+test('冻结历史没有原封面时不补当前节点图', () => {
+  const page = { ...definition, data: { ...definition.data, nodes: [{ chapterId: 11, imgUrl: nodeCover }] } };
+  const original = { id: '11', title: '旧章节', history: true, blocks: [], cover: '' };
+  page._chapterReadCursor = { id: '11' };
+  page._currentCompletedHistory = () => ({ chapters: [original] });
+  assert.equal(page._chapterFromCard({ id: 11, title: '新章节', cover: first }).cover, '');
+});

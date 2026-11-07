@@ -23,7 +23,7 @@ function mount() {
     wxLogin: async () => ({code: 'renewal'}), exchangeCode: async () => ({code:401}) });
   global.getApp = () => app; global.wx = wx;
   delete require.cache[require.resolve('../../utils/deregister-flow.js')];
-  const file = path.join(root, 'components/cy/scene-settings-deregister/index.js');
+  const file = path.join(root, 'pages/deregister/components/scene-settings-deregister/index.js');
   vm.runInNewContext(fs.readFileSync(file,'utf8'), {Component: value => { def = value; }, require:createRequire(file), console});
   const page = Object.assign({}, def.methods, {data: JSON.parse(JSON.stringify(def.data)),
     setData(patch, callback) {Object.assign(this.data,patch); if(callback) callback();} });
@@ -115,7 +115,7 @@ test('F-R2S-07 BLOCKED card offers an in-place recheck', () => {
   reply(h.requests.at(-1),200,{code:200,data:{status:'NORMAL'}});
   reply(h.requests.at(-1),200,{code:200,data:{status:'ELIGIBLE',blockers:[],verificationMethod:'SMS'}});
   assert.equal(h.page.data.status, 'ELIGIBLE');
-  const wxml = fs.readFileSync(path.join(root, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(root, 'pages/deregister/components/scene-settings-deregister/index.wxml'), 'utf8');
   assert.match(wxml, /bindtap="recheck">我已处理，重新检查</);
 });
 test('F-R2S-07 after cooling-off ends but before the batch runs, cancel stays available', () => {
@@ -127,7 +127,7 @@ test('F-R2S-07 after cooling-off ends but before the batch runs, cancel stays av
   require('../../utils/modal.js').show = () => { modals++; };
   try { h.page.cancel(); } finally { require('../../utils/modal.js').show = realShow; }
   assert.equal(modals, 1, '冷静期满但批次未执行时仍可发起撤销确认');
-  const wxml = fs.readFileSync(path.join(root, 'components/cy/scene-settings-deregister/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(root, 'pages/deregister/components/scene-settings-deregister/index.wxml'), 'utf8');
   assert.match(wxml, /<cy-btn class="deregister-action"[^>]*bindtap="cancel">撤销注销申请/);
   assert.doesNotMatch(wxml, /coolingOffEnded\}\}"[^>]*bindtap="cancel"/);
   assert.match(wxml, /冷静期已结束，账号将在随后的凌晨批次中完成注销；完成前仍可撤销/);

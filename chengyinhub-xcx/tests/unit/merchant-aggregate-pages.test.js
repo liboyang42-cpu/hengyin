@@ -39,7 +39,7 @@ function analyticsPayload(windowDays = 30) {
     windowDays,
     window: {
       timezone: 'Asia/Shanghai',
-      basis: 'COMPLETE_CALENDAR_DAYS',
+      basis: 'DAYS_INCL_TODAY',
       previousStartInclusive,
       currentStartInclusive,
       endExclusive,

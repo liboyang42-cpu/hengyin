@@ -3,7 +3,7 @@
   <cy-sheet show="{{show}}" handle closable="{{false}}" mask-closable="{{!saving}}" footer bind:close="onClose">
     <view class="ts__head">
       <text class="ts__title">{{title}}</text>
-      <text class="ts__count">已选 {{_sel.length}}</text>
+      <text class="ts__count">已选 {{_sel.length}}{{max > 0 ? '/' + max : ''}}</text>
     </view>
     <text wx:if="{{hint}}" class="ts__hint {{hintError ? 'ts__hint--error' : ''}}" aria-role="{{hintError ? 'alert' : ''}}">{{hint}}</text>
     <view wx:if="{{loading && !_rows.length}}" class="ts__state">正在载入…</view>
@@ -25,6 +25,7 @@
           >
             <image wx:if="{{item.iconSrc}}" class="ts__icon" src="{{item.iconSrc}}" mode="aspectFit" />
             <text class="ts__label">{{item.label}}</text>
+            <text wx:if="{{item.primary}}" class="ts__primary">主</text>
             <image wx:if="{{item.checked && _checkSrc}}" class="ts__check" src="{{_checkSrc}}" mode="aspectFit" />
           </view>
         </view>

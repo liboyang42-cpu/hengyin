@@ -124,11 +124,11 @@ test('项目卡带票分享:sourceClubId 取本页 clubId,clubCode 与期次一�
   assert.deepEqual(route.query, { id: '77', sourceClubId: '9', clubCode: 'club-9-t77' })
 })
 
-test('无 id 的链接:不发 id:null 请求,并给出「缺少俱乐部」提示', () => {
+test('无 id 的链接:不发 id:null 请求,并给出可见的「链接已失效」(第十轮 f3 j6 F3,不再留白 + toast)', () => {
   const h = loadDetail()
   h.page.onLoad({})
   assert.equal(h.requests.filter((r) => r.url === '/api/club/detail').length, 0)
-  assert.equal(h.page.data.notFound, true)
+  assert.equal(h.page.data.clubGoneText, '链接已失效')
 })
 
 // ---- SC-CL-SHARE(已修):失效/无效链接给显式状态;网络失败仍走既有 load-failure(F-W1-12) ----
@@ -146,7 +146,9 @@ test('期望:失效/无效分享链接显示明确状态(如「俱乐部不存�
   assert.doesNotMatch(gone[0], /load-failure/, '失效态不能是空白占位')
   assert.match(gone[0], /title="\{\{clubGoneText\}\}"/)
   // 返回入口 = 导航栏常驻返回(goBack;分享直达页栈只有一页时 switchTab 回发现页),失效态不另加按钮
-  assert.match(gone[0], /sub="[^"]*返回[^"]*"/, '失效态要指明怎么返回')
+  // 第十二轮 k9(p1 N-6):不写「请返回重新进入」副行,给一个真的「返回」按钮
+  assert.doesNotMatch(gone[0], /请返回重新进入/)
+  assert.match(gone[0], /retry="返回" bind:retry="goBack"/, '失效态要有返回出口')
   assert.match(wxml, /<cy-nav-bar custom-back bind:back="goBack" wx:if="\{\{!\(groupCodeVisible && groupCodeState !== 'selecting'\)\}\}">/)
   h.page.goBack()
   assert.deepEqual(h.nav, ['back', '/pages/talent/list/index'], '分享直达(无上一页)也必须能回去')
@@ -163,8 +165,8 @@ test('期望:失效/无效分享链接显示明确状态(如「俱乐部不存�
   assert.equal(offline.page.data.clubGoneText, '')
 })
 
-test('[现状记录] 俱乐部详情未实现 onShareTimeline,朋友圈分享不可用', () => {
+test('第七轮 C 第 1 项:俱乐部详情实现 onShareTimeline,只发主页 id', () => {
   const h = loadDetail()
   assert.equal(typeof h.definition.onShareAppMessage, 'function')
-  assert.equal(typeof h.definition.onShareTimeline, 'undefined')
+  assert.equal(typeof h.definition.onShareTimeline, 'function')
 })

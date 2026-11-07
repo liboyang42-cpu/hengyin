@@ -7,11 +7,11 @@ const EXPECTED_ROUTES = {
   'home-action-activity': '/pages/activity/list/index',
 };
 
+// R11 p1 F-12:横幅标题就是动作,不再配一行说明
 const HOME_ACTION_BANNERS = [
   {
     id: 'home-action-club',
     title: '成为俱乐部',
-    subtitle: '聚集同好，发起属于你们的城市活动',
     route: EXPECTED_ROUTES['home-action-club'],
     motionSrc: 'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-club.gif',
     poster: '/images/home-banner-club.jpg',
@@ -19,7 +19,6 @@ const HOME_ACTION_BANNERS = [
   {
     id: 'home-action-merchant',
     title: '成为商家',
-    subtitle: '把空间、服务和好内容带给更多玩家',
     route: EXPECTED_ROUTES['home-action-merchant'],
     motionSrc: 'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-merchant.gif',
     poster: '/images/home-banner-merchant.jpg',
@@ -27,7 +26,6 @@ const HOME_ACTION_BANNERS = [
   {
     id: 'home-action-activity',
     title: '和朋友报名活动',
-    subtitle: '和朋友一起，发现附近正在发生的有趣体验',
     route: EXPECTED_ROUTES['home-action-activity'],
     motionSrc: 'https://www.chengyinhub.com/prod-api/profile/home-banners/home-banner-friends.gif',
     poster: '/images/home-banner-friends.jpg',

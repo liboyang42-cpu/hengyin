@@ -1,0 +1,61 @@
+{
+  "time": "2026-11-05T19:15:23.061133+00:00",
+  "sourceSha": "1c60516771a6e2d50290ab44134005bdfe96c109",
+  "topicId": 990033,
+  "configVersion": 11,
+  "publishedConfigVersion": 1,
+  "auditTaskId": 34,
+  "auditStatus": 1,
+  "themeAudioRef": "media-asset:15",
+  "chapters": [
+    {
+      "id": 128,
+      "name": "序章",
+      "audioUrl": "media-asset:24",
+      "videoUrl": "media-asset:26",
+      "videoPosterUrl": "media-asset:25"
+    },
+    {
+      "id": 129,
+      "name": "R14-VIDEO-听雨站",
+      "audioUrl": "media-asset:32",
+      "videoUrl": "",
+      "videoPosterUrl": ""
+    },
+    {
+      "id": 130,
+      "name": "R14-VIDEO-雨停结局",
+      "audioUrl": "media-asset:27",
+      "videoUrl": "media-asset:29",
+      "videoPosterUrl": "media-asset:28"
+    }
+  ],
+  "cmsProjectionReadback": {
+    "configVersion": 11,
+    "publishedConfigVersion": 1,
+    "themeAudioPath": "/upload/a91e653bf6c54f258ce86b8011ba7a8e.mp3",
+    "chapters": [
+      {
+        "id": 128,
+        "name": "序章",
+        "audioUrlPath": "/upload/0e5f48bf5bb74940ac8b4b0bf96651f8.mp3",
+        "videoUrlPath": "/upload/87bf5fc4cd5b427c812451f8cf00db4f.mp4",
+        "videoPosterUrlPath": "/upload/fe8f27169fae46b4a779220a3f876072.jpg"
+      },
+      {
+        "id": 129,
+        "name": "R14-VIDEO-听雨站",
+        "audioUrlPath": "/upload/cc21ed7cb0224c828a560aa01bf6a5c3.mp3",
+        "videoUrlPath": "",
+        "videoPosterUrlPath": ""
+      },
+      {
+        "id": 130,
+        "name": "R14-VIDEO-雨停结局",
+        "audioUrlPath": "/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+        "videoUrlPath": "/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "videoPosterUrlPath": "/upload/68dd8b2efd264e4b8376166c638d2b3f.jpg"
+      }
+    ]
+  }
+}

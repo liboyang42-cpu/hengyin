@@ -12,7 +12,8 @@
     "cy-scene-game-coupon-wallet": "/subpackageMember/components/cy/scene-game-coupon-wallet/index",
     "cy-scene-play-activity-detail": "/subpackageMember/components/cy/scene-play-activity-detail/index",
     "cy-scene-roam-poi-detail": "/subpackageMember/components/cy/scene-roam-poi-detail/index",
-    "cy-scene-route-content": "/components/cy/scene-route-content/index",
+    "cy-scene-route-content": "/subpackageMember/components/cy/scene-route-content/index",
+    "cy-result-sheet": "/components/cy/result-sheet/index",
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-skeleton": "/components/cy/skeleton/index",
@@ -30,6 +31,7 @@
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",
     "cy-scene-roam-poi-detail": "view",
-    "cy-scene-game-coupon-wallet": "view"
+    "cy-scene-game-coupon-wallet": "view",
+    "cy-scene-route-content": "view"
   }
 }

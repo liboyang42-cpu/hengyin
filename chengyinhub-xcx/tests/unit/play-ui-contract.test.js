@@ -321,7 +321,7 @@ test('完成页明确显示通关状态并保留照片邮票', () => {
   // 避免有人把回落删掉、让接口一挂完成页就不说自己完成没完成。
   // 2026-10-27:服务端按主题规则(主线 N 站)判了通关时(topicCompleted)同样写「已通关」,不因选做站没走完写成「本章完成」
   // 2026-10-28 完成页改版(业主定稿):标签只说本章完成 / 已通关,「你已完成第 N 个主题」进城市探索卡的里程碑标题
-  assert.match(playWxml, /class="finsheet__result \{\{allDone \|\| topicCompleted \? 'is-win' : ''\}\}">\{\{allDone \|\| topicCompleted \? '已通关' : '本章完成'\}\}/)
+  assert.match(playWxml, /class="finsheet__result \{\{allDone \|\| topicCompleted \? 'is-win' : ''\}\}">\{\{allDone \|\| topicCompleted \? '已通关' : \(finishChapterDone \? '本章完成' : '已结束'\)\}\}/)  // R11 g1(j4 F8)
   assert.match(playWxml, /class="finish-milestone__head">\s*<text>\{\{milestone\.title\}\}<\/text>/)
   assert.match(playWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finishPhotos\}\}"/)
   assert.match(roamWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finish\.photos\}\}"/)
@@ -336,18 +336,47 @@ test('三模式完成卡继续使用真实腾讯地图展示完整路径', () =>
   assert.match(roamWxml, /template name="archRoute"[\s\S]*?archSegs/)
 })
 
-test('主题游玩只在玩家开始或前往时请求定位，并保留扫码降级', () => {
+test('主题游玩进页先说明定位用途，确认前不采集，并保留扫码降级', () => {
   const playJs = readXcx('pages/play/index.js')
   const playWxml = readXcx('pages/play/index.wxml')
   const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData(data) {'))
   const previewData = playJs.slice(playJs.indexOf('  applyPreviewData(data) {'), playJs.indexOf('  normNode('))
 
-  assert.doesNotMatch(loadData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
+  // V3-11 进游戏先说明用途；真正的 SDK 采集仍只能从明确确认回调进入。
+  assert.doesNotMatch(loadData, /initLocation\(|wx\.getLocation/)
+  assert.match(loadData, /if \(!that\._entryLocationOffered && d\.registered !== false && that\._playable && !that\.data\.allDone\s*&& that\.data\.runState !== 'paused' && nodes\.some\(node => !node\.done && node\.lat && node\.lng\)\) \{\s*that\._entryLocationOffered = true;\s*that\.requestPlayLocation\(\)/)
   assert.doesNotMatch(previewData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
   assert.match(playJs, /startNav\(node\)\s*\{[\s\S]*?this\.requestPlayLocation\(\)/)
   assert.match(playJs, /onScanArrive\(\)\s*\{[\s\S]*?this\.scanArrive\(node\)/)
-  assert.match(playJs, /content:\s*'仅在你主动开始游玩后/)
+  assert.match(playJs, /content:\s*'仅在本游玩页前台获取位置[^']*锁屏、切到后台、暂停、结束或离开后停止/)
   assert.match(playWxml, /bindtap="onScanArriveFromTools"[^>]*aria-label="扫码到达"/)
+})
+
+test('真实游玩定位方法在用途弹窗前和取消后均零 GPS，明确确认才调用 SDK', (t) => {
+  const previous = { getApp: global.getApp, Page: global.Page, wx: global.wx }
+  t.after(() => Object.assign(global, previous))
+  const dialogs = [], locations = []
+  let definition
+  global.getApp = () => ({ globalData: {}, getUserID: () => 7 })
+  global.Page = value => { definition = value }
+  global.wx = { getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
+    showModal: options => dialogs.push(options), getLocation: options => locations.push(options) }
+  const file = require.resolve('../../pages/play/index.js')
+  delete require.cache[file]
+  require(file)
+  const page = Object.assign({}, definition, { data: structuredClone(definition.data) })
+  page.data.topicId = 31
+  page.setData = patch => Object.assign(page.data, patch)
+  page.requestPlayLocation()
+  assert.equal(dialogs.length, 1)
+  assert.equal(locations.length, 0)
+  dialogs[0].success({ confirm: false })
+  assert.equal(locations.length, 0)
+  assert.equal(page.data.gpsOk, false)
+  page.requestPlayLocation()
+  dialogs[1].success({ confirm: true })
+  assert.equal(locations.length, 1, 'positive control must reach the real SDK caller after consent')
+  assert.equal(locations[0].type, 'gcj02')
 })
 
 // 2026-09-22 用户裁决「play 页去地图去底栏,城市定向打开即故事流」:
@@ -570,7 +599,7 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   const js = readXcx('pages/play/index.js')
 
   // ① 通关卡统计格:该格的数字必须是 doneCount(2026-10-22 起格首可带一枚字形图标)
-  const cell = wxml.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = wxml.match(/<view class="fst(?: fst--hero)?"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell, '找不到「点亮坐标」统计格')
   assert.equal(cell[1], 'doneCount', '「点亮坐标」绑的必须是 doneCount,不能是 total')
 
@@ -584,13 +613,9 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   // ③ 行为口径:doneCount 只数 done 的节点(部分完成时必然 < total)
   assert.match(js, /doneCount: nodes\.filter\(\(n\) => n\.done\)\.length/)
 
-  // ④ 「本章N处旧址已全部点亮」那句仍可用 total —— 它被 allDone 门控,此时 total===doneCount,
-  //    不是同一个 bug,别顺手改错。门控现在走 HUD 槽位(hud-slots.wxs BOTTOM_CARD),
-  //    所以这里断言「这句话只在 banner 槽里出」+「banner 槽的判据确实是 allDone」,
-  //    而不是抄一遍 wx:if 的字面量(字面量一变就假红,且证明不了门还在)。
-  // 2026-08-15 F3:banner 文案改为按 mode 三元(探店日不再念「旧址点亮」),
-  // 契约意图不变 —— 全量口径的那句话仍只出现在 allDone 门控的 banner 槽里,且仍用 total。
-  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}本章' \+ total \+ '处旧址已全部点亮/)
+  // ④ 互斥路线可在只完成一侧时 allDone，未选锁定站不计入点亮数。
+  // 横幅沿用 HUD 的 allDone 门控，但和通关卡、分享卡一样只显示 doneCount。
+  assert.match(wxml, /=== 'banner'\}\}"[\s\S]{0,260}: doneCount \+ '处旧址已点亮/)
   assert.match(readXcx('utils/wxs/hud-slots.wxs'), /banner:\s*!screen && !!allDone/)
 })
 
@@ -600,7 +625,7 @@ test('负控:「点亮坐标」退回 total 时上面那条契约必须判红', 
     '<text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>',
     '<text class="fst__v">{{total}}</text><text class="fst__l">点亮坐标</text></view>')
   assert.notEqual(mutated, wxml, '负控必须真的把绑定改回 total')
-  const cell = mutated.match(/<view class="fst">(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
+  const cell = mutated.match(/<view class="fst(?: fst--hero)?"(?: wx:if="\{\{doneCount > 0\}\}")?>(?:<cy-icon class="fst__ic"[^>]*\/>)?<text class="fst__v">\{\{([a-zA-Z]+)\}\}<\/text><text class="fst__l">点亮坐标<\/text><\/view>/)
   assert.ok(cell)
   // 断言「上面那条契约会判红」，判据是抛出 AssertionError 本身，不是它的消息文案。
   // 2026-08-27:原来写的是 /doneCount|total/ 去匹配 Node 内部的错误消息 —— 那串文案

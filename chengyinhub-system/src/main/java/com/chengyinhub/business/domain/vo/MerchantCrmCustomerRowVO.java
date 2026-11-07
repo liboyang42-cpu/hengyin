@@ -8,9 +8,13 @@ import java.util.Date;
 public class MerchantCrmCustomerRowVO {
     private Long memberId;
     private String name;
+    /** 第十二轮 k3(p2 N-6):本店负责联系的报名里填写的姓名(已解密);只在服务端判权后用来替换 name,不下发。 */
+    @JsonIgnore
+    private String signupName;
     private String avatar;
     private String phone;
     private Boolean merchantResponsibleForContact;
+    private Boolean freeExploreShopContact;
     private String contactHint;
     private Integer arrivedCount;
     private Integer pendingCount;
@@ -32,6 +36,9 @@ public class MerchantCrmCustomerRowVO {
     public void setMemberId(Long value) { memberId = value; }
     public String getName() { return name; }
     public void setName(String value) { name = value; }
+    @JsonIgnore
+    public String getSignupName() { return signupName; }
+    public void setSignupName(String value) { signupName = value; }
     public String getAvatar() { return avatar; }
     public void setAvatar(String value) { avatar = value; }
     public String getPhone() { return phone; }
@@ -39,6 +46,10 @@ public class MerchantCrmCustomerRowVO {
     @JsonIgnore
     public Boolean getMerchantResponsibleForContact() { return merchantResponsibleForContact; }
     public void setMerchantResponsibleForContact(Boolean value) { merchantResponsibleForContact = value; }
+    /** 本商家只是该客户自由探索票的参与商家:联系方式走单店授权,不在通用名册下发。 */
+    @JsonIgnore
+    public Boolean getFreeExploreShopContact() { return freeExploreShopContact; }
+    public void setFreeExploreShopContact(Boolean value) { freeExploreShopContact = value; }
     public String getContactHint() { return contactHint; }
     public void setContactHint(String value) { contactHint = value; }
     public Integer getArrivedCount() { return arrivedCount; }

@@ -64,7 +64,7 @@ class MemberFundsStageServiceTest {
     void splitsPendingComplaintPeriodDisputedAndWithdrawable() {
         MemberActivityFundsRow notEnded = row(1L, now.getTime() + DAY, "100", "0", null);
         MemberActivityFundsRow ended = row(2L, now.getTime() - 2 * DAY, "200", "60", null);
-        // 结束 2 天但最晚一张票退款截止在 20 天后 ⇒ 可提现日取较晚的那个
+        // 结束 2 天但最晚一张票退款截止在 20 天后(晚于结束 + 14 天)⇒ 可提现日取较晚的那个
         MemberActivityFundsRow lateDeadline = row(3L, now.getTime() - 2 * DAY, "10", "0", new Date(now.getTime() + 20 * DAY));
         when(holdMapper.selectUnsettledActivityFundsByMember(MEMBER)).thenReturn(Arrays.asList(notEnded, ended, lateDeadline));
         when(holdMapper.selectHeldActivityFundsByMember(MEMBER))
@@ -87,6 +87,7 @@ class MemberFundsStageServiceTest {
         assertEquals(3, period.size(), String.valueOf(period));
         assertEquals(day(now.getTime() + DAY), period.get(0).get("availableDate"));
         assertMoney("30.00", period.get(0).get("amount"));
+        // 2026-11-05 业主:结束后 14 天可提现 ⇒ 结束 2 天的这笔在 12 天后
         assertEquals(day(now.getTime() + 12 * DAY), period.get(1).get("availableDate"));
         assertMoney("180.00", period.get(1).get("amount"));
         assertEquals(day(now.getTime() + 20 * DAY), period.get(2).get("availableDate"));

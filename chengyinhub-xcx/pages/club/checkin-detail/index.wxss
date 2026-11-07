@@ -71,3 +71,5 @@
 .ckd-foot-note { display: block; margin-top: var(--cy-space-2); color: var(--cy-color-text-tertiary);
   font-size: var(--cy-font-caption); line-height: 1.5; }
 
+/* 2026-11-02:有号码权限时的拨号键(≥88rpx 触控) */
+.ckd-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }

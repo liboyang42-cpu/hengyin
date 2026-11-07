@@ -1,6 +1,7 @@
 // 主题画面风格在玩家页的两个入口(theme-look.js 读 / look-transition 转场)。从 index.js 抽出:
 // 那个文件的 UI 门禁基线按行号登记,新方法放这里,index.js 只留单行挂钩,行号不动。
 const themeLook = require('./theme-look.js');
+const mapStyle = require('../../../utils/map-style.js');
 const PUNCT = /^[,.!?;:，。！？；：、」』）)…—]$/;
 const GLYPH = 'ｱｲｳｴｵｶｷｸｹｺ01#%&*<>/=+';
 
@@ -17,6 +18,19 @@ function methods() {
       this.setData({ lookClass: themeLook.lookClass(look), lookTransition: themeLook.resolveTransition(look), lookOn: !look.legacy });
       // 浅底(主题配色白,或纸本 × 黄的牛皮纸):故事流在屏上时状态栏字换黑(见 _storyStatusBar)
       this._storyLight = !look.legacy && (look.palette === 'WHITE' || (look.style === 'PAPER' && look.palette === 'YELLOW'));
+      this._applyMapLook(look);
+    },
+    /** 第九轮 m4 第 2 项:底图按外观选(纸本 paper、夜城 2077、其余 black)。layer-style 不能运行时改:
+     *  第一次外观落定才放地图出来;同一页里外观真变了,先撤地图、下一拍按新样式重建,不在旧图上改属性。 */
+    _applyMapLook(look) {
+      const kind = mapStyle.kindForLook(look), next = mapStyle.mapStyleFor(kind), tone = mapStyle.mapToneFor(kind);
+      const d = this.data || {};
+      const same = d.fmSubkey === next.subkey && d.fmLayerStyle === next.layerStyle;
+      const patch = { fmSubkey: next.subkey, fmLayerStyle: next.layerStyle, fmTone: tone, fmStyleReady: true };
+      if (same || !d.fmStyleReady) { this.setData(patch); return; }
+      this.setData({ fmStyleReady: false });
+      const later = typeof wx !== 'undefined' && wx.nextTick ? wx.nextTick : (fn) => setTimeout(fn, 0);
+      later(() => { if (!this._playDisposed) this.setData(patch); });
     },
     /** 主题配色设了就统一用它,没设(老主题)各章沿用自己的章节配色。 */
     _themePalette(chapterPreset) {

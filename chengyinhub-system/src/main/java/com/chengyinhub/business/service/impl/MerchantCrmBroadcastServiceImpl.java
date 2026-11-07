@@ -97,7 +97,6 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         Set<String> groups = groups(request == null ? null : request.getGroups(), scope);
         Set<Long> memberIds = memberIds(request == null ? null : request.getMemberIds(), scope);
         MerchantCrmCustomerQuery query = query(access.getMerchantId(), request);
-        hostFreeExplore(access.getOwnerMemberId(), query);
         long filterTotal = appMapper.selectOwnedCustomerCount(access.getOwnerMemberId(), query);
         List<MerchantCrmBroadcastCandidate> candidates =
                 audience(access.getOwnerMemberId(), query, scope, groups, memberIds);
@@ -132,7 +131,6 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         String content = content(request == null ? null : request.getContent());
         String requestId = requestId(request == null ? null : request.getRequestId());
         MerchantCrmCustomerQuery query = query(access.getMerchantId(), request);
-        hostFreeExplore(access.getOwnerMemberId(), query);
 
         MerchantCrmBroadcast replay = broadcastMapper.selectByRequestId(access.getMerchantId(), requestId);
         if (replay != null) return exactReplay(replay, access, content);
@@ -415,14 +413,6 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         out.setFailedCount(zero(row.getFailedCount()));
         out.setCreateTime(row.getCreateTime());
         return out;
-    }
-
-    // 自由探索不进通用名册;按主题发、且主题是本商家自己发布的自由探索时,放开这一个主题的买票玩家。
-    private void hostFreeExplore(Long ownerMemberId, MerchantCrmCustomerQuery query) {
-        Long topicId = query.getTopicId();
-        if (topicId != null && appMapper.countFreeExploreTopicPublishedBy(ownerMemberId, topicId) > 0) {
-            query.setHostFreeExploreTopicId(topicId);
-        }
     }
 
     private MerchantCrmCustomerQuery query(Long merchantId, MerchantCrmBroadcastRequest request) {

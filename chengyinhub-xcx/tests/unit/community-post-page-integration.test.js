@@ -51,9 +51,32 @@ test('real favorites caller uses server bookmark cursor and cancellation removes
   h.page.postUnlike({currentTarget:{dataset:{}},detail:{index:0}});await flush();assert.deepEqual(h.page.data.postList.map(r=>r.id),[55]);
 });
 test('real profile own caller preserves pending state and uses own scope without actor parameter', async () => {
-  const h=load('subpackageMember/components/cy/profile/index.js',[{items:[bundle(56,{lifecycle:'CHECKING'})],hasMore:false,nextCursor:56}]);
+  // 第十轮 f3 j5 H4:本人帖文页随后多一路俱乐部帖文请求(下一条测试覆盖),这里给它一个空页。
+  const h=load('subpackageMember/components/cy/profile/index.js',[{items:[bundle(56,{lifecycle:'CHECKING'})],hasMore:false,nextCursor:56},{rows:[],hasMore:false}]);
   h.page.data.isSelf=true;h.page.data.page_no=1;h.page.getCreativesquareList();await flush();
   assert.equal(h.calls[0].url,'/api/v1/community/me/posts');assert.equal(h.calls[0].data.authorId,undefined);assert.equal(h.page.data.list[0].status,0);assert.equal(h.page.data.list[0].lifecycle,'CHECKING');
+});
+// 第十轮 f3 j5 H4:我的 → 帖文 只读 /me/posts(社区帖文),本人发在俱乐部的帖文从不出现,空态说「还没有帖文」。
+test('real profile own caller also shows own club posts; empty state only when both are empty', async () => {
+  const club={id:31,clubId:7,authorMemberId:990005,content:'俱乐部里发的',images:'a.jpg;b.jpg',createTime:'2026-11-04 10:00:00',nickname:'测试'};
+  const h=load('subpackageMember/components/cy/profile/index.js',[{items:[],hasMore:false,nextCursor:null},{rows:[club],hasMore:false}]);
+  h.page.data.isSelf=true;h.page.data.page_no=1;h.page.getCreativesquareList();await flush();await flush();await flush();
+  assert.equal(h.calls[1].url,'/api/club/post/feed');
+  const body=typeof h.calls[1].data==='string'?JSON.parse(h.calls[1].data):h.calls[1].data;
+  assert.equal(body.scope,'all');assert.equal(body.author,'me');
+  assert.equal(h.page.data.nodata,true);assert.equal(h.page.data.clubPostList.length,1);
+  assert.equal(h.page.data.clubPostList[0].contents,'俱乐部里发的');assert.equal(h.page.data.clubPostList[0].source,'club');
+  assert.equal(h.page.data.clubPostList[0].picList.join(';'),'a.jpg;b.jpg');
+  const wxml=fs.readFileSync(path.join(ROOT,'subpackageMember/components/cy/profile/index.wxml'),'utf8');
+  assert.match(wxml,/wx:elif="\{\{nodata && !clubPostList\.length\}\}" title="还没有帖文"/);
+  assert.match(wxml,/wx:for="\{\{clubPostList\}\}"[^>]*bind:detail="onClubPostCardDetail"/);
+  let opened;h.wx.navigateTo=o=>{opened=o.url;};
+  h.page.onClubPostCardDetail({detail:{index:0}});assert.equal(opened,'/pages/club/detail/index?id=7&postId=31');
+});
+test('profile of another member does not request club posts by author', async () => {
+  const h=load('subpackageMember/components/cy/profile/index.js',[{items:[],hasMore:false,nextCursor:null}]);
+  h.page.data.isSelf=false;h.page.data.userId=12;h.page.data.page_no=1;h.page.getCreativesquareList();await flush();await flush();
+  assert.equal(h.calls.length,1);assert.equal(h.page.data.clubPostList.length,0);
 });
 // 2026-10-27 P-20 owner:广场行内发布框撤掉,新建帖只走 cy-post-compose(下一条 real compose caller 覆盖规范确认 / 草稿 / 发布)。
 test('real compose caller submits canonical draft/publish and preserves pending lifecycle', async () => {

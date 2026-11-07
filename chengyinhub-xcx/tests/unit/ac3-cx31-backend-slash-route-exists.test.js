@@ -19,7 +19,7 @@ const SLASH_ROUTE_LITERAL = /"\/((?:pages|subpackage[A-Za-z0-9]*)\/[-A-Za-z0-9_/
 // 已删除页面 → 由客户端改写承接的出处。新增例外必须写明承接方,不得空口豁免。
 const REWRITTEN_BY_CLIENT = {
   'pages/club/dissolution-blockers/index': {
-    file: 'components/cy/scene-club-edit/index.js',
+    file: 'pages/club/components/cy/scene-club-edit/index.js',
     marker: "raw.indexOf('/pages/club/dissolution-blockers/') !== 0",
   },
 }

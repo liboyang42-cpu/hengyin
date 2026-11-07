@@ -41,7 +41,7 @@
       }
     },
     {
-      "game": "竞猜",
+      "game": "预测",
       "type": "predict",
       "action": "submit",
       "serverAction": "SUBMIT_PREDICT",

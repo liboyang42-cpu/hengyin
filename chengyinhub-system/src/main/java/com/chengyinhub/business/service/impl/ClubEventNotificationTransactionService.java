@@ -148,10 +148,12 @@ public class ClubEventNotificationTransactionService implements IClubEventNotifi
     }
 
     private List<ClubEventDelivery> claimCurrent(ClubEventCampaign campaign, int limit, Date leaseUntil) {
-        if (limit <= 0 || limit > 500 || leaseUntil == null || !leaseUntil.after(new Date())) {
+        Date now = new Date();
+        if (limit <= 0 || limit > 500 || leaseUntil == null || !leaseUntil.after(now)) {
             throw new IllegalStateException("notification claim scope missing");
         }
-        List<ClubEventDelivery> rows = mapper.selectDispatchableByCampaign(campaign.getId(), limit);
+        // 到期筛选与租约认领使用同一应用时间，避免数据库会话时区不同导致通知延迟。
+        List<ClubEventDelivery> rows = mapper.selectDispatchableByCampaign(campaign.getId(), limit, now);
         if (rows == null || rows.isEmpty()) return Collections.emptyList();
         for (ClubEventDelivery row : rows) {
             if (row == null || row.getId() == null || !campaign.getId().equals(row.getCampaignId())
@@ -159,7 +161,7 @@ public class ClubEventNotificationTransactionService implements IClubEventNotifi
                     || row.getAttemptCount() == null || row.getAttemptCount() < 0
                     || !(ClubEventDelivery.PENDING.equals(row.getStatus())
                     || ClubEventDelivery.FAILED.equals(row.getStatus()))
-                    || mapper.claimNotificationOutbox(row.getId(), leaseUntil) != 1) {
+                    || mapper.claimNotificationOutbox(row.getId(), leaseUntil, now) != 1) {
                 throw new IllegalStateException("notification claim receipt missing");
             }
         }

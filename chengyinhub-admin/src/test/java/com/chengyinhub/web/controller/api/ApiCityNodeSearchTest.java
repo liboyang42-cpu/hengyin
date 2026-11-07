@@ -172,7 +172,8 @@ class ApiCityNodeSearchTest {
         try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
             statement.execute("create table mms_merchant ("
                     + "id bigint primary key, name varchar(100), logo varchar(255), address varchar(255), "
-                    + "phone varchar(32), category_id bigint, city_role varchar(100))");
+                    + "phone varchar(32), category_id bigint, city_role varchar(100), "
+                    + "status bigint default 1, account_status bigint default 1, del_flag int default 0)");
             statement.execute("create table cms_member_template ("
                     + "id bigint primary key, title varchar(100), description varchar(255), interaction_type varchar(32), "
                     + "validation_method varchar(32), coupon_id bigint, photo_require_desc varchar(255), "

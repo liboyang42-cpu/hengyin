@@ -44,6 +44,7 @@ class ZeroAmountCheckoutRosterV2Test {
         ReflectionTestUtils.setField(checkout, "registrationService", registrationService);
         ReflectionTestUtils.setField(checkout, "registrationOrderService", orderService);
         ReflectionTestUtils.setField(checkout, "wechatPayService", wechatPayService);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
     }
 
     private RegistrationRequest givenOrder(BigDecimal payable, Integer paymentStatus) {
@@ -102,6 +103,7 @@ class ZeroAmountCheckoutRosterV2Test {
         original.setRegistrationStatus(2);
         when(registrationService.completeZeroAmountPaymentForRetry(77L, MEMBER))
                 .thenReturn(Collections.singletonList(original));
+        when(registrationService.selectCmsRegistrationById(77L)).thenReturn(original);
         for (boolean app : new boolean[]{false, true}) {
             RegistrationCheckoutResult result = checkout.retryPayment(MEMBER, 77L, app);
             assertEquals(77L, result.getData().get("registrationId"));

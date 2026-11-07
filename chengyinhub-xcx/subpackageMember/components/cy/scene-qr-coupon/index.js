@@ -147,6 +147,8 @@ Component({
           if (res && res.code == 410) { this.unavailable(res.msg); return }
           if (this._terminalStatus === 1 || this._terminalStatus === 2 || this._terminalStatus === 3) return
           const d = res && res.data
+          // 第十二轮 k9(p1 N-13):别人的券不是「暂时没生成」,重试也不会好;说清楚并只给返回
+          if (res && !ok(res) && /无权查看该券/.test(String(res.msg || ''))) { this._qrOwner = undefined; this.clearTimers(); this.setData({ state: 'notmine', qr: '', qrState: 'error', countdown: 0 }); return }
           if (!ok(res) || !d) { this.fail(res && res.msg); return }
           const parsed = credential.parseQrReply(d)
           if (!parsed) {

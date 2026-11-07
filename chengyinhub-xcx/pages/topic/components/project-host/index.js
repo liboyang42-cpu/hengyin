@@ -1,6 +1,8 @@
 // 主办方「我发的这条路线」视图 —— 纯展示组件,与 project-join 同构。
 const circleTheme = require('../../utils/circle-theme.js');
-const projectProgress = require('../../../../utils/project-progress.js');
+const projectProgress = require('../../utils/project-progress.js');
+const recruitSum = require('../../utils/recruit-summary.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const FREE_STATUS = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'];
 Component({
   options: { addGlobalClass: true },
@@ -52,7 +54,8 @@ Component({
       // 2026-11-01:城市定向也按 lifecycle 走 —— 原来只看审核态,开售后胶囊仍写「招募中」,和底部「去核销」对不上。
       // 招募中招满了仍写「已招满」;没下发 lifecycle 的旧数据退回审核态口径。
       const filled = recruit && recruit.nodeTotal > 0 && recruit.nodeFilled >= recruit.nodeTotal;
-      if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
+      if (projectProgress.isPublishedOrdinaryCity(topic)) text = '已发布';
+      else if (Number.isInteger(lifecycle) && lifecycle >= 0 && lifecycle < FREE_STATUS.length) {
         text = lifecycle === 1 && filled && Number(topic.productType) !== 2 ? '已招满' : FREE_STATUS[lifecycle];
       } else if (Number(topic.productType) === 2) {
         text = '状态待确认';
@@ -73,11 +76,12 @@ Component({
       if (show && !this._circleConfigOpen) this.resetCircleCandidates();
       this._circleConfigOpen = !!show;
     },
-    // 招商第三版站点行的汇总:已承接几站 / 还开着没人接几站
-    'recruitStations, ownerChapterApplications': function (rows, apps) {
-      const list = rows || [];
-      this.setData({ stationSum: { taken: list.filter((r) => r.state === 'taken').length, open: list.filter((r) => r.state === 'open').length,
-        pending: (apps || []).filter((a) => a && a.actionable).length } });
+    // 招商顶部三格:j2 F-09 起与下面的列表同一来源(数字 = 列表行数),见 utils/recruit-summary.js
+    'recruitStations, ownerChapterApplications, hostRecruit, regApplies, hostTopic, hostMerchants': function (rows, apps, recruit, applies, topic, hostMerchants) {
+      this.setData({
+        stationSum: recruitSum.recruitSummary({ stations: rows, chapterApps: apps, recruit, applies, topic }),
+        confirmedMerchants: recruitSum.confirmedMerchants(hostMerchants),
+      });
     },
     // 派生量放 observer 而不是让页面再多存两个字段:它们只有这个视图用得上
     'hostRecruit, clubSheet, hostTopic, hostPlayers': function (recruit, sheet, topic, players) {
@@ -93,12 +97,14 @@ Component({
         needExecutorClub: needClub,
         // 2026-11-01 业主:与俱乐部活动详情同一套 —— 开售后出「核销」三格,底部主键按状态变
         showVerify: [3, 4, 5, 6].indexOf(Number(topic && topic.lifecycle)) >= 0,
-        hostPrimary: projectProgress.hostPrimary({ lifecycle: topic && topic.lifecycle, needExecutorClub: needClub }),
+        hostPrimary: projectProgress.hostPrimary(Object.assign({}, topic, { needExecutorClub: needClub })),
         topicStructure: [Number(topic && topic.productType) === 2 ? '自由探索' : '城市定向', total ? total + ' 站' : ''].filter(Boolean).join(' · '),
         // 走查 v2 R04/R16:底部进度,只用这几份已有数据派生
         hostProgress: projectProgress.buildHostSteps({
           lifecycle: topic && topic.lifecycle,
           productType: topic && topic.productType,
+          status: topic && topic.status,
+          userStatus: topic && topic.userStatus,
           nodeTotal: total,
           nodeFilled: filled,
           pendingCount: recruit && recruit.pendingCount,
@@ -109,11 +115,13 @@ Component({
     },
   },
   data: {
-    recruitDone: false, stationSum: { taken: 0, open: 0, pending: 0 }, clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, showVerify: false, hostPrimary: { text: '', act: '', key: '', disabled: true }, topicStructure: '', anyDrawerOpen: false, hostStatusText: '状态待确认',
+    recruitDone: false, stationSum: { taken: 0, total: 0, open: 0, pending: 0 }, confirmedMerchants: [], clubCount: 0, clubAccepted: 0, hostProgress: [], needExecutorClub: false, showVerify: false, hostPrimary: { text: '', act: '', key: '', disabled: true }, topicStructure: '', anyDrawerOpen: false, hostStatusText: '状态待确认',
     circleCandidates: [], circleConfigHint: '',
     circleConfigActions: [{ key: 'submitCircleConfig', label: '保存供给角色' }],
   },
   methods: {
+    // 第九轮 m1-9:待审节点地址一点开地图
+    onAddressTap(e) { openAddress().openFromEvent(e); },
     noop() {},
     // 每次打开都从零开始选:没有读当前已开启候选的接口,预选任何一项都是编造。
     resetCircleCandidates() {

@@ -7,6 +7,7 @@ const motion = require('../../../utils/motion.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const { bizFailureMessage } = require('../../../utils/response-shape.js')
 const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js')
+const { callableNumber, callMember } = require('../utils/club-phone-call.js')
 
 const RECURRENCES = [
   { value: 'ONCE', label: '单次' },
@@ -29,6 +30,17 @@ function positiveId(value) {
 // 表单里明明写着今天,回包却说「场次日期不能早于今天」。
 function shanghaiToday() { return chinaDateKey(new Date()) }
 // 「仅改未来」的服务端边界是上海明日 00:00:今天的场次不在编辑范围内,表单也不能回填或选今天。
+// 第十二轮 k3(p3 N8):默认集合时间不能是已经过去的「今天 09:00」。取上海时间下一个整点再往后一小时;
+// 晚于 21:00 就给明天 09:00。
+function defaultSlot(now) {
+  const at = now === undefined ? Date.now() : now
+  const clock = chinaParts(new Date(at))
+  if (!clock) return { date: shanghaiToday(), time: '09:00' }
+  const hour = clock.hours + 2
+  if (hour > 21) return { date: chinaDateKey(new Date(at + 24 * 60 * 60 * 1000)), time: '09:00' }
+  if (hour < 9) return { date: chinaDateKey(new Date(at)), time: '09:00' }
+  return { date: chinaDateKey(new Date(at)), time: (hour < 10 ? '0' : '') + hour + ':00' }
+}
 function shanghaiTomorrow() { return chinaDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)) }
 // CU-C-35:日期=今天且集合时刻已过 —— 「今天」这一档由后端拒绝,用户看到的日期又没错,
 // 前后端都没人拦在提交之前。这里用同一个上海钟提前判出来,文案直说时刻。
@@ -371,8 +383,17 @@ function occurrenceDateText(raw) {
   return p.month + '月' + p.day + '日 周' + week + ' ' + pad2(p.hours) + ':' + pad2(p.minutes)
 }
 
+function sessionFactsText(item) {
+  const parts = []
+  const price = Number(item && item.sessionPrice)
+  if (item && item.sessionPrice != null && Number.isFinite(price)) parts.push(price > 0 ? '票价 ¥' + (Math.round(price * 100) / 100) : '免费')
+  if (item && typeof item.sessionMeetingPoint === 'string' && item.sessionMeetingPoint.trim()) parts.push('集合点 ' + item.sessionMeetingPoint.trim())
+  return parts.join(' · ')
+}
+
 Page({
   data: {
+    seriesWindowWarning: '',
     statusBarHeight: (app.globalData || {}).statusBarHeight || 44,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     clubId: null,
@@ -384,6 +405,7 @@ Page({
     recurrences: RECURRENCES,
     recurrenceType: 'ONCE',
     topics: [],
+    topicsLoaded: false,
     topicIndex: 0,
     startDate: shanghaiToday(),
     // 集合时刻是场次退款钟(集合前 24h)的锚点,后端缺它会拒绝开场(5.9 起)。
@@ -445,7 +467,9 @@ Page({
       this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
-    this.setData({ clubId, activityId, recurrenceType })
+    const slot = defaultSlot()
+    const startDate = slot.date < this.data.minDate ? this.data.minDate : slot.date
+    this.setData({ clubId, activityId, recurrenceType, startDate, startTime: slot.time, customDates: [startDate] })
     this.loadAccess()
   },
 
@@ -457,6 +481,13 @@ Page({
     else wx.switchTab({ url: '/pages/talent/list/index' })
   },
   retryLoad() { this.loadAccess() },
+
+  // p3 F4:没有可开场主题、也没有系列时只给这一个出口,不画排期表单
+  goPublishTopic() {
+    if (this._navigating || !this.data.clubId) return
+    this._navigating = true
+    wx.navigateTo({ url: '/pages/publish/fabu/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false } })
+  },
 
   loadAccess() {
     const that = this
@@ -532,17 +563,22 @@ Page({
           id: positiveId(item.id),
           name: typeof item.name === 'string' && item.name.trim() ? item.name.trim() : ('主题 #' + item.id),
           dropdownLabel: topicDropdownLabel(item, that.data.clubId),
+          ticketCount: Number.isInteger(item.sessionTicketCount) ? item.sessionTicketCount : 1,
+          // C-17:玩家结账页上的票价与集合点,开场前只读给主理人看
+          factsText: sessionFactsText(item),
+          // C-02:付费主题且不能在线收款时提示主理人(L3 管玩家侧)
+          paymentNotice: item.onlinePaymentAvailable === false && Number(item.sessionPrice) > 0
+            ? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : '',
         }))
         // topics 可能晚于 series 到,补一次装饰,否则清单会一直停在 `主题 #3`
-        // E-07:带 topicId 进来时把下拉预选到它(找不到就维持第一个,不静默改口径)
-        let topicIndex = 0
-        if (that._focusTopicId != null) {
-          const focusIndex = topics.findIndex(item => item.id === that._focusTopicId)
-          if (focusIndex >= 0) topicIndex = focusIndex
-        }
+        const selectedTopic = that.data.topics[that.data.topicIndex]
+        const selectedId = positiveId(selectedTopic && selectedTopic.id) || that._focusTopicId
+        const selectedIndex = topics.findIndex(item => item.id === selectedId)
         that.setData({
           topics,
-          topicIndex,
+          topicsLoaded: true,
+          topicIndex: Math.max(0, selectedIndex),
+          seriesWindowWarning: selectedIndex >= 0 ? that.data.seriesWindowWarning : '',
           seriesRows: decorateSeriesRows(that.data.seriesRows, topics),
         })
       },
@@ -680,6 +716,7 @@ Page({
           futureMinDate,
           editingSeriesId: series.id,
           editingTopicId: series.topicId,
+          seriesWindowWarning: '',
           recurrenceType: series.recurrenceType,
           startDate: dates[0],
           // 未知或混合时刻保持空值，由既有必填校验要求显式选择。
@@ -708,14 +745,18 @@ Page({
 
   resetSeriesForm() {
     this._expectedVersion = null
-    const today = this.data.minDate
+    const slot = defaultSlot()
+    const today = slot.date < this.data.minDate ? this.data.minDate : slot.date
+    const selectedTopic = this.data.topics[this.data.topicIndex]
+    const topicId = positiveId(this.data.editingTopicId) || positiveId(selectedTopic && selectedTopic.id)
     this.setData({
       editingSeriesId: null,
       editingTopicId: null,
       recurrenceType: 'ONCE',
-      topicIndex: 0,
+      topicIndex: Math.max(0, this.data.topics.findIndex(item => item.id === topicId)),
+      seriesWindowWarning: '',
       startDate: today,
-      startTime: '09:00',
+      startTime: slot.time,
       occurrenceCount: 4,
       customDates: [today],
       capacity: '',
@@ -732,7 +773,7 @@ Page({
     const type = String(e.currentTarget.dataset.type || '')
     if (RECURRENCES.some(item => item.value === type)) this.setData({ recurrenceType: type })
   },
-  onTopicChange(e) { this.setData({ topicIndex: Number(e.detail.value) || 0 }) },
+  onTopicChange(e) { this.setData({ topicIndex: Number(e.detail.value) || 0, seriesWindowWarning: '' }) },
   onStartDateChange(e) { this.setData({ startDate: e.detail.value }) },
   onStartTimeChange(e) { this.setData({ startTime: e.detail.value }) },
   onCountInput(e) { this.setData({ occurrenceCount: e.detail.value }) },
@@ -872,6 +913,10 @@ Page({
           motion.haptic({ type: 'light', reducedMotion: readReducedMotion() })
           toast.success(editingSeriesId ? '未来场次已更新' : '系列场次已创建')
           that.resetSeriesForm()
+          // C-21:回执警告只属于本次提交的主题,不能贴到等待时另选的主题上。
+          const selectedTopic = that.data.topics[that.data.topicIndex]
+          that.setData({ seriesWindowWarning: selectedTopic && selectedTopic.id === topicId
+            && typeof res.data.windowWarning === 'string' ? res.data.windowWarning : '' })
           that.loadSeries()
           return
         }
@@ -1084,20 +1129,26 @@ Page({
         const waitlist = data && normalizeRows(data.waitlist)
         const arrived = data && normalizeRows(data.arrived)
         const noShow = data && normalizeRows(data.noShow)
+        // 2026-11-02:有号码权限(主理人/副主理人/本场领队/勾了开关的核销员)时 phoneIncluded=true,
+        // 行上带完整号码;否则必须是 false 且行上不许有号码。其它值一律当坏回包。
         if (!data || registered === null || waitlist === null || arrived === null || noShow === null
-            || data.phoneIncluded !== false) {
+            || typeof data.phoneIncluded !== 'boolean') {
           that.setData({ rosterState: 'error', rosterError: bizFailureMessage(res, '名册加载失败') })
           return
         }
+        const keepPhone = data.phoneIncluded === true
+        ;[registered, waitlist, arrived, noShow].forEach(function (rows) {
+          rows.forEach(function (row) { row.phone = keepPhone ? callableNumber(row.phone) : '' })
+        })
         const buckets = { registered, waitlist, arrived, noShow }
         const window = normalizeCorrectionWindow(data.correctionWindow)
+        that._rosterBuckets = buckets // C-10:分段人数已写进标签,四个分段不再整份进 data
         that.setData({
-          registered, waitlist, arrived, noShow,
           rosterTotal: rosterTotal(buckets),
           correctionOperable: !window || window.operable,
           correctionWindowText: correctionWindowText(window),
           activeRoster: buckets[that.data.rosterTab] || [],
-          rosterTabs: ROSTER_TABS.map(item => Object.assign({}, item, { badge: buckets[item.key].length })),
+          rosterTabs: ROSTER_TABS.map(item => Object.assign({}, item, { label: item.label + ' ' + buckets[item.key].length })), // C-10:人数写进标签,不再用红色角标
           rosterState: 'ready',
         })
       },
@@ -1107,10 +1158,13 @@ Page({
       },
     })
   },
+  callRosterMember(e) {
+    callMember(e.currentTarget.dataset.phone, () => toast('拨号未完成，请重试'))
+  },
   chooseRosterTab(e) {
     const tab = String((e.detail && e.detail.key) || '')
     if (ROSTER_TABS.some(item => item.key === tab)) {
-      this.setData({ rosterTab: tab, activeRoster: this.data[tab] || [] })
+      this.setData({ rosterTab: tab, activeRoster: (this._rosterBuckets || {})[tab] || [] })
     }
   },
   correctAttendance(e) {
@@ -1123,6 +1177,12 @@ Page({
     // (UI-GATE-0:toast 上限 16 字,长说明落页内)。
     if (!this.data.correctionOperable) {
       toast('现在不能更正')
+      return
+    }
+    // C-06:开场现场把「已报名」的人标记到场是一下点完的事,原因用预置的「现场到达」;
+    // 已到改未到、散场后补记仍要写原因(那才是更正)。
+    if (arrived && this.data.rosterTab === 'registered') {
+      this.submitCorrection(memberId, true, expectedVersion, '现场到达')
       return
     }
     const that = this
@@ -1164,7 +1224,7 @@ Page({
       success(res) {
         if (ok(res) && positiveId(res.data && res.data.id)) {
           clearAttendanceRequestIntent(intent, that._attendanceRequestIntents)
-          toast.success('签到已更正')
+          toast.success(reason === '现场到达' ? '已标记到场' : '签到已更正')
           that.loadRoster()
           return
         }

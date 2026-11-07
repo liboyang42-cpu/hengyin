@@ -29,8 +29,13 @@ public final class CancellationPhaseTestSupport {
             @Override protected void doCommit(DefaultTransactionStatus status) { beforeCommit.run(); }
             @Override protected void doRollback(DefaultTransactionStatus status) { }
             @Override protected Object doSuspend(Object transaction) {
-                throw new AssertionError("cancellation must not suspend a lock-owning caller");
+                // 仅允许在物理提交之后(afterCompletion,同步已清)挂起已完成事务的资源,与生产派发口径一致。
+                if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                    throw new AssertionError("cancellation must not suspend a lock-owning caller");
+                }
+                return transaction;
             }
+            @Override protected void doResume(Object transaction, Object suspendedResources) { }
         };
     }
     public static RegistrationCancellationPayments stubEmptyObservation(ITeamGroupService group, Long activityId) {

@@ -24,7 +24,7 @@ function present(view, nodes) {
     })),
     tradeRows: (world.trades || []).map(row => Object.assign({}, row, {
       stationName: station(row), giveText: itemText(row.give, view), takeText: itemText(row.take, view),
-      statusText: { OPEN: '等待双方队长确认', COMPLETED: '已交换', CANCELLED: '已取消' }[row.status] || row.status,
+      statusText: { OPEN: '等待双方队长确认', COMPLETED: '已交换', CANCELLED: '已取消' }[row.status] || '状态待确认',
       confirmed: (row.confirmedTeams || []).some(id => String(id) === String(view.teamId)),
       canConfirm: row.status === 'OPEN' && row.disabled === false && allowed('TRADE_CONFIRM') && !(row.confirmedTeams || []).some(id => String(id) === String(view.teamId)),
       canCancel: row.status === 'OPEN' && allowed('TRADE_CANCEL'),

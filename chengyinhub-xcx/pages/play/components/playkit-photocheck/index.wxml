@@ -13,10 +13,11 @@
     </view>
 
     <view class="pc__verdict pk-in pc__verdict--{{verdictKind}}" wx:if="{{verdict}}">{{verdict}}</view>
+    <view class="pc__verdict pk-in pc__verdict--no" wx:if="{{uploadFail && !verdict}}" aria-role="status">{{uploadFail}}</view>
     <view class="pc__reason pk-in pk-in--2" wx:if="{{reason}}">{{reason}}</view>
     <view class="pc__tries" wx:if="{{verifiedNote}}">{{verifiedNote}}</view>
     <view class="pc__tries" wx:if="{{rewardNote}}">{{rewardNote}}</view>
-    <view class="pc__tries" wx:if="{{triesLabel && !verdict && !reason}}">{{triesLabel}}</view>
+    <view class="pc__tries" wx:if="{{triesLabel && !verdict && !reason && !uploadFail}}">{{triesLabel}}</view>
 
     <!-- 拍物成卡:判过当场就看到这张卡(照片卡,3D 转台由后台补,见施工文档 §3.3)。
          卡只在「真判过 + 回包真带回了这张卡」时出现 —— 铸卡失败时宁可不演,
@@ -30,9 +31,9 @@
     </view>
   </view>
 
-  <view class="g-btn {{busy || passed || flagged ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
+  <view class="g-btn {{busy || passed ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
         aria-role="button" aria-label="{{busy ? '正在处理照片' : '拍一张'}}" hover-class="g-btn--press" hover-stay-time="80">
-    {{busy ? '看一眼…' : (passed || flagged ? '这一张已定' : (lastUrl ? '再拍一张' : '拍一张'))}}
+    {{busy ? '看一眼…' : (passed ? '这一张已定' : (lastUrl ? '再拍一张' : '拍一张'))}}
   </view>
 </cy-play-stage>
 

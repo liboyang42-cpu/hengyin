@@ -125,7 +125,10 @@ test('V-24 「应用」与分享键同底色 / 文字色 / 无描边,只是更�
   // cy-btn 幽灵态正是用这两个变量上色,且没有描边 —— 变量下传才真的生效
   const btn = read('components/cy/btn/index.wxss')
   const ghost = rule(btn, '.btn--ghost')
-  assert.match(ghost, /background:\s*var\(--cy-bg-glass\)/)
+  // 打磨第 3 轮 §4-14:日间商家域可声明 --cy-comp-btn-ghost-bg;未声明时回落到按钮自身的 --cy-bg-glass,本页局部改值仍生效
+  assert.match(ghost, /background:\s*var\(--cy-comp-btn-ghost-bg,\s*var\(--cy-bg-glass\)\)/)
+  const pageTokens = rule(read('style/tokens.wxss'), 'page')
+  assert.doesNotMatch(pageTokens, /--cy-comp-btn-ghost-bg:/, 'page{} 声明它会提前解析,盖掉按钮上的局部 --cy-bg-glass')
   assert.match(ghost, /color:\s*var\(--cy-text-title\)/)
   assert.doesNotMatch(ghost, /border/)
   assert.match(rule(wxss, '.xb-cta-btn'), /flex:\s*1/, '主按钮占满分享键以外的宽度')

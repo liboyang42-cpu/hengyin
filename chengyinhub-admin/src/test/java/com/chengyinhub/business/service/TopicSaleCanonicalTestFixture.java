@@ -29,6 +29,18 @@ public final class TopicSaleCanonicalTestFixture {
         }
     }
 
+    public static TopicSaleCanonicalV1 ordinaryCanonical() {
+        TopicSaleCanonicalV1 value = canonical();
+        value.getCompletionPolicy().put("evidenceRule", "ALL_REQUIRED_STAMPS");
+        return value;
+    }
+
+    public static TopicSaleSnapshot ordinarySnapshot(Long topicId) {
+        TopicSaleSnapshot snapshot = snapshot(topicId);
+        snapshot.setCanonicalJson(TopicSaleCanonicalCodec.write(ordinaryCanonical(), 2));
+        return snapshot;
+    }
+
     public static TopicSaleSnapshot snapshot(Long topicId) {
         TopicSaleSnapshot snapshot = new TopicSaleSnapshot();
         snapshot.setTopicId(topicId);

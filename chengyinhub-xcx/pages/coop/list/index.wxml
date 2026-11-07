@@ -145,6 +145,10 @@
       <view class="inv-acts" wx:if="{{item.audit===0}}">
         <view class="inv-btn inv-btn--primary" catchtap="confirmReg" data-id="{{item.id}}" data-topicid="{{item.topicId}}" data-memberid="{{item.memberId}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.meta}}" aria-role="button" aria-label="确认{{item.name}}占住候选位置" aria-disabled="{{!!actionPendingKey}}" hover-class="{{!!actionPendingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{actionPendingKey === 'reg-confirm:' + item.id ? '确认中…' : '确认占槽'}}</view>
       </view>
+      <!-- 第十二轮 k4(j2 N-01):已中标还没发带条款邀约的,这里随时能补发 -->
+      <view class="inv-acts" wx:elif="{{item.audit===1 && item.inviteState==='none'}}">
+        <view class="inv-btn inv-btn--primary" catchtap="goTermsInvite" data-topicid="{{item.topicId}}" data-memberid="{{item.memberId}}" data-name="{{item.name}}" data-logo="{{item.logo}}" data-meta="{{item.meta}}" aria-role="button" aria-label="给{{item.name}}发邀约" hover-class="cy-pressed" hover-stay-time="80">发邀约</view>
+      </view>
     </view>
     <!-- 官方邀约(平台→商家),原合作中心「邀约我的」tab 收编至此 -->
     <view class="inv {{item.status!==0 ? 'is-dim' : ''}}" wx:for="{{officialInvites}}" wx:key="rowKey" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}--pmi:{{index}};">

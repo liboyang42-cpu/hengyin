@@ -3,7 +3,7 @@
 //   ② 「和队友一起出发」卡排在支付明细之后,不打断稿 578:2298 的顺序
 //   ③ 支付信息卡里的微信交易单号是纯值,动作不进信息卡(与订单号行一致)
 //   ④ 退款态的状态卡副文案 / 「退款与客服」卡说退款事实,不被 refundInfo 的可退政策
-//      「可全额退款,原路退回(预计1-3个工作日)」顶掉
+//      「可全额退款，原路退回(预计1-3个工作日)」顶掉
 const { beforeEach, test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -40,7 +40,7 @@ const infoReq = () => sandbox.requests.filter(r => r.url === '/api/registration/
 
 test('订单详情头部与订单列表使用相同现金实付款，保留零值和应付明细', () => {
   const wxml = fs.readFileSync(WXML, 'utf8')
-  const binding = wxml.match(/class="hero-amt">\{\{money\.amount\((?:cnt\.f\()?info\.(\w+)(?:, odK\))?\)\}\}/) // 2026-10-23:金额外包一层数字滚动(cnt.f),落点仍是同一字段
+  const binding = wxml.match(/class="hero-amt">\{\{money\.amount2?\((?:cnt\.f\()?info\.(\w+)(?:, odK\))?\)\}\}/) // 2026-10-23:金额外包一层数字滚动(cnt.f),落点仍是同一字段
   assert.ok(binding, '详情头部金额绑定存在')
   for (const cash of [0.01, 0]) {
     sandbox.requests = []
@@ -99,7 +99,7 @@ test('T3f ④ 退款态文案取退款事实,不被可退政策里的「预计1-
   infoReq().success({ code: '200', data: {
     id: 1001, ownerType: 1, registrationStatus: 3, paymentStatus: 4,
     refundApplication: { status: 1, payoutStatus: 0, refundAmount: 69 },
-    refundInfo: { refundable: true, reason: '可全额退款,原路退回(预计1-3个工作日)', deadline: '2026-09-20 10:00:00' },
+    refundInfo: { refundable: true, reason: '可全额退款，原路退回(预计1-3个工作日)', deadline: '2026-09-20 10:00:00' },
   } })
   assert.equal(vm.data.loadState, 'ready')
   const fact = vm.data.info.refundDisplayText

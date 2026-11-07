@@ -60,6 +60,9 @@ class ApiTopicMerchantOperatorLifecycleScopeTest {
         when(accessService.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE)).thenReturn(access);
         ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        // 草稿发布口会读库内节点绑定的玩法去复检文字(j5 B1);这里没有绑定玩法
+        ReflectionTestUtils.setField(controller, "cmsTopicNodeService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsTopicNodeService.class));
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "omsTicketService", mock(com.chengyinhub.business.service.IOmsTicketService.class));

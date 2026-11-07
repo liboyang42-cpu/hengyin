@@ -64,7 +64,7 @@ function assertPublishChrome(source) {
   // 2026-10-31 业主 P-4:第 1 页「下一步」→ 票务页「预览」→ 剧情预览右上「完成」= 发布。守的事实照旧:发布入口还在、还能点到。
   assert.match(source, /<cy-btn[^>]*bindtap="openStoryPreview"/, 'ticketing page must open the story preview')
   assert.match(source, /<cy-btn[^>]*bindtap="confirmPublishCheck"/, 'publish CTA must remain reachable')
-  assert.match(source, /class="sp-top" style="padding-top: \{\{statusBarHeight\}\}px;"/, 'story preview actions must clear the status bar')
+  assert.match(source, /class="sp-top" style="height: \{\{navBarHeight\}\}px; padding-top: \{\{statusBarHeight\}\}px;"/, 'story preview actions must clear the status bar')
 }
 
 test('P0 capsule geometry keeps the close target reachable at 375/393 widths and shifted capsules', () => {

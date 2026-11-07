@@ -39,6 +39,8 @@ function presentCampaign(campaign) {
 
 Page({
   data: {
+    titleError: '',
+    contentError: '',
     statusBarHeight: (app.globalData || {}).statusBarHeight || 44,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     clubId: null,
@@ -109,9 +111,8 @@ Page({
           disabled: item.eventOnly
             ? !canOperateEvent
             : !canNotifyAllMembers,
-          hint: item.eventOnly
-            ? (!activityId ? '从具体活动进入后才可选' : (!canOperateEvent ? '当前角色没有本场通知权限' : ''))
-            : '',
+          hidden: !!item.eventOnly && !activityId,
+          hint: item.eventOnly && activityId && !canOperateEvent ? '当前角色没有本场通知权限' : '',
         }))
         const audienceType = activityId && canOperateEvent ? 'REGISTERED' : 'ALL_MEMBERS'
         that.setData({ state: 'ready', audiences, audienceType })
@@ -160,10 +161,10 @@ Page({
     this.setData({ audienceType: value, previewState: 'idle', campaign: null, draftRequestId: '' })
   },
   onTitleInput(e) {
-    this.setData({ title: e.detail.value, previewState: 'idle', campaign: null, draftRequestId: '' })
+    this.setData({ title: e.detail.value, titleError: '', previewState: 'idle', campaign: null, draftRequestId: '' })
   },
   onContentInput(e) {
-    this.setData({ content: e.detail.value, previewState: 'idle', campaign: null, draftRequestId: '' })
+    this.setData({ content: e.detail.value, contentError: '', previewState: 'idle', campaign: null, draftRequestId: '' })
   },
 
   payload(sending) {
@@ -181,15 +182,11 @@ Page({
   validDraft() {
     const title = this.data.title.trim()
     const content = this.data.content.trim()
-    if (!title || title.length > 80) {
-      toast('标题需为 1–80 字')
-      return false
-    }
-    if (!content || content.length > 1000) {
-      toast('内容需为 1–1000 字')
-      return false
-    }
-    return true
+    // 第四轮(业主:输入问题只在字段下方红字说)
+    const titleError = !title || title.length > 80 ? '标题需为 1–80 字' : ''
+    const contentError = !content || content.length > 1000 ? '内容需为 1–1000 字' : ''
+    this.setData({ titleError, contentError })
+    return !titleError && !contentError
   },
 
   preview() {
@@ -221,7 +218,9 @@ Page({
   },
 
   send() {
-    if (!this.validDraft() || this.data.previewState !== 'ready' || this.data.sending) return
+    if (!this.validDraft() || this.data.sending) return
+    // 还没预览受众就点发送:先替他预览(缺项会在栏下红字),看到人数后再点一次发送
+    if (this.data.previewState !== 'ready') { this.preview(); return }
     const that = this
     const payload = this.payload(true)
     this.setData({ sending: true, draftRequestId: payload.requestId })

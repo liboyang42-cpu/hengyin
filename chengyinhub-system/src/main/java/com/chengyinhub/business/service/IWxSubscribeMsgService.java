@@ -70,6 +70,11 @@ public interface IWxSubscribeMsgService {
     /** 官方活动/公告通知，仅使用 tplOfficialEvent 专用模板；缺配置不回退招募模板。 */
     boolean notifyOfficialBroadcast(Long memberId, String title, String sub);
 
+    /** 第九轮 m2 补充第 7 项:带落地页(按收件角色)。page 为空时同三参版本。 */
+    default boolean notifyOfficialBroadcast(Long memberId, String title, String sub, String page) {
+        return notifyOfficialBroadcast(memberId, title, sub);
+    }
+
     /** Typed official-only send; old boolean callers retain their existing contract. */
     OfficialBroadcastResult notifyOfficialBroadcastResult(Long memberId, String title, String sub);
 

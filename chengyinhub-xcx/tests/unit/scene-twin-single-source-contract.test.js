@@ -37,7 +37,8 @@ function usingComponents(wxmlPath) {
 }
 
 function sceneComponentWxmlPath(sceneId) {
-  return ['components/cy', 'subpackageMember/components/cy']
+  // 第七轮主包瘦身:部分 scene 组件随宿主分包下发(subpackageA / pages/play / pages/club / pages/deregister)
+  return ['components/cy', 'subpackageMember/components/cy', 'subpackageA/components', 'pages/play/components', 'pages/club/components/cy', 'pages/deregister/components']
     .map((root) => `${root}/scene-${sceneId}/index.wxml`)
     .find((candidate) => fs.existsSync(path.join(ROOT, candidate)))
 }

@@ -104,6 +104,23 @@
 .bl__b--press { opacity: .88; }
 .bl__b--busy { opacity: .55; }
 
+/* 第十一轮 i1 跳过这一站:次要按钮,描边不填色,不抢「开始」;叠在主按钮上方 */
+.bl__skip {
+  position: absolute;
+  left: 40rpx; right: 40rpx;              /* ds-ok 与主按钮同宽 */
+  bottom: calc(env(safe-area-inset-bottom) + 188rpx);
+  z-index: 5;
+  min-height: 88rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--cy-radius-pill);
+  box-shadow: inset 0 0 0 2rpx currentColor;
+  font-size: var(--cy-type-label);
+  font-weight: 700;
+  opacity: .8;
+  transition: opacity .16s ease;
+}
+.bl__skip--press { opacity: .6; }
+
 /* 内嵌档(2026-10-30 所有玩法都内嵌):球场收成故事流里一块 1000rpx 高的整宽场地(与 index.js EMBED_H_RPX 同值),
    墙就是这块场地的四条边;提示与按钮跟着场地走,不再按状态栏 / 安全区让位。 */
 .bl--embed { position: relative; height: 1000rpx; border-radius: var(--cy-radius-lg); }

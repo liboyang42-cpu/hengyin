@@ -79,6 +79,11 @@ function loadRows(page, tab, rows) {
   page.setData({ typeTab: tab });
   page.loadProjects();
   sent.shift().success({ code: '200', data: { rows: rows, total: rows.length } });
+  // 第十轮 f1 p2 F-3:商家态还读两路承接项目(与工作台「全部 N」同源);这里没有承接,回空
+  while (sent.length && /merchant\/list|chapter-application\/mine/.test(sent[0].url)) {
+    const r = sent.shift();
+    r.success({ code: '200', data: /merchant\/list/.test(r.url) ? { rows: [] } : [] });
+  }
 }
 
 test('商家主办场次:取消前先问后端人数,确认框写明「将给 N 位已付款玩家全额退款，不可撤销」', () => {

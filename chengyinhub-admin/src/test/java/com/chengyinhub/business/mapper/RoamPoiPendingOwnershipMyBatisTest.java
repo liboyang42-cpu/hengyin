@@ -52,7 +52,7 @@ class RoamPoiPendingOwnershipMyBatisTest {
             statement.execute("create table roam_poi_reward_log (poi_id bigint, member_id bigint, coupon_id bigint, trigger_lat decimal(10,6), trigger_lng decimal(10,6), status int, create_time timestamp, claim_fingerprint varchar(100), photo_url varchar(2048), submitted_answer varchar(255), unique(poi_id,member_id))");
             statement.execute("create table member_collectible (member_id bigint, ref_id bigint, coll_type int, create_time timestamp)");
             statement.execute("create table roam_poi (id bigint primary key auto_increment, name varchar(80), type tinyint, lat decimal(10,6), lng decimal(10,6), radius_m int, address varchar(255), description varchar(255), xp int, coupon_template_id bigint, city_code varchar(20), status tinyint, create_time timestamp, merchant_id bigint, template_id bigint, node_level tinyint, tags varchar(255), cover_img varchar(500), sort int, audit_status tinyint, application_type tinyint, applicant_merchant_id bigint, audit_reason varchar(200), gallery_json text, quotes_json text, photo_credit text, photo_required int, badge_code varchar(80))");
-            statement.execute("create table mms_merchant (id bigint primary key, name varchar(80), logo varchar(500), address varchar(255), phone varchar(50), member_id bigint)");
+            statement.execute("create table mms_merchant (id bigint primary key, name varchar(80), logo varchar(500), address varchar(255), phone varchar(50), member_id bigint, status bigint default 1, account_status bigint default 1, del_flag int default 0)");
             statement.execute("create table cms_member_template (id bigint primary key, title varchar(80), description varchar(255), interaction_type varchar(40), validation_method int, coupon_id bigint, question_name varchar(255), question_a varchar(255), question_b varchar(255), question_c varchar(255), question_d varchar(255), photo_require_desc varchar(255))");
             statement.execute("insert into mms_merchant(id, member_id, name) values (88, 7, '申请商家')");
             statement.execute("insert into roam_poi(id, name, type, lat, lng, status, applicant_merchant_id, audit_status, application_type, merchant_id) values (101, '待审点', 2, 30.1, 120.2, 0, 88, 0, 1, null)");
@@ -165,6 +165,30 @@ class RoamPoiPendingOwnershipMyBatisTest {
             assertEquals(1, mapper.updatePoiStatus(poi.getId(),0));
             assertEquals(null, mapper.selectPlayerMerchantNodeDetail(poi.getId(),0L));
             assertEquals(0, mapper.selectPlayerMerchantNodeDetail(poi.getId(),7L).getStatus());
+        }
+    }
+
+    @Test
+    void guestSeesMerchantNodeOnlyWhileMerchantIsLive() throws Exception {
+        try (SqlSession session = factory.openSession(true); Statement sql = session.getConnection().createStatement()) {
+            sql.execute("insert into mms_merchant(id, member_id, name, phone) values (90, 9, '营业中', '13800000000')");
+            sql.execute("insert into roam_poi(id, name, type, lat, lng, status, audit_status, application_type, merchant_id) "
+                    + "values (201, '在架店', 2, 30.1, 120.2, 1, 1, 2, 90)");
+            RoamMapper mapper = session.getMapper(RoamMapper.class);
+            assertEquals(201L, mapper.selectPlayerMerchantNodeDetail(201L, 0L).getPoiId());
+            for (String closed : new String[]{"status = 0", "account_status = 0", "del_flag = 2"}) {
+                sql.execute("update mms_merchant set status = 1, account_status = 1, del_flag = 0 where id = 90");
+                sql.execute("update mms_merchant set " + closed + " where id = 90");
+                session.clearCache();
+                assertEquals(null, mapper.selectPlayerMerchantNodeDetail(201L, 0L),
+                        "商家 " + closed + " 后游客不得再读到它的据点");
+                assertEquals(201L, mapper.selectPlayerMerchantNodeDetail(201L, 7L).getPoiId(),
+                        "会员读取口径不变");
+            }
+            sql.execute("update mms_merchant set status = 1, account_status = 1, del_flag = 0 where id = 90");
+            sql.execute("update roam_poi set status = 0 where id = 201");
+            session.clearCache();
+            assertEquals(null, mapper.selectPlayerMerchantNodeDetail(201L, 0L), "下架据点游客读不到");
         }
     }
 }

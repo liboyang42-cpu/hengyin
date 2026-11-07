@@ -4,11 +4,11 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
-const { readPlayerCode } = require('../../utils/player-code.js')
+const { readPlayerCode } = require('../../subpackageMember/utils/player-code.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const COMP_JS = path.join(ROOT, 'components/cy/scene-share-invite/index.js')
-const COMP_WXML = fs.readFileSync(path.join(ROOT, 'components/cy/scene-share-invite/index.wxml'), 'utf8')
+const COMP_JS = path.join(ROOT, 'subpackageMember/components/cy/scene-share-invite/index.js')
+const COMP_WXML = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-share-invite/index.wxml'), 'utf8')
 const PROFILE_WXML = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/profile/index.wxml'), 'utf8')
 
 test('readPlayerCode 只认 code 200 + http(s) qr', () => {

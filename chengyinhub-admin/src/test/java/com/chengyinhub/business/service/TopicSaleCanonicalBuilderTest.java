@@ -40,13 +40,15 @@ class TopicSaleCanonicalBuilderTest {
     private Map<String, Object> live;
     private CmsTopicTemplateMetaMapper metaMapper;
     private IProductRoleService productRoleService;
+    private CoopPerkMapper perkMapper;
+    private CmsTopicNodeMapper nodeMapper;
 
     @BeforeEach
     void setUp() {
         policy = mock(CommercialTopicPolicy.class);
-        CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
+        nodeMapper = mock(CmsTopicNodeMapper.class);
         metaMapper = mock(CmsTopicTemplateMetaMapper.class);
-        CoopPerkMapper perkMapper = mock(CoopPerkMapper.class);
+        perkMapper = mock(CoopPerkMapper.class);
         CoopOrderLineupSource lineupSource = mock(CoopOrderLineupSource.class);
         productRoleService = mock(IProductRoleService.class);
         builder = new TopicSaleCanonicalBuilder(policy, nodeMapper, metaMapper, perkMapper, lineupSource,
@@ -79,7 +81,6 @@ class TopicSaleCanonicalBuilderTest {
 
         rebuilt.validateComplete();
         assertEquals(4, rebuilt.getStoreCount().intValue());
-        assertEquals(1, rebuilt.maxTicketPerAccount());
         assertEquals("20", rebuilt.getMicroExperienceCatalog().path("perks").get(0)
                 .path("retailValue").asText(), "真实 DECIMAL 整十值必须冻结为无科学计数法的 plain string");
         assertEquals("PLATFORM", rebuilt.getClubWorkPackage().path("organizerActor").path("actorType").asText());
@@ -145,6 +146,42 @@ class TopicSaleCanonicalBuilderTest {
         when(productRoleService.activeContentSlot(TOPIC)).thenReturn(null);
         assertEquals("SALE_SNAPSHOT_MISSING_ORGANIZER_ACTOR", assertThrows(IllegalStateException.class,
                 () -> builder.rebuild(topic, ordinary)).getMessage());
+    }
+
+    /** M-01:商家常备权益表单不采集核销规则;这样的权益不能再让整个主题开售失败。 */
+    @Test
+    void perkWithoutRedeemRuleFreezesDefaultRuleInsteadOfBlockingSale() {
+        when(perkMapper.selectById(any(Long.class))).thenAnswer(invocation -> {
+            CoopPerk perk = perk(invocation.getArgument(0));
+            perk.setRedeemRule(null);
+            return perk;
+        });
+
+        TopicSaleCanonicalV1 rebuilt = builder.rebuild(topic(), TopicSaleCanonicalTestFixture.canonical());
+
+        rebuilt.validateComplete();
+        for (com.fasterxml.jackson.databind.JsonNode perk : rebuilt.getMicroExperienceCatalog().path("perks")) {
+            assertEquals(CoopPerk.DEFAULT_REDEEM_RULE, perk.path("redeemRule").asText());
+        }
+    }
+
+    /** M-01:权益真缺关键字段时，错误点名商家与权益，而不是只给组织者一个错误码。 */
+    @Test
+    void unusablePerkErrorNamesTheShopAndThePerk() {
+        List<CmsTopicNode> named = nodes();
+        for (CmsTopicNode node : named) node.setName("书房" + node.getMerchantMemberId());
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class))).thenReturn(named);
+        when(perkMapper.selectById(any(Long.class))).thenAnswer(invocation -> {
+            CoopPerk perk = perk(invocation.getArgument(0));
+            perk.setRetailValue(null);
+            return perk;
+        });
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> builder.rebuild(topic(), TopicSaleCanonicalTestFixture.canonical()));
+
+        org.junit.jupiter.api.Assertions.assertTrue(error.getMessage().matches("商家「书房\\d+」的权益「权益\\d+」缺少.*"),
+                error.getMessage());
     }
 
     private static CmsTopic topic() {

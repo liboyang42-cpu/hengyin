@@ -158,13 +158,13 @@ function beginStart() {
       function (e) { finishFailure(gen, e || bgErr); });
   };
 
-  if (!wx.startLocationUpdateBackground) { toForeground(null); return; }
+  if (!wx.startLocationUpdateBackground || Object.keys(owners).every(function (key) { return owners[key].opts.foregroundOnly === true; })) { toForeground(null); return; }
   callStart(function (o) { wx.startLocationUpdateBackground(o); }, function () { finishSuccess(gen, true); }, toForeground);
 }
 
 /**
  * @param {string} key      行程标识,如 'play:<topicId>' / 'roam'
- * @param {object} opts     { onFail(err) }
+ * @param {object} opts     { success(usingBackground), fail(err), foregroundOnly }；只有前台持有者时不申请后台能力。
  * 成功回调里 usingBackground 表示实际拿到的是后台还是前台能力。
  */
 function acquire(key, opts) {

@@ -97,15 +97,15 @@ function assertEarningsCountUp(js, wxml) {
 
 test('收益金额滚动只污染展示值,真值与空态判断不受影响', () => {
   assertEarningsCountUp(
-    read('components/cy/scene-asset-earnings/index.js'),
-    read('components/cy/scene-asset-earnings/index.wxml'),
+    read('subpackageA/components/scene-asset-earnings/index.js'),
+    read('subpackageA/components/scene-asset-earnings/index.wxml'),
   )
 })
 
 test('负控:绕开共用件自己写 countUp 帧必须判红', () => {
-  const js = read('components/cy/scene-asset-earnings/index.js')
+  const js = read('subpackageA/components/scene-asset-earnings/index.js')
     .replace("pageMotion.countMoney(this, 'balanceK')", "motion.countUp(0, 1, (v) => this.setData({ balance: v.toFixed(2) }))")
-  assert.throws(() => assertEarningsCountUp(js, read('components/cy/scene-asset-earnings/index.wxml')))
+  assert.throws(() => assertEarningsCountUp(js, read('subpackageA/components/scene-asset-earnings/index.wxml')))
 })
 
 /* ---------- ③ 淡切 ---------- */
@@ -146,7 +146,7 @@ test('六个代表性状态页的 error/empty/ready 主分支都挂内容淡入'
   const coupon = read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml')
   assert.match(coupon, /cy-empty[^>]*class="cy-fade-in"/)
   assert.match(coupon, /wx:else class="wallet-list cy-fade-in"/)
-  const discover = read('components/cy/scene-roam-discover/index.wxml')
+  const discover = read('pages/play/components/scene-roam-discover/index.wxml')
   assert.match(discover, /class="discover-list cy-fade-in"/)
   assert.match(discover, /cy-empty[^>]*class="cy-fade-in"/)
   const poi = read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml')

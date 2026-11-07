@@ -96,6 +96,21 @@ public class ViewCouponHistory extends BaseEntity
     @Excel(name = "删除标记 0 代表存在  2删除")
     private Long couponDelFlag;
 
+    /** 第九轮 m1-9:发券门店的公开店名 / 地址 / 坐标(读侧投影,不落库;门店不公开时为空) */
+    private String shopName;
+    private String shopAddress;
+    private Double shopLat;
+    private Double shopLng;
+
+    public String getShopName() { return shopName; }
+    public void setShopName(String shopName) { this.shopName = shopName; }
+    public String getShopAddress() { return shopAddress; }
+    public void setShopAddress(String shopAddress) { this.shopAddress = shopAddress; }
+    public Double getShopLat() { return shopLat; }
+    public void setShopLat(Double shopLat) { this.shopLat = shopLat; }
+    public Double getShopLng() { return shopLng; }
+    public void setShopLng(Double shopLng) { this.shopLng = shopLng; }
+
     public void setId(Long id) 
     {
         this.id = id;

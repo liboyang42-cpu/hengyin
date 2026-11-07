@@ -6,6 +6,8 @@
  */
 const assert = require('node:assert/strict')
 const test = require('node:test')
+const fs = require('node:fs')
+const vm = require('node:vm')
 const cfg = require('../../pages/publish/utils/publish/advanced-game-config.js')
 const pv = require('../../pages/publish/utils/publish/advanced-game-preview.js')
 
@@ -157,10 +159,35 @@ test('建档、输入挑战、拍照与留言都有样例及当前配置预览�
 
 // 2026-09-23 整本《预制人生》试玩:作者把计步目标配成 800,试玩屏却写着目标 1,000、还能 ± 改 ——
 // 预览投影少了 goalLocked(正式投影 playkit-view.buildSteps 有)。判定按作者配的数,预览也得锁死。
-test('计步预览锁死作者配的目标,和正式游玩一致', () => {
-  const c = base()
-  c.steps = { enabled: true, eyebrow: '按自己的节奏', goal: 800, xp: 0 }
-  const kit = pv.buildPreviewKit(c)
-  assert.equal(kit.goal, 800)
-  assert.equal(kit.goalLocked, true, '没锁的话屏上显示的是玩家自己 ± 出来的数')
+test('计步预览组件原样显示锁定目标100、800和默认6000,个人目标仍按500步增减', () => {
+  let component
+  vm.runInNewContext(fs.readFileSync(require.resolve('../../pages/play/components/playkit-walk/index.js'), 'utf8'), {
+    Component: value => { component = value }, require: () => ({}),
+  })
+  const screen = {
+    data: {}, ...component.methods,
+    setData(patch) { Object.assign(this.data, patch) },
+  }
+  for (const goal of [100, 800, 6000]) {
+    const c = base()
+    c.steps.enabled = true
+    if (goal !== 6000) c.steps.goal = goal
+    const kit = pv.buildPreviewKit(c)
+    assert.equal(kit.goal, goal)
+    assert.equal(kit.goalLocked, true)
+    Object.assign(screen.data, { show: true }, kit)
+    component.observers['show, goal, steps, goalLocked'].call(screen, true, kit.goal, kit.steps)
+    assert.equal(screen._goal, goal, '锁定目标不能按500步取整')
+    assert.equal(screen.data.goalText, goal.toLocaleString('en-US'))
+    assert.equal(screen.data.stepsText, kit.steps.toLocaleString('en-US'))
+    assert.equal(screen.data.leftText, (goal - kit.steps).toLocaleString('en-US'))
+    assert.equal(screen.data.pct, 71)
+    assert.equal(screen.data.done, false, '预览中间态不能当作达标')
+    assert.equal(c.steps.goal, goal, '渲染不改作者配置')
+  }
+  screen.data.goalLocked = false
+  screen._paint(100, 0)
+  assert.equal(screen._goal, 500)
+  screen._paint(800, 0)
+  assert.equal(screen._goal, 1000)
 })

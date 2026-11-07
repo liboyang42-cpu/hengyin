@@ -159,7 +159,7 @@ public class CmsRegistration extends BaseEntity
     private Integer registrationStatus;
 
     /** 支付过期时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "支付过期时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date payExpireTime;
 
@@ -219,9 +219,9 @@ public class CmsRegistration extends BaseEntity
     @Excel(name = "核销状态：0未核销 1已核销")
     private Integer verificationStatus;
 
-    /** 核销时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd")
+    /** 核销时间(列是 datetime,核销写 now();带钟点下发,订单进度不再显示成当天 00:00、排到付款之前) */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "核销时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date verificationTime;
 
     /** 核销人ID */
@@ -250,6 +250,12 @@ public class CmsRegistration extends BaseEntity
 
     /** 退款可退判定(瞬态,订单详情展示用;仅主题计算,口径见 RefundPolicy,与 cancel 路径一致) */
     private com.chengyinhub.business.util.RefundPolicy.Verdict refundInfo;
+
+    /**
+     * 订单详情只读:此刻自助取消将原路退回的现金(微信实付 × 当前档位比例,向下取分),
+     * 与实际取消退款同一公式(RefundPolicy.applyCashRatio)。多票父单/现金快照未知/不可退时为 null,页面不出数。
+     */
+    private java.math.BigDecimal cancelRefundAmount;
 
     /** 最新退款申请(瞬态,玩家订单展示用；payoutStatus 是退款是否到账的唯一事实)。 */
     private RefundApplication refundApplication;
@@ -294,6 +300,28 @@ public class CmsRegistration extends BaseEntity
      */
     private OmsTicket omsTicket;
 
+    /** 城市定向本人在本单之后已通关(TOPIC_FINISH 勋章,瞬态读面,P-22)。只读,不改任何事实。 */
+    private Boolean topicCompleted;
+
+    public Boolean getTopicCompleted() {
+        return topicCompleted;
+    }
+
+    public void setTopicCompleted(Boolean topicCompleted) {
+        this.topicCompleted = topicCompleted;
+    }
+
+    /** ③ 探索票进度读面(瞬态,见 ExploreTicketProgress):redeemed/required/completed/ended/active。其余恒 null。 */
+    private java.util.Map<String, Object> exploreProgress;
+
+    public java.util.Map<String, Object> getExploreProgress() {
+        return exploreProgress;
+    }
+
+    public void setExploreProgress(java.util.Map<String, Object> exploreProgress) {
+        this.exploreProgress = exploreProgress;
+    }
+
     public List<RegistrationEntitlement> getEntitlements() {
         return entitlements;
     }
@@ -309,6 +337,10 @@ public class CmsRegistration extends BaseEntity
     public void setOmsTicket(OmsTicket omsTicket) {
         this.omsTicket = omsTicket;
     }
+
+    public java.math.BigDecimal getCancelRefundAmount() { return cancelRefundAmount; }
+
+    public void setCancelRefundAmount(java.math.BigDecimal cancelRefundAmount) { this.cancelRefundAmount = cancelRefundAmount; }
 
     public com.chengyinhub.business.util.RefundPolicy.Verdict getRefundInfo() {
         return refundInfo;

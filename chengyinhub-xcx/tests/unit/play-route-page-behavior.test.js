@@ -7,6 +7,7 @@ const PAGE_PATH = path.resolve(__dirname, '../../pages/play/index.js')
 
 function loadPage() {
   const requests = []
+  const navigations = []
   const app = {
     sendRequest(options) {
       requests.push(options)
@@ -19,11 +20,12 @@ function loadPage() {
     nextTick(callback) { if (callback) callback() },
     showToast() {},
     vibrateShort() {},
+    navigateTo(options) { navigations.push(options.url) },
   }
   delete require.cache[PAGE_PATH]
   require(PAGE_PATH)
   assert.ok(definition, 'play page definition was not registered')
-  return { definition, app, requests }
+  return { definition, app, requests, navigations }
 }
 
 function context(definition, data) {
@@ -267,4 +269,146 @@ test('分支地图、手记与完赛足迹都消费真实 decisionLog 顺序', (
   assert.match(source, /const routePathNodes = [\s\S]{0,180}buildVisibleRoutePath\(/)
   assert.ok((source.match(/orderedJourneyNodes\(/g) || []).length >= 3,
     'buildJournal、_reviewOrderedNodes、_drawRoute 必须全部按真实路线顺序')
+})
+
+test('P-37:自由探索的下一站跳过玩法已做完、只等核销的店', () => {
+  const { definition } = loadPage()
+  const free = context(definition, { mode: 2, routeState: { routeMode: 'LINEAR' } })
+  free.scoreCandidates = (nodes, pts, pool) => pool.map((o) => Object.assign({ reason: '' }, o))
+  const shops = [
+    { nodeId: 71, name: '梧桐咖啡', done: false, gameDone: true },
+    { nodeId: 72, name: '安福路旧书铺', done: false, gameDone: false },
+    { nodeId: 73, name: '已核销的店', done: true, gameDone: true },
+  ]
+  assert.equal(free.computeNext(shops, null).nodeId, 72)
+  assert.equal(free.computeNext([shops[0], shops[2]], null), null, '只剩等核销的店时不再指路')
+})
+
+function completionPage(mode, node) {
+  const { definition, requests, navigations } = loadPage()
+  const page = context(definition, {
+    mode, activityId: 88, topicId: 9, nodes: [Object.assign({ nodeId: 71 }, node)],
+    routeState: { routeMode: 'LINEAR' },
+  })
+  page._routeNodeCatalog = page.data.nodes.slice()
+  page._captureCompletionEffects = () => ({})
+  page._isCompletionEffectCurrent = () => true
+  for (const method of ['clearGameNetworkError', 'stopNav', '_animateCompletedSegment',
+    '_triggerCelebration', 'markJustWrote', 'probeCelebrateEntry']) page[method] = () => {}
+  page.rebuild = () => { page.data.doneCount = page.data.nodes.filter(n => n.done).length }
+  page.loadData = (force) => { page.readbackRequested = force === false }
+  page.requests = requests
+  page.navigations = navigations
+  return page
+}
+
+test('arrive 实际回调区分 FREE 游戏完成计数、纯到店与已核销重放', async () => {
+  for (const scenario of [
+    { mode: 2, firstTime: true, redeemed: false },
+    { mode: 2, firstTime: false, redeemed: false },
+    { mode: 2, firstTime: false, redeemed: true },
+    { mode: 2, arrivalOnly: true, redeemed: false },
+    { mode: 2, online: true, firstTime: true, redeemed: false },
+    { mode: 1, firstTime: true, redeemed: false },
+  ]) {
+    const page = completionPage(scenario.mode, { merchantId: scenario.online ? 0 : 8001, arrived: true,
+      done: scenario.redeemed, gameDone: scenario.redeemed || scenario.firstTime === false,
+      doneAt: scenario.redeemed ? 1787500000001 : 0, earnedXp: 12 })
+    page.arrive(71, 'test')
+    assert.equal(page.requests[0].url, '/api/play/action-context')
+    page.requests[0].success({ code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } })
+    await new Promise(resolve => setImmediate(resolve))
+    const request = page.requests[1]
+    assert.equal(request.url, '/api/play/arrive')
+    const data = scenario.arrivalOnly
+      ? { nodeId: 71, arrived: true, arrivedAt: 1787500000000, done: false }
+      : { nodeId: 71, firstTime: scenario.firstTime, done: 1, total: 2,
+        completed: false, xp: scenario.firstTime ? 12 : 0 }
+    request.success({ code: 200, intentTerminal: true, data })
+    await new Promise(resolve => setImmediate(resolve))
+    const node = page.data.nodes[0]
+    assert.equal(node.done, scenario.mode === 1 || !!scenario.online || scenario.redeemed, JSON.stringify(scenario))
+    assert.equal(node.gameDone, !scenario.arrivalOnly && !scenario.online && scenario.mode === 2, JSON.stringify(scenario))
+    assert.equal(page._arrivalWriteInFlight, false)
+    if (scenario.arrivalOnly) {
+      assert.deepEqual(page.navigations, ['/pages/play/merchant/index?nodeId=71&justScanned=1'])
+      assert.equal(node.arrivedAt, 1787500000000)
+      assert.equal(page.readbackRequested, undefined)
+    } else {
+      assert.deepEqual(page.navigations, [], '游戏结算不得跳到核销页')
+      assert.equal(page.readbackRequested, scenario.online ? undefined : true)
+      assert.equal(node.earnedXp, 12, '重放不得用 xp0 抹掉历史探索值')
+      if (scenario.redeemed) assert.equal(node.doneAt, 1787500000001)
+    }
+  }
+})
+
+test('静态 checkin 仍只到店，游戏 checkin 仍使用独立玩法完成态', async () => {
+  for (const source of [undefined, 'game']) {
+    const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false })
+    page.checkin(71, 'TEST-ONLY-CODE', source)
+    assert.equal(page.requests[0].url, '/api/play/action-context')
+    page.requests[0].success({ code: 200, data: { routeSessionId: '77', expectedRouteVersion: 0 } })
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(page.requests[1].url, '/api/play/checkin')
+    page.requests[1].success({ code: 200, intentTerminal: true, data: source === 'game'
+      ? { nodeId: 71, firstTime: true, done: 1, total: 2, completed: false, xp: 12 }
+      : { nodeId: 71, arrived: true, done: false } })
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(page.data.nodes[0].done, false)
+    assert.equal(page.data.nodes[0].gameDone, source === 'game')
+    assert.equal(page.navigations.length, source === 'game' ? 0 : 1)
+  }
+})
+
+test('FREE 商店真实答题回执只完成玩法，不把待核销权益显示为已核销', () => {
+  const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false, doneAt: 0,
+    fragmentText: '本店的故事碎片' })
+  page.onComplete(71, { nodeId: 71, firstTime: true, done: 1, total: 4, completed: false, xp: 10 })
+  assert.equal(page.data.nodes[0].done, false)
+  assert.equal(page.data.nodes[0].gameDone, true)
+  assert.equal(page.data.nodes[0].earnedXp, 10)
+  assert.equal(page.data.doneCount, 0)
+  assert.equal(page.data.frag.step, '我的第 1 步 · ')
+  assert.equal(page.readbackRequested, true, '核销完成态必须重读当前服务端权益')
+})
+
+test('FREE 商店重复玩法回执保留已经权威读回的核销事实与历史探索值', () => {
+  const page = completionPage(2, { merchantId: 8001, done: true, gameDone: true,
+    doneAt: 1787500000001, earnedXp: 10 })
+  page.onComplete(71, { nodeId: 71, firstTime: false, done: 1, total: 4, completed: false, xp: 0 })
+  assert.equal(page.data.nodes[0].done, true)
+  assert.equal(page.data.nodes[0].doneAt, 1787500000001)
+  assert.equal(page.data.nodes[0].gameDone, true)
+  assert.equal(page.data.nodes[0].earnedXp, 10)
+  assert.equal(page.data.flyScore, false)
+  assert.equal(page.readbackRequested, true)
+})
+
+test('CITY 与没有商家的纯线上 FREE 节点仍沿用原完成语义', () => {
+  for (const [mode, merchantId] of [[1, 8001], [2, 0]]) {
+    const page = completionPage(mode, { merchantId, done: false })
+    page.onComplete(71, { nodeId: 71, firstTime: true, done: 1, total: 4, completed: false, xp: 10 })
+    assert.equal(page.data.nodes[0].done, true)
+    assert.equal(page.data.doneCount, 1)
+  }
+})
+
+test('FREE 商店的路线完成投影不能充当尚未核销的权益', () => {
+  const page = completionPage(2, { merchantId: 8001, done: false, gameDone: false })
+  page.onComplete(71, { nodeId: 71, firstTime: true, done: 1, completed: false, xp: 10,
+    routeState: { routeMode: 'LINEAR', status: 'ACTIVE', version: 1, nodeStates: { 71: 'COMPLETED' } } })
+  assert.equal(page.data.nodes[0].done, false)
+  assert.equal(page.data.nodes[0].gameDone, true)
+})
+
+test('FREE 权威 nodes 读回已核销后，重复答题回执不会翻回待核销', () => {
+  const page = completionPage(2, { merchantId: 8001, done: false })
+  page.data.nodes = [page.normNode({ nodeId: 71, merchantId: 8001, done: true, gameDone: true,
+    doneAt: 1787500000001 }, 0, 2)]
+  page._routeNodeCatalog = page.data.nodes.slice()
+  page.onComplete(71, { nodeId: 71, firstTime: false, done: 1, completed: false, xp: 0 })
+  assert.equal(page.data.nodes[0].done, true)
+  assert.equal(page.data.nodes[0].doneAt, 1787500000001)
+  assert.equal(page.data.doneCount, 1)
 })

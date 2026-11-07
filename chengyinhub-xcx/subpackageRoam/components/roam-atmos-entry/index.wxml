@@ -1,0 +1,11 @@
+<!-- 第九轮 m1 第 8 项:首次进漫游的大气层转场。真实地图已经在下面铺好,视频盖在上面,播完淡出露出地图。
+     点任意处跳过;网络慢 / 减弱动态 / 加载失败或超时都直接不出现。 -->
+<view wx:if="{{phase !== 'off'}}" class="atm atm-scrim {{phase === 'fade' ? 'is-fade' : ''}} {{phase === 'play' || phase === 'dim' ? 'is-on' : ''}}"
+      bindtap="skip" aria-role="button" aria-label="跳过转场" hover-class="none">
+  <video id="atmVideo" class="atm__video" src="{{src}}" autoplay muted="{{true}}" loop="{{false}}"
+         controls="{{false}}" show-center-play-btn="{{false}}" show-fullscreen-btn="{{false}}" show-play-btn="{{false}}"
+         show-progress="{{false}}" enable-progress-gesture="{{false}}" object-fit="cover"
+         bindplay="onPlay" bindended="onEnded" binderror="onError"></video>
+  <!-- 第九轮 m2 补充第 5 项:片尾是近白的云,直接淡出会在深色地图上闪一下白;先压暗成黑,再整层淡出露出地图 -->
+  <view class="atm__dim {{phase === 'dim' || phase === 'fade' ? 'is-on' : ''}}"></view>
+</view>

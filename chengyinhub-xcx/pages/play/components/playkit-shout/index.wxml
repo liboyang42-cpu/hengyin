@@ -14,10 +14,14 @@
     <view class="sh__s pe pe--up" style="--pe-d:.55s">使用舒适音量，不适请停止，勿持续大声喊叫</view>
     <view class="sh__s pe pe--up" style="--pe-d:.55s" wx:if="{{rewardNote}}">{{rewardNote}}</view>
 
-    <view class="sh__b {{running || preparing ? 'sh__b--busy' : ''}} pe pe--up" style="--pe-d:.85s" bindtap="onStart"
+    <view wx:if="{{!skipped}}" class="sh__b {{running || preparing ? 'sh__b--busy' : ''}} pe pe--up" style="--pe-d:.85s" bindtap="onStart"
           aria-role="button" aria-label="开始喊一嗓子" hover-class="sh__b--press" hover-stay-time="80">
       {{preparing ? '准备中' : (running ? '测量中' : '开始')}}
     </view>
+    <view wx:if="{{micDenied && !skipped && !running}}" class="sh__s" aria-live="polite">需要授权麦克风才能开始</view>
+    <view wx:if="{{skipped}}" class="sh__s">这一站已跳过</view>
+    <view wx:elif="{{canSkip && !running && !preparing}}" class="sh__skip" bindtap="onSkip"
+          aria-role="button" aria-label="跳过这一站" hover-class="sh__skip--press" hover-stay-time="80">跳过这一站</view>
   </view>
 </cy-play-stage>
 

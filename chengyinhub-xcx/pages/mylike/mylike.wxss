@@ -28,7 +28,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border-radius: var(--cy-radius-lg);
+  border-radius: var(--cy-radius-2xl); /* 封面媒体卡档,与首页 feed 长方卡同源同圆角 */
   background: var(--cy-color-bg-elevated);
 }
 .favorite-card__cover { display: block; width: 100%; height: 100%; }

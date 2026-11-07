@@ -23,7 +23,6 @@
 /* 行:左状态点 + 主副文 + 右金额。分隔线只在行间,不在卡缘。 */
 .fin-row { display: flex; align-items: center; gap: var(--cy-space-2-5); }
 .fin-row + .fin-row { margin-top: 40rpx; }  /* 行距 20px;零 divider —— 密度靠间距不靠线 */
-.fin-row--tap { opacity: .72; }
 .fin-row__dot { width: 14rpx; height: 14rpx; border-radius: 50%; flex: 0 0 14rpx; background: var(--cy-text-placeholder); }
 .fin-row__dot--warning { background: var(--cy-color-status-warning); }
 .fin-row__dot--success { background: var(--cy-color-status-success); }
@@ -34,7 +33,7 @@
   overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .fin-row__t2 { margin-top: var(--cy-space-1); display: flex; align-items: center; flex-wrap: wrap; gap: var(--cy-space-1);
   font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
-.fin-row__chip { margin-left: var(--cy-space-1); }
+.fin-row__chip { margin-left: 0; } /* 与前文的间距由 .fin-row__t2 的 gap 给;换行后与标题同一左缘 */
 /* 金额:等宽数字,右缘对齐;+绿 −红,不结现金走中性破折号 */
 .fin-row__v { flex-shrink: 0; font-size: var(--cy-font-subtitle); font-weight: 600; font-variant-numeric: tabular-nums;
   color: var(--cy-text-title); }

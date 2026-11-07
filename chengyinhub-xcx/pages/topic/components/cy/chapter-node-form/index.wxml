@@ -1,3 +1,4 @@
+<wxs src="../../../../../utils/wxs/money.wxs" module="money" />
 <view class="cnf-shell" style="{{sheetStyle}}">
 <cy-sheet show="{{show}}" variant="full" footer="{{true}}" title="{{formMode === 'offer' ? '填写实际供给' : (formMode === 'node' ? (editing ? '编辑节点' : '配置节点') : (editing ? '编辑申请 · 修改节点' : '申请承接并配置节点'))}}" closable="{{!submitting}}"
   maskClosable="{{!submitting}}" bind:close="onClose">
@@ -87,6 +88,8 @@
           <text>{{perkTemplatesLoading ? '正在读取常备权益…' : '还没有常备权益，先创建后再回来选择'}}</text>
           <cy-btn wx:if="{{!perkTemplatesLoading}}" variant="ghost" size="sm" bindtap="goCreatePerkTemplate">去创建常备权益</cy-btn>
         </view>
+        <view class="cnf-note cnf-note--field" wx:if="{{perkMinText && !perkBelowMin}}">零售价不少于 {{money.amount(perkMinText)}}</view>
+        <cy-inline-error wx:if="{{perkBelowMin}}" kind="error" title="本章节要求权益零售价不少于 {{money.amount(perkMinText)}}" />
       </view>
     </block>
     <view class="cnf-field" wx:if="{{termsMode === 'REVSHARE'}}">
@@ -113,7 +116,8 @@
       <textarea class="cnf-input cnf-address" value="{{form.address}}" placeholder="默认取商家资料，可修改" disabled="{{submitting}}"
         auto-height="{{true}}" maxlength="140" placeholder-class="cnf-placeholder" data-key="address" bindinput="onInput" />
       <cy-btn class="cnf-map-button" variant="secondary" disabled="{{submitting}}" bindtap="chooseNodeLocation">地图选点</cy-btn>
-      <view class="cnf-note">{{locationReady ? '位置已确认' : '请在地图上选择门店位置'}}</view>
+      <view wx:if="{{locationReady}}" class="cnf-note cy-addr-tap" bindtap="viewNodeLocation" aria-role="button" aria-label="在地图中查看到店位置" hover-class="cy-pressed" hover-stay-time="80">位置已确认</view>
+      <view wx:else class="cnf-note">请在地图上选择门店位置</view>
     </view>
 
     <view class="cnf-field">

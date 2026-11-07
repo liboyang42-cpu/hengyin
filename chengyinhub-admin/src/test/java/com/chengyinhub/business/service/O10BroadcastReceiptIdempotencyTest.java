@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -75,7 +76,7 @@ class O10BroadcastReceiptIdempotencyTest {
         club.setDelFlag(0);
         when(clubs.selectClubByIdForUpdate(CLUB)).thenReturn(club);
         when(mapper.isEligibleNotificationRecipient(any(), any(), any(), any(), any())).thenReturn(1);
-        when(mapper.claimNotificationOutbox(any(), any())).thenReturn(1);
+        when(mapper.claimNotificationOutbox(any(), any(), any())).thenReturn(1);
     }
 
     @Test
@@ -89,7 +90,7 @@ class O10BroadcastReceiptIdempotencyTest {
 
         verify(mapper, never()).insertDelivery(any());
         verify(mapper, never()).insertOutbox(any(), any());
-        verify(mapper, never()).selectDispatchableByCampaign(any(), anyInt());
+        verify(mapper, never()).selectDispatchableByCampaign(any(), anyInt(), any());
         verify(im, never()).sendSystem(any(), any(), any(), any());
     }
 
@@ -134,7 +135,7 @@ class O10BroadcastReceiptIdempotencyTest {
             return 1;
         });
         when(mapper.insertOutbox(any(), any())).thenReturn(1);
-        when(mapper.selectDispatchableByCampaign(61L, 500)).thenReturn(Collections.emptyList());
+        when(mapper.selectDispatchableByCampaign(eq(61L), eq(500), any())).thenReturn(Collections.emptyList());
         when(mapper.refreshCampaignCounts(61L)).thenReturn(1);
         when(mapper.selectCampaignById(61L)).thenReturn(
                 campaign(61L, "fanout", 2, 0, 0, ClubEventCampaign.PROCESSING));
@@ -184,7 +185,7 @@ class O10BroadcastReceiptIdempotencyTest {
         failed.setAttemptCount(1);
         when(mapper.selectCampaignById(61L)).thenReturn(partial, partial,
                 campaign(61L, "retry", 2, 2, 0, ClubEventCampaign.COMPLETED));
-        when(mapper.selectDispatchableByCampaign(61L, 500)).thenReturn(Collections.singletonList(failed));
+        when(mapper.selectDispatchableByCampaign(eq(61L), eq(500), any())).thenReturn(Collections.singletonList(failed));
         when(mapper.selectDeliveryByIdForUpdate(122L)).thenReturn(failed);
         when(im.sendSystem(any(), any(), any(), any())).thenReturn(502L);
         when(mapper.markDeliverySentCas(any(), any(), any(), any())).thenReturn(1);

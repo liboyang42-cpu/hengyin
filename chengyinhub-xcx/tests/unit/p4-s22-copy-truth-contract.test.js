@@ -68,7 +68,7 @@ function analyticsPayload(windowDays, signupCount) {
     semantics: 'INDEPENDENT_EVENT_COUNTS',
     windowDays,
     window: {
-      timezone: 'Asia/Shanghai', basis: 'COMPLETE_CALENDAR_DAYS',
+      timezone: 'Asia/Shanghai', basis: 'DAYS_INCL_TODAY',
       previousStartInclusive, currentStartInclusive, endExclusive,
     },
     stages: [

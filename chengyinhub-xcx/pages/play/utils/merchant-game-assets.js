@@ -42,6 +42,13 @@ const merchantGameAssets = Object.freeze([
 
 const merchantGameAssetSet = new Set(merchantGameAssets);
 
+function legacyMerchantGameImageUrl(path) {
+  const prefix = '/images/merchant-games/';
+  if (typeof path !== 'string' || !path.startsWith(prefix)) return '';
+  const relocated = 'https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/' + path.slice(prefix.length);
+  return merchantGameAssetSet.has(relocated) ? relocated : '';
+}
+
 function bundledMerchantGameAudioPath(path) {
   // 服务端配置(含存量库值)仍下发 /audio/merchant-games/*;#1103 起实体素材下沉到本分包,
   // 播放前必须映射到分包内路径,映射不到(未打包)返回空串由调用方拦截。
@@ -54,4 +61,4 @@ function isBundledMerchantGameAudio(path) {
   return bundledMerchantGameAudioPath(path) !== '';
 }
 
-module.exports = { merchantGameAssets, isBundledMerchantGameAudio, bundledMerchantGameAudioPath };
+module.exports = { merchantGameAssets, isBundledMerchantGameAudio, bundledMerchantGameAudioPath, legacyMerchantGameImageUrl };

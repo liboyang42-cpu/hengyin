@@ -11,6 +11,7 @@
 .lp__story { margin-top: 20rpx; font-size: 34rpx; line-height: 1.8; font-family: 'CyStoryHand', "Kaiti SC", serif; } /* ds-ok 手写体在线加载,失败回落楷体 */
 .lp__opt { margin-top: 28rpx; display: flex; gap: 20rpx; align-items: baseline; padding: 22rpx 24rpx; border-left: 4rpx solid var(--lp-acc); background: var(--lp-soft); font-size: var(--cy-type-body); }
 .lp__opt-k { color: var(--lp-acc); font-weight: 700; }
+.lpv.look--paper .lp__opt-k { color: var(--lp-ink); }
 .lp__actions { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
 .lp__btn { flex: 1; height: 96rpx; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; background: var(--cy-color-surface-muted, rgba(0,0,0,.06)); color: var(--cy-color-text-primary); } /* ds-ok 底色兜底 */
 .lp__btn--primary { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }

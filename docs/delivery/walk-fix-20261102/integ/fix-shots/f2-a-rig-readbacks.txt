@@ -1,0 +1,187 @@
+[11-04 20:45:14 jar@ecef2f078] lead login: {"member": 990005}
+[11-04 20:45:14 jar@ecef2f078] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-04 20:45:15 jar@ecef2f078] publisher identity: {"code": 200, "msg": "实名信息已登记"}
+[11-04 20:45:15 jar@ecef2f078] club create: {"code": 200, "msg": "已创建", "data": {"clubCount": 1, "clubId": 990004, "status": 1}}
+[11-04 20:45:15 jar@ecef2f078] template publish 喷泉的水柱: {"code": 200, "msg": "操作成功"}
+[11-04 20:45:15 jar@ecef2f078] template publish 博物馆的鼎: {"code": 200, "msg": "操作成功"}
+[11-04 20:45:15 jar@ecef2f078] template publish 大世界的塔楼: {"code": 200, "msg": "操作成功"}
+[11-04 20:45:16 jar@ecef2f078] topic v2/create (editor body, recruitDeadline=None): {"code": 500, "msg": "玩法「喷泉的水柱」还在审核中，审核通过后才能用于发布", "data": null}
+[11-04 20:45:28 jar@ecef2f078] admin approve task 1 TEMPLATE biz=6005: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:45:28 jar@ecef2f078] admin approve task 2 TEMPLATE biz=6006: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:45:28 jar@ecef2f078] admin approve task 3 TEMPLATE biz=6007: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:45:28 jar@ecef2f078] lead login: {"member": 990005}
+[11-04 20:45:28 jar@ecef2f078] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-04 20:45:29 jar@ecef2f078] topic v2/create (editor body, recruitDeadline=None): {"code": 200, "msg": "主题发布成功", "data": {"topicId": 990015, "auditTaskId": 5, "reviewState": "PENDING", "bundledTemplateIds": [6005, 6006, 6007], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}}
+[11-04 20:45:29 jar@ecef2f078] topic row :: SELECT id,club_id,product_type,merchant_status,lifecycle,status,user_status,recruit_deadline,sale_end_at,merchant_sign_up_start_date,merchant_sign_up_end_date,start_date,: [[990015, 990004, 1, 1, 7, 1, 1, null, null, null, null, "2026-11-04 00:00:00", "2027-01-03 23:59:59"]]
+[11-04 20:45:29 jar@ecef2f078] nodes :: SELECT id,name,template_id FROM cms_topic_node WHERE topic_id=%s ORDER BY id: [[71, "人民广场音乐喷泉", 6005], [72, "上海博物馆", 6006], [73, "大世界", 6007]]
+[11-04 20:45:40 jar@ecef2f078] topic window before apply :: SELECT id,lifecycle,merchant_status,merchant_sign_up_start_date,merchant_sign_up_end_date,recruit_deadline FROM cms_topic WHERE id=%s: [[990015, 7, 1, null, null, null]]
+[11-04 20:45:40 jar@ecef2f078] merchant 9002 apply node 71 (app body, "yyyy-MM-dd HH:mm:ss"): {"_status": 200, "code": 500, "msg": "系统繁忙，请稍后重试", "data": null}
+[11-04 20:45:40 jar@ecef2f078] cms_registration_merchant :: SELECT id,member_id,topic_id,node_id,status,start_date,end_date FROM cms_registration_merchant WHERE topic_id=%s: []
+[11-04 20:46:25 jar@ecef2f078] admin approve TOPIC task 5: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:46:25 jar@ecef2f078] admin approve TOPIC_PROJECT_REVIEW task 4: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:46:25 jar@ecef2f078] after project review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, null, null, null, null]]
+[11-04 20:46:25 jar@ecef2f078] pricing preview: {"code": 404, "msg": "请求路径不存在", "canConfirm": null, "block": null, "tickets": []}
+[11-04 20:46:25 jar@ecef2f078] pricing confirm: {"code": 404, "msg": "请求路径不存在", "data": null}
+[11-04 20:46:25 jar@ecef2f078] after confirm :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, null, null, null, null]]
+[11-04 20:46:26 jar@ecef2f078] admin approve TOPIC_SALE_REVIEW task 6: {"code": 500, "msg": "saleEndAt 必填"}
+[11-04 20:46:26 jar@ecef2f078] after sale review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, null, null, null, null]]
+[11-04 20:46:34 jar@ecef2f078] pricing preview: {"code": 200, "msg": "操作成功", "canConfirm": true, "block": null, "tickets": [[null, "领队场", 39.0]]}
+[11-04 20:46:45 jar@ecef2f078] pricing preview: {"code": 200, "msg": "操作成功", "canConfirm": true, "block": null, "tickets": [[null, "领队场", 39.0]]}
+[11-04 20:46:45 jar@ecef2f078] pricing confirm: {"code": 500, "msg": "票价格式不正确", "data": null}
+[11-04 20:46:45 jar@ecef2f078] after confirm :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, null, null, null, null]]
+[11-04 20:46:52 jar@ecef2f078] pricing preview: {"code": 200, "msg": "操作成功", "canConfirm": true, "block": null, "tickets": [[null, "领队场", 39.0]]}
+[11-04 20:46:52 jar@ecef2f078] pricing confirm: {"code": 200, "msg": "终价已确认，已提交开售审核，审核通过后开售。注意：平台正在办理支付资质，开放前这个主题开售后玩家还不能在线付款报名", "data": null}
+[11-04 20:46:52 jar@ecef2f078] after confirm :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, null, null, null, "0.1000"]]
+---- fresh DB, jar at a1d57403b (items 1-4) ----
+[11-04 20:58:46 jar@a1d57403b] lead login: {"member": 990005}
+[11-04 20:58:46 jar@a1d57403b] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-04 20:58:47 jar@a1d57403b] publisher identity: {"code": 200, "msg": "实名信息已登记"}
+[11-04 20:58:47 jar@a1d57403b] club create: {"code": 200, "msg": "已创建", "data": {"clubCount": 1, "clubId": 990004, "status": 1}}
+[11-04 20:58:47 jar@a1d57403b] template publish 喷泉的水柱: {"code": 200, "msg": "操作成功"}
+[11-04 20:58:47 jar@a1d57403b] template publish 博物馆的鼎: {"code": 200, "msg": "操作成功"}
+[11-04 20:58:47 jar@a1d57403b] template publish 大世界的塔楼: {"code": 200, "msg": "操作成功"}
+[11-04 20:58:48 jar@a1d57403b] topic v2/create (editor body, recruitDeadline=2026-11-04 23:59:59): {"code": 500, "msg": "玩法「喷泉的水柱」还在审核中，审核通过后才能用于发布", "data": null}
+[11-04 20:58:49 jar@a1d57403b] admin approve task 1 TEMPLATE biz=6005: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:58:49 jar@a1d57403b] admin approve task 2 TEMPLATE biz=6006: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:58:49 jar@a1d57403b] admin approve task 3 TEMPLATE biz=6007: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:58:49 jar@a1d57403b] lead login: {"member": 990005}
+[11-04 20:58:49 jar@a1d57403b] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-04 20:58:51 jar@a1d57403b] topic v2/create (editor body, recruitDeadline=2026-11-04 23:59:59): {"code": 200, "msg": "主题发布成功", "data": {"topicId": 990015, "auditTaskId": 5, "reviewState": "PENDING", "bundledTemplateIds": [6005, 6006, 6007], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}}
+[11-04 20:58:51 jar@a1d57403b] topic row :: SELECT id,club_id,product_type,merchant_status,lifecycle,status,user_status,recruit_deadline,sale_end_at,merchant_sign_up_start_date,merchant_sign_up_end_date,start_date,: [[990015, 990004, 1, 1, 7, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", "2026-11-04 20:58:50", "2026-11-04 23:59:59", "2026-11-04 00:00:00", "2027-01-03 23:59:59"]]
+[11-04 20:58:51 jar@a1d57403b] nodes :: SELECT id,name,template_id FROM cms_topic_node WHERE topic_id=%s ORDER BY id: [[71, "人民广场音乐喷泉", 6005], [72, "上海博物馆", 6006], [73, "大世界", 6007]]
+[11-04 20:58:56 jar@a1d57403b] admin approve TOPIC task 5: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:58:56 jar@a1d57403b] admin approve TOPIC_PROJECT_REVIEW task 4: {"code": 200, "msg": "审核处理成功"}
+[11-04 20:58:56 jar@a1d57403b] after project review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 1, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", null, null]]
+[11-04 20:58:56 jar@a1d57403b] topic window before apply :: SELECT id,lifecycle,merchant_status,merchant_sign_up_start_date,merchant_sign_up_end_date,recruit_deadline FROM cms_topic WHERE id=%s: [[990015, 1, 1, "2026-11-04 20:58:50", "2026-11-04 23:59:59", "2026-11-04 23:59:59"]]
+[11-04 20:58:56 jar@a1d57403b] merchant 9002 apply node 71 (app body, "yyyy-MM-dd HH:mm:ss"): {"_status": 200, "code": 200, "msg": "操作成功", "data": 14}
+[11-04 20:58:56 jar@a1d57403b] cms_registration_merchant :: SELECT id,member_id,topic_id,node_id,status,start_date,end_date FROM cms_registration_merchant WHERE topic_id=%s: [[14, 9002, 990015, 71, 0, "2026-11-04 00:00:00", "2026-11-04 23:59:59"]]
+[11-04 20:59:11 jar@a1d57403b] lead confirm candidate reg 14: {"code": 200, "msg": "已选定该候选,请向该商家发出带条款的合作邀约(接受后才成合作单)", "data": null}
+[11-04 20:59:11 jar@a1d57403b] registration after confirm :: SELECT id,member_id,node_id,status,audit_status FROM cms_registration_merchant WHERE id=%s: [[14, 9002, 71, 1, 1]]
+[11-04 20:59:11 jar@a1d57403b] lead coop/invite -> merchant 9002: {"code": 500, "msg": "请选择本主题该商家的真实核销据点", "data": null}
+[11-04 20:59:11 jar@a1d57403b] coop_invite :: SELECT id,invite_type,from_id,to_type,to_id,topic_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: []
+[11-04 20:59:11 jar@a1d57403b] coop_invite :: SELECT id,to_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: []
+[11-04 20:59:11 jar@a1d57403b] coop_order :: SELECT id,topic_id,to_type,to_id,status FROM coop_order WHERE topic_id=%s: []
+[11-04 20:59:19 jar@a1d57403b] lead supply-stations: {"code": 200, "msg": "操作成功", "data": {"stations": [{"stationName": "人民广场音乐喷泉旁 · 小城咖啡", "supplyStationId": "14"}], "requiresSupplyStation": true}}
+[11-04 20:59:20 jar@a1d57403b] lead coop/invite -> merchant 9002: {"code": 200, "msg": "已发起", "data": {"state": "CREATED", "requestId": "91e40687586c4c539786423f4c30cc6d", "inviteId": "990024", "replayed": false, "inviteType": 0, "topicId": "990015", "toType": "merchant", "toId": "9002", "scope": "", "supplyStationId": "14"}}
+[11-04 20:59:20 jar@a1d57403b] coop_invite :: SELECT id,invite_type,from_id,to_type,to_id,topic_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 0, 990005, "merchant", 9002, 990015, 0]]
+[11-04 20:59:20 jar@a1d57403b] merchant accepts invite 990024: {"code": 500, "msg": "请明确确认原邀约据点，不能换站接受", "data": null}
+[11-04 20:59:20 jar@a1d57403b] coop_invite :: SELECT id,to_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 9002, 0]]
+[11-04 20:59:20 jar@a1d57403b] coop_order :: SELECT id,topic_id,to_type,to_id,status FROM coop_order WHERE topic_id=%s: []
+[11-04 20:59:30 jar@a1d57403b] merchant accepts invite 990024: {"code": 200, "msg": "已接受", "data": {"conversationId": 2}}
+[11-04 20:59:30 jar@a1d57403b] coop_invite :: SELECT id,to_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 9002, 1]]
+[11-04 20:59:30 jar@a1d57403b] coop_order :: SELECT id,topic_id,to_type,to_id,status FROM coop_order WHERE topic_id=%s: [[1, 990015, "merchant", 9002, 0]]
+---- jar at 3a4ace516 (items 1-6 + F-07/F-10), same DB ----
+[11-04 21:28:23 jar@3a4ace516] lead confirm candidate reg 15: {"code": 200, "msg": "已选定该候选,请向该商家发出带条款的合作邀约(接受后才成合作单)", "data": null}
+[11-04 21:28:23 jar@3a4ace516] registration after confirm :: SELECT id,member_id,node_id,status,audit_status FROM cms_registration_merchant WHERE id=%s: [[15, 9005, 72, 1, 1]]
+[11-04 21:28:23 jar@3a4ace516] lead supply-stations: {"code": 200, "msg": "操作成功", "data": {"stations": [{"stationName": "上海博物馆东门 · 书店", "supplyStationId": "15"}], "requiresSupplyStation": true}}
+[11-04 21:28:24 jar@3a4ace516] lead coop/invite -> merchant 9005: {"code": 200, "msg": "已发起", "data": {"state": "CREATED", "requestId": "34c3120829204b9cbf160f165ee1510a", "inviteId": "990025", "replayed": false, "inviteType": 0, "topicId": "990015", "toType": "merchant", "toId": "9005", "scope": "", "supplyStationId": "15"}}
+[11-04 21:28:24 jar@3a4ace516] coop_invite :: SELECT id,invite_type,from_id,to_type,to_id,topic_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 0, 990005, "merchant", 9002, 990015, 1], [990025, 0, 990005, "merchant", 9005, 990015, 0]]
+[11-04 21:28:24 jar@3a4ace516] merchant accepts invite 990025: {"code": 200, "msg": "已接受", "data": {"conversationId": 3}}
+[11-04 21:28:24 jar@3a4ace516] coop_invite :: SELECT id,to_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 9002, 1], [990025, 9005, 1]]
+[11-04 21:28:24 jar@3a4ace516] coop_order :: SELECT id,topic_id,to_type,to_id,status FROM coop_order WHERE topic_id=%s: [[1, 990015, "merchant", 9002, 0], [2, 990015, "merchant", 9005, 0]]
+[11-04 21:56:13 jar@478d221d9] lead login: {"member": 990005}
+[11-04 21:56:13 jar@478d221d9] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-04 21:56:14 jar@478d221d9] topic v2/create (editor body, recruitDeadline=2026-11-04 23:59:59): {"code": 200, "msg": "主题发布成功", "data": {"topicId": 990016, "auditTaskId": 7, "reviewState": "PENDING", "bundledTemplateIds": [6005, 6006, 6007], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}}
+[11-04 21:56:14 jar@478d221d9] topic row :: SELECT id,club_id,product_type,merchant_status,lifecycle,status,user_status,recruit_deadline,sale_end_at,merchant_sign_up_start_date,merchant_sign_up_end_date,start_date,: [[990016, 990004, 1, 1, 7, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", "2026-11-04 21:56:14", "2026-11-04 23:59:59", "2026-11-04 00:00:00", "2027-01-03 23:59:59"]]
+[11-04 21:56:14 jar@478d221d9] nodes :: SELECT id,name,template_id FROM cms_topic_node WHERE topic_id=%s ORDER BY id: [[74, "人民广场音乐喷泉", 6005], [75, "上海博物馆", 6006], [76, "大世界", 6007]]
+[11-04 21:56:15 jar@478d221d9] admin approve TOPIC task 7: {"code": 200, "msg": "审核处理成功"}
+[11-04 21:56:15 jar@478d221d9] admin approve TOPIC_PROJECT_REVIEW task 6: {"code": 200, "msg": "审核处理成功"}
+[11-04 21:56:15 jar@478d221d9] after project review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990016, 1, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", null, null]]
+[11-04 21:56:15 jar@478d221d9] topic window before apply :: SELECT id,lifecycle,merchant_status,merchant_sign_up_start_date,merchant_sign_up_end_date,recruit_deadline FROM cms_topic WHERE id=%s: [[990016, 1, 1, "2026-11-04 21:56:14", "2026-11-04 23:59:59", "2026-11-04 23:59:59"]]
+[11-04 21:56:15 jar@478d221d9] merchant 9006 apply node 74 (app body, "yyyy-MM-dd HH:mm:ss"): {"_status": 200, "code": 200, "msg": "操作成功", "data": 16}
+[11-04 21:56:15 jar@478d221d9] cms_registration_merchant :: SELECT id,member_id,topic_id,node_id,status,start_date,end_date FROM cms_registration_merchant WHERE topic_id=%s: [[16, 9006, 990016, 74, 0, "2026-11-04 00:00:00", "2026-11-04 23:59:59"]]
+[11-04 21:56:16 jar@478d221d9] lead confirm candidate reg 16: {"code": 200, "msg": "已选定该候选,请向该商家发出带条款的合作邀约(接受后才成合作单)", "data": null}
+[11-04 21:56:16 jar@478d221d9] registration after confirm :: SELECT id,member_id,node_id,status,audit_status FROM cms_registration_merchant WHERE id=%s: [[16, 9006, 74, 1, 1]]
+[11-04 21:56:16 jar@478d221d9] item6 topic2 prepared (winner 9006, no invite): {"topic2": 990016}
+[11-04 21:56:21 jar@478d221d9] topic window before apply :: SELECT id,lifecycle,merchant_status,merchant_sign_up_start_date,merchant_sign_up_end_date,recruit_deadline FROM cms_topic WHERE id=%s: [[990016, 1, 1, "2026-11-04 21:56:14", "2026-11-04 23:59:59", "2026-11-04 23:59:59"]]
+[11-04 21:56:21 jar@478d221d9] merchant 9007 apply node 75 (app body, "yyyy-MM-dd HH:mm:ss"): {"_status": 200, "code": 200, "msg": "操作成功", "data": 17}
+[11-04 21:56:21 jar@478d221d9] cms_registration_merchant :: SELECT id,member_id,topic_id,node_id,status,start_date,end_date FROM cms_registration_merchant WHERE topic_id=%s: [[16, 9006, 990016, 74, 1, "2026-11-04 00:00:00", "2026-11-04 23:59:59"], [17, 9007, 990016, 75, 0, "2026-11-04 00:00:00", "2026-11-04 23:59:59"]]
+[11-04 21:56:21 jar@478d221d9] lead confirm candidate reg 17: {"code": 200, "msg": "已选定该候选,请向该商家发出带条款的合作邀约(接受后才成合作单)", "data": null}
+[11-04 21:56:21 jar@478d221d9] registration after confirm :: SELECT id,member_id,node_id,status,audit_status FROM cms_registration_merchant WHERE id=%s: [[17, 9007, 75, 1, 1]]
+[11-04 21:56:21 jar@478d221d9] lead supply-stations: {"code": 200, "msg": "操作成功", "data": {"stations": [{"stationName": "人民广场音乐喷泉旁 · 小城咖啡", "supplyStationId": "17"}], "requiresSupplyStation": true}}
+[11-04 21:56:22 jar@478d221d9] lead coop/invite -> merchant 9007: {"code": 200, "msg": "已发起", "data": {"state": "CREATED", "requestId": "690e94dc0c3e4fea8d349d0a129a2e13", "inviteId": "990026", "replayed": false, "inviteType": 0, "topicId": "990016", "toType": "merchant", "toId": "9007", "scope": "", "supplyStationId": "17"}}
+[11-04 21:56:22 jar@478d221d9] coop_invite :: SELECT id,invite_type,from_id,to_type,to_id,topic_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990026, 0, 990005, "merchant", 9007, 990016, 0]]
+[11-04 21:56:22 jar@478d221d9] merchant accepts invite 990026: {"code": 200, "msg": "已接受", "data": {"conversationId": 4}}
+[11-04 21:56:22 jar@478d221d9] coop_invite :: SELECT id,to_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990026, 9007, 1]]
+[11-04 21:56:22 jar@478d221d9] coop_order :: SELECT id,topic_id,to_type,to_id,status FROM coop_order WHERE topic_id=%s: [[3, 990016, "merchant", 9007, 0]]
+[11-04 21:57:09 jar@478d221d9] topic window before apply :: SELECT id,lifecycle,merchant_status,merchant_sign_up_start_date,merchant_sign_up_end_date,recruit_deadline FROM cms_topic WHERE id=%s: [[990015, 1, 1, "2026-11-04 20:58:50", "2026-11-04 23:59:59", "2026-11-04 23:59:59"]]
+[11-04 21:57:09 jar@478d221d9] merchant 9006 apply node 73 (app body, "yyyy-MM-dd HH:mm:ss"): {"_status": 200, "code": 200, "msg": "操作成功", "data": 18}
+[11-04 21:57:09 jar@478d221d9] cms_registration_merchant :: SELECT id,member_id,topic_id,node_id,status,start_date,end_date FROM cms_registration_merchant WHERE topic_id=%s: [[14, 9002, 990015, 71, 1, "2026-11-04 00:00:00", "2026-11-04 23:59:59"], [15, 9005, 990015, 72, 1, "2026-11-04 00:00:00", "2026-11-04 23:59:59"], [18, 9006, 990015, 73, 0, "2026-11-04 00:00:00", "2026-11-04 23:59:59"]]
+[11-04 21:58:29 jar@478d221d9] lead supply-stations: {"code": 200, "msg": "操作成功", "data": {"stations": [{"stationName": "人民广场音乐喷泉旁 · 小城咖啡", "supplyStationId": "18"}], "requiresSupplyStation": true}}
+[11-04 21:58:29 jar@478d221d9] lead coop/invite -> merchant 9006: {"code": 200, "msg": "已发起", "data": {"state": "CREATED", "requestId": "8a213d1e13784242918737b9900fcd0c", "inviteId": "990027", "replayed": false, "inviteType": 0, "topicId": "990015", "toType": "merchant", "toId": "9006", "scope": "", "supplyStationId": "18"}}
+[11-04 21:58:29 jar@478d221d9] coop_invite :: SELECT id,invite_type,from_id,to_type,to_id,topic_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 0, 990005, "merchant", 9002, 990015, 1], [990025, 0, 990005, "merchant", 9005, 990015, 1], [990027, 0, 990005, "merchant", 9006, 990015, 0]]
+[11-04 21:58:29 jar@478d221d9] merchant accepts invite 990027: {"code": 200, "msg": "已接受", "data": {"conversationId": 5}}
+[11-04 21:58:29 jar@478d221d9] coop_invite :: SELECT id,to_id,status FROM coop_invite WHERE topic_id=%s ORDER BY id: [[990024, 9002, 1], [990025, 9005, 1], [990027, 9006, 1]]
+[11-04 21:58:29 jar@478d221d9] coop_order :: SELECT id,topic_id,to_type,to_id,status FROM coop_order WHERE topic_id=%s: [[1, 990015, "merchant", 9002, 0], [2, 990015, "merchant", 9005, 0], [4, 990015, "merchant", 9006, 0]]
+[11-04 21:58:34 jar@478d221d9] admin run job 149 topicRecruitDeadlineTask: {"code": 200, "msg": "操作成功"}
+[11-04 21:58:38 jar@478d221d9] topic after deadline job :: SELECT id,lifecycle,recruit_deadline,NOW() AS db_now_utc,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 1, "2026-11-04 23:59:59", "2026-11-04 13:58:38", null]]
+[11-04 21:58:38 jar@478d221d9] job log :: SELECT job_log_id,job_name,status,LEFT(job_message,120),LEFT(exception_info,200) FROM sys_job_log WHERE invoke_target='topicRecruitDeadlineTask.run()' ORDER BY job_log_id: [[70617, "双死线-招募到期判定", "0", "双死线-招募到期判定 总共耗时：12毫秒 jobId=149 jobRunId=30ea92f7b75d4a65885be39da609fc98", ""]]
+[11-05 00:01:01 jar@478d221d9] admin run job 149 topicRecruitDeadlineTask: {"code": 200, "msg": "操作成功"}
+[11-05 00:01:05 jar@478d221d9] topic after deadline job :: SELECT id,lifecycle,recruit_deadline,NOW() AS db_now_utc,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, "2026-11-04 23:59:59", "2026-11-04 16:01:05", "0.1000"]]
+[11-05 00:01:05 jar@478d221d9] job log :: SELECT job_log_id,job_name,status,LEFT(job_message,120),LEFT(exception_info,200) FROM sys_job_log WHERE invoke_target='topicRecruitDeadlineTask.run()' ORDER BY job_log_id: [[70922, "双死线-招募到期判定", "0", "双死线-招募到期判定 总共耗时：4毫秒 jobId=149 jobRunId=7b5950edf39a492eae0f2bdfd16349ee", ""]]
+[11-05 00:02:07 jar@478d221d9] pricing preview: {"code": 200, "msg": "操作成功", "canConfirm": true, "block": null, "tickets": [[null, "领队场", 39.0]]}
+[11-05 00:02:07 jar@478d221d9] pricing confirm: {"code": 200, "msg": "终价已确认，已提交开售审核，审核通过后开售", "data": null}
+[11-05 00:02:07 jar@478d221d9] after confirm :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", null, "0.1000"]]
+[11-05 00:02:07 jar@478d221d9] admin approve TOPIC_SALE_REVIEW task 8: {"code": 200, "msg": "审核处理成功"}
+[11-05 00:02:07 jar@478d221d9] after sale review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 3, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", "2026-11-05 00:02:08", "0.1000"]]
+[11-05 00:02:07 jar@478d221d9] sale review tasks :: SELECT id,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW': [[8, 1]]
+[11-05 00:02:10 jar@478d221d9] admin run job 149 topicRecruitDeadlineTask: {"code": 200, "msg": "操作成功"}
+[11-05 00:02:14 jar@478d221d9] topic after deadline job :: SELECT id,lifecycle,recruit_deadline,NOW() AS db_now_utc,fee_platform_rate FROM cms_topic WHERE id=%s: [[990016, 2, "2026-11-04 23:59:59", "2026-11-04 16:02:14", "0.1000"]]
+[11-05 00:02:14 jar@478d221d9] job log :: SELECT job_log_id,job_name,status,LEFT(job_message,120),LEFT(exception_info,200) FROM sys_job_log WHERE invoke_target='topicRecruitDeadlineTask.run()' ORDER BY job_log_id: [[70925, "双死线-招募到期判定", "0", "双死线-招募到期判定 总共耗时：4毫秒 jobId=149 jobRunId=23f530a4ab834536984612d4d329f256", ""]]
+[11-05 00:02:15 jar@478d221d9] pricing preview: {"code": 200, "msg": "操作成功", "canConfirm": true, "block": null, "tickets": [[null, "领队场", 39.0]]}
+[11-05 00:02:15 jar@478d221d9] pricing confirm: {"code": 200, "msg": "终价已确认，已提交开售审核，审核通过后开售", "data": null}
+[11-05 00:02:15 jar@478d221d9] after confirm :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990016, 2, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", null, "0.1000"]]
+[11-05 00:02:15 jar@478d221d9] admin approve TOPIC_SALE_REVIEW task 9: {"code": 500, "msg": "「人民广场音乐喷泉」的商家还没有生效的合作单，不能开售：请先发出合作邀约并等商家接受"}
+[11-05 00:02:15 jar@478d221d9] after sale review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990016, 2, 1, 1, "2026-11-04 23:59:59", "2027-01-03 23:59:59", null, "0.1000"]]
+[11-05 00:02:15 jar@478d221d9] sale review tasks :: SELECT id,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW': [[9, 0]]
+[11-05 00:02:32 jar@478d221d9] lead open-session 2026-11-05 00:25: {"code": 200, "msg": "开团成功", "data": {"activityId": 9}}
+[11-05 00:02:32 jar@478d221d9] session activity :: SELECT id,topic_id,club_id,start_date,end_date,status,publish_status,latitude,longitude FROM cms_activity WHERE topic_id=%s ORDER BY id DESC LIMIT 1: [[9, 990015, 990004, "2026-11-05 00:25:00", "2026-11-05 23:59:59", 1, 1, "31.2304", "121.4737"]]
+[11-05 00:02:32 jar@478d221d9] session tickets :: SELECT id,owner_type,owner_id,name,price,remaining_inventory FROM oms_ticket WHERE owner_type=2 AND owner_id=(SELECT MAX(id) FROM cms_activity WHERE topic_id=%s): [[77, 2, 9, "领队场", "39.00", 20]]
+[11-05 00:02:35 jar@478d221d9] player 990006 join club: {"code": 200, "msg": "加入成功"}
+[11-05 00:02:35 jar@478d221d9] player 990006 quote: {"code": 200, "msg": "操作成功", "payable": null}
+[11-05 00:02:35 jar@478d221d9] player 990006 create: {"code": 500, "msg": "请先完成报名信息提供的单独同意"}
+[11-05 00:02:35 jar@478d221d9] pay.py (real callback): {"ok": false, "error": "no unpaid registration for member=990006 reg_no=None"} 
+[11-05 00:02:35 jar@478d221d9] registration :: SELECT id,member_id,owner_type,owner_id,payable_amount,payment_status FROM cms_registration WHERE member_id=%s ORDER BY id DESC LIMIT 1: []
+[11-05 00:02:36 jar@478d221d9] player 990007 join club: {"code": 200, "msg": "加入成功"}
+[11-05 00:02:36 jar@478d221d9] player 990007 quote: {"code": 200, "msg": "操作成功", "payable": null}
+[11-05 00:02:36 jar@478d221d9] player 990007 create: {"code": 500, "msg": "请先完成报名信息提供的单独同意"}
+[11-05 00:02:36 jar@478d221d9] pay.py (real callback): {"ok": false, "error": "no unpaid registration for member=990007 reg_no=None"} 
+[11-05 00:02:36 jar@478d221d9] registration :: SELECT id,member_id,owner_type,owner_id,payable_amount,payment_status FROM cms_registration WHERE member_id=%s ORDER BY id DESC LIMIT 1: []
+[11-05 00:02:56 jar@478d221d9] player 990006 quote: {"code": 200, "msg": "操作成功", "payable": null}
+[11-05 00:02:56 jar@478d221d9] player 990006 signup data-sharing consent (the checkout checkbox): {"code": 200, "msg": "操作成功"}
+[11-05 00:02:56 jar@478d221d9] player 990006 create: {"code": 200, "msg": "报名创建成功"}
+[11-05 00:02:56 jar@478d221d9] pay.py (real callback): {"ok": true, "registrationId": 74, "registrationNo": "A20261105FC138296", "totalFen": 3900, "callbackStatus": 204, "paymentStatusBefore": 1, "readback": ["2", "2026-11-05 00:02:57", "RIG-TXN-74"], "callbackBody": ""} 
+[11-05 00:02:56 jar@478d221d9] registration :: SELECT id,member_id,owner_type,owner_id,payable_amount,payment_status FROM cms_registration WHERE member_id=%s ORDER BY id DESC LIMIT 1: [[74, 990006, 2, 9, "39.00", 2]]
+[11-05 00:02:57 jar@478d221d9] player 990007 quote: {"code": 200, "msg": "操作成功", "payable": null}
+[11-05 00:02:57 jar@478d221d9] player 990007 signup data-sharing consent (the checkout checkbox): {"code": 200, "msg": "操作成功"}
+[11-05 00:02:57 jar@478d221d9] player 990007 create: {"code": 200, "msg": "报名创建成功"}
+[11-05 00:02:57 jar@478d221d9] pay.py (real callback): {"ok": true, "registrationId": 75, "registrationNo": "A2026110545C16C5B", "totalFen": 3900, "callbackStatus": 204, "paymentStatusBefore": 1, "readback": ["2", "2026-11-05 00:02:57", "RIG-TXN-75"], "callbackBody": ""} 
+[11-05 00:02:57 jar@478d221d9] registration :: SELECT id,member_id,owner_type,owner_id,payable_amount,payment_status FROM cms_registration WHERE member_id=%s ORDER BY id DESC LIMIT 1: [[75, 990007, 2, 9, "39.00", 2]]
+[11-05 00:03:01 jar@478d221d9] f2-lead PREPARE node=None: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"prepared": true, "stationCount": 3}}
+[11-05 00:03:01 jar@478d221d9] view f2-lead CLUB: {"code": 200, "msg": "操作成功", "status": "PREPARING", "actions": ["SET_LEADERBOARD_VISIBILITY"], "readiness": {"requiredStations": 3, "readyStations": 0, "teamsReady": false, "blockers": ["人民广场音乐喷泉（待商家接受）", "上海博物馆（待商家接受）", "大世界（待商家接受）", "尚无有效报名队伍"]}, "stations": [["人民广场音乐喷泉", "INVITED"], ["上海博物馆", "INVITED"], ["大世界", "INVITED"]]}
+[11-05 00:04:33 jar@478d221d9] view f2-lead CLUB: {"code": 200, "msg": "操作成功", "status": "PREPARING", "actions": ["SET_LEADERBOARD_VISIBILITY"], "readiness": {"requiredStations": 3, "readyStations": 0, "teamsReady": true, "blockers": ["人民广场音乐喷泉（待商家接受）", "上海博物馆（待商家接受）", "大世界（待商家接受）"]}, "stations": [["人民广场音乐喷泉", "INVITED"], ["上海博物馆", "INVITED"], ["大世界", "INVITED"]]}
+[11-05 00:07:12 jar@478d221d9] e2e-openid-9002 STATION_READY node=71: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"station": {"stationId": 1, "nodeId": 71, "nodeName": "人民广场音乐喷泉", "stationCode": "NODE_71", "status": "READY", "revision": 2, "serviceStartAt": "2026-11-05 00:00:00", "serviceEndAt": "2026-11-05 23:00:00", "capacity": 8, "serviceWindow": {"start": "2026-11-05 00:00:00", "end": "2026-11-05 23:00:00"}, "preparationChecklist": [], "pauseReasonCode": null, "pauseReason": null, "resumeEta": null, "fallbackNodeId": null, "fallbackPlanCode": null, "fallbackPlanVersion": null, "pendingVerificationCount": 0, "fallbackPlanOptions": [], "playable": false, "playerTask": null, "merchantInstruction": null, "hiddenInfoReminder": null}}}
+[11-05 00:07:12 jar@478d221d9] stations :: SELECT node_id,node_name,merchant_member_id,source_type,status,service_start_at,service_end_at FROM game_station_run WHERE activity_id=%s: [[71, "人民广场音乐喷泉", 9002, "REGISTRATION_WINNER", "READY", "2026-11-05 00:00:00", "2026-11-05 23:00:00"], [72, "上海博物馆", 9005, "REGISTRATION_WINNER", "INVITED", null, null], [73, "大世界", 9006, "REGISTRATION_WINNER", "INVITED", null, null]]
+[11-05 00:07:13 jar@478d221d9] e2e-openid-9005 STATION_ACCEPT node=72: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"station": {"stationId": 2, "nodeId": 72, "nodeName": "上海博物馆", "stationCode": "NODE_72", "status": "ACCEPTED", "revision": 1, "serviceStartAt": null, "serviceEndAt": null, "capacity": null, "serviceWindow": {"start": null, "end": null}, "preparationChecklist": [], "pauseReasonCode": null, "pauseReason": null, "resumeEta": null, "fallbackNodeId": null, "fallbackPlanCode": null, "fallbackPlanVersion": null, "pendingVerificationCount": 0, "fallbackPlanOptions": [], "playable": false, "playerTask": null, "merchantInstruction": null, "hiddenInfoReminder": null}}}
+[11-05 00:07:13 jar@478d221d9] e2e-openid-9005 STATION_READY node=72: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"station": {"stationId": 2, "nodeId": 72, "nodeName": "上海博物馆", "stationCode": "NODE_72", "status": "READY", "revision": 2, "serviceStartAt": "2026-11-05 00:00:00", "serviceEndAt": "2026-11-05 23:00:00", "capacity": 8, "serviceWindow": {"start": "2026-11-05 00:00:00", "end": "2026-11-05 23:00:00"}, "preparationChecklist": [], "pauseReasonCode": null, "pauseReason": null, "resumeEta": null, "fallbackNodeId": null, "fallbackPlanCode": null, "fallbackPlanVersion": null, "pendingVerificationCount": 0, "fallbackPlanOptions": [], "playable": false, "playerTask": null, "merchantInstruction": null, "hiddenInfoReminder": null}}}
+[11-05 00:07:13 jar@478d221d9] stations :: SELECT node_id,node_name,merchant_member_id,source_type,status,service_start_at,service_end_at FROM game_station_run WHERE activity_id=%s: [[71, "人民广场音乐喷泉", 9002, "REGISTRATION_WINNER", "READY", "2026-11-05 00:00:00", "2026-11-05 23:00:00"], [72, "上海博物馆", 9005, "REGISTRATION_WINNER", "READY", "2026-11-05 00:00:00", "2026-11-05 23:00:00"], [73, "大世界", 9006, "REGISTRATION_WINNER", "INVITED", null, null]]
+[11-05 00:07:13 jar@478d221d9] e2e-openid-9006 STATION_ACCEPT node=73: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"station": {"stationId": 3, "nodeId": 73, "nodeName": "大世界", "stationCode": "NODE_73", "status": "ACCEPTED", "revision": 1, "serviceStartAt": null, "serviceEndAt": null, "capacity": null, "serviceWindow": {"start": null, "end": null}, "preparationChecklist": [], "pauseReasonCode": null, "pauseReason": null, "resumeEta": null, "fallbackNodeId": null, "fallbackPlanCode": null, "fallbackPlanVersion": null, "pendingVerificationCount": 0, "fallbackPlanOptions": [], "playable": false, "playerTask": null, "merchantInstruction": null, "hiddenInfoReminder": null}}}
+[11-05 00:07:13 jar@478d221d9] e2e-openid-9006 STATION_READY node=73: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"station": {"stationId": 3, "nodeId": 73, "nodeName": "大世界", "stationCode": "NODE_73", "status": "READY", "revision": 2, "serviceStartAt": "2026-11-05 00:00:00", "serviceEndAt": "2026-11-05 23:00:00", "capacity": 8, "serviceWindow": {"start": "2026-11-05 00:00:00", "end": "2026-11-05 23:00:00"}, "preparationChecklist": [], "pauseReasonCode": null, "pauseReason": null, "resumeEta": null, "fallbackNodeId": null, "fallbackPlanCode": null, "fallbackPlanVersion": null, "pendingVerificationCount": 0, "fallbackPlanOptions": [], "playable": false, "playerTask": null, "merchantInstruction": null, "hiddenInfoReminder": null}}}
+[11-05 00:07:13 jar@478d221d9] stations :: SELECT node_id,node_name,merchant_member_id,source_type,status,service_start_at,service_end_at FROM game_station_run WHERE activity_id=%s: [[71, "人民广场音乐喷泉", 9002, "REGISTRATION_WINNER", "READY", "2026-11-05 00:00:00", "2026-11-05 23:00:00"], [72, "上海博物馆", 9005, "REGISTRATION_WINNER", "READY", "2026-11-05 00:00:00", "2026-11-05 23:00:00"], [73, "大世界", 9006, "REGISTRATION_WINNER", "READY", "2026-11-05 00:00:00", "2026-11-05 23:00:00"]]
+[11-05 00:07:13 jar@478d221d9] view f2-lead CLUB: {"code": 200, "msg": "操作成功", "status": "READY", "actions": ["SET_LEADERBOARD_VISIBILITY", "START"], "readiness": {"requiredStations": 3, "readyStations": 3, "teamsReady": true, "blockers": []}, "stations": [["人民广场音乐喷泉", "READY"], ["上海博物馆", "READY"], ["大世界", "READY"]]}
+[11-05 00:26:18 jar@8ad2eb959] f2-lead START node=None: {"code": 200, "msg": "操作成功", "outcome": "APPLIED", "reasonCode": null, "result": {"startedAt": "2026-11-05 00:26:18"}}
+[note] lines tagged jar@8ad2eb959 ran on the jar built at 478d221d (repin not rerun; backend diff 478d221d..8ad2eb95 is only the sale-refusal wording 0d0e8669 and front-end)
+[11-05 00:26:25 jar@8ad2eb959] player f2-p1 answer node 71: {"code": 200, "msg": "答对了！"}
+[11-05 00:26:25 jar@8ad2eb959] player f2-p1 answer node 72: {"code": 500, "msg": "请先由商家扫描带队主理人的团码完成上一站接待"}
+[11-05 00:26:29 jar@8ad2eb959] lead groupcode/issue: {"code": 200, "msg": "操作成功", "hasCode": true}
+[11-05 00:26:29 jar@8ad2eb959] merchant e2e-openid-9002 groupcode/redeem: {"code": 200, "msg": "已记录接待该团"}
+[11-05 00:26:29 jar@8ad2eb959] player f2-p1 answer node 72: {"code": 200, "msg": "答对了！"}
+[11-05 00:26:34 jar@8ad2eb959] player f2-p1 answer node 73: {"code": 500, "msg": "本章还没开启,等队长放行"}
+[11-05 00:26:34 jar@8ad2eb959] lead groupcode/issue: {"code": 200, "msg": "操作成功", "hasCode": true}
+[11-05 00:26:34 jar@8ad2eb959] merchant e2e-openid-9005 groupcode/redeem: {"code": 200, "msg": "已记录接待该团"}
+[11-05 00:26:35 jar@8ad2eb959] player f2-p1 answer node 73: {"code": 500, "msg": "本章还没开启,等队长放行"}
+[11-05 00:26:36 jar@8ad2eb959] player f2-p2 answer node 71: {"code": 200, "msg": "答对了！"}
+[11-05 00:26:36 jar@8ad2eb959] player f2-p2 answer node 72: {"code": 200, "msg": "答对了！"}
+[11-05 00:26:44 jar@8ad2eb959] coop_group_verify (merchant scans of the 团码) :: SELECT id,activity_id,topic_id,coop_order_id,merchant_member_id,leader_member_id,verify_time FROM coop_group_verify WHERE activity_id=9: [[1, 9, 990015, 1, 9002, 990005, "2026-11-05 00:26:29"], [2, 9, 990015, 2, 9005, 990005, "2026-11-05 00:26:35"]]
+[11-05 00:26:44 jar@8ad2eb959] game_session :: SELECT id,activity_id,status,started_at FROM game_session WHERE activity_id=9: [[1, 9, "RUNNING", "2026-11-05 00:26:19"]]
+[11-05 00:26:44 jar@8ad2eb959] player progress :: SELECT member_id,node_id,status FROM player_node_progress WHERE activity_id=9 ORDER BY member_id,node_id: [[990006, 71, 1], [990006, 72, 1], [990007, 71, 1], [990007, 72, 1]]

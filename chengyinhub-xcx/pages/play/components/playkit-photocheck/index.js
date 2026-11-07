@@ -11,7 +11,7 @@
 // 这一屏只说清「这次没能审」,不许出现「审核通过 / 不通过」这类假结论。
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
-const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
+const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
 // C1:核验说明只认服务端 photoVerified=true;兜底放行另有一句,不说「这张过了」
@@ -42,9 +42,12 @@ Component({
     frameOpacity: { type: Number, value: 40 },
     // 拍物成卡:判过时服务端随本次回包带回来的那张卡(契约 §10.2)。null = 这一屏没有卡。
     card: { type: Object, value: null },
+    // P-24:页面上传失败一次就 +1(单调递增);组件只认比见过的大,屏上写「上传失败，请重拍」
+    photoFailSeq: { type: Number, value: 0 },
   },
   data: {
     busy: false,
+    uploadFail: '',
     triesLabel: '',
     verdict: '',
     verdictKind: '',
@@ -58,6 +61,12 @@ Component({
     outlineFailed: false,
   },
   observers: {
+    photoFailSeq: function (seq) {
+      const n = Number(seq) || 0;
+      if (n <= (this._seenFailSeq || 0)) return;
+      this._seenFailSeq = n;
+      this.setData({ uploadFail: '上传失败，请重拍', busy: false });
+    },
     'photoVerified, rewardCeiling, passed': function (photoVerified, rewardCeiling, passed) {
       this.setData({
         verifiedNote: passed && photoVerified === true ? PHOTO_VERIFIED_NOTE : '',
@@ -73,9 +82,11 @@ Component({
       let verdictKind = '';
       let reason = '';
       if (degraded) {
-        // 降级:这次没有结论。不许说「通过 / 不通过」,也不把玩家卡在这一屏
-        verdict = '这次没能审，先往下走';
+        /* 降级:这次没有结论。不许说「通过 / 不通过」。R11 g1 F3:跟服务端走 ——
+           还有机会就重拍(服务端 passed=false),机会用完服务端放行(passed=true)才说先往下走。 */
+        verdict = passed ? '这次没能审，先往下走' : '这次没能审，再拍一张';
         verdictKind = '';
+        if (!passed) reason = String(lastReason || '').trim();
       } else if (passed && flagged) {
         // 次数用尽兜底放行:服务端 passed 与 flagged 同时为真。这张是「先算过」,不是「过了」
         verdict = PHOTO_FALLBACK_VERDICT;
@@ -83,9 +94,6 @@ Component({
       } else if (passed) {
         verdict = '这张过了';
         verdictKind = 'ok';
-      } else if (flagged) {
-        verdict = fallback === 'pass' ? '机会用完了，这张先算过' : '机会用完了';
-        verdictKind = fallback === 'pass' ? 'ok' : 'no';
       } else if (used > 0) {
         verdict = '还差一点，再拍一张';
         verdictKind = 'no';
@@ -117,7 +125,9 @@ Component({
      * ⚠️ 轮廓是取景辅助,不是判定条件,绝不能因为它没起来就不让玩家拍这一张。
      */
     onShoot() {
-      if (this.data.busy || this.data.passed || this.data.flagged) return;
+      // R11 g1 F3:只认服务端 passed。flagged 是留给商家的痕迹,不是「这一站定了」
+      if (this.data.busy || this.data.passed) return;
+      if (this.data.uploadFail) this.setData({ uploadFail: '' });
       /* ⚠️ 内嵌呈现(故事流里就地玩)不进页内取景:.chfull__para 恒带 transform:scale() 与
          filter:blur()(见 pages/play/index.wxml 那一行的行内样式,值永远是数字、不是 none),
          非 none 的 transform/filter 会成为 position:fixed 后代的包含块 —— 取景层会被圈进

@@ -16,6 +16,7 @@
   color: var(--cy-text-secondary);
 }
 .sp-h:first-child { margin-top: 0; }
+.sp-gate { padding: var(--cy-space-3) 0; font-size: var(--cy-font-body); color: var(--cy-text-title); }
 .sp-scroll { width: 100%; white-space: nowrap; }
 
 /* 日期卡:稿上是矮扁块,周几小字在上、日期大字在下;选中整块反白 */

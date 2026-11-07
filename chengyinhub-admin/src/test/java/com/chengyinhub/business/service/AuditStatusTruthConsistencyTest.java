@@ -85,6 +85,7 @@ class AuditStatusTruthConsistencyTest {
         REGISTERED_WRITERS.put("cms_topic#reopenAuditDecision", "check_status,status,user_status");
         REGISTERED_WRITERS.put("cms_topic#markContentSafetyHold", "content_safety_hold");
         REGISTERED_WRITERS.put("cms_topic#clearContentSafetyHold", "content_safety_hold");
+        REGISTERED_WRITERS.put("cms_topic#markTopicTemplateCopy", "check_status,status,user_status");
     }
 
     @Test

@@ -87,7 +87,7 @@ function mountComponent() {
   let def
   const cnavs = []
   const stub = new Proxy({}, { get: () => () => {} })
-  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'components/cy/scene-route-content/index.js'), 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-route-content/index.js'), 'utf8'), {
     Component: (d) => { def = d },
     getApp: () => ({ globalData: {}, sendRequest: () => {} }),
     require: (r) => {

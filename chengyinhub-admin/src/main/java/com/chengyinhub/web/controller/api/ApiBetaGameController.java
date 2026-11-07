@@ -182,11 +182,10 @@ public class ApiBetaGameController extends BaseController {
             if (umsMember!=null){
 
 
-                int points = 0;
-                CmsPointsSetting cmsPointsSetting = cmsPointsSettingService.selectCmsPointsSettingById(4L);
-                if (cmsPointsSetting != null) {
-                    points = cmsPointsSetting.getValue().intValue();
-                }
+                // 停用的规则 4 一分不发,也不写 0 分流水
+                int points = com.chengyinhub.business.service.support.PointsRuleSwitch.activeValue(
+                        cmsPointsSettingService.selectCmsPointsSettingById(4L));
+                if (points > 0) {
                 umsMemberService.addPoints(umsMember.getId(), points);
 
                 //赠送积分
@@ -202,6 +201,7 @@ public class ApiBetaGameController extends BaseController {
                 umsMemberPointsDetail.setDelFlag(0);
                 umsMemberPointsDetail.setCreateTime(new Date());
                 umsMemberPointsDetailService.insertUmsMemberPointsDetail(umsMemberPointsDetail);
+                }
             }
 
             return success(cmsBetaGameVote);

@@ -268,7 +268,7 @@ test('orderinfo:purchaseKind 有值时是主真源,不拿 entitlements 覆盖', 
     data: { id: 1001, purchaseKind: 3, entitlements: [], registrationStatus: 2, ownerType: 2 }
   })
   assert.equal(explore.data.info.isExploreOrder, true, '真实探店日即使权益列表为空也必须识别')
-  assert.equal(explore.data.info.typeLabel, '探店日')
+  assert.equal(explore.data.info.typeLabel, '自由探索')
 
   sandbox.requests.length = 0
   const classic = loadPage()
@@ -298,7 +298,7 @@ test('orderinfo:purchaseKind 缺失时只回落明确的章节权益事实', () 
   })
 
   assert.equal(vm.data.info.isExploreOrder, true, '存量/手工单的明确章节权益必须触发 NULL 回落')
-  assert.equal(vm.data.info.typeLabel, '探店日')
+  assert.equal(vm.data.info.typeLabel, '自由探索')
 
   sandbox.requests.length = 0
   const legacy = loadPage()

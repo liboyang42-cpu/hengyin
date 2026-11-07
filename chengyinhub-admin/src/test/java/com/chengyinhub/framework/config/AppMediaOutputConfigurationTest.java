@@ -188,4 +188,30 @@ class AppMediaOutputConfigurationTest {
         }
     }
 
+    @Test void realLegacyCoverGuardSurvivesPublicListAndJsonProjection() throws Exception {
+        AppMediaReferenceGuard realGuard = new AppMediaReferenceGuard();
+        com.chengyinhub.business.mapper.AppMediaAssetMapper registry =
+                mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(realGuard, "mapper", registry);
+        org.springframework.test.util.ReflectionTestUtils.setField(realGuard, "assets",
+                mock(com.chengyinhub.business.service.impl.AppMediaAssetService.class));
+        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+        new AppMediaOutputConfiguration(realGuard).reviewedMediaOutput().customize(builder);
+        ObjectMapper realMapper = builder.build();
+        String reference = "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t1.png";
+        String key = "chenyin/t1.png";
+        for (boolean tree : new boolean[]{false, true}) {
+            String config = "{\"questionImg\":\"" + reference + "\"}";
+            Object value = Map.of("imgUrl", reference, "advancedConfigJson", config);
+            if (tree) value = realMapper.valueToTree(value);
+            var output = realMapper.readTree(realMapper.writeValueAsString(value));
+            assertEquals(reference, output.path("imgUrl").asText());
+            assertEquals(reference, realMapper.readTree(output.path("advancedConfigJson").asText()).path("questionImg").asText());
+        }
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+        when(registry.selectByObjectKey(key)).thenReturn(Map.of("id", 7L, "memberId", 11L,
+                "objectKey", key, "reviewState", "REJECTED", "ownerType", "APP"));
+        assertEquals("", realMapper.readTree(realMapper.writeValueAsString(Map.of("imgUrl", reference))).path("imgUrl").asText());
+    }
+
 }

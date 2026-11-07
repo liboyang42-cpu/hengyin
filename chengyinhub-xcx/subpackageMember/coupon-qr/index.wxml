@@ -25,15 +25,14 @@
   <cy-nav-bar tint="light" custom-back bind:back="onClose" wx:if="{{!(entryState === 'ready' && useStatus == 0)}}" />
   <cy-nav-spacer wx:if="{{!(entryState === 'ready' && useStatus == 0)}}" />
 
+  <cy-empty wx:if="{{entryState === 'notmine'}}" fill size="lg" title="这张券不在你的券包里" cta="返回" bind:cta="onClose" />
+
+  <!-- R11 p1 F-6:深链直进时自动返回无处可回,留成空白;改为常驻「缺少券信息 · 返回」 -->
   <cy-state-shell
     class="cq-entry-state"
     wx:if="{{entryState === 'missing-param'}}"
     kind="missing-param"
-    auto-back
-    custom-back
-    bind:back="onClose"
     title="缺少券信息"
-    sub="请返回重新进入"
     primary="返回"
     fill="{{true}}"
     size="lg"

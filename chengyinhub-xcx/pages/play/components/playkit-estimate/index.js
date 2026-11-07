@@ -41,6 +41,32 @@ function buildTicks(min, max) {
   return out;
 }
 
+/** 数字去掉多余的小数尾巴:5.40 → 5.4,6.0 → 6。 */
+function fmt(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '';
+  return String(Math.round(n * 100) / 100);
+}
+
+/**
+ * P-09 / P-10:交过之后的结果一行。服务端回执给 tier(HIT / CLOSE / MISS)、你的估数与真值;
+ * 交之前三者都不在客户端。返回 null = 还没交。
+ */
+function resultLine(r) {
+  const o = r || {};
+  if (!o.submitted || !o.tier) return null;
+  const unit = o.unit || '';
+  const guess = fmt(o.guess);
+  const answer = fmt(o.answer);
+  const hasNums = guess !== '' && answer !== '';
+  const diff = hasNums ? fmt(Math.abs(Number(o.guess) - Number(o.answer))) : '';
+  const head = o.tier === 'HIT' ? '猜中了' : (o.tier === 'CLOSE' ? '差一点' : '差得有点远');
+  const detail = !hasNums ? '' : (o.tier === 'HIT' && diff === '0'
+    ? '正好 ' + answer + ' ' + unit
+    : '你猜 ' + guess + ' ' + unit + ' · 实际 ' + answer + ' ' + unit + (diff !== '' && diff !== '0' ? ' · 差 ' + diff + ' ' + unit : ''));
+  return { head, detail: detail.replace(/ +/g, ' ').trim(), reveal: String(o.reveal || '').trim(), miss: o.tier !== 'HIT' };
+}
+
 /** 开局停在哪一格:量程正中。停在 0 会让人以为还没开始,停在答案附近是作弊。 */
 function initialIndex(ticks) {
   return ticks.length ? Math.floor(ticks.length / 2) : 0;
@@ -56,21 +82,35 @@ Component({
     max: { type: Number, value: 1000 },
     limitSeconds: { type: Number, value: 0 },
     maxTries: { type: Number, value: 0 },
+    // P-09:交过之后服务端回执才带这几样;交之前 submitted=false,其余为空
+    submitted: { type: Boolean, value: false },
+    tier: { type: String, value: '' },
+    guess: { type: Number, value: 0 },
+    answer: { type: Number, value: 0 },
+    reveal: { type: String, value: '' },
   },
   data: {
     ticks: [],
     pickerValue: [0],
     curText: '0', prevText: '', nextText: '',
     feedback: '', locked: false,
+    result: null,
   },
   observers: {
+    'submitted, tier, guess, answer, reveal, unit': function (submitted, tier, guess, answer, reveal, unit) {
+      const result = resultLine({ submitted, tier, guess, answer, reveal, unit });
+      // 第十二轮 k7 N2:服务端把这一局重开了(回执从「交过」回到「没交」)⇒ 解锁,「就这个数」重新能交。
+      // 以前 locked 只增不减,重开后按钮要么不见、要么点了不发,只能退出再进
+      const reset = !result && !!this.data.result;
+      this.setData({ result, locked: !!result || (!reset && this.data.locked), feedback: reset ? '' : this.data.feedback });
+    },
     'show, min, max': function (show, min, max) {
       if (!show) return;
       const ticks = buildTicks(min, max);
       const i = initialIndex(ticks);
       this._ticks = ticks;
       this.setData({
-        ticks, pickerValue: [i], feedback: '', locked: false,
+        ticks, pickerValue: [i], feedback: '', locked: !!this.data.result,
       });
       this._paint(i);
       const stage = this.selectComponent('#cy-play-stage');
@@ -81,6 +121,7 @@ Component({
     _stepFor: stepFor,          // 纯算法出口,供单测
     _buildTicks: buildTicks,
     _initialIndex: initialIndex,
+    _resultLine: resultLine,
 
     /** 三条道各画一个数。上下两条是镜像,内容就是相邻的那个数。 */
     _paint(i) {

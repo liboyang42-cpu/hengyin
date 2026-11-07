@@ -44,7 +44,7 @@ Page({
     exportError: '',
     ready: false,
     busy: false,
-    round: false,
+    round: false, settling: false, // settling:仅「还原」那一下让图带过渡回位,手势中从不开
     merchant: false, // 商家浅色、玩家深色(M-09 业主批注)
   },
 
@@ -191,7 +191,7 @@ Page({
 
   // ---- 手势:单指平移 / 双指缩放 ----
   onTouchStart(e) {
-    const t = e.touches;
+    const t = e.touches; if (this.data.settling) this.setData({ settling: false });
     if (t.length === 1) {
       this.gesture = { mode: 'pan', x0: t[0].clientX, y0: t[0].clientY, tx0: this.data.tx, ty0: this.data.ty };
     } else if (t.length >= 2) {
@@ -306,7 +306,7 @@ Page({
   onReset() {
     if (!this.data.ready || this.data.busy) return;
     this.gesture = null;
-    this.setData({ tx: 0, ty: 0, scale: 1, exportError: '' });
+    this.setData({ tx: 0, ty: 0, scale: 1, exportError: '', settling: true }); clearTimeout(this.settleTimer); this.settleTimer = setTimeout(() => { if (this.data.settling) this.setData({ settling: false }); }, 260);
   },
 
   finish(paths) {

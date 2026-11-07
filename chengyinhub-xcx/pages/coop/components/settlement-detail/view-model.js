@@ -9,9 +9,11 @@ function canonicalStatus(value) {
   return text === '0' || text === '1' || text === '2' ? Number(text) : null;
 }
 
+const { yuan } = require('../../../../utils/money-format.js');
+
 function money(value) {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-  return `¥${value.toFixed(2)}`;
+  return yuan(value);
 }
 
 function numericValue(value) {
@@ -77,7 +79,7 @@ function buildMerchantTimeline(record, status) {
 function buildMerchantSettlementDetail(input) {
   const record = input || {};
   const status = merchantStatus(record);
-  const amount = money(record.amount);
+  const amount = money(Object.prototype.hasOwnProperty.call(record, 'netAmount') ? record.netAmount : record.amount);
   const heads = numericValue(record.verifiedHeads);
   return {
     key: `mybiz:${record.id == null ? '' : record.id}`,
@@ -93,6 +95,8 @@ function buildMerchantSettlementDetail(input) {
       line('verifiedSales', '核销销售额', money(record.verifiedSales)),
       line('verifiedHeads', '核销人数', heads === null ? '' : `${heads} 人`),
       line('shareRule', '分润方式', shareRule(record)),
+      line('original', '原始应结', money(record.originalAmount)),
+      line('adjustment', '已执行调整', money(record.executedAdjustmentAmount)),
       line('income', '我的分润', amount || '—', true),
     ]),
     timeline: buildMerchantTimeline(record, status),
@@ -177,6 +181,8 @@ function buildClubSettlementDetail(input) {
     status: status.text,
     statusVariant: status.variant,
     lines: compact([
+      line('lineType', '分润类型', record.lineType === 'INITIATOR_GUARANTEE' ? '主办保底'
+        : record.lineType === 'INITIATOR_MARGIN' ? '主办分成' : ''),
       line('original', '原始应结', record.originalAmountText),
       line('adjustment', '已执行调整', record.executedAdjustmentText),
       line('net', '核算净额', record.netAmountText, true),

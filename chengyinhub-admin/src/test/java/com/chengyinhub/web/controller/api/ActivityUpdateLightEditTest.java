@@ -78,6 +78,7 @@ class ActivityUpdateLightEditTest {
         ActivityReviewPolicy policy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(policy, "configService", config);
 
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
@@ -118,6 +119,7 @@ class ActivityUpdateLightEditTest {
 
     @Test
     void switchOnTypoFixDoesNotReenterReview() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
         preReviewAll();
 
@@ -130,6 +132,7 @@ class ActivityUpdateLightEditTest {
 
     @Test
     void switchOnSubstantiveEditStillReentersPreReview() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
         preReviewAll();
 
@@ -140,6 +143,7 @@ class ActivityUpdateLightEditTest {
 
     @Test
     void switchOnSubstantivePostReviewEditOpensSpotCheckAndStaysLive() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
 
         controller.update(rewrite());
@@ -150,6 +154,7 @@ class ActivityUpdateLightEditTest {
 
     @Test
     void switchOnTypoFixUnderPostReviewOpensNothing() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
 
         controller.update(typoFix());
@@ -165,20 +170,22 @@ class ActivityUpdateLightEditTest {
         verify(auditTaskService, never()).submitOrRefreshActivity(anyLong(), anyLong(), anyString(), anyString());
     }
 
-    /** 门禁打标(需复核)的编辑不参与分级:即便是轻改也照旧进抽检单,不被当成轻改放过。 */
+    /** 机审需复核的编辑不参与分级(Round5B-3:先发后审也 HOLD):轻改也退回待审,不被当成轻改放过。 */
     @Test
     void flaggedEditIsNeverDowngradedToLight() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
 
         controller.update(typoFix());
 
-        verify(auditTaskService).submitOrRefreshActivity(eq(ACTIVITY), eq(MEMBER_ID), eq("post_review_flag"), anyString());
+        verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
     }
 
     /** 先审模式下文本机审存疑(HOLD/TEXT_REVIEW)的编辑不参与分级:轻改也照旧退回待审。 */
     @Test
     void textHeldEditIsNeverDowngradedToLight() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
         preReviewAll();
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
@@ -191,6 +198,7 @@ class ActivityUpdateLightEditTest {
     /** S531-1:先审模式下改金额(10.00 → 1000)或加否定词(可退款 → 不可退款)不是轻改,必须退回人工复审。 */
     @Test
     void switchOnAmountOrNegationEditStillReentersPreReview() {
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
         preReviewAll();
         exist.setDescription("周六晚上八点集合，费用10.00元，报名后可退款。");

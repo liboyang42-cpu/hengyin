@@ -1,0 +1,270 @@
+{
+  "totals": {
+    "tests": 683,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "classes": [
+    {
+      "name": "com.chengyinhub.business.service.ActivityCancelManualRefundCaseServiceImplTest",
+      "tests": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ClubHistoricalSettlementAccessH2Test",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ClubSessionSettlementH2Test",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ClubSettlementTopicNameH2Test",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ExploreQtyGateTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ExploreReserveWiringTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ExploreSaleSnapshotGateTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.MerchantPayableServiceTest",
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.PaymentCallbackFenceEntryTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.RefundMultiPartyClawbackTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.RefundPlatformShareClawbackTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.RegistrationVerifyAndSettleTest",
+      "tests": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.ShopDayNoTicketLimitTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicSaleCanonicalBuilderTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicSaleCanonicalV1Test",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.TopicSaleFinalizationServiceImplTest",
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImplTest",
+      "tests": 218,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.ClubSessionMerchantFeeSettlementTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.ClubSessionServiceImplTest",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.R14BranchPublicationRuntimeTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.RefundServiceImplTest",
+      "tests": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.ShopDayPurchaseFundsPolicyTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.TicketSourceAttributionTrustBoundaryTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.impl.TopicRoutePublicationOutcomeScopeTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.service.support.TopicTextSafetyTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.util.BoundTemplateReviewTextsTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.util.JourneyReviewTextsPlainFieldTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.business.util.JourneyReviewTextsTest",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ActivityBoundGameContentSafetyTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ActivityPublishReviewModeTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ActivityPublishRoleGateTest",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiClubSettlementControllerTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ApiVerifyGroupCodeTest",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.api.ThemeBoundTemplateTextSafetyTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "name": "com.chengyinhub.web.controller.business.CmsActivityAdminReviewGateTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "scope": "36 changed-scope classes. r2 original batch; r3 reran six affected classes after exact fixture/manual-guard corrections; combined reports by class, zero duplicate counts.",
+  "environment": "Approved development/test VPS budget212; Maven offline; container1536MiB/1CPU/256PIDs/no network; JVM768MiB/test fork256MiB.",
+  "notCovered": [
+    "Real MySQL/Redis tests",
+    "Authenticated business UI acceptance",
+    "Native device",
+    "Merge/deployment/release"
+  ]
+}

@@ -165,6 +165,646 @@
       "from": "components/cy/coop-invite-sheet/index.wxss",
       "to": "subpackageMember/components/cy/coop-invite-sheet/index.wxss",
       "sourceBlob": "112ca72556ff90eb64487148bbce8054d6d0ca99"
+    },
+    {
+      "from": "behaviors/replay-motion.js",
+      "to": "pages/play/behaviors/replay-motion.js",
+      "sourceBlob": "1978ee2a6c4fb3e657a384697fcc850555a62a7f"
+    },
+    {
+      "from": "components/cy/chapter-gate/index.js",
+      "to": "pages/publish/components/chapter-gate/index.js",
+      "sourceBlob": "266fdaae16f8133daa5992a354ef502866049176"
+    },
+    {
+      "from": "components/cy/chapter-gate/index.json",
+      "to": "pages/publish/components/chapter-gate/index.json",
+      "sourceBlob": "d80dd20a6bff3a1e4094d2712d37b3f370dfc189"
+    },
+    {
+      "from": "components/cy/chapter-gate/index.wxml",
+      "to": "pages/publish/components/chapter-gate/index.wxml",
+      "sourceBlob": "db700b3d39e89d978284672fd85cc8b5790050ee"
+    },
+    {
+      "from": "components/cy/chapter-gate/index.wxss",
+      "to": "pages/publish/components/chapter-gate/index.wxss",
+      "sourceBlob": "c14ab4b6e08415b663de48a1a73a513a1409af87"
+    },
+    {
+      "from": "components/cy/chips/index.js",
+      "to": "pages/publish/components/chips/index.js",
+      "sourceBlob": "84218538b63e1d343f5a755e2646693214a4d3f0"
+    },
+    {
+      "from": "components/cy/chips/index.json",
+      "to": "pages/publish/components/chips/index.json",
+      "sourceBlob": "357cf73347c36da494a686986585bba21cf11e92"
+    },
+    {
+      "from": "components/cy/chips/index.wxml",
+      "to": "pages/publish/components/chips/index.wxml",
+      "sourceBlob": "68b12f41a2d35e7d527eb43f923952bf75166ebc"
+    },
+    {
+      "from": "components/cy/chips/index.wxss",
+      "to": "pages/publish/components/chips/index.wxss",
+      "sourceBlob": "16e80e39241d16b2e785337d20889039a363afcd"
+    },
+    {
+      "from": "components/cy/choice-sheet/index.js",
+      "to": "pages/publish/components/choice-sheet/index.js",
+      "sourceBlob": "47f1610a979f835e681816f2243e0523d4b19d9c"
+    },
+    {
+      "from": "components/cy/choice-sheet/index.json",
+      "to": "pages/publish/components/choice-sheet/index.json",
+      "sourceBlob": "de5ba4fb0bb33043e3282334f6eb1cac6877868a"
+    },
+    {
+      "from": "components/cy/choice-sheet/index.wxml",
+      "to": "pages/publish/components/choice-sheet/index.wxml",
+      "sourceBlob": "5b968e8845cfb100e8d51e1eb88c3817bb0a5fe8"
+    },
+    {
+      "from": "components/cy/choice-sheet/index.wxss",
+      "to": "pages/publish/components/choice-sheet/index.wxss",
+      "sourceBlob": "246bcfca307729f3bc9195ded3cbfcd17738399e"
+    },
+    {
+      "from": "components/cy/club-pool-cards/index.js",
+      "to": "pages/merchant/components/cy/club-pool-cards/index.js",
+      "sourceBlob": "9d6c56a409cf6046dd9fb05d5b4f8880c9612652"
+    },
+    {
+      "from": "components/cy/club-pool-cards/index.json",
+      "to": "pages/merchant/components/cy/club-pool-cards/index.json",
+      "sourceBlob": "52dad47bd3bbf81819ec93a10981a1960f7f173a"
+    },
+    {
+      "from": "components/cy/club-pool-cards/index.wxml",
+      "to": "pages/merchant/components/cy/club-pool-cards/index.wxml",
+      "sourceBlob": "807228628f7c27bb678f1b2c06211d982c0a127b"
+    },
+    {
+      "from": "components/cy/club-pool-cards/index.wxss",
+      "to": "pages/merchant/components/cy/club-pool-cards/index.wxss",
+      "sourceBlob": "9dc07953a39fb9fc27fe96659c1efb1aa93c7b54"
+    },
+    {
+      "from": "components/cy/earnings-overview/index.js",
+      "to": "subpackageA/components/earnings-overview/index.js",
+      "sourceBlob": "6b30b912b74aaca09fafd49e255e6759e096d584"
+    },
+    {
+      "from": "components/cy/earnings-overview/index.json",
+      "to": "subpackageA/components/earnings-overview/index.json",
+      "sourceBlob": "52dad47bd3bbf81819ec93a10981a1960f7f173a"
+    },
+    {
+      "from": "components/cy/earnings-overview/index.wxml",
+      "to": "subpackageA/components/earnings-overview/index.wxml",
+      "sourceBlob": "bf9fa9d3ec1ddcabbffd77efa2c13106ba54e4ce"
+    },
+    {
+      "from": "components/cy/earnings-overview/index.wxss",
+      "to": "subpackageA/components/earnings-overview/index.wxss",
+      "sourceBlob": "3e9a1035d43891bf33ea9224f45c7f41a98ddf34"
+    },
+    {
+      "from": "components/cy/event-attendance/index.js",
+      "to": "pages/activity/components/event-attendance/index.js",
+      "sourceBlob": "f6a4ddd2f8c501716905a3be9ff028fd0fbb8149"
+    },
+    {
+      "from": "components/cy/event-attendance/index.json",
+      "to": "pages/activity/components/event-attendance/index.json",
+      "sourceBlob": "cca0f5820b604d54f91ad780d65c8491da1726fd"
+    },
+    {
+      "from": "components/cy/event-attendance/index.wxml",
+      "to": "pages/activity/components/event-attendance/index.wxml",
+      "sourceBlob": "ec9c5d34e0621142adacdedf966164b3565cb2d5"
+    },
+    {
+      "from": "components/cy/event-attendance/index.wxss",
+      "to": "pages/activity/components/event-attendance/index.wxss",
+      "sourceBlob": "8c4c383b3dc44330cdfe4dac13d463e304fa314d"
+    },
+    {
+      "from": "components/cy/list-group/index.js",
+      "to": "pages/publish/components/list-group/index.js",
+      "sourceBlob": "016ef768330b904b62e2fe759a4601595dd89900"
+    },
+    {
+      "from": "components/cy/list-group/index.json",
+      "to": "pages/publish/components/list-group/index.json",
+      "sourceBlob": "a89ef4dbeefa01f5cd7971973aa4db6498d139f7"
+    },
+    {
+      "from": "components/cy/list-group/index.wxml",
+      "to": "pages/publish/components/list-group/index.wxml",
+      "sourceBlob": "8842d497faada372ef3d1302fd524c7383422968"
+    },
+    {
+      "from": "components/cy/list-group/index.wxss",
+      "to": "pages/publish/components/list-group/index.wxss",
+      "sourceBlob": "b1b38df9dec05ebb652f899dcc702642647d1881"
+    },
+    {
+      "from": "components/cy/list-row/index.js",
+      "to": "pages/publish/components/list-row/index.js",
+      "sourceBlob": "78561a9419a2af85f2392c71d2490ee177134995"
+    },
+    {
+      "from": "components/cy/list-row/index.json",
+      "to": "pages/publish/components/list-row/index.json",
+      "sourceBlob": "357cf73347c36da494a686986585bba21cf11e92"
+    },
+    {
+      "from": "components/cy/list-row/index.wxml",
+      "to": "pages/publish/components/list-row/index.wxml",
+      "sourceBlob": "c11a2c88144d2075bae6c71295a5998235cf0acc"
+    },
+    {
+      "from": "components/cy/list-row/index.wxss",
+      "to": "pages/publish/components/list-row/index.wxss",
+      "sourceBlob": "f8386b0dcf27de3df5a6f5563aa68525e8e14e0d"
+    },
+    {
+      "from": "components/cy/media-model-preview/index.js",
+      "to": "pages/privacy/components/media-model-preview/index.js",
+      "sourceBlob": "562bca434269b79bfaa120b8069b07e7057cee5d"
+    },
+    {
+      "from": "components/cy/media-model-preview/index.json",
+      "to": "pages/privacy/components/media-model-preview/index.json",
+      "sourceBlob": "209fcc395678ef7d0ce67afc6efcfc1deccfdf24"
+    },
+    {
+      "from": "components/cy/media-model-preview/index.wxml",
+      "to": "pages/privacy/components/media-model-preview/index.wxml",
+      "sourceBlob": "cd22f108851add1231c7703e01494680d1b8ee7a"
+    },
+    {
+      "from": "components/cy/media-model-preview/index.wxss",
+      "to": "pages/privacy/components/media-model-preview/index.wxss",
+      "sourceBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "from": "components/cy/scene-asset-earnings/index.js",
+      "to": "subpackageA/components/scene-asset-earnings/index.js",
+      "sourceBlob": "b490c5653d088dec7a9019ca44fdcfd0a3b8827b"
+    },
+    {
+      "from": "components/cy/scene-asset-earnings/index.json",
+      "to": "subpackageA/components/scene-asset-earnings/index.json",
+      "sourceBlob": "cbc9903a5c1cbd6cdb3e9c304a0eab7b116c3a96"
+    },
+    {
+      "from": "components/cy/scene-asset-earnings/index.wxml",
+      "to": "subpackageA/components/scene-asset-earnings/index.wxml",
+      "sourceBlob": "d8393a0eacaa670959e00e1b3db5f92338662dc0"
+    },
+    {
+      "from": "components/cy/scene-asset-earnings/index.wxss",
+      "to": "subpackageA/components/scene-asset-earnings/index.wxss",
+      "sourceBlob": "50c935134022419d2e5a078c6cdc4ff02d7194c9"
+    },
+    {
+      "from": "components/cy/scene-asset-income-detail/index.js",
+      "to": "subpackageA/components/scene-asset-income-detail/index.js",
+      "sourceBlob": "e091ad27744a79a592a48f6613b25b8d14859a1d"
+    },
+    {
+      "from": "components/cy/scene-asset-income-detail/index.json",
+      "to": "subpackageA/components/scene-asset-income-detail/index.json",
+      "sourceBlob": "8d2f89ae4bd419abc206cef523a1ef0996629b63"
+    },
+    {
+      "from": "components/cy/scene-asset-income-detail/index.wxml",
+      "to": "subpackageA/components/scene-asset-income-detail/index.wxml",
+      "sourceBlob": "3c72ec0f3f636080b619214ab29f26f54139d632"
+    },
+    {
+      "from": "components/cy/scene-asset-income-detail/index.wxss",
+      "to": "subpackageA/components/scene-asset-income-detail/index.wxss",
+      "sourceBlob": "17620b652d3609f3f5fbf4bbe53b6ab024d2d7fc"
+    },
+    {
+      "from": "components/cy/scene-club-edit/index.js",
+      "to": "pages/club/components/cy/scene-club-edit/index.js",
+      "sourceBlob": "ce1d58db985ce918fc3ff9ed0ee32546db2064f0"
+    },
+    {
+      "from": "components/cy/scene-club-edit/index.json",
+      "to": "pages/club/components/cy/scene-club-edit/index.json",
+      "sourceBlob": "bc8f4403eab833e50beb92e0bca189fb8ede50fa"
+    },
+    {
+      "from": "components/cy/scene-club-edit/index.wxml",
+      "to": "pages/club/components/cy/scene-club-edit/index.wxml",
+      "sourceBlob": "3ce41e380bc6bb2c05ded3766df3dcfa2bd9b3c0"
+    },
+    {
+      "from": "components/cy/scene-club-edit/index.wxss",
+      "to": "pages/club/components/cy/scene-club-edit/index.wxss",
+      "sourceBlob": "cef3717a8e035b59228253c6521d2ed09018b5a6"
+    },
+    {
+      "from": "components/cy/scene-deep-link/index.js",
+      "to": "subpackageMember/components/cy/scene-deep-link/index.js",
+      "sourceBlob": "d6d194344285542f48a34985a86e7c710c51a401"
+    },
+    {
+      "from": "components/cy/scene-deep-link/index.json",
+      "to": "subpackageMember/components/cy/scene-deep-link/index.json",
+      "sourceBlob": "ada8b3cfcd41784ba9f228cb18187bb883bea26b"
+    },
+    {
+      "from": "components/cy/scene-deep-link/index.wxml",
+      "to": "subpackageMember/components/cy/scene-deep-link/index.wxml",
+      "sourceBlob": "2cb348dbaed81624993577cc884493810f391efa"
+    },
+    {
+      "from": "components/cy/scene-deep-link/index.wxss",
+      "to": "subpackageMember/components/cy/scene-deep-link/index.wxss",
+      "sourceBlob": "1daf9b4f969340e0ed5b2952bf8bc43be253b3fc"
+    },
+    {
+      "from": "components/cy/scene-member-invite-history/index.js",
+      "to": "subpackageA/components/scene-member-invite-history/index.js",
+      "sourceBlob": "ba16351ff4d1a5082621aa9d3650f4884a9f9e0d"
+    },
+    {
+      "from": "components/cy/scene-member-invite-history/index.json",
+      "to": "subpackageA/components/scene-member-invite-history/index.json",
+      "sourceBlob": "485bd57b66397394aed6c248212d562565f00a62"
+    },
+    {
+      "from": "components/cy/scene-member-invite-history/index.wxml",
+      "to": "subpackageA/components/scene-member-invite-history/index.wxml",
+      "sourceBlob": "b7dfa679fc95547ef71ef1174541ec741dcba251"
+    },
+    {
+      "from": "components/cy/scene-member-invite-history/index.wxss",
+      "to": "subpackageA/components/scene-member-invite-history/index.wxss",
+      "sourceBlob": "f0b0516d84c19b7fcb2f18f5116aeb02f9d250b4"
+    },
+    {
+      "from": "components/cy/scene-member-withdraw-history/index.js",
+      "to": "subpackageMember/components/cy/scene-member-withdraw-history/index.js",
+      "sourceBlob": "c4135671ebb4ef2827a73bdc87618d334dc398ba"
+    },
+    {
+      "from": "components/cy/scene-member-withdraw-history/index.json",
+      "to": "subpackageMember/components/cy/scene-member-withdraw-history/index.json",
+      "sourceBlob": "14310861103df5277180717859ae19c9017db34d"
+    },
+    {
+      "from": "components/cy/scene-member-withdraw-history/index.wxml",
+      "to": "subpackageMember/components/cy/scene-member-withdraw-history/index.wxml",
+      "sourceBlob": "d16422a69d748a674cbf9be3c51a7197c2d4996c"
+    },
+    {
+      "from": "components/cy/scene-member-withdraw-history/index.wxss",
+      "to": "subpackageMember/components/cy/scene-member-withdraw-history/index.wxss",
+      "sourceBlob": "a78869d81322b30db39a3ee5d1f04271aeb8b703"
+    },
+    {
+      "from": "components/cy/scene-merchant-profit/index.js",
+      "to": "subpackageA/components/scene-merchant-profit/index.js",
+      "sourceBlob": "5196b3be0c216ad054d34903e75245c8fa18f2b6"
+    },
+    {
+      "from": "components/cy/scene-merchant-profit/index.json",
+      "to": "subpackageA/components/scene-merchant-profit/index.json",
+      "sourceBlob": "0587192c059c104b99dfc90e6a1a3fc0c3b42ff3"
+    },
+    {
+      "from": "components/cy/scene-merchant-profit/index.wxml",
+      "to": "subpackageA/components/scene-merchant-profit/index.wxml",
+      "sourceBlob": "9ace794e4c37bf2b64b9d686ef21326bf6efa0ca"
+    },
+    {
+      "from": "components/cy/scene-merchant-profit/index.wxss",
+      "to": "subpackageA/components/scene-merchant-profit/index.wxss",
+      "sourceBlob": "c6d56f7a401fdf62cf3d646ba91423f08fff5589"
+    },
+    {
+      "from": "components/cy/scene-qr-ticket/index.js",
+      "to": "pages/play/components/scene-qr-ticket/index.js",
+      "sourceBlob": "aace8057fa7fafe703c7b58598df29299436f7fb"
+    },
+    {
+      "from": "components/cy/scene-qr-ticket/index.json",
+      "to": "pages/play/components/scene-qr-ticket/index.json",
+      "sourceBlob": "09066313324fe54d76bd5cbcd7154efe67da6e83"
+    },
+    {
+      "from": "components/cy/scene-qr-ticket/index.wxml",
+      "to": "pages/play/components/scene-qr-ticket/index.wxml",
+      "sourceBlob": "822a3858f6db2e4bb27fa7ab92378b6a2502a234"
+    },
+    {
+      "from": "components/cy/scene-qr-ticket/index.wxss",
+      "to": "pages/play/components/scene-qr-ticket/index.wxss",
+      "sourceBlob": "fa4fdb1838783b0c80ed2cef316995bae2ba533b"
+    },
+    {
+      "from": "components/cy/scene-roam-discover/index.js",
+      "to": "pages/play/components/scene-roam-discover/index.js",
+      "sourceBlob": "2b78378432d2253a048acb16f150b00e981cc94b"
+    },
+    {
+      "from": "components/cy/scene-roam-discover/index.json",
+      "to": "pages/play/components/scene-roam-discover/index.json",
+      "sourceBlob": "9475baa1f7df8036240a3f504a6be9c5341da7bc"
+    },
+    {
+      "from": "components/cy/scene-roam-discover/index.wxml",
+      "to": "pages/play/components/scene-roam-discover/index.wxml",
+      "sourceBlob": "f8bc3e6e66a6161c09bb0efe725c5828caae8874"
+    },
+    {
+      "from": "components/cy/scene-roam-discover/index.wxss",
+      "to": "pages/play/components/scene-roam-discover/index.wxss",
+      "sourceBlob": "98bfcfbbdba83331559e885764b07ae8e5b90c06"
+    },
+    {
+      "from": "components/cy/scene-route-content/index.js",
+      "to": "subpackageMember/components/cy/scene-route-content/index.js",
+      "sourceBlob": "245c79acc11597f18a00c0aa29a1e9245574eb1c"
+    },
+    {
+      "from": "components/cy/scene-route-content/index.json",
+      "to": "subpackageMember/components/cy/scene-route-content/index.json",
+      "sourceBlob": "93eba2467f0215c9e8e44e670edcfd610870e958"
+    },
+    {
+      "from": "components/cy/scene-route-content/index.wxml",
+      "to": "subpackageMember/components/cy/scene-route-content/index.wxml",
+      "sourceBlob": "c191bda4bfdd6212542a5c0e7cb755592d45f663"
+    },
+    {
+      "from": "components/cy/scene-route-content/index.wxss",
+      "to": "subpackageMember/components/cy/scene-route-content/index.wxss",
+      "sourceBlob": "484b3050b2a074c3160a5844397c0dfc6ebbe4f2"
+    },
+    {
+      "from": "components/cy/scene-settings-deregister/index.js",
+      "to": "pages/deregister/components/scene-settings-deregister/index.js",
+      "sourceBlob": "37f219fde7e65f3763c2d55d500611eb2280e42e"
+    },
+    {
+      "from": "components/cy/scene-settings-deregister/index.json",
+      "to": "pages/deregister/components/scene-settings-deregister/index.json",
+      "sourceBlob": "bed2571563f763a8be839406e0c3f2d0c93c68a8"
+    },
+    {
+      "from": "components/cy/scene-settings-deregister/index.wxml",
+      "to": "pages/deregister/components/scene-settings-deregister/index.wxml",
+      "sourceBlob": "b382cf1faaef0080f282525b89b035a8a18017d3"
+    },
+    {
+      "from": "components/cy/scene-settings-deregister/index.wxss",
+      "to": "pages/deregister/components/scene-settings-deregister/index.wxss",
+      "sourceBlob": "079d94d7c0ef7cb8f82466b181ee54bb25aaae80"
+    },
+    {
+      "from": "components/cy/scene-share-invite/index.js",
+      "to": "subpackageMember/components/cy/scene-share-invite/index.js",
+      "sourceBlob": "93e3c0ca724e9ef54ca540a0e1da7ec235242818"
+    },
+    {
+      "from": "components/cy/scene-share-invite/index.json",
+      "to": "subpackageMember/components/cy/scene-share-invite/index.json",
+      "sourceBlob": "a748d700e602e22c0f01e145672c4b8870d27b76"
+    },
+    {
+      "from": "components/cy/scene-share-invite/index.wxml",
+      "to": "subpackageMember/components/cy/scene-share-invite/index.wxml",
+      "sourceBlob": "999d3e694661eeb00c18cd37fd69539556f17097"
+    },
+    {
+      "from": "components/cy/scene-share-invite/index.wxss",
+      "to": "subpackageMember/components/cy/scene-share-invite/index.wxss",
+      "sourceBlob": "9c90c4fe0e4e64f3bf96a9f689bcce05386145fd"
+    },
+    {
+      "from": "components/cy/segmented/index.js",
+      "to": "pages/publish/components/segmented/index.js",
+      "sourceBlob": "069d9c99e2fddd37b95bef9b46b6ac896e3f3f19"
+    },
+    {
+      "from": "components/cy/segmented/index.json",
+      "to": "pages/publish/components/segmented/index.json",
+      "sourceBlob": "a89ef4dbeefa01f5cd7971973aa4db6498d139f7"
+    },
+    {
+      "from": "components/cy/segmented/index.wxml",
+      "to": "pages/publish/components/segmented/index.wxml",
+      "sourceBlob": "a693adeae052337ec17c991853c6dddfeb222de5"
+    },
+    {
+      "from": "components/cy/segmented/index.wxss",
+      "to": "pages/publish/components/segmented/index.wxss",
+      "sourceBlob": "1b04abd00ee3e609eb174caaa484c694af740eca"
+    },
+    {
+      "from": "components/cy/sheet-nav/index.js",
+      "to": "pages/publish/components/sheet-nav/index.js",
+      "sourceBlob": "98a592ebe0bef2c414a3c1db4d6316a580830ee9"
+    },
+    {
+      "from": "components/cy/sheet-nav/index.json",
+      "to": "pages/publish/components/sheet-nav/index.json",
+      "sourceBlob": "357cf73347c36da494a686986585bba21cf11e92"
+    },
+    {
+      "from": "components/cy/sheet-nav/index.wxml",
+      "to": "pages/publish/components/sheet-nav/index.wxml",
+      "sourceBlob": "b4bfc0d2f7c194d627cbab63fbcd3d8106938185"
+    },
+    {
+      "from": "components/cy/sheet-nav/index.wxss",
+      "to": "pages/publish/components/sheet-nav/index.wxss",
+      "sourceBlob": "41d574712019230e7bbc8424f3f9a7c2d41eaa2c"
+    },
+    {
+      "from": "components/cy/stepper/index.js",
+      "to": "pages/publish/components/stepper/index.js",
+      "sourceBlob": "e0f11105d5e9c44048a996d94aa1cca7498f78fc"
+    },
+    {
+      "from": "components/cy/stepper/index.json",
+      "to": "pages/publish/components/stepper/index.json",
+      "sourceBlob": "a89ef4dbeefa01f5cd7971973aa4db6498d139f7"
+    },
+    {
+      "from": "components/cy/stepper/index.wxml",
+      "to": "pages/publish/components/stepper/index.wxml",
+      "sourceBlob": "8e8773a40c3e8f9772cdd8e69aa255d79e8aaff8"
+    },
+    {
+      "from": "components/cy/stepper/index.wxss",
+      "to": "pages/publish/components/stepper/index.wxss",
+      "sourceBlob": "3ec8d1dc2d8f50e6e1112fa8e1c71f9d084a198a"
+    },
+    {
+      "from": "components/cy/swipe-row/index.js",
+      "to": "pages/publish/components/swipe-row/index.js",
+      "sourceBlob": "40287fdc46540f8058a0c25fb1b00ae7197ed3b2"
+    },
+    {
+      "from": "components/cy/swipe-row/index.json",
+      "to": "pages/publish/components/swipe-row/index.json",
+      "sourceBlob": "a89ef4dbeefa01f5cd7971973aa4db6498d139f7"
+    },
+    {
+      "from": "components/cy/swipe-row/index.wxml",
+      "to": "pages/publish/components/swipe-row/index.wxml",
+      "sourceBlob": "549eb19ef8320a62a3af065c195564aa7e99c74b"
+    },
+    {
+      "from": "components/cy/swipe-row/index.wxss",
+      "to": "pages/publish/components/swipe-row/index.wxss",
+      "sourceBlob": "332b79023479f9a7c32ee6c10708004823fe2b5c"
+    },
+    {
+      "from": "components/roleBadge/index.js",
+      "to": "subpackageMember/components/roleBadge/index.js",
+      "sourceBlob": "b76af099394526f91b878e9a904b8ff9bb64e136"
+    },
+    {
+      "from": "components/roleBadge/index.json",
+      "to": "subpackageMember/components/roleBadge/index.json",
+      "sourceBlob": "a89ef4dbeefa01f5cd7971973aa4db6498d139f7"
+    },
+    {
+      "from": "components/roleBadge/index.wxml",
+      "to": "subpackageMember/components/roleBadge/index.wxml",
+      "sourceBlob": "c1bee7a02ebbcbc44f9c2e5f60cd3f34414cf0f1"
+    },
+    {
+      "from": "components/roleBadge/index.wxss",
+      "to": "subpackageMember/components/roleBadge/index.wxss",
+      "sourceBlob": "4f65a4269d0f270befd9c0eb0a83c229263abd4a"
+    },
+    {
+      "from": "images/del.png",
+      "to": "pages/gerenziliao/images/del.png",
+      "sourceBlob": "70f27694c7ee7e4f2bdd095923b93478cba7437e"
+    },
+    {
+      "from": "images/figma-invite-qr.png",
+      "to": "subpackageMember/images/figma-invite-qr.png",
+      "sourceBlob": "efe0eda8a1ddaf4a0dd55aa874d3338f0a798e07"
+    },
+    {
+      "from": "images/icon_pen.svg",
+      "to": "subpackageMember/images/icon_pen.svg",
+      "sourceBlob": "80bb0564df80e66861bccd618326474d0cc634ed"
+    },
+    {
+      "from": "images/icon_qa_person.svg",
+      "to": "subpackageMember/images/icon_qa_person.svg",
+      "sourceBlob": "f31a7cac59a208011818cdc8098bb74924135e0e"
+    },
+    {
+      "from": "images/icon_search.svg",
+      "to": "pages/templatedetail/images/icon_search.svg",
+      "sourceBlob": "5cc73ca97272ab2b9cad73037e244d4bbf19cf96"
+    },
+    {
+      "from": "images/icon_star.png",
+      "to": "subpackageMember/images/icon_star.png",
+      "sourceBlob": "81c175d9e7f202c614f78fc4f2a919ee8f9007f5"
+    },
+    {
+      "from": "images/nav_msg.svg",
+      "to": "pages/merchant/images/nav_msg.svg",
+      "sourceBlob": "4a783cd4545c499f0f16daec79e28b47cb43d613"
+    },
+    {
+      "from": "images/tpl-tab-game.svg",
+      "to": "pages/templatedetail/images/tpl-tab-game.svg",
+      "sourceBlob": "6d0670d9d1c52c748032cf4e2ed531c7e1220fb1"
+    },
+    {
+      "from": "images/tpl-tab-topic.svg",
+      "to": "pages/templatedetail/images/tpl-tab-topic.svg",
+      "sourceBlob": "20b196e7e7563ddbfe08866ac06503512581e84a"
+    },
+    {
+      "from": "style/club-apply-form.wxss",
+      "to": "pages/club/style/club-apply-form.wxss",
+      "sourceBlob": "65223b3ffa1a9408a87d7f9b4023ab3a9e402376"
+    },
+    {
+      "from": "utils/ai-theme-draft-journal.js",
+      "to": "pages/publish/utils/ai-theme-draft-journal.js",
+      "sourceBlob": "02015aa8f406b7d4e55c69172fd532e4fe77906a"
+    },
+    {
+      "from": "utils/club-edit-draft.js",
+      "to": "pages/club/utils/club-edit-draft.js",
+      "sourceBlob": "79292cb778b502c5124be8060afb6fc841b96222"
+    },
+    {
+      "from": "utils/club-phone-call.js",
+      "to": "pages/club/utils/club-phone-call.js",
+      "sourceBlob": "15b30b708e2698f68b21981af0630b34b979a47c"
+    },
+    {
+      "from": "utils/content-report.js",
+      "to": "pages/topic/utils/content-report.js",
+      "sourceBlob": "540cfff3e58169be38b543b371123c6d4d58258d"
+    },
+    {
+      "from": "utils/earnings-view.js",
+      "to": "subpackageA/utils/earnings-view.js",
+      "sourceBlob": "83dd5671a2adc6d9889ae44a9ebd9b63ef48d274"
+    },
+    {
+      "from": "utils/free-explore-bundle.js",
+      "to": "subpackageMember/utils/free-explore-bundle.js",
+      "sourceBlob": "a50bbf51bd62244b0c53ee10179591121a24b391"
+    },
+    {
+      "from": "utils/player-code.js",
+      "to": "subpackageMember/utils/player-code.js",
+      "sourceBlob": "4c1c40bcb83562adede4eacda2ad4838b56f1946"
+    },
+    {
+      "from": "utils/predict-entry.js",
+      "to": "subpackageB/utils/predict-entry.js",
+      "sourceBlob": "c68c63755d52403d3f58fabdb08c8f697d2b0783"
+    },
+    {
+      "from": "utils/profit-split.js",
+      "to": "pages/topic/utils/profit-split.js",
+      "sourceBlob": "5dac36bfb96f39ec828929620db26bd406b795b7"
+    },
+    {
+      "from": "utils/project-progress.js",
+      "to": "pages/topic/utils/project-progress.js",
+      "sourceBlob": "dcd9b83a3cc38c8c445fcafbcd412b600d4bca4c"
+    },
+    {
+      "from": "utils/refund-rule.js",
+      "to": "pages/topic/utils/refund-rule.js",
+      "sourceBlob": "180117b50f2fd820d6d9f0bfec9eb275dcb34dd3"
+    },
+    {
+      "from": "utils/roam-team-operation.js",
+      "to": "subpackageRoam/utils/roam-team-operation.js",
+      "sourceBlob": "0727c5c1b2b9b700b7aab2cfac3c2ce4d117f674"
+    },
+    {
+      "from": "utils/roam-team-recovery.js",
+      "to": "subpackageRoam/utils/roam-team-recovery.js",
+      "sourceBlob": "52a1fb193c1e8f9e9b4859be0672776e8c3ae91b"
     }
   ]
 }

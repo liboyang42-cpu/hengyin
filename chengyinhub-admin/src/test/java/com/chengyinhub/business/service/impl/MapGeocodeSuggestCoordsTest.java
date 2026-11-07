@@ -109,9 +109,35 @@ class MapGeocodeSuggestCoordsTest {
         assertNull(service.suggestCoords("延安路1号", "杭州"));
     }
 
+    /** 第九轮 m1-9:点地址开地图同一地址只打一次供应商;拿不准的不缓存也不给坐标。 */
+    @Test
+    void locateAddressCachesStreetLevelHitsPerAddressAndRegion() {
+        StubGeocodeService service = new StubGeocodeService(
+                "{\"status\":0,\"result\":{\"reliability\":9,\"location\":{\"lng\":120.1,\"lat\":30.2}}}");
+        assertNotNull(service.locateAddress("延安路1号", "杭州"));
+        double[] second = service.locateAddress("延安路1号", "杭州");
+        assertEquals(1, service.calls, "同一地址第二次走缓存");
+        assertEquals(120.1D, second[0], 1e-9);
+        assertEquals(30.2D, second[1], 1e-9);
+        service.locateAddress("延安路1号", "宁波");
+        assertEquals(2, service.calls, "不同城市不共用缓存");
+    }
+
+    @Test
+    void locateAddressDoesNotCacheCoarseFallbacks() {
+        StubGeocodeService service = new StubGeocodeService(
+                "{\"status\":0,\"result\":{\"reliability\":3,\"location\":{\"lng\":120.1,\"lat\":30.2}}}");
+        assertNull(service.locateAddress("某处", "杭州"));
+        assertNull(service.locateAddress("某处", "杭州"));
+        assertEquals(2, service.calls);
+        assertNull(service.locateAddress(" ", "杭州"));
+        assertEquals(2, service.calls, "空地址不打供应商");
+    }
+
     private static final class StubGeocodeService extends MapGeocodeServiceImpl {
         private final String payload;
         private String lastUrl;
+        private int calls;
 
         private StubGeocodeService(String payload) {
             this.payload = payload;
@@ -123,6 +149,7 @@ class MapGeocodeSuggestCoordsTest {
         @Override
         protected String requestGeocode(String url) {
             this.lastUrl = url;
+            this.calls++;
             return payload;
         }
     }

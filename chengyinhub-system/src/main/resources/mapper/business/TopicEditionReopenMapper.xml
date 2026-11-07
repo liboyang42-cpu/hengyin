@@ -41,6 +41,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <resultMap id="ChapterResult" type="com.chengyinhub.business.domain.CmsTopicChapter">
+        <result property="videoUrl" column="video_url"/>
+        <result property="videoPosterUrl" column="video_poster_url"/>
         <result property="id" column="id"/>
         <result property="topicId" column="topic_id"/>
         <result property="name" column="name"/>
@@ -126,7 +128,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="selectSourceChapters" resultMap="ChapterResult">
-        select id, topic_id, name, description, blocks, img_arr, total_time, total_mileage,
+        select id, topic_id, name, description, blocks, video_url, video_poster_url, img_arr, total_time, total_mileage,
                location_count, template_count, sort_id, category, category_id, recruit_enabled, perk_min_value,
                max_merchant, required, terms_mode, max_per_head_fee, allowed_validation_methods, max_node_xp
           from cms_topic_chapter
@@ -161,11 +163,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertReopenedChapter" parameterType="com.chengyinhub.business.domain.CmsTopicChapter"
             useGeneratedKeys="true" keyProperty="id">
         insert into cms_topic_chapter
-            (topic_id, name, description, audio_url, atmosphere_preset, img_arr, total_time, total_mileage, location_count, template_count,
+            (topic_id, name, description, audio_url, video_url, video_poster_url, atmosphere_preset, img_arr, total_time, total_mileage, location_count, template_count,
              sort_id, category, category_id, recruit_enabled, perk_min_value, max_merchant, required, terms_mode,
              max_per_head_fee, allowed_validation_methods, max_node_xp, create_by, create_time)
         values
-            (#{topicId}, #{name}, #{description}, #{audioUrl}, #{atmospherePreset}, #{imgArr}, #{totalTime}, #{totalMileage}, #{locationCount}, #{templateCount},
+            (#{topicId}, #{name}, #{description}, #{audioUrl}, #{videoUrl}, #{videoPosterUrl}, #{atmospherePreset}, #{imgArr}, #{totalTime}, #{totalMileage}, #{locationCount}, #{templateCount},
              #{sortId}, #{category}, #{categoryId}, #{recruitEnabled}, #{perkMinValue}, #{maxMerchant}, #{required}, #{termsMode},
              #{maxPerHeadFee}, #{allowedValidationMethods}, #{maxNodeXp}, #{createBy}, #{createTime})
     </insert>

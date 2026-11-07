@@ -322,11 +322,24 @@ public class ClubServiceImpl implements IClubService
         return current == null || candidate.getId() > current.getId() ? candidate : current;
     }
 
+    @Override
+    public String checkNameForCreate(String name, Long ownerToSkip)
+    {
+        String trimmed = name == null ? null : name.trim();
+        if (trimmed == null || trimmed.isEmpty()) return "请填写俱乐部名称";
+        return isNameHeld(trimmed, ownerToSkip, null) ? NAME_TAKEN : null;
+    }
+
+    private boolean isNameHeld(String name, Long ownerToSkip, Long clubToSkip)
+    {
+        return clubMapper.countClubsHoldingName(name, ownerToSkip, clubToSkip) > 0;
+    }
+
     /** 俱乐部名称全站唯一(用户 2026-10-20 决定):待审或在营、未删除的俱乐部占用名称,被驳回和已解散的不占。 */
     private void requireNameFree(String name, Long ownerToSkip, Long clubToSkip)
     {
         if (name == null || name.isEmpty()) return;
-        if (clubMapper.countClubsHoldingName(name, ownerToSkip, clubToSkip) > 0)
+        if (isNameHeld(name, ownerToSkip, clubToSkip))
         {
             throw new ServiceException(NAME_TAKEN, HttpStatus.CONFLICT);
         }
@@ -712,5 +725,14 @@ public class ClubServiceImpl implements IClubService
         result.setDeposits(clubMapper.selectPendingDepositsByClub(clubId));
         result.setSettlements(clubMapper.selectUnpaidSettlementsByClub(clubId));
         return result;
+    }
+
+    @Override
+    public String ownerDisplayName(Club club)
+    {
+        if (club == null) return null;
+        com.chengyinhub.business.domain.UmsMember owner = club.getMemberId() == null ? null
+                : umsMemberService.selectUmsMemberById(club.getMemberId());
+        return com.chengyinhub.business.util.OrganiserPersonName.ownerName(owner == null ? null : owner.getNickname());
     }
 }

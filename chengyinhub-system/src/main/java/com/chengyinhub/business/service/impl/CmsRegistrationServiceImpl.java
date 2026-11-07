@@ -25,7 +25,7 @@ import com.chengyinhub.business.service.IWxPaymentCallbackInboxService;
 import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
-import com.chengyinhub.business.service.support.ExploreAccountTicketGate;
+import com.chengyinhub.business.service.support.ExploreSaleSnapshotGate;
 import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
 import com.chengyinhub.business.util.RefundPolicy;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
@@ -234,6 +234,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public java.util.List<java.util.Map<String, Object>> countByParticipateDate(Long ownerType, Long ownerId) {
         return cmsRegistrationMapper.selectCountGroupByDate(ownerType, ownerId);
+    }
+
+    @Override
+    public java.util.List<java.util.Map<String, Object>> countByParentOrderNos(java.util.Collection<String> parentOrderNos) {
+        return cmsRegistrationMapper.countByParentOrderNos(parentOrderNos);
     }
 
     /**
@@ -493,7 +498,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             sellerTopic = topic;
         }
         assertShopDayPointsUnsupported(sellerTopic, isUsePoint);
-        assertExploreAccountTicketAvailable(sellerTopic, memberId);
+        assertExploreSaleSnapshotFrozen(sellerTopic);
         List<Club> lockedOwningClubs = lockActiveOwningClubs(registrationActivity, sellerTopic);
         revalidateWaitlistParticipant(waitlistClaim, memberId, lockedOwningClubs);
         // 3. 验证票种是否存在、属于当前活动且库存充足
@@ -577,7 +582,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 分开写迟早分叉。锚点源(票的 end_time)卖票后还能被后台改,现取 = 追溯改写已售单的退款窗口。
         // 只落 ③(施工图:「P0-06 只需 ③ 的档位」);①② 返回 null ⇒ 不打快照 ⇒ 读侧回落现取。
         RefundPolicy.Snapshot rp = RefundPolicy.snapshotOnPurchase(
-                registration.getPurchaseKind(), ticket.getEndTime());
+                registration.getPurchaseKind(), ticket.getStartTime(), ticket.getEndTime());
         if (rp != null) {
             registration.setRefundPolicyCode(rp.code);
             registration.setRefundPolicyVersion(rp.version);
@@ -772,7 +777,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         CmsActivity orderActivity = ownerType != null && ownerType == 2
                 ? cmsActivityMapper.selectCmsActivityById(ownerId) : null;
         assertShopDayPointsUnsupported(orderTopic, isUsePoint);
-        assertExploreAccountTicketAvailable(orderTopic, memberId);
+        assertExploreSaleSnapshotFrozen(orderTopic);
         UmsMember member = validateAndGetMember(memberId);
         long userPoint = member.getPoint() != null ? member.getPoint() : 0L;
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, orderActivity);
@@ -834,12 +839,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     /**
-     * 探店日一期一票。主题行锁把“查现有票→插新单”串行化，跨 activity shell 仍共用同一源 topic。
-     * 门槛只读 finalize 冻结快照，绝不回退 live 票/章/offer 或另造配置。
+     * ③ 售票前快照门禁：只读 finalize 冻结快照，绝不回退 live 票/章/offer 或另造配置。
+     * 2026-11-02 业主裁决(C-22)取消每人限 1 张(含探店日)，不再按账号数票。
      */
-    private void assertExploreAccountTicketAvailable(CmsTopic sellerTopic, Long memberId) {
-        ExploreAccountTicketGate.assertAvailable(
-                sellerTopic, memberId, topicSaleSnapshotMapper, cmsRegistrationMapper);
+    private void assertExploreSaleSnapshotFrozen(CmsTopic sellerTopic) {
+        ExploreSaleSnapshotGate.assertSnapshotFrozen(
+                sellerTopic, topicSaleSnapshotMapper, cmsRegistrationMapper);
     }
 
     /**
@@ -872,7 +877,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         } else {
             topic = validateTopicSellable(topic);
         }
-        assertExploreAccountTicketAvailable(topic, memberId);
+        assertExploreSaleSnapshotFrozen(topic);
         lockActiveOwningClubs(null, topic);
         if (!freeTopic) SaleAvailabilityPolicy.assertSellable(topic, null, new Date());
         if (topic.getSelfPlay() == null || topic.getSelfPlay() != 1) {
@@ -943,16 +948,38 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setPaymentStatus(0);
         r.setRegistrationStatus(1);
         r.setPayExpireTime(DateUtils.addMinutes(new Date(), 30));
-        r.setExpiresAt(DateUtils.addDays(new Date(), 90)); // M2 通行证有效期 90 天
+        r.setExpiresAt(selfPlayPassExpiry(topic, new Date())); // M2 通行证有效期 90 天,不越过主题履约窗
         // [P0-02] 自玩通行证恒为 ②。此前「是不是自玩票」只能靠 (owner_type=1 + ticket_id 为空 + expires_at 非空)
         // 的组合约定反推,没有任何一列直说 —— 现在有了。
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
+        // 2026-11-03 业主:自玩通行证与场次票同三档,钟 = 主题履约窗开始,下单即冻结(不追溯存量单)。
+        RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
+        if (passPolicy != null) {
+            r.setRefundPolicyCode(passPolicy.code);
+            r.setRefundPolicyVersion(passPolicy.version);
+            r.setRefundDeadline(passPolicy.deadline);
+        }
         r.setCreateBy(memberId.toString());
         r.setCreateTime(new Date());
         if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
             throw new IllegalStateException("自玩报名原订单写入失败");
         }
         return r;
+    }
+
+    /**
+     * 自玩通行证到期 = 购后 90 天与主题履约窗结束(结束日次日 00:00,上海)取早者。
+     * 购买半屏承诺的「可玩至 X(主题结束)」与订单详情「权益到期」、扫码/开玩闸读的 expires_at 是同一个日子(R11 j3 F9)。
+     */
+    static Date selfPlayPassExpiry(CmsTopic topic, Date now) {
+        Date ninety = DateUtils.addDays(now, 90);
+        if (topic == null || topic.getEndDate() == null) {
+            return ninety;
+        }
+        java.time.ZoneId shanghai = java.time.ZoneId.of("Asia/Shanghai");
+        Date windowEnd = Date.from(topic.getEndDate().toInstant().atZone(shanghai).toLocalDate()
+                .plusDays(1).atStartOfDay(shanghai).toInstant());
+        return windowEnd.after(now) && windowEnd.before(ninety) ? windowEnd : ninety;
     }
 
     /**
@@ -1009,6 +1036,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             } else {
                 validateTopicSellable(topic);
             }
+            // ownerType=1 下单一律走 createSelfPlayPassInternal(金额 = selfPlayPrice,不看票价、不抵积分),
+            // 报价必须说同一个数(2026-11-03:rig 实测报价按主题票价 39.99,实收 29.99)。
+            if (ownerType != null && ownerType == 1 && inventoryHold == null) {
+                return quoteSelfPlayPass(memberId, ownerType, ownerId, ticketId, tickets, isUsePoint, topic);
+            }
         }
         CmsTopic sellerTopic = resolveSellerTopic(Convert.toLong(ownerType), ownerId);
         assertShopDayPointsUnsupported(sellerTopic, isUsePoint);
@@ -1022,10 +1054,29 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal pointsDeduct = BigDecimal.ZERO;
         BigDecimal memberDiscountYuan = BigDecimal.ZERO;
         StringBuilder ticketsKey = new StringBuilder();
+        // 2026-11-03 通行证三档:③ 自由探索票的退款钟 = 票的开始时间(与下单快照同一锚点)。
+        Date refundAnchor = activity == null ? null : activity.getStartDate();
+        boolean exploreAnchorSet = false;
+        // P-07/C-07(l3):报价必须读下单时会冻结的同一个点。③ 票缺开始时间时,下单冻结的是旧口径
+        // (有效期截止前全额),这里记下那个截止点,报价按它说,别再按集合钟说。
+        Date purchaseRefundDeadline = null;
+        // 第十二轮 k6(p1 N-1):这单若开积分最多能抵多少的基数(会员价后的票面);用来告诉结算页要不要画积分抵扣行。
+        BigDecimal pointsDeductBase = BigDecimal.ZERO;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
             OmsTicket ticket = validateAndGetTicket(ticketId, ownerType, ownerId, inventoryHold != null);
+            // P-07/C-07 + 通行证三档:与 createRegistration 同一个 snapshotOnPurchase 判定。
+            RefundPolicy.Snapshot refundSnapshot = RefundPolicy.snapshotOnPurchase(
+                    PurchaseKind.derive(ticketId, sellerTopic == null ? null : sellerTopic.getProductType()),
+                    ticket.getStartTime(), ticket.getEndTime());
+            if (refundSnapshot != null) {
+                if (RefundPolicy.isTieredPassSnapshot(refundSnapshot.code, refundSnapshot.deadline)) {
+                    refundAnchor = refundSnapshot.deadline;
+                } else {
+                    purchaseRefundDeadline = refundSnapshot.deadline;
+                }
+            }
             // F03 报价与报名同一可售口径:报价成功而下单被闸拒 = 用户走到末端才失败。
             if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
             if (inventoryHold == null) assertClubReservationAvailable(clubBenefit, ticket, 1);
@@ -1035,6 +1086,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             pointsUsed = c.pointUsed;
             pointsDeduct = c.pointDeductAmount;
             memberDiscountYuan = c.memberDiscountAmount;
+            pointsDeductBase = c.totalAmount;
             ticketsKey.append(ticketId).append(':').append(1);
             if (inventoryHold != null) ticketsKey.append("@offer:").append(inventoryHold.getOfferId());
         } else {
@@ -1049,6 +1101,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 RegistrationTicketItem it = tickets.get(i);
                 int qty = (it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
                 OmsTicket ticket = validateAndGetTicket(it.getTicketId(), ownerType, ownerId);
+                // 通行证三档:整单里有 ③ 票时,报价按最早开始的那张票的钟(与各行下单快照同锚)。
+                if (sellerTopic != null && PurchaseKind.derive(it.getTicketId(), sellerTopic.getProductType()) == PurchaseKind.EXPLORE_PASS
+                        && ticket.getStartTime() != null) {
+                    if (!exploreAnchorSet || ticket.getStartTime().before(refundAnchor)) refundAnchor = ticket.getStartTime();
+                    exploreAnchorSet = true;
+                }
                 if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
                 orderTotal = orderTotal.add(ticket.getPrice().multiply(BigDecimal.valueOf(qty)));
                 memberPriceTotal = memberPriceTotal.add(clubBenefit.effectivePrice(ticket.getPrice())
@@ -1059,6 +1117,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             // qty 传 1：orderTotal 已是整单票面，computePrice 内部再乘 qty 会重复计数
             PriceCalc c = computePrice(orderTotal, memberPriceTotal, 1, userPoint, usePoint);
+            pointsDeductBase = c.totalAmount;
             aggregatePayable = c.payableAmount;
             pointsUsed = c.pointUsed;
             pointsDeduct = c.pointDeductAmount;
@@ -1075,15 +1134,93 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 couponDeductYuan, quoteSign,
                 memberDiscountYuan.setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
                 clubBenefit.prioritySignupEnabled);
+        result.setPointsUsable(pointsUsable(sellerTopic, usePoint, pointsDeduct, pointsDeductBase, userPoint));
         // 1-22 附注(拍板 2026-09-19 第6条):开场前 24h 内的 ¥ 单,下单确认弹层必须写明「本单不可退」。
         // 截止点只许从 RefundPolicy 唯一场次钟取,报价侧不参与 quoteSign(它是展示性字段,
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
         if (activity != null) {
             boolean free = payAmount.signum() == 0 && pointsUsed == 0;
-            Date deadline = free ? activity.getStartDate() : RefundPolicy.sessionRefundDeadline(activity.getStartDate());
+            Date deadline = free ? activity.getStartDate() : purchaseRefundDeadline != null ? purchaseRefundDeadline
+                    : RefundPolicy.sessionRefundDeadline(refundAnchor);
             result.setRefundDeadline(deadline);
-            result.setRefundableNow(deadline == null ? null
-                    : free ? new Date().before(deadline) : !new Date().after(deadline));
+            Date quotedAt = new Date();
+            if (free) {
+                result.setRefundableNow(deadline == null ? null : quotedAt.before(deadline));
+            } else if (purchaseRefundDeadline != null) {
+                // ③ 旧口径快照(票缺开始时间):有效期截止前全额,之后不退 —— 与 RefundPolicy.evaluate 同口径。
+                boolean refundable = !quotedAt.after(purchaseRefundDeadline);
+                result.setRefundableNow(refundable);
+                result.setRefundPercentNow(refundable ? 100 : 0);
+            } else {
+                // 2026-11-02 退款档位:集合前 24 小时以上全额、24 小时内 50%、开始后不退(RefundPolicy 唯一判定)。
+                BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(refundAnchor, quotedAt);
+                result.setRefundableNow(ratio == null ? null : ratio.signum() > 0);
+                result.setRefundPercentNow(ratio == null ? null
+                        : ratio.multiply(BigDecimal.valueOf(100)).intValue());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 自玩通行证报价:与 {@link #createSelfPlayPassInternal} 同一套取价与退款快照。
+     * 金额 = 俱乐部权益后的 selfPlayPrice;不抵积分(下单 pointUsed 恒 0);
+     * 退款字段读下单会冻结的通行证三档快照({@link RefundPolicy#snapshotSelfPlayPass}),快照算不出时不另说。
+     * 签名的 ticketsKey 与幂等重放 {@code RegistrationOrderServiceImpl#matchesPersistedQuote} 同一拼法。
+     */
+    private RegistrationQuoteResult quoteSelfPlayPass(Long memberId, Integer ownerType, Long ownerId, Long ticketId,
+                                                      List<RegistrationTicketItem> tickets, Integer isUsePoint,
+                                                      CmsTopic topic) {
+        boolean freeTopic = isFreeTopic(topic);
+        if (freeTopic && topic.getSelfPlayPrice() != null && topic.getSelfPlayPrice().signum() != 0) {
+            throw new RuntimeException("票价已变更,请刷新后重新下单");
+        }
+        if (!freeTopic) SaleAvailabilityPolicy.assertSellable(topic, null, new Date());
+        if (topic.getSelfPlay() == null || topic.getSelfPlay() != 1) {
+            throw new RuntimeException("该主题未开放自玩");
+        }
+        if (topic.getSelfPlayPrice() == null || topic.getSelfPlayPrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("自玩票价未配置");
+        }
+        validateAndGetMember(memberId);
+        ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, topic.getClubId());
+        BigDecimal originalPrice = topic.getSelfPlayPrice();
+        BigDecimal price = clubBenefit.effectivePrice(originalPrice);
+        if (price.compareTo(BigDecimal.ZERO) > 0) {
+            // 与下单同一对收费闸:报价放行而下单被拒 = 用户走到末端才失败
+            assertCollectible(topic, price);
+            assertFeeRateValid(topic.getFeePlatformRate());
+        }
+        BigDecimal payAmount = price.setScale(2, BigDecimal.ROUND_HALF_UP);
+        StringBuilder ticketsKey = new StringBuilder();
+        if (tickets == null || tickets.isEmpty()) {
+            ticketsKey.append(ticketId).append(":1");
+        } else {
+            for (int i = 0; i < tickets.size(); i++) {
+                RegistrationTicketItem it = tickets.get(i);
+                int qty = (it == null || it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
+                if (i > 0) ticketsKey.append('|');
+                ticketsKey.append(it == null ? null : it.getTicketId()).append(':').append(qty);
+            }
+        }
+        int usePoint = (isUsePoint != null && isUsePoint == 1) ? 1 : 0;
+        BigDecimal couponDeductYuan = BigDecimal.ZERO;
+        String quoteSign = buildQuoteSign(memberId, ownerType, ownerId, ticketsKey.toString(),
+                usePoint, payAmount, 0, couponDeductYuan);
+        RegistrationQuoteResult result = new RegistrationQuoteResult(payAmount, 0,
+                BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP), couponDeductYuan, quoteSign,
+                originalPrice.subtract(price).setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
+                clubBenefit.prioritySignupEnabled);
+        if (payAmount.signum() > 0) {
+            RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
+            if (passPolicy != null && passPolicy.deadline != null) {
+                Date quotedAt = new Date();
+                result.setRefundDeadline(RefundPolicy.sessionRefundDeadline(passPolicy.deadline));
+                BigDecimal ratio = RefundPolicy.sessionRefundRatioAt(passPolicy.deadline, quotedAt);
+                result.setRefundableNow(ratio == null ? null : ratio.signum() > 0);
+                result.setRefundPercentNow(ratio == null ? null
+                        : ratio.multiply(BigDecimal.valueOf(100)).intValue());
+            }
         }
         return result;
     }
@@ -1103,6 +1240,21 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 金额/积分抵扣/支付方式计算（M0-1 抽取）：createRegistration 与 quoteRegistration 共用，
      * 保证「报价 = 实付」分毫不差。逻辑与原 createRegistration 内联段完全等价。
      */
+    /**
+     * 第十二轮 k6(p1 N-1):这单能不能用积分抵扣。自由探索不收积分(assertShopDayPointsUnsupported),
+     * 票面为 0、玩家没积分、按抵扣规则算下来是 0 ⇒ false,结算页就不画「积分抵扣 -¥0」那一行。
+     * 不参与 quoteSign:只是展示开关,真正的抵扣仍以下单时重算为准。
+     */
+    private Boolean pointsUsable(CmsTopic sellerTopic, int usePoint, BigDecimal pointsDeduct,
+                                 BigDecimal deductBase, long userPoint) {
+        if (sellerTopic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(sellerTopic.getProductType())) {
+            return Boolean.FALSE;
+        }
+        if (usePoint == 1) return pointsDeduct != null && pointsDeduct.signum() > 0;
+        if (deductBase == null || deductBase.signum() <= 0 || userPoint <= 0) return Boolean.FALSE;
+        return computePrice(deductBase, deductBase, 1, userPoint, 1).pointDeductAmount.signum() > 0;
+    }
+
     private PriceCalc computePrice(BigDecimal ticketPrice, int qty, long userPoint, Integer isUsePoint) {
         return computePrice(ticketPrice, ticketPrice, qty, userPoint, isUsePoint);
     }
@@ -1499,7 +1651,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private void assertShopDayPointsUnsupported(CmsTopic sellerTopic, Integer isUsePoint) {
         if (Integer.valueOf(1).equals(isUsePoint) && sellerTopic != null
                 && Integer.valueOf(ProductType.FREE_EXPLORE).equals(sellerTopic.getProductType())) {
-            throw new RuntimeException("探店日不支持积分抵扣，请关闭积分后按全价购买");
+            throw new RuntimeException("自由探索不支持积分抵扣，请关闭积分后按全价购买");
         }
     }
 
@@ -1507,12 +1659,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         assertCollectible(topic, payableAmount, null);
     }
 
+    /**
+     * 收款闸。2026-11-02 拍板(walk-fix ROUND2「Who can publish」):主办方(商家/俱乐部)没有自己的
+     * 商户号时,收费主题和活动照常发布,玩家的钱走平台商户号收 —— 全仓没有 sub_mchid,下单本来就只走
+     * 平台商户号(WechatPayServiceImpl#buildPrepayRequest)。因此本闸不再按「是否平台自营」拒。
+     *
+     * <p>仍然拒的只有「查不到票款归谁」的单(fail-closed):既没解析出主题,又不是有发布者的独立活动
+     * (含主题已删的承办活动)。第三方按核销计酬(REVSHARE)不在这里放开,仍由
+     * MerchantOfferServiceImpl / CmsTopicChapterServiceImpl 的 isPlatformOwned 闸拒。
+     */
     private void assertCollectible(CmsTopic topic, BigDecimal payableAmount, CmsActivity activity) {
         if (payableAmount == null || payableAmount.signum() <= 0) return;
-        boolean platformOwned = topic != null ? productRoleService.isPlatformOwned(topic.getId())
-                : activity != null && activity.getTopicId() == null && platformMemberId != null
-                        && platformMemberId > 0L && platformMemberId.equals(activity.getMemberId());
-        if (!platformOwned) {
+        boolean payeeKnown = topic != null
+                || activity != null && activity.getTopicId() == null && activity.getMemberId() != null;
+        if (!payeeKnown) {
             throw new RuntimeException("该产品暂不支持在线支付(平台正在办理支付资质,预计 2 个月内开放);"
                     + "如需报名请联系主办方");
         }
@@ -1578,6 +1738,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             originalActivity = cmsActivityMapper.selectCmsActivityById(request.getOwnerId());
             RegistrationTopicFence.lockActivityTopic(originalActivity, cmsTopicMapper);
         }
+        rejectWhileChargeablePendingOrder(memberId, request.getOwnerType(), request.getOwnerId(), normalizedRequestId);
         ClubWaitlistClaim waitlistClaim;
         if (clubWaitlistOrderBridge == null) {
             if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
@@ -1609,6 +1770,27 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
         return created;
+    }
+
+    /**
+     * j6 N1(第十二轮 k1 第 5 项):同一会员同一场次已有一笔还能被扣款的订单时,不建第二笔,把玩家带去那一笔。
+     * 先锁会员行,让同一会员的并发建单串行(锁序与支付回调一致:主题围栏 → 会员)。
+     * 付完的订单不挡:C-22 同一人跨订单为不同参与人买多张票照常可以。
+     */
+    private void rejectWhileChargeablePendingOrder(Long memberId, Integer ownerType, Long ownerId, String requestId) {
+        if (memberId == null || ownerType == null || ownerId == null) {
+            return;
+        }
+        if (umsMemberMapper != null) {
+            umsMemberMapper.selectPointsForUpdate(memberId);
+        }
+        // 同一幂等键的那笔不算「另一笔」:并发重放要落到唯一键冲突 → 返回赢家,不能被这里拒掉
+        Long pending = cmsRegistrationMapper.selectChargeablePendingOrderId(memberId, ownerType, ownerId, requestId);
+        if (pending != null && pending > 0L) {
+            throw new com.chengyinhub.business.service.RegistrationPendingOrderException(
+                    com.chengyinhub.business.service.RegistrationPendingOrderException.PENDING_ORDER_EXISTS,
+                    pending, "这一场你还有一笔订单没有完成支付");
+        }
     }
 
     private void bindRequestFingerprint(List<CmsRegistration> created, String requestId,
@@ -1678,6 +1860,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             closeExpiredOne(registrationId);
             throw expired;
         }
+        // j6 N1:这一单之后同场次已有一笔付成功,这一单不再发支付参数(防一人一场被扣两次)
+        if (cmsRegistrationMapper.countNewerPaidSiblingOrders(registration) > 0) {
+            throw new com.chengyinhub.business.service.RegistrationPendingOrderException(
+                    com.chengyinhub.business.service.RegistrationPendingOrderException.ORDER_SUPERSEDED,
+                    registration.getId(), "这一场你已有一笔付款成功的订单，这一笔不能再支付");
+        }
         if (Integer.valueOf(1).equals(registration.getPaymentStatus())) {
             return registration;
         }
@@ -1745,6 +1933,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         } else if (sellerTopic != null) {
             assertRegistrationSellable(activity, sellerTopic, null, now);
         }
+        assertExploreSaleSnapshotFrozen(sellerTopic);
         return sellerTopic;
     }
 
@@ -1782,6 +1971,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
+        if (activity != null) ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId());
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
             assertCommercialSaleOpen(topic, ticket, now);
             return;
@@ -2691,9 +2881,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return transactionId.equals(registration.getTransactionId());
     }
 
+    /**
+     * 支付成功回调发 id 2/3/5/6 积分时读规则值。后台「停用」(status != 1)或已删除(del_flag != 0)
+     * 的规则一分不发(2026-11-04 业主拍板:停用开关必须真停发放)。启用规则按原值发,不改存量数据;
+     * 只返回 0,订单照常完成。
+     */
     private int pointsSettingValue(Long settingId) {
-        CmsPointsSetting setting = cmsPointsSettingService.selectCmsPointsSettingById(settingId);
-        return setting == null || setting.getValue() == null ? 0 : setting.getValue().intValue();
+        return com.chengyinhub.business.service.support.PointsRuleSwitch.activeValue(
+                cmsPointsSettingService.selectCmsPointsSettingById(settingId));
     }
 
     /** 先用奖励业务键抢占流水，再更新余额；任一步失败由支付回调外层事务整体回滚。 */
@@ -3634,7 +3829,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (perkLedgerService.isExploreCompleted(registration.getId(), topicId)) {
             com.chengyinhub.business.domain.Redemption redemption = redemptionMapper.selectById(redemptionId);
             if (redemption == null || redemption.getCreateTime() == null) {
-                throw new IllegalStateException("探店日通关来源时间缺失");
+                throw new IllegalStateException("自由探索通关来源时间缺失");
             }
             TopicCompletionAwardVO award = topicCompletionAwardService.grantOnce(registration.getMemberId(), topicId,
                     registration.getOwnerId(), redemption.getCreateTime());

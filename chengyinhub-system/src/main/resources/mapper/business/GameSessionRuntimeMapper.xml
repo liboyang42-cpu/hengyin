@@ -278,6 +278,16 @@
          where s.id=#{sessionId} group by s.id, t.id, t.title
     </select>
 
+    <select id="selectRouteTeamCompletedNodes" resultType="map">
+        select distinct t.id as teamId, p.node_id as nodeId
+          from game_session s
+          join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
+          join play_team_member m on m.team_id=t.id and m.status=1
+          join player_node_progress p on p.member_id=m.member_id and p.activity_id=s.activity_id
+               and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
+         where s.id=#{sessionId}
+    </select>
+
     <insert id="insertStationsFromTopic">
         insert ignore into game_station_run
         (game_session_id, activity_id, node_id, node_name, station_code, merchant_member_id,
@@ -371,7 +381,8 @@
                a.name as activityName,
                a.start_date as startAt,
                a.end_date as endAt,
-               count(distinct r.id) as stationCount
+               count(distinct r.id) as stationCount,
+               count(distinct case when r.status='INVITED' then r.id end) as invitedCount
           from game_station_run r
           join game_session s on s.id=r.game_session_id and s.activity_id=r.activity_id
           join cms_activity a on a.id=r.activity_id and a.del_flag=0
@@ -514,9 +525,25 @@
          order by team_id, id
     </select>
 
+    <!-- j2 F-08:导演台(主理人/本场导演)选人看报名姓名 —— 本场已付报名最近一张的姓名密文,
+         Service 解密后替换 memberName 并移除本列,不下发密文。 -->
+    <!-- 第十轮 f2 walk:没组队的玩家不在成员投影里,导演台排行榜按本场已付报名取姓名密文(Service 解密,不下发密文)。 -->
+    <select id="selectActivitySignupNames" resultType="map">
+        select r.member_id as memberId, r.real_name as realNameStored
+        from cms_registration r
+        where r.owner_type = 2 and r.owner_id = #{activityId}
+          and r.payment_status = 2 and r.registration_status = 2
+          and r.real_name is not null and r.real_name &lt;&gt; ''
+        order by r.id desc
+    </select>
     <select id="selectClubMemberProjection" resultType="map">
         select t.id as teamId, coalesce(t.title, '队伍') as teamName,
                m.member_id as memberId, coalesce(u.nickname, '玩家') as memberName,
+               (select name_reg.real_name from cms_registration name_reg
+                 where name_reg.member_id=m.member_id and name_reg.owner_type=2 and name_reg.owner_id=t.owner_id
+                   and name_reg.payment_status=2 and name_reg.registration_status=2
+                   and name_reg.real_name is not null and name_reg.real_name &lt;&gt; ''
+                 order by name_reg.id desc limit 1) as realNameStored,
                r.role_code as roleCode, r.role_name as roleName, r.status
           from game_session s
           join play_team t on t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
@@ -631,32 +658,36 @@
                   from cms_registration reg
                  where reg.owner_type=2 and reg.owner_id=s.activity_id
                    and reg.payment_status=2 and reg.registration_status=2
-                   and exists (
-                       select 1 from play_team t
-                       join play_team_member m on m.team_id=t.id and m.member_id=reg.member_id and m.status=1
-                       where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
-                   )) as paidPlayers,
-               (select count(distinct p.member_id)
-                  from player_node_progress p
-                 where p.activity_id=s.activity_id and p.topic_id=s.topic_id
-                   and p.checkin_time is not null and p.del_flag=0
-                   and exists (
-                       select 1
-                         from play_team t
-                         join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
-                        where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
-                          and <include refid="paidActivityMemberExists"/>
-                   )) as arrivedPlayers,
+                   <!-- 第十一轮 h4 L3:持票 = 已付款未退的人,不再要求先进队;没组队的付款玩家也持票。 -->
+                   ) as paidPlayers,
+               <!-- C-10:到场与本场名册同一事实(签到/核销/节点进度,更正优先),口径同 ClubEventOpsMapper.selectPaidRoster。 -->
+               (select count(distinct reg.member_id)
+                  from cms_registration reg
+                  left join club_event_attendance_correction corr on corr.id = (
+                      select max(c2.id) from club_event_attendance_correction c2
+                       where c2.activity_id=reg.owner_id and c2.member_id=reg.member_id)
+                 where reg.owner_type=2 and reg.owner_id=s.activity_id
+                   and reg.payment_status=2 and reg.registration_status=2
+                   and case when corr.id is not null then corr.new_arrived=1
+                       else (exists (select 1 from club_lead_checkin ck
+                                      where ck.activity_id=reg.owner_id and ck.member_id=reg.member_id)
+                             or exists (select 1 from cms_registration v
+                                         where v.owner_type=2 and v.owner_id=reg.owner_id and v.member_id=reg.member_id
+                                           and v.payment_status=2 and v.registration_status=2 and v.verification_status=1)
+                             or exists (select 1 from player_node_progress p
+                                         where p.activity_id=reg.owner_id and p.member_id=reg.member_id
+                                           and p.status=1 and p.del_flag=0)) end
+               ) as arrivedPlayers,
                (select count(distinct q.member_id) from game_task_submission q
                  where q.game_session_id=s.id) as taskSubmitters,
                case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'
                     then (select count(distinct p.member_id) from player_node_progress p
                            where p.activity_id=s.activity_id and p.topic_id=s.topic_id and p.status=1 and p.del_flag=0
                              and exists (select 1 from game_station_run sr where sr.game_session_id=s.id and sr.node_id=p.node_id)
-                             and exists (select 1 from play_team t
-                                          join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
-                                         where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2)
-                                           and <include refid="paidActivityMemberExists"/>))
+                             <!-- 第十一轮 h4 L3:与持票同一口径,付款未退即可,不要求在队 -->
+                             and exists (select 1 from cms_registration reg
+                                          where reg.member_id=p.member_id and reg.owner_type=2 and reg.owner_id=s.activity_id
+                                            and reg.payment_status=2 and reg.registration_status=2))
                     else (select count(distinct case when o.status='COMPLETED' then o.member_id end)
                             from game_player_node_outcome o where o.game_session_id=s.id) end as normalCompleters,
                (select count(distinct case when o.status='FALLBACK_COMPLETED' then o.member_id end)
@@ -714,23 +745,18 @@
                   from player_node_progress p
                  where p.activity_id=r.activity_id and p.topic_id=s.topic_id and p.node_id=r.node_id
                    and p.checkin_time is not null and p.del_flag=0
-                   and exists (
-                       select 1
-                         from play_team t
-                         join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
-                        where t.owner_type=2 and t.owner_id=r.activity_id and t.status in (0,1,2)
-                          and <include refid="paidActivityMemberExists"/>
-                   )) as arrivedPlayers,
+                   and exists (select 1 from cms_registration reg
+                                where reg.member_id=p.member_id and reg.owner_type=2 and reg.owner_id=r.activity_id
+                                  and reg.payment_status=2 and reg.registration_status=2)) as arrivedPlayers,
                (select count(1) from game_task_submission q
                  where q.game_session_id=r.game_session_id and q.station_run_id=r.id) as submissionCount,
                case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'
                     then (select count(distinct p.member_id) from player_node_progress p
                            where p.activity_id=r.activity_id and p.topic_id=s.topic_id and p.node_id=r.node_id
                              and p.status=1 and p.del_flag=0
-                             and exists (select 1 from play_team t
-                                          join play_team_member m on m.team_id=t.id and m.member_id=p.member_id and m.status=1
-                                         where t.owner_type=2 and t.owner_id=r.activity_id and t.status in (0,1,2)
-                                           and <include refid="paidActivityMemberExists"/>))
+                             and exists (select 1 from cms_registration reg
+                                          where reg.member_id=p.member_id and reg.owner_type=2 and reg.owner_id=r.activity_id
+                                            and reg.payment_status=2 and reg.registration_status=2))
                     else (select count(case when o.status='COMPLETED' then 1 end) from game_player_node_outcome o
                            where o.game_session_id=r.game_session_id and o.station_run_id=r.id) end as normalCompletedCount,
                (select count(case when o.status='FALLBACK_COMPLETED' then 1 end) from game_player_node_outcome o
@@ -971,6 +997,65 @@
             <otherwise>and 1=1</otherwise>
         </choose>
     </insert>
+
+    <!-- 2026-11-01 业主:导演台定向广播按人发。范围闸与上面 ALL 分支同一口径(本局队伍在队 + 已支付),
+         memberIds 只在这个集合里收窄,传进来的人不在本局就不会写投递行。 -->
+    <!-- 第十一轮 h4 L3:按人发与「全部」的范围 = 本场已付款未退的玩家,不再要求先进队 ——
+         没组队的付款玩家以前既不在导演台名单里,也收不到「全部」广播。队伍 / 角色范围仍按队取人。 -->
+    <insert id="insertBroadcastMemberDeliveries">
+        insert ignore into game_broadcast_delivery
+        (broadcast_id, member_id, status, message_id, error_code, create_time, update_time)
+        select distinct #{broadcastId}, reg.member_id, 'PENDING', null, null, #{now}, #{now}
+          from cms_registration reg
+         where reg.owner_type=2 and reg.owner_id=#{activityId}
+           and reg.payment_status=2 and reg.registration_status=2
+           and reg.member_id in
+           <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">#{memberId}</foreach>
+    </insert>
+
+    <insert id="insertBroadcastAllPaidDeliveries">
+        insert ignore into game_broadcast_delivery
+        (broadcast_id, member_id, status, message_id, error_code, create_time, update_time)
+        select distinct #{broadcastId}, reg.member_id, 'PENDING', null, null, #{now}, #{now}
+          from cms_registration reg
+         where reg.owner_type=2 and reg.owner_id=#{activityId}
+           and reg.payment_status=2 and reg.registration_status=2
+    </insert>
+
+    <select id="countPaidPlayers" resultType="int">
+        select count(distinct reg.member_id) from cms_registration reg
+         where reg.owner_type=2 and reg.owner_id=#{activityId}
+           and reg.payment_status=2 and reg.registration_status=2
+    </select>
+
+    <!-- 第十一轮 h4 L3:导演台名单与队伍进度里的「没组队」付款玩家,一人一行;完成节点按本人进度算。 -->
+    <select id="selectClubUnteamedPaidMembers" resultType="map">
+        select reg.member_id as memberId, coalesce(u.nickname, '玩家') as memberName,
+               (select name_reg.real_name from cms_registration name_reg
+                 where name_reg.member_id=reg.member_id and name_reg.owner_type=2 and name_reg.owner_id=s.activity_id
+                   and name_reg.payment_status=2 and name_reg.registration_status=2
+                   and name_reg.real_name is not null and name_reg.real_name &lt;&gt; ''
+                 order by name_reg.id desc limit 1) as realNameStored,
+               case when json_unquote(json_extract(s.module_config_snapshot_json, '$.playMode'))='ROUTE'
+                    then (select count(distinct p.node_id) from player_node_progress p
+                           where p.member_id=reg.member_id and p.activity_id=s.activity_id and p.topic_id=s.topic_id
+                             and p.status=1 and p.del_flag=0
+                             and exists (select 1 from game_station_run sr where sr.game_session_id=s.id and sr.node_id=p.node_id))
+                    else (select count(distinct o.node_id) from game_player_node_outcome o
+                           where o.game_session_id=s.id and o.member_id=reg.member_id
+                             and o.status in ('COMPLETED','FALLBACK_COMPLETED')) end as completedNodes,
+               (select count(1) from game_station_run sr where sr.game_session_id=s.id) as totalNodes
+          from game_session s
+          join cms_registration reg on reg.owner_type=2 and reg.owner_id=s.activity_id
+               and reg.payment_status=2 and reg.registration_status=2
+          left join ums_member u on u.id=reg.member_id
+         where s.id=#{sessionId}
+           and not exists (select 1 from play_team t
+                            join play_team_member m on m.team_id=t.id and m.member_id=reg.member_id and m.status=1
+                           where t.owner_type=2 and t.owner_id=s.activity_id and t.status in (0,1,2))
+         group by reg.member_id, u.nickname, s.id, s.activity_id, s.topic_id, s.module_config_snapshot_json
+         order by min(reg.id)
+    </select>
 
     <select id="selectPendingDeliveries" resultMap="GameDeliveryResult">
         select id, broadcast_id, member_id, status, message_id, error_code, create_time, update_time

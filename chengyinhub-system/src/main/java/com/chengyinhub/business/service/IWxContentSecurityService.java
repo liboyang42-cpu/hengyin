@@ -190,6 +190,14 @@ public interface IWxContentSecurityService
      */
     boolean isEnabled();
 
+    /**
+     * Round5B-3:图片能否送微信异步检测(总开关开 + 有 openid)。不能送检的公开图片不得直接公开,
+     * 调用方须按 HOLD 进人工审核。
+     */
+    default boolean canSubmitMedia(String openid) {
+        return isEnabled() && openid != null && !openid.trim().isEmpty();
+    }
+
     /** 获取小程序 access_token(复用内容安全的 token+redis 缓存);未配置/失败返回 ""。供订阅消息等复用,避免另起 token 管理。 */
     String getAccessToken();
 
@@ -230,5 +238,14 @@ public interface IWxContentSecurityService
             }
         }
         return sb.toString();
+    }
+
+    /**
+     * Round5D:按内容安全违规自动下架(与微信 risky 回调同一条路径:下架 + 通知作者,幂等)。
+     * 供敏感词存量复查使用;不支持的类型返回 false。
+     */
+    default boolean takeDownForSafety(int bizType, Long bizId)
+    {
+        return false;
     }
 }

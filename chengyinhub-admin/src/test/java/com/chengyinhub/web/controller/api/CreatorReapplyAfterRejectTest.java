@@ -38,6 +38,7 @@ class CreatorReapplyAfterRejectTest {
     void setUp() {
         profileMapper = mock(CreatorProfileMapper.class);
         service = new CreatorCenterServiceImpl();
+        ReflectionTestUtils.setField(service, "submissionSafety", mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "creatorProfileMapper", profileMapper);
         ReflectionTestUtils.setField(service, "creatorMetricDailyMapper", mock(CreatorMetricDailyMapper.class));
         ReflectionTestUtils.setField(service, "creatorIncomeDetailMapper", mock(CreatorIncomeDetailMapper.class));

@@ -1,6 +1,12 @@
-
+// 第九轮 m1-9:地址开地图走 utils/open-address.js,点了才载入;是否给点只看坐标是否成立(与它同一判据)
+function openAddress() { return require('../../../utils/open-address.js') }
+function hasGeo(lat, lng) { const a = Number(lat), b = Number(lng); return lat !== '' && lng !== '' && lat != null && lng != null && isFinite(a) && isFinite(b) && !(a === 0 && b === 0) && Math.abs(a) <= 90 && Math.abs(b) <= 180; }
 Component({
   properties: {
+    // 第九轮 m1-9:有坐标时地址一点开地图;nav 为真时再给一个「导航」胶囊
+    latitude: { type: null, value: null },
+    longitude: { type: null, value: null },
+    nav: { type: Boolean, value: false },
     variant: { type: String, value: 'list' },
     size: { type: String, value: 'md' },
     status: { type: String, value: 'open' },
@@ -28,8 +34,9 @@ Component({
     suitTypes: { type: String, value: '' },
     coopOpen: { type: null, value: null },
   },
-  data: { _tags: [], _suit: '', _coverFailed: false, _logoFailed: false },
+  data: { _tags: [], _suit: '', _coverFailed: false, _logoFailed: false, _geo: false },
   observers: {
+    'latitude, longitude': function (latitude, longitude) { this.setData({ _geo: hasGeo(latitude, longitude) }); },
     'tags, variant, chargeType, capacity': function (tags, variant, chargeType, capacity) {
       let values = [];
       if (variant === 'venue') {
@@ -51,6 +58,10 @@ Component({
   methods: {
     onTap() { const s = this.data.status; if (s !== 'disabled' && s !== 'loading') this.triggerEvent('tap'); },
     onService() { if (this.data.status !== 'disabled' && this.data.status !== 'loading') this.triggerEvent('service'); },
+    onAddress() {
+      const d = this.data;
+      openAddress().openAddress({ latitude: d.latitude, longitude: d.longitude, name: d.name, address: d.address });
+    },
     onCoverError() { this.setData({ _coverFailed: true }); },
     onLogoError() { this.setData({ _logoFailed: true }); },
   },

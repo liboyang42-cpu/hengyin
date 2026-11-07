@@ -78,6 +78,15 @@ public interface IClubMemberService
     /** 资金动作专用场次级判据：必须是指定承接俱乐部的主理人。 */
     public boolean isTopicOwner(Long topicId, Long clubId, Long memberId);
 
+    /**
+     * C-12(2026-11-02 拍板默认):导演台与结束权的场次级判据。
+     * 发布俱乐部主理人(isTopicOwner)之外,执行俱乐部(有生效 club 合作单)的主理人也能导演**自己俱乐部的场次**;
+     * clubId 必须取场次 cms_activity.club_id。资金动作仍用 isTopicOwner,不走这里。
+     */
+    default boolean isSessionDirector(Long topicId, Long clubId, Long memberId) {
+        return isTopicOwner(topicId, clubId, memberId);
+    }
+
     /** D22:该主题的组织槽有没有人(存在生效的 to_type='club' 合作单)—— 决定谁核销玩家票。 */
     public boolean topicHasOrganizer(Long topicId);
 

@@ -39,6 +39,8 @@ class MinorCheckoutGateTest {
         ReflectionTestUtils.setField(checkout, "registrationService", registrationService);
         ReflectionTestUtils.setField(checkout, "registrationOrderService", orderService);
         ReflectionTestUtils.setField(checkout, "wechatPayService", wechatPayService);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate",
+                mock(com.chengyinhub.business.service.IRegistrationOrderCreateGate.class));
     }
 
     @Test

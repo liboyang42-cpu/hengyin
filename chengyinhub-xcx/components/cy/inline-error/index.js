@@ -7,6 +7,7 @@ const KIND_DEFAULTS = {
   network: { glyph: 'warning', title: '网络没连上',       sub: '' },
   data:    { glyph: 'info',    title: '这部分没更新成功', sub: '' },
   error:   { glyph: 'warning', title: '这一步没有完成',   sub: '' },
+  field:   { glyph: 'warning', title: '',                 sub: '' },   // 栏下红字:无底色无图标
 };
 
 Component({

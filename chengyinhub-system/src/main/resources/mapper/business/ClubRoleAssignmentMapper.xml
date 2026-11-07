@@ -17,6 +17,7 @@
         <result property="revokeReason" column="revoke_reason"/>
         <result property="version" column="version"/>
         <result property="scopeTopicId" column="scope_topic_id"/>
+        <result property="customerPhoneVisible" column="customer_phone_visible"/>
         <result property="createBy" column="create_by"/>
         <result property="createTime" column="create_time"/>
         <result property="updateBy" column="update_by"/>
@@ -26,7 +27,8 @@
     <sql id="assignmentColumns">
         id, club_id, target_member_id, role_code, scope_type, scope_id, status,
         expires_at, assigned_by_member_id, assigned_at, revoked_by_member_id,
-        revoked_at, revoke_reason, version, create_by, create_time, update_by, update_time
+        revoked_at, revoke_reason, version, customer_phone_visible,
+        create_by, create_time, update_by, update_time
     </sql>
 
     <select id="selectActiveForAccess" resultMap="ClubRoleAssignmentResult">
@@ -106,11 +108,12 @@
             parameterType="com.chengyinhub.business.domain.ClubRoleAssignment">
         insert into club_role_assignment
           (club_id, target_member_id, role_code, scope_type, scope_id, status,
-           expires_at, assigned_by_member_id, assigned_at, version,
+           expires_at, assigned_by_member_id, assigned_at, version, customer_phone_visible,
            create_by, create_time, update_by, update_time)
         values
           (#{clubId}, #{targetMemberId}, #{roleCode}, #{scopeType}, #{scopeId}, #{status},
            #{expiresAt}, #{assignedByMemberId}, #{assignedAt}, #{version},
+           coalesce(#{customerPhoneVisible}, 0),
            #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
     </insert>
 

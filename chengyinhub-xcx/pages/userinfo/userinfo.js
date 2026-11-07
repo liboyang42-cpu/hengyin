@@ -30,6 +30,7 @@ Page({
 
   onLoad: function (options) {
     options = options || {};
+    if (typeof wx.hideShareMenu === 'function') wx.hideShareMenu({ menus: ['shareTimeline'], fail: function () {} });
     var userId = String(options.userId || options.id || '').trim();
     this.setData({
       userId: userId,
@@ -50,6 +51,18 @@ Page({
 
   goMemberHome: function () {
     wx.switchTab({ url: '/pages/member/index/index' });
+  },
+
+  // 第七轮 C 第 1 项:朋友圈只对「可公开商家主页」开放。默认关掉朋友圈菜单,资料组件确认被看者是商家后再打开;
+  // 普通个人主页不进朋友圈。
+  onSubjectMerchant: function () {
+    if (typeof wx.showShareMenu === 'function') wx.showShareMenu({ menus: ['shareAppMessage', 'shareTimeline'], fail: function () {} });
+  },
+
+  onShareTimeline: function () {
+    var profile = this.selectComponent('#profile');
+    var payload = profile && typeof profile.getTimelinePayload === 'function' ? profile.getTimelinePayload() : null;
+    return payload || { title: '城瘾 · 城市探索', query: this.data.userId ? 'userId=' + this.data.userId + '&tab=about' : '' };
   },
 
   onShareAppMessage: function (res) {

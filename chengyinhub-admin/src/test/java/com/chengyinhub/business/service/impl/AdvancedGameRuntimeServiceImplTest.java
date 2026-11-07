@@ -105,6 +105,17 @@ class AdvancedGameRuntimeServiceImplTest {
         when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, ACTIVITY_ID)).thenReturn(1);
     }
 
+    @Test void legacyAlbumReadAcknowledgementDoesNotPretendToUploadEvidence() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        JsonNode config=json.readTree("{\"album\":{\"enabled\":true},\"random\":{\"enabled\":true}}");
+        com.fasterxml.jackson.databind.node.ObjectNode state=json.createObjectNode();
+        assertThrows(IllegalArgumentException.class,()->ReflectionTestUtils.invokeMethod(service,"submitAlbum",config,state,Map.of(),MEMBER_ID));
+        ReflectionTestUtils.invokeMethod(service,"submitAlbum",config,state,Map.of("viewed",true),MEMBER_ID);
+        assertTrue(state.path("album").path("done").asBoolean());
+        assertFalse(state.path("album").has("images"));
+        assertThrows(IllegalArgumentException.class,()->ReflectionTestUtils.invokeMethod(service,"submitAlbum",json.readTree("{\"album\":{\"enabled\":true}}"),json.createObjectNode(),Map.of("viewed",true),MEMBER_ID));
+    }
+
     @Test
     void startFreezesConfigInitializesBranchAndUsesServerDeadline() {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(fullConfig()));
@@ -298,6 +309,21 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("请先完成上一站", assertThrows(IllegalStateException.class,
                 () -> service.completeGate(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID)).getMessage());
         verifyNoInteractions(templateMapper, attemptMapper);
+    }
+
+    /* 第十三轮 m1 P6:本局已通关(路线不再放行)后再点「再摇一次」:不写任何东西,说「这一站已经完成了」,不再误报「请先完成上一站」 */
+    @Test
+    void finishedRunReflipOfCompletedCoinSaysDoneAndWritesNothing() throws Exception {
+        var route = frozenBasicRoute(new com.fasterxml.jackson.databind.ObjectMapper().readTree(coinOnlyConfig()));
+        when(route.canPlay(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID)).thenReturn(false);
+        GameRuntimeSession session = runningSession(coinOnlyConfig(), "{\"coinFlip\":{\"flipped\":true,\"side\":\"HEADS\"}}");
+        session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        assertEquals("这一站已经完成了", assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 1, "reflip", "FLIP_COIN", Collections.emptyMap())).getMessage());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(route, never()).recordNodeResult(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyInt(), any());
+        verify(route, never()).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -515,6 +541,18 @@ class AdvancedGameRuntimeServiceImplTest {
 
         assertEquals("高级玩法尚未完成", error.getMessage());
         verify(sessionMapper, never()).updateStateCas(any());
+    }
+
+    @Test void completedCompassCannotBypassTheCoLocatedOriginalCheck() throws Exception {
+        JsonNode config=new com.fasterxml.jackson.databind.ObjectMapper().readTree(compassConfigSkippable(true));
+        ITopicRouteRuntimeService route=frozenBasicRoute(config);
+        GameRuntimeSession session=runningSession(config.toString(),"{\"compass\":{\"done\":true,\"skipped\":true}}");
+        session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID,TOPIC_ID,NODE_ID,MEMBER_ID)).thenReturn(session);
+        when(route.pendingCompassCheck(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(true);
+        assertEquals("请先完成本站 D20 检定",assertThrows(ServiceException.class,()->service.completeGate(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID)).getMessage());
+        when(route.pendingCompassCheck(MEMBER_ID,TOPIC_ID,ACTIVITY_ID,NODE_ID)).thenReturn(false);
+        service.completeGate(MEMBER_ID,ACTIVITY_ID,TOPIC_ID,NODE_ID);
     }
 
     // ── v5.1 玩法必须真闸住 completeGate(修复前 mechanicsReady 只查 random/branch/multiplayer,
@@ -1201,6 +1239,31 @@ class AdvancedGameRuntimeServiceImplTest {
                 Collections.emptyMap());
         Map<String, Object> coinAgain = playKit(again, "coinFlip");
         assertEquals("HEADS", coinAgain.get("side"));
+    }
+
+    /** P-09:猜数字的题干(编辑器存在 title)要下发;交之前不给真值与揭示,交之后给你的估数、真值与揭示。 */
+    @Test
+    void estimateShowsTheQuestionAndRevealsOnlyAfterSubmit() {
+        String config = "{\"schemaVersion\":1,\"estimate\":{\"enabled\":true,\"title\":\"海关大楼钟面的直径大约有几米？\","
+                + "\"unit\":\"米\",\"min\":1,\"max\":20,\"answer\":5.4,\"tolerance\":0.5,\"xp\":10,\"reveal\":\"约 5.4 米。\"}}";
+        GameRuntimeSession session = runningSession(config, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        Map<String, Object> before = playKit(service.state(MEMBER_ID, 51L), "estimate");
+        assertEquals("海关大楼钟面的直径大约有几米？", before.get("question"));
+        assertFalse(before.containsKey("answer"));
+        assertFalse(before.containsKey("reveal"));
+        assertFalse(before.containsKey("guess"));
+
+        Map<String, Object> after = playKit(service.act(MEMBER_ID, 51L, 0, "est-1", "SUBMIT_ESTIMATE",
+                Collections.singletonMap("value", 6)), "estimate");
+        assertEquals("海关大楼钟面的直径大约有几米？", after.get("question"));
+        assertEquals("CLOSE", after.get("tier"));   // 差 0.6,在 3 倍容差内
+        assertEquals(6.0, ((Number) after.get("guess")).doubleValue());
+        assertEquals(5.4, ((Number) after.get("answer")).doubleValue());
+        assertEquals("约 5.4 米。", after.get("reveal"));
     }
 
     @Test
@@ -1975,6 +2038,33 @@ class AdvancedGameRuntimeServiceImplTest {
         assertThrows(IllegalStateException.class,()->service.act(8L,51L,0,"second-member","SUBMIT_PREDICT",Collections.singletonMap("optionKey","sun")));verify(predictions,never()).insertBet(any());assertTrue(session.getStateJson().contains("rain"));assertTrue(session.getStateJson().contains("101"));
     }
 
+    /* R11 g1 F1:过了截止整点、本人没选 ⇒ 可以不选直接走完这一站,0 分、奖励封顶、不发 xp;没截止不许跳 */
+    private String closedPredictConfig(int closeAtHour) { return "{\"schemaVersion\":1,\"predict\":{\"enabled\":true,\"question\":\"q\",\"xp\":30,\"options\":[{\"key\":\"a\",\"label\":\"A\"},{\"key\":\"b\",\"label\":\"B\"}],\"closeAtHour\":"+closeAtHour+"}}"; }
+    @Test void r11ClosedPredictCanBeSkippedWithoutReward() throws Exception {
+        com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);
+        GameRuntimeSession session=runningSession(closedPredictConfig(0),"{\"attemptOrdinal\":1}");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        Map<String,Object> kit=playKit(service.state(MEMBER_ID,51L),"predict");assertEquals(Boolean.TRUE,kit.get("closed"));assertEquals(Boolean.FALSE,kit.get("shopAnswers"));
+        service.act(MEMBER_ID,51L,0,"predict-skip","SKIP_CLOSED_PREDICT",Collections.emptyMap());
+        com.fasterxml.jackson.databind.JsonNode state=new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson());
+        assertTrue(state.path("predict").path("skipped").asBoolean());assertEquals("",state.path("predict").path("optionKey").asText(""));
+        assertEquals(0,session.getScore()==null?0:session.getScore().intValue());verify(predict,never()).insertBet(any());
+        assertTrue(AdvancedActionJudgement.mechanicsReady(new com.fasterxml.jackson.databind.ObjectMapper().readTree(closedPredictConfig(0)),(com.fasterxml.jackson.databind.node.ObjectNode)state));
+        assertTrue(AdvancedGameRuntimeServiceImpl.untrustedCompletionEvidence(new com.fasterxml.jackson.databind.ObjectMapper().readTree(closedPredictConfig(0)),state).contains("predict:SKIPPED_CLOSED"));
+        assertTrue(playKit(service.state(MEMBER_ID,51L),"predict").get("skipped").equals(Boolean.TRUE));
+    }
+    @Test void r11OpenPredictCannotBeSkipped() {
+        com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);
+        GameRuntimeSession session=runningSession(closedPredictConfig(24),"{\"attemptOrdinal\":1}");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);
+        assertThrows(IllegalStateException.class,()->service.act(MEMBER_ID,51L,0,"predict-skip","SKIP_CLOSED_PREDICT",Collections.emptyMap()));
+        assertFalse(session.getStateJson().contains("skipped"));
+    }
+    @Test void r11SettledRoundClosesPredictEvenBeforeCloseHour() {
+        com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);
+        com.chengyinhub.business.domain.PlayPredictResult round=new com.chengyinhub.business.domain.PlayPredictResult();round.setSettleStatus(1);when(predict.selectResult(any(),any())).thenReturn(round);
+        GameRuntimeSession session=runningSession(closedPredictConfig(24),"{\"attemptOrdinal\":1}");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        service.act(MEMBER_ID,51L,0,"predict-skip","SKIP_CLOSED_PREDICT",Collections.emptyMap());assertTrue(session.getStateJson().contains("\"skipped\":true"));
+    }
+
     @Test void r5PredictSubmissionFreezesRealBetIdentityWithoutPassing() throws Exception {
         com.chengyinhub.business.mapper.PlayPredictMapper predict=mock(com.chengyinhub.business.mapper.PlayPredictMapper.class);ReflectionTestUtils.setField(service,"predictMapper",predict);com.chengyinhub.business.domain.PlayPredictResult round=new com.chengyinhub.business.domain.PlayPredictResult();round.setSettleStatus(0);when(predict.selectResultForUpdate(any(),any())).thenReturn(round);when(predict.insertBet(any())).thenAnswer(i->{((com.chengyinhub.business.domain.PlayPredictBet)i.getArgument(0)).setId(101L);return 1;});
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().readTree(r5PredictConfig()));
@@ -1996,11 +2086,11 @@ class AdvancedGameRuntimeServiceImplTest {
         service.act(MEMBER_ID,51L,0,"first:"+kit,action,payload);service.act(MEMBER_ID,51L,1,"replay:"+kit,action,payload);
         org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),org.mockito.ArgumentMatchers.eq("advanced:51:1"),decision.capture(),any());assertEquals("PASS",decision.getValue().path("outcome").asText());
     }
-    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","REVIEW","CARD","ALBUM"})
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","LEGACY_SHOT","REVIEW","CARD","ALBUM"})
     void r5PhotoMustVerifyExistingUploadBeforeAccepting(String mode) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);String action;
-        if("SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";}else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";}
-        config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");
+        if("SHOT".equals(mode)||"LEGACY_SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";}else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";}
+        if(!"LEGACY_SHOT".equals(mode)){config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");}
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
         GameRuntimeSession session=runningSession(config.toString(),"{\"attemptOrdinal\":1}");session.setPlayInstanceId("quest:r5");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
         if ("SUBMIT_PHOTO_CHECK".equals(action)) AdvancedActionTestFixtures.photos(service,
@@ -2021,7 +2111,9 @@ class AdvancedGameRuntimeServiceImplTest {
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
         GameRuntimeSession session=runningSession(config.toString(),"{\"attemptOrdinal\":1}");session.setPlayInstanceId("quest:r5");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
         Map<String,Object> result=service.act(MEMBER_ID,51L,0,"proof:"+mode,action,payload);assertEquals("ALBUM".equals(mode)?2:1,checked.size());
-        if("DEGRADED".equals(mode)){verify(route,never()).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),any(),any());assertEquals(GameRuntimeSession.STATUS_RUNNING,session.getStatus());assertFalse(json.readTree(session.getStateJson()).path("photoCheck").path("passed").asBoolean());}
+        /* R11 g1 F3(业主 2026-11-04「一站不能把玩家留住」):审核通道不可用且机会(maxTries=1)用完,记成没过、走「没通过之后」,
+           不再停在这一站;仍不算通过(passed=false)。原先这里钉的是「降级一律不出结论、停在原地」。 */
+        if("DEGRADED".equals(mode)){org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("FAIL",decision.getValue().path("outcome").asText());assertFalse(json.readTree(session.getStateJson()).path("photoCheck").path("passed").asBoolean());}
         else{org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("REJECT".equals(mode)?"FAIL":"PASS",decision.getValue().path("outcome").asText());}
         if("ALBUM".equals(mode)){assertTrue(json.valueToTree(result).path("playKit").path("album").path("done").asBoolean());service.act(MEMBER_ID,51L,1,"new-key","SUBMIT_ALBUM",payload);assertEquals(2,checked.size());}
     }
@@ -2124,6 +2216,48 @@ class AdvancedGameRuntimeServiceImplTest {
         verify(route).recordGameplayOutcome(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("quest:r5"), org.mockito.ArgumentMatchers.eq("advanced:51:1"), result.capture(), any());
         assertEquals("FAIL", result.getValue().path("outcome").asText());
         verify(route, never()).recordNodeResult(any(), any(), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(), org.mockito.ArgumentMatchers.anyInt(), any());
+    }
+
+    @Test void photoOrScanCompletionUsesOnlyTheCurrentServerSessionProof() throws Exception {
+        GameRuntimeSession session = runningSession("{\"qa\":{\"enabled\":true,\"mode\":\"SHOT\"}}",
+                "{\"qa\":{\"finished\":true,\"passed\":true,\"lastImageUrl\":\"owned\"}}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        java.util.List<Long> uploaders = new java.util.ArrayList<>();
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String,Long>)(url, member) -> { assertEquals("owned",url); uploaders.add(member); });
+        assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertEquals(Collections.singletonList(MEMBER_ID), uploaders);
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String,Long>)(url, member) -> { throw new IllegalArgumentException("照片凭据无效"); });
+        assertThrows(IllegalArgumentException.class, () -> service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        session.setStateJson("{\"qa\":{\"finished\":true,\"passed\":true,\"lastImageUrl\":\"expired-owned-url\",\"photoUploaderMemberId\":"+MEMBER_ID+"}}");
+        assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID), "新局已核验照片不因签名过期再要一份证明");
+        session.setConfigSnapshotJson("{\"scan\":{\"enabled\":true}}"); session.setStateJson("{\"scan\":{\"scanned\":true}}");
+        assertTrue(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        session.setStateJson("{}"); assertFalse(service.hasStationGameProof(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+    }
+
+    @Test void ordinaryPhotoVerifiesUploadBeforeRecordingGenericTaskFact() throws Exception {
+        com.fasterxml.jackson.databind.JsonNode config = new com.fasterxml.jackson.databind.ObjectMapper().readTree(
+                "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"SHOT\",\"title\":\"拍下路灯\",\"maxTries\":0}}");
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.genericPlayer(any(), any(), any())).thenReturn(true);
+        when(route.canPlay(any(), any(), any(), any())).thenReturn(true);
+        when(route.gameplayInstance(any(), any(), any(), any())).thenReturn("quest:photo");
+        when(route.nodeRuntimeConfig(any(), any(), any(), any())).thenReturn(config);
+        GameRuntimeSession session = runningSession(config.toString(), "{}"); session.setPlayInstanceId("quest:photo");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        java.util.concurrent.atomic.AtomicInteger checked = new java.util.concurrent.atomic.AtomicInteger();
+        ReflectionTestUtils.setField(service, "photoEvidenceVerifier", (java.util.function.BiConsumer<String, Long>) (url, member) -> {
+            assertEquals("owned-photo", url); assertEquals(MEMBER_ID, member); checked.incrementAndGet();
+        });
+        when(sessionMapper.updateStateCas(any())).thenAnswer(call -> { assertEquals(1, checked.get()); return 1; });
+        assertThrows(IllegalArgumentException.class, () -> service.act(MEMBER_ID, 51L, 0, "no-photo", "SUBMIT_QA", Collections.emptyMap()));
+        verify(sessionMapper, never()).updateStateCas(any());
+        service.act(MEMBER_ID, 51L, 0, "photo", "SUBMIT_QA", Collections.singletonMap("imageUrl", "owned-photo"));
+        assertEquals(1, checked.get());
+        verify(route).recordNodeResult(any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("quest:photo"),
+                org.mockito.ArgumentMatchers.eq("theme:51:55c64d0fcd6f9d5f7c828093857e3fdf"), org.mockito.ArgumentMatchers.eq(true), org.mockito.ArgumentMatchers.eq(false), org.mockito.ArgumentMatchers.eq(0), any());
+        assertEquals("owned-photo", new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson()).path("qa").path("lastImageUrl").asText());
     }
 
     @Test void genericPersonalObjectiveIgnoresMultiplayerModifierForOwnerAndCompletion() throws Exception {
@@ -2536,6 +2670,21 @@ class AdvancedGameRuntimeServiceImplTest {
                 + "{\"id\":\"a\",\"label\":\"冷萃\",\"correct\":true,\"fb\":\"对,冷萃是冷的。\"},"
                 + "{\"id\":\"b\",\"label\":\"拿铁\",\"correct\":false,\"fb\":\"拿铁是热的。\"},"
                 + "{\"id\":\"c\",\"label\":\"冰滴\",\"correct\":true,\"fb\":\"对,冰滴也是。\"}]}}";
+    }
+
+    @Test
+    void textQaRevealsOnlyAfterFinishAndOnlyWhenAuthorEnabledIt() {
+        String config = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\","
+                + "\"title\":\"文字问答\",\"answerText\":\"钟楼\",\"reveal\":true}}";
+        GameRuntimeSession session = runningSession(config, "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        assertFalse(playKit(service.state(MEMBER_ID, 51L), "qa").containsKey("answerText"));
+        session.setStateJson("{\"qa\":{\"finished\":true,\"passed\":false}}");
+        assertEquals("钟楼", playKit(service.state(MEMBER_ID, 51L), "qa").get("answerText"));
+        GameRuntimeSession hidden = runningSession(config.replace("\"reveal\":true", "\"reveal\":false"),
+                "{\"qa\":{\"finished\":true,\"passed\":false}}");
+        when(sessionMapper.selectAccessibleById(52L, MEMBER_ID)).thenReturn(hidden);
+        assertFalse(playKit(service.state(MEMBER_ID, 52L), "qa").containsKey("answerText"));
     }
 
     @Test
@@ -3010,6 +3159,136 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("高级玩法尚未完成", error.getMessage());
     }
 
+    // ==================== P-23 罗盘读不出方向:跳过这一站 ====================
+
+    private String compassConfigSkippable(boolean allowSkip) {
+        return "{\"schemaVersion\":1,\"compass\":{\"enabled\":true,\"bearing\":135,\"tolerance\":15,"
+                + "\"holdSeconds\":3,\"xp\":8,\"allowSkip\":" + allowSkip + "}}";
+    }
+
+    private Map<String, Object> compassGame() {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("game", "compass");
+        return payload;
+    }
+
+    @Test
+    void compassSkipNeedsTwoOwnFailedReadsThenCompletesWithZeroPoints() throws Exception {
+        GameRuntimeSession session = runningSession(compassConfigSkippable(true), "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        Map<String, Object> first = service.act(MEMBER_ID, 51L, 0, "cp-fail-1", "REPORT_SENSOR_FAILURE", compassGame());
+        assertEquals(1, ((Number) playKit(first, "compass").get("failedReads")).intValue());
+        assertEquals(Boolean.FALSE, playKit(first, "compass").get("canSkip"), "一次失败还不许跳");
+        IllegalStateException early = assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 1, "cp-skip-early", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("读取失败两次后才能跳过这一站", early.getMessage());
+
+        Map<String, Object> second = service.act(MEMBER_ID, 51L, 1, "cp-fail-2", "REPORT_SENSOR_FAILURE", compassGame());
+        assertEquals(Boolean.TRUE, playKit(second, "compass").get("canSkip"));
+        when(sessionMapper.selectPlayerSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(Collections.singletonList(session));
+        assertTrue(service.pendingSensorSkips(ACTIVITY_ID, TOPIC_ID, Collections.singleton(MEMBER_ID)).isEmpty(),
+                "作者允许跳过的站成员自己能跳,不列给队长");
+
+        Map<String, Object> skipped = service.act(MEMBER_ID, 51L, 2, "cp-skip", "SKIP_SENSOR_STATION", compassGame());
+        Map<String, Object> cp = playKit(skipped, "compass");
+        assertEquals(Boolean.TRUE, cp.get("done"));
+        assertEquals(Boolean.TRUE, cp.get("skipped"));
+        assertNull(session.getScore(), "跳过不发这一段的 xp");
+        assertTrue(session.getStateJson().contains("\"skipVia\":\"AUTHOR\""), session.getStateJson());
+        assertTrue(session.getStateJson().contains("\"skippedBy\":" + MEMBER_ID), session.getStateJson());
+
+        // 完成链:跳过的这一站能过完成闸,且被认出是跳过的(进度记 SKIPPED / 0 分)
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        assertTrue(AdvancedActionJudgement.mechanicsReady(
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getConfigSnapshotJson()),
+                (com.fasterxml.jackson.databind.node.ObjectNode) new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson())),
+                "跳过的一站算走完,能过完成闸");
+        assertTrue(service.sensorStationSkipped(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+    }
+
+    @Test
+    void compassSkipIsRefusedWhenTheAuthorDidNotAllowItAndNoLeaderReleased() {
+        GameRuntimeSession session = runningSession(compassConfigSkippable(false),
+                "{\"compass\":{\"failedReads\":{\"" + MEMBER_ID + "\":2}}}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        assertEquals(Boolean.FALSE, playKit(service.state(MEMBER_ID, 51L), "compass").get("canSkip"));
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "cp-skip-off", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("这一站不允许跳过", error.getMessage());
+        assertFalse(session.getStateJson().contains("skipped"));
+    }
+
+    @Test
+    void anotherMembersFailedReadsDoNotOpenTheSkipForMe() {
+        // 队伍局里失败次数按人记:队友读不出方向,不替我攒跳过的门槛
+        GameRuntimeSession session = runningSession(compassConfigSkippable(true),
+                "{\"compass\":{\"failedReads\":{\"8\":2}}}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "cp-skip-other", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("读取失败两次后才能跳过这一站", error.getMessage());
+    }
+
+    @Test
+    void leaderReleaseLetsThatMemberSkipEvenWhenTheAuthorDidNotAllowIt() {
+        GameRuntimeSession session = runningSession(compassConfigSkippable(false),
+                "{\"compass\":{\"failedReads\":{\"" + MEMBER_ID + "\":2}}}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectByIdForUpdate(51L)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        when(sessionMapper.selectPlayerSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID)).thenReturn(Collections.singletonList(session));
+
+        assertEquals(Collections.singletonMap(MEMBER_ID, NODE_ID),
+                service.pendingSensorSkips(ACTIVITY_ID, TOPIC_ID, Collections.singleton(MEMBER_ID)), "队长看得到这个成员卡在这一站");
+        service.releaseSensorStation(1L, MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID);
+        assertTrue(session.getStateJson().contains("\"releasedFor\":{\"" + MEMBER_ID + "\":{\"by\":1"), session.getStateJson());
+        assertTrue(service.pendingSensorSkips(ACTIVITY_ID, TOPIC_ID, Collections.singleton(MEMBER_ID)).isEmpty(), "放行过的不再列给队长");
+
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+        Map<String, Object> view = service.act(MEMBER_ID, 51L, 1, "cp-skip-lead", "SKIP_SENSOR_STATION", compassGame());
+        assertEquals(Boolean.TRUE, playKit(view, "compass").get("skipped"));
+        assertTrue(session.getStateJson().contains("\"skipVia\":\"LEADER\""), session.getStateJson());
+    }
+
+    @Test
+    void leaderCannotReleaseANonSensorStation() {
+        // 第十一轮 i1:安静挑战(麦克风)起也算传感器站(业主规则:站点不许困住玩家),非传感器站换成反应测试。
+        GameRuntimeSession session = runningSession(reactionConfig(), "{}");
+        when(sessionMapper.selectPlayerByOwner(ACTIVITY_ID, TOPIC_ID, NODE_ID, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.selectByIdForUpdate(51L)).thenReturn(session);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.releaseSensorStation(1L, MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+        assertEquals("这一站不是传感器玩法，不能放行", error.getMessage());
+    }
+
+    @Test
+    void skipIsOnlyOpenToSensorGames() {
+        GameRuntimeSession session = runningSession(quietConfig(), "{}");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(attemptMapper.selectByIdempotencyKey(any())).thenReturn(null);
+
+        IllegalArgumentException notHere = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "skip-quiet", "SKIP_SENSOR_STATION", compassGame()));
+        assertEquals("本站没有这个玩法", notHere.getMessage());
+        Map<String, Object> qa = new LinkedHashMap<>();
+        qa.put("game", "qa");
+        IllegalArgumentException notSensor = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "skip-qa", "SKIP_SENSOR_STATION", qa));
+        assertEquals("这一项不支持跳过", notSensor.getMessage());
+        IllegalArgumentException reportNotSensor = assertThrows(IllegalArgumentException.class,
+                () -> service.act(MEMBER_ID, 51L, 0, "fail-qa", "REPORT_SENSOR_FAILURE", qa));
+        assertEquals("这一项不支持跳过", reportNotSensor.getMessage());
+    }
+
     // ==================== 扫码第四档 OVERLAY(AR 契约 §2.2) ====================
 
     private String overlayScanConfig() {
@@ -3025,6 +3304,43 @@ class AdvancedGameRuntimeServiceImplTest {
         node.setTemplateId(TEMPLATE_ID);
         node.setCheckinCode(code);
         when(nodeMapper.selectCmsTopicNodeById(NODE_ID)).thenReturn(node);
+    }
+
+    /* 第十三轮 m7:扫码站 = 带结果规则的主玩法(文字问答)+ 扫码参与。服务端比对这一站自己的码;
+       扫码只是参与证明,不结算任务;任务只由主玩法的服务端判定经 recordGameplayOutcome 结一次。
+       错码、别站的码、重放、别人的局都不能完成它,也不能结两次。 */
+    @Test void qrStationScanProvesOwnCodeAndTaskSettlesOnceThroughGameplayOutcome() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode config = json.readTree("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"门牌上的年份\",\"answerText\":\"1931\",\"maxTries\":0},"
+                + "\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"欢迎来到旧码头\"},\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}");
+        assertTrue(com.chengyinhub.business.service.support.GameplaySupportMatrix.scanIsParticipation(config));
+        stubNodeCheckinCode("DOCK-CODE");
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class); ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.genericPlayer(any(), any(), any())).thenReturn(true); when(route.canPlay(any(), any(), any(), any())).thenReturn(true);
+        when(route.gameplayInstance(any(), any(), any(), any())).thenReturn("quest:dock"); when(route.nodeRuntimeConfig(any(), any(), any(), any())).thenReturn(config);
+        GameRuntimeSession session = runningSession(config.toString(), "{\"attemptOrdinal\":1}"); session.setPlayInstanceId("quest:dock");
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session); when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        int v = session.getVersion();
+        for (String bad : new String[]{"WRONG", "OTHER-STATION-CODE", ""}) {
+            assertThrows(IllegalArgumentException.class, () -> service.act(MEMBER_ID, 51L, v, "scan-bad-" + bad, "SUBMIT_SCAN", Collections.singletonMap("code", bad)));
+        }
+        verify(sessionMapper, never()).updateStateCas(any());
+        assertFalse(session.getStateJson().contains("scanned"));
+        service.act(MEMBER_ID, 51L, v, "scan-ok", "SUBMIT_SCAN", Collections.singletonMap("code", "DOCK-CODE"));
+        assertTrue(json.readTree(session.getStateJson()).path("scan").path("scanned").asBoolean());
+        assertEquals(GameRuntimeSession.STATUS_RUNNING, session.getStatus(), "扫码只是参与证明,不结算任务");
+        verify(route, never()).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+        assertThrows(RuntimeException.class, () -> service.act(MEMBER_ID + 1, 51L, session.getVersion(), "other-player", "SUBMIT_QA", Collections.singletonMap("input", "1931")));
+        service.act(MEMBER_ID, 51L, session.getVersion(), "qa-ok", "SUBMIT_QA", Collections.singletonMap("input", "1931"));
+        org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision = org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);
+        verify(route).recordGameplayOutcome(org.mockito.ArgumentMatchers.eq(MEMBER_ID), any(), any(), org.mockito.ArgumentMatchers.eq(NODE_ID), org.mockito.ArgumentMatchers.eq("quest:dock"), org.mockito.ArgumentMatchers.eq("advanced:51:1"), decision.capture(), any());
+        assertEquals("PASS", decision.getValue().path("outcome").asText());
+        assertEquals(GameRuntimeSession.STATUS_COMPLETED, session.getStatus());
+        int done = session.getVersion();
+        service.act(MEMBER_ID, 51L, done, "qa-replay", "SUBMIT_QA", Collections.singletonMap("input", "1931"));
+        service.act(MEMBER_ID, 51L, done, "scan-replay", "SUBMIT_SCAN", Collections.singletonMap("code", "DOCK-CODE"));
+        verify(route, org.mockito.Mockito.times(1)).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+        assertEquals(done, session.getVersion(), "完成后的重放不改状态");
     }
 
     @Test

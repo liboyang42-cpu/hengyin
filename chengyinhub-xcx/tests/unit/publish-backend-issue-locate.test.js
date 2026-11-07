@@ -131,3 +131,10 @@ test('本地发布检查覆盖章节完成、归零挑战、方案结局和费�
   });
   assert.ok(p.buildPublishCheck().blocking.some(item => item.field === 'templateTool:77:vote:1'), '旧无方案键时按首个方案序号定位结局选择');
 });
+
+test('内容拒绝只区分修改动作，不推断标题或正文字段', () => {
+  assert.equal(target.isContentRejection('活动内容包含违规信息，请修改后重试'), true);
+  assert.equal(target.isContentRejection('内容未通过安全检查，请修改后重试'), true);
+  assert.equal(target.isContentRejection('网络中断，请重试'), false);
+  assert.equal(target.fromMessage('活动内容包含违规信息，请修改后重试', chapters), null);
+});

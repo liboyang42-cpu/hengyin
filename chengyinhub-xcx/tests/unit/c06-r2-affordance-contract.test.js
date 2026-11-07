@@ -279,11 +279,15 @@ test('R2-5 静态:非 ready 的输入栏可见禁用 + 说明原因 + 行为闸�
 test('R2-5 数据:每个非 ready 态都有一句真实原因,不留空白解释', () => {
   const ctx = loadPage('subpackageB/pages/im/chat/index.js')
   const map = ctx.page.data.sendBlockedMap
-  ;['loading', 'missing', 'error'].forEach((state) => {
+  ;['loading', 'error'].forEach((state) => {
     assert.ok(map && map[state] && map[state].length > 0, `${state} 态必须有解释文案，否则解释行渲染成空`)
   })
-  // 缺参的那句要真的把出路说清楚
-  assert.match(map.missing, /返回/, '缺参态要告诉用户回哪里去，不能只说「不可用」')
+  // 第十二轮 k9(p1 N-6):缺参态的出路是空态自己的「返回消息列表」按钮;底栏不再第三遍说「链接已失效」,
+  // 解释行在文案为空时整行不出(不渲染空条)。
+  assert.equal(map.missing, '')
+  const wxml = read(CHAT_WXML)
+  assert.match(wxml, /<cy-empty wx:elif="\{\{loadState === 'missing'\}\}"[^>]*title="这个会话无法打开" cta="返回消息列表" bind:cta="returnToMessageList" \/>/)
+  assert.match(wxml, /<view wx:if="\{\{disabled \|\| \(loadState !== 'ready' && sendBlockedMap\[loadState\]\)\}\}" class="disabled-tip"/)
 })
 
 test('negative control R2-5: 解禁视觉 / placeholder 不变 / 解释行只看 disabled,各自判红', () => {
@@ -305,7 +309,7 @@ test('negative control R2-5: 解禁视觉 / placeholder 不变 / 解释行只看
   assert.throws(() => assertChatNoSendableIllusion(oldPlaceholder, wxss), assert.AssertionError)
 
   const tipOnlyBlocked = wxml.replace(
-    `<view wx:if="{{disabled || loadState !== 'ready'}}" class="disabled-tip"`,
+    `<view wx:if="{{disabled || (loadState !== 'ready' && sendBlockedMap[loadState])}}" class="disabled-tip"`,
     '<view wx:if="{{disabled}}" class="disabled-tip"',
   )
   assert.notEqual(tipOnlyBlocked, wxml, '变异锚点失效(源码已改动?)')

@@ -189,17 +189,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
-    <!-- 批量更新过期优惠券状态：将用户下已过期且状态为1（进行中）的优惠券改为2（已结束） -->
+    <!-- 批量更新过期优惠券状态：将用户下已过期且状态为1（进行中）的优惠券改为2（已结束）。
+         SQL 体内不能写双横线行注释:应用数据源的 Druid wall 拒绝带注释的语句(comment not allow),
+         这条 update 在「我发布的优惠券」列表前必跑,被拒就整页 500(check-1104 p2 F-1)。 -->
     <update id="updateExpiredCouponsByMemberId" parameterType="java.lang.Long">
         update sms_coupon
         set
-            status = 2,  -- 状态改为“已结束”
-            update_time = now()  -- 更新时间设为当前时间
+            status = 2,
+            update_time = now()
         where
-            member_id = #{memberId}  -- 指定用户ID
-          and status = 1  -- 仅处理“进行中”的优惠券
-          and del_flag = 0  -- 排除已删除的优惠券
-          and end_time &lt; now()  -- 注意：这里使用了转义字符&lt;代替
+            member_id = #{memberId}
+          and status = 1
+          and del_flag = 0
+          and end_time &lt; now()
     </update>
 
     <!-- 按会员统计“同时存在”的优惠券数（status=1 进行中，未删除） -->
@@ -230,7 +232,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="tryIncrementIssuableReceiveCount">
         update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()
         where id = #{id}
-        and (status is null or status not in (3, 4))
+        and (status is null or status not in (3, 4, 5))
         and (enable_time is null or enable_time &lt;= now())
         and (start_time is null or start_time &lt;= now())
         and (end_time is null or end_time &gt; now())
@@ -256,6 +258,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </select>
+
+    <!-- Round5B-3:机审未完成扣下的券(status=5 待审核,不可领)人工审核通过 → 进行中;CAS 只动 5,不复活已停发/失效的券 -->
+    <update id="releaseHeldCoupon">
+        update sms_coupon set status = 1, update_time = now()
+        where id = #{id} and del_flag = 0 and status = 5
+    </update>
 
     <!-- 商家停发(0 未开始 / 1 进行中 → 4):已结束(2)/已手动失效(3)/已停发(4)不可再停 -->
     <update id="stopIssuingCoupon">

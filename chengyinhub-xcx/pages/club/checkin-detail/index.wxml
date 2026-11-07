@@ -3,6 +3,7 @@
      F 无权限、G 加载失败是整屏态;H 是手机号无查看权限的变体(由服务端决定,不是前端分支)。 -->
 <view class="ckd theme-dark">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-nav-bar plain />
   <cy-nav-spacer />
   <cy-page-title title="核销详情" safe-top="{{false}}" flush="{{true}}" />
@@ -10,8 +11,7 @@
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" loading-label="正在加载核销详情" />
   <cy-error wx:elif="{{state === 'denied'}}" fill size="lg"
             title="核销记录不可见" sub="{{errorText}}" retry="" bind:back="goBack" auto-back custom-back />
-  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条核销记录"
-            sub="{{errorText}}" retry="返回" bind:retry="goBack" auto-back />
+  <cy-empty wx:elif="{{state === 'missing'}}" kind="not-found" fill size="lg" title="{{errorText}}" cta="返回" bind:cta="goBack" />
   <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="核销凭证加载失败"
             sub="{{errorText}}" retry="重新加载" bind:retry="retry" auto-back />
 
@@ -25,10 +25,11 @@
         <view class="ckd-phone-row">
           <!-- 服务端已按岗位权限裁过:有权限是号码,没权限是替代说明。前端原样显示。 -->
           <text class="ckd-phone {{detail.phoneVisible ? '' : 'ckd-phone--masked'}}">{{detail.phoneText}}</text>
-          <!-- 2026-09-09 去掉「复制」:这一格服务端只可能给掩码
-               (ClubCrmAppServiceImpl.phoneText 有权限也走 maskPhone),复制过去是
-               「1385621」这种废字符串。和成员弹层同一个判断,两处保持一致。
-               要真能复制,得后端另开一条按 MEMBER_LIST_READ 下发真号的口子。 -->
+          <!-- 2026-11-02 用户:有号码权限的岗位拿到完整号码(phoneCallable),给拨号键;其余仍是掩码或替代说明,不给。 -->
+          <view wx:if="{{detail.phoneCallable}}" class="ckd-call" bindtap="callParticipant"
+            aria-role="button" aria-label="拨打 {{detail.displayName}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
+            <cy-icon name="phone" size="32" />
+          </view>
         </view>
       </view>
       <view class="ckd-head-state">
@@ -87,7 +88,6 @@
             hover-class="{{refunding || refundErrorUnknown ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{refunding ? '正在退款…' : '清退并退款'}}
       </view>
-      <text class="ckd-foot-note">已核销订单不可退款</text>
     </view>
   </block>
 </view>

@@ -1,3 +1,4 @@
+@import '../../../../style/addr-tap.wxss';
 /* cy-playkit-dailysign · 今日城市签(2026-09-05 重做:打印机 + 热敏小票)
  *
  * 这一屏是**纸的世界**:浅灰台面、拉丝银打印机、白色热敏小票、黑字。它刻意不跟深/浅主题走 ——
@@ -13,7 +14,7 @@
 .ds__bg {
   position: absolute;
   left: 0; right: 0; top: 0; bottom: 0;
-  background: linear-gradient(180deg, #F6F7F9 0%, #EEF0F3 45%, #E6E8EC 100%);   /* ds-ok 纸的台面,浅灰渐变 */
+  background: var(--cy-color-play-page);   /* ds-ok 纸的台面,浅灰渐变 */
 }
 .ds__stage {
   position: relative;
@@ -23,7 +24,7 @@
   min-height: 0;
   padding: calc(var(--cy-safe-top, 0px) + 96rpx) var(--cy-page-x) calc(var(--cy-space-4) + var(--cy-safe-bottom, 0px));
   box-sizing: border-box;
-  color: #17191C;                                   /* ds-ok 纸上的墨 */
+  color: var(--cy-color-text-primary);
 }
 
 /* ── 顶栏:圆按钮 + 居中标题 ── */
@@ -155,6 +156,7 @@
   background: #F5F6F8;          /* ds-ok 签文那块的淡底 */
 }
 .ds__poem {
+  min-height: 92rpx;            /* 未领取时签文为空，刮层和直接揭示仍要能点到 */
   padding: 12rpx 18rpx 10rpx;
   font-family: "Noto Serif SC", serif;
   font-size: var(--cy-type-body);
@@ -205,53 +207,11 @@
 .ds__cv { position: fixed; left: -3000px; top: -3000px; width: 375px; height: 500px; }
 
 /* ── 留言条:压在小票下半段上的第二张纸,从底部滑上来(只动 transform,键盘弹起也是 transform 抬) ── */
-.ds__note {
-  position: absolute;
-  left: var(--cy-page-x); right: var(--cy-page-x);
-  bottom: calc(var(--cy-space-2) + var(--cy-safe-bottom, 0px));
-  z-index: 4;
-  padding: var(--cy-space-2);
-  border-radius: var(--cy-radius-md);
-  background: #FFFFFF;                                    /* ds-ok 纸的世界:第二张纸 */
-  box-shadow: 0 -12rpx 40rpx rgba(20, 22, 26, .18),       /* ds-ok 纸压纸的影 */
-              0 2rpx 0 rgba(0, 0, 0, .06);                /* ds-ok 纸压纸的影 */
-  transform: translateY(130%);
-  transition: transform var(--cy-dur) var(--cy-ease-out);
-}
-.ds__note.is-on { transform: translateY(0); }
-.ds__note-h { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
-.ds__note-hl { display: flex; flex-direction: column; min-width: 0; }
-.ds__note-t { font-size: var(--cy-type-label); font-weight: 600; }
-.ds__note-c { margin-top: 2rpx; font-family: var(--cy-font-numeric); font-size: var(--cy-type-micro); color: #8A9099; }   /* ds-ok 纸上的淡墨 */
-.ds__ta {
-  width: 100%;
-  height: 96rpx;
-  margin-top: var(--cy-space-1);
-  padding: 8rpx 0;
-  box-sizing: border-box;
-  font-size: var(--cy-type-body);
-  line-height: 1.5;
-  color: #17191C;                                         /* ds-ok 纸上的墨 */
-  border-bottom: 2rpx dashed #C9CDD3;                     /* ds-ok 留言条的虚线 */
-}
-.ds__ta-ph { color: #B3B8C0; }                            /* ds-ok 纸上的淡墨(占位) */
-.ds__shot {
-  flex: none;
-  width: 88rpx; height: 88rpx;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-  border-radius: var(--cy-radius-sm);
-  border: 2rpx dashed #C9CDD3;                            /* ds-ok 留言条的虚线 */
-  color: #5B6169;                                         /* ds-ok 纸上的次级墨 */
-}
-.ds__shot-img { width: 88rpx; height: 88rpx; }
-.ds__note-my { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-type-body); line-height: 1.5; }
-.ds__note-img { display: block; width: 100%; height: 160rpx; margin-top: var(--cy-space-1); border-radius: var(--cy-radius-sm); }
 .ds__cta { margin-top: var(--cy-space-1); }
 /* 纸的世界里主 CTA 是深墨底白字(反色中性,同规范「主按钮=背景反色」,只是这页背景是浅的) */
 .ds__cta {
-  --cy-comp-btn-primary-bg: #17191C;   /* ds-ok 浅台面上的反色 */
-  --cy-comp-btn-primary-fg: #FFFFFF;   /* ds-ok 纸的世界:热敏纸/台面/墨,刻意不随主题 */
+  --cy-comp-btn-primary-bg: var(--cy-color-text-primary);   /* ds-ok 浅台面上的反色 */
+  --cy-comp-btn-primary-fg: var(--cy-color-text-inverse);   /* ds-ok 纸的世界:热敏纸/台面/墨,刻意不随主题 */
 }
 .cy-pressed { opacity: .88; }
 

@@ -1,0 +1,62 @@
+[
+ {
+  "check": "admin registers known-bad image (fingerprint only)",
+  "pass": true,
+  "resp": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "sha256": "cbfab3d3680c22287fb3954e849d98a5b638aabb7f6af1430572dedde11a8caf",
+    "nearDuplicateSupported": true
+   }
+  }
+ },
+ {
+  "check": "db stores sha256 + dhash, no image bytes",
+  "pass": true,
+  "cols": [
+   "id",
+   "sha256",
+   "dhash",
+   "category",
+   "enabled",
+   "note",
+   "create_by",
+   "create_time",
+   "update_time"
+  ]
+ },
+ {
+  "check": "player upload of exact copy refused by library",
+  "pass": true,
+  "http": 400,
+  "resp": {
+   "msg": "图片未通过内容安全检查，请更换后重试",
+   "code": 400
+  }
+ },
+ {
+  "check": "player upload of near copy (resized, +6% brightness, q70) refused by library",
+  "pass": true,
+  "http": 400,
+  "resp": {
+   "msg": "图片未通过内容安全检查，请更换后重试",
+   "code": 400
+  }
+ },
+ {
+  "check": "control: unrelated image is not stopped by the library (reaches WeChat img_sec_check, which the rig cannot reach)",
+  "pass": true,
+  "http": 503,
+  "resp": {
+   "msg": "安全检查服务异常，请稍后重试",
+   "code": 503
+  }
+ },
+ {
+  "check": "image hits recorded",
+  "pass": true,
+  "before": 0,
+  "after": 2
+ }
+]

@@ -15,6 +15,7 @@ function mount() {
   })
   page._loadIntroTopics = () => {}; page._fetchShopBadgeCfg = () => {}
   page._stopClock = () => {}; page._stopReal = () => {}; page._triggerCelebration = () => {}
+  page.data.entryLocated = !mount.unlocated // 第十一轮 g2 j4 F5:入口按真实定位读附近;夹具默认是已定位玩家
   page.onLoad({})
   return page
 }
@@ -789,4 +790,26 @@ for (const failure of ['throw', 'silent']) test('轨迹落盘' + failure + '失�
   assert.equal(page._revealsSaved, true)
   assert.equal(values['roam_memory_v1:9:sessions'].length, 1)
   assert.equal(values['roam_memory_v1:9:reveals'].length, 1)
+})
+
+// 第十一轮 g2,j4 F5:没有真实定位时不拿默认坐标读「附近」(不算「距你」、不打那里的队伍),改读不分城市的公开主题。
+test('j4 F5: without a real location the entry reads no nearby lists and shows public topics without distance', async () => {
+  mount.unlocated = true
+  try {
+    const pending = []
+    const page = mount()
+    app.sendRequest = o => pending.push(o)
+    page._loadEntryMap(page.data.center)
+    assert.equal(page.data.entryLocated, false)
+    assert.equal(pending.filter(c => ['/api/roam/entry/nearby', '/api/team/nearby'].includes(c.url)).length, 0)
+    const list = pending.find(c => c.url === '/api/topic/list')
+    assert.ok(list, '读公开主题')
+    list.success({ code: 200, data: { rows: [{ id: 5, name: '成都夜游', productType: 2, city: '成都' }] } })
+    await settle()
+    assert.equal(page.data.entryFarCards.length, 1)
+    assert.doesNotMatch(JSON.stringify(page.data.entryFarCards), /距你/)
+    assert.deepEqual(page.data.entryMarkers, [])
+    const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/roam/index.wxml'), 'utf8')
+    assert.match(wxml, /wx:if="\{\{!entryLocated && !entryReadAccess\}\}"[^>]*bindtap="enableEntryLocation"[^>]*>开启定位</)
+  } finally { mount.unlocated = false }
 })

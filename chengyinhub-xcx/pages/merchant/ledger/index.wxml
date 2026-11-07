@@ -3,6 +3,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <cy-access-gate kind="login" />
   <cy-nav-bar custom-back bind:back="onNavBack" />
   <view class="ledger-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="{{pageTitle}}" safe-top="{{false}}" flush="{{true}}" />
@@ -10,9 +11,12 @@
   <cy-empty wx:if="{{accessDenied}}" kind="no-permission" title="当前身份不能查看这份商家账本" />
   <block wx:if="{{!accessDenied}}">
   <cy-state-shell class="fill-slot" wx:if="{{routeError}}" kind="missing-param" fill size="lg"
-                  title="链接已失效" sub="请返回重新进入"
+                  title="链接已失效"
                   primary="返回工作台" bind:primary="onNavBack" />
   <block wx:elif="{{view === 'redemptions'}}">
+    <view wx:if="{{merchantAccess.canReadFinance}}" class="ledger-action" bindtap="goCoopSettlements" aria-role="button" aria-label="查看合作分润" hover-class="cy-pressed">
+      <text class="ledger-action-title">合作分润</text><cy-icon name="arrow-right" size="24" />
+    </view>
     <!-- 退款售后不再单独一张卡(UI-06,2026-09-18 用户走查):退款条目并进下面的状态 tab,
          待处理/已处理与核销记录同列展示,点条目进售后详情。 -->
     <!-- 固定四段筛选显式开启 shared slab；切换期间 shell 不卸载，只替换下方内容区。 -->
@@ -37,17 +41,17 @@
           <view class="fin-group" wx:for="{{redemptionGroups}}" wx:for-item="group" wx:key="dayKey">
             <view class="fin-group__title">{{group.dayLabel}}</view>
             <view class="fin-card">
-              <view class="fin-row" wx:for="{{group.rows}}" wx:key="recordKey" bindtap="goRedemptionDetail" data-item="{{item}}" hover-class="fin-row--tap" aria-role="button" aria-label="{{item.recordType === 'aftercare' ? '查看退款详情' : '查看核销详情'}}">
-                <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
+              <view class="fin-row" wx:for="{{group.rows}}" wx:key="recordKey" bindtap="goRedemptionDetail" data-item="{{item}}" hover-class="cy-pressed" aria-role="button" aria-label="{{item.recordType === 'aftercare' ? '查看退款详情' : '查看核销详情'}}">
+                <!-- M-27:副行 = 顾客报名姓名(服务端解密,没有就不出) + 时间 + 状态;不画左侧状态点,零现金右列留空。 -->
                 <view class="fin-row__main">
                   <text class="fin-row__t1">{{item.title}}</text>
                   <view class="fin-row__t2">
-                    <text>{{item.customerDisplayName || '顾客信息受保护'}}</text>
-                    <text wx:if="{{item.timeText}}"> · {{item.timeText}}</text>
+                    <text wx:if="{{item.customerName}}">{{item.customerName}}</text>
+                    <text wx:if="{{item.timeText}}">{{item.timeText}}</text>
                     <cy-badge class="fin-row__chip" type="status" variant="{{item.stateVariant}}" label="{{item.stateText}}" />
                   </view>
                 </view>
-                <text class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance}}">{{item.amountDisplay}}</text>
+                <text class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance && item.amountDisplay}}">{{item.amountDisplay}}</text>
               </view>
             </view>
           </view>
@@ -93,7 +97,7 @@
                        
                        action="重试" bind:action="retry" />
     </view>
-    <view class="ledger-inline-state" wx:if="{{settlementLoading.overview || settlementErrors.overview}}">
+    <view class="ledger-inline-state {{settlementLoading.overview && !overview ? 'ledger-inline-state--hold' : ''}}" wx:if="{{settlementLoading.overview || settlementErrors.overview}}">
       <cy-skeleton wx:if="{{settlementLoading.overview && !overview}}" type="amount" count="{{1}}" />
       <text class="ledger-sync" wx:if="{{settlementLoading.overview && overview}}" aria-role="status">正在更新结算概览…</text>
       <cy-inline-error wx:if="{{settlementErrors.overview}}" title="{{settlementErrors.overview}}"
@@ -113,10 +117,10 @@
     </view>
 
     <cy-btn class="fin-assets-cta" bindtap="goAssets">去我的资产</cy-btn>
-    <view class="fin-alert-row" role="switch" aria-checked="{{settleAlertsEnabled}}">
-      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text class="fin-alert-sub" aria-role="status">{{settleAlertsState === 'allowed' ? '已允许微信通知' : settleAlertsHint}}</text></view>
+    <view class="fin-alert-row" role="switch" aria-role="switch" aria-checked="{{settleAlertsEnabled}}">
+      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text wx:if="{{settleAlertsState === 'allowed' || settleAlertsHint}}" class="fin-alert-sub" aria-role="status">{{settleAlertsState === 'allowed' ? '已允许微信通知' : settleAlertsHint}}</text></view>
       <cy-switch checked="{{settleAlertsEnabled}}" disabled="{{settleAlertsLoading}}"
-        accessibility-label="结算到账提醒，{{settleAlertsHint}}" bind:change="enableCoopSettleAlerts" />
+        accessibility-label="结算到账提醒{{settleAlertsHint ? '，' + settleAlertsHint : ''}}" bind:change="enableCoopSettleAlerts" />
     </view>
 
     <view class="fin-group">
@@ -126,11 +130,12 @@
                        
                        action="重试此部分" bind:action="retrySettlementEntries" />
       <view class="fin-card" wx:if="{{entries.length}}">
-        <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey">
+        <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey" bindtap="goSettlementDetail" data-id="{{item.coopDetailId}}" hover-class="{{item.coopDetailId ? 'cy-pressed' : 'none'}}" aria-role="{{item.coopDetailId ? 'button' : ''}}">
           <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.sourceText}}</text>
             <view class="fin-row__t2"><text>{{item.timeText}}</text><cy-badge class="fin-row__chip" type="status" variant="{{item.stateVariant}}" label="{{item.stateText}}" /></view>
+            <text class="fin-row__t2" wx:if="{{item.coopBreakdown}}">{{item.coopBreakdown}}</text>
           </view>
           <text class="fin-row__v fin-row__v--{{item.amountTone}}">{{item.amountDisplay}}</text>
         </view>
@@ -147,7 +152,7 @@
                        
                        action="重试此部分" bind:action="retrySettlementBatches" />
       <view class="fin-card" wx:if="{{batches.length}}">
-        <view class="fin-row" wx:for="{{batches}}" wx:key="batchId" bindtap="goBatchDetail" data-id="{{item.batchId}}" hover-class="fin-row--tap" aria-role="button" aria-label="查看对公批次详情">
+        <view class="fin-row" wx:for="{{batches}}" wx:key="batchId" bindtap="goBatchDetail" data-id="{{item.batchId}}" hover-class="cy-pressed" aria-role="button" aria-label="查看对公批次详情">
           <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.periodYm}} 对公结算</text>
@@ -166,7 +171,7 @@
   </block>
 
   <block wx:else>
-    <view class="ledger-action" bindtap="goInbox" hover-class="ledger-action--tap"><view class="ledger-action-copy"><text class="ledger-action-title">站内消息</text></view></view>
+    <view class="ledger-action" bindtap="goInbox" hover-class="cy-pressed"><view class="ledger-action-copy"><text class="ledger-action-title">站内消息</text></view></view>
     <!-- CU-M-123:这一屏原本还挂着一行「经营动态 / 消息入口保留为兼容模式」。
          「兼容模式」是内部实现口径,对商家没有信息量;而这一路并没有任何动态数据源,
          留着标题就是给一个永远为空的分组占位。整块摘掉,只留真正可点的站内消息入口。 -->

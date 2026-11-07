@@ -71,6 +71,14 @@ function showPermissionGuide(env, onGranted) {
 // 选址:封装 wx.chooseLocation。options:
 //  - onPick(poi, raw):选到具体地点时回调,poi 已归一化(页面在此 setData / 可选成功 toast)。
 //  - guideOnDeny:拒绝授权时是否弹“去设置”引导(默认 true;merchantapply1 传 false)。
+//  - latitude / longitude:已选过的点(GCJ-02)。第九轮 m1-9:改地点时选点器从原来那个点打开,不从当前位置重来。
+function pickerCenter(options) {
+  var lat = Number(options.latitude), lng = Number(options.longitude);
+  if (options.latitude === '' || options.longitude === '' || options.latitude == null || options.longitude == null) return {};
+  if (!isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return {};
+  return { latitude: lat, longitude: lng };
+}
+
 function pickLocation(options, env) {
   options = options || {};
   var _wx = resolveWx(env);
@@ -79,7 +87,7 @@ function pickLocation(options, env) {
   var onPick = options.onPick;
   var guideOnDeny = options.guideOnDeny !== false;
 
-  _wx.chooseLocation({
+  _wx.chooseLocation(Object.assign(pickerCenter(options), {
     success: function (res) {
       if (!hasCoords(res)) {
         _toast('没找到该地点坐标，请换个词重选', { duration: 2000 });
@@ -105,7 +113,7 @@ function pickLocation(options, env) {
       _toast('选择地点失败');
       if (typeof options.onFail === 'function') options.onFail(err);
     },
-  });
+  }));
 }
 
 // 当前定位：用于“重新定位/回到我附近”等用户主动动作。拒权、系统失败必须有可恢复反馈。

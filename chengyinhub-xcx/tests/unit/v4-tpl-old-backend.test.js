@@ -177,3 +177,72 @@ test('SC-TPL-OLD-BACKEND 对照:采用成功拿到草稿 id 后,保存只更新�
   assert.equal(JSON.parse(drafts[0].data).id, 9101)
   assert.equal(adopts().length, 1)
 })
+
+for (const reason of ['ADOPTION_CAPABILITY_LOCKED', 'SOURCE_VERSION_CONFLICT', 'ADOPTION_VALIDATION_REJECTED']) {
+  for (const recovered of [false, true]) {
+    test(`R29-F27 明确拒绝 ${reason} (${recovered ? '原请求恢复' : '首次回执'}) 不进入 UNKNOWN 恢复`, () => {
+      const { editor, adoption } = openFromTemplateDetail()
+      const intent = JSON.parse(adoption.data)
+      let response = adoption
+      if (recovered) {
+        adoption.fail({ errMsg: 'request:fail timeout' })
+        editor.retryGetData()
+        response = requests.filter(r => r.url === '/api/template/adoption-receipt').at(-1)
+        assert.equal(response.data.requestId, intent.requestId)
+      }
+      response.success({ code: 200, data: { ...intent, status: 'REJECTED', reason } })
+
+      assert.ok(editor.data.loadError, '明确拒绝原因仍展示，不能放开编辑')
+      if (reason === 'ADOPTION_CAPABILITY_LOCKED') assert.match(editor.data.loadError, /还没解锁/)
+      assert.equal(editor._adoptionUnconfirmed, false)
+      assert.equal(editor.data.loadErrorIsOperation, false)
+      assert.equal(editor.data.loadErrorIsAccess, true)
+      assert.equal(editor.data.isMyScope, false)
+      assert.equal(editor._templateId, 16)
+      assert.equal(Object.values(storage).filter(r => r && r.requestId === intent.requestId).length, 0)
+      assert.equal(requests.filter(r => r.url === '/api/template/adoption-detail').length, 0)
+      pokeEveryWriteEntry(editor)
+      assert.equal(writes().length, 0, '能力、来源或资格拒绝后仍不可保存/发布')
+
+      const beforeRetry = requests.length
+      editor.retryGetData()
+      assert.equal(requests[beforeRetry].url, '/api/template/author-info', '明确拒绝后重新核来源，不查询已清除的 UNKNOWN 日志')
+      assert.equal(adopts().length, 1, '重新读来源前不能直接采用')
+    })
+  }
+}
+
+for (const field of ['requestId', 'sourceVersion', 'originalTemplateId']) {
+  test(`R29-F27 ${field} 不符的拒绝回执仍是 UNKNOWN，不能清除原请求`, () => {
+    const { editor, adoption } = openFromTemplateDetail()
+    const intent = JSON.parse(adoption.data)
+    adoption.success({ code: 200, data: { ...intent, [field]: 'different', status: 'REJECTED', reason: 'ADOPTION_CAPABILITY_LOCKED' } })
+    assert.equal(editor._adoptionUnconfirmed, true)
+    assert.equal(editor.data.loadErrorIsOperation, true)
+    assert.equal(editor.data.loadErrorIsAccess, false)
+    assert.equal(Object.values(storage).filter(r => r && r.requestId === intent.requestId).length, 1)
+    pokeEveryWriteEntry(editor)
+    assert.equal(writes().length, 0)
+  })
+}
+
+for (const status of ['UNKNOWN', 'PENDING']) {
+  test(`R29-F27 ${status} 仍只恢复同请求、同来源版本，不重新取来源或生成请求号`, () => {
+    const { editor, adoption } = openFromTemplateDetail()
+    const intent = JSON.parse(adoption.data)
+    adoption.fail({ errMsg: 'request:fail timeout' })
+    editor.retryGetData()
+    const receipt = requests.filter(r => r.url === '/api/template/adoption-receipt').at(-1)
+    receipt.success({ code: 200, data: { requestId: intent.requestId, status } })
+    assert.equal(adopts().length, 2)
+    assert.equal(adopts()[1].data, adoption.data)
+    assert.equal(requests.filter(r => r.url === '/api/template/adoption-source').length, 1)
+    adopts()[1].fail({ errMsg: 'request:fail timeout' })
+    assert.equal(editor._adoptionUnconfirmed, true)
+    assert.equal(editor.data.loadErrorIsOperation, true)
+    assert.equal(editor.data.loadErrorIsAccess, false)
+    assert.equal(Object.values(storage).filter(r => r && r.requestId === intent.requestId).length, 1)
+    pokeEveryWriteEntry(editor)
+    assert.equal(writes().length, 0)
+  })
+}

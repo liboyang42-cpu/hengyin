@@ -9,6 +9,8 @@ CREATE TABLE `cms_topic_chapter` (
   `blocks` mediumtext DEFAULT NULL,
   `atmosphere_preset` mediumtext DEFAULT NULL,
   `audio_url` mediumtext DEFAULT NULL,
+  `video_url` varchar(512) DEFAULT NULL,
+  `video_poster_url` varchar(512) DEFAULT NULL,
   `img_arr` mediumtext DEFAULT NULL,
   `total_time` bigint DEFAULT NULL,
   `total_mileage` decimal(18,4) DEFAULT NULL,

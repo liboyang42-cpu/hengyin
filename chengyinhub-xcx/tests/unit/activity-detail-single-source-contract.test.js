@@ -95,7 +95,7 @@ test('场景真源保留票务、地图、阵容、节点、评价、取消与�
   }
   assert.match(wxml, /open-type="share"/)
   assert.match(wxml, /disabled="\{\{!canCancel\}\}"[^>]*>确认取消并退款<\/cy-btn>/)
-  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>立即报名<\/cy-btn>/)
+  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
   assert.match(wxml, /disabled="\{\{!canSubmitComment\}\}"[^>]*>发布评价<\/cy-btn>/)
 })
 

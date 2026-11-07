@@ -114,6 +114,8 @@ function shapeCustomerDetail(raw, expectedMemberId) {
       avatar: text(raw.summary.avatar),
       // 服务端渲染好的一行,前端不参与拼装、也拿不到原始号码
       phoneText: text(raw.summary.phoneText),
+      // 2026-11-02:服务端判了能拨(主理人/副主理人),phoneText 才是完整号码
+      phoneCallable: raw.summary.phoneCallable === true && /^1\d{10}$/.test(text(raw.summary.phoneText)),
       lastInteractionText: interactionText(raw.summary.lastInteractionTime, remark),
       arrivedCount,
       pendingCount,

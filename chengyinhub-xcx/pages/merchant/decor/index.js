@@ -5,6 +5,7 @@
 const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const toast = require('../../../utils/toast.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
@@ -43,21 +44,8 @@ const PREFERENCE_OPTIONS = ['城市运动', '户外活动', '健康生活', '美
   '摄影', '城市漫步', '骑行', '露营', '瑜伽', '球类', '水上运动', '花艺', '美容美发', '宠物友好'];
 const PREFERENCE_SPLIT = /[、,，·\/|]+|\s+/;
 
-// 行业类型:只给一份常见行业短表,按名称关键字映射到后端已有的分类记录(不再平铺整张分类表)。
-// label 是胶囊上显示的短名,match 用来在 /api/category/list 里认领一条真实记录(存它的 id)。
-const INDUSTRY_OPTIONS = [
-  { label: '餐饮美食', match: /美食|餐饮|烹饪|餐厅|食堂/ },
-  { label: '咖啡茶饮', match: /咖啡|茶饮|饮品|奶茶/ },
-  { label: '烘焙甜品', match: /烘焙|甜品|蛋糕/ },
-  { label: '运动健身', match: /运动|健身|体育/ },
-  { label: '户外出行', match: /户外|徒步|骑行|出行|旅行/ },
-  { label: '文化艺术', match: /文化|艺术|书|展/ },
-  { label: '生活美学', match: /生活|美学|美妆|花艺|时尚/ },
-  { label: '娱乐休闲', match: /娱乐|游戏|音乐|演出|电影|休闲/ },
-  { label: '亲子社交', match: /亲子|社交|交友|组队/ },
-  { label: '摄影', match: /摄影|相机/ },
-];
-const MAX_INDUSTRIES = 5;
+// 行业类型:与入驻申请共用 pages/merchant/utils/merchant-industry.js 的胶囊短表(M-16)
+const { MAX_INDUSTRIES, buildIndustryOptions } = require('../utils/merchant-industry.js');
 
 /** 胶囊选项里勾选中的 key(按选项顺序,第一个仍是主行业)。 */
 function checkedKeys(options) {
@@ -78,35 +66,6 @@ function looksLikeUrl(value) {
 function selectedCategoryIds(m) {
   const raw = m && m.categoryIds ? m.categoryIds : (m && m.categoryId != null ? m.categoryId : '');
   return String(raw).split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x) && x !== '0');
-}
-
-/**
- * 常见行业短表 → 胶囊选项。每个短表项认领一条名字匹配的真实记录;没匹配上的短表项不出现。
- * 已选中但不在短表里的记录照常列出(用其原名),老数据保持可见可取消。
- * 一个都匹配不上(分类表全是陌生名字)时退回前 10 条真实记录,别给商家一张空面板。
- */
-function buildIndustryOptions(rows, selectedIds) {
-  const list = Array.isArray(rows) ? rows.filter(r => r && r.id != null && r.categoryName) : [];
-  const used = {};
-  const out = [];
-  INDUSTRY_OPTIONS.forEach(def => {
-    const hit = list.filter(r => !used[r.id] && def.match.test(String(r.categoryName)))[0];
-    if (!hit) return;
-    used[hit.id] = true;
-    out.push({ key: String(hit.id), label: def.label, name: String(hit.categoryName), icon: tagIconName(def.label) });
-  });
-  if (!out.length) {
-    list.slice(0, 10).forEach(r => {
-      used[r.id] = true;
-      out.push({ key: String(r.id), label: String(r.categoryName), name: String(r.categoryName), icon: tagIconName(r.categoryName) });
-    });
-  }
-  (selectedIds || []).forEach(id => {
-    if (out.some(o => o.key === String(id))) return;
-    const row = list.filter(r => String(r.id) === String(id))[0];
-    if (row) out.push({ key: String(row.id), label: String(row.categoryName), name: String(row.categoryName), icon: tagIconName(row.categoryName) });
-  });
-  return out.map(o => Object.assign(o, { checked: (selectedIds || []).indexOf(o.key) >= 0 }));
 }
 
 // 特色标签预置词库(空间/体验/人群),与 E5 搜索共用
@@ -944,7 +903,12 @@ Page({
     if (!this.data.saving) this.setData({basicEditing: !this.data.basicEditing});
   },
   onBasicAction(e) {
-    if (!this.data.basicEditing) return;
+    // 第九轮 m1-9:不在编辑时,店铺地址这一行只用来看 —— 有坐标就开地图
+    if (!this.data.basicEditing) {
+      const m = this.data.m || {};
+      if (e.currentTarget.dataset.action === 'geoLocate') openAddress().openAddress({ lat: m.locationLat, lng: m.locationLng, name: m.name, address: m.address });
+      return;
+    }
     const action = e.currentTarget.dataset.action;
     if (['openField','geoLocate','goStory','previewLicense','previewBrandImages',
       'openPreference','goCategory','openHours','chooseQrcode'].includes(action)) this[action](e);
@@ -1127,7 +1091,7 @@ Page({
       if (error) this.setData({ 'chipSheet.loading': false, 'chipSheet.error': error });
       else this.setData({ 'chipSheet.loading': false, 'chipSheet.error': '', 'chipSheet.options': options, 'chipSheet.value': checkedKeys(options) });
     };
-    app.sendRequest({hideLoading:true, url:'/api/category/list', method:'POST', data:{type:1,parentid:0},
+    app.sendRequest({hideLoading:true, url:'/api/category/list', method:'POST', data:{type:'MERCHANT',parentid:0},
       success: res => {
         if (String(res.code) !== '200' || !Array.isArray(res.data)) return done('行业类型没能载入，请重试');
         this._categoryRows = res.data;
@@ -1262,13 +1226,14 @@ Page({
   geoLocate() {
     if (this.data.saving || this.data.refreshing) return;
     const that = this;
-    wx.chooseLocation({
+    const lat = Number((this.data.m || {}).locationLat), lng = Number((this.data.m || {}).locationLng);
+    wx.chooseLocation(Object.assign(lat && lng ? { latitude: lat, longitude: lng } : {}, {
       success(r) {
         if (that.data.saving || that.data.refreshing) return;
         that.saveDecor({locationLat:r.latitude, locationLng:r.longitude, address:r.address || r.name || ''});
       },
       fail() {}
-    });
+    }));
   },
 
   goBack() { wx.navigateBack({ delta: 1 }); }

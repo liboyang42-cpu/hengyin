@@ -1,0 +1,5 @@
+P-21 registrationMerchantCount = 4
+P-19 activityList = [{"id": 14, "name": "E2E 探店日一期", "clubName": "执行俱乐部"}, {"id": 13, "name": "E2E 探店日一期", "clubName": "执行俱乐部"}, {"id": 12, "name": "E2E 探店日一期", "clubName": "执行俱乐部"}, {"id": 9, "name": "E2E 探店日一期", "clubName": "执行俱乐部"}, {"id": 10, "name": "E2E 探店日一期", "clubName": "执行俱乐部"}, {"id": 11, "name": "E2E 探店日一期", "clubName": "执行俱乐部"}]
+P-39 stamps = [{"title": "第1章 咖啡 · 样板咖啡第1站", "obtainedAt": "2026-11-02 16:31:04"}, {"title": "第2章 书店 · 样板书店第2站", "obtainedAt": "2026-11-02 16:32:43"}, {"title": "第3章 花店 · 样板花店第3站", "obtainedAt": "2026-11-02 16:32:43"}, {"title": "第4章 面包 · 样板面包第4站", "obtainedAt": "2026-11-02 16:32:44"}]
+P-20 organizerName = 执行俱乐部
+P-19 gate (非成员 9001) = {"clubName": "执行俱乐部", "activityName": "E2E 探店日一期", "clubId": 7002, "gate": true, "message": "这一场由「执行俱乐部」执行，加入后查看"}

@@ -1081,8 +1081,7 @@ function hasVisibleU5Feedback(file, source, candidate, seen = new Set()) {
   return false;
 }
 
-// Resolve only a local const, zero-argument expression arrow used as fail.
-// Look in the current open lexical block, never an unrelated function.
+// shortcut: same-block const arrows without nested bindings only; use lexical AST resolution for broader callbacks.
 function referencedFailBody(source, masked, requestStart, failSource) {
   const reference = /^\s*fail\s*:\s*([A-Za-z_$][\w$]*)\s*$/.exec(failSource);
   if (!reference) return failSource;
@@ -1094,7 +1093,8 @@ function referencedFailBody(source, masked, requestStart, failSource) {
   const start = (blocks[blocks.length - 1] ?? -1) + 1;
   const name = reference[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const prefix = masked.slice(start, requestStart);
-  const declaration = new RegExp('\\bconst\\s+' + name + '\\s*=\\s*\\(\\s*\\)\\s*=>\\s*([^;{}\\n]+);', 'g');
+  const declaration = new RegExp('\\bconst\\s+' + name
+    + '\\s*=\\s*(?:\\(\\s*([A-Za-z_$][\\w$]*)?\\s*\\)|([A-Za-z_$][\\w$]*))\\s*=>\\s*', 'g');
   const definitions = [...prefix.matchAll(declaration)];
   if (definitions.length !== 1) return failSource;
   const definition = definitions[0];
@@ -1103,9 +1103,18 @@ function referencedFailBody(source, masked, requestStart, failSource) {
     if (token === '{') depth += 1;
     else if (token === '}') depth -= 1;
   }
-  if (depth !== 0) return failSource;
-  const offset = start + definition.index + definition[0].indexOf(definition[1]);
-  return source.slice(offset, offset + definition[1].length);
+  const parameter = definition[1] || definition[2];
+  if (depth !== 0 || /^(?:(?:cy)?[tT]oast|wx|app)$/.test(parameter || '')) return failSource;
+  const offset = start + definition.index + definition[0].length;
+  const expression = /^[^;{}\n]+;/.exec(masked.slice(offset, requestStart));
+  const end = masked[offset] === '{' ? matchBrace(masked, offset) + 1
+    : expression ? offset + expression[0].length : -1;
+  if (end <= offset || end > requestStart) return failSource;
+  const body = source.slice(offset, end);
+  const code = maskNonCode(body);
+  if (/\b(?:const|let|var|function|class)\b|=>/.test(code)
+    || new RegExp('\\b' + name + '\\s*\\(').test(code)) return failSource;
+  return body;
 }
 
 function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {

@@ -29,8 +29,11 @@ Component({
     // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
     attemptId: { type: Number, value: 0 },
     rewardCeiling: { type: String, value: '' },
+    // 第十一轮 i1:读不出声音或拒了麦克风时的出路,与罗盘同口径 —— 能不能跳、是不是跳过的,都只听服务端
+    canSkip: { type: Boolean, value: false },
+    skipped: { type: Boolean, value: false },
   },
-  data: { left: '5.0', loud: false, running: false, preparing: false, hasFrame: false, levelPct: 0, stageKeys: [0], rewardNote: '' },
+  data: { left: '5.0', loud: false, running: false, preparing: false, hasFrame: false, levelPct: 0, stageKeys: [0], rewardNote: '', micDenied: false },
   observers: {
     rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show, seconds) {
@@ -88,17 +91,25 @@ Component({
         if (after && this.data.stageKeys[0] === key && this.data.show && !this._hidden && !this._closed && !this._detached) after();
       });
     },
+    /** 第十二轮 k8(k2 第 5 项遗留):麦克风被拒时屏上写出原因(与计步「需要授权微信运动才能计步」同口径),
+     *  失败次数照旧报给服务端,够了才出「跳过这一站」。重新开始时这句清掉。 */
+    _micDenied() {
+      this.setData({ micDenied: true });
+      this.triggerEvent('micdenied');
+    },
     _failure(a, error) {
       if (!this._current(a) || a.phase === 'reporting' || a.phase === 'finished') return;
       this._abort();
       const key = this.data.stageKeys[0];
-      if (denied(error)) { this.triggerEvent('micdenied'); return; }
+      if (denied(error)) { this._micDenied(); return; }
       toast('声音读取中断，可重试或退出');
+      // 失败次数由服务端记,够两次后它才会给出「跳过这一站」
+      this.triggerEvent('readfail');
       // Unknown device/busy errors are not a permission denial. Only read the actual scope flag.
       if (typeof wx.getSetting === 'function') {
         try { wx.getSetting({ success: result => {
           if (this._attempt || this.data.stageKeys[0] !== key || !this.data.show || this._hidden || this._closed || this._detached) return;
-          if (result && result.authSetting && result.authSetting['scope.record'] === false) this.triggerEvent('micdenied');
+          if (result && result.authSetting && result.authSetting['scope.record'] === false) this._micDenied();
         }, fail() {} }); } catch (error) { /* generic retry message already visible */ }
       }
     },
@@ -113,6 +124,8 @@ Component({
       a.stage.begin();
     },
     onStart() {
+      if (this.data.skipped) return;   // 第十一轮 i1:跳过的站不再开局(服务端也拒)
+      if (this.data.micDenied) this.setData({ micDenied: false });   // 第十二轮 k8:重新开始时清掉上一次的拒绝原因
       if (this._hidden || this._closed || this._detached || !this.data.show) return;
       if (this._attempt) {
         if (this._attempt.phase === 'finished') this._abort(() => this.onStart());
@@ -217,6 +230,14 @@ Component({
       this.triggerEvent('submit', withAttempt({ heldMs }, { attemptId: freshAttempt(this.data.attemptId, a.attemptAtRun) }));
     },
     onVerdict(e) { const a = this._stageAttempt(e); if (a && a.phase === 'reporting') this.triggerEvent('verdict', e.detail); },
+    /* 跳过由服务端判(次数、拒权限、作者开关或队长放行都在服务端),这里只发请求 */
+    onSkip() {
+      if (!this.data.canSkip || this.data.skipped || this.data.running || this.data.preparing
+        || this._attempt || this._skipping) return;
+      this._skipping = true;
+      setTimeout(() => { this._skipping = false; }, 1500);
+      this.triggerEvent('skip');
+    },
     onClose(e) {
       if (e && (!e.currentTarget || !e.currentTarget.dataset || String(e.currentTarget.dataset.stageKey) !== String(this.data.stageKeys[0]))) return;
       this._closed = true; this._abort(); this.triggerEvent('close');

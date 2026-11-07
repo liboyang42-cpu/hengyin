@@ -823,7 +823,7 @@ test('内心声音与异常块:插入、改字段、提交载荷、重开回填�
   assert.deepEqual(payload.blocks.find(b => b.type === 'odd'), { type: 'odd', key: 'o1', level: 3 })
 
   const back = storyFlow.materializeChapter({ ...chapter, blocks: payload.blocks })
-  assert.equal(back.blocks.find(b => b.key === 'v1' && b.type === 'text').content, '这条路没人推荐。')
+  assert.deepEqual(back.blocks.find(b => b.key === 'v1'), { type: 'voice', key: 'v1', who: '窗外', content: '这条路没人推荐。' })
   assert.equal(back.blocks.find(b => b.type === 'odd').level, 3)
 })
 
@@ -894,21 +894,30 @@ test('新相册删光照片后不能静默删除或关闭保存', () => {
   assert.throws(() => storyFlow.toPayloadChapter(chapter), /至少添加 1 张/);
 });
 
-test('旧角色与反转正文转换保留稳定标识和条件，文字设置往返不丢失', () => {
+test('内心声音与反转正文保留 canonical 类型、稳定标识和条件，角色文字设置往返不丢失', () => {
   const when = {op:'HAS_TAG', value:'tag.m_chosen'};
   let chapter = storyFlow.materializeChapter({nodes:[], blocks:[
     {key:'voice',type:'voice',who:'窗外',content:'看见风',when},
     {key:'reveal',type:'reveal',who:'对方',content:'你来了'}
   ]});
-  assert.ok(chapter.blocks.every(b=>b.type==='text'));
+  assert.deepEqual(chapter.blocks.map(b=>b.type), ['voice', 'reveal']);
+  assert.equal(chapter.blocks[0].who, '窗外');
+  assert.equal(chapter.blocks[1].who, '对方');
+  const canonicalBack = storyFlow.materializeChapter(storyFlow.toPayloadChapter(chapter));
+  assert.deepEqual(canonicalBack.blocks, chapter.blocks);
+  chapter.blocks.push({key:'prose',type:'text',content:'角色正文',when});
   assert.deepEqual(chapter.blocks[0].when, when);
   chapter = storyFlow.applyStoryCommand({chapter,pendingMaterials:[]},
-    {type:'setTextPresentation',blockKey:'voice',patch:{who:'陈老师',level:2}}).draft.chapter;
+    {type:'setTextPresentation',blockKey:'prose',patch:{who:'陈老师',level:2}}).draft.chapter;
   const back = storyFlow.materializeChapter(storyFlow.toPayloadChapter(chapter));
-  assert.equal(back.blocks[0].who,'陈老师');
-  assert.equal(back.blocks[0].level,2);
+  assert.equal(back.blocks[2].who,'陈老师');
+  assert.equal(back.blocks[2].level,2);
+  assert.equal(back.blocks[0].type,'voice');
+  assert.equal(back.blocks[1].type,'reveal');
+  assert.equal(back.blocks[0].key,'voice');
+  assert.equal(back.blocks[1].key,'reveal');
   assert.deepEqual(back.blocks[0].when,when);
   assert.equal(back.blocks[1].content,'你来了');
   assert.throws(()=>storyFlow.applyStoryCommand({chapter,pendingMaterials:[]},
-    {type:'setTextPresentation',blockKey:'voice',patch:{level:4}}),/文字效果/);
+    {type:'setTextPresentation',blockKey:'prose',patch:{level:4}}),/文字效果/);
 });

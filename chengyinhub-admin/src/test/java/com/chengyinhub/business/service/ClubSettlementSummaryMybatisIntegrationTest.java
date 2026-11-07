@@ -41,9 +41,12 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         jdbc = new JdbcTemplate(dataSource);
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         // cms_topic:CU-C-40 汇总行 left join 主题名,真库 schema 要有这张表
-        for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic"}) {
+        // cms_activity 的 club_id 注释里有「;」,按行尾「;\n」切语句,不在注释中间截断。
+        // 第十一轮 h4 L7:场次行减去结算后退款冲销,要读 settlement_detail → refund_application → cms_registration。
+        for (String table : new String[]{"coop_settlement", "coop_settlement_adjustment", "ums_member_balance_detail", "cms_topic", "cms_activity",
+                "settlement_detail", "refund_application", "cms_registration"}) {
             int start = base.indexOf("CREATE TABLE `" + table + "` (");
-            jdbc.execute(base.substring(start, base.indexOf(";", start)));
+            jdbc.execute(base.substring(start, base.indexOf(";\n", start)));
         }
         Configuration config = new Configuration(new Environment("club-summary", new SpringManagedTransactionFactory(), dataSource));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
@@ -81,9 +84,9 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         Map<String, Object> data = summary();
         Map<String, Object> row = row(data, 0);
         assertEquals("void", row.get("status"));
-        assertEquals("¥ 9.99", row.get("amountText"));
+        assertEquals("¥9.99", row.get("amountText"));
         assertEquals("已作废，不再打款", row.get("paidText"));
-        assertEquals("¥ 0.00", data.get("settledAmountText"));
+        assertEquals("¥0.00", data.get("settledAmountText"));
         verifyNoInteractions(withdrawals);
     }
 
@@ -96,7 +99,7 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         assertEquals(1, data.get("unverifiedSettledCount"));
         assertNull(byId(data, 2).get("amountText"));
         assertEquals("unverified", byId(data, 2).get("amountStatus"));
-        assertEquals("¥ 10.00", byId(data, 1).get("amountText"));
+        assertEquals("¥10.00", byId(data, 1).get("amountText"));
         verifyNoInteractions(withdrawals);
     }
 
@@ -113,11 +116,11 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         jdbc.update("DELETE FROM ums_member_balance_detail");
         payout(1, "10.00");
         assertThrows(org.springframework.dao.DuplicateKeyException.class, () -> payout(1, "10.00"));
-        assertEquals("¥ 10.00", summary().get("settledAmountText"));
+        assertEquals("¥10.00", summary().get("settledAmountText"));
     }
 
     @Test void emptyAndScopedRowsNeverIncludeOtherBeneficiariesOrVoids() {
-        assertEquals("¥ 0.00", summary().get("settledAmountText"));
+        assertEquals("¥0.00", summary().get("settledAmountText"));
         settlement(1, 1, "10.00"); payout(1, "8.00");
         settlement(2, 1, "20.00"); payout(2, "21.00");
         settlement(3, 1, "99.00"); payout(3, "99.00");
@@ -128,9 +131,9 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         jdbc.update("UPDATE coop_settlement SET del_flag=1 WHERE id=5");
         settlement(6, 2, "6.00"); adjustment(6, "-8.00", "EXECUTED");
         Map<String, Object> data = summary();
-        assertEquals("¥ 29.00", data.get("settledAmountText"));
+        assertEquals("¥29.00", data.get("settledAmountText"));
         assertEquals(3, ((List<?>) data.get("topics")).size());
-        assertEquals("¥ -2.00", byId(data, 6).get("netAmountText"));
+        assertEquals("−¥2.00", byId(data, 6).get("netAmountText"));
         assertEquals("void", byId(data, 6).get("status"));
         verifyNoInteractions(withdrawals);
     }
@@ -145,17 +148,17 @@ class ClubSettlementSummaryMybatisIntegrationTest {
         settlement(2, 0, "7.00"); adjustment(2, "1.00", "EXECUTED");
         adjustment(2, "99.00", "PENDING");
         Map<String, Object> data = summary();
-        assertEquals("¥ 10.00", data.get("settledAmountText"));
-        assertEquals("¥ 10.00", byId(data, 1).get("amountText"));
-        assertEquals("¥ 8.00", byId(data, 2).get("amountText"));
-        assertEquals("¥ 12.34", byId(data, 1).get("originalAmountText"));
-        assertEquals("¥ -2.34", byId(data, 1).get("executedAdjustmentText"));
+        assertEquals("¥10.00", data.get("settledAmountText"));
+        assertEquals("¥10.00", byId(data, 1).get("amountText"));
+        assertEquals("¥8.00", byId(data, 2).get("amountText"));
+        assertEquals("¥12.34", byId(data, 1).get("originalAmountText"));
+        assertEquals("−¥2.34", byId(data, 1).get("executedAdjustmentText"));
         adjustment(1, "-1.00", "EXECUTED");
         data = summary();
-        assertEquals("¥ 10.00", data.get("settledAmountText"));
-        assertEquals("¥ 10.00", byId(data, 1).get("amountText"));
-        assertEquals("¥ 9.00", byId(data, 1).get("netAmountText"));
-        assertEquals("¥ -3.34", byId(data, 1).get("executedAdjustmentText"));
+        assertEquals("¥10.00", data.get("settledAmountText"));
+        assertEquals("¥10.00", byId(data, 1).get("amountText"));
+        assertEquals("¥9.00", byId(data, 1).get("netAmountText"));
+        assertEquals("−¥3.34", byId(data, 1).get("executedAdjustmentText"));
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM ums_member_balance_detail", Integer.class));
         verifyNoInteractions(withdrawals);
     }

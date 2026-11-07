@@ -5,7 +5,7 @@ const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
 const cyToast = require('../../../../utils/toast.js');
 const motion = require('../../../../utils/motion.js');
-const { readReducedMotion } = require('../../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js'); const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp } = require('../../../../utils/datetime');
 const app = getApp();
 const session = require('../../../../utils/session/login-reload.js');
@@ -63,7 +63,6 @@ function buildBenefits(p) {
   return [
     // 2026-10-30 V-19 业主定 B:每行换成对应的线条图标(不再是勾 / 锁占位),没解锁的行尾一把锁
     { text: '发布路线 · 上限 ' + (max == null ? '不限' : (max || 0)), unlocked: (max == null || max > 0), icon: 'route' },
-    { text: '发布优惠券', unlocked: p.canPublishCoupon === true, icon: 'coupon' },
     { text: '到店核销', unlocked: p.canRedeemCoupon === true, icon: 'scan' },
     { text: '分支 / 条件玩法', unlocked: p.canBranch === true, icon: 'switch-chapter' },
     { text: '博弈机制（竞速/对抗/协作）', unlocked: p.canGameMechanic === true, icon: 'flag' },
@@ -74,11 +73,11 @@ function buildBenefits(p) {
   ];
 }
 
-function req(url, data) {
+function req(url, data, header) {
   return new Promise(function (resolve) {
     community.request({
       url: url,
-      method: 'POST',
+      method: 'POST', header: header,
       data: data || {},
       hideLoading: true,
       success: function (res) { resolve(res || {}); },
@@ -424,7 +423,7 @@ Component({
     reportTargetType: '',
     reportTargetId: '',
     reportTitle: '举报',
-    correctionShow: false,
+    correctionShow: false, shopShareShow: false, shopShareCard: null,
     correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
@@ -480,13 +479,14 @@ Component({
 
     identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
     rankDisplay: { no: 0, delta: '' },
-    exploreStat: { shops: 0, weekExp: 0, km: '0.0' },
+    exploreStat: { shops: 0, places: 0, weekExp: 0, km: '0.0' },
     themeProgress: [],
     medals: [],
     medalCount: 0,
     joinDate: '—',
 
     list: [],
+    clubPostList: [],
     page_no: 1,
     hasMore: false,
     nodata: false,
@@ -617,10 +617,10 @@ Component({
         friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
-        exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
+        exploreStat: { shops: 0, places: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
         orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
         orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false,
-        list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
+        list: [], clubPostList: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
         pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
         sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } });
     },
@@ -772,7 +772,7 @@ Component({
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
       if (!communityReadable()) {
         this._postsRequestGeneration = (this._postsRequestGeneration || 0) + 1;
-        this.setData({ memberTabs: tabs, list: [], hasMore: false, feedErr: false, feedAuthError: false,
+        this.setData({ memberTabs: tabs, list: [], clubPostList: [], hasMore: false, feedErr: false, feedAuthError: false,
           activeTab: this.data.activeTab === 'posts' ? 'about' : this.data.activeTab });
       } else {
         const activatePosts = this._pendingCommunityTab;
@@ -833,7 +833,7 @@ Component({
       primaryCta: isSelf ? '开始探索' : '关注',
       followSubmitting: false,
       followReceipt: false,
-      list: [],
+      list: [], clubPostList: [],
       page_no: 1,
       hasMore: false,
       nodata: false,
@@ -947,6 +947,8 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    // 第七轮 C 第 1 项:被看者确认为可公开商家后,宿主页(userinfo)才打开「分享到朋友圈」
+    if (typeof this.triggerEvent === 'function') this.triggerEvent('subjectmerchant', { memberId: String(this.data.userId || '') });
     this.loadMerchantSafety(m.id);
     this.loadMerchantNode(m.id);
   },
@@ -1028,7 +1030,7 @@ Component({
   refreshPublicProfile: function (silent) {
     var that = this;
     if (!silent) {
-      this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
+      this.setData({ page_no: 1, list: [], clubPostList: [], hasMore: false, nodata: false, feedErr: false });
     }
     return this.loadUserData().then(function () {
       if (!silent && that.data.activeTab === 'posts') that.getCreativesquareList();
@@ -1168,7 +1170,7 @@ Component({
     const read = this._captureProfileRead(true);
     if (!read) return Promise.resolve();
     var that = this;
-    if (!silent) this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
+    if (!silent) this.setData({ page_no: 1, list: [], clubPostList: [], hasMore: false, nodata: false, feedErr: false });
     this.resetProfileMetricState();
     // ⚠️ 按视角分流，不能无条件拉全部：下面这些接口要么用 app.getUserID()（当前登录用户）、
     // 要么只对「自己」有意义（订单/项目/积分/加入信息）。他人主页调它们既白跑一轮请求，
@@ -1287,7 +1289,8 @@ Component({
         fansNum: fansNum == null ? 0 : fansNum
       };
       if (!that.data.isSelf && !followStateChanged) {
-        profilePatch.growthLevel = res.data.levelId || 1;
+        // ums_member.level_id 不是成长等级(成长等级只有本人能读),别人主页不再写一个假的 Lv.1
+        profilePatch.growthLevel = 0;
         profilePatch.primaryCta = res.data.isFollow == 1 ? '已关注' : '关注';
       }
       that.setData(profilePatch);
@@ -1340,7 +1343,8 @@ Component({
       var play = arr[0].data;
       var center = arr[1].data;
       var growth = center.growth;
-      var level = metricNumber(play.level != null ? play.level : growth.levelNo);
+      // R11 p1 F-3 / j3 F10:等级只认成长中心那一套(member_growth.level_no),play.level 是打卡次数档,两处会对不上
+      var level = metricNumber(growth.levelNo);
       var exp = metricNumber(growth.expValue);
       var points = metricNumber(center.points);
       var shops = metricNumber(play.totalCheckins);
@@ -1364,7 +1368,7 @@ Component({
           medals: that.data.identityCard.medals, // BE-01 勋章单真源:勋章数只由 loadMedals(/api/medal/wall)写,growth 不再返 badgeCount
           cities: 1
         },
-        'exploreStat.shops': shops, 'exploreStat.km': km // BL-95: 累计里程补进现有「累计探索」块(同行写,不挪动基线行号)
+        'exploreStat.shops': shops, 'exploreStat.km': km, 'exploreStat.places': metricNumber(play.checkinPlaces) || 0 // P-22(2026-11-02 业主):「累计打卡 N 处」= 核销过的店 + 完成的城市站点(服务端去重),缺数据显示 0
       });
       // 是否开始过只看历史参与信号(totalCheckins / my-completed),绝不拿里程是否为 0 判断。
       // 这样已完成节点但真实里程为 0.0km 的老用户仍进入 ready,不会被错藏成首访。
@@ -1464,14 +1468,15 @@ Component({
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       var res = arr[0];
       var weekPoints = res.code == '200' && isRecord(res.data) ? metricNumber(res.data.weekPoints) : null;
+      // R11 p1 F-3/F-4:服务端这里的名次与成长中心「总积分榜」是同一条查询;0 分、非玩家账号给 TOP0% / 0 哨兵
       var rankPercentage = isRecord(res.data) ? res.data.rankPercentage : null;
       var pointsOk = weekPoints != null && typeof rankPercentage === 'string' && !!rankPercentage.trim();
       if (pointsOk) {
-        var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
+        var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0; // P-22(业主「没数据显示0」):无排名哨兵显示 0
         that.setData({
           pointsStat: { weekPoints: weekPoints, rankPercentage: rankPercentage },
           rankDisplay: {
-            no: hasRank ? rankPercentage : '—',
+            no: hasRank ? rankPercentage : '0',
             delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
           }
         });
@@ -2044,7 +2049,7 @@ Component({
   },
 
   onShareProfile: function () {
-    this.closeMoreMenu();
+    this.closeMoreMenu(); if (this.data.subjectIsMerchant && this.data.subjectMerchant) { this.openShopShare(); return; }
     cyToast('点击右上角分享主页');
   },
 
@@ -2152,8 +2157,37 @@ Component({
         hasMore: result.hasMore === true,
         nodata: newlist.length < 1
       });
+      if (that.data.isSelf) that.loadMyClubPosts(read, generation);
       return true;
     });
+  },
+
+  // 第十轮 f3 j5 H4:/me/posts 只有社区帖文,自己发在俱乐部里的帖文另取一路(俱乐部全站流按作者=本人),
+  // 排在社区帖文之后;两路都空才算「还没有帖文」。俱乐部帖文的可见性、删除与拉黑仍由后端判。
+  loadMyClubPosts: function (read, generation) {
+    var that = this;
+    // j5 N2:后端 @RequestBody,必须发 JSON(表单编码会被 415 拒,页面只剩「还没有帖文」)
+    return req('/api/club/post/feed', { scope: 'all', author: 'me', limit: 20 }, { 'content-type': 'application/json' }).then(function (res) {
+      if (!that._currentProfileRead(read, res) || generation !== that._postsRequestGeneration) return;
+      var rows = res && res.code == 200 && isRecord(res.data) && isRecordList(res.data.rows) ? res.data.rows : [];
+      that.setData({ clubPostList: rows.map(function (p) {
+        return Object.assign({}, p, {
+          source: 'club',
+          memberId: p.authorMemberId,
+          memberNickname: p.nickname || (that.data.userInfo && that.data.userInfo.nickname),
+          memberAvatar: p.avatar || that.data._avatarSrc,
+          contents: p.content,
+          picList: String(p.images || '').split(/[;,]/).filter(Boolean).slice(0, 3),
+          formattedCreateTime: p.createTime ? that.formatTimeDifference(p.createTime) : ''
+        });
+      }) });
+    });
+  },
+  onClubPostCardDetail: function (e) {
+    var post = (this.data.clubPostList || [])[e.detail && e.detail.index];
+    if (!post || !post.clubId || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/club/detail/index?id=' + post.clubId + '&postId=' + post.id, complete: () => { this._navigating = false; } });
   },
 
   // cy-error 的重试:各自只重拉自己那条链路,不整页刷新(别的区块的数据没坏,不该被连坐)
@@ -2399,8 +2433,15 @@ Component({
         path: '/pages/index/index?inviter=' + app.getUserID()
       };
     }
-    if (res.from === 'button') {
+    if (res.from === 'button' && !(res.target && res.target.dataset && res.target.dataset.shareKind === 'card')) {
       return { title: '城瘾 · 城市探索', path: '/pages/square/detail/index?id=' + res.target.dataset.id };
+    }
+    // 第七轮 C 第 3 项:看的是可公开商家 ⇒ 店名 + 店铺封面 + canonical 商家主页(tab=about)。
+    var merchantShare = this.getTimelinePayload();
+    if (merchantShare) {
+      var share = { title: merchantShare.title, path: merchantHomeUrl(this.data.userId) };
+      if (merchantShare.imageUrl) share.imageUrl = merchantShare.imageUrl;
+      return share;
     }
     if (!this.data.isSelf) {
       return {
@@ -2412,6 +2453,36 @@ Component({
       title: (this.data.userInfo.nickname || '我') + ' 的城市身份卡',
       path: '/pages/member/index/index'
     };
+  },
+
+  // 第七轮 C 第 1 项:朋友圈只发商家主页(公开、匿名可读 /api/merchant/public-home)。
+  // 落点固定是 pages/userinfo/userinfo,query 用 canonical 的 userId + tab=about(同 utils/merchant-home-link.js)。
+  // 被看者不是可公开商家 ⇒ null,宿主页不开朋友圈菜单。
+  getTimelinePayload: function () {
+    var d = this.data;
+    if (!d.subjectIsMerchant || !d.subjectMerchant || !d.userId) return null;
+    var m = d.subjectMerchant;
+    var payload = { title: m.name || '城瘾 · 商家主页', query: 'userId=' + d.userId + '&tab=about' };
+    var cover = m.coverImage || m.logo || '';
+    if (cover) payload.imageUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl(cover) : cover;
+    return payload;
+  },
+
+  // 第九轮 m1-9:商家主页的分享按钮 —— 通用分享层出店铺卡,右下是店铺小程序码(/api/merchant/share-code),
+  // 「微信好友」走宿主页 onShareAppMessage → getSharePayload 的商家主页落点。
+  openShopShare: function () {
+    var m = this.data.subjectMerchant;
+    if (!m || !this.data.userId) return;
+    this.setData({
+      shopShareShow: true,
+      // 第九轮 m2 补充第 4 项:卡面用店铺自己的照片 —— 装修封面,没有就取相册第一张,再没有用店铺头像
+      shopShareCard: { kind: 'shop', id: String(this.data.userId), title: m.name || '', when: m.address || '',
+        cover: String(m.coverImage || (this.data.merchantGallery || [])[0] || m.logo || m.avatar || '').split(',')[0] },
+    });
+  },
+
+  closeShopShare: function () {
+    this.setData({ shopShareShow: false });
   }
   }
 });

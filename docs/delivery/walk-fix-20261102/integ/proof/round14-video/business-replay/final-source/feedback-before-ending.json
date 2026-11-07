@@ -1,0 +1,21 @@
+{
+  "at": 1793907430112,
+  "player": 990015,
+  "run": "9",
+  "bag": true,
+  "verdict": {
+    "show": true,
+    "kind": "win",
+    "text": "R14-VIDEO：雨停了，去听结局。",
+    "images": []
+  },
+  "queued": true,
+  "video": {
+    "show": false
+  },
+  "redPlaying": [],
+  "viewport": {
+    "w": 390,
+    "h": 844
+  }
+}

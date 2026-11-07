@@ -219,4 +219,7 @@
 .wc__im image { width: 100%; height: 100%; display: block; }
 .wc__im::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 65%, rgba(0,0,0,.6)); } /* ds-ok */
 .signup .team-entry { bottom: auto; left: 50%; right: auto; transform: translateX(-50%); z-index: 4; padding: 12rpx 27rpx; gap: 15rpx; border-radius: 40rpx; background: rgba(40,40,42,.72); backdrop-filter: blur(31rpx); -webkit-backdrop-filter: blur(31rpx); } /* ds-ok */
+/* 第十二轮 k9(p1 N-9):left:50% 的胶囊按收缩宽度最多只有半屏,「我的队伍」被折成两行、队名截成两个字;按内容宽、最多到两侧页边距 */
+.signup .team-entry { width: max-content; max-width: calc(100vw - 2 * var(--cy-page-x)); box-sizing: border-box; }
+.signup .team-entry__k, .signup .team-entry__n { flex-shrink: 0; white-space: nowrap; }
 

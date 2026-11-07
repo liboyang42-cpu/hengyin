@@ -1,4 +1,4 @@
-const modal = require('../../../utils/modal.js');
+const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
@@ -16,15 +16,17 @@ const { createCheckoutWorkflow, hasCompletePaymentParams, isOrderExpiredFailure,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
 const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
-const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
+const { buildTopicStatBar, sessionWindowsText } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { haversine, distanceText } = require('../../../utils/geo.js');
+const { lightMapStyle } = require('../../../utils/map-style.js');
+const LIGHT_MAP_STYLE = lightMapStyle();
 const routePreview = require('../../../utils/topic-route-preview.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
-const contentReport = require('../../../utils/content-report.js');
+const contentReport = require('../utils/content-report.js');
 const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const motion = require('../utils/topic-motion.js');
@@ -99,6 +101,8 @@ Page({
   ...themeRecords.methods(recordsRequest, false),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   data: {
+    mapSubkey: LIGHT_MAP_STYLE.subkey,
+    mapLayerStyle: LIGHT_MAP_STYLE.layerStyle,
     ...themeRecords.data,
     // 选场次 / 选票种弹层(稿 11 240:401 · 11a 240:446)
     sessionPicker: { show: false },
@@ -196,7 +200,7 @@ Page({
     const validTopicId = Number.isFinite(topicId) && Number.isInteger(topicId) && topicId > 0;
 
     that.getSystemInfo();
-    that.calculateScreenHeights();
+    that.calculateScreenHeights(); that._viaSession = options.via === 'session'; // j2 F-06:俱乐部场次卡进来,主按钮先给场次
 
     that.setData({
       is_join: options.is_join != undefined ? options.is_join : 0,
@@ -209,7 +213,7 @@ Page({
         loadError: true,
         missingTopicId: true,
         loadErrorTitle: '无法打开主题',
-        loadErrorSub: '请返回重新进入',
+        loadErrorSub: '',
         topicLoaded: false,
       });
       return;
@@ -343,7 +347,7 @@ Page({
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion }); this._navigating = false; // 返回时兜底清跳转锁
     this._startKenBurns();
-    if (this.data.selfPlayCheckoutShow && !this._signupProfile) this._fillCheckoutProfile(); // 从个人资料补全回来
+    if (this.data.selfPlayCheckoutShow) this._fillCheckoutProfile(); // 从参与人信息/个人资料回来(R11 j3 F8)
     const that = this;
     
     // 重新获取所有位置信息
@@ -427,7 +431,7 @@ Page({
     const scrollToTarget = () => {
       wx.pageScrollTo({
         scrollTop: this.data.screen2Top,
-        duration: 500,
+        duration: 0, // 只在减弱动态时走这里:直接到位,不滚 500ms
         success: () => {
           this.setData({
             currentScreen: 1,
@@ -461,7 +465,7 @@ Page({
     this.setData({
       coverImages: motion.buildCoverImages(data), kbIdx: 0,
       publisher: motion.buildPublisher(data),
-      heroCta: motion.buildHeroCta(data, { isJoin: this.data.is_join, merchantClosed: data.merchantClosed === true, priceText }),
+      heroCta: motion.buildHeroCta(data, { isJoin: this.data.is_join, merchantClosed: data.merchantClosed === true, priceText, preferSession: this._viaSession }),
       merchantCards,
       storyCards: motion.buildStoryCards(data, merchantCards),
       storyMeta: motion.storyMeta(data),
@@ -794,7 +798,7 @@ Page({
     if (this.lockedTip()) return;
     const info = this.data.info || {};
     const win = motion.passWindow({ topicEnd: info.endDate });
-    const p = this._signupProfile || {};
+    const p = this._signupParts || this._signupProfile || {};
     const phone = String(p.phone || '');
     const price = Number(info.selfPlayPrice);
     this.setData({
@@ -820,8 +824,7 @@ Page({
   },
 
   onCheckoutProfile() {
-    if (this._navigating) return; this._navigating = true;
-    wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } });
+    this._goFixSignupProfile();
   },
 
   /* 付款成功 → 通行证到账动效。可选的商家营销同意行(拍板第 40 条 A)照旧要给:
@@ -1070,7 +1073,7 @@ Page({
 
     wx.pageScrollTo({
       scrollTop: 0,
-      duration: 500,
+      duration: this.data.reducedMotion ? 0 : 350, // 减弱动态直接到位;常规档 350ms(打磨第 3 轮 §4-11,原 v13 500ms 偏慢)
       success: () => {
         this.setData({
           currentScreen: 0,
@@ -1396,7 +1399,7 @@ Page({
               cb({ ok: false, msg: ORDER_REBUILD_REQUIRED });
               return;
             }
-            loading.hide();
+            loading.hide(); if (openPendingOrderConflict(res, cb)) return; // j6 N1:已有待支付单就带去那一笔
             if (res.code == '200' && res.data) {
               var d = res.data;
               const amount = d.payableAmount;
@@ -1564,23 +1567,73 @@ Page({
   // 任何玩家、任何在架自玩主题都买不成。这里按报名页同一口径把资料取回来缓存。
   // 只喂建单、页面不渲染,所以存实例字段而不是 setData(U4 A2:内部状态不该进 data)。
   _loadSignupProfile(done) {
+    // R11 j3 F8:「姓名」取参与人信息(与活动结算同一份、同一选取口径),不是资料页的昵称;
+    // 手机号仍取资料页绑定的微信手机号(手机号规则不变)。两路都回来才判。
     const that = this;
-    const settle = function () { done && done(that._signupProfile || null); };
+    const seq = that._signupSeq = (that._signupSeq || 0) + 1;
+    const parts = { realName: '', phone: '' };
+    let pending = 2;
+    const settle = function () {
+      if (--pending > 0 || seq !== that._signupSeq) return;
+      that._signupParts = parts;
+      that._signupProfile = parts.realName && parts.phone ? { realName: parts.realName, phone: parts.phone } : null;
+      if (done) done(that._signupProfile);
+    };
+    const record = function (res) {
+      return res && res.code == '200' && res.data && typeof res.data === 'object' && !Array.isArray(res.data) ? res.data : null;
+    };
     app.sendRequest({
-      hideLoading: true,
-      url: '/api/user/info',
-      method: 'POST',
-      data: { member_id: app.getUserID() },
+      hideLoading: true, url: '/api/user/info', method: 'POST', data: { member_id: app.getUserID() },
+      success(res) { const d = record(res); parts.phone = d ? String(d.phone || d.mobilePhone || '') : ''; settle(); },
+      fail: settle
+    });
+    app.sendRequest({
+      hideLoading: true, url: '/api/user/address/list', method: 'POST', data: {},
       success(res) {
-        const d = res && res.code == '200' && res.data
-          && typeof res.data === 'object' && !Array.isArray(res.data) ? res.data : null;
-        const realName = d ? (d.name || d.realName || d.fullName || '') : '';
-        const phone = d ? (d.phone || d.mobilePhone || '') : '';
-        // 只在两项都齐时才落缓存:半套缓存会让下面那次「现取一次」白取并原地打转。
-        if (realName && phone) that._signupProfile = { realName: realName, phone: phone };
+        const d = record(res);
+        const rows = d && Array.isArray(d.rows) ? d.rows : [];
+        const uid = app.getUserID && app.getUserID();
+        let picked = null;
+        try {
+          const cached = uid ? wx.getStorageSync('selectedAddressId_v1_' + String(uid)) : '';
+          if (cached !== '' && cached != null) picked = rows.find((r) => r && String(r.id) === String(cached)) || null;
+        } catch (e) { picked = null; }
+        if (!picked) picked = rows.find((r) => r && r.isDefault == 1) || rows[0] || null;
+        parts.realName = picked ? String(picked.fullName || picked.realName || '').trim() : '';
         settle();
       },
       fail: settle
+    });
+  },
+
+  // 结算页开着时(进页、从参与人信息/个人资料回来)按最新资料刷新那一行
+  _fillCheckoutProfile() {
+    const that = this;
+    that._loadSignupProfile(function () {
+      if (!that.data.selfPlayCheckoutShow) return;
+      const p = that._signupParts || {};
+      const phone = String(p.phone || '');
+      that.setData({
+        'checkout.profileName': p.realName || '',
+        'checkout.profilePhone': phone.length >= 7 ? phone.slice(0, 3) + '****' + phone.slice(-4) : phone,
+      });
+    });
+  },
+
+  // 缺手机号去资料页绑微信手机号;否则去参与人信息选/填姓名(同活动结算)
+  _goFixSignupProfile() {
+    if (this._navigating) return; this._navigating = true;
+    const p = this._signupParts || {};
+    const done = () => { this._navigating = false; };
+    if (!p.phone) { wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: done }); return; }
+    const uid = app.getUserID && app.getUserID();
+    wx.navigateTo({
+      url: '/pages/address/address?mode=participant',
+      events: { addressSelected: (data) => {
+        const id = data && data.address && data.address.id;
+        if (uid && id) { try { wx.setStorageSync('selectedAddressId_v1_' + String(uid), id); } catch (e) {} }
+      } },
+      complete: done,
     });
   },
 
@@ -1607,11 +1660,11 @@ Page({
         if (profile) { that._createSelfPlayOrder(topicId); return; }
         modal.show({
           title: '还差姓名和手机号',
-          content: '建单要用你的真实姓名和手机号，资料页补一次就好，之后不用再填。',
+          content: '建单要用你的真实姓名和手机号，补一次就好，之后不用再填。',
           confirmText: '去补全',
           cancelText: '稍后再说',
           success(res) {
-            if (res && res.confirm) wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' });
+            if (res && res.confirm) that._goFixSignupProfile();
           }
         });
       });
@@ -2066,7 +2119,7 @@ Page({
               loadError: true,
               missingTopicId: false,
               loadErrorTitle: '主题暂时无法打开',
-              loadErrorSub: res.msg || '主题详情暂时无法加载，请稍后重试。',
+              loadErrorSub: safeUserMessage(res.msg, '主题详情暂时无法加载，请稍后重试。'),
               topicLoaded: false,
             });
             return;
@@ -2084,6 +2137,11 @@ Page({
           res.data['showStartDate'] = that.formatDate(res.data['startDate'])
           res.data['showEndDate'] = that.formatDate(res.data['endDate'])
           res.data['omsTicketList'] = that.processTopicDate(res.data['omsTicketList'])
+          // P-30:自由探索的场次卡写真实场次(activityList)的时间,不写主题票自己的窗口
+          if (Number(res.data.productType) === 2) {
+            const sessionText = sessionWindowsText(res.data['activityList'])
+            if (sessionText) res.data['omsTicketList'].forEach((t) => { t.sessionTimeText = sessionText })
+          }
           res.data['perkCapacityText'] = that.formatPerkCapacity(res.data['perkSellableCapacity'])
           res.data['totalHour'] = that.formatHour(res.data['totalTime'])
           res.data['totalTimeFormatted'] = that.formatTimeToChinese(res.data['totalTime'])
@@ -2116,6 +2174,7 @@ Page({
             ratingStars,
             // 探店日/自由探索(productType=2):场次块换真场次卡,不再当「阵容」花名册渲染
             isExplore: Number(res.data.productType) === 2,
+            ownerStateText: ownerStateText(res.data),
             loadError: false,
             topicLoaded: true,
             everLoaded: true,   // 成功读到过一次:之后的刷新失败留在原页给重试,不 auto-back 把人踢走
@@ -2134,11 +2193,14 @@ Page({
             that._measureHero();
           }, 300);
         } else {
+          // j5 H1:服务端明确说「主题活动不存在」(审核中 / 已下架 / 未通过,对他人不可见)是终态:讲原因并给返回,不是加载失败留白。
+          const refused = refusalOf(res);
           that.setData({
             loadError: true,
             missingTopicId: false,
-            loadErrorTitle: '主题暂时无法打开',
-            loadErrorSub: res.msg || '主题详情暂时无法加载，请稍后重试。',
+            loadRefused: !!refused,
+            loadErrorTitle: refused || '主题暂时无法打开',
+            loadErrorSub: refused ? '' : safeUserMessage(res.msg, '主题详情暂时无法加载，请稍后重试。'),
             topicLoaded: false,
           });
         }
@@ -2148,6 +2210,7 @@ Page({
           loadError: true,
           missingTopicId: false,
           loginRequired: isLoginRequired(app, res, statusCode),
+          loadRefused: false,
           loadErrorTitle: '主题详情加载失败',
           loadErrorSub: '',
           topicLoaded: false,
@@ -2162,14 +2225,14 @@ Page({
       this.goTopicList();
       return;
     }
-    this.setData({ loadError: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+    this.setData({ loadError: false, loadRefused: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
     this.getData();
   },
 
   // 登录引导「登录」:重登成功后重读详情
   onLoginRetry: function () {
     retryLogin(this, app, function () {
-      this.setData({ loadError: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
+      this.setData({ loadError: false, loadRefused: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
       this.getData();
     });
   },
@@ -2204,6 +2267,8 @@ Page({
       } else {
         list[i]['sessionTimeText'] = list[i]['monthDayTime'] || '';
       }
+      // 退改一律显示平台三档,不显示票上存的 refund_rule 原文(业主 2026-11-03)。
+      list[i]['refundRuleText'] = require('../utils/refund-rule.js').refundRuleText(list[i]);
       // 场次余席属于 activity ticket；期级权益容量另行显示，不能把同一个数印到每张卡。
       const rawRemaining = list[i]['remainingInventory'];
       const remaining = rawRemaining === null || rawRemaining === undefined || rawRemaining === ''
@@ -2318,5 +2383,29 @@ Page({
       name: info.name,
       cover: resolveTopicCover(info, (path) => app.getImgUrl(path)),
     });
+  },
+
+  // 第七轮 C 第 1 项:朋友圈。落点固定是本页,只能给 query;单页模式下游客读 /api/topic/info(匿名放行)。
+  onShareTimeline() {
+    const share = this.onShareAppMessage();
+    const timeline = { title: share.title, query: 'id=' + (this.data.id || '') };
+    if (share.imageUrl) timeline.imageUrl = share.imageUrl;
+    return timeline;
   }
 })
+
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
+// j5 H2:作者看自己没公开的主题要知道它没公开(机审留置 / 待审 = 审核中,人工驳回 = 未通过,其余 = 已下架)。
+function ownerStateText(info) {
+  if (!info || Number(info.isOwner) !== 1 || Number(info.userStatus) === 1) return '';
+  if (Number(info.status) === 2) return '未通过';
+  return Number(info.status) === 0 || /内容安全/.test(String(info.rejectReason || '')) ? '审核中' : '已下架';
+}
+
+// 第十二轮 k1 第 5 项(j6 N1):服务端拒绝第二笔(同一主题已有一笔待支付的单)时,说一句再带玩家去那一笔订单。
+function openPendingOrderConflict(res, cb) {
+  if (!res || res.errorCode !== 'PENDING_ORDER_EXISTS' || !res.data || !res.data.registrationId) return false;
+  cb({ ok: false, msg: res.msg });
+  wx.navigateTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + res.data.registrationId });
+  return true;
+}

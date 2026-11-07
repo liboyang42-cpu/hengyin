@@ -29,11 +29,19 @@ function assertRetiredAssetAbsent(sources, assetExists) {
   assert.equal(assetExists, false, '已清退海报不得继续留在小程序包内');
 }
 
+// 同一 shard 里别的测试会临时写入再删除 `.xxx.mutant.js`(变异红控);目录枚举与读取之间被删掉的文件
+// 本就不在包里,跳过即可 —— 只吞 ENOENT,其余读错照常抛,仍存在的文件一个不漏。
 function currentRuntimeSources() {
-  return runtimeSources(ROOT).map((file) => ({
-    name: path.relative(ROOT, file),
-    text: fs.readFileSync(file, 'utf8'),
-  }));
+  return runtimeSources(ROOT).flatMap((file) => {
+    let text;
+    try {
+      text = fs.readFileSync(file, 'utf8');
+    } catch (err) {
+      if (err && err.code === 'ENOENT') return [];
+      throw err;
+    }
+    return [{ name: path.relative(ROOT, file), text }];
+  });
 }
 
 test('运行时源码与小程序包内均不存在已清退海报', () => {

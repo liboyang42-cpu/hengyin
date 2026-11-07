@@ -82,6 +82,8 @@ class MerchantCrmMarketingConsentMerchantRowMyBatisTest {
                     + "product_type int, del_flag int not null)");
             statement.execute("create table cms_registration_merchant(id bigint primary key, topic_id bigint not null, "
                     + "member_id bigint not null, audit_status int not null, del_flag int not null)");
+            statement.execute("create table merchant_chapter_application(id bigint primary key, topic_id bigint not null, "
+                    + "chapter_id bigint, merchant_id bigint not null, status int not null, del_flag int not null)");
             statement.execute("create table cms_activity(id bigint primary key, topic_id bigint, member_id bigint not null, "
                     + "del_flag int not null)");
             statement.execute("create table merchant_crm_marketing_consent(id bigint auto_increment primary key, "

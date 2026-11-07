@@ -28,14 +28,16 @@ test('CU-C-33:结算页补上所选票种的集合点,没填就整行不出', ()
 
 test('CU-C-102:合作者徽标说中文', () => {
   const wxml = read('pages/publish/activity/index.wxml')
-  assert.match(wxml, /<view class="zw" wx:if="\{\{item\.isOwner==1\}\}">主理人<\/view>/)
+  // 第十轮 f1(j1 F14):商家主办时首行标「商家」,其余仍是「主理人」—— 两个标签都是中文
+  assert.match(wxml, /<view class="zw" wx:if="\{\{item\.isOwner==1\}\}">\{\{item\.ownerLabel \|\| '主理人'\}\}<\/view>/)
+  assert.match(read('pages/publish/activity/index.js'), /ownerLabel: shop \? '商家' : ''/)
   assert.doesNotMatch(wxml, />Owner</, '同一页其余标题/字段/按钮全中文，不混语言')
 })
 
 test('CU-C-103:编辑态的保存页只说本次保存的效果', () => {
   const wxml = read('pages/publish/activity/index.wxml')
   assert.match(wxml, /\{\{editingActivityId \? '修改摘要' : '发布前摘要'\}\}/)
-  assert.match(wxml, /editingActivityId \? '本次保存只更新上面这些内容，不会改变活动的公开范围。'/)
-  assert.match(wxml, /默认公开：发布后会在活动列表展示，继续即按当前公开范围发布。/,
-    '新建活动那一路的口径保持不变')
+  assert.match(wxml, /wx:if="\{\{editingActivityId\}\}">本次保存只更新上面这些内容，不会改变活动的公开范围。/)
+  // 第十轮 f3(j1 文案表,owner ROUND10 第 5 项):新建那一路的「默认公开…」辅助行删去
+  assert.doesNotMatch(wxml, /默认公开：发布后会在活动列表展示/)
 })

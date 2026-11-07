@@ -182,7 +182,9 @@ function assertGroupPickerTitleParity(sceneSource) {
   const pageTitle = componentTag(read(GROUP_PAGE_WXML), 'cy-page-title')
   const sceneTitle = componentTag(read(GROUP_SCENE_WXML), 'cy-page-title')
   assert.equal(harness.instance.data[bindingName(sceneTitle.title)], pageTitle.title)
-  assert.equal(harness.instance.data[bindingName(sceneTitle.subtitle)], pageTitle.subtitle)
+  // 第十轮 f3 第 5 项(p3 F7):「选择本次带队场次」副标题按 owner 删说明小字规则撤掉,两侧都不再挂副标题。
+  assert.equal(sceneTitle.subtitle, pageTitle.subtitle)
+  assert.equal(pageTitle.subtitle, undefined)
   assert.equal(sceneTitle['safe-top'], pageTitle['safe-top'])
 }
 
@@ -192,7 +194,7 @@ test('qr-group-code 场景选场态保留页面的标题与副标题语义', () 
 
 test('负控：qr-group-code 场景摘掉选场标题时必须判红', () => {
   const source = read(GROUP_SCENE)
-  const mutated = source.replace(", pickerTitle: '选择场次', pickerSubtitle: '选择本次带队场次'", '')
+  const mutated = source.replace(", pickerTitle: '选择场次'", '')
   assert.notEqual(mutated, source, '负控锚点失效：选场态标题赋值不存在')
   assert.throws(() => assertGroupPickerTitleParity(mutated), assert.AssertionError)
 })

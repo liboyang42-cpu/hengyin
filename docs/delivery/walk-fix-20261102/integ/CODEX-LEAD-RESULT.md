@@ -1,0 +1,42 @@
+# Codex lead 交接
+
+2026-11-05。STATUS: PARTIAL。业主最新要求：停止新增走查，剩余额度由 lead 保留；只继续资金／结算阻塞。**统一 CI、Funds、全部登记真库类和 ROUND8 均等业主明确指令，当前没有同一最终提交全绿的结论。**
+
+## 资金清单：尚不能宣布完成
+
+| 项目 | 已证明 | 仍开着 |
+|---|---|---|
+| 俱乐部自有自由探索结算及开售前置条件 | `528c130c2`；Funds 真 MySQL 在中间候选 `76d1a3b5c` 为 739 条，零失败／错误／跳过。覆盖 58 元、平台 1.74／主理人 56.26、14 天边界、退款与幂等。 | 未完成当前 R2 的开售到结算 UI 闭环，不能用中间 CI 替代最终验收。 |
+| 平台退款收款人、原始分项与缺快照冻结 | `5dbe613bc`、`5cff928c8`、`6cd4e2572`、`f4245f5b2`；旧候选原始分项真库 4/4，最新相关单测已通过。 | 最新缺快照分支的真实 MySQL 收据仍待最终统一执行。历史已结算、缺原始分项的存量没有补账，也没有查询生产。 |
+| R2 专业自由探索无法先发布招商 | 界面复现：两章 PERK、29 元票已实际落库，但节点须由发布后的商家提供，前检却要求先有节点。提交“自由探索先发布招商再由商家建节点” 只让零节点判断复用现有 `awaitsMerchantGameplay`，普通专业主题／非招商／空章节仍拒绝；正常 VPS 提交钩子编译通过。 | 新 JAR／运行态的针对性复验尚未完成。没有绕钩子、改权限或改矩阵。 |
+
+最新 [定点单测收据](proof/codex-money-r2-20261105/unit-summary.json)：VPS budget212 六类 **67 条，零失败／错误／跳过**。原资金五类实际 42 条，发布审核类 25 条。校验了远端生产／测试源码哈希；一行生产修正及一条含正反例的回归均在这次编译／测试内。没有打 JAR、没有使用共享数据库，也没有把 VPS 冒充 GitHub-hosted runner。
+
+完整证据和停点见 [CODEX-MONEY-RESULT.md](CODEX-MONEY-RESULT.md)、[R2 记录](proof/codex-money-r2-20261105/README.md)。新增资金 UI 走查已停止，不通过添加占位节点、SQL 生命周期／状态／金额或作者 API 代建绕过发布。
+
+## 其他 lane 的最新已知边界
+
+- Play/map：最终交接 `ec860c315` 已读，报告 STATUS: COMPLETE。指南针跳过后仍需 D20，原 settle／arrive 返回 200，SQL 为 status1／score0／SKIPPED，稳定重开完成 1/1；N3、相册先于卡片、重建 17/17 与 11/11、无结尾和音频均有该 lane 的记录。Java 34/34、前端 25/25、ledger 5743／UI-GATE-0 通过。其分配的源码与 rig 走查已结束，原生能力和统一验收仍不在此完成结论内。旧库截图／读回仅为历史证据。见 [Play/map 最终报告](CODEX-PLAY-MAP-RESULT.md)。
+- K10：新身份经真实主理人／建俱乐部 UI 后 canBranch/canGameMechanic 均为 true；990026 已通过 UI 保存照片、两选项分支、TIME 彩蛋和图片道具。分支仍被 m1 的 NO_BRIDGE 完成路径挡住，不能宣称泛化完整发布／游玩。报告仍 PARTIAL。K10 报告 65a、6f 的五套相关 Java 零失败／错误／跳过，ce84 后 UI gate PASS；这不是全产品同提交通过。
+- Pages：最后结果仍 PARTIAL，扩展页修复和 R2 夹具／走查的最终交接未到；此前可见 `pages-k9-precommit` 预算任务，随后已退出。以前的 322／434 等定点结果、LOW 清单和动态证据欠账均不冒充最后完成。见 [Pages 结果](CODEX-PAGES-RESULT.md)。
+- Video：`9307c39df` 已交代码，报告仍 PARTIAL；有中间 Java／JS 回归、包体和静态门禁证据，没有可听见的手机音视频或完整混合创作／保存／发布／游玩证明。旧 E17 断言失败须按最后集成确认，不能把旧失败或旧通过直接贴给当前 head。见 [Video 结果](CODEX-VIDEO-RESULT.md)。
+- 云端 m1 的真实分支完成路径仍是跨 lane 阻塞；m2／m3／m4 结果保留在分支，不由 root 重做其页面／游戏改动。还没有“所有 worker／云 lane 全部结束”的通知。
+
+## 运行环境、保全和禁止混淆的证据
+
+管理者最新认证确认唯一共享应用 18099 为 `6feddc67180d1c1a0431362d3e0357942f998365`，数据库仍是 `cy_e2e_51`、新 UUID `19025e57-d901-11f1-b086-9ae8535e5aec`，没有重启 DB，env／hosts／truststore／stubs 保留。root 曾独立验证新 UUID、457 张表、9 个基线账号、持久 VPS bind，以及此前 65a 的认证 actuator／health。6f 的管理者证据位于其任务的 `ROOT/artifacts/runtime-6f-verified.json`。JAR 校验、health 和 UUID 均不等于业务或手机验收。
+
+10:00:17Z 的旧 tmpfs 数据已确认丢失；旧 990029／旧 K10 asset12 等不再有效。root 的 R2 角色／俱乐部是新分配的 990005，主题 990018；数值巧合不是旧数据恢复。root 没有操作生产、重启共享应用或数据库，也没有导入快照恢复作者内容。
+
+私有持久保全目录为 `/Users/arlan/Documents/Codex-Recovery/chengyin-shared-rig-20261105/`：root-money、root-money-r2、k10-immersive、k10-immersive-a47cd65。后者 36 项清单、原 32 项不变及全部 37 文件复制均已逐一校验；没有把原文、登录存储或凭据推到公开仓库。这些 UI 快照不是完整 DB dump。
+
+
+资金修正 JAR 已就绪：[手动构建 42018704010](https://github.com/liboyang42-cpu/hengyin/actions/runs/42018704010)，来源 `59613c315bac97c11266c8bcea3fadf2c35cb67d`（含 Pages 3756、Play/map 最终交接与本次资金修正）。下载后附带校验和、SOURCE_SHA、ZIP CRC、内嵌提交号均通过，[产物收据](proof/codex-money-r2-20261105/backend-jar-596-verification.json)。119643027 字节，SHA256 `a43d8b1904c6ff4477a7553ab1dc0a04053a0d6fef92b0f9a006b62d7c4ada92`；Mac 目录 `/tmp/codex-launch-backend-jar-59613c315bac97c11266c8bcea3fadf2c35cb67d/`，artifact 保留 1 天。只构建，未运行 Java 测试、HTTP／恢复夹具或统一 CI。共享应用仍为管理者已验证的 6f，root 未复制入或重启该容器；待唯一共享应用管理者协调更新后，仅复验现有资金发布阻塞，不开新走查。
+
+## 后续只做这些
+
+1. 资金发布前检修正已通过正常钩子编译并提交；先 pull/rebase 再无 force 推送，带 `[skip ci]`。JAR 只走 GitHub `backend-jar.yml`，唯一共享应用仍由 Play 管理者更新。必要的既有资金阻塞定点复验不扩展为新走查。
+2. 业主已授权的时间夹具严格限 root 自有行的截止／结束日期；生命周期、状态、金额必须由真实 job／endpoint 推进，并预检不会触及其他 lane。目前尚未执行日期 SQL。
+3. 业主明确通知后才冻结单个不带 `[skip ci]` 的提交，跑统一 CI、Funds、按类去重的真实存储登记和 ROUND8；不因预算紧张把未执行或失败标成通过，不合并、不部署、不触碰生产。
+
+STATUS: PARTIAL — 资金相关 67 条与正常提交编译通过；新发布阻塞修正已提交、待运行核验，资金清单尚未全部完成，最终统一验收未启动。

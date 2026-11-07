@@ -24,8 +24,8 @@ const EXCLUDED_PREFIXES = [
   'subpackageMember/tixian/',
   'subpackageMember/components/cy/profile/',
   'components/cy/date-sheet/',
-  'components/cy/scene-merchant-profit/',
-  'components/cy/scene-club-edit/',
+  'subpackageA/components/scene-merchant-profit/',
+  'pages/club/components/cy/scene-club-edit/',
   'components/cy/empty/',
   'components/cy/error/',
 ]

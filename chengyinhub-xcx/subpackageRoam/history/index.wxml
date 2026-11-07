@@ -1,6 +1,7 @@
 <!-- 深链兼容壳：站内入口走 sceneStack，本页只服务分享/外部直达。 -->
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="hs-shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">

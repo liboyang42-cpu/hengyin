@@ -69,6 +69,24 @@ class CoopFinanceTest {
     }
 
     @Test
+    void mySettlementsPreservesOriginalAndExcludesOtherPayeesAndInitiatorLines() {
+        ClubSettlementSummaryRow mine = settle(new BigDecimal("40.00"), 0);
+        mine.setId(31L); mine.setMerchantId(7L); mine.setPayeeType("merchant");
+        mine.setExecutedAdjustmentAmount(new BigDecimal("-10.00"));
+        ClubSettlementSummaryRow other = settle(new BigDecimal("99.00"), 0);
+        other.setMerchantId(8L); other.setPayeeType("merchant");
+        ClubSettlementSummaryRow initiator = settle(new BigDecimal("14.00"), 0);
+        initiator.setMerchantId(7L); initiator.setPayeeType("initiator");
+        when(coopSettlementMapper.selectSummaryByMerchant(7L)).thenReturn(Arrays.asList(mine, other, initiator));
+        var rows = svc.mySettlements(7L);
+        assertEquals(1, rows.size());
+        assertEquals(new BigDecimal("40.00"), rows.get(0).getAmount());
+        assertEquals(new BigDecimal("30.00"), ((ClubSettlementSummaryRow) rows.get(0)).getNetAmount());
+        verify(coopSettlementMapper, never()).selectByMerchant(any());
+        assertTrue(svc.mySettlements(null).isEmpty());
+    }
+
+    @Test
     void clubFinance_settledTopic_computesMyIncomeAndMerchantStatus() {
         when(coopOrderMapper.selectTopicIdsByFromId(900001L)).thenReturn(Collections.singletonList(700L));
         CmsTopic t = new CmsTopic();

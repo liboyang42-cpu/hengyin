@@ -36,7 +36,7 @@ class PricingServicePreviewTest {
     void setUp() {
         coopOrderMapper = mock(CoopOrderMapper.class);
         coopPerkMapper = mock(CoopPerkMapper.class);
-        svc = new PricingServiceImpl();
+        svc = PricingTestRules.withTopicRule(new PricingServiceImpl());
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopPerkMapper", coopPerkMapper);
     }

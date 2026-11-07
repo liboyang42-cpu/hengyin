@@ -35,7 +35,7 @@ class AdvancedActionJudgementTest {
     }
 
     @Test void photoQaReturnsAnExplicitUploadReferenceRequirementWithoutInvokingAnExternalGuard() throws Exception {
-        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"PHOTO\",\"xp\":2},\"outcomeRules\":{\"version\":1}}");
+        JsonNode config=json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"SHOT\",\"xp\":2}}");
         ObjectNode original=json.createObjectNode();
         Plan plan=judge().evaluate(Action.SUBMIT_QA,new Input(config,original,Map.of("imageUrl","owned-reference"),5,7L));
         assertEquals(new PhotoEvidence("owned-reference",7L),plan.photoEvidence());
@@ -77,6 +77,18 @@ class AdvancedActionJudgementTest {
         assertEquals(1,choices.size());assertArrayEquals(new String[]{"sort",null},choices.get(0));
         ((ObjectNode)answers).put("passed",true);
         assertThrows(IllegalArgumentException.class,()->AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));
+    }
+
+    @Test void combinedAlbumMustBeAcknowledgedBeforeDrawingAndBeforeCompletion() throws Exception {
+        JsonNode config=json.readTree("{\"album\":{\"enabled\":true},\"random\":{\"enabled\":true,\"drawCount\":1,\"items\":[{\"id\":\"a\",\"weight\":1,\"label\":\"label\",\"content\":\"body\"}]}}");
+        ObjectNode state=json.createObjectNode();
+        assertFalse(AdvancedActionJudgement.mechanicsReady(config,state));
+        assertThrows(IllegalStateException.class,()->judge().evaluate(Action.DRAW,new Input(config,state,Map.of(),0,7L)));
+        state.putObject("album").put("done",true);
+        assertFalse(AdvancedActionJudgement.mechanicsReady(config,state));
+        Plan draw=judge().evaluate(Action.DRAW,new Input(config,state,Map.of(),0,7L));
+        assertTrue(AdvancedActionJudgement.mechanicsReady(config,draw.state()));
+        assertEquals("body",draw.state().path("draws").path(0).path("content").asText());
     }
 
     private AdvancedActionJudgement judge() {return new AdvancedActionJudgement(json,()->new Date(100_000),bound->0,()->42);}

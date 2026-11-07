@@ -1,0 +1,12 @@
+from common import *
+atok = admin()
+q('topic', "SELECT id,club_id,product_type,is_settlement,end_date,lifecycle FROM cms_topic WHERE id=990014")
+note('TIME SHIFT: topic 990014 end_date -> 15 days ago; activities 9-13 ended 15 days ago')
+ex("UPDATE cms_topic SET end_date=DATE_SUB(NOW(), INTERVAL 15 DAY) WHERE id=990014")
+ex("UPDATE cms_activity SET start_date=DATE_SUB(NOW(), INTERVAL 15 DAY) - INTERVAL 3 HOUR, end_date=DATE_SUB(NOW(), INTERVAL 15 DAY) WHERE id IN (9,10,11,12,13)")
+run_job(atok, 'settlementTask', 10)
+q('topic after', "SELECT id,is_settlement FROM cms_topic WHERE id=990014")
+q('activities after', "SELECT id,is_settlement FROM cms_activity WHERE id IN (9,10,11,12,13)")
+q('coop_settlement', "SELECT id,topic_id,coop_order_id,line_type,amount,status FROM coop_settlement ORDER BY id")
+q('balances', "SELECT id,balance FROM ums_member WHERE id IN (9001,9002,9003,9005,9006,9007,9008,9009) ORDER BY id")
+q('alarm-ish log', "SELECT job_log_id,status,LEFT(exception_info,200) FROM sys_job_log ORDER BY job_log_id DESC LIMIT 1")

@@ -2,7 +2,7 @@ const toast = require('../../../utils/toast.js'); const pageMotion = require('..
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const subscribe = require('../../../utils/subscribe.js');
-const { normalizeMerchantFinanceRoute, isFinancePagePayload, isFinanceObjectPayload, isMerchantEventsPayload, money } = require('../utils/merchant-finance.js');
+const { normalizeMerchantFinanceRoute, isFinancePagePayload, isFinanceObjectPayload, isMerchantEventsPayload, money, yuan } = require('../utils/merchant-finance.js');
 const { normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 // UI-06(2026-09-18 用户走查):退款售后不再单独一张卡,并进核销记录的 全部/待处理/已处理 三个 tab。
 // 复用售后列表页的同一份行解析,不在台账里再写一套字段兜底。
@@ -319,7 +319,8 @@ Page({
         const shaped = res && (res.code === 200 || res.code === '200')
           ? shapeAftercareListPage(res.data, bucket) : null;
         if (!shaped) { failed = true; finish(); return; }
-        items.push.apply(items, shaped.items);
+        items.push.apply(items, shaped.items.filter(item => item.recordType === 'REFUND'
+          && Number.isSafeInteger(item.refundId) && item.refundId > 0));
         finish();
       });
     });
@@ -470,8 +471,12 @@ Page({
   // 标题与状态都带「退款」前缀 —— 混在核销记录里必须一眼看出这是退款,点进售后详情。
   refundRow(row, canReadFinance) {
     const item = Object.assign({}, row);
-    const amount = row.amountCents == null ? null : (row.amountCents / 100).toFixed(2);
+    const refundAmount = row.amountCents == null ? null : (row.amountCents / 100).toFixed(2);
+    // 第十二轮 k6(j1 N4 / p2 N-3):右列只放商家自己的钱。玩家拿回的钱从来不是从商家扣走的,
+    // 服务端给出「这单商家还剩多少 / 少了多少」(merchantNetAmount)才画;拿不到就不画,不再画玩家退款额的负数。
+    const net = canReadFinance === false ? null : money(row.merchantNetAmount);
     const title = row.titleText || row.refundNoText || ('#' + row.refundId);
+    const status = row.statusText || '状态待确认';
     return Object.assign(item, {
       recordKey: 'aftercare:' + row.refundId,
       recordType: 'aftercare',
@@ -482,11 +487,13 @@ Page({
       timeText: row.timeText,
       dayKey: row.dateKey,
       sortKey: row.createTimeText,
-      stateText: '退款 · ' + (row.statusText || '状态待确认'),
+      // 状态签带玩家退回的金额,和右列商家金额分开:「退款 ¥14.99 · 已退回」。
+      // j1 F21:状态本身以「退款」开头时不再叠前缀。
+      stateText: '退款' + (refundAmount == null ? '' : ' ' + yuan(refundAmount)) + ' · ' + status.replace(/^退款\s*/, ''),
       stateVariant: row.statusTone || 'neutral',
-      amountText: amount,
-      amountDisplay: canReadFinance === false ? null : (amount == null ? '待定' : '¥' + amount),
-      amountTone: amount == null ? 'mute' : 'neg',
+      amountText: net,
+      amountDisplay: net == null ? null : yuan(net, { signed: true }),
+      amountTone: net == null || Number(net) === 0 ? 'mute' : (Number(net) < 0 ? 'neg' : 'pos'),
     });
   },
   redemptionRow(row, canReadFinance) {
@@ -494,15 +501,17 @@ Page({
     const item = Object.assign({}, row);
     item.amountText = row.settlementAmount == null || Number(row.settlementAmount) === 0 ? null : money(row.settlementAmount);
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
-    // 右列只放金额,一列一语义;金额未成立也占位,右缘才有稳定对齐线。
-    // 两种未成立要分开:明确不产生现金 → 破折号;金额尚未成立(①②待主题结算)→「待定」。
-    item.amountDisplay = item.amountText != null ? `${item.amountPrefix}¥${item.amountText}`
-      : (row.displayState === 'NO_CASH_SETTLEMENT' ? '—' : '待定');
+    // 右列只放金额,一列一语义。两种未成立要分开:金额尚未成立(①②待主题结算)→「待定」;
+    // 明确不产生现金 → 右列留空(M-27 第3轮:不再画破折号,状态 chip 已说「无现金结算」)。
+    item.amountDisplay = item.amountText != null ? yuan(item.amountText, { signed: true })
+      : (row.displayState === 'NO_CASH_SETTLEMENT' ? null : '待定');
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.dayKey = row.occurredAt ? String(row.occurredAt).slice(0, 10) : '';
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(11, 16) : '';
     item.sortKey = row.occurredAt ? String(row.occurredAt).slice(0, 16) : '';
     item.title = [row.topicName, row.chapterName].filter(Boolean).join(' · ') || '核销记录';
+    // M-27 第4轮:顾客报名姓名(服务端按本商家核销解密下发);没有就空着,不写占位。
+    item.customerName = typeof row.customerDisplayName === 'string' ? row.customerDisplayName.trim() : '';
     if (!financeVisible) {
       item.amountText = null;
       item.amountPrefix = '';
@@ -522,24 +531,41 @@ Page({
     const item = Object.assign({}, row);
     item.amountText = money(row.signedAmount);
     item.amountPrefix = item.amountText != null && Number(item.amountText) >= 0 ? '+' : '';
-    item.amountDisplay = item.amountText == null ? '待定' : `${item.amountPrefix}¥${item.amountText}`;
+    item.amountDisplay = item.amountText == null ? '待定' : yuan(item.amountText, { signed: true });
     item.amountTone = item.amountText == null ? 'mute' : (Number(item.amountText) < 0 ? 'neg' : 'pos');
     item.timeText = row.occurredAt ? String(row.occurredAt).slice(5, 10) : '';
     item.sourceText = { REDEMPTION_FEE: '核销计酬', COOP_SHARE: '合作分润', ACTIVITY_SHARE: '活动分润', MERCHANT_CLAWBACK: '已执行扣划' }[row.source] || '调整';
+    if (row.source === 'COOP_SHARE' && row.topicName) item.sourceText += ' · ' + row.topicName;
     item.stateText = financeStateText(row);
     item.stateVariant = stateVariant(row.displayState);
+    item.coopDetailId = row.source === 'COOP_SHARE' && row.refKind === 'coop_settlement'
+      && (row.payeeType == null || row.payeeType === 'merchant' || row.payeeType === 'club')
+      && /^[1-9]\d*$/.test(String(row.refId || '')) && Number.isSafeInteger(Number(row.refId)) ? String(row.refId) : '';
+    item.coopBreakdown = row.source === 'COOP_SHARE' && row.originalAmount != null
+      ? '原始应结 ' + yuan(row.originalAmount) + ' · 已执行调整 ' + (row.executedAdjustmentAmount == null ? '—' : yuan(row.executedAdjustmentAmount)) : '';
     return item;
   },
   batchRow(row) {
     const item = Object.assign({}, row);
     item.amountText = money(row.amountTotal);
-    item.amountDisplay = item.amountText == null ? '待定' : `¥${item.amountText}`;
+    item.amountDisplay = item.amountText == null ? '待定' : yuan(item.amountText);
     item.tone = row.displayState === 'LEDGER_ERROR' ? 'void' : (row.paymentState === 'PAID' ? 'settled' : 'pending');
     item.stateText = row.displayState === 'LEDGER_ERROR' ? '结算数据对不上，请联系客服' : (row.netDirection === 'ZERO' ? '本期无需打款' : (row.netDirection === 'MERCHANT_OWES_PLATFORM' ? '调整待处理' : batchStateText(row)));
     item.stateVariant = row.displayState === 'LEDGER_ERROR' ? 'danger'
       : (row.paymentState === 'PAID' ? 'success' : 'warning');
     item.invoiceText = { NONE: '未开票', ISSUED: '已开票', RED: '已红冲' }[row.invoiceState] || '';
     return item;
+  },
+
+  goCoopSettlements() {
+    if (!this.data.merchantAccess.canReadFinance || !this._isCurrentMemberScope(this._scopeMemberId)) return;
+    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement&source=coop' });
+  },
+  goSettlementDetail(event) {
+    if (!this.data.merchantAccess.canReadFinance || !this._isCurrentMemberScope(this._scopeMemberId)) return;
+    const id = event && event.currentTarget && event.currentTarget.dataset.id;
+    if (!id || !this.data.entries.some(row => row.coopDetailId === String(id))) return;
+    wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=ledger&id=' + id });
   },
 
   onRedemptionFilter(event) {
@@ -630,7 +656,7 @@ Page({
           } else if (settings && settings.mainSwitch === true && (item === 'reject' || item === 'ban')) {
             finish('not_allowed', '此微信通知尚未获允许');
           } else {
-            finish('unknown', '授权状态待确认，可点击申请');
+            finish('unknown', ''); // 第十二轮 k9(j1):还没问过就不写说明,开关本身就是「可点击申请」
           }
         },
         fail: () => finish('unknown', '暂未读到授权状态，可重试'),
@@ -732,14 +758,14 @@ function summaryView(summary, canReadFinance) {
   if (pending == null || arrived == null) return null;
   return {
     countText: `${count} 笔`,
-    pendingDisplay: `¥${pending}`,
-    arrivedDisplay: `¥${arrived}`,
+    pendingDisplay: yuan(pending),
+    arrivedDisplay: yuan(arrived),
   };
 }
 
 function moneyDisplay(value) {
   const amount = money(value);
-  return amount == null ? '待定' : `¥${amount}`;
+  return amount == null ? '待定' : yuan(amount);
 }
 
 function financeStateText(item) {
@@ -749,7 +775,7 @@ function financeStateText(item) {
     return '本次不产生现金结算';
   }
   return {
-    PENDING_SETTLEMENT: item.settlementRoute === 'COOP_ORDER' ? '待主题结算' : '待结算',
+    PENDING_SETTLEMENT: item.source === 'COOP_SHARE' ? '待入账' : (item.settlementRoute === 'COOP_ORDER' ? '待主题结算' : '待结算'),
     SETTLED: item.destination === 'PERSONAL_ACCOUNT' ? '已入个人账户' : '平台已打款',
     ADJUSTMENT_PENDING: '调整中', ADJUSTED: '已调整', REVERSED_BEFORE_SETTLEMENT: '核销已撤销', LEDGER_ERROR: '结算数据对不上，请联系客服',
   }[item.displayState] || '状态待确认';

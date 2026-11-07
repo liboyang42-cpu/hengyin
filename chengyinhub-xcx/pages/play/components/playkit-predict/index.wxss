@@ -92,7 +92,7 @@
   position: absolute;
   left: var(--cy-page-x);
   right: var(--cy-page-x);
-  bottom: calc(env(safe-area-inset-bottom) + 190rpx);
+  bottom: calc(env(safe-area-inset-bottom) + var(--pk-hint-bottom, 190rpx));   /* 第十一轮 g4:故事流内嵌时压在卡底,内嵌改 140rpx 落到卡与按钮之间 */
   z-index: 6;
   text-align: center;
   font-size: var(--cy-type-label);
@@ -133,7 +133,8 @@
 /* 押定的火漆印。红蜡一坨,边缘不规则(蜡本来就压不圆),里面一圈凹进去的环和一个字。
    逐值照原型 .pvseal(88px / right 16% / top 23%)。 */
 .pd__seal {
-  position: absolute; right: 16%; top: 23%; z-index: 40;
+  position: absolute; left: 50%; top: 50%; z-index: 40;
+  margin-left: -24rpx; margin-top: -4rpx;   /* 落在正中那张卡的右下半(卡 276×372),不压卡上的字 */
   width: 176rpx; height: 176rpx; pointer-events: none;
   animation: pd-seal .7s cubic-bezier(.2, 1.25, .35, 1) forwards;
 }

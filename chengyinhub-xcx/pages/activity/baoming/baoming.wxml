@@ -17,7 +17,7 @@
 <cy-nav-spacer />
 
 <cy-empty class="page-terminal" wx:if="{{pageState === 'missing-param'}}" fill size="lg" kind="missing-param"
-  title="无法打开报名页" sub="请返回重新进入"
+  title="无法打开报名页"
   cta="去发现活动" bind:cta="goDiscoverActivities" />
 
 <!-- 你已经报过名了。
@@ -31,7 +31,7 @@
 </view>
 
 <view wx:if="{{pageState === 'ready'}}" class="set" bindtap="checkAndShowAddressPopup" hover-class="cy-pressed" hover-stay-time="80">
-  <view class="set_left">参与人信息</view>
+  <view class="set_left">参与人信息<text class="form-required" aria-hidden="true">*</text></view>
   <view class="set_right"><cy-icon name="arrow-right" size="32" /></view>
 </view>
 
@@ -53,6 +53,8 @@
     <!-- M0-5 报名轻表单:线下活动不配送,仅需姓名+手机,不再展示四级地址 -->
   </view>
 </view>
+<!-- 第五轮 D:参与人信息的输入问题写在这一栏下方 -->
+<cy-inline-error class="participant-err" wx:if="{{pageState === 'ready' && participantError}}" kind="field" title="{{participantError}}" />
  
 
 <!-- 详情加载中:给一条可见提示,避免页面只剩参与人信息一行像加载完了 -->
@@ -95,7 +97,7 @@
                随 /api/activity/info 到了,只是本页从来没渲染过。它和下面那行活动 address
                (场馆地址)不是一回事:一个是这场集合在哪里。没填就不出这一行。 -->
           <view wx:if="{{selectedTicket.meetingPoint}}" class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />集合点 · {{selectedTicket.meetingPoint}}</view>
-          <view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '—'}}</view>
+          <view class="cy-addr-tap" bindtap="onAddressTap" data-lat="{{activityInfo.latitude}}" data-lng="{{activityInfo.longitude}}" data-name="{{activityInfo.addressName || activityInfo.name}}" data-address="{{activityInfo.address || activityInfo.addressName}}" data-geo="1" aria-role="{{activityInfo.address || activityInfo.addressName ? 'button' : ''}}" aria-label="在地图中打开 {{activityInfo.address || activityInfo.addressName}}" hover-class="{{activityInfo.address || activityInfo.addressName ? 'cy-pressed' : 'none'}}" hover-stay-time="80"><view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '—'}}</view></view>
         </view>
       </view>
     </view>
@@ -107,7 +109,8 @@
 
 <!-- 深链直入报名时绕过详情组件的截止拦查:原来要填完整张表才被拒。这里在加载当刻就说明白。
      票已卖完的情况交给下面的候补卡(它有可动的出口),不叠加这张空态。 -->
-<cy-empty wx:if="{{pageState === 'ready' && signupState === 'closed' && !ticketSoldOut}}"
+<!-- R11 p1 F-10:已报名时上面那行「你已报名 · 查看我的报名」就是本页的状态,不再叠「报名已截止」与蓝框 -->
+<cy-empty wx:if="{{pageState === 'ready' && signupState === 'closed' && !ticketSoldOut && activityInfo.isSignUp !== 1}}"
   title="报名已截止" kind="not-started" />
 
 <!-- 费用明细:票种/订单金额/俱乐部权益/积分抵扣/总计 收进一个信息块。
@@ -120,14 +123,15 @@
   <view wx:if="{{ticketList.length > 1 && waitlistState !== 'OFFERED'}}" class="setly_li"
         bindtap="openTicketSheet" aria-role="button" aria-label="切换票种，当前 {{selectedTicket.name}}"
         hover-class="cy-pressed" hover-stay-time="80">
-    <view class="setly_li_left">{{selectedTicket.name}}<text>（点击切换）</text></view>
+    <view class="setly_li_left">{{selectedTicket.name}}</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text><cy-icon name="arrow-right" size="28" /></view>
   </view>
   <view wx:else class="setly_li">
     <view class="setly_li_left">{{selectedTicket.name}}</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text></view>
   </view>
-  <view class="setly_li">
+  <!-- 第十二轮 k9(p1 N-11):订单金额只在下面有减项时出现;一张票没有优惠时它和票种行、总计是同一个数 -->
+  <view wx:if="{{clubMemberDiscountAmount > 0 || (pointsUsable !== false && selectedTicket.price > 0 && userInfo.point != 0)}}" class="setly_li">
     <view class="setly_li_left">订单金额</view>
     <view class="setly_li_right"><text>{{money.amount(selectedTicket.price)}}</text></view>
   </view>
@@ -138,7 +142,9 @@
       <view wx:else class="club-benefit-text">{{isClubMember ? '优先报名已生效' : '部分名额优先留给会员'}}</view>
     </view>
   </view>
-  <view class="setly_li" wx:if="{{pointsUsable !== false}}">
+  <!-- P-32:¥0 票没有可抵扣的金额,整行不出现(不留「-¥0」) -->
+  <!-- R11 p1 F-10:没有积分时整行不出现(不留一个「-¥0」和点不出东西的勾) -->
+  <view class="setly_li" wx:if="{{pointsUsable !== false && selectedTicket.price > 0 && userInfo.point != 0}}">
     <view class="setly_li_left">积分抵扣<text wx:if="{{useDiscount}}">（抵扣积分{{usedPoints}}）</text></view>
     <view class="setly_li_right">
       <view class="setly_li_right_span">-{{money.amount(discountAmount)}}</view>
@@ -150,6 +156,24 @@
   <view class="setly_li setly_li--total">
     <view class="setly_li_left">总计</view>
     <view class="setly_li_right"><text>{{money.amount(totalAmount)}}</text></view>
+  </view>
+</view>
+
+<!-- 2026-11-02 退款档位(全平台,与后端 RefundPolicy 同一口径):收费票在结算页列出三档。
+     2026-11-03:③ 自由探索票(mode=2)同三档,钟是票的开始时间,故写「开始前」。 -->
+<view wx:if="{{pageState === 'ready' && selectedTicket && selectedTicket.price > 0}}" class="sec-title">退款规则</view>
+<view wx:if="{{pageState === 'ready' && selectedTicket && selectedTicket.price > 0}}" class="setly">
+  <view class="setly_li">
+    <view class="setly_li_left">{{selectedTicket.mode == 2 ? '开始前' : '集合前'}} 24 小时以上</view>
+    <view class="setly_li_right"><text>全额退</text></view>
+  </view>
+  <view class="setly_li">
+    <view class="setly_li_left">{{selectedTicket.mode == 2 ? '开始前' : '集合前'}} 24 小时内</view>
+    <view class="setly_li_right"><text>退 50%</text></view>
+  </view>
+  <view class="setly_li">
+    <view class="setly_li_left">开始后</view>
+    <view class="setly_li_right"><text>不退</text></view>
   </view>
 </view>
 
@@ -188,7 +212,7 @@
     <view class="waitlist-card__status">{{waitlistStatusTitle}}</view>
     <view class="waitlist-card__text">{{waitlistStatusDetail}}</view>
     <view wx:if="{{showWaitlistCancel}}" class="waitlist-card__link" bindtap="cancelWaitlist" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">退出候补</view>
-    <cy-btn wx:if="{{showWaitlistJoin}}" variant="secondary" loading="{{waitlistLoading}}" bindtap="joinWaitlist">重新加入候补</cy-btn>
+    <cy-btn wx:if="{{showWaitlistJoin}}" variant="secondary" loading="{{waitlistLoading}}" bindtap="joinWaitlist">{{waitlistState === 'CANCELLED' || waitlistState === 'EXPIRED' ? '重新加入候补' : '加入候补'}}</cy-btn>
   </block>
 </view>
 
@@ -224,12 +248,12 @@
 <!-- 占位必须和 .bmbottom 的真实高度同算式(含安全区):写死 240rpx 会比底栏矮一个
      home indicator,正文最后一行被永久盖住 —— 实拍到「…不会重复创建订」被切。 -->
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom-spacer"
-  style="--baoming-action-extra: {{submitError ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom"
-  style="--baoming-action-extra: {{submitError ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
-  <cy-inline-error class="submit-inline-error" wx:if="{{submitError}}" kind="data"
-    title="这次报名还没完成" sub="{{submitError}}"
-    action="重新提交" bind:action="handlePayment" />
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
+  <cy-inline-error class="submit-inline-error" wx:if="{{submitError && !(quoteRefusal && activityInfo.isSignUp === 1)}}" kind="data"
+    title="{{quoteRefusal ? '暂不可报名' : '这次报名还没完成'}}" sub="{{submitError}}"
+    action="{{quoteRefusal ? '' : '重新提交'}}" bind:action="handlePayment" />
   <!-- 拍板 2026-09-16 #10:商家闭店时报名入口先说清原因(点了也会被后端拒),已售不受影响。 -->
   <view class="bm-closed" wx:if="{{merchantClosed}}" aria-role="alert">商家暂停营业，暂不可报名</view>
   <!-- ★ 向主办方提供姓名/手机号 = 向第三方提供个人信息,个保法第 23 条要求【单独同意】:
@@ -240,7 +264,7 @@
     <icon wx:else class="bmbottom_box_gx" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
     <view class="bmbottom_box_txt">同意将姓名、手机号提供给主办方，用于报名核验</view>
   </view>
-  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? (hostShareConsentReady ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : (totalAmount > 0 ? '请先勾选信息共享同意' : '请先勾选信息共享同意')) : '请选择参与人信息'))))))}}</cy-btn>
+  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息')))))))}}</cy-btn>
 </view>
 
 <!-- 报名/支付结果面板。2026-09-06 用户裁决「买完直接跳」:面板不放按钮,

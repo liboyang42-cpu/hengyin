@@ -29,11 +29,47 @@ public class TopicContentCopyMySqlIT {
     @Test void completeCopyTypeThreeCommitsWholeContentGraphAndMemberSlot() throws Exception {
         long id = f.copy(3, TopicContentCopyMySqlFixture.TARGET);
         assertFullGraph(id, TopicContentCopyMySqlFixture.TARGET, "MEMBER", 2);
+        assertEquals(Integer.valueOf(0), f.topics.selectTopicIsDraft(id));
+        assertTrue(f.writes.statements.stream().noneMatch(s -> s.endsWith("CmsTopicMapper.updateTopicDraftState")));
         f.assertOriginalUnchanged();
         for (String mapper : List.of("CmsTopicMapper", "CmsTopicChapterMapper", "CmsTopicNodeMapper",
                 "CmsMemberTemplateMapper", "NpcProfileMapper", "CmsCollaboratorsMapper", "ProductRoleMapper"))
             assertTrue(f.writes.statements.stream().anyMatch(s -> s.contains("." + mapper + ".")), mapper);
         outcome = id;
+    }
+
+    @Test void explicitTemplateUseCommitsPersistedDraftAndWholeContentGraph() throws Exception {
+        long id = f.service.copyCmsTopic(100L,
+                Map.of("copyType", 3, "memberId", TopicContentCopyMySqlFixture.TARGET, "saveDraft", true));
+
+        assertFullGraph(id, TopicContentCopyMySqlFixture.TARGET, "MEMBER", 2);
+        assertEquals(Integer.valueOf(1), f.topics.selectTopicIsDraft(id));
+        assertEquals(1, f.db.queryForObject("select is_draft from cms_topic where id=?", Integer.class, id));
+        assertEquals("com.chengyinhub.business.mapper.CmsTopicMapper.updateTopicDraftState",
+                f.writes.statements.get(f.writes.statements.size() - 1));
+        f.assertOriginalUnchanged();
+        outcome = id;
+    }
+
+    @Test void zeroDraftUpdateRollsBackTopicContentSlotAndEveryCopiedChild() {
+        java.util.concurrent.atomic.AtomicBoolean reached = new java.util.concurrent.atomic.AtomicBoolean();
+        f.writes.zero = u -> {
+            if (!u.statement().endsWith("CmsTopicMapper.updateTopicDraftState")) return false;
+            reached.set(true);
+            assertEquals(1, f.db.queryForObject("select count(*) from cms_topic where id<>100", Integer.class));
+            assertEquals(1, f.db.queryForObject("select count(*) from product_role where topic_id<>100", Integer.class));
+            assertEquals(2, f.db.queryForObject("select count(*) from cms_topic_chapter where topic_id<>100", Integer.class));
+            assertEquals(3, f.db.queryForObject("select count(*) from cms_topic_node where topic_id<>100", Integer.class));
+            assertEquals(2, f.db.queryForObject("select count(*) from cms_member_template where member_id=2000", Integer.class));
+            assertEquals(2, f.db.queryForObject("select count(*) from cms_collaborators where data_id<>100", Integer.class));
+            assertEquals(2, f.db.queryForObject("select count(*) from npc_profile where scope_type=4 and scope_id not in (11,12)", Integer.class));
+            return true;
+        };
+
+        rejected(() -> f.service.copyCmsTopic(100L,
+                Map.of("copyType", 3, "memberId", TopicContentCopyMySqlFixture.TARGET, "saveDraft", true)));
+
+        assertTrue(reached.get(), "draft failure must occur after real copied content and role rows exist");
     }
 
     @Test void sameOwnerKeepsCompletionRuleAndSharesOnlyUnreferencedTemplate() throws Exception {
@@ -53,6 +89,7 @@ public class TopicContentCopyMySqlIT {
         f.before = f.snapshot(); // source member_id is deliberately still 1000
         long id = f.service.copyOfficialCmsTopic(100L, Map.of("copyType", 3));
         assertFullGraph(id, 100000L, "PLATFORM", 2);
+        assertEquals(Integer.valueOf(0), f.topics.selectTopicIsDraft(id));
         f.assertOriginalUnchanged();
         outcome = id;
     }
@@ -123,6 +160,21 @@ public class TopicContentCopyMySqlIT {
         rejected(() -> f.copy(3, 2000L));
     }
 
+    @Test void crossOwnerCompletionRuleZeroRowRollsBackEveryWrittenChild() {
+        java.util.concurrent.atomic.AtomicBoolean reached = new java.util.concurrent.atomic.AtomicBoolean();
+        f.writes.zero = u -> {
+            boolean countPatch = u.statement().endsWith("CmsTopicMapper.updateCmsTopic")
+                    && u.parameter() instanceof CmsTopic topic && topic.getCompleteRuleJson() != null;
+            if (countPatch) {
+                reached.set(true);
+                assertEquals(3, f.db.queryForObject("select count(*) from cms_topic_node where topic_id<>100", Integer.class));
+            }
+            return countPatch;
+        };
+        rejected(() -> f.copy(3, TopicContentCopyMySqlFixture.TARGET));
+        assertTrue(reached.get(), "must fail at the new cross-owner count-rule write after real children exist");
+    }
+
     @Test void officialMissingPersistedSlotRollsBackInsertedTopic() {
         f.db.update("update product_role set entity_type='PLATFORM',entity_id=null where topic_id=100"); f.before = f.snapshot();
         f.writes.zero = u -> u.statement().endsWith("ProductRoleMapper.insertProductRole");
@@ -149,6 +201,7 @@ public class TopicContentCopyMySqlIT {
         long id = f.service.copyCmsTopic(100L, null);
         CmsTopic copy = f.topics.selectCmsTopicById(id);
         assertEquals(Long.valueOf(100000), copy.getMemberId());
+        assertEquals(Integer.valueOf(0), f.topics.selectTopicIsDraft(id));
         assertEquals("LINEAR", copy.getRouteMode());
         assertEquals(0, f.nodes(id).size()); assertEquals(0, f.chapters(id).size());
         assertNull(f.roles.activeContentSlot(id), "known no-owner legacy path is not fixed in this move");
@@ -187,6 +240,7 @@ public class TopicContentCopyMySqlIT {
     @Test void transferSuccessKeepsOuterAlgorithmAndDoesNotCopyCollaborators() {
         long id = f.service.transferToClub(100L, 2000L, 77L);
         assertEquals(Long.valueOf(77), f.topics.selectCmsTopicById(id).getClubId());
+        assertEquals(Integer.valueOf(0), f.topics.selectTopicIsDraft(id));
         assertEquals(Integer.valueOf(0), f.topics.selectCmsTopicById(100L).getUserStatus());
         assertEquals(3, f.nodes(id).size()); assertEquals(2, f.chapters(id).size());
         assertNotNull(f.roles.activeContentSlot(id));
@@ -258,7 +312,8 @@ public class TopicContentCopyMySqlIT {
         assertEquals(Long.valueOf(0), copy.getPublishedConfigVersion());
         assertNull(copy.getPublishedRouteGraphJson()); assertNull(copy.getPublishedThemeRuntimeConfigJson());
         assertNull(copy.getSelfPlayPrice()); assertNull(copy.getFeePlatformRate());
-        assertNull(copy.getCompleteRuleJson()); // these fixtures cross the original member owner
+        assertEquals(f.json("{\"nodeCompletion\":{\"mode\":\"AT_LEAST\",\"requiredCount\":2}}"),
+                f.json(copy.getCompleteRuleJson())); // cross-owner CITY retains the count, not the source's future fields
         assertEquals(slotType, f.roles.activeContentSlot(id).getEntityType());
         assertEquals("PLATFORM".equals(slotType) ? null : Long.valueOf(owner), f.roles.activeContentSlot(id).getEntityId());
         Map<String, Map<String, Object>> chapters = named(f.chapters(id)), nodes = named(f.nodes(id));

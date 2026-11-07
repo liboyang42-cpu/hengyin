@@ -236,7 +236,7 @@ test('editScope=WHITELIST:上送体只剩白名单文案与图,日期/章节/票
 
   page._doSubmit();
 
-  const req = sent.find((r) => r.url === '/api/topic/update');
+  const req = sent.find((r) => r.url === '/api/topic/v2/update');
   assert.ok(req);
   const body = JSON.parse(req.data);
   // 能改的
@@ -273,9 +273,97 @@ test('WHITELIST 档只改文案:照常保存', () => {
   page._doSubmit();
 
   assert.equal(modals.length, 0, '只改文案不该被拦');
-  const req = sent.find((r) => r.url === '/api/topic/update');
+  const req = sent.find((r) => r.url === '/api/topic/v2/update');
   assert.ok(req);
   assert.equal(JSON.parse(req.data).name, '午夜巴士(改名版)');
+});
+
+test('WHITELIST 自由探索章流只改文案仍走V2，瘦payload不夹带冻结配置', () => {
+  const page = makePage();
+  page.data.editingTopicId = '77';
+  const detail = editDetailFixture('WHITELIST');
+  detail.topic.productType = 2;
+  detail.chapters[0].blocks = [
+    { key: 'intro', type: 'text', content: '已发布剧情' },
+    { key: 'station', type: 'node', nodeId: 51 }
+  ];
+  page.applyEditingTopic(detail);
+  page.data.formData.subtitle = '只改白名单副标题';
+  sent = [];
+  page._doSubmit();
+  const request = sent.find(r => r.url === '/api/topic/v2/update');
+  assert.ok(request, '已有章流不能因白名单payload不带chapters而退回426旧入口：' + JSON.stringify({ urls: sent.map(r => r.url), toasts, modals }));
+  assert.deepEqual(JSON.parse(request.data), {
+    name: '午夜巴士', subtitle: '只改白名单副标题', description: '沿着 71 路走一遍',
+    imgUrl: 'cover.jpg', imgArr: 'a.jpg,b.jpg', categoryIds: '3,4', scope: '', id: '77'
+  });
+});
+
+test('WHITELIST 无章流的简易自由探索保留既有legacy入口', () => {
+  const page = makePage();
+  page.data.editingTopicId = '77';
+  const detail = editDetailFixture('WHITELIST');
+  detail.topic.productType = 2;
+  detail.topic.publishMode = 'ai_simple';
+  page.applyEditingTopic(detail);
+  sent = [];
+  page._doSubmit();
+  assert.ok(sent.find(r => r.url === '/api/topic/update'));
+  assert.equal(sent.some(r => r.url === '/api/topic/v2/update'), false);
+});
+
+test('WHITELIST 合作预览锁住总开关，旧handler不修改冻结值', () => {
+  const template = require('node:fs').readFileSync(require.resolve('../../pages/publish/fabu/step3.wxml'), 'utf8');
+  const switchTag = template.match(/<cy-switch[^>]*bindchange="onMerchantPoolChange"[^>]*\/>/)[0];
+  assert.match(switchTag, /checked="\{\{formData\.openMerchantPool\}\}"/);
+  assert.match(switchTag, /disabled="\{\{editScope === 'WHITELIST'\}\}"/);
+  assert.match(template.match(/<cy-switch[^>]*bindchange="onClubPoolChange"[^>]*\/>/)[0], /disabled="\{\{editScope === 'WHITELIST'\}\}"/);
+  const page = openForEdit('WHITELIST');
+  const originalChapters = JSON.stringify(page.data.formData.chapters);
+  const originalPool = page.data.formData.openMerchantPool;
+  const originalClubPool = page.data.formData.openClubPool;
+  const switches = page._buildPublishPreview([]).switches;
+  assert.equal(switches.find(row => row.key === 'merchant').locked, true);
+  assert.equal(switches.find(row => row.key === 'merchant').on, originalPool);
+  assert.equal(switches.find(row => row.key === 'club').locked, true);
+  page.onMerchantPoolChange({ detail: { value: !originalPool } });
+  page.onPreviewMerchantRecruit({ detail: { value: !originalPool } });
+  page.onClubPoolChange({ detail: { value: !originalClubPool } });
+  page.onPreviewClubPool({ detail: { value: !originalClubPool } });
+  assert.equal(page.data.formData.openMerchantPool, originalPool);
+  assert.equal(page.data.formData.openClubPool, originalClubPool);
+  assert.equal(JSON.stringify(page.data.formData.chapters), originalChapters);
+});
+
+test('WHITELIST 自由探索预览不能总改已冻结的逐章招商', () => {
+  const page = makePage();
+  page.data.editingTopicId = '77';
+  const detail = editDetailFixture('WHITELIST');
+  detail.topic.productType = 2;
+  detail.chapters[0].recruitEnabled = 1;
+  page.applyEditingTopic(detail);
+  const before = JSON.stringify(page.data.formData.chapters);
+  const row = page._buildPublishPreview([]).switches.find(row => row.key === 'merchant');
+  assert.equal(row.on, true);
+  assert.equal(row.locked, true);
+  page.onPreviewMerchantRecruit({ detail: { value: false } });
+  assert.equal(JSON.stringify(page.data.formData.chapters), before);
+});
+
+test('WHITELIST 资格快照只锁UI，不清空回填的招商现值', () => {
+  const roleGuard = require('../../utils/roleGuard.js');
+  const previous = { hasSnapshot: roleGuard.hasSnapshot, isClubLeader: roleGuard.isClubLeader };
+  try {
+    roleGuard.hasSnapshot = () => true;
+    roleGuard.isClubLeader = () => false;
+    const page = openForEdit('WHITELIST');
+    assert.equal(page.data.formData.openMerchantPool, true);
+    page._syncMerchantPoolEligibility();
+    assert.equal(page.data.formData.openMerchantPool, true);
+    assert.equal(page.data.merchantPoolEditable, false);
+  } finally {
+    Object.assign(roleGuard, previous);
+  }
 });
 
 test('回填还没到位就点保存:拦住,别拿空表单去重建', () => {

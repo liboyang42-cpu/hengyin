@@ -130,11 +130,11 @@ const NEGATIVE = [
     m.hiddenObject.hotspots[1].x = m.hiddenObject.hotspots[0].x;
     m.hiddenObject.hotspots[1].y = m.hiddenObject.hotspots[0].y;
   }, '找东西的两个目标挨得太近,请把它们分开一些'],
-  ['竞猜问题为空', 'predict', m => { m.predict.question = ''; }, '竞猜问题不能为空'],
-  ['竞猜只有一个选项', 'predict', m => { m.predict.options = [{ key: 'a', label: '只有一个' }]; }, '竞猜选项须为 2 至 4 个'],
-  ['竞猜选项 key 重复', 'predict', m => { m.predict.options[1].key = 'a'; }, '竞猜选项 key 不能重复'],
-  ['竞猜截止小时越界', 'predict', m => { m.predict.closeAtHour = 24; }, '竞猜截止时间须为 0 到 23 点之间的整点'],
-  ['竞猜选项文案为空', 'predict', m => { m.predict.options[0].label = ''; }, '竞猜选项文案不能为空']
+  ['竞猜问题为空', 'predict', m => { m.predict.question = ''; }, '预测问题不能为空'],
+  ['竞猜只有一个选项', 'predict', m => { m.predict.options = [{ key: 'a', label: '只有一个' }]; }, '预测选项须为 2 至 4 个'],
+  ['竞猜选项 key 重复', 'predict', m => { m.predict.options[1].key = 'a'; }, '预测选项 key 不能重复'],
+  ['竞猜截止小时越界', 'predict', m => { m.predict.closeAtHour = 24; }, '预测截止时间须为 0 到 23 点之间的整点'],
+  ['竞猜选项文案为空', 'predict', m => { m.predict.options[0].label = ''; }, '预测选项文案不能为空']
 ];
 
 NEGATIVE.forEach(([name, section, mutate, expected]) => {

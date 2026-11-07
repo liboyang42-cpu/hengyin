@@ -31,6 +31,7 @@
     <cy-empty wx:if="{{missingTopicId}}" kind="missing-param" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" cta="返回发布广场" fill="{{true}}" size="lg" bind:cta="goTopicList" class="fill-slot" />
     <!-- PR10 F-W1-12:未登录(无会话 / 401)不是加载失败,给登录引导 -->
     <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" title="登录后查看主题" cta="登录" fill="{{true}}" size="lg" bind:cta="onLoginRetry" class="fill-slot" />
+    <cy-empty wx:elif="{{loadRefused}}" kind="not-found" title="{{loadErrorTitle}}" cta="返回" fill="{{true}}" size="lg" bind:cta="goBack" class="fill-slot" />
     <cy-error load-failure wx:else icon="empty-state" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" retry="重新加载" fill="{{true}}" size="lg" bind:retry="onRetryLoad" class="fill-slot" auto-back="{{!everLoaded}}" />
   </view>
 
@@ -115,7 +116,8 @@
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
           <!-- 2026-10-31 业主:收藏旁边放分享,进通用分享页(主题卡 + 色块 + 渠道;微信好友在那一页) -->
           <view class="hero-fav hero-share" bindtap="openShareCard" aria-role="button" aria-label="分享主题" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="share" size="35" /></view>
-          <text class="hero-type hero-type--{{info.productType == 2 ? 'free' : 'city'}}">{{info.productType == 2 ? '自由探索' : '城市定向'}}</text>
+          <!-- R11 p1 F-12:类型只在封面题签说一次,按钮旁只在作者看审核态时出那一枚 -->
+          <text wx:if="{{ownerStateText}}" class="hero-type hero-type--held">{{ownerStateText}}</text>
         </view>
         <view class="bm-closed" wx:if="{{merchantClosed && is_join == 0}}" aria-role="alert">商家暂停营业，暂不可报名</view>
       </view>
@@ -214,7 +216,7 @@
                           <view class="tit ep1">{{ node.cmsMemberTemplate.title }}</view>
                           <view class="david_mbxi">
                             <view class="david_mbxi_li">{{ node.cmsMemberTemplate.players }}</view>
-                            <view class="david_mbxi_li">{{ node.cmsMemberTemplate.duration === 0 ? 0 : (node.cmsMemberTemplate.duration || '--') }}分钟</view>
+                            <view class="david_mbxi_li">{{ node.cmsMemberTemplate.duration === 0 ? '0分钟' : (node.cmsMemberTemplate.duration ? node.cmsMemberTemplate.duration + '分钟' : '—') }}</view>
                           </view>
                         </view>
                       </view>
@@ -268,7 +270,7 @@
                   <view class="sess__name">{{item.name}}</view>
                   <view class="sess__time" wx:if="{{item.sessionTimeText}}">{{item.sessionTimeText}}</view>
                   <view class="sess__meet" wx:if="{{item.meetingPoint}}">集合点 · {{item.meetingPoint}}</view>
-                  <view class="sess__meet" wx:if="{{item.refundRule}}">退改 · {{item.refundRule}}</view>
+                  <view class="sess__meet" wx:if="{{item.refundRuleText}}">退改 · {{item.refundRuleText}}</view>
                 </view>
                 <view class="sess__side">
                   <view class="sess__price" wx:if="{{item.price != null}}">{{money.amount(item.price)}}</view>
@@ -276,7 +278,7 @@
                   <view class="sess__left" wx:else>余席 —</view>
                 </view>
               </view>
-              <view class="sess__note">每人限购 1 张 · 场次内自由顺序，不带队</view>
+              <view class="sess__note">场次内自由顺序，不带队</view>
             </view>
           </view>
         </view>
@@ -324,11 +326,10 @@
           <view class="det-type">评价</view>
           <view class="det6-empty" wx:if="{{!info.commentCount}}" bindtap="voteClick" aria-role="button" aria-label="成为第一个评价的人" hover-class="cy-pressed" hover-stay-time="80">
             <text class="det6-empty-t">还没有评价</text>
-            <text class="det6-empty-s">未参与也可以评价。已支付或已核销报名后的首条评价可按当前规则获得积分，以实际积分记录为准。</text>
           </view>
           <block wx:else>
             <view class="row1 flex-cb">
-              <view class="col1">{{ info.averageRating || 0 }}</view>
+              <view class="col1">{{ info.averageRating || '—' }}</view>
               <view class="col2 flex-a">
                 <view class="star flex-ac"><cy-icon wx:for="{{ratingStars}}" wx:key="star" name="star-filled" size="24" /></view>
                 <view class="row2">基于{{ info.commentCount || 0 }}条评论</view>
@@ -408,6 +409,7 @@
             <cy-route-sketch wx:if="{{!routeReal}}" points="{{sketchPoints}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" bind:open="onRouteReal" />
             <map wx:else
               id="routeMap"
+              subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
               class="route-map"
               latitude="{{mapLatitude}}"
               longitude="{{mapLongitude}}"

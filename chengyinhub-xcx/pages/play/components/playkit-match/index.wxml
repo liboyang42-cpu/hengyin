@@ -4,7 +4,6 @@
                bind:back="onClose">
   <view class="g-col ma {{reducedMotion ? 'ma--reduced' : ''}}">
     <view class="ma__prompt pe pe--blur" style="--pe-d:.05s">{{prompt}}</view>
-    <view class="ma__hint pe pe--blur" style="--pe-d:.15s" wx:if="{{verdict !== 'ok'}}">{{selected ? '再点右边对应的那一项' : '先点左边一项，再点右边对应的那一项'}}</view>
 
     <view class="ma__cols">
       <view class="ma__col">

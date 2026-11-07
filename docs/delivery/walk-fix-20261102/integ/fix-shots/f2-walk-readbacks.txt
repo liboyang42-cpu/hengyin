@@ -1,0 +1,108 @@
+第十轮 f2-C walk read-backs (lane f2-club-merchant). Rig at /home/user/rig-f2, fresh DB cy_e2e_51, jar repinned during the walk
+(5aa57498e -> d4faffd4a -> 5539681f9). Throwaway data, fictional names: 主理人 林小舟 (f2c-lead = 990005),
+players 林一帆 990006, 周小雨 990007, 陈小满 990008, 王一舟 990009; merchant 9002 (探店日样板咖啡); club 990004;
+theme 990015; session activity 9. This is not a phone.
+
+Environment fixtures (before any gate): settlement_rule activity/topic generic rows inserted at production's pre-migration
+values and then migration_20261103_settlement_rule_three_percent.sql applied (3%), cms_setting id 1 (platform 9001) and
+migration_20260815_tandianri_h8_publisher_points_funds.sql (release gaps j2 F-03). Rig seams: OSS stand-in on
+https://oss-rig.local:9443 (cert SAN for rig-offline.oss-rig.local), Chrome --no-proxy-server.
+Time shifts (job timing, labelled below): recruit_deadline moved back for the deadline job; session start moved to now+12 min;
+activity moved 9 days back for the settlement job (8 days + 1 for the rig's UTC MySQL NOW()).
+
+UI network read-backs (from the browser walk logs):
+ W01 /api/club/become-leader 200 已成为主理人 | W02 /api/club/create 200 已创建 (cover via real uploadOSS)
+ W03 /api/club/update-mine 200 已保存, page returns to club home, no 「保存后资料已变化」
+ W04 /api/club/join 200 加入成功 x4
+ W06 approve.py TOPIC + TOPIC_PROJECT_REVIEW -> lifecycle 1
+ W07 /api/topic/chapter/recruit chapterId=42 enabled=1 已开放商家承接 (later closed, see below)
+ W08 /api/registration/merchant/create 200 (form typed, photo uploaded, date/time wheels via setData) -> reg 14
+ W09 /api/coop/candidates/confirm 200 已选定该候选… -> lands on pages/coop/invite (F-10)
+ W10 /api/coop/invite 200 已发起 {inviteType 0, shareMode 0 引流合作, supplyStationId 14} -> coop_invite 990024
+ W11 /api/coop/handle 200 已接受 -> coop_order 1 (topic 990015, merchant 9002, status 0, share_mode 0)
+ W13 /api/topic/pricing/confirm 200 「终价已确认，已提交开售审核，审核通过后开售」 (no 支付资质 text)
+ W14 /api/topic/chapter/recruit chapterId=42 enabled=0 已关闭商家承接
+ W15 /api/club/event-ops/series/create 200 -> activity 9, ticket 76 ¥39
+ W16 x4 checkout + rig pay seam -> real /api/registration/callback -> regs 74-77 payment_status 2
+ W17 /api/team/command join 200 (team 1: 990006 + 990007), join page shows 2/2 + 查看队伍, no request-number card
+ W20 /api/club/lead/arrive 200 已到集合点 x3 (990006/7/8; 990009 did not check in)
+ W21 PREPARE 200 -> 「还不能开始：人民广场音乐喷泉（待商家接受）」 + 联系商家
+ W22 STATION_ACCEPT 200 (merchant: home card -> 承接页 -> 更多 -> 服务时段与接待容量 -> game-node)
+ W23 STATION_READY 200 (capacity typed, service date/time via the page's own handlers) -> 3/3 站就绪
+ W25 START 200 -> 进行中
+ W26 /api/play/answer node 71 「答对了！」; node 72 before reception code 500 「请先由商家扫描带队主理人的团码完成上一站接待」 (red under the field, button 提交)
+ W24 wrong code -> 「未核销 · 暂不支持此动态码」 (client) | W27 tampered code -> /api/verify/groupcode/redeem code 500 签名不匹配 notRedeemed:true -> 「未核销 · 这不是有效的核销码…」
+ W27 real code -> 200 「已记录接待该团」 coopOrderId 1 -> coop_group_verify 1 | same code again -> 200 已记录过 -> 「重复核销 · 已记录过」
+ W26/W31 all four players: node 71, 72, 73 「答对了！」 after reception and after UNLOCK_CHAPTER chapterId 43
+ W32 FINISH 200 -> game_session FINISHED
+ W35 /api/club/governance/owner/transfer 200 targetMemberId 990006 -> club.member_id 990005 -> 990006
+
+DB read-backs (f2lib.rb, in order):
+---- f2-C fresh DB, jar at 5aa57498e ----
+[11-05 00:33:28 jar@5aa57498e] env fixture: apply migration_20261103_settlement_rule_three_percent.sql: assert/select -> 1 assert/select -> 1 done 
+[11-05 00:33:28 jar@5aa57498e] env fixture: apply migration_20260815_tandianri_h8_publisher_points_funds.sql: assert/select -> 1 assert/select -> 1 assert/select -> 1 done 
+[11-05 00:33:28 jar@5aa57498e] env settlement_rule :: SELECT id,merchant_id,biz_type,platform_commission_rate,merchant_rate,creator_rate,status FROM settlement_rule: [[8, 0, "activity", "0.0300", "0.9700", "0.0000", 1], [9, 0, "topic", "0.0300", "0.9700", "0.0000", 1]]
+[11-05 00:33:28 jar@5aa57498e] env cms_setting :: SELECT id,platform_member_id FROM cms_setting: [[1, 9001]]
+[11-05 00:33:28 jar@5aa57498e] env points rule_version :: SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='cms_points_setting' AND COLUMN_NAME='rule_version': [[1]]
+[11-05 00:42:10 jar@5aa57498e] lead login: {"member": 990005}
+[11-05 00:42:10 jar@5aa57498e] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-05 00:42:10 jar@5aa57498e] publisher identity: {"code": 200, "msg": "实名信息已登记"}
+[11-05 00:42:10 jar@5aa57498e] template publish 喷泉的水柱: {"code": 200, "msg": "操作成功"}
+[11-05 00:42:10 jar@5aa57498e] template publish 博物馆的鼎: {"code": 200, "msg": "操作成功"}
+[11-05 00:42:10 jar@5aa57498e] template publish 大世界的塔楼: {"code": 200, "msg": "操作成功"}
+[11-05 00:42:10 jar@5aa57498e] topic v2/create (editor body, recruitDeadline=2026-11-05 23:59:59): {"code": 500, "msg": "玩法「喷泉的水柱」还在审核中，审核通过后才能用于发布", "data": null}
+[11-05 00:42:11 jar@5aa57498e] admin approve task 1 TEMPLATE biz=6005: {"code": 200, "msg": "审核处理成功"}
+[11-05 00:42:11 jar@5aa57498e] admin approve task 2 TEMPLATE biz=6006: {"code": 200, "msg": "审核处理成功"}
+[11-05 00:42:11 jar@5aa57498e] admin approve task 3 TEMPLATE biz=6007: {"code": 200, "msg": "审核处理成功"}
+[11-05 00:42:11 jar@5aa57498e] lead login: {"member": 990005}
+[11-05 00:42:11 jar@5aa57498e] become-leader: {"code": 200, "msg": "已成为主理人"}
+[11-05 00:42:12 jar@5aa57498e] topic v2/create (editor body, recruitDeadline=2026-11-05 23:59:59): {"code": 200, "msg": "主题发布成功", "data": {"topicId": 990015, "auditTaskId": 5, "reviewState": "PENDING", "bundledTemplateIds": [6005, 6006, 6007], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}}
+[11-05 00:42:12 jar@5aa57498e] topic row :: SELECT id,club_id,product_type,merchant_status,lifecycle,status,user_status,recruit_deadline,sale_end_at,merchant_sign_up_start_date,merchant_sign_up_end_date,start_date,: [[990015, 990004, 1, 1, 7, 1, 1, "2026-11-05 23:59:59", "2027-01-04 23:59:59", "2026-11-05 00:42:12", "2026-11-05 23:59:59", "2026-11-05 00:00:00", "2027-01-04 23:59:59"]]
+[11-05 00:42:12 jar@5aa57498e] nodes :: SELECT id,name,template_id FROM cms_topic_node WHERE topic_id=%s ORDER BY id: [[71, "人民广场音乐喷泉", 6005], [72, "上海博物馆", 6006], [73, "大世界", 6007]]
+[11-05 00:42:30 jar@5aa57498e] admin approve TOPIC task 5: {"code": 200, "msg": "审核处理成功"}
+[11-05 00:42:30 jar@5aa57498e] admin approve TOPIC_PROJECT_REVIEW task 4: {"code": 200, "msg": "审核处理成功"}
+[11-05 00:42:30 jar@5aa57498e] after project review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 1, 1, 1, "2026-11-05 23:59:59", "2027-01-04 23:59:59", null, null]]
+[11-05 00:52:52 jar@5aa57498e] TIME SHIFT (job timing): cms_topic 990015 recruit_deadline 2026-11-05 23:59:59 -> 2026-11-04 00:00:00 so the real deadline job picks it up now: ok
+[11-05 00:52:52 jar@5aa57498e] admin run job 149 topicRecruitDeadlineTask: {"code": 200, "msg": "操作成功"}
+[11-05 00:52:56 jar@5aa57498e] topic after deadline job :: SELECT id,lifecycle,recruit_deadline,NOW() AS db_now_utc,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, "2026-11-04 00:00:00", "2026-11-04 16:52:56", "0.0300"]]
+[11-05 00:52:56 jar@5aa57498e] job log :: SELECT job_log_id,job_name,status,LEFT(job_message,120),LEFT(exception_info,200) FROM sys_job_log WHERE invoke_target='topicRecruitDeadlineTask.run()' ORDER BY job_log_id: [[70520, "双死线-招募到期判定", "0", "双死线-招募到期判定 总共耗时：83毫秒 jobId=149 jobRunId=cf1b1ca3e3664e49bf3c305ec04922f6", ""]]
+[11-05 01:04:06 jar@d4faffd4a] after fix: /api/club/topics as non-member 9004: {"hasPublishedRouteGraphJson": false, "questionAnswerInBody": false, "saleReviewPending": true, "lifecycle": 2}
+[11-05 01:04:12 jar@d4faffd4a] BEFORE FIX (jar 5aa57498e, 01:00): /api/club/topics as non-member 9004 and member f2c-p1: code 200, publishedRouteGraphJson present with nodeAnswers.questionAnswer 8 / 铜鼎 / 4 for stations 71-73 (answers readable by any logged-in user); fixed in 4bdc110f9
+[11-05 01:04:12 jar@d4faffd4a] BEFORE FIX (jar 5aa57498e, 00:54): club 管理 after 确认终价 succeeded: 现在要做 still 「确认终价」 with a 确认终价 button while TOPIC_SALE_REVIEW task 6 was pending; fixed in d4faffd4a (now 「开售审核中」)
+[11-05 01:04:12 jar@d4faffd4a] admin approve TOPIC_SALE_REVIEW task 6: {"code": 500, "msg": "必选章节 chapterId=42 缺有效 SUPPLY 供给"}
+[11-05 01:04:12 jar@d4faffd4a] after sale review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 2, 1, 1, "2026-11-04 00:00:00", "2027-01-04 23:59:59", null, "0.0300"]]
+[11-05 01:04:12 jar@d4faffd4a] sale review tasks :: SELECT id,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW': [[6, 0]]
+[11-05 01:05:27 jar@d4faffd4a] sale review refused (reviewer sees): 必选章节 chapterId=42 缺有效 SUPPLY 供给: cause: walk step 17 opened 更多 › 开放商家承接申请 (chapter-level perk recruit, a separate channel from station applications) and no merchant took a chapter offer; lead closes it again in the UI (step 40)
+[11-05 01:05:27 jar@d4faffd4a] admin approve TOPIC_SALE_REVIEW task 6: {"code": 200, "msg": "审核处理成功"}
+[11-05 01:05:27 jar@d4faffd4a] after sale review :: SELECT id,lifecycle,status,user_status,recruit_deadline,sale_end_at,selling_started_at,fee_platform_rate FROM cms_topic WHERE id=%s: [[990015, 3, 1, 1, "2026-11-04 00:00:00", "2027-01-04 23:59:59", "2026-11-05 01:05:28", "0.0300"]]
+[11-05 01:05:27 jar@d4faffd4a] sale review tasks :: SELECT id,status FROM audit_task WHERE biz_id=%s AND biz_type='TOPIC_SALE_REVIEW': [[6, 1]]
+[11-05 01:06:50 jar@d4faffd4a] session activity :: SELECT id,topic_id,club_id,start_date,end_date,status,publish_status,latitude,longitude,member_id FROM cms_activity WHERE topic_id=990015 ORDER BY id DESC LIMIT 2: [[9, 990015, 990004, "2026-11-05 02:30:00", "2026-11-05 23:59:59", 1, 1, "31.2304", "121.4737", 990005]]
+[11-05 01:06:50 jar@d4faffd4a] session tickets :: SELECT id,owner_type,owner_id,name,price,remaining_inventory FROM oms_ticket WHERE owner_type=2 AND owner_id=%s: [[76, 2, 9, "领队场", "39.00", 20]]
+[11-05 01:09:54 jar@d4faffd4a] p1 registration :: SELECT id,member_id,owner_type,owner_id,real_name,payable_amount,payment_status,registration_status FROM cms_registration WHERE owner_type=2 AND owner_id=9: [[74, 990006, 2, 9, "v1:7qFLBDGU91wf6LqiTPSBn8iyUkZZHOd/lwEbiIpUgj4y8kJX/w==", "39.00", 2, 2]]
+FIXTURE TIME SHIFT cms_activity 9: 2026-11-05 02:30:00..2026-11-05 23:59:59 -> 2026-11-05 01:27:02..2026-11-05 22:57:01 (Shanghai wall time; mysql NOW()=2026-11-04 17:15:02 UTC)
+Redis caches may hold the old window; if a page still says 未开始, re-open it.
+[11-05 01:47:41 jar@5539681f9] BEFORE balances :: SELECT id,nickname,balance FROM ums_member WHERE id IN (9001,9002,990005,990006,990007,990008,990009) ORDER BY id: [[9001, "平台运营", "0.00"], [9002, "商家老板", "0.00"], [990005, "城瘾用户", "0.00"], [990006, "城瘾用户", "0.00"], [990007, "城瘾用户", "0.00"], [990008, "城瘾用户", "0.00"], [990009, "城瘾用户", "0.00"]]
+[11-05 01:47:41 jar@5539681f9] BEFORE balance detail :: SELECT id,member_id,event_type,event_id,change_balance,after_balance,change_reason FROM ums_member_balance_detail ORDER BY id: []
+[11-05 01:47:41 jar@5539681f9] paid registrations :: SELECT id,member_id,payable_amount,payment_status,registration_status FROM cms_registration WHERE owner_type=2 AND owner_id=%s: [[74, 990006, "39.00", 2, 2], [75, 990007, "39.00", 2, 2], [76, 990008, "39.00", 2, 2], [77, 990009, "39.00", 2, 2]]
+[11-05 01:47:41 jar@5539681f9] TIME SHIFT (job timing) activity moved 8 days back :: SELECT id,start_date,end_date,is_settlement,member_id,club_id FROM cms_activity WHERE id=%s: [[9, "2026-10-28 01:27:02", "2026-10-28 22:57:01", 0, 990005, 990004]]
+[11-05 01:47:42 jar@5539681f9] admin run job 145: {"code": 200, "msg": "操作成功"}
+[11-05 01:47:48 jar@5539681f9] admin run job 146: {"code": 200, "msg": "操作成功"}
+[11-05 01:47:54 jar@5539681f9] job log :: SELECT job_log_id,job_name,status,LEFT(job_message,90),LEFT(exception_info,300) FROM sys_job_log WHERE job_name IN ('分润结算（活动+主题）','商家结算T+7打款') ORDER BY job_log_id DESC LI: [[70656, "商家结算T+7打款", "0", "商家结算T+7打款 总共耗时：10毫秒 jobId=146 jobRunId=b2c57f01564e4a10bc53c358102c0bce", ""], [70655, "分润结算（活动+主题）", "0", "分润结算（活动+主题） 总共耗时：26毫秒 jobId=145 jobRunId=867839d8d4ea4648808186ca696ab81b", ""]]
+[11-05 01:47:54 jar@5539681f9] activity after :: SELECT id,is_settlement FROM cms_activity WHERE id=%s: [[9, 0]]
+[11-05 01:47:54 jar@5539681f9] AFTER balances :: SELECT id,nickname,balance FROM ums_member WHERE id IN (9001,9002,990005,990006,990007,990008,990009) ORDER BY id: [[9001, "平台运营", "0.00"], [9002, "商家老板", "0.00"], [990005, "城瘾用户", "0.00"], [990006, "城瘾用户", "0.00"], [990007, "城瘾用户", "0.00"], [990008, "城瘾用户", "0.00"], [990009, "城瘾用户", "0.00"]]
+[11-05 01:47:54 jar@5539681f9] AFTER balance detail :: SELECT id,member_id,event_type,event_id,change_balance,after_balance,change_reason FROM ums_member_balance_detail ORDER BY id: []
+[11-05 01:47:54 jar@5539681f9] settlement_detail :: SELECT * FROM settlement_detail ORDER BY id: [[1, 4, "ORIGIN", "ORIGIN", 0, 990005, "registration", 74, "merchant", 990005, "37.83", "0.00", "37.83", 0, null, "registration:74:merchant:990005", "2026-11-04 17:09:42", null], [2, 5, "ORIGIN", "ORIGIN", 0, 990005, "registration", 74, "platform", 0, "1.17", "0.00", "1.17", 0, null, "registration:74:platform:0", "2026-11-04 17:09:42", null], [3, 6, "ORIGIN", "ORIGIN", 0, 990005, "registration", 75, "merchant", 990005, "37.83", "0.00", "37.83", 0, null, "registration:75:merchant:990005", "2026-11-04 17:10:38", null], [4, 7, "ORIGIN", "ORIGIN", 0, 990005, "registration", 75, "platform", 0, "1.17", "0.00", "1.17", 0, null, "registration:75:platform:0", "2026-11-04 17:10:38", null], [5, 8, "ORIGIN", "ORIGIN", 0, 990005, "registration", 76, "merchant", 990005, "37.83", "0.00", "37.83", 0, null, "registration:76:merchant:990005", "2026-11-04 17:11:26", null], [6, 9, "ORIGIN", "ORIGIN", 0, 990005, "registration", 76, "platform", 0, "1.17", "0.00", "1.17", 0, null, "registration:76:platform:0", "2026-11-04 17:11:26", null], [7, 10, "ORIGIN", "ORIGIN", 0, 990005, "registration", 77, "merchant", 990005, "37.83", "0.00", "37.83", 0, null, "registration:77:merchant:990005", "2026-11-04 17:12:15", null], [8, 11, "ORIGIN", "ORIGIN", 0, 990005, "registration", 77, "platform", 0, "1.17", "0.00", "1.17", 0, null, "registration:77:platform:0", "2026-11-04 17:12:15", null]]
+[11-05 01:47:54 jar@5539681f9] coop_settlement :: SELECT id,topic_id,coop_order_id,merchant_id,share_mode,status FROM coop_settlement: []
+[11-05 01:48:03 jar@5539681f9] TIME SHIFT (job timing) one more day back: the rig MySQL NOW() is UTC while activity times are Shanghai wall time :: SELECT id,start_date,end_date,NOW() FROM cms_activity WHERE id=9: [[9, "2026-10-27 01:27:02", "2026-10-27 22:57:01", "2026-11-04 17:48:03"]]
+[11-05 01:48:04 jar@5539681f9] BEFORE balances :: SELECT id,nickname,balance FROM ums_member WHERE id IN (9001,9002,990005,990006,990007,990008,990009) ORDER BY id: [[9001, "平台运营", "0.00"], [9002, "商家老板", "0.00"], [990005, "城瘾用户", "0.00"], [990006, "城瘾用户", "0.00"], [990007, "城瘾用户", "0.00"], [990008, "城瘾用户", "0.00"], [990009, "城瘾用户", "0.00"]]
+[11-05 01:48:04 jar@5539681f9] BEFORE balance detail :: SELECT id,member_id,event_type,event_id,change_balance,after_balance,change_reason FROM ums_member_balance_detail ORDER BY id: []
+[11-05 01:48:04 jar@5539681f9] paid registrations :: SELECT id,member_id,payable_amount,payment_status,registration_status FROM cms_registration WHERE owner_type=2 AND owner_id=%s: [[74, 990006, "39.00", 2, 2], [75, 990007, "39.00", 2, 2], [76, 990008, "39.00", 2, 2], [77, 990009, "39.00", 2, 2]]
+[11-05 01:48:04 jar@5539681f9] TIME SHIFT (job timing) activity moved 8 days back :: SELECT id,start_date,end_date,is_settlement,member_id,club_id FROM cms_activity WHERE id=%s: [[9, "2026-10-27 01:27:02", "2026-10-27 22:57:01", 0, 990005, 990004]]
+[11-05 01:48:04 jar@5539681f9] admin run job 145: {"code": 200, "msg": "操作成功"}
+[11-05 01:48:10 jar@5539681f9] admin run job 146: {"code": 200, "msg": "操作成功"}
+[11-05 01:48:16 jar@5539681f9] job log :: SELECT job_log_id,job_name,status,LEFT(job_message,90),LEFT(exception_info,300) FROM sys_job_log WHERE job_name IN ('分润结算（活动+主题）','商家结算T+7打款') ORDER BY job_log_id DESC LI: [[70660, "商家结算T+7打款", "0", "商家结算T+7打款 总共耗时：4毫秒 jobId=146 jobRunId=a0013db396e84f97a1fa7123b933429b", ""], [70659, "分润结算（活动+主题）", "0", "分润结算（活动+主题） 总共耗时：78毫秒 jobId=145 jobRunId=9a232b14284a40c08c93e2f700a7bc94", ""]]
+[11-05 01:48:16 jar@5539681f9] activity after :: SELECT id,is_settlement FROM cms_activity WHERE id=%s: [[9, 1]]
+[11-05 01:48:16 jar@5539681f9] AFTER balances :: SELECT id,nickname,balance FROM ums_member WHERE id IN (9001,9002,990005,990006,990007,990008,990009) ORDER BY id: [[9001, "平台运营", "4.68"], [9002, "商家老板", "0.00"], [990005, "城瘾用户", "151.32"], [990006, "城瘾用户", "0.00"], [990007, "城瘾用户", "0.00"], [990008, "城瘾用户", "0.00"], [990009, "城瘾用户", "0.00"]]
+[11-05 01:48:16 jar@5539681f9] AFTER balance detail :: SELECT id,member_id,event_type,event_id,change_balance,after_balance,change_reason FROM ums_member_balance_detail ORDER BY id: [[39, 990005, 3, 9, "151.32", "151.32", "活动分润 - 人民广场 · 喷泉报时"], [40, 9001, 7, 9, "4.68", "4.68", "活动平台分润 - 人民广场 · 喷泉报时"]]
+[11-05 01:48:16 jar@5539681f9] settlement_detail :: SELECT * FROM settlement_detail ORDER BY id: [[1, 4, "ORIGIN", "ORIGIN", 0, 990005, "registration", 74, "merchant", 990005, "37.83", "0.00", "37.83", 1, null, "registration:74:merchant:990005", "2026-11-04 17:09:42", "2026-11-04 17:48:04"], [2, 5, "ORIGIN", "ORIGIN", 0, 990005, "registration", 74, "platform", 0, "1.17", "0.00", "1.17", 1, null, "registration:74:platform:0", "2026-11-04 17:09:42", "2026-11-04 17:48:04"], [3, 6, "ORIGIN", "ORIGIN", 0, 990005, "registration", 75, "merchant", 990005, "37.83", "0.00", "37.83", 1, null, "registration:75:merchant:990005", "2026-11-04 17:10:38", "2026-11-04 17:48:04"], [4, 7, "ORIGIN", "ORIGIN", 0, 990005, "registration", 75, "platform", 0, "1.17", "0.00", "1.17", 1, null, "registration:75:platform:0", "2026-11-04 17:10:38", "2026-11-04 17:48:04"], [5, 8, "ORIGIN", "ORIGIN", 0, 990005, "registration", 76, "merchant", 990005, "37.83", "0.00", "37.83", 1, null, "registration:76:merchant:990005", "2026-11-04 17:11:26", "2026-11-04 17:48:04"], [6, 9, "ORIGIN", "ORIGIN", 0, 990005, "registration", 76, "platform", 0, "1.17", "0.00", "1.17", 1, null, "registration:76:platform:0", "2026-11-04 17:11:26", "2026-11-04 17:48:04"], [7, 10, "ORIGIN", "ORIGIN", 0, 990005, "registration", 77, "merchant", 990005, "37.83", "0.00", "37.83", 1, null, "registration:77:merchant:990005", "2026-11-04 17:12:15", "2026-11-04 17:48:04"], [8, 11, "ORIGIN", "ORIGIN", 0, 990005, "registration", 77, "platform", 0, "1.17", "0.00", "1.17", 1, null, "registration:77:platform:0", "2026-11-04 17:12:15", "2026-11-04 17:48:04"]]
+[11-05 01:48:16 jar@5539681f9] coop_settlement :: SELECT id,topic_id,coop_order_id,merchant_id,share_mode,status FROM coop_settlement: []

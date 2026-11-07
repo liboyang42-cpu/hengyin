@@ -3,6 +3,7 @@ const toast = require('../../../utils/toast.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const roleGuard = require('../../../utils/roleGuard.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { memberId, retryLogin } = require('../../../utils/session/login-reload.js');
 
 // D18 表单A:注册成为俱乐部主理人(身份资格 + 能力档案 → L1-L5 定级依据)。
 // 填完即有:提交即 role→club;能力档案挂 club_leader,后台异步定级。建团走 club/create(表单B)。
@@ -20,6 +21,7 @@ Page({
     doneState: 'idle',       // idle | loading | ready | error，完成态必须有身份快照背书
     bootstrapState: 'checking-role', // checking-role | ready | error | blocked
     bootstrapError: '',
+    bootstrapErrorKind: '',  // '' | no-permission(游客:给登录入口,登录后续上)
     step: 1,
     stepTitle: STEP_TITLES[0],
     backLabel: '设置',
@@ -34,6 +36,7 @@ Page({
     // 身份
     leaderName: '',
     phone: '',
+    fieldErrors: {},
     identity: '',
     coFounders: '',
     // 经验
@@ -85,7 +88,7 @@ Page({
     var bootstrapEpoch = (this._bootstrapEpoch || 0) + 1;
     this._bootstrapEpoch = bootstrapEpoch;
     var that = this;
-    this.setData({ bootstrapState: 'checking-role', bootstrapError: '' });
+    this.setData({ bootstrapState: 'checking-role', bootstrapError: '', bootstrapErrorKind: '' });
     // 账户互斥:已注册商户不能再申请俱乐部主理人(一个账户只能是商户或主理人之一)。
     // P-23:不再只摆一句「不能申请」后自动退出,而是说明原因并给去商家端的出口。
     if (this.isMerchantAccount()) {
@@ -130,9 +133,12 @@ Page({
       if (bootstrapEpoch !== that._bootstrapEpoch) return;
       if (!snapshot || !roleGuard.hasSnapshot()) {
         that._bootstrapChecking = false;
+        // Round5 #1:游客没有身份快照,「重新检查」永远不会成功;与商家入驻(F-W1-12)一致给登录,登录后续上。
+        var guest = !memberId(app);
         that.setData({
           bootstrapState: 'error',
-          bootstrapError: '暂时无法确认当前账号的主理人资格，请重试',
+          bootstrapError: guest ? '' : '暂时无法确认当前账号的主理人资格，请重试',
+          bootstrapErrorKind: guest ? 'no-permission' : '',
         });
         return;
       }
@@ -155,7 +161,13 @@ Page({
     else wx.redirectTo({ url: '/pages/merchant/apply/index', complete: done });
   },
 
-  retryBootstrap() { this.startBootstrap(); },
+  retryBootstrap() {
+    if (this.data.bootstrapErrorKind === 'no-permission') {
+      retryLogin(this, app, function () { roleGuard.clear(); this.startBootstrap(); });
+      return;
+    }
+    this.startBootstrap();
+  },
 
   // 账户互斥判断:商户身份(user_type==2 或 role=merchant)
   isMerchantAccount() {
@@ -170,6 +182,7 @@ Page({
       step: step,
       stepTitle: STEP_TITLES[step - 1],
       backLabel: step === 1 ? '设置' : STEP_NAMES[step - 2],
+      fieldErrors: {},
       stepIn: false
     }, this.validate);
     var that = this;
@@ -215,6 +228,18 @@ Page({
     else { this.submit(); }
   },
 
+  // 置灰的「下一步」被点:把本步缺的必填写成栏下红字,不让按钮静默不动
+  onNextDisabledTap() {
+    var d = this.data, errors = {};
+    if (d.step === 1) {
+      if (!d.leaderName) errors.leaderName = '请填写称呼';
+      if (!d.phone) errors.phone = '请填写联系方式';
+    } else if (d.step === 2) {
+      if (!d.experience) errors.experience = '请选择你带过多少场';
+    }
+    this.setData({ fieldErrors: errors });
+  },
+
   validate() {
     var d = this.data, ok = false;
     if (d.step === 1) ok = !!(d.leaderName && d.phone);
@@ -230,11 +255,11 @@ Page({
 
   onInput(e) {
     var f = e.currentTarget.dataset.field;
-    this.setData({ [f]: e.detail.value }, this.validate);
+    this.setData({ [f]: e.detail.value, ['fieldErrors.' + f]: '' }, this.validate);
   },
 
   pickExp(e) {
-    this.setData({ experience: e.currentTarget.dataset.val }, this.validate);
+    this.setData({ experience: e.currentTarget.dataset.val, 'fieldErrors.experience': '' }, this.validate);
   },
 
   // 能力自评 是/否 切换(0/1)
