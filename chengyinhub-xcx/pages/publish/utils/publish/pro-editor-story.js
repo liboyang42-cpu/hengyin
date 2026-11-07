@@ -57,6 +57,8 @@ function isThoughtType(type) {
 // 与 mood 同一条口径:不进 description,形状由这张表统一清洗(物化 / 存盘 / 插入三处共用)。
 var VOICE_NAMES = ['规矩', '窗外', '心', '精密', '咔哒'];
 var PLAIN_BLOCKS = {
+  // divider 只承载稳定 key;与服务端最小块合同一致。
+  divider: function () { return {}; },
   voice: function (block) {
     return Object.assign({ who: VOICE_NAMES.indexOf(block.who) >= 0 ? block.who : VOICE_NAMES[0], content: String(block.content == null ? '' : block.content) }, textPresentation(block), whenOf(block));
   },
@@ -161,7 +163,7 @@ function projectedDescription(blocks) {
   var textBlocks = [];
   for (var i = 0; i < blocks.length; i += 1) {
     if (blocks[i].type === 'node') break;
-    if (blocks[i].type === 'text') textBlocks.push(String(blocks[i].content == null ? '' : blocks[i].content));
+    if (blocks[i].type === 'text' && !hasNarrativeBeat(blocks[i]) && blocks[i].when == null) textBlocks.push(String(blocks[i].content == null ? '' : blocks[i].content));
   }
   return textBlocks.join('\n');
 }
@@ -226,6 +228,7 @@ function insertVarAt(content, key, cursor) {
 }
 
 function synchronizeChapter(chapter) {
+  bindNarrativeNodes(chapter);
   chapter.nodes = orderedNodes(chapter);
   chapter.nodes.forEach(function (node, index) { node.sortID = index + 1; });
   var byLocalId = {};
@@ -246,6 +249,11 @@ function synchronizeChapter(chapter) {
     // 块上只投影第一张 —— 取第一张这件事在 wxs(img.first)和这里各做一次会有两份口径,
     // 所以统一在投影层切好,wxml 只管渲染。
     block._nodeThumb = String(node.imgUrl || '').split(',').filter(Boolean)[0] || '';
+  });
+  (chapter.blocks || []).forEach(function (block) {
+    if (block && hasNarrativeBeat(block)) {
+      block.nodeIndex = chapter.nodes.findIndex(function (node) { return node._localId === block._storyNodeKey; });
+    }
   });
   chapter.description = projectedDescription(chapter.blocks || []);
   chapter.schemaVersion = 1;
@@ -270,32 +278,32 @@ function materializeChapter(source, makeKey) {
 
   chapter.blocks = chapter.blocks.map(function (sourceBlock) {
     var block = sourceBlock || {};
-    if (block.type === 'text' || block.type === 'voice' || block.type === 'reveal') {
-      return Object.assign({
+    if (block.type === 'text') {
+      return Object.assign({}, block, {
         key: block.key || keyFactory(),
         type: 'text',
         content: String(block.content == null ? '' : block.content),
-      }, textPresentation(block), whenOf(block));
+      }, textPresentation(block));
     }
     if (block.type === 'node') {
       var node = nodeForBlock(chapter.nodes, block);
       if (!node || !node._localId) throw new Error('节点块引用已失效');
       node._storyGame = block.locationRequired === false;
-      return { key: block.key || keyFactory(), type: 'node', nodeKey: node._localId,
-        ...(node._storyGame ? { locationRequired: false } : {}) };
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'node', nodeKey: node._localId },
+        node._storyGame ? { locationRequired: false } : {});
     }
     // 梦块:图单原样带回来(每张的 url + 一句话),没有单个 url 的媒体态
     if (isDreamType(block.type)) {
-      return { key: block.key || keyFactory(), type: 'dream', ...(block.title != null ? { title: block.title } : {}), images: normalizeDreamImages(block.images) };
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'dream', images: normalizeDreamImages(block.images) });
     }
     if (isMoodType(block.type)) {
-      return { key: block.key || keyFactory(), type: 'mood', mood: String(block.mood == null ? '' : block.mood) };
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'mood', mood: String(block.mood == null ? '' : block.mood) });
     }
     if (isThoughtType(block.type)) {
-      return { key: block.key || keyFactory(), type: 'thought', thoughtKey: String(block.thoughtKey == null ? '' : block.thoughtKey) };
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'thought', thoughtKey: String(block.thoughtKey == null ? '' : block.thoughtKey) });
     }
     if (PLAIN_BLOCKS[block.type]) {
-      return Object.assign({ key: block.key || keyFactory(), type: block.type }, PLAIN_BLOCKS[block.type](block));
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: block.type }, PLAIN_BLOCKS[block.type](block));
     }
     if (isMediaType(block.type)) {
       var url = String(block.url == null ? '' : block.url);
@@ -305,7 +313,8 @@ function materializeChapter(source, makeKey) {
       // 图片没有空态,继续当场拒。
       // 空判用 .trim() 与 insertMediaAt / fillMedia / toPayloadChapter 三处对齐(纯空白 url 也算空)。
       if (!url.trim() && block.type !== 'audio') throw new Error('媒体块缺少地址');
-      var media = { key: block.key || keyFactory(), type: block.type, url: url };
+      var media = Object.assign({}, block, { key: block.key || keyFactory(), type: block.type, url: url });
+      delete media.altText;
       var altText = mediaAltTextOf(block);
       if (altText) media.altText = altText;
       // 重开章节时 payload 里只剩 {type,url} —— 文件名从地址末段派生,至少不显示成"音频片段"。
@@ -316,7 +325,8 @@ function materializeChapter(source, makeKey) {
       }
       return media;
     }
-    throw new Error('不支持的故事流块类型');
+    // 未识别的作者块留在草稿中;发布仍拒绝未知类型,不静默丢掉。
+    return Object.assign({}, block, { key: block.key || keyFactory() });
   });
   return synchronizeChapter(chapter);
 }
@@ -331,6 +341,7 @@ function stripLocalFields(input) {
 
 function toPayloadChapter(source) {
   var chapter = clone(source || {}) || {};
+  bindNarrativeNodes(chapter);
   chapter.nodes = orderedNodes(chapter);
   var nodeIndexes = {};
   chapter.nodes.forEach(function (node, index) { nodeIndexes[node._localId] = index; });
@@ -344,29 +355,37 @@ function toPayloadChapter(source) {
     }
     return true;
   }).map(function (block) {
+    var authored = stripLocalFields(block);
+    delete authored.nodeKey;
+    delete authored.nodeId;
+    if (hasNarrativeBeat(block)) {
+      if (!Object.prototype.hasOwnProperty.call(nodeIndexes, block._storyNodeKey)) throw new Error('叙事块引用已失效');
+      authored.nodeIndex = nodeIndexes[block._storyNodeKey];
+    }
     if (block.type === 'text') {
-      return Object.assign({ key: block.key, type: 'text', content: String(block.content == null ? '' : block.content) }, textPresentation(block), whenOf(block));
+      return Object.assign(authored, { key: block.key, type: 'text', content: String(block.content == null ? '' : block.content) }, textPresentation(block));
     }
     if (block.type === 'node' && Object.prototype.hasOwnProperty.call(nodeIndexes, block.nodeKey)) {
-      return { key: block.key, type: 'node', nodeIndex: nodeIndexes[block.nodeKey],
-        ...(block.locationRequired === false ? { locationRequired: false } : {}) };
+      return Object.assign(authored, { key: block.key, type: 'node', nodeIndex: nodeIndexes[block.nodeKey] },
+        block.locationRequired === false ? { locationRequired: false } : {});
     }
     if (isDreamType(block.type)) {
       // 契约 §3.2 的块形状带 key:后端 ChapterBlockReadSupport 原样透传,
       // 重开编辑器时这个 key 还用来对齐块(见 materializeChapter)。
-      return { type: 'dream', key: block.key, ...(block.title != null ? { title: block.title } : {}), images: normalizeDreamImages(block.images) };
+      return Object.assign(authored, { type: 'dream', key: block.key, images: normalizeDreamImages(block.images) });
     }
     if (isMoodType(block.type)) {
-      return { type: 'mood', key: block.key, mood: String(block.mood == null ? '' : block.mood) };
+      return Object.assign(authored, { type: 'mood', key: block.key, mood: String(block.mood == null ? '' : block.mood) });
     }
     if (isThoughtType(block.type)) {
-      return { type: 'thought', key: block.key, thoughtKey: String(block.thoughtKey == null ? '' : block.thoughtKey) };
+      return Object.assign(authored, { type: 'thought', key: block.key, thoughtKey: String(block.thoughtKey == null ? '' : block.thoughtKey) });
     }
     if (PLAIN_BLOCKS[block.type]) {
-      return Object.assign({ type: block.type, key: block.key }, PLAIN_BLOCKS[block.type](block));
+      return Object.assign(authored, { type: block.type, key: block.key }, PLAIN_BLOCKS[block.type](block));
     }
     if (isMediaType(block.type)) {
-      var mediaPayload = { key: block.key, type: block.type, url: String(block.url == null ? '' : block.url) };
+      var mediaPayload = Object.assign(authored, { key: block.key, type: block.type, url: String(block.url == null ? '' : block.url) });
+      delete mediaPayload.altText;
       var payloadAlt = mediaAltTextOf(block).trim();
       if (payloadAlt.length > MEDIA_ALT_TEXT_MAX) throw new Error((block.type === 'audio' ? '音频文字稿' : '图片说明') + '不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
       if (payloadAlt) mediaPayload.altText = payloadAlt;
@@ -407,6 +426,36 @@ function discardEmptyDreamBlocks(chapter) {
   return synchronizeChapter(target);
 }
 
+function hasNarrativeBeat(block) {
+  return block && block.beat != null && String(block.beat).trim() !== '';
+}
+
+// 叙事段绑定站点身份,不能随 nodeIndex 的排序漂移。
+function bindNarrativeNodes(chapter) {
+  (chapter.blocks || []).forEach(function (block) {
+    if (!block || !hasNarrativeBeat(block) || block._storyNodeKey) return;
+    var node = nodeForBlock(chapter.nodes || [], block);
+    if (!node || !node._localId) throw new Error('叙事块引用已失效');
+    block._storyNodeKey = node._localId;
+  });
+}
+
+function freshBlockKey(blocks, key) {
+  if (typeof key !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(key)
+    || blocks.some(function (block) { return block && block.key === key; })) throw new Error('内容块标识无效或重复');
+  return key;
+}
+
+function textCaret(blocks, key, cursor) {
+  var index = blocks.findIndex(function (block) { return block && block.key === key && block.type === 'text'; });
+  if (index < 0) throw new Error('未找到要编辑的文字块');
+  var text = String(blocks[index].content == null ? '' : blocks[index].content);
+  if (!Number.isInteger(cursor) || cursor < 0 || cursor > text.length
+    || (cursor > 0 && cursor < text.length && /[\uD800-\uDBFF]/.test(text.charAt(cursor - 1))
+      && /[\uDC00-\uDFFF]/.test(text.charAt(cursor)))) throw new Error('光标位置已失效，请重新选择');
+  return { index: index, block: blocks[index], text: text, cursor: cursor };
+}
+
 function applyStoryCommand(input, command) {
   var draft = clone(input || {}) || {};
   draft.chapter = draft.chapter || { nodes: [], blocks: [] };
@@ -414,6 +463,66 @@ function applyStoryCommand(input, command) {
   draft.chapter.blocks = draft.chapter.blocks || [];
   draft.pendingMaterials = draft.pendingMaterials || [];
   command = command || {};
+
+  // 命令仍返回独立草稿;调用方沿用 _pushUndo 的整份快照,不另建历史栈。
+  if (command.type === 'insertAtCaret') {
+    var caret = textCaret(draft.chapter.blocks, command.blockKey, command.cursor);
+    var insert = clone(command.insert || {});
+    if (['insertTextAt', 'insertMediaAt', 'insertNodeAt'].indexOf(insert.type) < 0) throw new Error('不支持的光标插入命令');
+    freshBlockKey(draft.chapter.blocks, insert.blockKey);
+    var split = caret.cursor > 0 && caret.cursor < caret.text.length;
+    if (split && hasNarrativeBeat(caret.block)) throw new Error('节点叙事段不能拆分，请在段落前后插入');
+    if (split) {
+      var tailKey = freshBlockKey(draft.chapter.blocks, command.trailingBlockKey);
+      if (tailKey === insert.blockKey) throw new Error('内容块标识无效或重复');
+      draft.chapter.blocks.splice(caret.index + 1, 0, Object.assign(clone(caret.block), { key: tailKey, content: caret.text.slice(caret.cursor) }));
+      caret.block.content = caret.text.slice(0, caret.cursor);
+    }
+    insert.index = caret.index + (caret.cursor === 0 ? 0 : 1);
+    return applyStoryCommand(draft, insert);
+  }
+
+  if (command.type === 'pasteTextAtCaret') {
+    var paste = textCaret(draft.chapter.blocks, command.blockKey, command.cursor);
+    if (typeof command.text !== 'string') throw new Error('粘贴内容必须是文字');
+    var content = paste.text.slice(0, paste.cursor) + command.text + paste.text.slice(paste.cursor);
+    if (hasNarrativeBeat(paste.block) && content.length > 200) throw new Error('节点叙事正文不能超过 200 字');
+    var parts = [];
+    // 不 trim、不按空行丢段;只按服务端单块 5000 字符上限切开,不切断 emoji。
+    do {
+      var end = Math.min(5000, content.length);
+      if (end < content.length && /[\uD800-\uDBFF]/.test(content.charAt(end - 1)) && /[\uDC00-\uDFFF]/.test(content.charAt(end))) end--;
+      parts.push(content.slice(0, end));
+      content = content.slice(end);
+    } while (content.length);
+    if (draft.chapter.blocks.length + parts.length - 1 > MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
+    var keys = command.blockKeys || [];
+    if (!Array.isArray(keys) || keys.length !== parts.length - 1) throw new Error('粘贴内容缺少内容块标识');
+    var replacements = parts.map(function (part, index) {
+      var key = index === 0 ? paste.block.key : freshBlockKey(draft.chapter.blocks, keys[index - 1]);
+      if (index > 0 && keys.indexOf(key) !== index - 1) throw new Error('内容块标识无效或重复');
+      return Object.assign(clone(paste.block), { key: key, content: part });
+    });
+    draft.chapter.blocks.splice.apply(draft.chapter.blocks, [paste.index, 1].concat(replacements));
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  if (command.type === 'moveBlock') {
+    var from = draft.chapter.blocks.findIndex(function (block) { return block && block.key === command.blockKey; });
+    if (from < 0) throw new Error('未找到要移动的内容块');
+    // index 是移动后的最终下标,不是删除前的插入缝下标。
+    var to = insertionIndex(draft.chapter.blocks.slice(1), command.index);
+    var moving = draft.chapter.blocks[from];
+    if (hasNarrativeBeat(moving) || (moving.type === 'node' && draft.chapter.blocks.some(function (block) { return block && hasNarrativeBeat(block); }))) {
+      throw new Error('节点叙事段需保持站点前后位置，请使用节点叙事编辑');
+    }
+    bindNarrativeNodes(draft.chapter);
+    draft.chapter.blocks.splice(from, 1);
+    draft.chapter.blocks.splice(to, 0, moving);
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
 
   if (command.type === 'insertTextAt') {
     if (draft.chapter.blocks.length >= MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
@@ -532,7 +641,7 @@ function applyStoryCommand(input, command) {
     });
     if (plainIndex < 0) throw new Error('未找到要编辑的块');
     var plain = draft.chapter.blocks[plainIndex];
-    draft.chapter.blocks[plainIndex] = Object.assign({ key: plain.key, type: plain.type },
+    draft.chapter.blocks[plainIndex] = Object.assign({}, plain, { key: plain.key, type: plain.type },
       PLAIN_BLOCKS[plain.type](Object.assign({}, plain, command.patch)));
     synchronizeChapter(draft.chapter);
     return { draft: draft };

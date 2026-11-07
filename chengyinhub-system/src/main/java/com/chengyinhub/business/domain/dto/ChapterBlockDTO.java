@@ -20,7 +20,7 @@ public class ChapterBlockDTO implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "块类型：text / node / image / audio / dream", example = "text")
+    @Schema(description = "块类型：text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider", example = "text")
     private String type;
 
     @Schema(description = "文本块正文；仅 type=text 时有效")
