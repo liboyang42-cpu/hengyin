@@ -809,8 +809,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     /**
-     * B4:coop 主题结算(有合作单)。平台留佣金,商家按核销分润挂 T+7 结算单(不即时打款),
-     * 发起人保底/毛利同样挂 T+7 应付。分成型=share_rate×核销销售额,固定型=¥F×核销人头,引流型=0。
+     * B4:coop 主题结算(有合作单)。平台留佣金,商家按核销分润挂 T+14 结算单(不即时打款),
+     * 发起人保底/毛利同样挂 T+14 应付。分成型=share_rate×核销销售额,固定型=¥F×核销人头,引流型=0。
      * 只在 settleTopic 里对"有生效 coop_order 的主题"调用,存量主题不受影响。
      */
     // 保留包内组合测试调用形状；传入的旧聚合只作调用兼容，绝不决定任何现金金额。
@@ -845,9 +845,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         String verifiedRegIds = joinVerifiedRegIds(cashBasis.getVerifiedRegistrationIds());
 
         Date now = new Date();
-        Date payable = topic.getEndDate() != null
-                ? new Date(topic.getEndDate().getTime() + 7L * 24 * 3600 * 1000)
-                : new Date(now.getTime() + 7L * 24 * 3600 * 1000);
+        Date payable = com.chengyinhub.business.support.FundsHoldPolicy.payableAfterEnd(topic.getEndDate(), now);
 
         // 第一遍:只算不写。承接方/商家分项行(LEAD_FEE=俱乐部带队 / MERCHANT_VERIFY=商家核销),
         // 累计应收 + 统计"有真实核销的被邀商家数"(发起人保底 +2n% 挂钩)。跳过已挂单(防重复)。
@@ -928,7 +926,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
         // 平台行(对账;status=1 已入账不放款,payout 只取 status=0 故跳过它)。
         pending.add(0, newSettlementLine(topic, null, platformAmount, "PLATFORM", "platform", 1, payable, now, verifiedHeads, verifiedSales, verifiedRegIds));
-        // 发起人保底 + 毛利行(T+7 放款给发起人;取代旧的即时 payPublisher)。
+        // 发起人保底 + 毛利行(T+14 放款给发起人;取代旧的即时 payPublisher)。
         // 发起人保底+毛利占销售额大部分;memberId 为空(存量脏数据)则无受款人 → 拒绝结算交人工,
         // 不静默跳过(否则守恒已按含这两笔通过,款项悬空丢钱,与 payee==null 同类资损)。
         if (topic.getMemberId() == null) {
@@ -1388,7 +1386,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             for (Throwable t : failure.getSuppressed()) visible.addSuppressed(t);
             throw visible;
         }
-        if (paid > 0) logger.info("coop T+7 打款完成,共 {} 笔", paid);
+        if (paid > 0) logger.info("coop 到期应付打款完成,共 {} 笔", paid);
         return paid;
     }
 

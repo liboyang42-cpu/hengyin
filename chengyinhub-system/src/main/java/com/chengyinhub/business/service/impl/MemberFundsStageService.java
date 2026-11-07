@@ -29,10 +29,10 @@ import java.util.TreeMap;
  * <p>钱在哪一段完全由结算闸决定,这里只是把闸的判据原样读出来,不另立口径:
  * <ul>
  *   <li>活动未结束 → 待结算;</li>
- *   <li>已结束未结算 → 客诉期中,可提现日 = max(结束 + 7 天, 最晚一张可退票的退款截止),
+ *   <li>已结束未结算 → 客诉期中,可提现日 = max(结束 + 14 天, 最晚一张可退票的退款截止),
  *       与 selectActivitiesForSettlement 的两道闸同源;</li>
  *   <li>有未结客诉的报名单(未结算的,或结算时已暂扣的)→ 客诉处理中;</li>
- *   <li>coop T+7 未打款行 → 客诉期中(可提现日 = payable_time);主题有未结客诉整行冻结 → 客诉处理中
+ *   <li>coop 未打款行 → 客诉期中(可提现日 = 已持久化的 payable_time);主题有未结客诉整行冻结 → 客诉处理中
  *       (与 payoutOneDueCoopSettlement 的整主题冻结一致);</li>
  *   <li>可提现 = 余额 − 提现冻结额(与两条提现腿同一个 WithdrawalFrozenAmountResolver)。</li>
  * </ul>
@@ -41,7 +41,7 @@ import java.util.TreeMap;
 @Service
 public class MemberFundsStageService {
 
-    static final long COMPLAINT_PERIOD_MS = 7L * 24 * 3600 * 1000;
+    static final long COMPLAINT_PERIOD_MS = com.chengyinhub.business.support.FundsHoldPolicy.WITHDRAWABLE_AFTER_END_MS;
 
     private final ActivitySettlementHoldMapper holdMapper;
     private final ICmsActivityService activityService;
