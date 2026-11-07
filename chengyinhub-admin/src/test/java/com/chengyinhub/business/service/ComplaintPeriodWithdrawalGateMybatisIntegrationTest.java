@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * 2026-09-16 晚用户拍板 1-5(客诉期提现闸)的真库证据:
- * ① 活动结束未满 7 天 → 不结算,钱不进余额,提不出;② 满 7 天 → 入余额,可提;
+ * ① 活动结束未满 14 天 → 不结算,钱不进余额,提不出;② 满 14 天 → 入余额,可提(2026-11-05 业主由 7 天改 14 天);
  * ③ 客诉期内有未结客诉 → 只暂扣涉诉那单,其余照放,结案后补结;
  * ④ 客诉期后退款冲销扣不够 → 记欠款,下一笔结算先抵;逾期未清不能发布新活动。
  * ⑤ 平台人工倒扣余额不足 → 扣到 0 + 差额记欠款(不再扣成负数),同一套抵扣/逾期规则。
@@ -198,10 +198,10 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         }
     }
 
-    /** ① 活动结束 6 天:还在客诉期,结算任务不结,主办方余额仍是 0,¥90 提不出来。 */
+    /** ① 活动结束 13 天:还在客诉期,结算任务不结,主办方余额仍是 0,¥90 提不出来。 */
     @Test
     void moneyIsNotWithdrawableBeforeTheSevenDayComplaintPeriodEnds() throws Exception {
-        seedActivity(8101L, 6);
+        seedActivity(8101L, 13);
         seedRegistration(8201L, 8101L, "100.00");
 
         activityService.executeActivitySettlement();
@@ -212,10 +212,10 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                 "客诉期内这 ¥90 不在余额里,提现原子扣减必须失败");
     }
 
-    /** ② 满 7 天:结算入余额,可提现。 */
+    /** ② 满 14 天(结束 15 天):结算入余额,可提现。 */
     @Test
     void moneyBecomesWithdrawableOnceTheComplaintPeriodEnds() throws Exception {
-        seedActivity(8102L, 8);
+        seedActivity(8102L, 15);
         seedRegistration(8202L, 8102L, "100.00");
 
         activityService.executeActivitySettlement();
@@ -225,10 +225,29 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         assertEquals(1, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
     }
 
+    @Test
+    void historicalUnsettledActivityWaitsUntilExactlyFourteenDays() throws Exception {
+        seedActivity(8110L, 8);
+        seedRegistration(8210L, 8110L, "100.00");
+
+        activityService.executeActivitySettlement();
+
+        assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=8110"));
+        assertMoney("0.00", balance(HOST));
+        assertEquals(0, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
+
+        execute("UPDATE cms_activity SET end_date=DATE_SUB(NOW(),INTERVAL 14 DAY) WHERE id=8110");
+        activityService.executeActivitySettlement();
+
+        assertEquals(1, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=8110"));
+        assertMoney("90.00", balance(HOST));
+        assertEquals(1, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
+    }
+
     /** ③ 两单 100 + 60,60 那单有未结客诉:只暂扣 60 那单,100 那单的 90 照放;结案后补结 54。 */
     @Test
     void openComplaintFreezesOnlyTheDisputedOrderAndReleasesItAfterClosing() throws Exception {
-        seedActivity(8103L, 8);
+        seedActivity(8103L, 15);
         seedRegistration(8203L, 8103L, "100.00");
         seedRegistration(8204L, 8103L, "60.00");
         execute("INSERT INTO coop_complaint(id,topic_id,registration_id,reporter_member_id,status,del_flag) VALUES (9301,1,8204,7001,0,0)");
@@ -258,7 +277,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
     /** ③' 涉诉那单结案时已退款:作废暂扣,不补结(商家从没拿到这单的钱)。 */
     @Test
     void refundedDisputedOrderIsVoidedNotPaid() throws Exception {
-        seedActivity(8104L, 8);
+        seedActivity(8104L, 15);
         seedRegistration(8205L, 8104L, "60.00");
         execute("INSERT INTO coop_complaint(id,topic_id,registration_id,reporter_member_id,status,del_flag) VALUES (9302,1,8205,7001,0,0)");
         activityService.executeActivitySettlement();
@@ -283,7 +302,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         ServiceException blocked = assertThrows(ServiceException.class, () -> debtLedger.requireNoOverdueDebt(HOST));
         assertTrue(blocked.getMessage().startsWith("SETTLEMENT_DEBT_OVERDUE"));
 
-        seedActivity(8105L, 8);
+        seedActivity(8105L, 15);
         seedRegistration(8206L, 8105L, "100.00");
         activityService.executeActivitySettlement();
 
@@ -314,7 +333,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         execute("UPDATE ums_member_settlement_debt SET due_time=DATE_SUB(NOW(), INTERVAL 1 DAY)");
         assertThrows(ServiceException.class, () -> debtLedger.requireNoOverdueDebt(HOST));
 
-        seedActivity(8106L, 8);
+        seedActivity(8106L, 15);
         seedRegistration(8207L, 8106L, "100.00");
         activityService.executeActivitySettlement();
 

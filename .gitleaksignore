@@ -66,3 +66,7 @@ d417bb12a173c528bcb5595203552cf9efc33373:chengyinhub-xcx/tests/unit/safe-user-me
 6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/OrientSwitches.java:generic-api-key:14
 6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql:generic-api-key:114
 6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql:generic-api-key:142
+
+# Funds14: deterministic SQL fixture row IDs, inserted and read back within the same test; no authentication use.
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGenerateBatchMybatisIntegrationTest.java:generic-api-key:260
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGenerateBatchMybatisIntegrationTest.java:generic-api-key:261

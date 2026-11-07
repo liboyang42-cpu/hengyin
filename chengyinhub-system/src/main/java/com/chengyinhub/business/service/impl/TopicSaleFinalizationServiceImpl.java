@@ -56,8 +56,8 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
 
     @Autowired private com.chengyinhub.business.service.support.PureContentExploreService pureContentExploreService;
 
-    /** A1 已拍板：活动结束后 T+7 收齐证据。 */
-    private static final long EVIDENCE_DUE_DAYS = 7L;
+    /** A1 证据截止复用原统一等待期；既有冻结条款保持原值。 */
+    private static final long EVIDENCE_DUE_DAYS = com.chengyinhub.business.support.FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS;
 
     private final CmsTopicMapper topicMapper;
     private final OmsTicketMapper ticketMapper;
@@ -217,11 +217,11 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
     }
 
     /**
-     * A1 的证据截止：本期活动结束的<b>权威</b>时刻 + 7 天。
+     * A1 的证据截止：本期活动结束的<b>权威</b>时刻 + 原统一等待期。
      *
      * <p>权威时刻取 {@link FulfillmentWindowResolver} 解出的主题履约窗结束瞬间 —— 它是仓库既有的
      * 统一活动时间口径（Asia/Shanghai 日粒度，同一函数已被 {@link TopicSaleTimeValidator} 用来卡
-     * saleEndAt），不是本方法自己新造的时区解释。T+7 用绝对时刻加天数，不经过任何本地时区换算。
+     * saleEndAt），不是本方法自己新造的时区解释。等待期用绝对时刻加天数，不经过任何本地时区换算。
      *
      * <p><b>缺事实即 fail closed</b>：topic.startDate/endDate 缺一，resolver 直接抛并点名字段，
      * 开售整体回滚。绝不用 {@code new Date()} 或 JVM 默认时区凑一个截止瞬间。

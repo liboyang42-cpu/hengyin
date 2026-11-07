@@ -216,7 +216,7 @@ EXPECTED = {
     "StoreVerifyGrowthDeliveryTransactionTest": 4,
     "RefundNotificationMybatisIntegrationTest": 9,
     "SessionRefundClockMybatisIntegrationTest": 3,
-    "SettlementGenerateBatchMybatisIntegrationTest": 3,
+    "SettlementGenerateBatchMybatisIntegrationTest": 4,
     # FX-10(2026-09-18):退款收回首评积分,真库验证「还参与过没有」的口径、扣到 0、重复/并发只扣一次。
     "FirstReviewPointsClawbackMybatisIntegrationTest": 10,
     "ClubSettlementSummaryMybatisIntegrationTest": 6,
@@ -250,7 +250,7 @@ EXPECTED = {
     # 2026-09-17 客诉期提现闸(9-16 晚拍板 1-5):到期前不可提现 / 到期后可提现 / 涉诉只冻结部分
     # (含结案补结与退款作废)/ 超期退款欠款从后续结算抵扣,共 5 条。
     # 2026-09-17 总控裁定补做:+2 平台人工倒扣余额不足扣到 0 + 差额记欠款 / 按加锁读的当前余额算(非事务快照)且重复复核空转。
-    "ComplaintPeriodWithdrawalGateMybatisIntegrationTest": 7,
+    "ComplaintPeriodWithdrawalGateMybatisIntegrationTest": 8,
     # 2026-09-17 第二轮拍板 17/22:足迹分享快照 + 进行中游戏会话的真迁移/真 XML IT(4 条 @Test)。
     "ShareSnapshotRunSessionMybatisIntegrationTest": 5,
     "PlayerRunSessionOrderingMybatisIntegrationTest": 6,

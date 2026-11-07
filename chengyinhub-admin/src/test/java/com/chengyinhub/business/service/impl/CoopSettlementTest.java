@@ -245,6 +245,7 @@ class CoopSettlementTest {
     void settleCoopTopic_splitsFiveLineItems_conserves() {
         CmsTopic topic = new CmsTopic();
         topic.setId(700L); topic.setMemberId(900001L);
+        topic.setEndDate(new Date(2_000_000L));
         when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(700L)).thenReturn(new BigDecimal("100"));
         when(cmsRegistrationMapper.selectVerifiedHeadsByTopicId(700L)).thenReturn(2);
         everyMerchantServedEveryone(700L, 2, "100", 900002L);
@@ -258,6 +259,12 @@ class CoopSettlementTest {
         PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
+        for (List<CoopSettlement> byType : lines.values()) {
+            for (CoopSettlement line : byType) {
+                assertEquals(new Date(2_000_000L + 1_209_600_000L), line.getPayableTime(),
+                        "所有新应付保留同一结束时间并等待完整14天");
+            }
+        }
         assertAmount("10.00", lines.get("PLATFORM").get(0), "平台 100×10%=10");
         assertEquals(Integer.valueOf(1), lines.get("PLATFORM").get(0).getStatus(), "平台行不放款(status=1)");
         assertAmount("7.00", lines.get("INITIATOR_GUARANTEE").get(0), "保底 100×7%=7");
@@ -272,7 +279,7 @@ class CoopSettlementTest {
                         .add(lines.get("INITIATOR_GUARANTEE").get(0).getAmount())
                         .add(lines.get("MERCHANT_VERIFY").get(0).getAmount())
                         .add(lines.get("INITIATOR_MARGIN").get(0).getAmount())), "五分项守恒==100");
-        // 发起人不再即时到账(改 T+7 结算行)
+        // 发起人不再即时到账(新生成 T+14 结算行)
         verify(umsMemberService, times(0)).addBalance(any(), any());
     }
 
