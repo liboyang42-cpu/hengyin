@@ -9,14 +9,14 @@ const TRACKER = path.resolve(__dirname, '../../utils/location/bg-tracker.js');
 
 function harness() {
   let member = 7, definition;
-  const dialogs = [], positions = [], starts = [], stops = [], listeners = new Set();
+  const dialogs = [], positions = [], starts = [], backgroundStarts = [], stops = [], listeners = new Set();
   const app = { globalData: {}, getUserID: () => member, sendRequest() {} };
   global.getApp = () => app; global.getCurrentPages = () => [];
   global.wx = {
     getStorageSync: () => '', setStorageSync() {}, showToast() {},
     getSystemInfoSync: () => ({}), getWindowInfo: () => ({}), setKeepScreenOn() {},
     showModal: options => dialogs.push(options), getLocation: options => positions.push(options),
-    startLocationUpdateBackground: options => starts.push(options),
+    startLocationUpdateBackground: options => backgroundStarts.push(options),
     startLocationUpdate: options => starts.push(options),
     stopLocationUpdate: options => { stops.push(options); if (options.success) options.success(); },
     onLocationChange: listener => listeners.add(listener), offLocationChange: listener => listeners.delete(listener),
@@ -44,7 +44,7 @@ function harness() {
     page.rebuild = () => {}; // Map rendering is separate; ownership, lifecycle and SDK callers remain real.
     return { page, callbacks };
   }
-  return { ...makePage(), makePage, tracker, dialogs, positions, starts, stops, listeners,
+  return { ...makePage(), makePage, tracker, dialogs, positions, starts, backgroundStarts, stops, listeners,
     account: value => { member = value; }, confirm: () => dialogs.at(-1).success({ confirm: true }),
     position: () => positions.at(-1).success({ latitude: 31, longitude: 121, accuracy: 10 }) };
 }
@@ -75,22 +75,41 @@ for (const stage of ['dialog', 'gps']) for (const change of ['account', 'session
   });
 }
 
-test('normal explicit consent starts tracking and hide keeps approved game location alive', () => {
+test('explicit consent uses foreground location and hide stops its listener until show', () => {
   const h = harness(); h.page.requestPlayLocation(); h.confirm(); h.position();
   assert.equal(h.starts.length, 1); h.starts[0].success();
-  assert.equal(h.tracker.isRunning(), true); assert.equal(h.listeners.size, 1);
+  assert.equal(h.tracker.isBackground(), false); assert.equal(h.backgroundStarts.length, 0);
+  const queued = h.page._playLocationHandler;
   h.page.onHide();
-  assert.equal(h.tracker.isRunning(), true); assert.equal(h.stops.length, 0);
-  h.page._playLocationHandler({ latitude: 31.001, longitude: 121.002, accuracy: 10 });
-  assert.equal(h.page._loc.latitude, 31.001);
-  h.page.onUnload(); assert.equal(h.stops.length, 1); assert.equal(h.listeners.size, 0);
-  assert.equal(h.tracker.hasOwner('play:31'), false);
+  assert.equal(h.tracker.isRunning(), false); assert.equal(h.stops.length, 1);
+  assert.equal(h.listeners.size, 0);
+  queued({ latitude: 31.001, longitude: 121.002, accuracy: 10 });
+  assert.equal(h.page._loc.latitude, 31, 'late foreground callback cannot update hidden page');
+  for (const method of ['restoreGuardAppeal', '_syncCommunityEntry', '_startThemePoll', '_flushTrail',
+    '_startZeroHpTimer', '_resetPackFx', 'loadData', '_consumePendingStart']) h.page[method] = () => {};
+  h.page.onShow();
+  assert.equal(h.starts.length, 2); h.starts[1].success();
+  assert.equal(h.listeners.size, 1); assert.equal(h.dialogs.length, 1, 'same page consent survives hide');
+  h.page.onUnload(); assert.equal(h.stops.length, 2); assert.equal(h.listeners.size, 0);
 });
 
-test('hide during explicitly approved GPS request does not revoke game location permission', () => {
-  const h = harness(); h.page.requestPlayLocation(); h.confirm(); h.page.onHide(); h.position();
-  assert.equal(h.starts.length, 1); h.starts[0].success();
-  assert.equal(h.tracker.isRunning(), true); assert.equal(h.listeners.size, 1); h.page.onUnload();
+for (const stage of ['dialog', 'gps']) test('hide fences pending ' + stage + ' without enabling hidden tracking', () => {
+  const h = harness(); h.page.requestPlayLocation();
+  if (stage === 'gps') h.confirm();
+  h.page.onHide();
+  if (stage === 'dialog') h.confirm(); else h.position();
+  assert.equal(h.starts.length, 0); assert.equal(h.listeners.size, 0);
+  assert.equal(h.page._loc, undefined);
+  h.page.onUnload();
+});
+
+for (const state of ['paused', 'completed']) test('show does not resume ' + state + ' tracking', () => {
+  const h = harness(); h.page.data.gpsOk = true; h.page._themeHidden = true;
+  h.page.data.runState = state === 'paused' ? 'paused' : 'idle'; h.page.data.allDone = state === 'completed';
+  for (const method of ['restoreGuardAppeal', '_syncCommunityEntry', '_startThemePoll', '_flushTrail',
+    '_startZeroHpTimer', '_resetPackFx', 'loadData', '_consumePendingStart']) h.page[method] = () => {};
+  h.page.onShow();
+  assert.equal(h.starts.length, 0); h.page.onUnload();
 });
 
 test('old start success cannot release or strand the newer same-key game owner', () => {

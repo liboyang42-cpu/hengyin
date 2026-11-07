@@ -755,6 +755,7 @@ Page({
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
+    if (this.data.gpsOk && !this.data.allDone && this.data.runState !== 'paused') this.watchLocation();
     if (this._teamTrail && this._watching) this._teamTrail.start();
     if (this._teamPatchPending) { this._teamPatchPending = false; this._applyTeams(this._teams); }
     this._flushTrail(true);
@@ -1090,10 +1091,7 @@ Page({
     // 不清就是卸载后每 40ms 一次 setData。
     this._cancelRunHold();
   },
-  // ⚠️ onHide **不再停定位**:玩家锁屏/切走仍在走路,那正是后台定位的理由。
-  //    定位只在 onUnload 与 _stopTracking(通关/退出)里停 —— 漏了就是长期采集。
-  // 2026-08-20 并 master:开卡包的三个 timeout 与定位无关,该清照清;
-  //    只把 master 那侧的 _watching=false / offLocationChange / stopLocationUpdate 三句拿掉。
+  // 游玩定位只在前台持有；回前台沿用本页同意，暂停或通关后不恢复。
   onHide() {
     this.finishChapterVideo();
     this._flushAnswerRight();
@@ -1106,6 +1104,7 @@ Page({
     this._playReloadOnShow = true;
     this._runRestoreEpoch = (this._runRestoreEpoch || 0) + 1;
     this._themeHidden = true; this._stopThemePoll();
+    this._stopTracking();
     this._stopZeroHpTimer();
     this._stopStoryDust();
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
@@ -1350,7 +1349,11 @@ Page({
   /** 左键「切换章节」(mode2):先弹章节选择;选完地点卡只出该章的商家/地点(用户裁决)。
    *  多章数据齐(chapterCards>1)才弹选择;单章直接进地点卡层。mode1 仍只给当前站。 */
   openStackOrChapters() {
-    if (this.data.chapterCards.length > 1) { this.setData({ 'chapterPick.show': true }); return; }
+    if (this.data.chapterCards.length > 1) {
+      const idx = this.data.chapterCards.findIndex(c => String(c.id) === String(this.data.chapter.id));
+      this.closeChapterFull();
+      this.setData({ 'chapterPick.show': true, 'chapterPick.cur': Math.max(0, idx) }); return;
+    }
     // 地点卡层已删:唯一的选点面就是卡包(用户裁决「完整地点列表=卡包」),别让入口点了没反应。
     this.setData({ packOpen: true });
   },
@@ -1929,7 +1932,7 @@ Page({
 
   /** 存档:读到的段落(同一段不重复写)。预览 / 缺身份时 scope 取不到 key,自然不存。 */
   _saveReadingPos(line) {
-    if (!line || this.data.isPreview || this.data.isMock) return;
+    if (!line || this._chapterReadCursor || this.data.isPreview || this.data.isMock) return;
     const chapterId = String((this.data.chapter || {}).id || '');
     const mark = chapterId + ':' + line.i;
     if (!chapterId || this._lastReadingMark === mark) return;
@@ -1941,7 +1944,7 @@ Page({
    * 那一段已经不在(作者改过、或本章还没解锁到那)就留在章首,不乱跳。
    */
   _resumeStory() {
-    if (!this._isPlayAccountCurrent() || this._resumeTried || this.data.isPreview || this.data.isMock) return;
+    if (this._chapterReadCursor || !this._isPlayAccountCurrent() || this._resumeTried || this.data.isPreview || this.data.isMock) return;
     this._resumeTried = true;
     const saved = storyResume.read(this._runSessionScope());
     const paras = this.data.chapterParas || [];
@@ -2563,8 +2566,18 @@ Page({
   },
   closeChapterPick() { this.setData({ 'chapterPick.show': false }); },
   onPickChapter(e) {
-    const idx = Number(e.currentTarget.dataset.idx) || 0;
-    this.setData({ 'chapterPick.show': false, 'chapterPick.cur': idx, packOpen: true });
+    const value = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.idx;
+    if (value == null || value === '' || !this._isPlayAccountCurrent()) return;
+    const idx = Number(value);
+    const card = Number.isInteger(idx) && (this.data.chapterCards || [])[idx];
+    const state = chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes);
+    if (state === 'locked' || this._leadHolds(card.id)) return;
+    const liveId = this._chapterReadCursor ? this._chapterReadCursor.liveId : this.data.chapter.id;
+    this.finishChapterVideo(null, false);
+    this.closeChapterFull();
+    if (state === 'completed') this._chapterReadCursor = { id: card.id, liveId, key: this._sessionKey(), sessionId: String((this._routeState || {}).sessionId || '') };
+    this.setData({ 'chapterPick.show': false, 'chapterPick.cur': idx, chapter: this._chapterFromCard(card),
+      chapterGameAnchor: '', packOpen: true }, () => this.openChapterFull());
   },
   /** 顶部输入地址选中一条 = 把地图挪过去并打开它的详情半屏。不跳页。 */
   onSearchPick(e) {
@@ -3711,6 +3724,7 @@ Page({
     wx.openLocation({ latitude: Number(n.lat), longitude: Number(n.lng), name: n.name || '', address: n.address || '', scale: 17 });
   },
   openChapterFull() {
+    const readOnly = !!this._chapterReadCursor;
     const wasOpen = this.data.chapterFull;
     const items = [];
     const claims = [];     // 读到了、但服务端还没下发的伏笔 —— 渲染完再认领
@@ -3748,10 +3762,10 @@ Page({
        ⚠️ 它必须仍是**一个 .chfull__para** —— measureChapter 用 selectAll('.chfull__para')
        按下标对齐 chapterParas,多一个少一个都让整屏焦点错位(见 WXML 的循环注释)。
        位置选在第一个未完成节点处:玩家读到「我当前站在这」,玩法就在这一块里等着。 */
-    const inlineKit = this._inlineKit();
+    const inlineKit = !readOnly && this._inlineKit();
     const check = this.data.journeyCheck || {};
     const checkNode = nodes.find((n) => String(n.nodeId) === String(check.nodeId));
-    const inlineCheck = check.show && !check.blocked && check.present === 'inline'
+    const inlineCheck = !readOnly && check.show && !check.blocked && check.present === 'inline'
       && !(checkNode && checkNode.done);
     let kitPlaced = false;
     let autoNodeId = null;   // 读到的第一个内嵌玩法:不出「进入」,直接铺开(2026-09-24 对照原型)
@@ -3763,8 +3777,11 @@ Page({
         const b = blocks[i];
         if (!b) continue;
         if (b.type === 'node') {
-          const n = nodes.find((x) => String(x.nodeId) === String(b.nodeId));
+          // 已完成的下架站只作阅读凭据，不并入可玩节点或重开玩法。
+          const history = this._historyNodeById(b.nodeId);
+          const n = nodes.find((x) => String(x.nodeId) === String(b.nodeId)) || (history && history.done === true ? history : null);
           if (!n || !n.done) {               // 未完成 ⇒ 故事流到此为止
+            if (readOnly) break;
             if (inlineCheck && String(b.nodeId) === String(check.nodeId)) {
               items.push({ kind: 'journeyCheck', nodeId: b.nodeId, mood: curMood });
               break;
@@ -3852,7 +3869,7 @@ Page({
     // 存量章节没有块流:检定仍可内嵌;完整块流只在其所属的未完成节点处铺。
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
     if (!items.length) push('这一章还没有写下的内容。');
-    if (claims.length) this._claimThoughts(claims);
+    if (!readOnly && claims.length) this._claimThoughts(claims);
     audioSession.keepAwake('chapterFull', true);
     this.setData({
       chapterFull: true,
@@ -3863,12 +3880,12 @@ Page({
       storyChat: false,
     }, () => {
       if (!wasOpen) this._storyTop = 0;
-      this.showChapterGate();
-      if (!wasOpen) this._resumeStory();
+      if (!readOnly) this.showChapterGate();
+      if (!readOnly && !wasOpen) this._resumeStory();
       /* (行位保留:此处原有代码已移除) */
       this.measureChapter();
       if (!this.data.chapterGate.show && !this.playChapterVideo(!wasOpen)) this.playChapterAudio(true);
-      this._enterThemeChapter();
+      if (!readOnly) this._enterThemeChapter();
     });
   },
   /** 内嵌玩法读到就铺开(原型:登记表、选择题、「在现场」都直接嵌在故事流里),每站只自动开一次 */
@@ -4062,10 +4079,16 @@ Page({
     if (this._settleTimer) clearTimeout(this._settleTimer);
     if (this._chMeasureTimer) clearTimeout(this._chMeasureTimer);
     audioSession.keepAwake('chapterFull', false);
-    this.setData({ chapterFull: false, 'chapterGate.show': false });
+    const cursor = this._chapterReadCursor;
+    if (cursor) this.finishChapterVideo(null, false);
+    const liveCard = cursor && (this.data.chapterCards || []).find(c => String(c.id) === String(cursor.liveId));
+    this._chapterReadCursor = cursor && !liveCard ? cursor : null;
+    this.setData(Object.assign({ chapterFull: false, 'chapterGate.show': false },
+      liveCard ? { chapter: this._chapterFromCard(liveCard) } : {}));
   },
 
   continueChapterStory() {
+    if (this._chapterReadCursor) { this.closeChapterFull(); return Promise.resolve(); }
     const opening = this._routeState && this._routeState.opening;
     // P-29:本章收尾读完了,这才换到下一章(章节卡随 openChapterFull 出现)
     if (this._chapterTrailNext && !this.data.isPreview) {
@@ -4274,6 +4297,7 @@ Page({
       && !this._leadHolds(chapterId)) { this._chapterHoldAway = ''; this.openChapterFull(); }
   },
   continueChapterGate() {
+    if (this._chapterReadCursor) return;
     // P-08:等待放行屏上不会有 continue;这里只是兜底,仍被挡着就留在等待屏上
     if (this.data.chapterGate.held) {
       if (this._leadHolds((this.data.chapter || {}).id)) return;
@@ -4458,6 +4482,11 @@ Page({
         } else if (!first && that.data.chapterFull) that.openChapterFull();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);
+        if (!that._entryLocationOffered && d.registered !== false && that._playable && !that.data.allDone
+            && that.data.runState !== 'paused' && nodes.some(node => !node.done && node.lat && node.lng)) {
+          that._entryLocationOffered = true;
+          that.requestPlayLocation();
+        }
         that.loadTeamProgress();   // P1 带领场探测(club 场次才 exists,内部自管轮询)
         that._loadPlayerGameModule();
         // P-10/P-11 第四轮 rig 实测:个人局主题运行时(任务 / 背包)原来只在第一次到达的回包里带回来,
@@ -4626,6 +4655,7 @@ Page({
     return list.map((c, i) => ({
       key: 'c' + i,
       opening: c.opening === true,
+      complete: c.complete === true, ready: c.ready === true, locked: c.locked === true,
       id: c.chapterId != null ? c.chapterId : (c.id != null ? c.id : null),   // 后端键=chapterId(id 是我一开始猜错的)
       category: c.category || '',
       // 占位/空名时标题本身就是「第 N 章」,上面再挂一个同样的序数标签是同一件事说两遍。
@@ -4832,8 +4862,16 @@ Page({
     }
     if (trailHold === 'none') this._chapterTrailNext = null;
     this._lastActiveChapterId = activeChapter.id;
+    const cursor = this._chapterReadCursor;
+    if (cursor) {
+      const picked = trailCards.find(c => String(c.id) === String(cursor.id));
+      if (this._isPlayAccountCurrent() && cursor.key === this._sessionKey()
+          && cursor.sessionId === String((this._routeState || {}).sessionId || '')
+          && chapterTrail.chapterReadState(picked, nodes, this._historyNodes) !== 'locked') activeChapter = this._chapterFromCard(picked);
+      else { this.finishChapterVideo(null, false); this._chapterReadCursor = null; this.setData({ chapterFull: false }); }
+    }
     let chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
-    if (trailHold === 'hold' && this.data.chapterFull && this._chapterTrailShownId !== String(activeChapter.id)) {
+    if (!this._chapterReadCursor && trailHold === 'hold' && this.data.chapterFull && this._chapterTrailShownId !== String(activeChapter.id)) {
       chapterChanged = true;   // 收尾第一次到手:重铺一次本章
       this._chapterTrailShownId = String(activeChapter.id);
     }
@@ -4869,6 +4907,7 @@ Page({
   _chapterFromCard(card) {
     return {
       id: card.id,
+      complete: chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes) === 'completed',
       opening: card.opening === true,
       idxLabel: card.meta,
       name: card.title,
@@ -4968,15 +5007,15 @@ Page({
     this.setData({ 'ending.show': false });
   },
   // ---------- 定位 ----------
-  // 仅由「开始游玩」或「前往此站」触发。进入页面时不预先请求，拒绝后仍可扫码完成。
+  // 游戏可玩且含待完成地点时进页说明用途，拒绝后仍可从原入口重试。
   requestPlayLocation() {
-    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
     const that = this;
-    // 与加载代际分开：锁屏或切后台不撤回已明确同意的游玩定位。
+    // 与加载代际分开；切后台会作废尚未完成的定位回调。
     const epoch = this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;
     const sessionKey = this._sessionKey();
     const current = () => that._isPlayAccountCurrent() && epoch === that._playLocationEpoch
-      && sessionKey === that._sessionKey();
+      && !that._themeHidden && sessionKey === that._sessionKey();
     const unavailable = (hint) => {
       if (!current()) return;
       that._locationRequesting = false;
@@ -4986,7 +5025,7 @@ Page({
     this.setData({ gpsHint: '正在请求定位…' });
     cyModal.show({
       title: '开启定位',
-      content: '仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。',
+      content: '仅在本游玩页前台获取位置，用于显示当前位置和自动判断到点。锁屏、切到后台、暂停、结束或离开后停止。未开启时仍可扫码到达。',
       confirmText: '开启定位',
       cancelText: '先用扫码',
       success(result) {
@@ -5122,7 +5161,7 @@ Page({
   },
   watchLocation() {
     const that = this;
-    if (!this._isPlayAccountCurrent()) { this._stopTracking(); return; }
+    if (!this._isPlayAccountCurrent() || this._themeHidden) { this._stopTracking(); return; }
     if (this._watching) return; // 同一持有者不重复注册监听。
     this._watching = true;
     const epoch = this._playLocationEpoch || 0;
@@ -5146,15 +5185,13 @@ Page({
     this._playTrackingKey = trackingKey;
     this._releasePlayTracking = release;
     const current = () => that._releasePlayTracking === release && that._isPlayAccountCurrent()
-      && epoch === (that._playLocationEpoch || 0) && sessionKey === that._sessionKey();
+      && !that._themeHidden && epoch === (that._playLocationEpoch || 0) && sessionKey === that._sessionKey();
     if (this._playLocationHandler) {
       try { wx.offLocationChange(this._playLocationHandler); } catch (e) {}
       this._playLocationHandler = null;
     }
-    // 后台定位:玩家锁屏塞兜里走路是本场景的常态(在架路线 2–4.5 小时、7.8–10.5 公里),
-    // 前台版一锁屏就断,轨迹断段、走到点位也判不出到达。拿不到后台权限时自动降级前台。
-    // ⚠️ 停的时机见 onUnload / _stopTracking —— **不能**在 onHide 停。
     bgTracker.acquire(trackingKey, {
+      foregroundOnly: true,
       fail() {
         if (!current()) { release(); return; }
         release();

@@ -44,4 +44,19 @@ function trailState(card, nodes, read, doneAtLoad) {
   return hasTrailingContent(blocks) ? 'hold' : 'none';
 }
 
-module.exports = { hasTrailingContent, trailState };
+/** 选章只认本次服务端节点/历史投影；缺节点或未知章节不能推断为已完成。 */
+function chapterReadState(card, nodes, history) {
+  if (!card || card.id == null || card.locked === true) return 'locked';
+  if (card.opening) return card.complete === true ? 'completed' : (card.ready === true ? 'available' : 'locked');
+  const byId = new Map();
+  (history || []).forEach(n => { if (n && n.done === true) byId.set(String(n.nodeId), n); });
+  (nodes || []).forEach(n => { if (n) byId.set(String(n.nodeId), n); });
+  const chapterNodes = Array.from(byId.values()).filter(n => String(n.chapterId) === String(card.id));
+  const ids = (card.blocks || []).filter(b => b && b.type === 'node').map(b => String(b.nodeId));
+  if (chapterNodes.length && chapterNodes.every(n => n.done === true)
+      && ids.every(id => byId.has(id) && byId.get(id).done === true)) return 'completed';
+  return chapterNodes.some(n => n.done !== true && !n.paused && !n.locked && n.playable !== false
+    && (!n.routeNodeState || n.routeNodeState === 'PLAYABLE')) ? 'available' : 'locked';
+}
+
+module.exports = { hasTrailingContent, trailState, chapterReadState };

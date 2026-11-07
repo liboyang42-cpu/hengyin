@@ -40,6 +40,6 @@ test('换章那一步停在上一次所在的章(重拉会把 data.chapter 重�
   assert.match(js, /const trailPrevId = this\._lastActiveChapterId;/);
   assert.match(js, /trailHold = chapterTrail\.trailState\(prevCard, nodes, trailRead, this\._trailDoneAtLoad\);\n      if \(trailHold !== 'none'\) \{ this\._chapterTrailNext = activeChapter; activeChapter = this\._chapterFromCard\(prevCard\); \}/);
   assert.match(js, /if \(trailCards !== this\._trailCardsRef\) \{\n      this\._trailCardsRef = trailCards;\n      this\._trailDoneAtLoad = /);
-  assert.match(js, /continueChapterStory\(\) \{\n    const opening = [^\n]+\n    \/\/ P-29[^\n]+\n    if \(this\._chapterTrailNext && !this\.data\.isPreview\) \{[\s\S]*?this\.setData\(\{ chapter: next \}, \(\) => this\.openChapterFull\(\)\);/);
+  assert.match(js, /continueChapterStory\(\) \{\n    if \(this\._chapterReadCursor\) \{ this\.closeChapterFull\(\); return Promise\.resolve\(\); \}\n    const opening = [^\n]+\n    \/\/ P-29[^\n]+\n    if \(this\._chapterTrailNext && !this\.data\.isPreview\) \{[\s\S]*?this\.setData\(\{ chapter: next \}, \(\) => this\.openChapterFull\(\)\);/);
   assert.match(js, /storyResume\.patch\(this\._runSessionScope\(\), \{ trails: /);
 });

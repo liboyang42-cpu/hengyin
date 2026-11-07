@@ -12,6 +12,7 @@ function harness() {
     onLocationChange(fn) { listeners.add(fn); },
     offLocationChange(fn) { assert.equal(typeof fn, 'function'); listeners.delete(fn); },
     startLocationUpdateBackground(opts) { opts.success(); },
+    startLocationUpdate(opts) { opts.success(); },
     stopLocationUpdate(opts) { stops++; opts.success(); }
   };
   const module = { exports: {} };
