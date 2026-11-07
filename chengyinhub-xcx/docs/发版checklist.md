@@ -38,6 +38,7 @@
          `https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/static/roam/atmos-entry-v2.mp4` 能播才算好。
       3. 片子必须放在小程序能播的主机上:组件只播 `utils/config.js` `TRUSTED_ASSET_HOSTS` 里的 https 主机
          (现在是 `www.chengyinhub.com` 与 `chengyin-oss.oss-cn-shanghai.aliyuncs.com`),别的主机一律跳过不播;
+         `xianghuioss.oss-cn-shanghai.aliyuncs.com` 仅兼容旧已发布图片,新增视频仍使用上述主域或当前 OSS 桶。
          同时在微信后台「开发管理 → 服务器域名」的 downloadFile 合法域名里确认有这台主机。
       4. 把地址填进 `utils/config.js` 的 `roamAtmosVideoUrl`(默认空 = 不播)。地址不是密钥,可以随发版提交。
       5. 真机确认:首次进漫游播一次、点一下能跳过、播完先压暗再整层淡出到地图上不闪白;再进不重播;弱网 / 减弱动态直接不播。

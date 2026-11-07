@@ -311,36 +311,58 @@ class TemplateAdoptSecretBackfillTest {
         assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
         request.setId(null); source.setPublishStatus(0L);
         assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
-        source.setPublishStatus(1L); source.setCouponId(99L);
-        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
-        source.setCouponId(null); source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"couponId\":99}]");
-        assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
+        source.setPublishStatus(1L);
+        for (Long canonicalId : java.util.Arrays.asList(null, 0L)) {
+            source.setMemberTemplateId(canonicalId);
+            source.setCouponId(99L); source.setRewardRulesJson(null);
+            assertEquals("该模板含商家专属优惠券，请先由原作者提供不含优惠券的可采用版本",
+                    assertThrows(IllegalArgumentException.class,
+                            () -> service.saveOrUpdateDraft(request, 7L, "member7")).getMessage());
+            source.setCouponId(null); source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"couponId\":99}]");
+            assertEquals("该模板含商家专属条件优惠券，不能跨商家采用",
+                    assertThrows(IllegalArgumentException.class,
+                            () -> service.saveOrUpdateDraft(request, 7L, "member7")).getMessage());
+        }
         assertTrue(inserted.get() == null);
     }
 
     @Test
-    void sourceOnlyAdoptionDoesNotApplyClientClearFlagsOrInventCanonicalFields() {
-        CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
-        source.setTitle("完整原玩法"); source.setMerchantGuide("只给店员的说明");
-        source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"xp\":2}]");
-        source.setStoryImg("media-asset:1");
-        when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
-        CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
-        request.setAdoptSourceOnly(true);
-        request.setClearFields(new java.util.HashSet<>(java.util.Arrays.asList(
-                "merchantGuide", "rewardRulesJson", "storyImg")));
-        request.setInteractionType("client-invented");
-        request.setMedalName("客户端夹带"); request.setMedalStyle("enamel");
+    void sourceOnlyAdoptionDoesNotApplyClientClearFlagsOrInventCanonicalFields() throws Exception {
+        for (Long canonicalId : java.util.Arrays.asList(null, 0L)) {
+            CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
+            source.setMemberTemplateId(canonicalId);
+            source.setTitle("完整原玩法"); source.setMerchantGuide("只给店员的说明");
+            source.setRewardRulesJson("[{\"outcomeCode\":\"COMPLETED\",\"xp\":2}]");
+            source.setStoryImg("media-asset:1");
+            when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
+            CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
+            request.setAdoptSourceOnly(true);
+            request.setClearFields(new java.util.HashSet<>(java.util.Arrays.asList(
+                    "merchantGuide", "rewardRulesJson", "storyImg")));
+            request.setInteractionType("client-invented");
+            request.setCouponId(99L); request.setMedalImg("media-asset:3");
+            request.setMedalName("客户端夹带"); request.setMedalStyle("enamel");
 
-        service.saveOrUpdateDraft(request, 7L, "member7");
+            assertEquals(91L, service.saveOrUpdateDraft(request, 7L, "member7"));
 
-        assertEquals("只给店员的说明", inserted.get().getMerchantGuide());
-        assertEquals(source.getRewardRulesJson(), inserted.get().getRewardRulesJson());
-        assertEquals("media-asset:1", inserted.get().getStoryImg());
-        org.junit.jupiter.api.Assertions.assertNull(inserted.get().getClearFields());
-        org.junit.jupiter.api.Assertions.assertNull(inserted.get().getInteractionType());
-        org.junit.jupiter.api.Assertions.assertNull(inserted.get().getMedalName());
-        assertEquals("glow", inserted.get().getMedalStyle());
+            assertEquals(new ObjectMapper().readTree(SOURCE_CONFIG),
+                    new ObjectMapper().readTree(inserted.get().getAdvancedConfigJson()));
+            assertEquals("完整原玩法", inserted.get().getTitle());
+            assertEquals(9001L, inserted.get().getOriginalTemplateId());
+            assertEquals(7L, inserted.get().getMemberId());
+            assertEquals("只给店员的说明", inserted.get().getMerchantGuide());
+            assertEquals(source.getRewardRulesJson(), inserted.get().getRewardRulesJson());
+            assertEquals("media-asset:1", inserted.get().getStoryImg());
+            org.junit.jupiter.api.Assertions.assertNull(inserted.get().getClearFields());
+            org.junit.jupiter.api.Assertions.assertNull(inserted.get().getInteractionType());
+            org.junit.jupiter.api.Assertions.assertNull(inserted.get().getCouponId());
+            org.junit.jupiter.api.Assertions.assertNull(inserted.get().getMedalImg());
+            org.junit.jupiter.api.Assertions.assertNull(inserted.get().getMedalName());
+            assertEquals("glow", inserted.get().getMedalStyle());
+        }
+        ICmsMemberTemplateService members = (ICmsMemberTemplateService)
+                ReflectionTestUtils.getField(service, "memberTemplateService");
+        org.mockito.Mockito.verify(members, org.mockito.Mockito.never()).selectCmsMemberTemplateById(any());
     }
 
     @Test
@@ -371,19 +393,20 @@ class TemplateAdoptSecretBackfillTest {
     }
 
     @Test
-    void sourceOnlyAdoptionRejectsMissingForeignDeletedOrUnapprovedCanonicalBeforeWriting() {
+    void sourceOnlyAdoptionRejectsMissingForeignDeletedUnapprovedOrNegativeCanonicalBeforeWriting() {
         CmsTemplateLibrary source = visibleSource(SOURCE_CONFIG);
         source.setMemberId(99L); source.setMemberTemplateId(700L);
         when(libraryService.selectCmsTemplateLibraryById(9001L)).thenReturn(source);
         ICmsMemberTemplateService members = (ICmsMemberTemplateService)
                 ReflectionTestUtils.getField(service, "memberTemplateService");
-        for (String state : java.util.Arrays.asList("missing", "foreign", "deleted", "pending")) {
+        for (String state : java.util.Arrays.asList("missing", "foreign", "deleted", "pending", "negative")) {
+            source.setMemberTemplateId("negative".equals(state) ? -1L : 700L);
             CmsMemberTemplate canonical = new CmsMemberTemplate();
             canonical.setId(700L); canonical.setMemberId("foreign".equals(state) ? 98L : 99L);
             canonical.setStatus("pending".equals(state) ? 0L : 1L);
             canonical.setDelFlag("deleted".equals(state) ? 2 : 0);
-            when(members.selectCmsMemberTemplateById(700L))
-                    .thenReturn("missing".equals(state) ? null : canonical);
+            when(members.selectCmsMemberTemplateById(source.getMemberTemplateId()))
+                    .thenReturn("missing".equals(state) || "negative".equals(state) ? null : canonical);
             CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
             request.setAdoptSourceOnly(true);
             assertThrows(IllegalArgumentException.class,

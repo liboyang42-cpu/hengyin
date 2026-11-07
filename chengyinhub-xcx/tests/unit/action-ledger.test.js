@@ -1891,7 +1891,11 @@ test('guarded 商家音频资源前缀不算路由，动态导航和未知路由
   assert.deepEqual(extractTargets("wx.navigateTo({ url: '/pages/play' + suffix });").routes, ['pages/play'])
   assert.deepEqual(extractTargets("wx.navigateTo({ url: '/pages/unknown/index' + query });").routes, ['pages/unknown/index'])
   assert.deepEqual(extractTargets(source.replace("path.startsWith('/audio/merchant-games/')", 'allowed(path)')).routes, ['pages/play'])
-  assert.deepEqual(extractTargets(source.replace('merchantGameAssetSet.has(relocated)', 'allowed(relocated)')).routes, ['pages/play'])
+  const unguardedAudio = source.replace(
+    "  const relocated = '/pages/play' + path;\n  return merchantGameAssetSet.has(relocated)",
+    "  const relocated = '/pages/play' + path;\n  return allowed(relocated)")
+  assert.notEqual(unguardedAudio, source)
+  assert.deepEqual(extractTargets(unguardedAudio).routes, ['pages/play'])
 })
 
 test('release 前重建 inventory，漏掉新增/修改控件必须变红', () => {

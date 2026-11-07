@@ -12,7 +12,7 @@ let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页
 const analytics = require('../../utils/analytics.js');
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { playMenuShare } = require('../../utils/play-menu-share.js');
-const { bundledMerchantGameAudioPath } = require('./utils/merchant-game-assets.js');
+const { bundledMerchantGameAudioPath, legacyMerchantGameImageUrl } = require('./utils/merchant-game-assets.js');
 const { stripOperatorNotes } = require('../../utils/rule-steps.js');
 const geo = require('../../utils/geo.js'); // 纯地理/时间工具(haversine/营业窗判定),可单测
 const recommend = require('./utils/play-recommend.js'); // P0 推荐评分(纯函数,已单测)
@@ -4613,7 +4613,7 @@ Page({
       // 题面媒体(看图答题 / 听音答题)。与 audio(整节点语音导览)不是一回事:
       // 那是到达就能听的导览,这是这道题的题面,只在答题卡里出现。
       // 后端签名链接存成 http://,真机不放 http 音频 / 不显 http 图片;与图片同口径升 https(实走复核)
-      questionImg: secureOwnMedia(n.questionImg), questionAudio: secureOwnMedia(n.questionAudio),
+      questionImg: secureOwnMedia(legacyMerchantGameImageUrl(n.questionImg) || n.questionImg), questionAudio: secureOwnMedia(n.questionAudio),
       optionMedia: n.optionMedia || null,
       points: n.xp || 12,
       // 模板呈现字段(/api/play/nodes 已下发)

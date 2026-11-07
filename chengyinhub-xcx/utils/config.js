@@ -1,6 +1,6 @@
 // 全局配置文件
 const API_BASE_URL = 'https://www.chengyinhub.com/prod-api';
-const TRUSTED_ASSET_HOSTS = ['www.chengyinhub.com', 'chengyin-oss.oss-cn-shanghai.aliyuncs.com'];
+const TRUSTED_ASSET_HOSTS = ['www.chengyinhub.com', 'chengyin-oss.oss-cn-shanghai.aliyuncs.com', 'xianghuioss.oss-cn-shanghai.aliyuncs.com'];
 
 function normalizeApiBaseUrl(value) {
   var url = String(value || '').trim().replace(/\/+$/, '');

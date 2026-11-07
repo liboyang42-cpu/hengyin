@@ -22,6 +22,18 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class AppMediaReferenceGuard {
     private static final String LOCAL_IMAGE = "/profile/upload/[0-9]{4}/[0-9]{2}/[0-9]{2}/[A-Za-z0-9_-]+\\.(jpg|jpeg|png|gif)";
     private static final String OSS_IMAGE = "upload/[0-9a-f]{32}\\.(jpg|jpeg|png|gif)";
+    // Existing published seed covers only; registry review still takes precedence and writes remain guarded.
+    private static final java.util.Set<String> LEGACY_TEMPLATE_IMAGES = java.util.Set.of(
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t1.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t2.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t3.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t4.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t5.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t6.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t7.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t8.png",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/upload/tmp_912332fefb01ff45beec6fbd905d7f8b_1777787760915.jpg",
+            "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/upload/tmp_16c1799962a7a5f0ad150acecabc057d_1777789299453.jpg");
     private final ObjectMapper json = new ObjectMapper();
     @Autowired private AppMediaAssetMapper mapper;
     @Autowired private AppMediaAssetService assets;
@@ -111,6 +123,7 @@ public class AppMediaReferenceGuard {
         if (AppMediaSchema.isOfficialTemplateImage(reference.trim())) return reference.trim();
         Map<String, Object> asset = resolve(reference);
         if (!registered(asset)) {
+            if (LEGACY_TEMPLATE_IMAGES.contains(reference.trim())) return reference.trim();
             String system = systemImageKey(reference);
             String url = system == null ? null : assets.systemImageUrl(system);
             return url == null ? "" : url;
@@ -156,6 +169,7 @@ public class AppMediaReferenceGuard {
 
     /** 本站存储对象 key:本地 /profile/upload/... 或 OSS upload/...;认不出返回 null。 */
     private static String storageKey(String value) {
+        if (LEGACY_TEMPLATE_IMAGES.contains(value)) return URI.create(value).getPath().substring(1);
         if (value.matches(LOCAL_IMAGE)) return value;
         URI uri;
         try { uri = URI.create(value); } catch (IllegalArgumentException invalidUrl) { return null; }

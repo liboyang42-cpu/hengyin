@@ -611,7 +611,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
 
     /** 库表未存储的互动语义和奖章沿现有 canonical 关联读取，不猜 library/member ID。 */
     private void copyAdoptedCanonicalFields(CmsTemplateLibrary source, CmsTemplatePublishRequest request) {
-        if (source.getMemberTemplateId() == null) return; // 历史直接入库内容没有个人原单关联。
+        if (source.getMemberTemplateId() == null || Long.valueOf(0L).equals(source.getMemberTemplateId())) return; // 历史直接入库内容以 null/0 表示没有个人原单关联。
         CmsMemberTemplate canonical = memberTemplateService.selectCmsMemberTemplateById(source.getMemberTemplateId());
         if (canonical == null || !source.getMemberTemplateId().equals(canonical.getId())
                 || source.getMemberId() == null || !source.getMemberId().equals(canonical.getMemberId())
