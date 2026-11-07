@@ -54,7 +54,7 @@ function setMode(raw, key, chapters, matrix, details) {
 }
 function syncChapters(raw, chapters) {
   const config = copy(support.parse(raw)), game = config.gameplayRuntime;
-  if (!game || !game.runtimeScope) return { error: '请先选择进行方式', field: 'mode' };
+  if (!game || !MODES.some(mode => mode.key === modeKey(game))) return { error: '请先选择进行方式', field: 'mode' };
   if (nodes(chapters).some(node => !Number.isSafeInteger(Number(node.id)) || Number(node.id) < 1))
     return { error: '请先保存主题和节点草稿，再设置章节及到达关系', field: 'chapters' };
   const previous = game.quests || [], acts = game.acts || [], nextQuests = [], nextActs = [];
@@ -192,9 +192,14 @@ const methods = {
     const ds = e && e.currentTarget && e.currentTarget.dataset || {}, kind = ds.kind || 'mode';
     let config = copy(support.parse(this.data.formData.themeRuntimeConfig));
     const editor = { show: true, kind, title: { mode: '进行方式', acts: '章节开幕', quests: '到达与工作人员引导', endings: '运行结局' }[kind], chapterIndex: Number(ds.index ?? this.data.popChapterIndex) };
+    if (kind === 'mode') {
+      if (!config.gameplayRuntime) config.gameplayRuntime = {};
+      if (ds.nextKind === 'quests') editor.nextKind = 'quests';
+    }
     let error = '';
     if (kind === 'acts' || kind === 'quests') {
       const synced = syncChapters(config, this.data.formData.chapters); error = synced.error || '';
+      if (kind === 'quests' && synced.field === 'mode') return this.openStructure({ currentTarget: { dataset: { kind: 'mode', nextKind: 'quests', index: editor.chapterIndex } } });
       if (synced.value) config = synced.value;
       if (kind === 'acts') {
         const chapter = this.data.formData.chapters[editor.chapterIndex];
@@ -321,7 +326,10 @@ const methods = {
     const issue = validate(config, this.data.formData.chapters);
     if (issue) return this.setData({ structureError: issue.error, structureErrorField: issue.field });
     if (this.data.structureSaving) return;
-    const finish = () => { this._saveRuntime(config); this.setData({ 'structureEditor.show': false, structureError: '' }); this._syncRuntimeStats(); };
+    const finish = () => {
+      this._saveRuntime(config); this.setData({ 'structureEditor.show': false, structureError: '' }); this._syncRuntimeStats();
+      if (editor.kind === 'mode' && editor.nextKind === 'quests') this.openStructure({ currentTarget: { dataset: { kind: 'quests', index: editor.chapterIndex } } });
+    };
     if (editor.kind === 'quests') return this._saveStructureAlts(editor.nodeId, finish);
     finish();
   },
