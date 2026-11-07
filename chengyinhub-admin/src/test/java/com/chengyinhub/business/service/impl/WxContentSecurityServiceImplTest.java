@@ -356,6 +356,94 @@ class WxContentSecurityServiceImplTest {
                 startsWith("wx:content-sec:callback:nonce:"), anyString());
     }
 
+    /** Round5B-5:库里的 media-asset:N 要解析成真实地址再送微信,回调身份仍是引用本身。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void mediaAssetReferenceIsResolvedToFetchableUrlBeforeSubmitting() {
+        WxContentSecurityServiceImpl service = spy(service(mock(RedisCache.class), mock(ImMessageMapper.class)));
+        WxPayConfig wxConfig = mock(WxPayConfig.class);
+        when(wxConfig.isSecCheckEnabled()).thenReturn(true);
+        ReflectionTestUtils.setField(service, "wxConfig", wxConfig);
+        AppMediaAssetService assets = mock(AppMediaAssetService.class);
+        when(assets.securityCheckFetchUrl(9L)).thenReturn("https://oss.example.com/upload/abc.jpg?sig=1");
+        org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> provider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(assets);
+        ReflectionTestUtils.setField(service, "mediaAssetServiceProvider", provider);
+        doReturn("trace-9").when(service).checkMediaAsync(anyString(), anyString());
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        when(inbox.register("trace-9", 3, 5L, "media-asset:9")).thenReturn(true);
+        ReflectionTestUtils.setField(service, "callbackInboxService", inbox);
+
+        assertEquals("trace-9", service.submitMediaCheckOne(3, 5L, "media-asset:9", "openid-x"));
+
+        verify(service).checkMediaAsync("https://oss.example.com/upload/abc.jpg?sig=1", "openid-x");
+        verify(service, never()).checkMediaAsync(eq("media-asset:9"), anyString());
+        verify(inbox).register("trace-9", 3, 5L, "media-asset:9");
+    }
+
+    /** Round5C:suggest=review 与 risky 同一路径自动下架,不再挂人工复核单。 */
+    @Test
+    void reviewSuggestionIsHandledExactlyLikeRisky() {
+        RedisCache redisCache = mock(RedisCache.class);
+        ISysConfigService configService = mock(ISysConfigService.class);
+        when(configService.selectConfigByKey("wx.msgpush.token")).thenReturn("test-token");
+        when(redisCache.setIfAbsent(startsWith("wx:content-sec:callback:nonce:"), anyString(),
+                eq(10), eq(TimeUnit.MINUTES))).thenReturn(true);
+        WxContentSecurityServiceImpl service = spy(service(redisCache, mock(ImMessageMapper.class)));
+        ReflectionTestUtils.setField(service, "configService", configService);
+        ReflectionTestUtils.setField(service, "clock",
+                Clock.fixed(Instant.ofEpochSecond(1700000000L), ZoneOffset.UTC));
+        doReturn(true).when(service).handleMediaCheckResult("trace-review", true);
+        String body = "{\"Event\":\"wxa_media_check\",\"trace_id\":\"trace-review\",\"errcode\":0,\"result\":{\"suggest\":\"review\"}}";
+
+        assertEquals(IWxContentSecurityService.CallbackResult.SUCCESS,
+                service.processMediaCheckCallback("8e91e748d4120504e771fd0ea6687904595b9d59",
+                        "1700000000", "nonce-false", body));
+        verify(service).handleMediaCheckResult("trace-review", true);
+    }
+
+    /** Round5C:据点模板图片 risky ⇒ 自动下架 + 通知作者,不挂任何人工审核单。 */
+    @Test
+    @SuppressWarnings("unchecked")
+    void riskyNodeTemplateImageIsTakenDownAndAuthorNotifiedWithoutHumanQueue() {
+        WxContentSecurityServiceImpl service = service(mock(RedisCache.class), mock(ImMessageMapper.class));
+        com.chengyinhub.business.mapper.CmsMemberTemplateMapper templates =
+                mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
+        com.chengyinhub.business.domain.CmsMemberTemplate template = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        template.setId(42L);
+        template.setMemberId(9L);
+        template.setTitle("t");
+        template.setPublishStatus(1L);
+        template.setCheckStatus(1);
+        when(templates.selectCmsMemberTemplateById(42L)).thenReturn(template);
+        when(templates.updateCmsMemberTemplate(any())).thenReturn(1);
+        ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", templates);
+        com.chengyinhub.business.service.IImService im = mock(com.chengyinhub.business.service.IImService.class);
+        org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IImService> imProvider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(imProvider.getIfAvailable()).thenReturn(im);
+        ReflectionTestUtils.setField(service, "imServiceProvider", imProvider);
+        com.chengyinhub.business.service.IAuditTaskService audit = mock(com.chengyinhub.business.service.IAuditTaskService.class);
+        org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditProvider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(auditProvider.getObject()).thenReturn(audit);
+        when(auditProvider.getIfAvailable()).thenReturn(audit);
+        ReflectionTestUtils.setField(service, "auditTaskServiceProvider", auditProvider);
+
+        Boolean applied = ReflectionTestUtils.invokeMethod(service, "processMediaCheckResult",
+                IWxContentSecurityService.BIZ_TYPE_NODE_TEMPLATE, 42L, "trace-node", true);
+
+        assertEquals(Boolean.TRUE, applied);
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.CmsMemberTemplate> down =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.CmsMemberTemplate.class);
+        verify(templates).updateCmsMemberTemplate(down.capture());
+        assertEquals(Long.valueOf(0L), down.getValue().getPublishStatus());
+        assertEquals(Integer.valueOf(2), down.getValue().getCheckStatus());
+        verify(im).sendSystemInNestedTransaction(eq(9L), any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(audit);
+    }
+
     @Test
     void reviewInfoLogContainsOnlyLengthAndNeverUserContent() {
         RedisCache redisCache = mock(RedisCache.class);

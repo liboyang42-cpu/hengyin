@@ -75,6 +75,7 @@ class ApiRoamCoordinateBoundaryTest
         merchantMapper = mock(CmsRegistrationMerchantMapper.class);
 
         controller = new StubController();
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "roamMapper", roamMapper);
         ReflectionTestUtils.setField(controller,"locationConsent",mock(com.chengyinhub.business.service.impl.RoamLocationConsentService.class));
         ReflectionTestUtils.setField(controller, "roamSessionWriteService", writeService);
@@ -83,6 +84,7 @@ class ApiRoamCoordinateBoundaryTest
         ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantMapper", merchantMapper);
         NpcFeatureFlags flags = mock(NpcFeatureFlags.class);
         when(flags.eventOn()).thenReturn(false);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "npcFeatureFlags", flags);
 
         RoamSession session = new RoamSession();
@@ -230,6 +232,7 @@ class ApiRoamCoordinateBoundaryTest
     {
         com.chengyinhub.business.service.support.VisitedPoiIdentityResolver identity =
                 mock(com.chengyinhub.business.service.support.VisitedPoiIdentityResolver.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "visitedPoiIdentity", identity);
         when(visitedPoiMapper.insertVisitedPoiIgnore(anyLong(), any(), any(), any(), any(), any())).thenReturn(1);
 

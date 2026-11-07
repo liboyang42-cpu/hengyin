@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 /**
  * AUDIT-P1(2026-10-20 分级审核):主题创建/编辑先发后审。
  * <ul>
- *   <li>机审建议人工 → 照常发布,并留一张 BIZ_TOPIC post_review_flag 抽检单(以前是硬错误);</li>
+ *   <li>机审建议人工 → 保存,但 Round5B-3 起下架留置并挂复核上架单(不再「照常发布 + 抽检单」);</li>
  *   <li>违规 → 拒绝保存,统一文案;</li>
  *   <li>干净文本 → 发布,不建抽检单(简易版行为不变);</li>
  *   <li>编辑只复检改动过的文本:只改价/票不重跑机审,改了故事才送检。</li>
@@ -92,22 +92,16 @@ class ApiTopicPostReviewTest {
         return dto;
     }
 
+    /** Round5B-3:机审要人工的主题照常保存,但随即下架留置并送人工复核,不再先公开。 */
     @Test
-    void reviewSuggestedText_nowPublishesFlagged_insteadOfErroring() {
+    void reviewSuggestedText_isSavedButHeldForHumanReview() {
         AjaxResult result = controller.createTopic(createDto("待复核的主题名"));
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG), String.valueOf(result.get(AjaxResult.MSG_TAG)));
         verify(topicService).createTopic(any(), eq(MEMBER), anyString());
-        verify(auditTaskService).submit(eq(AuditTask.BIZ_TOPIC), eq(TOPIC), eq(MEMBER), eq("post_review_flag"),
-                contains("TEXT_REVIEW"));
-    }
-
-    /** AUDIT-INT-8:打标的同时把 cms_topic.review_flag 置 1(#377 的列此前无写入方)。 */
-    @Test
-    void flaggedPublishMarksTopicReviewFlag() {
-        controller.createTopic(createDto("待复核的主题名"));
-
-        verify(topicService).markReviewFlag(TOPIC, true);
+        verify(topicService).holdUncheckedTopicForReview(TOPIC, MEMBER);
+        verify(auditTaskService, never()).submit(eq(AuditTask.BIZ_TOPIC), eq(TOPIC), eq(MEMBER), eq("post_review_flag"),
+                anyString());
     }
 
     @Test
@@ -115,6 +109,7 @@ class ApiTopicPostReviewTest {
         controller.createTopic(createDto("正常主题名"));
 
         verify(topicService, never()).markReviewFlag(anyLong(), org.mockito.ArgumentMatchers.anyBoolean());
+        verify(topicService, never()).holdUncheckedTopicForReview(anyLong(), any());
     }
 
     @Test
@@ -135,6 +130,7 @@ class ApiTopicPostReviewTest {
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), any());
     }
 
+    /** 草稿同样走留置(service 内对草稿只留置不挂单,发布草稿时由留置分支挂复核单)。 */
     @Test
     void flaggedDraft_isNotQueuedForSpotCheck() {
         when(topicService.selectTopicIsDraft(TOPIC)).thenReturn(1);
@@ -145,8 +141,7 @@ class ApiTopicPostReviewTest {
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), any());
-        // #380:草稿不建抽检单,但必须留下 review_flag,publish-draft 才不会把它记成机审通过
-        verify(topicService).markReviewFlag(TOPIC, true);
+        verify(topicService).holdUncheckedTopicForReview(TOPIC, MEMBER);
     }
 
     private CmsTopic saved() {

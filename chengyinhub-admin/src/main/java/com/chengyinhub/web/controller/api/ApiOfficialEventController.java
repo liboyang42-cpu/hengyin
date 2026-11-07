@@ -122,6 +122,8 @@ public class ApiOfficialEventController extends BaseController {
     private INotifyService notifyService;
     @Autowired
     private IContentSafetyGate contentSafetyGate;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
 
     private Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
@@ -333,6 +335,11 @@ public class ApiOfficialEventController extends BaseController {
         SafetyDecision decision = contentSafetyGate.decide(safety);
         if (decision == null || decision.isBlock()) return error("活动内容包含违规信息，请修改后重试");
         OfficialEvent saved = officialEventService.submitForReview(event, memberId);
+        // Round5C:文本机审没结论 → 自动复检(违规自动驳回);官方活动的公开审批仍由平台人工决定。
+        if (recheckService != null && saved != null
+                && com.chengyinhub.business.service.IContentSafetyRecheckService.needsRecheck(decision)) {
+            try { recheckService.enqueue(safety, saved.getId()); } catch (Exception e) { logger.error("官方活动自动复检进队失败", e); }
+        }
         // 封面图异步内容安全送检(BIZ_TYPE_OFFICIAL_EVENT,违规经回调告警人工下架)
         if (event.getCoverImg() != null && !event.getCoverImg().trim().isEmpty()) {
             try { wxSec.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_OFFICIAL_EVENT, saved.getId(), event.getCoverImg(), openidOf(memberId)); } catch (Exception ignore) {}

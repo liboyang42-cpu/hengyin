@@ -110,4 +110,9 @@ public interface IAuditTaskService {
     List<AuditTask> selectWorkbenchQueueWithGuardScope(AuditTask filter, List<Long> guardTopicIds);
     java.util.Map<String, Object> guardReviewReceipt(Long taskId, Long reviewerId, String requestId);
 
+
+    /** Round5C:同内容审核槽的未结(待审/升级)审核单 id,无则 null;举报单不算。供自动复检找单裁决。 */
+    default Long findOpenContentTaskId(String bizType, Long bizId) {
+        return null;
+    }
 }

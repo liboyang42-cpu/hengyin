@@ -108,6 +108,13 @@ public class ApiActivityController extends BaseController {
     @Autowired
     private IContentSafetyGate contentSafetyGate;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+
+    /** Round5B-6:活动封面 / 图集只收本站登记、本人上传或已审核通过的媒体,不收客户端外链。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
     @Autowired
     private com.chengyinhub.business.service.support.ActivityReviewPolicy activityReviewPolicy;
 
@@ -825,6 +832,8 @@ public class ApiActivityController extends BaseController {
 
             // UGC 内容安全门禁(2026-10-20 分级审核):活动按内容先发后审;高风险类目 / 未审核商家 / 总闸 → 先审后发。
             // 明确违规两种模式都拦;先审时门禁 HOLD → 落库待审并建 BIZ_ACTIVITY 审核单(活动尚未落库,门禁不建单)。
+            submissionSafety.requireOwnImages(member_id, request.getImgUrl());
+            submissionSafety.requireOwnImages(member_id, request.getImgArr());
             String secOpenid = resolveOpenid(member_id);
             PublishSafetyRequest safety = new PublishSafetyRequest();
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
@@ -833,6 +842,7 @@ public class ApiActivityController extends BaseController {
             safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
+            safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
             safety.setReviewMode(activityReviewPolicy.modeOf(request, publisher.reviewSubject()).name());
             SafetyDecision decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
@@ -853,6 +863,7 @@ public class ApiActivityController extends BaseController {
             if (decision.isFlagged()) {
                 flagForSpotCheck(activityId, fOwnerMemberId, decision.getFlagReason(), request, false);
             }
+            enqueueRecheck(decision, safety, activityId);
 
             // UGC 图片内容安全:异步送检封面/图集,命中违规由消息推送回调自动下架(best-effort,不阻断)
             wxContentSecurityService.submitMediaCheck(
@@ -935,8 +946,15 @@ public class ApiActivityController extends BaseController {
         }
         // F-L5C-02 / AUDIT-G1-2:改文案与 /publish 同一道统一门禁 + 同一套分级(ActivityReviewPolicy),
         // 不能先发干净文本再改成违规内容。明确违规两种模式都拒;先审模式下改了内容即退回待审(见 service)。
+        try {
+            submissionSafety.requireOwnImages(memberId, request.getImgUrl());
+            submissionSafety.requireOwnImages(memberId, request.getImgArr());
+        } catch (ServiceException invalidMedia) {
+            return error(invalidMedia.getMessage());
+        }
         final boolean preReview;
         final SafetyDecision decision;
+        final PublishSafetyRequest safety = new PublishSafetyRequest();
         try {
             CmsActivityPublishRequest policyView = request;
             if (request.getCategoryIds() == null) {
@@ -947,13 +965,13 @@ public class ApiActivityController extends BaseController {
             }
             PublishSafetyRequest.ReviewMode mode =
                     activityReviewPolicy.modeOf(policyView, publisher.reviewSubject());
-            PublishSafetyRequest safety = new PublishSafetyRequest();
             safety.setContentType(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY);
             safety.setMemberId(publisher.ownerMemberId());
             safety.setOpenid(resolveOpenid(memberId));
             safety.setText(IWxContentSecurityService.joinText(request.getName(), request.getDescription()));
             safety.setHasPrice(activityReviewPolicy.hasCharge(request));
             safety.setHasSignup(true);
+            safety.setMediaUrls(safetyMedia(request.getImgUrl(), request.getImgArr()));
             safety.setReviewMode(mode.name());
             decision = contentSafetyGate.decide(safety);
             if (decision == null || decision.isBlock()) {
@@ -988,6 +1006,7 @@ public class ApiActivityController extends BaseController {
         try {
             // SQL 的 where 带 member_id,传主体才写得动自家活动(员工只是操作人)。
             cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName(), reReview);
+            enqueueRecheck(decision, safety, cid);
             if (decision.isFlagged() && !preReview) {
                 flagForSpotCheck(cid, publisher.ownerMemberId(), decision.getFlagReason(), request, true);
             } else if (substantiveSpotCheck) {
@@ -1033,6 +1052,17 @@ public class ApiActivityController extends BaseController {
         return left.getTime() / 1000L == right.getTime() / 1000L;
     }
 
+    /** Round5C:机审没结论的待审活动进自动复检(通过自动上架;先审的业务审批仍留人工)。 */
+    private void enqueueRecheck(SafetyDecision decision, PublishSafetyRequest safety, Long activityId) {
+        if (recheckService == null || activityId == null
+                || !com.chengyinhub.business.service.IContentSafetyRecheckService.needsRecheck(decision)) return;
+        try {
+            recheckService.enqueue(safety, activityId);
+        } catch (Exception e) {
+            logger.error("活动自动复检进队失败 activityId={}", activityId, e);
+        }
+    }
+
     /** 内容安全送检需要发表者 openid:按 memberId 查会员;查不到返回空串(降级 scene 检测)。 */
     /**
      * 先发后审时机审没给出结论(要人工/审不了/缺 openid/检测关闭):活动照常上架,
@@ -1056,6 +1086,16 @@ public class ApiActivityController extends BaseController {
         } catch (Exception e) {
             logger.error("活动抽检单提交失败 activityId={}", activityId, e);
         }
+    }
+
+    /** Round5B-3:把封面 / 图集交给门禁,图片送不了检时先发后审也要 HOLD。 */
+    static java.util.List<String> safetyMedia(String imgUrl, String imgArr) {
+        java.util.List<String> media = new java.util.ArrayList<>();
+        for (String raw : new String[] {imgUrl, imgArr}) {
+            if (raw == null) continue;
+            for (String item : raw.split("[,;]")) if (!item.trim().isEmpty()) media.add(item.trim());
+        }
+        return media;
     }
 
     private String resolveOpenid(Long memberId) {

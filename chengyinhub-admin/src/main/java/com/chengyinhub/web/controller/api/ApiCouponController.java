@@ -89,6 +89,9 @@ public class ApiCouponController extends BaseController {
     @Autowired
     private IContentSafetyGate contentSafetyGate;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+
     @Autowired
     private IAuditTaskService auditTaskService;
 
@@ -167,7 +170,7 @@ public class ApiCouponController extends BaseController {
             return error("商家未通过入驻审核，暂不能发布优惠券");
         }
         // 2026-10-20 分级审核:优惠券先发后审。名称/描述过统一门禁(POST_REVIEW),明确违规直接拒;
-        // 审不了的照常上架但打标,发布后留非阻断抽检单。
+        // Round5B-3:审不了(HOLD)的券以 status=5(待审核)保存,发券 SQL 排除 5 即不可领,进审核台,人工通过才转进行中。
         PublishSafetyRequest safety = new PublishSafetyRequest();
         safety.setContentType(AuditTask.BIZ_COUPON);
         safety.setMemberId(ownerMemberId);
@@ -197,7 +200,7 @@ public class ApiCouponController extends BaseController {
             smsCoupon.setScopeType(1);
             smsCoupon.setMerchantId(operation.merchantId);
         }
-        smsCoupon.setStatus(1);
+        smsCoupon.setStatus(decision.isHold() ? SmsCoupon.STATUS_PENDING_REVIEW : 1);
         smsCoupon.setDelFlag(0);
         smsCoupon.setName(request.getName());
         smsCoupon.setCouponType(request.getCouponType());
@@ -223,7 +226,9 @@ public class ApiCouponController extends BaseController {
         Integer rows = quotaService.runWithCreateGuard(fMemberId,
                 com.chengyinhub.business.service.IQuotaService.TYPE_COUPON,
                 () -> smsCouponService.insertSmsCoupon(smsCoupon));
-        if (rows != null && rows > 0 && decision.isFlagged()) {
+        if (rows != null && rows > 0 && decision.isHold()) {
+            holdForReview(smsCoupon.getId(), ownerMemberId, decision.getReasonCode(), request.getName(), safety);
+        } else if (rows != null && rows > 0 && decision.isFlagged()) {
             flagForSpotCheck(smsCoupon.getId(), ownerMemberId, decision.getFlagReason(), request.getName());
         }
         // C-31:回传新券 id,发布流里「新建即选中」要靠它挂到节点奖励上(缺 id 会静默挂成 0)。
@@ -529,6 +534,24 @@ public class ApiCouponController extends BaseController {
      * 先发后审时机审没给出结论:券照常上架,在审核台留一张非阻断抽检单(source=post_review_flag),
      * 驳回即平台手动失效。best-effort:失败只记日志,不影响已发布的券。
      */
+    /**
+     * 机审未完成的券已按 status=5 保存(不可领)。挂一张待审单作为裁决锚点,并进自动复检(Round5C):
+     * 复检通过由审核服务以系统身份转 status=1,违规/耗尽自动驳回并通知商家,不需要人。
+     */
+    private void holdForReview(Long couponId, Long ownerMemberId, String reason, String name,
+                               PublishSafetyRequest safety) {
+        logger.warn("优惠券机审未完成,不可领并自动复检 couponId={} reason={}", couponId, reason);
+        com.alibaba.fastjson2.JSONObject snap = new com.alibaba.fastjson2.JSONObject();
+        snap.put("bizType", AuditTask.BIZ_COUPON);
+        snap.put("bizId", couponId);
+        snap.put("gateReason", reason);
+        snap.put("name", name);
+        auditTaskService.submitSafetyHold(AuditTask.BIZ_COUPON, couponId, ownerMemberId, "NORMAL", snap.toJSONString());
+        if (recheckService != null) {
+            recheckService.enqueue(AuditTask.BIZ_COUPON, couponId, ownerMemberId, safety.getText(), null, false);
+        }
+    }
+
     private void flagForSpotCheck(Long couponId, Long ownerMemberId, String reason, String name) {
         logger.warn("优惠券先发后审打标待抽检 couponId={} reason={}", couponId, reason);
         try {

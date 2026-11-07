@@ -118,6 +118,17 @@ public class AppMediaAssetService {
                 :FileOssUploadUtils.generateShortLivedPresignedUrl(objectKey,300));
         return item;
     }
+    /**
+     * Round5B-5:送微信异步图片检测要一个能抓取的地址,不能把库里的 media-asset:N 引用原样当 URL 发出去。
+     * 不论审核态(待审的正是要检测的):本地图用发布地址,OSS 图用 1 小时短签名(微信异步拉取)。
+     */
+    public String securityCheckFetchUrl(Long id) {
+        Map<String,Object> row=id==null?null:mapper.select(id);
+        if(row==null)throw new ServiceException("媒体不存在");
+        String objectKey=String.valueOf(row.get("objectKey"));
+        if("LOCAL".equals(row.get("storageType")))return localApprovedUrl(objectKey);
+        return FileOssUploadUtils.generateShortLivedPresignedUrl(objectKey,3600);
+    }
     public String approvedUrl(Long id) {
         Map<String,Object> row=mapper.select(id);
         if(row==null || !"APPROVED".equals(row.get("reviewState")))throw new ServiceException("媒体尚未审核通过");

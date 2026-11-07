@@ -62,6 +62,8 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
 
     @Autowired private MerchantDeskMapper mapper;
     @Autowired private AppMediaReferenceGuard mediaReferences;
+    /** Round5B-6:商品名 / 单位公开展示,先过文本机审。 */
+    @Autowired private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
 
     // ================= 回执 =================
 
@@ -238,6 +240,7 @@ public class MerchantDeskServiceImpl implements IMerchantDeskService {
         payload.put("unit", unit);
         payload.put("pic", pic);
         payload.put("albumPics", album);
+        submissionSafety.requireText(access.getPrincipalMemberId(), false, name, unit);
         return idempotent(access, str(body.get("requestId")), ACTION_PRODUCT_SAVE, payload, () -> {
             requireStore(access);
             Map<String, Object> row = new LinkedHashMap<>();

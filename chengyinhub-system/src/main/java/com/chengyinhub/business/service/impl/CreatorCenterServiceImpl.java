@@ -27,6 +27,9 @@ public class CreatorCenterServiceImpl implements ICreatorCenterService {
     @Autowired
     private CreatorProfileMapper creatorProfileMapper;
 
+    /** Round5B-6:创作者申请的昵称/简介过文本机审,头像只收本站登记媒体(申请后仍有平台人审)。 */
+    @Autowired private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
     @Autowired
     private CreatorMetricDailyMapper creatorMetricDailyMapper;
 
@@ -58,6 +61,8 @@ public class CreatorCenterServiceImpl implements ICreatorCenterService {
         if (memberId == null || request == null || StringUtils.isBlank(request.getCreatorName())) {
             return 0;
         }
+        submissionSafety.requireOwnImages(memberId, request.getAvatarUrl());
+        submissionSafety.requireText(memberId, true, request.getCreatorName(), request.getBio());
         CreatorProfile existing = creatorProfileMapper.selectByMemberId(memberId);
         if (existing != null) {
             // 待审/已通过不重复受理;被驳回(2)的可以改资料重新提交,回到待审

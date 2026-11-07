@@ -38,14 +38,14 @@ import static org.mockito.Mockito.when;
 class ApiCreativeSquareCommunityPolicyTest {
 
     @Test
-    void legacyCommunityWritesStayEnabledUntilControlledCutover() throws Exception {
-        assertEquals("${community.post.legacy-writes-enabled:true}",
+    void legacyCommunityWritesDefaultOffBecauseCurrentClientUsesPostsApi() throws Exception {
+        assertEquals("${community.post.legacy-writes-enabled:false}",
                 ApiCreativeSquareController.class.getDeclaredField("legacyCommunityWritesEnabled")
                         .getAnnotation(Value.class).value());
-        assertEquals("${community.post.legacy-writes-enabled:true}",
+        assertEquals("${community.post.legacy-writes-enabled:false}",
                 ApiCommentController.class.getDeclaredField("legacyCommunityWritesEnabled")
                         .getAnnotation(Value.class).value());
-        assertEquals("${community.post.legacy-writes-enabled:true}",
+        assertEquals("${community.post.legacy-writes-enabled:false}",
                 ApiTopicController.class.getDeclaredField("legacyCommunityWritesEnabled")
                         .getAnnotation(Value.class).value());
     }

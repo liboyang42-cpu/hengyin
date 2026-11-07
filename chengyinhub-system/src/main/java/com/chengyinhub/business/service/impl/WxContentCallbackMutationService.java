@@ -29,11 +29,8 @@ public class WxContentCallbackMutationService
         {
             return false;
         }
-        // 7=据点互动模板仍无自动处置,走人工;8=官方活动已有下线分支(AUDIT-G1-4),照常锁行 + 当前媒体校验。
-        if (row.getBizType() != null && row.getBizType() == 7)
-        {
-            return markManualReview(claim, risky, ERROR_UNSUPPORTED_AUTO_MUTATION);
-        }
+        // Round5B-4:7=据点互动模板已有下架分支(WxContentSecurityServiceImpl),与 8=官方活动一样照常锁行 + 当前媒体校验,
+        // 不再把 risky 结论落成「人工」后丢弃。
         if (row.getMediaHash() == null || row.getMediaHash().trim().length() == 0)
         {
             return markManualReview(claim, risky, ERROR_LEGACY_MEDIA_HASH_MISSING);

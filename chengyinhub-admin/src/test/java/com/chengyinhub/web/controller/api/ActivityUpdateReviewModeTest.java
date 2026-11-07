@@ -76,6 +76,7 @@ class ActivityUpdateReviewModeTest {
         ActivityReviewPolicy policy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(policy, "configService", config);
 
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
@@ -134,15 +135,16 @@ class ActivityUpdateReviewModeTest {
         verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
     }
 
+    /** Round5B-3:先发后审编辑审不了 → 退回待审(reReview=true),不再保持在架 + 抽检单。 */
     @Test
-    void reviewRequiredEditLeavesSpotCheckViaRefresh() {
+    void reviewRequiredEditIsHeldForHumanReview() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
 
         AjaxResult result = controller.update(edit());
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(false));
-        verify(auditTaskService).submitOrRefreshActivity(eq(ACTIVITY), eq(MEMBER_ID), eq("post_review_flag"), anyString());
+        verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
+        verify(auditTaskService, never()).submitOrRefreshActivity(eq(ACTIVITY), eq(MEMBER_ID), eq("post_review_flag"), anyString());
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), any());
     }
 }
