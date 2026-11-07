@@ -3729,7 +3729,7 @@ Page({
       target:{editor:'temp',sourceId:String(sourceId)},
       onBusy:busy=>{this._adoptingTemplate=busy;},
       onRejected:res=>{if(!sourceData||!isMediaRejection(res))return false;this._openWithUnusableMedia(sourceData,res);return true;},
-      onError:message=>{this._adoptionUnconfirmed=true;this.setData({editorLoading:false,loadErrorIsOperation:true,loadError:message});},
+      onError:(message,status)=>{const rejected=status==='REJECTED';this._adoptionUnconfirmed=!rejected;this.setData({editorLoading:false,loadErrorIsOperation:!rejected,loadErrorIsAccess:rejected,loadError:message});},
       onReady:detail=>{
         if(detail.canEdit!==true){this.setData({editorLoading:false,loadError:'采用草稿归属未确认'});return false;}
         this._adoptionUnconfirmed=false;this._templateId=positiveId(detail.id);this.data.isMyScope=true;this._templateCanEdit=true;
