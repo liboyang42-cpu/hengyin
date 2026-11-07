@@ -879,6 +879,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           AND registration_status = 2
     </select>
 
+    <!-- 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名已置退款态(4/3),不在上面的已付未退合计里;
+         未退回的那部分仍是主办方的收入,结算时按「实付 − 已批准退款」补进来。 -->
+    <select id="selectRetainedSalesAfterPartialRefundByActivityId" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(r.payable_amount - ra.refunded), 0)
+        FROM cms_registration r
+        JOIN (
+            SELECT source_id, SUM(refund_amount) AS refunded
+            FROM refund_application
+            WHERE source_type = 'registration' AND status = 1 AND del_flag = 0
+            GROUP BY source_id
+        ) ra ON ra.source_id = r.id
+        WHERE r.owner_id = #{activityId}
+          AND r.owner_type = 2
+          AND r.payment_status = 4
+          AND r.registration_status = 3
+          AND ra.refunded &lt; r.payable_amount
+    </select>
+
     <!-- P0-10 弃单关单:过期未支付订单 id(限批,防单轮过大) -->
     <!-- P1-PT-7:多票从单(payable=0 停 0 态)的父单里还有 PAYING 主单时不关 —— 钱付没付只有主单查单说了算,
          先关从单会让主单查到 SUCCESS 时从单补记冲突、整单回滚。这类父单由 settlePayingOne 整单关。 -->

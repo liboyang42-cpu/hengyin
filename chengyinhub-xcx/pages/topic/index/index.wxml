@@ -268,7 +268,7 @@
                   <view class="sess__name">{{item.name}}</view>
                   <view class="sess__time" wx:if="{{item.sessionTimeText}}">{{item.sessionTimeText}}</view>
                   <view class="sess__meet" wx:if="{{item.meetingPoint}}">集合点 · {{item.meetingPoint}}</view>
-                  <view class="sess__meet" wx:if="{{item.refundRule}}">退改 · {{item.refundRule}}</view>
+                  <view class="sess__meet" wx:if="{{item.refundRuleText}}">退改 · {{item.refundRuleText}}</view>
                 </view>
                 <view class="sess__side">
                   <view class="sess__price" wx:if="{{item.price != null}}">{{money.amount(item.price)}}</view>

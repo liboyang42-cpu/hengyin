@@ -187,9 +187,10 @@ class SessionRefundClockMybatisIntegrationTest {
         RefundPolicy.Verdict no = RefundPolicy.evaluate(2L, rMissed.getPaymentStatus(),
                 rMissed.getVerificationStatus(), null, null, null, missed.getStartDate(),
                 rMissed.getPurchaseKind(), rMissed.getRefundDeadline(), now);
-        assertFalse(no.refundable, "集合前 23h 必须不可退");
-        assertFalse(no.manualReview, "超过窗口是终局,不转人工");
-        assertTrue(no.reason.contains("集合前24小时"), "实际:" + no.reason);
+        // 2026-11-02 退款档位:集合前 23h(24 小时内、未开始)退 50%,截止点 = 读回的集合时间
+        assertTrue(no.partial(), "集合前 23h 必须退 50%,实际:" + no.reason);
+        assertFalse(no.manualReview, "档位是终局,不转人工");
+        assertEquals(missed.getStartDate().getTime(), no.deadline.getTime());
     }
 
     /** 购买页文案:真票行按 owner_type/mode 分流 —— 带队覆写,自由探索保留。 */

@@ -33,7 +33,13 @@ public final class RefundPolicy {
      * 场次票退款规则文案(产品拍板 2026-09-15,5.9) —— 购买页票种行与订单页退款卡共用。
      * 只给带队场次票/场次单用;自玩通行证与自由探索票(快照钟)不引用。
      */
-    public static final String SESSION_REFUND_RULE_TEXT = "集合前 24 小时可全额退;之后或未到场不退";
+    public static final String SESSION_REFUND_RULE_TEXT = "集合前 24 小时以上全额退;24 小时内退 50%;开始后不退";
+
+    /**
+     * 场次票退款档位(业主 2026-11-02,全平台):开始前 24 小时以上 100%,24 小时内 50%,开始后不退。
+     * 购买页退款表与订单页共用;别在调用方另写一份比例。
+     */
+    public static final java.math.BigDecimal SESSION_LATE_REFUND_RATIO = new java.math.BigDecimal("0.50");
 
     /** 退款判定结果。 */
     public static final class Verdict {
@@ -53,16 +59,30 @@ public final class RefundPolicy {
          * </ul>
          */
         public final boolean manualReview;
+        /** 可退时退回实付现金的比例:1 = 全额,0.5 = 场次集合前 24 小时内。不可退时无意义(为 0)。 */
+        public final java.math.BigDecimal ratio;
 
         public Verdict(boolean refundable, String reason, Date deadline) {
             this(refundable, reason, deadline, false);
         }
 
         public Verdict(boolean refundable, String reason, Date deadline, boolean manualReview) {
+            this(refundable, reason, deadline, manualReview,
+                    refundable ? java.math.BigDecimal.ONE : java.math.BigDecimal.ZERO);
+        }
+
+        public Verdict(boolean refundable, String reason, Date deadline, boolean manualReview,
+                       java.math.BigDecimal ratio) {
             this.refundable = refundable;
             this.reason = reason;
             this.deadline = deadline;
             this.manualReview = manualReview;
+            this.ratio = ratio;
+        }
+
+        /** 本次退款是否只退一部分(场次集合前 24 小时内)。 */
+        public boolean partial() {
+            return refundable && ratio != null && ratio.compareTo(java.math.BigDecimal.ONE) < 0;
         }
     }
 
@@ -98,11 +118,51 @@ public final class RefundPolicy {
      * @return 快照;**null = 不打快照**(非 ③,或锚点源本身就缺失 —— 缺失时留空比冻结一个
      *         凭空捏造的截止点强,读侧会走 P0-05 的「算不出来 ⇒ 转人工」)
      */
-    public static Snapshot snapshotOnPurchase(Integer purchaseKind, Date ticketEndTime) {
-        if (purchaseKind == null || purchaseKind != PurchaseKind.EXPLORE_PASS || ticketEndTime == null) {
+    public static Snapshot snapshotOnPurchase(Integer purchaseKind, Date ticketStartTime, Date ticketEndTime) {
+        if (purchaseKind == null || purchaseKind != PurchaseKind.EXPLORE_PASS) {
+            return null;
+        }
+        // 2026-11-03 业主:③ 与场次票同三档,钟 = 履约窗开始(票的 start_time)。
+        if (ticketStartTime != null) {
+            return new Snapshot(RefundPolicyCode.START_24H_100_50_0, RefundPolicyCode.CURRENT_VERSION, ticketStartTime);
+        }
+        // 票缺开始时间时没有三档的钟:保持旧快照(有效期截止前全额),不凭空捏一个开始时刻。
+        if (ticketEndTime == null) {
             return null;
         }
         return new Snapshot(RefundPolicyCode.EXPLORE_END_100_0, RefundPolicyCode.CURRENT_VERSION, ticketEndTime);
+    }
+
+    /**
+     * ② 自玩通行证下单快照(2026-11-03):三档,钟 = 主题履约窗开始(与
+     * {@link #evaluateTopicFulfillmentWindow} 同一个 {@link FulfillmentWindowResolver})。
+     * 履约窗算不出来 ⇒ 不打快照,读侧仍走旧口径(缺窗转人工)。
+     */
+    public static Snapshot snapshotSelfPlayPass(CmsTopic topic) {
+        try {
+            Date start = FulfillmentWindowResolver.resolve(topic, null).getStartInclusive();
+            return new Snapshot(RefundPolicyCode.START_24H_100_50_0, RefundPolicyCode.CURRENT_VERSION, start);
+        } catch (IllegalStateException e) {
+            return null;
+        }
+    }
+
+    /** 本单是否按通行证三档卖出(下单快照码 + 锚点都在)。 */
+    public static boolean isTieredPassSnapshot(String policyCode, Date snapshotAnchor) {
+        return snapshotAnchor != null && RefundPolicyCode.START_24H_100_50_0.equals(policyCode);
+    }
+
+    /** 通行证三档判定:锚 = 冻结的履约窗开始。与场次票共用 {@link #sessionRefundRatioAt} 这一口钟。 */
+    private static Verdict tieredPassVerdict(Date start, Date now) {
+        java.math.BigDecimal ratio = sessionRefundRatioAt(start, now);
+        if (ratio == null || ratio.signum() == 0) {
+            return new Verdict(false, "已开始,不可退款", start);
+        }
+        if (ratio.compareTo(java.math.BigDecimal.ONE) < 0) {
+            return new Verdict(true, "开始前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)",
+                    start, false, ratio);
+        }
+        return new Verdict(true, "可全额退款,原路退回(预计1-3个工作日)", sessionRefundDeadline(start));
     }
 
     /**
@@ -185,6 +245,20 @@ public final class RefundPolicy {
                                    Integer ticketMode, Date ticketStartTime, Date ticketEndTime,
                                    Date activityStartTime, Integer purchaseKind, Date snapshotDeadline,
                                    java.math.BigDecimal payableAmount, Long pointUsed, Date now) {
+        return evaluate(ownerType, paymentStatus, verificationStatus, ticketMode, ticketStartTime,
+                ticketEndTime, activityStartTime, purchaseKind, snapshotDeadline, null,
+                payableAmount, pointUsed, now);
+    }
+
+    /**
+     * @param refundPolicyCode 下单快照码({@code cms_registration.refund_policy_code});
+     *                         {@link RefundPolicyCode#START_24H_100_50_0} ⇒ 按通行证三档、锚 = snapshotDeadline。
+     */
+    public static Verdict evaluate(Long ownerType, Integer paymentStatus, Integer verificationStatus,
+                                   Integer ticketMode, Date ticketStartTime, Date ticketEndTime,
+                                   Date activityStartTime, Integer purchaseKind, Date snapshotDeadline,
+                                   String refundPolicyCode,
+                                   java.math.BigDecimal payableAmount, Long pointUsed, Date now) {
         if (paymentStatus == null || paymentStatus != 2) {
             return new Verdict(false, "未支付订单无需退款", null);
         }
@@ -207,6 +281,9 @@ public final class RefundPolicy {
                     ? new Verdict(true, "可取消报名并释放名额", activityStartTime)
                     : new Verdict(false, "场次已开始，不可取消报名", activityStartTime);
         }
+        if (isTieredPassSnapshot(refundPolicyCode, snapshotDeadline)) {
+            return tieredPassVerdict(snapshotDeadline, now);
+        }
         Date deadline = snapshotDeadline != null ? snapshotDeadline
                 : resolveDeadline(ownerType, ticketMode, ticketStartTime, ticketEndTime, activityStartTime);
         if (deadline == null) {
@@ -222,9 +299,31 @@ public final class RefundPolicy {
             return new Verdict(false, "退款截止时间缺失,需人工核实,请联系客服", null, true);
         }
         if (now != null && now.after(deadline)) {
+            // 2026-11-02 退款档位:场次票过了「集合前 24 小时」但还没开始 ⇒ 退 50%。
+            // ③ 快照单(snapshotDeadline)的钟不是集合时间,不进这一档。
+            if (snapshotDeadline == null && ownerType != null && ownerType == 2L
+                    && activityStartTime != null && now.before(activityStartTime)) {
+                return new Verdict(true, "集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)",
+                        activityStartTime, false, SESSION_LATE_REFUND_RATIO);
+            }
             return new Verdict(false, refusalReason(ownerType, ticketMode, snapshotDeadline != null), deadline);
         }
         return new Verdict(true, "可全额退款,原路退回(预计1-3个工作日)", deadline);
+    }
+
+    /**
+     * 场次票此刻取消可退的比例(报价/购买页用):集合前 24 小时以上 1,24 小时内 0.5,开始后 0;
+     * 集合时间缺失返回 null(算不出来,前端保持默认)。
+     */
+    public static java.math.BigDecimal sessionRefundRatioAt(Date assemblyTime, Date now) {
+        if (assemblyTime == null || now == null) {
+            return null;
+        }
+        Date deadline = sessionRefundDeadline(assemblyTime);
+        if (!now.after(deadline)) {
+            return java.math.BigDecimal.ONE;
+        }
+        return now.before(assemblyTime) ? SESSION_LATE_REFUND_RATIO : java.math.BigDecimal.ZERO;
     }
 
     /**
@@ -233,12 +332,27 @@ public final class RefundPolicy {
      */
     public static Verdict evaluateTopicFulfillmentWindow(Integer paymentStatus, Integer verificationStatus,
                                                          CmsTopic topic, OmsTicket ticket, Date now) {
+        return evaluateTopicFulfillmentWindow(paymentStatus, verificationStatus, topic, ticket, null, null, now);
+    }
+
+    /**
+     * 2026-11-03:带下单快照的主题退款判定。快照码 = {@link RefundPolicyCode#START_24H_100_50_0}
+     * 的新单(② 自玩通行证 / ③ 自由探索票)按三档、锚 = 冻结的履约窗开始;
+     * 其余(存量单、无快照)保持「履约窗开始前全额,之后不退」—— 已答应的不收回。
+     */
+    public static Verdict evaluateTopicFulfillmentWindow(Integer paymentStatus, Integer verificationStatus,
+                                                         CmsTopic topic, OmsTicket ticket,
+                                                         String refundPolicyCode, Date snapshotDeadline,
+                                                         Date now) {
         if (paymentStatus == null || paymentStatus != 2) {
             return new Verdict(false, "未支付订单无需退款", null);
         }
         Verdict verified = verifiedVerdict(null, verificationStatus);
         if (verified != null) {
             return verified;
+        }
+        if (isTieredPassSnapshot(refundPolicyCode, snapshotDeadline)) {
+            return tieredPassVerdict(snapshotDeadline, now);
         }
         FulfillmentWindowResolver.Window window;
         try {
@@ -291,7 +405,7 @@ public final class RefundPolicy {
             return "已错过退款截止时间,不可退款";
         }
         if (ownerType != null && ownerType == 2L) {
-            return "已错过集合前24小时,不可退款";
+            return "场次已开始,不可退款";
         }
         if (ticketMode != null && ticketMode == 2) {
             return "已错过主题有效期,不可退款";

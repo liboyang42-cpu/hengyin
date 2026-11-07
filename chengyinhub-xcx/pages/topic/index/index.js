@@ -2204,6 +2204,8 @@ Page({
       } else {
         list[i]['sessionTimeText'] = list[i]['monthDayTime'] || '';
       }
+      // 退改一律显示平台三档,不显示票上存的 refund_rule 原文(业主 2026-11-03)。
+      list[i]['refundRuleText'] = require('../../../utils/refund-rule.js').refundRuleText(list[i]);
       // 场次余席属于 activity ticket；期级权益容量另行显示，不能把同一个数印到每张卡。
       const rawRemaining = list[i]['remainingInventory'];
       const remaining = rawRemaining === null || rawRemaining === undefined || rawRemaining === ''

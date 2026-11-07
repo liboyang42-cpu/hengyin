@@ -46,7 +46,7 @@ test('payoutStatus=2 PENDING_MANUAL 归入退款中并提示人工处理', () =>
     refundApplication: { payoutStatus: 2 }
   }), NOW);
   assert.equal(summary.key, 'refunding');
-  assert.equal(summary.text, '退款处理中');
+  assert.equal(summary.text, '正在退款');
   assert.equal(summary.refundText, '原路退款异常，平台正在人工处理');
 });
 
@@ -56,7 +56,7 @@ test('payoutStatus=4 MANUAL_VERIFIED 归入已退款', () => {
     refundApplication: { payoutStatus: 4 }
   }), NOW);
   assert.equal(summary.key, 'refunded');
-  assert.equal(summary.text, '已退款');
+  assert.equal(summary.text, '退款成功');
   assert.equal(summary.refundText, '退款已原路退回');
 });
 
@@ -205,7 +205,7 @@ test('U-023:人工案件下退款已到账(payout 1/4)显示已退款，未到�
       refundInfo: { refundable: false, reason: '人工案件权威处理结果' } });
     const summary = summarizeOrderState(row, NOW);
     assert.equal(summary.key, 'refunded', 'payout=' + payoutStatus + ' 已到账不能被人工售后遮住');
-    assert.equal(summary.text, '已退款');
+    assert.equal(summary.text, '退款成功');
     assert.equal(canRequestOrderRefund(row), false);
   }
   for (const payoutStatus of [0, 2, 3, 5, 6]) {

@@ -12,6 +12,7 @@
 // 多日 → 先选日期再选票种(稿 11);只有一个场次 → 跳过选日期,顶部直接写明是哪天(稿 11a)。
 const app = getApp();
 const { ticketWindowText } = require('../../../../../utils/ticket-window.js');
+const { refundRuleText } = require('../../../../../utils/refund-rule.js');
 
 const { chinaParts } = require('../../../../../utils/datetime.js');
 
@@ -167,8 +168,8 @@ Component({
               selfGuided: t.selfGuided === true,
               signupDeadline: t.signupDeadline,
               windowText: ticketWindowText(t),
-              // 说明与余量都是「有就写、没有就不写」,不兜底成占位
-              rule: String(t.refundRule || '').trim(),
+              // 退改显示平台三档,不显示票上存的 refund_rule 原文(业主 2026-11-03);余量「有就写、没有就不写」
+              rule: refundRuleText(t),
               remaining: t.remainingInventory == null ? null : Number(t.remainingInventory),
             })),
             ticketsState: rows.length ? 'ready' : 'empty',

@@ -1,0 +1,12 @@
+
+──────── 步骤 1:9004 申请加入俱乐部 7002,主理人通过
+   join                               {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   approve                            {"msg": "入会申请不存在或已处理", "code": 500, "_status": 200}
+   [库回读] club_member              ((7002, 9004, 1), (7002, 9009, 1))
+   FIXTURE SQL                        UPDATE ums_member SET role = 'club' WHERE id = 9008 AND role <> 'club'
+
+──────── 步骤 2:主理人转让:9008 → 9004(真实入口 /api/club/governance/owner/transfer)
+   transfer                           {"msg": "操作成功", "code": 200, "data": {"id": 1, "clubId": 7002, "fromOwnerMemberId": 9008, "toOwnerMemberId": 9004, "reason": "R3D 证明:结算付给当前主理人", "transferredAt": "2026-11-03T11:33:02.243+08:00"}, "_status": 200}
+   [库回读] club(转让后)                ((7002, 9004),)
+
+RESULT {"transfer": {"response": {"code": 200, "msg": "操作成功", "data": {"id": 1, "clubId": 7002, "fromOwnerMemberId": 9008, "toOwnerMemberId": 9004, "reason": "R3D 证明:结算付给当前主理人", "transferredAt": "2026-11-03T11:33:02.243+08:00"}}, "club": [[7002, 9004]]}}

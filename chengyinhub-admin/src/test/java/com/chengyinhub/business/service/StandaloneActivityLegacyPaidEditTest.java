@@ -33,7 +33,9 @@ import static org.mockito.Mockito.when;
  * PR10 复审:非平台账号的存量收费独立活动,编辑时收款闸只拦「扩大收费面」的改动
  * (新增收费票 / 0 元改收费 / 涨价),纯文字等改动必须能保存;平台账号不受影响。
  *
- * <p>负控:把编辑口径换回全量 assertStandalonePaidTicketsCollectible ⇒ textOnlyEdit 用例红。
+ *
+ * <p>2026-11-02(walk-fix ROUND2 pay-gate):没有自己商户号的主办方也可收费,票款走平台商户号,
+ * 编辑收款闸已撤 ⇒ 原三条「扩大收费面 ⇒ 拒」改为「⇒ 可保存」。
  */
 class StandaloneActivityLegacyPaidEditTest {
 
@@ -111,13 +113,9 @@ class StandaloneActivityLegacyPaidEditTest {
         return r;
     }
 
-    private void assertRejected(CmsActivityPublishRequest request) {
-        ServiceException e = assertThrows(ServiceException.class,
-                () -> service.updateActivityByOwner(request, OWNER, "owner", false));
-        assertTrue(e.getMessage().contains("票价只能是 0"), e.getMessage());
-        verify(ticketMapper, never()).updateOmsTicket(any(OmsTicket.class));
-        verify(ticketMapper, never()).insertOmsTicket(any(OmsTicket.class));
-        verify(activityMapper, never()).updateCmsActivityByOwner(any());
+    private void assertSaved(CmsActivityPublishRequest request) {
+        assertEquals(1, service.updateActivityByOwner(request, OWNER, "owner", false));
+        verify(activityMapper).updateCmsActivityByOwner(any());
     }
 
     @Test
@@ -134,18 +132,18 @@ class StandaloneActivityLegacyPaidEditTest {
     }
 
     @Test
-    void legacyPaid_addNewPaidTicket_rejected() {
-        assertRejected(request(req(PAID_TICKET, "199.00"), req(FREE_TICKET, "0"), req(null, "50.00")));
+    void legacyPaid_addNewPaidTicket_saves() {
+        assertSaved(request(req(PAID_TICKET, "199.00"), req(FREE_TICKET, "0"), req(null, "50.00")));
     }
 
     @Test
-    void legacyPaid_raisePrice_rejected() {
-        assertRejected(request(req(PAID_TICKET, "299.00"), req(FREE_TICKET, "0")));
+    void legacyPaid_raisePrice_saves() {
+        assertSaved(request(req(PAID_TICKET, "299.00"), req(FREE_TICKET, "0")));
     }
 
     @Test
-    void legacyPaid_freeTicketTurnedPaid_rejected() {
-        assertRejected(request(req(PAID_TICKET, "199.00"), req(FREE_TICKET, "10.00")));
+    void legacyPaid_freeTicketTurnedPaid_saves() {
+        assertSaved(request(req(PAID_TICKET, "199.00"), req(FREE_TICKET, "10.00")));
     }
 
     @Test

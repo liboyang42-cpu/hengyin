@@ -1,0 +1,10 @@
+
+──────── 步骤 1:payoutDueCoopSettlements:跑 coopSettlementPayoutTask
+   FIXTURE SQL                        UPDATE coop_settlement SET payable_time = DATE_SUB(NOW(), INTERVAL 1 MINUTE) WHERE topic_id = 990016 AND status = 0 AND payable_time > NOW()
+   run coopSettlementPayoutTask.run() (146) {"msg": "操作成功", "code": 200, "_status": 200}
+   job log                            [["0", "商家结算T+7打款 总共耗时：39毫秒 jobId=146 jobRunId=2eff2f7fa9954b9483e6cfbc9e116cb8", ""]]
+   [库回读] coop_settlement(放款后)     ((1, 'PLATFORM', None, Decimal('0.90'), 1), (2, 'INITIATOR_MARGIN', 9004, Decimal('29.09'), 1))
+   [库回读] ums_member_balance_detail eventType 5 ((9004, 5, Decimal('29.09'), 'Coop结算打款 - 主题990016'),)
+   [库回读] 余额                       ((9004, Decimal('48.49')), (9008, Decimal('0.00')))
+
+RESULT {"payout": {"job": {"run": {"code": 200, "msg": "操作成功"}, "log": [["0", "商家结算T+7打款 总共耗时：39毫秒 jobId=146 jobRunId=2eff2f7fa9954b9483e6cfbc9e116cb8", ""]]}, "coop_settlement": [[1, "PLATFORM", null, "0.90", 1], [2, "INITIATOR_MARGIN", 9004, "29.09", 1]], "balance_detail": [[9004, 5, "29.09", "Coop结算打款 - 主题990016"]], "balances": [[9004, "48.49"], [9008, "0.00"]]}}

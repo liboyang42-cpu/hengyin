@@ -58,6 +58,10 @@ public class RegistrationQuoteResult {
     @Schema(description = "此刻下单后是否可退(null=未知,不可当可退宣传)")
     private Boolean refundableNow;
 
+    /** 此刻下单后取消可退的百分比(2026-11-02 退款档位):100 / 50 / 0;null = 非场次单或算不出来。 */
+    @Schema(description = "此刻下单后取消可退的百分比(100/50/0;null=未知)")
+    private Integer refundPercentNow;
+
     public RegistrationQuoteResult() {
     }
 
@@ -155,6 +159,14 @@ public class RegistrationQuoteResult {
 
     public Boolean getRefundableNow() {
         return refundableNow;
+    }
+
+    public Integer getRefundPercentNow() {
+        return refundPercentNow;
+    }
+
+    public void setRefundPercentNow(Integer refundPercentNow) {
+        this.refundPercentNow = refundPercentNow;
     }
 
     public void setRefundableNow(Boolean refundableNow) {

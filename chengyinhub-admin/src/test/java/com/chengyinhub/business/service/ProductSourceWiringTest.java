@@ -223,8 +223,12 @@ class ProductSourceWiringTest {
     @Test
     void settlementReadsFeeSnapshotNotLive() throws Exception {
         String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        // 两处结算(coop 主题 + 俱乐部自有主题自玩,2026-11-02)都经 settlementPlatformRate 取率;
+        // 它只在平台自有主题时取 0(2026-11-03 业主拍板),其余读快照 —— 快照读法在全类只剩它这一处。
         assertEquals(1, countOccurrences(src, "pricingService.platformRateOf(topic)"),
                 "结算必须按主题快照取平台率");
+        assertEquals(2, countOccurrences(src, "= settlementPlatformRate(topic)"),
+                "两处结算都必须经同一个平台率入口");
         assertEquals(1, countOccurrences(src, "pricingService.initiatorGuaranteeRateOf(topic,"),
                 "结算必须按主题快照取保底率");
         assertEquals(0, countOccurrences(src, "pricingService.platformRate()"),

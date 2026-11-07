@@ -109,7 +109,8 @@ public class RegistrationQueryApplication {
                     attachRefundVerdict(registration,
                             com.chengyinhub.business.util.RefundPolicy.evaluateTopicFulfillmentWindow(
                                     registration.getPaymentStatus(), registration.getVerificationStatus(),
-                                    topic, ticket, new java.util.Date()));
+                                    topic, ticket, registration.getRefundPolicyCode(),
+                                    registration.getRefundDeadline(), new java.util.Date()));
                 }
 
                 CmsRegistrationScan cmsRegistrationScan = new CmsRegistrationScan();
@@ -157,7 +158,7 @@ public class RegistrationQueryApplication {
                             com.chengyinhub.business.util.RefundPolicy.evaluate(
                                     2L, registration.getPaymentStatus(), registration.getVerificationStatus(),
                                     null, null, null, activity.getStartDate(),
-                                    registration.getPurchaseKind(), registration.getRefundDeadline(),
+                                    registration.getPurchaseKind(), registration.getRefundDeadline(), registration.getRefundPolicyCode(),
                                     registration.getPayableAmount(), registration.getPointUsed(), new java.util.Date()));
                 }
 
@@ -555,7 +556,8 @@ public class RegistrationQueryApplication {
             if (topic != null) {
                 attachRefundVerdict(registration,
                         com.chengyinhub.business.util.RefundPolicy.evaluateTopicFulfillmentWindow(
-                                registration.getPaymentStatus(), registration.getVerificationStatus(), topic, ticket, new Date()));
+                                registration.getPaymentStatus(), registration.getVerificationStatus(), topic, ticket,
+                                registration.getRefundPolicyCode(), registration.getRefundDeadline(), new Date()));
             }
             return;
         }
@@ -565,7 +567,7 @@ public class RegistrationQueryApplication {
                     com.chengyinhub.business.util.RefundPolicy.evaluate(
                             2L, registration.getPaymentStatus(), registration.getVerificationStatus(),
                             null, null, null, registration.getCmsActivity().getStartDate(),
-                            registration.getPurchaseKind(), registration.getRefundDeadline(),
+                            registration.getPurchaseKind(), registration.getRefundDeadline(), registration.getRefundPolicyCode(),
                             registration.getPayableAmount(), registration.getPointUsed(), new Date()));
         }
     }

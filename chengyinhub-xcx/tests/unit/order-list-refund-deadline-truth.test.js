@@ -63,6 +63,18 @@ test('可退单:弹窗截止话术来自后端 deadline,不写死规则', () => 
   assert.doesNotMatch(JSON.stringify(dialog.dangerParams), /已核销或已过开始时间不可退/)
 })
 
+// 2026-11-03 pay-gate Round 3D:集合前 24 小时内只退 50%(refundInfo.ratio=0.5,deadline=开场时刻)。
+// 旧弹窗照样写「可免费取消至 <开场时刻>」,把 50% 说成免费取消。必须改用后端 reason。
+test('24 小时内只退 50%:弹窗用后端 reason,不说「可免费取消至」', () => {
+  const dialog = openCancelDialog({
+    id: 1, registrationStatus: 2, paymentStatus: 2,
+    refundInfo: { refundable: true, ratio: 0.5, deadline: '2026-11-03T16:35:00.000+08:00',
+      reason: '集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)' },
+  })
+  assert.equal(dialog.dangerParams.deadline, '集合前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)')
+  assert.doesNotMatch(String(dialog.dangerParams.deadline), /可免费取消/)
+})
+
 test('不可退单:原样用后端 reason,前端不自己编', () => {
   const dialog = openCancelDialog({
     id: 1, registrationStatus: 2, paymentStatus: 2,

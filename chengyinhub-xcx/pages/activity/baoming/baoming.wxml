@@ -153,6 +153,24 @@
   </view>
 </view>
 
+<!-- 2026-11-02 退款档位(全平台,与后端 RefundPolicy 同一口径):收费票在结算页列出三档。
+     2026-11-03:③ 自由探索票(mode=2)同三档,钟是票的开始时间,故写「开始前」。 -->
+<view wx:if="{{pageState === 'ready' && selectedTicket && selectedTicket.price > 0}}" class="sec-title">退款规则</view>
+<view wx:if="{{pageState === 'ready' && selectedTicket && selectedTicket.price > 0}}" class="setly">
+  <view class="setly_li">
+    <view class="setly_li_left">{{selectedTicket.mode == 2 ? '开始前' : '集合前'}} 24 小时以上</view>
+    <view class="setly_li_right"><text>全额退</text></view>
+  </view>
+  <view class="setly_li">
+    <view class="setly_li_left">{{selectedTicket.mode == 2 ? '开始前' : '集合前'}} 24 小时内</view>
+    <view class="setly_li_right"><text>退 50%</text></view>
+  </view>
+  <view class="setly_li">
+    <view class="setly_li_left">开始后</view>
+    <view class="setly_li_right"><text>不退</text></view>
+  </view>
+</view>
+
 <!-- 候补是真实票库存 hold：只有服务端 OFFERED 且带短期 token 时才开放原报名付款。 -->
 <view wx:if="{{pageState === 'ready' && (ticketSoldOut || waitlistEligibility === 'ALREADY_REGISTERED' || (waitlistState && waitlistState !== 'NONE'))}}" class="waitlist-card">
   <view class="waitlist-card__title">候补状态</view>
