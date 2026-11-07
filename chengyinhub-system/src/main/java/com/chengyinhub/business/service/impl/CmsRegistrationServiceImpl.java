@@ -838,6 +838,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 门槛只读 finalize 冻结快照，绝不回退 live 票/章/offer 或另造配置。
      */
     private void assertExploreAccountTicketAvailable(CmsTopic sellerTopic, Long memberId) {
+        com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSnapshotFrozen(
+                sellerTopic, topicSaleSnapshotMapper, cmsRegistrationMapper);
         ExploreAccountTicketGate.assertAvailable(
                 sellerTopic, memberId, topicSaleSnapshotMapper, cmsRegistrationMapper);
     }
@@ -1745,6 +1747,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         } else if (sellerTopic != null) {
             assertRegistrationSellable(activity, sellerTopic, null, now);
         }
+        com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSnapshotFrozen(
+                sellerTopic, topicSaleSnapshotMapper, cmsRegistrationMapper);
         return sellerTopic;
     }
 
@@ -1782,6 +1786,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     }
 
     private void assertRegistrationSellable(CmsActivity activity, CmsTopic topic, OmsTicket ticket, Date now) {
+        if (activity != null) com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSessionClub(topic, activity.getClubId());
         if (activity == null || !isFreeUgcActivityTopic(activity, topic)) {
             assertCommercialSaleOpen(topic, ticket, now);
             return;

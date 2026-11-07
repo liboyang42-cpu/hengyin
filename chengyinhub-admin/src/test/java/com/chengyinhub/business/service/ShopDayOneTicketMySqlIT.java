@@ -110,7 +110,7 @@ class ShopDayOneTicketMySqlIT {
             statement.setLong(3, 1L);
             statement.setLong(4, 701L);
             statement.setString(5, com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(
-                    TopicSaleCanonicalTestFixture.canonical()));
+                    ordinarySaleCanonical()));
             statement.executeUpdate();
         }
     }
@@ -234,6 +234,34 @@ class ShopDayOneTicketMySqlIT {
                 "唯一冲突后原 ORGANIZER 的主体、声明人和 singleton_key 不得被篡改");
     }
 
+    @Test
+    void legacyFourStoreSnapshotStopsNewTicketsAndKeepsFrozenHistoryReadable() throws Exception {
+        String frozen = TopicSaleCanonicalCodec.write(TopicSaleCanonicalTestFixture.canonical());
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement update = connection.prepareStatement("UPDATE topic_sale_snapshot SET canonical_json=? WHERE topic_id=?")) {
+            update.setString(1, frozen); update.setLong(2, TOPIC); assertEquals(1, update.executeUpdate());
+        }
+        try (SqlSession session = factory.openSession(false)) {
+            CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setProductType(ProductType.FREE_EXPLORE);
+            IllegalStateException refused = assertThrows(IllegalStateException.class,
+                    () -> com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSnapshotFrozen(topic,
+                            session.getMapper(TopicSaleSnapshotMapper.class), session.getMapper(CmsRegistrationMapper.class)));
+            assertEquals("四店固定补偿产品已停止新售票，已售合同继续履行", refused.getMessage());
+            com.chengyinhub.business.domain.TopicSaleSnapshot history = session.getMapper(TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC);
+            assertEquals(frozen, history.getCanonicalJson());
+            assertTrue(TopicSaleCanonicalCodec.read(history.getSchemaVersion(), history.getCanonicalJson(), ProductType.FREE_EXPLORE).requiresFourStoreContract());
+            session.rollback();
+        }
+        assertFalse(attempt(7101L, 501L, new CountDownLatch(0), new CountDownLatch(0)));
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_registration"));
+    }
+
+    private static TopicSaleCanonicalV1 ordinarySaleCanonical() {
+        TopicSaleCanonicalV1 canonical = TopicSaleCanonicalTestFixture.canonical();
+        canonical.getCompletionPolicy().put("evidenceRule", "ALL_REQUIRED_STAMPS");
+        return canonical;
+    }
+
     private boolean attempt(long registrationId, long activityId, CountDownLatch ready,
                             CountDownLatch start) throws Exception {
         ready.countDown();
@@ -243,11 +271,14 @@ class ShopDayOneTicketMySqlIT {
             topic.setId(TOPIC);
             topic.setProductType(ProductType.FREE_EXPLORE);
             try {
+                com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSnapshotFrozen(topic,
+                        session.getMapper(TopicSaleSnapshotMapper.class), session.getMapper(CmsRegistrationMapper.class));
                 ExploreAccountTicketGate.assertAvailable(topic, MEMBER,
                         session.getMapper(TopicSaleSnapshotMapper.class),
                         session.getMapper(CmsRegistrationMapper.class));
             } catch (IllegalStateException e) {
-                if (!"SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED".equals(e.getMessage())) throw e;
+                if (!"SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED".equals(e.getMessage())
+                        && !"四店固定补偿产品已停止新售票，已售合同继续履行".equals(e.getMessage())) throw e;
                 session.rollback();
                 return false;
             }

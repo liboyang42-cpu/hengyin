@@ -132,6 +132,7 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         if (!Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())) {
             throw new IllegalArgumentException("主题未上架或已下架，不能开团");
         }
+        com.chengyinhub.business.service.support.ExploreSaleSnapshotGate.assertSessionClub(topic, request.getClubId());
         boolean clubOwned = topic.getClubId() != null && topic.getClubId().equals(request.getClubId());
         if (!clubOwned && !hasEffectiveClubOrder(request.getTopicId(), request.getClubId())) {
             throw new IllegalArgumentException("该俱乐部对本主题没有生效的合作单");

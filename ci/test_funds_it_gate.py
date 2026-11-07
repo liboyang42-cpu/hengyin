@@ -44,7 +44,7 @@ def all_required_clean(directory):
     write_report(directory, "ExploreAllianceRedeemRealDbIT", 4)
     write_report(directory, "ExploreScanReplayRealDbIT", 4)
     write_report(directory, "TandianriBatch0FundsMybatisIntegrationTest", 17)
-    write_report(directory, "ShopDayOneTicketMySqlIT", 5)
+    write_report(directory, "ShopDayOneTicketMySqlIT", 6)
     write_report(directory, "TandianriBatch3FundsMybatisIntegrationTest", 18)
     write_report(directory, "ClubCorporatePayeeMybatisIntegrationTest", 14)
     write_report(directory, "ClubEditionCompensationMybatisIntegrationTest", 21)
