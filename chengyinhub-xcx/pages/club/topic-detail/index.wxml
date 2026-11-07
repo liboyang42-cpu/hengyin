@@ -95,6 +95,8 @@
       </view>
     </view>
 
+    <!-- C-11 第三轮(Figma D9):导演台已结束 = 复盘整页态,下面的进行中各段(核销/主题/接下来/集合时间/排行榜)不再出。 -->
+    <block wx:if="{{!(directorActive && statusKey === 'ended')}}">
     <!-- ④ 核销(H4 / H5 / H6) -->
     <view wx:if="{{showVerify}}" class="ctd-sec">
       <view class="ctd-sec__head">
@@ -153,6 +155,7 @@
         </view>
       </view>
     </view>
+    </block>
 
     <!-- ── 导演台(施工文档 §5.4:game-director 那一整页已删,十张卡收编到这里)── -->
     <!-- 导演台自己的加载/错误/空态。它和页面主体(H1-H6)是两条独立的取数链路:
@@ -191,12 +194,12 @@
 
     <!-- HO-26 集合时间:承接方领队改运营详情(POST /api/club/lead/edit-ops)的入口。
          时间真源是 /api/topic/info-to-user 的 activityList,改完回读;拿不到合法时间就不显示这一格。 -->
-    <view class="ctd-opstime" wx:if="{{directorActive && loadState === 'ready' && opsTimeAvailable}}">
+    <view class="ctd-opstime" wx:if="{{directorActive && loadState === 'ready' && opsTimeAvailable && statusKey !== 'ended'}}">
       <view class="ctd-opstime__main">
         <text class="ctd-opstime__label">集合时间</text>
         <text class="ctd-opstime__value">{{opsTimeText}}</text>
       </view>
-      <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="{{opsTimeLocked ? '已有报名，时间地点不可改；备注仍可改' : '修改集合时间'}}" aria-disabled="{{opsTimeLocked}}" hover-class="{{opsTimeLocked ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{opsTimeLocked ? '已售锁定（备注仍可改）' : '修改'}}</view>
+      <view class="ctd-opstime__edit" bindtap="openOpsTimeSheet" aria-role="button" aria-label="{{opsTimeLocked ? '已有报名，时间地点不可改' : '修改集合时间'}}" aria-disabled="{{opsTimeLocked}}" hover-class="{{opsTimeLocked ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{opsTimeLocked ? '已有报名 · 已锁定' : '修改'}}</view>
     </view>
 
     <view class="ctd-generic-ops" wx:if="{{directorActive && loadState === 'ready' && genericOpsKnown && genericOpsActions.length}}">
@@ -244,21 +247,23 @@
       <view wx:if="{{planFallbackAvailable}}" class="ctd-director-export {{writeLocked ? 'is-disabled' : ''}}" bindtap="openPlanFallback" aria-role="button" aria-label="填写默认结局收尾原因" hover-class="cy-pressed" hover-stay-time="80">填写收尾原因</view>
     </view>
     <view class="ctd-plan-fallback" wx:if="{{planFallbackResult}}"><text class="ctd-director-note">{{planFallbackResult.title}}</text><text class="ctd-director-note">收尾原因：{{planFallbackResult.reason}}</text></view>
+    <!-- C-09 第三轮:与页面同一左右留白;开始活动只留底栏那一颗,卡内主键不出(primary-text 置空)。 -->
     <cy-club-director-ready
+      class="ctd-sec ctd-director-recap"
       wx:if="{{statusKey === 'preparing'}}"
       title="准备总览"
       station-title="节点状态" station-sub="{{readinessText}}" stations="{{stations}}"
       team-title="队伍进度" team-sub="{{sessionStatusText}}" teams="{{directorTeamRows}}"
-      primary-text="开始活动" primary-disabled="{{!readiness.canStart || writeLocked}}"
-      caption="{{writeMessage}}" caption-tone="{{writeState === 'unknown-write' ? 'warning' : 'muted'}}"
+      primary-text="" primary-disabled="{{!readiness.canStart || writeLocked}}"
+      caption="{{writeMessage || blockerText}}" caption-tone="{{writeState === 'unknown-write' || (!writeMessage && blockerText) ? 'warning' : 'muted'}}"
       bind:primary="onStartSession" />
 
     <!-- 收编时别把这两句丢了:它们各自挡着一个误读。 -->
     <cy-empty wx:if="{{directorActive && loadState === 'ready' && stations.length === 0}}"
-      title="暂无节点状态" sub="节点数据加载中" />
+      title="开始准备后显示节点状态" />
     <view class="ctd-director-note" wx:if="{{directorActive && canUnlockChapter}}">玩家进度与发放状态保持不变</view>
 
-    <block wx:if="{{directorActive && loadState === 'ready' && leaderboardVisibleKnown}}">
+    <block wx:if="{{directorActive && loadState === 'ready' && leaderboardVisibleKnown && statusKey !== 'ended'}}">
       <view class="ctd-director-recaphead">
         <text>排行榜</text>
         <view class="ctd-director-export" wx:if="{{canToggleLeaderboard}}" bindtap="onToggleLeaderboard"
@@ -271,20 +276,40 @@
     <!-- D9 已结束:复盘/漏斗/榜单。 -->
     <view class="ctd-director-recaphead" wx:if="{{directorActive && statusKey === 'ended'}}">
       <view class="ctd-director-note" wx:if="{{!recap}}">复盘尚未生成</view>
+      <view class="ctd-director-export" wx:if="{{recap && canToggleLeaderboard}}" bindtap="onToggleLeaderboard"
+        aria-role="button" aria-label="调整排行榜可见性" hover-class="cy-pressed" hover-stay-time="80">{{leaderboard.visible ? '隐藏榜单' : '显示榜单'}}</view>
       <view class="ctd-director-export {{exportState === 'loading' ? 'is-disabled' : ''}}" wx:if="{{canExportRecap}}"
         bindtap="copyRecap" aria-role="button" aria-label="复制复盘数据" hover-class="cy-pressed" hover-stay-time="80">{{exportState === 'loading' ? '复制中' : '复制复盘数据'}}</view>
     </view>
     <cy-club-director-recap
+      class="ctd-sec ctd-director-recap"
       wx:if="{{statusKey === 'ended' && recap}}"
       title="活动复盘"
-      funnel-title="活动漏斗" funnel-sub="{{sessionStatusText}}" metrics="{{recapMetrics}}"
-      completion-title="节点完成" completion-rows="{{recap.stations}}"
+      metrics="{{recapTiles}}"
+      completion-title="完成情况" completion-rows="{{recapCompletionRows}}"
       leaderboard-title="榜单" leaderboard-rows="{{leaderboard ? leaderboard.rows : []}}"
+      station-title="节点完成" station-rows="{{recapStationRows}}"
       caption="{{writeMessage}}"
       bind:leaderboardrowtap="onToggleLeaderboard" />
 
     <!-- §5-断6:没场次时主键换成「去开场」,原因就地写出来 —— 不留点了没反应的死入口 -->
     <view class="ctd-director-note" wx:if="{{sessionHint}}">{{sessionHint}}</view>
+    <view class="ctd-director-note" wx:if="{{paymentNotice}}">{{paymentNotice}}</view>
+
+    <!-- C-04(2026-11-02):这一行原来在 footspacer 之后,被固定底栏盖住,放行/队伍进度点不到;挪到底栏留白之前。
+         E-04(2026-09-16 P1):导演台四个弹层(D4 手动解锁 / D5 队伍进度 / D6 角色分配 / D8 现场事件)
+         原来在页面上**没有任何入口**(方法只有单测直调,全仓 wxml 零绑定)——组件都渲染着,功能静默不可用。
+         这里按投影的能力位给最小入口:有权限/有数据才出,点了才开。 -->
+    <view class="ctd-tools" wx:if="{{directorActive && loadState === 'ready' && (canUnlockChapter || directorTeamRows.length || (canAssignRoles && roleMemberRows.length) || incidentRows.length)}}">
+      <view class="ctd-director-export" wx:if="{{canUnlockChapter}}" bindtap="openManualUnlock"
+            aria-role="button" aria-label="{{unlockButtonText}}" hover-class="cy-pressed" hover-stay-time="80">{{unlockButtonText}}</view>
+      <view class="ctd-director-export" wx:if="{{directorTeamRows.length}}" bindtap="openTeamSheet"
+            aria-role="button" aria-label="查看队伍进度" hover-class="cy-pressed" hover-stay-time="80">队伍进度</view>
+      <view class="ctd-director-export" wx:if="{{canAssignRoles && roleMemberRows.length}}" bindtap="openRoleSheet"
+            aria-role="button" aria-label="分配角色" hover-class="cy-pressed" hover-stay-time="80">角色分配</view>
+      <view class="ctd-director-export" wx:if="{{incidentRows.length}}" bindtap="openIncidentSheet"
+            aria-role="button" aria-label="处理现场事件" hover-class="cy-pressed" hover-stay-time="80">现场事件</view>
+    </view>
 
     <view class="ctd-footspacer"></view>
 
@@ -316,33 +341,19 @@
       cancel-text="再想想" confirm-text="结束活动" loading="{{writeLocked}}"
       bind:cancel="onDirectorEndCancel" bind:confirm="onDirectorEndConfirm" />
 
-    <!-- E-04(2026-09-16 P1):导演台四个弹层(D4 手动解锁 / D5 队伍进度 / D6 角色分配 / D8 现场事件)
-         原来在页面上**没有任何入口**(方法只有单测直调,全仓 wxml 零绑定)——组件都渲染着,功能静默不可用。
-         这里按投影的能力位给最小入口:有权限/有数据才出,点了才开。 -->
-    <view class="ctd-tools" wx:if="{{directorActive && loadState === 'ready' && (canUnlockChapter || directorTeamRows.length || (canAssignRoles && roleMemberRows.length) || incidentRows.length)}}">
-      <view class="ctd-director-export" wx:if="{{canUnlockChapter}}" bindtap="openManualUnlock"
-            aria-role="button" aria-label="手动解锁章节" hover-class="cy-pressed" hover-stay-time="80">手动解锁章节</view>
-      <view class="ctd-director-export" wx:if="{{directorTeamRows.length}}" bindtap="openTeamSheet"
-            aria-role="button" aria-label="查看队伍进度" hover-class="cy-pressed" hover-stay-time="80">队伍进度</view>
-      <view class="ctd-director-export" wx:if="{{canAssignRoles && roleMemberRows.length}}" bindtap="openRoleSheet"
-            aria-role="button" aria-label="分配角色" hover-class="cy-pressed" hover-stay-time="80">角色分配</view>
-      <view class="ctd-director-export" wx:if="{{incidentRows.length}}" bindtap="openIncidentSheet"
-            aria-role="button" aria-label="处理现场事件" hover-class="cy-pressed" hover-stay-time="80">现场事件</view>
-    </view>
 
     <!-- D4 章节控制 / 手动解锁 -->
     <cy-club-director-chapter-sheet
-      show="{{unlockSheetVisible}}" title="手动解锁章节"
-      chapters="{{chapterOptions}}" confirm-text="解锁"
-      confirm-disabled="{{writeLocked || !unlockReason}}" caption="{{writeMessage}}"
+      show="{{unlockSheetVisible}}" title="{{unlockButtonText}}"
+      chapters="{{chapterOptions}}" confirm-text="放行"
+      confirm-disabled="{{writeLocked}}" caption="{{writeMessage}}"
       bind:close="closeManualUnlock" bind:confirm="confirmManualUnlock"
       bind:selectchapter="onUnlockChapterChange">
-      <!-- 原因必填:confirm-disabled 已经把「没填原因」挡住了,但挡住不等于填得进去 ——
-           组件本身没有输入位,靠它的 slot 补。少了这个框,手动解锁永远点不动。 -->
+      <!-- C-04(2026-11-02 用户):放行原因选填。组件本身没有输入位,靠 slot 补;填了进审计记录。 -->
       <view class="ctd-director-field">
-        <text class="ctd-director-field__label">现场原因<text class="ctd-required" aria-hidden="true">*</text></text>
+        <text class="ctd-director-field__label">现场原因（选填）</text>
         <textarea class="ctd-director-field__input" value="{{unlockReason}}" bindinput="onUnlockReasonInput"
-          placeholder="写明为什么要手动解锁，会进审计记录" maxlength="200" auto-height />
+          placeholder="写明放行原因" maxlength="200" auto-height />
       </view>
     </cy-club-director-chapter-sheet>
 
@@ -574,6 +585,10 @@
           <text class="cli-sub">{{item.timeText}}</text>
           <text class="cli-sub">{{item.phoneText}}</text>
         </view>
+        <view wx:if="{{item.phoneCallable}}" class="cli-call" data-phone="{{item.phoneText}}" bindtap="callCustomerRow"
+          aria-role="button" aria-label="拨打 {{item.displayName}} 的电话" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="phone" size="32" />
+        </view>
         <view class="cli-right">
           <text class="cli-state cli-state--{{item.statusCode}}">{{item.statusText}}</text>
           <text wx:if="{{item.verifyText}}" class="cli-sub">{{item.verifyText}}</text>
@@ -623,7 +638,6 @@
 <!-- HO-26 改集合时间:日期 + 时间各一格,底部两颗小按钮并排。已售锁定由后端判(CR-63),这里先把规则说在前面。 -->
 <cy-scene-sheet show="{{opsTimeSheetVisible}}" variant="half" title="修改集合时间" closable bind:close="closeOpsTimeSheet">
   <view class="ctd-director-field">
-    <text class="ctd-opstime__hint">已有报名，集合时间和地点不可改</text>
     <text class="ctd-director-field__label">集合日期</text>
     <cy-date-field mode="date" value="{{opsTimeDraft.date}}" bind:change="onOpsDateChange">
       <view class="ctd-director-field__picker">{{opsTimeDraft.date || '选择日期'}}</view>

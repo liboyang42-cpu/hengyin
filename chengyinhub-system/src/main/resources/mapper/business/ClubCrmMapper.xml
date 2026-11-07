@@ -38,6 +38,25 @@
         max(coalesce(r.verification_time, r.create_time)) as last_interaction_time
     </sql>
 
+    <!-- C-05(2026-11-02 用户):客户列表与客户详情显示报名时填写的姓名(本俱乐部范围内最近一张)。
+         只取密文列,解密在 Service 做;别的俱乐部的报名不参与。 -->
+    <sql id="ClubCustomerSignupName">
+        (
+            select r3.real_name
+            from cms_registration r3
+            left join cms_topic t3 on t3.id = r3.owner_id and r3.owner_type = 1
+            left join cms_activity a3 on a3.id = r3.owner_id and r3.owner_type = 2
+            where r3.member_id = agg.member_id
+              and r3.payment_status in (2, 4)
+              and r3.real_name is not null and r3.real_name &lt;&gt; ''
+              and (
+                (r3.owner_type = 1 and t3.club_id = #{clubId} and t3.del_flag = 0)
+                or (r3.owner_type = 2 and a3.club_id = #{clubId} and a3.del_flag = 0))
+            order by r3.id desc
+            limit 1
+        ) as participant_name
+    </sql>
+
     <resultMap id="RawCustomer" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$RawCustomer">
         <result property="memberId" column="member_id"/>
         <result property="displayName" column="display_name"/>
@@ -49,6 +68,7 @@
         <result property="paidAmount" column="paid_amount"/>
         <result property="lastInteractionTime" column="last_interaction_time"/>
         <result property="lastTopicName" column="last_topic_name"/>
+        <result property="participantName" column="participant_name"/>
     </resultMap>
 
     <resultMap id="Record" type="com.chengyinhub.business.domain.vo.ClubCustomerVO$Record">
@@ -97,7 +117,8 @@
                 or (r2.owner_type = 2 and a2.club_id = #{clubId} and a2.del_flag = 0))
             order by r2.create_time desc
             limit 1
-        ) as last_topic_name
+        ) as last_topic_name,
+        <include refid="ClubCustomerSignupName"/>
         from (
             select <include refid="ClubCustomerAggregate"/>
             from cms_registration r
@@ -152,12 +173,15 @@
     </select>
 
     <select id="selectClubCustomerSummary" resultMap="RawCustomer">
-        select <include refid="ClubCustomerAggregate"/>
-        from cms_registration r
-        join ums_member u on u.id = r.member_id and u.del_flag = 0
-        where r.member_id = #{memberId}
-          and <include refid="ClubRegistrationScope"/>
-        group by r.member_id
+        select agg.*, <include refid="ClubCustomerSignupName"/>
+        from (
+            select <include refid="ClubCustomerAggregate"/>
+            from cms_registration r
+            join ums_member u on u.id = r.member_id and u.del_flag = 0
+            where r.member_id = #{memberId}
+              and <include refid="ClubRegistrationScope"/>
+            group by r.member_id
+        ) agg
     </select>
 
     <select id="selectClubCustomerRecords" resultMap="Record">
@@ -328,6 +352,7 @@
         <result property="topicCover"         column="topic_cover"/>
         <result property="operatorName"       column="operator_name"/>
         <result property="storeName"          column="store_name"/>
+        <result property="sessionId"          column="session_id"/>
     </resultMap>
 
     <!-- Figma K3 核销详情 · 俱乐部端。归属判定与 selectTopicCustomers 同口径:
@@ -358,7 +383,8 @@
             coalesce(t.name, a.name) as topic_name,
             coalesce(t.img_url, a.img_url) as topic_cover,
             nullif(vu.nickname, '') as operator_name,
-            nullif(vm.name, '') as store_name
+            nullif(vm.name, '') as store_name,
+            a.id as session_id
         from cms_registration r
         join ums_member u on u.id = r.member_id and u.del_flag = 0
         left join cms_topic t on t.id = r.owner_id and r.owner_type = 1
@@ -371,5 +397,24 @@
             or (r.owner_type = 2 and a.id is not null and a.club_id = #{clubId} and a.del_flag = 0)
           )
         limit 1
+    </select>
+
+    <select id="selectSessionMoney" resultType="java.util.LinkedHashMap">
+        select a.id as activityId,
+               coalesce(sum(case when r.payment_status in (2, 4)
+                   then round(coalesce(r.payable_amount, r.total_amount, 0) * 100) else 0 end), 0) as paidFen,
+               coalesce(sum(ra.refunded_fen), 0) as refundedFen
+          from cms_activity a
+          join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+          left join (
+              select source_id, sum(round(refund_amount * 100)) as refunded_fen
+                from refund_application
+               where source_type = 'registration' and del_flag = 0 and status = 1
+               group by source_id
+          ) ra on ra.source_id = r.id
+         where a.club_id = #{clubId}
+           and a.id in
+           <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+         group by a.id
     </select>
 </mapper>

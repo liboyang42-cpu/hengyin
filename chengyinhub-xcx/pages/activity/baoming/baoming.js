@@ -73,12 +73,15 @@ function formatOfferDeadline(value) {
     + pad(date.getHours()) + ':' + pad(date.getMinutes());
 }
 
+const OFFER_WINDOW_MAX_MS = 1441 * 60_000;
+
 function offerDeadlineIsFuture(value, now) {
   const date = parseOfferDeadline(value);
   if (!date) return false;
   const delay = date.getTime() - (now == null ? Date.now() : now);
-  // 后端策略上限为 120 分钟；异常超长时间同样 fail-closed，不能扩张付款窗口。
-  return delay > 0 && delay <= 121 * 60_000;
+  // C-24(2026-11-02):候补认领窗口由系列配置,后端上限 1440 分钟(ClubEventOpsServiceImpl /
+  // club_event_series CHECK);原先按 120 分钟判,把 24 小时内仍有效的 OFFERED 当成已过期。超出上限仍 fail-closed。
+  return delay > 0 && delay <= OFFER_WINDOW_MAX_MS;
 }
 
 // CU-C-32(9-25 裁决):换票弹层是「场次选择器」,同日多场要能区分 —— 有开始时间就带上「MM-DD HH:mm」。
@@ -948,7 +951,7 @@ Page({
       this.expireWaitlistOfferInView();
       return;
     }
-    if (delay > 121 * 60_000) {
+    if (delay > OFFER_WINDOW_MAX_MS) {
       this.expireWaitlistOfferInView();
       return;
     }

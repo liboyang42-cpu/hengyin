@@ -158,3 +158,6 @@ cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0
 }
 .cd-draft-error { display: block; margin-top: var(--cy-space-2); }
 .cd-save { display: block; margin-top: var(--cy-space-3); }
+/* 2026-11-02:有号码权限时号码后的拨号键(≥88rpx 触控) */
+.cd-phone-row { display: flex; align-items: center; gap: var(--cy-space-2); }
+.cd-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }

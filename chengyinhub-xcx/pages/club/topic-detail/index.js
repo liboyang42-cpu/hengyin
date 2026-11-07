@@ -5,6 +5,7 @@
 // (「这一站玩什么」是讲给商家听的「玩家到店会跟你做什么」),不是俱乐部要看的东西。
 // 日常详情不跳 merchantinfo；只有「承接审核」显式复用它已有的主办方审核台，避免复制审核链。
 const toast = require('../../../utils/toast.js');
+const { callMember } = require('../../../utils/club-phone-call.js');
 const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const app = getApp();
@@ -59,6 +60,8 @@ function flattenCustomerRows(sessions) {
         initial: name.slice(0, 1),
         timeText: timeText,
         phoneText: r.phoneText || '',
+        // 2026-11-02:服务端判了能拨(主理人/副主理人/本场领队/勾了开关的核销员)才给拨号键
+        phoneCallable: r.phoneCallable === true && /^1\d{10}$/.test(String(r.phoneText || '')),
         statusCode: r.statusCode,
         statusText: r.statusText || '',
         verifyText: r.timeText && r.timeText !== '—' ? r.timeText : '',
@@ -387,7 +390,8 @@ Page({
         cover: resolveTopicCover(raw) || raw.cover || raw.coverUrl || '',
         merchantLogo: raw.merchantLogo || '',
         dateRange: this.formatRange(raw.startDate, raw.endDate),
-        verifyModeText: raw.verifyModeText || '玩家可到店核销',
+        // C-27:没有任何商家信息的主题(纯城市定向)不再默认写「玩家可到店核销」
+        verifyModeText: raw.verifyModeText || (raw.merchantLogo ? '玩家可到店核销' : ''),
         chips: this.buildChips(raw, stats),
         structureText: this.buildStructureText(raw, stats),
         statusChips: this.buildTopicStatusChips(raw),
@@ -396,6 +400,8 @@ Page({
       sessions: state.sessions ? this.buildSessions(raw) : [],
       canManageSessions: this._canManageSessions,
       canReviewChapterApplications: stats.canReviewChapterApplications === true,
+      // C-02:非平台主题的付费场次暂不能在线收款,告诉主理人;平台放开后后端不再给 true,这句自然消失。
+      paymentNotice: stats.paidSessionsBlocked === true ? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : '',
     });
     this.applyVerifyVisibility();
     this._topicActivities = (Array.isArray(raw.activityList) ? raw.activityList : [])
@@ -425,7 +431,8 @@ Page({
     const match = this._opsTimeMatch();
     this.setData({
       opsTimeAvailable: !!match,
-      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey(),
+      // C-23:已有报名时一进页就显示已锁定,不用先点保存吃一次拒绝;最终仍以后端为准。
+      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey() || this._opsTimeHasSignups(),
       opsTimeText: match ? (Number(match[2]) + '月' + Number(match[3]) + '日 ' + match[4]) : '',
     });
   },
@@ -448,9 +455,14 @@ Page({
     this.setData({ opsTimeSubmitting: false, opsTimeSheetVisible: false, 'resultSheet.show': false });
   },
 
+  _opsTimeHasSignups() {
+    const stats = this._manageStats || {};
+    return !!this._directorActivityId && Number(stats.sessionHeadcount) > 0;
+  },
+
   openOpsTimeSheet() {
     this._syncOpsTimeContext();
-    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey()) return;
+    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey() || this._opsTimeHasSignups()) return;
     const match = this._opsTimeMatch();
     if (!match) { this.syncOpsTime(); return; }
     this.setData({
@@ -739,7 +751,8 @@ Page({
     //(剧情与玩法 / 核销台账 / 场次管理 / 退出与暂停规则)。
     // 主题内容仍去编辑主题页,由弹层里那一行带过去;结束主题不放在俱乐部这一层。
     if (key === 'more') { this.openTopicSetting(); return; }
-    if (key === 'merchant') { this.openMerchants(); return; }
+    // ROUND4:能审承接的人直接进主题工作台的 P-6 招商层(merchantinfo 内现成),其他人仍看只读商家列表
+    if (key === 'merchant') { if (this.data.canReviewChapterApplications) { this.goMerchantRecruit(); return; } this.openMerchants(); return; }
     if (key === 'customer') { this.openCustomers(); return; }
     if (key === 'groupcode') { this.goGroupCode(); return; }
     this.notReady(action.label);
@@ -964,6 +977,9 @@ Page({
   },
   closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
+  callCustomerRow(e) {
+    callMember(e.currentTarget.dataset.phone, () => toast('拨号未完成，请重试'))
+  },
   onCustomerFilter(e) {
     const value = e.currentTarget.dataset.value || '';
     if (value === this.data.customerFilter) return;
@@ -1221,7 +1237,13 @@ Page({
       complete: () => { this._navigating = false; } });
   },
 
-  /* ——— Figma J3-A(按节点)/ J3-B(按章节)招商台 ——— */
+  goMerchantRecruit() {
+    if (!this.data.canReviewChapterApplications || !this._topicId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._topicId + '&scope=CLUB&open=merchant',
+      complete: () => { this._navigating = false; } });
+  },
+
 
   openTeamSheet() { this.setData({ teamSheetVisible: true }); },
   closeTeamSheet() { this.setData({ teamSheetVisible: false }); },

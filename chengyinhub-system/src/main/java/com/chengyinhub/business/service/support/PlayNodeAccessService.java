@@ -305,7 +305,8 @@ public class PlayNodeAccessService {
             String routeStatus = gameSessionRuntimeService == null ? null
                     : gameSessionRuntimeService.routeSessionStatus(actId);
             if (routeStatus != null) {
-                return "RUNNING".equals(routeStatus) ? null : "本场带队尚未开局或已结束";
+                if (!"RUNNING".equals(routeStatus)) return "本场带队尚未开局或已结束";
+                return node == null ? null : gameSessionRuntimeService.routeChapterGateError(actId, node.getId());
             }
             com.chengyinhub.business.domain.ClubLeadState st = clubLeadMapper.selectByActivity(actId);
             if (st == null || st.getStatus() == null || st.getStatus() == 3) return null;

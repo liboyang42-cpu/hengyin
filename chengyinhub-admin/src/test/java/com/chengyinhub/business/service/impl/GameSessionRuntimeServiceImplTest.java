@@ -3619,6 +3619,96 @@ class GameSessionRuntimeServiceImplTest {
         verify(runtimeMapper, never()).updateStationStatusCas(any(), any(), any(), any(), any(), any());
     }
 
+    /** C-04:路线局的章节来自主题章节表(拥有本场站点的章节),工作台给出「放行下一章」并能真正推进。 */
+    private void stubRouteChapters() {
+        com.chengyinhub.business.mapper.CmsTopicChapterMapper chapterMapper =
+                mock(com.chengyinhub.business.mapper.CmsTopicChapterMapper.class);
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper =
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        ReflectionTestUtils.setField(service, "routeChapterMapper", chapterMapper);
+        ReflectionTestUtils.setField(service, "routeNodeMapper", nodeMapper);
+        List<com.chengyinhub.business.domain.CmsTopicChapter> chapters = new java.util.ArrayList<>();
+        long[][] defs = {{49L, 2L}, {48L, 1L}, {50L, 3L}};
+        for (long[] def : defs) {
+            com.chengyinhub.business.domain.CmsTopicChapter c = new com.chengyinhub.business.domain.CmsTopicChapter();
+            c.setId(def[0]); c.setSortId(def[1]); c.setName("第" + def[1] + "章");
+            chapters.add(c);
+        }
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(chapters);
+        List<com.chengyinhub.business.domain.CmsTopicNode> nodes = new java.util.ArrayList<>();
+        long[][] nodeDefs = {{NODE, 48L}, {FALLBACK_NODE, 49L}};
+        for (long[] def : nodeDefs) {
+            com.chengyinhub.business.domain.CmsTopicNode n = new com.chengyinhub.business.domain.CmsTopicNode();
+            n.setId(def[0]); n.setTopicId(TOPIC); n.setChapterId(def[1]);
+            nodes.add(n);
+            when(nodeMapper.selectCmsTopicNodeById(def[0])).thenReturn(n);
+        }
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(nodes);
+        GameStationRun first = station(MERCHANT, GameStationRun.ACTIVE);
+        first.setNodeId(NODE);
+        GameStationRun second = station(MERCHANT, GameStationRun.ACTIVE);
+        second.setNodeId(FALLBACK_NODE);
+        when(runtimeMapper.selectStations(SESSION)).thenReturn(Arrays.asList(first, second));
+    }
+
+    @Test
+    void routeSessionOffersNextChapterWithWaitingTeamsAndUnlockAdvancesGate() {
+        GameSession session = runningSession(4);
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\"}");
+        session.setCurrentChapterId(48L);
+        stubRouteChapters();
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        when(runtimeMapper.selectActiveTeamIds(ACTIVITY)).thenReturn(Arrays.asList(TEAM, TEAM + 1));
+        Map<String, Object> done = new LinkedHashMap<>();
+        done.put("teamId", TEAM);
+        done.put("nodeId", NODE);
+        when(runtimeMapper.selectRouteTeamCompletedNodes(SESSION)).thenReturn(Collections.singletonList(done));
+
+        com.chengyinhub.business.domain.dto.GameSessionView view =
+                service.view(GameActorContext.club(DIRECTOR), ACTIVITY);
+        assertTrue(view.getAvailableActions().contains("UNLOCK_CHAPTER"));
+        List<?> options = (List<?>) view.getClub().get("chapterOptions");
+        assertEquals(1, options.size(), "只给相邻下一章(章节 50 没有本场站点,不算)");
+        Map<?, ?> next = (Map<?, ?>) options.get(0);
+        assertEquals(49L, next.get("chapterId"));
+        assertEquals("第2章", next.get("title"));
+        assertEquals(1, next.get("waitingTeams"), "一支队伍已完成第 1 章全部站点");
+        assertEquals("第1章", view.getClub().get("currentChapterTitle"));
+
+        // 未放行前,第 2 章站点被挡;放行后通过。
+        assertEquals("本章还没开启,等队长放行", service.routeChapterGateError(ACTIVITY, FALLBACK_NODE));
+        assertNull(service.routeChapterGateError(ACTIVITY, NODE));
+        when(runtimeMapper.updateSessionCas(anyLong(), anyInt(), anyString(), anyString(), any(), any(), any()))
+                .thenReturn(1);
+        stubReceiptPersistence("route-unlock-49");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("chapterId", 49L);
+        // C-04(2026-11-02 用户):放行原因选填,不带 reason 也能放行
+        service.command(GameActorContext.club(DIRECTOR), command("route-unlock-49", 4, "UNLOCK_CHAPTER", payload));
+        assertEquals(Long.valueOf(49L), session.getCurrentChapterId());
+        assertNull(service.routeChapterGateError(ACTIVITY, FALLBACK_NODE));
+    }
+
+    @Test
+    void routeSessionRefusesSkippingChapters() {
+        GameSession session = runningSession(4);
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\"}");
+        session.setCurrentChapterId(49L);
+        stubRouteChapters();
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, DIRECTOR)).thenReturn(true);
+        stubReceiptPersistence("route-unlock-last");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("chapterId", 50L);
+        payload.put("reason", "跳章");
+        GameSessionException error = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(DIRECTOR), command("route-unlock-last", 4, "UNLOCK_CHAPTER", payload)));
+        assertEquals("GAME_STATE_CONFLICT", error.getErrorCode());
+        assertEquals(Long.valueOf(49L), session.getCurrentChapterId());
+        assertTrue(((List<?>) service.view(GameActorContext.club(DIRECTOR), ACTIVITY).getClub().get("chapterOptions")).isEmpty());
+    }
+
     @Test
     void ordinaryRouteRecapUsesV1CompletionFieldsWithoutInventingStoryRoles() {
         GameSession session = runningSession(4);

@@ -222,6 +222,31 @@ class ClubAccessServiceImplTest {
                 "EVENT_LEAD 必须只授权所绑定的 activityId");
     }
 
+    /** 2026-11-02 用户:领队(执行方)有完整号码;核销员默认没有,委派上勾了「可见客户手机号」才有,且只在本场。 */
+    @Test
+    void customerPhoneReadFollowsLeadRoleAndPerAssignmentCheckinToggle() {
+        when(clubs.selectClubById(11L)).thenReturn(activeClub(11L, 900L));
+        when(members.selectByClubAndMember(11L, 901L)).thenReturn(activeMember(11L, 901L, 0));
+        when(activities.selectCmsActivityById(55L)).thenReturn(activity(55L, 11L));
+        when(assignments.selectActiveForAccess(eq(11L), eq(901L), eq(55L), any(Date.class)))
+                .thenReturn(Collections.singletonList(activeEventRole(11L, 901L, 55L, ClubRoleCode.EVENT_LEAD)));
+        assertTrue(service.resolve(901L, 11L, 55L).hasPermission(ClubPermission.CUSTOMER_PHONE_READ));
+
+        ClubRoleAssignment checkin = activeEventRole(11L, 901L, 55L, ClubRoleCode.EVENT_CHECKIN);
+        when(assignments.selectActiveForAccess(eq(11L), eq(901L), eq(55L), any(Date.class)))
+                .thenReturn(Collections.singletonList(checkin));
+        assertTrue(!service.resolve(901L, 11L, 55L).hasPermission(ClubPermission.CUSTOMER_PHONE_READ));
+        checkin.setCustomerPhoneVisible(1);
+        assertTrue(service.resolve(901L, 11L, 55L).hasPermission(ClubPermission.CUSTOMER_PHONE_READ));
+
+        // 运营(俱乐部级)不因任何开关拿到号码
+        ClubRoleAssignment operator = activeClubRole(11L, 901L, ClubRoleCode.CLUB_OPERATOR);
+        operator.setCustomerPhoneVisible(1);
+        when(assignments.selectActiveForAccess(eq(11L), eq(901L), eq(null), any(Date.class)))
+                .thenReturn(Collections.singletonList(operator));
+        assertTrue(!service.resolve(901L, 11L, null).hasPermission(ClubPermission.CUSTOMER_PHONE_READ));
+    }
+
     @Test
     void expiredAndCrossClubAssignmentsFailClosed() {
         when(clubs.selectClubById(11L)).thenReturn(activeClub(11L, 900L));

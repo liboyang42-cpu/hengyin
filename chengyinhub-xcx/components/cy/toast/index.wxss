@@ -25,6 +25,8 @@
      起点态(没有 .ct--in)上挂的是收起那条,.ct--in 上挂出现那条:transition 取的是目标态的声明。 */
   transition: opacity var(--cy-motion-toast-out) var(--cy-ease-accelerate), transform var(--cy-motion-toast-out) var(--cy-ease-accelerate);
 }
+/* lift:底部整宽主键(高 104rpx + 提示行)之上。只给声明了 lift 的页面用,其它页位置不变。 */
+.ct.ct--lift { bottom: calc(env(safe-area-inset-bottom) + 340rpx); }
 .ct.ct--in { opacity: 1; transform: translate(-50%, 0); transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-standard) var(--cy-ease-out); }
 .ct.ct--reduced-motion { transition: none; }
 .ct__icon { flex: none; }

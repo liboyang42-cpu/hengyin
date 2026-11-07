@@ -1,0 +1,5 @@
+cms_activity before: ((10, 7002, datetime.datetime(2026, 11, 2, 17, 36), datetime.datetime(2026, 11, 2, 23, 59, 59), '31.24268', '121.48841'),)
+ticket gather point: ((77, Decimal('31.242680'), Decimal('121.488410')),)
+POST /api/club/lead/arrive walk-player-2 990006 within ~5 m {"activityId": 10, "latitude": 31.24272, "longitude": 121.48839} -> {"msg": "已到集合点", "code": 200, "_status": 200}
+POST /api/club/lead/arrive walk-player-3 990007 ~2 km north {"activityId": 10, "latitude": 31.2607, "longitude": 121.48841} -> {"msg": "请到集合点500米内签到", "code": 500, "_status": 200}
+club_lead_checkin rows: ((10, 990006, datetime.datetime(2026, 11, 2, 16, 56, 41)),)

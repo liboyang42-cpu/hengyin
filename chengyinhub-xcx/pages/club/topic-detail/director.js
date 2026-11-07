@@ -31,7 +31,7 @@ function readinessText(readiness) {
   const ready = numeric(readiness && readiness.readyStations)
   const required = numeric(readiness && readiness.requiredStations)
   if (ready === null || required === null) return '—'
-  return ready + '/' + required + ' 站 READY'
+  return ready + '/' + required + ' 站就绪'
 }
 
 function statusText(status) {
@@ -47,12 +47,24 @@ function statusText(status) {
   return labels[String(status || '').toUpperCase()] || '状态待确认'
 }
 
-function stationView(station) {
+// C-09 第三轮:准备总览的节点行直接喂收编行列表,要 {id,title,subtitle,value};状态码不外露。
+const STATION_STATUS_TEXT = { INVITED: '已邀请', ACCEPTED: '已接受', READY: '就绪', ACTIVE: '进行中', PAUSED: '已暂停', CLOSED: '已关闭' }
+
+function stationView(station, index) {
   const item = station || {}
+  const nameText = item.name || item.stationName || item.nodeName || '未命名节点'
+  const status = String(item.status || '').toUpperCase()
+  const statusText = STATION_STATUS_TEXT[status] || '待确认'
+  const issueText = item.issue || item.blockedReason || item.pauseReason || item.exception || ''
   return Object.assign({}, item, {
-    nameText: item.name || item.stationName || item.nodeName || '未命名节点',
-    statusText: item.status || 'UNKNOWN',
-    issueText: item.issue || item.blockedReason || item.pauseReason || item.exception || '',
+    nameText: nameText,
+    statusText: statusText,
+    issueText: issueText,
+    id: item.stationId != null ? item.stationId : (item.nodeId != null ? item.nodeId : 's' + (index || 0)),
+    title: nameText,
+    subtitle: issueText,
+    value: statusText,
+    valueTone: status === 'READY' || status === 'ACTIVE' ? 'success' : (status === 'PAUSED' ? 'warning' : 'default'),
   })
 }
 
@@ -80,7 +92,8 @@ function teamView(team) {
     ? recentEvent.occurredAt.trim() : ''
   return Object.assign({}, item, {
     nameText: item.name || item.teamName || '未命名队伍',
-    statusText: item.status || 'UNKNOWN',
+    // C-26:队伍状态用中文,不露枚举。
+    statusText: ({ PREPARING: '未出发', RUNNING: '进行中', COMPLETED: '已完成', BLOCKED: '受阻', PAUSED: '暂停', ERROR: '异常' })[status] || '待确认',
     progressText: completed !== null && total !== null ? completed + '/' + total + ' 节点' : '—',
     issueText: item.blockedReason || item.issue || '',
     isAbnormal: status === 'BLOCKED' || status === 'PAUSED' || status === 'ERROR'
@@ -232,7 +245,25 @@ function recapMetricView(metric) {
   const label = item.label || item.name || item.key || ''
   const value = item.value
   if (!label || value == null) return null
-  return { label: label, valueText: String(value), unit: item.unit || '' }
+  return { key: item.key || '', label: label, valueText: String(value), unit: item.unit || '' }
+}
+
+// C-11 第三轮(Figma D9 289:523):漏斗前三个数做大块,其余进「完成情况」行。
+function recapCompletionRow(metric, index) {
+  return { id: metric.key || ('m' + index), title: metric.label, value: metric.valueText + (metric.unit ? ' ' + metric.unit : '') }
+}
+
+// C-11:复盘「节点完成」行。服务端给的是原始计数对象,行组件要 {id,title,subtitle}。
+function recapStationRow(station) {
+  const item = station || {}
+  const id = normalizedPositiveId(item.nodeId)
+  if (!id || !item.nodeName) return null
+  const parts = []
+  if (item.arrivedPlayers != null) parts.push('到达 ' + item.arrivedPlayers + ' 人')
+  if (item.normalCompletedCount != null) parts.push('完成 ' + item.normalCompletedCount)
+  if (Number(item.fallbackCompletedCount) > 0) parts.push('兜底 ' + item.fallbackCompletedCount)
+  if (Number(item.rejectedCount) > 0) parts.push('打回 ' + item.rejectedCount)
+  return { id: id, title: item.nodeName, subtitle: parts.join(' · ') }
 }
 
 function normalizedPositiveId(value) {
@@ -490,6 +521,7 @@ const DIRECTOR_DATA = {
     sessionStatusText: '状态待确认',
     revision: null,
     chapterOptions: [],
+    unlockButtonText: '手动解锁章节',
     chapterOptionLabels: [],
     readiness: { requiredStations: null, readyStations: null, teamsReady: null, canStart: false },
     readinessText: '—',
@@ -540,6 +572,9 @@ const DIRECTOR_DATA = {
     canToggleLeaderboard: false,
     recap: null,
     recapMetrics: [],
+    recapTiles: [],
+    recapCompletionRows: [],
+    recapStationRows: [],
     canExportRecap: false,
     exportState: 'idle',
     canFinish: false,
@@ -744,6 +779,9 @@ const DIRECTOR_METHODS = {
     const leaderboard = projection.leaderboard || null
     const leaderboardVisibleKnown = !!leaderboard && typeof leaderboard.visible === 'boolean'
     const recap = projection.recap || null
+    const recapMetrics = recap && Array.isArray(recap.metrics)
+      ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
+      : []
     this._genericControl = projection.genericControl || null
     this._roleOptions = roleOptions
     this._takeoverTargetOptions = []
@@ -753,8 +791,15 @@ const DIRECTOR_METHODS = {
         && (projection.currentChapterId == null || String(item.chapterId) !== String(projection.currentChapterId))
     }).map(function (item) {
       // 5-04(D4):行组件按 id 找行、回传 {id};缺 id 的章节行点哪一行都落回第 0 项。
-      return { id: item.chapterId, chapterId: item.chapterId, title: item.title || '章节 #' + item.chapterId }
+      const title = item.title || '章节 #' + item.chapterId
+      // C-04:路线局只给相邻下一章,并带上已完成本章、在等放行的队伍数。
+      const waiting = numeric(item.waitingTeams)
+      return { id: item.chapterId, chapterId: item.chapterId, title: title, waitingTeams: waiting,
+        subtitle: waiting === null ? '' : (waiting > 0 ? waiting + ' 队已完成本章，在等放行' : '还没有队伍完成本章') }
     })
+    const unlockText = chapterOptions.length === 1
+      ? '放行「' + chapterOptions[0].title + '」' + (chapterOptions[0].waitingTeams > 0 ? ' · ' + chapterOptions[0].waitingTeams + ' 队在等' : '')
+      : '手动解锁章节'
     // 宿主页(index.js)提供 applyProjectionStatus:场次状态 → 页面六态。director 与宿主是同一个 Page 作用域。
     // 契约测试用裸 host 装载 director,没有这个方法;真页面(index.js)一定有
     if (typeof this.applyProjectionStatus === 'function') this.applyProjectionStatus(projection.status)
@@ -769,11 +814,14 @@ const DIRECTOR_METHODS = {
       genericOpsStatus: this._genericControl ? this._genericControl.run.operationStatus + ' · ' + this._genericControl.run.authorityMode + ' · 权威 ' + this._genericControl.run.authorityEpoch : '',
       genericOpsTeams: this._genericControl ? this._genericControl.teams.map(team => '队伍 ' + team.teamId + (team.exited ? '（已退出）' : '')).join(' · ') : '',
       chapterOptions: chapterOptions,
+      unlockButtonText: unlockText,
       chapterOptionLabels: chapterOptions.map(function (item) { return item.title }),
       readiness: readiness,
       readinessText: readinessText(readiness),
       canPrepare: hasAction(availableActions, 'PREPARE'),
       blockers: Array.isArray(readiness.blockers) ? readiness.blockers : [],
+      blockerText: Array.isArray(readiness.blockers) && readiness.blockers.length && projection.status !== 'RUNNING'
+        ? '还不能开始：' + readiness.blockers.filter(Boolean).join('；') : '',
       // D8 现场事件:全部由已有投影推出,不新造事实。
       // 站点暂停 / 待核验积压来自 stations,待核验与已驳回的提交来自 submissions。
       incidentRows: incidentRowList(projection.stations, projection.submissions),
@@ -797,8 +845,11 @@ const DIRECTOR_METHODS = {
       leaderboardVisibleKnown: leaderboardVisibleKnown,
       canToggleLeaderboard: leaderboardVisibleKnown && hasAction(availableActions, 'SET_LEADERBOARD_VISIBILITY'),
       recap: recap,
-      recapMetrics: recap && Array.isArray(recap.metrics)
-        ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
+      recapMetrics: recapMetrics,
+      recapTiles: recapMetrics.slice(0, 3),
+      recapCompletionRows: recapMetrics.slice(3).map(recapCompletionRow),
+      recapStationRows: recap && Array.isArray(recap.stations)
+        ? recap.stations.map(recapStationRow).filter(function (item) { return !!item })
         : [],
       canExportRecap: !!(recap && recap.exportAvailable === true),
       canFinish: hasAction(availableActions, 'FINISH'),
@@ -1245,12 +1296,15 @@ const DIRECTOR_METHODS = {
     if (this.data.writeLocked) return
     const reason = String(this.data.unlockReason || '').trim()
     const selected = this.data.chapterOptions[this.data.unlockChapterIndex]
-    if (!this.data.canUnlockChapter || !selected || !reason) {
-      toast('请填写手动解锁原因')
+    // C-04(2026-11-02 用户):放行原因选填,填了才带上
+    if (!this.data.canUnlockChapter || !selected) {
+      toast('请选择要放行的章节')
       return
     }
     this.setData({ unlockSheetVisible: false })
-    this.executeAction('UNLOCK_CHAPTER', { chapterId: selected.chapterId, reason: reason })
+    const payload = { chapterId: selected.chapterId }
+    if (reason) payload.reason = reason
+    this.executeAction('UNLOCK_CHAPTER', payload)
   },
 
   onToggleLeaderboard() {
@@ -1313,7 +1367,9 @@ const DIRECTOR_METHODS = {
   onStartSession() {
     if (this.data.writeLocked) return
     if (!this.data.readiness || !this.data.readiness.canStart) {
-      toast('准备未完成，暂时不能开局')
+      // C-09:服务端已给出卡点(如「尚无有效报名队伍」),直接说出来;只有带队人能看到导演台。
+      const blockers = Array.isArray(this.data.blockers) ? this.data.blockers.filter(Boolean) : []
+      toast(blockers.length ? '还不能开始：' + blockers.join('；') : '准备未完成，暂时不能开局')
       return
     }
     const that = this
@@ -1334,7 +1390,7 @@ const DIRECTOR_METHODS = {
     const that = this
     showDirectorModal(this, {
       title: '进入准备',
-      content: '进入后将开始收集节点和队伍 READY 状态。',
+      content: '进入后将开始收集节点和队伍的就绪状态。',
       confirmText: '开始准备',
       success(result) { if (result.confirm) that.executeAction('PREPARE', {}) },
     })

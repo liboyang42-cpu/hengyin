@@ -54,11 +54,22 @@ public class ClubRoleAssignmentServiceImpl implements IClubRoleAssignmentService
     @Transactional(rollbackFor = Exception.class)
     public ClubRoleAssignment assign(Long principalMemberId, Long clubId, Long targetMemberId,
                                      String roleCode, Long activityId, Date expiresAt, String requestId) {
+        return assign(principalMemberId, clubId, targetMemberId, roleCode, activityId, expiresAt, requestId, false);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ClubRoleAssignment assign(Long principalMemberId, Long clubId, Long targetMemberId,
+                                     String roleCode, Long activityId, Date expiresAt, String requestId,
+                                     boolean customerPhoneVisible) {
         ClubAccessContext access = ownerAccess(principalMemberId, clubId);
         Club locked = clubMapper.selectClubByIdForUpdate(clubId);
         access = ownerAccess(principalMemberId, clubId);
         if (!isOwnedActiveClub(locked, access)) throw forbidden();
         if (!ClubRoleCode.isAssignable(roleCode)) throw badRequest("角色不合法");
+        if (customerPhoneVisible && !ClubRoleCode.EVENT_CHECKIN.equals(roleCode)) {
+            throw badRequest("只有活动核销员可设置可见客户手机号");
+        }
         if (!positive(targetMemberId) || targetMemberId.equals(access.getOwnerMemberId())) {
             throw badRequest("目标成员不合法");
         }
@@ -83,8 +94,12 @@ public class ClubRoleAssignmentServiceImpl implements IClubRoleAssignmentService
         BusinessAuditEvent receipt = businessAuditEventMapper.selectByDomainActionRequestForUpdate(
                 "CLUB", clubId, "CLUB_ROLE_ASSIGNED", normalizedRequestId);
         if (receipt != null) {
-            return requireExactAssignReplay(receipt, access, targetMemberId, roleCode,
+            ClubRoleAssignment replayed = requireExactAssignReplay(receipt, access, targetMemberId, roleCode,
                     scopeType, scopeId, expiresAt, normalizedRequestId);
+            if (customerPhoneVisible != Integer.valueOf(1).equals(replayed.getCustomerPhoneVisible())) {
+                throw conflict("角色分配 requestId 与原请求不一致");
+            }
+            return replayed;
         }
         if (ClubRoleCode.EVENT_LEAD.equals(roleCode)) {
             revokeActiveEventLeads(access, clubId, activityId, principalMemberId,
@@ -108,6 +123,7 @@ public class ClubRoleAssignmentServiceImpl implements IClubRoleAssignmentService
         assignment.setAssignedByMemberId(principalMemberId);
         assignment.setAssignedAt(now);
         assignment.setVersion(0);
+        assignment.setCustomerPhoneVisible(customerPhoneVisible ? 1 : 0);
         assignment.setCreateBy(String.valueOf(principalMemberId));
         assignment.setCreateTime(now);
         assignment.setUpdateBy(String.valueOf(principalMemberId));
@@ -673,7 +689,11 @@ public class ClubRoleAssignmentServiceImpl implements IClubRoleAssignmentService
     private String assignmentJsonForStatus(ClubRoleAssignment assignment, String status) {
         return "{\"roleCode\":\"" + assignment.getRoleCode() + "\",\"scopeType\":\""
                 + assignment.getScopeType() + "\",\"scopeId\":" + assignment.getScopeId()
-                + ",\"status\":\"" + status + "\"}";
+                + ",\"status\":\"" + status + "\""
+                // 只有开了才写进审计,存量回执(没有这个键)的重放比对保持不变
+                + (Integer.valueOf(1).equals(assignment.getCustomerPhoneVisible())
+                        ? ",\"customerPhoneVisible\":true" : "")
+                + "}";
     }
 
     private String normalizeRequestId(String requestId) {

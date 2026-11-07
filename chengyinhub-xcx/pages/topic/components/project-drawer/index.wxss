@@ -143,7 +143,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--cy-radius-md);
-  background: #000;  /* ds-ok: 抽屉主动作是纯黑,按稿 */
+  background: var(--cy-btn-solid-bg);  /* 浅色主题即纯黑(按稿);俱乐部主办深色层跟 theme-dark 的主 CTA 走(ROUND5E) */
   font-size: var(--cy-type-button);
   line-height: var(--cy-leading-normal);
   text-align: center;

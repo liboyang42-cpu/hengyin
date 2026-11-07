@@ -75,6 +75,7 @@
   position: absolute; left: var(--cy-space-4); right: var(--cy-space-4); top: 548rpx;  /* 设计 y323 */
   font-size: var(--ctd-type-hero); font-weight: 700; line-height: 1.35;
   color: var(--cy-color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;  /* C-26:长标题不压日期行 */
 }
 .ctd-head__meta { position: absolute; left: var(--cy-space-4); top: 618rpx; display: flex; align-items: center; gap: var(--cy-space-3); }
 .ctd-head__meta-item { display: flex; align-items: center; gap: 10rpx; color: var(--cy-color-text-tertiary); }
@@ -196,6 +197,8 @@
 /* ── 导演台(game-director 整页收编进来后新增)── */
 .ctd-director-state { padding: var(--cy-space-4); }
 .ctd-director-note { padding: 0 var(--cy-space-4) var(--cy-space-2); font-size: var(--cy-type-caption); line-height: 1.5; color: var(--cy-color-text-tertiary); }
+/* C-11:复盘块与页面其它分区同一左右留白,不再贴屏幕边 */
+.ctd-director-recap { display: block; margin-top: var(--cy-space-3); }
 .ctd-director-recaphead { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--cy-space-4); }
 .ctd-director-export { min-height: var(--cy-btn-h-sm); display: flex; align-items: center; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-raised); color: var(--cy-info); font-size: var(--cy-type-label); }
 .ctd-director-export.is-disabled { opacity: .45; pointer-events: none; }
@@ -212,7 +215,8 @@
 /* 弹层里补的填写位(组件只给了 slot) */
 .ctd-director-field { display: flex; flex-direction: column; gap: var(--cy-space-2); margin-top: var(--cy-space-3); }
 .ctd-director-field__label { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.ctd-director-field__input { min-height: 120rpx; padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); line-height: 1.5; }
+/* C-04 R4:textarea 原生默认宽 300px,与上方章节卡同宽 */
+.ctd-director-field__input { box-sizing: border-box; width: 100%; min-height: 120rpx; padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); line-height: 1.5; }
 .ctd-director-field__picker { min-height: var(--cy-btn-h); display: flex; align-items: center; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
 .ctd-director-field__acts { display: flex; gap: var(--cy-space-2); }
 .ctd-director-field__act { flex: 1; min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
@@ -295,3 +299,5 @@
 .ctd-generic-ops__input { width: 100%; box-sizing: border-box; min-height: var(--cy-btn-h); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
 .ctd-generic-ops__confirm { margin-top: var(--cy-space-4); padding-bottom: var(--cy-space-5); }
 .ctd-plan-fallback__input{width:100%;box-sizing:border-box;padding:var(--cy-space-3);border-radius:var(--cy-radius-md);background:var(--cy-color-bg-elevated);color:var(--cy-color-text-primary);font-size:var(--cy-type-body)}
+/* 2026-11-02:有号码权限时报名参与者行的拨号键(≥88rpx 触控) */
+.cli-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }

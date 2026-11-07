@@ -647,12 +647,20 @@ test('导演页先显示加载态，准备未完成时只展示阻断原因且�
   assert.equal(harness.page.data.loadState, 'loading')
   await settle()
   assert.equal(harness.page.data.loadState, 'ready')
-  assert.equal(harness.page.data.readinessText, '2/3 站 READY')
+  assert.equal(harness.page.data.readinessText, '2/3 站就绪')
   assert.deepEqual(harness.page.data.blockers, ['南门店未 READY'])
+  // C-09 第三轮:节点行带名称与中文状态(原来行组件拿不到 title,整卡是空白框;状态码 PAUSED 外露)。
+  const station = harness.page.data.stations[0]
+  assert.equal(station.title, '南门店')
+  assert.equal(station.value, '已暂停')
+  assert.equal(station.subtitle, '物料损坏')
+  assert.equal(station.id, 1)
 
   harness.page.onStartSession()
   assert.equal(writes.length, 0)
-  assert.match(harness.toasts[0].title, /未完成|不能开局/)
+  // C-09(2026-11-02):不再只说「准备未完成」,直接说出服务端给的卡点;页面上同一句落在开始卡说明位。
+  assert.equal(harness.toasts[0].title, '还不能开始：南门店未 READY')
+  assert.equal(harness.page.data.blockerText, '还不能开始：南门店未 READY')
 
   const view = directorView()
   assert.match(view, /wx:if="\{\{loadState === 'loading'\}\}"/)
@@ -1052,8 +1060,7 @@ test('手动解锁必须填原因，且只提交章节开放动作', async () =>
 
   harness.page.openManualUnlock()
   assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.chapterOptions.map((item) => item.chapterId))), [41, 42])
-  harness.page.confirmManualUnlock()
-  assert.equal(writes.length, 0, '没有原因不得解锁')
+  // C-04(2026-11-02 用户):放行原因选填。目标章节仍必须来自服务端 chapterOptions。
   harness.page.onUnlockReasonInput({ detail: { value: '伪造章节' } })
   harness.page.setData({ unlockChapterIndex: 99 })
   harness.page.confirmManualUnlock()
@@ -1185,7 +1192,8 @@ test('加载异常分流 empty / business / network，且失败后不得用旧�
   const view = directorView()
   assert.match(view, /wx:elif="\{\{loadState === 'business-error'\}\}"/)
   assert.match(view, /wx:elif="\{\{loadState === 'network-error'\}\}"/)
-  assert.match(view, /节点数据加载中/)
+  // C-26(2026-11-02):原「暂无节点状态 / 节点数据加载中」两句互相矛盾,并成一句说清何时出现。
+  assert.match(view, /开始准备后显示节点状态/)
 })
 
 test('unknown 写持久化：重新进入自动用原 requestId 回读，pending 保留，确认后清理', async () => {
@@ -1686,4 +1694,119 @@ test('导演宿主页透传原纪元；冲突保留原身份，重试只读回�
   await harness.page.retryUnknownWrite()
   assert.equal(calls.filter(call => call.method === 'POST').length, 1)
   assert.equal(harness.page.data.writeLocked, true)
+})
+
+// C-04(2026-11-02 walk-fix):路线局服务端只给相邻下一章并带 waitingTeams;入口按钮要点名章节和等待队伍数。
+test('路线局放行按钮点名下一章与在等队伍数，提交的仍是服务端给的章节', async () => {
+  const writes = []
+  const projection = {
+    sessionId: 9002, activityId: 702, status: 'RUNNING', revision: 3,
+    currentChapterId: 48, availableActions: ['UNLOCK_CHAPTER'],
+    chapterOptions: [{ chapterId: 49, title: '第二章 外滩钟声', waitingTeams: 2 }],
+    readiness: { requiredStations: 2, readyStations: 2, teamsReady: true, blockers: [], canStart: false },
+    stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null, recap: null,
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit(input) { writes.push(input); return Promise.resolve({ state: 'unknown-write', requestId: input.requestId }) },
+    readReceipt() { return Promise.resolve({ state: 'pending' }) },
+  })
+  harness.page.initDirector('702')
+  await settle()
+  assert.equal(harness.page.data.canUnlockChapter, true)
+  assert.equal(harness.page.data.unlockButtonText, '放行「第二章 外滩钟声」 · 2 队在等')
+  assert.equal(harness.page.data.chapterOptions[0].subtitle, '2 队已完成本章，在等放行')
+  harness.page.openManualUnlock()
+  // C-04:不填原因也能放行,payload 不带 reason
+  harness.page.confirmManualUnlock()
+  await settle()
+  assert.equal(writes[0].action, 'UNLOCK_CHAPTER')
+  assert.equal(writes[0].payload.chapterId, 49)
+  assert.equal('reason' in writes[0].payload, false)
+  const hostWxml = read(DIRECTOR_HOST_WXML)
+  assert.match(hostWxml, /confirm-disabled="\{\{writeLocked\}\}"/)
+  assert.match(hostWxml, /现场原因（选填）/)
+  const host = read(DIRECTOR_HOST_WXML)
+  assert.match(host, /\{\{unlockButtonText\}\}/)
+})
+
+// C-11(2026-11-02 walk-fix):复盘指标块渲染 valueText+unit(原来绑 item.value,恒空);节点完成行映射成 {id,title,subtitle}。
+test('复盘指标显示数字与单位，节点完成行有标题与计数', async () => {
+  const projection = {
+    sessionId: 9003, activityId: 703, status: 'FINISHED', revision: 12,
+    availableActions: [],
+    readiness: { requiredStations: 1, readyStations: 1, teamsReady: true, blockers: [], canStart: false },
+    stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [], leaderboard: null,
+    recap: {
+      metrics: [{ key: 'PAID_PLAYERS', label: '持票玩家', value: 6, unit: '人' }, { key: 'ARRIVED_PLAYERS', label: '到场玩家', value: 2, unit: '人' }],
+      stations: [{ nodeId: 5001, nodeName: '旧钟楼', arrivedPlayers: 4, normalCompletedCount: 3, fallbackCompletedCount: 0, rejectedCount: 1 }],
+      exportAvailable: true,
+    },
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit() { return Promise.resolve({}) },
+    readReceipt() { return Promise.resolve({}) },
+  })
+  harness.page.initDirector('703')
+  await settle()
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapMetrics[0])), { key: 'PAID_PLAYERS', label: '持票玩家', valueText: '6', unit: '人' })
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapStationRows)),
+    [{ id: 5001, title: '旧钟楼', subtitle: '到达 4 人 · 完成 3 · 打回 1' }])
+  const recapWxml = read('pages/club/components/club-director-recap/index.wxml')
+  assert.match(recapWxml, /\{\{item\.valueText\}\}/)
+  assert.doesNotMatch(recapWxml, /\{\{item\.value\}\}/)
+  assert.match(read(DIRECTOR_HOST_WXML), /station-rows="\{\{recapStationRows\}\}"/)
+})
+
+// C-09 第三轮:准备总览与页面同一留白,卡内不再有第二颗「开始活动」(底栏那颗就是开局入口)。
+test('准备总览：页面留白、卡内无第二颗开始活动、无 READY 字样', () => {
+  const host = read(DIRECTOR_HOST_WXML)
+  const card = host.slice(host.indexOf('<cy-club-director-ready'), host.indexOf('bind:primary="onStartSession"'))
+  assert.match(card, /class="ctd-sec ctd-director-recap"/)
+  assert.match(card, /primary-text=""/)
+  const ready = read('pages/club/components/club-director-ready/index.wxml')
+  assert.match(ready, /wx:if="\{\{primaryText\}\}"/)
+  assert.doesNotMatch(read('pages/club/topic-detail/director.js'), /READY 状态|站 READY/)
+})
+
+// C-11 第三轮(Figma D9 289:523):已结束 = 复盘整页态。漏斗前三个数做大块,后两个进「完成情况」行,
+// 榜单只出复盘里那一份;进行中各段(核销/主题/接下来/集合时间/排行榜)不再出。
+test('已结束复盘：三块大数、完成情况两行、只有一份榜单，进行中各段收起', async () => {
+  const metrics = [
+    { key: 'PAID_PLAYERS', label: '持票玩家', value: 4, unit: '人' },
+    { key: 'ARRIVED_PLAYERS', label: '到场玩家', value: 3, unit: '人' },
+    { key: 'NORMAL_COMPLETERS', label: '有完成进度', value: 0, unit: '人' },
+    { key: 'FALLBACK_COMPLETERS', label: '兜底完成', value: 0, unit: '人' },
+    { key: 'FINISHED_TEAMS', label: '完成队伍', value: 0, unit: '队' },
+  ]
+  const projection = {
+    sessionId: 9003, activityId: 703, status: 'FINISHED', revision: 12, availableActions: [],
+    readiness: { blockers: [], canStart: false }, stations: [], teams: [], roles: [], roleOptions: [], broadcasts: [],
+    leaderboard: { visible: true, rows: [] },
+    recap: { metrics: metrics, stations: [], exportAvailable: true },
+  }
+  const harness = loadDirector({
+    load() { return Promise.resolve(projection) },
+    submit() { return Promise.resolve({}) },
+    readReceipt() { return Promise.resolve({}) },
+  })
+  harness.page.initDirector('703')
+  await settle()
+  assert.deepEqual(harness.page.data.recapTiles.map(function (m) { return m.label }), ['持票玩家', '到场玩家', '有完成进度'])
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.page.data.recapCompletionRows)), [
+    { id: 'FALLBACK_COMPLETERS', title: '兜底完成', value: '0 人' },
+    { id: 'FINISHED_TEAMS', title: '完成队伍', value: '0 队' },
+  ])
+  const host = read(DIRECTOR_HOST_WXML)
+  assert.match(host, /metrics="\{\{recapTiles\}\}"/)
+  assert.match(host, /completion-title="完成情况" completion-rows="\{\{recapCompletionRows\}\}"/)
+  assert.match(host, /<block wx:if="\{\{!\(directorActive && statusKey === 'ended'\)\}\}">\s*<!-- ④ 核销/)
+  assert.match(host, /leaderboardVisibleKnown && statusKey !== 'ended'/)
+  assert.match(host, /opsTimeAvailable && statusKey !== 'ended'/)
+  const recapWxml = read('pages/club/components/club-director-recap/index.wxml')
+  const order = ['cdrecap__metrics', '{{completionTitle}}', '{{leaderboardTitle}}', '{{stationTitle}}'].map(function (k) { return recapWxml.indexOf(k) })
+  assert.ok(order.every(function (i, n) { return i > 0 && (n === 0 || i > order[n - 1]) }), 'tiles → 完成情况 → 榜单 → 节点完成')
+  assert.match(recapWxml, /wx:if="\{\{stationRows\.length\}\}"/)
+  assert.doesNotMatch(recapWxml, /funnelSub/)
 })

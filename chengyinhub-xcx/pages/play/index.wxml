@@ -1,5 +1,5 @@
 <view class="play {{lookClass}} {{reducedMotion ? 'play--reduced-motion' : ''}} {{story.show ? 'play--scaled' : ''}}" style="--cy-psheet-max-h: calc(100vh - {{chrome.sheetTop}}px)">
-  <cy-toast id="cy-toast" />
+  <cy-toast id="cy-toast" lift />
   <cy-look-transition id="lookTx" kind="{{lookTransition}}" reduced-motion="{{reducedMotion}}" />
   <include src="theme-backpack.wxml" />
   <include src="theme-player-ops.wxml" />
@@ -55,9 +55,10 @@
 <view class="leadbar glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadbar'}}">
   <view class="lb-left">
     <view class="lb-dot"></view>
-    <text class="lb-txt">带领中 · {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
+    <text class="lb-txt" wx:if="{{lead.ended}}">本场已结束 · 你完成了 {{doneCount}}/{{total}} 站</text>
+    <text class="lb-txt" wx:else>带领中 · {{lead.arrived}}/{{lead.total}} 人{{lead.chapterName ? ' · ' + lead.chapterName : ''}}</text>
   </view>
-  <text class="lb-wait">{{lead.isLeader ? '队长带领中 · 工具在更多' : '队长带队中'}}</text>
+  <text class="lb-wait" wx:if="{{!lead.ended}}">{{lead.isLeader ? '队长带领中 · 工具在更多' : '队长带队中'}}</text>
 </view>
 <view class="leadbar leadbar-retry glass" wx:if="{{hud.topBanner(couponToast, screen, leadLoadError, lead) === 'leadRetry'}}" bindtap="retryLeadProgress" aria-role="button" aria-label="重新加载当前状态" hover-class="cy-pressed" hover-stay-time="80">
   <cy-icon name="warning" size="24" />
@@ -227,7 +228,7 @@
           <view class="dcopy"><text class="dt">展示整团码</text></view>
           <view class="darr"></view>
         </view>
-        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadUnlockFromTools" aria-role="button" aria-label="解锁下一章节" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="drow" wx:if="{{lead.exists && lead.isLeader && !lead.directorRun}}" bindtap="leadUnlockFromTools" aria-role="button" aria-label="解锁下一章节" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--unlock"></view>
           <view class="dcopy"><text class="dt">解锁下一章节</text></view>
           <view class="darr"></view>

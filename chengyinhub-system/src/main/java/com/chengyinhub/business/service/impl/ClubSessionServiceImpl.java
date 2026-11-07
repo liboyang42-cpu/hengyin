@@ -60,6 +60,8 @@ public class ClubSessionServiceImpl implements IClubSessionService {
     private final ActivityReviewPolicy activityReviewPolicy;
     private final IAuditTaskService auditTaskService;
     private final IUmsMemberService umsMemberService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.IProductRoleService productRoleService;
 
     public ClubSessionServiceImpl(IClubService clubService, ICmsTopicService topicService,
                                   ICmsActivityService activityService, IOmsTicketService ticketService,
@@ -104,6 +106,10 @@ public class ClubSessionServiceImpl implements IClubSessionService {
                 topics.add(topic);
             }
         }
+        // C-02:主理人开场前就要知道付费场次能不能在线收款(与 assertCollectible 同一判据,不改收款闸本身)。
+        for (CmsTopic topic : topics) topic.setOnlinePaymentAvailable(onlinePaymentAvailable(topic.getId()));
+        // C-17:开一场页只读显示票价与集合点(玩家结账页看到的就是票上的这两项)。
+        for (CmsTopic topic : topics) applySessionTicketFacts(topic);
         return topics;
     }
 
@@ -122,6 +128,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             throw new IllegalArgumentException("集合时间必须晚于当前时间");
         }
         requireOwnerForUpdate(request.getClubId(), memberId);
+        // C-18:同一俱乐部、同一主题、同一集合时刻已有一场(未取消)时不再静默再建一场。
+        // 放在俱乐部行锁之后,两次并发提交也会串行看到对方;系列按 requestId 的回执重放在调用方更早返回,不经过这里。
+        requireNoSameMomentSession(request.getClubId(), request.getTopicId(), assemblyMoment);
         // 9-16 拍板第 2 条:欠款逾期未补足 ⇒ 不能开新场次(场次票款结算给开场主理人)。
         settlementDebtLedger.requireNoOverdueDebt(memberId);
         CmsTopic topic = topicService.selectCmsTopicById(request.getTopicId());
@@ -169,6 +178,9 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         activity.setImgUrl(topic.getImgUrl());
         activity.setCategoryIds(topic.getCategoryIds());
         activity.setAddressName(topic.getAddressName());
+        // C-03:集合签到(ClubGatherArrivalPolicy)只认场次自己的经纬度;开场时把票种上的集合点
+        // 抄到场次上,否则「我到了」恒为「集合点未配置」。系列开场也走这里。
+        applyGatherPoint(activity, request.getTopicId());
         activity.setStartDate(assemblyMoment);
         activity.setEndDate(dayBoundary(assemblyMoment, true));
         // 先审 ⇒ 待审(status=0/publish_status=0),审核台通过后 applyModeration 上架;先发后审 ⇒ 直接上架。
@@ -198,6 +210,87 @@ public class ClubSessionServiceImpl implements IClubSessionService {
             }
         }
         return activity.getId();
+    }
+
+    /** 与 CmsRegistrationServiceImpl.assertCollectible 的主题分支同一判据;服务不可用时返回 null,页面不出提示。 */
+    Boolean onlinePaymentAvailable(Long topicId) {
+        if (topicId == null || productRoleService == null) return null;
+        return productRoleService.isPlatformOwned(topicId);
+    }
+
+    @Override
+    public String themeWindowWarning(Long topicId, List<LocalDate> dates) {
+        if (topicId == null || dates == null || dates.isEmpty()) return null;
+        CmsTopic topic = topicService.selectCmsTopicById(topicId);
+        if (topic == null || (topic.getStartDate() == null && topic.getEndDate() == null)) return null;
+        ZoneId zone = ZoneId.of("Asia/Shanghai");
+        LocalDate start = topic.getStartDate() == null ? null : topic.getStartDate().toInstant().atZone(zone).toLocalDate();
+        LocalDate end = topic.getEndDate() == null ? null : topic.getEndDate().toInstant().atZone(zone).toLocalDate();
+        int outside = 0;
+        for (LocalDate date : dates) {
+            if (date == null) continue;
+            if ((start != null && date.isBefore(start)) || (end != null && date.isAfter(end))) outside++;
+        }
+        if (outside == 0) return null;
+        DateTimeFormatter label = DateTimeFormatter.ofPattern("M月d日");
+        String window = (start == null ? "" : start.format(label)) + "—" + (end == null ? "" : end.format(label));
+        return (dates.size() == 1 ? "这一场" : "有 " + outside + " 场") + "不在主题日期（" + window + "）内，请确认";
+    }
+
+    private void requireNoSameMomentSession(Long clubId, Long topicId, Date assemblyMoment) {
+        CmsActivity probe = new CmsActivity();
+        probe.setTopicId(topicId);
+        probe.setClubId(clubId);
+        probe.setDelFlag(0);
+        probe.setExcludeCancelled(1);
+        List<CmsActivity> existing = activityService.selectCmsActivityList(probe);
+        if (existing == null) return;
+        for (CmsActivity activity : existing) {
+            if (activity != null && activity.getCancelTime() == null && activity.getStartDate() != null
+                    && activity.getStartDate().getTime() == assemblyMoment.getTime()) {
+                throw new IllegalArgumentException("这个时间已有一场，请换个时间或直接修改那一场");
+            }
+        }
+    }
+
+    void applySessionTicketFacts(CmsTopic topic) {
+        if (topic == null || topic.getId() == null) return;
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(1L);
+        query.setOwnerId(topic.getId());
+        query.setDelFlag(0);
+        List<OmsTicket> tickets = ticketService.selectOmsTicketList(query);
+        if (tickets == null) return;
+        java.math.BigDecimal min = null;
+        String meeting = null;
+        for (OmsTicket ticket : tickets) {
+            if (ticket == null) continue;
+            if (ticket.getPrice() != null && (min == null || ticket.getPrice().compareTo(min) < 0)) min = ticket.getPrice();
+            if (meeting == null) {
+                String name = ticket.getMeetingPoint() == null ? "" : ticket.getMeetingPoint().trim();
+                String address = ticket.getMeetingPointAddress() == null ? "" : ticket.getMeetingPointAddress().trim();
+                String text = (name + (name.isEmpty() || address.isEmpty() ? "" : " · ") + address).trim();
+                if (!text.isEmpty()) meeting = text;
+            }
+        }
+        topic.setSessionPrice(min);
+        topic.setSessionMeetingPoint(meeting);
+    }
+
+    /** 取主题票(owner_type=1)里第一张带完整集合点坐标的票,写到场次 latitude/longitude。 */
+    void applyGatherPoint(CmsActivity activity, Long topicId) {
+        OmsTicket query = new OmsTicket();
+        query.setOwnerType(1L);
+        query.setOwnerId(topicId);
+        query.setDelFlag(0);
+        List<OmsTicket> tickets = ticketService.selectOmsTicketList(query);
+        if (tickets == null) return;
+        for (OmsTicket ticket : tickets) {
+            if (ticket == null || ticket.getGatherLat() == null || ticket.getGatherLng() == null) continue;
+            activity.setLatitude(ticket.getGatherLat().stripTrailingZeros().toPlainString());
+            activity.setLongitude(ticket.getGatherLng().stripTrailingZeros().toPlainString());
+            return;
+        }
     }
 
     private List<ActivityTicketRequest> topicTicketView(Long topicId) {

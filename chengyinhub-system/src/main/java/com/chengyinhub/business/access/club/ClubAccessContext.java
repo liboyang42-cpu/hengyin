@@ -25,6 +25,14 @@ public final class ClubAccessContext {
     public ClubAccessContext(Long principalMemberId, Long clubId, Long ownerMemberId,
                              Long activityId, Set<String> roleCodes,
                              List<ClubEventAccess> eventAccesses) {
+        this(principalMemberId, clubId, ownerMemberId, activityId, roleCodes, eventAccesses,
+                Collections.<String>emptySet());
+    }
+
+    /** grantedExtras:逐条委派上的附加授权(目前只有核销员的 CUSTOMER_PHONE_READ),必须是已知权限码。 */
+    public ClubAccessContext(Long principalMemberId, Long clubId, Long ownerMemberId,
+                             Long activityId, Set<String> roleCodes,
+                             List<ClubEventAccess> eventAccesses, Set<String> grantedExtras) {
         this.principalMemberId = principalMemberId;
         this.clubId = clubId;
         this.ownerMemberId = ownerMemberId;
@@ -33,6 +41,9 @@ public final class ClubAccessContext {
         this.roleCodes = Collections.unmodifiableSet(roles);
         LinkedHashSet<String> granted = new LinkedHashSet<>();
         for (String roleCode : roles) granted.addAll(ClubPermissionPolicy.permissionsFor(roleCode));
+        if (grantedExtras != null) for (String extra : grantedExtras) {
+            if (ClubPermission.all().contains(extra)) granted.add(extra);
+        }
         this.permissions = Collections.unmodifiableSet(granted);
         this.eventAccesses = Collections.unmodifiableList(new ArrayList<>(eventAccesses));
     }

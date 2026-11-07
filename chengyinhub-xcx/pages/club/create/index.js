@@ -16,6 +16,11 @@ function buildDirList(options, prefs) {
 }
 
 // 创建俱乐部(D18 表单B,轻量·填完即有)。参考 Strava 创建俱乐部向导:类型→方向→资料→城市。
+// C-14:后端「俱乐部名称已被使用」类拒绝(409 语义)。
+function isNameTaken(msg) {
+  return /名称/.test(String(msg || '')) && /已被使用|已存在|重复/.test(String(msg || ''));
+}
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
@@ -57,6 +62,7 @@ Page({
     submitting: false,
     submitErrorKind: 'data',
     submitError: '',
+    submitNameTaken: false,
     submissionReceipt: null,
     submissionPending: false,
     createdClubId: ''
@@ -257,7 +263,8 @@ Page({
     if (this._submitting) return;
     var f = e.currentTarget.dataset.field;
     var value = e.detail.value;
-    if (f === 'name') this.setData({ name: value }, this.validate);
+    if (f === 'name' && this.data.submitNameTaken) this.setData({ name: value, submitError: '', submitNameTaken: false }, this.validate);
+    else if (f === 'name') this.setData({ name: value }, this.validate);
     else if (f === 'description') this.setData({ description: value }, this.validate);
     else if (f === 'city') this.setData({ city: value }, this.validate);
     else if (f === 'keywords') this.setData({ keywords: value }, this.validate);
@@ -312,7 +319,7 @@ Page({
     this._submitting = true;
     var submitEpoch = (this._submitEpoch || 0) + 1;
     this._submitEpoch = submitEpoch;
-    this.setData({ submitting: true, submitError: '', submitErrorKind: 'data' });
+    this.setData({ submitting: true, submitError: '', submitErrorKind: 'data', submitNameTaken: false });
     var payload = {
       name: d.name,
       logo: d.logo,
@@ -344,10 +351,13 @@ Page({
             submissionPending: Number(res.data && res.data.status) === 0,
           });
         } else {
+          var msg = (res && res.msg) || '创建没有完成，请稍后重试';
           that.setData({
             submitting: false,
             submitErrorKind: 'data',
-            submitError: (res && res.msg) || '创建没有完成，请稍后重试',
+            submitError: msg,
+            // C-14:名称已被占用时重发同一名称没有意义,入口改为回到名称那一步。
+            submitNameTaken: isNameTaken(msg),
           });
         }
       },
@@ -366,7 +376,10 @@ Page({
     });
   },
 
-  retrySubmit() { this.submit(); },
+  retrySubmit() {
+    if (this.data.submitNameTaken) { this.refreshStep(3); return; }
+    this.submit();
+  },
 
   goCreatedClub() {
     wx.redirectTo({

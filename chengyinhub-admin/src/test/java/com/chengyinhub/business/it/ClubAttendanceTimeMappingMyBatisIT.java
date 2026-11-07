@@ -49,9 +49,9 @@ class ClubAttendanceTimeMappingMyBatisIT {
              Statement sql = connection.createStatement()) {
             sql.execute("create table cms_registration (id bigint primary key, owner_type bigint,"
                     + "owner_id bigint, member_id bigint, payment_status int, registration_status int,"
-                    + "verification_status int default 0, verification_time datetime)");
+                    + "verification_status int default 0, verification_time datetime, real_name varchar(255))");
             sql.execute("create table ums_member (id bigint primary key, nickname varchar(64),"
-                    + "name varchar(64), del_flag int)");
+                    + "name varchar(64), phone varchar(30), del_flag int)");
             sql.execute("create table club_lead_checkin (activity_id bigint, member_id bigint, arrived_at datetime)");
             sql.execute("create table player_node_progress (activity_id bigint, member_id bigint,"
                     + "checkin_time datetime, status int, del_flag int)");
@@ -60,7 +60,7 @@ class ClubAttendanceTimeMappingMyBatisIT {
                     + "new_arrived boolean, original_arrived_at datetime, new_arrived_at datetime,"
                     + "reason varchar(500), actor_member_id bigint, request_id varchar(64),"
                     + "version int, corrected_at datetime)");
-            sql.execute("insert into ums_member values (51,'签到成员','',0),(52,'更正成员','',0)");
+            sql.execute("insert into ums_member (id,nickname,name,del_flag) values (51,'签到成员','',0),(52,'更正成员','',0)");
             for (long activityId : new long[]{31L, 32L}) {
                 sql.execute("insert into cms_registration"
                         + " (id,owner_type,owner_id,member_id,payment_status,registration_status)"
