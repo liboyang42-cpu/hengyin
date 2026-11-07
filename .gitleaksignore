@@ -73,3 +73,7 @@ d417bb12a173c528bcb5595203552cf9efc33373:chengyinhub-xcx/tests/unit/safe-user-me
 # 不是凭据),被 generic-api-key 误判。当前源码已改名为 SEEN_STORAGE_NAME 不再命中;PR 扫描读 base..head 的提交历史,
 # 改名清不掉这个历史提交,只精确忽略它的这一处指纹。
 7f3ce957f8279e9876f122e1c3f6556ffaae8807:chengyinhub-xcx/subpackageRoam/components/roam-atmos-entry/index.js:generic-api-key:8
+
+# Funds14: deterministic SQL fixture row IDs, inserted and read back within the same test; no authentication use.
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGenerateBatchMybatisIntegrationTest.java:generic-api-key:260
+chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGenerateBatchMybatisIntegrationTest.java:generic-api-key:261

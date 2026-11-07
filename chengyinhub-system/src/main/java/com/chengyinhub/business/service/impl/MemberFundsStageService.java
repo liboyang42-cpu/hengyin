@@ -32,7 +32,7 @@ import java.util.TreeMap;
  *   <li>已结束未结算 → 客诉期中,可提现日 = max(结束 + 14 天(FundsHoldPolicy), 最晚一张可退票的退款截止),
  *       与 selectActivitiesForSettlement 的两道闸同源;</li>
  *   <li>有未结客诉的报名单(未结算的,或结算时已暂扣的)→ 客诉处理中;</li>
- *   <li>coop T+7 未打款行 → 客诉期中(可提现日 = payable_time);主题有未结客诉整行冻结 → 客诉处理中
+ *   <li>coop 未打款行 → 客诉期中(可提现日 = 已持久化的 payable_time);主题有未结客诉整行冻结 → 客诉处理中
  *       (与 payoutOneDueCoopSettlement 的整主题冻结一致);</li>
  *   <li>可提现 = 余额 − 提现冻结额(与两条提现腿同一个 WithdrawalFrozenAmountResolver)。</li>
  * </ul>

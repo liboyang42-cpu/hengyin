@@ -116,8 +116,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
-    <!-- FX-13(9-15 拍板):主题级票(owner_type=1)只能在主题 end_date + N 天之后归批;end_date 为空视为未结束。
-         N = FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS(2026-11-05 起 14 天),与 CmsTopicServiceImpl 的 payable_time 同源。
+    <!-- FX-13:主题级票(owner_type=1)只能在主题 end_date + 14 天之后归批;end_date 为空视为未结束。
+         天数来自 FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS,与 CmsTopicServiceImpl.settleCoopTopic 新生成的 payable_time 同源。
          selectPendingByMerchant 与 bindBatch 共用本片段,保证读快照和真绑定同一口径。 -->
     <sql id="topicTicketNotYetSettleable">
         and not exists (

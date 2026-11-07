@@ -484,7 +484,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 2026-09-16 用户硬规则「收款方的钱,等所有玩家都确定退不了才可提现」:结算即入余额可提现,
          所以还有已付未退未核销、退款截止未到的票就不结。截止口径与 RefundPolicy 同源:
          下单快照优先,否则集合时间前 24h。end_date 早于集合时间(发布未校验)时靠这一条兜住。 -->
-    <!-- 2026-09-16 晚拍板:客诉期满才结算入余额(=可提现);2026-11-05 业主改为结束后 14 天(FundsHoldPolicy);
+    <!-- 2026-11-05 业主:客诉期 = 活动结束后 14 天,满 14 天才结算入余额(=可提现);
          与上面的退款截止闸同时成立 ⇒ 取两者较晚。涉诉订单在结算时另行暂扣(ActivitySettlementHoldMapper)。 -->
     <select id="selectActivitiesForSettlement" resultMap="CmsActivityResult">
         <![CDATA[

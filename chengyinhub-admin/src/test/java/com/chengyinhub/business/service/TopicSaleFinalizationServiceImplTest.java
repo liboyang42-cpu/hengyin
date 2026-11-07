@@ -898,9 +898,9 @@ class TopicSaleFinalizationServiceImplTest {
 
     /** 履约窗结束的权威瞬间（FulfillmentWindowResolver 的 Asia/Shanghai 日粒度窗）。 */
     private static final Date EXPECTED_FULFILLMENT_END_AT = Date.from(Instant.parse("2026-08-13T16:00:00Z"));
-    /** T+7 的权威起点 = 上面那个瞬间。 */
+    /** 原统一等待期的权威起点 = 上面那个瞬间。 */
     private static final Date EXPECTED_EVIDENCE_DUE_AT =
-            Date.from(Instant.parse("2026-08-13T16:00:00Z").plus(14, java.time.temporal.ChronoUnit.DAYS));
+            Date.from(Instant.parse("2026-08-27T16:00:00Z"));
 
 
 
@@ -949,6 +949,17 @@ class TopicSaleFinalizationServiceImplTest {
 
         verify(compensationService, never()).freezeTermsForSale(any(), any(), any(), any(), any());
         verify(clubPayeeService, never()).snapshotForSale(any(), any(), any());
+    }
+
+    @Test
+    void evidenceDeadlineUsesOriginalSharedPolicyAndAuthoritativeFulfillmentEndWithoutWritingTerms() {
+        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        Date due = ReflectionTestUtils.invokeMethod(service, "evidenceDueAt", topic);
+        assertEquals(EXPECTED_EVIDENCE_DUE_AT, due);
+        assertEquals(EXPECTED_FULFILLMENT_END_AT, ReflectionTestUtils.invokeMethod(service, "fulfillmentEndAt", topic));
+        topic.setEndDate(null);
+        assertThrows(IllegalStateException.class, () -> ReflectionTestUtils.invokeMethod(service, "evidenceDueAt", topic));
+        org.mockito.Mockito.verifyNoInteractions(clubPayeeService, compensationService);
     }
 
     private static CoopOrderLineupSource.ReadResult validGuidedLineup() {

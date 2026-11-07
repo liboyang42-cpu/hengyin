@@ -233,6 +233,25 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
         assertEquals(1, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
     }
 
+    @Test
+    void historicalUnsettledActivityWaitsUntilExactlyFourteenDays() throws Exception {
+        seedActivity(8110L, 8);
+        seedRegistration(8210L, 8110L, "100.00");
+
+        activityService.executeActivitySettlement();
+
+        assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=8110"));
+        assertMoney("0.00", balance(HOST));
+        assertEquals(0, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
+
+        execute("UPDATE cms_activity SET end_date=DATE_SUB(NOW(),INTERVAL 14 DAY) WHERE id=8110");
+        activityService.executeActivitySettlement();
+
+        assertEquals(1, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=8110"));
+        assertMoney("90.00", balance(HOST));
+        assertEquals(1, umsMemberMapper.deductWithdrawableBalance(HOST, new BigDecimal("90.00"), BigDecimal.ZERO));
+    }
+
     /** ③ 两单 100 + 60,60 那单有未结客诉:只暂扣 60 那单,100 那单的 90 照放;结案后补结 54。 */
     @Test
     void openComplaintFreezesOnlyTheDisputedOrderAndReleasesItAfterClosing() throws Exception {

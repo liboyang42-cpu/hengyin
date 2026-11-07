@@ -123,7 +123,7 @@ class TandianriBatch0FundsMybatisIntegrationTest {
                 "CREATE TABLE coop_group_verify (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT NOT NULL, activity_id BIGINT DEFAULT NULL, coop_order_id BIGINT NOT NULL, merchant_member_id BIGINT NOT NULL, leader_member_id BIGINT NOT NULL, verify_time DATETIME NOT NULL, "
                         + "UNIQUE KEY uk_group_verify_activity_merchant (activity_id, merchant_member_id), KEY idx_group_verify_topic (topic_id), KEY idx_group_verify_activity (activity_id))",
                 "INSERT INTO cms_topic(id,name,product_type,del_flag,status,is_settlement,end_date) VALUES (7001,'FREE_EXPLORE',2,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY)),(7002,'经典定向',1,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY)),(7003,'类型未决主题',NULL,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY))",
-                // 2026-09-17 客诉期:活动结束满 7 天才入结算选单,活动夹具统一放在结束 8 天前。
+                // 2026-11-05 客诉期:活动结束满 14 天才入结算选单,活动夹具统一放在结束 15 天前。
                 "INSERT INTO cms_activity(id,topic_id,member_id,name,del_flag,status,is_settlement,end_date) VALUES (7101,7001,1,'FREE_EXPLORE壳',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY)),(7102,7002,1,'经典活动',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY)),(7103,NULL,1,'独立旧活动',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY)),(7104,7003,1,'类型未决活动壳',0,1,0,DATE_SUB(NOW(),INTERVAL 15 DAY))",
                 "INSERT INTO cms_registration(id,owner_type,owner_id,member_id,payable_amount,payment_status,registration_status,verification_status,purchase_kind,verification_time) VALUES (7301,1,7001,7401,69.00,2,2,1,1,NOW()),(7302,2,7101,7402,100.00,2,2,1,3,NOW()),(7303,2,7102,7403,88.00,2,2,1,3,NOW())",
                 "INSERT INTO cms_registration_scan(registration_id,member_id,registration_type,create_time) VALUES (7301,7201,1,NOW()),(7302,7201,1,NOW())",
@@ -222,7 +222,7 @@ class TandianriBatch0FundsMybatisIntegrationTest {
     }
 
     /**
-     * 同一条硬规则的主题侧:合作结算在主题结束 +12h 冻结发起人保底/毛利、T+7 入余额。
+     * 同一条硬规则的主题侧:合作结算在主题结束 +12h 冻结发起人保底/毛利、新应付 T+14 入余额。
      * 自由定向票(mode=2)有效期晚于主题结束时,玩家在冻结后仍可退 ⇒ 不许结。
      * 7005 的票已退(registration_status=3),证明闸只看「已付未退未核销」的票。
      */

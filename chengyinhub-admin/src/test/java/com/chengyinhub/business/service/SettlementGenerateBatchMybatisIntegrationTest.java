@@ -241,6 +241,29 @@ class SettlementGenerateBatchMybatisIntegrationTest {
                 decimal("SELECT total_amount FROM settlement_batch WHERE id=" + batchId)));
     }
 
+    @Test
+    void historicalUnbatchedTopicTicketsWaitUntilExactlyFourteenDays() throws Exception {
+        execute("INSERT INTO cms_topic (id, end_date) VALUES "
+                        + "(505, DATE_SUB(NOW(), INTERVAL 8 DAY)), (506, DATE_SUB(NOW(), INTERVAL 14 DAY))",
+                "INSERT INTO cms_registration (id, owner_type, owner_id) VALUES (9010, 1, 505), (9011, 1, 506)",
+                "INSERT INTO settlement_detail (batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id, "
+                        + "gross_amount, commission_amount, settlement_amount, status, idempotency_key) VALUES "
+                        + "(0, 30, 'registration', 9010, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-HISTORICAL-8D'), "
+                        + "(0, 30, 'registration', 9011, 'merchant', 30, 10.00, 0.00, 10.00, 0, 'REG-BOUNDARY-14D')");
+        SettlementGenerateDTO request = new SettlementGenerateDTO();
+        request.setMerchantId(30L);
+        request.setBatchNo("S-14D-BOUNDARY");
+        request.setIdempotencyKey("fourteen-day-boundary");
+
+        Long batchId = settlementService.generateBatch(request);
+
+        assertEquals(0, number("SELECT batch_id FROM settlement_detail WHERE idempotency_key='REG-HISTORICAL-8D'"));
+        assertEquals(batchId.longValue(), number("SELECT batch_id FROM settlement_detail WHERE idempotency_key='REG-BOUNDARY-14D'"));
+        assertEquals(3, number("SELECT COUNT(*) FROM settlement_detail WHERE batch_id=" + batchId));
+        assertEquals(0, new BigDecimal("210.00").compareTo(
+                decimal("SELECT total_amount FROM settlement_batch WHERE id=" + batchId)));
+    }
+
     private SettlementBatch query(Long merchantId) {
         SettlementBatch query = new SettlementBatch();
         query.setMerchantId(merchantId);

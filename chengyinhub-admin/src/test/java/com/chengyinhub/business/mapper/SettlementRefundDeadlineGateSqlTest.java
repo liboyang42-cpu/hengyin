@@ -1,5 +1,6 @@
 package com.chengyinhub.business.mapper;
 
+import com.chengyinhub.business.support.FundsHoldPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -27,12 +28,12 @@ class SettlementRefundDeadlineGateSqlTest {
         assertTrue(sql.contains("coalesce(r.refund_deadline, date_sub(activity.start_date, interval 24 hour)) > now()"), sql);
     }
 
-    /** 2026-09-16 晚拍板第 1 条:客诉期满才结算入余额;2026-11-05 业主改为结束后 14 天(真库见 ComplaintPeriodWithdrawalGateMybatisIntegrationTest)。 */
+    /** 客诉期 = 活动结束后 14 天(2026-11-05 原政策);退款截止闸同时保留。 */
     @Test
     void activitySettlementSelectionWaitsForTheSevenDayComplaintPeriod() throws Exception {
         String sql = select("mapper/business/CmsActivityMapper.xml", "selectActivitiesForSettlement");
         assertTrue(sql.contains("activity.end_date <= date_sub(now(), interval ${@com.chengyinhub.business.support.fundsholdpolicy@withdrawable_after_end_days} day)"), sql);
-        assertEquals(14, com.chengyinhub.business.support.FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS,
+        assertEquals(14, FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS,
                 "2026-11-05 业主:所有路径结束后 14 天可提现");
     }
 
