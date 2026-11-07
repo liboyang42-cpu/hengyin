@@ -129,7 +129,8 @@ class FreeSelfPlayCreateRealDbIT {
                     "migration_20260930_registration_first_successful_scan.sql",
                     // MmsMerchantMapper 的完整投影读取这两列，沿用真实迁移及其回填/形状守卫。
                     "migration_merchant_category_ids_20261022.sql",
-                    "migration_merchant_wechat_qrcode_20261022.sql"}) {
+                    "migration_merchant_wechat_qrcode_20261022.sql",
+                    "migration_20261105_chapter_video.sql"}) {
                 java.io.File migration = new java.io.File("sql/" + name);
                 if (!migration.exists()) {
                     // surefire 工作目录是模块目录时走 ../;两种都认,别再犯 ExploreItDatabase 被 cwd 咬的错。
