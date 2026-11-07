@@ -135,7 +135,7 @@
         where task_id = #{taskId} and alternative_task_type = #{type} for update
     </select>
 
-    <select id="selectAlternativesForTopicRebuild" resultMap="OrientTaskAlternativeResult">
+    <select id="selectAlternativesForTopicRebuild" resultMap="OrientTaskAlternativeResult" useCache="false" flushCache="true">
         select a.* from orient_task_alternative a
         inner join cms_topic_node n on n.id = a.task_id and n.topic_id = a.topic_id
         where a.topic_id = #{topicId} order by a.id for update
