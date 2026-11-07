@@ -126,6 +126,14 @@ public class MerchantChapterApplication extends BaseEntity {
     public void setOfferId(Long value) { this.offerId = value; }
     public String getCircleThemeCode() { return circleThemeCode; }
     public void setCircleThemeCode(String value) { this.circleThemeCode = value; }
+    /** M-24:本店本章供给的核销额度与已用份数(只在本店自己的列表里读出)。 */
+    private Integer offerQuotaTotal;
+    private Integer offerQuotaUsed;
+    public Integer getOfferQuotaTotal() { return offerQuotaTotal; }
+    public void setOfferQuotaTotal(Integer value) { this.offerQuotaTotal = value; }
+    public Integer getOfferQuotaUsed() { return offerQuotaUsed; }
+    public void setOfferQuotaUsed(Integer value) { this.offerQuotaUsed = value; }
+
     public Date getCircleSupplyCheckedAt() { return circleSupplyCheckedAt; }
     public void setCircleSupplyCheckedAt(Date value) { this.circleSupplyCheckedAt = value; }
 }

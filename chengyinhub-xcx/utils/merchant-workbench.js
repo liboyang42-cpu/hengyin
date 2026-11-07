@@ -179,7 +179,7 @@ function buildProjectCards(input) {
     // 已确认但档期未知:不编「报名中 / 进行中」,仍写关系本身「承接中」(灰点);未确认关系不写状态
     const [statusLabel, statusTone] = dateStatus === '已结束' ? ['已结束', '']
       : pendingReview ? ['待审核', 'wait']
-        : needsSupply ? ['待补供给', 'fix']
+        : needsSupply ? ['还差一步：设置到店权益', 'fix']
           : !accepted ? ['', '']
             : DATE_STATE_LABELS[dateStatus] || ['承接中', 'wait'];
     cards.push(makeProjectCard({
@@ -189,6 +189,7 @@ function buildProjectCards(input) {
       roleLabel: '我承接的',
       title: item.topicName || item.addressName || '未命名项目',
       meta: item.assignmentText || '',
+      metaNoDate: item.assignmentPlaceText || '',
       /* 稿 134:185(M15)卡底那一行:「承接方 · 幸会咖啡」。
          承接方 = 商家自己报名时填的那个点位名(ViewRegistrationMerchant.addressName)——
          同一条路线上一家商家可以承接多个点位,卡上必须说清这一张是哪一个,
@@ -281,15 +282,24 @@ function pickTodayProject(list, today) {
 // 只含本商家中标主题),按主题取最近一场「俱乐部场次且已有人付款」;有「预计到店」区间用区间起点,
 // 否则用场次开始时间。没俱乐部、或还没人付款的场次不算「俱乐部要来」,不写。
 const WEEKDAY = ['日', '一', '二', '三', '四', '五', '六'];
-function visitTextOf(run) {
+function visitTextOf(run, now) {
   if (!run) return '';
   const p = chinaParts(run.arrivalStart || run.startTime);
   if (!p) return '';
   const pad = (n) => (n < 10 ? '0' + n : String(n));
+  // M-04:开场当天写「今天 几点 · 几人已报名」,不再只给日期(卡上这一格窄,俱乐部名留给他日场次)。
+  if (isTodayRun(run, now)) {
+    return '今天 ' + pad(p.hours) + ':' + pad(p.minutes) + ' · ' + Number(run.paidCount) + ' 人已报名';
+  }
   return run.clubName + ' · ' + p.month + '月' + p.day + '日 周' + WEEKDAY[p.weekday] + ' ' + pad(p.hours) + ':' + pad(p.minutes) + ' 到店';
 }
 
-function attachVisitTexts(cards, runs) {
+function isTodayRun(run, now) {
+  const key = chinaDateKey(run && (run.arrivalStart || run.startTime));
+  return !!key && key === chinaDateKey(now == null ? Date.now() : now);
+}
+
+function attachVisitTexts(cards, runs, now) {
   const firstByTopic = {};
   (Array.isArray(runs) ? runs : []).forEach((run) => {
     const key = run && run.topicId != null ? String(run.topicId) : '';
@@ -298,7 +308,13 @@ function attachVisitTexts(cards, runs) {
   });
   return (Array.isArray(cards) ? cards : []).map((card) => {
     if (!card || card.role !== 'join') return card;
-    return Object.assign({}, card, { visitText: visitTextOf(firstByTopic[String(card.ownerId)]) });
+    const run = firstByTopic[String(card.ownerId)];
+    const patch = { visitText: visitTextOf(run, now) };
+    // 当天有人要来时,「今日无待办」与之矛盾,不再写。
+    if (run && isTodayRun(run, now) && card.todoText === '今日无待办') patch.todoText = '';
+    // M-04 第4轮:写了「今天 几点」就不再写主题日期,一张卡只出一个日期。
+    if (run && isTodayRun(run, now)) patch.meta = card.metaNoDate || '';
+    return Object.assign({}, card, patch);
   });
 }
 

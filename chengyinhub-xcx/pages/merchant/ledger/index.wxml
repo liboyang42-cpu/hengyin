@@ -38,16 +38,16 @@
             <view class="fin-group__title">{{group.dayLabel}}</view>
             <view class="fin-card">
               <view class="fin-row" wx:for="{{group.rows}}" wx:key="recordKey" bindtap="goRedemptionDetail" data-item="{{item}}" hover-class="fin-row--tap" aria-role="button" aria-label="{{item.recordType === 'aftercare' ? '查看退款详情' : '查看核销详情'}}">
-                <view class="fin-row__dot fin-row__dot--{{item.stateVariant}}"></view>
+                <!-- M-27:副行 = 顾客报名姓名(服务端解密,没有就不出) + 时间 + 状态;不画左侧状态点,零现金右列留空。 -->
                 <view class="fin-row__main">
                   <text class="fin-row__t1">{{item.title}}</text>
                   <view class="fin-row__t2">
-                    <text>{{item.customerDisplayName || '顾客信息受保护'}}</text>
-                    <text wx:if="{{item.timeText}}"> · {{item.timeText}}</text>
+                    <text wx:if="{{item.customerName}}">{{item.customerName}}</text>
+                    <text wx:if="{{item.timeText}}">{{item.timeText}}</text>
                     <cy-badge class="fin-row__chip" type="status" variant="{{item.stateVariant}}" label="{{item.stateText}}" />
                   </view>
                 </view>
-                <text class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance}}">{{item.amountDisplay}}</text>
+                <text class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance && item.amountDisplay}}">{{item.amountDisplay}}</text>
               </view>
             </view>
           </view>

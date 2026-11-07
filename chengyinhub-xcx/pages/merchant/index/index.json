@@ -13,6 +13,7 @@
     "cy-scene-play-activity-detail": "/subpackageMember/components/cy/scene-play-activity-detail/index",
     "cy-scene-roam-poi-detail": "/subpackageMember/components/cy/scene-roam-poi-detail/index",
     "cy-scene-route-content": "/components/cy/scene-route-content/index",
+    "cy-result-sheet": "/components/cy/result-sheet/index",
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-skeleton": "/components/cy/skeleton/index",

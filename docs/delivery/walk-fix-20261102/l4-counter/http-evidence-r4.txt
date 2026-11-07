@@ -1,0 +1,14 @@
+# l4-counter round 4 HTTP evidence (rig, candidate 32b185e2). 2026-11-03 ~04:00Z
+## M-27 /api/merchant/finance/redemptions (recordId, customerDisplayName, chapterName)
+merchant 9002: [('1', 'E2E 玩家二号', '第1章 咖啡')]
+  redemption-detail id=1: 操作成功 E2E 玩家二号
+merchant 9005: [('2', 'E2E 玩家二号', '第2章 书店')]
+  redemption-detail id=1: 记录不可见 None
+## DB read-back (redemption -> cms_registration)
+id merchant_id reg_id member_id cipher_prefix
+1  9002        74     9009      v1:
+2  9005        74     9009      v1:
+3  9006        74     9009      v1:
+4  9007        74     9009      v1:
+## name in application.log: grep -c -> 0
+## M-04 cms_activity 13: club 7002, start 2026-11-03 11:58 (Shanghai), topic 990014; cms_registration 74 owner 2/13 payment_status 2

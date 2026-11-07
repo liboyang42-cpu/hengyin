@@ -26,6 +26,13 @@ public interface RedemptionMapper {
     public Redemption selectByMerchantAndId(@Param("merchantId") Long merchantId, @Param("id") Long id);
 
     /**
+     * M-27:本商家核销对应报名的报名姓名(密文,Service 解密)。SQL 层带 r.merchant_id,只读本商家自己的核销;
+     * id 非空时只取这一条(详情)。没有姓名的报名不返行。
+     */
+    public List<com.chengyinhub.business.domain.vo.RedemptionSignupName> selectSignupNamesByMerchant(
+            @Param("merchantId") Long merchantId, @Param("id") Long id);
+
+    /**
      * 请求级幂等:按 idempotency_key 找**生效**核销。命中 = 这个请求之前成功过。
      *
      * <p>走生成列 {@code active_idem_key}(= status='ACTIVE' 时才等于 idempotency_key,

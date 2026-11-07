@@ -371,7 +371,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         List<CmsTopic> ordered = new ArrayList<>();
         int openRecruitCount = 0;
         for (CmsTopic topic : topics) {
-            if (isRecruitOpenAt(topic, recruitNow) && !isEndedAt(topic, recruitNow)) { ordered.add(topic); openRecruitCount += 1; }
+            if (isRecruitOpenAt(topic, recruitNow) && !isEndedAt(topic, recruitNow) && !chapterTermsFrozen(topic)) { ordered.add(topic); openRecruitCount += 1; }
         }
         List<Map<String, Object>> items = new ArrayList<>();
         for (CmsTopic topic : ordered) {
@@ -432,6 +432,16 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
     private static boolean isEndedAt(CmsTopic topic, Date now) {
         Date end = topic == null ? null : topic.getEndDate();
         return end != null && !end.after(now);
+    }
+
+    /**
+     * M-28(2026-11-02):自由探索主题锁价(开卖)后章节一律不再招募,商家点进去只有「暂时没有开放的章节」,
+     * 不算开放商机。判据与章节招募状态同源(TopicLifecycleState.commercialTermsFrozen)。
+     */
+    static boolean chapterTermsFrozen(CmsTopic topic) {
+        return topic != null && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && topic.getLifecycle() != null
+                && com.chengyinhub.business.domain.enums.TopicLifecycleState.commercialTermsFrozen(topic.getLifecycle());
     }
 
     private static boolean isRecruitOpenAt(CmsTopic topic, Date now) {
