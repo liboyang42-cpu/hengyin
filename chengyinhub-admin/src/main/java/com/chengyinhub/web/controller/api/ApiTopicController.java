@@ -97,6 +97,8 @@ public class ApiTopicController extends BaseController {
 
     @Autowired
     private ICmsTopicService cmsTopicService;
+    @Autowired
+    private com.chengyinhub.business.service.IOrientTaskService orientTaskService;
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
 
@@ -1015,7 +1017,24 @@ public class ApiTopicController extends BaseController {
     private AjaxResult authorDetailWire(AjaxResult result) {
         if (Integer.valueOf(200).equals(result.get(AjaxResult.CODE_TAG))) {
             Map<String, Object> data = new HashMap<>((Map<String, Object>) result.get(AjaxResult.DATA_TAG));
-            data.put("topic", new com.chengyinhub.business.domain.dto.TopicAuthorEditDTO((CmsTopic) data.get("topic")));
+            CmsTopic topic = (CmsTopic) data.get("topic");
+            data.put("nodeAlternativeConfigs", java.util.Collections.emptyMap());
+            data.put("nodeAlternativeConfigsLoaded", false);
+            if (Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())) {
+                try {
+                    Long principal = getAppUserId();
+                    if (principal != null && principal.equals(topic.getMemberId())) {
+                        Map<String, List<Map<String, Object>>> configs = orientTaskService.authorAlternativeConfigs(principal, topic.getId());
+                        if (configs != null) {
+                            data.put("nodeAlternativeConfigs", configs);
+                            data.put("nodeAlternativeConfigsLoaded", true);
+                        }
+                    }
+                } catch (RuntimeException unavailable) {
+                    logger.warn("主题替代完成配置读取失败: topicId={}", topic.getId());
+                }
+            }
+            data.put("topic", new com.chengyinhub.business.domain.dto.TopicAuthorEditDTO(topic));
             result.put(AjaxResult.DATA_TAG, com.chengyinhub.business.service.support.TemplateAdoptionWire.strings(data, "templateId", responseObjectMapper));
         }
         return result;

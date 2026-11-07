@@ -198,6 +198,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private CmsTopicNodeMapper cmsTopicNodeMapper;
 
+    @Autowired
+    private OrientMapper orientMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.OrientSwitches orientSwitches;
+
 
     /** B1 发布期状态键闸。手工 new 的旧单测不注入该字段时闸跳过;Spring 运行态必注入。 */
     @Autowired
@@ -3214,6 +3220,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         boolean allowBundledDraft = chapterFlowV2
                 && (draft || !isSimplePublishMode(patch.getPublishMode()));
         // 重建会删掉全部节点再插回(插回一律 status=1);先记下后台隐藏的,插回后按旧 id 还原,作者重存不得取消隐藏
+        List<OrientTaskAlternative> alternatives = Collections.emptyList();
+        if (Integer.valueOf(ProductType.ORIENTEERING).equals(exist.getProductType())) {
+            contentWriteGuard.lockTopicContent(topicId);
+            if (orientMapper.alternativeTableExists()) {
+                alternatives = orientMapper.selectAlternativesForTopicRebuild(topicId);
+            } else if (orientSwitches.altTaskOn()) {
+                throw new IllegalStateException("替代完成方式配置表不存在");
+            }
+        }
         Set<Long> hiddenNodeIds = contentGraphAuthoringService.selectHiddenNodeIds(topicId);
         com.chengyinhub.business.service.support.TopicAuthoredGraphIds routeNodeMaps;
         if (contentGraphAuthoringService.shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {
@@ -3225,6 +3240,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             routeNodeMaps = contentGraphAuthoringService.saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                     productType, chapterFlowV2, allowBundledDraft);
         }
+        copyRebuiltNodeAlternatives(topicId, alternatives, routeNodeMaps);
         contentGraphAuthoringService.restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);
         contentGraphAuthoringService.remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
         contentGraphAuthoringService.restoreNodeUnlocks(existingUnlocks, routeNodeMaps);
@@ -3291,6 +3307,33 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 第一次保存草稿就建等于草稿立即可售。发布时由 publishDraft 补建。
         if (!draft) {
             refreshSelfHostActivity(topicId, memberId, username);
+        }
+    }
+
+    private void copyRebuiltNodeAlternatives(Long topicId, List<OrientTaskAlternative> alternatives,
+            com.chengyinhub.business.service.support.TopicAuthoredGraphIds ids) {
+        for (OrientTaskAlternative old : alternatives) {
+            Long newId = ids.oldToNew.get(old.getTaskId());
+            if (newId == null) continue;
+            CmsTopicNode node = cmsTopicNodeMapper.selectCmsTopicNodeById(newId);
+            if (!topicId.equals(old.getTopicId()) || !ids.newNodeIds.contains(newId)
+                    || node == null || !topicId.equals(node.getTopicId())) {
+                throw new IllegalStateException("替代完成方式节点重映射失败");
+            }
+            // Keep old rows and player facts on their historical task identity.
+            OrientTaskAlternative copy = new OrientTaskAlternative();
+            copy.setTopicId(topicId);
+            copy.setTaskId(newId);
+            copy.setAlternativeTaskType(old.getAlternativeTaskType());
+            copy.setPromptText(old.getPromptText());
+            copy.setAnswerHash(old.getAnswerHash());
+            copy.setEnabled(old.getEnabled());
+            copy.setCreateBy(old.getCreateBy());
+            copy.setCreateTime(old.getCreateTime());
+            copy.setUpdateTime(old.getUpdateTime());
+            if (orientMapper.insertAlternative(copy) != 1) {
+                throw new IllegalStateException("替代完成方式重建保存失败");
+            }
         }
     }
 

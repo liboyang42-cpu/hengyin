@@ -2576,6 +2576,7 @@ Page({
   _resumeCreatorLoad() { if (this._creatorOwnerChanged()) return; this.onLoad(this._creatorEntryOptions || {}); },
   _creatorOwnerChanged() {
     if (!this._creatorOwner || this._creatorOwner === memberId(app)) return false;
+    this._resetStructureAlts();
     this.setData({ creatorLoginRequired: true });
     wx.switchTab({ url: '/pages/template/index' });
     return true;
@@ -2699,13 +2700,17 @@ Page({
   /** [B3b] 带 ?id= 进来 → 拉本人主题全量详情回填表单。 */
   loadEditingTopic(id) {
     const that = this;
+    this._resetStructureAlts();
     const owner = memberId(app);
     if (!owner) { this.setData({ creatorLoginRequired: true }); return; }
     const requestToken = (this._editLoadToken || 0) + 1;
     this._editLoadToken = requestToken;
-    const isCurrent = () => !that._unloaded && owner === memberId(app) && requestToken === that._editLoadToken;
+    const alternativeContext = this._structureAltContext();
+    const isLatest = () => !that._unloaded && owner === memberId(app) && requestToken === that._editLoadToken;
+    const isCurrent = () => isLatest()
+      && alternativeContext === that._structureAltContext();
     this.setData({ editLoading: true, editLoadError: '', editLoadIsAccess: false });
-    const recover = (res, status) => !that._unloaded && requestToken === that._editLoadToken && recoverReadSession(that, app, res,
+    const recover = (res, status) => isCurrent() && recoverReadSession(that, app, res,
       function (anonymous) { this._editLoadToken++; this.setData({ 'formData.chapters': [], 'formData.tickets': [], 'formData.name': '', 'formData.description': '', editLoading: false, editLoadError: anonymous ? '请登录后读取主题' : '请重新读取主题', creatorLoginRequired: anonymous, editLoadIsAccess: false }); },
       () => that.loadEditingTopic(id), status);
     app.sendRequest({
@@ -2715,7 +2720,7 @@ Page({
       silentError: true,
       data: { id, scope: this.data.operationScope },
       success(res) {
-        if (requestToken !== that._editLoadToken || owner !== memberId(app) || that._unloaded) return;
+        if (!isCurrent()) return;
         if (res.code != '200' || !isEditingTopicPayload(res.data)) {
           that._showEditingTopicLoadError(res, '主题内容不完整，请重试');
           return;
@@ -2736,17 +2741,17 @@ Page({
       },
       fail(res, status) {
         if (recover(res, status)) return;
-        if (requestToken !== that._editLoadToken || owner !== memberId(app) || that._unloaded) return;
+        if (!isCurrent()) return;
         that._showEditingTopicLoadError(res, '网络暂时不可用，主题未加载');
       },
       successStatusAbnormal(res, status) {
         if (recover(res, status)) return;
-        if (requestToken !== that._editLoadToken || owner !== memberId(app) || that._unloaded) return;
+        if (!isCurrent()) return;
         that._showEditingTopicLoadError(res, '主题未加载', status);
       },
       complete() {
-        if (isCurrent() && that.data.editLoading) {
-          that.setData({ editLoading: false });
+        if (isLatest() && that.data.editLoading) {
+          that.setData({ editLoading: false, editLoadError: isCurrent() ? that.data.editLoadError : '请重新读取主题' });
         }
       }
     });
@@ -2771,7 +2776,7 @@ Page({
    *   chapter.cmsTopicNodeList → chapter.nodes。漏一个就是「编辑一次静默丢一批配置」。
    */
   applyEditingTopic(detail) {
-    if (!isEditingTopicPayload(detail)) return false;
+    if (!isEditingTopicPayload(detail)) { this._resetStructureAlts(); return false; }
     const topic = detail.topic || {};
     const productType = Number(topic.productType) === 2 ? 2 : 1;
     const rawChapters = (detail.chapters || []).map((chapter) => Object.assign({}, chapter, {
@@ -2784,6 +2789,7 @@ Page({
     // 下次保存就按章存 —— 作者不用手工搬。
     const attached = storyEnding.attachEndingsToChapters(rawChapters, detail.journeyStory || topic.journeyStoryJson);
     const chapters = attached.chapters.concat(attached.legacy.map((item) => this._endingChapterFrom(item)));
+    this._hydrateStructureAlts(detail, chapters);
     const tickets = (detail.tickets || []).map((ticket) => Object.assign({}, ticket, {
       mode: productType,
       totalStock: ticket.totalInventory,
@@ -3135,6 +3141,10 @@ Page({
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
+    if (this.data.structureSaving) {
+      this._altEditorGeneration = (this._altEditorGeneration || 0) + 1;
+      this.setData({ structureSaving: false });
+    }
     this._hidden = true;
     this._precheckToken = (this._precheckToken || 0) + 1;
     // 保存/发布意图已在发请求前落盘。隐藏后只允许下一次显式核对，旧回包不结算新页面。

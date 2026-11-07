@@ -26,6 +26,13 @@ public interface OrientMapper {
     // ---- 替代任务配置 ----
     OrientTaskAlternative selectAlternative(@Param("taskId") Long taskId, @Param("type") String type);
 
+    OrientTaskAlternative selectAlternativeForUpdate(@Param("taskId") Long taskId, @Param("type") String type);
+
+    /** Current configs of actual pre-rebuild nodes only; historical orphan rows stay untouched. */
+    List<OrientTaskAlternative> selectAlternativesForTopicRebuild(Long topicId);
+
+    boolean alternativeTableExists();
+
     List<OrientTaskAlternative> selectAlternativesByTask(Long taskId);
 
     int insertAlternative(OrientTaskAlternative alternative);

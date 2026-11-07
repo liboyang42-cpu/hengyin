@@ -104,6 +104,78 @@ class TopicAuthorEditDateWireTest {
     }
 
     @Test
+    void authorAlternativeHydrationIsSharedByEditAndSavedWithoutLeakingIntoLegacyDetail() throws Exception {
+        CmsTopic topic = new CmsTopic(); topic.setId(7L); topic.setMemberId(11L); topic.setProductType(1);
+        com.chengyinhub.business.service.IOrientTaskService alternatives = mock(com.chengyinhub.business.service.IOrientTaskService.class);
+        Map<String, List<Map<String, Object>>> configs = Map.of("19", List.of(Map.of(
+                "type", "QUIZ", "promptText", "saved prompt", "enabled", false, "answerConfigured", true), Map.of(
+                "type", "SCAN", "promptText", "", "enabled", true, "answerConfigured", true)), "20", List.of());
+        when(alternatives.authorAlternativeConfigs(11L, 7L)).thenReturn(configs);
+        ApiTopicController controller = alternativeController(topic, alternatives);
+        ReflectionTestUtils.setField(controller, "responseObjectMapper",
+                httpMapper().setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL));
+        for (AjaxResult result : List.of(controller.authorEditDetail("7", ""), controller.authorSavedDetail("7", ""))) {
+            assertEquals(200, result.get("code"));
+            JsonNode data = httpMapper().valueToTree(result.get("data"));
+            assertTrue(data.path("nodeAlternativeConfigsLoaded").asBoolean());
+            assertEquals(httpMapper().valueToTree(configs), data.path("nodeAlternativeConfigs"));
+            assertTrue(data.path("nodeAlternativeConfigs").path("20").isArray());
+            assertTrue(data.path("nodeAlternativeConfigs").path("19").get(1).has("promptText"));
+            assertEquals("", data.path("nodeAlternativeConfigs").path("19").get(1).path("promptText").asText());
+            assertFalse(data.toString().contains("answerHash"));
+        }
+        Map<?, ?> legacy = (Map<?, ?>) controller.topicEditDetail("7", "").get("data");
+        assertFalse(legacy.containsKey("nodeAlternativeConfigs"));
+        verify(alternatives, times(2)).authorAlternativeConfigs(11L, 7L);
+    }
+
+    @Test
+    void unavailableOrFailedOptionalReadNeverClaimsLoadedEmptyConfigs() throws Exception {
+        CmsTopic topic = new CmsTopic(); topic.setId(7L); topic.setMemberId(11L); topic.setProductType(1);
+        com.chengyinhub.business.service.IOrientTaskService alternatives = mock(com.chengyinhub.business.service.IOrientTaskService.class);
+        when(alternatives.authorAlternativeConfigs(11L, 7L)).thenReturn(null).thenThrow(new IllegalStateException("unavailable"));
+        ApiTopicController controller = alternativeController(topic, alternatives);
+        for (AjaxResult result : List.of(controller.authorEditDetail("7", ""), controller.authorSavedDetail("7", ""))) {
+            assertEquals(200, result.get("code"));
+            JsonNode data = httpMapper().valueToTree(result.get("data"));
+            assertFalse(data.path("nodeAlternativeConfigsLoaded").asBoolean());
+            assertEquals(0, data.path("nodeAlternativeConfigs").size());
+        }
+    }
+
+    @Test
+    void operationScopeProjectionCannotGrantOrientOwnerAccessAndNonCityDoesNotRead() throws Exception {
+        CmsTopic topic = new CmsTopic(); topic.setId(7L); topic.setMemberId(11L); topic.setProductType(1);
+        com.chengyinhub.business.service.IOrientTaskService alternatives = mock(com.chengyinhub.business.service.IOrientTaskService.class);
+        ApiTopicController controller = alternativeController(topic, alternatives);
+        doReturn(22L).when(controller).getAppUserId();
+        // Simulate the existing detail scope authorizing an operation proxy; orient still requires the principal owner.
+        doReturn(AjaxResult.success(Map.of("topic", topic))).when(controller).topicEditDetail("7", "MERCHANT");
+        JsonNode proxy = httpMapper().valueToTree(controller.authorEditDetail("7", "MERCHANT").get("data"));
+        assertFalse(proxy.path("nodeAlternativeConfigsLoaded").asBoolean());
+        doReturn(11L).when(controller).getAppUserId(); topic.setProductType(2);
+        JsonNode nonCity = httpMapper().valueToTree(controller.authorSavedDetail("7", "").get("data"));
+        assertFalse(nonCity.path("nodeAlternativeConfigsLoaded").asBoolean());
+        verifyNoInteractions(alternatives);
+    }
+
+    private ApiTopicController alternativeController(CmsTopic topic,
+            com.chengyinhub.business.service.IOrientTaskService alternatives) {
+        topic.setLifecycle(0);
+        ApiTopicController controller = spy(new ApiTopicController());
+        doReturn(11L).when(controller).getAppUserId();
+        ICmsTopicService topics = mock(ICmsTopicService.class);
+        when(topics.selectCmsTopicById(7L)).thenReturn(topic); when(topics.selectTopicIsDraft(7L)).thenReturn(1);
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+        ReflectionTestUtils.setField(controller, "responseObjectMapper", httpMapper());
+        ReflectionTestUtils.setField(controller, "orientTaskService", alternatives);
+        ReflectionTestUtils.setField(controller, "cmsTopicChapterService", mock(com.chengyinhub.business.service.ICmsTopicChapterService.class));
+        ReflectionTestUtils.setField(controller, "omsTicketService", mock(com.chengyinhub.business.service.IOmsTicketService.class));
+        ReflectionTestUtils.setField(controller, "viewCollaboratorsService", mock(com.chengyinhub.business.service.IViewCollaboratorsService.class));
+        return controller;
+    }
+
+    @Test
     void normalOwnershipRejectionDoesNotExposeAnAuthorProjection() {
         ApiTopicController controller = spy(new ApiTopicController());
         doReturn(11L).when(controller).getAppUserId();

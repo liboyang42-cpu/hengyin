@@ -416,7 +416,7 @@
       "classes": [
         "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT"
       ],
-      "note": "32 ordinary@Test with62 named scenarios; exact original mapper/transaction fixture, old/new full receipts compared separately. Source-bound zero-skip XML and independent CLEAN required; not full economic or HTTP acceptance."
+      "note": "40 ordinary@Test with74 named scenarios: original32/62 retained plus8 alternative-configuration rebuild, rollback, ownership and feature-off compatibility cases/12 scenarios, declarations only NOT_RUN. Original source lineage and old/new receipt comparison remain unchanged. Source-bound zero-skip XML and independent CLEAN required; not full economic or HTTP acceptance."
     },
     "architecture-day-theme-intent": {
       "registered_source": "c65c7ac90ecddeed9c4e1d95eaee4348ee7c2b58",
@@ -1609,7 +1609,7 @@
       "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original29 (original25 plus3 coupon-ownership copy/rollback cases plus1 cross-owner CITY count-rule zero-write rollback) and adds explicitTemplateUseCommitsPersistedDraftAndWholeContentGraph and zeroDraftUpdateRollsBackTopicContentSlotAndEveryCopiedChild; declarations only, NOT_RUN."
     },
     "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
-      "tests": 32,
+      "tests": 40,
       "storage": [
         "mysql"
       ],

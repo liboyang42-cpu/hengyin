@@ -23,6 +23,148 @@ class TopicContentGraphMySqlIT {
         finally { f.close(); }
     }
 
+    private void seedAlternativeHistory() {
+        for (String type : List.of("QUIZ", "SCAN", "PHOTO")) {
+            f.db.update("insert into orient_task_alternative(topic_id,task_id,alternative_task_type,prompt_text,answer_hash,enabled,create_by,create_time,update_time) "
+                    + "values(100,11,?,?,?,?,42,'2026-01-02 03:04:05','2026-01-02 03:04:05')",
+                    type, "authored-" + type, type.equals("PHOTO") ? null : "a".repeat(64), type.equals("QUIZ") ? 0 : 1);
+        }
+        f.db.update("insert into orient_task_alternative(topic_id,task_id,alternative_task_type,prompt_text,enabled,create_by,create_time,update_time) "
+                + "values(100,12,'PHOTO','deleted node',0,42,now(),now()),(101,21,'PHOTO','foreign node',1,77,now(),now()),"
+                + "(100,99,'PHOTO','historical orphan',1,42,now(),now())");
+        f.db.update("insert into orient_task_attempt(member_id,activity_id,topic_id,play_instance_id,task_id,alternative_task_type,idempotency_key,request_fingerprint,status,create_time,update_time) "
+                + "values(81,0,100,'history',11,'QUIZ','history-attempt',?,1,now(),now())", "b".repeat(64));
+        f.db.update("insert into orient_task_completion(member_id,activity_id,topic_id,play_instance_id,task_id,completed_via,source_attempt_id,completed_time) "
+                + "values(81,0,100,'history',11,'QUIZ',1,now())");
+        f.mark();
+    }
+
+    private void assertAlternativeCopy() {
+        long newId = f.number(f.topicNodes(100).stream().filter(row -> "first".equals(row.get("name"))).findFirst().orElseThrow().get("id"));
+        List<Map<String,Object>> old = f.db.queryForList("select alternative_task_type,prompt_text,answer_hash,enabled,create_by,create_time,update_time from orient_task_alternative where task_id=11 order by alternative_task_type");
+        assertEquals(old, f.db.queryForList("select alternative_task_type,prompt_text,answer_hash,enabled,create_by,create_time,update_time from orient_task_alternative where task_id=? order by alternative_task_type", newId));
+        assertEquals(1, f.db.queryForObject("select count(*) from orient_task_attempt where task_id=11", Integer.class));
+        assertEquals(1, f.db.queryForObject("select count(*) from orient_task_completion where task_id=11", Integer.class));
+        assertEquals(0, f.db.queryForObject("select count(*) from orient_task_attempt where task_id=?", Integer.class, newId));
+        assertEquals(0, f.db.queryForObject("select count(*) from orient_task_completion where task_id=?", Integer.class, newId));
+        f.earlier("selectAlternativesForTopicRebuild", "deleteCmsTopicNodeById");
+        f.earlier("insertCmsTopicNode", "insertAlternative");
+        assertTrue(f.txFacts.stream().allMatch(Boolean::booleanValue));
+        f.protectedRowsUnchanged();
+    }
+
+    @Test void v1AlternativeRebuildCopiesConfigurationWithoutChangingHistory() {
+        seedAlternativeHistory();
+        assertFalse(f.orientSwitches.altTaskOn());
+        f.success("v1-alternative-rebuild", () -> f.update(f.update(false, 1), false));
+        assertAlternativeCopy();
+    }
+
+    @Test void v2AlternativeRebuildCopiesConfigurationWithoutChangingHistory() {
+        seedAlternativeHistory();
+        assertFalse(f.orientSwitches.altTaskOn());
+        f.success("v2-alternative-rebuild", () -> f.update(f.update(true, 1), true));
+        assertAlternativeCopy();
+    }
+
+    @Test void forgedOldIdsNeverCopyForeignOrHistoricalAlternativeConfig() {
+        seedAlternativeHistory();
+        f.db.update("update cms_topic set route_mode='LINEAR',route_graph_json=null where id=100"); f.mark();
+        TopicUpdateDTO dto = f.update(true, 1);
+        dto.getChapters().get(0).getNodes().get(0).setId(21L);
+        dto.getChapters().get(0).getNodes().get(1).setId(99L);
+        // The third node's server unlock still refers to removed 11, so remove it explicitly in this scratch fixture.
+        f.db.update("update cms_topic_node set unlock_after_node_id=null where id=13"); f.mark();
+        f.success("untrusted-old-ids", () -> f.update(dto, true));
+        for (Map<String,Object> node : f.topicNodes(100)) {
+            assertEquals(0, f.db.queryForObject("select count(*) from orient_task_alternative where task_id=?", Integer.class, node.get("id")));
+        }
+        f.protectedRowsUnchanged();
+    }
+
+    @Test void deletedNodeAlternativeStaysHistoricalAndDoesNotAttachToAnotherNode() {
+        seedAlternativeHistory();
+        f.db.update("update cms_topic set route_mode='LINEAR',route_graph_json=null where id=100"); f.mark();
+        TopicUpdateDTO dto = f.update(true, 1); dto.getChapters().get(0).getNodes().remove(1);
+        dto.getChapters().get(0).getBlocks().remove(2);
+        f.success("deleted-node-alternative", () -> f.update(dto, true));
+        assertAlternativeCopy();
+        assertEquals(1, f.db.queryForObject("select count(*) from orient_task_alternative where task_id=12", Integer.class));
+        assertEquals(0, f.db.queryForObject("select count(*) from orient_task_alternative where task_id>=20000 and prompt_text='deleted node'", Integer.class));
+    }
+
+    @Test void alternativeCopyZeroRowWriteRollsBackBothRebuildPathsAndEarlierCopies() {
+        seedAlternativeHistory();
+        for (boolean compiled : List.of(false, true)) {
+            java.util.concurrent.atomic.AtomicInteger copies = new java.util.concurrent.atomic.AtomicInteger();
+            f.zeroAfter = call -> call.is("insertAlternative") && copies.incrementAndGet() == 2;
+            assertEquals("替代完成方式重建保存失败", f.failure("alternative-zero-" + compiled,
+                    () -> f.update(f.update(compiled, 1), compiled)).getMessage());
+            assertEquals(2, copies.get()); f.unchanged();
+        }
+        f.zeroAfter = call -> false;
+        f.failBefore = call -> call.is("selectAlternativesForTopicRebuild");
+        f.failure("alternative-read-error", () -> f.update(f.update(true, 1), true)); f.unchanged();
+    }
+
+    @Test void alternativeCopyRejectsDestinationOutsideActualNewTopicNodes() {
+        seedAlternativeHistory();
+        com.chengyinhub.business.mapper.OrientMapper mapper = f.sql.getMapper(com.chengyinhub.business.mapper.OrientMapper.class);
+        for (Set<Long> newIds : List.of(Set.of(21L), Set.<Long>of())) {
+            com.chengyinhub.business.service.support.TopicAuthoredGraphIds ids =
+                    new com.chengyinhub.business.service.support.TopicAuthoredGraphIds(null, List.of(), Map.of(), Map.of(),
+                            Map.of(11L, 21L), newIds, Map.of());
+            assertEquals("替代完成方式节点重映射失败", f.failure("foreign-destination-" + newIds.size(),
+                    () -> f.tx.execute(status -> {
+                        org.springframework.test.util.ReflectionTestUtils.invokeMethod(f.facade, "copyRebuiltNodeAlternatives",
+                                100L, mapper.selectAlternativesForTopicRebuild(100L), ids);
+                        return null;
+                    })).getMessage());
+            f.unchanged();
+        }
+    }
+
+    @Test void featureOffMissingAlternativeTableKeepsOriginalCitySave() {
+        assertFalse(f.orientSwitches.altTaskOn());
+        f.db.execute("rename table orient_task_alternative to orient_task_alternative_unavailable");
+        try {
+            f.success("off-missing-table", () -> f.update(f.update(true, 1), true));
+            assertEquals(-1, f.index("selectAlternativesForTopicRebuild"));
+            assertEquals(-1, f.index("insertAlternative"));
+        } finally {
+            f.db.execute("rename table orient_task_alternative_unavailable to orient_task_alternative");
+        }
+        assertEquals(3, f.topicNodes(100).size());
+        assertTrue(f.topicNodes(100).stream().allMatch(row -> f.number(row.get("id")) >= 20000));
+        // Availability is not cached false: the next save must see and preserve the newly available data.
+        long nodeId = f.number(f.topicNodes(100).get(0).get("id"));
+        f.db.update("insert into orient_task_alternative(topic_id,task_id,alternative_task_type,prompt_text,enabled,create_by,create_time,update_time) "
+                + "values(100,?,'PHOTO','after recovery',0,42,now(),now())", nodeId);
+        TopicUpdateDTO next = f.update(true, 1);
+        for (int i = 0; i < 2; i++) next.getChapters().get(i).setId(f.number(f.topicChapters(100).get(i).get("id")));
+        for (int i = 0; i < 3; i++) {
+            NodeDTO node = i < 2 ? next.getChapters().get(0).getNodes().get(i) : next.getChapters().get(1).getNodes().get(0);
+            node.setId(f.number(f.topicNodes(100).get(i).get("id")));
+        }
+        f.success("off-table-recovered", () -> f.update(next, true));
+        long current = f.number(f.topicNodes(100).get(0).get("id"));
+        assertEquals(1, f.db.queryForObject("select count(*) from orient_task_alternative where task_id=? and prompt_text='after recovery'", Integer.class, current));
+    }
+
+    @Test void featureOnMissingAlternativeTableRejectsAndRollsBackWholeSave() {
+        when(f.orientSwitches.altTaskOn()).thenReturn(true);
+        f.db.execute("rename table orient_task_alternative to orient_task_alternative_unavailable");
+        try {
+            assertEquals("替代完成方式配置表不存在", f.failure("on-missing-table",
+                    () -> f.update(f.update(true, 1), true)).getMessage());
+            assertEquals(-1, f.index("deleteCmsTopicNodeById"));
+            assertEquals(-1, f.index("selectAlternativesForTopicRebuild"));
+        } finally {
+            f.db.execute("rename table orient_task_alternative_unavailable to orient_task_alternative");
+        }
+        f.unchanged();
+    }
+
     @Test void v1CreatePersistsLegacyGraphInSubmittedOrder() {
         long id=f.success("create-v1",()->f.create(f.create(false,1),false));
         assertEquals(2,f.topicChapters(id).size());assertEquals(3,f.topicNodes(id).size());

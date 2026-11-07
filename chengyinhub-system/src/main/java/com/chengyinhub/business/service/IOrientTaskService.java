@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import java.util.Map;
+import java.util.List;
 
 /**
  * 城市定向 AR 替代任务(Doc2 F1d)。
@@ -20,6 +21,9 @@ public interface IOrientTaskService {
     /** 发布者为自己主题的任务配置一种替代方式(按 taskId + 类型幂等覆盖)。SCAN/QUIZ 只存答案摘要。 */
     Map<String, Object> configureAlternative(Long memberId, Long topicId, Long taskId, String type,
                                              String promptText, String answer, Boolean enabled);
+
+    /** Author-only safe projection; null means the optional feature is unavailable, never an empty success. */
+    Map<String, List<Map<String, Object>>> authorAlternativeConfigs(Long memberId, Long topicId);
 
     /** 玩家视角的任务状态:是否已完成、经哪条路径、是否有待审照片、可用替代方式(不含答案)。 */
     Map<String, Object> taskState(Long memberId, Long topicId, Long activityId, String playInstanceId, Long taskId);

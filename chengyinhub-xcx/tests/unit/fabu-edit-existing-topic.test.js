@@ -19,6 +19,9 @@ let storage = {};
 let navigations = [];
 let toasts = [];
 let modals = [];
+let currentAuthor = 7;
+let currentAuthorization = 'author-session';
+let currentSessionRevision = 1;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -26,7 +29,9 @@ global.getApp = () => ({
   tips: (m) => { toasts.push(m); },
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   chooseImage: () => {},
-  getUserID: () => 7,
+  getUserID: () => currentAuthor,
+  getAuthorization: () => currentAuthorization,
+  getSession: () => ({ getRevision: () => currentSessionRevision }),
   getNickname: () => '测试作者',
   getAvatar: () => '',
   getUserInfo: () => null,
@@ -55,6 +60,9 @@ beforeEach(() => {
   navigations = [];
   toasts = [];
   modals = [];
+  currentAuthor = 7;
+  currentAuthorization = 'author-session';
+  currentSessionRevision = 1;
   pageConfig = null;
   delete require.cache[require.resolve(PAGE)];
   require(PAGE);
@@ -141,6 +149,146 @@ function openForEdit(editScope) {
   detailReq.success({ code: '200', data: editDetailFixture(editScope) });
   return page;
 }
+
+test('真实 author-edit-detail 冷回填替代配置，author-saved-detail 新节点 ID 回填替换旧配置', () => {
+  const page = makePage(); page.onLoad({ id: '77' });
+  const request = sent.find(row => row.url === '/api/topic/author-edit-detail');
+  const detail = editDetailFixture('FULL');
+  detail.nodeAlternativeConfigsLoaded = true;
+  detail.nodeAlternativeConfigs = { 51: [
+    { type: 'QUIZ', promptText: '原题', enabled: true, answerConfigured: true },
+    { type: 'PHOTO', promptText: '原拍摄内容', enabled: false, answerConfigured: false },
+  ] };
+  request.success({ code: 200, data: detail });
+  assert.equal(page._altDrafts[51].QUIZ.on, true); assert.equal(page._altDrafts[51].QUIZ.answer, '');
+  assert.equal(page._altDrafts[51].PHOTO.on, false);
+  const saver = page.getServerDraftSaver();
+  const rebuilt = editDetailFixture('FULL'); rebuilt.chapters[0].cmsTopicNodeList[0].id = 61;
+  rebuilt.nodeAlternativeConfigsLoaded = true;
+  rebuilt.nodeAlternativeConfigs = { 51: detail.nodeAlternativeConfigs[51], 61: detail.nodeAlternativeConfigs[51] };
+  rebuilt.isDraft = true; rebuilt.topic.status = 0; rebuilt.topic.configVersion = 1;
+  rebuilt.chapters[0].topicId = 77;
+  Object.assign(rebuilt.chapters[0].cmsTopicNodeList[0], { topicId: 77, chapterId: 5 });
+  let applied = false;
+  saver.save({ name: '午夜巴士', chapters: [{ name: '第一章', nodes: [{ name: '外滩' }] }] }, {
+    onSuccess: result => { applied = true; page.applyEditingTopic(result.detail); },
+    onFail: result => assert.fail(result.msg),
+  });
+  sent.at(-1).success({ code: 200, data: { topicId: 77 } });
+  assert.equal(sent.at(-1).url, '/api/topic/author-saved-detail');
+  sent.at(-1).success({ code: 200, data: rebuilt });
+  assert.equal(applied, true);
+  assert.equal(page._altDrafts[51], undefined); assert.equal(page._altDrafts[61].QUIZ.answerConfigured, true);
+  assert.equal(page.data.formData.chapters[0].nodes[0].id, 61);
+  page.loadEditingTopic('77'); assert.deepEqual(page._altDrafts, {});
+  sent.at(-1).fail({ msg: '读取失败' }); assert.deepEqual(page._altDrafts, {});
+});
+
+test('作者读取代次、同账号新会话与代理范围切换后，旧详情不能回填替代配置', () => {
+  const page = makePage(); page.data.editingTopicId = '77';
+  const detail = editDetailFixture('FULL');
+  detail.nodeAlternativeConfigsLoaded = true;
+  detail.nodeAlternativeConfigs = { 51: [{ type: 'QUIZ', promptText: '旧会话题目', enabled: true, answerConfigured: true }] };
+  for (const mutate of [() => currentAuthor++, () => { currentAuthorization += '-new'; },
+    () => { page.data.operationScope = 'proxy'; }, () => { page.loadEditingTopic('77'); }]) {
+    page.loadEditingTopic('77'); const request = sent.at(-1);
+    mutate(); request.success({ code: 200, data: detail });
+    assert.deepEqual(page._altDrafts, {});
+  }
+});
+
+for (const [context, mutate] of [
+  ['authorization', () => { currentAuthorization += '-new'; }],
+  ['session revision', () => { currentSessionRevision++; }],
+  ['scope', page => { page.data.operationScope = 'proxy'; }],
+]) {
+  for (const callback of ['success', 'fail', 'successStatusAbnormal']) {
+    test(`最新同作者读取的 ${context} 改变后 ${callback} 完成：丢弃详情并结束等待，可手动重读`, () => {
+      const page = makePage(); page.data.editingTopicId = '77';
+      page.loadEditingTopic('77'); const request = sent.at(-1), token = page._editLoadToken;
+      const originalForm = JSON.parse(JSON.stringify(page.data.formData));
+      const detail = editDetailFixture('FULL');
+      detail.nodeAlternativeConfigsLoaded = true;
+      detail.nodeAlternativeConfigs = { 51: [{ type: 'QUIZ', promptText: '旧上下文题目', enabled: true, answerConfigured: true }] };
+      mutate(page);
+      request[callback](callback === 'success' ? { code: 200, data: detail } : { code: 401, reason: 'sessionChanged' }, 401);
+      assert.deepEqual(page.data.formData, originalForm);
+      assert.deepEqual(page._altDrafts, {});
+      assert.equal(page.data.editLoaded, false);
+      request.complete();
+      assert.equal(page.data.editLoading, false);
+      assert.match(page.data.editLoadError, /重新读取|重新加载|重试/);
+      assert.equal(page.data.editLoadIsAccess, false);
+      assert.equal(page.data.creatorLoginRequired, false);
+      assert.equal(page._editLoadToken, token, '收尾不能重置请求代次或自动恢复会话');
+      assert.equal(sent.length, 1, '丢弃旧上下文不自动重发请求');
+      const authorization = currentAuthorization, revision = currentSessionRevision;
+      page.retryLoadEditingTopic();
+      assert.equal(sent.length, 2);
+      const retry = sent.at(-1);
+      assert.equal(retry.data.scope, page.data.operationScope);
+      retry.success({ code: 200, data: editDetailFixture('FULL') }); retry.complete();
+      assert.equal(page.data.formData.name, '午夜巴士');
+      assert.equal(page.data.editLoaded, true);
+      assert.equal(page.data.editLoading, false);
+      assert.equal(page.data.editLoadError, '');
+      assert.equal(currentAuthorization, authorization);
+      assert.equal(currentSessionRevision, revision);
+    });
+  }
+}
+
+for (const newerState of ['loading', 'error', 'loaded']) {
+  test(`旧请求回调和收尾不改动新请求的 ${newerState} 状态`, () => {
+    const page = makePage(); page.data.editingTopicId = '77';
+    page.loadEditingTopic('77'); const oldRequest = sent.at(-1);
+    currentAuthorization += '-new'; page.data.operationScope = 'proxy';
+    page.loadEditingTopic('77'); const newRequest = sent.at(-1);
+    if (newerState === 'error') newRequest.fail({ msg: '新请求失败' });
+    if (newerState === 'loaded') newRequest.success({ code: 200, data: editDetailFixture('FULL') });
+    const state = JSON.stringify(page.data), token = page._editLoadToken;
+    oldRequest.success({ code: 200, data: editDetailFixture('FULL') });
+    oldRequest.fail({ reason: 'sessionChanged' });
+    oldRequest.successStatusAbnormal({ code: 401 }, 401); oldRequest.complete();
+    assert.equal(JSON.stringify(page.data), state);
+    assert.equal(page._editLoadToken, token);
+    assert.equal(sent.length, 2);
+  });
+}
+
+for (const reason of ['owner changed', 'unloaded']) {
+  test(`${reason} 后旧读取回调和收尾不改动页面`, () => {
+    const page = makePage(); page.data.editingTopicId = '77';
+    page.loadEditingTopic('77'); const request = sent.at(-1);
+    if (reason === 'owner changed') currentAuthor++;
+    else page.onUnload();
+    const state = JSON.stringify(page.data), token = page._editLoadToken;
+    request.success({ code: 200, data: editDetailFixture('FULL') });
+    request.fail({ reason: 'sessionChanged' });
+    request.successStatusAbnormal({ code: 401 }, 401); request.complete();
+    assert.equal(JSON.stringify(page.data), state);
+    assert.deepEqual(page._altDrafts, {});
+    assert.equal(page._editLoadToken, token);
+    assert.equal(sent.length, 1);
+  });
+}
+
+test('真实页面隐藏后替代保存解除等待且保留输入，旧写回包不继续回读', () => {
+  const page = makePage(); page.onLoad({ id: '77' });
+  const detail = editDetailFixture('FULL');
+  detail.themeRuntimeConfig = JSON.stringify({ schemaVersion: 1, gameplayRuntime: { runtimeScope: 'PLAYER' } });
+  detail.nodeAlternativeConfigsLoaded = true;
+  detail.nodeAlternativeConfigs = { 51: [{ type: 'QUIZ', promptText: '原题', enabled: true, answerConfigured: true }] };
+  sent.find(row => row.url === '/api/topic/author-edit-detail').success({ code: 200, data: detail });
+  page.data.nodesForm = page.data.formData.chapters[0].nodes[0];
+  page.openStructure({ currentTarget: { dataset: { kind: 'quests' } } });
+  page.onStructureAltInput({ currentTarget: { dataset: { type: 'QUIZ', field: 'prompt' } }, detail: { value: '待保存题目' } });
+  page.saveStructure(); const request = sent.at(-1), count = sent.length;
+  assert.equal(request.url, '/api/orient/task/alternative'); assert.equal(page.data.structureSaving, true);
+  page.onHide(); assert.equal(page.data.structureSaving, false);
+  assert.equal(page._altWritePending[51].rows.find(row => row.type === 'QUIZ').prompt, '待保存题目');
+  request.success({ code: 200 }); assert.equal(sent.length, count); assert.equal(page._altDirty.QUIZ, true);
+});
 
 test('带 id 进入:拉 edit-detail 并把内容回填到 formData', () => {
   const page = openForEdit('FULL');
