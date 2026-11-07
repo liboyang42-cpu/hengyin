@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,6 +72,38 @@ class TopicDraftVisibilityMyBatisTest {
         }
     }
 
+    @Test
+    void publicTemplateQueriesRejectRetiredAndKeepLegacyEligibility() throws Exception {
+        try (SqlSession s = factory().openSession(true);
+             Statement st = s.getConnection().createStatement()) {
+            recreate(st);
+            st.execute("INSERT INTO cms_topic (id,member_id,name,status,user_status,del_flag,is_template) VALUES"
+                    + " (80,7,'retired',1,1,0,1),(81,7,'experimental',1,1,0,1),"
+                    + " (82,7,'pilot',1,1,0,1),(83,7,'verified',1,1,0,1),"
+                    + " (84,7,'legacy',1,1,0,1),(85,7,'deleted meta',1,1,0,1),"
+                    + " (86,7,'deleted topic',1,1,2,1),(87,7,'not template',1,1,0,0),"
+                    + " (88,7,'not approved',0,1,0,1),(89,7,'offline',1,0,0,1)");
+            st.execute("INSERT INTO cms_topic_template_meta (topic_id,template_status,del_flag) VALUES"
+                    + " (80,'RETIRED',0),(81,'EXPERIMENTAL',0),(82,'PILOT',0),"
+                    + " (83,'VERIFIED',0),(85,'RETIRED',2)");
+            CmsTopicMapper mapper = s.getMapper(CmsTopicMapper.class);
+
+            assertEquals(List.of(81L, 82L, 83L, 84L, 85L), mapper.selectTopicTemplateList().stream()
+                    .map(CmsTopic::getId).sorted().collect(Collectors.toList()),
+                    "公共货架只排除有效 RETIRED 和原四项门禁不合格来源");
+            for (long id : new long[]{81L, 82L, 83L, 84L, 85L}) {
+                assertEquals(Integer.valueOf(1), mapper.selectTopicIsTemplate(id), "允许采用来源 " + id);
+                assertEquals(id, mapper.selectPublicTopicTemplateById(id).getId().longValue(),
+                        "允许公开详情来源 " + id);
+            }
+            for (long id : new long[]{80L, 86L, 87L, 88L, 89L}) {
+                assertNull(mapper.selectTopicIsTemplate(id), "拒绝采用来源 " + id);
+                assertNull(mapper.selectPublicTopicTemplateById(id), "拒绝公开详情来源 " + id);
+                assertNotNull(mapper.selectCmsTopicById(id), "通用复制的原始来源读取不受模板门禁影响 " + id);
+            }
+        }
+    }
+
     private SqlSessionFactory factory() throws Exception {
         Configuration cfg = new Configuration();
         cfg.getTypeAliasRegistry().registerAlias("CmsTopic", CmsTopic.class);
@@ -86,6 +119,9 @@ class TopicDraftVisibilityMyBatisTest {
     }
 
     private void recreate(Statement st) throws Exception {
+        st.execute("DROP TABLE IF EXISTS cms_topic_template_meta");
+        st.execute("CREATE TABLE cms_topic_template_meta (topic_id BIGINT PRIMARY KEY,"
+                + " template_status VARCHAR(16), del_flag TINYINT NOT NULL DEFAULT 0)");
         st.execute("DROP TABLE IF EXISTS cms_topic");
         st.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, member_id BIGINT, club_id BIGINT,"
                 + " topic_type INT, product_type INT, circle_theme_code VARCHAR(24),"

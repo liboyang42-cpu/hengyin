@@ -22,6 +22,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -88,8 +89,11 @@ class TopicTemplateUseTicketCopyTest {
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 3);
         params.put("memberId", MEMBER);
+        params.put("saveDraft", true);
+        when(topics.updateTopicDraftState(DRAFT, 1)).thenReturn(1);
 
         assertEquals(DRAFT, copy.copyCmsTopic(TEMPLATE, params));
+        verify(topics).updateTopicDraftState(DRAFT, 1);
 
         ArgumentCaptor<CmsTopic> inserted = ArgumentCaptor.forClass(CmsTopic.class);
         verify(topics).insertCmsTopic(inserted.capture());
@@ -129,6 +133,28 @@ class TopicTemplateUseTicketCopyTest {
 
         verify(tickets, never()).selectOmsTicketList(any());
         verify(tickets, never()).insertOmsTicket(any());
+        verify(topics, never()).updateTopicDraftState(any(), any());
+    }
+
+    @Test
+    void explicitFalseDoesNotMarkGenericFullCopyAsDraft() {
+        assertEquals(DRAFT, copy.copyCmsTopic(TEMPLATE,
+                Map.of("copyType", 3, "memberId", MEMBER, "saveDraft", false)));
+
+        verify(tickets).insertOmsTicket(any());
+        verify(topics, never()).updateTopicDraftState(any(), any());
+    }
+
+    @Test
+    void draftWriteMustAffectExactlyOneRowBeforeReturning() {
+        for (int rows : new int[]{0, 2}) {
+            when(topics.updateTopicDraftState(DRAFT, 1)).thenReturn(rows);
+            assertThrows(IllegalStateException.class, () -> copy.copyCmsTopic(TEMPLATE,
+                    Map.of("copyType", 3, "memberId", MEMBER, "saveDraft", true)));
+        }
+
+        verify(tickets, times(2)).insertOmsTicket(any());
+        verify(topics, times(2)).updateTopicDraftState(DRAFT, 1);
     }
 
 }

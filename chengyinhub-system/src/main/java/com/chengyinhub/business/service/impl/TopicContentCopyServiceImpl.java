@@ -133,6 +133,10 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             // 只抄票的设定,库存回满,不带场次票、报名与售出。副本是草稿,未上架,不会开卖。
             copyTopicTicketTypes(id, newTopic);
         }
+        if (params != null && Boolean.TRUE.equals(params.get("saveDraft"))
+                && cmsTopicMapper.updateTopicDraftState(newTopicId, 1) != 1) {
+            throw new IllegalStateException("复制主题草稿保存失败");
+        }
         return newTopicId;
     }
 

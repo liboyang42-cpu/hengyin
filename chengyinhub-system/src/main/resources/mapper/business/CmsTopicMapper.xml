@@ -1224,6 +1224,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          (没有任何代码写该行,导致货架恒空)。VERIFIED 只用于 recommendedOnly=1 的推荐口径(service 层过滤)。 -->
     <sql id="publicTopicTemplateEligibility">
         del_flag = 0 and is_template = 1 and status = 1 and user_status = 1
+        and not exists (
+            select 1 from cms_topic_template_meta template_meta
+            where template_meta.topic_id = cms_topic.id and template_meta.del_flag = 0
+              and template_meta.template_status = 'RETIRED'
+        )
     </sql>
 
     <!-- T7 公共模板库:已审核、在架的模板均可见(含未验证)。 -->

@@ -181,6 +181,7 @@ public class ApiTopicTemplateController extends BaseController {
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 3);
         params.put("memberId", memberId);
+        params.put("saveDraft", true);
         Long newTopicId = cmsTopicService.copyCmsTopic(tid, params);
         Map<String, Object> data = new HashMap<>();
         data.put("topicId", newTopicId);
