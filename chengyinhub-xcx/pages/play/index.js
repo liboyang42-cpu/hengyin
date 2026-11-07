@@ -30,6 +30,7 @@ const guardAppeal = require('./utils/guard-appeal.js');
 const playBoardView = require('./utils/play-board-view.js');
 const { id: precisePlayId } = require('../../utils/orient-score-view.js');
 const journeyCheckRecovery = require('./utils/journey-check-recovery.js');
+const playHistory = require('./utils/play-history.js');
 const { reportBlocksParseFailure } = require('./utils/chapter-blocks-health.js');   // P1-021 块流回落埋点
 const audioSession = require('./utils/audio-session.js');       // 音频打断/恢复 + 长音频不熄屏
 // 配乐音量:平时 / 旁白在讲时(压低一档,旁白听得清,音乐不断)
@@ -2570,12 +2571,18 @@ Page({
     if (value == null || value === '' || !this._isPlayAccountCurrent()) return;
     const idx = Number(value);
     const card = Number.isInteger(idx) && (this.data.chapterCards || [])[idx];
-    const state = chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes);
+    const history = this._currentCompletedHistory();
+    const frozen = card && history && history.chapters.find(chapter => chapter.id === String(card.id));
+    const contradicted = frozen && frozen.blocks.some(block => block.type === 'node'
+      && this.data.nodes.some(node => String(node.nodeId) === block.nodeId && node.done !== true));
+    const state = frozen && !contradicted ? 'completed' : chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes);
+    if (state === 'completed' && this._historyReadAttempted && !frozen) return;
     if (state === 'locked' || this._leadHolds(card.id)) return;
     const liveId = this._chapterReadCursor ? this._chapterReadCursor.liveId : this.data.chapter.id;
     this.finishChapterVideo(null, false);
     this.closeChapterFull();
-    if (state === 'completed') this._chapterReadCursor = { id: card.id, liveId, key: this._sessionKey(), sessionId: String((this._routeState || {}).sessionId || '') };
+    if (state === 'completed') this._chapterReadCursor = { id: card.id, liveId, key: this._sessionKey(), sessionId: String((this._routeState || {}).sessionId || ''),
+      historyKey: history && playHistory.key(history), configVersion: history && history.configVersion };
     this.setData({ 'chapterPick.show': false, 'chapterPick.cur': idx, chapter: this._chapterFromCard(card),
       chapterGameAnchor: '', packOpen: true }, () => this.openChapterFull());
   },
@@ -3725,6 +3732,7 @@ Page({
   },
   openChapterFull() {
     const readOnly = !!this._chapterReadCursor;
+    if (readOnly && this._historyReadAttempted && !this._currentCompletedHistory()) return;
     const wasOpen = this.data.chapterFull;
     const items = [];
     const claims = [];     // 读到了、但服务端还没下发的伏笔 —— 渲染完再认领
@@ -3733,12 +3741,12 @@ Page({
     /* 故事变量(契约 §3.1):文本推入前先做 {名字} / {名字|兜底词} 替换。
        值是服务端会话视图下发的 vars map;没值且没兜底时**原样留花括号**(作者看得见),
        不渲染成空串 —— 空串会让漏掉的键永远没人发现。 */
-    const vars = this._storyVars || null;
+    const vars = readOnly ? null : this._storyVars || null;
     // 氛围跟着正文流走:遇到 mood 块就换,之后的段落都带这个基调(mood 块自己不占一段)。
     let curMood = '';
     let curOdd = 0;   // 越往后越不正常:odd 块起的档位,之后每段都带着(同 mood)
     // cond:试玩里条件正文的「只给谁看」标签(真玩家拿到的条件块已由服务端按本局标签筛过,不带这个)
-    const push = (t, cond) => { String(t || '').split(/\n+/).forEach((x, i) => { const v = x.trim(); if (v) items.push({ kind: 'text', text: applyStoryVars(v, vars), mood: curMood, odd: curOdd, cond: i === 0 && cond ? cond : '' }); }); };
+    const push = (t, cond, literal) => { String(t || '').split(/\n+/).forEach((x, i) => { const v = x.trim(); if (v) items.push({ kind: 'text', text: applyStoryVars(v, literal ? null : vars), mood: curMood, odd: curOdd, cond: i === 0 && cond ? cond : '' }); }); };
     const condOf = (b) => (this.data.isPreview && b.when ? String(b.condLabel || '有条件才看到') : '');
     // 真实章节封面是叙事的第一屏，也必须进入 chapterParas，才能和正文共用近焦/渐隐测量。
     if (this.data.chapter && this.data.chapter.cover) {
@@ -3779,7 +3787,8 @@ Page({
         if (b.type === 'node') {
           // 已完成的下架站只作阅读凭据，不并入可玩节点或重开玩法。
           const history = this._historyNodeById(b.nodeId);
-          const n = nodes.find((x) => String(x.nodeId) === String(b.nodeId)) || (history && history.done === true ? history : null);
+          const n = readOnly && this._historyReadAttempted ? history
+            : nodes.find((x) => String(x.nodeId) === String(b.nodeId)) || (history && history.done === true ? history : null);
           if (!n || !n.done) {               // 未完成 ⇒ 故事流到此为止
             if (readOnly) break;
             if (inlineCheck && String(b.nodeId) === String(check.nodeId)) {
@@ -3806,8 +3815,9 @@ Page({
           if (kitHere) {
             items.push({ kind: 'kit', nodeId: b.nodeId, mood: curMood }); kitPlaced = true;
           }
-          pushVoices(b.nodeId);
-          if (n.story) push(n.story);        // 已完成 ⇒ 手记就地接上
+          if (!readOnly) pushVoices(b.nodeId);
+          const story = history && history.done === true ? history.story : n.story;
+          if (story) push(story, '', history && history.readOnly);
           continue;
         }
         if (b.type === 'text') {
@@ -3840,7 +3850,7 @@ Page({
         } else if (b.type === 'voice' && STORY_VOICE_COLORS[b.who] && b.content) {
           items.push({ kind: 'voice', who: (curOdd >= 3 && STORY_VOICE_ALT[b.who]) || b.who, color: STORY_VOICE_COLORS[b.who],
             text: applyStoryVars(String(b.content), vars), mood: curMood, odd: curOdd, cond: condOf(b) });
-        } else if (b.type === 'thought') {
+        } else if (b.type === 'thought' && !readOnly) {
           // 原型 gainThought「得到一个念头」。真玩家只认服务端已下发的念头(没得到的不露名字 = 防剧透);
           // 试玩认草稿里配的。查不到就不出卡,不画空壳。
           const known = this.data.isPreview ? (this._previewThoughts || [])
@@ -4367,6 +4377,7 @@ Page({
   loadData(first) {
     if (!this._isPlayAccountCurrent() || this._themeHidden) return;
     const loadEpoch = this._playLoadEpoch = (this._playLoadEpoch || 0) + 1;
+    this._historyReadAttempted = true;
     const sessionKey = this._sessionKey();
     const isCurrent = () => this._isPlayAccountCurrent() && loadEpoch === this._playLoadEpoch
       && sessionKey === this._sessionKey();
@@ -4412,18 +4423,14 @@ Page({
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
       that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook();
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
-      // 规则16 历史履约:已普通下架的本人已完成站只作只读回看,不并入 nodes/total/完成率/解锁/推荐/地图。
-      const historyNodes = Array.isArray(d.historyNodes)
-        ? d.historyNodes.map((h) => Object.assign({}, h, { history: true, done: true }))
-        : [];
-      // 只喂 buildJournal / _historyNodeById 的内部状态,不渲染、不进 setData(UI-GATE-0 死数据字段口径)。
-      that._historyNodes = historyNodes;
+      // 原局历史只认 /history 的冻结快照；/nodes 的当前作者投影不能冒充旧剧情。
       const catalog = raw.map((n, i) => that.normNode(n, i, mode));
       const routeInput = d.routeState || { routeMode: d.routeMode };
       const acceptProjection = that._acceptRouteStateProjection(routeInput);
       const routeState = acceptProjection ? normalizeRouteState(routeInput) : that._routeState;
       const nodes = that._nodesForRoute(catalog, routeState);
       that._routeState = routeState;
+      if (!that._currentCompletedHistory()) that._discardCompletedHistory();
       if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
       that._routeNodeCatalog = catalog;
       if (routeState.thoughtCount > 0) that._askWeRunOnce();
@@ -4466,6 +4473,7 @@ Page({
       }, () => {
         if (!isCurrent()) return;
         that.rebuild();
+        that._loadCompletedHistory(routeInput && routeInput.configVersion);
         that._ensureSessionClock();
         that._syncIdleStats(d.chapters, nodes);
         that._syncRunState();
@@ -4864,10 +4872,14 @@ Page({
     this._lastActiveChapterId = activeChapter.id;
     const cursor = this._chapterReadCursor;
     if (cursor) {
+      const history = this._currentCompletedHistory();
       const picked = trailCards.find(c => String(c.id) === String(cursor.id));
       if (this._isPlayAccountCurrent() && cursor.key === this._sessionKey()
           && cursor.sessionId === String((this._routeState || {}).sessionId || '')
-          && chapterTrail.chapterReadState(picked, nodes, this._historyNodes) !== 'locked') activeChapter = this._chapterFromCard(picked);
+          && (!cursor.historyKey || history && cursor.historyKey === playHistory.key(history)
+            && cursor.configVersion === history.configVersion)
+          && (picked && history && history.chapters.some(chapter => chapter.id === String(picked.id))
+            || chapterTrail.chapterReadState(picked, nodes, this._historyNodes) !== 'locked')) activeChapter = this._chapterFromCard(picked);
       else { this.finishChapterVideo(null, false); this._chapterReadCursor = null; this.setData({ chapterFull: false }); }
     }
     let chapterChanged = this.data.chapterFull && String(activeChapter.id) !== String(this.data.chapter.id);
@@ -4905,9 +4917,13 @@ Page({
 
   /** 章节卡 → 本页 chapter 对象(rebuild 换章与 P-29 停在上一章共用) */
   _chapterFromCard(card) {
+    const history = this._currentCompletedHistory();
+    if (this._chapterReadCursor && history) {
+      card = history.chapters.find(chapter => chapter.id === String(card.id)) || card;
+    }
     return {
       id: card.id,
-      complete: chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes) === 'completed',
+      complete: card.history === true || chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes) === 'completed',
       opening: card.opening === true,
       idxLabel: card.meta,
       name: card.title,
@@ -4925,7 +4941,63 @@ Page({
   _nodeById(id) { return this.data.nodes.find((n) => n.nodeId === id); },
   // 历史回看专用查找:只在手记/剧情全文里用,不并入可玩 nodes(不给任何操作入口)。
   _historyNodeById(id) {
+    if (this._completedHistory && !this._currentCompletedHistory()) return undefined;
     return (this._historyNodes || []).find((n) => String(n.nodeId) === String(id));
+  },
+  _currentCompletedHistory() {
+    const history = this._completedHistory;
+    const config = precisePlayId((this._routeState || {}).configVersion);
+    return history && this._isPlayAccountCurrent()
+      && playHistory.key(history) === playHistory.key(playHistory.scope(this._boundPlayOwner(), this.data.activityId, this.data.topicId, (this._routeState || {}).sessionId))
+      && (!config || config === history.configVersion) ? history : null;
+  },
+  _discardCompletedHistory() {
+    const cursor = this._chapterReadCursor;
+    this._completedHistory = null;
+    this._historyNodes = [];
+    this._precedingHistoryParas = [];
+    if (cursor && cursor.historyKey) {
+      this.finishChapterVideo(null, false);
+      this._chapterReadCursor = null;
+      const live = (this.data.chapterCards || []).find(card => !card.history && String(card.id) === String(cursor.liveId));
+      this.setData({ chapterFull: false, chapter: live ? this._chapterFromCard(live) : { blocks: [], description: '' } });
+    }
+  },
+  _loadCompletedHistory(configVersion) {
+    const generation = this._historyReadGeneration = (this._historyReadGeneration || 0) + 1;
+    this._historyReadAttempted = true;
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock) return Promise.resolve(false);
+    const target = playHistory.scope(this._boundPlayOwner(), this.data.activityId, this.data.topicId, (this._routeState || {}).sessionId);
+    if (!target) return Promise.resolve(false);
+    const scopeKey = playHistory.key(target), loadEpoch = this._playLoadEpoch;
+    const routeConfig = precisePlayId((this._routeState || {}).configVersion);
+    if (configVersion != null && !precisePlayId(configVersion)) return Promise.resolve(false);
+    const expectedConfig = precisePlayId(configVersion) || routeConfig || (this._historyConfigPin && this._historyConfigPin.key === scopeKey ? this._historyConfigPin.version : '');
+    if (this._historyConfigPin && this._historyConfigPin.key === scopeKey && this._historyConfigPin.version !== expectedConfig) return Promise.resolve(false);
+    const current = () => this._isPlayAccountCurrent() && !this._themeHidden
+      && generation === this._historyReadGeneration && loadEpoch === this._playLoadEpoch
+      && routeConfig === precisePlayId((this._routeState || {}).configVersion)
+      && scopeKey === playHistory.key(playHistory.scope(this._boundPlayOwner(), this.data.activityId, this.data.topicId, (this._routeState || {}).sessionId));
+    return req('/api/play/history', 'GET', { activityId: target.activityId, topicId: target.topicId, routeSessionId: target.routeSessionId }, undefined, true).then(response => {
+      if (!current()) return false;
+      const history = response.code == 200 && playHistory.project(response.data, target, expectedConfig);
+      if (!history) { this._discardCompletedHistory(); return false; }
+      this._historyConfigPin = { key: scopeKey, version: history.configVersion };
+      this._completedHistory = history;
+      this._historyNodes = history.nodes;
+      const cards = this.data.chapterCards || [];
+      const missing = history.chapters.filter(chapter => !cards.some(card => String(card.id) === chapter.id));
+      if (missing.length) this.setData({ chapterCards: cards.concat(missing) });
+      // Prepared for the approved continuous-history renderer; keep live paragraph indexes/bookmarks unchanged.
+      this._precedingHistoryParas = playHistory.preceding(history, (this.data.chapter || {}).id, cards);
+      this.buildJournal();
+      if (this.data.chapterFull && this._chapterReadCursor && !this._afterEndingChapter) {
+        const card = this.data.chapterCards.find(card => String(card.id) === String(this._chapterReadCursor.id));
+        if (card) this.setData({ chapter: this._chapterFromCard(card) });
+        this.openChapterFull();
+      }
+      return true;
+    }).catch(() => false);
   },
   computeNext(nodes, pts) {
     pts = pts || [];
@@ -7334,7 +7406,9 @@ Page({
   // 这里不参与排序,更不碰防剧透那套(未解锁段落在 wxml 层就没有展开入口)。
   openStory(e) {
     const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
-    const node = this._nodeById(ds.id) || this._historyNodeById(ds.id);
+    const live = this._nodeById(ds.id), history = this._historyNodeById(ds.id);
+    if (live && live.done && this._historyReadAttempted && !history) return;
+    const node = history && (!live || live.done === true) ? history : live;
     if (!node) return;
     this.setData({
       story: {
@@ -7343,7 +7417,7 @@ Page({
         step: ds.step || '',
         cover: node.imgUrl ? String(node.imgUrl).split(',')[0] : '',
         // 节点手记与章节正文同一条规矩:{名字} 在这也要替换(契约 §3.1 的「节点 story」)
-        text: applyStoryVars(String(node.description == null ? '' : node.description), this._storyVars),
+        text: applyStoryVars(String(node.description == null ? '' : node.description), node.readOnly ? null : this._storyVars),
       },
     });
   },
@@ -8210,7 +8284,8 @@ Page({
          gap/scale/ty/blur/opacity/justWrote/canGo 是已删的文字流留下的,一起清掉,
          免得成为「写了没人读」的字段(U4 对计算属性名是盲的,靠它抓不出来)。 */
       const seg = { key: n.nodeId, nodeId: n.nodeId };
-      const paras = String(n.description).split('\n');
+      const history = n.done && this._historyNodeById(n.nodeId);
+      const paras = String(history ? history.description || '' : n.done && this._historyReadAttempted ? '' : n.description).split('\n');
       if (n.done) {
         // mode=2:标签用"我的第 K 步"(K=完成顺序),路线变成自己的故事线;mode=1 保持原站序
         seg.label = mode === 1 && !branch ? ('第 ' + n.num + ' 站 · 已抵达') : ('我的第 ' + (i + 1) + ' 步 · ' + n.name);
@@ -8230,17 +8305,18 @@ Page({
          正文只取第一段并夹一行:全文仍在点进去那件半屏里,这儿是目录不是正文。 */
       const parts = String(seg.label || '').split(' · ');
       seg.kvK = parts[0] || '';
-      seg.kvT = parts.length > 1 ? parts.slice(1).join(' · ') : (n.name || '');
+      seg.kvT = history ? history.name || '' : parts.length > 1 ? parts.slice(1).join(' · ') : (n.name || '');
       seg.kvS = String((seg.paras && seg.paras[0]) || '').slice(0, 40);
       return seg;
     });
     /* 规则16 历史履约:普通下架的已完成站以只读卡片续在手记末尾(完成时间序);
        不参与上面的主线 order/focus/locked 计算,也没有任何挑战/发奖入口。 */
     const historyCards = (this._historyNodes || []).slice()
+      .filter(n => !nodes.some(node => String(node.nodeId) === String(n.nodeId)))
       .sort((a, b) => (a.doneAt || 0) - (b.doneAt || 0))
       .map((n) => {
         const paras = String(n.description == null ? '' : n.description).split('\n');
-        const label = '已下架 · ' + (n.name || '');
+        const label = (n.readOnly ? '已完成' : '已下架') + ' · ' + (n.name || '');
         const parts = label.split(' · ');
         return {
           key: 'history-' + n.nodeId,

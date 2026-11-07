@@ -77,7 +77,12 @@ async function enter(routeState, done = []) {
   assert.equal(page._loadCommitted, true);
   assert.equal(JSON.stringify(response), before, 'Returned progress is never rewritten');
   assert.deepEqual(writes, [], 'Selecting entry never clears or replaces stored progress');
-  assert.equal(requests.length, 1, 'Selecting entry never submits tasks, unlocks or rewards');
+  assert.deepEqual(requests.map(request => [request.url, request.method]),
+    [['/api/play/nodes', 'GET'], ['/api/play/history', 'GET']], 'Entry reads never submit tasks, unlocks or rewards');
+  assert.deepEqual(requests[1].data, { activityId: '0', topicId: '8', routeSessionId: routeState.sessionId },
+    'History reads the exact original route session');
+  requests[1].success({ code: 500, msg: '本局历史快照不可用' });
+  await new Promise(resolve => setImmediate(resolve));
   assert.equal(page._hasGenericProofFlow(), false, 'Cursor is correct before the backpack read');
   return { page, opened };
 }
