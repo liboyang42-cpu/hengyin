@@ -410,12 +410,9 @@ Page({
   },
 
   // 置灰的提交钮被点 → 报出还差哪一项。静默置灰等于把「为什么不能提交」留给用户猜。
+  // 第四轮(业主):问题写在各字段下方红字(validateForm 的 errors),不再弹提示。
   onSubmitDisabledTap() {
-    const d = this.data;
-    if (!(d.address || '').trim()) toast('请先选择承接地点');
-    else if (!d.startDate || !d.endDate) toast('请选择可配合日期区间');
-    else if (!(d.ruleInstructions || '').trim()) toast('请填写可用空间与现场条件');
-    else if (!d.picUrl) toast('请添加场地照片');
+    this.validateForm();
   },
 
   // ===== cy-sheet 关闭契约 =====
@@ -618,9 +615,7 @@ Page({
     if (picUrl === '') fail('picUrl', '请上传节点现场图片');
 
     this.setData({ errors });
-    if (!order.length) return true;
-    toast(errors[order[0]]);
-    return false;
+    return !order.length;
   },
 
   clearRuleInstructions() {

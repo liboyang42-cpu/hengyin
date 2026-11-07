@@ -40,9 +40,11 @@
       <view class="ds-card ds-card--form">
         <text class="field-label">标题<text class="form-required" aria-hidden="true">*</text></text>
         <input class="field-input" maxlength="80" value="{{title}}" bindinput="onTitleInput" placeholder="例如：周六集合提醒" />
+        <cy-inline-error class="field-err" wx:if="{{titleError}}" kind="error" title="{{titleError}}" />
         <text class="field-label">内容<text class="form-required" aria-hidden="true">*</text></text>
         <textarea class="field-textarea" maxlength="1000" value="{{content}}" bindinput="onContentInput"
           placeholder="写清集合时间、地点与需要准备的物品" />
+        <cy-inline-error class="field-err" wx:if="{{contentError}}" kind="error" title="{{contentError}}" />
       </view>
 
       <!-- 发送前必须先拿到受众预览:Figma 静态稿没画这一步，但它是防止群发空任务/误发的

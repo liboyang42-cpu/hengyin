@@ -938,7 +938,7 @@ test('实名登记失败停在第 4 步:入驻单不许跟着发出去', () => {
   assert.equal(requests.length, 1, '实名没登记成功就不许再发入驻单')
   assert.equal(page.data.submitting, false)
   assert.equal(page.data.submitError, '该证件已绑定其他账号')
-  assert.equal(page.data.submitErrorKind, 'data')
+  assert.equal(page.data.submitErrorKind, 'error', '第四轮业主标准:证件问题是输入问题,红色,不用蓝色提示框')
   assert.equal(page.data.identityRegistered, false)
   assert.equal(page.data.step, 4, '报错留在原地，草稿不丢')
   assert.equal(page.data.name, '河畔咖啡')

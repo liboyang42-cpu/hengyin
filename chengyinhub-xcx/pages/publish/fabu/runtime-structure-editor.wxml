@@ -17,7 +17,7 @@
     <text class="node-sheet__eyebrow">进行方式</text>
     <text class="node-sheet__name node-sheet__name--static">队伍怎样一起玩？</text>
    </view>
-   <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
+   <cy-inline-error kind="error" wx:if="{{structureError}}" title="{{structureError}}" />
    <text wx:if="{{supportMatrixLoading}}" aria-live="polite">正在读取玩法支持范围</text>
 <cy-inline-error load-failure wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
    <view wx:for="{{structureModeOptions}}" wx:key="key" class="node-card mode-opt {{item.reason ? 'rt-disabled' : ''}}" data-key="{{item.key}}" bindtap="chooseStructureMode" aria-role="radio" aria-checked="{{item.selected}}" aria-disabled="{{!!item.reason}}" hover-class="{{item.reason ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
@@ -36,7 +36,7 @@
 
   <block wx:elif="{{structureEditor.kind === 'endings'}}">
    <view class="rt-title"><text>运行结局</text></view>
-   <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
+   <cy-inline-error kind="error" wx:if="{{structureError}}" title="{{structureError}}" />
    <text class="story-initial__example rt-lead">队伍表决的方案执行后，按这里的结局收场。剧情结局在「剧情结局」中另行编写。</text>
    <view class="node-card" wx:for="{{structureEndings}}" wx:key="id" wx:for-index="ei">
     <view class="rt-card-head">
@@ -56,7 +56,7 @@
   <!-- 10-28 原型 A e-quest：三组列表，说明都删掉；换个方式的开关就在行里，打开的那一行下面直接是要填的；
        备用节点点开就地多选。不按节点设分（A5）。 -->
   <block wx:elif="{{structureEditor.kind === 'quests' && structureEditor.quest}}">
-   <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
+   <cy-inline-error kind="error" wx:if="{{structureError}}" title="{{structureError}}" />
    <cy-list-group>
     <cy-dropdown topic-editor range="{{structureLocations}}" range-key="label" value="{{structureLocationIndex}}" bind:change="onStructureLocation">
      <cy-list-row title="到达地点" value="{{structureLocationIndex >= 0 ? structureLocations[structureLocationIndex].label : '选择本主题节点'}}" chevron />

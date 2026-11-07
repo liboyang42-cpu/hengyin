@@ -402,8 +402,8 @@ page {
   border-radius: 8rpx;
   font-size: var(--cy-type-micro);
   font-weight: 700;
-  background: var(--cy-color-action-danger-bg);
-  color: var(--cy-color-action-danger-fg);
+  background: var(--cy-color-action-primary-bg);
+  color: var(--cy-color-action-primary-fg);
 }
 .v3-nearby-time {
   flex: 1;

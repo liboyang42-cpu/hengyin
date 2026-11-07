@@ -56,6 +56,7 @@ class OWN_C03_21Test {
     /** 自由探索:绕开经典定向那段俱乐部门禁,直达 service 调用,让抛出的异常走到 catch。 */
     private TopicCreateDTO freeExploreDto() {
         TopicCreateDTO dto = new TopicCreateDTO();
+        dto.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setName("探店日");
         return dto;

@@ -100,7 +100,9 @@ test('CL-29 报名:参与人缺手机号时不建单,提示并直接带去参与
   h.page.handlePayment();
   assert.equal(h.submits.length, 0, '缺号仍建单 ⇒ 后端只会回「手机号不能为空」,用户无出路');
   assert.ok(!h.calls.requests.some((r) => /\/api\/registration\/create/.test(r.url || '')));
-  assert.deepEqual(h.calls.tips, ['参与人信息需要包含手机号']);
+  // 第五轮 D(业主):输入问题写在参与人信息一栏下方红字,不再弹提示
+  assert.deepEqual(h.calls.tips, []);
+  assert.equal(h.page.data.participantError, '参与人信息需要包含手机号');
   assert.deepEqual(h.calls.navigations, ['/pages/addressinfo/addressinfo?mode=participant'],
     '缺号必须给出填写入口，而不是只弹一句错误');
 });

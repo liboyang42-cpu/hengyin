@@ -111,7 +111,7 @@
         <text class="cd-field-action {{tagSubmitting ? 'cd-field-action--busy' : ''}}" bindtap="submitTag"
               aria-role="button" aria-label="添加标签" hover-class="cy-pressed" hover-stay-time="80">{{tagSubmitting ? '添加中…' : '添加'}}</text>
       </view>
-      <cy-inline-error class="cd-editor-error" wx:if="{{tagError}}" kind="data"
+      <cy-inline-error class="cd-editor-error" wx:if="{{tagError}}" kind="error"
         title="标签未添加" sub="{{tagError}}" />
 
       <text class="cd-editor-label">客户备注</text>
@@ -122,7 +122,7 @@
                   bindinput="onNoteInput" />
         <text class="cd-textarea-count">{{noteContent.length}}/500</text>
       </view>
-      <cy-inline-error class="cd-editor-error" wx:if="{{noteError}}" kind="data"
+      <cy-inline-error class="cd-editor-error" wx:if="{{noteError}}" kind="error"
         title="备注未保存" sub="{{noteError}}" />
 
       <!-- 稿的编辑弹窗没画这块,但线上已有这些能力,收编时不能顺手删掉:

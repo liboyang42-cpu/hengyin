@@ -33,14 +33,27 @@ function text(value) {
  * 与后端 MemberIdentityService.register 的校验顺序一致:姓名 → 证件 → 单独同意。
  */
 function checkIdentityForm(form) {
+  const e = identityFieldErrors(form);
+  const message = e.realName || e.idCard || e.consent;
+  return message ? { ok: false, message } : { ok: true, message: '' };
+}
+
+/**
+ * 同一套规则逐栏给出原因(空串 = 该栏没问题),供页面把问题写在对应字段下方。
+ * checkIdentityForm 取其中第一条,顺序与文案不变。
+ */
+function identityFieldErrors(form) {
   const f = form || {};
   const name = text(f.realName);
-  if (!name) return { ok: false, message: '请填写真实姓名' };
-  if (name.length < 2 || name.length > 20) return { ok: false, message: '请填写真实姓名(2-20 个字)' };
-  if (/[0-9]/.test(name)) return { ok: false, message: '姓名里不应包含数字' };
-  if (!isValidIdCard(f.idCard)) return { ok: false, message: '身份证号格式不正确，请确认后重填' };
-  if (!f.consented) return { ok: false, message: '请先同意提供真实姓名与身份证号' };
-  return { ok: true, message: '' };
+  let realName = '';
+  if (!name) realName = '请填写真实姓名';
+  else if (name.length < 2 || name.length > 20) realName = '请填写真实姓名(2-20 个字)';
+  else if (/[0-9]/.test(name)) realName = '姓名里不应包含数字';
+  return {
+    realName,
+    idCard: isValidIdCard(f.idCard) ? '' : '身份证号格式不正确，请确认后重填',
+    consent: f.consented ? '' : '请先同意提供真实姓名与身份证号',
+  };
 }
 
 /**
@@ -130,6 +143,7 @@ module.exports = {
   CONSENT_TEXT,
   ALREADY_REGISTERED_HINT,
   checkIdentityForm,
+  identityFieldErrors,
   identitySatisfied,
   topicRequiresIdentity,
   loadIdentityStatus,

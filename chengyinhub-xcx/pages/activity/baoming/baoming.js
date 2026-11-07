@@ -255,9 +255,13 @@ Page({
       consentName: '', consentChecked: false, consentState: 'idle', consentError: '' },
     // 向活动主办方提供报名信息(姓名/手机号)的单独同意(PIPL 单独同意)
     hostShareChecked: false,
+    // 第五轮 D:参与人信息一栏的输入问题(红字写在该栏下方)
+    participantError: '',
     // 结算关键前置态同时落在 data，供 UI/自动化回读；私有字段只保留兼容。
     hostShareConsentReady: false,
     quoteReady: false,
+    // P-05:服务端报价拒绝的原因(如该主题暂不支持在线支付);非空即这场现在不能报名
+    quoteRefusal: '',
     orderInfo: null,
     isPaying: false,
     paymentReady: false,
@@ -506,8 +510,17 @@ Page({
     };
     
     that.setData({
-      userInfo: newUserInfo
+      userInfo: newUserInfo,
+      participantError: ''   // 第五轮 D:换了参与人,字段下方的红字随之清掉
     });
+  },
+
+  // 第五轮 D:参与人信息是本页第一栏,滚回顶部即可看到它下方的红字。
+  showParticipantError(message) {
+    this.setData({ participantError: message });
+    if (typeof wx !== 'undefined' && typeof wx.pageScrollTo === 'function') {
+      wx.pageScrollTo({ scrollTop: 0, duration: 200 });
+    }
   },
 
   /**
@@ -1089,7 +1102,7 @@ Page({
     that._quoteRetried = false;
     that._nonRefundableConfirmed = false;
     that._quoteRefundableNow = null;
-    that.setData({ quoteReady: false });
+    that.setData({ quoteReady: false, quoteRefusal: '' });
     app.sendRequest({
       url: '/api/registration/quote',
       method: 'POST',
@@ -1115,6 +1128,7 @@ Page({
           that._quoteRefundableNow = refundableNow;
           that.setData({
             quoteReady: !!that._quoteSign,
+            quoteRefusal: '',
             totalAmount: parseFloat(pay.toFixed(2)),
             discountAmount: parseFloat(pd.toFixed(2)),
             usedPoints: res.data.pointsUsed || 0,
@@ -1134,7 +1148,10 @@ Page({
           if (pay > 0) that.checkPaymentReadiness();
         } else if (res && res.msg) {
           // F-W1-05:报价被拒(如主题尚未开售)要说出真实原因,不能停在「重新检查支付服务」。
-          that.setData({ submitError: String(res.msg) });
+          // P-05:报价拒绝是这场当前不能报名的真实原因,记下来并关掉付款按钮,
+          // 否则点付款会带着空签名建单,只换来一句「缺少报价签名」。
+          that.setData({ submitError: String(res.msg), quoteRefusal: String(res.msg) },
+            () => that.refreshPaymentState());
           if (Number(that.data.totalAmount || 0) > 0 && !that.data.paymentReadinessChecking) {
             that.checkPaymentReadiness();
           }
@@ -1290,6 +1307,7 @@ Page({
     const signupClosed = (ticketSignupClosed(data.selectedTicket, now) || ticketWindowPassed(data.selectedTicket, now))
       && !activeOffer;
     const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed
+      && !data.quoteRefusal
       && data.hostShareChecked && !!data.selectedAddress
       && !data.merchantClosed
       && waitlistAllowsCheckout
@@ -1468,6 +1486,12 @@ Page({
       return;
     }
 
+    if (that.data.quoteRefusal) {
+      that.setData({ submitError: that.data.quoteRefusal });
+      app.tips(that.data.quoteRefusal);
+      return;
+    }
+
     if (that.data.waitlistState === 'OFFERED'
       && !offerDeadlineIsFuture(that._waitlistOfferExpiresAt, that.clockNow())) {
       that.expireWaitlistOfferInView();
@@ -1525,8 +1549,10 @@ Page({
       return;
     }
 
+    // 第五轮 D(业主):参与人信息的问题写在该栏下方红字并滚回该栏,不再弹提示;
+    // 拦截与随后打开选择弹层/新增页都和原来一样。
     if (!that.data.selectedAddress) {
-      app.tips('请选择参与人信息');
+      that.showParticipantError('请选择参与人信息');
       that.checkAndShowAddressPopup();
       return;
     }
@@ -1538,20 +1564,20 @@ Page({
 
     // 验证用户信息（从参与人信息获取）
     if (!that.data.userInfo.realName) {
-      app.tips('参与人信息需要包含姓名');
+      that.showParticipantError('参与人信息需要包含姓名');
       that.checkAndShowAddressPopup();
       return;
     }
 
     if (!that.data.userInfo.phone) {
-      app.tips('参与人信息需要包含手机号');
+      that.showParticipantError('参与人信息需要包含手机号');
       that.checkAndShowAddressPopup();
       return;
     }
 
     // 验证手机号格式
     if (!isValidMobile(that.data.userInfo.phone)) {
-      app.tips('参与人信息中的手机号码格式不正确');
+      that.showParticipantError('参与人信息中的手机号码格式不正确');
       that.checkAndShowAddressPopup();
       return;
     }
@@ -1662,6 +1688,14 @@ Page({
             that.setData({
               quoteReady: !!that._quoteSign
             });
+          } else if (res && res.msg) {
+            // P-05:补报价被拒就停在这里说真实原因,不带空签名去建单。
+            const refusal = String(res.msg);
+            that.setData({ isPaying: false, submitError: refusal, quoteRefusal: refusal }, function () {
+              that.refreshPaymentState();
+              cyLoading.hide();
+            });
+            return;
           }
           resumePayment();
         },

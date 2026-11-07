@@ -78,6 +78,16 @@ public class ApiRegistrationController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.support.RegistrationCancellationReadService cancellationReadService;
 
+    /**
+     * P-15 / C-22：售票闸抛的内部码换成用户读得懂的一句话；其余业务句原样交给 AjaxResult(仍过 UserSafeMessage)。
+     */
+    static String checkoutRefusalMessage(String raw) {
+        if ("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED".equals(raw)) return "这一期每人限购一张，你已经有票了";
+        if ("EXPLORE_SESSION_TICKET_LIMIT_REACHED".equals(raw)) return "这一场你已经有票了，可以选别的场次";
+        if ("SALE_SNAPSHOT_MISSING".equals(raw)) return "该主题的开售信息还没准备好，暂不能报名";
+        return raw;
+    }
+
     @Operation(summary = "报名报价(M0-1 实扣一致):不落库,返回应付/抵扣明细+quoteSign")
     @PostMapping("/quote")
     public AjaxResult quote(@RequestBody RegistrationRequest param) {
@@ -96,7 +106,7 @@ public class ApiRegistrationController extends BaseController {
         } catch (RegistrationCheckoutException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
         }
     }
 
@@ -147,10 +157,7 @@ public class ApiRegistrationController extends BaseController {
                     member_id, param == null ? null : param.getOwnerType(),
                     param == null ? null : param.getOwnerId(), param == null ? null : param.getTicketId(),
                     param == null ? null : param.getRequestId(), e);
-            if ("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED".equals(e.getMessage())) {
-                return AjaxResult.error("已达到该主题的购票上限");
-            }
-            return AjaxResult.error(e.getMessage());
+            return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
         }
     }
 

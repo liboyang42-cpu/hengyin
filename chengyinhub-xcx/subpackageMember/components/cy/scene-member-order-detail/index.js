@@ -190,7 +190,9 @@ function buildOrderTimeline(info) {
     state: 'done',
   }];
 
-  if (paid) {
+  // P-07:退款后支付状态不再是「已支付」,但这笔钱确实付过 —— 进度按已付、再退款走,不能回到「等待支付」。
+  const refundState = stateKey === 'refunding' || stateKey === 'refunded';
+  if (paid || refundState) {
     rows.push({ key: 'paid', label: isFreeOrder(value) ? '免费报名成功' : '支付已完成', time: toDisplayTime(value.paymentTime), state: 'done' });
   } else if (stateKey === 'cancelled') {
     rows.push({ key: 'cancelled', label: '订单已取消', time: '', state: 'done' });

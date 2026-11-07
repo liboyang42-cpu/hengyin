@@ -35,6 +35,26 @@ class TopicSaleTimeValidatorTest {
         assertTrue(failure.getMessage().contains("recruitDeadline"), "开放承接必须点名 recruitDeadline");
     }
 
+    /** P-01：俱乐部发的城市定向在招募期邀来带队俱乐部(阵容非空)时，recruitDeadline 是真实招募截止，不该被拒。 */
+    @Test
+    void cityThemeThatRecruitedAnOrganizerKeepsItsRecruitDeadline() {
+        CmsTopic topic = sellableTopic();
+        Date start = at("2026-08-11T01:00:00Z");
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        topic.setMerchantStatus(0);
+        topic.setOpenClubPool(0);
+        topic.setRecruitDeadline(start);
+        OmsTicket guided = ticket();
+        guided.setStartTime(at("2026-08-12T15:00:00Z"));
+        guided.setEndTime(at("2026-08-12T16:00:00Z"));
+
+        IllegalStateException without = assertThrows(IllegalStateException.class,
+                () -> TopicSaleTimeValidator.assertValid(topic, Collections.singletonList(guided), start, () -> false));
+        assertTrue(without.getMessage().contains("未开放承接"));
+        assertDoesNotThrow(() -> TopicSaleTimeValidator.assertValid(topic,
+                Collections.singletonList(guided), start, () -> true));
+    }
+
     @Test
     void topicHardSaleEndMustNotOutliveTopicFulfillmentEnd() {
         CmsTopic topic = sellableTopic();

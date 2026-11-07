@@ -42,3 +42,6 @@
 .dp-pair .dp-field { display:flex; flex-direction:column; }
 
 .dp-editor-page { flex:1; min-height:0; padding:31rpx 38.5rpx; box-sizing:border-box; }
+
+/* 第四轮:字段下方红字 */
+.dp-field-err { margin-top: var(--cy-space-1); }

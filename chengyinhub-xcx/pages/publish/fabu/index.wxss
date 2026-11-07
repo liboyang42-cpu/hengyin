@@ -1134,9 +1134,16 @@ page { background: var(--cy-btn-solid-bg); }
      59fd3d6aa 已经删了,这档留白就成了纯空档:实拍返回钮与主题名之间空出一大截,
      整页像被压扁往下推。删掉那一项,标题紧跟在返回钮下面(稿子 4028:13649 的
      TopBar pb=14 + Heading 就是这个节奏)。 */
-  padding-top: var(--cy-sheet-chrome-top, 0px);
+  /* P-33(2026-11-02):满屏态从胶囊下方开始,而不是用 padding 顶开 —— padding 属于滚动内容,
+     一滚动标题与卡片就钻到状态栏和返回钮底下(票务设置页实拍)。顶端这段留给页面底色与返回钮。 */
+  top: var(--cy-sheet-chrome-top, 0px);
+  padding-top: 0;
   border-radius: 0;
 }
+
+/* P-33 第三轮:sheet 让出胶囊区后,顶端露出的是 .slopes 根的深色底(一条黑带)。
+   满屏态根换成页面底色,状态栏区与页面同色。 */
+.fabu.slopes--full { background: var(--cy-color-bg-page); }
 
 /* 满屏态没有地图可抓,grabber 只是个装饰横条,去掉省一行空间 */
 .slopes-sheet--full .slopes-grabber {

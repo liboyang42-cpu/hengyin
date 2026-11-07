@@ -103,7 +103,9 @@ test('滑块与灰按钮:改价不复活人数缺失的提交,灰按钮要说明
   assert.equal(page.data.canConfirmPrice, false)
 
   page.onConfirmDisabledTap()
-  assert.match(page.data.submitError, /成团人数/, '点灰按钮必须有回执，本仓不许留死交互')
+  // 第四轮(业主:输入问题只在字段下方红字说):回执是成团人数栏下的红字,不在底部另起提示框。
+  assert.match(page.data.teamSizeError, /成团人数/, '点灰按钮必须有回执，本仓不许留死交互')
+  assert.equal(page.data.submitError, '')
 })
 
 test('确认失败就地返回回执,不发建单请求', () => {

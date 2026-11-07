@@ -15,6 +15,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    fieldErrors: { fullName: '', mobilePhone: '' },
     // 自定义导航:顶栏高度 = 状态栏 + 导航条,页面自留同高占位,内容不被顶栏压住
     statusBarHeight: (app.globalData || {}).statusBarHeight || 20,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
@@ -129,7 +130,8 @@ Page({
     const value = e.detail.value;
     
     this.setData({
-      [`form.${field}`]: value
+      [`form.${field}`]: value,
+      [`fieldErrors.${field}`]: ''
     }, () => this.refreshSubmitState());
   },
 
@@ -155,9 +157,8 @@ Page({
 
   // 置灰的「保存参与人信息」被点 → 报第一条没交的必填(报名链路的最后一屏,别静默)。
   onSaveDisabledTap: function () {
-    const form = this.data.form;
-    if (!String(form.fullName || '').trim()) toast('请填写姓名');
-    else if (!isValidMobile(String(form.mobilePhone || '').trim())) toast('请填写正确的手机号');
+    // 第四轮(业主):问题写在对应字段下方红字,不再弹提示。
+    this.validateForm(this.data.form);
   },
 
   /**
@@ -244,23 +245,14 @@ Page({
   validateForm: function (form) {
     const fullName = typeof form.fullName === 'string' ? form.fullName : '';
     const mobilePhone = typeof form.mobilePhone === 'string' ? form.mobilePhone : '';
-    if (fullName.trim() === '') {
-      toast('请输入姓名');
-      return false;
-    }
-    
-    if (mobilePhone.trim() === '') {
-      toast('请输入手机号');
-      return false;
-    }
-    
-    // 手机号格式验证
-    if (!isValidMobile(mobilePhone)) {
-      toast('请输入正确的手机号');
-      return false;
-    }
-    
-    return true;
+    // 第四轮(业主:输入问题只在字段下方红字说):两栏各自报,不再弹提示。
+    const fieldErrors = {
+      fullName: fullName.trim() === '' ? '请输入姓名' : '',
+      mobilePhone: mobilePhone.trim() === '' ? '请输入手机号'
+        : (isValidMobile(mobilePhone.trim()) ? '' : '请输入正确的手机号'),
+    };
+    this.setData({ fieldErrors });
+    return !fieldErrors.fullName && !fieldErrors.mobilePhone;
   },
 
   /**

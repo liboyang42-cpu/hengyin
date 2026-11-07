@@ -189,6 +189,9 @@
 .cc-field-label { display: block; font-size: var(--cy-font-label); color: var(--cy-text-secondary); margin-bottom: var(--cy-space-1-5); }
 .cc-req { color: var(--cy-danger); margin-left: 4rpx; } /* ds-ok: 4rpx 星号贴字像素级微调,非排版间距 */
 .cc-input--field { margin-top: 0; }
+/* C-14:名称被占用时,输入框下方红 * + 原因 */
+.cc-field-err { display: flex; align-items: baseline; gap: var(--cy-space-1); margin-top: var(--cy-space-1-5); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-danger); }
+.cc-field-err .cc-req { margin-left: 0; }
 .cc-field .cc-input--field + .cc-input--field { margin-top: 0; }
 
 /* 底部 CTA */
