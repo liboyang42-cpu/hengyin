@@ -8546,6 +8546,8 @@ Page({
   selectTemp: function (e) {
     const item = e.currentTarget.dataset.item;
     if (!isRecord(item) || !item.id) return;
+    if (e.currentTarget.dataset.source !== 'public' && (item.draftStatus != null && Number(item.draftStatus) !== 1
+        || item.status != null && Number(item.status) !== 1)) { cyToast('请先选择一个模板'); return; }
     this._nodeTemplateLoadToken = (this._nodeTemplateLoadToken || 0) + 1;
     const reason = this._templateSupportReason(item);
     if (reason) { cyToast(reason); return; }
@@ -8574,6 +8576,8 @@ Page({
       return;
     }
     const selectedTemplate = this.data.selectedTempInfo;
+    if (this.data.selectedTempSource !== 'public' && (selectedTemplate.draftStatus != null && Number(selectedTemplate.draftStatus) !== 1
+        || selectedTemplate.status != null && Number(selectedTemplate.status) !== 1)) { cyToast('请先选择一个模板'); return; }
     const reason = this._templateSupportReason(selectedTemplate);
     if (reason) { cyToast(reason); return; }
     if (this._insertAlbumTemplate(selectedTemplate)) return;
@@ -8621,8 +8625,8 @@ Page({
       typeof app.getAuthorization === 'function' ? app.getAuthorization() : '',
       this.data.draftUuid, this.data.editingTopicId, this._editLoadToken,
       this.data.nodesForm, this.data.selectedTempSource, this.data.selectedTempId, this._loginContinuationEpoch]);
-    const originalContext = context();
-    const current = () => !this._hidden && !this._unloaded && context() === originalContext;
+    const originalContext = context(), targetCurrent = this._nodeTemplateTargetCurrent();
+    const current = () => targetCurrent() && context() === originalContext;
     let record;
     try { record = templateAdoption.read(wx, owner, scope, sourceId); }
     catch (invalid) { error(invalid.message); return; }
@@ -8758,7 +8762,8 @@ Page({
         success(res) {
           if (token === that._nodeTemplateLoadToken) that._loadingSelectedTemplate = 0;
           if (!current()) return;
-          if (res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === templateAdoption.id(selectedTemplate.id))
+          if (res && res.code == '200' && isRecord(res.data) && templateAdoption.id(res.data.id) === templateAdoption.id(selectedTemplate.id)
+              && Object.prototype.hasOwnProperty.call(res.data, 'advancedConfigJson'))
             that._bindNodeTemplate(res.data);
           else cyToast('玩法详情未加载，请重新选择');
         },
@@ -9154,47 +9159,11 @@ Page({
     load(1);
   },
 
-  /* 我的故事玩法草稿(W-10):从发布页存下的故事玩法是 status=0 草稿,「我的模板」按 is_quote
-     只列已发布,绑定一旦丢了(关了弹层、页面被重置)就再也选不回来,作者只能重配、库里留孤儿。
-     每次打开面板都重拉 —— 刚存的那条要马上看得到。拉不到就不出这一段,不塞占位。 */
-  // 草稿列表分页读取全部（接口默认每页 10 条；只取首页时第 11 个起的草稿在站点里选不到）
+  // V3-41：选择器不再展示草稿；采用回执仍按原请求恢复，不依赖此列表。
   getStoryDraftList: function () {
-    const that = this, collected = [], pageSize = 100;
-    const owner = memberId(app);
-    const scope = this.data.operationScope;
-    const token = this._storyDraftListToken = (this._storyDraftListToken || 0) + 1;
-    // 换号 / 换经营身份 / 页面卸载 / 被更新一次读取取代后,旧响应一律作废;
-    // 列表不属于当前账号+身份(或来历不明)时先清空,同一账号重读则保留旧列表直到新结果到
-    const listKey = owner + '|' + (scope || '');
-    const isCurrent = () => !that._unloaded && token === that._storyDraftListToken
-      && owner === memberId(app) && scope === that.data.operationScope;
-    if (this._storyDraftListKey !== listKey) {
-      this._storyDraftListKey = '';
-      this.setData({ storyDraftList: [] });
-    }
-    const settle = function () {
-      that._storyDraftListKey = listKey;
-      that.setData({ storyDraftList: collected });
-    };
-    const load = function (pageNum) {
-      app.sendRequest({
-        hideLoading: true,
-        url: '/api/template/my-list',
-        method: 'POST',
-        data: { draft_status: 0, scope: scope, pageNum: pageNum, pageSize: pageSize },
-        success: function (res) {
-          if (!isCurrent()) return;
-          const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : [];
-          rows.forEach(row => collected.push(row));
-          const total = Number(res && res.data && res.data.total) || 0;
-          if (rows.length === pageSize && collected.length < total && pageNum < 10) { load(pageNum + 1); return; }
-          settle();
-          that._refreshSupportMatrix();
-        },
-        fail: function () { if (isCurrent()) settle(); },
-      });
-    };
-    load(1);
+    this._storyDraftListToken = (this._storyDraftListToken || 0) + 1;
+    this._storyDraftListKey = '';
+    this.setData({ storyDraftList: [] });
   },
 
   getTempList: function () {
@@ -9213,6 +9182,7 @@ Page({
       method: "POST",
       data: {
         is_quote: 1,
+        draft_status: 1,
         keyword: that.data.searchKeyword,
         scope: that.data.operationScope,
       },
@@ -9220,7 +9190,7 @@ Page({
         if (!isCurrent()) return;
         if (res.code == "200" && res.data && isRecordList(res.data.rows)) {
           that.setData({
-            tempList: res.data.rows,
+            tempList: res.data.rows.filter(item => Number(item.draftStatus) === 1 && Number(item.status) === 1),
           });
           that._refreshSupportMatrix();
         } else {
