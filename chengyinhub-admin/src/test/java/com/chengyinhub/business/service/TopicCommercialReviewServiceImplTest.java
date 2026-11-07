@@ -181,6 +181,39 @@ class TopicCommercialReviewServiceImplTest {
                 eq(3L), org.mockito.ArgumentMatchers.anyString());
     }
 
+    /** P-01：付费城市定向不需要四店 canonical15 草稿也能提交开售审；快照里不带 canonical15。 */
+    @Test
+    void cityOrienteeringSaleReviewDoesNotNeedFourStoreCanonicalDraft() {
+        CmsTopic topic = topic(TopicLifecycleState.PRICING);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        when(policy.evaluate(9L)).thenReturn(CommercialTopicPolicy.Evaluation.commercial("paidTicket", 11L));
+        when(auditTaskService.submitCommercialReview(eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L), eq(3L),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(72L);
+
+        assertEquals(72L, service.submitSaleReview(9L, 3L));
+        com.chengyinhub.business.domain.vo.TopicSaleReviewProgress auto = service.submitSaleReviewIfReady(9L, 3L);
+        assertEquals(72L, auto.getTaskId());
+
+        verify(transferGate, org.mockito.Mockito.times(2)).assertTransferred(topic);
+        verify(saleSnapshotMapper, never()).selectDraftByTopicIdForUpdate(9L);
+        verify(canonicalBuilder, never()).rebuild(eq(topic), org.mockito.ArgumentMatchers.any());
+        org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(auditTaskService, org.mockito.Mockito.times(2)).submitCommercialReview(
+                eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L), eq(3L), snapshot.capture());
+        assertTrue(snapshot.getValue().contains("saleParameters"));
+        assertTrue(!snapshot.getValue().contains("canonical15"));
+    }
+
+    /** 产品类型未定(存量 NULL)不得因此绕开 canonical15。 */
+    @Test
+    void unknownProductTypeStillRequiresCanonicalDraft() {
+        CmsTopic topic = topic(TopicLifecycleState.PRICING);
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        when(policy.evaluate(9L)).thenReturn(CommercialTopicPolicy.Evaluation.commercial("paidTicket", 11L));
+        assertThrows(IllegalStateException.class, () -> service.submitSaleReview(9L, 3L));
+    }
+
     private static CmsTopic topic(TopicLifecycleState state) {
         CmsTopic topic = new CmsTopic();
         topic.setId(9L);
