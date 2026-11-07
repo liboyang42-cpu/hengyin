@@ -512,7 +512,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-cash-expand": 45,
                     "architecture-day-ai-not-sent": 4,
                     "architecture-day-lead-admission": 14,
-                    "architecture-day-topic-copy": 28,
+                    "architecture-day-topic-copy": 29,
                     "architecture-day-topic-authoring": 32,
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
@@ -538,7 +538,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 76,
-                    "architecture-day-integrated-changes": 955,  # R14 payee isolation seven; R30 real adoption receipt/draft seam +1
+                    "architecture-day-integrated-changes": 956,  # R14 payee isolation seven; R30 adoption receipt +1, CITY copy rollback +1
                     "payment-intent-correctness": 30}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])

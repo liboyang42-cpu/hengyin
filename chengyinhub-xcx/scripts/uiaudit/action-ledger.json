@@ -1168840,19 +1168840,15 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "external",
+      "actionClass": "state",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [
-        "createInnerAudioContext"
-      ],
-      "successCapabilities": [
-        "createInnerAudioContext"
-      ],
+      "externalCapabilities": [],
+      "successCapabilities": [],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1168861,18 +1168857,12 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
+      "requiredPlatforms": [],
+      "externalGate": null,
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:7381"

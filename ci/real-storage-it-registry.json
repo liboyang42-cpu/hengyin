@@ -408,7 +408,7 @@
       "classes": [
         "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT"
       ],
-      "note": "28 ordinary@Test source declarations: original25 retained plus3 actual coupon-ownership copy/rollback cases. No dynamic count/skip fallback. Source-bound XML/CLEAN required; historical25 execution retains its original source, no mechanical equivalence claim for the new3."
+      "note": "29 ordinary@Test source declarations: original25 retained plus3 actual coupon-ownership copy/rollback cases and1 cross-owner CITY count-rule zero-write rollback case. No dynamic count/skip fallback. Source-bound XML/CLEAN required; historical25 execution retains its original source, no mechanical equivalence claim for the new4."
     },
     "architecture-day-topic-authoring": {
       "registered_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
@@ -1601,12 +1601,12 @@
       "note": "Actual ClubLead table-unavailable503/NOT_RUN, original claim rollback, no branch/journey session on denied GET/POST and real route creation after recovery; catalogue/node/template double."
     },
     "com.chengyinhub.business.service.impl.TopicContentCopyMySqlIT": {
-      "tests": 28,
+      "tests": 29,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original25 and adds3 coupon-ownership copy/rollback cases; declarations only, NOT_RUN."
+      "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original25 and adds3 coupon-ownership copy/rollback cases plus1 cross-owner CITY count-rule zero-write rollback; declarations only, NOT_RUN."
     },
     "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
       "tests": 32,

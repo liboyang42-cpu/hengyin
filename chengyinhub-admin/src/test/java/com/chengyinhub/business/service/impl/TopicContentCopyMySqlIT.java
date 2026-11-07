@@ -123,6 +123,21 @@ public class TopicContentCopyMySqlIT {
         rejected(() -> f.copy(3, 2000L));
     }
 
+    @Test void crossOwnerCompletionRuleZeroRowRollsBackEveryWrittenChild() {
+        java.util.concurrent.atomic.AtomicBoolean reached = new java.util.concurrent.atomic.AtomicBoolean();
+        f.writes.zero = u -> {
+            boolean countPatch = u.statement().endsWith("CmsTopicMapper.updateCmsTopic")
+                    && u.parameter() instanceof CmsTopic topic && topic.getCompleteRuleJson() != null;
+            if (countPatch) {
+                reached.set(true);
+                assertEquals(3, f.db.queryForObject("select count(*) from cms_topic_node where topic_id<>100", Integer.class));
+            }
+            return countPatch;
+        };
+        rejected(() -> f.copy(3, TopicContentCopyMySqlFixture.TARGET));
+        assertTrue(reached.get(), "must fail at the new cross-owner count-rule write after real children exist");
+    }
+
     @Test void officialMissingPersistedSlotRollsBackInsertedTopic() {
         f.db.update("update product_role set entity_type='PLATFORM',entity_id=null where topic_id=100"); f.before = f.snapshot();
         f.writes.zero = u -> u.statement().endsWith("ProductRoleMapper.insertProductRole");
@@ -258,7 +273,8 @@ public class TopicContentCopyMySqlIT {
         assertEquals(Long.valueOf(0), copy.getPublishedConfigVersion());
         assertNull(copy.getPublishedRouteGraphJson()); assertNull(copy.getPublishedThemeRuntimeConfigJson());
         assertNull(copy.getSelfPlayPrice()); assertNull(copy.getFeePlatformRate());
-        assertNull(copy.getCompleteRuleJson()); // these fixtures cross the original member owner
+        assertEquals(f.json("{\"nodeCompletion\":{\"mode\":\"AT_LEAST\",\"requiredCount\":2}}"),
+                f.json(copy.getCompleteRuleJson())); // cross-owner CITY retains the count, not the source's future fields
         assertEquals(slotType, f.roles.activeContentSlot(id).getEntityType());
         assertEquals("PLATFORM".equals(slotType) ? null : Long.valueOf(owner), f.roles.activeContentSlot(id).getEntityId());
         Map<String, Map<String, Object>> chapters = named(f.chapters(id)), nodes = named(f.nodes(id));

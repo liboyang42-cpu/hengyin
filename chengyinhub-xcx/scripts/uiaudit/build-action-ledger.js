@@ -383,6 +383,8 @@ const ACTION_VARIANTS = new Map([
     apis: ['/api/game/session/shared/export'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [] }]],
   ['pages/club/topic-detail/index.js:closeGenericOps', [{ id: 'ops-close', handler: 'closeGenericOps', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/club/topic-detail/index.js:inputGenericOps', [{ id: 'ops-fields', handler: 'inputGenericOps', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  // 历史章节关闭只调用 finishChapterVideo(null, false)，不会恢复旁白；真实闭包负控在 action-ledger.test.js。
+  ['pages/play/index.js:openStackOrChaptersFromTools', [{ id: null, handler: 'openStackOrChaptersFromTools', effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/play/index.js:openThemePlan', [{ id: 'plan-local-state', handler: 'openThemePlan', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/play/index.js:closeThemePlan', [{ id: 'plan-local-state', handler: 'closeThemePlan', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/play/index.js:editThemePlanFunding', [{ id: 'plan-local-state', handler: 'editThemePlanFunding', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],

@@ -135,6 +135,77 @@ test('action ledger 区分导航、写操作、读操作、页内状态与外部
   assert.equal(inferActionClass('scanCode', 'wx.scanCode({})'), 'external')
 })
 
+test('R30 切换章节只关闭视频，选择章节仍保留真实旁白的真机门', () => {
+  const slices = handlerSlices(path.join(__dirname, '../../pages/play/index.js'))
+  const stopped = new Map(slices)
+  const finish = slices.get('finishChapterVideo')
+  assert.equal(finish.split('this.playChapterAudio(true);').length, 2)
+  stopped.set('finishChapterVideo', finish.replace('this.playChapterAudio(true);', ''))
+  const helpers = discoverExternalHelperNames([path.join(__dirname, '../../app.js')])
+  // false-resume 已由下条真实方法负控证明；其余闭包若新增 SDK，不能沿用这项例外。
+  assert.equal(inferActionClass('openStackOrChaptersFromTools',
+    expandHandlerBody('openStackOrChaptersFromTools', stopped, null, { modules: true }), helpers), 'state')
+  assert.deepEqual(extractTargets(expandHandlerBody('openStackOrChaptersFromTools', stopped)).apis, [])
+  assert.equal(inferActionClass('onPickChapter',
+    expandHandlerBody('onPickChapter', stopped, null, { modules: true }), helpers), 'external')
+  for (const controls of [ledger.controls, readCurrentLedger().controls]) {
+    const tools = controls.find(item => item.id === 'pages/play/index.wxml:311:bindtap:openStackOrChaptersFromTools:49')
+    const pick = controls.find(item => item.id === 'pages/play/index.wxml:515:bindtap:onPickChapter:74')
+    assert.ok(tools)
+    assert.equal(tools.actionClass, 'state')
+    assert.deepEqual(tools.externalCapabilities, [])
+    assert.deepEqual(tools.requiredBranches, ['success'])
+    assert.ok(pick)
+    assert.equal(pick.actionClass, 'external')
+    assert.ok(pick.externalCapabilities.includes('createInnerAudioContext'))
+    assert.equal(pick.externalGate, 'real-device-required')
+    assert.deepEqual(pick.requiredPlatforms, ['ios', 'android'])
+    assert.equal(tools.evidence.status, 'pending')
+    assert.equal(pick.evidence.status, 'pending')
+  }
+})
+
+test('R30 真实关闭链的 resume=false 不启动旁白，默认恢复仍调用音频 SDK', () => {
+  const slices = handlerSlices(path.join(__dirname, '../../pages/play/index.js'))
+  let created = 0
+  const wx = {
+    createVideoContext: () => ({ stop() {} }),
+    createInnerAudioContext() {
+      created++
+      return Object.fromEntries(['stop', 'play', 'onPlay', 'onPause', 'onStop', 'onEnded', 'onError', 'onWaiting']
+        .map(name => [name, () => {}]))
+    },
+  }
+  const names = ['openStackOrChaptersFromTools', 'openStackOrChapters', 'closeChapterFull',
+    'finishChapterVideo', 'playChapterAudio', 'initAudio']
+  const methods = new Function('wx', 'audioSession', 'secureOwnMedia',
+    `return {${names.map(name => slices.get(name)).join(',')}}`)(wx,
+    { register: context => context, keepAwake() {} }, url => url)
+  for (const cards of [[{ id: 1 }], [{ id: 1 }, { id: 2 }]]) for (const cursor of [null, { liveId: 1 }]) {
+    const page = Object.assign({}, methods, {
+      data: { chapterCards: cards, chapter: { id: 1, audioUrl: 'chapter.mp3' }, chapterVideo: { show: true, token: 1 } },
+      _chapterReadCursor: cursor, _chapterVideoToken: 1, _chapterVideoScopeKey: 'scope',
+      _isChapterVideoCurrent: () => true, _isPlayAccountCurrent: () => true,
+      _chapterVideoScope: () => 'scope', _sessionKey: () => 'session',
+      closeAlbum() {}, _stopStoryDust() {}, _chapterFromCard: card => card,
+      setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback() },
+    })
+    page.openStackOrChaptersFromTools()
+    assert.equal(created, 0, '单章、多章和历史回看关闭都不得创建旁白上下文')
+    assert.equal(page.data.sessionToolsOpen, false)
+    assert.equal(page.data[cards.length > 1 ? 'chapterPick.show' : 'packOpen'], true)
+  }
+  const page = Object.assign({}, methods, {
+    data: { chapter: { id: 1, audioUrl: 'chapter.mp3' }, chapterVideo: { show: true, token: 1 } },
+    _chapterVideoToken: 1, _chapterVideoScopeKey: 'scope',
+    _isChapterVideoCurrent: () => true, _isPlayAccountCurrent: () => true,
+    _chapterVideoScope: () => 'scope', _sessionKey: () => 'session',
+    setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback() },
+  })
+  page.finishChapterVideo()
+  assert.equal(created, 1, '真旁白不能为修复 false-resume 误报而丢掉 SDK 路径')
+})
+
 test('同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转', () => {
   assert.deepEqual(inferEffectClasses('goPrivacy', 'this.setData({showPrivacySheet:true})'), ['state'])
   assert.deepEqual(inferEffectClasses('openScene', 'this.setData({sceneCurrent:next})'), ['state'])
@@ -307,6 +378,10 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   assert.equal(interactionModeFor('bindtap'), 'tap')
   assert.equal(interactionModeFor('bind:close'), 'event-contract')
   const local = ledger.controls.filter((item) => item.actionClass !== 'external')
+  // R30：选章真实启动旁白，工具菜单关闭不恢复旁白；总控件与物理交互分母不变。
+  assert.equal(ledger.controls.filter(item => item.interactionMode === 'tap').length, 2876)
+  assert.equal(ledger.controls.filter(item => item.interactionMode === 'event-contract').length, 2875)
+  assert.equal(ledger.controls.filter(item => item.interactionMode === 'tap' && item.actionClass === 'external').length, 352)
   // 2026-09-13逐项映射：漫游恢复/继续+2 tap，copyRecap真实剪贴板归external，local tap净+1。
   // 邀约恢复+2、漫游retry+1、订单orderchanged+1，local事件净+4；草稿据点拒绝独立variant再+1 tap，总3971。
   // 2026-08-25 工时自报退役：edition-report 少了「自报」按钮(−1 tap)与工时输入框(−1 事件合同)。
@@ -634,7 +709,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-31 PR #684 合 master(冲突只在台账计数):tap: 本线 2413→2381(−32)+ master 2413→2424(+11),合并树重建实测。
   // 2026-10-31 PR #684 二次合 master(#692 后):master 2421 + 本线 −32 = 2389,合并树重建实测。
   // K10 序章入口 +1；云端合流后按生成台账实测。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2525)  /* R23: templateStatus两条互斥写入variant，local tap净增1。 */  /* R23: 合作结算入口和详情 +2 local tap。 */  /* R14 approved earnings/coupon entry changes: rebuilt exact candidate; static counts only. */  /* 2026-11-05 m4:成为主理人、创建俱乐部置灰「下一步」被点的红字反馈 +2 tap,2519 → 2521。 */  /* 第十二轮 k9-pages:缺票邀请「去买这一场的票」、个人介绍空行拆成两种行,+2,重建实测 2508 → 2510。 */  /* 2026-11-05 第十二轮 k7:漫游「附近 N 个地点」可点开横滑卡(j4 N1)tap +1,重建实测 2507 → 2508。 */  /* 2026-11-05 第十二轮 k4:两颗「发邀约」tap(j2 N-01),重建实测 2505 → 2507。 */  /* 2026-11-05 第十一轮 i1:弹球 / 安静挑战 / 喊一嗓子 / 计步「跳过这一站」4 个 tap,重建实测 2501 → 2505。 */  /* 2026-11-04 第十轮 f3 第 1 项:主题模板预览不存在时「返回」tap +1,重建实测 2500 → 2501。 */  /* 2026-11-04 第十一轮 g2:去掉入队页 / 队伍详情 / 漫游队伍面板三处「确认结果 / 确认并归档结果」(终态回执静默归档),加队伍详情入队申请「拒绝 / 同意」、漫游入口「开启定位」,合并树重建实测 2501 → 2500。 */  /* 2026-11-04 第十一轮 g1 F1:预测站已截止「不选，继续」+1,重建实测 2500 → 2501。 */  /* 2026-11-04 第十轮 f2:俱乐部主题「更多」确认终价、导演台联系商家 2 个 tap,重建实测 2498 → 2500。 */  /* 2026-11-04 第十轮 f2 j2 F-06:订单详情已付未结束的票底部「开始游戏」(startPlay),2497 → 2498。 */  /* 2026-11-04 第九轮 m2:同场路线表态开关由 cy-switch 改为游玩页 .dsw 行 tap,2496 → 2497。 */  /* 2026-11-04 第九轮 m2 第 2 项:同场路线表态层「开始」、右侧队伍一排,重建实测 2494 → 2496。 */  /* 2026-11-04 第九轮 m1 第 9 项:漫游地点卡与横滑卡地址点开地图 2 个 tap,重建实测 2492 → 2494。 */  /* 2026-11-04 第九轮 m1-9 地址一点开地图(各页地址行 / 商家卡地址与导航 / 券上地址与导航 / 编辑器看点)、商家主页分享店铺按钮、资料页微信头像按钮,重建实测 2464 → 2492。 */  /* 2026-11-04 第九轮 m1:地点卡(遮罩 / 照片 / 地址 / 导航 / 关闭)与首次转场跳过 tap,重建实测 2460 → 2464。 */  /* 2026-11-03 第七轮城市漫游清单(漫游首页入口与清单组件),重建实测 2455 → 2460。 */  /* 2026-11-03 集成 #710 俱乐部按人广播:合并树重建实测 2454 → 2455。 */  /* 2026-11-03 集成 l7-launch:合并树重建实测 2452 → 2454。 */  /* 2026-11-03 集成 l6-club:合并树重建实测 2450 → 2452。 */  /* 2026-11-03 集成 l5-onboard:合并树重建实测 2449 → 2450。 */  /* 2026-11-03 集成 l4-counter:合并树重建实测 2450 → 2449。 */  /* 2026-11-03 集成 l2-explore 合 l1-play:两线各自增量合流,合并树重建实测 2448 → 2450。 */  /* 2026-11-03 l1-play 第五轮 D(P-08「返回地图」):地图「回到故事」closeStoryMap 从等待屏过来时可接着放翻转门进章(章节旁白、存档),分类 state → external 出本地分母,重建实测 2449 → 2448。 */  /* 2026-11-02 l1-play 合 master(#711 后):master 2447 + 本线 +2(罗盘「跳过这一站」、整屏玩法「返回故事」),合并树重建实测 2449。 */  /* 2026-11-02 #702 合 master(#711):项目卡方案 B v3、删开通前置检查与合流,重建实测 2447。 */  /* 2026-11-02 page-polish 合 master:game-node 本站运行分两处渲染 +3,重建实测 2445 → 2448。 */  /* 2026-11-01 定向广播叠层(头像 / 范围 / 清空 / 重试 / 发送 / 完成)与客户多选(选择 / 勾选行)重建实测,旧 cy-sheet 随之撤掉,2435 → 2445。 */  /* 2026-11-01 主办 / 俱乐部工作台对齐:主办主题卡 / 底部主键 / 核销「记录」、承办主题卡、俱乐部「更多」结束活动,本地 tap 重建实测 2430 → 2435。 */  /* 2026-11-01 走查 v2 R02:商家首页我的消息叠层每条 ×、「清空」、「都看完了」三个 tap,2427 → 2430。 */  /* 2026-11-01 走查修复:俱乐部主办工作台客户抽屉加「发通知」一行,2426 → 2427。 */  /* 2026-11-01 dw31 上线集成(master + #695 F2 + #694 F4 + #696 F3/F5 合流):重建实测 2426。 */  /* 2026-10-31 业主:主题详情收藏旁加分享方块(openShareCard),2395 → 2396。 */  /* 2026-10-31 F3/F5(P-7 / P-8):漫游分享改成一张卡 + 四个色块 + 横滑渠道(新增色块、更多、微信好友按钮),通用分享层 cy-share-card(✕、色块、五个渠道),活动详情分享按钮改开分享层;重建实测 2389 → 2395。 */  /* 2026-10-31 dw29 发布集成(master 2424 + album-r4 / p4-template / l1 / l6 / l5 合流,square/list 整页删除等逐项叠加):重建实测 2421。 */  /* 2026-10-29 dw29 l6 M-32 本月收入明细俱乐部计酬重试 +1,2413 → 2414。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2524)  /* R23: templateStatus两条互斥写入variant，local tap净增1。 */  /* R23: 合作结算入口和详情 +2 local tap。 */  /* R14 approved earnings/coupon entry changes: rebuilt exact candidate; static counts only. */  /* 2026-11-05 m4:成为主理人、创建俱乐部置灰「下一步」被点的红字反馈 +2 tap,2519 → 2521。 */  /* 第十二轮 k9-pages:缺票邀请「去买这一场的票」、个人介绍空行拆成两种行,+2,重建实测 2508 → 2510。 */  /* 2026-11-05 第十二轮 k7:漫游「附近 N 个地点」可点开横滑卡(j4 N1)tap +1,重建实测 2507 → 2508。 */  /* 2026-11-05 第十二轮 k4:两颗「发邀约」tap(j2 N-01),重建实测 2505 → 2507。 */  /* 2026-11-05 第十一轮 i1:弹球 / 安静挑战 / 喊一嗓子 / 计步「跳过这一站」4 个 tap,重建实测 2501 → 2505。 */  /* 2026-11-04 第十轮 f3 第 1 项:主题模板预览不存在时「返回」tap +1,重建实测 2500 → 2501。 */  /* 2026-11-04 第十一轮 g2:去掉入队页 / 队伍详情 / 漫游队伍面板三处「确认结果 / 确认并归档结果」(终态回执静默归档),加队伍详情入队申请「拒绝 / 同意」、漫游入口「开启定位」,合并树重建实测 2501 → 2500。 */  /* 2026-11-04 第十一轮 g1 F1:预测站已截止「不选，继续」+1,重建实测 2500 → 2501。 */  /* 2026-11-04 第十轮 f2:俱乐部主题「更多」确认终价、导演台联系商家 2 个 tap,重建实测 2498 → 2500。 */  /* 2026-11-04 第十轮 f2 j2 F-06:订单详情已付未结束的票底部「开始游戏」(startPlay),2497 → 2498。 */  /* 2026-11-04 第九轮 m2:同场路线表态开关由 cy-switch 改为游玩页 .dsw 行 tap,2496 → 2497。 */  /* 2026-11-04 第九轮 m2 第 2 项:同场路线表态层「开始」、右侧队伍一排,重建实测 2494 → 2496。 */  /* 2026-11-04 第九轮 m1 第 9 项:漫游地点卡与横滑卡地址点开地图 2 个 tap,重建实测 2492 → 2494。 */  /* 2026-11-04 第九轮 m1-9 地址一点开地图(各页地址行 / 商家卡地址与导航 / 券上地址与导航 / 编辑器看点)、商家主页分享店铺按钮、资料页微信头像按钮,重建实测 2464 → 2492。 */  /* 2026-11-04 第九轮 m1:地点卡(遮罩 / 照片 / 地址 / 导航 / 关闭)与首次转场跳过 tap,重建实测 2460 → 2464。 */  /* 2026-11-03 第七轮城市漫游清单(漫游首页入口与清单组件),重建实测 2455 → 2460。 */  /* 2026-11-03 集成 #710 俱乐部按人广播:合并树重建实测 2454 → 2455。 */  /* 2026-11-03 集成 l7-launch:合并树重建实测 2452 → 2454。 */  /* 2026-11-03 集成 l6-club:合并树重建实测 2450 → 2452。 */  /* 2026-11-03 集成 l5-onboard:合并树重建实测 2449 → 2450。 */  /* 2026-11-03 集成 l4-counter:合并树重建实测 2450 → 2449。 */  /* 2026-11-03 集成 l2-explore 合 l1-play:两线各自增量合流,合并树重建实测 2448 → 2450。 */  /* 2026-11-03 l1-play 第五轮 D(P-08「返回地图」):地图「回到故事」closeStoryMap 从等待屏过来时可接着放翻转门进章(章节旁白、存档),分类 state → external 出本地分母,重建实测 2449 → 2448。 */  /* 2026-11-02 l1-play 合 master(#711 后):master 2447 + 本线 +2(罗盘「跳过这一站」、整屏玩法「返回故事」),合并树重建实测 2449。 */  /* 2026-11-02 #702 合 master(#711):项目卡方案 B v3、删开通前置检查与合流,重建实测 2447。 */  /* 2026-11-02 page-polish 合 master:game-node 本站运行分两处渲染 +3,重建实测 2445 → 2448。 */  /* 2026-11-01 定向广播叠层(头像 / 范围 / 清空 / 重试 / 发送 / 完成)与客户多选(选择 / 勾选行)重建实测,旧 cy-sheet 随之撤掉,2435 → 2445。 */  /* 2026-11-01 主办 / 俱乐部工作台对齐:主办主题卡 / 底部主键 / 核销「记录」、承办主题卡、俱乐部「更多」结束活动,本地 tap 重建实测 2430 → 2435。 */  /* 2026-11-01 走查 v2 R02:商家首页我的消息叠层每条 ×、「清空」、「都看完了」三个 tap,2427 → 2430。 */  /* 2026-11-01 走查修复:俱乐部主办工作台客户抽屉加「发通知」一行,2426 → 2427。 */  /* 2026-11-01 dw31 上线集成(master + #695 F2 + #694 F4 + #696 F3/F5 合流):重建实测 2426。 */  /* 2026-10-31 业主:主题详情收藏旁加分享方块(openShareCard),2395 → 2396。 */  /* 2026-10-31 F3/F5(P-7 / P-8):漫游分享改成一张卡 + 四个色块 + 横滑渠道(新增色块、更多、微信好友按钮),通用分享层 cy-share-card(✕、色块、五个渠道),活动详情分享按钮改开分享层;重建实测 2389 → 2395。 */  /* 2026-10-31 dw29 发布集成(master 2424 + album-r4 / p4-template / l1 / l6 / l5 合流,square/list 整页删除等逐项叠加):重建实测 2421。 */  /* 2026-10-29 dw29 l6 M-32 本月收入明细俱乐部计酬重试 +1,2413 → 2414。 */  /* 2026-10-25 地图底部横滑卡片(点卡 = 点列表行)+1,重建实测 2182 → 2183。 */  /* 2026-10-25 官方地点卡:相册图、小红书行、评分星、发布评价、取景卡等新增 tap,重建实测 2177 → 2182。 */  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */

@@ -32,6 +32,9 @@ import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,7 +123,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
             remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
-            preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
+            preserveCopiedCompletionRule(originalTopic, newTopic);
             // 站点玩法里引用的状态键要跟着走:副本不注册,发布闸「以下状态键未注册」把套模板的人整个挡住
             copyStateKeys(id, newTopicId);
         }
@@ -158,9 +161,10 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         themeStateKeyService.register(copyTopicId, copies);
     }
 
-    private void preserveSameOwnerCopiedCompletionRule(CmsTopic original, CmsTopic copy) {
-        if (original.getMemberId() == null || !original.getMemberId().equals(copy.getMemberId())
-                || StringUtils.isBlank(original.getCompleteRuleJson())) return;
+    private void preserveCopiedCompletionRule(CmsTopic original, CmsTopic copy) {
+        if (StringUtils.isBlank(original.getCompleteRuleJson())) return;
+        boolean sameOwner = original.getMemberId() != null && original.getMemberId().equals(copy.getMemberId());
+        if (!sameOwner && !Integer.valueOf(ProductType.ORIENTEERING).equals(copy.getProductType())) return;
         if (copy.getId() == null || copy.getId() <= 0L) {
             throw new IllegalStateException("完整复制失败，副本主题身份缺失");
         }
@@ -173,10 +177,29 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         if (sourceCount != copiedCount) {
             throw new IllegalStateException("完整复制节点数量不一致，未保留通关规则");
         }
+        String rule = topicCompletionRulePolicy.validateAndNormalize(
+                original.getCompleteRuleJson(), copiedCount, copy.getProductType());
+        if (!sameOwner) {
+            // 跨作者只带节点数量合同，奖励、核销及其他配置仍须由副本作者自行配置。
+            try {
+                ObjectMapper json = new ObjectMapper();
+                JsonNode root = json.readTree(rule);
+                JsonNode source = root.get("nodeCompletion");
+                if (source == null || source.isNull()) return;
+                ObjectNode safe = json.createObjectNode();
+                ObjectNode node = safe.putObject("nodeCompletion");
+                node.put("mode", source.path("mode").asText("ALL"));
+                if ("AT_LEAST".equals(node.path("mode").asText())) {
+                    node.put("requiredCount", source.path("requiredCount").asInt());
+                }
+                rule = safe.toString();
+            } catch (java.io.IOException e) {
+                throw new IllegalArgumentException("主题通关规则不是合法 JSON", e);
+            }
+        }
         CmsTopic patch = new CmsTopic();
         patch.setId(copy.getId());
-        patch.setCompleteRuleJson(topicCompletionRulePolicy.validateAndNormalize(
-                original.getCompleteRuleJson(), copiedCount, copy.getProductType()));
+        patch.setCompleteRuleJson(rule);
         if (cmsTopicMapper.updateCmsTopic(patch) != 1) {
             throw new IllegalStateException("副本通关规则保存失败");
         }
