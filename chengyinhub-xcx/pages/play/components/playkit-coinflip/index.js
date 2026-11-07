@@ -86,17 +86,22 @@ Component({
     attached() { this._shake = createShakeDetector(() => this.onFlip()); },
     detached() { this._stop(); this._offShake(); },
   },
-  pageLifetimes: { hide() { this._offShake(); } },
+  pageLifetimes: {
+    hide() { this._hidden = true; this._offShake(); },
+    show() { this._hidden = false; this._onShake(); },
+  },
   methods: {
     _normalizeFace: normalizeFace,      // 纯算法出口,供单测
     _spinDeg: spinDeg,
     _spinMs: () => SPIN_MS,
     _stop() { if (this._timer) { clearTimeout(this._timer); this._timer = null; } },
     _onShake() {
+      if (this._hidden || !this.data.show) return;
       if (!this._shakeOn) {
         this._shakeOn = true;
-        this._tick = (res) => this._shake(res);
-        wx.startAccelerometer({ interval: 'normal', fail() {} });
+        const tick = (res) => { if (this._tick === tick && this._shakeOn && !this._hidden && this.data.show) this._shake(res); };
+        this._tick = tick;
+        wx.startAccelerometer({ interval: 'game', fail() {} });
         wx.onAccelerometerChange(this._tick);
       }
     },
