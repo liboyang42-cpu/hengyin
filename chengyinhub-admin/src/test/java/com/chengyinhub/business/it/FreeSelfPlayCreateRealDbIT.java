@@ -15,6 +15,7 @@ import com.chengyinhub.business.mapper.MmsMerchantMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
 import com.chengyinhub.business.mapper.TopicSaleSnapshotMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
+import com.chengyinhub.business.mapper.UmsMemberAddressMapper;
 import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
@@ -153,6 +154,16 @@ class FreeSelfPlayCreateRealDbIT {
             }
             ScriptUtils.executeSqlScript(db, new org.springframework.core.io.ClassPathResource(
                     "it-schema/run41-prod-seed.sql"));
+            // R29 F01:保存参与人资料是购买前置条件，保持原生产快照文件不变。
+            try (Statement fixture = db.createStatement()) {
+                fixture.execute("CREATE TABLE ums_member_address (id BIGINT PRIMARY KEY, member_id BIGINT, "
+                        + "full_name VARCHAR(100), area_code VARCHAR(20), mobile_phone VARCHAR(64), "
+                        + "province VARCHAR(255), detail_address VARCHAR(255), is_default INT, del_flag INT, "
+                        + "request_id VARCHAR(64), create_by VARCHAR(64), create_time DATETIME, "
+                        + "update_by VARCHAR(64), update_time DATETIME)");
+                fixture.execute("INSERT INTO ums_member_address(id,member_id,full_name,is_default,del_flag) "
+                        + "VALUES (1,100092,'IT测试玩家',1,0)");
+            }
         }
 
         template = new SqlSessionTemplate(buildFactory(ds));
@@ -219,6 +230,8 @@ class FreeSelfPlayCreateRealDbIT {
         ReflectionTestUtils.setField(gate, "topicService", topicService);
         ReflectionTestUtils.setField(gate, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(gate, "merchantBusinessStatusService", businessStatus);
+        ReflectionTestUtils.setField(gate, "umsMemberMapper", template.getMapper(UmsMemberMapper.class));
+        ReflectionTestUtils.setField(gate, "umsMemberAddressMapper", template.getMapper(UmsMemberAddressMapper.class));
 
         orderService = new RegistrationOrderServiceImpl();
         ReflectionTestUtils.setField(orderService, "registrationService", proxy);
@@ -293,6 +306,7 @@ class FreeSelfPlayCreateRealDbIT {
         addMapper(configuration, CmsActivityMapper.class, "mapper/business/CmsActivityMapper.xml");
         addMapper(configuration, TopicSaleSnapshotMapper.class, "mapper/business/TopicSaleSnapshotMapper.xml");
         addMapper(configuration, UmsMemberMapper.class, "mapper/business/UmsMemberMapper.xml");
+        addMapper(configuration, UmsMemberAddressMapper.class, "mapper/business/UmsMemberAddressMapper.xml");
         addMapper(configuration, ClubMapper.class, "mapper/business/ClubMapper.xml");
         addMapper(configuration, ClubMemberMapper.class, "mapper/business/ClubMemberMapper.xml");
         addMapper(configuration, MmsMerchantMapper.class, "mapper/business/MmsMerchantMapper.xml");

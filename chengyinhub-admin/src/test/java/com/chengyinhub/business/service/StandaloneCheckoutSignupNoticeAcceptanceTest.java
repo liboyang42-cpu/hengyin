@@ -161,6 +161,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ReflectionTestUtils.setField(checkout, "registrationService", service);
         ReflectionTestUtils.setField(checkout, "registrationOrderService", mock(IRegistrationOrderService.class));
         ReflectionTestUtils.setField(checkout, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
         return checkout;
     }
 
@@ -234,6 +235,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ReflectionTestUtils.setField(checkout, "registrationService", registrations);
         ReflectionTestUtils.setField(checkout, "registrationOrderService", orders);
         ReflectionTestUtils.setField(checkout, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
 
         checkout.createOrReplay(MEMBER, new com.chengyinhub.business.domain.dto.RegistrationRequest());
 

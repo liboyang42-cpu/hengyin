@@ -95,6 +95,13 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
         RestoreDispatchGuard.requireDispatchAllowed();
         requireNoActiveTransaction();
+        CmsRegistration observed = registrationService.selectCmsRegistrationById(registrationId);
+        if (observed == null || memberId == null || !memberId.equals(observed.getMemberId())) {
+            throw new RegistrationCheckoutException(403, "报名不存在或无权操作");
+        }
+        if (!Integer.valueOf(2).equals(observed.getPaymentStatus())) {
+            registrationOrderCreateGate.validatePurchaseProfile(memberId, observed.getRealName());
+        }
         List<CmsRegistration> zeroOrder = registrationService.completeZeroAmountPaymentForRetry(
                 registrationId, memberId);
         if (zeroOrder != null) {
@@ -254,6 +261,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         CmsRegistration primary = order == null ? null : order.getPrimary();
         if (primary == null) {
             throw new RegistrationCheckoutException(500, "报名记录不存在");
+        }
+        if (order.isReplayed() && !Integer.valueOf(2).equals(primary.getPaymentStatus())) {
+            registrationOrderCreateGate.validatePurchaseProfile(memberId, primary.getRealName());
         }
         List<CmsRegistration> registrations = order.getRegistrations();
         Map<String, Object> data = mapOrder(primary, registrations);

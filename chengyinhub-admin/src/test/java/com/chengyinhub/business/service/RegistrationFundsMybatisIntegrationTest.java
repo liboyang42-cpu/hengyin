@@ -2193,6 +2193,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(reconstructedCheckout, "registrationService", fresh);
         ReflectionTestUtils.setField(reconstructedCheckout, "registrationOrderService", registrationOrderService);
         ReflectionTestUtils.setField(reconstructedCheckout, "wechatPayService", unavailable);
+        ReflectionTestUtils.setField(reconstructedCheckout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
         RegistrationCheckoutResult replay = reconstructedCheckout.retryPayment(7L, original.getId(), true);
         assertEquals(completed.getData(), replay.getData());
         assertEquals(committed, zeroRecoveryRows());

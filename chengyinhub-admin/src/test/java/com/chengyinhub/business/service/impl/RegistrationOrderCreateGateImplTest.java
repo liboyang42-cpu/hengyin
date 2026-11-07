@@ -52,12 +52,25 @@ class RegistrationOrderCreateGateImplTest {
         ReflectionTestUtils.setField(gate, "merchantBusinessStatusService", merchantBusinessStatusService);
         ReflectionTestUtils.setField(gate, "activityService", activityService);
         ReflectionTestUtils.setField(gate, "capabilityService", capabilityService);
+        com.chengyinhub.business.mapper.UmsMemberMapper members = mock(com.chengyinhub.business.mapper.UmsMemberMapper.class);
+        com.chengyinhub.business.mapper.UmsMemberAddressMapper participants = mock(com.chengyinhub.business.mapper.UmsMemberAddressMapper.class);
+        com.chengyinhub.business.domain.UmsMember member = new com.chengyinhub.business.domain.UmsMember();
+        member.setPhone("13800000000");
+        when(members.selectUmsMemberById(any())).thenReturn(member);
+        when(participants.selectOwnedAddressList(any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.UmsMemberAddress participant = new com.chengyinhub.business.domain.UmsMemberAddress();
+            participant.setMemberId(call.getArgument(0)); participant.setFullName("报名人"); participant.setDelFlag(0);
+            return java.util.List.of(participant);
+        });
+        ReflectionTestUtils.setField(gate, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(gate, "umsMemberAddressMapper", participants);
         return gate;
     }
 
     private RegistrationRequest topicRequest(long topicId) {
         RegistrationRequest request = new RegistrationRequest();
         request.setOwnerType(1);
+        request.setRealName("报名人");
         request.setOwnerId(topicId);
         return request;
     }
@@ -65,6 +78,7 @@ class RegistrationOrderCreateGateImplTest {
     private RegistrationRequest activityRequest(String quoteSign) {
         RegistrationRequest request = new RegistrationRequest();
         request.setOwnerType(2);
+        request.setRealName("报名人");
         request.setOwnerId(500L);
         request.setTicketId(9L);
         request.setIsUsePoint(0);

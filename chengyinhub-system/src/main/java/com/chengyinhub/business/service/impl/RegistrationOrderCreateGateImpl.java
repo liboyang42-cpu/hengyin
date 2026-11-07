@@ -3,6 +3,10 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MemberCapability;
+import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.UmsMemberAddress;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
+import com.chengyinhub.business.mapper.UmsMemberAddressMapper;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.service.ICapabilityService;
@@ -38,10 +42,15 @@ public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreate
     private ICmsActivityService activityService;
     @Autowired
     private ICapabilityService capabilityService;
+    @Autowired
+    private UmsMemberMapper umsMemberMapper;
+    @Autowired
+    private UmsMemberAddressMapper umsMemberAddressMapper;
 
     @Override
     public void validate(Long memberId, RegistrationRequest request) {
         validateBuyer(memberId, request);
+        validatePurchaseProfile(memberId, request.getRealName());
         if (Integer.valueOf(1).equals(request.getOwnerType())) {
             CmsTopic topic = topicService.selectCmsTopicById(request.getOwnerId());
             if (topic != null && positive(topic.getSelfPlayPrice()) && !wechatPayService.isReady()) {
@@ -63,6 +72,28 @@ public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreate
         if (isClubOwned(request) && capabilityService.hasCapability(memberId, MemberCapability.CAP_MERCHANT)) {
             throw new RegistrationCheckoutException(403, MERCHANT_CLUB_SIGNUP_MESSAGE);
         }
+    }
+
+    @Override
+    public void validatePurchaseProfile(Long memberId, String realName) {
+        UmsMember member = memberId == null ? null : umsMemberMapper.selectUmsMemberById(memberId);
+        if (member == null || StringUtils.isBlank(member.getPhone())) {
+            throw new RegistrationCheckoutException(400, "请先绑定手机号，再购买");
+        }
+        // 姓名沿用结算页的参与人记录；昵称和自动生成的会员姓名不能证明已补全。
+        if (StringUtils.isNotBlank(realName)) {
+            java.util.List<UmsMemberAddress> participants = umsMemberAddressMapper.selectOwnedAddressList(memberId);
+            if (participants != null) {
+                for (UmsMemberAddress participant : participants) {
+                    if (participant != null && memberId.equals(participant.getMemberId())
+                            && Integer.valueOf(0).equals(participant.getDelFlag())
+                            && realName.trim().equals(StringUtils.trim(participant.getFullName()))) {
+                        return;
+                    }
+                }
+            }
+        }
+        throw new RegistrationCheckoutException(400, "请先补全参与人姓名，再购买");
     }
 
     private void validateQuote(Long memberId, RegistrationRequest request) {
