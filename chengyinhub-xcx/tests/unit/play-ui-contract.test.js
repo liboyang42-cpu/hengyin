@@ -336,18 +336,47 @@ test('三模式完成卡继续使用真实腾讯地图展示完整路径', () =>
   assert.match(roamWxml, /template name="archRoute"[\s\S]*?archSegs/)
 })
 
-test('主题游玩只在玩家开始或前往时请求定位，并保留扫码降级', () => {
+test('主题游玩进页先说明定位用途，确认前不采集，并保留扫码降级', () => {
   const playJs = readXcx('pages/play/index.js')
   const playWxml = readXcx('pages/play/index.wxml')
   const loadData = playJs.slice(playJs.indexOf('  loadData(first) {'), playJs.indexOf('  applyPreviewData(data) {'))
   const previewData = playJs.slice(playJs.indexOf('  applyPreviewData(data) {'), playJs.indexOf('  normNode('))
 
-  assert.doesNotMatch(loadData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
+  // V3-11 进游戏先说明用途；真正的 SDK 采集仍只能从明确确认回调进入。
+  assert.doesNotMatch(loadData, /initLocation\(|wx\.getLocation/)
+  assert.match(loadData, /if \(!that\._entryLocationOffered && d\.registered !== false && that\._playable && !that\.data\.allDone\s*&& that\.data\.runState !== 'paused' && nodes\.some\(node => !node\.done && node\.lat && node\.lng\)\) \{\s*that\._entryLocationOffered = true;\s*that\.requestPlayLocation\(\)/)
   assert.doesNotMatch(previewData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
   assert.match(playJs, /startNav\(node\)\s*\{[\s\S]*?this\.requestPlayLocation\(\)/)
   assert.match(playJs, /onScanArrive\(\)\s*\{[\s\S]*?this\.scanArrive\(node\)/)
-  assert.match(playJs, /content:\s*'仅在你主动开始游玩后/)
+  assert.match(playJs, /content:\s*'仅在本游玩页前台获取位置[^']*锁屏、切到后台、暂停、结束或离开后停止/)
   assert.match(playWxml, /bindtap="onScanArriveFromTools"[^>]*aria-label="扫码到达"/)
+})
+
+test('真实游玩定位方法在用途弹窗前和取消后均零 GPS，明确确认才调用 SDK', (t) => {
+  const previous = { getApp: global.getApp, Page: global.Page, wx: global.wx }
+  t.after(() => Object.assign(global, previous))
+  const dialogs = [], locations = []
+  let definition
+  global.getApp = () => ({ globalData: {}, getUserID: () => 7 })
+  global.Page = value => { definition = value }
+  global.wx = { getStorageSync: () => '', setStorageSync() {}, removeStorageSync() {},
+    showModal: options => dialogs.push(options), getLocation: options => locations.push(options) }
+  const file = require.resolve('../../pages/play/index.js')
+  delete require.cache[file]
+  require(file)
+  const page = Object.assign({}, definition, { data: structuredClone(definition.data) })
+  page.data.topicId = 31
+  page.setData = patch => Object.assign(page.data, patch)
+  page.requestPlayLocation()
+  assert.equal(dialogs.length, 1)
+  assert.equal(locations.length, 0)
+  dialogs[0].success({ confirm: false })
+  assert.equal(locations.length, 0)
+  assert.equal(page.data.gpsOk, false)
+  page.requestPlayLocation()
+  dialogs[1].success({ confirm: true })
+  assert.equal(locations.length, 1, 'positive control must reach the real SDK caller after consent')
+  assert.equal(locations[0].type, 'gcj02')
 })
 
 // 2026-09-22 用户裁决「play 页去地图去底栏,城市定向打开即故事流」:

@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
 import com.chengyinhub.business.service.impl.TemplatePublishServiceImpl;
+import com.chengyinhub.business.service.support.TemplateAdoptionService;
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -204,7 +205,8 @@ class TemplateAdoptSecretBackfillTest {
         ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
         when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
         var receipts = mock(com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper.class);
-        ReflectionTestUtils.setField(service, "adoptionReceiptMapper", receipts);
+        ReflectionTestUtils.setField(service, "adoptionService", new TemplateAdoptionService(receipts, service,
+                mock(org.springframework.transaction.PlatformTransactionManager.class)));
         String hash = com.chengyinhub.business.service.support.TemplateAdoptionService
                 .inheritedAdvancedConfigHash(inserted.get().getAdvancedConfigJson());
         when(receipts.countCompletedInheritedConfig(7L, 91L, 9001L, hash)).thenReturn(1);
@@ -235,7 +237,8 @@ class TemplateAdoptSecretBackfillTest {
         ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
         when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
         var receipts = mock(com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper.class);
-        ReflectionTestUtils.setField(service, "adoptionReceiptMapper", receipts);
+        ReflectionTestUtils.setField(service, "adoptionService", new TemplateAdoptionService(receipts, service,
+                mock(org.springframework.transaction.PlatformTransactionManager.class)));
         String hash = com.chengyinhub.business.service.support.TemplateAdoptionService
                 .inheritedAdvancedConfigHash(inserted.get().getAdvancedConfigJson());
         CmsTemplatePublishRequest edit = adoptedRequest(9001L, LOCKED_TIMER_CONFIG);
@@ -268,7 +271,8 @@ class TemplateAdoptSecretBackfillTest {
         ICapabilityGuard guard = (ICapabilityGuard) ReflectionTestUtils.getField(service, "capabilityGuard");
         when(guard.checkAdvancedMechanics(any(), any())).thenReturn("当前身份未解锁分支或计时能力");
         var receipts = mock(com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper.class);
-        ReflectionTestUtils.setField(service, "adoptionReceiptMapper", receipts);
+        ReflectionTestUtils.setField(service, "adoptionService", new TemplateAdoptionService(receipts, service,
+                mock(org.springframework.transaction.PlatformTransactionManager.class)));
         var failure = new org.springframework.dao.DataAccessResourceFailureException("controlled receipt read failure");
         when(receipts.countCompletedInheritedConfig(any(), any(), any(), any())).thenThrow(failure);
         CmsTemplatePublishRequest edit = adoptedRequest(9001L, LOCKED_TIMER_CONFIG);

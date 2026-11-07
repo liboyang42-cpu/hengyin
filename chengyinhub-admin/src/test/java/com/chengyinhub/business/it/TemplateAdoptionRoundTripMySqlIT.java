@@ -69,12 +69,12 @@ class TemplateAdoptionRoundTripMySqlIT {
         ReflectionTestUtils.setField(target, "auditTaskService", audit);
         capabilities = mock(ICapabilityGuard.class);
         ReflectionTestUtils.setField(target, "auditTaskMapper", mock(AuditTaskMapper.class)); ReflectionTestUtils.setField(target, "capabilityGuard", capabilities);
-        ReflectionTestUtils.setField(target, "adoptionReceiptMapper", sql.getMapper(TemplateAdoptionReceiptMapper.class));
         ReflectionTestUtils.setField(target, "mediaPublicationGuard", MediaPublicationMySqlFixture.guard(sql, members));
         ProxyFactory proxy = new ProxyFactory(target); proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source), new AnnotationTransactionAttributeSource()));
         publish = (ITemplatePublishService) proxy.getProxy();
         adoption = new TemplateAdoptionService(sql.getMapper(TemplateAdoptionReceiptMapper.class), publish,
                 new DataSourceTransactionManager(source));
+        ReflectionTestUtils.setField(target, "adoptionService", adoption);
     }
     @AfterAll static void close() throws Exception {
         try { if (source != null) source.forceCloseAll(); }

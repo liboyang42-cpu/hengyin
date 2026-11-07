@@ -73,6 +73,9 @@ public class TemplateAdoptionService {
             throw new IllegalArgumentException("采用玩法配置无法计算版本", e);
         }
     }
+    public boolean hasCompletedInheritedConfig(Long owner, Long draftId, Long sourceId, String configHash) {
+        return mapper.countCompletedInheritedConfig(owner, draftId, sourceId, configHash) > 0;
+    }
     // Versioned fingerprint of author fields copied by the existing adoption service, not counters or audit timestamps.
     String sourceVersion(CmsTemplateLibrary source) {
         CmsTemplatePublishRequest copy = new CmsTemplatePublishRequest();

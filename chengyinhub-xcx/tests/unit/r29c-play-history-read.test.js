@@ -54,8 +54,32 @@ function pageFixture() {
   page._themePalette = value => value;
   page._chapterTime = () => '';
   page.closeChapterFull = () => { page._chapterReadCursor = null; page.data.chapterFull = false; };
-  return { page, requests, stored, actor };
+  return { page, requests, stored, actor, closeChapterFull: config.closeChapterFull };
 }
+
+for (const liveId of ['2', 'missing', null]) test('closing history preserves the live chapter boundary: ' + liveId, () => {
+  const { page, requests, stored, closeChapterFull } = pageFixture();
+  const cursor = liveId && { liveId }, chapter = page.data.chapter, patches = [];
+  page._chapterReadCursor = cursor;
+  page.data.chapterFull = true;
+  page.data.chapterGate.show = true;
+  page.closeAlbum = page._stopStoryDust = () => {};
+  const setData = page.setData;
+  page.setData = patch => { patches.push(patch); setData(patch); };
+  closeChapterFull.call(page);
+  assert.equal(patches.length, 1, 'closing sends exactly one synchronous patch');
+  assert.deepEqual(Object.keys(patches[0]).sort(), liveId === '2'
+    ? ['chapter', 'chapterFull', 'chapterGate.show'] : ['chapterFull', 'chapterGate.show']);
+  assert.equal(page.data.chapterFull, false);
+  assert.equal(page.data.chapterGate.show, false);
+  assert.equal(page._chapterReadCursor, liveId === 'missing' ? cursor : null);
+  if (liveId === '2') {
+    assert.equal(page.data.chapter.id, '2');
+    assert.equal(page.data.chapter.blocks, page.data.chapterCards[1].blocks);
+  } else assert.equal(page.data.chapter, chapter, 'missing live card must not overwrite the chapter');
+  assert.deepEqual(requests, []);
+  assert.deepEqual(stored, []);
+});
 
 test('snapshot whitelist keeps exact IDs, original results and deeply immutable copies', () => {
   const source = response(), saved = historyView.project(source, TARGET, '12');

@@ -38,6 +38,40 @@ class TemplateAdoptionServiceTest {
                 TemplateAdoptionService.inheritedAdvancedConfigHash(""));
     }
 
+    @Test void completedInheritanceQueryPreservesOwnerDraftSourceAndConfigFingerprint() {
+        var mapper = mock(TemplateAdoptionReceiptMapper.class);
+        var service = new TemplateAdoptionService(mapper, mock(ITemplatePublishService.class),
+                mock(PlatformTransactionManager.class));
+        Long draftId = 9007199254740993L;
+        String hash = "a".repeat(64);
+        when(mapper.countCompletedInheritedConfig(7L, draftId, 9L, hash)).thenReturn(2);
+
+        assertTrue(service.hasCompletedInheritedConfig(7L, draftId, 9L, hash));
+        assertFalse(service.hasCompletedInheritedConfig(8L, draftId, 9L, hash));
+        assertFalse(service.hasCompletedInheritedConfig(7L, draftId + 1, 9L, hash));
+        assertFalse(service.hasCompletedInheritedConfig(7L, draftId, 10L, hash));
+        assertFalse(service.hasCompletedInheritedConfig(7L, draftId, 9L, "b".repeat(64)));
+        verify(mapper).countCompletedInheritedConfig(7L, draftId, 9L, hash);
+        verify(mapper).countCompletedInheritedConfig(8L, draftId, 9L, hash);
+        verify(mapper).countCompletedInheritedConfig(7L, draftId + 1, 9L, hash);
+        verify(mapper).countCompletedInheritedConfig(7L, draftId, 10L, hash);
+        verify(mapper).countCompletedInheritedConfig(7L, draftId, 9L, "b".repeat(64));
+        verifyNoMoreInteractions(mapper);
+    }
+
+    @Test void completedInheritanceQueryPropagatesStorageFailure() {
+        var mapper = mock(TemplateAdoptionReceiptMapper.class);
+        var service = new TemplateAdoptionService(mapper, mock(ITemplatePublishService.class),
+                mock(PlatformTransactionManager.class));
+        var failure = new org.springframework.dao.DataAccessResourceFailureException("controlled receipt read failure");
+        when(mapper.countCompletedInheritedConfig(7L, 91L, 9L, "a".repeat(64))).thenThrow(failure);
+
+        assertSame(failure, assertThrows(org.springframework.dao.DataAccessResourceFailureException.class,
+                () -> service.hasCompletedInheritedConfig(7L, 91L, 9L, "a".repeat(64))));
+        verify(mapper).countCompletedInheritedConfig(7L, 91L, 9L, "a".repeat(64));
+        verifyNoMoreInteractions(mapper);
+    }
+
     @Test void sourceCopyCompletesExactReceiptAndReplayNeverCreatesAnotherDraft() {
         var mapper = mock(TemplateAdoptionReceiptMapper.class);
         var drafts = mock(ITemplatePublishService.class);

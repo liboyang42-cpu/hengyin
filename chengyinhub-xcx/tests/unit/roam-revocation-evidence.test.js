@@ -58,6 +58,9 @@ function harness(noBackground) {
   require('../../pages/privacy/index.js')
   h.privacy = { ...definition, data: JSON.parse(JSON.stringify(definition.data)), setData: h.roam.setData }
   h.tracker = require('../../utils/location/bg-tracker.js')
+  h.acquireOptions = new Map()
+  const acquire = h.tracker.acquire
+  h.tracker.acquire = (key, options) => { h.acquireOptions.set(key, options); return acquire(key, options) }
   const revoke = h.tracker.revoke
   h.tracker.revoke = key => { h.revokedOrder = ++h.order; return revoke(key) }
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
@@ -117,15 +120,15 @@ async function receiptFor(kind, branch = 'success') {
   const before = h.frame(); const playBefore = h.tracker.hasOwner(h.playKey || h.play._trackKey())
   if (kind.startsWith('record-failed')) h.rejectRecord = true
   h.privacy.withdrawRoamLocationConsent(); await settle()
-  if (['bg-restart', 'fg-restart', 'both-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) h.startPlay()
+  if (['fg-restart', 'fg-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) h.startPlay()
   if (kind !== 'cold' && kind !== 'already-stopped' && kind !== 'retained' && kind !== 'record-failed-retained' && !kind.startsWith('pending-play')) h.fire(h.calls.find(c => c.method === 'stopLocationUpdate' && c.outcome === 'pending'))
   if (kind === 'inflight-success' || kind === 'inflight-denied') {
     h.fire(h.calls[0], kind === 'inflight-success' ? 'success' : 'denied')
     if (kind === 'inflight-success') h.fire(h.calls.at(-1))
   }
-  if (['bg-restart', 'fg-restart', 'both-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) {
-    h.fire(h.calls.at(-1), ['bg-restart', 'fg-only-restart'].includes(kind) ? 'success' : 'denied')
-    if (['fg-restart', 'both-denied'].includes(kind)) h.fire(h.calls.at(-1), kind === 'fg-restart' ? 'success' : 'denied')
+  if (['fg-restart', 'fg-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) {
+    assert.equal(h.calls.at(-1).method, 'startLocationUpdate')
+    h.fire(h.calls.at(-1), ['fg-restart', 'fg-only-restart'].includes(kind) ? 'success' : 'denied')
   }
   if (kind.startsWith('pending-play')) {
     h.fire(h.calls[0], kind === 'pending-play-bg' ? 'success' : 'denied')
@@ -133,8 +136,8 @@ async function receiptFor(kind, branch = 'success') {
   }
   const scenario = ({ cold: 'no-active-collection', stopped: 'stop-confirmed', 'already-stopped': 'no-active-collection', 'inflight-success': 'stop-confirmed',
     'inflight-denied': 'stop-confirmed', 'prior-stop': 'prior-stop-completed', retained: 'independent-play-retained',
-    'bg-restart': 'independent-play-bg-restarted', 'fg-restart': 'independent-play-fg-restarted',
-    'both-denied': 'independent-play-both-denied', 'record-failed': 'record-failed', 'record-failed-retained': 'record-failed',
+    'fg-restart': 'independent-play-fg-only-restarted', 'fg-denied': 'independent-play-fg-only-denied',
+    'record-failed': 'record-failed', 'record-failed-retained': 'record-failed',
     'fg-only-restart': 'independent-play-fg-only-restarted', 'fg-only-denied': 'independent-play-fg-only-denied',
     'pending-play-bg': 'independent-play-pending-started', 'pending-play-fg': 'independent-play-pending-started',
     'pending-play-denied': 'independent-play-pending-denied' })[kind]
@@ -147,6 +150,8 @@ async function receiptFor(kind, branch = 'success') {
     play: { key: h.playKey || h.play._trackKey(), ...h.playAtStart, ownerBefore: playBefore, ownerAfter: h.tracker.hasOwner(h.playKey || h.play._trackKey()),
       watchingAfter: !!h.play._watching, ownerSource: ref('utils/location/bg-tracker.js#hasOwner:' + (h.playKey || h.play._trackKey())),
       permissionSource: ref('pages/play/index.js#requestPlayLocation'), backgroundApiAvailable: typeof global.wx.startLocationUpdateBackground === 'function',
+      foregroundOnlySource: { ...ref('pages/play/index.js#watchLocation'), keyValue: h.playKey,
+        value: h.acquireOptions.get(h.playKey)?.foregroundOnly },
       availabilitySource: { ...ref('wx.startLocationUpdateBackground#available'), value: typeof global.wx.startLocationUpdateBackground === 'function' } } }
   const latest = { ...h.recordEcho, ...(kind.startsWith('record-failed') ? { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } : {}) }
   proof.sourceRefs.recordRequest = { ...ref('utils/compliance/consent-client.js#record'), requestIdValue: h.recordRequest.body.requestId, startedOrderValue: h.recordRequest.startedOrder }
@@ -165,12 +170,17 @@ async function receiptFor(kind, branch = 'success') {
 function captureFor(receipt) { return { verified: true, captureId: 'unit-capture', sourceDigest, principalFingerprint: principal,
   readbackDigest: crypto.createHash('sha256').update(stableJson(receipt)).digest('hex') } }
 function validate(receipt, options) { return validateBranchReceipt(action, receipt.branch, receipt, fixture, options || captureFor(receipt)) }
-for (const kind of ['cold', 'stopped', 'already-stopped', 'inflight-success', 'inflight-denied', 'prior-stop', 'retained', 'bg-restart', 'fg-restart']) {
+for (const kind of ['cold', 'stopped', 'already-stopped', 'inflight-success', 'inflight-denied', 'prior-stop', 'retained', 'fg-restart']) {
   test('真实caller/runtime回读形态可通过固定合同：' + kind, async () => { const { receipt } = await receiptFor(kind); validate(receipt) })
 }
-test('真实BG拒绝→FG成功和两者都拒绝匹配各自capability错误枝', async () => {
-  validate((await receiptFor('fg-restart', 'startLocationUpdateBackground-denied')).receipt)
-  validate((await receiptFor('both-denied', 'startLocationUpdate-denied')).receipt)
+test('真实play只申请前台定位，拒绝匹配前台capability错误枝', async () => {
+  validate((await receiptFor('fg-denied', 'startLocationUpdate-denied')).receipt)
+  const { receipt } = await receiptFor('fg-restart')
+  assert.equal(receipt.observed.roamRevocation.play.backgroundApiAvailable, true)
+  for (const branch of ['startLocationUpdateBackground-denied', 'startLocationUpdate-denied']) {
+    const changed = structuredClone(receipt); changed.branch = branch
+    assert.throws(() => validate(changed), /UNVERIFIED/)
+  }
 })
 test('真实record未确认也必须撤回本机用途，不能冒充审计成功', async () => {
   const { receipt } = await receiptFor('record-failed', 'error'); validate(receipt)
@@ -219,13 +229,13 @@ test('缺来源、SDK未知、latest错请求或旧owner/listener/epoch一律UNV
 })
 test('GPS成功坐标门保留：stop无坐标合法，BG/FG缺坐标和伪造拒绝为成功判红', async () => {
   validate((await receiptFor('stopped')).receipt)
-  for (const kind of ['bg-restart', 'fg-restart']) {
+  for (const kind of ['pending-play-bg', 'fg-restart']) {
     const { receipt } = await receiptFor(kind)
     delete receipt.observed.roamRevocation.sdk.calls.at(-1).latitude
     assert.throws(() => validate(receipt), /GPS坐标/)
   }
-  const { receipt } = await receiptFor('fg-restart')
-  receipt.observed.capabilities.startLocationUpdateBackground.outcome = 'success'
+  const { receipt } = await receiptFor('fg-denied', 'startLocationUpdate-denied')
+  receipt.observed.capabilities.startLocationUpdate.outcome = 'success'
   assert.throws(() => validate(receipt), /不符实际callback/)
 })
 
@@ -245,7 +255,7 @@ test('独立play许可/owner原始capture缺失或GPS在SDK终态之前都不能
     r => { r.observed.roamRevocation.sdk.calls.at(-1).gpsSample.observedOrder = 0 },
     r => { r.observed.roamRevocation.sdk.calls.at(-1).gpsSample.callId = 'old-sdk' },
   ]) {
-    const { receipt } = await receiptFor('bg-restart'); mutation(receipt)
+    const { receipt } = await receiptFor('fg-restart'); mutation(receipt)
     assert.throws(() => validate(receipt), /UNVERIFIED/)
   }
 })
@@ -256,6 +266,31 @@ test('删掉撤回前在途SDK历史不能用stop后的false快照冒充终态',
   proof.sdk.calls = proof.sdk.calls.filter(call => call.method === 'stopLocationUpdate')
   delete receipt.observed.capabilities.startLocationUpdateBackground
   assert.throws(() => validate(receipt), /在途历史未回读/)
+})
+
+test('前台恢复仍绑定真实申请用途、来源与stop终态，旧BG形态不能冒充', async () => {
+  const { receipt } = await receiptFor('fg-restart')
+  validate(receipt)
+  const proof = receipt.observed.roamRevocation
+  const stop = proof.sdk.calls.find(call => call.method === 'stopLocationUpdate')
+  assert.ok(proof.sdk.calls.at(-1).startedOrder > stop.completedOrder)
+  assert.equal(proof.sdk.calls.at(-1).method, 'startLocationUpdate')
+  for (const mutation of [
+    p => { delete p.play.foregroundOnlySource },
+    p => { p.play.foregroundOnlySource.value = false },
+    p => { p.play.foregroundOnlySource.keyValue = 'other-owner' },
+    p => { p.play.foregroundOnlySource.sourceDigest = 'b'.repeat(64) },
+    p => { p.play.foregroundOnlySource.source = 'pages/roam/index.js#_startReal' },
+    p => { p.play.availabilitySource.value = false },
+    p => { p.sdk.calls.at(-1).startedOrder = stop.completedOrder },
+    p => { p.sdk.calls.find(call => call.method === 'stopLocationUpdate').outcome = 'error' },
+    p => { p.scenario = 'independent-play-bg-restarted' },
+    p => { p.scenario = 'independent-play-fg-restarted' },
+    p => { p.scenario = 'independent-play-both-denied' },
+  ]) {
+    const changed = structuredClone(receipt); mutation(changed.observed.roamRevocation)
+    assert.throws(() => validate(changed), /UNVERIFIED/)
+  }
 })
 
 test('peer实证FG-only和获独立许可的旧pending代际正常保留，不伪造BG拒绝/补停', async () => {

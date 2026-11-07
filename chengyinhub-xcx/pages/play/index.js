@@ -4093,8 +4093,8 @@ Page({
     if (cursor) this.finishChapterVideo(null, false);
     const liveCard = cursor && (this.data.chapterCards || []).find(c => String(c.id) === String(cursor.liveId));
     this._chapterReadCursor = cursor && !liveCard ? cursor : null;
-    this.setData(Object.assign({ chapterFull: false, 'chapterGate.show': false },
-      liveCard ? { chapter: this._chapterFromCard(liveCard) } : {}));
+    if (liveCard) this.setData({ chapterFull: false, 'chapterGate.show': false, chapter: this._chapterFromCard(liveCard) });
+    else this.setData({ chapterFull: false, 'chapterGate.show': false });
   },
 
   continueChapterStory() {

@@ -1,5 +1,4 @@
-// NOT_RUN: local verification deferred by user.
-// Real Page methods, deferred request callbacks and local storage exercise lost-write responses.
+// Real Page methods and deferred request callbacks exercise owner-list read fences.
 const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -66,23 +65,57 @@ function makePage() {
   return inst;
 }
 
-test('own-story draft responses are account and request-generation fenced through showTemp', () => {
+test('showTemp clears retired story drafts without requesting private draft data', () => {
   const page = makePage();
   page.data.storyDraftList = [{ id:1, title:'cached' }];
   page.showTemp();
+  assert.deepEqual(page.data.storyDraftList, []);
+  assert.equal(sent.length, 0);
+});
+
+test('own published-template responses are account and unload fenced through getTempList', () => {
+  const page = makePage();
+  page.data.tempList = [{ id:1, title:'cached' }];
+  page.getTempList();
   const old = sent[0];
-  assert.deepEqual(page.data.storyDraftList, []);
+  assert.equal(old.url, '/api/template/my-list');
+  assert.equal(old.method, 'POST');
+  assert.equal(old.data.is_quote, 1);
+  assert.equal(old.data.draft_status, 1);
+  assert.deepEqual(page.data.tempList, []);
   memberId = 43;
-  old.success({ code:200, data:{ rows:[{ id:42, title:'A private draft' }] } });
-  assert.deepEqual(page.data.storyDraftList, []);
-  page.showTemp();
-  sent[1].success({ code:200, data:{ rows:[{ id:43, title:'B own draft' }] } });
+  old.success({ code:200, data:{ rows:[{ id:42, title:'A own template', draftStatus:1, status:1 }] } });
+  assert.deepEqual(page.data.tempList, []);
+  page.getTempList();
+  sent[1].success({ code:200, data:{ rows:[{ id:43, title:'B own template', draftStatus:1, status:1 }] } });
   old.fail();
-  assert.equal(page.data.storyDraftList[0].id, 43);
-  page.showTemp();
+  assert.equal(page.data.tempList[0].id, 43);
+  page.getTempList();
   page.destroyPreviewAudio = () => {};
   page.onUnload();
   const before = JSON.stringify(page.data);
-  sent[2].success({ code:200, data:{ rows:[{ id:99 }] } });
+  sent[2].success({ code:200, data:{ rows:[{ id:99, draftStatus:1, status:1 }] } });
+  assert.equal(JSON.stringify(page.data), before);
+  sent[2].fail();
+  assert.equal(JSON.stringify(page.data), before);
+});
+
+test('own-template reads reject superseded same-account requests and changed owner scope', () => {
+  const page = makePage();
+  const response = id => ({ code:200, data:{ rows:[{ id, draftStatus:1, status:1 }] } });
+  page.getTempList();
+  page.getTempList();
+  sent[1].success(response(2));
+  sent[0].success(response(1));
+  sent[0].fail();
+  assert.equal(page.data.tempList[0].id, 2);
+  page.data.operationScope = 'MERCHANT';
+  page.getTempList();
+  assert.equal(sent[2].data.scope, 'MERCHANT');
+  page.data.operationScope = '';
+  const before = JSON.stringify(page.data);
+  sent[2].success(response(3));
+  assert.equal(JSON.stringify(page.data), before);
+  sent[2].fail();
   assert.equal(JSON.stringify(page.data), before);
 });

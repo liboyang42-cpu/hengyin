@@ -127,6 +127,8 @@ const MATRIX = [
   ['utils/game-session-client.js', "url: '/api/game/session/receipt'", 'required', 'player/merchant/club', 'activity-perspective-access'],
   ['utils/game-session-client.js', "url: exported ? '/api/game/session/shared/export'", 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
+  // R29C:只读登录会员的原会话快照，服务端逐项校验会话/会员/场次/主题及历史可读性。
+  ['pages/play/index.js', "req('/api/play/history'", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
      行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
   ['pages/play/index.js', "req('/api/play/nodes', 'GET', params).then((res) => { // 补拉", 'required', 'member', 'current-session'],
@@ -446,7 +448,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 39 叠加本线 p74 20km 兜底读一处,39 → 40。
   // 2026-10-30 #686 故事流顶栏:案件册两处 + 各站奖励一处 req 包装 GET(本人本局,已逐条入 MATRIX),41 → 44。
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
-  assert.equal(wrapperCount, 45, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // R29C:原会话历史 GET /api/play/history 一处，按登录会员与原会话归属只读，45 → 46。
+  assert.equal(wrapperCount, 46, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
@@ -567,6 +570,7 @@ function playGetSources() {
   const support = 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/';
   return {
     controller: fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8'),
+    history: java(app + 'play/PlayHistoryQueryApplication.java'),
     preference: java(app + 'play/PlayPreferenceApplication.java'),
     player: java(app + 'play/PlayPlayerQueryApplication.java'),
     context: java(app + 'play/PlayNodeContext.java'),
@@ -607,6 +611,39 @@ function actorEntry(source, methodName) {
   inOrder(method, 'Long memberId = actorMemberId;', 'if (memberId <= 0) return error("请先登录");');
   return method;
 }
+
+function assertHistoryGetContract(s) {
+  assert.match(javaMethod(s.controller, 'public AjaxResult history('),
+    /return playHistoryQueryApplication\.history\(currentMemberId\(\), activityId, topicId, routeSessionId\);/);
+  const method = javaMethod(s.history, 'public AjaxResult history(');
+  inOrder(method,
+    'if (memberId == null || memberId <= 0) return error("请先登录");',
+    'TopicRouteSession session = historySessionMapper.selectAccessibleById(routeSessionId, memberId);',
+    'if (session == null || !routeSessionId.equals(session.getId()) || !memberId.equals(session.getMemberId())',
+    '|| !activityId.equals(session.getActivityId()) || !topicId.equals(session.getTopicId()))',
+    'return error("本局不存在或无权查看");',
+    'if (topic == null || playCompletionFacts.topicHistoryBlocked(topic)) return error("历史内容不可用");',
+    'snapshot = json.readTree(session.getConfigSnapshotJson());');
+}
+
+test('原会话历史 GET 绑定登录会员、原会话归属及主题历史可读性，缺任一守卫判红', () => {
+  const source = playGetSources();
+  assertHistoryGetContract(source);
+  for (const [file, guard] of [
+    ['controller', 'currentMemberId(), activityId, topicId, routeSessionId'],
+    ['history', 'memberId == null || memberId <= 0'],
+    ['history', 'selectAccessibleById(routeSessionId, memberId)'],
+    ['history', '!routeSessionId.equals(session.getId())'],
+    ['history', '!memberId.equals(session.getMemberId())'],
+    ['history', '!activityId.equals(session.getActivityId())'],
+    ['history', '!topicId.equals(session.getTopicId())'],
+    ['history', 'playCompletionFacts.topicHistoryBlocked(topic)'],
+  ]) {
+    const changed = { ...source, [file]: source[file].replace(guard, 'false') };
+    assert.notEqual(changed[file], source[file]);
+    assert.throws(() => assertHistoryGetContract(changed), assert.AssertionError);
+  }
+});
 
 function assertPreferenceGetContract(s) {
   const controller = javaMethod(s.controller, 'public AjaxResult preference(');

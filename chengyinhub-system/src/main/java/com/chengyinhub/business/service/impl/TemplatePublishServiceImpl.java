@@ -3,7 +3,6 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
 import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
-import com.chengyinhub.business.mapper.TemplateAdoptionReceiptMapper;
 import com.chengyinhub.business.service.support.TemplateAdoptionService;
 import com.chengyinhub.business.mapper.AuditTaskMapper;
 
@@ -40,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,7 +62,8 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     private ICapabilityGuard capabilityGuard;
 
     @Autowired
-    private TemplateAdoptionReceiptMapper adoptionReceiptMapper;
+    @Lazy // Adoption depends on this draft service.
+    private TemplateAdoptionService adoptionService;
 
     @Autowired
     private ICouponRewardAuthorizationService couponRewardAuthorizationService;
@@ -798,8 +799,8 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 || existing.getOriginalTemplateId() <= 0) return false;
         // 只有成功采用事务写入的不可变基线可信；来源 ID 或客户端复制标记都不是能力授权。
         String configHash = TemplateAdoptionService.inheritedAdvancedConfigHash(request.getAdvancedConfigJson());
-        return adoptionReceiptMapper.countCompletedInheritedConfig(memberId, existing.getId(),
-                existing.getOriginalTemplateId(), configHash) > 0;
+        return adoptionService.hasCompletedInheritedConfig(memberId, existing.getId(),
+                existing.getOriginalTemplateId(), configHash);
     }
 
     /**
