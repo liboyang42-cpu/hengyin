@@ -4689,7 +4689,7 @@ Page({
   _coverOf(chapterCover, nodes) {
     if (chapterCover) return chapterCover;
     const withImg = (nodes || []).find((n) => n && n.imgUrl);
-    return withImg ? String(withImg.imgUrl).split(',')[0] : '';
+    return withImg ? String(withImg.imgUrl).split(/[,;]/)[0] : '';
   },
 
   buildChapter(d, nodes) {
@@ -4921,6 +4921,8 @@ Page({
     if (this._chapterReadCursor && history) {
       card = history.chapters.find(chapter => chapter.id === String(card.id)) || card;
     }
+    const coverNodes = !this._chapterReadCursor && !card.history && card.id != null
+      ? this.data.nodes.filter(node => String(node.chapterId) === String(card.id)) : [];
     return {
       id: card.id,
       complete: card.history === true || chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes) === 'completed',
@@ -4928,7 +4930,7 @@ Page({
       idxLabel: card.meta,
       name: card.title,
       description: card.description || card.sub || '',
-      cover: card.cover || '',
+      cover: this._coverOf(card.cover || '', coverNodes),
       mileage: card.mileage || '',
       timeText: card.timeText || '',
       blocks: card.blocks || null,

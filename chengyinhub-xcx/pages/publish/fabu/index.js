@@ -24,6 +24,11 @@ function writeAiDraft(draft) {
 }
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const analytics = require('../../../utils/analytics.js');
+const { firstImage: firstTemplateImage } = require('../../../utils/discover-search.js');
+function templateCardImage(item) {
+  if (!item.imgUrl) return item;
+  return Object.assign({}, item, { imgUrl: app.getImgUrl(firstTemplateImage(item.imgUrl)) });
+}
 const roleGuard = require('../../../utils/roleGuard.js');
 const { createErrorBag, nonEmpty } = require('../utils/publish/publish-validator.js');
 const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeExplorationValidityScheduleIssues } = require('../utils/publish/publish-ticket-schedule.js');
@@ -9148,7 +9153,7 @@ Page({
         if (new Set(data.rows.map(item => String(item.id))).size !== data.rows.length
           || data.rows.some(item => !templateAdoption.id(item.id)
           || seen.has(String(item.id))) || (!data.rows.length && received < total)) { fail(); return; }
-        data.rows.forEach(item => { seen.add(String(item.id)); rows.push(item); });
+        data.rows.forEach(item => { seen.add(String(item.id)); rows.push(templateCardImage(item)); });
         received += data.rows.length;
         if (received < total) { load(pageNum + 1); return; }
         that.setData({ publicTempList: rows, publicTempState: 'ready' });
@@ -9190,7 +9195,7 @@ Page({
         if (!isCurrent()) return;
         if (res.code == "200" && res.data && isRecordList(res.data.rows)) {
           that.setData({
-            tempList: res.data.rows.filter(item => Number(item.draftStatus) === 1 && Number(item.status) === 1),
+            tempList: res.data.rows.filter(item => Number(item.draftStatus) === 1 && Number(item.status) === 1).map(templateCardImage),
           });
           that._refreshSupportMatrix();
         } else {
