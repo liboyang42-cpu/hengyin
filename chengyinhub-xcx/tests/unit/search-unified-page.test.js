@@ -56,8 +56,32 @@ test('refresh replaces deleted results and current city rather than retaining ol
   h.page.runSearch(); assert.ok(!h.page.data.visibleResults.some(r => r.type === 'topic'));
   ok(h.unified()[1], [row(2, 'topic', '440100')], 1);
   assert.equal(h.page.data.visibleResults.length, 1); assert.equal(h.page.data.visibleResults[0].cityCode, '440100');
-  h.page.onHide(); h.page.onShow(); h.unified()[2].fail({ code: 503 });
-  assert.equal(h.page.data.visibleResults.length, 0); assert.match(h.page.data.contentError, /暂未开放/);
+  h.page.onHide(); h.page.onShow(); h.unified()[2].fail({ code: 500 });
+  assert.equal(h.page.data.visibleResults.length, 0); assert.match(h.page.data.contentError, /未完成/);
+});
+
+// Round5 #3:合并搜索开关默认关(503)时,已登录用户退回与游客相同的主题/活动列表请求,结果照常出现。
+test('unified off (503) falls back to topic/activity list requests for logged-in users, and stays off for later searches', () => {
+  const h = harness(); h.page.onLoad({ keyword: 'city' });
+  assert.ok(!h.requests.some(r => r.url === '/api/topic/list'));
+  h.unified()[0].fail({ code: 503 });
+  assert.equal(h.page.data.contentError, '');
+  assert.equal(h.page.data.contentEnabled, false);
+  assert.equal(h.page.data.contentFilterNotice, '', '开关关闭时不提示「清除筛选可搜帖文」');
+  const topic = h.requests.filter(r => r.url === '/api/topic/list');
+  const activity = h.requests.filter(r => r.url === '/api/activity/list');
+  assert.equal(topic.length, 1); assert.equal(activity.length, 1);
+  h.requests.filter(r => r.url !== '/api/search/unified').forEach(r => {
+    if (r.url === '/api/topic/list') r.success({ code: 200, data: { rows: [{ id: 1, title: 'city 主题' }], total: 1 } });
+    else if (r.url === '/api/activity/list') r.success({ code: 200, data: { rows: [{ id: 2, title: 'city 活动' }], total: 1 } });
+    else r.success({ code: 200, data: { rows: [], total: 0 } });
+  });
+  const types = h.page.data.visibleResults.map(r => r.type).sort();
+  assert.equal(types.join(','), 'activity,topic');
+  const before = h.unified().length;
+  h.page.runSearch();
+  assert.equal(h.unified().length, before, '短时间内不再先撞一次 503');
+  assert.equal(h.requests.filter(r => r.url === '/api/topic/list').length, 2);
 });
 
 test('input changes, account changes, hidden and unloaded pages reject late responses', () => {

@@ -25,8 +25,8 @@
   </view>
 
   <cy-skeleton wx:if="{{bootstrapState === 'checking-role'}}" type="card" count="2" />
-  <cy-state-shell class="bootstrap-state" wx:elif="{{bootstrapState === 'error'}}" kind="data" size="lg" fill
-    title="主理人资格未确认" sub="{{bootstrapError}}" primary="重新检查" bind:primary="retryBootstrap" auto-back custom-back bind:back="onExit" />
+  <cy-state-shell class="bootstrap-state" wx:elif="{{bootstrapState === 'error'}}" kind="{{bootstrapErrorKind || 'data'}}" size="lg" fill
+    title="{{bootstrapErrorKind === 'no-permission' ? '登录后申请成为主理人' : '主理人资格未确认'}}" sub="{{bootstrapError}}" primary="{{bootstrapErrorKind === 'no-permission' ? '登录' : '重新检查'}}" bind:primary="retryBootstrap" auto-back custom-back bind:back="onExit" />
   <!-- P-23:已有商家记录的账号进页就说明,并给去商家端的出口(不再填完 4 步才报错,也不自动退出) -->
   <cy-state-shell class="bootstrap-state" wx:elif="{{bootstrapState === 'merchant'}}" kind="no-permission" size="lg" fill
     title="这个账号已经是商家" sub="{{merchantActive ? '一个账号不能同时是商家和俱乐部主理人，切换到商家端继续经营' : '这个账号有商家入驻记录，一个账号不能同时是商家和俱乐部主理人'}}"

@@ -393,7 +393,10 @@ function normalizePlayerProjection(raw) {
     },
     nodes,
     mySubmissions,
-    teamActions: normalizeTeamActions(player.teamActions),
+    // Round5 #9:队友只下发 roleCode(作者配置的代码)。只有与我同一角色时才能给出角色名,其余不显示代码。
+    teamActions: normalizeTeamActions(player.teamActions).map((item) => (
+      item.roleCode && item.roleCode === safeText(role.code, 64) && safeText(role.name, 80)
+        ? Object.assign(item, { roleName: safeText(role.name, 80) }) : item)),
     leaderboard: normalizeLeaderboard(player.leaderboard),
     story: {
       visibleVariables: normalizeVisibleVariables(story.visibleVariables),

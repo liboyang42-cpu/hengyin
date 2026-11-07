@@ -153,14 +153,15 @@ test('详情票种:已开始/已结束的场次置灰并写明理由,卡点不�
     harness.instance.selectTicket({ currentTarget: { dataset: { id: '12' } } })
   })
   assert.deepEqual(blocked.shown, ['场次已结束', '场次已开始'], '理由要说准，不能一律报「已售罄」')
-  assert.equal(harness.instance.data.selectedTicketId, '', '过期场次不得被选中')
+  // Round5 #5:四张里只有 13 场可报名 → 进页即自动选中;点过期场次不得把选择换走
+  assert.equal(harness.instance.data.selectedTicketId, '13', '过期场次不得被选中')
 
   // ★开场即停售:进行中场次(id15,startTime 已过)现在同样不能被选中
   const inProgress = captureToasts(() => {
     harness.instance.selectTicket({ currentTarget: { dataset: { id: '15' } } })
   })
   assert.deepEqual(inProgress.shown, ['场次已开始'], '场次一到开始时间就不再放行，不再「进行中照样能买」')
-  assert.equal(harness.instance.data.selectedTicketId, '', '已开始场次不得被选中')
+  assert.equal(harness.instance.data.selectedTicketId, '13', '已开始场次不得被选中')
 
   const ok2 = captureToasts(() => {
     harness.instance.selectTicket({ currentTarget: { dataset: { id: '13' } } })

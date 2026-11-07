@@ -4,6 +4,10 @@
   <cy-loading-mask id="cy-loading" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
   <view wx:if="{{step === 'loading'}}" class="pc-page__state"><cy-skeleton /></view>
+  <view wx:elif="{{step === 'login'}}" class="pc-page__state">
+    <cy-empty kind="no-permission" title="登录后开始挑战" cta="登录" bind:cta="loginRetry" />
+    <view class="pc-page__exit" bindtap="exit" aria-role="button" aria-label="返回地图" hover-class="cy-pressed" hover-stay-time="80">返回地图</view>
+  </view>
   <view wx:elif="{{step === 'error'}}" class="pc-page__state">
     <cy-error title="挑战暂时打不开" sub="{{errorText}}" retry="重试" bind:retry="retry" />
     <view class="pc-page__exit" bindtap="exit" aria-role="button" aria-label="返回地图" hover-class="cy-pressed" hover-stay-time="80">返回地图</view>

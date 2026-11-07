@@ -6,6 +6,9 @@ const LIMIT = 20;
 const id = value => (typeof value !== 'number' || Number.isSafeInteger(value)) && /^[1-9][0-9]*$/.test(String(value || ''));
 const request = value => typeof value === 'string' && /^(?:sample:[a-f0-9]{64}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/.test(value);
 const states = ['PREPARED', 'IN_FLIGHT', 'UNKNOWN', 'NOT_SENT', 'PENDING', 'READY'];
+// Round5 #4:屏上只出中文(与 utils/wxs/display-label.wxs VOICE 同表)
+const STATE_LABELS = { PREPARED: '待发送', IN_FLIGHT: '发送中', UNKNOWN: '结果待确认', NOT_SENT: '未发出', PENDING: '处理中', READY: '已完成' };
+const stateLabel = state => STATE_LABELS[state] || '状态待确认';
 function key(member, scope) {
   if (!id(member) || !/^(?:merchant|node:[1-9][0-9]*)$/.test(scope)) throw Error('声音恢复身份无效');
   return 'npc_voice_v1:' + member + ':' + scope;
@@ -96,4 +99,4 @@ function context(app, storage, pageCurrent) {
   if (!login || !login.owner) throw Error('登录状态不可确认，请重新进入');
   return { member: login.owner, current: () => pageCurrent() && loginCurrent(app, storage, login) };
 }
-module.exports = { load, begin, dispatched, observe, recover, context, LIMIT };
+module.exports = { load, begin, dispatched, observe, recover, context, LIMIT, STATE_LABELS, stateLabel };

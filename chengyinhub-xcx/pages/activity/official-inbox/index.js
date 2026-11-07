@@ -66,10 +66,10 @@ Page({
         if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data)
             && res.data.every((item) => item && typeof item === 'object' && !Array.isArray(item))) {
           const invites = res.data.map((item) => {
-            const role = ROLE[item.role] || item.role || '—';
+            const role = ROLE[item.role] || '—';
             return Object.assign({}, item, {
               _partyKey: String(item.partyId == null ? '' : item.partyId),
-              _status: STATUS[item.status] || item.status || '状态待确认',
+              _status: STATUS[item.status] || '状态待确认',
               _role: role,
               _window: this.timeRange(item.windowStart, item.windowEnd),
               // BL-06 角色说明 / 承接名额 / 活动暂停提示,均来自收件箱已有字段

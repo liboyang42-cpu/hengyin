@@ -68,7 +68,7 @@ test('V-01 用户主动点定位失败才提示',()=>{
 })
 test('V-01 首页城市文字可点击重新定位',()=>{
   const wxml=require('fs').readFileSync(require('path').join(__dirname,'../../pages/index/index.wxml'),'utf8')
-  assert.match(wxml,/<view wx:if="\{\{city\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
+  assert.match(wxml,/<block wx:if="\{\{city\}\}">\s*<view wx:if="\{\{!cityPicker\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
 })
 
 test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
@@ -91,4 +91,43 @@ test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
 test('V-01 未登录有记住的城市时沿用记住的城市',()=>{
   store={home_city_last:'杭州市'};token=''
   const p=page();p.getHomeCityLocation();assert.equal(p.data.city,'杭州市')
+})
+
+// Round5 #7:点「暂不定位」后本机记住,之后启动不再自动弹;只有点城市才再问,同意后清掉记忆
+test('Round5 #7 拒绝定位后不再自动询问,点城市才再问', () => {
+  wx.removeStorageSync = key => { delete store[key] }
+  const noConsent = { docType: 'privacy_policy', scene: 'home_city_location', eventType: 'NONE' }
+  let p = page(); latest(p, noConsent)
+  assert.equal(modals.length, 1, '首次自动询问')
+  modals[0].success({ confirm: false, cancel: true })
+  assert.equal(store.home_city_location_declined, 1)
+  assert.equal(p.data.city, '上海市')
+  // 再次启动 / onShow:不发同意查询、不弹窗
+  requests = []; modals = []
+  p = page(); p.getHomeCityLocation()
+  assert.equal(requests.length, 0); assert.equal(modals.length, 0)
+  assert.equal(p.data.city, '上海市')
+  // 用户点城市:照常询问;同意后记忆清掉
+  p.onTapHomeCity()
+  requests.find(x => x.url === '/api/compliance/consents/latest').success({ code: 200, data: noConsent })
+  assert.equal(modals.length, 1)
+  modals[0].success({ confirm: true })
+  assert.equal(store.home_city_location_declined, undefined)
+})
+
+// Round5 #8:游客点首页城市 → 现有选城下拉(只改本地展示,不定位不上传);登录后回到点城市重新定位
+test('Round5 #8 游客首页城市用选城下拉,选中即改并记住;登录后恢复点城市定位', () => {
+  token = ''
+  const p = page(); p.getHomeCityLocation()
+  assert.equal(p.data.cityPicker, true)
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPickerIndex, 1)
+  p.onManualCityChange({ detail: { value: 4 } })
+  assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPickerIndex, 4); assert.equal(store.home_city_last, '杭州市')
+  assert.equal(requests.length, 0, '游客选城不发任何请求'); assert.equal(locations.length, 0)
+  token = 'normal-session'; p.getHomeCityLocation()
+  assert.equal(p.data.cityPicker, false)
+  const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/index/index.wxml'), 'utf8')
+  assert.match(wxml, /<view wx:if="\{\{!cityPicker\}\}"[^\n]*<\/view>\s*<cy-dropdown wx:else mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" panel-width="\{\{160\}\}" bind:change="onManualCityChange"[^>]*>\s*<text class="v3-hero-mem-loc">· \{\{city\}\}<\/text>/)
+  // 没有昵称的游客那一行不渲染,所以另有一行只放选城下拉
+  assert.match(wxml, /<view wx:if="\{\{userInfo\.nickname\}\}" class="v3-hero-mem flex-ac">[\s\S]*?<\/view>\s*<!--[^>]*-->\s*<view wx:elif="\{\{city && cityPicker\}\}" class="v3-hero-guest-city flex-ac">\s*<cy-dropdown mode="selector" range="\{\{manualCityOptions\}\}" value="\{\{cityPickerIndex\}\}" panel-width="\{\{160\}\}" bind:change="onManualCityChange"/)
 })

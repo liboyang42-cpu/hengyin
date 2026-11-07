@@ -41,6 +41,8 @@ function loadPage(mutate) {
   let clubLeader = false
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    // walk-fix Round5 #1:游客(无 userId)读不到快照改给登录入口;本文件测已登录账号的资格流程
+    getUserID: () => '7',
     getUserType: () => 0,
     getUserRole: () => 'player',
     setUserRole() {},

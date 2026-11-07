@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
 import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
 import com.chengyinhub.business.domain.dto.SafetyDecision;
+import com.chengyinhub.business.domain.vo.ActivityGuestProjection;
 import com.chengyinhub.business.domain.vo.ActivityInfoVO;
 import com.chengyinhub.business.domain.vo.PublicRegistrationSummaryVO;
 import com.chengyinhub.business.domain.vo.PublicTicketVO;
@@ -21,6 +22,7 @@ import com.chengyinhub.business.mapper.UmsCommentMapper;
 import com.chengyinhub.business.mapper.UmsMemberFollowMapper;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.util.ActivityLifecycle;
+import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -1184,6 +1186,9 @@ public class ApiActivityController extends BaseController {
     @Parameters({
             @Parameter(name = "id", description = "活动id")
     })
+    // walk-fix Round5 #6:owner「游客可浏览」—— 分享来的活动详情对游客只读开放。游客 member_id=0:
+    // 只看已审核在架的活动,响应走 ActivityGuestProjection(无报名名单、无评价人明细、无销售态),不记浏览。
+    @Anonymous
     public AjaxResult activityInfo(String id) {
         CmsActivity cmsActivity = new CmsActivity();
 
@@ -1203,6 +1208,10 @@ public class ApiActivityController extends BaseController {
         }
 
         cmsActivity = cmsActivityService.selectCmsActivityDetailById(activityId, member_id);
+        boolean guest = member_id == null || member_id <= 0;
+        if (guest && cmsActivity != null && !ActivityGuestProjection.publiclyVisible(cmsActivity)) {
+            return success(null);
+        }
         if (cmsActivity != null) {
             // M1-3 社群活动门卡:非俱乐部成员(且非创建者)分享落地看到加入引导,不下发完整详情
             if (cmsActivity.getClubId() != null && cmsActivity.getClubId() > 0) {
@@ -1347,15 +1356,17 @@ public class ApiActivityController extends BaseController {
                 activityInfoVO.setRegistrationList(viewRegistrations);
             }
 
-            //增加活动浏览量
-            TmsBrowseRecord tmsBrowseRecord = new TmsBrowseRecord();
-            tmsBrowseRecord.setMemberId(member_id);
-            // browse_type 约定:活动=2、主题=1(读侧见本类 :257/:383 与 ApiTopicController)
-            tmsBrowseRecord.setBrowseType(2L); //活动
-            tmsBrowseRecord.setTargetId(activityId);
-            tmsBrowseRecord.setTargetTitle(activityInfoVO.getName());
-            tmsBrowseRecord.setBrowseTime(new Date());
-            tmsBrowseRecordService.insertTmsBrowseRecord(tmsBrowseRecord);
+            //增加活动浏览量(游客不记:没有会员可归属)
+            if (!guest) {
+                TmsBrowseRecord tmsBrowseRecord = new TmsBrowseRecord();
+                tmsBrowseRecord.setMemberId(member_id);
+                // browse_type 约定:活动=2、主题=1(读侧见本类 :257/:383 与 ApiTopicController)
+                tmsBrowseRecord.setBrowseType(2L); //活动
+                tmsBrowseRecord.setTargetId(activityId);
+                tmsBrowseRecord.setTargetTitle(activityInfoVO.getName());
+                tmsBrowseRecord.setBrowseTime(new Date());
+                tmsBrowseRecordService.insertTmsBrowseRecord(tmsBrowseRecord);
+            }
 
 
             // 查询活动的销售金额
@@ -1400,6 +1411,7 @@ public class ApiActivityController extends BaseController {
 
             // U-168:报名页按服务器时刻置灰场次/票种/候补窗口,与建单闸同一把钟;只读、不入库。
             activityInfoVO.setServerNow(System.currentTimeMillis());
+            if (guest) ActivityGuestProjection.apply(activityInfoVO);
             return success(activityInfoVO);
         } else {
             if (member_id != null && member_id > 0) {
