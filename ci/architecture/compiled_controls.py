@@ -15,7 +15,7 @@ import re
 import subprocess
 import zipfile
 
-VERIFIER = "9041c5a64d5416f7bcb7d5d5a2eccb812911f03c"
+VERIFIER = "9cd002fb9db978d0ab1f5b6b0504481c4ae3571a"
 BASE = "e4e9f6042ba34fb571c3bcfbfe59e248000ef637"
 CASES = {
     "sdk-router": ("chengyinhub-system", "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",

@@ -100,7 +100,7 @@ class CompiledControlSourceTest(unittest.TestCase):
         self.assertIn(b"public interface", controls.LEAF_SOURCES["architecture.leafcontrol.EmptyInterface"])
 
     def test_exact_clean_verifier_matches_both_workflow_callers_and_loads_once(self):
-        expected = "9041c5a64d5416f7bcb7d5d5a2eccb812911f03c"
+        expected = "9cd002fb9db978d0ab1f5b6b0504481c4ae3571a"
         self.assertEqual(expected, controls.VERIFIER)
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertEqual([expected, expected], re.findall(r"(?m)^\s+ref: ([0-9a-f]{40})$", workflow))
@@ -113,7 +113,8 @@ class CompiledControlSourceTest(unittest.TestCase):
             spec.return_value.loader.exec_module.assert_called_once_with(module)
 
     def test_superseded_reviewed_verifiers_are_refused_before_loading_any_code(self):
-        for wrong in ("2181ad835d2c7e6b5d5ca0f9692849c890c7d7d1", "92fd81c313766b07087858f02967f430115642ab"):
+        for wrong in ("2181ad835d2c7e6b5d5ca0f9692849c890c7d7d1", "92fd81c313766b07087858f02967f430115642ab",
+                      "9041c5a64d5416f7bcb7d5d5a2eccb812911f03c"):
             with self.subTest(wrong=wrong), patch.object(controls, "git", return_value=wrong.encode()), \
                     patch.object(controls.importlib.util, "spec_from_file_location", side_effect=AssertionError("must not load superseded code")):
                 with self.assertRaises(ValueError): controls.load_verifier(Path("unused"))
