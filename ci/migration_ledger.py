@@ -55,6 +55,10 @@ EXPLICIT_AUXILIARY_SQL = {
     # review proposals; canonical executable migrations remain fully checked.
     "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
+    # B8 完局报表真库 IT 的建表资源:逐字摘录自各建表迁移,只在 IT 的临时 schema 里执行,
+    # 不进发布台账、不在生产跑。与上面几份同档。
+    "chengyinhub-admin/src/test/resources/it-schema/post-game-outcome-it-schema.sql":
+        "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
     # Historical source-only station proposal; canonical executable DDL is the

@@ -634,6 +634,10 @@ class RegistrationReadContractMybatisIntegrationTest {
         // base_schema 之后主题侧新增列(类型抄各自迁移文件);只补读侧列,让真实 select 能执行。
         exec("ALTER TABLE cms_topic ADD COLUMN circle_theme_code VARCHAR(24) NULL");              // circle_theme_batch2_20260821
         exec("ALTER TABLE cms_topic ADD COLUMN source_template_topic_id BIGINT NULL");            // circle_theme_batch2_20260821
+        // B2 模板换城:这两列进了共享 resultMap/selectCmsTopicVo,缺列会让真实 select 直接
+        // "Unknown column"。类型抄各自迁移文件,与生产一致。
+        exec("ALTER TABLE cms_topic ADD COLUMN city_code VARCHAR(32) NULL");                       // o14_cms_topic_city_code_20261022
+        exec("ALTER TABLE cms_topic ADD COLUMN content_contract_json JSON NULL");                  // topic_location_contract_20261107
         exec("ALTER TABLE cms_topic ADD COLUMN circle_reviewed_at DATETIME NULL");                // circle_theme_primary_schema_20260821
         exec("ALTER TABLE cms_topic ADD COLUMN complete_rule_json JSON NULL");                    // new_city_setup_plan_20260820
         exec("ALTER TABLE cms_topic ADD COLUMN route_mode VARCHAR(20) NOT NULL DEFAULT 'LINEAR'"); // topic_route_graph_20260823

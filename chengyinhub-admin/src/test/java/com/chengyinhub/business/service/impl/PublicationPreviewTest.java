@@ -44,7 +44,8 @@ class PublicationPreviewTest {
     private static final long NODE = 11L;
     private static final long TEMPLATE = 701L;
     /** 模板「线索」工具产出的稳定键（同名同键），预演时尚未登记。 */
-    private static final String CLUE_KEY = "clue.h_abcdef123456";
+    // clue.h_<12 hex> 是模板线索状态键的真实格式(StateKeyRefs.TEMPLATE_CLUE),不是凭证。
+    private static final String CLUE_KEY = "clue.h_abcdef123456"; // gitleaks:allow 状态键格式,非密钥
 
     private final ObjectMapper json = new ObjectMapper();
 

@@ -58,7 +58,28 @@ public final class TopicCopyTestWiring {
         if (!hasContractWrite) {
             // 老夹具可能既没有 platformMemberId 也没有 memberId(副本 member_id 为 null):
             // owner 参数用 nullable(Long) 才匹配得上;anyLong() 不匹配 null。
-            org.mockito.Mockito.lenient().doAnswer(call -> 1).when(mapper).updateTopicLocationContract(
+            // 写口之后生产会回读校验(materializeLocationContract),而老夹具只 stub 了来源主题的
+            // selectCmsTopicById,副本 id 读回 null 就会「回读校验失败」。这里模拟已落库的那一行:
+            // 幂等设置 content_contract_json,而不是放宽生产校验。
+            org.mockito.Mockito.lenient().doAnswer(call -> {
+                Long id = call.getArgument(0);
+                String contract = call.getArgument(2);
+                com.chengyinhub.business.domain.CmsTopic existing = null;
+                try {
+                    existing = mapper.selectCmsTopicById(id);
+                } catch (RuntimeException ignore) {
+                    existing = null;
+                }
+                if (existing == null) {
+                    com.chengyinhub.business.domain.CmsTopic row = new com.chengyinhub.business.domain.CmsTopic();
+                    row.setId(id);
+                    row.setContentContractJson(contract);
+                    org.mockito.Mockito.lenient().when(mapper.selectCmsTopicById(id)).thenReturn(row);
+                } else {
+                    existing.setContentContractJson(contract);
+                }
+                return 1;
+            }).when(mapper).updateTopicLocationContract(
                     org.mockito.ArgumentMatchers.anyLong(),
                     org.mockito.ArgumentMatchers.nullable(Long.class),
                     org.mockito.ArgumentMatchers.nullable(String.class),
