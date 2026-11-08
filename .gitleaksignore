@@ -73,3 +73,4 @@ chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGener
 
 # PublicationPreviewTest: fixed clue-key fixture in this historical commit; no authentication use.
 962ae9cfb5d331ccea9254091a94316300b0bdda:chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PublicationPreviewTest.java:generic-api-key:47
+26dd29b37ccb8b9157c647320953eaaac9c71e14:chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PublicationPreviewTest.java:generic-api-key:49

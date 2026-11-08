@@ -233,6 +233,10 @@ class RegistrationFundsMybatisIntegrationTest {
 
     /** Notification persistence is covered by D's dedicated IT; keep this suite's real financial writes. */
     private void wireSignupNoticeFixture(CmsRegistrationServiceImpl target) {
+        com.chengyinhub.business.service.IMarketingRevenuePostingService revenuePosting =
+                mock(com.chengyinhub.business.service.IMarketingRevenuePostingService.class);
+        when(revenuePosting.enqueueAccrual(org.mockito.ArgumentMatchers.anyLong())).thenReturn(1L);
+        ReflectionTestUtils.setField(target, "marketingRevenuePostingService", revenuePosting);
         ISystemNotificationIntentService intents = mock(ISystemNotificationIntentService.class);
         // Mockito's boxed Long default is 0, which the production guard correctly rejects as an invalid receipt.
         when(intents.findIntentId(org.mockito.ArgumentMatchers.anyString())).thenReturn(null);

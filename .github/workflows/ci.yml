@@ -381,7 +381,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: 0b5d81d855fe95a076b3c4c4b3b3c4fecb9282a2
+          ref: bf6282ef77a56abaa01e1d494ca7377c2c759245
           path: .architecture-gate
           fetch-depth: 0
           persist-credentials: false
@@ -648,7 +648,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: 0b5d81d855fe95a076b3c4c4b3b3c4fecb9282a2
+          ref: bf6282ef77a56abaa01e1d494ca7377c2c759245
           path: chengyinhub-admin/target/f-private-port-verifier
           fetch-depth: 1
           persist-credentials: false
