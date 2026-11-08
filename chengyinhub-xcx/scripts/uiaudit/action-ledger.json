@@ -1479726,7 +1479726,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/components/roam-place-card/index.js:48"
+        "staticSource": "subpackageRoam/components/roam-place-card/index.js:49"
       }
     },
     {
@@ -1479815,7 +1479815,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/components/roam-place-card/index.js:48"
+        "staticSource": "subpackageRoam/components/roam-place-card/index.js:49"
       }
     },
     {
@@ -1479895,7 +1479895,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/components/roam-place-card/index.js:47"
+        "staticSource": "subpackageRoam/components/roam-place-card/index.js:48"
       }
     },
     {
@@ -1479975,7 +1479975,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/components/roam-place-card/index.js:47"
+        "staticSource": "subpackageRoam/components/roam-place-card/index.js:48"
       }
     },
     {
@@ -1480055,7 +1480055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/components/roam-place-card/index.js:46"
+        "staticSource": "subpackageRoam/components/roam-place-card/index.js:47"
       }
     },
     {

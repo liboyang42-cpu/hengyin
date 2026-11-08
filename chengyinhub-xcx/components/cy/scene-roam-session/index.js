@@ -85,7 +85,7 @@ Component({
   methods: {
     _load() {
       this._clearReplayTimer()
-      this.setData({ state: 'loading' })
+      this.setData({ state: 'loading', routeSegs: [], routePoiDots: [], replaySegs: [], replayProgress: 0, replayState: 'idle' })
       if (this._recordReader) this._recordReader.dispose()
       if (this.data.snapshot) {
         this._render(this.data.snapshot)

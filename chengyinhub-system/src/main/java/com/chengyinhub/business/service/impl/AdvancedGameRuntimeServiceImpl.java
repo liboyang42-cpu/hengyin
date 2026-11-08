@@ -631,6 +631,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         int oldVersion = session.getVersion();
         Date now = clock.now();
+        if (session.getCompletedAt() == null && (Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
+                || Integer.valueOf(GameRuntimeSession.STATUS_FAILED).equals(session.getStatus()))) session.setCompletedAt(now);
         session.setStateJson(writeJson(state));
         session.setUpdateTime(now);
         if (sessionMapper.updateStateCas(session) != 1) {
@@ -1668,6 +1670,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         session.setStatus("FAILED".equals(timeout)
                 ? GameRuntimeSession.STATUS_FAILED : GameRuntimeSession.STATUS_EXPIRED);
         session.setUpdateTime(clock.now());
+        if (session.getCompletedAt() == null) session.setCompletedAt(session.getUpdateTime());
         boolean r5=config.path("outcomeRules").path("version").asInt()==1;ObjectNode decision=null;
         if(r5){
             boolean completed="COMPLETED".equals(timeout);
@@ -3462,7 +3465,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             else session.setStatus(GameRuntimeSession.STATUS_EXPIRED);
         }
         int old=session.getVersion();session.setStateJson(writeJson(state));session.setUpdateTime(clock.now());
-        if(running){if(sessionMapper.updateStateCas(session)!=1)throw new IllegalStateException("预测揭晓状态已更新，请刷新");}
+        if(running){
+            if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus()) && session.getCompletedAt() == null) session.setCompletedAt(session.getUpdateTime());
+            if(sessionMapper.updateStateCas(session)!=1)throw new IllegalStateException("预测揭晓状态已更新，请刷新");
+        }
         else if(sessionMapper.updateFeedbackStateCas(session)!=1)throw new IllegalStateException("预测揭晓状态已更新，请刷新");
         session.setVersion(old+1);return session;
     }

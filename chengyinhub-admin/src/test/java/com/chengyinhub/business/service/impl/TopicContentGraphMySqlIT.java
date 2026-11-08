@@ -193,6 +193,75 @@ class TopicContentGraphMySqlIT {
         f.originalRowsUnchanged();
     }
 
+    @Test void syntheticFreeThemesKeepTwoChapterGameAndMediaBindingsAfterRebuild() {
+        f.db.update("update cms_member_template set question_img=? where id=701", "/fixture/first-original.jpg");
+        f.db.update("insert into cms_member_template(id,member_id,title,status,draft_status,publish_status,check_status,is_sync,del_flag,question_img) "
+                + "values(703,42,'second-owned-game',1,1,1,1,0,'0','/fixture/second-original.jpg')");
+        f.mark();
+        String fixture = "two-chapter";
+        for (boolean compiled : List.of(false, true)) {
+            TopicCreateDTO create = f.create(compiled, 2);
+            create.setName("synthetic-free-" + fixture + "-" + compiled);
+            create.getChapters().get(1).getNodes().add(f.node(14L, "fourth"));
+            for (int chapter = 0; chapter < 2; chapter++) {
+                List<NodeDTO> nodes = create.getChapters().get(chapter).getNodes();
+                for (int station = 0; station < nodes.size(); station++) {
+                    NodeDTO node = nodes.get(station);
+                    node.setTemplateId(chapter == 0 ? 701L : 703L);
+                    node.setAddress("fixture-" + chapter + "-" + station);
+                    node.setLongitude("121." + (4100 + chapter * 100 + station));
+                    node.setLatitude("31." + (2100 + chapter * 100 + station));
+                }
+                if (compiled) create.getChapters().set(chapter, f.chapter(chapter == 0 ? 10 : 20,
+                        chapter == 0 ? "first" : "second", true, nodes.toArray(new NodeDTO[0])));
+            }
+            long topic = f.success("free-create-" + fixture + "-" + compiled, () -> f.create(create, true));
+            List<Map<String,Object>> chapters = f.topicChapters(topic);
+            List<Map<String,Object>> nodes = f.topicNodes(topic);
+            assertEquals(2, chapters.size());
+            assertEquals(4, nodes.size());
+            List<Map<String,Object>> before = f.db.queryForList(
+                    "select c.name as chapter_name,n.name as node_name,n.address,n.longitude,n.latitude,t.question_img from cms_topic_node n "
+                            + "join cms_topic_chapter c on c.id=n.chapter_id and c.topic_id=n.topic_id "
+                            + "join cms_member_template t on t.id=n.template_id where n.topic_id=? order by n.address", topic);
+            assertEquals(4, before.size());
+            for (int chapter = 0; chapter < 2; chapter++) {
+                long chapterId = f.number(chapters.get(chapter).get("id"));
+                assertEquals(2, nodes.stream().filter(row -> f.number(row.get("chapter_id")) == chapterId).count());
+                assertEquals(1, nodes.stream().filter(row -> f.number(row.get("chapter_id")) == chapterId)
+                        .map(row -> row.get("template_id")).distinct().count());
+            }
+            assertEquals(2, nodes.stream().map(row -> row.get("template_id")).distinct().count());
+            assertEquals(List.of("/fixture/first-original.jpg", "/fixture/first-original.jpg",
+                    "/fixture/second-original.jpg", "/fixture/second-original.jpg"),
+                    before.stream().map(row -> row.get("question_img")).toList());
+            TopicUpdateDTO update = f.fill(new TopicUpdateDTO(), compiled, 2);
+            update.setId(topic);
+            update.setName(create.getName());
+            update.setChapters(create.getChapters());
+            for (int chapter = 0; chapter < 2; chapter++) {
+                ChapterDTO dto = update.getChapters().get(chapter);
+                dto.setId(f.number(chapters.get(chapter).get("id")));
+                for (int station = 0; station < 2; station++) dto.getNodes().get(station)
+                        .setId(f.number(nodes.get(chapter * 2 + station).get("id")));
+            }
+            f.success("free-rebuild-" + fixture + "-" + compiled, () -> f.update(update, true));
+            assertEquals(2, f.topicChapters(topic).size());
+            assertEquals(4, f.topicNodes(topic).size());
+            assertEquals(before, f.db.queryForList(
+                    "select c.name as chapter_name,n.name as node_name,n.address,n.longitude,n.latitude,t.question_img from cms_topic_node n "
+                            + "join cms_topic_chapter c on c.id=n.chapter_id and c.topic_id=n.topic_id "
+                            + "join cms_member_template t on t.id=n.template_id where n.topic_id=? order by n.address", topic));
+            assertEquals(2, f.db.queryForObject(
+                    "select count(distinct template_id) from cms_topic_node where topic_id=?", Integer.class, topic));
+            assertEquals(2, f.db.queryForObject("select product_type from cms_topic where id=?", Integer.class, topic));
+            assertEquals(1, f.db.queryForObject("select is_draft from cms_topic where id=?", Integer.class, topic));
+            assertEquals(0, f.db.queryForObject(
+                    "select count(*) from cms_topic_node where topic_id=? and merchant_member_id is not null", Integer.class, topic));
+            f.originalRowsUnchanged();
+        }
+    }
+
     @Test void v2FreeExploreWithoutBlocksKeepsLegacyWriter() {
         long id=f.success("free-without-blocks",()->f.create(f.create(false,2),true));
         assertEquals(3,f.topicNodes(id).size());assertTrue(f.topicChapters(id).stream().allMatch(row -> row.get("blocks")==null));f.originalRowsUnchanged();

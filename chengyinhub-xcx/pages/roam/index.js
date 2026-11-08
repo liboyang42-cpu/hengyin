@@ -40,7 +40,7 @@ const {
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
-const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
+const { simplifyTrack, limitTrack, normalizeTrack } = require('../../utils/roam-track-simplify.js');
 const { createRouteLine } = require('../../utils/my-route-line.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const readSession = require('../../utils/session/login-reload.js');
@@ -1525,7 +1525,7 @@ Page({
         }
         return;
       }
-      const roamPois = list.map((n) => {
+      const roamPois = list.filter((n) => normalizeTrack([n]).length).map((n) => {
         // 展示分类只认 roam:* 保留标签;业务身份仍按 type(1 平台地点 / 2 商家据点),不按名字猜。
         const m = presentationForPoi(n);
         const color = m.cat === 'merchant' ? '#D9D9D9' : (m.cat === 'park' ? '#A6A6A6' : BRAND); /* ds-ok 与本页演示点 catMap 的 park / merchant 同色,原生 marker 只吃字面色值 */
@@ -1534,7 +1534,7 @@ Page({
         const npcAvatar = n.npcAvatar || '';
         return {
           id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2 || !!n.templateId, name: n.name,
-          lat: parseFloat(n.lat), lng: parseFloat(n.lng), address: n.address || '', tags: n.tags || '',
+          lat: Number(n.lat), lng: Number(n.lng), address: n.address || '', tags: n.tags || '',
           // 非商户地点的 description 不是审核意义来源，绝不直出；商户说明仍走既有确定性探店信息。
           desc: n.type === 2 ? (n.description || '') : '', points: n.xp || 20,
           icon: m.icon, catLabel: m.catLabel, color,

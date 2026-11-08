@@ -3,6 +3,7 @@
 // 第九轮 m1 第 3 项:地点卡。数据就是地图上那一枚点(名字 / 照片 / 地址 / 距离),
 // 评分沿用据点详情原来的读接口(/api/city/nodes/{id} 的 averageRating / ratingCount),不另开一份。正文仍在原来的详情里,点卡片本身进去。
 const app = typeof getApp === 'function' ? getApp() : null
+const { normalizeTrack } = require('../../../utils/roam-track-simplify.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 function ratingText(avg, count) {
@@ -47,8 +48,9 @@ Component({
     onClose() { this.triggerEvent('close') },
     onNavigate() {
       const p = this.data.place || {}
-      const latitude = Number(p.lat), longitude = Number(p.lng)
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return
+      const point = normalizeTrack([p])[0]
+      if (!point) return
+      const latitude = point.lat, longitude = point.lng
       wx.openLocation({ latitude, longitude, name: p.name || '', address: p.address || '', scale: 17 })
     },
   },
