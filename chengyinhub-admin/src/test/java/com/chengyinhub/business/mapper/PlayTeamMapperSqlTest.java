@@ -69,6 +69,35 @@ class PlayTeamMapperSqlTest {
         assertFalse(select.contains("where id ="), select);
     }
 
+    @Test
+    void paidSeatCountReadsPaidActivityRegistrationInsteadOfTrustingTheSeatRow() throws Exception {
+        String sql = sql("countPaidActiveMembers", Collections.singletonMap("teamId", 1L));
+
+        // 票款身份:必须是本场次(owner_type=2)已支付且报名有效的报名,不能拿 self-play 通行证冒充。
+        assertTrue(sql.contains("r.owner_type = 2"), sql);
+        assertTrue(sql.contains("r.owner_id = t.owner_id"), sql);
+        assertTrue(sql.contains("r.payment_status = 2"), sql);
+        assertTrue(sql.contains("r.registration_status = 2"), sql);
+        assertTrue(sql.contains("count(distinct m.member_id)"), sql);
+        assertTrue(sql.contains("m.status = 1"), sql);
+        // 只读:席位投影不得写订单、退款或权益。
+        assertFalse(sql.matches(".*(?:insert|update|delete|refund|settlement).*"), sql);
+    }
+
+    @Test
+    void pendingApplicationsAreCountedSeparatelyAndNeverOccupyASeat() throws Exception {
+        java.util.Map<String, Object> p = new java.util.HashMap<>();
+        p.put("teamId", 1L);
+        p.put("now", new Date());
+        String sql = sql("countOpenApplications", p);
+
+        assertTrue(sql.contains("m.status = 0"), sql);
+        assertTrue(sql.contains("m.apply_expire_time > ?"), sql);
+        // 预留只是待审申请,不碰 play_team 的名额计数。
+        assertFalse(sql.contains("joined_count"), sql);
+        assertFalse(sql.contains("play_team "), sql);
+    }
+
     private void assertGameLifecycleDeadline(String sql) {
         assertTrue(sql.contains("left join cms_activity activity"), sql);
         assertTrue(sql.contains("left join cms_topic topic"), sql);

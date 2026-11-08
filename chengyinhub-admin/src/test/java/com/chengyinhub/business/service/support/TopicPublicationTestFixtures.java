@@ -41,5 +41,12 @@ public final class TopicPublicationTestFixtures {
             ReflectionTestUtils.setField(service,"mediaPublicationGuard",publication);
         }
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(service);
+        // B3 状态投影新增的依赖:发布路径会经 publicationStatus 读未结审核单。
+        // 手工装配的夹具里它是空的,发布就 NPE —— 与上面几处「不在场就是 NPE 假红」同性质。
+        // 只补空位,不覆盖测试自己设的 mock。
+        if (com.chengyinhub.business.service.support.TopicPublicationTestWiring.get(service, "auditTaskService") == null) {
+            com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(
+                    service, "auditTaskService", mock(com.chengyinhub.business.service.IAuditTaskService.class));
+        }
     }
 }

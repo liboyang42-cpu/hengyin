@@ -128,6 +128,27 @@
         select count(1) from audit_task where biz_type = 'TEAM' and biz_id = #{teamId} and status in (0, 3)
     </select>
 
+    <!--
+      席位投影:已加入成员里仍持本场次已支付报名的人数(去重,防同场重复购买重复计数)。
+      只读 cms_registration 的既有事实,不复制票款、不写订单/权益/退款。
+    -->
+    <select id="countPaidActiveMembers" resultType="int">
+        select count(distinct m.member_id)
+        from play_team_member m
+        join play_team t on t.id = m.team_id
+        join cms_registration r on r.member_id = m.member_id
+             and r.owner_type = 2 and r.owner_id = t.owner_id
+             and r.payment_status = 2 and r.registration_status = 2
+        where m.team_id = #{teamId} and m.status = 1
+    </select>
+
+    <!-- 未过期待审申请数:申请不占席,不参与 reserveSlot 判定,也不计入 play_team.joined_count。 -->
+    <select id="countOpenApplications" resultType="int">
+        select count(distinct m.member_id)
+        from play_team_member m
+        where m.team_id = #{teamId} and m.status = 0 and m.apply_expire_time &gt; #{now}
+    </select>
+
     <select id="selectPendingApplications" resultMap="PlayTeamMemberResult">
         select m.id, m.team_id, m.member_id, m.role, m.status, m.apply_message, m.apply_expire_time,
                m.create_time, m.update_time,

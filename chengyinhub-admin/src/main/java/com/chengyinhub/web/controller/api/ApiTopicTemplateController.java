@@ -56,6 +56,9 @@ public class ApiTopicTemplateController extends BaseController {
     @Autowired
     private IMerchantAccessService merchantAccessService;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.TopicLocationBindingService locationBindingService;
+
     @Operation(summary = "主题模板库列表（含章节数/玩法数）")
     @PostMapping("/list")
     public AjaxResult list(String recommendedOnly) {
@@ -141,7 +144,7 @@ public class ApiTopicTemplateController extends BaseController {
 
     @Operation(summary = "使用主题模板(复制生成我的草稿)")
     @PostMapping("/use")
-    public AjaxResult use(String id, String scope) {
+    public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode) {
         Long principalMemberId;
         try {
             principalMemberId = getAppUserId();
@@ -161,30 +164,147 @@ public class ApiTopicTemplateController extends BaseController {
         }
         Long memberId = principalMemberId;
         try {
-            if (!MerchantOperationScope.isMerchant(scope)) {
-                return useTemplateForMember(tid, memberId);
+            if (MerchantOperationScope.isMerchant(scope)) {
+                memberId = merchantAccessService.require(
+                        principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
             }
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         }
-        try {
-            memberId = merchantAccessService.require(
-                    principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
-        } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
-        }
-        return useTemplateForMember(tid, memberId);
+        return useTemplateForMember(tid, memberId, bindingIntent, targetCityCode);
     }
 
-    private AjaxResult useTemplateForMember(Long tid, Long memberId) {
+    /** 旧调用方/单测入口：不传采用方式 = LEGACY，复制结果与旧版一致。 */
+    public AjaxResult use(String id, String scope) {
+        return use(id, scope, null, null);
+    }
+
+    private AjaxResult useTemplateForMember(Long tid, Long memberId, String bindingIntent,
+                                            String targetCityCode) {
         // 全量复制(章节/节点/协作/票种)+ 归属改为明确作用域会员 → 生成草稿
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 3);
         params.put("memberId", memberId);
-        Long newTopicId = cmsTopicService.copyCmsTopic(tid, params);
+        if (bindingIntent != null && !bindingIntent.trim().isEmpty()) params.put("bindingIntent", bindingIntent);
+        if (targetCityCode != null && !targetCityCode.trim().isEmpty()) params.put("targetCityCode", targetCityCode);
+        Long newTopicId;
+        try {
+            newTopicId = cmsTopicService.copyCmsTopic(tid, params);
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        }
         Map<String, Object> data = new HashMap<>();
         data.put("topicId", newTopicId);
+        // 增量读回（保持 data.topicId 原键）：来源血缘、采用方式与待重绑清单，供采用流程直接展示。
+        CmsTopic created = cmsTopicService.selectCmsTopicById(newTopicId);
+        String contractJson = created == null ? null : created.getContentContractJson();
+        Map<String, Object> summary = com.chengyinhub.business.service.support.TopicLocationContract.summary(contractJson);
+        data.put("sourceTemplateTopicId", summary.get("sourceTemplateTopicId"));
+        data.put("sourceConfigVersion", summary.get("sourceConfigVersion"));
+        data.put("cityCode", created == null ? null : created.getCityCode());
+        data.put("bindingIntent", summary.get("bindingIntent"));
+        data.put("targetCityCode", summary.get("targetCityCode"));
+        data.put("pendingRebindSlotKeys", summary.get("pendingRebindSlotKeys"));
+        data.put("bindingIssues", com.chengyinhub.business.service.support.TopicLocationContract
+                .bindingIssues(contractJson, created == null ? null : created.getCityCode()));
         return AjaxResult.success(data);
+    }
+
+    @Operation(summary = "作者绑定/解绑地点槽（目标城市选点）")
+    @PostMapping("/binding")
+    public AjaxResult bindLocation(String topicId, String scope, String slotKey, String nodeId,
+                                   String approvedFallbackNodeIds, String openingHours,
+                                   String observationNote, String referenceMediaIds,
+                                   String expectedRevision) {
+        Long principalMemberId;
+        try {
+            principalMemberId = getAppUserId();
+        } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (principalMemberId == null || principalMemberId <= 0) {
+            return error("请先登录");
+        }
+        Long ownerMemberId;
+        try {
+            ownerMemberId = resolveOwnerMemberId(principalMemberId, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        com.chengyinhub.business.domain.dto.TopicLocationBindingCommand command =
+                new com.chengyinhub.business.domain.dto.TopicLocationBindingCommand();
+        command.setTopicId(Convert.toLong(topicId, 0L));
+        command.setSlotKey(slotKey);
+        Long parsedNodeId = Convert.toLong(nodeId, 0L);
+        command.setNodeId(parsedNodeId != null && parsedNodeId > 0L ? parsedNodeId : null);
+        command.setApprovedFallbackNodeIds(longList(approvedFallbackNodeIds));
+        command.setReferenceMediaIds(stringList(referenceMediaIds));
+        command.setOpeningHours(openingHours);
+        command.setObservationNote(observationNote);
+        command.setExpectedRevision(isBlank(expectedRevision) ? null : Convert.toInt(expectedRevision, null));
+        try {
+            return AjaxResult.success(locationBindingService.bind(command, ownerMemberId, principalMemberId));
+        } catch (ServiceException e) {
+            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode(), e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "地点合同与绑定状态（作者只读）")
+    @PostMapping("/binding-status")
+    public AjaxResult bindingStatus(String topicId, String scope) {
+        Long principalMemberId;
+        try {
+            principalMemberId = getAppUserId();
+        } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (principalMemberId == null || principalMemberId <= 0) {
+            return error("请先登录");
+        }
+        Long ownerMemberId;
+        try {
+            ownerMemberId = resolveOwnerMemberId(principalMemberId, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        try {
+            return AjaxResult.success(locationBindingService.status(Convert.toLong(topicId, 0L), ownerMemberId));
+        } catch (ServiceException e) {
+            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode(), e.getMessage());
+        }
+    }
+
+    private Long resolveOwnerMemberId(Long principalMemberId, String scope) {
+        if (MerchantOperationScope.isMerchant(scope)) {
+            return merchantAccessService.require(
+                    principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+        }
+        return principalMemberId;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static java.util.List<Long> longList(String csv) {
+        java.util.List<Long> ids = new java.util.ArrayList<Long>();
+        if (isBlank(csv)) return ids;
+        for (String part : csv.split(",")) {
+            Long id = Convert.toLong(part.trim(), 0L);
+            if (id != null && id > 0L) ids.add(id);
+        }
+        return ids;
+    }
+
+    private static java.util.List<String> stringList(String csv) {
+        java.util.List<String> values = new java.util.ArrayList<String>();
+        if (isBlank(csv)) return values;
+        for (String part : csv.split(",")) {
+            if (!part.trim().isEmpty()) values.add(part.trim());
+        }
+        return values;
     }
 
     @Operation(summary = "把我的已发布主题另存为模板")

@@ -133,6 +133,19 @@ public interface CmsTopicMapper
                               @Param("targetVersion") Long targetVersion,
                               @Param("updateTime") Date updateTime);
 
+    /**
+     * 地点合同唯一写口。
+     *
+     * <p>owner 在 SQL 里再判一次，调用方先读后判不作为唯一依据；返回 0 行 = 主题不存在/已删除/不是该所有者，
+     * 调用方必须报错而不是忽略。通用 {@link #updateCmsTopic} 故意不带这一列：那条是宽口，
+     * 没有所有者、编辑窗口与 bindingRevision 校验。
+     */
+    int updateTopicLocationContract(@Param("id") Long id,
+                                    @Param("ownerMemberId") Long ownerMemberId,
+                                    @Param("contentContractJson") String contentContractJson,
+                                    @Param("updateBy") String updateBy,
+                                    @Param("updateTime") Date updateTime);
+
     /** 成功发布时把已校验草稿复制为运行快照，并独立递增发布版本。 */
     int publishRouteSnapshot(@Param("id") Long id,
                              @Param("publishedRouteGraphJson") String publishedRouteGraphJson,

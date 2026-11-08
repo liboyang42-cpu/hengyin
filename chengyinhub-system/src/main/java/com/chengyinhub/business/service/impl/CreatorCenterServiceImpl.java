@@ -4,10 +4,12 @@ import com.chengyinhub.business.domain.CreatorProfile;
 import com.chengyinhub.business.domain.dto.CreatorProfileApplyDTO;
 import com.chengyinhub.business.domain.dto.CreatorReviewDTO;
 import com.chengyinhub.business.domain.vo.CreatorCenterVO;
+import com.chengyinhub.business.domain.vo.CreatorRevenueLedgerVO;
 import com.chengyinhub.business.mapper.CreatorIncomeDetailMapper;
 import com.chengyinhub.business.mapper.CreatorMetricDailyMapper;
 import com.chengyinhub.business.mapper.CreatorProfileMapper;
 import com.chengyinhub.business.service.ICreatorCenterService;
+import com.chengyinhub.business.service.ICreatorRevenueReadService;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.DateUtils;
@@ -33,6 +35,10 @@ public class CreatorCenterServiceImpl implements ICreatorCenterService {
     @Autowired
     private CreatorIncomeDetailMapper creatorIncomeDetailMapper;
 
+    /** 原账本收益只读件；缺失或读取失败都不阻断中心页，而是显式标 UNKNOWN。 */
+    @Autowired(required = false)
+    private ICreatorRevenueReadService creatorRevenueReadService;
+
     @Override
     public CreatorCenterVO getCenter(Long memberId) {
         CreatorCenterVO vo = new CreatorCenterVO();
@@ -50,7 +56,37 @@ public class CreatorCenterServiceImpl implements ICreatorCenterService {
         vo.setMetric(creatorMetricDailyMapper.selectLatestMetric(profile.getId()));
         List income = creatorIncomeDetailMapper.selectRecentIncome(profile.getId());
         vo.setRecentIncome(income == null ? Collections.emptyList() : income);
+        applyRevenue(vo, memberId);
         return vo;
+    }
+
+    /**
+     * 原账本收益：成功则 AVAILABLE 并给出应计金额；失败则 UNKNOWN 且 revenue 为 null。
+     *
+     * <p>未知不能展示成 0 收入，也不能让整个创作者中心报错——其它字段（档案/指标/最近明细）仍然可用。
+     * 返回值语义：{@code ACCRUAL_ORIGINAL_LEDGER} 是应计口径，不是实收、不是可提现。
+     */
+    private void applyRevenue(CreatorCenterVO vo, Long memberId) {
+        if (creatorRevenueReadService == null) {
+            vo.setRevenueState(CreatorRevenueLedgerVO.State.UNKNOWN);
+            vo.setRevenueUnavailableReason("原账本收益读取件未装配");
+            return;
+        }
+        try {
+            CreatorRevenueLedgerVO ledger = creatorRevenueReadService.readForMember(memberId, null, null);
+            if (ledger == null || !ledger.isAvailable()) {
+                vo.setRevenueState(CreatorRevenueLedgerVO.State.UNKNOWN);
+                vo.setRevenueUnavailableReason(ledger == null
+                        ? "原账本收益读取返回空结果" : ledger.getUnavailableReason());
+                return;
+            }
+            vo.setRevenue(ledger);
+            vo.setRevenueState(CreatorRevenueLedgerVO.State.AVAILABLE);
+        } catch (RuntimeException unavailable) {
+            // 读失败/数据源异常一律降级为显式 UNKNOWN，不冒 500，也不写 0。
+            vo.setRevenueState(CreatorRevenueLedgerVO.State.UNKNOWN);
+            vo.setRevenueUnavailableReason("原账本收益读取失败：" + unavailable.getClass().getSimpleName());
+        }
     }
 
     @Override

@@ -15,6 +15,9 @@ public interface CmsTopicNodeMapper
     /** All physically retained content, independent of merchant/player visibility. */
     Long countContentByTopicForUpdate(@Param("topicId") Long topicId);
 
+    /** 发布前试检查的只读计数:同表同条件,不加锁(理由见 {@link CmsTopicChapterMapper#countContentByTopic})。 */
+    Long countContentByTopic(@Param("topicId") Long topicId);
+
     /** Current ownership proof after the parent fence, independent of visibility filters. */
     CmsTopicNode selectContentByIdForUpdate(@Param("id") Long id);
 

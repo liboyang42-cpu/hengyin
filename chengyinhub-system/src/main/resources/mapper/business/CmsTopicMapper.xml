@@ -36,6 +36,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="productType"    column="product_type"    />
         <result property="circleThemeCode" column="circle_theme_code" />
         <result property="sourceTemplateTopicId" column="source_template_topic_id" />
+        <result property="cityCode" column="city_code" />
+        <result property="contentContractJson" column="content_contract_json" />
         <result property="roamReferralEnabled" column="roam_referral_enabled" />
         <result property="completeRuleJson" column="complete_rule_json" />
         <result property="routeMode" column="route_mode" />
@@ -126,7 +128,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <sql id="selectCmsTopicVo">
-        select id, member_id, club_id, topic_type, product_type, circle_theme_code, source_template_topic_id, complete_rule_json, route_mode, route_graph_json, config_version, published_route_graph_json, published_config_version, game_module_config_json, journey_rules_json, journey_story_json, theme_runtime_config_json, published_theme_runtime_config_json, fee_platform_rate, fee_guarantee_base_rate, fee_guarantee_step_rate, fee_guarantee_max_merchant, topic_id, name,subtitle, description,address_name, total_time, total_mileage, location_count, template_count, start_date, end_date, img_url, img_arr, category_ids, status, reason, user_status, merchant_status, open_club_pool, merchant_sign_up_start_date, merchant_sign_up_end_date, del_flag, is_sync,is_recommend,check_status,is_settlement, publish_mode, beta_flag, audio_url, audio_duration, self_play, self_play_price, self_play_quota, team_mode, team_max_members, xp_budget, finish_medal_name, finish_medal_img, complete_reward_coupon_id, recruit_deadline, recruit_extend_count, club_coop_open, club_pinned, club_member_only, lifecycle, sale_end_at, selling_started_at, source_topic_id, create_by, create_time, update_by, update_time from cms_topic
+        select id, member_id, club_id, topic_type, product_type, circle_theme_code, source_template_topic_id, city_code, content_contract_json, complete_rule_json, route_mode, route_graph_json, config_version, published_route_graph_json, published_config_version, game_module_config_json, journey_rules_json, journey_story_json, theme_runtime_config_json, published_theme_runtime_config_json, fee_platform_rate, fee_guarantee_base_rate, fee_guarantee_step_rate, fee_guarantee_max_merchant, topic_id, name,subtitle, description,address_name, total_time, total_mileage, location_count, template_count, start_date, end_date, img_url, img_arr, category_ids, status, reason, user_status, merchant_status, open_club_pool, merchant_sign_up_start_date, merchant_sign_up_end_date, del_flag, is_sync,is_recommend,check_status,is_settlement, publish_mode, beta_flag, audio_url, audio_duration, self_play, self_play_price, self_play_quota, team_mode, team_max_members, xp_budget, finish_medal_name, finish_medal_img, complete_reward_coupon_id, recruit_deadline, recruit_extend_count, club_coop_open, club_pinned, club_member_only, lifecycle, sale_end_at, selling_started_at, source_topic_id, create_by, create_time, update_by, update_time from cms_topic
     </sql>
 
     <!-- 主题列表与 360 工作台共用的运营事实。公开池只表示可否公开申请，不能用于推断承接或供给。 -->
@@ -918,6 +920,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="productType != null">product_type,</if>
             <if test="circleThemeCode != null">circle_theme_code,</if>
             <if test="sourceTemplateTopicId != null">source_template_topic_id,</if>
+            <if test="cityCode != null">city_code,</if>
             <if test="roamReferralEnabled != null">roam_referral_enabled,</if>
             <if test="completeRuleJson != null">complete_rule_json,</if>
             <if test="routeMode != null">route_mode,</if>
@@ -984,6 +987,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="productType != null">#{productType},</if>
             <if test="circleThemeCode != null">#{circleThemeCode},</if>
             <if test="sourceTemplateTopicId != null">#{sourceTemplateTopicId},</if>
+            <if test="cityCode != null">#{cityCode},</if>
             <if test="roamReferralEnabled != null">#{roamReferralEnabled},</if>
             <if test="completeRuleJson != null">#{completeRuleJson},</if>
             <if test="routeMode != null">#{routeMode},</if>
@@ -1054,6 +1058,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="productType != null">product_type = #{productType},</if>
             <if test="circleThemeCode != null">circle_theme_code = #{circleThemeCode},</if>
             <if test="sourceTemplateTopicId != null">source_template_topic_id = #{sourceTemplateTopicId},</if>
+            <if test="cityCode != null">city_code = #{cityCode},</if>
             <if test="roamReferralEnabled != null">roam_referral_enabled = #{roamReferralEnabled},</if>
             <if test="completeRuleJson != null">complete_rule_json = #{completeRuleJson},</if>
             <if test="routeMode != null">route_mode = #{routeMode},</if>
@@ -1133,6 +1138,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         set route_mode=#{routeMode}, route_graph_json=#{routeGraphJson}, config_version=#{targetVersion},
             update_time=#{updateTime}
         where id=#{id} and config_version=#{expectedVersion} and del_flag=0
+    </update>
+
+    <!--
+      地点合同唯一写口。
+
+      为什么不让通用 updateCmsTopic 带这一列:那条是「谁拿到 CmsTopic 谁就能写」的宽口,
+      而地点绑定的不变量(所有者、编辑窗口、父行锁、expectedRevision)全在专用服务里。
+      把列留在宽口上等于给任何把 CmsTopic 绑进请求的入口留一条绕过路径 —— 绑定的 owner/revision
+      校验一次都不会跑。这里在 SQL 里再判一次 owner,不依赖调用方先读过再判。
+      写入行数不是 1 就是拒绝;调用方必须据此报错,不能忽略返回值。
+    -->
+    <update id="updateTopicLocationContract">
+        update cms_topic
+        set content_contract_json = #{contentContractJson},
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        where id = #{id}
+          and member_id = #{ownerMemberId}
+          and (del_flag is null or del_flag = 0)
     </update>
 
     <update id="publishRouteSnapshot">

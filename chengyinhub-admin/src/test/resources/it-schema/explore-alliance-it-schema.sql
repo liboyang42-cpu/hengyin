@@ -17,6 +17,8 @@ CREATE TABLE `cms_topic` (
   `member_id` bigint DEFAULT NULL COMMENT '用户ID-用户和后台发布（商家不能发布）',
   `topic_type` int DEFAULT NULL COMMENT '主题类型：1平台主题  2自定义主题',
   `product_type` tinyint DEFAULT NULL COMMENT '产品类型 1经典定向ORIENTEERING/2自由定向FREE_EXPLORE。NULL=存量未回填或混票待人工,读侧回落票mode推断',
+  `city_code` varchar(32) DEFAULT NULL COMMENT '城市编码(adcode 城市级，可空)',
+  `content_contract_json` json DEFAULT NULL COMMENT '地点合同:要求/绑定/采用来源;NULL=未建立',
   `complete_rule_json` json DEFAULT NULL COMMENT '自由探索完成规则;NULL=必选章全核销',
   `game_module_config_json` json DEFAULT NULL COMMENT '三身份游戏模组配置，仅服务端保存权威配置',
   `journey_rules_json` json DEFAULT NULL COMMENT '主题数值规则 journeyRules;NULL=未启用',

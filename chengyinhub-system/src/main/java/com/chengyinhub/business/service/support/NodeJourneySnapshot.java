@@ -85,6 +85,18 @@ public final class NodeJourneySnapshot {
         }
     }
 
+    /**
+     * 读侧内容版本号：同一份冻结快照的 contentSnapshotVersion。旧快照没有该键返回 0，
+     * 供玩家端区分「旧局（章节呈现未冻结）」与「新局」—— 不拒绝旧局，也不伪造新版本。
+     */
+    public static int contentVersion(JsonNode snapshot) {
+        if (snapshot == null) return 0;
+        int version = 0;
+        for (JsonNode row : snapshot.path(NODE_ANSWERS_KEY))
+            if (row.has("contentSnapshotVersion")) version = Math.max(version, row.path("contentSnapshotVersion").asInt(0));
+        return version;
+    }
+
     /** Server-only typed view; never serialize this object as a public response. */
     public static com.chengyinhub.business.domain.CmsMemberTemplate contentTemplate(JsonNode answer) {
         if (!hasContent(answer) || !answer.hasNonNull("templateId")) return null;
@@ -114,7 +126,11 @@ public final class NodeJourneySnapshot {
         template.setMedalStyle(presentation.path("medalStyle").asText(null));
         template.setMedalImg(presentation.path("medalImg").asText(null));
         template.setCouponId(presentation.hasNonNull("couponId") ? presentation.path("couponId").asLong() : null);
-        template.setValidationMethod(answer.hasNonNull("validationMethod") ? answer.path("validationMethod").asInt() : null);
+        // 新制快照把判定方式冻进模板呈现(键在即为权威,可为 null);老快照没有该键才读答案区。
+        template.setValidationMethod(presentation.has("validationMethod")
+                ? (presentation.path("validationMethod").isIntegralNumber()
+                        ? presentation.path("validationMethod").asInt() : null)
+                : (answer.hasNonNull("validationMethod") ? answer.path("validationMethod").asInt() : null));
         template.setPhotoReview(answer.hasNonNull("photoReview") ? answer.path("photoReview").asInt() : null);
         template.setQuestionAnswer(answer.path("questionAnswer").asText(null));
         template.setCorrectAnswer(answer.path("correctAnswer").asText(null));

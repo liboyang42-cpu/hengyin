@@ -36,7 +36,7 @@ import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static com.chengyinhub.common.core.domain.AjaxResult.error;
+
 import com.chengyinhub.web.service.play.PlayNodeContext.PlayCtx;
 
 /** SCAN, ANSWER, GPS and sensor command orchestration. */
@@ -95,7 +95,7 @@ public class PlayBasicCommandApplication {
 
     public AjaxResult checkin(String activityId, String code, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long registrationId) {
-        return error("必须提供原目标节点和运行时身份");
+        return PlayCommandErrorContract.rejected("必须提供原目标节点和运行时身份", PlayCommandErrorContract.INTENT_INPUT_INVALID);
     }
 
     public AjaxResult checkinOnce(Long actorMemberId, String activityId, String code, String topicId,
@@ -103,8 +103,8 @@ public class PlayBasicCommandApplication {
             String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun)
     {
         Long memberId = actorMemberId;
-        if (memberId <= 0) return error("请先登录");
-        if (StringUtils.isBlank(code) || (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId))) return error("参数有误");
+        if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
+        if (StringUtils.isBlank(code) || (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId))) return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID);
 
         // 1) 码 → 节点：一次性游戏打卡码优先；签名无效才回落店内静态 checkin_code
         String trimmedCode = code.trim();
@@ -114,32 +114,32 @@ public class PlayBasicCommandApplication {
             IPlayCheckinCodeService.ConsumeResult live = playCheckinCodeService.inspect(trimmedCode);
             if (live.kind == IPlayCheckinCodeService.ConsumeResult.Kind.USED
                     || live.kind == IPlayCheckinCodeService.ConsumeResult.Kind.EXPIRED) {
-                return error(live.message);
+                return PlayCommandErrorContract.rejected(live.message, scanCodeCode(live));
             }
             if (live.kind == IPlayCheckinCodeService.ConsumeResult.Kind.OK) {
                 liveCode = true;
                 node = cmsTopicNodeService.selectCmsTopicNodeById(live.nodeId);
-                if (node == null) return error("节点不存在");
+                if (node == null) return PlayCommandErrorContract.rejected("节点不存在", PlayCommandErrorContract.NODE_NOT_FOUND);
             }
         }
         if (node == null) {
             CmsTopicNode nodeProbe = new CmsTopicNode();
             nodeProbe.setCheckinCode(trimmedCode);
             List<CmsTopicNode> nodeList = cmsTopicNodeService.selectCmsTopicNodeList(nodeProbe);
-            if (nodeList == null || nodeList.isEmpty()) return error("无效的打卡码");
+            if (nodeList == null || nodeList.isEmpty()) return PlayCommandErrorContract.rejected("无效的打卡码", PlayCommandErrorContract.SCAN_CODE_INVALID);
             // 静态码应全局唯一(uk_cms_topic_node_checkin_code);库里一码多站时不猜取第一条,
             // 否则会把到店记到别的站/别的主题上 —— 拒绝并留日志给运营排查。
             if (nodeList.size() > 1) {
                 logger.warn("打卡码命中多个节点,拒绝打卡 nodeCount={}", nodeList.size());
-                return error("该打卡码对应多个站点，请联系商家处理");
+                return PlayCommandErrorContract.rejected("该打卡码对应多个站点，请联系商家处理", PlayCommandErrorContract.SCAN_CODE_AMBIGUOUS);
             }
             node = nodeList.get(0);
         }
-        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return error("扫码节点与本次意图目标不一致");
+        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return PlayCommandErrorContract.rejected("扫码节点与本次意图目标不一致", PlayCommandErrorContract.SCAN_CODE_NODE_MISMATCH);
         // 规则16:普通下架/停用节点停止新发现,旧码/旧链接不得再产生新完成;
         // 已正式完成者的幂等重试仍走原回执(与 photo 同口径,§7-2)
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityId, node)) {
-            return error("该站已下架，暂时无法完成");
+            return PlayCommandErrorContract.rejected("该站已下架，暂时无法完成", PlayCommandErrorContract.NODE_DELISTED);
         }
 
         // 2-3) 统一上下文校验(活动会话/自玩会话:归属+报名/通行证+时效)
@@ -149,11 +149,12 @@ public class PlayBasicCommandApplication {
         int playMode = playNodeContext.resolveMode(actId, ctx.topicId);
         if (playMode == PlayMode.FREE_COLLECT) {
             if (playCompletionFacts.isExploreChapterRedeemed(ctx.registration, node.getChapterId())) {
-                return error("该章节已核销，不能补写到店时间");
+                return PlayCommandErrorContract.rejected("该章节已核销，不能补写到店时间", PlayCommandErrorContract.CHAPTER_REDEEMED);
             }
             if (liveCode) {
                 IPlayCheckinCodeService.ConsumeResult consumed = playCheckinCodeService.consume(trimmedCode);
-                if (consumed.kind != IPlayCheckinCodeService.ConsumeResult.Kind.OK) return error(consumed.message);
+                // 码消费失败可能已改写码状态,不声称本次未执行。
+                if (consumed.kind != IPlayCheckinCodeService.ConsumeResult.Kind.OK) return PlayCommandErrorContract.unresolvedEffect(consumed.message, scanCodeCode(consumed));
             }
             PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
             recordFirstSuccessfulScan(memberId, ctx);
@@ -161,21 +162,21 @@ public class PlayBasicCommandApplication {
         }
         // R18-FREEZE:完成方式闸按开局快照判定(冻结优先,老局快照回退实时模板)
         CmsMemberTemplate checkinTemplate = playNodeContext.effectiveTemplate(memberId, ctx.topicId, ctx.actId, node, originalRun);
-        if (playNodeContext.isAppSensorNode(node, checkinTemplate)) return error("该站需通过 App 传感器挑战完成");
-        if (playNodeContext.isPhotoFilterNode(node, checkinTemplate)) return error("该站需通过 App 滤镜相机完成");
+        if (playNodeContext.isAppSensorNode(node, checkinTemplate)) return PlayCommandErrorContract.rejected("该站需通过 App 传感器挑战完成", PlayCommandErrorContract.TASK_REQUIRED);
+        if (playNodeContext.isPhotoFilterNode(node, checkinTemplate)) return PlayCommandErrorContract.rejected("该站需通过 App 滤镜相机完成", PlayCommandErrorContract.TASK_REQUIRED);
         // P1 带领场闸:集合中不可推进;行进中章节须队长已放行
         String leadErr = playNodeContext.leadGateError(actId, node);
-        if (leadErr != null) return error(leadErr);
+        if (leadErr != null) return PlayCommandErrorContract.rejected(leadErr, PlayCommandErrorContract.TEAM_LEAD_REQUIRED);
 
         // 3.5) 线性解锁校验（仅 mode=1 经典定向，防扫后面的码跳关）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return error(unlockErr);
+        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
 
         com.fasterxml.jackson.databind.JsonNode sharedRoute = originalRun.runtimeInstance() == null || gameSessionRuntimeService == null ? null
                 : gameSessionRuntimeService.sharedRouteSnapshot(memberId, ctx.topicId, actId, node.getId());
         if (liveCode) {
             IPlayCheckinCodeService.ConsumeResult consumed = playCheckinCodeService.consume(trimmedCode);
-            if (consumed.kind != IPlayCheckinCodeService.ConsumeResult.Kind.OK) return error(consumed.message);
+            if (consumed.kind != IPlayCheckinCodeService.ConsumeResult.Kind.OK) return PlayCommandErrorContract.unresolvedEffect(consumed.message, scanCodeCode(consumed));
         }
         boolean personalGameplay=originalRun.session()!=null && topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
         if (sharedRoute != null || personalGameplay) {
@@ -203,6 +204,15 @@ public class PlayBasicCommandApplication {
 
     public AjaxResult checkin(String activityId, String code, String topicId) {
         return checkin(activityId, code, topicId, null, null, null);
+    }
+
+    /** 一次性游戏码的消费结果 → 稳定机器码:用过/过期/无效三种都可由端上区别提示。 */
+    private static String scanCodeCode(IPlayCheckinCodeService.ConsumeResult result) {
+        switch (result.kind) {
+            case USED: return PlayCommandErrorContract.SCAN_CODE_USED;
+            case EXPIRED: return PlayCommandErrorContract.SCAN_CODE_EXPIRED;
+            default: return PlayCommandErrorContract.SCAN_CODE_INVALID;
+        }
     }
 
     public void recordFirstSuccessfulScan(Long memberId, PlayCtx ctx) {
@@ -233,7 +243,7 @@ public class PlayBasicCommandApplication {
     public AjaxResult scanEntry(Long actorMemberId, String code)
     {
         Long memberId = actorMemberId;
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
         try {
             PlayScanEntry entry = playScanEntryService.resolve(memberId, code);
             Map<String, Object> data = new LinkedHashMap<>();
@@ -243,7 +253,7 @@ public class PlayBasicCommandApplication {
             if (entry.activityId != null) data.put("activityId", entry.activityId);
             return AjaxResult.success(data);
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return PlayCommandErrorContract.rejected(e.getMessage(), PlayCommandErrorContract.SCAN_CODE_INVALID);
         }
     }
 
@@ -273,7 +283,7 @@ public class PlayBasicCommandApplication {
 
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
             String routeActionId, Integer expectedRouteVersion) {
-        return error("必须提供原运行时身份");
+        return PlayCommandErrorContract.rejected("必须提供原运行时身份", PlayCommandErrorContract.INTENT_INPUT_INVALID);
     }
 
     public AjaxResult answerOnce(Long actorMemberId, String activityId, String nodeId, String answer, String topicId,
@@ -288,17 +298,17 @@ public class PlayBasicCommandApplication {
             String longitude, String latitude, String accuracy)
     {
         Long memberId = actorMemberId;
-        if (memberId <= 0) return error("请先登录");
-        if (StringUtils.isBlank(nodeId) || (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId))) return error("参数有误");
+        if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
+        if (StringUtils.isBlank(nodeId) || (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId))) return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID);
         Long nId;
         try { nId = Long.valueOf(nodeId); }
-        catch (Exception e) { return error("参数有误"); }
+        catch (Exception e) { return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID); }
 
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nId);
-        if (node == null) return error("节点不存在");
+        if (node == null) return PlayCommandErrorContract.rejected("节点不存在", PlayCommandErrorContract.NODE_NOT_FOUND);
         // 规则16 下架闸 + 已完成幂等豁免(与 photo 同口径,§7-2):未完成的新提交仍被拦
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityId, node)) {
-            return error("该站已下架，暂时无法完成");
+            return PlayCommandErrorContract.rejected("该站已下架，暂时无法完成", PlayCommandErrorContract.NODE_DELISTED);
         }
 
         // M2 统一上下文:活动会话或自玩会话(topicId 二选一);校验/时效/通行证在此收口
@@ -308,19 +318,19 @@ public class PlayBasicCommandApplication {
         int playMode = playNodeContext.resolveMode(actId, ctx.topicId);
         // P1 带领场闸:集合中不可推进;行进中章节须队长已放行
         String leadErr = playNodeContext.leadGateError(actId, node);
-        if (leadErr != null) return error(leadErr);
+        if (leadErr != null) return PlayCommandErrorContract.rejected(leadErr, PlayCommandErrorContract.TEAM_LEAD_REQUIRED);
 
         // B5 收窄(2026-08-15):mode2 答题是「扫码进店后的体验层」——未进店不得作答
         // (题面在 /nodes 与 checkin 回包也按进店态下发,这里是防远程作答的硬闸)。
         if (playMode == PlayMode.FREE_COLLECT
                 && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
-            return error("先扫店内静态码进店，再开始任务");
+            return PlayCommandErrorContract.rejected("先扫店内静态码进店，再开始任务", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
         }
 
         // 线性解锁校验（仅 mode=1 经典定向）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return error(unlockErr);
+        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
 
         // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先经 GPS 围栏(50 米)记过到达才能作答。
         // 只管到达与任务分开记的本局路线(与 arrive 的 personalArrival 同一判据);老路径到达即完成,不受影响。
@@ -332,32 +342,32 @@ public class PlayBasicCommandApplication {
             boolean located = target != null && StringUtils.isNotBlank(target.path("longitude").asText(null))
                     && StringUtils.isNotBlank(target.path("latitude").asText(null));
             if (located && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
-                return error("先到这一站 50 米内，再开始作答").put("errorCode", "ARRIVE_FIRST");
+                return PlayCommandErrorContract.arriveFirst("先到这一站 50 米内，再开始作答", PlayCommandErrorContract.ARRIVE_NOT_RECORDED);
             }
         } else if (playMode == PlayMode.LINEAR_ORIENTEERING
                 && StringUtils.isNotBlank(node.getLongitude()) && StringUtils.isNotBlank(node.getLatitude())) {
             // 老路径到达即完成,没有单独的到达记录可查:答案随带的定位按 arrive 同一围栏(精度 80 米、距离 50 米)判
-            String fenceErr = answerFenceError(node, longitude, latitude, accuracy);
-            if (fenceErr != null) return error(fenceErr).put("errorCode", "ARRIVE_FIRST");
+            FenceRejection fence = answerFenceError(node, longitude, latitude, accuracy);
+            if (fence != null) return PlayCommandErrorContract.arriveFirst(fence.message(), fence.reasonCode());
         }
 
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
         // 进行中的一局;老局快照没有 nodeAnswers 键时回退实时模板)
         com.fasterxml.jackson.databind.JsonNode frozenAnswer = playNodeContext.frozenAnswer(
                 memberId, ctx.topicId, ctx.actId, node.getId(), originalRun);
-        if (node.getTemplateId() == null && !playNodeContext.hasFrozenContent(frozenAnswer)) return error("该节点未配置答题");
+        if (node.getTemplateId() == null && !playNodeContext.hasFrozenContent(frozenAnswer)) return PlayCommandErrorContract.rejected("该节点未配置答题", PlayCommandErrorContract.CONFIG_INVALID);
         if (playNodeContext.hasFrozenContent(frozenAnswer)) playNodeContext.frozenNodeView(node, frozenAnswer);
         int vm;
         String questionAnswer;
         String correctAnswer;
         if (frozenAnswer != null) {
             vm = frozenAnswer.path("validationMethod").asInt(0);
-            if (vm == 0) return error("该节点未配置答题");
+            if (vm == 0) return PlayCommandErrorContract.rejected("该节点未配置答题", PlayCommandErrorContract.CONFIG_INVALID);
             questionAnswer = frozenAnswer.path("questionAnswer").asText(null);
             correctAnswer = frozenAnswer.path("correctAnswer").asText(null);
         } else {
             CmsMemberTemplate liveTpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
-            if (liveTpl == null || liveTpl.getValidationMethod() == null) return error("该节点未配置答题");
+            if (liveTpl == null || liveTpl.getValidationMethod() == null) return PlayCommandErrorContract.rejected("该节点未配置答题", PlayCommandErrorContract.CONFIG_INVALID);
             vm = liveTpl.getValidationMethod();
             questionAnswer = liveTpl.getQuestionAnswer();
             correctAnswer = liveTpl.getCorrectAnswer();
@@ -374,12 +384,16 @@ public class PlayBasicCommandApplication {
             // 扩展点：收集/占领/小游戏等后续作为「单独的游戏模板」接入，
             // 届时新增对应 validationMethod(或独立完成接口)走自己的校验，
             // 校验通过后同样调用 advanceProgress 推进进度，复用幂等/发分/通关逻辑。
-            return error("该节点不支持答题校验");
+            return PlayCommandErrorContract.rejected("该节点不支持答题校验", PlayCommandErrorContract.CONFIG_INVALID);
         }
         if (!ok) {
             playNodeCompletionApplication.logAttempt(memberId, node, actId, 1, 0, ans); // M9 答错(带用户答案供AI评估)
             // 明确标记「这是答案错」:前端据此才计一次错 / 才可能解锁揭示。业务拒绝
             // (活动已结束/未报名/先扫码进店/本章未放行…)不带这个标记,不得被当成答错。
+            // 答错已落一次失误事实(logAttempt),故不声称 intentNotExecuted;该动作号已终态。
+            // 但**不加 errorCode**:原合同里「答错」不是传输/恢复错误,判据是
+            // msg=「答案不正确」+ data.answerWrong。加了码会让既有客户端把普通答错
+            // 当成业务拒绝(而业务拒绝恰恰不该带这个标记),等于改既有 body 语义。
             return AjaxResult.error("答案不正确",
                     java.util.Collections.singletonMap("answerWrong", true));
         }
@@ -400,7 +414,7 @@ public class PlayBasicCommandApplication {
             try {
                 puzzleScore = puzzlePlayService.solvedScore(memberId, ctx.topicId, node.getId(), actId);
             } catch (IllegalStateException e) {
-                return error(e.getMessage());
+                return PlayCommandErrorContract.retryableUncertain(e.getMessage(), PlayCommandErrorContract.PUZZLE_STATE_UNAVAILABLE);
             }
             data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null,
                     puzzleScore, PuzzleScorePolicy.COMPLETION_SOLVED, RewardPolicy.FULL,
@@ -415,21 +429,33 @@ public class PlayBasicCommandApplication {
     }
 
     /** 作答时定位的到站围栏,与 arrive 坐标判定同口径;null = 在站内。 */
-    private String answerFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
-        if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude) || StringUtils.isBlank(accuracy)) {
-            return "先开启定位，到这一站 50 米内再作答";
+    private FenceRejection answerFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
+        if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) {
+            return new FenceRejection("先开启定位，到这一站 50 米内再作答", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
+        }
+        if (StringUtils.isBlank(accuracy)) {
+            return new FenceRejection("先开启定位，到这一站 50 米内再作答",
+                    com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING);
         }
         Double playerLat = PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d);
         Double playerLng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
         Double nodeLat = PlayNodeContext.parseGeoCoordinate(node.getLatitude(), -90d, 90d);
         Double nodeLng = PlayNodeContext.parseGeoCoordinate(node.getLongitude(), -180d, 180d);
         Double acc = PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
-        if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null || acc == null) return "定位无效";
-        if (acc > GEOFENCE_ACCURACY_METERS) return "定位精度不足，请到开阔处再作答";
+        if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null || acc == null) {
+            return new FenceRejection("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+        }
+        if (acc > GEOFENCE_ACCURACY_METERS) {
+            return new FenceRejection("定位精度不足，请到开阔处再作答", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
+        }
         double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
-        if (!Double.isFinite(dist)) return "定位无效";
-        return dist > GEOFENCE_METERS ? "还没到这一站附近，到 50 米内再作答" : null;
+        if (!Double.isFinite(dist)) return new FenceRejection("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+        return dist > GEOFENCE_METERS
+                ? new FenceRejection("还没到这一站附近，到 50 米内再作答", PlayCommandErrorContract.ARRIVE_TOO_FAR) : null;
     }
+
+    /** 作答到站围栏的细分拒绝:errorCode 仍是既有 ARRIVE_FIRST,细分原因放 reasonCode。 */
+    private record FenceRejection(String message, String reasonCode) { }
 
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId) {
         return answer(activityId, nodeId, answer, topicId, null, null);
@@ -438,7 +464,7 @@ public class PlayBasicCommandApplication {
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult sensorResult(Long actorMemberId, SensorResultRequest request)
     {
-        if (request == null) return error("参数有误");
+        if (request == null) return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID);
         return playBasicIntentApplication.executeBasicIntent(actorMemberId, "SENSOR",
                 request.getActivityId() == null ? null : request.getActivityId().toString(),
                 request.getTopicId() == null ? null : request.getTopicId().toString(),
@@ -453,21 +479,21 @@ public class PlayBasicCommandApplication {
             PlayOriginalRun originalRun)
     {
         Long memberId = actorMemberId;
-        if (memberId <= 0) return error("请先登录");
-        if (request == null || request.getNodeId() == null || request.getNodeId() <= 0) return error("参数有误");
+        if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
+        if (request == null || request.getNodeId() == null || request.getNodeId() <= 0) return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID);
         boolean hasActivity = request.getActivityId() != null && request.getActivityId() > 0;
         boolean hasTopic = request.getTopicId() != null && request.getTopicId() > 0;
-        if (hasActivity == hasTopic) return error("activityId 与 topicId 必须且只能传一个");
+        if (hasActivity == hasTopic) return PlayCommandErrorContract.rejected("activityId 与 topicId 必须且只能传一个", PlayCommandErrorContract.INTENT_INPUT_INVALID);
 
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(request.getNodeId());
-        if (node == null) return error("节点不存在或未配置玩法");
+        if (node == null) return PlayCommandErrorContract.rejected("节点不存在或未配置玩法", PlayCommandErrorContract.NODE_NOT_FOUND);
         if (node.getTemplateId() == null && !playNodeContext.hasFrozenContent(playNodeContext.frozenAnswer(
                 memberId, node.getTopicId(), hasActivity ? request.getActivityId() : 0L, node.getId(), originalRun)))
-            return error("节点不存在或未配置玩法");
+            return PlayCommandErrorContract.rejected("节点不存在或未配置玩法", PlayCommandErrorContract.CONFIG_INVALID);
         // 规则16 下架闸 + 已完成幂等豁免(与 photo 同口径,§7-2):未完成的新提交仍被拦
         String activityIdArg = hasActivity ? String.valueOf(request.getActivityId()) : null;
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityIdArg, node)) {
-            return error("该站已下架，暂时无法完成");
+            return PlayCommandErrorContract.rejected("该站已下架，暂时无法完成", PlayCommandErrorContract.NODE_DELISTED);
         }
 
         PlayCtx ctx = playNodeContext.resolveCtx(memberId,
@@ -476,13 +502,13 @@ public class PlayBasicCommandApplication {
         if (ctx.error != null) return ctx.error;
         // canPlay may initialize a route: refuse lead state before entering that writable context.
         String leadErr = playNodeContext.leadGateError(ctx.actId, node);
-        if (leadErr != null) return error(leadErr);
+        if (leadErr != null) return PlayCommandErrorContract.rejected(leadErr, PlayCommandErrorContract.TEAM_LEAD_REQUIRED);
         String unlockErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, request.getRouteActionId());
-        if (unlockErr != null) return error(unlockErr);
+        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
         int mode = playNodeContext.resolveMode(ctx.actId, ctx.topicId);
         if (mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node)
                 && !shopDayProofService.hasArrived(memberId, ctx.actId, node.getId())) {
-            return error("先扫店内静态码进店，再开始任务");
+            return PlayCommandErrorContract.rejected("先扫店内静态码进店，再开始任务", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
         }
         // R18-FREEZE:传感器判定配置按开局快照,老局快照没有该键时回退实时模板
         com.fasterxml.jackson.databind.JsonNode frozenAnswer = playNodeContext.frozenAnswer(memberId, ctx.topicId, ctx.actId, node.getId(), originalRun);
@@ -491,7 +517,8 @@ public class PlayBasicCommandApplication {
                 : playNodeContext.frozenTemplateView(node, frozenAnswer);
         String sensorError = sensorChallengeService.validateAndAcquire(memberId, ctx.actId, node, template,
                 request.getSensorType(), request.getPayload());
-        if (sensorError != null) return error(sensorError);
+        // 传感器判定可能已占用一次挑战,不声称本次未执行。
+        if (sensorError != null) return PlayCommandErrorContract.unresolvedEffect(sensorError, PlayCommandErrorContract.SENSOR_REJECTED);
 
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, ctx.actId, null, null, null,
                 RewardPolicy.XP_BADGE_ONLY, request.getRouteActionId(),
@@ -517,24 +544,24 @@ public class PlayBasicCommandApplication {
 
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy) {
-        return error("必须提供原运行时身份");
+        return PlayCommandErrorContract.rejected("必须提供原运行时身份", PlayCommandErrorContract.INTENT_INPUT_INVALID);
     }
 
     public AjaxResult arriveOnce(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun)
     {
         Long memberId = actorMemberId;
-        if (memberId <= 0) return error("请先登录");
-        if (StringUtils.isBlank(nodeId) || (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId))) return error("参数有误");
+        if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
+        if (StringUtils.isBlank(nodeId) || (StringUtils.isBlank(activityId) && StringUtils.isBlank(topicId))) return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID);
         Long nId;
         try { nId = Long.valueOf(nodeId); }
-        catch (Exception e) { return error("参数有误"); }
+        catch (Exception e) { return PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID); }
 
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nId);
-        if (node == null) return error("节点不存在");
+        if (node == null) return PlayCommandErrorContract.rejected("节点不存在", PlayCommandErrorContract.NODE_NOT_FOUND);
         // 规则16 下架闸 + 已完成幂等豁免(与 photo 同口径,§7-2):未完成的新提交仍被拦
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityId, node)) {
-            return error("该站已下架，暂时无法完成");
+            return PlayCommandErrorContract.rejected("该站已下架，暂时无法完成", PlayCommandErrorContract.NODE_DELISTED);
         }
 
         // M2 统一上下文:活动会话或自玩会话(topicId 二选一)
@@ -559,21 +586,21 @@ public class PlayBasicCommandApplication {
             //   只记 shop-day 凭证、不发分、不判通关(③ 的完成经济仍由章节核销承担)。
             //   有商家或有坐标的节点一字不动,仍只认 /checkin。
             if (!playNodeContext.isPureOnlineNode(node)) {
-                return error("请扫店内的码");
+                return PlayCommandErrorContract.rejected("请扫店内的码", PlayCommandErrorContract.STORE_SCAN_REQUIRED);
             }
             if (playCompletionFacts.isExploreChapterRedeemed(memberId, actId, node.getChapterId())) {
-                return error("该章节已核销，不能补写到店时间");
+                return PlayCommandErrorContract.rejected("该章节已核销，不能补写到店时间", PlayCommandErrorContract.CHAPTER_REDEEMED);
             }
             PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
             return AjaxResult.success("已完成本节", playTaskPresentation.shopDayProofData(node, proof));
         }
         // P1 带领场闸:集合中不可推进;行进中章节须队长已放行
         String leadErr = playNodeContext.leadGateError(actId, node);
-        if (leadErr != null) return error(leadErr);
+        if (leadErr != null) return PlayCommandErrorContract.rejected(leadErr, PlayCommandErrorContract.TEAM_LEAD_REQUIRED);
 
         // 线性解锁校验（仅 mode=1 经典定向；mode=2 自由定向跳过）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
-        if (unlockErr != null) return error(unlockErr);
+        if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
 
         // 验证方式闸：答题(1)/拍照(2)/选项(3)/扫码(4) 类节点必须走对应接口完成，
         // 不能用"到达/到点"绕过任务白拿分+券+勋章+通关(反作弊)。仅 0/null(到点即完成) 或 5(GPS) 放行。
@@ -584,14 +611,14 @@ public class PlayBasicCommandApplication {
             // G-R1:悬空 templateId(行读不到)是配置损坏,必须缺合同失败关闭。
             // 否则 arriveValidationMethod 停 null ⇒ vm=5 节点被当成普通无验证节点,缺坐标也放行完成。
             if (vmTpl == null) {
-                return error("该站配置异常，暂时无法打卡");
+                return PlayCommandErrorContract.rejected("该站配置异常，暂时无法打卡", PlayCommandErrorContract.CONFIG_INVALID);
             }
             arriveValidationMethod = vmTpl.getValidationMethod();
             if (!ValidationMethod.completesOnArrive(vmTpl.getValidationMethod())) {
                 // 白名单判据见 ValidationMethod#completesOnArrive:
                 // 原来这里逐个列"要拒的 vm",新增完成方式会默认从这条路放行,
                 // 等于绕过它自己的判定且零报错。
-                return error("该站需完成对应任务后才能打卡");
+                return PlayCommandErrorContract.rejected("该站需完成对应任务后才能打卡", PlayCommandErrorContract.TASK_REQUIRED);
             }
         }
 
@@ -601,12 +628,12 @@ public class PlayBasicCommandApplication {
         com.fasterxml.jackson.databind.JsonNode sharedArrival=originalRun.runtimeInstance()==null || gameSessionRuntimeService==null?null:gameSessionRuntimeService.sharedRouteSnapshot(memberId,ctx.topicId,actId,node.getId());
         boolean personalArrival=originalRun.session()!=null && topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
         String targetLongitude=node.getLongitude(),targetLatitude=node.getLatitude();
-        if((personalArrival || sharedArrival!=null) && topicRouteRuntimeService!=null) {com.fasterxml.jackson.databind.JsonNode target=topicRouteRuntimeService.nodeArrivalConfig(memberId,ctx.topicId,actId,node.getId());if(target==null)return error("本局缺少冻结到达配置");targetLongitude=target.path("longitude").asText(null);targetLatitude=target.path("latitude").asText(null);}
+        if((personalArrival || sharedArrival!=null) && topicRouteRuntimeService!=null) {com.fasterxml.jackson.databind.JsonNode target=topicRouteRuntimeService.nodeArrivalConfig(memberId,ctx.topicId,actId,node.getId());if(target==null)return PlayCommandErrorContract.rejected("本局缺少冻结到达配置", PlayCommandErrorContract.CONFIG_INVALID);targetLongitude=target.path("longitude").asText(null);targetLatitude=target.path("latitude").asText(null);}
         boolean hasNodeCoord = StringUtils.isNotBlank(targetLongitude) && StringUtils.isNotBlank(targetLatitude);
         boolean gpsNode = Integer.valueOf(5).equals(arriveValidationMethod);
-        if (gpsNode && !hasNodeCoord) return error("站点未设坐标，暂时无法打卡");
+        if (gpsNode && !hasNodeCoord) return PlayCommandErrorContract.rejected("站点未设坐标，暂时无法打卡", PlayCommandErrorContract.ARRIVE_COORD_NOT_CONFIGURED);
         if (hasNodeCoord) {
-            if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return error("请开启定位");
+            if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置
             // 都必须有限且在经纬范围内;距离本身也要有限,任一不满足一律失败关闭。
@@ -614,33 +641,38 @@ public class PlayBasicCommandApplication {
             Double playerLng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
             Double nodeLat = PlayNodeContext.parseGeoCoordinate(targetLatitude, -90d, 90d);
             Double nodeLng = PlayNodeContext.parseGeoCoordinate(targetLongitude, -180d, 180d);
-            if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return error("定位无效");
+            if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
             double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
-            if (!Double.isFinite(dist)) return error("定位无效");
+            if (!Double.isFinite(dist)) return PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
             // B1:定位精度闸(仅坐标判定路径)。accuracy 为端上 wx.getLocation 的水平精度(米);
             // 空白=未上报,拒(ARRIVE_ACCURACY_MISSING);非有限/负数/坏文本=定位无效(ARRIVE_ACCURACY_INVALID);
             // >80m 要求去开阔处或扫码,先于距离判断。
             // O-01(owner 2026-10-23 拍板:尚无真实用户,不设过渡期):原「空精度放行」与开关
             // play.arrive.require_accuracy 已删除。这两种拒绝不是作弊判定,不入守卫表、不可申诉,重新定位或扫码即可。
             if (StringUtils.isBlank(accuracy)) {
-                return error("未获取到定位精度，请重新定位后重试或扫码完成")
-                        .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING)
+                return PlayCommandErrorContract
+                        .retryable("未获取到定位精度，请重新定位后重试或扫码完成",
+                                com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING)
                         .put("appealable", false);
             }
             Double acc = PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
             if (acc == null) {
-                return error("定位无效")
-                        .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_INVALID)
+                return PlayCommandErrorContract
+                        .retryable("定位无效", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_INVALID)
                         .put("appealable", false);
             }
-            if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
-            if (dist > GEOFENCE_METERS) return error("还没到这一站附近");
+            if (acc > GEOFENCE_ACCURACY_METERS) return PlayCommandErrorContract.retryable("定位精度不足，请到开阔处或扫码完成", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
+            if (dist > GEOFENCE_METERS) return PlayCommandErrorContract.retryable("还没到这一站附近", PlayCommandErrorContract.ARRIVE_TOO_FAR);
             // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
             if (arriveLocationGuard != null) {
                 com.chengyinhub.business.service.support.ArriveLocationGuard.Result guard =
                         arriveLocationGuard.check(memberId, actId, ctx.topicId, nId, nodeLat, nodeLng, acc);
                 if (guard.rejected()) {
-                    AjaxResult rejected = error(guard.message()).put("errorCode", guard.errorCode())
+                    // 守卫已按判定落表(REJECT/SHADOW 行),不声称本次未执行;
+                    // 节流是瞬时拒绝,速度/窗口是位移异常(重发会再次命中,需申诉)。
+                    AjaxResult rejected = (com.chengyinhub.business.service.support.ArriveLocationGuardPolicy.THROTTLE.equals(guard.errorCode())
+                            ? PlayCommandErrorContract.retryableUncertain(guard.message(), guard.errorCode())
+                            : PlayCommandErrorContract.unresolvedEffect(guard.message(), guard.errorCode()))
                             .put("appealable", guard.appealable());
                     if (guard.guardLogId() != null) rejected.put("guardLogId", guard.guardLogId().toString());
                     rejected.put("routeSessionId", originalRun.routeSessionId().toString());
@@ -667,7 +699,7 @@ public class PlayBasicCommandApplication {
             try {
                 advancedGameRuntimeService.completeGate(memberId, actId, ctx.topicId, node.getId());
             } catch (ServiceException notPassed) {
-                return error(notPassed.getMessage()).put("errorCode", "ADVANCED_FIRST");
+                return PlayCommandErrorContract.unresolvedEffect(notPassed.getMessage(), PlayCommandErrorContract.ADVANCED_FIRST);
             }
         }
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功

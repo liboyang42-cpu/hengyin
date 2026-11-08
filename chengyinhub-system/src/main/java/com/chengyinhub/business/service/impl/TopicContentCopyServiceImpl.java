@@ -22,6 +22,8 @@ import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.support.TopicRouteConfigValidator;
 import com.chengyinhub.business.service.support.TopicTemplateRuleIdentityRemapper;
 import com.chengyinhub.business.service.support.TopicPlatformContentSlotGuard;
+import com.chengyinhub.business.service.support.TopicContentWriteGuard;
+import com.chengyinhub.business.service.support.TopicLocationContract;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.RoleEntityType;
@@ -58,6 +60,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     @Autowired private ICmsMemberTemplateService cmsMemberTemplateService;
     @Autowired private TopicPlatformContentSlotGuard platformContentSlotGuard;
     @Autowired private ThemeStateKeyService themeStateKeyService;
+    @Autowired private TopicContentWriteGuard contentWriteGuard;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -79,6 +82,16 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
 
     private Long copyCmsTopicWithContentOwner(Long id, Map<String, Object> params,
                                                String forcedContentEntityType) {
+        // 采用方式在写任何行之前校验；旧客户端不传 bindingIntent = LEGACY，复制结果保持原样。
+        String bindingIntent = TopicLocationContract.intent(paramString(params, "bindingIntent"));
+        String targetCityCode = TopicLocationContract.cityCode(paramString(params, "targetCityCode"), "targetCityCode");
+        // 采用模式与目标城市的合同校验必须在**任何写入之前**完成：
+        // 若留到末尾的 buildAdoptionContract 才查，副本父行/章节/节点已经落库，
+        // 事务回滚只是补救，契约要的是「不合法请求不产生任何 copy/chapter/node 写」。
+        assertAdoptionRequestLegal(bindingIntent, targetCityCode);
+        // 与章节/节点/路线写者共用同一把父行 fence：来源快照与子内容一致，且本事务只写副本。
+        // 手工 new 的旧单测没注入(同 TopicPublicationContentGuard 的既有口径)：运行态必注入。
+        if (contentWriteGuard != null) contentWriteGuard.lockTopicContent(id);
         CmsTopic originalTopic = cmsTopicMapper.selectCmsTopicById(id);
         if (originalTopic == null) {
             throw new RuntimeException("原主题不存在");
@@ -86,9 +99,12 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         if (Integer.valueOf(2).equals(originalTopic.getDelFlag())) {
             throw new IllegalArgumentException("原主题已删除，不能复制");
         }
+        // 与来源城市的关系（目标城市不能等于/必须等于来源城市）同样要在写前判：
+        // 这一步只需只读的源主题，不需要任何写。
+        assertAdoptionCityRelationLegal(bindingIntent, targetCityCode, originalTopic.getCityCode());
 
         Integer copyType = Convert.toInt(params == null ? null : params.get("copyType"), 1);
-        CmsTopic newTopic = copyTopicBasicInfo(originalTopic);
+        CmsTopic newTopic = copyTopicBasicInfo(originalTopic, bindingIntent, targetCityCode);
         Long memberId = params == null ? null : Convert.toLong(params.get("memberId"));
         if (RoleEntityType.PLATFORM.equals(forcedContentEntityType)) {
             newTopic.setMemberId(platformMemberId);
@@ -113,18 +129,85 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
 
         if (copyType >= 2) {
             Map<Long, Long> npcIdMap = new LinkedHashMap<Long, Long>();
-            CopiedContentIds copiedMaps = copyChaptersAndNodes(id, newTopic, npcIdMap);
+            CopiedContentIds copiedMaps = copyChaptersAndNodes(id, newTopic, npcIdMap, bindingIntent);
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
             remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
             preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
             // 站点玩法里引用的状态键要跟着走:副本不注册,发布闸「以下状态键未注册」把套模板的人整个挡住
             copyStateKeys(id, newTopicId);
+            materializeLocationContract(originalTopic, newTopic, copiedMaps, bindingIntent, targetCityCode);
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
         }
         return newTopicId;
+    }
+
+    private static String paramString(Map<String, Object> params, String key) {
+        if (params == null) return null;
+        Object value = params.get(key);
+        return value == null ? null : String.valueOf(value);
+    }
+
+    /**
+     * 采用请求自身的合法性：只看请求参数，不读库、不写行。
+     *
+     * <p>放在 {@code copyCmsTopicWithContentOwner} 的第一行之后调用，保证「不合法请求一个写都不产生」。
+     * 旧客户端不传 {@code bindingIntent}（= LEGACY）与只传 {@code bindingIntent=SAME_CITY} 都照旧放行；
+     * 显式 {@code LEGACY} 由 {@link TopicLocationContract#intent} 直接拒（裸 LEGACY 不是客户端契约）。
+     */
+    private static void assertAdoptionRequestLegal(String bindingIntent, String targetCityCode) {
+        if (TopicLocationContract.isNewCity(bindingIntent) && targetCityCode == null) {
+            throw new IllegalArgumentException("targetCityCode 不能为空:换城采用必须指定目标城市");
+        }
+    }
+
+    /**
+     * 目标城市与来源城市的关系：这个判定只需要只读的源主题，所以同样放在第一次写入之前。
+     *
+     * <p>与 {@link TopicLocationContract#buildAdoptionContract} 里的同名判定同源（同一个合同、
+     * 同一套错误文案）：那边留在末尾做最后一道防线，这里提前挡住「先写副本再抛」。
+     */
+    private static void assertAdoptionCityRelationLegal(String bindingIntent, String targetCityCode,
+                                                        String sourceCityCode) {
+        if (targetCityCode == null || sourceCityCode == null) return;
+        if (TopicLocationContract.isNewCity(bindingIntent) && sourceCityCode.equals(targetCityCode)) {
+            throw new IllegalArgumentException("目标城市与来源相同，请使用同城复用");
+        }
+        if (TopicLocationContract.INTENT_SAME_CITY.equals(bindingIntent)
+                && !sourceCityCode.equals(targetCityCode)) {
+            throw new IllegalArgumentException("同城复用要求目标城市与来源一致；跨城请使用 NEW_CITY");
+        }
+    }
+
+    /**
+     * 写入副本地点合同并回读校验。
+     *
+     * <p>旧版采用（LEGACY）也写一份合同：来源血缘（sourceTemplateTopicId + 源 configVersion）可追，
+     * 且不会把「没有合同」误读成「没有地点要求」。源合同非法直接失败，不静默丢要求。
+     */
+    private void materializeLocationContract(CmsTopic sourceTopic, CmsTopic newTopic,
+                                             CopiedContentIds copiedMaps, String bindingIntent,
+                                             String targetCityCode) {
+        if (newTopic.getId() == null || newTopic.getId() <= 0L) {
+            throw new IllegalStateException("地点合同写入失败：副本主题身份缺失");
+        }
+        String contract = TopicLocationContract.buildAdoptionContract(sourceTopic, copiedMaps.sourceNodes,
+                copiedMaps.oldToNew, bindingIntent, targetCityCode, new Date());
+
+        // 唯一写口：owner 在 SQL 里再判一次；通用 updateCmsTopic 不带这一列（见 mapper 注释）。
+        int rows = cmsTopicMapper.updateTopicLocationContract(newTopic.getId(), newTopic.getMemberId(),
+                contract, "system_copy", new Date());
+        if (rows != 1) {
+            throw new IllegalStateException("地点合同保存失败: 副本不归本次复制的内容主体");
+        }
+        CmsTopic readBack = cmsTopicMapper.selectCmsTopicById(newTopic.getId());
+        if (readBack == null
+                || !java.util.Objects.equals(readBack.getCityCode(), newTopic.getCityCode())
+                || !TopicLocationContract.same(contract, readBack.getContentContractJson())) {
+            throw new IllegalStateException("地点合同回读校验失败");
+        }
     }
 
     private void copyStateKeys(Long sourceTopicId, Long copyTopicId) {
@@ -176,7 +259,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         }
     }
 
-    private CmsTopic copyTopicBasicInfo(CmsTopic original) {
+    private CmsTopic copyTopicBasicInfo(CmsTopic original, String bindingIntent, String targetCityCode) {
         CmsTopic newTopic = new CmsTopic();
 
         // 复制所有字段，除了ID、状态和时间相关字段
@@ -208,7 +291,11 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         newTopic.setName(original.getName());
         newTopic.setSubtitle(original.getSubtitle());
         newTopic.setDescription(original.getDescription());
-        newTopic.setAddressName(original.getAddressName());
+        // 城市事实与故事内容分开：跨城采用时主题地址属于旧城事实，必须清空；同城/旧版沿用。
+        // 目的地城市：NEW_CITY 写目标城市；SAME_CITY/LEGACY 继承来源城市（来源未标注则保持 NULL）。
+        boolean newCity = TopicLocationContract.INTENT_NEW_CITY.equals(bindingIntent);
+        newTopic.setAddressName(newCity ? null : original.getAddressName());
+        newTopic.setCityCode(newCity ? targetCityCode : original.getCityCode());
         newTopic.setTotalTime(original.getTotalTime());
         newTopic.setTotalMileage(original.getTotalMileage());
         newTopic.setLocationCount(original.getLocationCount());
@@ -242,7 +329,8 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         return newTopic;
     }
 
-    private CopiedContentIds copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic, Map<Long, Long> npcIdMap) {
+    private CopiedContentIds copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic,
+                                                  Map<Long, Long> npcIdMap, String bindingIntent) {
         CopiedContentIds copiedMaps = new CopiedContentIds();
         Long newTopicId = newTopic.getId();
         // 查询原主题的章节
@@ -332,7 +420,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
 
         // 复制节点
         com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(newTopic.getThemeRuntimeConfigJson());
-        Map<Long, Long> nodeIdMap = copyNodes(originalTopicId, newTopicId, chapterIdMap, newTopic.getMemberId(), npcIdMap, runtimeConfig);
+        Map<Long, Long> nodeIdMap = copyNodes(originalTopicId, newTopicId, chapterIdMap, newTopic.getMemberId(), npcIdMap, runtimeConfig, bindingIntent, copiedMaps);
         CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(newTopicId);
         runtimePatch.setThemeRuntimeConfigJson(TopicTemplateRuleIdentityRemapper.remap(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapAll(runtimeConfig == null ? newTopic.getThemeRuntimeConfigJson() : runtimeConfig.toString(), nodeIdMap, chapterIdMap, npcIdMap), nodeIdMap));
         if (runtimePatch.getThemeRuntimeConfigJson() != null && cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置复制失败");
@@ -403,16 +491,23 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     }
 
     private Map<Long, Long> copyNodes(Long originalTopicId, Long newTopicId, Map<Long, Long> chapterIdMap,
-                                      Long newOwnerMemberId, Map<Long, Long> npcIdMap, com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig) {
+                                      Long newOwnerMemberId, Map<Long, Long> npcIdMap,
+                                      com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig,
+                                      String bindingIntent, CopiedContentIds copiedMaps) {
         Map<Long, Long> nodeIdMap = new HashMap<>();
         // 查询原主题的所有节点
         CmsTopicNode nodeQuery = new CmsTopicNode();
         nodeQuery.setTopicId(originalTopicId);
         List<CmsTopicNode> originalNodes = cmsTopicNodeMapper.selectCmsTopicNodeList(nodeQuery);
+        if (copiedMaps != null) copiedMaps.sourceNodes = originalNodes;
 
         if (CollectionUtils.isEmpty(originalNodes)) {
             return nodeIdMap;
         }
+
+        // 跨城采用：节点上的地址/坐标/现场营业条件/实景图都是旧城事实，不得原样搬进新实例。
+        // 要求本身留在 content_contract_json 的 locationSlots；绑定状态由采用合同标 REBIND_REQUIRED。
+        boolean newCity = TopicLocationContract.INTENT_NEW_CITY.equals(bindingIntent);
 
         Map<Long, Long> templateIdMap = new HashMap<>();
         // 节点级前置解锁引用的是本主题节点 id,必须等全部副本节点落库后按 nodeIdMap 重映射
@@ -436,10 +531,11 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
 
             newNode.setName(originalNode.getName());
             newNode.setDescription(originalNode.getDescription());
-            newNode.setAddress(originalNode.getAddress());
-            newNode.setLongitude(originalNode.getLongitude());
-            newNode.setLatitude(originalNode.getLatitude());
-            newNode.setImgUrl(originalNode.getImgUrl());
+            // 跨城采用不得把旧城地址/坐标/实景图当新实例已确认地点；要求与待绑定状态走地点合同。
+            newNode.setAddress(newCity ? null : originalNode.getAddress());
+            newNode.setLongitude(newCity ? null : originalNode.getLongitude());
+            newNode.setLatitude(newCity ? null : originalNode.getLatitude());
+            newNode.setImgUrl(newCity ? null : originalNode.getImgUrl());
             newNode.setNodeTime(originalNode.getNodeTime());
             // [W4闭环] 节点模板是私有的(cms_member_template):副本若原样沿用源作者的 templateId,
             // 新归属在编辑器里一保存就会被 assertTemplateOwned 以「不能引用他人的模板」拒掉。
@@ -469,7 +565,8 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
                     copiedTemplateBlocks.put(copiedTemplateId, sourceTemplate.getAdvancedConfigJson());
                 }
             }
-            newNode.setBusinessTime(originalNode.getBusinessTime());
+            // 营业时间属于旧城现场条件，跨城必须重新确认；打卡码每次复制都换新，旧商家凭证不随副本走。
+            newNode.setBusinessTime(newCity ? null : originalNode.getBusinessTime());
             newNode.setHookText(originalNode.getHookText());
             newNode.setCardHookLong(originalNode.getCardHookLong());
             newNode.setFragmentText(originalNode.getFragmentText());
@@ -477,6 +574,12 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             newNode.setSortId(originalNode.getSortId());
             newNode.setXpValue(originalNode.getXpValue()); // M7 停靠节点探索值:漏抄会让副本静默丢 XP(insert 有 xp_value 列)
             newNode.setCheckinCode(java.util.UUID.randomUUID().toString().replace("-", "")); // 复制主题生成新打卡码
+            // 旧商家承接与旧审核痕迹不随内容走：副本只能是本主题/新归属自己的供给。
+            newNode.setMerchantMemberId(null);
+            newNode.setNodeAuditStatus(null);
+            newNode.setNodeAuditReason(null);
+            newNode.setNodeAuditMemberId(null);
+            newNode.setNodeAuditTime(null);
 
             // 设置创建信息
             newNode.setCreateBy("system_copy");
@@ -638,5 +741,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     private static final class CopiedContentIds {
         private final Map<Long, Long> chapterOldToNew = new LinkedHashMap<Long, Long>();
         private final Map<Long, Long> oldToNew = new LinkedHashMap<Long, Long>();
+        /** 与本次复制同一 fence 下读到的来源节点，供地点要求推导与绑定重映射使用。 */
+        private List<CmsTopicNode> sourceNodes = Collections.emptyList();
     }
 }

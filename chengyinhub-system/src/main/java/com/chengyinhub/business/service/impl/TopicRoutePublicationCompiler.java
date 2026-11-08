@@ -36,6 +36,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /** Publication compilation and immutable journey snapshots; no sessions, receipts, CAS or runtime callbacks.
@@ -56,6 +57,8 @@ final class TopicRoutePublicationCompiler {
     private CurrentContent currentContent;
     private boolean derivingDeclarations;
     private boolean finalDeclarations;
+    /** 只读发布预演:声明只进本次内存投影,不 upsert、不取声明写锁。 */
+    private boolean previewDeclarations;
     private final com.chengyinhub.business.mapper.CmsTopicMapper topicMapper;
     private static final class CurrentContent {
         final Long topicId;
@@ -475,6 +478,18 @@ final class TopicRoutePublicationCompiler {
         boolean changed = false;
         for (Map.Entry<String, String> clue : labels.entrySet()) if (!existing.contains(clue.getKey())) {
             if (finalDeclarations) throw new IllegalStateException("最终声明投影缺少模板线索，拒绝发布");
+            if (previewDeclarations) {
+                // 只读预演:派生线索只进本次内存投影 —— 不 upsert、不取声明写锁、也不提前结束,
+                // 让 merge / assertCompiledReferences / freezeJourney / validateGameplayRuntime 照常跑完。
+                if (currentContent == null) throw new IllegalStateException("发布预演声明投影缺失");
+                ThemeStateKey derived = new ThemeStateKey();
+                derived.setTopicId(topic.getId()); derived.setStateKey(clue.getKey());
+                derived.setKeyType(ThemeStateKey.TYPE_FLAG); derived.setScope(ThemeStateKey.SCOPE_RUN);
+                derived.setLabel(clue.getValue()); derived.setInitialValue(0);
+                currentContent.declarations.add(derived);
+                existing.add(clue.getKey()); changed = true;
+                continue;
+            }
             if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
                     || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
                 throw new IllegalStateException("自动线索声明必须加入主题写事务");
@@ -496,7 +511,8 @@ final class TopicRoutePublicationCompiler {
             }
             existing.add(clue.getKey()); changed = true;
         }
-        if (changed && currentContent != null) {
+        // 只读预演已把派生线索直接写进内存投影,不再回头取声明写锁刷新。
+        if (changed && currentContent != null && !previewDeclarations) {
             List<ThemeStateKey> fresh = themeStateKeyMapper.selectByTopicIdForUpdate(topic.getId());
             com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), fresh);
             currentContent.declarations.clear(); currentContent.declarations.addAll(fresh);
@@ -534,6 +550,130 @@ final class TopicRoutePublicationCompiler {
             try { return freezeCurrentPublication(currentContent.topic, routeSnapshot); }
             finally { finalDeclarations = false; }
         });
+    }
+
+    /**
+     * 只读发布预演：用普通读建立一次性内容投影，跑完整冻结/校验链并返回将要发布的那份快照。
+     *
+     * <p>与 {@link #freezePublication(CmsTopic, String, List)} 的关键差别：
+     * <ul>
+     *   <li>不取任何行锁：读 {@code selectCmsTopicById / selectCmsTopicChapterList / selectCmsTopicNodeList /
+     *       selectCmsMemberTemplateByIds / selectByTopicId}，绝不调 {@code *ForUpdate} 或
+     *       {@code lockTopicForStateKeyWrite}；</li>
+     *   <li>不写库：模板派生线索只并入本次内存声明投影，不 upsert、不刷新锁定投影；</li>
+     *   <li>不要求写事务，也不接受在写事务里被调用（否则 {@code withCurrentContent} 会升级成取锁读）；</li>
+     *   <li>不改调用方实体：冻结仍沿用 {@code freezeCurrentPublication} 里的 {@code CmsTopic} 副本；</li>
+     *   <li>结束后在 {@code finally} 里还原上下文，同一编译器的后续操作不继承预演声明。</li>
+     * </ul>
+     *
+     * <p>线索登记不会被吞掉：预演把它视作「本次投影已声明」，随后继续跑
+     * {@code assertCompiledReferences} / {@code merge} / {@code freezeJourney} /
+     * {@code freezeContentSnapshots} / {@code freezeKeys} / {@code validateGameplayRuntime}，
+     * 后面的非法配置照样会抛错。
+     *
+     * @param projectedDeclarations 调用方打算随即提交的声明投影；与库内既有声明按 {@code stateKey} 合并，
+     *                              同名以本参数为准。{@code null} = 只用库内声明。
+     */
+    public String previewPublication(CmsTopic topic, String routeSnapshot,
+                                     List<ThemeStateKey> projectedDeclarations) {
+        if (topic == null || topic.getId() == null || topic.getId() <= 0L)
+            throw new IllegalArgumentException("发布预演主题缺失");
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("发布预演不能加入主题写事务");
+        CurrentContent preview = readPreviewContent(topic, projectedDeclarations);
+        CurrentContent previousContent = currentContent;
+        boolean previousFinal = finalDeclarations;
+        boolean previousPreview = previewDeclarations;
+        // 派生模式会短路 assertCompiledReferences（正式发布只在两次派生之后才做最终校验）；
+        // 预演要的是完整校验，所以显式清掉，结束再还原。
+        boolean previousDeriving = derivingDeclarations;
+        currentContent = preview;
+        finalDeclarations = false;
+        previewDeclarations = true;
+        derivingDeclarations = false;
+        try {
+            return freezeCurrentPublication(preview.topic, routeSnapshot);
+        } finally {
+            derivingDeclarations = previousDeriving;
+            previewDeclarations = previousPreview;
+            finalDeclarations = previousFinal;
+            currentContent = previousContent;
+        }
+    }
+
+    /**
+     * 预演的当前读：只做普通查询，并一次性建好 {@link CurrentContent}。
+     * 节点/章节保留库内全量行（{@code nodes()} 与 {@code runtimeChapters()} 自行按原口径过滤），
+     * 模板只留本主题实际绑定到的那些。
+     */
+    private CurrentContent readPreviewContent(CmsTopic callerTopic, List<ThemeStateKey> projectedDeclarations) {
+        Long topicId = callerTopic.getId();
+        if (topicMapper == null || cmsTopicChapterMapper == null || nodeMapper == null)
+            throw new IllegalStateException("发布预演读取依赖缺失");
+        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        if (topic == null || !topicId.equals(topic.getId()))
+            throw new IllegalStateException("发布预演主题缺失");
+        CmsTopicChapter chapterQuery = new CmsTopicChapter(); chapterQuery.setTopicId(topicId);
+        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery);
+        if (chapters == null) throw new IllegalStateException("发布预演章节读取失败");
+        CmsTopicNode nodeQuery = new CmsTopicNode(); nodeQuery.setTopicId(topicId);
+        List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(nodeQuery);
+        if (nodes == null) throw new IllegalStateException("发布预演节点读取失败");
+        Set<Long> referencedIds = new java.util.TreeSet<Long>();
+        for (CmsTopicNode node : nodes) {
+            if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0L)
+                referencedIds.add(node.getTemplateId());
+        }
+        Map<Long, CmsMemberTemplate> templates = new LinkedHashMap<Long, CmsMemberTemplate>();
+        if (!referencedIds.isEmpty()) {
+            if (templateMapper == null) throw new IllegalStateException("发布预演玩法读取依赖缺失");
+            List<CmsMemberTemplate> rows = templateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(referencedIds));
+            if (rows == null) throw new IllegalStateException("发布预演玩法读取失败");
+            for (CmsMemberTemplate row : rows) {
+                if (row != null && row.getId() != null && referencedIds.contains(row.getId()))
+                    templates.put(row.getId(), row);
+            }
+        }
+        List<ThemeStateKey> declarations = new ArrayList<ThemeStateKey>();
+        List<ThemeStateKey> stored = themeStateKeyMapper == null ? null : themeStateKeyMapper.selectByTopicId(topicId);
+        if (stored != null) for (ThemeStateKey row : stored) if (row != null) declarations.add(row);
+        if (projectedDeclarations != null) for (ThemeStateKey row : projectedDeclarations) {
+            if (row == null || row.getStateKey() == null || row.getStateKey().trim().isEmpty())
+                throw new IllegalStateException("发布预演声明身份不一致");
+            if (row.getTopicId() != null && !topicId.equals(row.getTopicId()))
+                throw new IllegalStateException("发布预演声明归属不一致");
+            ThemeStateKey projected = projectedRow(row, topicId);
+            boolean replaced = false;
+            for (int i = 0; i < declarations.size(); i++) {
+                if (projected.getStateKey().equals(declarations.get(i).getStateKey())) {
+                    declarations.set(i, projected);
+                    replaced = true;
+                    break;
+                }
+            }
+            if (!replaced) declarations.add(projected);
+        }
+        CurrentContent content = new CurrentContent(topic, new ArrayList<CmsTopicChapter>(chapters),
+                new ArrayList<CmsTopicNode>(nodes), templates, declarations);
+        // 只校验形状（归属/键名/重复），不落库、不改调用方对象。
+        com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topicId, content.declarations);
+        return content;
+    }
+
+    /** 预演声明用副本:调用方传进来的行不参与冻结，也不被回写。 */
+    private static ThemeStateKey projectedRow(ThemeStateKey source, Long topicId) {
+        ThemeStateKey row = new ThemeStateKey();
+        row.setTopicId(topicId);
+        row.setStateKey(source.getStateKey());
+        row.setKeyType(source.getKeyType() == null ? ThemeStateKey.TYPE_FLAG : source.getKeyType());
+        row.setScope(source.getScope() == null ? ThemeStateKey.SCOPE_RUN : source.getScope());
+        row.setLabel(source.getLabel());
+        row.setInitialValue(source.getInitialValue());
+        row.setMinValue(source.getMinValue());
+        row.setMaxValue(source.getMaxValue());
+        row.setVisible(source.getVisible());
+        return row;
     }
 
     private String freezeCurrentPublication(CmsTopic topic, String routeSnapshot) {
@@ -893,6 +1033,9 @@ final class TopicRoutePublicationCompiler {
                     ObjectNode ending = endingChapters.putObject(String.valueOf(chapter.getId()));
                     ending.put("id", chapter.getId());
                     ending.put("name", chapter.getName());
+                    ending.put("description", chapter.getDescription());
+                    ending.put("imgArr", chapter.getImgArr());
+                    ending.put("sortId", chapter.getSortId());
                     ending.put("atmospherePreset", chapter.getAtmospherePreset());
                     ending.put("audioUrl", chapter.getAudioUrl());
                     ending.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolve(
@@ -910,14 +1053,31 @@ final class TopicRoutePublicationCompiler {
             row.set("nodeIds", JSON.valueToTree(nodeIds));
             row.set("requiredBefore", JSON.valueToTree(requiredBefore));
             row.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(chapter, nodes)));
-            if (ChapterBlockReadSupport.isRequiredChapter(chapter)) requiredBefore.addAll(nodeIds);
+            // 章节呈现随发布冻结:改章节名/简介/图/音频/里程不再改写已开局的读回内容。
+            row.put("name", chapter.getName());
+            row.put("description", chapter.getDescription());
+            row.put("imgArr", chapter.getImgArr());
+            row.put("totalMileage", chapter.getTotalMileage());
+            row.put("totalTime", chapter.getTotalTime());
+            row.put("sortId", chapter.getSortId());
+            row.put("category", chapter.getCategory());
+            row.put("atmospherePreset", chapter.getAtmospherePreset());
+            row.put("audioUrl", chapter.getAudioUrl());
+            // 必需章决定玩家端要不要下发 blocks;这一位也必须冻结,否则读侧只能回头看实时章节行。
+            boolean required = ChapterBlockReadSupport.isRequiredChapter(chapter);
+            row.put("required", required);
+            if (required) requiredBefore.addAll(nodeIds);
         }
     }
 
+    /**
+     * 模板呈现白名单。{@code validationMethod} 也在里面:键在即为权威(可为 null),
+     * 新制快照据此证明「建局时这一站有没有判定方式」,不再靠答案区有没有该键去猜。
+     */
     private static final String[] TEMPLATE_PRESENTATION_FIELDS = ("id title description imgUrl players usageLocation "
             + "requiredMaterials duration difficulty ruleInstructions merchantGuide interactionType questionName questionImg "
             + "questionAudio questionOptionMediaJson questionA questionB questionC questionD storyText storyImg feedbackText "
-            + "photoRequireDesc audioUrl audioDuration medalName medalStyle medalImg couponId").split(" ");
+            + "photoRequireDesc audioUrl audioDuration medalName medalStyle medalImg couponId validationMethod").split(" ");
     private static final String[] NODE_PRESENTATION_FIELDS = ("id topicId chapterId templateId merchantMemberId name description "
             + "address longitude latitude imgUrl hookText cardHookLong fragmentText nodeTime businessTime sortId unlockAfterNodeId").split(" ");
 
@@ -927,6 +1087,8 @@ final class TopicRoutePublicationCompiler {
         Map<Long, CmsTopicChapter> chapters = new LinkedHashMap<>();
         for (CmsTopicChapter chapter : runtimeChapters(topic.getId())) chapters.put(chapter.getId(), chapter);
         ObjectNode answers = frozen.with(NodeJourneySnapshot.NODE_ANSWERS_KEY);
+        Map<Long, JsonNode> templateViews = new LinkedHashMap<Long, JsonNode>();
+        Map<Long, String> chapterAudio = new LinkedHashMap<Long, String>();
         for (CmsTopicNode node : nodes) {
             if (node.getId() == null || node.getId() <= 0 || !topic.getId().equals(node.getTopicId()))
                 throw new IllegalStateException("冻结节点身份不一致");
@@ -951,6 +1113,21 @@ final class TopicRoutePublicationCompiler {
             if (template != null) {
                 putAnswerText(target, "hint1", template.getHint1());
                 putAnswerText(target, "hint2", template.getHint2());
+            }
+            // 绑定 / 媒体一致性:同一模板在多个站点必须呈现同一份内容,同章节点必须挂同一段章节音频。
+            // 对不上就不再是「同一版内容的重复引用」,发布直接拒绝,读侧不需要猜。
+            if (templateId != null) {
+                JsonNode view = target.path("templatePresentation");
+                JsonNode previous = templateViews.putIfAbsent(templateId, view);
+                if (previous != null && !previous.equals(view))
+                    throw new IllegalStateException("冻结模板呈现不一致");
+            }
+            if (chapter != null) {
+                String audio = target.path("chapterAudioUrl").asText(null);
+                if (chapterAudio.containsKey(chapter.getId())) {
+                    if (!Objects.equals(chapterAudio.get(chapter.getId()), audio))
+                        throw new IllegalStateException("冻结章节音频不一致");
+                } else chapterAudio.put(chapter.getId(), audio);
             }
         }
     }

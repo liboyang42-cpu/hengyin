@@ -15,7 +15,21 @@ public interface IPlayTeamService {
     PlayTeam create(Long memberId, Integer ownerType, Long ownerId, String title, Integer maxMembers, Integer joinMode);
     /** 队长切换组队方式:1=邀请制(退出公开地图) 2=公开申请制。返回生效后的模式。 */
     int updateJoinMode(Long teamId, Long leaderMemberId, Integer joinMode);
+    /**
+     * 队伍详情。在原有 team/members/joined/leader 之外追加三段只读投影:
+     * seats(capacity/occupied/available/paidOccupied/paidTicketMissing/pendingApplications)、
+     * invite(mode/available/expiresAt/expired)、
+     * viewer(joined/leader/role/applicationStatus/applyExpireTime/canApply/canJoinWithCode/
+     * applyBlockers/joinBlockers)。
+     * seats.available 与 viewer.canApply/canJoinWithCode 都是现读结果:名额真源是 joined_count,
+     * 准入判断复用 apply/join 的前置条件(票、审核、拉黑、容量、重复申请),写路径仍是唯一权威。
+     */
     Map<String, Object> info(Long teamId, String inviteCode, Long viewerMemberId);
+    /**
+     * 通过邀请码加入。业务拒绝用 {@link TeamRejection#getErrorCode()}:
+     * INVITE_REVOKED(码不可解析)/INVITE_EXPIRED(队伍已不在招募窗口)/TEAM_UNDER_REVIEW/
+     * TEAM_FULL/TICKET_REQUIRED,各自独立,不再统一并成「邀请已失效」。
+     */
     PlayTeam join(String inviteCode, Long memberId);
     /** 公开申请;返回申请失效时间。 */
     Date apply(Long teamId, Long memberId, String message);

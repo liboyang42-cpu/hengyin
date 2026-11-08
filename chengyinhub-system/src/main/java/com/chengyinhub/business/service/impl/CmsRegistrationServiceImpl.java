@@ -1022,10 +1022,15 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         BigDecimal pointsDeduct = BigDecimal.ZERO;
         BigDecimal memberDiscountYuan = BigDecimal.ZERO;
         StringBuilder ticketsKey = new StringBuilder();
+        // 报价交付摘要的单一票种来源:单票直接取;多票仅当全部同一票种时才有可陈述的票面条款。
+        OmsTicket quotedTicket = null;
+        OmsTicket firstQuotedTicket = null;
+        boolean mixedTickets = false;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
             OmsTicket ticket = validateAndGetTicket(ticketId, ownerType, ownerId, inventoryHold != null);
+            quotedTicket = ticket;
             // F03 报价与报名同一可售口径:报价成功而下单被闸拒 = 用户走到末端才失败。
             if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
             if (inventoryHold == null) assertClubReservationAvailable(clubBenefit, ticket, 1);
@@ -1049,6 +1054,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 RegistrationTicketItem it = tickets.get(i);
                 int qty = (it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
                 OmsTicket ticket = validateAndGetTicket(it.getTicketId(), ownerType, ownerId);
+                if (i == 0) {
+                    firstQuotedTicket = ticket;
+                } else if (firstQuotedTicket != null
+                        && !firstQuotedTicket.getId().equals(it.getTicketId())) {
+                    mixedTickets = true;
+                }
                 if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
                 orderTotal = orderTotal.add(ticket.getPrice().multiply(BigDecimal.valueOf(qty)));
                 memberPriceTotal = memberPriceTotal.add(clubBenefit.effectivePrice(ticket.getPrice())
@@ -1057,6 +1068,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 if (i > 0) ticketsKey.append('|');
                 ticketsKey.append(it.getTicketId()).append(':').append(qty);
             }
+            quotedTicket = mixedTickets ? null : firstQuotedTicket;
             // qty 传 1：orderTotal 已是整单票面，computePrice 内部再乘 qty 会重复计数
             PriceCalc c = computePrice(orderTotal, memberPriceTotal, 1, userPoint, usePoint);
             aggregatePayable = c.payableAmount;
@@ -1075,6 +1087,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 couponDeductYuan, quoteSign,
                 memberDiscountYuan.setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
                 clubBenefit.prioritySignupEnabled);
+        result.setDelivery(quoteDelivery(activity, sellerTopic, quotedTicket, quotedTicketIdOf(tickets)));
         // 1-22 附注(拍板 2026-09-19 第6条):开场前 24h 内的 ¥ 单,下单确认弹层必须写明「本单不可退」。
         // 截止点只许从 RefundPolicy 唯一场次钟取,报价侧不参与 quoteSign(它是展示性字段,
         // 不随时间翻转而使已发出的报价失效)。非场次单(主题路径)不下发 ⇒ 前端 tri-state 保持默认。
@@ -1086,6 +1099,48 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     : free ? new Date().before(deadline) : !new Date().after(deadline));
         }
         return result;
+    }
+
+    /**
+     * C06 交付摘要的唯一装配点。只读既有票种/活动/主题事实：
+     * 没有票种 = 自玩通行证；票面条款缺失时保持 null，不用客户端默认值补齐。
+     */
+    private RegistrationQuoteResult.Delivery quoteDelivery(CmsActivity activity,
+                                                           CmsTopic sellerTopic, OmsTicket ticket,
+                                                           Long fallbackTicketId) {
+        RegistrationQuoteResult.Delivery delivery = new RegistrationQuoteResult.Delivery();
+        Long ticketId = ticket != null ? ticket.getId() : fallbackTicketId;
+        Integer productType = sellerTopic != null ? sellerTopic.getProductType() : null;
+        delivery.setPurchaseKind(PurchaseKind.derive(ticketId, productType));
+        if (ticket != null) {
+            // 多票混选时 ticket 为空：不为整单挑一个票种条款冒充全部交付。
+            delivery.setTicketName(ticket.getName());
+            delivery.setTeamSize(ticket.getTeamSize());
+            delivery.setMinPeople(ticket.getMinPeople());
+            delivery.setMaxPeople(ticket.getMaxPeople());
+            delivery.setNeedAudit(ticket.getNeedAudit());
+            delivery.setRefundRule(ticket.getRefundRule());
+        }
+        Date start = activity != null ? activity.getStartDate()
+                : (sellerTopic != null ? sellerTopic.getStartDate() : null);
+        Date end = activity != null ? activity.getEndDate()
+                : (sellerTopic != null ? sellerTopic.getEndDate() : null);
+        delivery.setServiceStartAt(start);
+        delivery.setServiceEndAt(end);
+        // 受益主体只表达种类：报价人身份已由登录态确定，不重复回显账号 id。
+        delivery.setBeneficiaryKind("PAYER_SELF");
+        delivery.setSellerMemberId(activity != null ? activity.getMemberId()
+                : (sellerTopic != null ? sellerTopic.getMemberId() : null));
+        delivery.setAmountFromServer(Boolean.TRUE);
+        return delivery;
+    }
+
+    /** 多票报价没有单一票种时，仅用第一张票判 ①/③，避免自玩票被误报成有人带票。 */
+    private Long quotedTicketIdOf(List<RegistrationTicketItem> tickets) {
+        if (tickets == null || tickets.isEmpty() || tickets.get(0) == null) {
+            return null;
+        }
+        return tickets.get(0).getTicketId();
     }
 
     /** 无状态报价签名：仅服务端计算，客户端只回传。 */

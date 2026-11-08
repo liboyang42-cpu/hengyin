@@ -50,6 +50,8 @@ import static com.chengyinhub.common.core.domain.AjaxResult.error;
 @Service
 public class PlayNodeQueryApplication {
     private static final Logger logger = LoggerFactory.getLogger(PlayNodeQueryApplication.class);
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
+            new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
@@ -528,59 +530,68 @@ public class PlayNodeQueryApplication {
                 topicForFlow == null ? null : topicForFlow.getProductType(), null);
 
         // 章节列表（章节首次过场/叙事用）；routeGeometry 由前端另调 /api/topic/info-to-user 取（决策 B2）
-        CmsTopicChapter chapterProbe = new CmsTopicChapter();
-        chapterProbe.setTopicId(read.tId);
-        List<CmsTopicChapter> chapterList = cmsTopicChapterService.selectCmsTopicChapterList(chapterProbe);
         List<Map<String, Object>> chapters = new ArrayList<>();
-        Map<Long,String> originalChapterAudio = new LinkedHashMap<>();
+        Map<Long, String> originalChapterAudio = new LinkedHashMap<>();
         for (com.fasterxml.jackson.databind.JsonNode content : read.presentedContents.values()) {
             if (!com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContent(content)
                     || !content.path("nodePresentation").hasNonNull("chapterId")) continue;
-            Long chapterId=content.path("nodePresentation").path("chapterId").asLong();
-            String audio=content.path("chapterAudioUrl").asText(null);
-            if (originalChapterAudio.containsKey(chapterId) && !java.util.Objects.equals(originalChapterAudio.get(chapterId),audio))
+            Long chapterId = content.path("nodePresentation").path("chapterId").asLong();
+            String audio = content.path("chapterAudioUrl").asText(null);
+            if (originalChapterAudio.containsKey(chapterId) && !java.util.Objects.equals(originalChapterAudio.get(chapterId), audio))
                 throw new IllegalStateException("章节音频快照不一致");
-            originalChapterAudio.put(chapterId,audio);
+            originalChapterAudio.put(chapterId, audio);
         }
         Map<String, Object> opening = read.routeState == null ? null : read.routeState.getOpening();
         // 结局章不是路线的一章:不进章节列表(不剧透、不被当成下一章),通关后读 /journey/ending 才播
         java.util.Set<Long> endingChapterIds = com.chengyinhub.business.domain.JourneyStory.endingChapterIds(
                 read.contentSnapshot != null ? com.chengyinhub.business.service.support.NodeJourneySnapshot.journeyStory(read.contentSnapshot.toString())
                         : topicForFlow == null ? null : topicForFlow.getJourneyStoryJson());
-        for (CmsTopicChapter c : chapterList) {
-            if (endingChapterIds.contains(c.getId())) continue;
-            if (opening != null && String.valueOf(c.getId()).equals(String.valueOf(opening.get("chapterId")))) continue;
-            if (opening != null && !Boolean.TRUE.equals(opening.get("complete"))) continue;
-            Map<String, Object> cm = new LinkedHashMap<>();
-            cm.put("chapterId", c.getId());
-            cm.put("name", c.getName());
-            cm.put("description", c.getDescription());
-            cm.put("imgArr", c.getImgArr());
-            cm.put("totalMileage", c.getTotalMileage());
-            cm.put("totalTime", c.getTotalTime());
-            cm.put("sortId", c.getSortId());
-            cm.put("category", c.getCategory());   // 选章弹窗要显示章节类别(用户裁决)
-            cm.put("atmospherePreset", read.playMode == PlayMode.LINEAR_ORIENTEERING
-                    ? ChapterAtmospherePreset.normalizeForRead(c.getAtmospherePreset())
-                    : ChapterAtmospherePreset.DEFAULT);
-            // 章节背景旁白:玩家端进入本章自动播放(2026-09-04 起音频不再是 blocks 里的块)
-            cm.put("audioUrl", originalChapterAudio.containsKey(c.getId()) ? originalChapterAudio.get(c.getId()) : c.getAudioUrl());
-            if (resolveBlocks && ChapterBlockReadSupport.isRequiredChapter(c)) {
-                List<Object> blocks;
-                if (read.contentSnapshot == null) blocks=ChapterBlockReadSupport.resolveFromTopicNodes(c,read.nodeList);
-                else {
-                    blocks=java.util.Collections.emptyList();
-                    for (com.fasterxml.jackson.databind.JsonNode chapter : read.contentSnapshot.path("thoughtChapters"))
-                        if (chapter.path("chapterId").asLong()==c.getId() && chapter.path("blocks").isArray()) {
-                            blocks=new com.fasterxml.jackson.databind.ObjectMapper().convertValue(chapter.path("blocks"),
-                                    new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() {});
-                            break;
-                        }
+        if (frozenChapters(read)) {
+            // 新制发布:章节呈现只读建局冻结的那一份,实时章节行(改名 / 换图 / 换音频 / 新增章节)
+            // 不再改写进行中的局;冻结里缺一章就明确拒绝,不回退实时内容。
+            chapters.addAll(frozenChapterViews(read, endingChapterIds, opening, originalChapterAudio,
+                    resolveBlocks, storyTags));
+        } else {
+            CmsTopicChapter chapterProbe = new CmsTopicChapter();
+            chapterProbe.setTopicId(read.tId);
+            List<CmsTopicChapter> chapterList = cmsTopicChapterService.selectCmsTopicChapterList(chapterProbe);
+            for (CmsTopicChapter c : chapterList) {
+                if (endingChapterIds.contains(c.getId())) continue;
+                if (opening != null && String.valueOf(c.getId()).equals(String.valueOf(opening.get("chapterId")))) continue;
+                if (opening != null && !Boolean.TRUE.equals(opening.get("complete"))) continue;
+                Map<String, Object> cm = new LinkedHashMap<>();
+                cm.put("chapterId", c.getId());
+                cm.put("name", c.getName());
+                cm.put("description", c.getDescription());
+                cm.put("imgArr", c.getImgArr());
+                cm.put("totalMileage", c.getTotalMileage());
+                cm.put("totalTime", c.getTotalTime());
+                cm.put("sortId", c.getSortId());
+                cm.put("category", c.getCategory());   // 选章弹窗要显示章节类别(用户裁决)
+                cm.put("atmospherePreset", read.playMode == PlayMode.LINEAR_ORIENTEERING
+                        ? ChapterAtmospherePreset.normalizeForRead(c.getAtmospherePreset())
+                        : ChapterAtmospherePreset.DEFAULT);
+                // 章节背景旁白:玩家端进入本章自动播放(2026-09-04 起音频不再是 blocks 里的块)
+                cm.put("audioUrl", originalChapterAudio.containsKey(c.getId()) ? originalChapterAudio.get(c.getId()) : c.getAudioUrl());
+                if (resolveBlocks && ChapterBlockReadSupport.isRequiredChapter(c)) {
+                    // 章节呈现冻结上线前发布的老局：blocks 早已冻结在 thoughtChapters 里，那一份优先。
+                    List<Object> blocks;
+                    if (read.contentSnapshot == null) {
+                        blocks = ChapterBlockReadSupport.resolveFromTopicNodes(c, read.nodeList);
+                    } else {
+                        blocks = java.util.Collections.emptyList();
+                        for (com.fasterxml.jackson.databind.JsonNode chapter : read.contentSnapshot.path("thoughtChapters"))
+                            if (chapter.path("chapterId").asLong() == c.getId() && chapter.path("blocks").isArray()) {
+                                blocks = JSON.convertValue(chapter.path("blocks"),
+                                        new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() { });
+                                break;
+                            }
+                    }
+                    cm.put("blocks", ChapterBlockReadSupport.projectForPlayer(
+                            blocks, read.completedNodeIds, storyTags));
                 }
-                cm.put("blocks", ChapterBlockReadSupport.projectForPlayer(
-                        blocks, read.completedNodeIds, storyTags));
+                chapters.add(cm);
             }
-            chapters.add(cm);
         }
         if (opening != null) chapters.add(0, new LinkedHashMap<>(opening));
 
@@ -709,7 +720,101 @@ public class PlayNodeQueryApplication {
         } catch (Exception e) {
             logger.warn("咔哒内心声音读取失败 member={} topic={} activity={}", read.memberId, read.tId, read.progActId, e);
         }
+        // 内容身份(只读):复用既有发布版本号 + 冻结内容快照版本,不新造第二身份体系。
+        // 有本局冻结时以快照版本为准 —— 那一局的正文/答案/章节都来自快照,不随之后的发布改变。
+        Long publishedVersion = read.routeTopic == null ? null : read.routeTopic.getPublishedConfigVersion();
+        int contentVersion = read.contentSnapshot == null ? 0
+                : com.chengyinhub.business.service.support.NodeJourneySnapshot.contentVersion(read.contentSnapshot);
+        if (publishedVersion != null && publishedVersion > 0) data.put("publishedConfigVersion", publishedVersion);
+        if (contentVersion > 0) data.put("contentSnapshotVersion", contentVersion);
+        // 能力声明只作可选提示:老客户端不传 = supported=null(未确认),既不当成不支持也不阻断读取;
+        // 声明本身不授予权益、不改变判定与奖励。
+        data.put("compatibility", com.chengyinhub.business.service.support.ContentCapabilityRequirements
+                .compatibility(read.contentSnapshot, read.capabilityDeclaration));
         return data;
+    }
+
+    /**
+     * 章节呈现是否随本局冻结。判据是冻结行是否带呈现字段（{@code name} 键）——
+     * 章节呈现冻结上线前开的老局没有这些键，继续读实时章节行（与改动前完全一致），
+     * <b>不能因为老快照缺新键就拒绝</b>。
+     */
+    private static boolean frozenChapters(NodeProjection read) {
+        if (read.contentSnapshot == null || !read.contentSnapshot.path("thoughtChapters").isArray()) return false;
+        for (com.fasterxml.jackson.databind.JsonNode row : read.contentSnapshot.path("thoughtChapters"))
+            return row != null && row.isObject() && row.has("name");
+        return false;
+    }
+
+    /**
+     * 只从本局冻结的章节里投影章节列表：顺序按 authorIndex（与发布时章序一致），
+     * 呈现字段与 blocks 全部取自冻结行，实时章节行不再参与。
+     *
+     * <p>拒绝只针对「新局却内容不全」：本局节点挂的章节不在冻结里、或冻结行缺 blocks。
+     * 老局根本进不到这里（{@link #frozenChapters} 为 false）。
+     */
+    private List<Map<String, Object>> frozenChapterViews(NodeProjection read, java.util.Set<Long> endingChapterIds,
+            Map<String, Object> opening, Map<Long, String> presentedChapterAudio, boolean resolveBlocks,
+            java.util.Set<String> storyTags) {
+        com.fasterxml.jackson.databind.JsonNode snapshot = read.contentSnapshot;
+        Long openingChapterId = opening == null || opening.get("chapterId") == null ? null
+                : Long.valueOf(String.valueOf(opening.get("chapterId")));
+        List<com.fasterxml.jackson.databind.JsonNode> rows = new ArrayList<>();
+        for (com.fasterxml.jackson.databind.JsonNode row : snapshot.path("thoughtChapters"))
+            if (row != null && row.isObject()) rows.add(row);
+        rows.sort(Comparator.comparing((com.fasterxml.jackson.databind.JsonNode row) -> row.path("authorIndex").asLong(Long.MAX_VALUE))
+                .thenComparing((com.fasterxml.jackson.databind.JsonNode row) -> row.path("chapterId").asLong(Long.MAX_VALUE)));
+        java.util.Set<Long> frozenChapterIds = new java.util.HashSet<>();
+        for (com.fasterxml.jackson.databind.JsonNode row : rows) frozenChapterIds.add(row.path("chapterId").asLong());
+        for (com.fasterxml.jackson.databind.JsonNode content : read.presentedContents.values()) {
+            if (!content.path("nodePresentation").hasNonNull("chapterId")) continue;
+            long nodeChapterId = content.path("nodePresentation").path("chapterId").asLong();
+            if (!frozenChapterIds.contains(nodeChapterId) && !endingChapterIds.contains(nodeChapterId)
+                    && (openingChapterId == null || openingChapterId.longValue() != nodeChapterId))
+                throw new IllegalStateException("本局章节内容快照不可用");
+        }
+        List<Map<String, Object>> chapters = new ArrayList<>();
+        for (com.fasterxml.jackson.databind.JsonNode row : rows) {
+            long chapterId = row.path("chapterId").asLong();
+            if (endingChapterIds.contains(chapterId)) continue;
+            if (openingChapterId != null && openingChapterId.longValue() == chapterId) continue;
+            if (opening != null && !Boolean.TRUE.equals(opening.get("complete"))) continue;
+            if (!row.path("blocks").isArray()) throw new IllegalStateException("本局章节内容快照不完整");
+            String audio = frozenText(row, "audioUrl");
+            if (presentedChapterAudio.containsKey(chapterId)
+                    && !java.util.Objects.equals(presentedChapterAudio.get(chapterId), audio))
+                throw new IllegalStateException("章节音频快照不一致");
+            Map<String, Object> cm = new LinkedHashMap<>();
+            cm.put("chapterId", chapterId);
+            cm.put("name", frozenText(row, "name"));
+            cm.put("description", frozenText(row, "description"));
+            cm.put("imgArr", frozenText(row, "imgArr"));
+            cm.put("totalMileage", frozenValue(row, "totalMileage"));
+            cm.put("totalTime", frozenValue(row, "totalTime"));
+            cm.put("sortId", frozenValue(row, "sortId"));
+            cm.put("category", frozenText(row, "category"));
+            cm.put("atmospherePreset", read.playMode == PlayMode.LINEAR_ORIENTEERING
+                    ? ChapterAtmospherePreset.normalizeForRead(frozenText(row, "atmospherePreset"))
+                    : ChapterAtmospherePreset.DEFAULT);
+            cm.put("audioUrl", audio);
+            if (resolveBlocks && row.path("required").asBoolean(false)) {
+                List<Object> blocks = JSON.convertValue(row.path("blocks"),
+                        new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() { });
+                cm.put("blocks", ChapterBlockReadSupport.projectForPlayer(blocks, read.completedNodeIds, storyTags));
+            }
+            chapters.add(cm);
+        }
+        return chapters;
+    }
+
+    private static String frozenText(com.fasterxml.jackson.databind.JsonNode row, String field) {
+        com.fasterxml.jackson.databind.JsonNode value = row.get(field);
+        return value == null || value.isNull() ? null : value.asText();
+    }
+
+    private static Object frozenValue(com.fasterxml.jackson.databind.JsonNode row, String field) {
+        com.fasterxml.jackson.databind.JsonNode value = row.get(field);
+        return value == null || value.isNull() ? null : JSON.convertValue(value, Object.class);
     }
 
     /** Request-owned projection values only: no service references or executable continuations. */
@@ -748,6 +853,9 @@ public class PlayNodeQueryApplication {
         int nowMinuteOfDay;
         java.util.Set<Long> playableNodeIds;
         Map<Long, Integer> nodeXpCache;
+        /** 端能力声明(可选):不传 = 未声明,兼容结论为未确认,绝不当作不支持。 */
+        com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration capabilityDeclaration =
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE;
 
         NodeProjection(
                 Long memberId,

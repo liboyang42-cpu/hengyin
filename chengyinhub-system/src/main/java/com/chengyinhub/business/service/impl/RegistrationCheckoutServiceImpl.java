@@ -42,11 +42,39 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
+        RegistrationQuoteResult result;
         if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
-            return registrationService.quoteRegistrationForOffer(memberId, request);
+            result = registrationService.quoteRegistrationForOffer(memberId, request);
+        } else {
+            result = registrationService.quoteRegistration(memberId, request.getOwnerType(), request.getOwnerId(),
+                    request.getTicketId(), request.getTickets(), request.getIsUsePoint());
         }
-        return registrationService.quoteRegistration(memberId, request.getOwnerType(), request.getOwnerId(),
-                request.getTicketId(), request.getTickets(), request.getIsUsePoint());
+        attachPaymentChannels(result);
+        return result;
+    }
+
+    /**
+     * 只报通道是否就绪，不报商品是否获准在该市场销售。
+     * 零元单没有支付动作，返回空列表；探测异常按不可用处理，绝不伪造可用。
+     */
+    private void attachPaymentChannels(RegistrationQuoteResult result) {
+        if (result == null) {
+            return;
+        }
+        List<String> channels = new ArrayList<>();
+        if (positive(result.getPayAmount())) {
+            try {
+                if (wechatPayService.isReady()) {
+                    channels.add("JSAPI");
+                }
+                if (wechatPayService.isAppReady()) {
+                    channels.add("APP");
+                }
+            } catch (RuntimeException unavailable) {
+                channels.clear();
+            }
+        }
+        result.setPaymentChannels(channels);
     }
 
     @Override

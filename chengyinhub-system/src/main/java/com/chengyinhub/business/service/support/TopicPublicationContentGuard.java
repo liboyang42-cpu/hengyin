@@ -132,22 +132,52 @@ public class TopicPublicationContentGuard {
         contentWriteGuard.assertTopicSizeWithinLimits(topicId);
     }
 
-    public void assertPublishReady(CmsTopic topic) {
-        List<String> issues = new ArrayList<String>();
+    /**
+     * 发布前试检查专用的尺寸判据:**普通读计数,不取任何锁**。
+     *
+     * <p>不能复用 {@link #assertTopicSizeWithinLimits}:那条走 {@code TopicContentWriteGuard},
+     * 内部 {@code lockTopicContent} + {@code countContentByTopicForUpdate}({@code for update nowait}),
+     * 只在持有父行 fence 的写链里成立。放进 GET 预检会同时破坏两件事:只读路径开始抢写锁;
+     * 抢不到锁就把"锁冲突"当成作者的内容问题报出去。
+     *
+     * <p>判据仍是同一份 {@link TopicSizeLimits#violation},上限没有第二套。
+     */
+    public void assertTopicSizeWithinLimitsPreview(Long topicId) {
+        if (topicId == null || topicId <= 0L) throw new IllegalStateException("主题不存在");
+        Long chapters = cmsTopicChapterMapper.countContentByTopic(topicId);
+        Long nodes = cmsTopicNodeMapper.countContentByTopic(topicId);
+        if (chapters == null || nodes == null || chapters < 0L || nodes < 0L) {
+            throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
+        }
+        String violation = TopicSizeLimits.violation(Math.toIntExact(chapters), Math.toIntExact(nodes));
+        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
+    }
+
+    /**
+     * 内容完整度问题,逐条返回(名称 / ai_simple 坐标 / 自由探索招募截止 / 票种)。
+     *
+     * <p>发布闸 {@link #assertPublishReady} 把这份列表拼成一句话抛出去,试检查逐条展示 ——
+     * 同一份判据,两处消费,不许各写一遍。
+     */
+    public List<PublicationProblem> publishReadinessProblems(CmsTopic topic) {
+        List<PublicationProblem> issues = new ArrayList<PublicationProblem>();
         Long topicId = topic == null ? null : topic.getId();
         if (StringUtils.isBlank(topic == null ? null : topic.getName())) {
-            issues.add("主题名称不能为空");
+            issues.add(PublicationProblem.at(PublicationProblem.CODE_TOPIC_NAME_REQUIRED, null,
+                    "name", "主题名称不能为空"));
         }
         if (topicId != null && "ai_simple".equalsIgnoreCase(topic.getPublishMode())) {
             try {
                 assertAiSimpleNodeLocations(chaptersFromNodeRows(topicId), true);
             } catch (IllegalArgumentException | IllegalStateException e) {
-                issues.add(e.getMessage());
+                issues.add(PublicationProblem.at(PublicationProblem.CODE_AI_SIMPLE_LOCATION_INVALID, null,
+                        "chapters[].nodes[].latitude/longitude", e.getMessage()));
             }
         }
         if (topicId != null && ProductType.FREE_EXPLORE == (topic.getProductType() == null ? -1 : topic.getProductType())
                 && topic.getRecruitDeadline() == null) {
-            issues.add("自由探索主题缺少招募截止时间");
+            issues.add(PublicationProblem.at(PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED, null,
+                    "recruitDeadline", "自由探索主题缺少招募截止时间"));
         }
         if (topicId != null) {
             OmsTicket ticketQuery = new OmsTicket();
@@ -158,19 +188,416 @@ public class TopicPublicationContentGuard {
                 try {
                     OmsTicketWriteValidator.validateNewTicket(ticket);
                 } catch (ServiceException e) {
-                    issues.add("票种「" + (StringUtils.isEmpty(ticket.getName()) ? "未命名" : ticket.getName())
-                            + "」" + e.getMessage());
+                    issues.add(PublicationProblem.at(PublicationProblem.CODE_TICKET_INVALID, null,
+                            "tickets[id=" + ticket.getId() + "]",
+                            "票种「" + (StringUtils.isEmpty(ticket.getName()) ? "未命名" : ticket.getName())
+                                    + "」" + e.getMessage()));
                 }
             }
         }
-        if (issues.isEmpty()) {
+        return issues;
+    }
+
+    public void assertPublishReady(CmsTopic topic) {
+        List<PublicationProblem> problems = publishReadinessProblems(topic);
+        if (problems.isEmpty()) {
             return;
         }
+        List<String> issues = new ArrayList<String>();
+        for (PublicationProblem problem : problems) issues.add(problem.getMessage());
         String message = "发布前请先补全:" + String.join(";", issues);
         if (message.length() > 110) {
             message = message.substring(0, 110) + "…";
         }
         throw new IllegalStateException(message);
+    }
+
+    /**
+     * 一条可定位的发布问题:{code, message, nodeId?, field?}。
+     *
+     * <p>field 是作者配置里的 JSON 路径(如 {@code nodes[nodeId=12].template.advancedConfigJson}),
+     * message 去掉发布闸支持用的 {@code [topicId=.., path=..]} 尾巴,给作者直接看。
+     * 这里只是一条数据,不是第二套判据:code 与 message 都直接来自发布闸自己的异常。
+     */
+    public static final class PublicationProblem {
+
+        public static final String LEVEL_ERROR = "error";
+        public static final String LEVEL_WARN = "warn";
+
+        public static final String CODE_TOPIC_NAME_REQUIRED = "TOPIC_NAME_REQUIRED";
+        public static final String CODE_AI_SIMPLE_LOCATION_INVALID = "AI_SIMPLE_LOCATION_INVALID";
+        public static final String CODE_RECRUIT_DEADLINE_REQUIRED = "RECRUIT_DEADLINE_REQUIRED";
+        public static final String CODE_TICKET_INVALID = "TICKET_INVALID";
+        public static final String CODE_SIZE_LIMIT_EXCEEDED = "SIZE_LIMIT_EXCEEDED";
+        public static final String CODE_STATE_KEY_UNREGISTERED = "STATE_KEY_UNREGISTERED";
+        public static final String CODE_THOUGHT_REF_UNRESOLVED = "THOUGHT_REF_UNRESOLVED";
+        public static final String CODE_JOURNEY_STORY_INVALID = "JOURNEY_STORY_INVALID";
+        public static final String CODE_THEME_RUNTIME_REF_INVALID = "THEME_RUNTIME_REF_INVALID";
+        public static final String CODE_NARRATIVE_NPC_INVALID = "NARRATIVE_NPC_INVALID";
+        public static final String CODE_BLOCK_SYS_VAR_INVALID = "BLOCK_SYS_VAR_INVALID";
+        /** 冻结预演失败:路线图结构 / 模板规则编译 / 冻结快照 / 玩法运行期校验任一处不通过。 */
+        public static final String CODE_FREEZE_INVALID = "FREEZE_INVALID";
+        /** 冻结预演未能跑完(warn,**明确表示未检查**,不是通过)。 */
+        public static final String CODE_FREEZE_PREVIEW_INCOMPLETE = "FREEZE_PREVIEW_INCOMPLETE";
+        public static final String CODE_ROUTE_MODE_INVALID = "ROUTE_MODE_INVALID";
+        public static final String CODE_LOCATION_BINDING_INVALID = "LOCATION_BINDING_INVALID";
+
+        private final String level;
+        private final String code;
+        private final Long nodeId;
+        private final String field;
+        private final String message;
+
+        private PublicationProblem(String level, String code, Long nodeId, String field, String message) {
+            this.level = level;
+            this.code = code;
+            this.nodeId = nodeId;
+            this.field = field;
+            this.message = message;
+        }
+
+        static PublicationProblem at(String code, Long nodeId, String field, String message) {
+            return new PublicationProblem(LEVEL_ERROR, code, nodeId, field, message);
+        }
+
+        static PublicationProblem warn(String code, Long nodeId, String field, String message) {
+            return new PublicationProblem(LEVEL_WARN, code, nodeId, field, message);
+        }
+
+        /** 把发布闸抛出的异常收敛成一条问题:尾部定位尾巴拆到 field,nodeId 从字段路径里认。 */
+        static PublicationProblem from(String code, String fallbackField, RuntimeException failure) {
+            String raw = failure.getMessage() == null || failure.getMessage().trim().isEmpty()
+                    ? fallbackField + " 未通过发布校验" : failure.getMessage();
+            // 路径本身含方括号(nodes[nodeId=301].template[templateId=900].advancedConfigJson),
+            // 正则 [^\]]+ 会在第一个 ']' 截断,nodeId 就永远解析不出来。按标记位置切,不按字符类贪心。
+            String field = null;
+            String cleaned = raw;
+            int cursor = cleaned.indexOf(LOCATION_MARK);
+            while (cursor >= 0) {
+                int pathStart = cleaned.indexOf(PATH_MARK, cursor + LOCATION_MARK.length());
+                if (pathStart <= 0) break;
+                // 路径自身带方括号(nodes[nodeId=301].template[templateId=401].advancedConfigJson),
+                // 而且定位尾巴常被拼进 List.toString(),后面会再跟一个 ']'。
+                // 因此「尾巴结束」只能按括号配对判定:深度回到 0 的那个 ']' 才是尾巴的收尾。
+                int depth = 0;
+                int closing = -1;
+                for (int i = pathStart + PATH_MARK.length(); i < cleaned.length(); i++) {
+                    char c = cleaned.charAt(i);
+                    if (c == '[') depth++;
+                    else if (c == ']') {
+                        if (depth == 0) { closing = i; break; }
+                        depth--;
+                    }
+                }
+                if (closing < 0) break;
+                if (field == null) field = cleaned.substring(pathStart + PATH_MARK.length(), closing);
+                cleaned = cleaned.substring(0, cursor) + cleaned.substring(closing + 1);
+                cursor = cleaned.indexOf(LOCATION_MARK);
+            }
+            if (field == null) field = fallbackField;
+            Long nodeId = null;
+            java.util.regex.Matcher node = NODE_PATH.matcher(field);
+            if (node.find()) {
+                try { nodeId = Long.valueOf(node.group(1)); } catch (RuntimeException ignore) { nodeId = null; }
+            }
+            String message = cleaned.trim().isEmpty() ? fallbackField + " 未通过发布校验" : cleaned.trim();
+            return new PublicationProblem(LEVEL_ERROR, code, nodeId, field, message);
+        }
+
+        public String getLevel() { return level; }
+        public String getCode() { return code; }
+        public Long getNodeId() { return nodeId; }
+        public String getField() { return field; }
+        public String getMessage() { return message; }
+    }
+
+    /** 定位尾巴的两个标记:{@code "[topicId=<id>, path=<field>]"};按标记切,避免路径里的 ']' 截断。 */
+    private static final String LOCATION_MARK = "[topicId=";
+    private static final String PATH_MARK = ", path=";
+    private static final java.util.regex.Pattern NODE_PATH =
+            java.util.regex.Pattern.compile("nodes\\[nodeId=(\\d+)\\]");
+
+    /**
+     * 发布前试检查的收集器:按真实发布的顺序,逐条调用同一批既有 assert,把异常收成问题列出来。
+     *
+     * <p>顺序与真实发布完全一致(尺寸 → 完整度 → 路线模式 → 状态键 → 念头 → 剧情 → 运行配置 →
+     * 叙事 NPC → sys.* → 地点合同 → 冻结预演),所以「第一条会拦什么」预检也答得出;失败不中断,一次列全。
+     *
+     * <p>与真实发布只有一处绑定差异,且必须不同:状态键 / 运行配置走只读预览实现
+     * ({@link #assertStateKeysRegistered(CmsTopic)} / {@link #assertThemeRuntimeReferences(CmsTopic)}),
+     * 不吃锁定后的声明快照、不进写事务。冻结预演见 {@link #assertFreezePreview}。
+     */
+    public List<PublicationProblem> collectPublicationProblems(CmsTopic topic) {
+        List<PublicationProblem> problems = new ArrayList<PublicationProblem>();
+        if (topic == null || topic.getId() == null || topic.getId() <= 0L) return problems;
+        // 1. 尺寸(只读计数:不加 lockTopicContentBudget 行锁)
+        collect(problems, PublicationProblem.CODE_SIZE_LIMIT_EXCEEDED, "chapters[].nodes[]",
+                () -> assertTopicSizeWithinLimitsPreview(topic.getId()));
+        // 2. 内容完整度(名称 / ai_simple 坐标 / 招募截止 / 票种)
+        problems.addAll(publishReadinessProblems(topic));
+        // 3. 路线模式
+        collect(problems, PublicationProblem.CODE_ROUTE_MODE_INVALID, "routeMode",
+                () -> assertBranchGraphOnlyForOrienteering(topic.getRouteMode(), topic.getProductType()));
+        // 4. 状态键注册(预览绑定:只读投影,不取声明快照锁)
+        collect(problems, PublicationProblem.CODE_STATE_KEY_UNREGISTERED, "stateKeys",
+                () -> assertStateKeysRegistered(topic));
+        // 5. 剧情念头定义
+        collect(problems, PublicationProblem.CODE_THOUGHT_REF_UNRESOLVED, "journeyRulesJson.thoughts",
+                () -> assertThoughtRefsResolvable(topic));
+        // 6. 主题剧情配置引用
+        collect(problems, PublicationProblem.CODE_JOURNEY_STORY_INVALID, "journeyStoryJson",
+                () -> assertJourneyStoryReferences(topic));
+        // 7. 主题运行配置引用(预览绑定)
+        collect(problems, PublicationProblem.CODE_THEME_RUNTIME_REF_INVALID, "themeRuntimeConfigJson",
+                () -> assertThemeRuntimeReferences(topic));
+        // 8. 节点叙事 NPC
+        collect(problems, PublicationProblem.CODE_NARRATIVE_NPC_INVALID,
+                "nodes[].template.advancedConfigJson.enter/outcome.npcId",
+                () -> assertBlockNarrativeNpcReferences(topic));
+        // 9. 块配置系统变量 / NODE_COMPLETED
+        collect(problems, PublicationProblem.CODE_BLOCK_SYS_VAR_INVALID,
+                "nodes[].template.advancedConfigJson", () -> assertBlockSysVarReferences(topic));
+        // 10. 地点合同(B2):同一份 bindingIssues,不改写政策
+        problems.addAll(locationBindingProblems(topic));
+        // 11. 冻结预演:路线图结构 + 模板规则编译 + 冻结快照 + 玩法运行期校验,全部只读
+        collectFreezePreview(problems, topic);
+        return problems;
+    }
+
+    /**
+     * 冻结预演的四种结果,一律显式,不许把「没检查」当 PASS:
+     * <ul>
+     *   <li>跑完 → 有问题就报 error({@code FREEZE_INVALID});</li>
+     *   <li>编译/冻结实现暂未提供只读预演入口({@link UnsupportedOperationException})
+     *       → 报 warn {@code FREEZE_PREVIEW_INCOMPLETE};</li>
+     *   <li>仍在「模板线索待自动登记」处提前结束 → 报 warn {@code FREEZE_PREVIEW_INCOMPLETE}
+     *       (线索未被投影覆盖时的真实退化,同样明说未检查);</li>
+     *   <li>其它异常 → error。</li>
+     * </ul>
+     */
+    private void collectFreezePreview(List<PublicationProblem> problems, CmsTopic topic) {
+        try {
+            assertFreezePreview(topic);
+        } catch (RuntimeException failure) {
+            if (isPreviewUnavailable(failure) || isAutoDerivedClueNotice(failure)) {
+                problems.add(PublicationProblem.warn(PublicationProblem.CODE_FREEZE_PREVIEW_INCOMPLETE,
+                        null, "routeGraphJson", incompleteMessage(failure)));
+                return;
+            }
+            problems.add(PublicationProblem.from(PublicationProblem.CODE_FREEZE_INVALID, "routeGraphJson", failure));
+        }
+    }
+
+    /** 预演入口缺失(null 服务或实现未覆写 default)时不是发布失败,而是「这项没检查」。 */
+    private static boolean isPreviewUnavailable(RuntimeException failure) {
+        return failure instanceof UnsupportedOperationException;
+    }
+
+    private static String incompleteMessage(RuntimeException failure) {
+        if (isAutoDerivedClueNotice(failure)) {
+            return "模板线索将在发布时自动登记；本次冻结预演在该登记点提前结束，"
+                    + "其后的冻结校验未检查(不等于通过)";
+        }
+        return "当前冻结实现尚未提供只读预演入口；本次冻结校验未检查(不等于通过)，"
+                + "发布时仍会完整校验";
+    }
+
+    private static void collect(List<PublicationProblem> problems, String code, String field, Runnable check) {
+        try {
+            check.run();
+        } catch (RuntimeException failure) {
+            problems.add(PublicationProblem.from(code, field, failure));
+        }
+    }
+
+    private static int sizeOf(List<?> rows) {
+        return rows == null ? 0 : rows.size();
+    }
+
+    /**
+     * 冻结预演:与真实发布最后一步 {@code normalizedBranchRouteForPublish} 同一段代码,只喂一次性副本。
+     *
+     * <p>为什么可以只读(<b>已核源码,不是推断</b>):
+     * <ol>
+     *   <li>{@code TopicRoutePublicationCompiler#withCurrentContent} 在「无活动事务」或「事务只读」时
+     *       直接执行 operation,不调 {@code selectCmsTopicByIdForUpdate} / {@code selectByTopicForUpdate} /
+     *       {@code selectCmsMemberTemplateByIdsForUpdate} —— 所以预检不会取任何行锁;</li>
+     *   <li>{@code freezeCurrentPublication} 自己 {@code new CmsTopic()} + {@code BeanUtils.copyProperties}
+     *       再写 {@code themeRuntimeConfigJson},外部实体本就不被写;</li>
+     *   <li>{@link #normalizedBranchRouteForPublish(CmsTopic)} 唯一会写回调用方实体的是
+     *       {@code compileTemplateRules} 里那句 {@code topic.setThemeRuntimeConfigJson(compiled)} ——
+     *       对一次性副本执行即无副作用。</li>
+     * </ol>
+     *
+     * <p>「模板线索待自动登记」曾是这一环的硬缺口:{@code registerTemplateClues} 在只读/无事务下会抛,
+     * 冻结<b>提前结束</b>,其后校验根本没跑。现在由编译器自己的只读入口
+     * {@code previewPublication(topic, routeSnapshot, projectedDeclarations)} 解决 ——
+     * 它把传入的声明投影当作「本次已声明」,派生的线索也只进内存投影,于是冻结链能跑到底。
+     * 若该入口不可用(实现未覆写),调用方仍在 {@link #collectFreezePreview} 里如实标「未检查」。
+     */
+    public void assertFreezePreview(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || topic.getId() <= 0L) return;
+        if (topicRouteRuntimeService == null) throw new IllegalStateException("主题发布内容冻结服务缺失");
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {
+            // 写事务里跑预演会走当前读锁(见上),且预检不得改变发布时序:拒绝半预演而不是偷偷加锁。
+            throw new IllegalStateException("发布预检必须在只读或非事务上下文执行");
+        }
+        if ("BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode()) && routeOutcomeReader == null) {
+            throw new IllegalStateException("预检路线结局来源缺失");
+        }
+        // 与正式发布 {@link #normalizedBranchRouteForPublish(CmsTopic, List)} 同一段语义:
+        // 正式发布**无条件**冻结(哪怕线性主题不需要完整运行快照),所以预演也必须无条件冻结,
+        // 否则线性旅程主题的冻结期错误仍然预报不出来。
+        //
+        // 差别只在两处,且都必须不同:
+        //   1. 所有写回(compileTemplateRules 的 themeRuntimeConfigJson)都落在一次性副本上;
+        //   2. 声明投影由本类在内存里算好并作为参数传入(previewPublication),而不是像正式发布
+        //      那样先 deriveOptionTagsForPublication / deriveTemplateCluesForPublication 写库再锁定读。
+        //      这样编译器在 registerTemplateClues 处看到「线索已登记」,不再提前抛,冻结得以跑完。
+        CmsTopic disposable = new CmsTopic();
+        org.springframework.beans.BeanUtils.copyProperties(topic, disposable);
+        String compiled = topicRouteRuntimeService.compileTemplateRules(disposable);
+        if (compiled != null) disposable.setThemeRuntimeConfigJson(compiled);
+        String normalized = "BRANCH_GRAPH".equalsIgnoreCase(disposable.getRouteMode())
+                ? normalizedBranchGraph(disposable) : null;
+        List<ThemeStateKey> projected = projectDeclarationsInMemory(topic, compiled);
+        String frozen = topicRouteRuntimeService.previewPublication(disposable, normalized, projected);
+        if (StringUtils.isBlank(frozen)) throw new IllegalStateException("主题发布内容快照为空");
+    }
+
+    /**
+     * 发布声明投影的**只读**版本:已登记行(普通读)+ 选项标签 + 模板线索键,按 stateKey 去重。
+     *
+     * <p>为什么需要它:正式发布先 {@code deriveOptionTagsForPublication} 与
+     * {@code deriveTemplateCluesForPublication} 把这两类键写进注册表,再锁定读成声明快照;
+     * 预检不许写库,所以只能在内存里算出「登记之后会是什么样」,把结果喂给预演。
+     * 集合口径与 {@code assertStateKeysRegisteredUsing(preview=true)} 完全一致,不另立政策。
+     *
+     * <p>每行都带 topicId:编译器后续 {@code ThemeStateKeyDeclarationSnapshot.capture} 会校验归属,
+     * 缺失即抛 —— 这里补齐而不是让预演失败在一个装配细节上。
+     *
+     * <p>引用解析失败时只返回已登记行 + 模板线索(不再派生):那类解析错误已由前置规则逐条报出,
+     * 这里重复抛只会制造同一根因的第二条噪音。
+     */
+    private List<ThemeStateKey> projectDeclarationsInMemory(CmsTopic topic, String compiledJson) {
+        Map<String, ThemeStateKey> merged = new LinkedHashMap<String, ThemeStateKey>();
+        if (themeStateKeyService != null) {
+            for (ThemeStateKey row : themeStateKeyService.listByTopic(topic.getId())) {
+                if (row != null && !StringUtils.isEmpty(row.getStateKey())) merged.put(row.getStateKey(), row);
+            }
+        }
+        TopicStateKeyRefService.RefCollection refs = null;
+        if (topicStateKeyRefService != null) {
+            try {
+                refs = topicStateKeyRefService.collect(topic);
+            } catch (RuntimeException unreadableRefs) {
+                refs = null;    // 前置规则已报同一根因,这里不重复
+            }
+        }
+        if (refs != null && refs.getParseErrors().isEmpty()) {
+            Set<String> nodeKeys = new LinkedHashSet<String>();
+            for (Set<String> keys : refs.getRefsByNode().values()) nodeKeys.addAll(keys);
+            for (ThemeStateKey tag : optionTagDeclarations(nodeKeys, refs.getStoryKeys(),
+                    refs.getChapterKeys(), journeyStoryStateKeyRefs(topic).keySet())) {
+                mergeProjected(merged, topic.getId(), tag);
+            }
+        }
+        for (String clue : previewTemplateClueKeys(topic)) {
+            mergeProjected(merged, topic.getId(), flagDeclaration(topic.getId(), clue, clue));
+        }
+        if (!StringUtils.isBlank(compiledJson)) {
+            // 编译产出可能引入作者原文里没有的线索(模板绑定展开),与编译器 registerTemplateClues 同源。
+            try {
+                for (Map.Entry<String, String> clue
+                        : com.chengyinhub.business.util.StateKeyRefs.declaredTemplateClues(ROUTE_JSON.readTree(compiledJson)).entrySet()) {
+                    mergeProjected(merged, topic.getId(), flagDeclaration(topic.getId(), clue.getKey(), clue.getValue()));
+                }
+            } catch (java.io.IOException unreadableCompiled) {
+                throw new IllegalArgumentException("编译后的主题运行配置无法读取", unreadableCompiled);
+            }
+        }
+        return java.util.Collections.unmodifiableList(new ArrayList<ThemeStateKey>(merged.values()));
+    }
+
+    /** 投影用的行必须带 topicId 且不覆盖已登记行(已登记行的类型/标签是作者确认过的)。 */
+    private static void mergeProjected(Map<String, ThemeStateKey> merged, Long topicId, ThemeStateKey row) {
+        if (row == null || StringUtils.isEmpty(row.getStateKey())) return;
+        if (merged.containsKey(row.getStateKey())) return;
+        if (row.getTopicId() == null) row.setTopicId(topicId);
+        merged.put(row.getStateKey(), row);
+    }
+
+    /** 与编译器自动登记同名线索时写的行同形(type=flag, scope=run, initial=0)。 */
+    private static ThemeStateKey flagDeclaration(Long topicId, String key, String label) {
+        ThemeStateKey row = new ThemeStateKey();
+        row.setTopicId(topicId);
+        row.setStateKey(key);
+        row.setKeyType(ThemeStateKey.TYPE_FLAG);
+        row.setScope(ThemeStateKey.SCOPE_RUN);
+        row.setLabel(label == null ? key : label);
+        row.setInitialValue(0);
+        return row;
+    }
+
+    /**
+     * 「模板线索待自动登记」会让冻结提前结束:它不是真拦截(真实发布会先自动登记),
+     * 但也**不是通过** —— 其后的冻结校验根本没跑。调用方据此判为「未检查」。
+     *
+     * <p>只认编译器自己的原话;文案若变更,本判定失效并退化为报 error(fail-closed)。
+     */
+    private static boolean isAutoDerivedClueNotice(RuntimeException failure) {
+        String message = failure.getMessage();
+        return message != null && message.contains(CLUE_DERIVE_REQUIRES_TX);
+    }
+
+    /** {@code TopicRoutePublicationCompiler#registerTemplateClues} 只读分支的原话。 */
+    private static final String CLUE_DERIVE_REQUIRES_TX = "自动线索声明必须加入主题写事务";
+
+    /**
+     * 地点合同缺口(B2 §5):只读消费 {@code TopicLocationContract.bindingIssues},不另解析、
+     * 不复制政策。必填槽未绑定 / 需重绑 / 城市不一致 = error;
+     * 旧模板沿用的 LEGACY_UNVERIFIED 只是提醒 —— 不可新阻断旧请求产生的正常副本。
+     *
+     * <p>无合同的旧主题直接返回空:不增加任何门槛。
+     */
+    private List<PublicationProblem> locationBindingProblems(CmsTopic topic) {
+        List<PublicationProblem> problems = new ArrayList<PublicationProblem>();
+        String raw = topic.getContentContractJson();
+        if (StringUtils.isBlank(raw)) {
+            return problems;
+        }
+        for (java.util.Map<String, Object> issue : TopicLocationContract.bindingIssues(raw, topic.getCityCode())) {
+            String code = issue.get("code") == null ? "" : String.valueOf(issue.get("code"));
+            String message = issue.get("message") == null ? "地点合同未满足" : String.valueOf(issue.get("message"));
+            String slotKey = issue.get("slotKey") == null ? null : String.valueOf(issue.get("slotKey"));
+            String field = "contentContractJson.locationBindings[" + slotKey + "]";
+            if (TopicLocationContract.ISSUE_LEGACY.equals(code)) {
+                problems.add(PublicationProblem.warn(PublicationProblem.CODE_LOCATION_BINDING_INVALID,
+                        null, field, message));
+            } else {
+                problems.add(PublicationProblem.at(PublicationProblem.CODE_LOCATION_BINDING_INVALID,
+                        null, field, message));
+            }
+        }
+        return problems;
+    }
+
+    /**
+     * 发布闸只认 error 级地点缺口;LEGACY_UNVERIFIED 只提示。
+     * 与预检共用同一份 {@link #locationBindingProblems},不另判一次。
+     */
+    public void assertLocationBindingsPublishable(CmsTopic topic) {
+        if (topic == null) return;
+        for (PublicationProblem problem : locationBindingProblems(topic)) {
+            if (PublicationProblem.LEVEL_ERROR.equals(problem.getLevel())) {
+                // 与本类其它发布闸一致:发布被拦是 IllegalStateException。
+                // 混用 ServiceException 会让调用方按业务异常处理(不同 HTTP/日志口径),
+                // 同一道闸不该有两种异常类型。
+                throw new IllegalStateException("主题发布失败:" + problem.getMessage()
+                        + publicationLocation(topic, problem.getField()));
+            }
+        }
     }
 
     private List<ChapterDTO> chaptersFromNodeRows(Long topicId) {

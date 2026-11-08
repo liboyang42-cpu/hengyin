@@ -91,6 +91,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select count(*) from cms_topic_node where topic_id = #{topicId} for update nowait
     </select>
 
+    <!-- 发布前试检查:同一行集,不加锁。写链仍用上面的 for update nowait 版本。 -->
+    <select id="countContentByTopic" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select count(*) from cms_topic_node where topic_id = #{topicId}
+    </select>
+
     <select id="selectContentByIdForUpdate" resultMap="CmsTopicNodeResult" useCache="false" flushCache="true">
         <include refid="selectCmsTopicNodeVo"/>
         where id = #{id} for update nowait

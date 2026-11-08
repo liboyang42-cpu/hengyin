@@ -37,6 +37,12 @@ public interface ITopicRouteRuntimeService {
     default String freezePublication(com.chengyinhub.business.domain.CmsTopic topic, String routeSnapshot,
             List<com.chengyinhub.business.domain.ThemeStateKey> declarations) { throw new UnsupportedOperationException(); }
     default String freezePublishedJourney(com.chengyinhub.business.domain.CmsTopic topic) { throw new UnsupportedOperationException(); }
+    /**
+     * 只读发布预演：按普通读建立一次性内容投影（含调用方拟提交的声明），跑完整冻结/校验链并返回快照。
+     * 不取行锁、不写库、不要求写事务、不改调用方实体；未实现时必须显式失败，不得静默返回「通过」。
+     */
+    default String previewPublication(com.chengyinhub.business.domain.CmsTopic topic, String routeSnapshot,
+            List<com.chengyinhub.business.domain.ThemeStateKey> projectedDeclarations) { throw new UnsupportedOperationException(); }
     default List<Map<String,Object>> themeHistory(Long memberId,Long topicId,Long beforeSessionId,Integer limit) {return themeHistory(memberId,topicId);}
     default Map<String,Object> themeCard(Long memberId,Long sessionId) {throw new UnsupportedOperationException();}
     default JsonNode nodeRuntimeConfig(Long memberId,Long topicId,Long nodeId,Long activityId) {return nodeRuntimeConfig(memberId,topicId,nodeId);}

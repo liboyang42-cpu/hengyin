@@ -51,6 +51,22 @@ public final class SaleAvailabilityPolicy {
         }
     }
 
+    /**
+     * 只读孪生:返回第一条拒绝原因(可售返回 null),判据与文案只有 {@link #assertSellable} 一份。
+     *
+     * <p>作者端「现在为什么还不能卖」必须就是售卖闸的原话,所以这里直接调用原闸并捕获它的业务拒绝
+     * (IllegalStateException),不重写任何一条判断 —— 重写就会漂移。调用方缺陷(now 为 null)仍是
+     * IllegalArgumentException,与抛出版本一致,不当作业务拒绝吞掉。
+     */
+    public static String sellableBlockReason(CmsTopic topic, OmsTicket ticket, Date now) {
+        try {
+            assertSellable(topic, ticket, now);
+            return null;
+        } catch (IllegalStateException refused) {
+            return refused.getMessage();
+        }
+    }
+
     /** ticket.signupDeadline 仅能提前主题硬售止；无票通行证只读主题硬售止。 */
     public static Date effectiveSaleEndAt(CmsTopic topic, OmsTicket ticket) {
         if (topic == null || topic.getSaleEndAt() == null) {

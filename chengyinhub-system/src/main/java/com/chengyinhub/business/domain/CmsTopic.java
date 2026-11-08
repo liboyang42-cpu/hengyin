@@ -152,6 +152,18 @@ public class CmsTopic extends BaseEntity
     /** 从主题模板复制出的谱系；模板本体与普通主题为 NULL。 */
     private Long sourceTemplateTopicId;
 
+    /** 城市 adcode（城市级 6 位，如 310100）；NULL = 未标注城市，不得推断。 */
+    private String cityCode;
+
+    /**
+     * 地点合同（要求/绑定/采用来源）；NULL = 尚未建立，老主题行为不变。
+     *
+     * <p>带作者私有的现场备注/媒体引用，<b>不随裸 CmsTopic 序列化下发</b>；作者读回走
+     * {@code /api/template/topic-template/binding-status}，玩家投影由 B4 按白名单字段取。
+     */
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private String contentContractJson;
+
     /** 城市代理最后一次复核本实例全部有效供给的时间。 */
     private Date circleReviewedAt;
 
@@ -859,6 +871,10 @@ public class CmsTopic extends BaseEntity
     public void setCircleThemeCode(String circleThemeCode) { this.circleThemeCode = circleThemeCode; }
     public Long getSourceTemplateTopicId() { return sourceTemplateTopicId; }
     public void setSourceTemplateTopicId(Long sourceTemplateTopicId) { this.sourceTemplateTopicId = sourceTemplateTopicId; }
+    public String getCityCode() { return cityCode; }
+    public void setCityCode(String cityCode) { this.cityCode = cityCode; }
+    public String getContentContractJson() { return contentContractJson; }
+    public void setContentContractJson(String contentContractJson) { this.contentContractJson = contentContractJson; }
     public Date getCircleReviewedAt() { return circleReviewedAt; }
     public void setCircleReviewedAt(Date circleReviewedAt) { this.circleReviewedAt = circleReviewedAt; }
 
@@ -1155,6 +1171,7 @@ public class CmsTopic extends BaseEntity
             .append("productType", getProductType())
             .append("circleThemeCode", getCircleThemeCode())
             .append("sourceTemplateTopicId", getSourceTemplateTopicId())
+            .append("cityCode", getCityCode())
             .append("roamReferralEnabled", getRoamReferralEnabled())
             .append("completeRuleJson", getCompleteRuleJson())
             .append("routeMode", getRouteMode())

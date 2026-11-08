@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CreatorRevenueLedgerMapper">
+
+    <!--
+      原账本收入只读投影（应计/结算口径，不是实收、不是可提现）。
+      - 毛额：coop_settlement_original_component.original_amount，按 component.created_at 归属期间。
+      - 冲回：coop_settlement_original_adjustment.amount（恒为负），按 adjustment.created_at 归属期间，
+        join component 拿回 receiver_kind + receiver_member_id —— 不用 settlement/member 反推，避免二次归属。
+      - 按 receiver_kind 分组：只有 MEMBER 且 member_id>0 进会员收入；
+        ACCOUNTING（如 PLATFORM 行）单列，不得摊给会员。
+      全部只读；无 insert/update/delete。
+    -->
+
+    <select id="selectGrossByReceiver" resultType="com.chengyinhub.business.domain.dto.CreatorRevenueRow">
+        select c.receiver_kind as receiverKind,
+               c.receiver_member_id as memberId,
+               coalesce(sum(c.original_amount), 0) as grossAmount,
+               0 as refundedAmount,
+               count(1) as componentCount,
+               count(distinct c.settlement_id) as settlementCount,
+               max(c.id) as maxComponentId,
+               max(c.created_at) as watermarkAt
+        from coop_settlement_original_component c
+        where c.created_at &gt;= #{from} and c.created_at &lt; #{toExclusive}
+        group by c.receiver_kind, c.receiver_member_id
+    </select>
+
+    <!--
+      冲回只提供「冲回额 + 水位」。这里**不**返回 componentCount / settlementCount / maxComponentId：
+      冲回行来自 coop_settlement_original_adjustment，它的行数与主键是 adjustment 的，
+      与 component 的主键不是同一个命名空间；把它当成 componentCount 会虚增分项数，
+      当成 maxComponentId 会让追踪 id 指向另一张表（追账时在元件表里查不到那一行）。
+    -->
+    <select id="selectRefundedByReceiver" resultType="com.chengyinhub.business.domain.dto.CreatorRevenueRow">
+        select c.receiver_kind as receiverKind,
+               c.receiver_member_id as memberId,
+               0 as grossAmount,
+               coalesce(sum(a.amount), 0) as refundedAmount,
+               max(a.created_at) as watermarkAt
+        from coop_settlement_original_adjustment a
+        join coop_settlement_original_component c on c.id = a.component_id
+        where a.created_at &gt;= #{from} and a.created_at &lt; #{toExclusive}
+        group by c.receiver_kind, c.receiver_member_id
+    </select>
+
+    <select id="selectCalculationVersions" resultType="java.lang.String">
+        select distinct c.calculation_version
+        from coop_settlement_original_component c
+        where c.created_at &gt;= #{from} and c.created_at &lt; #{toExclusive}
+          and c.calculation_version is not null
+          and c.calculation_version &lt;&gt; ''
+        order by c.calculation_version asc
+    </select>
+
+</mapper>

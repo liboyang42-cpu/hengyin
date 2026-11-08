@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.support;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicNode;
+import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.ThemeStateKey;
 import com.chengyinhub.business.domain.route.TopicRouteState;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -46,21 +47,40 @@ public class TopicPublishCheckService {
     private final ThemeStateKeyService themeStateKeyService;
     private final TopicStateKeyRefService topicStateKeyRefService;
     private final TopicBundleReviewService topicBundleReviewService;
+    /** 章节标题定位用;老测试手工 new 时为 null,只是少个标题,不影响任何问题项。 */
+    private final com.chengyinhub.business.mapper.CmsTopicChapterMapper cmsTopicChapterMapper;
+    /** 发布闸本体:预检复用它的既有 assert 收集问题;未注入时只跑本类原有判据。 */
+    private final TopicPublicationContentGuard publicationContentGuard;
     /** O5c:可选注入,未注入(老测试直接 new)时等同开关关闭。 */
     private TopicAiPrecheckService topicAiPrecheckService;
     /** 与 TemplatePublishServiceImpl 同一用法:无状态,直接 new。 */
     private final AdvancedGameConfigValidator advancedGameConfigValidator = new AdvancedGameConfigValidator();
 
+    /** 老测试用的最小构造:不含发布闸与章节标题,行为与改造前一致。 */
     public TopicPublishCheckService(CmsTopicNodeMapper cmsTopicNodeMapper,
                                     CmsMemberTemplateMapper cmsMemberTemplateMapper,
                                     ThemeStateKeyService themeStateKeyService,
                                     TopicStateKeyRefService topicStateKeyRefService,
                                     TopicBundleReviewService topicBundleReviewService) {
+        this(cmsTopicNodeMapper, cmsMemberTemplateMapper, themeStateKeyService, topicStateKeyRefService,
+                topicBundleReviewService, null, null);
+    }
+
+    @Autowired
+    public TopicPublishCheckService(CmsTopicNodeMapper cmsTopicNodeMapper,
+                                    CmsMemberTemplateMapper cmsMemberTemplateMapper,
+                                    ThemeStateKeyService themeStateKeyService,
+                                    TopicStateKeyRefService topicStateKeyRefService,
+                                    TopicBundleReviewService topicBundleReviewService,
+                                    com.chengyinhub.business.mapper.CmsTopicChapterMapper cmsTopicChapterMapper,
+                                    TopicPublicationContentGuard publicationContentGuard) {
         this.cmsTopicNodeMapper = cmsTopicNodeMapper;
         this.cmsMemberTemplateMapper = cmsMemberTemplateMapper;
         this.themeStateKeyService = themeStateKeyService;
         this.topicStateKeyRefService = topicStateKeyRefService;
         this.topicBundleReviewService = topicBundleReviewService;
+        this.cmsTopicChapterMapper = cmsTopicChapterMapper;
+        this.publicationContentGuard = publicationContentGuard;
     }
 
     @Autowired(required = false)
@@ -127,7 +147,105 @@ public class TopicPublishCheckService {
         if (topicAiPrecheckService != null && topicAiPrecheckService.isEnabled()) {
             issues.addAll(topicAiPrecheckService.check(topic, nodes));
         }
-        return issues;
+        appendPublicationRuleIssues(topic, issues);
+        return locate(topic.getId(), issues, nodes);
+    }
+
+    /**
+     * 真实发布闸剩下的那批判据:尺寸 / 内容完整度 / 路线模式 / 剧情引用 / 运行配置引用 /
+     * 叙事 NPC / 块内 sys.* nodeId / 路线图结构 / 地点合同。判定与文案直接来自
+     * {@link TopicPublicationContentGuard#collectPublicationProblems} 逐条调用的既有 assert,
+     * 所以「预检说没事、发布被拦」不再可能。
+     *
+     * <p>STATE_KEYS 一条不重复报:上面 {@code appendUnregisteredKeyIssues} 已经把未注册键按引用位置逐键列出,
+     * 用的是同一个 {@link TopicStateKeyRefService#collect} 投影 —— 同一事实只出一次。
+     */
+    private void appendPublicationRuleIssues(CmsTopic topic, List<PublishCheckIssue> issues) {
+        if (publicationContentGuard == null) {
+            return;
+        }
+        for (TopicPublicationContentGuard.PublicationProblem problem
+                : publicationContentGuard.collectPublicationProblems(topic)) {
+            if (TopicPublicationContentGuard.PublicationProblem.CODE_STATE_KEY_UNREGISTERED.equals(problem.getCode())) {
+                continue;
+            }
+            PublishCheckIssue issue = TopicPublicationContentGuard.PublicationProblem.LEVEL_WARN
+                    .equals(problem.getLevel())
+                    ? PublishCheckIssue.warn(problem.getCode(), problem.getNodeId(), problem.getMessage())
+                    : PublishCheckIssue.error(problem.getCode(), problem.getNodeId(), problem.getMessage());
+            issues.add(issue.at(problem.getField(), problem.getCode()));
+        }
+    }
+
+    /**
+     * 给每条问题补上「哪一章 / 哪一站 / 哪个块 / 哪个字段」。
+     *
+     * <p>作者端拿不到定位就只能猜;这里用启用节点表把 nodeId 换成章节 id + 章节标题 + 节点名,
+     * 再按错误码补一条默认字段路径(问题自带 field 的不覆盖)。
+     */
+    private List<PublishCheckIssue> locate(Long topicId, List<PublishCheckIssue> issues, List<CmsTopicNode> nodes) {
+        Map<Long, CmsTopicNode> nodeById = new LinkedHashMap<Long, CmsTopicNode>();
+        for (CmsTopicNode node : nodes) {
+            if (node != null && node.getId() != null) nodeById.put(node.getId(), node);
+        }
+        Map<Long, String> titles = chapterTitles(topicId, issues, nodeById);
+        List<PublishCheckIssue> located = new ArrayList<PublishCheckIssue>(issues.size());
+        for (PublishCheckIssue issue : issues) {
+            CmsTopicNode node = issue.getNodeId() == null ? null : nodeById.get(issue.getNodeId());
+            Long chapterId = node == null ? null : node.getChapterId();
+            String chapterTitle = chapterId == null ? null : titles.get(chapterId);
+            String nodeName = node == null ? null : node.getName();
+            String field = issue.getField() != null ? issue.getField() : defaultField(issue);
+            located.add(issue.at(chapterId, chapterTitle, nodeName, field));
+        }
+        return located;
+    }
+
+    /** 只在确有问题时才去查章节表(健康主题一次都不查)。 */
+    private Map<Long, String> chapterTitles(Long topicId, List<PublishCheckIssue> issues,
+                                            Map<Long, CmsTopicNode> nodeById) {
+        Map<Long, String> titles = new LinkedHashMap<Long, String>();
+        if (cmsTopicChapterMapper == null || issues.isEmpty() || topicId == null) {
+            return titles;
+        }
+        Set<Long> chapterIds = new LinkedHashSet<Long>();
+        for (PublishCheckIssue issue : issues) {
+            CmsTopicNode node = issue.getNodeId() == null ? null : nodeById.get(issue.getNodeId());
+            if (node != null && node.getChapterId() != null) chapterIds.add(node.getChapterId());
+        }
+        if (chapterIds.isEmpty()) {
+            return titles;
+        }
+        CmsTopicChapter probe = new CmsTopicChapter();
+        probe.setTopicId(topicId);
+        for (CmsTopicChapter chapter : chapterRows(cmsTopicChapterMapper.selectCmsTopicChapterList(probe))) {
+            if (chapter != null && chapter.getId() != null && chapterIds.contains(chapter.getId())) {
+                titles.put(chapter.getId(), chapter.getName());
+            }
+        }
+        return titles;
+    }
+
+    private static List<CmsTopicChapter> chapterRows(List<CmsTopicChapter> rows) {
+        return rows == null ? new ArrayList<CmsTopicChapter>() : rows;
+    }
+
+    /** 问题没自带字段时按错误码给一条最小字段路径,让作者知道去哪儿改;给不出就是 null。 */
+    private static String defaultField(PublishCheckIssue issue) {
+        String code = issue.getCode();
+        if (code == null) return null;
+        if (CODE_BLOCK_CONFIG_INVALID.equals(code)) {
+            return issue.getNodeId() == null ? "nodes[].template.advancedConfigJson"
+                    : "nodes[nodeId=" + issue.getNodeId() + "].template.advancedConfigJson";
+        }
+        if (CODE_CHAPTER_BLOCKS_INVALID.equals(code)) return "chapters[].blocksJson";
+        if (CODE_JOURNEY_STORY_INVALID.equals(code)) return "journeyStoryJson";
+        if (CODE_JOURNEY_RULES_INVALID.equals(code)) return "journeyRulesJson";
+        if (CODE_STATE_KEY_UNREGISTERED.equals(code) || CODE_STATE_KEY_TYPE_INVALID.equals(code)) {
+            return "stateKeys";
+        }
+        if (CODE_TOPIC_BUNDLE_INVALID.equals(code)) return "chapters/nodes";
+        return null;
     }
 
     /**
@@ -246,7 +364,12 @@ public class TopicPublishCheckService {
         return nodes == null ? new ArrayList<CmsTopicNode>() : nodes;
     }
 
-    /** 一条试检查问题:{level, code, nodeId?, message}。 */
+    /**
+     * 一条试检查问题:{level, code, nodeId?, message} + 定位字段。
+     *
+     * <p>{@code level/code/nodeId/message} 是作者端一直在消费的老形状,一个都没改;
+     * {@code chapterId/chapterTitle/nodeName/blockId/field/source} 是后加的定位,老客户端忽略即可。
+     */
     public static final class PublishCheckIssue {
 
         public static final String LEVEL_ERROR = "error";
@@ -256,21 +379,62 @@ public class TopicPublishCheckService {
         private final String code;
         private final Long nodeId;
         private final String message;
+        private final Long chapterId;
+        private final String chapterTitle;
+        private final String nodeName;
+        private final String blockId;
+        private final String field;
+        private final String source;
 
-        private PublishCheckIssue(String level, String code, Long nodeId, String message) {
+        private PublishCheckIssue(String level, String code, Long nodeId, String message,
+                                  Long chapterId, String chapterTitle, String nodeName,
+                                  String blockId, String field, String source) {
             this.level = level;
             this.code = code;
             this.nodeId = nodeId;
             this.message = message;
+            this.chapterId = chapterId;
+            this.chapterTitle = chapterTitle;
+            this.nodeName = nodeName;
+            this.blockId = blockId;
+            this.field = field;
+            this.source = source;
         }
 
         public static PublishCheckIssue error(String code, Long nodeId, String message) {
-            return new PublishCheckIssue(LEVEL_ERROR, code, nodeId, message);
+            return new PublishCheckIssue(LEVEL_ERROR, code, nodeId, message, null, null, null, null, null, null);
         }
 
         public static PublishCheckIssue warn(String code, Long nodeId, String message) {
-            return new PublishCheckIssue(LEVEL_WARN, code, nodeId, message);
+            return new PublishCheckIssue(LEVEL_WARN, code, nodeId, message, null, null, null, null, null, null);
         }
+
+        /** 记录这条问题来自哪条发布规则,以及它落在作者配置的哪个字段。 */
+        PublishCheckIssue at(String field, String source) {
+            return new PublishCheckIssue(level, code, nodeId, message, chapterId, chapterTitle,
+                    nodeName, blockId, field, source);
+        }
+
+        /** 补章节 / 节点 / 块的定位;字段只在还没有时填,不覆盖规则给出的精确路径。 */
+        PublishCheckIssue at(Long chapterId, String chapterTitle, String nodeName, String field) {
+            return new PublishCheckIssue(level, code, nodeId, message, chapterId, chapterTitle,
+                    nodeName, blockId == null ? blockIdOf(field) : blockId, field == null ? this.field : field, source);
+        }
+
+        /** 块级定位:字段路径里带 templateId 时指到那个玩法块,否则指到节点。 */
+        private static String blockIdOf(String field) {
+            if (field == null) return null;
+            java.util.regex.Matcher template = BLOCK_PATH.matcher(field);
+            if (template.find()) return "template:" + template.group(1);
+            java.util.regex.Matcher node = BLOCK_PATH_NODE.matcher(field);
+            if (node.find()) return "node:" + node.group(1);
+            return null;
+        }
+
+        private static final java.util.regex.Pattern BLOCK_PATH =
+                java.util.regex.Pattern.compile("template\\[templateId=(\\d+)\\]");
+        private static final java.util.regex.Pattern BLOCK_PATH_NODE =
+                java.util.regex.Pattern.compile("nodes\\[nodeId=(\\d+)\\]");
 
         public String getLevel() { return level; }
 
@@ -279,5 +443,17 @@ public class TopicPublishCheckService {
         public Long getNodeId() { return nodeId; }
 
         public String getMessage() { return message; }
+
+        public Long getChapterId() { return chapterId; }
+
+        public String getChapterTitle() { return chapterTitle; }
+
+        public String getNodeName() { return nodeName; }
+
+        public String getBlockId() { return blockId; }
+
+        public String getField() { return field; }
+
+        public String getSource() { return source; }
     }
 }

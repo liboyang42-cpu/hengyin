@@ -70,6 +70,15 @@ public class PlayEntryApplication {
 
     /** Compatibility GET /nodes still performs original entry commands at their original points. */
     public AjaxResult nodes(Long actorMemberId, Long activityId, Long topicId) {
+        return nodes(actorMemberId, activityId, topicId, null, null, null);
+    }
+
+    /**
+     * 同一入口的可选端能力声明（只读投影，不参与准入、不授予权益）。
+     * 不传 = 老客户端，兼容结论为「未确认」，不当作不支持。
+     */
+    public AjaxResult nodes(Long actorMemberId, Long activityId, Long topicId,
+            String clientPlatform, String clientVersion, String capabilities) {
         Long memberId = actorMemberId;
         if (memberId <= 0) return error("请先登录");
 
@@ -201,6 +210,8 @@ public class PlayEntryApplication {
                 hintUnlockedNodeIds, nodes, spoilerAccess, playMode, routeTopic, bargainOffered, routeState);
         read.contentSnapshot = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot)
                 ? contentSnapshot : null;
+        read.capabilityDeclaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse(clientPlatform, clientVersion, capabilities);
         AjaxResult denied = playNodeQueryApplication.prepareNodes(read);
         if (denied != null) return denied;
         boolean versionedContent = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot);

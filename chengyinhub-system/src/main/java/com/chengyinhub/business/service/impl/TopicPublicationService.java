@@ -4,6 +4,7 @@ import java.util.*;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.domain.vo.TopicPublicationStatusVO;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.support.CircleThemePublishPolicy;
 import com.chengyinhub.business.service.ITopicCommercialReviewService;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.chengyinhub.business.service.support.TopicPublicationContentGuard;
 import com.chengyinhub.business.service.support.TopicSelfHostActivityService;
+import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
+import com.chengyinhub.business.util.TopicEditWindow;
 
 /** Owns publication state and review orchestration; joins the original caller transaction. */
 @Service
@@ -105,6 +108,8 @@ public class TopicPublicationService {
         publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
         // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
         publicationContentGuard.assertBlockSysVarReferences(topic);
+        // B2 地点合同:必填槽未绑定 / 需重绑 / 城市不一致才拦;旧模板沿用只是提醒,不新阻断
+        publicationContentGuard.assertLocationBindingsPublishable(topic);
         String publishedRouteSnapshot = simple ? publicationContentGuard.normalizedBranchRouteForPublish(topic, declarations) : null;
         if (!StringUtils.isEmpty(topic.getCircleThemeCode())) {
             CmsTopicChapter circleQuery = new CmsTopicChapter();
@@ -263,6 +268,12 @@ public class TopicPublicationService {
     }
 
     private Long findOpenTopicTaskId(Long topicId) {
+        AuditTask task = openTopicReviewTask(topicId);
+        return task == null ? null : task.getId();
+    }
+
+    /** 未结的主题审核单(待审/升级人工);状态投影与复核上架单复用同一份挑选口径。 */
+    private AuditTask openTopicReviewTask(Long topicId) {
         AuditTask query = new AuditTask();
         query.setBizType(AuditTask.BIZ_TOPIC);
         query.setBizId(topicId);
@@ -271,7 +282,7 @@ public class TopicPublicationService {
             // AUDIT-INT-5:举报单在独立槽,不能顶替复核上架单(举报不成立会顺手解除留置)。
             if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
                     || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) {
-                return task.getId();
+                return task;
             }
         }
         return null;
@@ -316,19 +327,171 @@ public class TopicPublicationService {
                 recruitDeadline != null ? TopicLifecycleState.RECRUITING : TopicLifecycleState.PRICING);
     }
 
+    /**
+     * 作者端发布状态窄投影:draft / review / visibility / sale / playable 五段事实,彼此独立。
+     *
+     * <p>只读,不写库、不加锁、不改任何发布态。存在的理由只有一个:专业主题是「先公开后审」,
+     * {@code status=1,userStatus=1,checkStatus=0} 同时表示「玩家看得见」和「还没过审」——
+     * 压成一个 published 布尔,作者会以为已过审,运营会以为已验收。所以过审只看 review.passed。
+     *
+     * <p>这不是第二套 readiness:售卖原因直接读 {@link SaleAvailabilityPolicy#sellableBlockReason},
+     * 可玩原因用运行期同一句「路线尚未发布」,审核事实读审核单与 checkStatus —— 都是既有真源。
+     */
+    public TopicPublicationStatusVO publicationStatus(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || topic.getId() <= 0L) throw new ServiceException("主题不存在");
+        Long topicId = topic.getId();
+        Integer isDraft = cmsTopicMapper.selectTopicIsDraft(topicId);
+        boolean draft = isDraft != null && isDraft.intValue() == 1;
+
+        // 可编辑档位与主题编辑接口同一份判定(TopicEditWindow),只读投影,不另判一次。
+        boolean editable = false;
+        String editBlocked = null;
+        try {
+            TopicEditWindow.Scope window = TopicEditWindow.resolve(topic, isDraft, DateUtils.getNowDate());
+            editable = window == TopicEditWindow.Scope.FULL;
+            if (window == TopicEditWindow.Scope.WHITELIST) {
+                editBlocked = "主题已上架，只能修改文案等白名单字段";
+            } else if (window == TopicEditWindow.Scope.SELLING_FROZEN) {
+                editBlocked = "主题已进入售卖/履约阶段，商业结构已冻结";
+            }
+        } catch (IllegalStateException refused) {
+            editBlocked = refused.getMessage();
+        }
+
+        AuditTask openTask = openTopicReviewTask(topicId);
+        Integer checkStatus = topic.getCheckStatus();
+        // 内容安全留置(check_status=2 但 status≠2)是「等人工复核」,不是「被驳回」——
+        // 算成驳回会让作者以为内容被否了,而实际只要换图复核通过就自动上架。
+        boolean held = com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(topic);
+        boolean rejected = Integer.valueOf(2).equals(topic.getStatus());
+        // 过审的唯一判据是 checkStatus=1(机审通过/免审/人工通过);「公开」不参与判定。
+        boolean passed = !rejected && !held && Integer.valueOf(1).equals(checkStatus);
+        // 状态不猜:checkStatus=0 本身不代表存在审核单,pending 只认真正未结的那张单。
+        boolean pending = !rejected && !passed && !draft && openTask != null;
+        String reviewState;
+        String reviewLabel;
+        if (rejected) {
+            reviewState = TopicPublicationStatusVO.REVIEW_REJECTED;
+            reviewLabel = "未通过";
+        } else if (draft) {
+            reviewState = TopicPublicationStatusVO.REVIEW_DRAFT;
+            reviewLabel = "草稿";
+        } else if (held) {
+            reviewState = TopicPublicationStatusVO.REVIEW_PENDING;
+            reviewLabel = "内容安全复核中";
+        } else if (passed) {
+            reviewState = TopicPublicationStatusVO.REVIEW_PASSED;
+            reviewLabel = "已通过";
+        } else if (openTask != null && AuditTask.STATUS_ESCALATED.equals(openTask.getStatus())) {
+            reviewState = TopicPublicationStatusVO.REVIEW_ESCALATED;
+            reviewLabel = "人工复审中";
+        } else if (openTask != null) {
+            reviewState = TopicPublicationStatusVO.REVIEW_PENDING;
+            reviewLabel = "审核中";
+        } else {
+            // 后审通道:只到「后审中」,不假装有一张审核单在跑。
+            reviewState = TopicPublicationStatusVO.REVIEW_AWAITING;
+            reviewLabel = "后审中（当前无未结审核单）";
+        }
+        TopicPublicationStatusVO.Review review = new TopicPublicationStatusVO.Review(
+                reviewState, reviewLabel, passed, pending,
+                openTask == null ? null : openTask.getId(),
+                rejected ? topic.getReason() : null);
+
+        boolean listed = Integer.valueOf(1).equals(topic.getStatus());
+        boolean visible = listed && Integer.valueOf(1).equals(topic.getUserStatus()) && !held;
+        String visibleReason = visible ? null
+                : held ? "内容安全复核中，暂不公开"
+                : !listed ? (rejected ? "审核未通过，玩家看不到" : "尚未发布，玩家看不到")
+                : "已下架，玩家看不到";
+        TopicPublicationStatusVO.Visibility visibility = new TopicPublicationStatusVO.Visibility(visible, visibleReason);
+
+        Integer lifecycle = topic.getLifecycle();
+        TopicLifecycleState saleState = null;
+        try { saleState = TopicLifecycleState.fromCode(lifecycle); } catch (IllegalArgumentException unknown) { saleState = null; }
+        boolean lifecycleSaleOpen = saleState != null && saleState.isDirectSaleOpen();
+        String saleBlockReason = SaleAvailabilityPolicy.sellableBlockReason(topic, null, DateUtils.getNowDate());
+        // 「在售」= 生命周期放行 且 售卖闸放行,两者不可分开成立:
+        // 否则会出现「在售」同时「saleEndAt 已到,不可再售」的自相矛盾。
+        TopicPublicationStatusVO.Sale sale = new TopicPublicationStatusVO.Sale(
+                lifecycleSaleOpen && saleBlockReason == null,
+                lifecycleSaleOpen,
+                isCommercialAwaitingReview(lifecycle),
+                commercialNextStepOf(lifecycle),
+                saleBlockReason);
+
+        Long publishedConfigVersion = topic.getPublishedConfigVersion();
+        boolean snapshotReady = snapshotPublished(topic);
+        TopicPublicationStatusVO.Playable play = new TopicPublicationStatusVO.Playable(
+                snapshotReady,
+                snapshotReady ? null : "路线尚未发布",
+                publishedConfigVersion,
+                Integer.valueOf(1).equals(topic.getBetaFlag()));
+
+        return new TopicPublicationStatusVO(
+                new TopicPublicationStatusVO.Draft(draft, editable, editBlocked),
+                review, visibility, sale, play);
+    }
+
+    /**
+     * 开局所需的已发布内容事实 —— 判据取自运行期入口本身,不按 publishMode 猜。
+     *
+     * <p>证据链:{@code PlayEntryApplication#routeState} → {@code ITopicRouteRuntimeService#state} →
+     * {@code requireScope} → {@code currentScope},那里对<b>所有</b> routeMode 一律要求
+     * {@code publishedConfigVersion>0}(或本局行已存在),否则抛「路线尚未发布」。
+     * 所以 simple / ai_simple 没有任何豁免:
+     *
+     * <p>{@code ensureBranchSession} 额外要求 {@code publishedRouteGraphJson} 非空;
+     * {@code ensureJourneySession} 只需 {@code publishedConfigVersion>0}(无图时用 linearSnapshot 现编)。
+     * 是否建旅程局由 {@code journeyConfigured} 按<b>内容</b>判定
+     * (publishedGraph.runtimeSnapshotVersion==1 / openingChapter / publishedThemeRuntimeConfig /
+     * journeyRules.hasRuntimeState / 块需要本局状态),与 publishMode 无关;纯线性老主题不建局,
+     * 但仍要过 currentScope 的版本闸。
+     *
+     * <p>这里只答「内容侧已发布快照能否用于开局」,不含报名/权益/可玩时段 —— 那些由
+     * {@code CurrentPlayRegistration.require} 与 {@code TopicPlaySetupService.requireOpen} 在开局时判定。
+     */
+    private static boolean snapshotPublished(CmsTopic topic) {
+        Long version = topic.getPublishedConfigVersion();
+        if (version == null || version.longValue() <= 0L) return false;
+        return !"BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode())
+                || !StringUtils.isEmpty(topic.getPublishedRouteGraphJson());
+    }
+
     private void attachCommercialPublicationState(TopicBundleSubmitResultVO result) {
         CmsTopic topic = cmsTopicMapper.selectCmsTopicById(result.getTopicId());
         if (topic == null) throw new IllegalStateException("主题发布后状态读取失败");
-        Integer lifecycle = topic.getLifecycle();
-        boolean awaiting = Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
+        TopicPublicationStatusVO status = publicationStatus(topic);
+        result.setPublicationStatus(status);
+        result.setReviewPassed(status.getReview().isPassed());
+        result.setCheckStatus(topic.getCheckStatus());
+        result.setReviewConfigVersion(topic.getConfigVersion());
+        result.setCommercialAwaitingReview(status.getSale().isAwaitingReview());
+        result.setCommercialNextStep(status.getSale().getNextStep());
+        result.setPublicVisible(status.getVisibility().isVisible());
+        result.setPublicReason(status.getVisibility().getReason());
+        result.setSaleOpen(status.getSale().isOnSale());
+        result.setSaleBlockReason(status.getSale().getBlockReason());
+        result.setPlayable(status.getPlayable().isPlayable());
+        result.setPlayableReason(status.getPlayable().getReason());
+    }
+
+    /** 立项/招募/定价三态统一口径:作者端文案与发布结果商业段共用这一份,不各写一遍。 */
+    private static boolean isCommercialAwaitingReview(Integer lifecycle) {
+        return Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
                 || Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)
                 || Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(lifecycle);
-        result.setCommercialAwaitingReview(awaiting);
-        if (awaiting) result.setCommercialNextStep(Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
-                ? "已提交立项审核，审核与定价完成前尚未开售"
-                : Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)
-                ? "请先完成招募，招募结束后完成定价并自动提交开售审核"
-                : "请在定价工作台保存完整开售参数，保存后自动提交开售审核");
+    }
+
+    private static String commercialNextStepOf(Integer lifecycle) {
+        if (!isCommercialAwaitingReview(lifecycle)) return null;
+        if (Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)) {
+            return "已提交立项审核，审核与定价完成前尚未开售";
+        }
+        if (Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)) {
+            return "请先完成招募，招募结束后完成定价并自动提交开售审核";
+        }
+        return "请在定价工作台保存完整开售参数，保存后自动提交开售审核";
     }
 
     public TopicBundleSubmitResultVO noBundleReview(Long topicId, String state) {
@@ -387,6 +550,8 @@ public class TopicPublicationService {
         publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
         // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
         publicationContentGuard.assertBlockSysVarReferences(topic);
+        // B2 地点合同与首次发布同一口径:error 级缺口才拦,LEGACY 只提醒
+        publicationContentGuard.assertLocationBindingsPublishable(topic);
         return publicationContentGuard.normalizedBranchRouteForPublish(topic, declarations);
     }
 

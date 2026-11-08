@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 报名报价结果（M0-1 实扣报价一致）
@@ -57,6 +58,69 @@ public class RegistrationQuoteResult {
     /** 此刻下单是否还可退:null = 系统算不出来(前端不弹、保持默认路径),false = 本单不可退。 */
     @Schema(description = "此刻下单后是否可退(null=未知,不可当可退宣传)")
     private Boolean refundableNow;
+
+    /**
+     * C06 商品交付摘要（报价只读投影）。只从服务端既有票种/活动/主题事实派生，
+     * 不参与金额计算，也不改变 quoteSign；客户端不得凭这些字段自行判定可售或权益。
+     */
+    @Schema(description = "商品交付摘要(只读服务端事实)")
+    private Delivery delivery;
+
+    /**
+     * 此刻服务端实际可用的支付通道。仅代表通道就绪，不代表商品在该市场已获准销售；
+     * 数字商品 IAP/商店地区分类由 App 侧商品策略单独确认。
+     */
+    @Schema(description = "当前可用支付通道(JSAPI/APP);空表示通道未就绪")
+    private List<String> paymentChannels;
+
+    /** 报价交付摘要：买的是什么、给谁、多少人、何时可用、退款规则。 */
+    public static class Delivery {
+        /** {@link com.chengyinhub.common.constant.PurchaseKind}:1 有人带票/2 自玩通行证/3 自由探索票 */
+        private Integer purchaseKind;
+        private String ticketName;
+        /** 该票一张覆盖的人数(多人票=同一报名单内席位);1 或 null 表示单人。 */
+        private Integer teamSize;
+        private Integer minPeople;
+        private Integer maxPeople;
+        /** 1 = 报名需审核；0/null = 不需要。 */
+        private Integer needAudit;
+        /** 服务可用期(活动/主题既有起止)。null = 服务端未给出，不得由客户端补默认值。 */
+        private Date serviceStartAt;
+        private Date serviceEndAt;
+        /** 票种既有退款规则原文；null = 未配置，不得展示为"可退"。 */
+        private String refundRule;
+        /** 权益归属种类：报名场景恒为付款人本人，与主办/商家主体分开表达。 */
+        private String beneficiaryKind;
+        /** 内容/场次归属主体(主题活动主办者或活动所属商家会员)。 */
+        private Long sellerMemberId;
+        /** 报价金额由服务端计算并签名，客户端仅展示。 */
+        private Boolean amountFromServer;
+
+        public Integer getPurchaseKind() { return purchaseKind; }
+        public void setPurchaseKind(Integer purchaseKind) { this.purchaseKind = purchaseKind; }
+        public String getTicketName() { return ticketName; }
+        public void setTicketName(String ticketName) { this.ticketName = ticketName; }
+        public Integer getTeamSize() { return teamSize; }
+        public void setTeamSize(Integer teamSize) { this.teamSize = teamSize; }
+        public Integer getMinPeople() { return minPeople; }
+        public void setMinPeople(Integer minPeople) { this.minPeople = minPeople; }
+        public Integer getMaxPeople() { return maxPeople; }
+        public void setMaxPeople(Integer maxPeople) { this.maxPeople = maxPeople; }
+        public Integer getNeedAudit() { return needAudit; }
+        public void setNeedAudit(Integer needAudit) { this.needAudit = needAudit; }
+        public Date getServiceStartAt() { return serviceStartAt; }
+        public void setServiceStartAt(Date serviceStartAt) { this.serviceStartAt = serviceStartAt; }
+        public Date getServiceEndAt() { return serviceEndAt; }
+        public void setServiceEndAt(Date serviceEndAt) { this.serviceEndAt = serviceEndAt; }
+        public String getRefundRule() { return refundRule; }
+        public void setRefundRule(String refundRule) { this.refundRule = refundRule; }
+        public String getBeneficiaryKind() { return beneficiaryKind; }
+        public void setBeneficiaryKind(String beneficiaryKind) { this.beneficiaryKind = beneficiaryKind; }
+        public Long getSellerMemberId() { return sellerMemberId; }
+        public void setSellerMemberId(Long sellerMemberId) { this.sellerMemberId = sellerMemberId; }
+        public Boolean getAmountFromServer() { return amountFromServer; }
+        public void setAmountFromServer(Boolean amountFromServer) { this.amountFromServer = amountFromServer; }
+    }
 
     public RegistrationQuoteResult() {
     }
@@ -159,5 +223,21 @@ public class RegistrationQuoteResult {
 
     public void setRefundableNow(Boolean refundableNow) {
         this.refundableNow = refundableNow;
+    }
+
+    public Delivery getDelivery() {
+        return delivery;
+    }
+
+    public void setDelivery(Delivery delivery) {
+        this.delivery = delivery;
+    }
+
+    public List<String> getPaymentChannels() {
+        return paymentChannels;
+    }
+
+    public void setPaymentChannels(List<String> paymentChannels) {
+        this.paymentChannels = paymentChannels;
     }
 }

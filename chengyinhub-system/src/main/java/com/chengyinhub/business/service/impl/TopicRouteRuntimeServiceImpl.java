@@ -1270,6 +1270,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return publicationCompiler().freezePublication(topic, routeSnapshot, declarations);
     }
 
+    /** Read-only publication preflight; the compiler owns the ordinary-read projection and restores it. */
+    @Override
+    public String previewPublication(CmsTopic topic, String routeSnapshot, List<ThemeStateKey> projectedDeclarations) {
+        return publicationCompiler().previewPublication(topic, routeSnapshot, projectedDeclarations);
+    }
+
     @Override
     public String freezePublishedJourney(CmsTopic topic) {
         return publicationCompiler().freezePublishedJourney(topic);

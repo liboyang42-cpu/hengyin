@@ -9,6 +9,8 @@ CREATE TABLE `cms_topic` (
   `product_type` tinyint DEFAULT NULL COMMENT '产品类型 1经典定向ORIENTEERING/2自由定向FREE_EXPLORE。NULL=存量未回填或混票待人工,读侧回落票mode推断',
   `circle_theme_code` varchar(24) DEFAULT NULL COMMENT '圈层主题码；NULL=普通主题',
   `source_template_topic_id` bigint DEFAULT NULL COMMENT '模板复制谱系；NULL=非模板副本',
+  `city_code` varchar(32) DEFAULT NULL COMMENT '城市编码(adcode 城市级，可空)',
+  `content_contract_json` json DEFAULT NULL COMMENT '地点合同:要求/绑定/采用来源;NULL=未建立',
   `complete_rule_json` json DEFAULT NULL COMMENT '自由探索完成规则;NULL=必选章全核销',
   `route_mode` varchar(20) NOT NULL DEFAULT 'LINEAR' COMMENT 'LINEAR/BRANCH_GRAPH',
   `route_graph_json` json DEFAULT NULL COMMENT '主题级地点路线图',
