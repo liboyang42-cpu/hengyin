@@ -44,6 +44,33 @@ class TopicPublicationContentSnapshotTest {
         assertFalse(answer.path("nodePresentation").has("checkinCode"));
     }
 
+    /**
+     * BE-08:答案别名政策与 canonical answer 同源(模板私有 advancedConfigJson 根层),
+     * 发布/建局时一起冻结进 nodeAnswers;没有别名就不写键 —— 老快照读回后仍走旧比较器。
+     */
+    @Test void freezesExplicitAnswerAliasesBesideTheAnswerAndOmitsTheKeyWhenNotConfigured() throws Exception {
+        Fixture withPolicy = new Fixture();
+        withPolicy.template.setFeedbackText("暗号正确");
+        withPolicy.template.setAdvancedConfigJson("{\"schemaVersion\":1,\"answerPolicy\":"
+                + "{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\",\"acceptedAliases\":[\"暗号\"]}}");
+        JsonNode answer = JSON.readTree(withPolicy.compiler.freezePublication(withPolicy.topic, null))
+                .path("nodeAnswers").path("11");
+        assertEquals("secret", answer.path("questionAnswer").asText(), "canonical answer 保留");
+        assertEquals(1, answer.path("answerPolicy").path("version").asInt());
+        assertEquals("LEGACY_V1", answer.path("answerPolicy").path("normalizationPolicy").asText());
+        assertEquals("暗号", answer.path("answerPolicy").path("acceptedAliases").path(0).asText());
+        // 判题反馈复用既有冻结公开反馈字段(templatePresentation.feedbackText),不另造一段。
+        assertEquals("暗号正确", answer.path("templatePresentation").path("feedbackText").asText());
+        // 呈现白名单是玩家可见面:政策与答案一样不进 templatePresentation。
+        assertFalse(answer.path("templatePresentation").has("answerPolicy"));
+        assertFalse(answer.path("templatePresentation").has("acceptedAliases"));
+
+        Fixture withoutPolicy = new Fixture();
+        JsonNode legacy = JSON.readTree(withoutPolicy.compiler.freezePublication(withoutPolicy.topic, null))
+                .path("nodeAnswers").path("11");
+        assertFalse(legacy.has("answerPolicy"), "没配别名就不写键,旧局口径不变");
+    }
+
     @Test void legitimateNonTemplateStationHasNoInventedTemplateIdentity() throws Exception {
         Fixture f = new Fixture(); f.node.setTemplateId(null);
         JsonNode answer = JSON.readTree(f.compiler.freezePublication(f.topic, null)).path("nodeAnswers").path("11");

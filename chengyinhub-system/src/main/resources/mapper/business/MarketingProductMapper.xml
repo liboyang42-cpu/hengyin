@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingProductMapper">
+
+    <resultMap id="productMap" type="com.chengyinhub.business.domain.MarketingProduct">
+        <id property="id" column="id"/>
+        <result property="productCode" column="product_code"/>
+        <result property="productName" column="product_name"/>
+        <result property="productKind" column="product_kind"/>
+        <result property="purchaseKind" column="purchase_kind"/>
+        <result property="fulfillmentRoute" column="fulfillment_route"/>
+        <result property="ticketId" column="ticket_id"/>
+        <result property="exploreCapacity" column="explore_capacity"/>
+        <result property="saleCity" column="sale_city"/>
+        <result property="parentProductId" column="parent_product_id"/>
+        <result property="cashPrice" column="cash_price"/>
+        <result property="pointsPrice" column="points_price"/>
+        <result property="validityKind" column="validity_kind"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="fixedValidFrom" column="fixed_valid_from"/>
+        <result property="fixedValidTo" column="fixed_valid_to"/>
+        <result property="seatCount" column="seat_count"/>
+        <result property="giftAllowed" column="gift_allowed"/>
+        <result property="giftClaimDays" column="gift_claim_days"/>
+        <result property="status" column="status"/>
+        <result property="saleStartAt" column="sale_start_at"/>
+        <result property="saleEndAt" column="sale_end_at"/>
+        <result property="termsVersion" column="terms_version"/>
+        <result property="revision" column="revision"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="itemMap" type="com.chengyinhub.business.domain.MarketingProductItem">
+        <id property="id" column="id"/>
+        <result property="productId" column="product_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="topicTitle" column="topic_title"/>
+        <result property="contentRevision" column="content_revision"/>
+        <result property="sortNo" column="sort_no"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="productColumns">
+        id, product_code, product_name, product_kind, purchase_kind, explore_capacity,
+        fulfillment_route, ticket_id, sale_city, parent_product_id,
+        cash_price, points_price, validity_kind, valid_days, fixed_valid_from, fixed_valid_to,
+        seat_count, gift_allowed, gift_claim_days, status, sale_start_at, sale_end_at,
+        terms_version, revision, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="productMap" useCache="false">
+        select <include refid="productColumns"/> from marketing_product where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="productMap" useCache="false" flushCache="true">
+        select <include refid="productColumns"/> from marketing_product where id = #{id} for update
+    </select>
+
+    <select id="selectSellable" resultMap="productMap" useCache="false">
+        select <include refid="productColumns"/> from marketing_product
+        where status = 1
+          and (sale_start_at is null or sale_start_at &lt;= #{now})
+          and (sale_end_at is null or sale_end_at &gt; #{now})
+        <if test="city != null and city != ''">
+          and (sale_city = #{city} or sale_city is null)
+        </if>
+        <if test="kind != null">
+          and product_kind = #{kind}
+        </if>
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="selectItems" resultMap="itemMap" useCache="false">
+        select id, product_id, topic_id, topic_title, content_revision, sort_no, create_time
+        from marketing_product_item
+        where product_id = #{productId}
+        order by sort_no asc, id asc
+    </select>
+
+    <select id="selectItemsByProductIds" resultMap="itemMap" useCache="false">
+        select id, product_id, topic_id, topic_title, content_revision, sort_no, create_time
+        from marketing_product_item
+        where product_id in
+        <foreach item="pid" collection="productIds" open="(" separator="," close=")">
+            #{pid}
+        </foreach>
+        order by product_id asc, sort_no asc, id asc
+    </select>
+
+    <insert id="insertProduct" parameterType="com.chengyinhub.business.domain.MarketingProduct"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_product
+            (product_code, product_name, product_kind, purchase_kind, explore_capacity,
+             fulfillment_route, ticket_id, sale_city, parent_product_id,
+             cash_price, points_price, validity_kind, valid_days, fixed_valid_from, fixed_valid_to,
+             seat_count, gift_allowed, gift_claim_days, status, sale_start_at, sale_end_at,
+             terms_version, revision, create_time, update_time)
+        values
+            (#{productCode}, #{productName}, #{productKind}, #{purchaseKind}, #{exploreCapacity},
+             #{fulfillmentRoute}, #{ticketId}, #{saleCity}, #{parentProductId},
+             #{cashPrice}, #{pointsPrice}, #{validityKind}, #{validDays}, #{fixedValidFrom}, #{fixedValidTo},
+             #{seatCount}, #{giftAllowed}, #{giftClaimDays}, #{status}, #{saleStartAt}, #{saleEndAt},
+             #{termsVersion}, #{revision}, #{createTime}, #{updateTime})
+    </insert>
+
+    <insert id="insertItem" parameterType="com.chengyinhub.business.domain.MarketingProductItem"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_product_item
+            (product_id, topic_id, topic_title, content_revision, sort_no, create_time)
+        values
+            (#{productId}, #{topicId}, #{topicTitle}, #{contentRevision}, #{sortNo}, #{createTime})
+    </insert>
+</mapper>

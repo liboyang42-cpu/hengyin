@@ -1,11 +1,14 @@
 package com.chengyinhub.web.service.play;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.domain.GiftPlayFact;
 import com.chengyinhub.common.constant.PurchaseKind;
 import com.chengyinhub.common.constant.PlayMode;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -39,6 +42,18 @@ public class PlayCompletionFacts {
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
     @Autowired
     private PlayNodeContext playNodeContext;
+    /**
+     * 礼品对可玩资格的影响（只读自玩域）。缺失即启动失败，不会让礼品行退化成可玩：
+     * 待领取 ⇒ 无人可玩；已领取 ⇒ 只有领取人；无礼品 ⇒ 沿用原买家行为。
+     */
+    @Autowired
+    private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
+    /**
+     * 付费内含席位受让人事实（只读）。与礼品分开：它不是第二套准入，
+     * 只把「已领取原已付行第 2..N 席」的会员并入原行读取；退款由事实查询直接收口。
+     */
+    @Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
 
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
 
@@ -111,13 +126,47 @@ public class PlayCompletionFacts {
      */
     public boolean hasSelfPlayRegistration(Long memberId, Long topicId)
     {
+        if (memberId == null || topicId == null) return false;
+        Map<Long, GiftPlayFact> gifts = giftFactsOf(memberId, topicId);
         CmsRegistration probe = new CmsRegistration();
         probe.setMemberId(memberId);
         probe.setOwnerType(1L);
         probe.setOwnerId(topicId);
         probe.setRegistrationStatus(2);
         List<CmsRegistration> regs = cmsRegistrationService.selectCmsRegistrationList(probe);
-        return regs != null && !regs.isEmpty();
+        if (regs != null) {
+            for (CmsRegistration r : regs) {
+                GiftPlayFact fact = gifts.get(r.getId());
+                // 礼品扣住时买家不再算历史参与者；无礼品行沿用原行为。
+                if (fact == null || fact.claimedBy(memberId)) return true;
+            }
+        }
+        // 已领取给本人：行仍属买家，按 id 单条补判（不扫全表）。
+        for (GiftPlayFact fact : gifts.values()) {
+            if (fact.claimedBy(memberId) && inSelfPlayScope(fact.getRegistrationId(), topicId)) return true;
+        }
+        // 已领取付费内含席位：同样是该主题的真实参与者，但订单财务归属仍是买家。
+        return hasSeatRecipientFact(memberId, 1L, topicId);
+    }
+
+    /** 该礼品已领取给本人，且行仍是本主题成功自玩通行证。 */
+    private boolean inSelfPlayScope(Long registrationId, Long topicId) {
+        if (registrationId == null) return false;
+        CmsRegistration row = cmsRegistrationService.selectCmsRegistrationById(registrationId);
+        return row != null && topicId.equals(row.getOwnerId()) && Long.valueOf(1L).equals(row.getOwnerType())
+                && Integer.valueOf(2).equals(row.getRegistrationStatus());
+    }
+
+    /** 与 actor 相关的本主题礼品事实（一次索引查询）；无 bean 时为空，保持旧行为。 */
+    private Map<Long, GiftPlayFact> giftFactsOf(Long memberId, Long topicId) {
+        Map<Long, GiftPlayFact> out = new HashMap<>();
+        if (giftPlayEligibility == null || memberId == null || topicId == null) return out;
+        List<GiftPlayFact> facts = giftPlayEligibility.playFacts(memberId, 1L, topicId);
+        if (facts == null) return out;
+        for (GiftPlayFact fact : facts) {
+            if (fact != null && fact.getRegistrationId() != null) out.put(fact.getRegistrationId(), fact);
+        }
+        return out;
     }
 
     public boolean isExploreChapterRedeemed(Long memberId, Long activityId, Long chapterId) {
@@ -274,7 +323,8 @@ public class PlayCompletionFacts {
         regProbe.setOwnerId(actId);
         regProbe.setRegistrationStatus(2); // 2=报名成功
         List<CmsRegistration> regs = cmsRegistrationService.selectCmsRegistrationList(regProbe);
-        return regs != null && !regs.isEmpty();
+        if (regs != null && !regs.isEmpty()) return true;
+        return hasSeatRecipientFact(memberId, 2L, actId);
     }
 
     /** 旧入口无指定票时沿用报名查询的 id desc 顺序；有指定票则仅用本次票夹中的本人订单。 */
@@ -301,21 +351,63 @@ public class PlayCompletionFacts {
         return validSelfPlayPass(memberId, topicId, null);
     }
 
+    /**
+     * 该主题此刻可玩的自玩通行证。
+     *
+     * <p>礼品语义（自玩域）：行仍归买家（财务/退款归属不动），但可玩权按礼品事实判定 ——
+     * 待领取 ⇒ 任何人都拿不到；已领取 ⇒ 只有领取人拿得到（同人自领也算领取人）。
+     * 只多一次按主题的礼品事实查询；领取人行按 id 单条补读，不扫全表、不加锁。
+     */
     public CmsRegistration validSelfPlayPass(Long memberId, Long topicId, Long registrationId)
     {
+        if (memberId == null || topicId == null) return null;
+        Map<Long, GiftPlayFact> gifts = giftFactsOf(memberId, topicId);
         CmsRegistration probe = new CmsRegistration();
         probe.setMemberId(memberId);
         probe.setOwnerType(1L); // 1=主题(自玩通行证)
         probe.setOwnerId(topicId);
         probe.setRegistrationStatus(2); // 报名成功=已支付
         List<CmsRegistration> regs = cmsRegistrationService.selectCmsRegistrationList(probe);
-        if (regs == null) return null;
         Date now = new Date();
-        for (CmsRegistration r : regs) {
-            // expires_at 空=不过期(兼容旧数据);非空须晚于现在
-            if ((registrationId == null || registrationId.equals(r.getId()))
-                    && (r.getExpiresAt() == null || r.getExpiresAt().after(now))) return r;
+        if (regs != null) for (CmsRegistration r : regs) {
+            if (registrationId != null && !registrationId.equals(r.getId())) continue;
+            GiftPlayFact fact = gifts.get(r.getId());
+            // 礼品待领取(无人可玩)或已领取给他人 ⇒ 买家拿不到;无礼品行沿用旧行为。
+            if (fact != null && !fact.claimedBy(memberId)) continue;
+            if (r.getExpiresAt() == null || r.getExpiresAt().after(now)) return r;
+        }
+        // 已领取给本人:行 member_id 仍是买家,按 id 单条补入。
+        for (GiftPlayFact fact : gifts.values()) {
+            if (!fact.claimedBy(memberId)) continue;
+            if (registrationId != null && !registrationId.equals(fact.getRegistrationId())) continue;
+            CmsRegistration row = cmsRegistrationService.selectCmsRegistrationById(fact.getRegistrationId());
+            if (row == null || !topicId.equals(row.getOwnerId()) || !Long.valueOf(1L).equals(row.getOwnerType())) continue;
+            if (!Integer.valueOf(2).equals(row.getRegistrationStatus())) continue;
+            if (row.getExpiresAt() == null || row.getExpiresAt().after(now)) return row;
+        }
+        // 已领取付费内含席位：返回原已付行供原准入/进度使用，member_id/金额仍归买家。
+        for (com.chengyinhub.business.domain.SeatRecipientFact fact
+                : seatRecipientFacts(memberId, 1L, topicId)) {
+            if (registrationId != null && !registrationId.equals(fact.getRegistrationId())) continue;
+            CmsRegistration row = cmsRegistrationService.selectCmsRegistrationById(fact.getRegistrationId());
+            if (row == null || !topicId.equals(row.getOwnerId()) || !Long.valueOf(1L).equals(row.getOwnerType())) continue;
+            if (!Integer.valueOf(2).equals(row.getRegistrationStatus())
+                    || !Integer.valueOf(2).equals(row.getPaymentStatus())) continue;
+            if (row.getExpiresAt() == null || row.getExpiresAt().after(now)) return row;
         }
         return null;
+    }
+
+    /** 已领取邀请事实（只读、按 owner 域一次查询）；无 bean/无会员时为空。 */
+    private List<com.chengyinhub.business.domain.SeatRecipientFact> seatRecipientFacts(
+            Long memberId, long ownerType, Long ownerId) {
+        if (seatRecipientEligibility == null || memberId == null || ownerId == null) return List.of();
+        List<com.chengyinhub.business.domain.SeatRecipientFact> facts =
+                seatRecipientEligibility.playFacts(memberId, ownerType, ownerId);
+        return facts == null ? List.of() : facts;
+    }
+
+    private boolean hasSeatRecipientFact(Long memberId, long ownerType, Long ownerId) {
+        return !seatRecipientFacts(memberId, ownerType, ownerId).isEmpty();
     }
 }

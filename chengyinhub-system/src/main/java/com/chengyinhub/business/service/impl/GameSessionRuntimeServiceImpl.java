@@ -96,6 +96,12 @@ import java.util.Set;
 /** 活动级总局、三身份权限、状态与回执的唯一实现。 */
 @Service
 public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService {
+    /** 礼品 eligibility（活动域不使用；保持同一受控事实注入以免各入口分叉）。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
+    /** 付费内含席位受让人事实（只读）；与礼品分开，合并点仍在 CurrentPlayRegistration。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
 
     // 2026-09-06 现场事件(Figma D8):俱乐部在现场需要能暂停一个出问题的站点、
     // 恢复它,以及把一条提交打回重交。
@@ -2355,6 +2361,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             ObjectNode frozen = (ObjectNode) readRouteJson(topicRouteRuntimeService.freezePublishedJourney(topic));
             frozen.put("playMode", "ROUTE");
             frozen.put("publishedConfigVersion", topic.getPublishedConfigVersion());
+            // BE-06:新局绑定明确发布修订;老主题没有修订行时不加键,继续按原真实快照跑。
+            com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(
+                    frozen, topicMapper.selectLatestContentRevisionHeader(topic.getId()));
             config = frozen;
         } else config = validateModuleConfig(configJson);
 
@@ -3733,7 +3742,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 throw error("GAME_FORBIDDEN_SCOPE", "仅本场玩家可执行该操作");
             }
             com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,
-                    currentPlayRegistrationMapper,actor.getMemberId(),2L,activity.getId(),null,clock.now(),true);
+                    currentPlayRegistrationMapper,actor.getMemberId(),2L,activity.getId(),null,clock.now(),true,
+                    giftPlayEligibility,seatRecipientEligibility);
             requirePlayer(actor, activity);
             if (!"CONFIRM_ROLE".equals(action)) requireConfirmedRoleForUpdate(session, actor.getMemberId());
             if (!"CONFIRM_ROLE".equals(action) && command.getNodeId() != null) {

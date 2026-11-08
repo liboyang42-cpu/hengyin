@@ -41,6 +41,8 @@ public final class PlayCommandErrorContract
     public static final String ARRIVE_ACCURACY_LOW = "ARRIVE_ACCURACY_LOW";
     /** 超 50m 围栏:走近后可重发。 */
     public static final String ARRIVE_TOO_FAR = "ARRIVE_TOO_FAR";
+    /** 冻结到达策略要求定位时效，而上报定位时间缺失/来自未来/已过期:重新定位后可重发。 */
+    public static final String ARRIVE_LOCATION_STALE = "ARRIVE_LOCATION_STALE";
     /** 本局要求先经 GPS 记到达才能作答,而尚无到达事实。 */
     public static final String ARRIVE_NOT_RECORDED = "ARRIVE_NOT_RECORDED";
     /** vm=5 站点缺坐标:配置缺合同,扫码或找运营,重发无用。 */

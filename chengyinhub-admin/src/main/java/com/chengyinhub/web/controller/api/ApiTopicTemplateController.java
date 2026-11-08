@@ -59,11 +59,22 @@ public class ApiTopicTemplateController extends BaseController {
     @Autowired
     private com.chengyinhub.business.service.support.TopicLocationBindingService locationBindingService;
 
+    /** BE-13 交付元数据投影(修订/端能力/地点/运营投入/证据/许可);只读,不改既有货架字段。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.TopicDeliveryMetadataProjection deliveryMetadataProjection;
+
     @Operation(summary = "主题模板库列表（含章节数/玩法数）")
     @PostMapping("/list")
     public AjaxResult list(String recommendedOnly) {
         // recommendedOnly=1 → 只回 template_status=VERIFIED 的推荐范本;不传 = 既有货架行为不变
-        return AjaxResult.success(cmsTopicService.buildTopicTemplateListVO("1".equals(recommendedOnly)));
+        // 列表只补「源语言」这一条真实事实:修订号需要逐模板查修订索引(本基线没有批量读),
+        // 放到 /info 精确给出,避免为货架加一条 N+1;详见交付报告。
+        java.util.List<com.chengyinhub.business.domain.vo.TopicTemplateListItemVO> rows =
+                cmsTopicService.buildTopicTemplateListVO("1".equals(recommendedOnly));
+        if (rows != null) for (com.chengyinhub.business.domain.vo.TopicTemplateListItemVO row : rows)
+            if (row != null) row.setSourceLocale(
+                    com.chengyinhub.business.service.support.TopicDeliveryMetadataProjection.SOURCE_LOCALE);
+        return AjaxResult.success(rows);
     }
 
     @Operation(summary = "主题模板详情（聚合：章节→节点→玩法 + 路线剪影）")
@@ -95,7 +106,24 @@ public class ApiTopicTemplateController extends BaseController {
         if (detail == null) {
             return error("模板不存在");
         }
+        attachDelivery(detail, tid, Boolean.TRUE.equals(detail.getViewerIsMerchant())
+                || Boolean.TRUE.equals(detail.getViewerIsPublisher()));
         return AjaxResult.success(detail);
+    }
+
+    /**
+     * BE-13 最小投影接线:交付元数据只挂在已通过原公共可见性闸的详情上。
+     *
+     * <p>生产装配缺这个 bean 会在启动期 fail-fast(注入是必需的,不静默降级成「没有交付信息」)。
+     * 这里仍判空,是因为既有单测用 {@code new ApiTopicTemplateController()} + 反射塞字段,
+     * 不经过 Spring;那种场景下详情照常返回既有字段,不因新投影缺失而 500。
+     */
+    private void attachDelivery(com.chengyinhub.business.domain.vo.TopicTemplateDetailVO detail, Long topicId,
+                                boolean viewerCanViewRecruitment) {
+        if (detail == null || topicId == null || deliveryMetadataProjection == null) return;
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null || !topicId.equals(topic.getId())) return;
+        detail.setContentDelivery(deliveryMetadataProjection.build(topic, viewerCanViewRecruitment));
     }
 
     /**

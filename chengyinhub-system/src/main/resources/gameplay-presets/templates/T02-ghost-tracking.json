@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": true,
+    "multi": false,
+    "title": "${question}",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "t1",
+        "label": "${target1}",
+        "correct": false,
+        "fb": "${feedback}"
+      },
+      {
+        "id": "t2",
+        "label": "${target2}",
+        "correct": false,
+        "fb": "${feedback}"
+      },
+      {
+        "id": "t3",
+        "label": "${target3}",
+        "correct": false,
+        "fb": "${feedback}"
+      }
+    ]
+  }
+}

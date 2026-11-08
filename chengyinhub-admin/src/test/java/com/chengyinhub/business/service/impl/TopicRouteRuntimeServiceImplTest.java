@@ -214,6 +214,33 @@ class TopicRouteRuntimeServiceImplTest {
         topic.setThemeRuntimeConfigJson(GenericRouteRuntimeServiceTest.config());one.setMerchantMemberId(null);assertNotNull(runtime.freezePublication(topic,null));
     }
 
+    /**
+     * BE-08:guided / 共享路线与普通 {@code /answer} 走同一个比较器。
+     * 别名只来自本局冻结的 {@code nodeAnswers.answerPolicy};老快照没有该键 = 没有别名。
+     */
+    @Test
+    void guidedRouteAnswerUsesTheFrozenAliasPolicyAndNeverInventsOneForOldSnapshots() throws Exception {
+        ObjectNode frozen = json.createObjectNode();
+        frozen.putObject("nodeConfigs").putObject("11");
+        ObjectNode answer = frozen.putObject("nodeAnswers").putObject("11");
+        answer.put("validationMethod", 1).put("questionAnswer", "正确答案");
+        answer.set("answerPolicy", json.readTree("{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\","
+                + "\"acceptedAliases\":[\"暗号\"]}"));
+        assertTrue(runtime.verifyGuidedRouteAnswer(frozen, 11L, json.createObjectNode().put("answer", "暗号")));
+        assertTrue(runtime.verifyGuidedRouteAnswer(frozen, 11L,
+                json.createObjectNode().put("answer", " 正 确 答 案 ")), "与普通 answer 同一 LEGACY_V1 归一");
+        assertFalse(runtime.verifyGuidedRouteAnswer(frozen, 11L, json.createObjectNode().put("answer", "暗号吧")),
+                "近似错字不自动通过");
+
+        ObjectNode oldSnapshot = json.createObjectNode();
+        oldSnapshot.putObject("nodeConfigs").putObject("11");
+        ObjectNode oldAnswer = oldSnapshot.putObject("nodeAnswers").putObject("11");
+        oldAnswer.put("validationMethod", 1).put("questionAnswer", "正确答案");
+        assertFalse(runtime.verifyGuidedRouteAnswer(oldSnapshot, 11L, json.createObjectNode().put("answer", "暗号")),
+                "老快照没有 answerPolicy:别名不得回填生效");
+        assertTrue(runtime.verifyGuidedRouteAnswer(oldSnapshot, 11L, json.createObjectNode().put("answer", "正确答案")));
+    }
+
     @Test
     void personalR5ScanPublishesButScanAloneIsNotGameplayCompletion() throws Exception {
         CmsTopic topic = personalR5Topic(4, true);

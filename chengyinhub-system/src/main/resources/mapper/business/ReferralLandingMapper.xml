@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ReferralLandingMapper">
+
+    <!--
+      礼品落地页只读摘要：按码摘要精确命中。
+      不 select buyer_member_id / order_id / source_registration_id / claimed_member_id ——
+      落地页不需要、也不应该拿到买家或受益人身份。
+    -->
+    <select id="selectGiftByTokenHash"
+            resultType="com.chengyinhub.business.domain.dto.ReferralLandingGiftRow">
+        select public_id                       as publicId,
+               product_id                      as productId,
+               status                          as status,
+               case when recipient_member_id is null then 0 else 1 end as recipientBound,
+               claim_expires_at                as claimExpiresAt,
+               claimed_at                      as claimedAt
+        from gift_entitlement
+        where claim_token_hash = #{tokenHash}
+    </select>
+</mapper>

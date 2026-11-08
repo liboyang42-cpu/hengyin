@@ -203,7 +203,10 @@ public final class NodeJourneySnapshot {
             // R17-INT 待办 b:排序 / 连线 / 分类(R3)与对照(R16)也必须下发。
             "sort", "match", "classify", "compare",
             // 罗盘指向(现场感契约 §5.1):漏这一行 = 到店后客户端拿不到该玩法入口,静默不存在。
-            "compass"));
+            "compass",
+            // G1 逐字猜词:同一份名单。漏登记会让冻结 playables 不含 hangman,客户端到点拿不到入口,
+            // ContentCapabilityRequirements 也推导不出 game.hangman。
+            "hangman"));
 
     /** 块配置里要冻结的旅程相关段;其余玩法段落(如 timeWindow)不冻结,仍读实时配置。 */
     private static final List<String> JOURNEY_SEGMENTS = Collections.unmodifiableList(Arrays.asList(

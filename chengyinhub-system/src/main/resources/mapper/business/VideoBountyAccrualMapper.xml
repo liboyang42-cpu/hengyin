@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.VideoBountyAccrualMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.VideoBountyAccrual">
+    <id     column="id"                 property="id"/>
+    <result column="submission_id"      property="submissionId"/>
+    <result column="campaign_id"        property="campaignId"/>
+    <result column="group_key"          property="groupKey"/>
+    <result column="rule_version"       property="ruleVersion"/>
+    <result column="basis_views"        property="basisViews"/>
+    <result column="rate_per_thousand"  property="ratePerThousand"/>
+    <result column="per_video_cap"      property="perVideoCap"/>
+    <result column="group_basis_views"  property="groupBasisViews"/>
+    <result column="gross_amount"       property="grossAmount"/>
+    <result column="payable_amount"     property="payableAmount"/>
+    <result column="currency"           property="currency"/>
+    <result column="payout_state"       property="payoutState"/>
+    <result column="idempotency_key"    property="idempotencyKey"/>
+    <result column="window_start"       property="windowStart"/>
+    <result column="window_end"         property="windowEnd"/>
+    <result column="evidence_watermark" property="evidenceWatermark"/>
+    <result column="note"               property="note"/>
+    <result column="create_time"        property="createTime"/>
+  </resultMap>
+
+  <!--
+    幂等键查询用锁定读:默认 REPEATABLE READ 下普通 SELECT 读事务快照,
+    并发重算的输家看不到赢家刚提交的行,会误以为"还没算过"并撞唯一键。
+    FOR UPDATE 总读最新已提交版本,读回赢家那一行。
+  -->
+  <select id="selectByIdempotencyKey" resultMap="BaseResultMap" useCache="false" flushCache="true">
+    SELECT * FROM video_bounty_accrual WHERE idempotency_key = #{idempotencyKey} FOR UPDATE
+  </select>
+
+  <!-- 代次:该组既有应计行的最大 id。整组替换只在写入新行时才作废旧行,故该值单调增长。 -->
+  <select id="selectMaxIdByGroup" resultType="java.lang.Long" useCache="false" flushCache="true">
+    SELECT MAX(id) FROM video_bounty_accrual
+    WHERE campaign_id = #{campaignId} AND group_key = #{groupKey}
+  </select>
+
+  <select id="selectBySubmission" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_accrual WHERE submission_id = #{submissionId} ORDER BY id DESC
+  </select>
+
+  <select id="selectByGroup" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_accrual
+    WHERE campaign_id = #{campaignId} AND group_key = #{groupKey}
+    ORDER BY id DESC
+  </select>
+
+  <select id="selectAdminPage" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_accrual
+    <where>
+      <if test="campaignId != null">campaign_id = #{campaignId}</if>
+    </where>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="selectActiveBySubmission" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_accrual
+    WHERE submission_id = #{submissionId} AND payout_state IN (0, 1, 2)
+    ORDER BY id DESC LIMIT 1
+  </select>
+
+  <!-- 幂等:同一 idempotency_key 的并发插入只有一方成功,另一方 DuplicateKeyException。 -->
+  <insert id="insertAccrual" parameterType="com.chengyinhub.business.domain.VideoBountyAccrual"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO video_bounty_accrual
+      (submission_id, campaign_id, group_key, rule_version, basis_views, rate_per_thousand,
+       per_video_cap, group_basis_views, gross_amount, payable_amount, currency, payout_state,
+       idempotency_key, window_start, window_end, evidence_watermark, note, create_time)
+    VALUES
+      (#{submissionId}, #{campaignId}, #{groupKey}, #{ruleVersion}, #{basisViews}, #{ratePerThousand},
+       #{perVideoCap}, #{groupBasisViews}, #{grossAmount}, #{payableAmount}, #{currency}, #{payoutState},
+       #{idempotencyKey}, #{windowStart}, #{windowEnd}, #{evidenceWatermark}, #{note}, NOW())
+  </insert>
+
+  <!--
+    重算:旧行标记 SUPERSEDED,不物理删除、不改金额。
+    这样"当时按什么规则算了多少"可以永远复现,申诉与审计有据。
+  -->
+  <update id="supersedeActiveBySubmissionExcept">
+    UPDATE video_bounty_accrual
+       SET payout_state = 3, note = CONCAT(COALESCE(note, ''), ' | superseded by newer evidence')
+     WHERE submission_id = #{submissionId} AND payout_state IN (0, 1) AND id &lt;&gt; #{keepId}
+  </update>
+
+  <!--
+    整组重算:同组其他投稿的旧应计一并 SUPERSEDED(排除刚写入的那条)。
+    封顶是"组内合计 ≤ per_video_cap",额度按组内播放量比例分摊 ——
+    只 supersede 自己那一条,组内另一条旧值仍在,合计就会突破封顶。
+  -->
+  <update id="supersedeActiveByGroupExcept">
+    UPDATE video_bounty_accrual
+       SET payout_state = 3, note = CONCAT(COALESCE(note, ''), ' | superseded by group recompute')
+     WHERE campaign_id = #{campaignId} AND group_key = #{groupKey}
+       AND payout_state IN (0, 1) AND id &lt;&gt; #{keepId}
+  </update>
+
+  <!--
+    整组替换(按保留集):本轮为该组每个投稿都写入新行,旧行里不在保留集的全部作废。
+    组内只留下同一 evidence_watermark + rule_version 的那一套,合计 = 本次组应计。
+  -->
+  <update id="supersedeActiveByGroupExceptIds">
+    UPDATE video_bounty_accrual
+       SET payout_state = 3, note = CONCAT(COALESCE(note, ''), ' | superseded by group recompute')
+     WHERE campaign_id = #{campaignId} AND group_key = #{groupKey}
+       AND payout_state IN (0, 1)
+       <if test="keepIds != null and keepIds.size() > 0">
+         AND id NOT IN
+         <foreach collection="keepIds" item="keepId" open="(" separator="," close=")">#{keepId}</foreach>
+       </if>
+  </update>
+
+  <!-- 撤销:同样保留行,状态改 REVERSED,金额与来源仍在。 -->
+  <update id="reverseActiveBySubmission">
+    UPDATE video_bounty_accrual
+       SET payout_state = 4, note = #{note}
+     WHERE submission_id = #{submissionId} AND payout_state IN (0, 1, 2)
+  </update>
+
+</mapper>

@@ -22,6 +22,19 @@ public class JdbcWechatPaymentOrderOwner implements WechatPaymentOrderOwner {
         } else if (businessNo.startsWith("TPLTM_") || businessNo.startsWith("PROMOT_") || businessNo.startsWith("CUSTOM_")) {
             type = "COMMERCE";
             sql = "SELECT id,pay_amount AS amount,CASE WHEN status=0 THEN 1 ELSE 0 END AS payable FROM oms_order WHERE order_sn=? FOR UPDATE";
+        } else if (businessNo.startsWith("MKO")) {
+            // 营销商品订单(现金单)。type 由这次真实命中的行决定(该行确实存在于
+            // marketing_product_order),不是凭前缀返回一个未经核对的字符串:
+            // 同一个值会被写进 wx_pay_order_intent.biz_type,
+            // WechatVerifiedPaymentFactService.matchesFrozenIntent 再用本处返回值反查比对。
+            // ⚠️ 必须 <= 16 字符:wx_pay_order_intent.biz_type 是 VARCHAR(16) ascii。
+            // payable 只认「待现金支付 + 现金模式」:积分单或已付/已退订单一律不可支付,
+            // 避免把已结算过的订单再当成可支付意图。
+            type = "MARKETING";
+            sql = "SELECT id,total_cash_amount AS amount,"
+                    + "CASE WHEN status=0 AND pay_mode=1 AND total_cash_amount IS NOT NULL AND total_cash_amount>0"
+                    + " THEN 1 ELSE 0 END AS payable "
+                    + "FROM marketing_product_order WHERE order_no=? FOR UPDATE";
         } else {
             type = "REGISTRATION";
             sql = "SELECT id,wechat_payment_amount AS amount,CASE WHEN payment_status=1 AND registration_status=1 THEN 1 ELSE 0 END AS payable FROM cms_registration WHERE registration_no=? FOR UPDATE";

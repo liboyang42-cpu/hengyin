@@ -133,7 +133,10 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_topic_journey_story_20260916.sql",
                 "migration_theme_runtime_20261004.sql",
                 "migration_audit_level_20261020.sql",
-                "migration_content_safety_hold_20261020.sql"));
+                // 共享 resultMap 已消费 city_code / content_contract_json;两列的真实来源是下面两个迁移,
+                // 缺了会在解析阶段直接 BadSqlGrammar(不是本类业务断言失败)。
+                "migration_o14_cms_topic_city_code_20261022.sql",
+                "migration_topic_location_contract_20261107.sql"));
         MIGRATIONS.put("cms_topic_chapter", List.of(
                 "migration_20260820_new_city_setup_plan.sql",
                 "migration_20260820_questo_puzzle_atmosphere.sql",

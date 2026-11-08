@@ -86,7 +86,8 @@ class RegistrationOrderCreateGateImplTest {
     }
 
     private void stubQuote(RegistrationQuoteResult result) {
-        when(registrationService.quoteRegistration(eq(7L), eq(2), eq(500L), eq(9L), any(), eq(0)))
+        // 门禁现在必须用完整请求重算(才能读到 offerCode 等促销意图),6 参版本不再被调用。
+        when(registrationService.quoteRegistration(eq(7L), any(RegistrationRequest.class)))
                 .thenReturn(result);
     }
 

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingPromotionMapper">
+
+    <sql id="promotionColumns">
+        id                  as id,
+        promo_code          as promoCode,
+        trigger_kind        as triggerKind,
+        name                as name,
+        description         as description,
+        scope_type          as scopeType,
+        scope_id            as scopeId,
+        discount_type       as discountType,
+        discount_value      as discountValue,
+        max_discount_amount as maxDiscountAmount,
+        window_hours        as windowHours,
+        min_payable_amount  as minPayableAmount,
+        exclusive_flag      as exclusiveFlag,
+        stack_group         as stackGroup,
+        priority            as priority,
+        max_uses_per_member as maxUsesPerMember,
+        status              as status,
+        rule_version        as ruleVersion,
+        valid_from          as validFrom,
+        valid_to            as validTo,
+        del_flag            as delFlag,
+        create_by           as createBy,
+        create_time         as createTime,
+        update_by           as updateBy,
+        update_time         as updateTime
+    </sql>
+
+    <select id="selectActiveByScope" resultType="com.chengyinhub.business.domain.MarketingPromotion">
+        select <include refid="promotionColumns"/>
+        from marketing_promotion
+        where status = 1
+          and del_flag = 0
+          and (scope_type = 0 or (scope_type = #{ownerType} and scope_id = #{ownerId}))
+          and (valid_from is null or valid_from &lt;= #{now})
+          and (valid_to is null or valid_to &gt;= #{now})
+        order by priority desc, id asc
+    </select>
+
+    <select id="selectPromotionList" resultType="com.chengyinhub.business.domain.MarketingPromotion">
+        select <include refid="promotionColumns"/>
+        from marketing_promotion
+        <where>
+            del_flag = 0
+            <if test="promoCode != null and promoCode != ''">and promo_code = #{promoCode}</if>
+            <if test="triggerKind != null">and trigger_kind = #{triggerKind}</if>
+            <if test="scopeType != null">and scope_type = #{scopeType}</if>
+            <if test="scopeId != null">and scope_id = #{scopeId}</if>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+        order by priority desc, id asc
+    </select>
+
+    <!-- 含已软删:唯一键在库上,复用已删码会直接 1062,这里先给可读的冲突。 -->
+    <select id="countByCode" resultType="int">
+        select count(1) from marketing_promotion where promo_code = #{promoCode}
+    </select>
+
+    <select id="selectPromotionById" resultType="com.chengyinhub.business.domain.MarketingPromotion">
+        select <include refid="promotionColumns"/>
+        from marketing_promotion
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <insert id="insertPromotion" parameterType="com.chengyinhub.business.domain.MarketingPromotion"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_promotion
+            (promo_code, trigger_kind, name, description, scope_type, scope_id, discount_type,
+             discount_value, max_discount_amount, window_hours, min_payable_amount, exclusive_flag,
+             stack_group, priority, max_uses_per_member, status, rule_version,
+             valid_from, valid_to, del_flag, create_by, create_time, update_by, update_time)
+        values
+            (#{promoCode}, #{triggerKind}, #{name}, #{description}, #{scopeType}, #{scopeId}, #{discountType},
+             #{discountValue}, #{maxDiscountAmount}, #{windowHours}, #{minPayableAmount}, #{exclusiveFlag},
+             #{stackGroup}, #{priority}, #{maxUsesPerMember}, #{status}, #{ruleVersion},
+             #{validFrom}, #{validTo}, 0, #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <update id="updatePromotion" parameterType="com.chengyinhub.business.domain.MarketingPromotion">
+        update marketing_promotion
+        set trigger_kind        = #{triggerKind},
+            name                = #{name},
+            description         = #{description},
+            scope_type          = #{scopeType},
+            scope_id            = #{scopeId},
+            discount_type       = #{discountType},
+            discount_value      = #{discountValue},
+            max_discount_amount = #{maxDiscountAmount},
+            window_hours        = #{windowHours},
+            min_payable_amount  = #{minPayableAmount},
+            exclusive_flag      = #{exclusiveFlag},
+            stack_group          = #{stackGroup},
+            priority            = #{priority},
+            max_uses_per_member = #{maxUsesPerMember},
+            status              = #{status},
+            rule_version        = #{ruleVersion},
+            valid_from          = #{validFrom},
+            valid_to            = #{validTo},
+            update_by           = #{updateBy},
+            update_time         = #{updateTime}
+        where id = #{id} and del_flag = 0
+    </update>
+
+    <update id="deletePromotionByIds">
+        update marketing_promotion
+        set del_flag = 2, update_time = now()
+        where del_flag = 0 and id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

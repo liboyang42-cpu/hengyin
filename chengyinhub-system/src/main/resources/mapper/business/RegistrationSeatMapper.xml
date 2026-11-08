@@ -20,6 +20,9 @@
     <select id="selectByRegistrationForUpdate" useCache="false" flushCache="true" resultMap="seat">
         select * from cms_registration_seat where registration_id = #{registrationId} order by seat_no for update
     </select>
+    <select id="selectByRegistration" useCache="false" resultMap="seat">
+        select * from cms_registration_seat where registration_id = #{registrationId} order by seat_no
+    </select>
     <insert id="insertSeat" useGeneratedKeys="true" keyProperty="id">
         insert into cms_registration_seat (registration_id, seat_no, status)
         values (#{registrationId}, #{seatNo}, 0)

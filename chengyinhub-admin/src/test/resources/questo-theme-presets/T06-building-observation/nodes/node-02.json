@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "classify": {
+    "enabled": true,
+    "prompt": "待填：把观察到的纹样归入作者给定的分类",
+    "bins": [
+      {
+        "id": "bin_style_a",
+        "label": "待填：分类甲"
+      },
+      {
+        "id": "bin_style_b",
+        "label": "待填：分类乙"
+      }
+    ],
+    "items": [
+      {
+        "id": "item_orn_01",
+        "label": "待填：纹样一"
+      },
+      {
+        "id": "item_orn_02",
+        "label": "待填：纹样二"
+      },
+      {
+        "id": "item_orn_03",
+        "label": "待填：纹样三"
+      }
+    ],
+    "answer": {
+      "item_orn_01": "bin_style_a",
+      "item_orn_02": "bin_style_b",
+      "item_orn_03": "bin_style_a"
+    },
+    "xp": 0
+  },
+  "effects": [
+    {
+      "op": "SET",
+      "var": "clue.ornament_matched",
+      "value": 1
+    }
+  ],
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "requireArrival": true,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

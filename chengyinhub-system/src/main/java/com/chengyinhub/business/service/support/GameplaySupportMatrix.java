@@ -12,6 +12,14 @@ public final class GameplaySupportMatrix {
     private static final Map<String, JsonNode> TYPES = new LinkedHashMap<>();
     private static final List<String> GENERIC_ZERO_HP_POLICIES=Collections.unmodifiableList(Arrays.asList("BLOCK_HP_COST","CHALLENGE","BLOCK_PAID","THEME_FAIL","WAIT","STEPS"));
     private static final List<String> LEGACY_ZERO_HP_POLICIES=Collections.unmodifiableList(Arrays.asList("BLOCK_HP_COST","CHALLENGE","LEGACY_END","BLOCK_PAID"));
+    /**
+     * 呈现/帮助类配置段:它们挂在某个真玩法上,自己不判题、不产生完成证明。
+     * 所以不占能力表的题型/附加行(那两栏是作者端可见目录,由客户端 catalog 同步,不能靠加行扩目录),
+     * 也不参与「本节点启用了哪些玩法」的扫描 —— 否则只配了结案呈现的节点会被判成
+     * 「没有通用结算完成证明」而发不出去。
+     */
+    private static final Set<String> PRESENTATION_SECTIONS = Collections.unmodifiableSet(
+            new LinkedHashSet<>(Arrays.asList("accusation", "clueTransform", "hintLadder")));
     static {
         MATRIX.put("schemaVersion", 1);
         ObjectNode policies=MATRIX.putObject("zeroHpPolicies");
@@ -20,6 +28,7 @@ public final class GameplaySupportMatrix {
         MATRIX.putObject("participantSelection").put("toolKind","FACILITY").put("targetScope","PARTICIPANTS")
                 .put("payerRequired",true).put("runtimeScope","TEAM").put("worldMode","WORLD_SHARED");
         add("album", "album", null, "PRESENTATION", false, false);
+        // CT-07 指认结案等呈现/帮助段不进能力表(见 PRESENTATION_SECTIONS),也不占类型行。
         add("qaText", "qa", "TYPE", "PROOF", true, false);
         add("qaPick", "qa", "PICK", "PROOF", true, false);
         add("qaShot", "qa", "SHOT", "NO_BRIDGE", false, false);
@@ -43,9 +52,15 @@ public final class GameplaySupportMatrix {
         add("coin", "coinFlip", null, "NO_BRIDGE", false, false);
         add("dice", "diceRoll", "d6", "NO_BRIDGE", false, false);
         add("scan", "scan", null, "PROOF", false, false);
+        // 逐字猜词:完成证明是服务端判定的「槽位重建 == 冻结答案(含别名)」,即 SUBMIT_HANGMAN 的
+        // solved 事实 —— 和问答同级,不是呈现段也不是附加项。登记了才过发布闸:
+        // 不登记 = 新玩法永远 fail-closed,那不能算完成。
+        // ⚠️ 作者端目录(node-game-catalog.js)与客户端 fixture 由 UI 负责人同批补,
+        // 未补前本行只让后端发布闸放行,客户端编辑器暂看不到该玩法(见 ui-inputs/V2.md 依赖项)。
+        add("hangman", "hangman", null, "PROOF", true, false);
         for (String key : Arrays.asList("timer", "leaderboard", "multiplayer", "timeWindow", "blindTaste", "silentOrder", "diyName", "musicCorner", "dailySign", "slowTask"))
             add(key, key, null, "PRESENTATION", false, true);
-        for(String key:Arrays.asList("qaText","qaPick","sort","match","classify","estimate","pricePair","random","blindTaste","react","shake","quiet","compass","shout","countdown","stopwatch","typeIn","check","d20","coin","dice","profile","note","dailySign","hidden","steps","qaShot","photoCheck","objectCard","album","predict"))((ObjectNode)TYPES.get(key)).put("r5CompletionProof",true);
+        for(String key:Arrays.asList("qaText","qaPick","sort","match","classify","estimate","pricePair","random","blindTaste","react","shake","quiet","compass","shout","countdown","stopwatch","typeIn","check","d20","coin","dice","profile","note","dailySign","hidden","steps","qaShot","photoCheck","objectCard","album","predict","hangman"))((ObjectNode)TYPES.get(key)).put("r5CompletionProof",true);
         MATRIX.putObject("outcomeRules").put("version",1).put("nextStepId","SETTLED_FEEDBACK").put("failParticipants","UNSUPPORTED").put("vote","TEAM_PASS_OWNER_AFTER");
         MATRIX.putObject("legacyProofs").put("GPS", 5).put("qaText", 1).put("qaPick", 3).put("scan", 4);
         ObjectNode constraints = MATRIX.putObject("constraints");
@@ -81,7 +96,17 @@ public final class GameplaySupportMatrix {
 
     public static List<String> zeroHpPolicies(boolean generic) { return generic?GENERIC_ZERO_HP_POLICIES:LEGACY_ZERO_HP_POLICIES; }
 
+    /**
+     * 该段是不是「只能挂在真玩法上、自己不能独立产生完成证明」的次要件。
+     *
+     * <p>呈现/帮助段(指认结案、谜面变换、提示阶梯)必须在这里算 true,不能只在
+     * {@link #validateNode} 里跳过 —— 仓里还有两处按 {@code addon()} 扫描节点配置的既有调用者:
+     * {@code GameSessionRuntimeServiceImpl.bindBasicArrivalProof} 与
+     * {@code TopicRoutePublicationCompiler.validateObjectiveGroup}。漏给它们就等于
+     * 「某基础题节点只要多配一条提示/指认,到达证明或任务题组判定就被整段短路」。
+     */
     public static boolean addon(String section) {
+        if (presentation(section)) return true;
         JsonNode row = TYPES.get(section);
         return row != null && row.path("requiresProof").asBoolean() || "branch".equals(section) || "random".equals(section);
     }
@@ -96,11 +121,16 @@ public final class GameplaySupportMatrix {
         Iterator<Map.Entry<String, JsonNode>> fields = config.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
+            if (presentation(field.getKey())) continue;
             if (field.getValue().path("enabled").asBoolean() && !"scan".equals(field.getKey()) && !addon(field.getKey())) return null;
         }
         return method == 4 ? "SCAN" : method == 5 ? "GPS" : method == 1 || method == 3 ? "ANSWER" : null;
     }
 
+    /** 该段只是呈现/帮助配置,不是玩法,不参与启用法扫描也不产生完成证明。 */
+    public static boolean presentation(String section) {
+        return section != null && PRESENTATION_SECTIONS.contains(section);
+    }
     public static void validateNode(JsonNode theme, long nodeId, String nodeName, JsonNode config, int method) {
         validateNode(theme, nodeId, nodeName, config, method, false);
     }
@@ -119,6 +149,9 @@ public final class GameplaySupportMatrix {
         List<String> enabled = new ArrayList<>();
         List<String> secondary = new ArrayList<>();
         config.fields().forEachRemaining(field -> {
+            // 呈现/帮助段(指认结案等)不是玩法:不参与「启用了哪些机制」的判定,
+            // 也不允许它们把节点顶成「已配高级玩法」。
+            if (presentation(field.getKey())) return;
             if (!field.getValue().path("enabled").asBoolean()) return;
             if (addon(field.getKey()) && !(r5 && TYPES.containsKey(field.getKey()) && TYPES.get(field.getKey()).path("r5CompletionProof").asBoolean())) secondary.add(field.getKey());
             else enabled.add(type(field.getKey(), field.getValue()));

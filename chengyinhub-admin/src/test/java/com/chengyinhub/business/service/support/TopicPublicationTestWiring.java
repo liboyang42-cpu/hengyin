@@ -140,8 +140,42 @@ public final class TopicPublicationTestWiring {
                 }
             }
         }
+        // BE-06 新协作者:既有发布夹具只证原冻结/发布头/守卫,不证修订入库(那是
+        // TopicContentRevisionServiceImplTest 与真库 IT 的职责),这里给一个诚实的在内存记录器,
+        // 避免只补空位不补语义 → NPE 假红,也不伪造「已写入 DB」。
+        for (Object owner : owners(facade)) installContentRevisionRecorder(owner);
         wireCurrentPublication(facade);
         return value;
+    }
+
+    /**
+     * 给手工 new 出来的 {@code TopicPublicationService} 补 BE-06 修订记录器。
+     * 只补空位,不覆盖测试自己设的替身。
+     */
+    public static void installContentRevisionRecorder(Object owner) {
+        if (owner == null) return;
+        Field field = ReflectionUtils.findField(owner.getClass(), "contentRevisionService");
+        if (field == null) return;
+        if (ReflectionTestUtils.getField(owner, "contentRevisionService") != null) return;
+        ReflectionTestUtils.setField(owner, "contentRevisionService", revisionRecorder());
+    }
+
+    /** 在内存里回一条「本次写入」的修订记录,不触碰数据库、不代表真的持久化。 */
+    public static com.chengyinhub.business.service.ITopicContentRevisionService revisionRecorder() {
+        com.chengyinhub.business.service.ITopicContentRevisionService revisions =
+                Mockito.mock(com.chengyinhub.business.service.ITopicContentRevisionService.class);
+        Mockito.lenient().when(revisions.recordPublishedRevision(Mockito.any())).thenAnswer(call -> {
+            com.chengyinhub.business.domain.dto.TopicContentRevisionWrite write = call.getArgument(0);
+            com.chengyinhub.business.domain.CmsTopicContentRevision row =
+                    new com.chengyinhub.business.domain.CmsTopicContentRevision();
+            row.setTopicId(write.getTopicId());
+            row.setRevisionNo(1L);
+            row.setSchemaVersion(1);
+            row.setContentSha256("fixture-content-sha256");
+            row.setSnapshotJson(write.getFrozenSnapshot());
+            return com.chengyinhub.business.domain.dto.TopicContentRevisionWriteResult.recorded(row);
+        });
+        return revisions;
     }
 
     private static boolean plainMock(Object value) {

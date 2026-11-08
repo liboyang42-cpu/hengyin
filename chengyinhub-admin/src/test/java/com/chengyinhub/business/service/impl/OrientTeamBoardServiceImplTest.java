@@ -24,6 +24,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -139,7 +140,104 @@ class OrientTeamBoardServiceImplTest {
         List<Map<String, Object>> members = (List<Map<String, Object>>) detail.get("members");
         assertEquals(List.of(11L), members.get(0).get("doneTaskIds"));
         assertEquals(List.of(12L), members.get(2).get("doneTaskIds"));
+        assertEquals(List.of(1L, 2L, 3L), members.stream().map(m -> m.get("memberId")).toList());
+        assertEquals(List.of(1, 1, 1), members.stream().map(m -> m.get("rank")).toList());
+        assertTrue(members.stream().allMatch(m -> Integer.valueOf(1).equals(m.get("doneTaskCount"))));
+        assertTrue(members.stream().allMatch(m -> Boolean.TRUE.equals(m.get("ranked"))));
+        assertEquals(List.of(true, false, false), members.stream().map(m -> m.get("mine")).toList());
+        assertEquals("COMPLETED_TASK_COUNT", detail.get("rankBasis"));
+        assertEquals("TEAM_ACTIVE_MEMBERS", detail.get("rankScope"));
+        assertEquals(3, detail.get("rankedMemberCount"));
+        assertEquals("阿一", members.get(0).get("name"));
+        assertEquals("a1", members.get(0).get("avatar"));
+        assertEquals(1, ((Number) members.get(0).get("role")).intValue());
         assertEquals(0, ((Map<String, Object>) detail.get("summary")).get("teamDoneCount"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void memberRanksOrderByCompletedTaskCountAndMarkCurrentViewer() throws Exception {
+        db.exec("insert into orient_task_completion(member_id, activity_id, topic_id, task_id,"
+                + " completed_via, completed_time) values"
+                + " (3, 500, 300, 11, 'SCAN', timestamp '2026-10-22 10:20:00')");
+        when(playTeamMapper.selectActiveMember(70L, 2L)).thenReturn(new PlayTeamMember());
+
+        Map<String, Object> detail = board.detail(2L, 70L);
+        List<Map<String, Object>> members = (List<Map<String, Object>>) detail.get("members");
+        assertEquals(List.of(3L, 1L, 2L), members.stream().map(m -> m.get("memberId")).toList());
+        assertEquals(List.of(2, 1, 1), members.stream().map(m -> m.get("doneTaskCount")).toList());
+        assertEquals(List.of(1, 2, 2), members.stream().map(m -> m.get("rank")).toList());
+        assertEquals(List.of(false, false, true), members.stream().map(m -> m.get("mine")).toList());
+        assertEquals(3, detail.get("rankedMemberCount"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void memberTiesUseCompetitionRanksAndMemberIdInsteadOfRoleOrJoinOrder() throws Exception {
+        db.exec("insert into orient_task_completion(member_id, activity_id, topic_id, task_id,"
+                + " completed_via, completed_time) values"
+                + " (1, 500, 300, 12, 'SCAN', timestamp '2026-10-22 10:20:00'),"
+                + " (2, 500, 300, 12, 'PHOTO', timestamp '2026-10-22 10:21:00')");
+        db.exec("update play_team_member set role = case when member_id = 2 then 1 else 0 end"
+                + " where team_id = 70");
+        db.exec("insert into play_team_member(team_id, member_id, role, status, create_time)"
+                + " values (70, 4, 0, 0, timestamp '2026-10-22 09:00:00')");
+
+        Map<String, Object> detail = board.detail(1L, 70L);
+        List<Map<String, Object>> members = (List<Map<String, Object>>) detail.get("members");
+        assertEquals(List.of(1L, 2L, 3L), members.stream().map(m -> m.get("memberId")).toList());
+        assertEquals(List.of(2, 2, 1), members.stream().map(m -> m.get("doneTaskCount")).toList());
+        assertEquals(List.of(1, 1, 3), members.stream().map(m -> m.get("rank")).toList());
+        assertEquals(3, detail.get("rankedMemberCount"), "待审成员不进入榜单");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void zeroCompletionMembersRemainVisibleWithoutRankIncludingAnEmptyLeaderboard() throws Exception {
+        db.exec("update player_node_progress set status = 0 where member_id = 3");
+        Map<String, Object> detail = board.detail(1L, 70L);
+        List<Map<String, Object>> members = (List<Map<String, Object>>) detail.get("members");
+        assertEquals(List.of(1L, 2L, 3L), members.stream().map(m -> m.get("memberId")).toList());
+        assertEquals(2, detail.get("rankedMemberCount"));
+        assertEquals(List.of(1, 1), members.subList(0, 2).stream().map(m -> m.get("rank")).toList());
+        assertEquals(0, members.get(2).get("doneTaskCount"));
+        assertEquals(List.of(), members.get(2).get("doneTaskIds"));
+        assertNull(members.get(2).get("rank"));
+        assertEquals(false, members.get(2).get("ranked"));
+
+        db.exec("delete from orient_task_completion where member_id in (1, 2)");
+        detail = board.detail(1L, 70L);
+        members = (List<Map<String, Object>>) detail.get("members");
+        assertEquals(0, detail.get("rankedMemberCount"));
+        assertEquals(List.of(1L, 2L, 3L), members.stream().map(m -> m.get("memberId")).toList());
+        for (Map<String, Object> member : members) {
+            assertEquals(0, member.get("doneTaskCount"));
+            assertTrue(member.containsKey("rank"));
+            assertNull(member.get("rank"));
+            assertEquals(false, member.get("ranked"));
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void memberCountsDeduplicateSourcesAndInstancesAndExcludeUnlistedOrOtherOwnerTasks() throws Exception {
+        db.exec("insert into orient_task_completion(member_id, activity_id, topic_id, play_instance_id,"
+                + " task_id, completed_via, completed_time) values"
+                + " (1, 500, 300, 'retry', 11, 'SCAN', timestamp '2026-10-22 10:20:00'),"
+                + " (1, 500, 300, 'default', 13, 'SCAN', timestamp '2026-10-22 10:21:00'),"
+                + " (1, 501, 300, 'default', 12, 'SCAN', timestamp '2026-10-22 10:22:00'),"
+                + " (1, 500, 301, 'default', 12, 'SCAN', timestamp '2026-10-22 10:23:00')");
+        db.exec("insert into player_node_progress(member_id, activity_id, topic_id, node_id,"
+                + " status, checkin_time, del_flag) values"
+                + " (1, 500, 300, 11, 1, timestamp '2026-10-22 10:24:00', 0),"
+                + " (1, 500, 300, 11, 1, timestamp '2026-10-22 10:25:00', 0)");
+
+        Map<String, Object> detail = board.detail(1L, 70L);
+        List<Map<String, Object>> members = (List<Map<String, Object>>) detail.get("members");
+        assertEquals(List.of(11L), members.get(0).get("doneTaskIds"));
+        assertTrue(members.stream().allMatch(m -> Integer.valueOf(1).equals(m.get("doneTaskCount"))));
+        assertEquals(List.of(1, 1, 1), members.stream().map(m -> m.get("rank")).toList());
+        assertEquals(3, detail.get("rankedMemberCount"));
     }
 
     @Test
@@ -159,6 +257,10 @@ class OrientTeamBoardServiceImplTest {
         assertEquals(1, summary.get("teamDoneCount"), "11 由在岗 1、2 号完成");
         List<Map<String, Object>> tasks = (List<Map<String, Object>>) detail.get("tasks");
         assertEquals(0, tasks.get(1).get("completedCount"), "3 号退队后,他完成的 12 不再计入");
+        List<Map<String, Object>> members = (List<Map<String, Object>>) detail.get("members");
+        assertEquals(List.of(1L, 2L), members.stream().map(m -> m.get("memberId")).toList());
+        assertEquals(List.of(1, 1), members.stream().map(m -> m.get("rank")).toList());
+        assertEquals(2, detail.get("rankedMemberCount"));
 
         List<Map<String, Object>> after = board.ranking(1L, 2, ACTIVITY);
         assertEquals(List.of(70L, 71L), after.stream().map(r -> r.get("teamId")).toList(),
@@ -167,10 +269,16 @@ class OrientTeamBoardServiceImplTest {
     }
 
     @Test
-    void detailIsMembersOnlyAndSwitchDefaultsOff() {
+    void detailIsMembersOnlyAndSwitchDefaultsOff() throws Exception {
+        assertThrows(OrientRejection.class, () -> board.detail(null, 70L));
         assertEquals(OrientRejection.TEAM_NOT_MEMBER, assertThrows(OrientRejection.class,
                 () -> board.detail(4L, 70L)).getErrorCode());
+        db.exec("update play_team_member set status = 2 where team_id = 70 and member_id = 3");
+        assertEquals(OrientRejection.TEAM_NOT_MEMBER, assertThrows(OrientRejection.class,
+                () -> board.detail(3L, 70L)).getErrorCode());
         config.remove(OrientSwitches.KEY_TEAM_BOARD);
+        assertEquals(OrientRejection.DISABLED, assertThrows(OrientRejection.class,
+                () -> board.detail(1L, 70L)).getErrorCode());
         assertEquals(OrientRejection.DISABLED, assertThrows(OrientRejection.class,
                 () -> board.ranking(1L, 2, ACTIVITY)).getErrorCode());
     }

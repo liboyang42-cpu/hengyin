@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingAttributionMapper">
+
+    <insert id="insertAttribution" parameterType="com.chengyinhub.business.domain.MarketingAttribution"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_attribution
+            (order_type, order_id, credential_id, sharer_member_id, campaign_key,
+             claimed_member_id, order_created_at, snapshot_hash, create_time)
+        values
+            (#{orderType}, #{orderId}, #{credentialId}, #{sharerMemberId}, #{campaignKey},
+             #{claimedMemberId}, #{orderCreatedAt}, #{snapshotHash}, #{createTime})
+    </insert>
+
+    <select id="selectByOrder" resultType="com.chengyinhub.business.domain.MarketingAttribution">
+        select id,
+               order_type       as orderType,
+               order_id         as orderId,
+               credential_id    as credentialId,
+               sharer_member_id as sharerMemberId,
+               campaign_key     as campaignKey,
+               claimed_member_id as claimedMemberId,
+               order_created_at as orderCreatedAt,
+               snapshot_hash    as snapshotHash,
+               create_time      as createTime
+        from marketing_attribution
+        where order_type = #{orderType} and order_id = #{orderId}
+    </select>
+
+    <!-- 绑定判定:凭据必须由服务端签发、属于调用者本人、campaignKey 与 target 完全一致。 -->
+    <select id="countOwnedCredentials" resultType="int">
+        select count(*)
+        from marketing_referral_credential
+        where sharer_member_id = #{sharerMemberId}
+          and campaign_key = #{campaignKey}
+          and target_type = #{targetType}
+          and target_id = #{targetId}
+    </select>
+
+    <!--
+      已绑定 campaign 的成交聚合。三处硬约束:
+      1) join 凭据并同时比 sharer/campaign_key/target,不用裸 campaignKey 匹配归因行;
+      2) 只统计报名单(商户自报的 order_type 仅 1),并按归属人再比一次,防上游条件被改坏越权;
+      3) 只输出计数与合计,不 select order_id / member_id —— 不给他人身份。
+      payment_status:2=已支付 4=已退款(见 CmsRegistration 字段注释)。
+    -->
+    <select id="aggregateOwnedCampaign"
+            resultType="com.chengyinhub.business.domain.dto.CampaignAttributionAggregate">
+        select
+            #{campaignKey}                                   as campaignKey,
+            #{targetType}                                    as targetType,
+            #{targetId}                                      as targetId,
+            count(*)                                         as attributedOrders,
+            coalesce(sum(case when r.payment_status = 2 then 1 else 0 end), 0) as paidOrders,
+            coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, 0) else 0 end), 0)
+                                                             as paidAmount,
+            coalesce(sum(case when r.payment_status = 4 then 1 else 0 end), 0) as refundedOrders,
+            coalesce(sum(case when r.payment_status = 4 then coalesce(r.payable_amount, 0) else 0 end), 0)
+                                                             as refundedAmount
+        from marketing_attribution a
+        join marketing_referral_credential c
+          on c.id = a.credential_id
+         and c.sharer_member_id = #{sharerMemberId}
+         and c.campaign_key = #{campaignKey}
+         and c.target_type = #{targetType}
+         and c.target_id = #{targetId}
+        left join cms_registration r
+          on r.id = a.order_id
+         and a.order_type = 1
+        where a.sharer_member_id = #{sharerMemberId}
+          and a.campaign_key = #{campaignKey}
+    </select>
+</mapper>

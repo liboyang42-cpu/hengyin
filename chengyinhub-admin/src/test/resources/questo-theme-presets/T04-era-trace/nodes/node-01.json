@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "effects": [
+    {
+      "op": "SET",
+      "var": "clue.archive_compared",
+      "value": 1
+    }
+  ],
+  "sort": {
+    "enabled": true,
+    "prompt": "待填：按档案与现状的先后顺序排列事件卡",
+    "items": [
+      {
+        "id": "ev_archive_01",
+        "label": "待填：档案事件一",
+        "img": "/questo-theme-presets/T04-era-trace/media/archive-01.png"
+      },
+      {
+        "id": "ev_archive_02",
+        "label": "待填：档案事件二",
+        "img": "/questo-theme-presets/T04-era-trace/media/archive-02.png"
+      },
+      {
+        "id": "ev_now_01",
+        "label": "待填：现状观察一",
+        "img": "/questo-theme-presets/T04-era-trace/media/now-01.png"
+      }
+    ],
+    "answerOrder": [
+      "ev_archive_01",
+      "ev_archive_02",
+      "ev_now_01"
+    ],
+    "maxAttempts": 0,
+    "xp": 0
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "requireArrival": true,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

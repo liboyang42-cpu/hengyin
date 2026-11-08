@@ -68,6 +68,8 @@ public final class TopicLocationContract {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern SLOT_KEY = Pattern.compile("[A-Za-z0-9._-]{1,64}");
     private static final Pattern CITY_CODE = Pattern.compile("[0-9]{6}");
+    /** BE-14：国家码是发布者填写的 ISO 3166-1 alpha-2（大写两位），不接受自由文本、不从城市反推。 */
+    private static final Pattern ISO_COUNTRY = Pattern.compile("[A-Z]{2}");
     private static final Pattern DECIMAL_ID = Pattern.compile("[1-9][0-9]{0,18}");
 
     private static final Set<String> PURPOSES = set("EVIDENCE", "SPACE", "EVENT", "RELATION");
@@ -77,8 +79,14 @@ public final class TopicLocationContract {
             set(STATUS_UNBOUND, STATUS_BOUND_UNVERIFIED, STATUS_REBIND_REQUIRED, STATUS_LEGACY_UNVERIFIED);
     private static final Set<String> INTENTS = set(INTENT_LEGACY, INTENT_SAME_CITY, INTENT_NEW_CITY);
 
+    /**
+     * BE-14：合同根可以携带发布者填写的国家归属 {@value #KEY_PLACE_COUNTRY_CODE}（ISO 3166-1 alpha-2）。
+     * 列进来变成「已知键」是为了走严格校验（大写两位），不再是过去的未知键原样透传。
+     */
+    public static final String KEY_PLACE_COUNTRY_CODE = "placeCountryCode";
+
     private static final Set<String> KNOWN_ROOT_KEYS =
-            set("schemaVersion", "locationSlots", "locationBindings", "adoption");
+            set("schemaVersion", "locationSlots", "locationBindings", "adoption", KEY_PLACE_COUNTRY_CODE);
     private static final Set<String> KNOWN_SLOT_KEYS = set("slotKey", "title", "purpose", "required",
             "observationTarget", "observationAction", "accessRequirements", "hostRequired",
             "propRequirements", "alternativePolicy", "derived", "sourceNodeId");
@@ -131,6 +139,9 @@ public final class TopicLocationContract {
         normalized.set("locationBindings",
                 normalizeBindings(root.path("locationBindings"), normalized.path("locationSlots")));
         if (root.hasNonNull("adoption")) normalized.set("adoption", normalizeAdoption(root.path("adoption")));
+        if (root.hasNonNull(KEY_PLACE_COUNTRY_CODE)) {
+            normalized.put(KEY_PLACE_COUNTRY_CODE, isoCountry(root.get(KEY_PLACE_COUNTRY_CODE).asText(), KEY_PLACE_COUNTRY_CODE));
+        }
         carryUnknown(root, normalized, KNOWN_ROOT_KEYS);
         return normalized;
     }
@@ -166,6 +177,38 @@ public final class TopicLocationContract {
             throw new IllegalArgumentException(field + " 必须是 6 位城市 adcode");
         }
         return value;
+    }
+
+    /**
+     * BE-14：发布者填写的国家归属（ISO 3166-1 alpha-2）。未填返回 null（= UNKNOWN，不得推断）；
+     * 填了但不合规则抛 {@link IllegalArgumentException}，由保存入口拒绝，不静默丢弃。
+     */
+    public static String isoCountry(String raw, String field) {
+        if (raw == null) return null;
+        String value = raw.trim().toUpperCase(Locale.ROOT);
+        if (value.isEmpty()) return null;
+        if (!ISO_COUNTRY.matcher(value).matches()) {
+            throw new IllegalArgumentException(field + " 必须是 ISO 3166-1 alpha-2 两位大写国家码");
+        }
+        return value;
+    }
+
+    /** 从合同原文读国家码；缺失或合同不可解析时返回 null（=UNKNOWN），供只读投影使用，不抛异常。 */
+    public static String placeCountryCode(String raw) {
+        if (StringUtils.isBlank(raw)) return null;
+        JsonNode root;
+        try {
+            root = JSON.readTree(raw);
+        } catch (Exception invalid) {
+            return null;
+        }
+        JsonNode value = root.path(KEY_PLACE_COUNTRY_CODE);
+        if (!value.isTextual()) return null;
+        try {
+            return isoCountry(value.asText(), KEY_PLACE_COUNTRY_CODE);
+        } catch (IllegalArgumentException invalid) {
+            return null;
+        }
     }
 
     /** 不传 = LEGACY；只接受显式 SAME_CITY / NEW_CITY。 */
@@ -521,6 +564,48 @@ public final class TopicLocationContract {
             if (slotKey.equals(slot.path("slotKey").asText())) return true;
         }
         return false;
+    }
+
+    /**
+     * 只读：某个真实节点在地点合同里<b>已经批准</b>的 fallback 节点编号。
+     *
+     * <p>冻结时复制进 routeStations，到达拒绝响应据此告诉端上「有获批替代」。
+     * 只认合同里已写入的 approvedFallbackNodeIds；作者新声明的 fallbackMode 不在这里授权。
+     * 合同脏数据/编号不合法按「没有获批替代」处理，不让旧主题因为合同格式问题冻结失败。
+     */
+    public static List<String> approvedFallbacksForNode(String raw, Long nodeId, Set<Long> knownNodeIds) {
+        if (StringUtils.isBlank(raw) || nodeId == null || nodeId.longValue() <= 0L) return Collections.emptyList();
+        final JsonNode root;
+        try {
+            root = parse(raw);
+        } catch (IllegalArgumentException unusableContract) {
+            return Collections.emptyList();
+        }
+        List<String> out = new ArrayList<String>();
+        Set<String> seen = new LinkedHashSet<String>();
+        for (JsonNode binding : root.path("locationBindings")) {
+            if (binding == null || !binding.isObject()) continue;
+            Long bound;
+            try {
+                bound = parseId(binding.path("nodeId"), "nodeId");
+            } catch (IllegalArgumentException invalidId) {
+                continue;
+            }
+            if (bound == null || !bound.equals(nodeId)) continue;
+            for (JsonNode rawFallback : binding.path("approvedFallbackNodeIds")) {
+                Long fallback;
+                try {
+                    fallback = parseId(rawFallback, "approvedFallbackNodeIds");
+                } catch (IllegalArgumentException invalidId) {
+                    continue;
+                }
+                if (fallback == null || fallback.longValue() <= 0L || fallback.equals(nodeId)) continue;
+                if (knownNodeIds != null && !knownNodeIds.contains(fallback)) continue;
+                String value = String.valueOf(fallback);
+                if (seen.add(value)) out.add(value);
+            }
+        }
+        return out;
     }
 
     private static ObjectNode previous(String city, Long nodeId, String status, String confirmedAt) {

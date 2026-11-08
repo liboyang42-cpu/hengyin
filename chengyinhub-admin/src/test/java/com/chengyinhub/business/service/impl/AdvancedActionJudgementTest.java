@@ -79,5 +79,27 @@ class AdvancedActionJudgementTest {
         assertThrows(IllegalArgumentException.class,()->AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));
     }
 
+    /**
+     * BE-08:高级 {@code qa.TYPE} 的别名只来自模板 {@code advancedConfigJson} 根层政策。
+     * 没配政策时逐字保留原比较器(trim + 大小写,不折全角、不删中间空白)。
+     */
+    @Test void typeQaUsesTheRootAliasPolicyOnlyWhenOneIsConfigured() throws Exception {
+        JsonNode withPolicy=json.readTree("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"A、B\"},"
+                +"\"answerPolicy\":{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\",\"acceptedAliases\":[\"甲\"]}}");
+        assertTrue(judge().evaluate(Action.SUBMIT_QA,new Input(withPolicy,json.createObjectNode(),
+                Map.of("input","甲"),null,7L)).state().path("qa").path("passed").asBoolean());
+        assertTrue(judge().evaluate(Action.SUBMIT_QA,new Input(withPolicy,json.createObjectNode(),
+                Map.of("input"," a "),null,7L)).state().path("qa").path("passed").asBoolean(),"canonical 保留");
+        assertFalse(judge().evaluate(Action.SUBMIT_QA,new Input(withPolicy,json.createObjectNode(),
+                Map.of("input","甲吧"),null,7L)).state().path("qa").path("passed").asBoolean(),"近似错字不通过");
+
+        JsonNode withoutPolicy=json.readTree("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"Ａ\"}}");
+        assertTrue(judge().evaluate(Action.SUBMIT_QA,new Input(withoutPolicy,json.createObjectNode(),
+                Map.of("input","ａ"),null,7L)).state().path("qa").path("passed").asBoolean(),"仍忽略大小写");
+        assertFalse(judge().evaluate(Action.SUBMIT_QA,new Input(withoutPolicy,json.createObjectNode(),
+                Map.of("input","A"),null,7L)).state().path("qa").path("passed").asBoolean(),
+                "没配政策不启用 LEGACY_V1 全角折叠,原行为不变");
+    }
+
     private AdvancedActionJudgement judge() {return new AdvancedActionJudgement(json,()->new Date(100_000),bound->0,()->42);}
 }

@@ -83,6 +83,44 @@ public class RegistrationRequest {
         this.quoteSign = quoteSign;
     }
 
+    /**
+     * 选择的组合包/礼品业务码（促销供给）。客户端<b>只给业务码</b>,价格与适用性全部服务端读配置判定。
+     *
+     * <p>空 = 不使用组合包/礼品价;触发式优惠(完局限时/首关)不需要本字段,由服务端按事实判定。
+     * 报名不做赠送:收礼人不在本请求内,避免客户端改受益人。
+     */
+    @Size(max = 64, message = "优惠码长度不能超过64个字符")
+    @Schema(description = "组合包/礼品业务码(可选)")
+    private String offerCode;
+
+    /**
+     * 促销报价指纹:来自 /api/registration/quote 的 {@code marketingSign}。
+     *
+     * <p>下单时服务端用**同一份入参**重算促销,与本值比对;不一致(促销配置/资格/金额/版本变了)
+     * 一律 409 让前端重新报价 —— 绝不用客户端回传的金额。为空且本次确有促销生效同样 409。
+     * 无促销生效时为空是合法的(与旧客户端兼容,不影响既有报价=实付)。
+     */
+    @Size(max = 128, message = "促销报价指纹长度不能超过128个字符")
+    @Schema(description = "促销报价指纹(quote 接口返回)")
+    private String marketingSign;
+
+    public String getOfferCode() {
+        return offerCode;
+    }
+
+    public void setOfferCode(String offerCode) {
+        this.offerCode = offerCode == null || offerCode.trim().isEmpty() ? null : offerCode.trim();
+    }
+
+    public String getMarketingSign() {
+        return marketingSign;
+    }
+
+    public void setMarketingSign(String marketingSign) {
+        this.marketingSign = marketingSign == null || marketingSign.trim().isEmpty()
+                ? null : marketingSign.trim();
+    }
+
     /** BE-03 幂等键：每个结账意图生成一次，网络重试必须复用；服务端不生成兜底键。 */
     @NotBlank(message = "报名幂等键不能为空")
     @Size(max = 64, message = "幂等键长度不能超过64个字符")

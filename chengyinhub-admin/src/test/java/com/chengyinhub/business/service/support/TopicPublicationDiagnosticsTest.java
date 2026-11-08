@@ -120,6 +120,8 @@ class TopicPublicationDiagnosticsTest {
         ReflectionTestUtils.setField(publication, "auditTaskService", audit);
         ReflectionTestUtils.setField(publication, "umsCreativeSquareService", square);
         ReflectionTestUtils.setField(publication, "selfHostActivityService", activity);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring
+                .installContentRevisionRecorder(publication);
         facade = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(facade, "topicPublicationService", publication);
     }

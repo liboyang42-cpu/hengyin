@@ -740,6 +740,41 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult pick=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "c", null, "pick-proof", 3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
+    /**
+     * BE-08:普通 {@code /api/play/answer} 的显式别名只认本局冻结的政策;
+     * 作者事后给模板加别名不改进行中的一局。
+     */
+    @SuppressWarnings("unchecked")
+    @Test void frozenAliasPolicyDecidesTextAnswerWithoutPollutingOldRuns() throws Exception {
+        topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",runtime);
+        when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
+        when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
+        // 模板后来加了「暗号」别名;本局冻结的只有「口令」。
+        CmsMemberTemplate live=new CmsMemberTemplate();live.setValidationMethod(1);live.setQuestionAnswer("正确答案");
+        live.setAdvancedConfigJson("{\"schemaVersion\":1,\"answerPolicy\":{\"version\":1,"
+                + "\"normalizationPolicy\":\"LEGACY_V1\",\"acceptedAliases\":[\"暗号\"]}}");
+        when(templateService.selectCmsMemberTemplateById(9L)).thenReturn(live);
+        com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode frozen=json.createObjectNode();
+        frozen.put("validationMethod",1).put("questionAnswer","正确答案");
+        frozen.set("answerPolicy",json.readTree("{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\","
+                + "\"acceptedAliases\":[\"口令\"]}"));
+        PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,0,frozen);
+        String a=String.valueOf(ACTIVITY),n=String.valueOf(NODE);
+
+        assertEquals(200,BasicPlayCommandFixtures.answer(controller,a,n,"口令",null,"alias-frozen",0).get("code"));
+        AjaxResult laterAlias=BasicPlayCommandFixtures.answer(controller,a,n,"暗号",null,"alias-live-template",0);
+        assertEquals(500,laterAlias.get("code"),"模板后补的别名不能回头改这一局");
+        assertEquals("答案不正确",laterAlias.get("msg"));
+        assertEquals(Boolean.TRUE,((Map<String,Object>)laterAlias.get("data")).get("answerWrong"));
+        AjaxResult nearMiss=BasicPlayCommandFixtures.answer(controller,a,n,"口令吧",null,"alias-near-miss",0);
+        assertEquals(500,nearMiss.get("code"),"近似错字不得自动通过");
+        assertEquals(200,BasicPlayCommandFixtures.answer(controller,a,n,"正确答案",null,"alias-canonical",0).get("code"));
+    }
+
     /** 实走 A20(业主 2026-10-30 拍板「执行 50 米」):本局路线里有坐标的站,未经 GPS 记过到达不得作答;到过就照常判题。 */
     @Test void locatedGenericStationRefusesAnswersUntilTheGpsArrivalIsRecorded() throws Exception {
         topic.setProductType(ProductType.ORIENTEERING);node.setTemplateId(9L);

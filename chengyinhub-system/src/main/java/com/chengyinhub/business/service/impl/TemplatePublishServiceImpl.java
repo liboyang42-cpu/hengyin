@@ -603,6 +603,41 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         request.setOriginalTemplateId(sourceId);
     }
 
+    /**
+     * 预设来源 {@code presetKey@version} 只在"从固定预设新建"时由服务端写入；
+     * 之后编辑草稿不能改、不能换、也不能凭空加。
+     *
+     * <p>与市场来源互斥：预设不是某位作者已审核上架的货架内容，所以一份草稿不能同时声称
+     * 「从市场采用」和「从预设起头」——那会让版权/已售授权的判断失真。
+     */
+    private void preservePresetSource(CmsTemplatePublishRequest request, CmsMemberTemplate existing) {
+        String declared = request.getPresetSource();
+        if (declared != null && !declared.isBlank()
+                && !declared.trim().matches("[A-Z][0-9]{2}-[a-z][a-z0-9-]{1,47}@[1-9][0-9]{0,5}")) {
+            throw new IllegalArgumentException("预设来源标记不规范");
+        }
+        String presetSource = declared == null || declared.isBlank() ? null : declared.trim();
+        if (existing != null) {
+            String stored = existing.getPresetSource() == null || existing.getPresetSource().isBlank()
+                    ? null : existing.getPresetSource().trim();
+            if (presetSource != null && !presetSource.equals(stored)) {
+                throw new IllegalArgumentException("不能修改已有模板的预设来源");
+            }
+            // 客户端不传就沿用已存的那一份：编辑草稿不该把出身洗掉。
+            request.setPresetSource(stored);
+            return;
+        }
+        if (presetSource == null) return;
+        Long market = request.getOriginalTemplateId();
+        if (market != null && market > 0) {
+            throw new IllegalArgumentException("预设草稿不能同时声明市场来源");
+        }
+        if (Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
+            throw new IllegalArgumentException("预设草稿不能走市场采用入口");
+        }
+        request.setPresetSource(presetSource);
+    }
+
     /** 库表未存储的互动语义和奖章沿现有 canonical 关联读取，不猜 library/member ID。 */
     private void copyAdoptedCanonicalFields(CmsTemplateLibrary source, CmsTemplatePublishRequest request) {
         if (source.getMemberTemplateId() == null) return; // 历史直接入库内容没有个人原单关联。
@@ -692,6 +727,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
         }
         preserveAdoptionIdentity(request, existingDraft);
+        preservePresetSource(request, existingDraft);
         prepareClearFields(request, existingDraft);
         validateSensorFields(request);
         normalizeAdvancedConfig(request, existingDraft, !Boolean.TRUE.equals(request.getAdoptSourceOnly()));
@@ -705,6 +741,8 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         Date now = new Date();
         CmsMemberTemplate t = new CmsMemberTemplate();
         copyPropertiesToMemberTemplate(request, t);
+        // 预设来源与市场来源互斥:只有预设创建链会带这个标记,且它只记「从哪个平台结构起头」。
+        t.setPresetSource(request.getPresetSource());
         assertTemplateRewardOwnership(memberId, t, existingDraft);
         // 来源编号先落到实体上:媒体闸据它认出「公开模板自带的图」(V-13)
         t.setOriginalTemplateId(
@@ -946,13 +984,38 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         boolean needQaCorrect = sectionEnabled(root.get("qa"))
                 && "PICK".equals(root.path("qa").path("mode").asText(""))
                 && missingBooleanField(root.path("qa").path("options"), "correct");
+        // BE-08:答案别名政策是 secret,公开投影按白名单整段不带。采用别人的模板时
+        // 不从源模板补回,作者保存出来的副本就静默丢了别名(canonical 还在,但同一题
+        // 换了写法就判错)。只补本副本没有的键,不覆盖已有政策。
+        boolean needAnswerPolicy = !root.has(
+                com.chengyinhub.business.service.support.AnswerPolicy.FIELD);
         com.fasterxml.jackson.databind.JsonNode dice = root.path("diceRoll");
         boolean needD20Text = sectionEnabled(dice) && "d20".equals(dice.path("mode").asText())
                 && (dice.path("successText").asText("").trim().isEmpty()
                     || dice.path("failText").asText("").trim().isEmpty());
+        // G1 逐字猜词:投影只下发槽位形状(length/blankCount/caseSensitive),答案、别名与
+        // format 预填字符一个都不下发。采用后不回填,作者保存必然撞「答案缺失」。
+        boolean needHangman = sectionEnabled(root.get("hangman"))
+                && (root.path("hangman").path("answer").asText("").trim().isEmpty()
+                    || emptyArray(root.path("hangman").path("format")));
+        // BE-16 提示阶梯根本不进公开投影(整段不下发),所以"采用稿里没有"就是唯一信号:
+        // 源模板若也没配,后面按源逐项对账时自然什么都不补。
+        boolean needHintLadder = !root.has("hintLadder");
+        // CT-07 指认结案:投影只给人物卡/引导屏/线索板/是否允许提前指认;
+        // 两个结局文案与 earlyAccuse.recordAs 都在服务端,必须补回。
+        boolean needAccusation = sectionEnabled(root.get("accusation"))
+                && (root.path("accusation").path("winScreen").asText("").trim().isEmpty()
+                    || root.path("accusation").path("loseScreen").asText("").trim().isEmpty());
+        // G3 有限谜面变换:投影只给非 STANDARD 的模式名,STANDARD 整段不下发。
+        boolean needClueTransform = !root.has("clueTransform");
+        // 问答选项反馈 fb 同样被投影剥掉(判完之后才该看到的话),采用后不回填会被静默丢掉。
+        boolean needQaFeedback = sectionEnabled(root.get("qa"))
+                && missingTextField(root.path("qa").path("options"), "fb");
         if (!needAnswerKey && !needPoems && !needEstimate && !needPrices && !needSpots
                 && !needSortOrder && !needPairs && !needClassifyAnswer && !needQaCorrect
-                && !needCompareAnswer && !needD20Text) return;
+                && !needCompareAnswer && !needD20Text && !needAnswerPolicy
+                && !needHangman && !needHintLadder
+                && !needAccusation && !needClueTransform && !needQaFeedback) return;
         final String sourceConfig;
         if (existing != null) {
             // 该行已由当前 owner 锁定；副本缺失字段只可从自己的原内容补回。
@@ -1054,6 +1117,76 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                         .set("answer", answer.deepCopy());
             }
         }
+        if (needHangman) {
+            // 逐字猜词的答案/别名/format 预填字符是冻结配置里的秘密,投影一个都不给。
+            com.fasterxml.jackson.databind.node.ObjectNode target =
+                    (com.fasterxml.jackson.databind.node.ObjectNode) root.get("hangman");
+            com.fasterxml.jackson.databind.JsonNode source = sourceRoot.path("hangman");
+            if (source.hasNonNull("answer") && target.path("answer").asText("").trim().isEmpty()) {
+                target.set("answer", source.get("answer").deepCopy());
+            }
+            for (String field : new String[] {"aliases", "format"}) {
+                if (source.hasNonNull(field) && !target.hasNonNull(field)) {
+                    target.set(field, source.get(field).deepCopy());
+                }
+            }
+        }
+        if (needHintLadder) {
+            // 阶梯整段不进投影;源里有就整段补回,并连同"整局共享免费次数"这个同级标量。
+            com.fasterxml.jackson.databind.JsonNode ladder = sourceRoot.path("hintLadder");
+            if (ladder.isArray() && ladder.size() > 0) {
+                ((com.fasterxml.jackson.databind.node.ObjectNode) root).set("hintLadder", ladder.deepCopy());
+            }
+            com.fasterxml.jackson.databind.JsonNode freeUses = sourceRoot.get("hintFreeUsesPerRun");
+            if (freeUses != null && !freeUses.isNull() && !root.has("hintFreeUsesPerRun")) {
+                // root 在本方法内已判定是 ObjectNode;JsonNode 接口没有 set(),必须走 ObjectNode。
+                ((com.fasterxml.jackson.databind.node.ObjectNode) root)
+                        .set("hintFreeUsesPerRun", freeUses.deepCopy());
+            }
+        }
+        if (needAccusation) {
+            com.fasterxml.jackson.databind.node.ObjectNode target =
+                    (com.fasterxml.jackson.databind.node.ObjectNode) root.get("accusation");
+            com.fasterxml.jackson.databind.JsonNode source = sourceRoot.path("accusation");
+            for (String field : new String[] {"winScreen", "loseScreen"}) {
+                if (source.hasNonNull(field) && !target.hasNonNull(field)) {
+                    target.set(field, source.get(field).deepCopy());
+                }
+            }
+            com.fasterxml.jackson.databind.JsonNode early = source.path("earlyAccuse");
+            String recordAs = early.path("recordAs").asText("").trim();
+            if (!recordAs.isEmpty()) {
+                com.fasterxml.jackson.databind.node.ObjectNode targetEarly =
+                        target.has("earlyAccuse") && target.get("earlyAccuse").isObject()
+                                ? (com.fasterxml.jackson.databind.node.ObjectNode) target.get("earlyAccuse")
+                                : target.putObject("earlyAccuse");
+                if (targetEarly.path("recordAs").asText("").trim().isEmpty()) {
+                    targetEarly.put("recordAs", recordAs);
+                }
+            }
+            // 未获证词根本不投影;按人物 id 对账补回,不按下标(作者可能增删人物)。
+            copyRowFieldNode(target.path("suspects"), source.path("suspects"), "id", "testimony");
+            copyRowTextField(target.path("suspects"), source.path("suspects"), "id", "identity");
+        }
+        if (needClueTransform) {
+            com.fasterxml.jackson.databind.JsonNode mode = sourceRoot.path("clueTransform");
+            if (mode.isObject() && mode.hasNonNull("mode")) {
+                ((com.fasterxml.jackson.databind.node.ObjectNode) root).set("clueTransform", mode.deepCopy());
+            }
+        }
+        if (needQaFeedback) {
+            copyRowTextField(root.path("qa").path("options"), sourceRoot.path("qa").path("options"), "id", "fb");
+        }
+        if (needAnswerPolicy) {
+            com.fasterxml.jackson.databind.JsonNode policy = sourceRoot.get(
+                    com.chengyinhub.business.service.support.AnswerPolicy.FIELD);
+            if (policy != null && policy.isObject()) {
+                // root 已判定是 ObjectNode(JsonNode 接口没有 set):与上面 hintFreeUses 同一写法。
+                ((com.fasterxml.jackson.databind.node.ObjectNode) root)
+                        .set(com.chengyinhub.business.service.support.AnswerPolicy.FIELD,
+                                policy.deepCopy());
+            }
+        }
         try {
             request.setAdvancedConfigJson(mapper.writeValueAsString(root));
         } catch (Exception unserializable) {
@@ -1093,6 +1226,58 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     /** 投影剥掉整个对象字段(classify.answer)后,键不存在或为空都算缺 */
     private boolean emptyObject(com.fasterxml.jackson.databind.JsonNode node) {
         return !node.isObject() || node.size() == 0;
+    }
+
+    /** 文本字段版的 missingTextField:选项反馈 fb、人物身份这类被投影剥掉的文字,缺一个就整段补 */
+    private boolean missingTextField(com.fasterxml.jackson.databind.JsonNode rows, String field) {
+        if (rows == null || !rows.isArray() || rows.size() == 0) return false;
+        for (com.fasterxml.jackson.databind.JsonNode row : rows) {
+            if (row.path(field).asText("").trim().isEmpty()) return true;
+        }
+        return false;
+    }
+
+    /** 按 id 对账补回文字字段:只补空行,不覆盖作者已经写过的值,也不动源里没有的 id。 */
+    private void copyRowTextField(com.fasterxml.jackson.databind.JsonNode rows,
+                                  com.fasterxml.jackson.databind.JsonNode sourceRows,
+                                  String keyField, String valueField) {
+        if (rows == null || !rows.isArray() || sourceRows == null || !sourceRows.isArray()) return;
+        for (com.fasterxml.jackson.databind.JsonNode row : rows) {
+            if (!(row instanceof com.fasterxml.jackson.databind.node.ObjectNode)) continue;
+            if (!row.path(valueField).asText("").trim().isEmpty()) continue;
+            String id = row.path(keyField).asText("").trim();
+            if (id.isEmpty()) continue;
+            for (com.fasterxml.jackson.databind.JsonNode sourceRow : sourceRows) {
+                if (!id.equals(sourceRow.path(keyField).asText("").trim())) continue;
+                com.fasterxml.jackson.databind.JsonNode value = sourceRow.get(valueField);
+                if (value != null && !value.isNull()) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) row).set(valueField, value.deepCopy());
+                }
+                break;
+            }
+        }
+    }
+
+    /** 按 id 对账补回整个节点(指认人物的证词数组):同样只补空、只按稳定 id 配对。 */
+    private void copyRowFieldNode(com.fasterxml.jackson.databind.JsonNode rows,
+                                  com.fasterxml.jackson.databind.JsonNode sourceRows,
+                                  String keyField, String valueField) {
+        if (rows == null || !rows.isArray() || sourceRows == null || !sourceRows.isArray()) return;
+        for (com.fasterxml.jackson.databind.JsonNode row : rows) {
+            if (!(row instanceof com.fasterxml.jackson.databind.node.ObjectNode)) continue;
+            com.fasterxml.jackson.databind.JsonNode current = row.get(valueField);
+            if (current != null && !current.isNull() && !(current.isArray() && current.size() == 0)) continue;
+            String id = row.path(keyField).asText("").trim();
+            if (id.isEmpty()) continue;
+            for (com.fasterxml.jackson.databind.JsonNode sourceRow : sourceRows) {
+                if (!id.equals(sourceRow.path(keyField).asText("").trim())) continue;
+                com.fasterxml.jackson.databind.JsonNode value = sourceRow.get(valueField);
+                if (value != null && !value.isNull()) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) row).set(valueField, value.deepCopy());
+                }
+                break;
+            }
+        }
     }
 
     /**
@@ -1154,6 +1339,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     /** null=调用方未提供，不改旧值；空串=显式关闭，Mapper 负责写 SQL NULL。 */
     private String normalizeAdvancedConfigValue(String raw) {
         if (raw == null) return null;
+        // BE-08:答案别名政策必须在写库前拒掉坏形状;validateAndNormalize 同时服务运行期,
+        // 不能在那里抛,否则一条坏政策会把玩家卡死在答题页。
+        advancedGameConfigValidator.assertAnswerPolicy(raw);
         String normalized = advancedGameConfigValidator.validateAndNormalize(raw);
         return normalized == null ? "" : normalized;
     }

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {
+      "op": "NODE_COMPLETED",
+      "nodeId": 900202
+    }
+  ],
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "待填：这处构件支持哪一种用途判断？",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "opt_use_a",
+        "label": "待填：用途甲",
+        "correct": true,
+        "fb": "待填：判断成立反馈"
+      },
+      {
+        "id": "opt_use_b",
+        "label": "待填：用途乙",
+        "correct": false,
+        "fb": "待填：判断不成立反馈"
+      }
+    ]
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

@@ -85,6 +85,15 @@ public interface CmsTopicMapper
      */
     public CmsTopic selectCmsTopicByIdForUpdate(Long id);
 
+    /**
+     * BE-06:开局只需要的「当前发布修订头」窄读(无 snapshot_json / 无 public manifest)。
+     *
+     * <p>放在本 mapper 是因为会话创建方已持有它:为一次索引头读给运行期服务再加一个依赖,
+     * 会把所有手工装配的测试夹具连锁改一遍。重 payload 与历史修订仍走
+     * {@link CmsTopicContentRevisionMapper}。老主题没有修订行 → 返回 null,调用方按 legacy 处理。
+     */
+    com.chengyinhub.business.domain.vo.TopicContentRevisionView selectLatestContentRevisionHeader(@Param("topicId") Long topicId);
+
 
 
     public List<CmsTopic> selectTopicsForSettlement();

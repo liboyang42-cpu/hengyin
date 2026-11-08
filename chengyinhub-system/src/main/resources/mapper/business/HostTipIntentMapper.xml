@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.HostTipIntentMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.HostTipIntent">
+    <id     column="id"                 property="id"/>
+    <result column="config_id"          property="configId"/>
+    <result column="payer_member_id"    property="payerMemberId"/>
+    <result column="host_member_id"     property="hostMemberId"/>
+    <result column="club_id"            property="clubId"/>
+    <result column="order_ref_type"     property="orderRefType"/>
+    <result column="order_ref_id"       property="orderRefId"/>
+    <result column="amount"             property="amount"/>
+    <result column="currency"           property="currency"/>
+    <result column="host_share_percent" property="hostSharePercent"/>
+    <result column="channel_fee_bearer" property="channelFeeBearer"/>
+    <result column="payment_channel"    property="paymentChannel"/>
+    <result column="status"             property="status"/>
+    <result column="external_trade_no"  property="externalTradeNo"/>
+    <result column="settlement_ref"     property="settlementRef"/>
+    <result column="idempotency_key"    property="idempotencyKey"/>
+    <result column="note"               property="note"/>
+    <result column="create_time"        property="createTime"/>
+    <result column="update_time"        property="updateTime"/>
+  </resultMap>
+
+  <select id="selectById" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_intent WHERE id = #{id}
+  </select>
+
+  <select id="selectByIdForUpdate" resultMap="BaseResultMap" useCache="false" flushCache="true">
+    SELECT * FROM host_tip_intent WHERE id = #{id} FOR UPDATE
+  </select>
+
+  <select id="selectByIdempotencyKey" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_intent WHERE idempotency_key = #{idempotencyKey}
+  </select>
+
+  <select id="selectByHost" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_intent WHERE host_member_id = #{hostMemberId} ORDER BY id DESC
+  </select>
+
+  <select id="selectByPayer" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_intent WHERE payer_member_id = #{payerMemberId} ORDER BY id DESC
+  </select>
+
+  <insert id="insertIntent" parameterType="com.chengyinhub.business.domain.HostTipIntent"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO host_tip_intent
+      (config_id, payer_member_id, host_member_id, club_id, order_ref_type, order_ref_id,
+       amount, currency, host_share_percent, channel_fee_bearer, payment_channel, status,
+       external_trade_no, settlement_ref, idempotency_key, note, create_time, update_time)
+    VALUES
+      (#{configId}, #{payerMemberId}, #{hostMemberId}, #{clubId}, #{orderRefType}, #{orderRefId},
+       #{amount}, #{currency}, #{hostSharePercent}, #{channelFeeBearer}, #{paymentChannel}, #{status},
+       #{externalTradeNo}, #{settlementRef}, #{idempotencyKey}, #{note}, NOW(), NOW())
+  </insert>
+
+  <!-- CAS 取消:payer 进 WHERE,防越权改他人意向单;已付的单不能被取消成"没付过"。 -->
+  <update id="cancelIfOpen">
+    UPDATE host_tip_intent
+       SET status = 3, update_time = NOW()
+     WHERE id = #{id} AND payer_member_id = #{payerMemberId} AND status IN (0, 1)
+  </update>
+
+  <!--
+    仅 AWAITING_PAYMENT(1) 可置 PAID(2):已取消/未启用的单不会被晚到的回调"补成已付"。
+    external_trade_no 写 WHERE 之外的列,但要求非空 —— 没有通道交易号的"已付"是伪造。
+  -->
+  <update id="markPaidIfAwaiting">
+    UPDATE host_tip_intent
+       SET status = 2, external_trade_no = #{externalTradeNo}, update_time = NOW()
+     WHERE id = #{id} AND status = 1 AND #{externalTradeNo} IS NOT NULL AND #{externalTradeNo} &lt;&gt; ''
+  </update>
+
+  <update id="markRefundedIfPaid">
+    UPDATE host_tip_intent
+       SET status = 4, settlement_ref = #{settlementRef}, update_time = NOW()
+     WHERE id = #{id} AND status = 2
+  </update>
+
+</mapper>

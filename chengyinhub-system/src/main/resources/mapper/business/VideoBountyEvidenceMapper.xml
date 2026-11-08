@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.VideoBountyEvidenceMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.VideoBountyEvidence">
+    <id     column="id"            property="id"/>
+    <result column="submission_id" property="submissionId"/>
+    <result column="evidence_type" property="evidenceType"/>
+    <result column="source_ref"    property="sourceRef"/>
+    <result column="captured_by"   property="capturedBy"/>
+    <result column="period_start"  property="periodStart"/>
+    <result column="period_end"    property="periodEnd"/>
+    <result column="views"         property="views"/>
+    <result column="organic"       property="organic"/>
+    <result column="verifiable"    property="verifiable"/>
+    <result column="note"          property="note"/>
+    <result column="evidence_hash" property="evidenceHash"/>
+    <result column="create_time"   property="createTime"/>
+  </resultMap>
+
+  <select id="selectBySubmission" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_evidence WHERE submission_id = #{submissionId} ORDER BY id
+  </select>
+
+  <!--
+    同组证据:证据表本身不带 group/campaign 列,靠 submission 关联取。
+    只用仍有效(未撤销/未取消/未拒绝)的投稿做基数,防止被撤销的投稿继续占播放。
+  -->
+  <select id="selectByGroup" resultMap="BaseResultMap" useCache="false" flushCache="true">
+    SELECT e.* FROM video_bounty_evidence e
+      JOIN video_bounty_submission s ON s.id = e.submission_id
+    WHERE s.campaign_id = #{campaignId}
+      AND s.origin_group_key = #{originGroupKey}
+      AND s.status IN (0, 1, 2)
+      AND s.del_flag = '0'
+    ORDER BY e.id
+  </select>
+
+  <select id="selectByHash" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_evidence WHERE evidence_hash = #{evidenceHash}
+  </select>
+
+  <!--
+    组的证据水位:必须按**运营核验过的** verified_group_key 过滤。
+    ⚠️ 原实现按 s.origin_group_key 过滤,而调用方传的是 verifiedGroupKey ——
+    两者只在作者自报键恰好等于核验键时才一致。运营把两条不同 origin 的投稿并到同一核验组后,
+    新证据进来时该组的 watermark 不会推进 ⇒ 重算走同一幂等键 ⇒ 总返回旧额(应计永久冻结)。
+  -->
+  <select id="selectMaxIdByVerifiedGroup" resultType="java.lang.Long" useCache="false" flushCache="true">
+    SELECT COALESCE(MAX(e.id), 0) FROM video_bounty_evidence e
+      JOIN video_bounty_submission s ON s.id = e.submission_id
+    WHERE s.campaign_id = #{campaignId} AND s.verified_group_key = #{verifiedGroupKey}
+      AND s.del_flag = '0'
+  </select>
+
+  <insert id="insertEvidence" parameterType="com.chengyinhub.business.domain.VideoBountyEvidence"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO video_bounty_evidence
+      (submission_id, evidence_type, source_ref, captured_by, period_start, period_end,
+       views, organic, verifiable, note, evidence_hash, create_time)
+    VALUES
+      (#{submissionId}, #{evidenceType}, #{sourceRef}, #{capturedBy}, #{periodStart}, #{periodEnd},
+       #{views}, #{organic}, #{verifiable}, #{note}, #{evidenceHash}, NOW())
+  </insert>
+
+</mapper>

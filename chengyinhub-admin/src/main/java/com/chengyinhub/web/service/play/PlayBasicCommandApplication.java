@@ -32,6 +32,9 @@ import com.chengyinhub.business.util.PuzzleScorePolicy;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.chengyinhub.business.service.support.ArrivalPolicy;
+import com.chengyinhub.business.service.support.ArrivalReading;
 
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -42,8 +45,8 @@ import com.chengyinhub.web.service.play.PlayNodeContext.PlayCtx;
 /** SCAN, ANSWER, GPS and sensor command orchestration. */
 @Service
 public class PlayBasicCommandApplication {
-    private static final double GEOFENCE_METERS = 50d;
-    private static final double GEOFENCE_ACCURACY_METERS = 80d;
+    private static final double GEOFENCE_METERS = ArrivalPolicy.LEGACY_RADIUS_METERS;
+    private static final double GEOFENCE_ACCURACY_METERS = ArrivalPolicy.LEGACY_MAX_ACCURACY_METERS;
     private static final Logger logger = LoggerFactory.getLogger(PlayBasicCommandApplication.class);
 
     @Autowired
@@ -360,24 +363,31 @@ public class PlayBasicCommandApplication {
         int vm;
         String questionAnswer;
         String correctAnswer;
+        // BE-08 答案别名政策:与答案同源(模板私有 advancedConfigJson 根层),不另立实体列。
+        // 有冻结的判定区就以冻结为准 —— 老局快照没有 answerPolicy 键 = 建局时没有别名,
+        // 之后作者补写的别名不会回头改这一局(与 canonical answer 同一条旧数据口径)。
+        com.chengyinhub.business.service.support.AnswerPolicy answerPolicy;
         if (frozenAnswer != null) {
             vm = frozenAnswer.path("validationMethod").asInt(0);
             if (vm == 0) return PlayCommandErrorContract.rejected("该节点未配置答题", PlayCommandErrorContract.CONFIG_INVALID);
             questionAnswer = frozenAnswer.path("questionAnswer").asText(null);
             correctAnswer = frozenAnswer.path("correctAnswer").asText(null);
+            answerPolicy = com.chengyinhub.business.service.support.AnswerPolicy.of(
+                    frozenAnswer.path(com.chengyinhub.business.service.support.AnswerPolicy.FIELD));
         } else {
             CmsMemberTemplate liveTpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
             if (liveTpl == null || liveTpl.getValidationMethod() == null) return PlayCommandErrorContract.rejected("该节点未配置答题", PlayCommandErrorContract.CONFIG_INVALID);
             vm = liveTpl.getValidationMethod();
             questionAnswer = liveTpl.getQuestionAnswer();
             correctAnswer = liveTpl.getCorrectAnswer();
+            answerPolicy = com.chengyinhub.business.service.support.AnswerPolicy
+                    .ofAdvancedConfig(liveTpl.getAdvancedConfigJson());
         }
         String ans = answer == null ? "" : answer.trim();
         boolean ok;
-        if (vm == 1) { // 文字验证：去全部空白 + 全角→半角归一后比对(中文 equalsIgnoreCase 无意义但无害)
-            ok = StringUtils.isNotBlank(questionAnswer)
-                    && playNodeContext.normalizeAnswer(questionAnswer).equalsIgnoreCase(playNodeContext.normalizeAnswer(ans));
-        } else if (vm == 3) { // 选项验证(A/B/C/D)
+        if (vm == 1) { // 文字验证:同一比较器(去全部空白 + 全角→半角 + 忽略大小写)比对 canonical 与显式别名
+            ok = answerPolicy.matches(questionAnswer, ans);
+        } else if (vm == 3) { // 选项验证(A/B/C/D):仍按稳定选项编码精确比对,不把显示文案当答案
             ok = StringUtils.isNotBlank(correctAnswer)
                     && correctAnswer.trim().equalsIgnoreCase(ans);
         } else {
@@ -534,12 +544,24 @@ public class PlayBasicCommandApplication {
      */
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp, Long routeSessionId,
+            String runtimeInstance, Integer authorityEpoch)
+    {
+        java.util.List<String> intentInput = new java.util.ArrayList<>(java.util.Arrays.asList(longitude, latitude, accuracy));
+        // 只有端上真的带定位时间才进请求指纹:旧客户端原样重发的指纹与改造前一致,同号重放不受影响。
+        if (StringUtils.isNotBlank(locationTimestamp)) intentInput.add(locationTimestamp);
+        return playBasicIntentApplication.executeBasicIntent(actorMemberId, "GPS", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
+                null, routeSessionId, runtimeInstance, authorityEpoch, intentInput,
+                originalRun -> arriveOnce(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, runtimeInstance, authorityEpoch, originalRun));
+    }
+
+    /** 兼容旧调用:不带定位时间的旧客户端请求指纹与改造前逐字一致。 */
+    public AjaxResult arrive(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy, Long routeSessionId,
             String runtimeInstance, Integer authorityEpoch)
     {
-        return playBasicIntentApplication.executeBasicIntent(actorMemberId, "GPS", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
-                null, routeSessionId, runtimeInstance, authorityEpoch, java.util.Arrays.asList(longitude, latitude, accuracy),
-                originalRun -> arriveOnce(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, runtimeInstance, authorityEpoch, originalRun));
+        return arrive(actorMemberId, activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion,
+                accuracy, null, routeSessionId, runtimeInstance, authorityEpoch);
     }
 
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
@@ -548,7 +570,7 @@ public class PlayBasicCommandApplication {
     }
 
     public AjaxResult arriveOnce(Long actorMemberId, String activityId, String nodeId, String longitude, String latitude, String topicId,
-            String routeActionId, Integer expectedRouteVersion, String accuracy, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun)
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp, String runtimeInstance, Integer authorityEpoch, PlayOriginalRun originalRun)
     {
         Long memberId = actorMemberId;
         if (memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
@@ -628,12 +650,25 @@ public class PlayBasicCommandApplication {
         com.fasterxml.jackson.databind.JsonNode sharedArrival=originalRun.runtimeInstance()==null || gameSessionRuntimeService==null?null:gameSessionRuntimeService.sharedRouteSnapshot(memberId,ctx.topicId,actId,node.getId());
         boolean personalArrival=originalRun.session()!=null && topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,ctx.topicId,actId);
         String targetLongitude=node.getLongitude(),targetLatitude=node.getLatitude();
-        if((personalArrival || sharedArrival!=null) && topicRouteRuntimeService!=null) {com.fasterxml.jackson.databind.JsonNode target=topicRouteRuntimeService.nodeArrivalConfig(memberId,ctx.topicId,actId,node.getId());if(target==null)return PlayCommandErrorContract.rejected("本局缺少冻结到达配置", PlayCommandErrorContract.CONFIG_INVALID);targetLongitude=target.path("longitude").asText(null);targetLatitude=target.path("latitude").asText(null);}
+        JsonNode frozenStation = null;
+        if((personalArrival || sharedArrival!=null) && topicRouteRuntimeService!=null) {
+            JsonNode target=topicRouteRuntimeService.nodeArrivalConfig(memberId,ctx.topicId,actId,node.getId());
+            if(target==null)return PlayCommandErrorContract.rejected("本局缺少冻结到达配置", PlayCommandErrorContract.CONFIG_INVALID);
+            frozenStation=target;
+            targetLongitude=target.path("longitude").asText(null);targetLatitude=target.path("latitude").asText(null);
+        }
+        // BE-09:新发布在站点里冻结到达策略；老局/老发布没有该键时沿原 50m/80m 规则。
+        ArrivalPolicy arrivalPolicy;
+        try { arrivalPolicy=ArrivalPolicy.fromStation(frozenStation); }
+        catch (IllegalArgumentException invalidPolicy) {
+            logger.warn("arrive 冻结到达策略不可用 memberId={} nodeId={} reason={}", memberId, nId, invalidPolicy.getMessage());
+            return PlayCommandErrorContract.rejected("本局到达策略不可用，暂时无法打卡", PlayCommandErrorContract.CONFIG_INVALID);
+        }
         boolean hasNodeCoord = StringUtils.isNotBlank(targetLongitude) && StringUtils.isNotBlank(targetLatitude);
         boolean gpsNode = Integer.valueOf(5).equals(arriveValidationMethod);
-        if (gpsNode && !hasNodeCoord) return PlayCommandErrorContract.rejected("站点未设坐标，暂时无法打卡", PlayCommandErrorContract.ARRIVE_COORD_NOT_CONFIGURED);
+        if (gpsNode && !hasNodeCoord) return arriveRejected(PlayCommandErrorContract.rejected("站点未设坐标，暂时无法打卡", PlayCommandErrorContract.ARRIVE_COORD_NOT_CONFIGURED), frozenStation);
         if (hasNodeCoord) {
-            if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
+            if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置
             // 都必须有限且在经纬范围内;距离本身也要有限,任一不满足一律失败关闭。
@@ -641,28 +676,34 @@ public class PlayBasicCommandApplication {
             Double playerLng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
             Double nodeLat = PlayNodeContext.parseGeoCoordinate(targetLatitude, -90d, 90d);
             Double nodeLng = PlayNodeContext.parseGeoCoordinate(targetLongitude, -180d, 180d);
-            if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+            if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return arriveRejected(PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID), frozenStation);
             double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
-            if (!Double.isFinite(dist)) return PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+            if (!Double.isFinite(dist)) return arriveRejected(PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID), frozenStation);
             // B1:定位精度闸(仅坐标判定路径)。accuracy 为端上 wx.getLocation 的水平精度(米);
             // 空白=未上报,拒(ARRIVE_ACCURACY_MISSING);非有限/负数/坏文本=定位无效(ARRIVE_ACCURACY_INVALID);
             // >80m 要求去开阔处或扫码,先于距离判断。
             // O-01(owner 2026-10-23 拍板:尚无真实用户,不设过渡期):原「空精度放行」与开关
             // play.arrive.require_accuracy 已删除。这两种拒绝不是作弊判定,不入守卫表、不可申诉,重新定位或扫码即可。
             if (StringUtils.isBlank(accuracy)) {
-                return PlayCommandErrorContract
+                return arriveRejected(PlayCommandErrorContract
                         .retryable("未获取到定位精度，请重新定位后重试或扫码完成",
                                 com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING)
-                        .put("appealable", false);
+                        .put("appealable", false), frozenStation);
             }
             Double acc = PlayNodeContext.parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
             if (acc == null) {
-                return PlayCommandErrorContract
+                return arriveRejected(PlayCommandErrorContract
                         .retryable("定位无效", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_INVALID)
-                        .put("appealable", false);
+                        .put("appealable", false), frozenStation);
             }
-            if (acc > GEOFENCE_ACCURACY_METERS) return PlayCommandErrorContract.retryable("定位精度不足，请到开阔处或扫码完成", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
-            if (dist > GEOFENCE_METERS) return PlayCommandErrorContract.retryable("还没到这一站附近", PlayCommandErrorContract.ARRIVE_TOO_FAR);
+            // BE-09:策略只在发布时冻结一次；精度与半径独立判定，不会把 accuracy 加到半径上。
+            if (arrivalPolicy.locationTooOld(parseLocationTimestamp(locationTimestamp), System.currentTimeMillis())) {
+                return arriveRejected(PlayCommandErrorContract.retryable("定位时间已过期，请重新定位后重试", PlayCommandErrorContract.ARRIVE_LOCATION_STALE), frozenStation);
+            }
+            ArrivalPolicy.Fence fence = arrivalPolicy.fenceViolation(dist, acc.doubleValue());
+            if (fence == ArrivalPolicy.Fence.INVALID) return arriveRejected(PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID), frozenStation);
+            if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) return arriveRejected(PlayCommandErrorContract.retryable("定位精度不足，请到开阔处或扫码完成", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW), frozenStation);
+            if (fence == ArrivalPolicy.Fence.TOO_FAR) return arriveRejected(PlayCommandErrorContract.retryable("还没到这一站附近", PlayCommandErrorContract.ARRIVE_TOO_FAR), frozenStation);
             // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
             if (arriveLocationGuard != null) {
                 com.chengyinhub.business.service.support.ArriveLocationGuard.Result guard =
@@ -683,14 +724,16 @@ public class PlayBasicCommandApplication {
                     }
                     if (guard.appealable()) rejected.put("appealBizType",
                             com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE);
-                    return rejected;
+                    return arriveRejected(rejected, frozenStation);
                 }
             }
         }
 
+        JsonNode arrivalReading = ArrivalReading.project(frozenStation);
         if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
+            if(arrivalReading!=null)data.put("arrivalReading",arrivalReading);
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
         // 玩法没过就到达:原闸在完成链里以异常拒绝,小程序收不到明确回执会把到达记成「结果待确认」,
         // 之后玩法做完「我已到达此站」也点不动,只能退出重进(2026-10-30 开发者工具复核)。
@@ -708,6 +751,25 @@ public class PlayBasicCommandApplication {
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);
+    }
+
+    /** 端上定位时间(epoch 毫秒)；空白/非数字按缺失处理，由冻结策略决定是否拒绝。 */
+    private Long parseLocationTimestamp(String raw) {
+        if (StringUtils.isBlank(raw)) return null;
+        try { return Long.valueOf(raw.trim()); }
+        catch (NumberFormatException invalid) { return null; }
+    }
+
+    /**
+     * 到达拒绝统一补机器可读字段：arrivalReasonCode 就是既有 errorCode，
+     * canRetry 与 retryable 同值；approvedFallbacks 只回冻结站点里已获合同批准的替代节点。
+     */
+    private AjaxResult arriveRejected(AjaxResult response, JsonNode station) {
+        Object errorCode = response.get("errorCode");
+        response.put("arrivalReasonCode", errorCode == null ? null : String.valueOf(errorCode));
+        response.put("canRetry", Boolean.TRUE.equals(response.get("retryable")));
+        response.put("approvedFallbacks", ArrivalPolicy.approvedFallbacks(station));
+        return response;
     }
 
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,

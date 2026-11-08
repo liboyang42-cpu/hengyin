@@ -1531,4 +1531,65 @@ class AdvancedGameConfigValidatorTest {
                                 + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"sys.luck\"}]}")));
         assertTrue(foreign.getMessage().contains("counter."), foreign.getMessage());
     }
+    // ---------- BE-08 答案别名政策 ----------
+
+    @Test
+    void answerPolicyIsValidatedAtSaveAndSurvivesNormalization() throws Exception {
+        String config = qaType("\"answerPolicy\":{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\","
+                + "\"acceptedAliases\":[\"芝麻\",\"开门\"]}");
+        validator.assertAnswerPolicy(config);
+        String normalized = validator.validateAndNormalize(config);
+        JsonNode policy = new ObjectMapper().readTree(normalized).path("answerPolicy");
+        assertEquals(1, policy.path("version").asInt());
+        assertEquals("芝麻", policy.path("acceptedAliases").path(0).asText());
+        assertEquals("芝麻开门",
+                new ObjectMapper().readTree(normalized).path("qa").path("answerText").asText(),
+                "canonical answer 保留且不被别名覆盖");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "\"answerPolicy\":{}",
+            "\"answerPolicy\":{\"version\":2}",
+            "\"answerPolicy\":{\"version\":1,\"caseSensitive\":true}",
+            "\"answerPolicy\":{\"version\":1,\"normalizationPolicy\":\"FUZZY\"}",
+            "\"answerPolicy\":{\"version\":1,\"acceptedAliases\":\"芝麻\"}",
+            "\"answerPolicy\":{\"version\":1,\"acceptedAliases\":[\"\"]}",
+            "\"answerPolicy\":{\"version\":1,\"acceptedAliases\":[\"AB\",\"ａb\"]}"
+    })
+    void malformedAnswerPolicyIsRejectedBeforeItCanSilentlyStopWorking(String policy) {
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.assertAnswerPolicy(qaType(policy)), policy);
+    }
+
+    /**
+     * 运行期同一份配置不再严格拒:坏政策只让别名失效,不能把进行中的局弄成每答必错。
+     * 负控:把 assertAnswerPolicy 塞回 validateAndNormalize,这里立刻红。
+     */
+    @Test
+    void runtimeNormalizationToleratesABrokenPolicyInsteadOfKillingTheRun() throws Exception {
+        String normalized = validator.validateAndNormalize(qaType("\"answerPolicy\":{\"version\":9}"));
+        assertEquals(9, new ObjectMapper().readTree(normalized).path("answerPolicy").path("version").asInt());
+        assertTrue(AnswerPolicy.of(new ObjectMapper().readTree(normalized)
+                .path("answerPolicy")).isEmpty(), "运行期退回无别名");
+    }
+
+    @Test
+    void answerPolicyAliasCountIsCapped() {
+        StringBuilder aliases = new StringBuilder();
+        for (int i = 0; i <= AnswerPolicy.MAX_ALIASES; i++) {
+            if (i > 0) aliases.append(',');
+            aliases.append("\"别名").append(i).append('"');
+        }
+        assertThrows(IllegalArgumentException.class, () -> validator.assertAnswerPolicy(qaType(
+                "\"answerPolicy\":{\"version\":1,\"acceptedAliases\":[" + aliases + "]}")));
+    }
+
+    /** 一个合法的 TYPE 问答模板;policy 片段可选,空串 = 不配政策。 */
+    private static String qaType(String policyFragment) {
+        String comma = policyFragment.isEmpty() ? "" : ",";
+        return "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\","
+                + "\"title\":\"暗号是什么\",\"answerText\":\"芝麻开门\",\"maxTries\":0}" + comma
+                + policyFragment + "}";
+    }
 }

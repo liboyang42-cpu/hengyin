@@ -70,3 +70,6 @@ d417bb12a173c528bcb5595203552cf9efc33373:chengyinhub-xcx/tests/unit/safe-user-me
 # Funds14: deterministic SQL fixture row IDs, inserted and read back within the same test; no authentication use.
 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGenerateBatchMybatisIntegrationTest.java:generic-api-key:260
 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementGenerateBatchMybatisIntegrationTest.java:generic-api-key:261
+
+# PublicationPreviewTest: fixed clue-key fixture in this historical commit; no authentication use.
+962ae9cfb5d331ccea9254091a94316300b0bdda:chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PublicationPreviewTest.java:generic-api-key:47

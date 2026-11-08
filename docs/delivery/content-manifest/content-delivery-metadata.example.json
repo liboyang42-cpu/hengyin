@@ -1,0 +1,61 @@
+{
+  "revision": {
+    "contentRevisionId": 900,
+    "revisionNo": 7,
+    "schemaVersion": 1,
+    "contentSha256": "3d1f0a7c1b4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8",
+    "origin": "PUBLISH"
+  },
+  "requiredCapabilities": [
+    { "key": "media.audio", "minVersion": 1 },
+    { "key": "answer.choice", "minVersion": 1 }
+  ],
+  "locationRequirement": {
+    "stationCount": 3,
+    "stationWithAddressCount": 2,
+    "stationWithScanCheckpointCount": 2,
+    "rtlStationCount": 1,
+    "cityCode": "NL-UTR",
+    "physicalPlaceRequired": true
+  },
+  "operatingRequirements": {
+    "venues": ["老城咖啡馆", "旧邮局"],
+    "materials": ["印章 2 枚", "地图 1 份"],
+    "roleNeeds": ["1名店员", "店主"],
+    "staffMinutesMax": 45,
+    "maxConcurrent": 6,
+    "needsBooking": true,
+    "prepHoursMax": 2.5,
+    "availableSlots": ["周三至周日 10:00-18:00"],
+    "qualifications": ["需能开具发票"]
+  },
+  "operatingRequirementsVisibility": "INCLUDED",
+  "evidence": {
+    "templateStatus": "PILOT",
+    "evidenceLevel": "ESTIMATED",
+    "isOfficial": 0,
+    "updatedAt": "2026-11-01T08:00:00.000+00:00"
+  },
+  "license": {
+    "status": "AUTHORITATIVE",
+    "unavailableReason": null,
+    "assetRef": "ASSET-9",
+    "owner": "作者工作室",
+    "licensedEntity": "城瘾平台",
+    "channels": ["WECHAT_MINI", "H5"],
+    "validFrom": "2026-01-01",
+    "validTo": "2027-01-01",
+    "editingRight": false
+  },
+  "runtimeSupport": {
+    "capabilities": [
+      { "key": "media.audio", "minVersion": 1 },
+      { "key": "answer.choice", "minVersion": 1 }
+    ],
+    "platformExecution": "UNKNOWN",
+    "platformExecutionReason": "NO_PLATFORM_RUNTIME_MATRIX"
+  },
+  "sourceLocale": "zh-CN",
+  "translationStatus": "SINGLE_LOCALE",
+  "translations": []
+}

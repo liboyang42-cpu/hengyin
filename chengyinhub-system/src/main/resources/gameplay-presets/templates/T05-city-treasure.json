@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": true,
+    "multi": false,
+    "title": "${question}",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "o1",
+        "label": "${option1}",
+        "correct": false,
+        "fb": "${feedback}"
+      },
+      {
+        "id": "o2",
+        "label": "${option2}",
+        "correct": false,
+        "fb": "${feedback}"
+      },
+      {
+        "id": "o3",
+        "label": "${option3}",
+        "correct": false,
+        "fb": "${feedback}"
+      }
+    ]
+  }
+}

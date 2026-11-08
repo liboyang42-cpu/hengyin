@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ChannelOrderVerificationMapper">
+
+    <resultMap id="verificationMap" type="com.chengyinhub.business.domain.ChannelOrderVerification">
+        <id property="id" column="id"/>
+        <result property="accountId" column="account_id"/>
+        <result property="channelKey" column="channel_key"/>
+        <result property="providerKey" column="provider_key"/>
+        <result property="channelOrderNo" column="channel_order_no"/>
+        <result property="externalReference" column="external_reference"/>
+        <result property="eventId" column="event_id"/>
+        <result property="amount" column="amount"/>
+        <result property="currency" column="currency"/>
+        <result property="skuJson" column="sku_json"/>
+        <result property="productId" column="product_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="status" column="status"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="rawHash" column="raw_hash"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="verificationColumns">
+        id, account_id, channel_key, provider_key, channel_order_no, external_reference, event_id,
+        amount, currency, sku_json, product_id, quantity, status, reason_code, verified_at,
+        expires_at, raw_hash, request_id, request_fingerprint, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.ChannelOrderVerification"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_channel_order_verification
+            (account_id, channel_key, provider_key, channel_order_no, external_reference, event_id,
+             amount, currency, sku_json, product_id, quantity, status, reason_code, verified_at,
+             expires_at, raw_hash, request_id, request_fingerprint, create_time, update_time)
+        values
+            (#{accountId}, #{channelKey}, #{providerKey}, #{channelOrderNo}, #{externalReference}, #{eventId},
+             #{amount}, #{currency}, #{skuJson}, #{productId}, #{quantity}, #{status}, #{reasonCode}, #{verifiedAt},
+             #{expiresAt}, #{rawHash}, #{requestId}, #{requestFingerprint}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="verificationMap" useCache="false">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="verificationMap" useCache="false" flushCache="true">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification
+        where id = #{id} for update
+    </select>
+
+    <select id="selectByAccountOrderNo" resultMap="verificationMap" useCache="false">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification
+        where account_id = #{accountId} and channel_order_no = #{channelOrderNo}
+    </select>
+
+    <select id="selectByAccountRequest" resultMap="verificationMap" useCache="false">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification
+        where account_id = #{accountId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectByProviderEvent" resultMap="verificationMap" useCache="false">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification
+        where provider_key = #{providerKey} and event_id = #{eventId}
+    </select>
+
+    <select id="selectVerifiedByChannelOrderNo" resultMap="verificationMap" useCache="false">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification
+        where channel_order_no = #{channelOrderNo} and status = 1
+        order by id
+        limit 2
+    </select>
+
+    <select id="selectByAccount" resultMap="verificationMap" useCache="false">
+        select <include refid="verificationColumns"/> from marketing_channel_order_verification
+        where account_id = #{accountId}
+        <if test="status != null">and status = #{status}</if>
+        <if test="from != null">and create_time &gt;= #{from}</if>
+        <if test="to != null">and create_time &lt; #{to}</if>
+        order by id desc limit #{limit}
+    </select>
+
+    <update id="markVerified">
+        update marketing_channel_order_verification
+        set status = 1, product_id = #{productId}, quantity = #{quantity}, amount = #{amount},
+            currency = #{currency}, sku_json = #{skuJson}, raw_hash = #{rawHash},
+            verified_at = #{verifiedAt}, expires_at = #{expiresAt}, reason_code = null,
+            update_time = #{updateTime}
+        where id = #{id} and status in (0, 2)
+    </update>
+
+    <update id="markRejected">
+        update marketing_channel_order_verification
+        set status = 2, reason_code = #{reasonCode}, raw_hash = #{rawHash}, update_time = #{updateTime}
+        where id = #{id} and status in (0, 2)
+    </update>
+
+    <update id="markRevoked">
+        update marketing_channel_order_verification
+        set status = 3, reason_code = #{reasonCode}, update_time = #{updateTime}
+        where id = #{id} and status in (1, 2)
+    </update>
+
+    <select id="selectReconciliationSummary" resultType="java.util.Map" useCache="false">
+        select
+            coalesce(sum(case when status = 1 then 1 else 0 end), 0) as verifiedOrderCount,
+            coalesce(sum(case when status = 1 then amount else 0 end), 0) as verifiedAmount,
+            coalesce(sum(case when status = 0 then 1 else 0 end), 0) as pendingVerificationCount
+        from marketing_channel_order_verification
+        where account_id = #{accountId}
+        <if test="from != null">and create_time &gt;= #{from}</if>
+        <if test="to != null">and create_time &lt; #{to}</if>
+    </select>
+
+    <select id="selectReconciliationIssues" resultType="java.util.Map" useCache="false">
+        select 'VERIFIED_WITHOUT_VOUCHER' as issueType,
+               v.channel_order_no as channelOrderNo,
+               null as voucherPublicId,
+               v.amount as amount,
+               v.status as status,
+               v.create_time as occurredAt
+        from marketing_channel_order_verification v
+        left join marketing_channel_voucher c on c.verification_id = v.id
+        where v.account_id = #{accountId} and v.status = 1 and c.id is null
+        <if test="from != null">and v.create_time &gt;= #{from}</if>
+        <if test="to != null">and v.create_time &lt; #{to}</if>
+        union all
+        select 'VOUCHER_UNREDEEMED' as issueType,
+               v.channel_order_no as channelOrderNo,
+               c.public_id as voucherPublicId,
+               v.amount as amount,
+               c.status as status,
+               c.create_time as occurredAt
+        from marketing_channel_voucher c
+        join marketing_channel_order_verification v on v.id = c.verification_id
+        where c.account_id = #{accountId} and c.status = 0
+          and (c.expires_at is null or c.expires_at &gt; now())
+          and not exists (select 1 from marketing_channel_redemption r where r.voucher_id = c.id)
+        <if test="from != null">and c.create_time &gt;= #{from}</if>
+        <if test="to != null">and c.create_time &lt; #{to}</if>
+        union all
+        select 'REDEMPTION_REVOKED' as issueType,
+               v.channel_order_no as channelOrderNo,
+               c.public_id as voucherPublicId,
+               v.amount as amount,
+               r.status as status,
+               r.revoked_at as occurredAt
+        from marketing_channel_redemption r
+        join marketing_channel_voucher c on c.id = r.voucher_id
+        join marketing_channel_order_verification v on v.id = c.verification_id
+        where c.account_id = #{accountId} and r.status = 1
+        <if test="from != null">and r.revoked_at &gt;= #{from}</if>
+        <if test="to != null">and r.revoked_at &lt; #{to}</if>
+        order by occurredAt desc limit #{limit}
+    </select>
+</mapper>

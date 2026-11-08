@@ -50,6 +50,8 @@ class TopicPublicationStatusFacetsTest {
         service = new TopicPublicationService();
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring
+                .installContentRevisionRecorder(service);
     }
 
     /** 草稿:没提交、没人看、卖不了、也开不了局 —— 四段各自说清楚,不互相顶替。 */

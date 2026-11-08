@@ -60,14 +60,9 @@ public class RegistrationOrderCreateGateImpl implements IRegistrationOrderCreate
         if (StringUtils.isBlank(request.getQuoteSign())) {
             throw new RegistrationCheckoutException(400, "缺少报价签名，请重新进入报名页");
         }
-        RegistrationQuoteResult current;
-        if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
-            current = registrationService.quoteRegistrationForOffer(memberId, request);
-        } else {
-            current = registrationService.quoteRegistration(memberId,
-                    request.getOwnerType(), request.getOwnerId(), request.getTicketId(),
-                    request.getTickets(), request.getIsUsePoint());
-        }
+        // ⚠️ 必须用**完整请求**重算:6 参版本读不到 offerCode,带组合包/礼品价的单会被
+        // 算成另一个 quoteSign ⇒ 每次下单都 409。走同一入口也保证促销窗口/资格在建单时刻重判。
+        RegistrationQuoteResult current = registrationService.quoteRegistration(memberId, request);
         if (!request.getQuoteSign().equals(current.getQuoteSign())) {
             throw new RegistrationCheckoutException(409, "价格已更新，请重新确认");
         }

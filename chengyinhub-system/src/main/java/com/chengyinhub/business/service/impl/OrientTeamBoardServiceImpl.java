@@ -22,6 +22,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -124,8 +125,27 @@ public class OrientTeamBoardServiceImpl implements IOrientTeamBoardService {
             v.put("name", m.get("member_name"));
             v.put("avatar", m.get("member_avatar"));
             v.put("role", m.get("role"));
-            v.put("doneTaskIds", progress.memberDone.getOrDefault(memberId, Collections.emptyList()));
+            List<Long> doneTaskIds = progress.memberDone.getOrDefault(memberId, Collections.emptyList());
+            v.put("doneTaskIds", doneTaskIds);
+            v.put("doneTaskCount", doneTaskIds.size());
+            v.put("mine", memberId.equals(viewerId));
             memberViews.add(v);
+        }
+        memberViews.sort(Comparator.<Map<String, Object>>comparingInt(v -> (Integer) v.get("doneTaskCount"))
+                .reversed().thenComparing(v -> (Long) v.get("memberId")));
+        int rankedMemberCount = 0;
+        int previousCount = -1;
+        int rank = 0;
+        for (Map<String, Object> member : memberViews) {
+            int count = (Integer) member.get("doneTaskCount");
+            boolean ranked = count > 0;
+            if (ranked) {
+                rankedMemberCount++;
+                if (count != previousCount) rank = rankedMemberCount;
+                previousCount = count;
+            }
+            member.put("rank", ranked ? Integer.valueOf(rank) : null);
+            member.put("ranked", ranked);
         }
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("teamDoneCount", progress.teamDoneCount);
@@ -137,6 +157,9 @@ public class OrientTeamBoardServiceImpl implements IOrientTeamBoardService {
         data.put("threshold", threshold);
         data.put("tasks", taskViews);
         data.put("members", memberViews);
+        data.put("rankBasis", "COMPLETED_TASK_COUNT");
+        data.put("rankScope", "TEAM_ACTIVE_MEMBERS");
+        data.put("rankedMemberCount", rankedMemberCount);
         data.put("summary", summary);
         return data;
     }

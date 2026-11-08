@@ -5,6 +5,9 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.JourneyRules;
+import com.chengyinhub.business.service.support.ArrivalPolicy;
+import com.chengyinhub.business.service.support.ArrivalReading;
+import com.chengyinhub.business.service.support.TopicLocationContract;
 import com.chengyinhub.business.service.support.FrozenAttributeDefinitions;
 import com.chengyinhub.business.domain.ThemeStateKey;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -682,6 +685,9 @@ final class TopicRoutePublicationCompiler {
         JourneyTemplateProbe publicationProbe=new JourneyTemplateProbe(liveNodes);
         com.chengyinhub.business.service.support.AdvancedGameConfigValidator authorValidator=new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
         for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())if(entry.getValue()!=null && validator.readTree(entry.getValue()).path("outcomeRules").path("version").asInt()==1)entry.setValue(authorValidator.validateAndNormalize(entry.getValue()));
+        // BE-08:别名政策是 secret 且改变判定,发布前再核一次形状 —— 存量行若绕过保存入口
+        // 被直接写坏,不能带着它上线;只查这一段,不改其它段的旧兼容校验。
+        for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())authorValidator.assertAnswerPolicy(entry.getValue());
         String compiled = compileTemplateRules(topic);
         ObjectNode authoredDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
         if(authoredDefinition!=null)for(JsonNode scene:authoredDefinition.path("scenes"))for(JsonNode block:scene.path("nodeConfigs"))if(block.path("outcomeRules").path("version").asInt()==1)authorValidator.validateAndNormalize(block.toString());
@@ -703,6 +709,7 @@ final class TopicRoutePublicationCompiler {
             if(frozen.path("themeConfig").has("nodeConfigs"))definition.set("nodeConfigs",frozen.path("themeConfig").path("nodeConfigs").deepCopy());
             frozen.set("themeDefinition", definition);
         }
+        Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:liveNodes)nodeIds.add(node.getId());
         ArrayNode stations = frozen.putArray("routeStations");
         for (CmsTopicNode node : liveNodes) {
             ObjectNode station = stations.addObject(); station.put("nodeId", node.getId());
@@ -711,8 +718,22 @@ final class TopicRoutePublicationCompiler {
             if (node.getMerchantMemberId() != null) station.put("merchantMemberId", node.getMerchantMemberId());
             station.put("scanReady",node.getMerchantMemberId()!=null && node.getMerchantMemberId()>0 || node.getCheckinCode()!=null && !node.getCheckinCode().trim().isEmpty());
             if(node.getLongitude()!=null)station.put("longitude",node.getLongitude());if(node.getLatitude()!=null)station.put("latitude",node.getLatitude());
+            // BE-09/BE-15:作者公开配置按真实节点编号冻结进站点；老发布没有这些键，运行时沿旧 50m/80m。
+            JsonNode authoredArrival = arrivalAuthorConfig(definition, node.getId());
+            if (authoredArrival != null) {
+                if (authoredArrival.has(ArrivalPolicy.FIELD) && !authoredArrival.get(ArrivalPolicy.FIELD).isNull())
+                    station.set(ArrivalPolicy.FIELD, ArrivalPolicy.normalize(authoredArrival.get(ArrivalPolicy.FIELD)));
+                if (authoredArrival.has(ArrivalReading.FIELD) && !authoredArrival.get(ArrivalReading.FIELD).isNull())
+                    station.set(ArrivalReading.FIELD, ArrivalReading.normalize(authoredArrival.get(ArrivalReading.FIELD)));
+            }
+            // 只复制地点合同里已经批准的 fallback 编号；作者声明不构成授权。
+            List<String> approvedFallbacks = TopicLocationContract.approvedFallbacksForNode(
+                    topic.getContentContractJson(), node.getId(), nodeIds);
+            if (!approvedFallbacks.isEmpty()) {
+                ArrayNode fallbacks = station.putArray("approvedFallbacks");
+                for (String fallbackNodeId : approvedFallbacks) fallbacks.add(fallbackNodeId);
+            }
         }
-        Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:liveNodes)nodeIds.add(node.getId());
         if(frozen.path("themeConfig").isObject())assertCompiledReferences((ObjectNode)frozen.path("themeConfig"),nodeIds,topic);
         List<ThemeStateKey> declarations = declarationRows(topic.getId());
         if (declarations != null) {
@@ -720,6 +741,23 @@ final class TopicRoutePublicationCompiler {
         }
         validateGameplayRuntime(frozen);
         return write(frozen);
+    }
+
+    /**
+     * 到达策略/读数只认按真实节点编号写的节点块（{@code themeRuntimeConfigJson.scenes[].nodeConfigs}）。
+     * 从作者当前场景读取，而不是从可能滞后的冻结 themeConfig 回读；
+     * 模板级 advancedConfigJson 可能被多个站点共享，不在这里冒充某一站的读数。
+     */
+    private JsonNode arrivalAuthorConfig(JsonNode definition, Long nodeId) {
+        if (definition == null || nodeId == null) return null;
+        String selectedScene = definition.path("currentScene").asText(null);
+        for (JsonNode scene : definition.path("scenes")) {
+            if (scene == null || !scene.isObject()) continue;
+            if (selectedScene != null && !selectedScene.equals(scene.path("id").asText())) continue;
+            JsonNode byNode = scene.path("nodeConfigs").path(String.valueOf(nodeId));
+            if (byNode.isObject()) return byNode;
+        }
+        return null;
     }
 
     public String freezePublishedJourney(CmsTopic topic) {
@@ -1170,6 +1208,15 @@ final class TopicRoutePublicationCompiler {
             putAnswerText(target, "preferenceJson", template.getPreferenceJson());
             putAnswerText(target, "sensorType", template.getSensorType());
             putAnswerText(target, "sensorConfig", template.getSensorConfig());
+            // BE-08:答案别名政策与 canonical answer 同一来源(模板私有 advancedConfigJson 根层),
+            // 在这里连同判定字段一起冻结。没有别名就不写键 —— 老局/未配政策的局读回后
+            // 仍走旧比较器,作者之后补写的别名不会回头改这一局。
+            com.chengyinhub.business.service.support.AnswerPolicy answerPolicy =
+                    com.chengyinhub.business.service.support.AnswerPolicy
+                            .ofAdvancedConfig(template.getAdvancedConfigJson());
+            if (!answerPolicy.isEmpty()) {
+                target.set(com.chengyinhub.business.service.support.AnswerPolicy.FIELD, answerPolicy.toJson());
+            }
         }
     }
 

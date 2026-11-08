@@ -1989,23 +1989,50 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean publishDraft(Long id, Long expectedOwnerId) {
+        return publishDraft(id, expectedOwnerId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean publishDraft(Long id, Long expectedOwnerId, String publishRequestId) {
         if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
-        return publishDraftInternal(id, expectedOwnerId, true) != null;
+        return publishDraftInternal(id, expectedOwnerId, true, null, null, publishRequestId) != null;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId) {
+        return publishDraftWithReview(id, expectedOwnerId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId, String publishRequestId) {
         if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
-        return publishDraftInternal(id, expectedOwnerId, true);
+        return publishDraftInternal(id, expectedOwnerId, true, null, null, publishRequestId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
             Long expectedConfigVersion, String expectedRegistryVersion) {
+        return publishDraftWithBinding(id, expectedOwnerId, expectedConfigVersion, expectedRegistryVersion, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
+            Long expectedConfigVersion, String expectedRegistryVersion, String publishRequestId) {
         if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
-        return publishDraftInternal(id, expectedOwnerId, true, expectedConfigVersion, expectedRegistryVersion);
+        return publishDraftInternal(id, expectedOwnerId, true, expectedConfigVersion, expectedRegistryVersion, publishRequestId);
+    }
+
+    @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO replayPublishedRevision(Long id, Long expectedOwnerId,
+            String publishRequestId, String expectedContentSha256) {
+        if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
+        return topicPublicationService.replayPublishedRevision(id, expectedOwnerId, publishRequestId, expectedContentSha256);
     }
 
     @Override
@@ -2034,14 +2061,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission) {
-        return publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, null, null);
+        return publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, null, null, null);
     }
 
     private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission,
-            Long expectedConfigVersion, String expectedRegistryVersion) {
+            Long expectedConfigVersion, String expectedRegistryVersion, String publishRequestId) {
         CmsTopic topic = supplyReviewService.lockTopic(id);
         if (expectedOwnerId != null && (topic == null || !expectedOwnerId.equals(topic.getMemberId())))
             throw new ServiceException("主题归属已变化，无权提交", 403);
+        // F1:已完成的发布意图重试直接回原修订。必须在 freezeAuthorAttributes 之前收口 ——
+        // 那条路径会重写属性定义,重放不得产生任何写入(也就不会重复冻结/重复计数)。
+        TopicBundleSubmitResultVO replayed = topicPublicationService.replayPublishedRevision(
+                id, expectedOwnerId, publishRequestId, null);
+        if (replayed != null) return replayed;
         if (topic != null) {
             long version = topic.getConfigVersion() == null ? 1L : topic.getConfigVersion();
             if (com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(topic.getJourneyRulesJson())) {
@@ -2057,7 +2089,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             long publishedVersion = (topic.getPublishedConfigVersion() == null ? 0L : topic.getPublishedConfigVersion()) + 1L;
             freezeAuthorAttributes(topic, expectedConfigVersion == null ? version : expectedConfigVersion, version, publishedVersion, false);
         }
-        return topicPublicationService.publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission);
+        return topicPublicationService.publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, publishRequestId);
     }
 
 

@@ -59,6 +59,10 @@ EXPLICIT_AUXILIARY_SQL = {
     # 不进发布台账、不在生产跑。与上面几份同档。
     "chengyinhub-admin/src/test/resources/it-schema/post-game-outcome-it-schema.sql":
         "TEST_FIXTURE",
+    # BE-14 多作用域榜单 MySQL IT 的用例自有表:只补那 4 张 IT 脚本未覆盖的表,
+    # 仅在测试 scratch schema 里执行,不进发布台账、不在生产跑。
+    "chengyinhub-admin/src/test/resources/it-schema/scoped-leaderboard-it-schema.sql":
+        "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
     # Historical source-only station proposal; canonical executable DDL is the

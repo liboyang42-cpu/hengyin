@@ -4,6 +4,9 @@ import com.chengyinhub.business.service.IOrientSessionService;
 import com.chengyinhub.business.service.support.OrientSessionException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.web.metrics.GameSloMetrics;
+import com.chengyinhub.web.metrics.GameSloResult;
+import com.chengyinhub.web.metrics.GameSloRoute;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +34,10 @@ public class ApiOrientSessionController extends BaseController {
     @Autowired
     private IOrientSessionService orientSessionService;
 
+    /** OPS-01：只观测开赛这一条路径；不影响原有错误码、回执与计时。测试直接 new 时为 null。 */
+    @Autowired(required = false)
+    private GameSloMetrics gameSlo;
+
     Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
@@ -44,7 +51,23 @@ public class ApiOrientSessionController extends BaseController {
     @Operation(summary = "开赛:首次需确认规则版本并由服务端起表;重进续用原计时")
     @PostMapping("/start")
     public AjaxResult start(Long sessionId, Long ackConfigVersion, String idempotencyKey) {
-        return call(memberId -> orientSessionService.start(memberId, sessionId, ackConfigVersion, idempotencyKey));
+        long startedAt = System.nanoTime();
+        // 401/409 等业务拒绝不是成功；成功率只认 code=200。抛异常（极少）按 fault 计。
+        GameSloResult sloResult = GameSloResult.FAULT;
+        try {
+            AjaxResult result = call(memberId -> orientSessionService.start(memberId, sessionId, ackConfigVersion, idempotencyKey));
+            sloResult = GameSloMetrics.classify(result);
+            return result;
+        } finally {
+            // 每个请求恰好一次，成功与异常路径共用同一记录点。
+            recordStart(sloResult, startedAt);
+        }
+    }
+
+    private void recordStart(GameSloResult result, long startedAt) {
+        if (gameSlo != null) {
+            gameSlo.recordStart(GameSloRoute.ORIENT_START, result, System.nanoTime() - startedAt);
+        }
     }
 
     @Operation(summary = "放弃本局(终态,幂等)")

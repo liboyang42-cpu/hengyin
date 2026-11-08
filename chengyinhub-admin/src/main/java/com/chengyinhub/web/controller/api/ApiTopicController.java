@@ -1504,14 +1504,15 @@ public class ApiTopicController extends BaseController {
     }
 
     public AjaxResult publishDraft(String id, String scope) {
-        return publishDraft(id, scope, null, null);
+        return publishDraft(id, scope, null, null, null, null);
     }
 
     @Operation(summary = "发布草稿")
     @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
     @PostMapping("/publish-draft")
-    public AjaxResult publishDraft(String id, String scope, Long configVersion, String registryVersion) {
-        try { return publishDraftBound(id, scope, configVersion, registryVersion); }
+    public AjaxResult publishDraft(String id, String scope, Long configVersion, String registryVersion,
+                                   String publishRequestId, String expectedContentSha256) {
+        try { return publishDraftBound(id, scope, configVersion, registryVersion, publishRequestId, expectedContentSha256); }
         catch (ServiceException error) {
             AjaxResult attributeError = authorAttributeError(error);
             if (attributeError != null) return attributeError;
@@ -1519,7 +1520,8 @@ public class ApiTopicController extends BaseController {
         }
     }
 
-    private AjaxResult publishDraftBound(String id, String scope, Long configVersion, String registryVersion) {
+    private AjaxResult publishDraftBound(String id, String scope, Long configVersion, String registryVersion,
+                                         String publishRequestId, String expectedContentSha256) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
             return error("参数不合规");
@@ -1543,6 +1545,22 @@ public class ApiTopicController extends BaseController {
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
             return error("无权操作该主题");
+        }
+        // F1:已完成的发布意图重试先收口。发布成功后 is_draft 已被清掉,超时重发在草稿闸会假失败,
+        // 且不能再占额度/重开审核。同作者 + 同 publishRequestId + 同 payload 才命中;其余继续原流程。
+        if (publishRequestId != null && !publishRequestId.trim().isEmpty()) {
+            TopicBundleSubmitResultVO replayed;
+            try {
+                replayed = cmsTopicService.replayPublishedRevision(cid, memberId, publishRequestId, expectedContentSha256);
+            } catch (ServiceException conflict) {
+                // 同号异 payload:409,不覆盖历史,也不假装成功。
+                return businessRefusal(conflict, conflict.getMessage());
+            }
+            if (replayed != null) {
+                return isSimplePublishMode(topic.getPublishMode())
+                        ? success("已发布")            // 简易版沿用原有标量回执
+                        : AjaxResult.success("已发布", replayed);
+            }
         }
         // 门禁:必须当前确为草稿,防 rejected(审核未通过)/已上架 主题借道发布绕过审核
         Integer isDraft = cmsTopicService.selectTopicIsDraft(cid);
@@ -1575,13 +1593,16 @@ public class ApiTopicController extends BaseController {
             final Long fCid = cid;
             Boolean ok = quotaService.runWithThemeOnlineGuard(fMemberId, fCid,
                     () -> configVersion == null && registryVersion == null
-                            ? cmsTopicService.publishDraft(fCid, fMemberId)
-                            : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion) != null);
+                            ? cmsTopicService.publishDraft(fCid, fMemberId, publishRequestId)
+                            : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion,
+                                    publishRequestId) != null);
             return (ok != null && ok) ? success("已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                configVersion == null && registryVersion == null ? cmsTopicService.publishDraftWithReview(cid, memberId)
-                        : cmsTopicService.publishDraftWithBinding(cid, memberId, configVersion, registryVersion);
+                configVersion == null && registryVersion == null
+                        ? cmsTopicService.publishDraftWithReview(cid, memberId, publishRequestId)
+                        : cmsTopicService.publishDraftWithBinding(cid, memberId, configVersion, registryVersion,
+                                publishRequestId);
         if (result == null) {
             return error("该主题不是草稿，无法发布");
         }

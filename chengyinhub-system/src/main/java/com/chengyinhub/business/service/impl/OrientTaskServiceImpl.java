@@ -57,6 +57,15 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
     private OrientMapper orientMapper;
     @Autowired
     private PlayTeamMapper playTeamMapper;
+    /** 付费内含席位受让人事实（只读）；团队/组队资格仍是另一道闸，不在此放宽。 */
+    @Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsActivityMapper currentPlayActivityMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper currentPlayRegistrationMapper;
+    @Autowired
+    private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
     @Autowired
     private ICmsTopicService topicService;
     @Autowired
@@ -382,7 +391,18 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
         int ownerType = activityId > 0 ? 2 : 1;
         long ownerId = activityId > 0 ? activityId : topicId;
         if (playTeamMapper.hasPaidRegistration(memberId, ownerType, ownerId) <= 0) {
-            throw new OrientRejection(OrientRejection.NOT_PARTICIPANT, "请先报名该主题");
+            if (seatRecipientEligibility == null
+                    || seatRecipientEligibility.playFacts(memberId, ownerType, ownerId).isEmpty()) {
+                throw new OrientRejection(OrientRejection.NOT_PARTICIPANT, "请先报名该主题");
+            }
+            try {
+                // submit 的原事务持原单锁至 attempt/completion 提交，与释放席位串行。
+                com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
+                        currentPlayActivityMapper, currentPlayRegistrationMapper, memberId,
+                        ownerType, ownerId, null, new Date(), true, giftPlayEligibility, seatRecipientEligibility);
+            } catch (IllegalStateException denied) {
+                throw new OrientRejection(OrientRejection.NOT_PARTICIPANT, "请先报名该主题");
+            }
         }
         String instance = playInstanceIdRaw == null || playInstanceIdRaw.trim().isEmpty()
                 ? DEFAULT_INSTANCE : playInstanceIdRaw.trim();

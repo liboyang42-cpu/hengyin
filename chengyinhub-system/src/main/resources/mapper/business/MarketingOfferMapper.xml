@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingOfferMapper">
+
+    <sql id="offerColumns">
+        id             as id,
+        offer_code     as offerCode,
+        offer_kind     as offerKind,
+        name           as name,
+        description    as description,
+        owner_type     as ownerType,
+        owner_id       as ownerId,
+        price_amount   as priceAmount,
+        list_amount    as listAmount,
+        status         as status,
+        valid_from     as validFrom,
+        valid_to       as validTo,
+        max_per_member as maxPerMember,
+        rule_version   as ruleVersion,
+        del_flag       as delFlag,
+        create_by      as createBy,
+        create_time    as createTime,
+        update_by      as updateBy,
+        update_time    as updateTime
+    </sql>
+
+    <select id="selectEnabledByCode" resultType="com.chengyinhub.business.domain.MarketingOffer">
+        select <include refid="offerColumns"/>
+        from marketing_offer
+        where offer_code = #{offerCode} and status = 1 and del_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectItemsByOfferId" resultType="com.chengyinhub.business.domain.MarketingOfferItem">
+        select id               as id,
+               offer_id         as offerId,
+               item_type        as itemType,
+               item_id          as itemId,
+               quantity         as quantity,
+               unit_list_amount as unitListAmount,
+               create_time      as createTime
+        from marketing_offer_item
+        where offer_id = #{offerId}
+        order by id asc
+    </select>
+
+    <!-- 建单事务内的限次闸:锁住供给行,把「读使用数 → 校验 → insert 使用事实」串起来。
+         不过滤 del_flag/status:调用方要能分辨"行没了/已下架"并拒绝,而不是当成"没配限次"放过。 -->
+    <select id="selectOfferByIdForUpdate" resultType="com.chengyinhub.business.domain.MarketingOffer">
+        select <include refid="offerColumns"/>
+        from marketing_offer
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectActiveByScope" resultType="com.chengyinhub.business.domain.MarketingOffer">
+        select <include refid="offerColumns"/>
+        from marketing_offer
+        where owner_type = #{ownerType}
+          and owner_id = #{ownerId}
+          and status = 1
+          and del_flag = 0
+          and (valid_from is null or valid_from &lt;= #{now})
+          and (valid_to is null or valid_to &gt;= #{now})
+        order by id asc
+    </select>
+
+    <select id="selectOfferList" resultType="com.chengyinhub.business.domain.MarketingOffer">
+        select <include refid="offerColumns"/>
+        from marketing_offer
+        <where>
+            del_flag = 0
+            <if test="offerCode != null and offerCode != ''">and offer_code = #{offerCode}</if>
+            <if test="offerKind != null">and offer_kind = #{offerKind}</if>
+            <if test="ownerType != null">and owner_type = #{ownerType}</if>
+            <if test="ownerId != null">and owner_id = #{ownerId}</if>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <!-- 含已软删:唯一键在库上,复用已删码会直接 1062,这里先给可读的冲突。 -->
+    <select id="countByCode" resultType="int">
+        select count(1) from marketing_offer where offer_code = #{offerCode}
+    </select>
+
+    <select id="selectOfferById" resultType="com.chengyinhub.business.domain.MarketingOffer">
+        select <include refid="offerColumns"/>
+        from marketing_offer
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <insert id="insertOffer" parameterType="com.chengyinhub.business.domain.MarketingOffer"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_offer
+            (offer_code, offer_kind, name, description, owner_type, owner_id, price_amount, list_amount,
+             status, valid_from, valid_to, max_per_member, rule_version, del_flag,
+             create_by, create_time, update_by, update_time)
+        values
+            (#{offerCode}, #{offerKind}, #{name}, #{description}, #{ownerType}, #{ownerId}, #{priceAmount},
+             #{listAmount}, #{status}, #{validFrom}, #{validTo}, #{maxPerMember}, #{ruleVersion}, 0,
+             #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <!-- rule_version 每次改配置必须由服务层 +1:报价签名/订单快照靠它区分"改版前成交"与"改版后报价"。 -->
+    <update id="updateOffer" parameterType="com.chengyinhub.business.domain.MarketingOffer">
+        update marketing_offer
+        set offer_kind     = #{offerKind},
+            name           = #{name},
+            description    = #{description},
+            owner_type     = #{ownerType},
+            owner_id       = #{ownerId},
+            price_amount   = #{priceAmount},
+            list_amount    = #{listAmount},
+            status         = #{status},
+            valid_from     = #{validFrom},
+            valid_to       = #{validTo},
+            max_per_member = #{maxPerMember},
+            rule_version   = #{ruleVersion},
+            update_by      = #{updateBy},
+            update_time    = #{updateTime}
+        where id = #{id} and del_flag = 0
+    </update>
+
+    <update id="deleteOfferByIds">
+        update marketing_offer
+        set del_flag = 2, update_time = now()
+        where del_flag = 0 and id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteItemsByOfferId">
+        delete from marketing_offer_item where offer_id = #{offerId}
+    </delete>
+
+    <insert id="insertItem" parameterType="com.chengyinhub.business.domain.MarketingOfferItem"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_offer_item
+            (offer_id, item_type, item_id, quantity, unit_list_amount, create_time)
+        values
+            (#{offerId}, #{itemType}, #{itemId}, #{quantity}, #{unitListAmount}, #{createTime})
+    </insert>
+</mapper>

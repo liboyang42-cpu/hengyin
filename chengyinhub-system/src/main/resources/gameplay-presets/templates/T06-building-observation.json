@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "classify": {
+    "enabled": true,
+    "prompt": "${classifyPrompt}",
+    "xp": 0,
+    "bins": [
+      {
+        "id": "k1",
+        "label": "${bin1}"
+      },
+      {
+        "id": "k2",
+        "label": "${bin2}"
+      }
+    ],
+    "items": [
+      {
+        "id": "b1",
+        "label": "${item1}"
+      },
+      {
+        "id": "b2",
+        "label": "${item2}"
+      },
+      {
+        "id": "b3",
+        "label": "${item3}"
+      }
+    ],
+    "answer": {
+      "b1": "k1",
+      "b2": "k2",
+      "b3": "k1"
+    }
+  },
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": true,
+    "multi": false,
+    "title": "${question}",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "c1",
+        "label": "${choice1}",
+        "correct": false
+      },
+      {
+        "id": "c2",
+        "label": "${choice2}",
+        "correct": false
+      }
+    ]
+  }
+}

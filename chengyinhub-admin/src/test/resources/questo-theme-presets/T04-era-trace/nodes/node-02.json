@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {
+      "op": "NODE_COMPLETED",
+      "nodeId": 900101
+    }
+  ],
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "待填：哪一条信息在现状中已经改变？",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "opt_changed",
+        "label": "待填：已改变项",
+        "correct": true,
+        "fb": "待填：变化反馈"
+      },
+      {
+        "id": "opt_unchanged",
+        "label": "待填：仍成立项",
+        "correct": false,
+        "fb": "待填：仍成立反馈"
+      }
+    ]
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "requireArrival": true,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

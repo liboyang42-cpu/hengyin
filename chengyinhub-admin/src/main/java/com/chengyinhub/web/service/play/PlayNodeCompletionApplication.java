@@ -17,6 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.common.constant.PlayMode;
 import com.chengyinhub.common.constant.RewardPolicy;
+import com.chengyinhub.business.util.PuzzleScorePolicy;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.chengyinhub.business.service.support.PlayHelpReceiptReadModel;
+import com.chengyinhub.business.service.support.PlayHelpUsagePolicy;
+import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayerBadge;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
@@ -93,6 +98,9 @@ public class PlayNodeCompletionApplication {
     private PlayCompletionFacts playCompletionFacts;
     @Autowired
     private PlayNodeContext playNodeContext;
+    /** UG07 成绩明细：完成回包与只读回执共用同一份计算，不另算一套。 */
+    @Autowired(required = false)
+    private PlayHelpReceiptReadModel playHelpReceiptReadModel;
 
     private final com.chengyinhub.business.service.support.RewardRulesValidator rewardRulesValidator
             = new com.chengyinhub.business.service.support.RewardRulesValidator();
@@ -300,6 +308,18 @@ public class PlayNodeCompletionApplication {
         boolean rewardCapped = rewardPolicy == RewardPolicy.FULL && advancedGameRuntimeService != null
                 && advancedGameRuntimeService.rewardCappedToXpBadge(memberId, actId, node.getTopicId(), node.getId());
         if (rewardCapped) rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
+        // 跳过(BE-16 L5)在本局只留辅助完成:本题 0 分、完成方式写 SKIPPED、奖励降为探索值+徽章。
+        // 收口放在这一处而不是各调用方:答题/到达/扫码都从这里落进度,少改一处就会有一条路
+        // 把「跳过」写成 SOLVED 或按通过码发奖。
+        boolean skipped = advancedGameRuntimeService != null
+                && advancedGameRuntimeService.skippedAssistedCompletion(memberId, actId, node.getTopicId(), node.getId());
+        if (skipped) {
+            puzzleScore = PuzzleScorePolicy.skippedScore();
+            completionMode = PuzzleScorePolicy.COMPLETION_SKIPPED;
+            rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
+            // 跳过不是任何通过码:分支结论、条件奖励都不得把它当成功。
+            advancedOutcomeCode = null;
+        }
         Map<String, Object> conditionalReward = null;
         // ③ 与 ①② 在本方法里有两处分歧(首完判据 + 发奖范围),求一次共用,免得两处各判各的再漂开。
         boolean shopDay = playNodeContext.resolveMode(actId, node.getTopicId()) == PlayMode.FREE_COLLECT;
@@ -524,6 +544,14 @@ public class PlayNodeCompletionApplication {
         if (conditionalReward != null) data.put("conditionalReward", conditionalReward);
         if (persistedPuzzleScore != null) data.put("puzzleScore", persistedPuzzleScore);
         if (StringUtils.isNotBlank(persistedCompletionMode)) data.put("completionMode", persistedCompletionMode);
+        // UG07：完成回包里带上与只读回执**同源**的明细（base/bonus/扣分/净分 + 积分消费 + 层使用）。
+        // 明细完全是既有事实的回放，客户端上报的 score/passed 不参与；没有权威基准就是 NOT_SCORED。
+        Map<String, Object> helpReceipt = helpReceipt(memberId, node, actId, progressInstance,
+                persistedCompletionMode,
+                originalSession == null ? null
+                        : com.chengyinhub.business.service.support.NodeJourneySnapshot.answer(
+                                originalSession.getConfigSnapshotJson(), node.getId()));
+        if (helpReceipt != null) data.put("helpReceipt", helpReceipt);
         if (completed && !shopDay) {
             Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(memberId, node.getTopicId());
             if (personalBest != null) data.put("puzzlePersonalBest", personalBest);
@@ -532,6 +560,91 @@ public class PlayNodeCompletionApplication {
             data.put("drop", dropResult); // M6 随机掉落(命中已入账:XP倍率→addExp / 彩蛋券→SmsCouponHistory)
         }
         return data;
+    }
+
+    /**
+     * 生成本节点本局的帮助/成绩明细。
+     *
+     * <p>只在"这个节点真的跟帮助/跳过有关"时才产出，避免给所有节点都塞一个空对象：
+     * 条件 = 冻结阶梯非空，或本局已按跳过收尾。
+     *
+     * <p>基准分判定与 {@code PlayHelpApplication.baseScoreOf} 同源：线性城市定向 + 模板验真方式 1/3。
+     */
+    private Map<String, Object> helpReceipt(Long memberId, CmsTopicNode node, Long actId,
+            String progressInstance, String completionMode, JsonNode frozenAnswer) {
+        if (playHelpReceiptReadModel == null || playAttemptLogMapper == null) return null;
+        if (node == null || node.getTopicId() == null || progressInstance == null) return null;
+        JsonNode ladder = frozenLadder(memberId, node, actId);
+        boolean skipped = PuzzleScorePolicy.COMPLETION_SKIPPED.equals(completionMode);
+        if ((ladder == null || !ladder.isArray() || ladder.size() == 0) && !skipped) return null;
+        PlayHelpUsagePolicy.Scope scope;
+        try {
+            scope = new PlayHelpUsagePolicy.Scope(node.getTopicId(), actId, node.getId(), progressInstance);
+        } catch (IllegalArgumentException noRunIdentity) {
+            return null;
+        }
+        Integer baseScore = baseScore(node, actId, frozenAnswer);
+        boolean revealed = PuzzleScorePolicy.COMPLETION_REVEALED.equals(completionMode);
+        return playHelpReceiptReadModel.receipt(memberId, scope, ladder, baseScore, skipped, revealed);
+    }
+
+    /**
+     * 本局的冻结阶梯。
+     *
+     * <p>★ 冻结配置存在时**绝不退回当前模板**：作者在本局开局后给模板加/删 `hintLadder`，
+     * 不该改变这一局的明细。当前模板只在"完全没有冻结配置"（老局没有 `nodeRuntimeConfig`）时兜底，
+     * 因为那种局本来就没有冻结概念，实际运行期读的也是模板。
+     */
+    private JsonNode frozenLadder(Long memberId, CmsTopicNode node, Long actId) {
+        JsonNode frozen = null;
+        if (topicRouteRuntimeService != null) {
+            try {
+                frozen = topicRouteRuntimeService.nodeRuntimeConfig(memberId, node.getTopicId(),
+                        node.getId(), actId);
+            } catch (RuntimeException unusableFrozen) {
+                // 读不到冻结配置时不猜：按"没有阶梯"处理，只保留跳过事实。
+                return null;
+            }
+        }
+        if (frozen != null) {
+            // 冻结块在 = 这一局的规则已定；它没有 ladder 就是这一局没有 ladder。
+            return frozen.path("hintLadder").isArray() ? frozen.path("hintLadder") : null;
+        }
+        if (node.getTemplateId() == null) return null;
+        CmsMemberTemplate template = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
+        if (template == null || template.getAdvancedConfigJson() == null) return null;
+        try {
+            JsonNode parsed = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readTree(template.getAdvancedConfigJson());
+            return parsed == null ? null : parsed.path("hintLadder");
+        } catch (Exception unusableConfig) {
+            return null;
+        }
+    }
+
+    /**
+     * 基准分：只在该节点走既有解谜分链时给出，否则 null（明细为 NOT_SCORED）。
+     *
+     * <p>验真方式同样优先取**本局冻结的节点答案**；只有老局没有内容快照时才退回当前模板。
+     * 否则作者开局后把模板从文字题改成拍照题，会让同一局的明细在 SCORED / NOT_SCORED 之间跳变。
+     */
+    private Integer baseScore(CmsTopicNode node, Long actId, JsonNode frozenAnswer) {
+        if (node.getTemplateId() == null) return null;
+        try {
+            if (playNodeContext.resolveMode(actId, node.getTopicId())
+                    != com.chengyinhub.common.constant.PlayMode.LINEAR_ORIENTEERING) return null;
+        } catch (RuntimeException unresolvedMode) {
+            return null;
+        }
+        com.chengyinhub.business.domain.CmsMemberTemplate frozen =
+                com.chengyinhub.business.service.support.NodeJourneySnapshot.contentTemplate(frozenAnswer);
+        CmsMemberTemplate template = frozen != null
+                ? frozen
+                : cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
+        if (template == null || template.getValidationMethod() == null) return null;
+        int method = template.getValidationMethod().intValue();
+        if (method != 1 && method != 3) return null;
+        return Integer.valueOf(PuzzleScorePolicy.solvedScore(0));
     }
 
     /**

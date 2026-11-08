@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {
+      "op": "NODE_COMPLETED",
+      "nodeId": 900301
+    }
+  ],
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "待填：第二件物品从哪里取得？",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "opt_second_a",
+        "label": "待填：取得路径甲",
+        "correct": true,
+        "fb": "待填：取得反馈"
+      },
+      {
+        "id": "opt_second_b",
+        "label": "待填：取得路径乙",
+        "correct": false,
+        "fb": "待填：未取得反馈"
+      }
+    ]
+  },
+  "effects": [
+    {
+      "op": "SET",
+      "var": "clue.festival_item_b",
+      "value": 1
+    }
+  ],
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "scope": "OWNER",
+    "targetScope": "OWNER",
+    "grants": [
+      {
+        "itemId": "item_fantasy_second",
+        "quantity": 1
+      }
+    ]
+  }
+}

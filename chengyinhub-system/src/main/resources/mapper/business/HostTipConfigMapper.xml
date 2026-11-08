@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.HostTipConfigMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.HostTipConfig">
+    <id     column="id"                  property="id"/>
+    <result column="host_member_id"      property="hostMemberId"/>
+    <result column="club_id"             property="clubId"/>
+    <result column="enabled"             property="enabled"/>
+    <result column="host_share_percent"  property="hostSharePercent"/>
+    <result column="channel_fee_bearer"  property="channelFeeBearer"/>
+    <result column="min_amount"          property="minAmount"/>
+    <result column="currency"            property="currency"/>
+    <result column="payment_channel"     property="paymentChannel"/>
+    <result column="config_version"      property="configVersion"/>
+    <result column="del_flag"            property="delFlag"/>
+    <result column="create_time"         property="createTime"/>
+    <result column="update_time"         property="updateTime"/>
+  </resultMap>
+
+  <select id="selectById" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_config WHERE id = #{id} AND del_flag = '0'
+  </select>
+
+  <select id="selectByHostAndClub" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_config
+    WHERE host_member_id = #{hostMemberId} AND club_id = #{clubId} AND del_flag = '0'
+  </select>
+
+  <select id="selectByHost" resultMap="BaseResultMap">
+    SELECT * FROM host_tip_config WHERE host_member_id = #{hostMemberId} AND del_flag = '0' ORDER BY id DESC
+  </select>
+
+  <insert id="insertConfig" parameterType="com.chengyinhub.business.domain.HostTipConfig"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO host_tip_config
+      (host_member_id, club_id, enabled, host_share_percent, channel_fee_bearer,
+       min_amount, currency, payment_channel, config_version, del_flag, create_time, update_time)
+    VALUES
+      (#{hostMemberId}, #{clubId}, #{enabled}, #{hostSharePercent}, #{channelFeeBearer},
+       #{minAmount}, #{currency}, #{paymentChannel}, #{configVersion}, '0', NOW(), NOW())
+  </insert>
+
+  <!--
+    配置更新。host_share_percent 固定 100(平台不抽成),故不提供可写参数 ——
+    想改分成比例必须改代码并重新审批,不能靠一次 SQL 更新悄悄抽成。
+  -->
+  <update id="updateConfig" parameterType="com.chengyinhub.business.domain.HostTipConfig">
+    UPDATE host_tip_config
+       SET club_id = #{clubId},
+           channel_fee_bearer = #{channelFeeBearer},
+           min_amount = #{minAmount},
+           currency = #{currency},
+           payment_channel = #{paymentChannel},
+           config_version = config_version + 1,
+           update_time = NOW()
+     WHERE id = #{id} AND del_flag = '0'
+  </update>
+
+  <update id="updateEnabledIfCurrent">
+    UPDATE host_tip_config
+       SET enabled = #{newEnabled},
+           config_version = #{configVersion},
+           update_time = NOW()
+     WHERE id = #{id} AND enabled = #{expectedEnabled} AND del_flag = '0'
+  </update>
+
+</mapper>

@@ -1,0 +1,705 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026-11-08.1",
+  "presets": [
+    {
+      "presetKey": "T01-urban-mystery",
+      "version": 1,
+      "title": "都市谜案（结构预设）",
+      "purpose": "多站调查后指认结案：结案题复用既有图片单选，指认段只做呈现，对错仍由原题库判定。",
+      "category": "T01",
+      "validationMethod": 3,
+      "capabilities": [
+        "qaPick"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T01-urban-mystery.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "question",
+          "label": "结案问题",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "suspect1",
+          "label": "嫌疑人一姓名",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "suspect2",
+          "label": "嫌疑人二姓名",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "suspect3",
+          "label": "嫌疑人三姓名",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确嫌疑人",
+          "kind": "CHOICE",
+          "options": [
+            "s1",
+            "s2",
+            "s3"
+          ]
+        },
+        {
+          "key": "feedback",
+          "label": "答后反馈",
+          "kind": "TEXT",
+          "maxLength": 60
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues",
+          "photoRefs"
+        ]
+      },
+      "authorTodos": [
+        "在编辑器补 accusation 段的头像、两个结局文案与已获证词（需要先上传并审核通过人物照片）",
+        "把三条线索站绑定到真实地点，并现场核对观察事实"
+      ]
+    },
+    {
+      "presetKey": "T02-ghost-tracking",
+      "version": 1,
+      "title": "怪谈追踪（结构预设）",
+      "purpose": "逐个目标收集线索，最后一题选出危险的那一个；目标清单用既有任务与线索表达，不新增追踪段。",
+      "category": "T02",
+      "validationMethod": 3,
+      "capabilities": [
+        "qaPick"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T02-ghost-tracking.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "question",
+          "label": "指认问题",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "target1",
+          "label": "目标一名称",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "target2",
+          "label": "目标二名称",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "target3",
+          "label": "目标三名称",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "dangerous",
+          "label": "危险的那一个",
+          "kind": "CHOICE",
+          "options": [
+            "t1",
+            "t2",
+            "t3"
+          ]
+        },
+        {
+          "key": "feedback",
+          "label": "答后反馈",
+          "kind": "TEXT",
+          "maxLength": 60
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues"
+        ]
+      },
+      "authorTodos": [
+        "在主题里为每个目标建一条任务与一段线索，漏目标仍可结案的规则用原完成条件的 ALL/ANY_N 表达",
+        "三个目标的地点必须在现场核对过夜间可达性"
+      ]
+    },
+    {
+      "presetKey": "T03-family-observation",
+      "version": 1,
+      "title": "亲子观察（结构预设）",
+      "purpose": "先按现场观察排序，再用一道选择题确认结论；都是既有题型，不需要拍照判题。",
+      "category": "T03",
+      "validationMethod": 0,
+      "capabilities": [
+        "sort",
+        "qaPick"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T03-family-observation.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "sortPrompt",
+          "label": "排序题面",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "item1",
+          "label": "待排项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "item2",
+          "label": "待排项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "item3",
+          "label": "待排项三",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "order",
+          "label": "正确顺序",
+          "kind": "ORDER",
+          "options": [
+            "i1",
+            "i2",
+            "i3"
+          ]
+        },
+        {
+          "key": "question",
+          "label": "结论题面",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "choice1",
+          "label": "选项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "choice2",
+          "label": "选项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确选项",
+          "kind": "CHOICE",
+          "options": [
+            "c1",
+            "c2"
+          ]
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues"
+        ]
+      },
+      "authorTodos": [
+        "把排序项换成孩子能看见、能比较的现场细节；不要用需要读长文的题目",
+        "现场核对三项的出现顺序，家长先走一遍"
+      ]
+    },
+    {
+      "presetKey": "T04-era-trace",
+      "version": 1,
+      "title": "年代追索（结构预设）",
+      "purpose": "把档案照片与现场现状对照排序，再用一道选择题确认变化；档案图走既有排序项配图。",
+      "category": "T04",
+      "validationMethod": 0,
+      "capabilities": [
+        "sort",
+        "qaPick"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T04-era-trace.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "sortPrompt",
+          "label": "排序题面",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "item1",
+          "label": "待排项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "item2",
+          "label": "待排项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "item3",
+          "label": "待排项三",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "order",
+          "label": "正确顺序",
+          "kind": "ORDER",
+          "options": [
+            "e1",
+            "e2",
+            "e3"
+          ]
+        },
+        {
+          "key": "question",
+          "label": "现状确认题面",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "choice1",
+          "label": "选项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "choice2",
+          "label": "选项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确选项",
+          "kind": "CHOICE",
+          "options": [
+            "c1",
+            "c2"
+          ]
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues",
+          "photoRefs"
+        ]
+      },
+      "authorTodos": [
+        "档案照片必须有可核出处或明确虚构标注；没有来源的图不能当史实",
+        "现场现状必须当天实拍核对，不能用旧图冒充现状"
+      ]
+    },
+    {
+      "presetKey": "T05-city-treasure",
+      "version": 1,
+      "title": "城市寻宝（结构预设）",
+      "purpose": "靠线索与数字物品推进，最后选出一个目标；必做/选做沿用既有任务与额外槽位。",
+      "category": "T05",
+      "validationMethod": 3,
+      "capabilities": [
+        "qaPick"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T05-city-treasure.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "question",
+          "label": "找到目标后的问题",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "option1",
+          "label": "选项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "option2",
+          "label": "选项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "option3",
+          "label": "选项三",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确选项",
+          "kind": "CHOICE",
+          "options": [
+            "o1",
+            "o2",
+            "o3"
+          ]
+        },
+        {
+          "key": "feedback",
+          "label": "答后反馈",
+          "kind": "TEXT",
+          "maxLength": 60
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues"
+        ]
+      },
+      "authorTodos": [
+        "在主题里声明线索物品；没有实体物料时只用数字物品，不要求埋物",
+        "选做目标用原 extraOnly/extraSlot 表达，不要另造清单"
+      ]
+    },
+    {
+      "presetKey": "T06-building-observation",
+      "version": 1,
+      "title": "建筑观察（结构预设）",
+      "purpose": "把构件按依据分类，再用一道选择题确认推断；分类项当前只有文字，不支持配图。",
+      "category": "T06",
+      "validationMethod": 0,
+      "capabilities": [
+        "classify",
+        "qaPick"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T06-building-observation.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "classifyPrompt",
+          "label": "分类题面",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "bin1",
+          "label": "分类一名称",
+          "kind": "TEXT",
+          "maxLength": 12
+        },
+        {
+          "key": "bin2",
+          "label": "分类二名称",
+          "kind": "TEXT",
+          "maxLength": 12
+        },
+        {
+          "key": "item1",
+          "label": "构件一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "item2",
+          "label": "构件二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "item3",
+          "label": "构件三",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "answer",
+          "label": "每个构件归哪一类",
+          "kind": "BIN_MAP",
+          "items": [
+            "b1",
+            "b2",
+            "b3"
+          ],
+          "bins": [
+            "k1",
+            "k2"
+          ]
+        },
+        {
+          "key": "question",
+          "label": "推断题面",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "choice1",
+          "label": "选项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "choice2",
+          "label": "选项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确选项",
+          "kind": "CHOICE",
+          "options": [
+            "c1",
+            "c2"
+          ]
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues"
+        ]
+      },
+      "authorTodos": [
+        "分类项只有文字（classify.items 没有配图字段），需要看图请改用排序题的 items[].img",
+        "现场确认每个构件确实站在同一观察点可见"
+      ]
+    },
+    {
+      "presetKey": "T07-fantasy-festival",
+      "version": 1,
+      "title": "原创奇幻节日（结构预设）",
+      "purpose": "完成小任务后选择帮助方式，分支只做呈现与走向，完成证明仍由题目给出。",
+      "category": "T07",
+      "validationMethod": 3,
+      "capabilities": [
+        "qaPick",
+        "branch"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T07-fantasy-festival.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "question",
+          "label": "求助后的选择问题",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "option1",
+          "label": "选项一",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "option2",
+          "label": "选项二",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确选项",
+          "kind": "CHOICE",
+          "options": [
+            "o1",
+            "o2"
+          ]
+        },
+        {
+          "key": "branchTitle",
+          "label": "分支步骤标题",
+          "kind": "TEXT",
+          "maxLength": 40
+        },
+        {
+          "key": "branchBody",
+          "label": "分支步骤正文",
+          "kind": "TEXT",
+          "maxLength": 200
+        },
+        {
+          "key": "outcomeLabel",
+          "label": "分支结果名称",
+          "kind": "TEXT",
+          "maxLength": 40
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues"
+        ]
+      },
+      "authorTodos": [
+        "发放的数字物品必须先在主题物资里声明，条件用 ITEM_HELD",
+        "分支终点必须写明 outcomeCode（模板已给稳定码），结局文案由作者补"
+      ]
+    },
+    {
+      "presetKey": "T08-multi-clue-investigation",
+      "version": 1,
+      "title": "多线索调查（结构预设）",
+      "purpose": "带节点级限时的多线索调查，最后一步指认；限时用既有 timer，指认仍走原题库判定。",
+      "category": "T08",
+      "validationMethod": 3,
+      "capabilities": [
+        "qaPick",
+        "timer"
+      ],
+      "presentationSections": [],
+      "templateFile": "templates/T08-multi-clue-investigation.json",
+      "fields": [
+        {
+          "key": "title",
+          "label": "玩法标题",
+          "kind": "TEXT",
+          "maxLength": 30,
+          "target": "request.title"
+        },
+        {
+          "key": "question",
+          "label": "指认问题",
+          "kind": "TEXT",
+          "maxLength": 120
+        },
+        {
+          "key": "suspect1",
+          "label": "嫌疑人一姓名",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "suspect2",
+          "label": "嫌疑人二姓名",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "suspect3",
+          "label": "嫌疑人三姓名",
+          "kind": "TEXT",
+          "maxLength": 16
+        },
+        {
+          "key": "rightAnswer",
+          "label": "正确嫌疑人",
+          "kind": "CHOICE",
+          "options": [
+            "s1",
+            "s2",
+            "s3"
+          ]
+        },
+        {
+          "key": "timerSeconds",
+          "label": "限时秒数",
+          "kind": "NUMBER",
+          "min": 60,
+          "max": 7200
+        },
+        {
+          "key": "feedback",
+          "label": "答后反馈",
+          "kind": "TEXT",
+          "maxLength": 60
+        }
+      ],
+      "cityBinding": {
+        "appliesAt": "THEME_NODE_BINDING",
+        "requiredRebinds": [
+          "nodeIds",
+          "locationKey",
+          "observedFact",
+          "answerValues",
+          "photoRefs"
+        ]
+      },
+      "authorTodos": [
+        "在编辑器补 accusation 段的头像、两个结局文案与已获证词（需先上传并审核人物照片）",
+        "限时秒数必须按现场步行与阅读节奏实测后填，模板给的只是上限内的默认"
+      ]
+    }
+  ]
+}

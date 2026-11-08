@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {
+      "op": "NODE_COMPLETED",
+      "nodeId": 900402
+    }
+  ],
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "待填：指认哪一位嫌疑人（最终一题复用图片单选，判定由服务端完成）",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "suspect_01",
+        "label": "待填：嫌疑人一",
+        "correct": true,
+        "fb": "待填：指认反馈",
+        "img": "/questo-theme-presets/T08-multi-clue-investigation/media/suspect-01.png",
+        "alt": "待填：嫌疑人一的头像照片"
+      },
+      {
+        "id": "suspect_02",
+        "label": "待填：嫌疑人二",
+        "correct": false,
+        "fb": "待填：错误指认反馈",
+        "img": "/questo-theme-presets/T08-multi-clue-investigation/media/suspect-02.png",
+        "alt": "待填：嫌疑人二的头像照片"
+      },
+      {
+        "id": "suspect_03",
+        "label": "待填：嫌疑人三",
+        "correct": false,
+        "fb": "待填：错误指认反馈",
+        "img": "/questo-theme-presets/T08-multi-clue-investigation/media/suspect-03.png",
+        "alt": "待填：嫌疑人三的头像照片"
+      }
+    ]
+  },
+  "accusation": {
+    "enabled": true,
+    "suspects": [
+      {
+        "id": "suspect_01",
+        "avatar": "/questo-theme-presets/T08-multi-clue-investigation/media/suspect-01.png",
+        "name": "待填：嫌疑人一",
+        "identity": "待填：身份",
+        "testimony": [
+          {
+            "key": "clue.clue_a",
+            "text": "待填：已获证词"
+          }
+        ]
+      },
+      {
+        "id": "suspect_02",
+        "avatar": "/questo-theme-presets/T08-multi-clue-investigation/media/suspect-02.png",
+        "name": "待填：嫌疑人二",
+        "identity": "待填：身份",
+        "testimony": [
+          {
+            "key": "clue.clue_b",
+            "text": "待填：已获证词"
+          }
+        ]
+      },
+      {
+        "id": "suspect_03",
+        "avatar": "/questo-theme-presets/T08-multi-clue-investigation/media/suspect-03.png",
+        "name": "待填：嫌疑人三",
+        "identity": "待填：身份"
+      }
+    ],
+    "introScreens": [
+      {
+        "title": "待填：指认前提示",
+        "body": "待填：指认前正文"
+      }
+    ],
+    "winScreen": "待填：正确指认结局文案",
+    "loseScreen": "待填：错误指认结局文案",
+    "corkboardImage": {
+      "img": "/questo-theme-presets/T08-multi-clue-investigation/media/corkboard.png",
+      "alt": "待填：结案板图替代文字"
+    },
+    "earlyAccuse": {
+      "allowed": false,
+      "recordAs": "待填：提前结案留痕说明（作者自写）"
+    }
+  },
+  "effects": [
+    {
+      "op": "SET",
+      "var": "clue.suspect_reason",
+      "value": 1
+    }
+  ],
+  "timer": {
+    "enabled": true,
+    "durationSeconds": 900,
+    "timeoutResult": "FAILED"
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

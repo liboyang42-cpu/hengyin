@@ -73,6 +73,13 @@ public class TopicTemplateListItemVO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Integer isOfficial;
 
+    /**
+     * 真实源语言(本基线正文只有中文)。货架不假装已支持多语:
+     * 没有译文就不下发翻译字段,由详情页给出 {@code translationStatus=SINGLE_LOCALE}。
+     */
+    @Schema(description = "内容源语言(BE-13):本基线恒为 zh-CN")
+    private String sourceLocale;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -109,4 +116,6 @@ public class TopicTemplateListItemVO {
     public void setEvidenceLevel(String evidenceLevel) { this.evidenceLevel = evidenceLevel; }
     public Integer getIsOfficial() { return isOfficial; }
     public void setIsOfficial(Integer isOfficial) { this.isOfficial = isOfficial; }
+    public String getSourceLocale() { return sourceLocale; }
+    public void setSourceLocale(String sourceLocale) { this.sourceLocale = sourceLocale; }
 }

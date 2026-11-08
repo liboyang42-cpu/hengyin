@@ -6,6 +6,9 @@ import com.chengyinhub.business.service.support.WeRunDecryptor;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
+import com.chengyinhub.web.metrics.GameSloMetrics;
+import com.chengyinhub.web.metrics.GameSloResult;
+import com.chengyinhub.web.metrics.GameSloRoute;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,10 @@ public class ApiPlayJourneyActionController extends BaseController {
     private ITopicRouteRuntimeService topicRouteRuntimeService;
     @Autowired(required = false)
     private IWeChatMiniSessionService weChatMiniSessionService;
+
+    /** OPS-01：只观测开局完成这一条路径；测试直接 new 时为 null。 */
+    @Autowired(required = false)
+    private GameSloMetrics gameSlo;
 
     @Operation(summary = "问问题")
     @PostMapping("/ask")
@@ -160,15 +167,35 @@ public class ApiPlayJourneyActionController extends BaseController {
     @Operation(summary = "完成开局流程")
     @PostMapping("/opening/complete")
     public AjaxResult completeOpening(@RequestBody(required = false) Map<String, Object> body) {
-        Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
-        if (topicRouteRuntimeService == null || body == null) return error("参数有误");
+        long startedAt = System.nanoTime();
+        // 未登录/参数缺失是业务拒绝；service 抛业务拒绝也记 rejected；其余异常原样外抛并按分类记录。
+        GameSloResult sloResult = GameSloResult.REJECTED;
         try {
-            return success(topicRouteRuntimeService.completeOpening(memberId, longOrZero(body.get("topicId")),
-                    longOrZero(body.get("activityId")), longOrZero(body.get("chapterId")),
-                    Convert.toInt(body.get("expectedVersion"))));
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            Long memberId = currentMemberId();
+            if (memberId == null) return error("请先登录");
+            if (topicRouteRuntimeService == null || body == null) return error("参数有误");
+            try {
+                AjaxResult response = success(topicRouteRuntimeService.completeOpening(memberId, longOrZero(body.get("topicId")),
+                        longOrZero(body.get("activityId")), longOrZero(body.get("chapterId")),
+                        Convert.toInt(body.get("expectedVersion"))));
+                sloResult = GameSloResult.SUCCESS;
+                return response;
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                sloResult = GameSloResult.REJECTED;
+                return error(e.getMessage());
+            } catch (RuntimeException e) {
+                sloResult = GameSloMetrics.classify(e);
+                throw e;
+            }
+        } finally {
+            // 每个请求恰好一次；不改原回包、不改原异常。
+            recordStart(sloResult, startedAt);
+        }
+    }
+
+    private void recordStart(GameSloResult result, long startedAt) {
+        if (gameSlo != null) {
+            gameSlo.recordStart(GameSloRoute.OPENING_COMPLETE, result, System.nanoTime() - startedAt);
         }
     }
 

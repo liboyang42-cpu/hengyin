@@ -103,7 +103,12 @@ public class GameplaySupportMatrixTest {
             Matcher mode = Pattern.compile("mode: '([^']+)'").matcher(entries.group(3));
             if (mode.find()) assertEquals(mode.group(1), row.path("mode").asText()); count++;
         }
-        assertEquals(32, count); assertTrue(rows.isEmpty());
+        // 客户端目录仍是 32 行(编辑器 UI 源,服务端不改)。矩阵多出的行只能是**已登记但客户端尚未跟上**
+        // 的那一个:逐字猜词有服务端完成证明(SUBMIT_HANGMAN 的 solved 事实),后端先放行发布,
+        // 客户端编辑器与 fixture 由 UI 负责人同批补(见 ui-inputs/V2.md)。除它之外任何多行都算漂移。
+        assertEquals(32, count);
+        assertEquals(new LinkedHashSet<>(java.util.Arrays.asList("hangman")), rows.keySet(),
+                "矩阵相对客户端目录只能多出已登记的新玩法:" + rows.keySet());
         Set<String> addons = new LinkedHashSet<>(); for (JsonNode row : GameplaySupportMatrix.view().path("addons")) addons.add(row.path("key").asText());
         // R5（2026-10-10 主人裁定）：作者端只再提供 4 个附加规则（限时/时段/排行榜/多人协作-待定义）；
         // 闭眼盲品、今日城市签改为玩法「形式」（在 ALL 里），沉默点单/作品命名/治愈音乐角/跨日慢任务不再提供但服务端继续支持存量。
@@ -112,7 +117,7 @@ public class GameplaySupportMatrixTest {
         assertEquals(4, count);
         for (String form : java.util.Arrays.asList("blindTaste", "dailySign")) assertTrue(source.contains("{ key: '" + form + "', section: '" + form + "'"), form);
         assertEquals(new LinkedHashSet<>(java.util.Arrays.asList("blindTaste", "silentOrder", "diyName", "musicCorner", "dailySign", "slowTask")), addons);
-        GameplaySupportMatrix.view().remove("types"); assertEquals(32, GameplaySupportMatrix.view().path("types").size());
+        GameplaySupportMatrix.view().remove("types"); assertEquals(33, GameplaySupportMatrix.view().path("types").size());
     }
 
     @Test void originalEffectDeclarationsDoNotInventACompletionProofBridge() {

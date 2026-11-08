@@ -1,0 +1,2903 @@
+{
+ "contract": "chengyin-content-contract-v1",
+ "contractVersion": 1,
+ "schema": "docs/contracts/content-schema.v1.json",
+ "generatedFor": "C04 / BE-07 / QA-07 first batch",
+ "note": "共用 golden vectors。后端 ContentContractV1Test 读取本文件并调用真实 AdvancedGameConfigValidator / AdvancedGamePublicProjection / PlayHelpUsagePolicy / PlayHelpRunQuotaPolicy / HangmanGameplay / AccusationTemplateSupport / AccusationOutcomePolicy / ContentCapabilityRequirements。期望值不是从被测 helper 回写生成；客户端（小程序 / iOS）未来读同一份。Java 执行状态见 REPORT：NOT_RUN 直到 VPS/CI。 sections 组：按 content-schema.v1.json 的段清单逐段给最小合法向量（真实 validator 断言），并给逐段拒绝向量；不是机械枚举。",
+ "limits": {
+  "notCoveredByPureHelpers": [
+   "adopt（模板采用链）没有纯 helper：本文件只覆盖 adoptedAdvancedConfigJson 字符串读回形状，真实采用/复制需 DB。",
+   "skip 的到达围栏在 AdvancedGameRuntimeServiceImpl.requireSkippable（读 DB 模板 validationMethod 4/5），本文件只覆盖阶梯中 SKIP 是否配置/可用；不得据此宣称到达围栏已测。",
+   "同 requestId 重放/异 payload 冲突的持久化事实在 play_attempt_log / game_command_receipt；本文件只覆盖 PlayHelpUsagePolicy 的 requestFactKey/requestFingerprint 纯函数，DB 幂等 NOT_RUN。",
+   "revision / answerPolicy / arrival 字段仍是待 owner 回签的提案，不做断言。",
+   "sections 组是保存/发布闸的段级覆盖，不证明客户端会渲染这些段，也不证明 DB 冻结/到达围栏。"
+  ]
+ },
+ "vectors": {
+  "save": [
+   {
+    "id": "save-first-batch-full-valid",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "谁拿走了钟表？",
+      "judge": true,
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅",
+        "correct": true
+       },
+       {
+        "id": "o3",
+        "label": "周老板"
+       }
+      ]
+     },
+     "accusation": {
+      "enabled": true,
+      "suspects": [
+       {
+        "id": "o1",
+        "name": "张医生",
+        "identity": "诊所医生",
+        "avatar": "/profile/upload/2026/11/08/o1.png"
+       },
+       {
+        "id": "o2",
+        "name": "李师傅",
+        "identity": "钟表匠",
+        "avatar": "/profile/upload/2026/11/08/o2.png",
+        "testimony": [
+         {
+          "key": "clue.a",
+          "text": "八点他还在铺子里"
+         }
+        ]
+       },
+       {
+        "id": "o3",
+        "name": "周老板",
+        "avatar": "https://cdn.example.test/o3.png"
+       }
+      ],
+      "introScreens": [
+       {
+        "text": "把线索钉上板子"
+       }
+      ],
+      "winScreen": "你指认了李师傅，证据链成立。",
+      "loseScreen": "这次指认没能说服任何人。",
+      "corkboardImage": {
+       "img": "/profile/upload/2026/11/08/board.png",
+       "alt": "线索板"
+      },
+      "earlyAccuse": {
+       "allowed": false
+      }
+     },
+     "hangman": {
+      "enabled": true,
+      "answer": "ENDLESS",
+      "format": [
+       "E",
+       "_",
+       "_",
+       "_",
+       "_",
+       "_",
+       "S"
+      ],
+      "aliases": [
+       "INFINITE"
+      ],
+      "caseSensitive": false
+     },
+     "hintLadder": [
+      {
+       "level": 1,
+       "type": "TEXT",
+       "payload": "检查钟摆的划痕",
+       "freeQuota": 0
+      },
+      {
+       "level": 2,
+       "type": "IMAGE",
+       "payload": "/profile/upload/2026/11/08/hint2.png",
+       "cost": {
+        "points": 10
+       },
+       "freeQuota": 0
+      },
+      {
+       "level": 3,
+       "type": "LETTER",
+       "payload": 2,
+       "freeQuota": 0
+      },
+      {
+       "level": 4,
+       "type": "DIGIT",
+       "freeQuota": 0
+      },
+      {
+       "level": 5,
+       "type": "ANSWER",
+       "payload": "答案在钟摆后面",
+       "cost": {
+        "points": 30
+       },
+       "freeQuota": 0
+      },
+      {
+       "level": 6,
+       "type": "SKIP",
+       "freeQuota": 0
+      }
+     ],
+     "hintFreeUsesPerRun": 2
+    },
+    "expect": {
+     "ok": true,
+     "mechanic": true,
+     "present": "inline",
+     "ladderSize": 6,
+     "quota": 2
+    }
+   },
+   {
+    "id": "save-legacy-minimal-no-new-sections",
+    "config": {
+     "schemaVersion": 1
+    },
+    "expect": {
+     "ok": true,
+     "mechanic": false,
+     "present": "fullscreen",
+     "quota": null
+    }
+   },
+   {
+    "id": "save-reject-unsupported-schema-version",
+    "config": {
+     "schemaVersion": 2
+    },
+    "expect": {
+     "rejectContains": "版本不支持"
+    }
+   },
+   {
+    "id": "save-reject-location-hint-level",
+    "config": {
+     "schemaVersion": 1,
+     "hintLadder": [
+      {
+       "level": 1,
+       "type": "LOCATION",
+       "freeQuota": 0
+      }
+     ]
+    },
+    "expect": {
+     "rejectContains": "位置类帮助"
+    }
+   },
+   {
+    "id": "save-reject-per-level-free-quota",
+    "config": {
+     "schemaVersion": 1,
+     "hintLadder": [
+      {
+       "level": 1,
+       "type": "TEXT",
+       "payload": "看钟摆",
+       "freeQuota": 1
+      }
+     ]
+    },
+    "expect": {
+     "rejectContains": "hintFreeUsesPerRun"
+    }
+   },
+   {
+    "id": "save-reject-quota-out-of-range",
+    "config": {
+     "schemaVersion": 1,
+     "hintFreeUsesPerRun": 1001
+    },
+    "expect": {
+     "rejectContains": "0 至 1000"
+    }
+   },
+   {
+    "id": "save-reject-hangman-format-prefill-mismatch",
+    "config": {
+     "schemaVersion": 1,
+     "hangman": {
+      "enabled": true,
+      "answer": "ENDLESS",
+      "format": [
+       "E",
+       "X",
+       "",
+       "",
+       "",
+       "",
+       "S"
+      ]
+     }
+    },
+    "expect": {
+     "rejectContains": "不符"
+    }
+   },
+   {
+    "id": "save-reject-accusation-second-answer-source",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "谁拿走了钟表？",
+      "judge": true,
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅",
+        "correct": true
+       }
+      ]
+     },
+     "accusation": {
+      "enabled": true,
+      "correctSuspectId": "o2",
+      "suspects": [
+       {
+        "id": "o1",
+        "name": "张医生",
+        "avatar": "/profile/upload/2026/11/08/o1.png"
+       },
+       {
+        "id": "o2",
+        "name": "李师傅",
+        "avatar": "/profile/upload/2026/11/08/o2.png"
+       }
+      ],
+      "winScreen": "成立。",
+      "loseScreen": "不成立。"
+     }
+    },
+    "expect": {
+     "rejectContains": "不支持的配置字段"
+    }
+   }
+  ],
+  "publicProjection": [
+   {
+    "id": "public-first-batch-hides-private-values",
+    "configRef": "save-first-batch-full-valid",
+    "expect": {
+     "present": "inline",
+     "rootAbsentKeys": [
+      "hintLadder",
+      "hintFreeUsesPerRun",
+      "answer",
+      "aliases",
+      "format"
+     ],
+     "hangman": {
+      "enabled": true,
+      "length": 7,
+      "blankCount": 5,
+      "caseSensitive": false
+     },
+     "hangmanAbsentKeys": [
+      "answer",
+      "aliases",
+      "format"
+     ],
+     "accusation": {
+      "enabled": true,
+      "suspectCount": 3,
+      "suspectNames": [
+       "张医生",
+       "李师傅",
+       "周老板"
+      ],
+      "earlyAllowed": false,
+      "testimonyCount": 0
+     },
+     "accusationAbsentKeys": [
+      "correct",
+      "winScreen",
+      "loseScreen",
+      "recordAs",
+      "correctSuspectId"
+     ],
+     "qaOptionAbsentKeys": [
+      "correct",
+      "fb",
+      "fbImgs"
+     ],
+     "forbiddenSubstrings": [
+      "ENDLESS",
+      "INFINITE",
+      "你指认了李师傅",
+      "这次指认没能说服任何人",
+      "八点他还在铺子里",
+      "检查钟摆的划痕",
+      "答案在钟摆后面"
+     ]
+    }
+   },
+   {
+    "id": "public-legacy-minimal-stays-empty",
+    "config": {
+     "schemaVersion": 1
+    },
+    "expect": {
+     "present": "fullscreen",
+     "rootAbsentKeys": [
+      "hintLadder",
+      "hintFreeUsesPerRun",
+      "hangman",
+      "accusation"
+     ],
+     "qaEnabled": false
+    }
+   }
+  ],
+  "freeze": [
+   {
+    "id": "freeze-adopted-string-and-run-quota-same-value",
+    "snapshot": {
+     "nodeConfigs": {
+      "31": {
+       "hintFreeUsesPerRun": 2,
+       "hintLadder": [
+        {
+         "level": 1,
+         "type": "TEXT",
+         "payload": "看钟摆",
+         "freeQuota": 0
+        }
+       ]
+      }
+     },
+     "nodeAnswers": {
+      "31": {
+       "advancedConfigJson": "{\"schemaVersion\":1,\"hintFreeUsesPerRun\":2}"
+      }
+     }
+    },
+    "frozenAnswer": {
+     "hintFreeUsesPerRun": 2,
+     "advancedConfigJson": "{\"schemaVersion\":1,\"hintFreeUsesPerRun\":2}"
+    },
+    "expect": {
+     "runFreeUses": 2,
+     "frozenUses": 2
+    }
+   }
+  ],
+  "runQuota": [
+   {
+    "id": "quota-root-and-node-agree",
+    "snapshot": {
+     "hintFreeUsesPerRun": 2,
+     "nodeConfigs": {
+      "31": {
+       "hintFreeUsesPerRun": 2
+      }
+     }
+    },
+    "expect": {
+     "value": 2
+    }
+   },
+   {
+    "id": "quota-root-and-node-conflict",
+    "snapshot": {
+     "hintFreeUsesPerRun": 2,
+     "nodeConfigs": {
+      "31": {
+       "hintFreeUsesPerRun": 3
+      }
+     }
+    },
+    "expect": {
+     "rejectReason": "PLAY_HELP_RUN_QUOTA_DECLARED_CONFLICT"
+    }
+   },
+   {
+    "id": "quota-ladder-without-n-defaults-zero",
+    "snapshot": {
+     "nodeAnswers": {
+      "31": {
+       "hintLadder": [
+        {
+         "level": 1,
+         "type": "TEXT"
+        }
+       ]
+      }
+     }
+    },
+    "expect": {
+     "value": 0
+    }
+   },
+   {
+    "id": "quota-old-run-without-n-or-ladder-is-legacy",
+    "snapshot": {
+     "nodeConfigs": {
+      "31": {
+       "qa": {
+        "enabled": true
+       }
+      }
+     }
+    },
+    "expect": {
+     "value": null
+    }
+   },
+   {
+    "id": "quota-explicit-zero-stays-zero",
+    "snapshot": {
+     "hintFreeUsesPerRun": 0
+    },
+    "expect": {
+     "value": 0
+    }
+   }
+  ],
+  "hintPolicy": [
+   {
+    "id": "hint-quota-available-makes-first-unlock-free",
+    "ladder": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "cost": {
+       "points": 10
+      },
+      "freeQuota": 0
+     },
+     {
+      "level": 2,
+      "type": "IMAGE",
+      "cost": {
+       "points": 20
+      },
+      "freeQuota": 0
+     },
+     {
+      "level": 3,
+      "type": "SKIP",
+      "freeQuota": 0
+     }
+    ],
+    "unlockedLevels": [],
+    "remainingFreeUses": 2,
+    "expect": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "usable": true,
+      "unlocked": false,
+      "free": true,
+      "costPoints": 0,
+      "freeQuota": 0,
+      "reason": null
+     },
+     {
+      "level": 2,
+      "type": "IMAGE",
+      "usable": true,
+      "unlocked": false,
+      "free": true,
+      "costPoints": 0,
+      "freeQuota": 0,
+      "reason": null
+     },
+     {
+      "level": 3,
+      "type": "SKIP",
+      "usable": true,
+      "unlocked": false,
+      "free": true,
+      "costPoints": 0,
+      "freeQuota": 0,
+      "reason": null
+     }
+    ]
+   },
+   {
+    "id": "hint-quota-exhausted-shows-author-cost",
+    "ladder": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "cost": {
+       "points": 10
+      },
+      "freeQuota": 0
+     },
+     {
+      "level": 2,
+      "type": "IMAGE",
+      "cost": {
+       "points": 20
+      },
+      "freeQuota": 0
+     },
+     {
+      "level": 3,
+      "type": "SKIP",
+      "freeQuota": 0
+     }
+    ],
+    "unlockedLevels": [],
+    "remainingFreeUses": 0,
+    "expect": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "usable": true,
+      "unlocked": false,
+      "free": false,
+      "costPoints": 10,
+      "freeQuota": 0,
+      "reason": null
+     },
+     {
+      "level": 2,
+      "type": "IMAGE",
+      "usable": true,
+      "unlocked": false,
+      "free": false,
+      "costPoints": 20,
+      "freeQuota": 0,
+      "reason": null
+     },
+     {
+      "level": 3,
+      "type": "SKIP",
+      "usable": true,
+      "unlocked": false,
+      "free": false,
+      "costPoints": 0,
+      "freeQuota": 0,
+      "reason": null
+     }
+    ]
+   },
+   {
+    "id": "hint-repeat-read-of-unlocked-level-is-free",
+    "ladder": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "cost": {
+       "points": 10
+      },
+      "freeQuota": 0
+     },
+     {
+      "level": 2,
+      "type": "IMAGE",
+      "cost": {
+       "points": 20
+      },
+      "freeQuota": 0
+     },
+     {
+      "level": 3,
+      "type": "SKIP",
+      "freeQuota": 0
+     }
+    ],
+    "unlockedLevels": [
+     1
+    ],
+    "remainingFreeUses": 0,
+    "expect": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "usable": true,
+      "unlocked": true,
+      "free": true,
+      "costPoints": 0,
+      "freeQuota": 0,
+      "reason": null
+     },
+     {
+      "level": 2,
+      "type": "IMAGE",
+      "usable": true,
+      "unlocked": false,
+      "free": false,
+      "costPoints": 20,
+      "freeQuota": 0,
+      "reason": null
+     },
+     {
+      "level": 3,
+      "type": "SKIP",
+      "usable": true,
+      "unlocked": false,
+      "free": false,
+      "costPoints": 0,
+      "freeQuota": 0,
+      "reason": null
+     }
+    ]
+   }
+  ],
+  "requestIdempotency": [
+   {
+    "id": "same-request-different-payload-same-fact-key-different-fingerprint",
+    "memberId": 7,
+    "scope": {
+     "topicId": 9001,
+     "activityId": 55,
+     "nodeId": 77,
+     "playInstance": "run-uuid-0001"
+    },
+    "requestId": "req-help-1",
+    "otherRequestId": "req-help-2",
+    "level": 2,
+    "free": false,
+    "chargedPoints": 10,
+    "otherLevel": 3,
+    "otherFree": true,
+    "otherChargedPoints": 0,
+    "expect": {
+     "sameRequestFactKeyIgnoresPayload": true,
+     "sameRequestDifferentPayloadChangesFingerprint": true,
+     "differentRequestChangesFactKey": true,
+     "sameInputsStayStable": true
+    }
+   }
+  ],
+  "skip": [
+   {
+    "id": "skip-configured-by-frozen-ladder",
+    "ladder": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "payload": "看钟摆",
+      "freeQuota": 0
+     },
+     {
+      "level": 2,
+      "type": "SKIP",
+      "freeQuota": 0
+     }
+    ],
+    "expect": {
+     "skipConfigured": true,
+     "skipUsable": true
+    }
+   },
+   {
+    "id": "skip-not-configured-without-skip-level",
+    "ladder": [
+     {
+      "level": 1,
+      "type": "TEXT",
+      "payload": "看钟摆",
+      "freeQuota": 0
+     }
+    ],
+    "expect": {
+     "skipConfigured": false,
+     "skipUsable": false
+    },
+    "arrivalFenceRule": "扫码(4)/现场到达(5)节点不能跳过：AdvancedGameRuntimeServiceImpl.requireSkippable 读 DB 模板 verification method；本 golden 不断言该 DB 围栏。"
+   }
+  ],
+  "hangman": [
+   {
+    "id": "hangman-format-prefill-endless",
+    "section": {
+     "enabled": true,
+     "answer": "ENDLESS",
+     "format": [
+      "E",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "S"
+     ],
+     "aliases": [
+      "INFINITE"
+     ],
+     "caseSensitive": false
+    },
+    "expect": {
+     "validateOk": true,
+     "safeConfig": {
+      "enabled": true,
+      "length": 7,
+      "blankCount": 5,
+      "caseSensitive": false
+     },
+     "projection": {
+      "display": "E_____S",
+      "length": 7,
+      "blankCount": 5,
+      "solved": false
+     },
+     "submits": [
+      {
+       "payload": {
+        "input": "NDLES"
+       },
+       "expect": {
+        "verdict": "CORRECT",
+        "answerText": "ENDLESS",
+        "display": "ENDLESS",
+        "solved": true,
+        "alreadySolved": false
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "hangman-alias-accepted-case-insensitively",
+    "section": {
+     "enabled": true,
+     "answer": "ENDLESS",
+     "format": [
+      "E",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "S"
+     ],
+     "aliases": [
+      "INFINITE"
+     ],
+     "caseSensitive": false
+    },
+    "expect": {
+     "validateOk": true,
+     "safeConfig": {
+      "enabled": true,
+      "length": 7,
+      "blankCount": 5,
+      "caseSensitive": false
+     },
+     "projection": {
+      "display": "E_____S",
+      "length": 7,
+      "blankCount": 5,
+      "solved": false
+     },
+     "submits": [
+      {
+       "payload": {
+        "input": "infinite"
+       },
+       "expect": {
+        "verdict": "CORRECT",
+        "answerText": "ENDLESS",
+        "display": "ENDLESS",
+        "solved": true,
+        "alreadySolved": false
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "hangman-legacy-no-format-exact-length",
+    "section": {
+     "enabled": true,
+     "answer": "LANES"
+    },
+    "expect": {
+     "validateOk": true,
+     "safeConfig": {
+      "enabled": true,
+      "length": 5,
+      "blankCount": 5,
+      "caseSensitive": false
+     },
+     "projection": {
+      "display": "_____",
+      "length": 5,
+      "blankCount": 5,
+      "solved": false
+     },
+     "submits": [
+      {
+       "payload": {
+        "input": "LANES"
+       },
+       "expect": {
+        "verdict": "CORRECT",
+        "answerText": "LANES",
+        "display": "LANES",
+        "solved": true,
+        "alreadySolved": false
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "hangman-wrong-submission-does-not-leak-answer",
+    "section": {
+     "enabled": true,
+     "answer": "ENDLESS",
+     "format": [
+      "E",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "S"
+     ]
+    },
+    "expect": {
+     "validateOk": true,
+     "safeConfig": {
+      "enabled": true,
+      "length": 7,
+      "blankCount": 5,
+      "caseSensitive": false
+     },
+     "projection": {
+      "display": "E_____S",
+      "length": 7,
+      "blankCount": 5,
+      "solved": false
+     },
+     "submits": [
+      {
+       "payload": {
+        "input": "NDLEX"
+       },
+       "expect": {
+        "verdict": "WRONG",
+        "answerTextAbsent": true,
+        "display": "ENDLEXS",
+        "solved": false,
+        "alreadySolved": false
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "hangman-reject-prefilled-slot-submission",
+    "section": {
+     "enabled": true,
+     "answer": "ENDLESS",
+     "format": [
+      "E",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "S"
+     ]
+    },
+    "expect": {
+     "validateOk": true,
+     "submits": [
+      {
+       "payload": {
+        "slots": {
+         "0": "E",
+         "1": "N",
+         "2": "D",
+         "3": "L",
+         "4": "E",
+         "5": "S"
+        }
+       },
+       "expect": {
+        "rejectContains": "已由题面给出"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "hangman-reject-format-count-mismatch",
+    "section": {
+     "enabled": true,
+     "answer": "ENDLESS",
+     "format": [
+      "E",
+      "_",
+      "_"
+     ]
+    },
+    "expect": {
+     "rejectContains": "槽数"
+    }
+   }
+  ],
+  "accusation": [
+   {
+    "id": "accusation-normal-and-early-closure",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "指认凶手",
+      "judge": true,
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅",
+        "correct": true
+       },
+       {
+        "id": "o3",
+        "label": "周老板"
+       }
+      ]
+     },
+     "accusation": {
+      "enabled": true,
+      "suspects": [
+       {
+        "id": "o1",
+        "name": "张医生",
+        "avatar": "/profile/upload/2026/11/08/o1.png"
+       },
+       {
+        "id": "o2",
+        "name": "李师傅",
+        "avatar": "/profile/upload/2026/11/08/o2.png",
+        "testimony": [
+         {
+          "key": "clue.a",
+          "text": "八点他还在铺子里"
+         }
+        ]
+       },
+       {
+        "id": "o3",
+        "name": "周老板",
+        "avatar": "/profile/upload/2026/11/08/o3.png"
+       }
+      ],
+      "winScreen": "你指认了李师傅，证据链成立。",
+      "loseScreen": "这次指认没能说服任何人。",
+      "earlyAccuse": {
+       "allowed": false
+      }
+     }
+    },
+    "expect": {
+     "validateOk": true,
+     "enabled": true,
+     "correctSuspectId": "o2",
+     "public": {
+      "enabled": true,
+      "suspectCount": 3,
+      "testimonyCount": 0,
+      "earlyAllowed": false
+     },
+     "forbiddenSubstrings": [
+      "correct",
+      "winScreen",
+      "loseScreen",
+      "recordAs",
+      "你指认了李师傅",
+      "这次指认没能说服任何人",
+      "八点他还在铺子里"
+     ],
+     "cases": [
+      {
+       "submitted": "o2",
+       "clueGateSatisfied": true,
+       "early": {
+        "allowed": false,
+        "recordAs": null
+       },
+       "remainingChances": 1,
+       "expect": {
+        "verdict": "CORRECT",
+        "correct": true,
+        "early": false,
+        "recordCode": null,
+        "canRetry": false,
+        "terminal": true,
+        "endingScreen": "winScreen",
+        "refuseCode": null
+       }
+      },
+      {
+       "submitted": "o1",
+       "clueGateSatisfied": true,
+       "early": {
+        "allowed": false,
+        "recordAs": null
+       },
+       "remainingChances": 1,
+       "expect": {
+        "verdict": "WRONG",
+        "correct": false,
+        "early": false,
+        "recordCode": null,
+        "canRetry": true,
+        "terminal": false,
+        "endingScreen": null,
+        "refuseCode": null
+       }
+      },
+      {
+       "submitted": "o1",
+       "clueGateSatisfied": true,
+       "early": {
+        "allowed": false,
+        "recordAs": null
+       },
+       "remainingChances": 0,
+       "expect": {
+        "verdict": "FAILED",
+        "correct": false,
+        "early": false,
+        "recordCode": null,
+        "canRetry": false,
+        "terminal": true,
+        "endingScreen": "loseScreen",
+        "refuseCode": null
+       }
+      },
+      {
+       "submitted": "o2",
+       "clueGateSatisfied": false,
+       "early": {
+        "allowed": false,
+        "recordAs": null
+       },
+       "remainingChances": 1,
+       "expect": {
+        "verdict": "REFUSED",
+        "correct": false,
+        "early": false,
+        "recordCode": null,
+        "canRetry": true,
+        "terminal": false,
+        "endingScreen": null,
+        "refuseCode": "ACCUSATION_EARLY_NOT_ALLOWED"
+       }
+      },
+      {
+       "submitted": "o2",
+       "clueGateSatisfied": false,
+       "early": {
+        "allowed": true,
+        "recordAs": "EARLY_CLOSED"
+       },
+       "remainingChances": 0,
+       "expect": {
+        "verdict": "CORRECT",
+        "correct": true,
+        "early": true,
+        "recordCode": "EARLY_CLOSED",
+        "canRetry": false,
+        "terminal": true,
+        "endingScreen": "winScreen",
+        "refuseCode": null
+       }
+      },
+      {
+       "submitted": "",
+       "clueGateSatisfied": true,
+       "early": {
+        "allowed": false,
+        "recordAs": null
+       },
+       "remainingChances": 1,
+       "expect": {
+        "verdict": "REFUSED",
+        "correct": false,
+        "early": false,
+        "recordCode": null,
+        "canRetry": true,
+        "terminal": false,
+        "endingScreen": null,
+        "refuseCode": "ACCUSATION_MISSING_SUSPECT"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "accusation-absent-means-ordinary-ending",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "谁拿走了钟表？",
+      "judge": true,
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅",
+        "correct": true
+       }
+      ]
+     }
+    },
+    "expect": {
+     "validateOk": true,
+     "enabled": false,
+     "publicEnabled": false,
+     "resultScreenNull": true
+    }
+   }
+  ],
+  "capability": [
+   {
+    "id": "capability-declared-covers-derived-requirements",
+    "snapshot": {
+     "thoughtChapters": [
+      {
+       "blocks": [
+        {
+         "type": "story"
+        },
+        {
+         "type": "image"
+        }
+       ],
+       "imgArr": [
+        "/profile/upload/2026/11/08/chapter.png"
+       ]
+      }
+     ],
+     "nodeAnswers": {
+      "31": {
+       "templatePresentation": {
+        "validationMethod": 1,
+        "imgUrl": "/profile/upload/2026/11/08/q.png",
+        "sensorType": "compass"
+       },
+       "nodePresentation": {
+        "imgUrl": "/profile/upload/2026/11/08/node.png"
+       }
+      }
+     },
+     "nodeConfigs": {
+      "31": {
+       "qa": {
+        "enabled": true
+       },
+       "hangman": {
+        "enabled": true
+       }
+      }
+     },
+     "routeMode": "BRANCH",
+     "themeConfig": {}
+    },
+    "required": [
+     {
+      "key": "answer.text",
+      "minVersion": 1
+     },
+     {
+      "key": "chapter.blocks",
+      "minVersion": 1
+     },
+     {
+      "key": "chapter.blocks.image",
+      "minVersion": 1
+     },
+     {
+      "key": "chapter.blocks.story",
+      "minVersion": 1
+     },
+     {
+      "key": "game.hangman",
+      "minVersion": 1
+     },
+     {
+      "key": "game.qa",
+      "minVersion": 1
+     },
+     {
+      "key": "media.image",
+      "minVersion": 1
+     },
+     {
+      "key": "route.branch",
+      "minVersion": 1
+     },
+     {
+      "key": "sensor.compass",
+      "minVersion": 1
+     },
+     {
+      "key": "station.list",
+      "minVersion": 1
+     },
+     {
+      "key": "theme.runtime",
+      "minVersion": 1
+     }
+    ],
+    "cases": [
+     {
+      "id": "all-declared-supported",
+      "platform": "miniprogram",
+      "clientVersion": "1.4.2",
+      "supportedCapabilities": "answer.text@1,chapter.blocks@1,chapter.blocks.image@1,chapter.blocks.story@1,game.hangman@1,game.qa@1,media.image@1,route.branch@1,sensor.compass@1,station.list@1,theme.runtime@1,extra.unknown@9",
+      "expect": {
+       "declared": true,
+       "supported": true,
+       "source": "DECLARED",
+       "missingKeys": []
+      }
+     },
+     {
+      "id": "missing-capabilities-reported",
+      "platform": "miniprogram",
+      "clientVersion": "1.4.2",
+      "supportedCapabilities": "answer.text@1,chapter.blocks@1,chapter.blocks.image@1,chapter.blocks.story@1",
+      "expect": {
+       "declared": true,
+       "supported": false,
+       "source": "DECLARED",
+       "missingKeys": [
+        "game.hangman",
+        "game.qa",
+        "media.image",
+        "route.branch",
+        "sensor.compass",
+        "station.list",
+        "theme.runtime"
+       ]
+      }
+     },
+     {
+      "id": "undeclared-is-unconfirmed-not-unsupported",
+      "platform": "miniprogram",
+      "clientVersion": "1.0.0",
+      "supportedCapabilities": "",
+      "expect": {
+       "declared": false,
+       "supported": null,
+       "source": "UNDECLARED",
+       "missingKeys": []
+      }
+     },
+     {
+      "id": "malformed-declaration-is-unconfirmed",
+      "platform": "ios",
+      "clientVersion": "1.0.0",
+      "supportedCapabilities": "media.image@x",
+      "expect": {
+       "declared": false,
+       "supported": null,
+       "source": "MALFORMED",
+       "missingKeys": []
+      }
+     },
+     {
+      "id": "partially-malformed-declaration-still-computes",
+      "platform": "ios",
+      "clientVersion": "1.0.0",
+      "supportedCapabilities": "answer.text@1,media.image@x",
+      "expect": {
+       "declared": true,
+       "supported": false,
+       "source": "DECLARED_MALFORMED",
+       "missingKeys": [
+        "chapter.blocks",
+        "chapter.blocks.image",
+        "chapter.blocks.story",
+        "game.hangman",
+        "game.qa",
+        "media.image",
+        "route.branch",
+        "sensor.compass",
+        "station.list",
+        "theme.runtime"
+       ]
+      }
+     }
+    ]
+   }
+  ],
+  "sections": [
+   {
+    "id": "section-timer",
+    "section": "timer",
+    "config": {
+     "schemaVersion": 1,
+     "timer": {
+      "enabled": true,
+      "durationSeconds": 10,
+      "timeoutResult": "FAILED"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-random",
+    "section": "random",
+    "config": {
+     "schemaVersion": 1,
+     "random": {
+      "enabled": true,
+      "drawCount": 1,
+      "items": [
+       {
+        "id": "a",
+        "label": "线索 A",
+        "weight": 1
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-branch",
+    "section": "branch",
+    "config": {
+     "schemaVersion": 1,
+     "branch": {
+      "enabled": true,
+      "startStepId": "s",
+      "steps": [
+       {
+        "id": "s",
+        "terminal": true,
+        "options": []
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-leaderboard",
+    "section": "leaderboard",
+    "config": {
+     "schemaVersion": 1,
+     "leaderboard": {
+      "enabled": true,
+      "metric": "ELAPSED_TIME",
+      "scope": "ACTIVITY",
+      "limit": 1
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-multiplayer",
+    "section": "multiplayer",
+    "config": {
+     "schemaVersion": 1,
+     "multiplayer": {
+      "enabled": true,
+      "mode": "SEQUENTIAL",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "roles": [
+       {
+        "id": "r",
+        "label": "同伴",
+        "min": 2,
+        "max": 2
+       }
+      ],
+      "turnOrder": [
+       "r"
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-timeWindow",
+    "section": "timeWindow",
+    "config": {
+     "schemaVersion": 1,
+     "timeWindow": {
+      "enabled": true,
+      "openFrom": "09:00",
+      "openTo": "18:00"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-blindTaste",
+    "section": "blindTaste",
+    "config": {
+     "schemaVersion": 1,
+     "blindTaste": {
+      "enabled": true,
+      "title": "盲品",
+      "answerKey": "a",
+      "options": [
+       {
+        "key": "a",
+        "label": "咖啡"
+       },
+       {
+        "key": "b",
+        "label": "茶"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-silentOrder",
+    "section": "silentOrder",
+    "config": {
+     "schemaVersion": 1,
+     "silentOrder": {
+      "enabled": true,
+      "title": "沉默点单"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-diyName",
+    "section": "diyName",
+    "config": {
+     "schemaVersion": 1,
+     "diyName": {
+      "enabled": true,
+      "title": "作品命名"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-musicCorner",
+    "section": "musicCorner",
+    "config": {
+     "schemaVersion": 1,
+     "musicCorner": {
+      "enabled": true,
+      "title": "音乐角"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-backgroundMusic",
+    "section": "backgroundMusic",
+    "config": {
+     "schemaVersion": 1,
+     "backgroundMusic": {
+      "audioUrl": "https://cdn.example.test/bgm.mp3"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-steps",
+    "section": "steps",
+    "config": {
+     "schemaVersion": 1,
+     "steps": {
+      "enabled": true,
+      "goal": 100
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-dailySign",
+    "section": "dailySign",
+    "config": {
+     "schemaVersion": 1,
+     "dailySign": {
+      "enabled": true,
+      "poems": [
+       [
+        "春风十里"
+       ]
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-slowTask",
+    "section": "slowTask",
+    "config": {
+     "schemaVersion": 1,
+     "slowTask": {
+      "enabled": true,
+      "title": "跨日慢任务",
+      "unlockText": "明天再来"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-estimate",
+    "section": "estimate",
+    "config": {
+     "schemaVersion": 1,
+     "estimate": {
+      "enabled": true,
+      "title": "估数",
+      "min": 0,
+      "max": 100,
+      "answer": 50,
+      "tolerance": 10
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-pricePair",
+    "section": "pricePair",
+    "config": {
+     "schemaVersion": 1,
+     "pricePair": {
+      "enabled": true,
+      "title": "猜图",
+      "items": [
+       {
+        "id": "a",
+        "name": "图一",
+        "correct": true
+       },
+       {
+        "id": "b",
+        "name": "图二"
+       },
+       {
+        "id": "c",
+        "name": "图三"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-hiddenObject",
+    "section": "hiddenObject",
+    "config": {
+     "schemaVersion": 1,
+     "hiddenObject": {
+      "enabled": true,
+      "title": "找东西",
+      "imageUrl": "https://cdn.example.test/pic.png",
+      "hotspots": [
+       {
+        "id": "a",
+        "label": "钟",
+        "x": 0.1,
+        "y": 0.1,
+        "r": 0.05
+       },
+       {
+        "id": "b",
+        "label": "表",
+        "x": 0.5,
+        "y": 0.5,
+        "r": 0.05
+       },
+       {
+        "id": "c",
+        "label": "锁",
+        "x": 0.9,
+        "y": 0.9,
+        "r": 0.05
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-predict",
+    "section": "predict",
+    "config": {
+     "schemaVersion": 1,
+     "predict": {
+      "enabled": true,
+      "question": "今天哪款卖最多",
+      "closeAtHour": 20,
+      "options": [
+       {
+        "key": "a",
+        "label": "拿铁"
+       },
+       {
+        "key": "b",
+        "label": "美式"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-qa-type",
+    "section": "qa",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "TYPE",
+      "title": "打字问答",
+      "answerText": "钟摆"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-qa-pick",
+    "section": "qa",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "选项问答",
+      "options": [
+       {
+        "id": "a",
+        "label": "左",
+        "correct": true
+       },
+       {
+        "id": "b",
+        "label": "右"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-qa-shot",
+    "section": "qa",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "SHOT",
+      "title": "拍照打卡"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-scan",
+    "section": "scan",
+    "config": {
+     "schemaVersion": 1,
+     "scan": {
+      "enabled": true,
+      "kind": "NONE"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-sort",
+    "section": "sort",
+    "config": {
+     "schemaVersion": 1,
+     "sort": {
+      "enabled": true,
+      "prompt": "按时间排序",
+      "items": [
+       {
+        "id": "a",
+        "label": "一"
+       },
+       {
+        "id": "b",
+        "label": "二"
+       }
+      ],
+      "answerOrder": [
+       "b",
+       "a"
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-match",
+    "section": "match",
+    "config": {
+     "schemaVersion": 1,
+     "match": {
+      "enabled": true,
+      "prompt": "连线",
+      "left": [
+       {
+        "id": "a",
+        "label": "左一"
+       },
+       {
+        "id": "b",
+        "label": "左二"
+       }
+      ],
+      "right": [
+       {
+        "id": "c",
+        "label": "右一"
+       },
+       {
+        "id": "d",
+        "label": "右二"
+       }
+      ],
+      "pairs": [
+       [
+        "a",
+        "c"
+       ],
+       [
+        "b",
+        "d"
+       ]
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-classify",
+    "section": "classify",
+    "config": {
+     "schemaVersion": 1,
+     "classify": {
+      "enabled": true,
+      "prompt": "分类",
+      "bins": [
+       {
+        "id": "x",
+        "label": "甲"
+       },
+       {
+        "id": "y",
+        "label": "乙"
+       }
+      ],
+      "items": [
+       {
+        "id": "a",
+        "label": "卡一"
+       },
+       {
+        "id": "b",
+        "label": "卡二"
+       }
+      ],
+      "answer": {
+       "a": "x",
+       "b": "y"
+      }
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-compare",
+    "section": "compare",
+    "config": {
+     "schemaVersion": 1,
+     "compare": {
+      "enabled": true,
+      "prompt": "对照",
+      "left": {
+       "label": "旧版",
+       "items": [
+        {
+         "id": "a",
+         "time": "1",
+         "text": "一"
+        },
+        {
+         "id": "b",
+         "time": "2",
+         "text": "二"
+        }
+       ]
+      },
+      "right": {
+       "label": "新版",
+       "items": [
+        {
+         "id": "c",
+         "time": "1",
+         "text": "三"
+        },
+        {
+         "id": "d",
+         "time": "2",
+         "text": "四"
+        }
+       ]
+      },
+      "answer": [
+       "a"
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-profile",
+    "section": "profile",
+    "config": {
+     "schemaVersion": 1,
+     "profile": {
+      "enabled": true,
+      "questions": [
+       {
+        "key": "name",
+        "label": "你怎么称呼",
+        "kind": "text"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-photoCheck",
+    "section": "photoCheck",
+    "config": {
+     "schemaVersion": 1,
+     "photoCheck": {
+      "enabled": true,
+      "title": "拍照审核",
+      "requirement": "拍到钟摆",
+      "maxTries": 1,
+      "fallback": "retake"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-album",
+    "section": "album",
+    "config": {
+     "schemaVersion": 1,
+     "album": {
+      "enabled": true,
+      "images": [
+       {
+        "url": "https://cdn.example.test/a.png"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-note",
+    "section": "note",
+    "config": {
+     "schemaVersion": 1,
+     "note": {
+      "enabled": true,
+      "title": "留言",
+      "prompt": "写给后来的人"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-typeIn",
+    "section": "typeIn",
+    "config": {
+     "schemaVersion": 1,
+     "typeIn": {
+      "enabled": true,
+      "title": "限时打字",
+      "target": "钟摆",
+      "seconds": 3
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-coinFlip",
+    "section": "coinFlip",
+    "config": {
+     "schemaVersion": 1,
+     "coinFlip": {
+      "enabled": true,
+      "heads": {
+       "action": "向前一步"
+      },
+      "tails": {
+       "action": "原地不动"
+      }
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-diceRoll",
+    "section": "diceRoll",
+    "config": {
+     "schemaVersion": 1,
+     "diceRoll": {
+      "enabled": true,
+      "faces": [
+       "一",
+       "二",
+       "三",
+       "四",
+       "五",
+       "六"
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-reaction",
+    "section": "reaction",
+    "config": {
+     "schemaVersion": 1,
+     "reaction": {
+      "enabled": true,
+      "rounds": 1,
+      "goalMs": 120
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-ballShake",
+    "section": "ballShake",
+    "config": {
+     "schemaVersion": 1,
+     "ballShake": {
+      "enabled": true,
+      "goal": 1
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-quietHold",
+    "section": "quietHold",
+    "config": {
+     "schemaVersion": 1,
+     "quietHold": {
+      "enabled": true,
+      "seconds": 5
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-compass",
+    "section": "compass",
+    "config": {
+     "schemaVersion": 1,
+     "compass": {
+      "enabled": true,
+      "bearing": 0,
+      "tolerance": 5,
+      "holdSeconds": 1
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-shout",
+    "section": "shout",
+    "config": {
+     "schemaVersion": 1,
+     "shout": {
+      "enabled": true,
+      "seconds": 5
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-countdown",
+    "section": "countdown",
+    "config": {
+     "schemaVersion": 1,
+     "countdown": {
+      "enabled": true,
+      "seconds": 5,
+      "doneText": "时间到"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-stopwatch",
+    "section": "stopwatch",
+    "config": {
+     "schemaVersion": 1,
+     "stopwatch": {
+      "enabled": true,
+      "targetSeconds": 3,
+      "toleranceMs": 50
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-clueTransform",
+    "section": "clueTransform",
+    "config": {
+     "schemaVersion": 1,
+     "clueTransform": {
+      "mode": "MIRROR"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-arrivalPolicy",
+    "section": "arrivalPolicy",
+    "config": {
+     "schemaVersion": 1,
+     "arrivalPolicy": {
+      "version": 1,
+      "radiusMeters": 50,
+      "maxAccuracyMeters": 80
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-arrivalReading",
+    "section": "arrivalReading",
+    "config": {
+     "schemaVersion": 1,
+     "arrivalReading": {
+      "level": 1
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-clues",
+    "section": "clues",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789ab": "钟摆"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-requires",
+    "section": "requires",
+    "config": {
+     "schemaVersion": 1,
+     "requires": [
+      {
+       "op": "EQ",
+       "var": "counter.stage",
+       "value": 1
+      }
+     ]
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-effects",
+    "section": "effects",
+    "config": {
+     "schemaVersion": 1,
+     "effects": [
+      {
+       "op": "INC",
+       "var": "counter.stage",
+       "value": 1
+      }
+     ]
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-check",
+    "section": "check",
+    "config": {
+     "schemaVersion": 1,
+     "check": {
+      "enabled": true,
+      "checkId": "c1",
+      "tier": "easy"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-roleViews",
+    "section": "roleViews",
+    "config": {
+     "schemaVersion": 1,
+     "roleViews": {
+      "enabled": true,
+      "roles": [
+       {
+        "id": "A",
+        "label": "侦察"
+       },
+       {
+        "id": "B",
+        "label": "掩护"
+       }
+      ],
+      "views": [
+       {
+        "roleId": "A"
+       },
+       {
+        "roleId": "B"
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-variants",
+    "section": "variants",
+    "config": {
+     "schemaVersion": 1,
+     "timer": {
+      "enabled": true,
+      "durationSeconds": 10,
+      "timeoutResult": "FAILED"
+     },
+     "variants": [
+      {
+       "when": {
+        "op": "HAS_TAG",
+        "value": "tag.ready"
+       },
+       "relax": {
+        "timer.durationSeconds": "+100"
+       }
+      }
+     ]
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-root-meta-combo",
+    "section": "root",
+    "config": {
+     "schemaVersion": 1,
+     "present": "inline",
+     "mistakeTier": "hard",
+     "timer": {
+      "enabled": true,
+      "durationSeconds": 10,
+      "timeoutResult": "FAILED"
+     },
+     "hintLadder": [
+      {
+       "level": 1,
+       "type": "TEXT",
+       "payload": "看钟摆",
+       "freeQuota": 0
+      }
+     ],
+     "hintFreeUsesPerRun": 3,
+     "hangman": {
+      "enabled": true,
+      "answer": "ENDLESS",
+      "format": [
+       "E",
+       "_",
+       "_",
+       "_",
+       "_",
+       "_",
+       "S"
+      ]
+     },
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "谁拿走了钟表？",
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅",
+        "correct": true
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "reject-timer-duration-below-floor",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "timer": {
+      "enabled": true,
+      "durationSeconds": 9,
+      "timeoutResult": "FAILED"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "计时时长"
+    }
+   },
+   {
+    "id": "reject-random-draw-over-items",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "random": {
+      "enabled": true,
+      "drawCount": 2,
+      "items": [
+       {
+        "id": "a",
+        "label": "A",
+        "weight": 1
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "抽取数量不能超过物品数量"
+    }
+   },
+   {
+    "id": "reject-sort-answer-missing-item",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "sort": {
+      "enabled": true,
+      "prompt": "排",
+      "items": [
+       {
+        "id": "a",
+        "label": "A"
+       },
+       {
+        "id": "b",
+        "label": "B"
+       }
+      ],
+      "answerOrder": [
+       "a"
+      ]
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "排序答案必须覆盖全部待排项"
+    }
+   },
+   {
+    "id": "reject-match-side-unbalanced",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "match": {
+      "enabled": true,
+      "prompt": "连",
+      "left": [
+       {
+        "id": "a",
+        "label": "A"
+       },
+       {
+        "id": "b",
+        "label": "B"
+       }
+      ],
+      "right": [
+       {
+        "id": "c",
+        "label": "C"
+       }
+      ],
+      "pairs": [
+       [
+        "a",
+        "c"
+       ]
+      ]
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "连线题右侧须为"
+    }
+   },
+   {
+    "id": "reject-classify-answer-unknown-bin",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "classify": {
+      "enabled": true,
+      "prompt": "分",
+      "bins": [
+       {
+        "id": "x",
+        "label": "X"
+       },
+       {
+        "id": "y",
+        "label": "Y"
+       }
+      ],
+      "items": [
+       {
+        "id": "a",
+        "label": "A"
+       },
+       {
+        "id": "b",
+        "label": "B"
+       }
+      ],
+      "answer": {
+       "a": "x",
+       "b": "z"
+      }
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "分类答案引用了不存在的分类"
+    }
+   },
+   {
+    "id": "reject-compare-effects-unsupported",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "compare": {
+      "enabled": true,
+      "prompt": "对照",
+      "left": {
+       "label": "左",
+       "items": [
+        {
+         "id": "a",
+         "time": "1",
+         "text": "一"
+        },
+        {
+         "id": "b",
+         "time": "2",
+         "text": "二"
+        }
+       ]
+      },
+      "right": {
+       "label": "右",
+       "items": [
+        {
+         "id": "c",
+         "time": "1",
+         "text": "三"
+        },
+        {
+         "id": "d",
+         "time": "2",
+         "text": "四"
+        }
+       ]
+      },
+      "answer": [
+       "a"
+      ],
+      "effects": [
+       {
+        "op": "INC",
+        "var": "counter.x",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "对照题不支持 effects"
+    }
+   },
+   {
+    "id": "reject-background-music-enabled-flag",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "backgroundMusic": {
+      "enabled": true,
+      "audioUrl": "https://cdn.example.test/bgm.mp3"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "背景音乐不使用 enabled"
+    }
+   },
+   {
+    "id": "reject-photoCheck-maxTries-zero",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "photoCheck": {
+      "enabled": true,
+      "title": "拍",
+      "requirement": "拍到",
+      "maxTries": 0,
+      "fallback": "retake"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "拍照审核的可拍次数"
+    }
+   },
+   {
+    "id": "reject-arrivalReading-unknown-key",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "arrivalReading": {
+      "level": 1,
+      "secret": 1
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "到达读数包含未知字段"
+    }
+   },
+   {
+    "id": "reject-check-tier",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "check": {
+      "enabled": true,
+      "checkId": "c1",
+      "tier": "nightmare"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "tier"
+    }
+   },
+   {
+    "id": "reject-clues-key-shape",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.bad": "x"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "线索标识不合法"
+    }
+   },
+   {
+    "id": "section-hangman",
+    "section": "hangman",
+    "config": {
+     "schemaVersion": 1,
+     "hangman": {
+      "enabled": true,
+      "answer": "ENDLESS",
+      "format": [
+       "E",
+       "_",
+       "_",
+       "_",
+       "_",
+       "_",
+       "S"
+      ],
+      "aliases": [
+       "INFINITE"
+      ],
+      "caseSensitive": false
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-hintLadder",
+    "section": "hintLadder",
+    "config": {
+     "schemaVersion": 1,
+     "hintLadder": [
+      {
+       "level": 1,
+       "type": "TEXT",
+       "payload": "检查钟摆的划痕",
+       "freeQuota": 0
+      },
+      {
+       "level": 2,
+       "type": "IMAGE",
+       "payload": "/profile/upload/2026/11/08/hint2.png",
+       "cost": {
+        "points": 10
+       },
+       "freeQuota": 0
+      },
+      {
+       "level": 3,
+       "type": "LETTER",
+       "payload": 2,
+       "freeQuota": 0
+      },
+      {
+       "level": 4,
+       "type": "DIGIT",
+       "freeQuota": 0
+      },
+      {
+       "level": 5,
+       "type": "ANSWER",
+       "payload": "答案在钟摆后面",
+       "cost": {
+        "points": 30
+       },
+       "freeQuota": 0
+      },
+      {
+       "level": 6,
+       "type": "SKIP",
+       "freeQuota": 0
+      }
+     ]
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-hintFreeUsesPerRun",
+    "section": "hintFreeUsesPerRun",
+    "config": {
+     "schemaVersion": 1,
+     "hintFreeUsesPerRun": 2
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-accusation",
+    "section": "accusation",
+    "config": {
+     "schemaVersion": 1,
+     "qa": {
+      "enabled": true,
+      "mode": "PICK",
+      "title": "谁拿走了钟表？",
+      "judge": true,
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅",
+        "correct": true
+       },
+       {
+        "id": "o3",
+        "label": "周老板"
+       }
+      ]
+     },
+     "accusation": {
+      "enabled": true,
+      "suspects": [
+       {
+        "id": "o1",
+        "name": "张医生",
+        "identity": "诊所医生",
+        "avatar": "/profile/upload/2026/11/08/o1.png"
+       },
+       {
+        "id": "o2",
+        "name": "李师傅",
+        "identity": "钟表匠",
+        "avatar": "/profile/upload/2026/11/08/o2.png",
+        "testimony": [
+         {
+          "key": "clue.a",
+          "text": "八点他还在铺子里"
+         }
+        ]
+       },
+       {
+        "id": "o3",
+        "name": "周老板",
+        "avatar": "https://cdn.example.test/o3.png"
+       }
+      ],
+      "introScreens": [
+       {
+        "text": "把线索钉上板子"
+       }
+      ],
+      "winScreen": "你指认了李师傅，证据链成立。",
+      "loseScreen": "这次指认没能说服任何人。",
+      "corkboardImage": {
+       "img": "/profile/upload/2026/11/08/board.png",
+       "alt": "线索板"
+      },
+      "earlyAccuse": {
+       "allowed": false
+      }
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-clues-name-twenty-chars",
+    "section": "clues",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789ab": "一二三四五六七八九十一二三四五六七八九十"
+     }
+    },
+    "expect": {
+     "accepted": true
+    }
+   },
+   {
+    "id": "section-clues-name-nbsp-is-not-blank",
+    "section": "clues",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789ab": " "
+     }
+    },
+    "expect": {
+     "accepted": true
+    },
+    "note": "Java trim() 不去掉 >U+0020 的字符，所以 NBSP 与服务器一致地算非空"
+   },
+   {
+    "id": "reject-clues-empty-name",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789ab": ""
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "线索名称须为 1 至 20 字"
+    }
+   },
+   {
+    "id": "reject-clues-whitespace-only-name",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789ab": "   "
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "线索名称须为 1 至 20 字"
+    }
+   },
+   {
+    "id": "reject-clues-name-too-long",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789ab": "一二三四五六七八九十一二三四五六七八九十一"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "线索名称须为 1 至 20 字"
+    }
+   },
+   {
+    "id": "reject-clues-uppercase-hex-key",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "clues": {
+      "clue.h_0123456789AB": "钟摆"
+     }
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "线索标识不合法"
+    }
+   },
+   {
+    "id": "reject-clues-non-object",
+    "section": "reject",
+    "config": {
+     "schemaVersion": 1,
+     "clues": []
+    },
+    "expect": {
+     "accepted": false,
+     "rejectContains": "线索名称表格式不正确"
+    }
+   }
+  ]
+ }
+}

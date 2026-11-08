@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "presetCode": "T04-era-trace",
+  "templateType": "T04",
+  "title": "年代追索（字段映射样本）",
+  "contractSource": "施工文档.md v1.3.2 §0.1 T04；§6 T04；§7 材料清单",
+  "contentStatus": "MAPPING_READY",
+  "contentStatusReason": "仅完成题材到既有题型/模板字段的映射与发布闸验证；未创作人物、剧情、谜题、谜底、结局，未绑定真实地点。当前状态是 MAPPING_READY，不是可发布成品，也不是竞品正文/素材的转写",
+  "mediaStatus": "SPEC_ONLY",
+  "capabilities": [
+    "sort",
+    "qaPick"
+  ],
+  "requiredThemeItems": [],
+  "requiredStateKeys": [
+    "clue.archive_compared"
+  ],
+  "nodeIdPlaceholders": {
+    "900101": "档案对比站",
+    "900102": "变化确认站",
+    "900103": "保存与讲述站"
+  },
+  "nodes": [
+    "nodes/node-01.json",
+    "nodes/node-02.json",
+    "nodes/node-03.json"
+  ],
+  "bindings": [
+    "bindings/city-a.json",
+    "bindings/city-b.json"
+  ],
+  "notImplemented": [],
+  "reuse": "排序判题走既有 SUBMIT_SORT；图片选项不参与本范本，档案照片仅作排序项配图（既有 sort.items[].img）",
+  "mediaSpec": [
+    {
+      "id": "archive-01",
+      "kind": "ARCHIVE_PHOTO",
+      "status": "NOT_PRODUCED",
+      "path": "T04-era-trace/media/archive-01.png",
+      "spec": "年代档案照片一；须有可核出处或明确虚构标注"
+    },
+    {
+      "id": "archive-02",
+      "kind": "ARCHIVE_PHOTO",
+      "status": "NOT_PRODUCED",
+      "path": "T04-era-trace/media/archive-02.png",
+      "spec": "年代档案照片二"
+    },
+    {
+      "id": "now-01",
+      "kind": "OBSERVED_PHOTO",
+      "status": "NOT_PRODUCED",
+      "path": "T04-era-trace/media/now-01.png",
+      "spec": "现场对应观察照片；须发布者实拍并核验时点"
+    }
+  ],
+  "notVerified": [
+    "城市照片",
+    "地点核验",
+    "现场试玩",
+    "GPS与可达性",
+    "媒体产出",
+    "在VPS实际执行本验证类"
+  ],
+  "placeholderFields": [
+    "sort.answerOrder / qa.options[].label / feedback：均为待填，范本未编写剧情或真实年代事实"
+  ],
+  "productStatus": "MAPPING_READY_NOT_A_PRODUCT",
+  "chaptersForced": false,
+  "sourceRecords": [
+    {
+      "node": "nodes/node-01.json",
+      "templateTitle": "档案对比站（待填：发布者改写标题）",
+      "validationMethod": 0,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-02.json",
+      "templateTitle": "变化确认站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-03.json",
+      "templateTitle": "保存与讲述站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    }
+  ],
+  "publishBlockers": [
+    "所有『待填：』文本必须由发布者替换为真实正文、答案与反馈后才能发布",
+    "bindings/<city>.json 的 required 槽位必须全部有值且 bound=true（换城必须重绑）",
+    "mediaSpec 中 status=NOT_PRODUCED 的项必须有已授权的实际文件与来源标注",
+    "地点必须在地图确认坐标；未核验现场不得标成可上线"
+  ],
+  "dataSource": {
+    "noDiskPackageConsumed": true,
+    "playerAdoptionPath": "cms_member_template（审核真源）→ cms_template_library（货架投影）→ POST /api/template/adopt-draft",
+    "minimumSeed": "一作者真源行 + 一货架投影行；货架行只能由 submitTemplateToMarket 在个人审核通过后产生"
+  }
+}

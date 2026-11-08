@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "presetCode": "T08-multi-clue-investigation",
+  "templateType": "T08",
+  "title": "多线索调查（字段映射样本）",
+  "contractSource": "施工文档.md v1.3.2 §0.1 T08；§6 T08；CT-07 指认结案；M.7 指认模型",
+  "contentStatus": "MAPPING_READY",
+  "contentStatusReason": "仅完成题材到既有题型/模板字段的映射与发布闸验证；未创作人物、剧情、谜题、谜底、结局，未绑定真实地点。当前状态是 MAPPING_READY，不是可发布成品，也不是竞品正文/素材的转写",
+  "mediaStatus": "SPEC_ONLY",
+  "capabilities": [
+    "qaPick",
+    "accusation",
+    "timer"
+  ],
+  "requiredThemeItems": [],
+  "requiredStateKeys": [
+    "clue.clue_a",
+    "clue.clue_b",
+    "clue.suspect_reason"
+  ],
+  "nodeIdPlaceholders": {
+    "900401": "调查线索A站",
+    "900402": "调查线索B站",
+    "900403": "指认结案站"
+  },
+  "nodes": [
+    "nodes/node-01.json",
+    "nodes/node-02.json",
+    "nodes/node-03.json"
+  ],
+  "bindings": [
+    "bindings/city-a.json",
+    "bindings/city-b.json"
+  ],
+  "notImplemented": [
+    "全案总时钟（原文明确不立项）",
+    "自由证据组合推理引擎",
+    "提前指认（earlyAccuse.allowed=true）：缺『本局尚未走完』的既有服务端事实"
+  ],
+  "reuse": "计时仅用既有 timer（节点级，timeoutResult=FAILED，不设全案总时钟）；指认最终一题复用既有 qa PICK，对错真源只有 qa.options[].correct，accusation 不另存正确项；结案呈现用 G0 新增的 accusation 段（CT-07 配置映射）",
+  "mediaSpec": [
+    {
+      "id": "suspect-01",
+      "kind": "PORTRAIT",
+      "status": "NOT_PRODUCED",
+      "path": "T08-multi-clue-investigation/media/suspect-01.png",
+      "spec": "嫌疑人头像一（CT-07 图片指认需求）"
+    },
+    {
+      "id": "suspect-02",
+      "kind": "PORTRAIT",
+      "status": "NOT_PRODUCED",
+      "path": "T08-multi-clue-investigation/media/suspect-02.png",
+      "spec": "嫌疑人头像二"
+    },
+    {
+      "id": "suspect-03",
+      "kind": "PORTRAIT",
+      "status": "NOT_PRODUCED",
+      "path": "T08-multi-clue-investigation/media/suspect-03.png",
+      "spec": "嫌疑人头像三"
+    },
+    {
+      "id": "corkboard",
+      "kind": "CASE_BOARD",
+      "status": "NOT_PRODUCED",
+      "path": "T08-multi-clue-investigation/media/corkboard.png",
+      "spec": "结案板背景（CT-07 corkboardImage）"
+    }
+  ],
+  "notVerified": [
+    "城市照片",
+    "地点核验",
+    "现场试玩",
+    "GPS与可达性",
+    "媒体产出",
+    "在VPS实际执行本验证类"
+  ],
+  "placeholderFields": [
+    "timer.durationSeconds = 900：节点级计时时长，原文未给数值，须作者按现场节奏改写",
+    "accusation.earlyAccuse.allowed = false：提前结案缺少可核的本局事实来源，G0 在保存/发布期拒绝开启；productStatus 保持待产品裁定"
+  ],
+  "productStatus": "MAPPING_READY_NOT_A_PRODUCT",
+  "chaptersForced": false,
+  "mappingNotes": [
+    "CT-07 原文只列 suspects/introScreens/winScreen/loseScreen/corkboardImage/earlyAccuse，本样本不加字段",
+    "图片指认依赖 qa.options[].img + alt（G2 已接），判定仍交原 SUBMIT_QA"
+  ],
+  "sourceRecords": [
+    {
+      "node": "nodes/node-01.json",
+      "templateTitle": "调查线索A站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-02.json",
+      "templateTitle": "调查线索B站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-03.json",
+      "templateTitle": "指认结案站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    }
+  ],
+  "publishBlockers": [
+    "所有『待填：』文本必须由发布者替换为真实正文、答案与反馈后才能发布",
+    "bindings/<city>.json 的 required 槽位必须全部有值且 bound=true（换城必须重绑）",
+    "mediaSpec 中 status=NOT_PRODUCED 的项必须有已授权的实际文件与来源标注",
+    "地点必须在地图确认坐标；未核验现场不得标成可上线"
+  ],
+  "dataSource": {
+    "noDiskPackageConsumed": true,
+    "playerAdoptionPath": "cms_member_template（审核真源）→ cms_template_library（货架投影）→ POST /api/template/adopt-draft",
+    "minimumSeed": "一作者真源行 + 一货架投影行；货架行只能由 submitTemplateToMarket 在个人审核通过后产生"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "sort": {
+    "enabled": true,
+    "prompt": "${sortPrompt}",
+    "xp": 0,
+    "items": [
+      {
+        "id": "e1",
+        "label": "${item1}"
+      },
+      {
+        "id": "e2",
+        "label": "${item2}"
+      },
+      {
+        "id": "e3",
+        "label": "${item3}"
+      }
+    ],
+    "answerOrder": [
+      "e1",
+      "e2",
+      "e3"
+    ]
+  },
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": true,
+    "multi": false,
+    "title": "${question}",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "c1",
+        "label": "${choice1}",
+        "correct": false
+      },
+      {
+        "id": "c2",
+        "label": "${choice2}",
+        "correct": false
+      }
+    ]
+  }
+}

@@ -81,6 +81,9 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
 
         service = new CmsRegistrationServiceImpl();
         ReflectionTestUtils.setField(service, "platformMemberId", PLATFORM);
+        // M5 应计入队是强依赖:支付成功路径必须能注入它。
+        ReflectionTestUtils.setField(service, "marketingRevenuePostingService",
+                mock(com.chengyinhub.business.service.IMarketingRevenuePostingService.class));
         ReflectionTestUtils.setField(service, "growthService", mock(IGrowthService.class));
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activityMapper);

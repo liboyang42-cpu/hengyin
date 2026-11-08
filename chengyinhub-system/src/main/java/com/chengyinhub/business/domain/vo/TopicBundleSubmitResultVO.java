@@ -27,6 +27,14 @@ public class TopicBundleSubmitResultVO {
     private boolean playable;
     private String playableReason;
     private TopicPublicationStatusVO publicationStatus;
+    /**
+     * BE-06:本次发布落成的不可变内容修订(作者端据此显示/缓存「同一修订」)。
+     * 老主题没有任何修订行或旧调用时保持 null,不伪造。
+     */
+    private Long contentRevisionId;
+    private Long contentRevisionNo;
+    private Integer contentSchemaVersion;
+    private String contentSha256;
 
     private final Long topicId;
     private final Long auditTaskId;
@@ -67,6 +75,14 @@ public class TopicBundleSubmitResultVO {
     public void setPlayableReason(String playableReason) { this.playableReason = playableReason; }
     public TopicPublicationStatusVO getPublicationStatus() { return publicationStatus; }
     public void setPublicationStatus(TopicPublicationStatusVO publicationStatus) { this.publicationStatus = publicationStatus; }
+    public Long getContentRevisionId() { return contentRevisionId; }
+    public void setContentRevisionId(Long contentRevisionId) { this.contentRevisionId = contentRevisionId; }
+    public Long getContentRevisionNo() { return contentRevisionNo; }
+    public void setContentRevisionNo(Long contentRevisionNo) { this.contentRevisionNo = contentRevisionNo; }
+    public Integer getContentSchemaVersion() { return contentSchemaVersion; }
+    public void setContentSchemaVersion(Integer contentSchemaVersion) { this.contentSchemaVersion = contentSchemaVersion; }
+    public String getContentSha256() { return contentSha256; }
+    public void setContentSha256(String contentSha256) { this.contentSha256 = contentSha256; }
     public Long getTopicId() { return topicId; }
     public Long getAuditTaskId() { return auditTaskId; }
     public String getReviewState() { return reviewState; }

@@ -537,7 +537,30 @@ class PersonalGameplayRuntimeServiceTest {
         ObjectNode config=(ObjectNode)json.readTree("{\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"correct\"},\"sort\":{\"enabled\":true,\"items\":[{\"id\":\"a\"},{\"id\":\"b\"}],\"answerOrder\":[\"b\",\"a\"]},\"match\":{\"enabled\":true,\"left\":[{\"id\":\"a\"}],\"right\":[{\"id\":\"b\"}],\"pairs\":[[\"a\",\"b\"]]},\"classify\":{\"enabled\":true,\"items\":[{\"id\":\"a\"}],\"bins\":[{\"id\":\"b\"}],\"answer\":{\"a\":\"b\"}}}");
         ObjectNode answers=(ObjectNode)json.readTree("{\"qa\":{\"input\":\"correct\"},\"sort\":{\"order\":[\"b\",\"a\"]},\"match\":{\"pairs\":[[\"a\",\"b\"]]},\"classify\":{\"placement\":{\"a\":\"b\"}}}");
         assertTrue(AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));answers.with("qa").put("input","wrong");assertFalse(AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));
+        // 缺一整组 = 拒绝;伪造 passed = 拒绝。
         answers.remove("sort");assertThrows(IllegalArgumentException.class,()->AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));answers.putObject("sort").put("passed",true);assertThrows(IllegalArgumentException.class,()->AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config,answers));
+    }
+
+    /**
+     * 引导题组现在把逐字猜词也算客观题:它必须靠 {@code solved},不能靠客户端 passed,
+     * 也不能因为一次猜错就把整组判成通过。
+     */
+    @Test
+    void guideObjectiveGroupAcceptsHangmanOnlyAfterTheWordIsActuallySolved() {
+        ObjectNode config = new ObjectMapper().createObjectNode();
+        config.putObject("hangman").put("enabled", true).put("answer", "ORB")
+                .putArray("format").add("_").add("_").add("_");
+        ObjectNode answers = new ObjectMapper().createObjectNode();
+        answers.putObject("hangman").put("input", "XXX");
+        assertFalse(AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config, answers), "猜错不算通过");
+
+        answers.putObject("hangman").put("input", "ORB");
+        assertTrue(AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config, answers));
+
+        answers.putObject("hangman").put("passed", true);
+        assertThrows(IllegalArgumentException.class,
+                () -> AdvancedGameRuntimeServiceImpl.verifyObjectiveAnswers(config, answers),
+                "不接受客户端通过标记");
     }
     @Test void templateRulesCompileRealNodesOnceAndKeepLegacyWithoutRules() throws Exception {
         topic.setThemeRuntimeConfigJson(null);assertNull(service.compileTemplateRules(topic));

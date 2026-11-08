@@ -213,6 +213,8 @@ class TopicPublicationSizeEntryTest {
             ReflectionTestUtils.setField(service, "umsCreativeSquareService", square);
             ReflectionTestUtils.setField(service, "selfHostActivityService", activity);
             ReflectionTestUtils.setField(service, "mediaPublicationGuard", mock(AppMediaPublicationGuard.class));
+            com.chengyinhub.business.service.support.TopicPublicationTestWiring
+                    .installContentRevisionRecorder(service);
         }
 
         void assertNoPublicationEffects() {

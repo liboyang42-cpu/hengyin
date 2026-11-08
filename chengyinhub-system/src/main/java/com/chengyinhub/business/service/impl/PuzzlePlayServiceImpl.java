@@ -84,6 +84,7 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
         if (template != null && !Integer.valueOf(1).equals(template.getValidationMethod())
                 && !Integer.valueOf(3).equals(template.getValidationMethod())) template = null;
         if (template == null) throw new IllegalArgumentException("该节点未配置文字或选项谜题");
+        requireNoHintLadder(template, memberId, topicId, node, activityId);
         List<Integer> configuredLevels = new ArrayList<>();
         List<String> configuredHints = new ArrayList<>();
         if (StringUtils.isNotBlank(template.getHint1())) {
@@ -296,6 +297,12 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
         if (tpl == null || (StringUtils.isEmpty(tpl.getHint1()) && StringUtils.isEmpty(tpl.getHint2()))) {
             return hintFailure("该节点无提示");
         }
+        // 配了提示阶梯的节点,旧收费入口必须拒绝:两条链同时可用就是「一节点双扣」。
+        // 判据含本局冻结运行配置(内容快照模板不带 advancedConfigJson,只看字段会漏判)。
+        if (hintLadderConfigured(tpl)
+                || frozenLadderConfigured(memberId, ctx.topicId(), node, ctx.activityId())) {
+            return hintFailure("该节点已配置提示阶梯，请使用新的提示入口");
+        }
 
         int cost = hintUnlockCost();
         // 无规则/规则为0 = 功能未开闸,免费直出(兼容老版本客户端与灰度期)
@@ -359,6 +366,55 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
 
     private static NodeHintUnlockResult hintFailure(String message) {
         return new NodeHintUnlockResult(null, new NodeHintUnlockResult.Failure(500, message));
+    }
+
+    /**
+     * 该模板是否配了提示阶梯(BE-16)。配了就必须走 {@code /api/play/help},旧提示/积分解锁入口一律拒绝,
+     * 否则同一节点存在两条都能扣费的链 —— 一节点双扣。
+     *
+     * <p>判据只看冻结模板的 {@code advancedConfigJson} 里有没有非空 {@code hintLadder} 数组;
+     * 没配的旧节点零行为变化。
+     */
+    private static boolean hintLadderConfigured(CmsMemberTemplate template) {
+        if (template == null || StringUtils.isBlank(template.getAdvancedConfigJson())) return false;
+        try {
+            com.fasterxml.jackson.databind.JsonNode root =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(template.getAdvancedConfigJson());
+            com.fasterxml.jackson.databind.JsonNode ladder = root.path("hintLadder");
+            return ladder.isArray() && ladder.size() > 0;
+        } catch (Exception unusableConfig) {
+            // 坏 JSON 不在这里判:保存期已拒,读侧当「没配」保持旧行为,不因坏数据挡住老玩家。
+            return false;
+        }
+    }
+
+    /**
+     * 旧提示入口的统一闸:配了阶梯就拒绝,并说清该走哪个入口。
+     *
+     * <p>★ 必须同时看**本局冻结的节点运行配置**：内容快照里的模板
+     * ({@code NodeJourneySnapshot.contentTemplate}) 不带 {@code advancedConfigJson}，
+     * 只看模板字段会漏判 —— 那种情况下旧入口会放行，于是同一题既扣旧链的提示等级(降解谜分)
+     * 又扣新阶梯的积分，玩家被罚两次。冻结配置存在时以冻结为准。
+     */
+    private void requireNoHintLadder(CmsMemberTemplate template, Long memberId, Long topicId,
+            CmsTopicNode node, Long activityId) {
+        if (hintLadderConfigured(template) || frozenLadderConfigured(memberId, topicId, node, activityId)) {
+            throw new IllegalArgumentException("该节点已配置提示阶梯，请使用新的提示入口");
+        }
+    }
+
+    /** 本局冻结的节点运行配置里有没有 {@code hintLadder}。读不到就当没有（保持旧行为）。 */
+    private boolean frozenLadderConfigured(Long memberId, Long topicId, CmsTopicNode node, Long activityId) {
+        if (topicRouteRuntimeService == null || memberId == null || topicId == null || node == null) return false;
+        try {
+            com.fasterxml.jackson.databind.JsonNode frozen = topicRouteRuntimeService.nodeRuntimeConfig(
+                    memberId, topicId, node.getId(), activityId);
+            if (frozen == null) return false;
+            com.fasterxml.jackson.databind.JsonNode ladder = frozen.path("hintLadder");
+            return ladder.isArray() && ladder.size() > 0;
+        } catch (RuntimeException unavailable) {
+            return false;
+        }
     }
     private static NodeHintUnlockResult hintResult(CmsMemberTemplate template, int cost) {
         return new NodeHintUnlockResult(new NodeHintUnlockResult.Hints(template.getHint1(), template.getHint2(), cost), null);

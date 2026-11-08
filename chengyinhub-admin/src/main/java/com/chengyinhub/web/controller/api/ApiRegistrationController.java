@@ -32,6 +32,8 @@ import java.util.*;
 import java.util.function.Supplier;
 import com.alibaba.fastjson2.JSON;
 import org.springframework.http.ResponseEntity;
+import com.chengyinhub.web.metrics.GameSloMetrics;
+import com.chengyinhub.web.metrics.GameSloResult;
 
 import com.chengyinhub.common.utils.OwnershipUtils;
 /**
@@ -44,6 +46,13 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @Tag(name = "活动/主题报名")
 @RequestMapping("/api/registration")
 public class ApiRegistrationController extends BaseController {
+
+    /**
+     * OPS-01：只观测支付回调（退款回调不在此列）。观测失败绝不改变微信应答状态。
+     * 测试直接 new 控制器时为 null。
+     */
+    @Autowired(required = false)
+    private GameSloMetrics gameSlo;
 
     private static final Logger logger = LoggerFactory.getLogger(ApiRegistrationController.class);
 
@@ -547,7 +556,18 @@ public class ApiRegistrationController extends BaseController {
     @Anonymous
     public ResponseEntity<?> payCallback(@RequestBody String requestBody,
                                          @RequestHeader Map<String, String> headers) {
-        return callbackResponse(() -> wechatPayService.handlePayCallback(requestBody, headers));
+        long startedAt = System.nanoTime();
+        // 只有 2xx（已确认并提交）算成功；否则微信会重投，已付未确认是真实风险，按失败计。
+        GameSloResult sloResult = GameSloResult.FAULT;
+        try {
+            ResponseEntity<?> response = callbackResponse(() -> wechatPayService.handlePayCallback(requestBody, headers));
+            sloResult = response.getStatusCode().is2xxSuccessful() ? GameSloResult.SUCCESS : GameSloResult.FAULT;
+            return response;   // 原应答原样返回，埋点不改微信 ACK
+        } finally {
+            if (gameSlo != null) {
+                gameSlo.recordPayCallback(sloResult, System.nanoTime() - startedAt);
+            }
+        }
     }
 
     /**

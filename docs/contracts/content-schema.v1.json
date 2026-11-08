@@ -1,0 +1,4191 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://chengyin.invalid/contracts/content-schema.v1.json",
+ "title": "城瘾内容合同 v1 — 全量节点高级玩法段（作者保存闸 / 公开白名单 / 冻结与能力协商）",
+ "description": "C04 / BE-07 / QA-07 共同内容合同，首批（hintLadder / accusation / hangman / capability / envelope） + 全量段清单。只描述当前源码真实存在的段、字段与取值范围：字段与上下界逐条取自 AdvancedGameConfigValidator 与同目录既有 helper 的实现，不新建 DSL、不新建规则解释器、不新增 JSON schema 库。本文件是跨端声明产物，当前未接入运行时；运行时校验仍以 AdvancedGameConfigValidator 等原实现为准。author 面允许未知键透传（additionalProperties=true，与验证器一致）；只有 arrivalPolicy / arrivalReading / clueTransform / check.bargain 这类显式拒绝未知键的段标 false。",
+ "contractVersion": 1,
+ "x-cy-source": [
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/util/AdvancedGamePublicProjection.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/NodeJourneySnapshot.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ContentCapabilityRequirements.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayHelpUsagePolicy.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/PlayHelpRunQuotaPolicy.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/HangmanGameplay.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AccusationTemplateSupport.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AccusationOutcomePolicy.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ArrivalPolicy.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ArrivalReading.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/util/ClueTransformSupport.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplayOutcomeRules.java",
+  "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/GameplaySupportMatrix.java"
+ ],
+ "x-cy-boundaries": {
+  "author": "作者编辑/保存/发布前的 advancedConfigJson，未知字段原样保留，不用新严格 schema 静默丢字段。",
+  "server": "服务端权威判定与冻结：答案、到达、奖励、核销只由服务端判定（C05）。",
+  "public": "玩家可见白名单：AdvancedGamePublicProjection 逐字段 copy；未列入 copy 的字段默认不下发。",
+  "frozen": "topic_route_session.config_snapshot_json / game_runtime_session 冻结内容；旧局不自动切新内容。"
+ },
+ "type": "object",
+ "required": [
+  "schemaVersion"
+ ],
+ "additionalProperties": true,
+ "properties": {
+  "schemaVersion": {
+   "const": 1,
+   "description": "字段结构版本。不是内容修订 ID；runtimeSnapshotVersion=1 也只是格式常量。",
+   "x-cy-surface": "author",
+   "x-cy-historical": "缺失或非 1 时 AdvancedGameConfigValidator 直接拒绝（高级玩法配置版本不支持）。"
+  },
+  "present": {
+   "enum": [
+    "inline",
+    "fullscreen"
+   ],
+   "description": "呈现方式。缺省由 AdvancedGameConfigValidator.resolvePresent 推导：启用任一玩法段=inline，否则 fullscreen。",
+   "x-cy-surface": "author",
+   "x-cy-projection": "safeConfigJson 下发最终生效值。"
+  },
+  "mistakeTier": {
+   "enum": [
+    "easy",
+    "medium",
+    "hard"
+   ],
+   "description": "判错扣血吃主题难度表的哪一档。缺省运行期按 easy。",
+   "x-cy-surface": "author"
+  },
+  "hintLadder": {
+   "type": "array",
+   "minItems": 1,
+   "maxItems": 6,
+   "description": "BE-16 提示阶梯。按作者书写顺序，不补层、不排序、不强制六层。",
+   "x-cy-surface": "author",
+   "x-cy-private": true,
+   "x-cy-projection": "safeConfigJson 不下发本段；GET /api/play/help 只下发 LevelView（无 payload、无答案）。",
+   "x-cy-historical": "缺失/空数组 = 不做新阶梯，调用方回落到既有 hint1/hint2 与揭示链。",
+   "items": {
+    "$ref": "#/$defs/hintLadderEntry"
+   }
+  },
+  "hintFreeUsesPerRun": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 1000,
+   "description": "整局共享免费提示次数 N。根层标量，与 hintLadder 同级；不是每层各一份。",
+   "x-cy-surface": "author",
+   "x-cy-private": true,
+   "x-cy-historical": [
+    "有 hintLadder 但没有显式 N → 整局默认 0（新规则不送免费次数）。",
+    "既无 N 也无 hintLadder → 旧局，返回 null，调用方走逐层旧语义。",
+    "节点没有声明 N 时只继承整局值。",
+    "多处显式声明不同 → PLAY_HELP_RUN_QUOTA_DECLARED_CONFLICT。"
+   ]
+  },
+  "hangman": {
+   "$ref": "#/$defs/hangmanSection"
+  },
+  "accusation": {
+   "$ref": "#/$defs/accusationSection"
+  },
+  "qa": {
+   "$ref": "#/$defs/qaSection"
+  },
+  "arrivalPolicy": {
+   "$ref": "#/$defs/arrivalPolicySection"
+  },
+  "arrivalReading": {
+   "$ref": "#/$defs/arrivalReadingSection"
+  },
+  "outcomeRules": {
+   "$ref": "#/$defs/outcomeRulesSection"
+  },
+  "interactionRules": {
+   "$ref": "#/$defs/interactionRulesSection"
+  },
+  "interactionTools": {
+   "$ref": "#/$defs/interactionToolsSection"
+  },
+  "clues": {
+   "type": "object",
+   "additionalProperties": false,
+   "maxProperties": 60,
+   "patternProperties": {
+    "^clue\\.h_[0-9a-f]{12}$": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 20,
+     "pattern": "[^\\u0000-\\u0020]",
+     "description": "线索显示名。键含非空白字符即非空——与 Java String.trim().isEmpty() 同一判定（trim 去掉所有 <= U+0020 的字符）。"
+    }
+   },
+   "description": "线索名称表：键**只能**是 clue.h_ + 12 位小写十六进制，其余键一律非法（无第二命名空间）；每行最多 60 条；值必须是字符串且 1 至 20 字。",
+   "x-cy-source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:280-286 validateClues",
+   "x-cy-exactness": "逐条对齐 validateClues 的真实语义：①键用 Java String.matches() ⇒ 整串锚定，等价于本处 ^...$；②非对象/超过 60 条整段拒绝（type+maxProperties）；③值非文本拒绝（type:string）；④空白值拒绝——Java 判 trim().isEmpty()，本处用 pattern [^\\u0000-\\u0020]（存在 >U+0020 的字符即非空白），因此 NBSP 等 >U+0020 的字符与服务器一致都算非空；⑤超长拒绝——服务器用 String.length()（UTF-16 单元，上限 20）。",
+   "x-cy-known-divergence": "maxLength 在 JSON Schema 里按 Unicode 码点计数，服务器按 UTF-16 单元计数：纯星光平面字符（如 emoji）可能被本声明接受而被服务器拒绝（服务器更严）。这是 JSON Schema 表达能力的边界，不是新语义；保存闸仍以 validateClues 为准。"
+  },
+  "variants": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": true,
+    "properties": {
+     "when": {
+      "$ref": "#/$defs/stateCondition"
+     },
+     "relax": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string",
+       "pattern": "^([+=-])([0-9]{1,5})$"
+      },
+      "propertyNames": {
+       "pattern": "^(timer\\.durationSeconds|typeIn\\.seconds|sort\\.maxAttempts|pricePair\\.maxTries|typeIn\\.tries|qa\\.maxTries|hiddenObject\\.maxTries|stopwatch\\.tries|estimate\\.tolerance|compass\\.tolerance|stopwatch\\.toleranceMs|ballShake\\.seconds|reaction\\.goalMs|quietHold\\.seconds|shout\\.seconds|countdown\\.seconds|compass\\.holdSeconds|ballShake\\.goal)$"
+      },
+      "description": "只放宽容错面（时长/次数/容差）。逐条应用后必须仍是一份合法配置，否则整条拒绝。"
+     }
+    },
+    "required": [
+     "when",
+     "relax"
+    ],
+    "description": "一条 = 一个 when + 一组 relax。"
+   },
+   "maxItems": 16,
+   "description": "阶段 4 自适应难度（validateVariants）。根层控制项，不是玩法段；条数上限 16。"
+  },
+  "requires": {
+   "$ref": "#/$defs/stateConditionList",
+   "description": "建局/进入前的条件列表（validateConditionList），最多 16 条。"
+  },
+  "effects": {
+   "$ref": "#/$defs/stateEffectList",
+   "description": "块跑完的效果列表（validateEffects），最多 16 条。"
+  },
+  "check": {
+   "$ref": "#/$defs/checkSection"
+  },
+  "roleViews": {
+   "$ref": "#/$defs/roleViewsSection"
+  },
+  "timer": {
+   "$ref": "#/$defs/timerSection"
+  },
+  "random": {
+   "$ref": "#/$defs/randomSection"
+  },
+  "branch": {
+   "$ref": "#/$defs/branchSection"
+  },
+  "leaderboard": {
+   "$ref": "#/$defs/leaderboardSection"
+  },
+  "multiplayer": {
+   "$ref": "#/$defs/multiplayerSection"
+  },
+  "timeWindow": {
+   "$ref": "#/$defs/timeWindowSection"
+  },
+  "blindTaste": {
+   "$ref": "#/$defs/blindTasteSection"
+  },
+  "silentOrder": {
+   "$ref": "#/$defs/silentOrderSection"
+  },
+  "diyName": {
+   "$ref": "#/$defs/diyNameSection"
+  },
+  "musicCorner": {
+   "$ref": "#/$defs/musicCornerSection"
+  },
+  "backgroundMusic": {
+   "$ref": "#/$defs/backgroundMusicSection"
+  },
+  "steps": {
+   "$ref": "#/$defs/stepsSection"
+  },
+  "dailySign": {
+   "$ref": "#/$defs/dailySignSection"
+  },
+  "slowTask": {
+   "$ref": "#/$defs/slowTaskSection"
+  },
+  "estimate": {
+   "$ref": "#/$defs/estimateSection"
+  },
+  "pricePair": {
+   "$ref": "#/$defs/pricePairSection"
+  },
+  "hiddenObject": {
+   "$ref": "#/$defs/hiddenObjectSection"
+  },
+  "predict": {
+   "$ref": "#/$defs/predictSection"
+  },
+  "clueTransform": {
+   "$ref": "#/$defs/clueTransformSection"
+  },
+  "scan": {
+   "$ref": "#/$defs/scanSection"
+  },
+  "sort": {
+   "$ref": "#/$defs/sortSection"
+  },
+  "match": {
+   "$ref": "#/$defs/matchSection"
+  },
+  "classify": {
+   "$ref": "#/$defs/classifySection"
+  },
+  "compare": {
+   "$ref": "#/$defs/compareSection"
+  },
+  "profile": {
+   "$ref": "#/$defs/profileSection"
+  },
+  "photoCheck": {
+   "$ref": "#/$defs/photoCheckSection"
+  },
+  "album": {
+   "$ref": "#/$defs/albumSection"
+  },
+  "note": {
+   "$ref": "#/$defs/noteSection"
+  },
+  "typeIn": {
+   "$ref": "#/$defs/typeInSection"
+  },
+  "coinFlip": {
+   "$ref": "#/$defs/coinFlipSection"
+  },
+  "diceRoll": {
+   "$ref": "#/$defs/diceRollSection"
+  },
+  "reaction": {
+   "$ref": "#/$defs/reactionSection"
+  },
+  "ballShake": {
+   "$ref": "#/$defs/ballShakeSection"
+  },
+  "quietHold": {
+   "$ref": "#/$defs/quietHoldSection"
+  },
+  "compass": {
+   "$ref": "#/$defs/compassSection"
+  },
+  "shout": {
+   "$ref": "#/$defs/shoutSection"
+  },
+  "countdown": {
+   "$ref": "#/$defs/countdownSection"
+  },
+  "stopwatch": {
+   "$ref": "#/$defs/stopwatchSection"
+  }
+ },
+ "x-cy-envelope": {
+  "capabilityRequest": {
+   "$ref": "#/$defs/capabilityDeclaration"
+  },
+  "capabilityResponse": {
+   "$ref": "#/$defs/capabilityCompatibility"
+  },
+  "revision": {
+   "$ref": "#/$defs/revisionReferences",
+   "x-cy-contractStatus": "PROPOSED_PENDING_BE06_SIGNATURE",
+   "x-cy-note": "字段名取自施工文档 C02/BE-06 提案；BE-06 尚未回签，不宣称已实现，不用于当前 golden 断言。"
+  },
+  "answerPolicy": {
+   "$ref": "#/$defs/answerPolicy",
+   "x-cy-contractStatus": "PROPOSED_PENDING_BE08_SIGNATURE",
+   "x-cy-note": "字段名取自施工文档 BE-08 提案；hangman 现有的 aliases[]/caseSensitive 仍是段内真源，未合并。"
+  },
+  "arrival": {
+   "$ref": "#/$defs/arrivalContract",
+   "x-cy-contractStatus": "PROPOSED_PENDING_ARRIVAL_SIGNATURE",
+   "x-cy-note": "字段名取自施工文档 BE-09/BE-15 提案；当前源码只有既有 lat/lng 与 50m 围栏，不宣称已实现。"
+  }
+ },
+ "$defs": {
+  "hintLadderEntry": {
+   "type": "object",
+   "required": [
+    "level",
+    "type"
+   ],
+   "additionalProperties": true,
+   "properties": {
+    "level": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 6,
+     "description": "同段内唯一；运行期与保存期都按 1 至 6。"
+    },
+    "type": {
+     "enum": [
+      "TEXT",
+      "IMAGE",
+      "LETTER",
+      "DIGIT",
+      "ANSWER",
+      "SKIP"
+     ],
+     "description": "运行期保存前 trim + 大写。LOCATION 在册但保存期显式拒绝：位置类帮助会绕过既有到达与权限判定。"
+    },
+    "payload": {
+     "description": "标量，类型随 type 定。TEXT=非空文字；IMAGE=https/站内路径/media-asset；LETTER=1 起整数（揭示第几个字符）；ANSWER=可选揭示文案；DIGIT/SKIP 不得有内容。",
+     "x-cy-private": true,
+     "x-cy-conditionals": {
+      "TEXT": {
+       "type": "string",
+       "minLength": 1
+      },
+      "IMAGE": {
+       "type": "string",
+       "minLength": 1
+      },
+      "LETTER": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "ANSWER": {
+       "type": "string"
+      },
+      "DIGIT": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 0
+      },
+      "SKIP": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "maxLength": 0
+      }
+     }
+    },
+    "cost": {
+     "type": "object",
+     "additionalProperties": true,
+     "description": "只认已有真实账本的类型：本树只有积分 ums_member_points_detail。",
+     "properties": {
+      "points": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "gems": {
+       "const": 0,
+       "description": "无真实账本；非零保存期拒绝、运行期该层不可用。"
+      },
+      "coins": {
+       "const": 0,
+       "description": "无真实账本；非零保存期拒绝、运行期该层不可用。"
+      }
+     },
+     "x-cy-gap": "保存闸只检查 points/gems/coins；未知代价键（如 xp）保存期通过，但运行期 PlayHelpUsagePolicy.parseCost 会判为该层配置无效。"
+    },
+    "freeQuota": {
+     "const": 0,
+     "description": "层内免费额度只保留 0 作旧配置占位。免费额度统一由根层 hintFreeUsesPerRun 表达。",
+     "x-cy-historical": "早期候选 freeQuota:0|1 不是整局 N 合同；>0 保存期直接拒绝并指向根层字段。"
+    }
+   }
+  },
+  "hangmanSection": {
+   "type": "object",
+   "required": [
+    "enabled"
+   ],
+   "additionalProperties": true,
+   "description": "G1 逐字猜词。answer/aliases/format 都是冻结配置里的秘密，任何公共投影都不下发。",
+   "x-cy-surface": "author",
+   "x-cy-private": true,
+   "x-cy-publicShape": "#/$defs/hangmanSafeConfig",
+   "x-cy-sessionShape": "#/$defs/hangmanProjection",
+   "x-cy-historical": "未启用/缺失 = 普通玩法，无逐字猜词。",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "answer": {
+     "type": "string",
+     "minLength": 1,
+     "description": "冻结答案；按 Unicode 完整码点计数，最多 40 个（x-cy-codePointsMax=40）。至少一个字母或数字。",
+     "x-cy-codePointsMax": 40,
+     "x-cy-private": true
+    },
+    "format": {
+     "type": "array",
+     "maxItems": 40,
+     "description": "槽位数组，槽数必须等于答案码点数。空串/null/字面量 \"_\" 都表示待填空白槽；固定字符与分隔符原样保留。",
+     "x-cy-private": true,
+     "items": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "maxLength": 1
+     }
+    },
+    "aliases": {
+     "type": "array",
+     "maxItems": 10,
+     "description": "可接受别名；每项非空、含至少一个字母或数字、与答案及其他别名归一后不得重复。",
+     "x-cy-private": true,
+     "items": {
+      "type": "string",
+      "minLength": 1
+     }
+    },
+    "caseSensitive": {
+     "type": "boolean",
+     "default": false,
+     "description": "缺省不区分大小写（canon = lowercase(uppercase(cp))）。"
+    }
+   }
+  },
+  "hangmanSafeConfig": {
+   "type": "object",
+   "required": [
+    "enabled"
+   ],
+   "description": "模板详情/整实体下发出口的白名单摘要。",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "length": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "blankCount": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "caseSensitive": {
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": false
+  },
+  "hangmanProjection": {
+   "type": "object",
+   "description": "会话视图 player projection；空白槽只有占位符，绝不下发答案。",
+   "required": [
+    "length",
+    "blankCount",
+    "caseSensitive",
+    "solved",
+    "slots",
+    "display"
+   ],
+   "properties": {
+    "length": {
+     "type": "integer"
+    },
+    "blankCount": {
+     "type": "integer"
+    },
+    "caseSensitive": {
+     "type": "boolean"
+    },
+    "solved": {
+     "type": "boolean"
+    },
+    "display": {
+     "type": "string",
+     "description": "SEPARATOR/PREFILLED/FILLED 原字符，BLANK 用 '_'。"
+    },
+    "slots": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "i",
+       "kind"
+      ],
+      "properties": {
+       "i": {
+        "type": "integer"
+       },
+       "kind": {
+        "enum": [
+         "SEPARATOR",
+         "PREFILLED",
+         "FILLED",
+         "BLANK"
+        ]
+       },
+       "ch": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "accusationSection": {
+   "type": "object",
+   "required": [
+    "enabled"
+   ],
+   "additionalProperties": false,
+   "description": "CT-07 指认结案模板。可选结局块；无该块即普通结局。正确答案只有一个真源：原 qa.options[].correct，本段不存答案。",
+   "x-cy-surface": "author",
+   "x-cy-private": [
+    "winScreen（提交前）",
+    "loseScreen（提交前）",
+    "earlyAccuse.recordAs",
+    "未获得的 testimony",
+    "由 qa 派生的 correct"
+   ],
+   "x-cy-publicShape": "#/$defs/accusationPublicView",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "suspects": {
+     "type": "array",
+     "minItems": 2,
+     "maxItems": 4,
+     "description": "必须与已启用的 qa PICK 选项一一对应（2 至 4 条，数量相等）。",
+     "items": {
+      "$ref": "#/$defs/accusationSuspect"
+     }
+    },
+    "introScreens": {
+     "type": "array",
+     "description": "原文只要求是数组；单屏形状原文未给，原样透传。"
+    },
+    "winScreen": {
+     "$ref": "#/$defs/screen"
+    },
+    "loseScreen": {
+     "$ref": "#/$defs/screen"
+    },
+    "corkboardImage": {
+     "oneOf": [
+      {
+       "type": "string",
+       "minLength": 1
+      },
+      {
+       "$ref": "#/$defs/corkboard"
+      }
+     ]
+    },
+    "earlyAccuse": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "allowed"
+     ],
+     "properties": {
+      "allowed": {
+       "type": "boolean"
+      },
+      "recordAs": {
+       "type": "string",
+       "minLength": 1,
+       "description": "allowed=true 时必填；原样透传，不设默认值、不限定取值集合。"
+      }
+     },
+     "if": {
+      "properties": {
+       "allowed": {
+        "const": true
+       }
+      }
+     },
+     "then": {
+      "required": [
+       "recordAs"
+      ]
+     }
+    }
+   }
+  },
+  "accusationSuspect": {
+   "type": "object",
+   "required": [
+    "id",
+    "name",
+    "avatar"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "id": {
+     "type": "string",
+     "minLength": 1,
+     "description": "= qa.options[].id。"
+    },
+    "name": {
+     "type": "string",
+     "minLength": 1,
+     "description": "必须与 qa 选项 label 完全一致（同一人只有一份姓名）。"
+    },
+    "identity": {
+     "type": "string"
+    },
+    "avatar": {
+     "type": "string",
+     "minLength": 1,
+     "description": "https 链接或站内路径。"
+    },
+    "testimony": {
+     "type": "array",
+     "description": "证词键须匹配 clue\\.[a-z][a-z0-9_]{0,47}；未获得的证词不在公共投影出现。",
+     "items": {
+      "type": "object",
+      "required": [
+       "key",
+       "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "key": {
+        "type": "string",
+        "pattern": "^clue\\.[a-z][a-z0-9_]{0,47}$"
+       },
+       "text": {
+        "type": "string",
+        "minLength": 1
+       }
+      }
+     }
+    }
+   }
+  },
+  "screen": {
+   "oneOf": [
+    {
+     "type": "string",
+     "minLength": 1
+    },
+    {
+     "type": "object"
+    }
+   ],
+   "description": "文字或作者写的呈现对象；提交后才下发。"
+  },
+  "corkboard": {
+   "type": "object",
+   "required": [
+    "img"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "img": {
+     "type": "string",
+     "minLength": 1
+    },
+    "alt": {
+     "type": "string"
+    }
+   }
+  },
+  "accusationPublicView": {
+   "type": "object",
+   "required": [
+    "enabled"
+   ],
+   "description": "确认指认之前的公开投影。不含 correct、winScreen/loseScreen、recordAs、未获证词。",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "suspects": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "name"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "identity": {
+        "type": "string"
+       },
+       "avatar": {
+        "type": "string"
+       },
+       "testimony": {
+        "type": "array"
+       }
+      }
+     }
+    },
+    "introScreens": {
+     "type": "array"
+    },
+    "corkboardImage": {
+     "type": [
+      "string",
+      "object"
+     ]
+    },
+    "earlyAccuse": {
+     "type": "object",
+     "properties": {
+      "allowed": {
+       "type": "boolean"
+      }
+     },
+     "additionalProperties": false
+    }
+   },
+   "additionalProperties": false
+  },
+  "qaPickForAccusation": {
+   "type": "object",
+   "required": [
+    "enabled",
+    "mode",
+    "options"
+   ],
+   "description": "指认结案复用的最小 qa 合同子集（PICK / 单选 / 2-4 选项 / 恰好一个 correct / judge 缺省 true）。完整问答合同不在本文件范围。",
+   "properties": {
+    "enabled": {
+     "const": true
+    },
+    "mode": {
+     "const": "PICK"
+    },
+    "judge": {
+     "type": "boolean",
+     "default": true
+    },
+    "multi": {
+     "const": false
+    },
+    "title": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 120
+    },
+    "options": {
+     "type": "array",
+     "minItems": 2,
+     "maxItems": 4,
+     "items": {
+      "type": "object",
+      "required": [
+       "id",
+       "label"
+      ],
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1
+       },
+       "label": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 32
+       },
+       "correct": {
+        "type": "boolean"
+       },
+       "img": {
+        "type": "string"
+       },
+       "alt": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "helpLevelView": {
+   "type": "object",
+   "description": "GET /api/play/help 的一层。只有代价与状态；不含提示正文、答案。",
+   "required": [
+    "level",
+    "type",
+    "usable",
+    "unlocked",
+    "free",
+    "costPoints",
+    "freeQuota",
+    "reason"
+   ],
+   "properties": {
+    "level": {
+     "type": "integer"
+    },
+    "type": {
+     "enum": [
+      "TEXT",
+      "IMAGE",
+      "LETTER",
+      "DIGIT",
+      "ANSWER",
+      "SKIP",
+      "LOCATION"
+     ]
+    },
+    "usable": {
+     "type": "boolean"
+    },
+    "unlocked": {
+     "type": "boolean"
+    },
+    "free": {
+     "type": "boolean"
+    },
+    "costPoints": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "freeQuota": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "reason": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "additionalProperties": false
+  },
+  "helpView": {
+   "type": "object",
+   "required": [
+    "runId",
+    "nodeId",
+    "enabled",
+    "layers"
+   ],
+   "properties": {
+    "runId": {
+     "type": "integer"
+    },
+    "nodeId": {
+     "type": "integer"
+    },
+    "enabled": {
+     "type": "boolean",
+     "description": "layers 为空=false：该原局冻结配置没有 hintLadder，继续走旧 hint1/hint2。"
+    },
+    "layers": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/helpLevelView"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "helpUseReceipt": {
+   "type": "object",
+   "required": [
+    "runId",
+    "nodeId",
+    "level",
+    "type",
+    "content",
+    "applied",
+    "alreadyUnlocked",
+    "chargedPoints",
+    "balanceAfter"
+   ],
+   "description": "POST /api/play/help/use 的权威回执；content 只含本次获准层。",
+   "properties": {
+    "runId": {
+     "type": "integer"
+    },
+    "nodeId": {
+     "type": "integer"
+    },
+    "level": {
+     "type": "integer"
+    },
+    "type": {
+     "enum": [
+      "TEXT",
+      "IMAGE",
+      "LETTER",
+      "DIGIT",
+      "ANSWER",
+      "SKIP"
+     ]
+    },
+    "content": {
+     "type": "string",
+     "x-cy-private": "本次获准后才可下发"
+    },
+    "applied": {
+     "type": "boolean"
+    },
+    "alreadyUnlocked": {
+     "type": "boolean"
+    },
+    "chargedPoints": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "balanceAfter": {
+     "type": "integer"
+    }
+   },
+   "additionalProperties": false
+  },
+  "capabilityDeclaration": {
+   "type": "object",
+   "description": "端能力自报。缺省=未声明（老客户端），不当作全支持，不阻断读取。",
+   "properties": {
+    "clientPlatform": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "clientVersion": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "supportedCapabilities": {
+     "type": "string",
+     "description": "实际解析格式：key@version,key@version。无法解析的条目丢弃并把整份声明标为不可信。",
+     "x-cy-docMismatch": "施工文档附录 A 的数组形态只是示意；当前 ContentCapabilityRequirements.Declaration.parse 只读逗号分隔字符串，客户端不得改发数组。",
+     "x-cy-derivedKeyPattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)+$"
+    }
+   }
+  },
+  "capabilityCompatibility": {
+   "type": "object",
+   "required": [
+    "requiredCapabilities",
+    "declared",
+    "platform",
+    "clientVersion",
+    "missingCapabilities",
+    "supported",
+    "source"
+   ],
+   "properties": {
+    "requiredCapabilities": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "key",
+       "minVersion"
+      ],
+      "properties": {
+       "key": {
+        "type": "string"
+       },
+       "minVersion": {
+        "type": "integer",
+        "minimum": 1
+       }
+      }
+     }
+    },
+    "declared": {
+     "type": "boolean"
+    },
+    "platform": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "clientVersion": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "missingCapabilities": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "key",
+       "minVersion",
+       "declaredVersion"
+      ],
+      "properties": {
+       "key": {
+        "type": "string"
+       },
+       "minVersion": {
+        "type": "integer"
+       },
+       "declaredVersion": {
+        "type": [
+         "integer",
+         "null"
+        ]
+       }
+      }
+     }
+    },
+    "supported": {
+     "type": [
+      "boolean",
+      "null"
+     ],
+     "description": "null = 未确认兼容（未声明或声明损坏），不冒充支持，也不阻断读取。"
+    },
+    "source": {
+     "enum": [
+      "UNDECLARED",
+      "MALFORMED",
+      "DECLARED",
+      "DECLARED_MALFORMED"
+     ]
+    }
+   },
+   "additionalProperties": false
+  },
+  "revisionReferences": {
+   "type": "object",
+   "description": "BE-06 提案字段；当前未实现。四类版本不能混用。",
+   "x-cy-contractStatus": "PROPOSED_PENDING_BE06_SIGNATURE",
+   "properties": {
+    "runtimeSnapshotVersion": {
+     "const": 1,
+     "description": "格式常量，不是内容修订 ID。"
+    },
+    "contentRevisionId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "contentSha256": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "publishedContentRevisionId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "publishRequestId": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "description": "同号异 payload 必须冲突；不能由内容 hash 推导。"
+    }
+   },
+   "additionalProperties": false
+  },
+  "answerPolicy": {
+   "type": "object",
+   "description": "BE-08 提案字段；同正确答案一样是 secret，不得进入公共详情/manifest/预取。",
+   "x-cy-contractStatus": "PROPOSED_PENDING_BE08_SIGNATURE",
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "acceptedAliases": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     }
+    },
+    "normalizationPolicy": {
+     "const": "LEGACY_V1",
+     "description": "缺省等价于仅 canonical answer + LEGACY_V1；不默认启用模糊/拼音/语义/LLM 判分。"
+    }
+   },
+   "additionalProperties": false
+  },
+  "arrivalContract": {
+   "type": "object",
+   "description": "BE-09/BE-15 提案字段；当前未实现，阈值不得从竞品臆定。",
+   "x-cy-contractStatus": "PROPOSED_PENDING_ARRIVAL_SIGNATURE",
+   "properties": {
+    "arrivalPolicy": {
+     "type": "object",
+     "properties": {
+      "version": {
+       "type": "integer"
+      },
+      "radiusMeters": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "maxAccuracyMeters": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "maxAgeSeconds": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "fallbackMode": {
+       "type": "string"
+      }
+     }
+    },
+    "arrivalReading": {
+     "type": "object",
+     "properties": {
+      "level": {
+       "type": "integer"
+      },
+      "log": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "stateCondition": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "op": {
+     "enum": [
+      "EQ",
+      "NE",
+      "GT",
+      "GTE",
+      "LT",
+      "LTE",
+      "HAS_TAG",
+      "NODE_COMPLETED",
+      "ITEM_HELD",
+      "ITEM_ACQUIRED"
+     ],
+     "description": "比较类 op 必须带整数 value；HAS_TAG 只带 value=tag.*；NODE_COMPLETED 只带正整数 nodeId；物资条件带 itemId+quantity。"
+    },
+    "var": {
+     "type": "string",
+     "description": "具名状态键（clue./relation./counter.）或只读系统变量（sys.hp/sys.luck/sys.exhausted/sys.momentum/sys.asked.*/sys.mistakes.*/sys.outcome.*/sys.passed.*）。"
+    },
+    "value": {
+     "type": "integer",
+     "minimum": -99,
+     "maximum": 99
+    },
+    "nodeId": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "itemId": {
+     "type": "string",
+     "pattern": "^[a-z][a-z0-9_]{0,31}$"
+    },
+    "quantity": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 999
+    }
+   },
+   "required": [
+    "op"
+   ],
+   "description": "requires / check.advantageIf / mods[].when / variants[].when 共用的同一张条件形状（validateCondition）。"
+  },
+  "stateConditionList": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/stateCondition"
+   },
+   "maxItems": 16,
+   "description": "最多 16 条（MAX_STATE_REFS）。"
+  },
+  "stateEffect": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "op": {
+     "enum": [
+      "SET",
+      "INC",
+      "ADD_TAG",
+      "FLOOR"
+     ],
+     "description": "SET/INC 带整数 value；ADD_TAG 带 tag 值；FLOOR 仅 counter.* 且 value>=1；sys.luck 只能 INC 1..3。"
+    },
+    "var": {
+     "type": "string",
+     "description": "clue./relation./counter. 具名键；sys.luck 是唯一放行的系统变量（只能 INC 1..3）。"
+    },
+    "value": {
+     "type": "integer",
+     "minimum": -99,
+     "maximum": 99
+    }
+   },
+   "required": [
+    "op"
+   ],
+   "description": "块跑完对具名状态的写入（validateEffects）。"
+  },
+  "stateEffectList": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/stateEffect"
+   },
+   "maxItems": 16,
+   "description": "最多 16 条（MAX_STATE_REFS）。"
+  },
+  "arrivalPolicySection": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "radiusMeters": {
+     "type": "number",
+     "description": "(0, 10000] 米。缺省 = 既有 50m 基线，不是新策略默认。"
+    },
+    "maxAccuracyMeters": {
+     "type": "number",
+     "description": "(0, 10000] 米。缺省 = 既有 80m 基线。"
+    },
+    "maxAgeSeconds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 86400,
+     "description": "定位时效；缺省 = 不校验（旧局兼容）。"
+    },
+    "fallbackMode": {
+     "enum": [
+      "NONE",
+      "ALTERNATE_EVIDENCE",
+      "ALTERNATE_NODE",
+      "SKIP_ALLOWED"
+     ],
+     "description": "只声明替代方式，不授权任何 fallback/skip。"
+    }
+   },
+   "description": "到达策略（ArrivalPolicy.normalize）。未知键直接拒绝。"
+  },
+  "arrivalReadingSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "level": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3,
+     "description": "沿既有叙事块 level 语义区间，不自造强弱枚举。"
+    },
+    "log": {
+     "type": "string",
+     "maxLength": 500,
+     "description": "到达读数文案 1..500 字。"
+    }
+   },
+   "description": "到达读数（ArrivalReading.normalize）。至少 level 或 log 之一；未知键拒绝。"
+  },
+  "outcomeRulesSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {},
+   "description": "R5 通用结算结果段（GameplayOutcomeRules.validateBlock）。缺省 = 老结算。字段由 GameplayOutcomeRules 与资源槽合同共同约束，本文件只登记入口，不复制第二份规则表。"
+  },
+  "interactionRulesSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {},
+   "description": "互动工具/资源槽规则（GameplayTemplateRules.normalize + assertCompatible）。本文件只登记入口。"
+  },
+  "interactionToolsSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {},
+   "description": "互动工具声明（GameplayTemplateRules.normalizeTools）。本文件只登记入口。"
+  },
+  "checkSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "checkId": {
+     "type": "string",
+     "pattern": "^[A-Za-z0-9_-]{1,64}$",
+     "description": "必填；1..64 位字母/数字/下划线/短横线。"
+    },
+    "tier": {
+     "enum": [
+      "easy",
+      "medium",
+      "hard"
+     ],
+     "description": "必填；只有三档，禁止任意 DC。"
+    },
+    "skill": {
+     "type": "string",
+     "maxLength": 200
+    },
+    "successText": {
+     "type": "string",
+     "maxLength": 200
+    },
+    "failText": {
+     "type": "string",
+     "maxLength": 200
+    },
+    "advantageIf": {
+     "$ref": "#/$defs/stateConditionList"
+    },
+    "disadvantageIf": {
+     "$ref": "#/$defs/stateConditionList"
+    },
+    "successEffects": {
+     "$ref": "#/$defs/stateEffectList"
+    },
+    "failEffects": {
+     "$ref": "#/$defs/stateEffectList"
+    },
+    "critEffects": {
+     "$ref": "#/$defs/stateEffectList",
+     "description": "自然 20 额外效果，执行在 successEffects 之后。"
+    },
+    "fumbleEffects": {
+     "$ref": "#/$defs/stateEffectList",
+     "description": "自然 1 额外效果，执行在 failEffects 之后。"
+    },
+    "failCostTag": {
+     "type": "string",
+     "pattern": "^tag\\.[a-z][a-z0-9_]{0,47}$"
+    },
+    "mods": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "when": {
+        "$ref": "#/$defs/stateCondition"
+       },
+       "var": {
+        "type": "string",
+        "description": "counter.* 状态键；与 value 二选一。"
+       },
+       "value": {
+        "type": "integer",
+        "minimum": -99,
+        "maximum": 99
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 200
+       }
+      },
+      "required": [
+       "when"
+      ],
+      "description": "条件修正：value 与 counter.* var 二选一。"
+     },
+     "maxItems": 16
+    },
+    "bargain": {
+     "type": "object",
+     "additionalProperties": false,
+     "properties": {
+      "label": {
+       "type": "string",
+       "maxLength": 200,
+       "description": "必填；写明代价。"
+      },
+      "bonus": {
+       "type": "integer",
+       "minimum": 1,
+       "maximum": 3,
+       "description": "必填；1..3。"
+      },
+      "effects": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/stateEffect"
+       },
+       "minItems": 1,
+       "maxItems": 4
+      }
+     },
+     "required": [
+      "label",
+      "bonus",
+      "effects"
+     ],
+     "description": "魔鬼交易：代价只能是自伤类效果；字段只认 label/bonus/effects。"
+    }
+   },
+   "description": "R14 旅程检定段（validateCheck）。present 由 resolvePresent 单独推导，与 check 同层。"
+  },
+  "roleViewsSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "roles": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "enum": [
+         "A",
+         "B"
+        ],
+        "description": "恰好 A、B 两个角色，且不重复。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "必填 1..200 字。"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 2
+    },
+    "views": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "roleId": {
+        "enum": [
+         "A",
+         "B"
+        ],
+        "description": "必须指向 roles 里的角色，且每个角色恰好一个 view。"
+       },
+       "title": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "body": {
+        "type": "string",
+        "maxLength": 200
+       },
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": true,
+         "properties": {
+          "label": {
+           "type": "string",
+           "maxLength": 200,
+           "description": "必填。"
+          },
+          "text": {
+           "type": "string",
+           "maxLength": 200,
+           "description": "必填。"
+          }
+         },
+         "required": [
+          "label",
+          "text"
+         ]
+        },
+        "maxItems": 8
+       }
+      },
+      "required": [
+       "roleId"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 2
+    }
+   },
+   "description": "双人视角（validateRoleViews）。不投影：由 Encounter 按本人角色下发。"
+  },
+  "timerSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "durationSeconds": {
+     "type": "integer",
+     "minimum": 10,
+     "maximum": 86400,
+     "description": "必填；10 秒..24 小时。"
+    },
+    "timeoutResult": {
+     "enum": [
+      "FAILED",
+      "EXPIRED"
+     ],
+     "description": "必填；COMPLETED 仅在 R5 outcomeRules.version=1 时允许。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "randomSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "deckName": {
+     "type": "string",
+     "maxLength": 20
+    },
+    "drawCount": {
+     "type": "integer",
+     "minimum": 1,
+     "description": "至少 1，且不能超过 items 数量。"
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "description": "必填；1..64 位字母/数字/下划线/短横线，段内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       },
+       "weight": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100000,
+        "description": "必填。"
+       },
+       "content": {
+        "type": "string",
+        "maxLength": 500
+       },
+       "audioUrl": {
+        "type": "string",
+        "maxLength": 512,
+        "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+        "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+       }
+      },
+      "required": [
+       "id",
+       "label",
+       "weight"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 50
+    }
+   }
+  },
+  "branchSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "startStepId": {
+     "type": "string",
+     "description": "必填；必须指向 steps 里的步骤。"
+    },
+    "steps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "description": "必填；steps 内唯一。"
+       },
+       "title": {
+        "type": "string",
+        "maxLength": 80
+       },
+       "body": {
+        "type": "string",
+        "maxLength": 1000
+       },
+       "terminal": {
+        "type": "boolean",
+        "description": "终点必须配 outcomeCode，且不能再有 options；非终点至少一个选项。"
+       },
+       "outcomeCode": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,64}$",
+        "description": "终点唯一；缺省由 resolveBranchOutcomeCode 补（单终点取 COMPLETED，多终点取步骤 ID）。"
+       },
+       "outcomeLabel": {
+        "type": "string",
+        "maxLength": 80
+       },
+       "options": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": true,
+         "properties": {
+          "id": {
+           "type": "string",
+           "description": "必填；同一步骤内唯一。"
+          },
+          "label": {
+           "type": "string",
+           "maxLength": 80,
+           "description": "必填 1..80 字。"
+          },
+          "nextStepId": {
+           "type": "string",
+           "description": "必填；必须存在。"
+          },
+          "score": {
+           "type": "integer",
+           "minimum": -100000,
+           "maximum": 100000
+          },
+          "effects": {
+           "$ref": "#/$defs/stateEffectList"
+          }
+         },
+         "required": [
+          "id",
+          "label",
+          "nextStepId"
+         ]
+        },
+        "maxItems": 12
+       }
+      },
+      "required": [
+       "id"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 50
+    }
+   }
+  },
+  "leaderboardSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "metric": {
+     "enum": [
+      "ELAPSED_TIME",
+      "SCORE",
+      "COMPLETED_UNITS"
+     ],
+     "description": "必填。"
+    },
+    "scope": {
+     "enum": [
+      "ACTIVITY",
+      "TOPIC"
+     ],
+     "description": "必填。"
+    },
+    "limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100,
+     "description": "必填；1..100。"
+    }
+   }
+  },
+  "multiplayerSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "mode": {
+     "enum": [
+      "SEQUENTIAL",
+      "ROLE_BASED"
+     ],
+     "description": "必填。"
+    },
+    "minPlayers": {
+     "type": "integer",
+     "minimum": 2,
+     "description": "与 maxPlayers 一起构成 2..20 人。"
+    },
+    "maxPlayers": {
+     "type": "integer",
+     "maximum": 20
+    },
+    "assignment": {
+     "enum": [
+      "AUTO",
+      "LEADER"
+     ],
+     "description": "缺省 AUTO；AUTO 时轮次顺序必须能覆盖全部允许人数。"
+    },
+    "roles": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "description": "必填；roles 内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       },
+       "min": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "max": {
+        "type": "integer",
+        "minimum": 1
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 20
+    },
+    "turnOrder": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "角色 id，必须已声明。"
+     },
+     "minItems": 1,
+     "maxItems": 100
+    },
+    "requiredTurns": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 1000,
+     "description": "缺省 1。"
+    },
+    "unitScore": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100000,
+     "description": "缺省 0。"
+    }
+   }
+  },
+  "timeWindowSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "openFrom": {
+     "type": "string",
+     "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+     "description": "必填；HH:mm 24 小时制；跨夜合法；起止不能相同。"
+    },
+    "openTo": {
+     "type": "string",
+     "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+     "description": "必填。"
+    },
+    "eyebrow": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "subscribeTmplId": {
+     "type": "string",
+     "maxLength": 64
+    }
+   }
+  },
+  "blindTasteSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "steps": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "hint": {
+     "type": "string",
+     "maxLength": 60
+    },
+    "imageUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "options": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "key": {
+        "type": "string",
+        "description": "必填；段内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 32,
+        "description": "必填 1..32 字。"
+       }
+      },
+      "required": [
+       "key",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 6
+    },
+    "answerKey": {
+     "type": "string",
+     "description": "必填；必须是其中一个选项 key。绝不投影。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "silentOrderSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "rule": {
+     "type": "string",
+     "maxLength": 200
+    },
+    "limitSeconds": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3600,
+     "description": "0 = 不限时；否则 60..3600。"
+    }
+   }
+  },
+  "diyNameSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "maxLength": {
+     "type": "integer",
+     "minimum": 2,
+     "maximum": 40,
+     "description": "缺省 16。"
+    },
+    "suggestions": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "不能为空且不超过 maxLength。"
+     },
+     "maxItems": 6
+    }
+   }
+  },
+  "musicCornerSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "trackName": {
+     "type": "string",
+     "maxLength": 40
+    },
+    "audioUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "durationSeconds": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 3600,
+     "description": "0 或 10..3600。不判定通关。"
+    }
+   }
+  },
+  "backgroundMusicSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "title": {
+     "type": "string",
+     "maxLength": 40
+    },
+    "audioUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "loop": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "audioUrl"
+   ],
+   "description": "背景音乐（validateBackgroundMusic）。**不使用 enabled**：带了 enabled 直接拒绝；有这一段就算开着。"
+  },
+  "stepsSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "goal": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 100000,
+     "description": "必填。真实步数只由服务端解密微信运动取得。"
+    },
+    "eyebrow": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "dailySignSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "poems": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 24,
+       "description": "非空，≤24 字。"
+      },
+      "minItems": 1,
+      "maxItems": 4
+     },
+     "minItems": 1,
+     "maxItems": 60,
+     "desc": "签文池 1..60 条，每条 1..4 行。整池不投影。"
+    },
+    "signer": {
+     "type": "string",
+     "maxLength": 16
+    },
+    "sealText": {
+     "type": "string",
+     "maxLength": 8
+    }
+   }
+  },
+  "slowTaskSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "startLabel": {
+     "type": "string",
+     "maxLength": 24
+    },
+    "waitHint": {
+     "type": "string",
+     "maxLength": 60
+    },
+    "unlockLabel": {
+     "type": "string",
+     "maxLength": 24
+    },
+    "unlockText": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "必填 1..200 字。"
+    },
+    "waitDays": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 7,
+     "description": "缺省 1。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "estimateSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "unit": {
+     "type": "string",
+     "maxLength": 8
+    },
+    "reveal": {
+     "type": "string",
+     "maxLength": 200
+    },
+    "min": {
+     "type": "number",
+     "description": "必填；min < max，跨度 ≤ 1000000。"
+    },
+    "max": {
+     "type": "number",
+     "description": "必填。"
+    },
+    "answer": {
+     "type": "number",
+     "description": "必填；必须落在 [min,max]。绝不投影。"
+    },
+    "tolerance": {
+     "type": "number",
+     "description": "必填；>0 且 ≤ (max-min)/2。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "pricePairSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "description": "必填；段内唯一。"
+       },
+       "name": {
+        "type": "string",
+        "maxLength": 32,
+        "description": "必填 1..32 字。"
+       },
+       "imageUrl": {
+        "type": "string",
+        "maxLength": 512,
+        "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+        "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+       },
+       "correct": {
+        "type": "boolean",
+        "description": "有且只有一张为 true。"
+       }
+      },
+      "required": [
+       "id",
+       "name"
+      ]
+     },
+     "minItems": 3,
+     "maxItems": 8
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 200,
+     "description": "答对奖励 0..200。"
+    },
+    "maxTries": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10,
+     "description": "0 = 不限。"
+    },
+    "effects": {
+     "$ref": "#/$defs/stateEffectList"
+    }
+   }
+  },
+  "hiddenObjectSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "hint": {
+     "type": "string",
+     "maxLength": 60
+    },
+    "maxTries": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10,
+     "description": "0 = 不限。"
+    },
+    "imageUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "hotspots": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "description": "必填；段内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 24,
+        "description": "必填 1..24 字。"
+       },
+       "x": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+       },
+       "y": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+       },
+       "r": {
+        "type": "number",
+        "minimum": 0.03,
+        "maximum": 0.15,
+        "description": "按图宽比例；任意两圈不得相交。"
+       }
+      },
+      "required": [
+       "id",
+       "label",
+       "x",
+       "y",
+       "r"
+      ]
+     },
+     "minItems": 3,
+     "maxItems": 5
+    },
+    "effects": {
+     "$ref": "#/$defs/stateEffectList"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "predictSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "question": {
+     "type": "string",
+     "maxLength": 120,
+     "description": "必填 1..120 字。"
+    },
+    "hint": {
+     "type": "string",
+     "maxLength": 60
+    },
+    "options": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "key": {
+        "type": "string",
+        "description": "必填；段内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 32,
+        "description": "必填 1..32 字。"
+       }
+      },
+      "required": [
+       "key",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 4
+    },
+    "closeAtHour": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 23,
+     "description": "必填；按 Asia/Shanghai 的当天整点。"
+    },
+    "revealDays": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 30,
+     "description": "缺省 1。0 = 当天；当天揭晓必须晚于收注截止。"
+    },
+    "revealHour": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 23,
+     "description": "缺省 20。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "qaSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "mode": {
+     "enum": [
+      "TYPE",
+      "PICK",
+      "SHOT"
+     ],
+     "description": "必填。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 120,
+     "description": "必填 1..120 字。"
+    },
+    "lead": {
+     "type": "string",
+     "maxLength": 60
+    },
+    "imageUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "audioUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "shotNote": {
+     "type": "string",
+     "maxLength": 56
+    },
+    "maxTries": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10,
+     "description": "0 = 不限。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    },
+    "answerText": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "TYPE 模式必填；多个答案用、分隔，比对忽略大小写与首尾空格。绝不投影。"
+    },
+    "judge": {
+     "type": "boolean",
+     "description": "PICK 缺省 true。false = 每个选项都有效，不要求正确答案。"
+    },
+    "multi": {
+     "type": "boolean",
+     "description": "PICK 多选：至少 2 个且不能全选。"
+    },
+    "options": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "description": "必填；段内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 32,
+        "description": "必填 1..32 字。"
+       },
+       "fb": {
+        "type": "string",
+        "maxLength": 120
+       },
+       "fbImgs": {
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 512,
+         "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+        },
+        "maxItems": 3
+       },
+       "effects": {
+        "$ref": "#/$defs/stateEffectList"
+       },
+       "correct": {
+        "type": "boolean",
+        "description": "单选恰好一个；多选至少 2 个且不能全选。"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 4
+    }
+   }
+  },
+  "clueTransformSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "mode": {
+     "enum": [
+      "STANDARD",
+      "MIRROR",
+      "REVERSE"
+     ],
+     "description": "缺省 STANDARD。密码类模式无经审核算法，直接拒绝。"
+    }
+   },
+   "description": "有限谜面变换（ClueTransformSupport.validate）。只接受 mode 一个键；非 STANDARD 时题面必须有可呈现文字。"
+  },
+  "scanSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kind": {
+     "enum": [
+      "TEXT",
+      "VOICE",
+      "IMAGE",
+      "OVERLAY",
+      "NONE"
+     ],
+     "description": "必填；NONE = 只扫码进场不回内容。"
+    },
+    "reply": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "TEXT 必填。"
+    },
+    "audioUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "imageUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "overlayUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "overlayScale": {
+     "type": "number",
+     "minimum": 20,
+     "maximum": 100,
+     "description": "显形图占比 20..100。"
+    },
+    "arMode": {
+     "enum": [
+      "NONE",
+      "PLANE",
+      "MARKER"
+     ],
+     "description": "只有 OVERLAY 档能开 AR；MARKER 必须配 markerUrl。"
+    },
+    "markerUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+     "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+    },
+    "modelUrl": {
+     "type": "string",
+     "maxLength": 1024,
+     "description": "仅 AR 模式下允许，且路径部分必须以 .glb 结尾。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "sortSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "prompt": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "必填 1..200 字。"
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}$",
+        "description": "必填；段内唯一（requiredGameId）。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       },
+       "img": {
+        "type": "string",
+        "maxLength": 512,
+        "description": "媒体引用：https:// 链接、站内 /path 或已落库 media-asset:<id>（optionalMediaUrl）。",
+        "pattern": "^(https://.*|/[^/\\\\].*|media-asset:[1-9][0-9]{0,18})$"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 8
+    },
+    "answerOrder": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "必须恰好覆盖全部 item id。"
+     },
+     "minItems": 2,
+     "maxItems": 8
+    },
+    "maxAttempts": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10,
+     "description": "0 = 不限。"
+    },
+    "effects": {
+     "$ref": "#/$defs/stateEffectList"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "matchSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "prompt": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "必填 1..200 字。"
+    },
+    "left": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}$"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 6
+    },
+    "right": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}$"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 6
+    },
+    "pairs": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     },
+     "minItems": 2,
+     "maxItems": 6,
+     "desc": "每条 [左 id, 右 id]；两侧各恰好覆盖一次。"
+    },
+    "effects": {
+     "$ref": "#/$defs/stateEffectList"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "classifySection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "prompt": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "必填 1..200 字。"
+    },
+    "bins": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}$"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 4
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}$"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       }
+      },
+      "required": [
+       "id",
+       "label"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 10
+    },
+    "answer": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "string"
+     },
+     "description": "itemId → binId；必须恰好覆盖全部 itemId，且 binId 存在。绝不投影。"
+    },
+    "effects": {
+     "$ref": "#/$defs/stateEffectList"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "compareSide": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "label": {
+     "type": "string",
+     "maxLength": 20,
+     "description": "必填 1..20 字。"
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]{1,32}$",
+        "description": "两侧 id 必须全段唯一。"
+       },
+       "time": {
+        "type": "string",
+        "maxLength": 16,
+        "description": "必填。"
+       },
+       "text": {
+        "type": "string",
+        "maxLength": 200,
+        "description": "必填。"
+       }
+      },
+      "required": [
+       "id",
+       "time",
+       "text"
+      ]
+     },
+     "minItems": 2,
+     "maxItems": 20
+    }
+   },
+   "required": [
+    "label",
+    "items"
+   ],
+   "description": "对照题单侧（validateCompareSide）。"
+  },
+  "compareSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "prompt": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "必填 1..200 字。"
+    },
+    "left": {
+     "$ref": "#/$defs/compareSide"
+    },
+    "right": {
+     "$ref": "#/$defs/compareSide"
+    },
+    "answer": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "必须非空、只能引用两侧条目、不得重复。绝不投影。"
+     },
+     "minItems": 1
+    },
+    "maxAttempts": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10,
+     "description": "缺省不限。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "profileSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "lead": {
+     "type": "string",
+     "maxLength": 200
+    },
+    "avatar": {
+     "type": "object",
+     "additionalProperties": true
+    },
+    "questions": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "key": {
+        "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,15}$",
+        "description": "必填；段内唯一。"
+       },
+       "label": {
+        "type": "string",
+        "maxLength": 40,
+        "description": "必填 1..40 字。"
+       },
+       "kind": {
+        "enum": [
+         "text",
+         "pick"
+        ],
+        "description": "必填。"
+       },
+       "maxLength": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 40,
+        "description": "text 题缺省 12。"
+       },
+       "options": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "additionalProperties": true,
+         "properties": {
+          "key": {
+           "type": "string",
+           "description": "必填；跨题也不许重名。"
+          },
+          "label": {
+           "type": "string",
+           "maxLength": 32,
+           "description": "必填 1..32 字。"
+          },
+          "effects": {
+           "$ref": "#/$defs/stateEffectList"
+          }
+         },
+         "required": [
+          "key",
+          "label"
+         ]
+        },
+        "minItems": 2,
+        "maxItems": 6
+       },
+       "override": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+         "requires": {
+          "$ref": "#/$defs/stateConditionList"
+         },
+         "option": {
+          "type": "string",
+          "description": "必填；必须指向本题已有选项 key。"
+         },
+         "voice": {
+          "type": "string",
+          "maxLength": 120
+         }
+        },
+        "required": [
+         "requires",
+         "option"
+        ],
+        "description": "咔哒：条件改写。"
+       }
+      },
+      "required": [
+       "key",
+       "label",
+       "kind"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 8
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "photoCheckSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "shotNote": {
+     "type": "string",
+     "maxLength": 120
+    },
+    "requirement": {
+     "type": "string",
+     "maxLength": 60,
+     "description": "必填 1..60 字：一句人话写清要拍到什么。服务端交视觉模型判定。"
+    },
+    "minConfidence": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 100
+    },
+    "maxTries": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10,
+     "description": "必填范围 1..10。"
+    },
+    "fallback": {
+     "enum": [
+      "retake",
+      "pass"
+     ],
+     "description": "必填；次数用尽后的兜底。"
+    },
+    "frameUrl": {
+     "type": "string",
+     "maxLength": 512,
+     "description": "取景轮廓（辅助对位，不参与判定）。"
+    },
+    "frameOpacity": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 100,
+     "description": "缺省 40；越界夹到 0..100 后写回。"
+    },
+    "mode": {
+     "enum": [
+      "CARD"
+     ],
+     "description": "空 = 老拍照审核；CARD = 拍物成卡。"
+    },
+    "cardTitle": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "cardStyle": {
+     "enum": [
+      "foil",
+      "plain"
+     ]
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "albumSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "images": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+       "url": {
+        "type": "string",
+        "maxLength": 1024,
+        "description": "必填；https/站内路径。"
+       },
+       "line": {
+        "type": "string",
+        "maxLength": 40
+       }
+      },
+      "required": [
+       "url"
+      ]
+     },
+     "minItems": 1,
+     "maxItems": 6
+    }
+   }
+  },
+  "noteSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "prompt": {
+     "type": "string",
+     "maxLength": 120,
+     "description": "必填 1..120 字。"
+    },
+    "maxLength": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 40,
+     "description": "缺省 40。"
+    },
+    "presets": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "非空且不超过 maxLength。"
+     },
+     "maxItems": 6
+    },
+    "showPrevious": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 5,
+     "description": "缺省 0。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "typeInSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 64,
+     "description": "必填 1..64 字。"
+    },
+    "target": {
+     "type": "string",
+     "maxLength": 40,
+     "description": "必填 1..40 字。"
+    },
+    "seconds": {
+     "type": "integer",
+     "minimum": 3,
+     "maximum": 120,
+     "description": "必填。"
+    },
+    "tries": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10,
+     "description": "0 = 不限。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "coinFlipSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "heads": {
+     "type": "object",
+     "additionalProperties": true,
+     "properties": {
+      "label": {
+       "type": "string",
+       "maxLength": 16
+      },
+      "action": {
+       "type": "string",
+       "maxLength": 60,
+       "description": "必填 1..60 字。"
+      }
+     },
+     "required": [
+      "action"
+     ]
+    },
+    "tails": {
+     "type": "object",
+     "additionalProperties": true,
+     "properties": {
+      "label": {
+       "type": "string",
+       "maxLength": 16
+      },
+      "action": {
+       "type": "string",
+       "maxLength": 60,
+       "description": "必填 1..60 字。"
+      }
+     },
+     "required": [
+      "action"
+     ]
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "diceRollSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "mode": {
+     "enum": [
+      "d6",
+      "d20"
+     ],
+     "description": "缺省 d6。"
+    },
+    "diceCount": {
+     "enum": [
+      1,
+      2
+     ],
+     "description": "d6 模式：一颗或两颗（两颗判点数和）。"
+    },
+    "faces": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "非空且 ≤60 字。"
+     },
+     "minItems": 6,
+     "maxItems": 6,
+     "desc": "d6 必须配满六个面。"
+    },
+    "dc": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 40,
+     "description": "d20 必填 1..40。"
+    },
+    "modifier": {
+     "type": "integer",
+     "minimum": -20,
+     "maximum": 20,
+     "description": "d20 必填 -20..20。"
+    },
+    "rollMode": {
+     "enum": [
+      "normal",
+      "advantage",
+      "disadvantage"
+     ],
+     "description": "d20 必填。"
+    },
+    "successText": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "d20 必填 1..200 字。"
+    },
+    "failText": {
+     "type": "string",
+     "maxLength": 200,
+     "description": "d20 必填 1..200 字。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "reactionSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "rounds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10,
+     "description": "必填。"
+    },
+    "goalMs": {
+     "type": "integer",
+     "minimum": 120,
+     "maximum": 3000,
+     "description": "必填；不许低于人的反应极限 120ms。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "ballShakeSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "goal": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 200,
+     "description": "必填。"
+    },
+    "timed": {
+     "type": "boolean"
+    },
+    "seconds": {
+     "type": "integer",
+     "minimum": 3,
+     "maximum": 300,
+     "description": "timed=true 时必填。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "quietHoldSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "seconds": {
+     "type": "integer",
+     "minimum": 5,
+     "maximum": 300,
+     "description": "必填。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "compassSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "bearing": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 359,
+     "description": "必填；缺省 -1 视为未填，不能拿 0（正北）冒充。"
+    },
+    "tolerance": {
+     "type": "integer",
+     "minimum": 5,
+     "maximum": 90,
+     "description": "必填。"
+    },
+    "holdSeconds": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 10,
+     "description": "必填。"
+    },
+    "hint": {
+     "type": "string",
+     "maxLength": 60
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "shoutSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "seconds": {
+     "type": "integer",
+     "minimum": 5,
+     "maximum": 300,
+     "description": "必填。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "countdownSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "seconds": {
+     "type": "integer",
+     "minimum": 5,
+     "maximum": 3600,
+     "description": "必填。"
+    },
+    "doneText": {
+     "type": "string",
+     "maxLength": 60,
+     "description": "必填 1..60 字。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  },
+  "stopwatchSection": {
+   "type": "object",
+   "additionalProperties": true,
+   "properties": {
+    "enabled": {
+     "const": true,
+     "description": "启用开关。缺省/false = 该段不生效、不校验其余字段。"
+    },
+    "kicker": {
+     "type": "string",
+     "maxLength": 32
+    },
+    "targetSeconds": {
+     "type": "number",
+     "minimum": 3,
+     "maximum": 120,
+     "description": "必填。"
+    },
+    "toleranceMs": {
+     "type": "integer",
+     "minimum": 50,
+     "maximum": 5000,
+     "description": "必填。"
+    },
+    "tries": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 10,
+     "description": "0 = 不限。"
+    },
+    "xp": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 1000,
+     "description": "段内奖励分上限 1000（validateXp）。"
+    }
+   }
+  }
+ },
+ "x-cy-derivedCapabilityKeys": {
+  "description": "当前 ContentCapabilityRequirements.required() 实际可能推导出的键；不是文档附录的示意 key（node.photoCheck@2 等尚未实现）。",
+  "fixed": [
+   "answer.arrive",
+   "answer.text",
+   "answer.photo",
+   "answer.choice",
+   "answer.scan",
+   "answer.gps",
+   "answer.preference",
+   "answer.sensor",
+   "answer.estimate",
+   "answer.pricePair",
+   "answer.hiddenObject",
+   "chapter.blocks",
+   "media.audio",
+   "media.image",
+   "media.photo",
+   "location.gps",
+   "station.list",
+   "role.views",
+   "route.branch",
+   "theme.runtime"
+  ],
+  "dynamic": {
+   "chapter.blocks.{type}": "blocks[].type 经 sanitize",
+   "answer.method.{N}": "未登记的 validationMethod",
+   "sensor.{type}": "sensorType 经 sanitize",
+   "game.{section}": "nodeConfigs[].<section>.enabled=true，section 属于 NodeJourneySnapshot.PLAYABLE_SECTIONS"
+  },
+  "x-cy-gap": [
+   "hintLadder/hintFreeUsesPerRun 不产生任何 capability key。",
+   "accusation 不产生独立 capability key（它复用 qa）。",
+   "当前 checkout 的 hangman 不在 NodeJourneySnapshot.PLAYABLE_SECTIONS；配套 delta（CONTRACT/delta/NodeJourneySnapshot-hangman-playable.patch）把它加入后，required() 才会产出 game.hangman。该 delta 是首批实际接线，不是纯文档。",
+   "文档示例 key（node.photoCheck@2 / node.scan@1 / node.compass@1 / engine.zodiac@1 / hint.ladder@1）不是当前实现输出；hint.ladder / accusation 若需要独立能力 key，须先有真实客户端 mapping 与未知/不支持行为依据。"
+  ]
+ },
+ "x-cy-historicalDefaults": {
+  "hintLadder": "缺失/空数组 → 旧链 hint1/hint2，levels() 返回空表。",
+  "hintFreeUsesPerRun": "有阶梯无 N → 0；无阶梯无 N → null（旧局）；显式 0 就是 0。",
+  "hintLadder.freeQuota": "缺省 0；>0 保存期拒绝。",
+  "hangman.caseSensitive": "缺省 false（不区分大小写）。",
+  "accusation": "缺失/显式 enabled=false → 普通结局，isEnabled=false，publicView.enabled=false。",
+  "accusation.earlyAccuse": "缺失 → allowed=false, recordAs=null；allowed=true 必须有 recordAs。",
+  "present": "缺失 → resolvePresent：任一玩法段启用=inline，否则 fullscreen。",
+  "capability": "未声明 → supported=null/source=UNDECLARED；声明损坏 → supported=null/source=MALFORMED。",
+  "revision": "旧局无 revision 引用 → 继续从已有局快照读取；LEGACY_IMPORTED 不得用当前 live 模板冒充旧版。"
+ },
+ "x-cy-enums": {
+  "present": [
+   "inline",
+   "fullscreen"
+  ],
+  "mistakeTier": [
+   "easy",
+   "medium",
+   "hard"
+  ],
+  "checkTier": [
+   "easy",
+   "medium",
+   "hard"
+  ],
+  "qaMode": [
+   "TYPE",
+   "PICK",
+   "SHOT"
+  ],
+  "scanKind": [
+   "TEXT",
+   "VOICE",
+   "IMAGE",
+   "OVERLAY",
+   "NONE"
+  ],
+  "scanArMode": [
+   "NONE",
+   "PLANE",
+   "MARKER"
+  ],
+  "hintLevelType": [
+   "TEXT",
+   "IMAGE",
+   "LETTER",
+   "DIGIT",
+   "ANSWER",
+   "SKIP"
+  ],
+  "photoCheckMode": [
+   "CARD"
+  ],
+  "photoCardStyle": [
+   "foil",
+   "plain"
+  ],
+  "photoCheckFallback": [
+   "retake",
+   "pass"
+  ],
+  "leaderboardMetric": [
+   "ELAPSED_TIME",
+   "SCORE",
+   "COMPLETED_UNITS"
+  ],
+  "leaderboardScope": [
+   "ACTIVITY",
+   "TOPIC"
+  ],
+  "multiplayerMode": [
+   "SEQUENTIAL",
+   "ROLE_BASED"
+  ],
+  "multiplayerAssignment": [
+   "AUTO",
+   "LEADER"
+  ],
+  "diceMode": [
+   "d6",
+   "d20"
+  ],
+  "diceRollMode": [
+   "normal",
+   "advantage",
+   "disadvantage"
+  ],
+  "profileKind": [
+   "text",
+   "pick"
+  ],
+  "clueTransformMode": [
+   "STANDARD",
+   "MIRROR",
+   "REVERSE"
+  ],
+  "conditionOp": [
+   "EQ",
+   "NE",
+   "GT",
+   "GTE",
+   "LT",
+   "LTE",
+   "HAS_TAG",
+   "NODE_COMPLETED",
+   "ITEM_HELD",
+   "ITEM_ACQUIRED"
+  ],
+  "effectOp": [
+   "SET",
+   "INC",
+   "ADD_TAG",
+   "FLOOR"
+  ],
+  "arrivalFallbackMode": [
+   "NONE",
+   "ALTERNATE_EVIDENCE",
+   "ALTERNATE_NODE",
+   "SKIP_ALLOWED"
+  ],
+  "x-cy-note": "以上枚举逐项对应源码常量；未列出的取值在保存/发布期被拒绝。"
+ },
+ "x-cy-sections": {
+  "root": [
+   {
+    "name": "schemaVersion",
+    "kind": "ROOT",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:310",
+    "enabledGate": false
+   },
+   {
+    "name": "present",
+    "kind": "ROOT",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:414 validatePresent",
+    "enabledGate": false
+   },
+   {
+    "name": "mistakeTier",
+    "kind": "ROOT",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:429 validateMistakeTier",
+    "enabledGate": false
+   },
+   {
+    "name": "arrivalPolicy",
+    "kind": "ROOT",
+    "source": "ArrivalPolicy.normalize:113",
+    "enabledGate": false
+   },
+   {
+    "name": "arrivalReading",
+    "kind": "ROOT",
+    "source": "ArrivalReading.normalize:42",
+    "enabledGate": false
+   },
+   {
+    "name": "outcomeRules",
+    "kind": "ROOT",
+    "source": "GameplayOutcomeRules.validateBlock:22",
+    "enabledGate": false
+   },
+   {
+    "name": "interactionRules",
+    "kind": "ROOT",
+    "source": "GameplayTemplateRules.normalize",
+    "enabledGate": false
+   },
+   {
+    "name": "interactionTools",
+    "kind": "ROOT",
+    "source": "GameplayTemplateRules.normalizeTools",
+    "enabledGate": false
+   },
+   {
+    "name": "clues",
+    "kind": "ROOT",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:280 validateClues",
+    "enabledGate": false
+   },
+   {
+    "name": "variants",
+    "kind": "ROOT",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2207 validateVariants",
+    "enabledGate": false
+   },
+   {
+    "name": "requires",
+    "kind": "JOURNEY",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2079 validateConditionList",
+    "enabledGate": false
+   },
+   {
+    "name": "effects",
+    "kind": "JOURNEY",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2156 validateEffects",
+    "enabledGate": false
+   },
+   {
+    "name": "check",
+    "kind": "JOURNEY",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2337 validateCheck",
+    "enabledGate": true
+   },
+   {
+    "name": "roleViews",
+    "kind": "PRESENTATION",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2480 validateRoleViews",
+    "enabledGate": true
+   }
+  ],
+  "sections": [
+   {
+    "name": "timer",
+    "kind": "PLAY",
+    "def": "#/$defs/timerSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:560 validateTimer",
+    "enabledGate": true,
+    "projection": "safeConfigJson 下发 durationSeconds；判定用服务端时钟。"
+   },
+   {
+    "name": "random",
+    "kind": "PLAY",
+    "def": "#/$defs/randomSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:573 validateRandom",
+    "enabledGate": true
+   },
+   {
+    "name": "branch",
+    "kind": "PLAY",
+    "def": "#/$defs/branchSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:611 validateBranch",
+    "enabledGate": true,
+    "projection": "分支终点 outcomeCode/outcomeLabel 冻结进 nodeAnswers。"
+   },
+   {
+    "name": "leaderboard",
+    "kind": "PLAY",
+    "def": "#/$defs/leaderboardSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:690 validateLeaderboard",
+    "enabledGate": true
+   },
+   {
+    "name": "multiplayer",
+    "kind": "PLAY",
+    "def": "#/$defs/multiplayerSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:703 validateMultiplayer",
+    "enabledGate": true
+   },
+   {
+    "name": "timeWindow",
+    "kind": "PLAY",
+    "def": "#/$defs/timeWindowSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:779 validateTimeWindow",
+    "enabledGate": true
+   },
+   {
+    "name": "blindTaste",
+    "kind": "PLAY",
+    "def": "#/$defs/blindTasteSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:801 validateBlindTaste",
+    "enabledGate": true,
+    "private": true,
+    "projection": "safeConfigJson 只下发 title/steps/hint/imageUrl/options；answerKey 绝不投影。"
+   },
+   {
+    "name": "silentOrder",
+    "kind": "PLAY",
+    "def": "#/$defs/silentOrderSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:833 validateSilentOrder",
+    "enabledGate": true
+   },
+   {
+    "name": "diyName",
+    "kind": "PLAY",
+    "def": "#/$defs/diyNameSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:845 validateDiyName",
+    "enabledGate": true
+   },
+   {
+    "name": "musicCorner",
+    "kind": "PLAY",
+    "def": "#/$defs/musicCornerSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:872 validateMusicCorner",
+    "enabledGate": true
+   },
+   {
+    "name": "backgroundMusic",
+    "kind": "PRESENTATION",
+    "def": "#/$defs/backgroundMusicSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:889 validateBackgroundMusic",
+    "enabledGate": false,
+    "note": "无 enabled 字段；存在即生效。"
+   },
+   {
+    "name": "steps",
+    "kind": "PLAY",
+    "def": "#/$defs/stepsSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:908 validateSteps",
+    "enabledGate": true
+   },
+   {
+    "name": "dailySign",
+    "kind": "PLAY",
+    "def": "#/$defs/dailySignSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:923 validateDailySign",
+    "enabledGate": true,
+    "private": true,
+    "projection": "签文池不投影；一次只发当天一条（服务端选）。"
+   },
+   {
+    "name": "slowTask",
+    "kind": "PLAY",
+    "def": "#/$defs/slowTaskSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:955 validateSlowTask",
+    "enabledGate": true
+   },
+   {
+    "name": "estimate",
+    "kind": "PLAY",
+    "def": "#/$defs/estimateSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:982 validateEstimate",
+    "enabledGate": true,
+    "private": true,
+    "projection": "answer/tolerance 不投影。"
+   },
+   {
+    "name": "pricePair",
+    "kind": "PLAY",
+    "def": "#/$defs/pricePairSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1036 validatePricePair",
+    "enabledGate": true,
+    "private": true,
+    "projection": "只下发 name/配图；correct 不投影。",
+    "note": "带 price 且无 correct 的老比价配置由 retireLegacyPricePair 整段关掉（不报错，避免已发布节点打不开）。"
+   },
+   {
+    "name": "hiddenObject",
+    "kind": "PLAY",
+    "def": "#/$defs/hiddenObjectSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1096 validateHiddenObject",
+    "enabledGate": true,
+    "private": true,
+    "projection": "hotspots 坐标不投影（就是答案位置）。"
+   },
+   {
+    "name": "predict",
+    "kind": "PLAY",
+    "def": "#/$defs/predictSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1172 validatePredict",
+    "enabledGate": true,
+    "note": "答案在提交时还不存在：配置里没有 answerKey，选项可整个下发。"
+   },
+   {
+    "name": "qa",
+    "kind": "PLAY",
+    "def": "#/$defs/qaSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1226 validateQa",
+    "enabledGate": true,
+    "private": true,
+    "projection": "安全投影只下发 mode/title/lead/媒体/options（去掉私有面）；answerText 与 correct 绝不投影。",
+    "note": "指认结案复用本段的 PICK 单选（见 accusation）。"
+   },
+   {
+    "name": "clueTransform",
+    "kind": "PRESENTATION",
+    "def": "#/$defs/clueTransformSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1316 validateClueTransform",
+    "enabledGate": false,
+    "note": "无 enabled：按 mode 判定，缺省 STANDARD。"
+   },
+   {
+    "name": "scan",
+    "kind": "PLAY",
+    "def": "#/$defs/scanSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1519 validateScan",
+    "enabledGate": true,
+    "private": true,
+    "projection": "二维码内容不在此段：绑在路线层节点 checkin_code。"
+   },
+   {
+    "name": "sort",
+    "kind": "PLAY",
+    "def": "#/$defs/sortSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1588 validateSort",
+    "enabledGate": true,
+    "private": true,
+    "projection": "answerOrder 不投影；下发 items 顺序与答案无关。"
+   },
+   {
+    "name": "match",
+    "kind": "PLAY",
+    "def": "#/$defs/matchSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1641 validateMatch",
+    "enabledGate": true,
+    "private": true,
+    "projection": "pairs 不投影；右侧顺序打乱。"
+   },
+   {
+    "name": "classify",
+    "kind": "PLAY",
+    "def": "#/$defs/classifySection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1704 validateClassify",
+    "enabledGate": true,
+    "private": true,
+    "projection": "answer 映射不投影。"
+   },
+   {
+    "name": "compare",
+    "kind": "PLAY",
+    "def": "#/$defs/compareSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1773 validateCompare",
+    "enabledGate": true,
+    "private": true,
+    "projection": "answer 不投影；items 照原顺序下发（时间轴顺序就是题面）。",
+    "note": "不支持 effects：时间轴玩法没有通过类效果的执行链路，配了直接拒绝。"
+   },
+   {
+    "name": "profile",
+    "kind": "PLAY",
+    "def": "#/$defs/profileSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1850 validateProfile",
+    "enabledGate": true,
+    "private": true,
+    "projection": "effects 不投影（数值加成是暗的）。required 由服务端强制写为 true。"
+   },
+   {
+    "name": "photoCheck",
+    "kind": "PLAY",
+    "def": "#/$defs/photoCheckSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1938 validatePhotoCheck",
+    "enabledGate": true,
+    "projection": "判定全在服务端；不下发置信度模型参数。"
+   },
+   {
+    "name": "album",
+    "kind": "PLAY",
+    "def": "#/$defs/albumSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1991 validateAlbum",
+    "enabledGate": true,
+    "projection": "presentation：不产生完成证明。"
+   },
+   {
+    "name": "note",
+    "kind": "PLAY",
+    "def": "#/$defs/noteSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2015 validateNote",
+    "enabledGate": true
+   },
+   {
+    "name": "typeIn",
+    "kind": "PLAY",
+    "def": "#/$defs/typeInSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2050 validateTypeIn",
+    "enabledGate": true,
+    "note": "必须先开表（START_CHALLENGE typein）再提交，服务端按开表时刻复核。"
+   },
+   {
+    "name": "coinFlip",
+    "kind": "PLAY",
+    "def": "#/$defs/coinFlipSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2581 validateCoinFlip",
+    "enabledGate": true
+   },
+   {
+    "name": "diceRoll",
+    "kind": "PLAY",
+    "def": "#/$defs/diceRollSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2603 validateDiceRoll",
+    "enabledGate": true
+   },
+   {
+    "name": "reaction",
+    "kind": "PLAY",
+    "def": "#/$defs/reactionSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2656 validateReaction",
+    "enabledGate": true
+   },
+   {
+    "name": "ballShake",
+    "kind": "PLAY",
+    "def": "#/$defs/ballShakeSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2673 validateBallShake",
+    "enabledGate": true
+   },
+   {
+    "name": "quietHold",
+    "kind": "PLAY",
+    "def": "#/$defs/quietHoldSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2691 validateQuietHold",
+    "enabledGate": true
+   },
+   {
+    "name": "compass",
+    "kind": "PLAY",
+    "def": "#/$defs/compassSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2703 validateCompass",
+    "enabledGate": true,
+    "note": "低价值段：禁止当到店凭证（现场感契约 §3.3）。"
+   },
+   {
+    "name": "shout",
+    "kind": "PLAY",
+    "def": "#/$defs/shoutSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2725 validateShout",
+    "enabledGate": true
+   },
+   {
+    "name": "countdown",
+    "kind": "PLAY",
+    "def": "#/$defs/countdownSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2737 validateCountdown",
+    "enabledGate": true,
+    "note": "倒计时本身不判对错。"
+   },
+   {
+    "name": "stopwatch",
+    "kind": "PLAY",
+    "def": "#/$defs/stopwatchSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:2750 validateStopwatch",
+    "enabledGate": true
+   },
+   {
+    "name": "hintLadder",
+    "kind": "HELP",
+    "def": "#/$defs/hintLadderEntry",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1338 validateHintLadder",
+    "enabledGate": false,
+    "private": true,
+    "vector": "save-first-batch-full-valid"
+   },
+   {
+    "name": "hintFreeUsesPerRun",
+    "kind": "HELP",
+    "def": "#/$defs/hintFreeUsesPerRun",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1388 validateHintFreeUsesPerRun",
+    "enabledGate": false,
+    "private": true,
+    "vector": "save-first-batch-full-valid"
+   },
+   {
+    "name": "hangman",
+    "kind": "PLAY",
+    "def": "#/$defs/hangmanSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/HangmanGameplay.java:77",
+    "enabledGate": true,
+    "private": true,
+    "vector": "save-first-batch-full-valid"
+   },
+   {
+    "name": "accusation",
+    "kind": "PRESENTATION",
+    "def": "#/$defs/accusationSection",
+    "source": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AdvancedGameConfigValidator.java:1304 validateAccusation",
+    "enabledGate": true,
+    "private": true,
+    "vector": "save-first-batch-full-valid"
+   }
+  ],
+  "x-cy-note": "每条都指向真实校验入口。enabledGate=true 表示该段用根字段 enabled 开启；false 表示无 enabled 或用 mode/存在性表达。"
+ },
+ "x-cy-coverage": {
+  "sections": 43,
+  "rootControls": 14,
+  "vectors": "chengyinhub-admin/src/test/resources/contracts/content-contract-v1-vectors.json → vectors.sections",
+  "x-cy-note": "每个玩法段的最小合法向量都在同一份 vectors 里由真实 validator 断言；新增段必须同批补段清单 + 向量。"
+ }
+}

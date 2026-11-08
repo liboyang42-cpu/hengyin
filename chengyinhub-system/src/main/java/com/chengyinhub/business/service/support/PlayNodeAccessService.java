@@ -30,6 +30,13 @@ public class PlayNodeAccessService {
     private final ICmsTopicChapterService cmsTopicChapterService;
     private final ITopicRouteRuntimeService topicRouteRuntimeService;
 
+    /** 礼品对可玩资格的影响（只读，自玩域）。缺失即启动失败，不会退化成"礼品行可玩"。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private IMarketingGiftPlayEligibility giftPlayEligibility;
+    /** 付费内含席位受让人事实（只读）。与礼品分开，合并点仍在 CurrentPlayRegistration。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
+
     public PlayNodeAccessService(ICmsActivityService activities, CmsActivityMapper currentActivities,
             CmsRegistrationMapper registrations, ICmsTopicNodeService nodes, IPlayerNodeProgressService progress,
             ICmsTopicService topics, IOmsTicketService tickets, ClubLeadMapper leads,
@@ -259,7 +266,7 @@ public class PlayNodeAccessService {
             if (!activity.getTopicId().equals(node.getTopicId())) { c.error = error("该节点不属于本次活动"); return c; }
             CmsRegistration ticket;
             try { ticket=com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                    currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date()); }
+                    currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date(),false,giftPlayEligibility,seatRecipientEligibility); }
             catch(IllegalStateException denied) { c.error=error(denied.getMessage());return c; }
             if (ticket == null) { c.error = error("请先报名并完成支付"); return c; }
             c.registration = ticket;
@@ -285,9 +292,11 @@ public class PlayNodeAccessService {
         boolean continuing = topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L);
         try { pass = continuing
                 ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
-                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date())
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date(),
+                        giftPlayEligibility,seatRecipientEligibility)
                 : com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date()); }
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date(),
+                        false,giftPlayEligibility,seatRecipientEligibility); }
         catch(IllegalStateException denied) { c.error=new Failure(402,denied.getMessage());return c; }
         if (pass == null) { c.error = new Failure(402, "请先购买自玩通行证"); return c; }
         c.registration = pass;

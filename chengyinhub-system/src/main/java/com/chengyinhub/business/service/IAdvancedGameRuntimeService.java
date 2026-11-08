@@ -31,6 +31,26 @@ public interface IAdvancedGameRuntimeService {
     String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId);
 
     /**
+     * 跳过本题(BE-16 L5 / M.7「跳过记 0 分」):本题记 0 分、只留辅助完成痕迹,
+     * 不产生答对、到达、扫码、照片、核销或支付任何证明。
+     *
+     * <p>只有作者在冻结阶梯里配了 {@code SKIP} 层、且该节点不是现实凭证类(扫码/拍照/计步/相册/竞猜)
+     * 时才允许。同一 {@code requestId} 重发只回放,不重复落账;本局已结束或已跳过不重复结算。
+     *
+     * @return 本局会话视图(客户端据此展示「本题记 0 分·辅助完成」),调用方随后按既有完成链
+     *         写 0 分与 {@code completion_mode=SKIPPED};本方法不自己写节点进度
+     */
+    Map<String, Object> skip(Long memberId, Long activityId, Long topicId, Long nodeId, String requestId);
+
+    /**
+     * 该节点本局是否已按「跳过·辅助完成」收尾。完成链({@code advanceProgress})据此把
+     * 分数固定为 0、完成方式写 {@code SKIPPED}、奖励降为探索值+徽章。只读。
+     */
+    default boolean skippedAssistedCompletion(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
+    /**
      * C1 可信边界(选项 A):本节点当前局的完成是否只由设备自报成绩、拍照兜底放行或静态节点码撑着。
      * 为 true 时节点奖励只许探索值与徽章(不发积分、券、掉落)。只读,按 memberId 取本人局。
      */

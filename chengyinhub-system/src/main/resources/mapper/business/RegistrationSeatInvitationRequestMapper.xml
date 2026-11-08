@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RegistrationSeatInvitationRequestMapper">
+
+    <resultMap id="requestRecordMap" type="com.chengyinhub.business.domain.RegistrationSeatInvitationRequestRecord">
+        <id property="id" column="id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="operation" column="operation"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="invitationId" column="invitation_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="resultStatus" column="result_status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="requestColumns">
+        id, request_id, member_id, operation, registration_id, invitation_id, request_fingerprint, result_status, create_time
+    </sql>
+
+    <select id="selectByRequestId" resultMap="requestRecordMap" useCache="false">
+        select <include refid="requestColumns"/> from cms_registration_seat_invitation_request
+        where member_id = #{memberId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectByRequestIdForUpdate" resultMap="requestRecordMap" useCache="false" flushCache="true">
+        select <include refid="requestColumns"/> from cms_registration_seat_invitation_request
+        where member_id = #{memberId} and request_id = #{requestId} for update
+    </select>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.RegistrationSeatInvitationRequestRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into cms_registration_seat_invitation_request
+            (request_id, member_id, operation, registration_id, invitation_id, request_fingerprint, result_status, create_time)
+        values
+            (#{requestId}, #{memberId}, #{operation}, #{registrationId}, #{invitationId}, #{requestFingerprint}, #{resultStatus}, #{createTime})
+    </insert>
+</mapper>

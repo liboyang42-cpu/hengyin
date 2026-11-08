@@ -27,6 +27,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.dao.DuplicateKeyException;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RegistrationOrderServiceBoundaryTest {
 
@@ -127,6 +129,42 @@ class RegistrationOrderServiceBoundaryTest {
     @Test
     void expiredOrderIsNotReplayedAsSuccess() {
         assertTerminalOrderRejected(4, "该幂等键对应的报名已过期，请重新发起报名");
+    }
+
+    @Test
+    void promotionUniqueKeyCollisionBecomesRecoverableConflict() {
+        // 促销用事实被并发用掉 ⇒ 撞 uk_redemption_*:对客户端唯一可恢复的动作是重新报价,转 409。
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        IRegistrationCreationTransaction creation = mock(IRegistrationCreationTransaction.class);
+        IRegistrationOrderCreateGate gate = mock(IRegistrationOrderCreateGate.class);
+        when(registrations.selectCmsRegistrationList(any(CmsRegistration.class)))
+                .thenReturn(Collections.emptyList());
+        when(creation.create(any(), any(), any(), any())).thenThrow(new DuplicateKeyException(
+                "Duplicate entry '7-3-11' for key 'marketing_promotion_redemption.uk_redemption_fact'"));
+        RegistrationOrderServiceImpl service = service(registrations, creation, gate);
+
+        RegistrationRequestConflictException conflict = assertThrows(RegistrationRequestConflictException.class,
+                () -> service.createOrReplay(7L, request("promo-race")));
+        assertTrue(conflict.getMessage().contains("重新报价"),
+                "必须告诉客户端重新报价(实际:" + conflict.getMessage() + ")");
+    }
+
+    @Test
+    void nonPromotionDuplicateKeyStillPropagatesAsIs() {
+        // 负控:别的唯一键(如 registration_no 撞车)不能被伪装成"重试就好"的 409。
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        IRegistrationCreationTransaction creation = mock(IRegistrationCreationTransaction.class);
+        IRegistrationOrderCreateGate gate = mock(IRegistrationOrderCreateGate.class);
+        when(registrations.selectCmsRegistrationList(any(CmsRegistration.class)))
+                .thenReturn(Collections.emptyList());
+        DuplicateKeyException original = new DuplicateKeyException(
+                "Duplicate entry 'T20261108ABC' for key 'cms_registration.uk_registration_no'");
+        when(creation.create(any(), any(), any(), any())).thenThrow(original);
+        RegistrationOrderServiceImpl service = service(registrations, creation, gate);
+
+        DuplicateKeyException propagated = assertThrows(DuplicateKeyException.class,
+                () -> service.createOrReplay(7L, request("plain-race")));
+        assertSame(original, propagated, "非促销唯一键必须原样抛出,不得 catch 所有 SQL 错误");
     }
 
     /** 负控:非终态(待支付1)且指纹一致时仍是正常重放,新的终态闸不得误伤。 */

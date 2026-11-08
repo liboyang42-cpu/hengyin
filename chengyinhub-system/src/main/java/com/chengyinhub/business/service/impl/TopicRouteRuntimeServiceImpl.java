@@ -102,6 +102,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final com.chengyinhub.business.service.support.GameplayTaskEngine gameplayTasks = new com.chengyinhub.business.service.support.GameplayTaskEngine();
     @Autowired private com.chengyinhub.business.service.support.VerifiedWeRunService verifiedWeRunService;
+    /** 礼品对可玩资格的影响（只读自玩域）；缺失即启动失败，不让礼品行退化成可玩。 */
+    @Autowired private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
+    /** 付费内含席位受让人事实（只读）；与礼品事实分开，在同一准入点合并。 */
+    @Autowired private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
     private final com.chengyinhub.business.service.support.GameplaySurvivalEngine gameplaySurvival = new com.chengyinhub.business.service.support.GameplaySurvivalEngine();
     private final com.chengyinhub.business.service.support.GameplayCooperationEngine gameplayCooperation = new com.chengyinhub.business.service.support.GameplayCooperationEngine();
     /** 检定运行时系统键:不进键注册表,只由服务端写本局 state(共享契约 v2/v3)。 */
@@ -1137,7 +1141,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (existing != null) return existing;
         if (topicPlaySetupService != null) topicPlaySetupService.requireOpen(scope.topic, scope.activityId);
         com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
-                scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date());
+                scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date(),false,giftPlayEligibility,seatRecipientEligibility);
         if (scope.topic.getPublishedRouteGraphJson() == null
                 || scope.topic.getPublishedRouteGraphJson().trim().isEmpty()
                 || scope.topic.getPublishedConfigVersion() == null
@@ -1151,6 +1155,14 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 validator.readTree(scope.topic.getPublishedRouteGraphJson()).path("runtimeSnapshotVersion").asInt() == 1
                         ? scope.topic.getPublishedRouteGraphJson() : validator.validateAndNormalize(scope.topic.getPublishedRouteGraphJson(), nodeIds),
                 scope.topic, nodes);
+        // BE-06:新局绑定当前发布修订;老主题没有修订行时快照字节原样,继续按发布头真实内容跑。
+        com.chengyinhub.business.domain.vo.TopicContentRevisionView revisionHeader =
+                topicMapper.selectLatestContentRevisionHeader(scope.topic.getId());
+        if (revisionHeader != null) {
+            ObjectNode revisionBoundSnapshot = (ObjectNode) validator.readTree(snapshot);
+            com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(revisionBoundSnapshot, revisionHeader);
+            snapshot = write(revisionBoundSnapshot);
+        }
         TopicRouteEngine.State initial = engine.initial(snapshot);
         JourneyRules branchRules = FrozenAttributeDefinitions.rules(validator.readTree(snapshot), scope.topic.getPublishedConfigVersion());
         applyJourneyInitials(branchRules, initial);
@@ -1287,15 +1299,13 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if("ANSWER".equals(basicCompletionKind(frozen,nodeId))) {
             JsonNode answer=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId));String submitted=answers.path("answer").asText("").trim();
             if(answer.path("validationMethod").asInt()==3)return !answer.path("correctAnswer").asText().trim().isEmpty() && answer.path("correctAnswer").asText().trim().equalsIgnoreCase(submitted);
-            String expected=answer.path("questionAnswer").asText();return !expected.trim().isEmpty() && normalizeBasicAnswer(expected).equalsIgnoreCase(normalizeBasicAnswer(submitted));
+            // BE-08:引导/共享路线与普通 answer 同一比较器。别名来自本局冻结的 answerPolicy
+            // (发布/建局时从模板 advancedConfigJson 冻结);老快照没有该键 = 只有 canonical answer。
+            com.chengyinhub.business.service.support.AnswerPolicy policy = com.chengyinhub.business.service.support.AnswerPolicy
+                    .of(answer.path(com.chengyinhub.business.service.support.AnswerPolicy.FIELD));
+            return policy.matches(answer.path("questionAnswer").asText(), submitted);
         }
         return AdvancedActionJudgement.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
-    }
-
-    private String normalizeBasicAnswer(String value) {
-        String trimmed=value.trim().replaceAll("\\s+", ""); StringBuilder normalized=new StringBuilder();
-        for(char c:trimmed.toCharArray()) {if(c>='！' && c<='～')normalized.append((char)(c-0xFEE0));else if(c=='　')normalized.append(' ');else normalized.append(c);}
-        return normalized.toString();
     }
 
     private String basicCompletionKind(JsonNode frozen,Long nodeId) {
@@ -1392,13 +1402,21 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (existing != null) return existing;
         if (topicPlaySetupService != null) topicPlaySetupService.requireOpen(scope.topic, scope.activityId);
         com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
-                scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date());
+                scope.memberId,scope.activityId>0 ? 2L : 1L,scope.activityId>0 ? scope.activityId : scope.topic.getId(),null,new Date(),false,giftPlayEligibility,seatRecipientEligibility);
         if (scope.topic.getPublishedConfigVersion() == null || scope.topic.getPublishedConfigVersion() <= 0L) {
             throw new IllegalStateException("路线尚未发布");
         }
         String frozenSnapshot = scope.topic.getPublishedRouteGraphJson() != null
                 && validator.readTree(scope.topic.getPublishedRouteGraphJson()).path("runtimeSnapshotVersion").asInt() == 1
                 ? freezePublishedJourney(scope.topic) : freezeJourney(linearSnapshot(liveNodes), scope.topic, liveNodes, probe);
+        // BE-06:同上;只在新建局时绑头,老主题无修订行则快照字节原样。
+        com.chengyinhub.business.domain.vo.TopicContentRevisionView journeyRevision =
+                topicMapper.selectLatestContentRevisionHeader(scope.topic.getId());
+        if (journeyRevision != null) {
+            ObjectNode revisionBoundJourney = (ObjectNode) validator.readTree(frozenSnapshot);
+            com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(revisionBoundJourney, journeyRevision);
+            frozenSnapshot = write(revisionBoundJourney);
+        }
         JsonNode publishedStations = validator.readTree(frozenSnapshot).path("routeStations");
         if (publishedStations.isArray()) {
             liveNodes = new ArrayList<>();
@@ -1767,9 +1785,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(newUse) current=started
                 // 已开局的路线：自玩通行证开局时有效即可打完本局；活动场次/探索票仍按活动结束等原规则。
                 ? com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAllToContinue(
-                        activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date())
+                        activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date(),giftPlayEligibility,seatRecipientEligibility)
                 : com.chengyinhub.business.service.support.CurrentPlayRegistration.requireAll(
-                        activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date());
+                        activityMapper,registrationMapper,memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,new Date(),giftPlayEligibility,seatRecipientEligibility);
         CmsRegistration probe = new CmsRegistration(); probe.setMemberId(memberId); probe.setRegistrationStatus(2);
         if (actId > 0L) {
             CmsActivity activity = activityMapper.selectCmsActivityById(actId);
@@ -1782,7 +1800,18 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             // publishStatus 是公开目录/新购可见性；已付玩家的存量游玩权不以它为闸。
             probe.setOwnerType(2L); probe.setOwnerId(actId);
         } else { probe.setOwnerType(1L); probe.setOwnerId(topicId); }
-        List<CmsRegistration> rows = registrationMapper.selectCmsRegistrationList(probe);
+        List<CmsRegistration> rows = newUse ? current : registrationMapper.selectCmsRegistrationList(probe);
+        if (!newUse && seatRecipientEligibility != null) {
+            rows = rows == null ? new ArrayList<>() : new ArrayList<>(rows);
+            for (com.chengyinhub.business.domain.SeatRecipientFact fact : seatRecipientEligibility.playFacts(
+                    memberId, actId > 0L ? 2L : 1L, actId > 0L ? actId : topicId)) {
+                if (fact == null || !memberId.equals(fact.getInviteeMemberId()) || fact.getRegistrationId() == null) continue;
+                CmsRegistration original = registrationMapper.selectCmsRegistrationById(fact.getRegistrationId());
+                if (com.chengyinhub.business.service.support.CurrentPlayRegistration.ownedScope(
+                        original, actId > 0L ? 2L : 1L, actId > 0L ? actId : topicId)
+                        && Integer.valueOf(2).equals(original.getPaymentStatus())) rows.add(original);
+            }
+        }
         if (rows == null || rows.isEmpty()) throw new IllegalStateException(actId > 0L ? "请先报名并完成支付" : "请先购买自玩通行证");
         List<CmsRegistration> currentRegistrations = new ArrayList<CmsRegistration>();
         if (actId == 0L) {
@@ -3887,6 +3916,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 ? freezeJourney(published.toString(), scope.topic, liveNodes, replayProbe.configs(), replayProbe.templatesById(), index)
                 : freezeJourney(branch ? validator.validateAndNormalize(scope.topic.getPublishedRouteGraphJson(),replayNodes) : linearSnapshot(liveNodes),scope.topic,liveNodes,replayProbe.configs(),replayProbe.templatesById(),index);
         ObjectNode root=(ObjectNode)validator.readTree(snapshot);
+        // BE-06:重玩同样是新局,绑定当前发布修订;老主题无修订行时不加键。
+        com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(
+                root, topicMapper.selectLatestContentRevisionHeader(scope.topic.getId()));
         ObjectNode frozen=(ObjectNode)root.get("themeConfig");
         TopicRouteEngine.State initial=branch ? engine.initial(write(root)) : new TopicRouteEngine.State();initial.setStatus("ACTIVE");
         if(!branch){initial.setCurrentNodeId(liveNodes.get(0).getId());initial.setRecommendedNodeId(liveNodes.get(0).getId());}

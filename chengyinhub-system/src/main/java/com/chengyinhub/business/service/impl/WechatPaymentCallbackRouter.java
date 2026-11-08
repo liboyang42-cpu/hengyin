@@ -31,7 +31,8 @@ public class WechatPaymentCallbackRouter {
 
     @Autowired
     public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
-            ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds) {
+            ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
+            IMarketingProductPurchaseService marketingProducts) {
         // Reserve CLM even when malformed/unknown: it must never fall through to registration.
         owners = List.of(
                 new Owner("club-membership", no -> no != null && no.startsWith("CLM"), facts ->
@@ -47,6 +48,15 @@ public class WechatPaymentCallbackRouter {
                                         cents(facts) == null ? null : cents(facts).longValue(), facts.get("transaction_id"),
                                         new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
                                                 Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"))))),
+                // 营销商品现金单(MKO_)。放在 registration 之前是刻意的:MKO 号段绝不能被
+                // registration 的「按 registration_no 查得到」兜底认领;承载方内部仍会再次校验
+                // 订单存在/可支付/金额与不可变支付事实一致,不靠这里的字符串。
+                new Owner("marketing-product", no -> marketingProducts != null
+                        && no != null && no.startsWith("MKO"), facts ->
+                        ack(paid(facts) && marketingProducts != null
+                                && marketingProducts.handlePaidOrder(facts.get("out_trade_no"), paid(facts),
+                                        cents(facts), facts.get("transaction_id"),
+                                        verifiedPaymentReference(facts)))),
                 new Owner("registration", no -> no != null && registration != null && registration.getByRegistrationNo(no) != null, facts ->
                         registration == null ? "FAIL" : registration.handleWechatPayCallback(facts)));
         depositRefund = facts -> coop != null && coop.handleDepositRefundResult(facts);

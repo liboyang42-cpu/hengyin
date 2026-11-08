@@ -911,6 +911,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} for update
     </select>
 
+    <!-- BE-06:开局/发布回执只需修订头;刻意不选 snapshot_json(私有答案)。
+         public_manifest_json 必须选:F1 的新局冻结地理只从该修订自己的 manifest 取,
+         不能回读 live cms_topic.city_code。它是白名单公共投影,不含 secret。
+         老主题没有修订行时返回空,调用方保持原有 legacy 读法。 -->
+    <select id="selectLatestContentRevisionHeader" resultType="com.chengyinhub.business.domain.vo.TopicContentRevisionView"
+            useCache="false" flushCache="true">
+        select id, topic_id as topicId, revision_no as revisionNo, schema_version as schemaVersion,
+               content_sha256 as contentSha256, public_manifest_json as publicManifestJson,
+               source_content_revision_id as sourceContentRevisionId,
+               origin, create_time as createTime
+        from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no desc
+        limit 1
+    </select>
+
     <insert id="insertCmsTopic" parameterType="CmsTopic" useGeneratedKeys="true" keyProperty="id">
         insert into cms_topic
         <trim prefix="(" suffix=")" suffixOverrides=",">

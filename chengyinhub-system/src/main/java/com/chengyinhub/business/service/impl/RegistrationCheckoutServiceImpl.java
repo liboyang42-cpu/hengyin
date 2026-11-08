@@ -42,13 +42,10 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
-        RegistrationQuoteResult result;
-        if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
-            result = registrationService.quoteRegistrationForOffer(memberId, request);
-        } else {
-            result = registrationService.quoteRegistration(memberId, request.getOwnerType(), request.getOwnerId(),
-                    request.getTicketId(), request.getTickets(), request.getIsUsePoint());
-        }
+        // M2 的完整请求入口:促销意图(offerCode)与候补凭证都在同一处判定,
+        // 报价与下单用同一份入参,避免"报价不认优惠码、下单认"。
+        RegistrationQuoteResult result = registrationService.quoteRegistration(memberId, request);
+        // B7 的通道就绪投影:只报通道是否可用，不报商品是否获准在该市场销售。
         attachPaymentChannels(result);
         return result;
     }

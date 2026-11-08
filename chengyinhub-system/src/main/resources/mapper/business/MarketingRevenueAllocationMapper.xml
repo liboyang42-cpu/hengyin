@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingRevenueAllocationMapper">
+
+    <resultMap id="RevenueAllocationResult" type="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocation">
+        <id property="id" column="id"/>
+        <result property="orderType" column="order_type"/>
+        <result property="orderId" column="order_id"/>
+        <result property="allocationKey" column="allocation_key"/>
+        <result property="ruleId" column="rule_id"/>
+        <result property="ruleKey" column="rule_key"/>
+        <result property="ruleVersion" column="rule_version"/>
+        <result property="scenario" column="scenario"/>
+        <result property="attributionId" column="attribution_id"/>
+        <result property="sharerMemberId" column="sharer_member_id"/>
+        <result property="campaignKey" column="campaign_key"/>
+        <result property="authorMemberId" column="author_member_id"/>
+        <result property="contractRef" column="contract_ref"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="currency" column="currency"/>
+        <result property="paidFen" column="paid_fen"/>
+        <result property="paymentFactHash" column="payment_fact_hash"/>
+        <result property="originalAmountFen" column="original_amount_fen"/>
+        <result property="discountFen" column="discount_fen"/>
+        <result property="pointDeductFen" column="point_deduct_fen"/>
+        <result property="taxFen" column="tax_fen"/>
+        <result property="paymentFeeFen" column="payment_fee_fen"/>
+        <result property="channelCommissionFen" column="channel_commission_fen"/>
+        <result property="feeBasisRef" column="fee_basis_ref"/>
+        <result property="netFen" column="net_fen"/>
+        <result property="referralFundingSide" column="referral_funding_side"/>
+        <result property="status" column="status"/>
+        <result property="settleableAt" column="settleable_at"/>
+        <result property="reversedFen" column="reversed_fen"/>
+        <result property="snapshotHash" column="snapshot_hash"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="AllocationColumns">
+        id, order_type, order_id, allocation_key, rule_id, rule_key, rule_version, scenario,
+        attribution_id, sharer_member_id, campaign_key, author_member_id, contract_ref,
+        owner_type, owner_id, currency, paid_fen, payment_fact_hash, original_amount_fen,
+        discount_fen, point_deduct_fen, tax_fen, payment_fee_fen, channel_commission_fen,
+        fee_basis_ref, net_fen, referral_funding_side, status, settleable_at, reversed_fen,
+        snapshot_hash, create_time, update_time
+    </sql>
+
+    <insert id="insertAllocation"
+            parameterType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocation"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_revenue_allocation
+            (order_type, order_id, allocation_key, rule_id, rule_key, rule_version, scenario,
+             attribution_id, sharer_member_id, campaign_key, author_member_id, contract_ref,
+             owner_type, owner_id, currency, paid_fen, payment_fact_hash, original_amount_fen,
+             discount_fen, point_deduct_fen, tax_fen, payment_fee_fen, channel_commission_fen,
+             fee_basis_ref, net_fen, referral_funding_side, status, settleable_at, reversed_fen,
+             snapshot_hash, create_time, update_time)
+        values
+            (#{orderType}, #{orderId}, #{allocationKey}, #{ruleId}, #{ruleKey}, #{ruleVersion}, #{scenario},
+             #{attributionId}, #{sharerMemberId}, #{campaignKey}, #{authorMemberId}, #{contractRef},
+             #{ownerType}, #{ownerId}, #{currency}, #{paidFen}, #{paymentFactHash}, #{originalAmountFen},
+             #{discountFen}, #{pointDeductFen}, #{taxFen}, #{paymentFeeFen}, #{channelCommissionFen},
+             #{feeBasisRef}, #{netFen}, #{referralFundingSide}, #{status}, #{settleableAt}, #{reversedFen},
+             #{snapshotHash}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="RevenueAllocationResult">
+        select <include refid="AllocationColumns"/>
+        from marketing_revenue_allocation where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="RevenueAllocationResult">
+        select <include refid="AllocationColumns"/>
+        from marketing_revenue_allocation where id = #{id} for update
+    </select>
+
+    <select id="selectByOrder" resultMap="RevenueAllocationResult">
+        select <include refid="AllocationColumns"/>
+        from marketing_revenue_allocation
+        where order_type = #{orderType} and order_id = #{orderId}
+    </select>
+
+    <select id="selectByOrderForUpdate" resultMap="RevenueAllocationResult">
+        select <include refid="AllocationColumns"/>
+        from marketing_revenue_allocation
+        where order_type = #{orderType} and order_id = #{orderId} for update
+    </select>
+
+    <select id="selectByAuthor" resultMap="RevenueAllocationResult">
+        select <include refid="AllocationColumns"/>
+        from marketing_revenue_allocation
+        where author_member_id = #{authorMemberId}
+        order by create_time desc, id desc
+    </select>
+
+    <select id="selectList" resultMap="RevenueAllocationResult">
+        select <include refid="AllocationColumns"/>
+        from marketing_revenue_allocation
+        <where>
+            <if test="status != null">and status = #{status}</if>
+            <if test="scenario != null">and scenario = #{scenario}</if>
+        </where>
+        order by create_time desc, id desc
+    </select>
+
+    <!-- 推进可结算。
+         条件只保留三条，都不新造资金政策：
+           1) 本域自己的冻结期已到（settleable_at = 应计时刻 + 规则 hold_days，应计时冻结）；
+           2) 尚未冲满净额（reversed_fen < net_fen），即仍有可结余额；
+           3) 该单没有"进行中"的退款申请 —— 只挡未落定的退款，不挡已结束的退款。
+              进行中 = 待审核(status=0) 或 通道处理中/待派发/派发中(payout_status 0/5/6)。
+              这与既有 refund_application 状态定义一致，是"别结算正在退的钱"，不是新政策。
+         刻意**不**用 reversed_fen = 0：那会把"已部分退款但仍有合法余额"的单永久挂起，
+         而部分退款后的应付余额正是 reversed_fen 记录的差额（net_fen − reversed_fen）。
+         已部分冲销(status=4)的行在余额仍可结时也允许推进到 2；已全额冲销(5)不在此列。
+    -->
+    <update id="markSettleableDue">
+        update marketing_revenue_allocation a
+        set a.status = 2, a.update_time = now()
+        where a.status in (1, 4)
+          and a.settleable_at is not null and a.settleable_at &lt;= now()
+          and a.reversed_fen &lt; a.net_fen
+          and not exists (
+              select 1 from refund_application r
+              where r.source_type = 'registration' and r.source_id = a.order_id
+                and (r.status = 0 or r.payout_status in (0, 5, 6))
+          )
+    </update>
+
+    <update id="markSettleable">
+        update marketing_revenue_allocation a
+        set a.status = 2, a.update_time = now()
+        where a.id = #{id} and a.status in (1, 4)
+          and a.settleable_at is not null and a.settleable_at &lt;= now()
+          and a.reversed_fen &lt; a.net_fen
+          and not exists (
+              select 1 from refund_application r
+              where r.source_type = 'registration' and r.source_id = a.order_id
+                and (r.status = 0 or r.payout_status in (0, 5, 6))
+          )
+    </update>
+
+    <update id="updateAfterReversal">
+        update marketing_revenue_allocation
+        set reversed_fen = #{reversedFen}, status = #{status}, update_time = #{updateTime}
+        where id = #{id}
+    </update>
+</mapper>

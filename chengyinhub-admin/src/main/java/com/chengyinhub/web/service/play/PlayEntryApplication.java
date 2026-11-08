@@ -67,6 +67,12 @@ public class PlayEntryApplication {
     private PlayNodeContext playNodeContext;
     @Autowired
     private PlayNodeQueryApplication playNodeQueryApplication;
+    /** 礼品可玩资格（只读自玩域）；必需注入，避免礼品行退化成"买家可玩"。 */
+    @Autowired
+    private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
+    /** 付费内含席位受让人事实（只读）；与礼品分开，合并点仍在 CurrentPlayRegistration。 */
+    @Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
 
     /** Compatibility GET /nodes still performs original entry commands at their original points. */
     public AjaxResult nodes(Long actorMemberId, Long activityId, Long topicId) {
@@ -118,7 +124,8 @@ public class PlayEntryApplication {
             // 已开局的本局：通行证开局时有效即可打完，节点列表照常下发。
             if (pass == null && topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L)) {
                 try { pass = com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
-                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,null,new Date()); }
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,null,new Date(),
+                        giftPlayEligibility,seatRecipientEligibility); }
                 catch (IllegalStateException denied) { pass = null; }
             }
             // C-26:没有(或过期的)自玩通行证不是「未报名」——自玩本来就没有报名这个动作。

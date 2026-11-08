@@ -66,6 +66,10 @@ public class ApiCouponController extends BaseController {
 
     @Autowired
     private ISmsCouponHistoryService smsCouponHistoryService;
+
+    /** 只读:玩家已持有券的可用性投影(不发券、不核销、不改状态)。 */
+    @Autowired
+    private com.chengyinhub.business.service.impl.CouponUsabilityService couponUsabilityService;
     @Autowired
     private ISettlementEntryService settlementEntryService;
     @Autowired
@@ -523,6 +527,21 @@ public class ApiCouponController extends BaseController {
 
     public AjaxResult couponVerification(String code, String token) {
         return couponVerification(code, token, null);
+    }
+
+    @Operation(summary = "我持有的优惠券可用性(只读):能不能用/为什么不能用")
+    @PostMapping("/usability")
+    public AjaxResult couponUsability() {
+        Long memberId = 0L;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            // 未登录:按既有端点口径如实要求登录,不注入任何假身份
+        }
+        if (memberId == null || memberId <= 0) {
+            return error("请先登录");
+        }
+        return success(couponUsabilityService.listMine(memberId));
     }
 
     /**

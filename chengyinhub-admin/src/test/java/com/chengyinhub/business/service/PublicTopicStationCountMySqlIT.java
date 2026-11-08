@@ -286,7 +286,10 @@ class PublicTopicStationCountMySqlIT {
                 + " recruit_extend_count TINYINT, lifecycle TINYINT, sale_end_at DATETIME,"
                 + " selling_started_at DATETIME, source_topic_id BIGINT, circle_reviewed_at DATETIME,"
                 + " is_template TINYINT, create_by VARCHAR(64), create_time DATETIME,"
-                + " update_by VARCHAR(64), update_time DATETIME)");
+                + " update_by VARCHAR(64), update_time DATETIME,"
+                // 共享 resultMap/CmsTopic 已消费这两列;真实来源见 migration_o14_cms_topic_city_code_20261022.sql
+                // 与 migration_topic_location_contract_20261107.sql。测试建表语句,不是生产 DDL。
+                + " city_code VARCHAR(32), content_contract_json JSON)");
         st.execute("CREATE TABLE cms_topic_like(id BIGINT PRIMARY KEY,data_id BIGINT,member_id BIGINT)");
         st.execute("CREATE TABLE cms_topic_template_meta(topic_id BIGINT PRIMARY KEY,del_flag INT,template_status VARCHAR(20))");
         st.execute("CREATE TABLE merchant_chapter_application(id BIGINT PRIMARY KEY,topic_id BIGINT,chapter_id BIGINT,merchant_id BIGINT,status INT,del_flag INT)");

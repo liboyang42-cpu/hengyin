@@ -133,6 +133,50 @@ class PuzzlePlayServiceImplTest
         verify(templateService, never()).selectCmsMemberTemplateById(any());
     }
 
+    /**
+     * 已证实的重复计罚入口：内容快照里的模板**不带** advancedConfigJson，
+     * 只看模板字段会漏判，旧提示入口被放行 → 同一题既扣旧链提示等级(降解谜分)
+     * 又扣新阶梯积分。冻结运行配置里有 hintLadder 时必须拒绝旧入口。
+     */
+    @Test
+    void legacyHintIsRefusedWhenTheFrozenRunConfigCarriesAHintLadder()
+    {
+        com.chengyinhub.business.service.ITopicRouteRuntimeService route =
+                mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        com.fasterxml.jackson.databind.node.ObjectNode content = originalContent();
+        when(route.nodeAnswers(10L, 20L, 0L, 30L)).thenReturn(content);
+        com.fasterxml.jackson.databind.node.ObjectNode frozen =
+                new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        frozen.putArray("hintLadder").addObject().put("level", 1).put("type", "TEXT");
+        when(route.nodeRuntimeConfig(10L, 20L, 30L, 0L)).thenReturn(frozen);
+
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+                () -> service.requestHint(10L, 20L, node, 0L, 1));
+
+        assertEquals("该节点已配置提示阶梯，请使用新的提示入口", refused.getMessage());
+        verify(attemptLogMapper, never()).insertPlayAttemptLog(any(PlayAttemptLog.class));
+    }
+
+    /** 冻结配置里没有 ladder 的旧节点：旧提示入口照旧可用，零行为变化。 */
+    @Test
+    void legacyHintStillWorksWhenNeitherTemplateNorFrozenConfigHasALadder()
+    {
+        com.chengyinhub.business.service.ITopicRouteRuntimeService route =
+                mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.nodeAnswers(10L, 20L, 0L, 30L)).thenReturn(originalContent());
+        com.fasterxml.jackson.databind.node.ObjectNode frozen =
+                new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        frozen.putObject("qa").put("enabled", true);
+        when(route.nodeRuntimeConfig(10L, 20L, 30L, 0L)).thenReturn(frozen);
+        when(attemptLogMapper.selectMaxPuzzleHintLevel(10L, 20L, 30L, 0L)).thenReturn(0);
+        when(attemptLogMapper.insertPlayAttemptLog(any())).thenReturn(1);
+
+        assertEquals(Collections.singletonList("原第一提示"),
+                service.requestHint(10L, 20L, node, 0L, 1).getHints());
+    }
+
     @Test
     void damagedNewHintContentCannotReadCurrentTemplateOrWriteHintFact()
     {

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingRevenuePostingTaskMapper">
+
+    <!-- 幂等入队。命中已有行时：
+         - DONE(1)：完全不动（不能把已完成的应计重新排回队列）
+         - CLAIMED(3)：也完全不动。MAU 复查确认：把 CLAIMED 重置成 PENDING 会**抢走活着的租约**，
+           旧持有者的账务仍在进行，随后它与新持有者并发执行；虽然应计/冲销按业务键幂等、
+           不会双记账，但任务状态会被两个 worker 争夺。僵死持有者由 lease_expires_at 过期回收
+           （reclaimExpired）处理，不需要入队来"救"。
+         - PENDING(0)/FAILED(2)：重置为 PENDING 立即可试（新事件值得再试一次），
+           attempts 不清零便于看出反复失败次数。
+         赋值顺序有意把 status 放最后：MySQL 单表 UPDATE 从左到右求值，后面的表达式会看到前面已写入的值，
+         先写 status 会让下面几个 if() 读到新状态而不是原始状态。 -->
+    <insert id="enqueue">
+        insert into marketing_revenue_posting_task
+            (task_kind, ref_id, order_id, status, attempts, reason_code, detail, next_attempt_at,
+             lease_owner, lease_expires_at, create_time, update_time)
+        values
+            (#{task.taskKind}, #{task.refId}, #{task.orderId}, 0, 0, null, null, now(),
+             null, null, now(), now())
+        on duplicate key update
+            next_attempt_at = if(status in (1, 3), next_attempt_at, now()),
+            lease_owner = if(status in (1, 3), lease_owner, null),
+            lease_expires_at = if(status in (1, 3), lease_expires_at, null),
+            update_time = if(status in (1, 3), update_time, now()),
+            status = if(status in (1, 3), status, 0)
+    </insert>
+
+    <!-- 原子领取：把"待处理(PENDING) 或 失败待重试(FAILED) 且已到期"的行置为 CLAIMED 并打租约。
+         limit 用子查询先锁定候选，避免全表锁。
+
+         ⚠️ 必须包含 status=2(FAILED)：markFailed 写的就是 2，此前这里只领 0，
+         导致一次失败的任务**永远不会再被领取**，只能等同一 (kind, ref) 被重新入队才复活。
+         渠道退款是一次性回调、没有第二次入队，若不修就会让"退款先到、费用未核"永久卡死。 -->
+    <update id="claim">
+        update marketing_revenue_posting_task
+        set status = 3,
+            lease_owner = #{leaseOwner},
+            lease_expires_at = date_add(now(), interval #{leaseSeconds} second),
+            update_time = now()
+        where status in (0, 2)
+          and next_attempt_at &lt;= now()
+          and id in (
+              select id from (
+                  select id from marketing_revenue_posting_task
+                  where status in (0, 2) and next_attempt_at &lt;= now()
+                  order by next_attempt_at, id
+                  limit #{limit}
+              ) candidate
+          )
+    </update>
+
+    <select id="selectClaimed"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenuePostingTask">
+        select id, task_kind as taskKind, ref_id as refId, order_id as orderId, status,
+               attempts, reason_code as reasonCode, detail, next_attempt_at as nextAttemptAt,
+               lease_owner as leaseOwner, lease_expires_at as leaseExpiresAt,
+               create_time as createTime, update_time as updateTime
+        from marketing_revenue_posting_task
+        where status = 3 and lease_owner = #{leaseOwner}
+        order by id
+    </select>
+
+    <!-- 租约过期回收：持有者崩溃/超时后任务不会永久卡死。 -->
+    <update id="reclaimExpired">
+        update marketing_revenue_posting_task
+        set status = 0,
+            lease_owner = null,
+            lease_expires_at = null,
+            next_attempt_at = now(),
+            update_time = now()
+        where status = 3
+          and (lease_expires_at is null or lease_expires_at &lt;= now())
+    </update>
+
+    <select id="selectByKindAndRef"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenuePostingTask">
+        select id, task_kind as taskKind, ref_id as refId, order_id as orderId, status,
+               attempts, reason_code as reasonCode, detail, next_attempt_at as nextAttemptAt,
+               lease_owner as leaseOwner, lease_expires_at as leaseExpiresAt,
+               create_time as createTime, update_time as updateTime
+        from marketing_revenue_posting_task
+        where task_kind = #{taskKind} and ref_id = #{refId}
+    </select>
+
+    <!-- 生产路径：租约栅栏。只有"仍是 CLAIMED 且仍是我持有"的行才能被改。
+         旧 worker 醒来时若租约已过期被回收、或任务已被重新入队（enqueue 把 CLAIMED 重置为
+         PENDING 并清空 lease_owner），这里命中 0 行 —— 旧 worker 不可能覆盖新 worker 的状态。 -->
+    <update id="markDoneIfLeaseHeld">
+        update marketing_revenue_posting_task
+        set status = 1, reason_code = null, detail = null,
+            lease_owner = null, lease_expires_at = null, update_time = now()
+        where id = #{id} and status = 3 and lease_owner = #{leaseOwner}
+    </update>
+
+    <update id="markFailedIfLeaseHeld">
+        update marketing_revenue_posting_task
+        set status = 2,
+            attempts = attempts + 1,
+            reason_code = #{reasonCode},
+            detail = #{detail},
+            next_attempt_at = #{nextAttemptAt},
+            lease_owner = null,
+            lease_expires_at = null,
+            update_time = now()
+        where id = #{id} and status = 3 and lease_owner = #{leaseOwner}
+    </update>
+
+    <!-- 不带租约的写入：仅测试夹具/人工补偿。生产消费不得使用（会绕过上面的栅栏）。 -->
+    <update id="markDone">
+        update marketing_revenue_posting_task
+        set status = 1, reason_code = null, detail = null,
+            lease_owner = null, lease_expires_at = null, update_time = now()
+        where id = #{id}
+    </update>
+
+    <update id="markFailed">
+        update marketing_revenue_posting_task
+        set status = 2,
+            attempts = attempts + 1,
+            reason_code = #{reasonCode},
+            detail = #{detail},
+            next_attempt_at = #{nextAttemptAt},
+            lease_owner = null,
+            lease_expires_at = null,
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <select id="selectByOrder"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenuePostingTask">
+        select id, task_kind as taskKind, ref_id as refId, order_id as orderId, status,
+               attempts, reason_code as reasonCode, detail, next_attempt_at as nextAttemptAt,
+               lease_owner as leaseOwner, lease_expires_at as leaseExpiresAt,
+               create_time as createTime, update_time as updateTime
+        from marketing_revenue_posting_task
+        where order_id = #{orderId}
+        order by id
+    </select>
+
+    <select id="selectByStatus"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenuePostingTask">
+        select id, task_kind as taskKind, ref_id as refId, order_id as orderId, status,
+               attempts, reason_code as reasonCode, detail, next_attempt_at as nextAttemptAt,
+               lease_owner as leaseOwner, lease_expires_at as leaseExpiresAt,
+               create_time as createTime, update_time as updateTime
+        from marketing_revenue_posting_task
+        where status = #{status}
+        order by update_time desc, id desc
+    </select>
+</mapper>

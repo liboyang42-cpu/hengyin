@@ -9,6 +9,8 @@ import com.chengyinhub.business.domain.dto.SensorResultRequest;
 import com.chengyinhub.business.domain.dto.PreferenceSubmitRequest;
 import com.chengyinhub.business.domain.dto.PreferenceTagCorrectionRequest;
 import com.chengyinhub.web.service.play.*;
+import com.chengyinhub.web.metrics.GameSloMetrics;
+import com.chengyinhub.web.metrics.GameSloResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +35,12 @@ public class ApiPlayProgressController extends BaseController {
     private PlayPreferenceApplication playPreferenceApplication;
     @Autowired
     private PlayPuzzleCommandApplication playPuzzleCommandApplication;
+    @Autowired
+    private PlayContentManifestApplication playContentManifestApplication;
+
+    /** OPS-01：只观测映射到 POST /api/play/arrive 的这条路径；测试直接 new 时为 null。 */
+    @Autowired(required = false)
+    private GameSloMetrics gameSlo;
 
     @Operation(summary = "游玩节点列表+进度")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
@@ -45,6 +53,15 @@ public class ApiPlayProgressController extends BaseController {
         // 三个可选参数只用于能力兼容提示;缺省即老客户端,准入与权限一律不变。
         return playEntryApplication.nodes(currentMemberId(), activityId, topicId,
                 clientPlatform, clientVersion, capabilities);
+    }
+
+    @Operation(summary = "内容清单(按已发布修订预取,只读不建局)")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
+    @GetMapping("/content-manifest")
+    public AjaxResult contentManifest(Long activityId, Long topicId, Long revisionId)
+    {
+        // 准入、不建局与不凭 revisionId 越权取内容都在 application 层;这里只做 HTTP 适配。
+        return playContentManifestApplication.manifest(currentMemberId(), activityId, topicId, revisionId);
     }
 
     /**
@@ -245,10 +262,37 @@ public class ApiPlayProgressController extends BaseController {
     @PostMapping("/arrive")
     @DeadlockRetry
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String locationTimestamp,
+            Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
+    {
+        return playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, locationTimestamp, routeSessionId, runtimeInstance, authorityEpoch);
+    }
+
+    /** 兼容旧调用（不带定位时间）：原样走既有 50m/80m 与旧请求指纹。 */
+    public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
             String routeActionId, Integer expectedRouteVersion, String accuracy, Long routeSessionId,
             String runtimeInstance, Integer authorityEpoch)
     {
-        return playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, routeSessionId, runtimeInstance, authorityEpoch);
+        // OPS01 的 SLO 计时/分类 + BE08 的显式原局空位：两者都在，签名以 BE08 的为准。
+        long startedAt = System.nanoTime();
+        GameSloResult sloResult = GameSloResult.FAULT;
+        try {
+            AjaxResult response = playBasicCommandApplication.arrive(currentMemberId(), activityId, nodeId,
+                    longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, null,
+                    routeSessionId, runtimeInstance, authorityEpoch);
+            // HTTP 200 + AjaxResult 业务拒绝不是成功：success 只认 code=200。
+            sloResult = GameSloMetrics.classify(response);
+            return response;
+        } finally {
+            // 每个请求恰好一次；异常外抛时保持原异常，只把结果记成 fault。
+            recordArrive(sloResult, startedAt);
+        }
+    }
+
+    private void recordArrive(GameSloResult result, long startedAt) {
+        if (gameSlo != null) {
+            gameSlo.recordArrive(result, System.nanoTime() - startedAt);
+        }
     }
 
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,

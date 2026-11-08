@@ -142,12 +142,19 @@ MYBATIS_ITS=(
   # 2026-10-23 DOC2 O-06 part 1 券库存守恒:N 个并发领取打在库存 K 上恰好 K 个成功(按 id 发券 / 按来源发券且重放不占库存 /
   #   后台补录),负控=旧的无条件 +1 在同样并发下真超发。行锁串行化只有真 InnoDB 验得动。
   CouponStockConservationMySqlIT
+  # BE-14 多作用域榜单:score=完成节点数、有效报名/全额退款撤销、run 重放、城市 adcode 归因、
+  #   俱乐部只含在册成员;全部落在真 MySQL 方言上(ONLY_FULL_GROUP_BY / 派生表聚合 / 保留字),
+  #   H2 MySQL 模式挡不住这几类差异。不点名 = CI 永远跑不到这条口径。
+  ScopedLeaderboardMySqlIT
   # DOC2 FXA(#478-3):主题通关奖封顶判据读真 game_runtime_session JSON 快照 —— 任一已完成站自报/兜底 ⇒ 封顶,
   #   别人的局、别的场次不算,视觉复核改判 PASS 后解除。
   ThemeCompletionRewardCapMySqlIT
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT
+  # BE-13 交付元数据:真 mapper XML 读 cms_topic_template_meta / 章节投入 / topic_sale_snapshot,
+  #   并证明商家节点数据层可见性闸仍把未审节点挡在公开交付摘要之外。不点名 = CI 永远跑不到这条边界。
+  TopicDeliveryMetadataMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingRevenueAllocationLineMapper">
+
+    <sql id="LineColumns">
+        id, allocation_id, entry_type, line_role, recipient_member_id, funding_side,
+        basis_fen, rate, amount_fen, currency, entry_key, event_ref, event_amount_fen,
+        event_currency, event_order_type, event_order_id, reversal_of_line_id, source_fact,
+        create_time
+    </sql>
+
+    <insert id="batchInsert">
+        insert into marketing_revenue_allocation_line
+            (allocation_id, entry_type, line_role, recipient_member_id, funding_side,
+             basis_fen, rate, amount_fen, currency, entry_key, event_ref, event_amount_fen,
+             event_currency, event_order_type, event_order_id, reversal_of_line_id, source_fact,
+             create_time)
+        values
+        <foreach collection="lines" item="l" separator=",">
+            (#{l.allocationId}, #{l.entryType}, #{l.lineRole}, #{l.recipientMemberId}, #{l.fundingSide},
+             #{l.basisFen}, #{l.rate}, #{l.amountFen}, #{l.currency}, #{l.entryKey}, #{l.eventRef},
+             #{l.eventAmountFen}, #{l.eventCurrency}, #{l.eventOrderType}, #{l.eventOrderId},
+             #{l.reversalOfLineId}, #{l.sourceFact}, #{l.createTime})
+        </foreach>
+    </insert>
+
+    <select id="selectByAllocationId"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+        select <include refid="LineColumns"/>
+        from marketing_revenue_allocation_line
+        where allocation_id = #{allocationId}
+        order by entry_type, id
+    </select>
+
+    <select id="selectByEvent"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+        select <include refid="LineColumns"/>
+        from marketing_revenue_allocation_line
+        where allocation_id = #{allocationId} and event_ref = #{eventRef}
+        order by id
+    </select>
+
+    <select id="sumReversedFenByLineId" resultType="java.lang.Long">
+        select coalesce(sum(-amount_fen), 0)
+        from marketing_revenue_allocation_line
+        where reversal_of_line_id = #{reversalOfLineId} and entry_type = 2
+    </select>
+
+    <select id="selectByRecipient"
+            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+        select <include refid="LineColumns"/>
+        from marketing_revenue_allocation_line
+        where recipient_member_id = #{recipientMemberId}
+        order by create_time desc, id desc
+    </select>
+</mapper>

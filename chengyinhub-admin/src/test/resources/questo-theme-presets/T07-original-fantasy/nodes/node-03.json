@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": false,
+    "title": "待填：最后怎样帮助这位人物？",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "opt_help_return",
+        "label": "待填：归还原物",
+        "fb": "待填：归还结尾回应",
+        "effects": [
+          {
+            "op": "SET",
+            "var": "counter.help_choice",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "opt_help_replace",
+        "label": "待填：另作替代",
+        "fb": "待填：替代结尾回应",
+        "effects": [
+          {
+            "op": "SET",
+            "var": "counter.help_choice",
+            "value": 2
+          }
+        ]
+      }
+    ]
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "scope": "OWNER",
+    "targetScope": "OWNER",
+    "when": [
+      {
+        "op": "ITEM_HELD",
+        "itemId": "item_fantasy_second",
+        "quantity": 1
+      }
+    ]
+  }
+}

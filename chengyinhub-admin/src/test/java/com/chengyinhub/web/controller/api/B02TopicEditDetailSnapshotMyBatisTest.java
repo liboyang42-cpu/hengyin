@@ -311,7 +311,8 @@ class B02TopicEditDetailSnapshotMyBatisTest {
                 + " ADD game_module_config_json LONGTEXT, ADD journey_rules_json LONGTEXT, ADD journey_story_json LONGTEXT,"
                 + " ADD theme_runtime_config_json LONGTEXT, ADD published_theme_runtime_config_json LONGTEXT,"
                 + " ADD beta_flag TINYINT, ADD team_mode TINYINT, ADD team_max_members INT,"
-                + " ADD club_coop_open TINYINT, ADD club_pinned TINYINT, ADD club_member_only TINYINT");
+                + " ADD club_coop_open TINYINT, ADD club_pinned TINYINT, ADD club_member_only TINYINT,"
+                + " ADD city_code VARCHAR(32), ADD content_contract_json JSON");
         jdbc.execute("ALTER TABLE cms_topic_chapter ADD atmosphere_preset VARCHAR(32), ADD audio_url VARCHAR(500),"
                 + " ADD finish_time DATETIME, ADD circle_candidate_code VARCHAR(24), ADD circle_role VARCHAR(24),"
                 + " ADD circle_policy VARCHAR(24), ADD circle_enabled TINYINT, ADD need_group TINYINT");

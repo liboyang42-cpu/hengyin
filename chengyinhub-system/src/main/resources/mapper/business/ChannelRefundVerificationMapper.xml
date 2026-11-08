@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ChannelRefundVerificationMapper">
+
+    <resultMap id="refundMap" type="com.chengyinhub.business.domain.ChannelRefundVerification">
+        <id property="id" column="id"/>
+        <result property="accountId" column="account_id"/>
+        <result property="purchaseVerificationId" column="purchase_verification_id"/>
+        <result property="channelKey" column="channel_key"/>
+        <result property="providerKey" column="provider_key"/>
+        <result property="channelOrderNo" column="channel_order_no"/>
+        <result property="channelRefundNo" column="channel_refund_no"/>
+        <result property="eventId" column="event_id"/>
+        <result property="amount" column="amount"/>
+        <result property="currency" column="currency"/>
+        <result property="fullRefund" column="full_refund"/>
+        <result property="status" column="status"/>
+        <result property="consumed" column="consumed"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="rawHash" column="raw_hash"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="consumedAt" column="consumed_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="refundColumns">
+        id, account_id, purchase_verification_id, channel_key, provider_key, channel_order_no,
+        channel_refund_no, event_id, amount, currency, full_refund, status, consumed, reason_code,
+        raw_hash, request_id, request_fingerprint, verified_at, consumed_at, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.ChannelRefundVerification"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_channel_refund_verification
+            (account_id, purchase_verification_id, channel_key, provider_key, channel_order_no,
+             channel_refund_no, event_id, amount, currency, full_refund, status, consumed, reason_code,
+             raw_hash, request_id, request_fingerprint, verified_at, consumed_at, create_time, update_time)
+        values
+            (#{accountId}, #{purchaseVerificationId}, #{channelKey}, #{providerKey}, #{channelOrderNo},
+             #{channelRefundNo}, #{eventId}, #{amount}, #{currency}, #{fullRefund}, #{status}, #{consumed}, #{reasonCode},
+             #{rawHash}, #{requestId}, #{requestFingerprint}, #{verifiedAt}, #{consumedAt}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="refundMap" useCache="false">
+        select <include refid="refundColumns"/> from marketing_channel_refund_verification where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="refundMap" useCache="false" flushCache="true">
+        select <include refid="refundColumns"/> from marketing_channel_refund_verification
+        where id = #{id} for update
+    </select>
+
+    <select id="selectByProviderEvent" resultMap="refundMap" useCache="false">
+        select <include refid="refundColumns"/> from marketing_channel_refund_verification
+        where provider_key = #{providerKey} and event_id = #{eventId}
+    </select>
+
+    <select id="selectByAccountRefundNo" resultMap="refundMap" useCache="false">
+        select <include refid="refundColumns"/> from marketing_channel_refund_verification
+        where account_id = #{accountId} and channel_refund_no = #{channelRefundNo}
+    </select>
+
+    <update id="markVerified">
+        update marketing_channel_refund_verification
+        set status = 1, full_refund = #{fullRefund}, verified_at = #{verifiedAt}, reason_code = null,
+            update_time = #{updateTime}
+        where id = #{id} and status = 0
+    </update>
+
+    <update id="markRejected">
+        update marketing_channel_refund_verification
+        set status = 2, reason_code = #{reasonCode}, update_time = #{updateTime}
+        where id = #{id} and status = 0
+    </update>
+
+    <update id="markNoRevenueToReverse">
+        update marketing_channel_refund_verification
+        set consumed = 1, consumed_at = #{consumedAt}, reason_code = #{reasonCode},
+            update_time = #{updateTime}
+        where id = #{id} and consumed = 0 and status = 1
+    </update>
+
+    <select id="selectVerifiedUnconsumed" resultMap="refundMap" useCache="false">
+        select <include refid="refundColumns"/> from marketing_channel_refund_verification
+        where status = 1 and consumed = 0
+        order by id
+        limit #{limit}
+    </select>
+
+    <update id="markConsumed">
+        update marketing_channel_refund_verification
+        set consumed = 1, consumed_at = #{consumedAt}, update_time = #{updateTime}
+        where id = #{id} and consumed = 0 and status = 1
+    </update>
+</mapper>

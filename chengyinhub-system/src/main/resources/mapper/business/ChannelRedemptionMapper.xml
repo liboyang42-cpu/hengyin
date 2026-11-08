@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ChannelRedemptionMapper">
+
+    <resultMap id="redemptionMap" type="com.chengyinhub.business.domain.ChannelRedemption">
+        <id property="id" column="id"/>
+        <result property="voucherId" column="voucher_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="channelOrderNo" column="channel_order_no"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="registrationNo" column="registration_no"/>
+        <result property="registrationIdsJson" column="registration_ids_json"/>
+        <result property="entitlementIdsJson" column="entitlement_ids_json"/>
+        <result property="grantRef" column="grant_ref"/>
+        <result property="receiptNo" column="receipt_no"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="status" column="status"/>
+        <result property="revokeReason" column="revoke_reason"/>
+        <result property="validFrom" column="valid_from"/>
+        <result property="validTo" column="valid_to"/>
+        <result property="redeemedAt" column="redeemed_at"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="redemptionColumns">
+        id, voucher_id, member_id, channel_order_no, registration_id, registration_no,
+        registration_ids_json, entitlement_ids_json, grant_ref, receipt_no,
+        request_id, request_fingerprint, status, revoke_reason, valid_from, valid_to,
+        redeemed_at, revoked_at, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.ChannelRedemption"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_channel_redemption
+            (voucher_id, member_id, channel_order_no, registration_id, registration_no,
+             registration_ids_json, entitlement_ids_json, grant_ref, receipt_no,
+             request_id, request_fingerprint, status, revoke_reason, valid_from, valid_to,
+             redeemed_at, revoked_at, create_time, update_time)
+        values
+            (#{voucherId}, #{memberId}, #{channelOrderNo}, #{registrationId}, #{registrationNo},
+             #{registrationIdsJson}, #{entitlementIdsJson}, #{grantRef}, #{receiptNo},
+             #{requestId}, #{requestFingerprint}, #{status}, #{revokeReason}, #{validFrom}, #{validTo},
+             #{redeemedAt}, #{revokedAt}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectByVoucherId" resultMap="redemptionMap" useCache="false">
+        select <include refid="redemptionColumns"/> from marketing_channel_redemption
+        where voucher_id = #{voucherId}
+    </select>
+
+    <select id="selectByVoucherIdForUpdate" resultMap="redemptionMap" useCache="false" flushCache="true">
+        select <include refid="redemptionColumns"/> from marketing_channel_redemption
+        where voucher_id = #{voucherId} for update
+    </select>
+
+    <select id="selectByMemberRequest" resultMap="redemptionMap" useCache="false">
+        select <include refid="redemptionColumns"/> from marketing_channel_redemption
+        where member_id = #{memberId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectByReceiptNo" resultMap="redemptionMap" useCache="false">
+        select <include refid="redemptionColumns"/> from marketing_channel_redemption
+        where receipt_no = #{receiptNo}
+    </select>
+
+    <select id="selectByChannelOrderNo" resultMap="redemptionMap" useCache="false">
+        select <include refid="redemptionColumns"/> from marketing_channel_redemption
+        where channel_order_no = #{channelOrderNo}
+        order by id desc limit 1
+    </select>
+
+    <update id="markRevoked">
+        update marketing_channel_redemption
+        set status = 1, revoke_reason = #{reason}, revoked_at = #{revokedAt}, update_time = #{updateTime}
+        where id = #{id} and status = 0
+    </update>
+</mapper>
