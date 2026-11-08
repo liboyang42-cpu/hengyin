@@ -65,7 +65,7 @@ class TopicPublicationFreezePreviewNoEarlyExitTest {
 
     private static final long TOPIC_ID = 10L;
     private static final long NODE_ID = 11L;
-    private static final String TEMPLATE_CLUE = "clue.h_aabbccddeeff";
+    private static final String TEMPLATE_CLUE = "clue.h_0123456789ab";
 
     /**
      * 合法运行配置:场景里节点 11 的玩法块声明一条线索。
