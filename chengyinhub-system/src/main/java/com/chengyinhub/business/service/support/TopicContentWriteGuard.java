@@ -61,6 +61,19 @@ public final class TopicContentWriteGuard {
         if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
     }
 
+
+    /** Read-only size preflight; unlike the write path it never locks the topic or uses FOR UPDATE counts. */
+    public void assertTopicSizeWithinLimitsPreview(Long topicId) {
+        if (topicId == null || topicId <= 0L) throw new IllegalStateException("主题不存在");
+        Long chapters = cmsTopicChapterMapper.countContentByTopic(topicId);
+        Long nodes = cmsTopicNodeMapper.countContentByTopic(topicId);
+        if (chapters == null || nodes == null || chapters < 0L || nodes < 0L) {
+            throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
+        }
+        String violation = TopicSizeLimits.violation(Math.toIntExact(chapters), Math.toIntExact(nodes));
+        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
+    }
+
     /** blocks 已物化后，旧客户端不得再用 description + nodes 覆盖它。 */
     public void assertLegacyChapterFlowWritable(Long topicId) {
         CmsTopicChapter query = new CmsTopicChapter();

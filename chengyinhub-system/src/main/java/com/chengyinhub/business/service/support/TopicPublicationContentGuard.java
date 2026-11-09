@@ -132,25 +132,8 @@ public class TopicPublicationContentGuard {
         contentWriteGuard.assertTopicSizeWithinLimits(topicId);
     }
 
-    /**
-     * 发布前试检查专用的尺寸判据:**普通读计数,不取任何锁**。
-     *
-     * <p>不能复用 {@link #assertTopicSizeWithinLimits}:那条走 {@code TopicContentWriteGuard},
-     * 内部 {@code lockTopicContent} + {@code countContentByTopicForUpdate}({@code for update nowait}),
-     * 只在持有父行 fence 的写链里成立。放进 GET 预检会同时破坏两件事:只读路径开始抢写锁;
-     * 抢不到锁就把"锁冲突"当成作者的内容问题报出去。
-     *
-     * <p>判据仍是同一份 {@link TopicSizeLimits#violation},上限没有第二套。
-     */
     public void assertTopicSizeWithinLimitsPreview(Long topicId) {
-        if (topicId == null || topicId <= 0L) throw new IllegalStateException("主题不存在");
-        Long chapters = cmsTopicChapterMapper.countContentByTopic(topicId);
-        Long nodes = cmsTopicNodeMapper.countContentByTopic(topicId);
-        if (chapters == null || nodes == null || chapters < 0L || nodes < 0L) {
-            throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
-        }
-        String violation = TopicSizeLimits.violation(Math.toIntExact(chapters), Math.toIntExact(nodes));
-        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
+        contentWriteGuard.assertTopicSizeWithinLimitsPreview(topicId);
     }
 
     /**
