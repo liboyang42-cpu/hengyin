@@ -223,8 +223,17 @@
   </view>
 </view>
 
+<!-- §27.6 主持预约:状态只读服务端 reservationState;需预约时由这张卡接管候补卡 -->
+<view wx:if="{{pageState === 'ready' && hostResv.show}}" class="waitlist-card">
+  <view class="waitlist-card__title">主持预约</view>
+  <view class="waitlist-card__status {{hostResv.awaitingPayment ? 'is-offered' : ''}}">{{hostResv.text}}</view>
+  <view wx:if="{{hostResv.awaitingPayment && waitlistExpiresText}}" class="waitlist-card__text">请在 {{waitlistExpiresText}} 前完成付款</view>
+  <cy-btn wx:if="{{hostResv.canRequest}}" variant="secondary" loading="{{waitlistLoading}}" bindtap="requestHost">请求主持</cy-btn>
+  <view wx:if="{{hostResv.canCancel}}" class="waitlist-card__link" bindtap="cancelWaitlist" aria-role="button" hover-class="{{waitlistLoading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">撤销申请</view>
+</view>
+
 <!-- 候补是真实票库存 hold：只有服务端 OFFERED 且带短期 token 时才开放原报名付款。 -->
-<view wx:if="{{pageState === 'ready' && (ticketSoldOut || waitlistEligibility === 'ALREADY_REGISTERED' || (waitlistState && waitlistState !== 'NONE'))}}" class="waitlist-card">
+<view wx:if="{{pageState === 'ready' && !hostResv.show && (ticketSoldOut || waitlistEligibility === 'ALREADY_REGISTERED' || (waitlistState && waitlistState !== 'NONE'))}}" class="waitlist-card">
   <view class="waitlist-card__title">候补状态</view>
   <view wx:if="{{waitlistLoading || waitlistState === 'LOADING'}}" class="waitlist-card__text">正在读取候补状态…</view>
   <block wx:elif="{{waitlistState === 'OFFERED' && waitlistEligibility === 'ELIGIBLE' && waitlistJoinAllowed}}">
@@ -310,7 +319,7 @@
     <icon wx:else class="bmbottom_box_gx" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
     <view class="bmbottom_box_txt">同意将姓名、手机号提供给主办方，用于报名核验</view>
   </view>
-  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息')))))))}}</cy-btn>
+  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (hostResv.required && !waitlistOfferId ? '请先预约主持' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息'))))))))}}</cy-btn>
 </view>
 
 <!-- 报名/支付结果面板。2026-09-06 用户裁决「买完直接跳」:面板不放按钮,

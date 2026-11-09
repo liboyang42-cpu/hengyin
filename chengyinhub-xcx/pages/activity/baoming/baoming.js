@@ -26,6 +26,7 @@ const indexFormat = require('../../../utils/index/index-format.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const quoteView = require('../../../utils/commerce/quote-view.js');
+const { hostReservationView } = require('../../../utils/commerce/host-reservation.js');
 
 // 成功弹窗:停留时长 + 退场动画时长。后者必须和 wxss 里 --cy-motion-slow(350ms) 一致,
 // 短了会在动画没播完时就销毁节点(又变成凭空消失),长了会白白多停一截。
@@ -120,7 +121,9 @@ function waitlistCanJoin(data) {
 }
 
 const WAITLIST_STATES = Object.freeze([
-  'NONE', 'WAITING', 'OFFERED', 'CLAIMED', 'CONVERTED', 'CANCELLED', 'EXPIRED'
+  'NONE', 'WAITING', 'OFFERED', 'CLAIMED', 'CONVERTED', 'CANCELLED', 'EXPIRED',
+  // §27.6 主持预约系列:申请中/未接受
+  'REQUESTED', 'REJECTED'
 ]);
 const WAITLIST_ELIGIBILITIES = Object.freeze([
   'NO_SERIES', 'WAITLIST_CLOSED', 'NOT_MEMBER', 'ALREADY_REGISTERED', 'ELIGIBLE', 'BLOCKED'
@@ -133,7 +136,9 @@ function normalizeWaitlistStatus(value) {
   if (!WAITLIST_STATES.includes(state) || !WAITLIST_ELIGIBILITIES.includes(eligibility)
       || typeof value.waitlistJoinAllowed !== 'boolean') return null;
   const joinAllowed = value.waitlistJoinAllowed === true;
-  if (joinAllowed !== (eligibility === 'ELIGIBLE')) return null;
+  // 只能在 ELIGIBLE 时允许加入;ELIGIBLE 但不允许加入是服务端的合法形态
+  // (需先预约主持的系列、已关闭系列里仍在队列的条目),不能当作读取失败。
+  if (joinAllowed && eligibility !== 'ELIGIBLE') return null;
   if (state !== 'NONE' && (!Number.isInteger(Number(value.id)) || Number(value.id) <= 0)) return null;
   if ((state === 'CLAIMED' || state === 'CONVERTED')
       && (!Number.isInteger(Number(value.registrationId)) || Number(value.registrationId) <= 0)) return null;
@@ -276,6 +281,7 @@ Page({
     quoteRefusal: '',
     // U07-01 交付说明 / §17.6 报价分项 / §17.5 促销目录:全部只取服务端回包
     deliveryRows: [],
+    hostResv: { show: false, required: false, text: '', canRequest: false, canCancel: false, awaitingPayment: false },
     mkt: { show: false, listAmount: null, adjustments: [], coveredByPass: false, rewardCoupon: null },
     promoCatalog: { show: false, offers: [], promotions: [], tiers: [] },
     orderInfo: null,
@@ -955,7 +961,8 @@ Page({
           waitlistOfferId: offerId,
           waitlistOfferToken: offerToken,
           waitlistRegistrationId: entry && entry.registrationId || null,
-          waitlistExpiresText: activeOffer ? formatOfferDeadline(entry.offerExpiresAt) : ''
+          waitlistExpiresText: activeOffer ? formatOfferDeadline(entry.offerExpiresAt) : '',
+          hostResv: hostReservationView(entry, that.data.ticketSoldOut)
         }, function () {
           that.refreshPaymentState();
           that.scheduleWaitlistOfferExpiry();
@@ -1039,6 +1046,31 @@ Page({
       fail() {
         that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试加入候补' },
           () => that.refreshPaymentState());
+      }
+    });
+  },
+
+  /** §27.6 请求主持:不传身份,不当作已持位;结果以重新读取的 reservationState 为准 */
+  requestHost() {
+    const that = this;
+    const ticket = that.data.selectedTicket;
+    if (that.data.waitlistLoading || !ticket || !ticket.id) return;
+    that.setData({ waitlistLoading: true });
+    app.sendRequest({
+      url: '/api/club/event-ops/host/request',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      hideLoading: true,
+      autoErrorToast: false,
+      data: JSON.stringify({ activityId: that.data.activityId, ticketId: ticket.id }),
+      success(res) {
+        that.setData({ waitlistLoading: false });
+        if (!res || (res.code != 200 && res.code != '200')) toast((res && res.msg) || '主持预约暂不可用');
+        that.loadWaitlistStatus();
+      },
+      fail() {
+        that.setData({ waitlistLoading: false });
+        that.loadWaitlistStatus();
       }
     });
   },
@@ -1370,7 +1402,9 @@ Page({
     // CU-C-32:履约窗(场次)已过与「报名已截止」同归这条闸 —— 两者都意味着这一场不能报。
     const signupClosed = (ticketSignupClosed(data.selectedTicket, now) || ticketWindowPassed(data.selectedTicket, now))
       && !activeOffer;
-    const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed
+    // §27.6:需预约主持的场次,只有主持接受后拿到服务端名额才能下单
+    const hostBlocked = !!(data.hostResv && data.hostResv.required) && !activeOffer;
+    const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed && !hostBlocked
       && !data.quoteRefusal
       && data.hostShareChecked && !!data.selectedAddress
       && !data.merchantClosed
