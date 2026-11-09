@@ -27,7 +27,7 @@
     <text class="hs-month" wx:if="{{item.monthHead}}">{{item.monthHead}}</text>
     <view class="rc" bindtap="openSession" data-ts="{{item.ts}}" data-session-id="{{item.serverFact ? item.sessionId : ''}}"
           aria-role="button" aria-label="{{item.dateCard}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
-      <cy-route-thumb route="{{item.route}}" />
+      <cy-route-thumb route="{{item.route}}" geo="{{item.geo}}" />
       <view class="rc__body">
         <view class="rc__row">
           <view class="rc__t"><cy-icon name="route" size="36" /><text class="rc__title">{{item.title}}</text></view>

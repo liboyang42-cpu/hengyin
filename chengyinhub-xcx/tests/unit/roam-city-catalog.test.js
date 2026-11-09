@@ -99,43 +99,19 @@ test('SQL文本使用UTF8十六进制，目录文字不能注入额外语句', (
   assert.match(sql, /CONVERT\(0x[0-9a-f]+ USING utf8mb4\)/)
 })
 
-test('目录组件可切城筛选、点开详情和复制地址，旧列表点击不会选到另一城市', () => {
-  const previousComponent = global.Component
-  const previousWx = global.wx
-  const copied = []
-  let definition
-  global.Component = value => { definition = value }
-  global.wx = { setClipboardData: options => copied.push(options.data) }
-  try {
-    require('../../subpackageRoam/components/roam-city-guide/index.js')
-    const instance = Object.assign({
-      data:JSON.parse(JSON.stringify(definition.data)),
-      setData(patch) { Object.assign(this.data,patch) },
-      triggerEvent(name) { this.closedEvent = name },
-    }, definition.methods)
-    instance.onCityChange({detail:{value:1}})
-    assert.equal(instance.data.cityName, '北京')
-    instance.onCategoryTap({currentTarget:{dataset:{id:'shop'}}})
-    assert.equal(instance.data.places.length, 1)
-    instance.onPlaceTap({currentTarget:{dataset:{id:'sh-uchiyama-books'}}})
-    assert.equal(instance.data.selected, null)
-    instance.onPlaceTap({currentTarget:{dataset:{id:'bj-zhengyang-books'}}})
-    assert.equal(instance.data.selected.name, '正阳书局（西四店）')
-    instance.copyAddress()
-    instance.copySources()
-    assert.match(copied[0], /西四南大街43号/)
-    assert.equal(copied[1].split('\n').length, 2)
-    instance.backToList()
-    instance.copyAddress()
-    assert.equal(copied.length, 2)
-    instance.onCityChange({detail:{value:999}})
-    assert.equal(instance.data.cityName, '北京')
-    instance.close()
-    assert.equal(instance.closedEvent, 'close')
-  } finally {
-    global.Component = previousComponent
-    global.wx = previousWx
-  }
+// 2026-11-09 V3-35 业主「没有这个城市漫游清单 这个应该直接展示在地图上的」:清单组件删除,
+// 目录地点(已上架、带种子标签的平台点位)由漫游入口地图画成图钉,点开走同一个理由组件。
+test('城市漫游清单下线:组件与入口按钮都不在,目录地点改由入口地图画图钉', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const root = path.resolve(__dirname, '../..')
+  assert.equal(fs.existsSync(path.join(root, 'subpackageRoam/components/roam-city-guide')), false)
+  const wxml = fs.readFileSync(path.join(root, 'pages/roam/index.wxml'), 'utf8')
+  const js = fs.readFileSync(path.join(root, 'pages/roam/index.js'), 'utf8')
+  assert.doesNotMatch(wxml, /cy-roam-city-guide|openCityGuide|intro-guide-hit/)
+  assert.doesNotMatch(js, /cityGuideOpen|openCityGuide|closeCityGuide/)
+  assert.match(js, /req\('\/api\/roam\/pois', 'GET'[\s\S]*entryMap\.isCatalogPlace/)
+  assert.match(wxml, /<cy-roam-place-note tags="\{\{entryPlace\.tags\}\}" bind:note="onEntryPlaceNote" \/>/)
 })
 
 test('地图点位按种子标签取目录里的推荐理由和来源，查不到就不显示', () => {
@@ -157,15 +133,14 @@ test('目录、目录组件和地点卡理由组件都不进主包，漫游页�
   const roam = (app.subPackages || app.subpackages).find(row => row.root === 'subpackageRoam')
   assert.ok(roam, 'subpackageRoam 必须是分包')
   for (const file of ['subpackageRoam/data/roam-city-catalog.js', 'subpackageRoam/utils/roam-city-catalog.js',
-    'subpackageRoam/components/roam-city-guide/index.js', 'subpackageRoam/components/roam-place-note/index.js']) {
+    'subpackageRoam/components/roam-place-note/index.js']) {
     assert.ok(fs.existsSync(path.join(root, file)), file)
   }
   for (const gone of ['data/roam-city-catalog.json', 'utils/roam-city-catalog.js', 'components/cy/roam-city-guide']) {
     assert.equal(fs.existsSync(path.join(root, gone)), false, gone + ' 不能留在主包')
   }
   const page = JSON.parse(fs.readFileSync(path.join(root, 'pages/roam/index.json'), 'utf8'))
-  assert.equal(page.usingComponents['cy-roam-city-guide'], '/subpackageRoam/components/roam-city-guide/index')
-  assert.equal(page.componentPlaceholder['cy-roam-city-guide'], 'view')
+  assert.equal(page.usingComponents['cy-roam-city-guide'], undefined)
   assert.equal(page.componentPlaceholder['cy-roam-place-note'], 'view')
   const js = fs.readFileSync(path.join(root, 'pages/roam/index.js'), 'utf8')
   assert.doesNotMatch(js, /roam-city-catalog/, '主包漫游页不得直接 require 目录')

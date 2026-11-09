@@ -1,0 +1,1 @@
+<image wx:if="{{name === 'history' || name === 'stamp' || name === 'event'}}" class="roam-photo" src="/subpackageRoam/assets/photos/{{name}}.webp" mode="aspectFill" aria-hidden="true" />

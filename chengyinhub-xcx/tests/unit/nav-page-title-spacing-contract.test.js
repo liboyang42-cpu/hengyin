@@ -509,7 +509,8 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-10-28 +4:原型 C 的我的申诉(照抄我的举报)与发票详情、发票抬头、抬头编辑(X5 拆页),均为 cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 85 → 89。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 89 叠加本线营销消息页(P-55)与账户收益分析页(G-9)两页 ⇒ 89 → 91(实测)。
   // 2026-10-30 收集册:集邮册、藏品册不再用 cy-page-title(标题由 album-head 给,见 NAV_WITHOUT_L1_TITLE) ⇒ 91 → 89。
-  assert.equal(files.length, 89, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-11-09 V3-42:时光胶囊页先删 ⇒ 89 → 88。
+  assert.equal(files.length, 88, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

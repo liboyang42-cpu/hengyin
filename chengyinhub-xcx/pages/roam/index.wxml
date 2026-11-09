@@ -15,7 +15,6 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-  <cy-roam-city-guide show="{{cityGuideOpen}}" bind:close="closeCityGuide" />
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
 <!-- G-2:手写 psheet 浮层开着时,物理返回 / 侧滑先关最上层,不退出本页 -->
@@ -29,6 +28,7 @@
       <view class="entry-sheet__head-copy" wx:if="{{entrySheet=='activity' && entryActivity}}">
         <text class="entry-sheet__title">{{entrySheetView=='team' ? entryTeam.title : entryActivity.title}}</text>
       </view>
+      <view class="entry-sheet__head-copy" wx:elif="{{entrySheet=='place' && entryPlace}}"><text class="entry-sheet__title">{{entryPlace.name}}</text></view>
       <view class="entry-sheet__head-copy" wx:elif="{{entrySheet=='layers'}}"><text class="entry-sheet__title">选择地图图层</text></view>
       <view class="entry-sheet__head-copy" wx:elif="{{entrySheet=='roam'}}"><text class="entry-sheet__title">{{entrySheetView=='rules' ? '漫游规则' : '走到哪，雾散到哪'}}</text></view>
       <view class="psheet__x entry-sheet__close" catchtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
@@ -54,6 +54,15 @@
         <view class="entry-posts" wx:if="{{entryActivity.dynamicImages.length}}"><image wx:for="{{entryActivity.dynamicImages}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view>
         <view class="entry-sheet__empty entry-sheet__empty--compact" wx:else>还没有现场动态</view>
       </view>
+    </block>
+
+    <block wx:elif="{{entrySheet=='place' && entryPlace}}">
+      <cy-roam-place-note tags="{{entryPlace.tags}}" bind:note="onEntryPlaceNote" />
+      <view class="entry-place" bindtap="openEntryPlaceLocation" aria-role="button" aria-label="在地图中打开 {{entryPlace.name}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view>
+        <view class="entry-place__copy"><text>{{entryPlace.catLabel}}</text><text>{{entryPlace.address}}</text></view>
+      </view>
+      <text class="entry-place__reason" wx:if="{{entryPlace.reason}}">{{entryPlace.reason}}</text>
     </block>
 
     <block wx:elif="{{entrySheet=='layers'}}">
@@ -86,7 +95,6 @@
 <view class="intro" wx:if="{{screen=='entry-map'||screen=='intro'}}">
   <view class="intro-head" style="padding-top:{{chrome.actionTop}}px;">
     <view class="intro-ava-hit" bindtap="goProfile" aria-role="button" aria-label="打开我的" hover-class="cy-pressed" hover-stay-time="80"><image class="intro-ava" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" /></view>
-    <view class="intro-guide-hit" bindtap="openCityGuide" aria-role="button" aria-label="按城市浏览街道、推荐店铺和公园" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="40" /></view>
   </view>
   <!-- 2026-10-27 owner P-25:头部结构与间距还原到 7f4bcee9(票根卡)之前,只保留票根卡本身 -->
   <view class="intro-top"><view class="intro-title">漫游</view></view>
@@ -193,7 +201,7 @@
         <!-- 2026-10-27 owner P-29:方卡还原 10-15 之前的结构(图优先,图标小号兜底);档案三卡用真实图片,没有就是空态插画 -->
         <view class="pp-tile__box">
           <image wx:if="{{item.img}}" class="pp-tile__img" src="{{item.img}}" mode="aspectFill" />
-          <image wx:elif="{{item.art}}" class="pp-tile__art" src="{{item.art}}" mode="aspectFit" aria-hidden="true" />
+          <cy-roam-photo wx:elif="{{item.photo}}" name="{{item.photo}}" />
           <cy-icon wx:else name="{{item.icon}}" size="48" />
         </view>
         <text class="pp-tile__t">{{item.title}}</text>
@@ -206,6 +214,7 @@
             aria-role="button" aria-label="{{item.title}} {{item.sub}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="pp-trip__card">
           <image wx:if="{{item.cover}}" class="pp-trip__img" src="{{item.cover}}" mode="aspectFill" />
+          <cy-roam-photo wx:elif="{{item.photo}}" name="{{item.photo}}" />
           <cy-icon wx:else class="pp-trip__ic" name="{{item.icon}}" size="64" />
           <view class="pp-trip__shade"></view>
           <text class="pp-trip__big">{{item.title}}</text>

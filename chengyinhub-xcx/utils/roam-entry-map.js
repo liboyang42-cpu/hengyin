@@ -2,10 +2,16 @@
 
 const H = require('./roam-hangout.js');
 const { toTimestamp, chinaParts } = require('./datetime.js');
+const { readTags, presentationForPoi } = require('./roam-poi-presentation.js');
+const { readFontScale, mapFontSize } = require('./font-scale.js');
 
 const FALLBACK_TEAM_ICON = '/images/d_profile.png';
 const TEAM_MARKER_TAG = 4;
 const POST_MARKER_TAG = 5;
+const PLACE_MARKER_TAG = 6;
+const PLACE_ICON = '/images/roam-pushpin.png';
+// V3-35:城市漫游目录不再是单独清单,目录地点(导入工具写了种子标签的已上架平台点位)直接画在入口地图上。
+const SEED_PREFIX = 'roam:seed:v1:';
 
 function validPoint(row) {
   return row && H.numOrNull(row.latitude) != null && H.numOrNull(row.longitude) != null;
@@ -21,17 +27,43 @@ function teamsFor(row, teams) {
   return (teams || []).filter((team) => topicId && String(team.topicId) === String(topicId));
 }
 
+// V1-P32(业主「地图上放的活动 组队要都能看到」):活动 / 主题与招募中的队伍在地图上常显一张深色小卡(标题 + 一行事实),
+// 不再只是 14px 的点。卡片文字只用服务端回来的字段;没有的那一行不写。
+const CARD_BG = '#1C1C1EF2'; /* ds-ok V3-18 深色浮层同一灰 */
+const CARD_TEXT = '#FFFFFF'; /* ds-ok 深色卡白字 */
+function cardCallout(lines) {
+  return {
+    content: lines.filter(Boolean).join('\n'), color: CARD_TEXT, bgColor: CARD_BG,
+    fontSize: mapFontSize(12, readFontScale()), borderRadius: 12, padding: 8, display: 'ALWAYS', textAlign: 'left',
+  };
+}
+function teamLine(team) {
+  const joined = Number(team.joinedCount); const max = Number(team.maxMembers);
+  return Number.isFinite(joined) && Number.isFinite(max) && max > 0 ? joined + '/' + max + ' 人 · 招募中' : '招募中';
+}
 function buildTeamMarkers(teams) {
   return (teams || []).filter((team) => validPoint(team) && Number(team.teamId) > 0).map((team) => ({
     id: Number(team.teamId) * 10 + TEAM_MARKER_TAG,
     latitude: Number(team.latitude),
     longitude: Number(team.longitude),
-    width: 14,
-    height: 14,
+    width: 22,
+    height: 22,
     anchor: { x: 0.5, y: 0.5 },
     zIndex: 12,
     iconPath: FALLBACK_TEAM_ICON,
+    callout: cardCallout([String(team.title || '玩家队伍'), teamLine(team)]),
   }));
+}
+function withActivityCards(markers, cards) {
+  return markers.map((marker) => {
+    const hit = H.parseMarkerId(marker.id);
+    const card = hit && (cards || []).find((row) => row.kind === hit.kind && String(row.id) === String(hit.id));
+    if (!card) return marker;
+    return Object.assign({}, marker, {
+      width: Math.max(marker.width, 20), height: Math.max(marker.height, 20),
+      callout: marker.callout || cardCallout([card.title, card.meta || card.tag]),
+    });
+  });
 }
 
 function imageList(row) {
@@ -49,6 +81,31 @@ function buildPostMarkers(rows, getImgUrl) {
     anchor: { x: 0.5, y: 0.5 },
     zIndex: 13,
     iconPath: coverOf({ picUrl: imageList(row)[0] }, getImgUrl),
+  }));
+}
+
+function isCatalogPlace(row) {
+  return !!row && Number(row.id) > 0 && Number(row.type) === 1 && validLatLng(row)
+    && readTags(row.tags).some((tag) => typeof tag === 'string' && tag.indexOf(SEED_PREFIX) === 0);
+}
+function validLatLng(row) {
+  return H.numOrNull(row.lat) != null && H.numOrNull(row.lng) != null;
+}
+function placeView(row) {
+  const p = presentationForPoi(row);
+  return { id: Number(row.id), name: String(row.name || ''), address: String(row.address || ''), catLabel: p.catLabel,
+    tags: typeof row.tags === 'string' ? row.tags : JSON.stringify(readTags(row.tags)), lat: Number(row.lat), lng: Number(row.lng) };
+}
+function buildPlaceMarkers(places) {
+  return (places || []).filter(isCatalogPlace).map((row) => ({
+    id: Number(row.id) * 10 + PLACE_MARKER_TAG,
+    latitude: Number(row.lat),
+    longitude: Number(row.lng),
+    width: 20,
+    height: 24,
+    anchor: { x: 0.5, y: 1 },
+    zIndex: 4,
+    iconPath: PLACE_ICON,
   }));
 }
 
@@ -99,15 +156,16 @@ function activityView(row, teams, getImgUrl) {
   };
 }
 
-function build(items, teams, layers, getImgUrl) {
+function build(items, teams, layers, getImgUrl, places) {
   const visible = layers || { activities: true, teams: true, posts: true };
   const rows = (items || []).filter((row) => validPoint(row) && H.isMapItem(row));
   const teamRows = (teams || []).filter((row) => validPoint(row) && Number(row.teamId) > 0);
   const cards = rows.map((row) => activityView(row, teamRows, getImgUrl));
   const markers = [];
-  if (visible.activities !== false) markers.push.apply(markers, H.buildHangoutMarkers(rows, {}, {}));
+  if (visible.activities !== false) markers.push.apply(markers, withActivityCards(H.buildHangoutMarkers(rows, {}, {}), cards));
   if (visible.teams !== false) markers.push.apply(markers, buildTeamMarkers(teamRows));
   if (visible.posts !== false) markers.push.apply(markers, buildPostMarkers(rows, getImgUrl));
+  markers.push.apply(markers, buildPlaceMarkers(places));
   return {
     markers,
     cards,
@@ -125,9 +183,10 @@ function parseMarker(markerId) {
   if (!(id > 0)) return null;
   if (tag === TEAM_MARKER_TAG) return { kind: 'team', id };
   if (tag === POST_MARKER_TAG) return { kind: 'post', id };
+  if (tag === PLACE_MARKER_TAG) return { kind: 'place', id };
   return H.parseMarkerId(markerId);
 }
 
 function hasLayerError(errors) { return !!(errors && (errors.activities || errors.teams)); }
 
-module.exports = { build, activityView, sessionWhen, parseMarker, hasLayerError };
+module.exports = { build, activityView, sessionWhen, parseMarker, hasLayerError, isCatalogPlace, placeView, buildPlaceMarkers };
