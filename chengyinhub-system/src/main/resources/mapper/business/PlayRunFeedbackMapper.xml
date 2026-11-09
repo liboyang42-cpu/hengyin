@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayRunFeedbackMapper">
+
+  <select id="selectByRequest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+    SELECT id, member_id AS memberId, route_session_id AS runId, topic_id AS topicId, activity_id AS activityId,
+           config_version AS configVersion, content_revision_id AS contentRevisionId, node_id AS nodeId,
+           category, request_hash AS requestHash, status, create_time AS createTime
+    FROM play_run_feedback WHERE member_id = #{memberId} AND request_id = #{requestId}
+  </select>
+
+  <insert id="insertFeedback" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO play_run_feedback (member_id, route_session_id, topic_id, activity_id, play_instance_id, config_version,
+      content_revision_id, node_id, category, content, request_id, request_hash, status, create_time)
+    VALUES (#{memberId}, #{runId}, #{topicId}, #{activityId}, #{playInstanceId}, #{configVersion},
+      #{contentRevisionId}, #{nodeId}, #{category}, #{content}, #{requestId}, #{requestHash}, 0, NOW(3))
+  </insert>
+
+  <select id="selectRevisionIdBySnapshot" resultType="java.lang.Long">
+    SELECT id FROM cms_topic_content_revision
+    WHERE topic_id = #{topicId} AND content_sha256 = #{contentSha256}
+    ORDER BY revision_no DESC LIMIT 1
+  </select>
+</mapper>
