@@ -434,6 +434,7 @@ Component({
         hideLoading: true, autoErrorToast: false, success: settle, fail: function () { settle(null); },
         successStatusAbnormal: function () { settle(null); } });
     },
+    goSeats() { const id = this.data.info && this.data.info.id; if (id) this._leave('/subpackageJourney/pages/seats/index?registrationId=' + id); },
     goInvoiceApply() { this._leave('/subpackageMember/invoice-apply/index'); },
     goInvoiceDetail() {
       const id = this.data.invoiceRow && this.data.invoiceRow.applicationId;

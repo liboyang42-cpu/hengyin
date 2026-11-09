@@ -1437,6 +1437,11 @@
     <text class="fje-v" wx:if="{{sessStats.rank}}">{{sessStats.provisional ? '暂列' : ''}}第 {{sessStats.rank}} 名</text>
     <cy-icon name="arrow-right" size="28" />
   </view>
+  <!-- qx-b3 P7:本局战报(只读),runId 用本局路线会话 -->
+  <view class="finish-journal-entry" wx:if="{{!isPreview && !isMock}}" bindtap="openRunReport" aria-role="button" aria-label="本局战报" hover-class="cy-pressed" hover-stay-time="80">
+    <view><text class="finish-journal-entry__title">本局战报</text></view>
+    <cy-icon name="arrow-right" size="28" />
+  </view>
   <view class="finsheet__retry" wx:if="{{endingError}}">城市故事暂未加载，不影响本次足迹。<text class="finsheet__retry-act" bindtap="retryEnding" hover-class="cy-pressed" hover-stay-time="80">重新加载</text></view>
   <view class="finish-route-recommendation" wx:if="{{finishRouteRecommendation}}" bindtap="goFinishRouteRecommendation" aria-role="button" aria-label="查看附近路线{{finishRouteRecommendation.title}}并购票" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{finishRouteRecommendation.cover}}" class="finish-route-recommendation__cover" src="{{finishRouteRecommendation.cover}}" mode="aspectFill" />
@@ -1931,7 +1936,7 @@
 
 <cy-playkit-album show="{{album.show}}" title="{{album.title}}" images="{{album.images}}" bind:close="closeAlbum" />
 
-<view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
+<view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:report="openThemeRunReport" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
 
 <!-- 第九轮 m2 第 2 项:同场路线,开局前本人表态(原型 m-consent)。作者关掉或不是场次局时不出现。 -->
 <cy-sheet show="{{teamConsent.show}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeTeamConsent">

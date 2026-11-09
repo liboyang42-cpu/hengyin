@@ -9423,6 +9423,19 @@ Page({
   },
   closeFinale() { this.setData({ 'finale.show': false }); },
   saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },
+  // qx-b3 P7:战报读同一局(runId=本局路线会话),战报页只读,不补完局不发奖。
+  openRunReport() {
+    if (this.data.isPreview || this.data.isMock) return;
+    const q = [];
+    if (this.data.activityId) q.push('activityId=' + this.data.activityId);
+    if (this.data.topicId) q.push('topicId=' + this.data.topicId);
+    const runId = String((this._routeState || {}).sessionId || '');
+    if (/^[1-9]\d*$/.test(runId)) q.push('runId=' + runId);
+    if (this.data.regId) q.push('registrationId=' + this.data.regId);
+    if (this.data.topicName) q.push('topicName=' + encodeURIComponent(this.data.topicName));
+    if (!q.length) return;
+    wx.navigateTo({ url: '/subpackageJourney/pages/report/index?' + q.join('&') });
+  },
 });
 
 /** 完成页眉标:「10月28日 周二」 */

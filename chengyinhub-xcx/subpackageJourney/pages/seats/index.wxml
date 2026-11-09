@@ -1,0 +1,29 @@
+<view class="theme-dark jn">
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain />
+  <cy-page-title title="同行席位" />
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="load" fill size="lg" />
+  <block wx:else>
+    <view class="jn-sec jn-sec--first">
+      <view class="jn-group">
+        <view class="jn-row"><view class="jn-row__t"><text class="jn-row__s">票型</text></view><text class="jn-row__v is-strong">{{seats.countText}}</text></view>
+        <view class="jn-row"><view class="jn-row__t"><text class="jn-row__s">还可邀请</text></view><text class="jn-row__v is-strong">{{seats.freeText}}</text></view>
+        <view class="jn-row" wx:if="{{seats.expires}}"><view class="jn-row__t"><text class="jn-row__s">票有效期至</text></view><text class="jn-row__v">{{seats.expires}}</text></view>
+      </view>
+    </view>
+    <view class="jn-sec">
+      <view class="jn-group">
+        <view class="jn-row" wx:for="{{seats.seats}}" wx:key="key">
+          <text class="jn-rank">{{item.no}}</text>
+          <view class="jn-row__t"><text class="jn-row__b">{{item.label}}</text><text class="jn-row__s" wx:if="{{item.expires}}">{{item.expires}}</text></view>
+          <text class="jn-row__v jn-danger-text" wx:if="{{item.canCancel}}" data-id="{{item.invitationId}}" bindtap="onCancel" aria-role="button" aria-label="撤销第{{item.no}}席邀请" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
+        </view>
+      </view>
+    </view>
+    <view class="jn-footer jn-footer--stack" wx:if="{{inviteToken || seats.canInvite || pendingInvite}}">
+      <button wx:if="{{inviteToken}}" class="jn-share" open-type="share" aria-label="发送席位邀请"><cy-btn variant="primary">发送邀请</cy-btn></button>
+      <cy-btn wx:else variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onInvite">{{pendingInvite ? '查询邀请结果' : '邀请同行'}}</cy-btn>
+      <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
+    </view>
+  </block>
+</view>

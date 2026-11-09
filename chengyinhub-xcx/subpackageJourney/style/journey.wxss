@@ -1,0 +1,53 @@
+/* 玩家闭环页共用：结构照抄游玩完成面板(.finsheet / .fst / .fsec / .fgroup / .frow)，颜色全走 token。 */
+page { background: var(--cy-bg-page); }
+.jn { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(160rpx + env(safe-area-inset-bottom)); color: var(--cy-color-text-primary); }
+.jn-head { display: flex; flex-direction: column; align-items: center; padding: 16rpx 38rpx 0; text-align: center; }
+.jn-eyebrow { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.jn-title { margin-top: 12rpx; font-size: var(--cy-type-page-title); font-weight: 700; color: var(--cy-color-text-primary); }
+.jn-pill { margin-top: 16rpx; padding: 8rpx 31rpx; border-radius: var(--cy-radius-pill); font-size: var(--cy-type-label); font-weight: 600;
+  background: var(--cy-comp-sheet-group-bg); color: var(--cy-color-text-primary); }
+.jn-pill.is-win { background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); }
+.jn-grid { display: flex; margin: 38rpx 38rpx 0; }
+.jn-stat { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
+.jn-stat__v { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.jn-stat__v.is-muted { font-size: var(--cy-type-body); font-weight: 500; color: var(--cy-color-text-secondary); padding: 10rpx 0; }
+.jn-stat__l { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.jn-sec { margin: 54rpx 38rpx 0; display: flex; flex-direction: column; gap: 19rpx; }
+.jn-sec__h { font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-color-text-primary); }
+.jn-group { border-radius: var(--cy-comp-sheet-group-radius); overflow: hidden; background: var(--cy-comp-sheet-group-bg); }
+.jn-row { position: relative; display: flex; align-items: center; gap: 24rpx; min-height: 88rpx; padding: 20rpx 31rpx; box-sizing: border-box; }
+.jn-row + .jn-row::before { content: ''; position: absolute; top: 0; left: 31rpx; right: 0; height: 1rpx; background: var(--cy-comp-sheet-group-line); }
+.jn-row__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.jn-row__b { font-size: var(--cy-type-body); font-weight: 500; color: var(--cy-color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jn-row__s { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jn-row__v { flex: none; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
+.jn-row__v.is-strong { color: var(--cy-color-text-primary); font-weight: 600; }
+.jn-row__arr { flex: none; color: var(--cy-color-text-secondary); }
+.jn-row.is-danger .jn-row__b { color: var(--cy-color-status-danger); }
+.jn-av { flex: none; width: 64rpx; height: 64rpx; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); font-weight: 600; }
+.jn-av image { width: 100%; height: 100%; }
+.jn-rank { flex: none; width: 56rpx; text-align: center; font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
+.jn-rank.is-top { color: var(--cy-color-status-success); }
+.jn-me { color: var(--cy-color-status-success); }
+.jn-footer { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 20rpx; padding: 20rpx 38rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--cy-bg-page); }
+.jn-footer > * { flex: 1; }
+.jn-share { display: block; width: 100%; margin: 0; padding: 0; background: none; border: 0; line-height: normal; }
+.jn-share::after { display: none; }
+.jn-err { margin-top: 8rpx; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
+.jn-photos { display: flex; gap: 16rpx; padding: 0 0 4rpx; }
+.jn-photo { flex: none; width: 200rpx; height: 200rpx; border-radius: var(--cy-radius-md); overflow: hidden; background: var(--cy-color-bg-elevated); }
+.jn-photo image { width: 100%; height: 100%; }
+.jn-sheet { padding: 0 6rpx 24rpx; }
+.jn-note { padding: 20rpx 31rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.jn-photos-scroll { margin-bottom: 24rpx; }
+.jn-av--lg { width: 128rpx; height: 128rpx; font-size: var(--cy-type-section-title); }
+.jn-gap { margin-top: 16rpx; }
+.jn-footer--stack { flex-direction: column; gap: 8rpx; }
+.jn-footer--stack .jn-err { text-align: center; }
+.jn-sec--first { margin-top: 24rpx; }
+.jn-danger-text { color: var(--cy-color-status-danger); min-height: 88rpx; line-height: 88rpx; padding: 0 8rpx; }
+.jn-tabbar { display: flex; align-items: center; gap: 16rpx; margin: 0 0 24rpx; }
+.jn-tabbar__scope { flex: 1; min-width: 0; }
+.jn-tabbar__period { flex: none; }
