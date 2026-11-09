@@ -123,13 +123,14 @@ test('exact authenticated GET wires immutable history into existing chapter read
   assert.notEqual(requests[0].auth, false, 'existing transport supplies Authorization');
   requests[0].success({ code: 200, data: response() });
   assert.equal(await pending, true);
-  assert.deepEqual(page._precedingHistoryParas.map(item => item.text), ['原开场{name}', '原手记{name}', '原收尾']);
+  // U04-01(qx-b1):作者分割线按原顺序呈现为一条细线(kind divider,无文字)。
+  assert.deepEqual(page._precedingHistoryParas.map(item => item.kind === 'divider' ? '—' : item.text), ['原开场{name}', '原手记{name}', '—', '原收尾']);
   assert.equal(page._nodeById(NODE), undefined);
   assert.equal(page.data.journalCards.find(card => card.nodeId === NODE).kvK, '已完成', 'history alone does not prove delisting');
   page.onPickChapter({ currentTarget: { dataset: { idx: 0 } } });
   assert.equal(page.data.chapter.complete, true);
   assert.equal(page.data.chapter.cover, '', 'current media is not original snapshot media');
-  assert.deepEqual(page.data.chapterParas.map(item => item.text), ['原开场{name}', '原手记{name}', '原收尾']);
+  assert.deepEqual(page.data.chapterParas.map(item => item.kind === 'divider' ? '—' : item.text), ['原开场{name}', '原手记{name}', '—', '原收尾']);
   assert.equal(JSON.stringify(page.data.chapterParas).includes('当前'), false);
   assert.equal(page.data.chapterParas.some(item => ['game', 'kit', 'journeyCheck'].includes(item.kind)), false);
   page.openStory({ currentTarget: { dataset: { id: NODE } } });
