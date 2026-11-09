@@ -689,7 +689,8 @@ class JourneyFullFlowMySqlIT {
                 "sql/migration_20260823_topic_route_graph.sql",
                 "sql/migration_20260930_registration_first_successful_scan.sql",
                 "sql/migration_ordinary_chapter_offer_withdraw_20261003.sql",
-                "sql/migration_20261003_merchant_offer_withdrawal_columns.sql");
+                "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
+                "sql/migration_preset_draft_source_20261108.sql");
     }
 
     private static void wipe() throws Exception {

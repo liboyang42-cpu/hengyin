@@ -66,6 +66,7 @@ class TemplateMarketLifecycleMySqlIT {
         try (Connection connection = source.getConnection()) {
             assertTrue(connection.getMetaData().getDatabaseProductVersion().startsWith("8.0"));
             ItSchema.apply(connection, "it-schema/journey-full-flow-it-schema.sql");
+            ItSchema.applyMigrations(connection, "sql/migration_preset_draft_source_20261108.sql");
             connection.createStatement().execute("CREATE TABLE cms_template_library LIKE cms_member_template");
             connection.createStatement().execute("ALTER TABLE cms_template_library ADD member_template_id BIGINT, ADD pack_type INT, ADD INDEX idx_member_template(member_template_id)");
             String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("../sql/ry_20250522.sql")), java.nio.charset.StandardCharsets.UTF_8);

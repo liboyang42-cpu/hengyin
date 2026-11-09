@@ -132,6 +132,7 @@ class ScopedLeaderboardMySqlIT {
             // 用与 JDBC 参数同一套转换生成墙钟字面量：不写死 JVM/服务端时区，
             // 只断「窗口右边界前 1 分钟算本周、正好在右边界不算」。
             java.text.SimpleDateFormat wallClock = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            wallClock.setTimeZone(java.util.TimeZone.getTimeZone(ScopedLeaderboardPeriods.SERVER_ZONE));
             String lastMinute = wallClock.format(new Date(weekEnd.getTime() - 60_000L));
             String boundary = wallClock.format(weekEnd);
             st.execute("delete from player_node_progress where member_id <> " + PAID_ACE);
@@ -186,6 +187,9 @@ class ScopedLeaderboardMySqlIT {
                     "topic_route_session", "player_node_progress", "club", "club_member", "ums_member"}) {
                 st.execute("DROP TABLE IF EXISTS `" + table + "`");
             }
+        }
+        try (Statement st = connection.createStatement()) {
+            st.execute("DROP TABLE IF EXISTS community_post");
         }
         ItSchema.apply(connection, "it-schema/cms-topic-it-schema.sql");
         ItSchema.apply(connection, "it-schema/post-game-outcome-it-schema.sql");

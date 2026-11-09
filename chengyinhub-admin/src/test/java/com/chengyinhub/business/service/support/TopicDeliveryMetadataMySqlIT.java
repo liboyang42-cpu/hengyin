@@ -109,7 +109,7 @@ class TopicDeliveryMetadataMySqlIT {
 
     @AfterAll
     void tearDown() throws Exception {
-        if (session != null) session.close();
+
         JdbcTemplate admin = new JdbcTemplate(new DriverManagerDataSource(
                 MybatisItDatabase.url(database).replace("/" + database + "?", "/mysql?"),
                 MybatisItDatabase.user(), MybatisItDatabase.password()));

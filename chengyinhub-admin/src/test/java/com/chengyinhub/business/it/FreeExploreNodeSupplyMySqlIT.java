@@ -158,7 +158,8 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_app_sensor_template_fields_20260821.sql",
                 "migration_20260822_advanced_game_runtime.sql",
                 "migration_template_merchant_guide_20260906.sql",
-                "migration_template_reward_rules_20260906.sql"));
+                "migration_template_reward_rules_20260906.sql",
+                "migration_preset_draft_source_20261108.sql"));
         MIGRATIONS.put("cms_registration_merchant", List.of("migration_registration_merchant_audit_time_20260910.sql"));
         MIGRATIONS.put("coop_invite", List.of("migration_coop_deposit_refund_state_20260913.sql"));
     }
