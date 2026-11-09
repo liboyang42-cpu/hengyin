@@ -105,6 +105,21 @@
       </view>
     </view>
 
+    <!-- U07-04 退款进度:阶段、分项、已退/有效票数;只在有退款事实时出现 -->
+    <block wx:if="{{info.settleView.show}}">
+      <view class="sec-title">退款进度</view>
+      <view class="ocard">
+        <view class="orow">
+          <text class="orow-k">进度</text>
+          <text class="orow-v settle-stage settle-stage--{{info.settleView.stageTone}}">{{info.settleView.stage}}</text>
+        </view>
+        <view class="orow" wx:for="{{info.settleView.rows}}" wx:key="key">
+          <text class="orow-k">{{item.label}}</text>
+          <text class="orow-v">{{item.value}}</text>
+        </view>
+      </view>
+    </block>
+
     <!-- 「和队友一起出发」原来插在状态卡和订单明细之间,打断稿的顺序;2026-09-15 挪到支付明细之后 -->
     <cy-card class="order-card team-order-card" wx:if="{{info.teamOpen}}">
       <view class="section-title">和队友一起出发</view>
