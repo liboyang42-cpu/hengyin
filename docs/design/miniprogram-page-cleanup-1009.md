@@ -128,6 +128,8 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/topic/merchantapply/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:328` | KEEP |
 | `pages/topic/pricing/index` | 否 | `chengyinhub-xcx/pages/topic/index/index.js:751` | KEEP |
 | `pages/topic/pricing/partner/index` | 否 | `chengyinhub-xcx/pages/topic/pricing/index.js:212` | KEEP |
+| `pages/topic/catalog/index` | 否 | 无站内导航引用（qx-b8 公开目录/城市合集落地，分享与外链直达，入口待拍板） | KEEP |
+| `pages/topic/catalog/detail` | 否 | 无站外导航引用（qx-b8 公开落地详情，由同目录列表页与分享直达） | KEEP |
 | `pages/merchant/index/index` | 否 | `chengyinhub-xcx/components/cy/access-gate/index.js:85` | KEEP |
 | `pages/merchant/apply/index` | 否 | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPrerequisiteServiceImpl.java:16` | KEEP |
 | `pages/merchant/ledger/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:26` | KEEP |
