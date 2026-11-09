@@ -34,6 +34,9 @@ function serverSections() {
   // 2026-10-10 R5：validateTimer 增加第二参数（是否 R5 outcomeRules），解析允许后续参数，段名单语义不变。
   const re = /validate\w+\(\s*root\.get\("(\w+)"\)\s*[,)]/g
   while ((m = re.exec(code))) found.add(m[1])
+  // 2026-11-09 qx-b2:逐字猜词由玩法类自己校验(HangmanGameplay.validate(root.get("hangman"))),同属段名单
+  const reOwned = /\b[A-Z]\w+\.validate\(\s*root\.get\("(\w+)"\)\s*\)/g
+  while ((m = reOwned.exec(code))) found.add(m[1])
   // requires / effects 是根级条件与效果块(多参数校验),不是玩法段;旧单参正则只是碰巧没匹配到它们。
   // clues 是「线索」工具的名称表(2026-10-11)，同样不是玩法段。
   for (const rootBlock of ['requires', 'effects', 'clues']) found.delete(rootBlock)
