@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.support;
 import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
 import com.chengyinhub.business.service.ITemplatePublishService;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class GameplayPresetDraftService {
     private final ITemplatePublishService templatePublishService;
     private final GameplayPresetCatalog catalog;
 
+    @Autowired
     public GameplayPresetDraftService(ITemplatePublishService templatePublishService) {
         this(templatePublishService, GameplayPresetCatalog.shared());
     }
