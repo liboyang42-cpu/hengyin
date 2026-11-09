@@ -309801,7 +309801,7 @@
       }
     },
     {
-      "id": "components/cy/post-card/index.wxml:158:catchtap:emitComment:17",
+      "id": "components/cy/post-card/index.wxml:160:catchtap:emitComment:17",
       "route": "component:components/cy/post-card/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -309929,7 +309929,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "emitComment",
-        "line": 158,
+        "line": 160,
         "selectorHint": ".post-card__comment-preview",
         "visibleCondition": "{{post.commentText || post.commentCount > 0}}",
         "disabledCondition": null,
@@ -923311,7 +923311,7 @@
       }
     },
     {
-      "id": "components/tabBar/index.wxml:21:bindtap:openPublishSheet:1",
+      "id": "components/tabBar/index.wxml:20:bindtap:openPublishSheet:1",
       "route": "component:components/tabBar/index",
       "hostRoutes": [
         "pages/index/index",
@@ -923443,7 +923443,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPublishSheet",
-        "line": 21,
+        "line": 20,
         "selectorHint": ".tabbar__publish",
         "visibleCondition": "{{showPublish}}",
         "disabledCondition": null,
@@ -923525,11 +923525,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/tabBar/index.js:81"
+        "staticSource": "components/tabBar/index.js:83"
       }
     },
     {
-      "id": "components/tabBar/index.wxml:22:bind:close:closePublishSheet:2",
+      "id": "components/tabBar/index.wxml:21:bind:close:closePublishSheet:2",
       "route": "component:components/tabBar/index",
       "hostRoutes": [
         "pages/index/index",
@@ -923661,7 +923661,7 @@
         "tag": "cy-publish-sheet",
         "event": "bind:close",
         "handler": "closePublishSheet",
-        "line": 22,
+        "line": 21,
         "selectorHint": "cy-publish-sheet[bind:close]",
         "visibleCondition": "{{showPublish}}",
         "disabledCondition": null,
@@ -923701,7 +923701,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/tabBar/index.js:108"
+        "staticSource": "components/tabBar/index.js:110"
       }
     },
     {
@@ -923878,7 +923878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/tabBar/index.js:137"
+        "staticSource": "components/tabBar/index.js:139"
       }
     },
     {
@@ -1340073,7 +1340073,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:143:bindtap:commentFollowClick:19",
+      "id": "pages/square/detail/index.wxml:142:bindtap:commentFollowClick:19",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1340209,7 +1340209,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "commentFollowClick",
-        "line": 143,
+        "line": 142,
         "selectorHint": ".jia",
         "visibleCondition": "{{item.isFollowTheUser==0}}",
         "disabledCondition": null,
@@ -1340309,7 +1340309,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:164:bindtap:commentLikeClick:20",
+      "id": "pages/square/detail/index.wxml:163:bindtap:commentLikeClick:20",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1340400,7 +1340400,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "commentLikeClick",
-        "line": 164,
+        "line": 163,
         "selectorHint": ".comment-like",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1340474,7 +1340474,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:168:bindtap:msgClick:21",
+      "id": "pages/square/detail/index.wxml:167:bindtap:msgClick:21",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1340497,7 +1340497,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "msgClick",
-        "line": 168,
+        "line": 167,
         "selectorHint": "button[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1340611,7 +1340611,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:171:bindtap:reportComment:22",
+      "id": "pages/square/detail/index.wxml:170:bindtap:reportComment:22",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1340731,7 +1340731,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "reportComment",
-        "line": 171,
+        "line": 170,
         "selectorHint": ".comment-report",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1340806,7 +1340806,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:175:bindtap:deleteComment:23",
+      "id": "pages/square/detail/index.wxml:174:bindtap:deleteComment:23",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1340897,7 +1340897,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "deleteComment",
-        "line": 175,
+        "line": 174,
         "selectorHint": ".comment-report",
         "visibleCondition": "{{item.memberId == userId}}",
         "disabledCondition": null,
@@ -1340972,7 +1340972,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:189:bind:action:retryCommentSubmit:25",
+      "id": "pages/square/detail/index.wxml:188:bind:action:retryCommentSubmit:25",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341073,7 +1341073,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryCommentSubmit",
-        "line": 189,
+        "line": 188,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1341225,7 +1341225,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:204:bindinput:onCommentInput:26",
+      "id": "pages/square/detail/index.wxml:203:bindinput:onCommentInput:26",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341248,7 +1341248,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onCommentInput",
-        "line": 204,
+        "line": 203,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": "{{commentSubmitting || commentRecoveryPending}}",
@@ -1341292,7 +1341292,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:205:bindconfirm:addComment:27",
+      "id": "pages/square/detail/index.wxml:204:bindconfirm:addComment:27",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341393,7 +1341393,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "addComment",
-        "line": 205,
+        "line": 204,
         "selectorHint": "input[bindconfirm]",
         "visibleCondition": null,
         "disabledCondition": "{{commentSubmitting || commentRecoveryPending}}",
@@ -1341475,7 +1341475,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:217:bind:close:popClose:28",
+      "id": "pages/square/detail/index.wxml:216:bind:close:popClose:28",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341498,7 +1341498,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "popClose",
-        "line": 217,
+        "line": 216,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1341542,7 +1341542,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:218:bind:action:retryReplySubmit:29",
+      "id": "pages/square/detail/index.wxml:217:bind:action:retryReplySubmit:29",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341643,7 +1341643,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryReplySubmit",
-        "line": 218,
+        "line": 217,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{replySubmitError}}",
         "disabledCondition": null,
@@ -1341725,7 +1341725,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:229:bindinput:onReplyInput:30",
+      "id": "pages/square/detail/index.wxml:228:bindinput:onReplyInput:30",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341748,7 +1341748,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onReplyInput",
-        "line": 229,
+        "line": 228,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": "{{replySubmitting || commentRecoveryPending}}",
@@ -1341862,7 +1341862,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:234:bind:tap:addReplyComment:31",
+      "id": "pages/square/detail/index.wxml:233:bind:tap:addReplyComment:31",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1341963,7 +1341963,7 @@
         "tag": "cy-btn",
         "event": "bind:tap",
         "handler": "addReplyComment",
-        "line": 234,
+        "line": 233,
         "selectorHint": ".david_nplok",
         "visibleCondition": null,
         "disabledCondition": "{{!canReply || replySubmitting}}",
@@ -1342045,7 +1342045,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:243:bind:close:closePostActions:33",
+      "id": "pages/square/detail/index.wxml:242:bind:close:closePostActions:33",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342068,7 +1342068,7 @@
         "tag": "cy-post-actions",
         "event": "bind:close",
         "handler": "closePostActions",
-        "line": 243,
+        "line": 242,
         "selectorHint": "#post-actions",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342112,7 +1342112,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:243:bind:select:onPostAction:32:variant:delete",
+      "id": "pages/square/detail/index.wxml:242:bind:select:onPostAction:32:variant:delete",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342201,7 +1342201,7 @@
         "tag": "cy-post-actions",
         "event": "bind:select",
         "handler": "onPostAction",
-        "line": 243,
+        "line": 242,
         "selectorHint": "#post-actions",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342265,7 +1342265,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:243:bind:select:onPostAction:32:variant:edit",
+      "id": "pages/square/detail/index.wxml:242:bind:select:onPostAction:32:variant:edit",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342296,7 +1342296,7 @@
         "tag": "cy-post-actions",
         "event": "bind:select",
         "handler": "onPostAction",
-        "line": 243,
+        "line": 242,
         "selectorHint": "#post-actions",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342340,7 +1342340,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:243:bind:select:onPostAction:32:variant:report",
+      "id": "pages/square/detail/index.wxml:242:bind:select:onPostAction:32:variant:report",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342468,7 +1342468,7 @@
         "tag": "cy-post-actions",
         "event": "bind:select",
         "handler": "onPostAction",
-        "line": 243,
+        "line": 242,
         "selectorHint": "#post-actions",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342546,7 +1342546,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:248:bind:close:onComposeClose:34",
+      "id": "pages/square/detail/index.wxml:247:bind:close:onComposeClose:34",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342569,7 +1342569,7 @@
         "tag": "cy-post-compose",
         "event": "bind:close",
         "handler": "onComposeClose",
-        "line": 248,
+        "line": 247,
         "selectorHint": "cy-post-compose[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342613,7 +1342613,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:248:bind:published:onComposePublished:35",
+      "id": "pages/square/detail/index.wxml:247:bind:published:onComposePublished:35",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342694,7 +1342694,7 @@
         "tag": "cy-post-compose",
         "event": "bind:published",
         "handler": "onComposePublished",
-        "line": 248,
+        "line": 247,
         "selectorHint": "cy-post-compose[bind:published]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342755,7 +1342755,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:254:bind:close:onAvatarPopClose:37",
+      "id": "pages/square/detail/index.wxml:253:bind:close:onAvatarPopClose:37",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342778,7 +1342778,7 @@
         "tag": "cy-popover",
         "event": "bind:close",
         "handler": "onAvatarPopClose",
-        "line": 254,
+        "line": 253,
         "selectorHint": "cy-popover[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342822,7 +1342822,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:254:bind:pick:onAvatarPopPick:36",
+      "id": "pages/square/detail/index.wxml:253:bind:pick:onAvatarPopPick:36",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342845,7 +1342845,7 @@
         "tag": "cy-popover",
         "event": "bind:pick",
         "handler": "onAvatarPopPick",
-        "line": 254,
+        "line": 253,
         "selectorHint": "cy-popover[bind:pick]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1342935,7 +1342935,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:257:bind:cancel:onReportReasonCancel:39",
+      "id": "pages/square/detail/index.wxml:256:bind:cancel:onReportReasonCancel:39",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1342958,7 +1342958,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReportReasonCancel",
-        "line": 257,
+        "line": 256,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1343003,7 +1343003,7 @@
       }
     },
     {
-      "id": "pages/square/detail/index.wxml:257:bind:select:onReportReasonSelect:38",
+      "id": "pages/square/detail/index.wxml:256:bind:select:onReportReasonSelect:38",
       "route": "pages/square/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1343026,7 +1343026,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReportReasonSelect",
-        "line": 257,
+        "line": 256,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,

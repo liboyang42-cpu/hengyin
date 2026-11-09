@@ -119,7 +119,7 @@ test('A10：详情无“动态”页标题，作者名可见，点赞和分享�
   assert.match(detail, /class="comment-like[^>]*[\s\S]*?name="heart"[\s\S]*?\{\{item\.likeCount \|\| ''\}\}/)
   assert.doesNotMatch(detail, /\{\{item\.likeCount\}\}\s*赞/)
   // 2026-09-21 用户拍板:帖文分享统一改成产品既有弯箭头位图，不使用方框上箭头。
-  assert.match(detail, /class="act-share act-share--end"[^>]*[\s\S]*?src="\/images\/icon_share\.png"/)
+  assert.match(detail, /class="act-share"[^>]*[\s\S]*?src="\/images\/icon_share\.png"/)
   assert.match(listCard, /class="post-card__share"[^>]*[\s\S]*?src="\/images\/icon_share\.png"/)
   assert.doesNotMatch(listCard, /post-card__share-icon"[^>]*name="arrow-right"/,
     '分享不许再借用 arrow-right —— share 这枚 iOS 分享件仓里早就有')
