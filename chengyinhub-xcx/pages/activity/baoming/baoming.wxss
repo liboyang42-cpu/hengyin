@@ -467,3 +467,7 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
   text-align: right;
   word-break: break-all;
 }
+
+/* §27.6 主持预约:沿用明细行;撤销是唯一的危险行,红字 */
+.host-danger { color: var(--cy-color-status-danger); }
+.host-request { display: block; margin: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) 0; }

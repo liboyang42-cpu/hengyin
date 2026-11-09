@@ -223,14 +223,24 @@
   </view>
 </view>
 
-<!-- §27.6 主持预约:状态只读服务端 reservationState;需预约时由这张卡接管候补卡 -->
-<view wx:if="{{pageState === 'ready' && hostResv.show}}" class="waitlist-card">
-  <view class="waitlist-card__title">主持预约</view>
-  <view class="waitlist-card__status {{hostResv.awaitingPayment ? 'is-offered' : ''}}">{{hostResv.text}}</view>
-  <view wx:if="{{hostResv.awaitingPayment && waitlistExpiresText}}" class="waitlist-card__text">请在 {{waitlistExpiresText}} 前完成付款</view>
-  <cy-btn wx:if="{{hostResv.canRequest}}" variant="secondary" loading="{{waitlistLoading}}" bindtap="requestHost">请求主持</cy-btn>
-  <view wx:if="{{hostResv.canCancel}}" class="waitlist-card__link" bindtap="cancelWaitlist" aria-role="button" hover-class="{{waitlistLoading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">撤销申请</view>
-</view>
+<!-- §27.6 主持预约:状态只读服务端 reservationState;需预约时由这块接管候补卡。沿用本页 sec-title + setly 明细行 -->
+<block wx:if="{{pageState === 'ready' && hostResv.show}}">
+  <view class="sec-title">主持预约</view>
+  <view class="setly">
+    <view class="setly_li">
+      <view class="setly_li_left">状态</view>
+      <view class="setly_li_right"><text class="{{hostResv.awaitingPayment ? '' : 'promo-off'}}">{{hostResv.text}}</text></view>
+    </view>
+    <view wx:if="{{hostResv.awaitingPayment && waitlistExpiresText}}" class="setly_li">
+      <view class="setly_li_left">付款截止</view>
+      <view class="setly_li_right"><text>{{waitlistExpiresText}}</text></view>
+    </view>
+    <view wx:if="{{hostResv.canCancel}}" class="setly_li" bindtap="cancelWaitlist" aria-role="button" hover-class="{{waitlistLoading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+      <view class="setly_li_left host-danger">撤销申请</view>
+    </view>
+  </view>
+  <cy-btn wx:if="{{hostResv.canRequest}}" class="host-request" variant="secondary" loading="{{waitlistLoading}}" bindtap="requestHost">请求主持</cy-btn>
+</block>
 
 <!-- 候补是真实票库存 hold：只有服务端 OFFERED 且带短期 token 时才开放原报名付款。 -->
 <view wx:if="{{pageState === 'ready' && !hostResv.show && (ticketSoldOut || waitlistEligibility === 'ALREADY_REGISTERED' || (waitlistState && waitlistState !== 'NONE'))}}" class="waitlist-card">
@@ -303,10 +313,10 @@
 <!-- 占位必须和 .bmbottom 的真实高度同算式(含安全区):写死 240rpx 会比底栏矮一个
      home indicator,正文最后一行被永久盖住 —— 实拍到「…不会重复创建订」被切。 -->
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom-spacer"
-  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) && !(quoteRefusal && hostResv.required) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom"
-  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
-  <cy-inline-error class="submit-inline-error" wx:if="{{submitError && !(quoteRefusal && activityInfo.isSignUp === 1)}}" kind="data"
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) && !(quoteRefusal && hostResv.required) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
+  <cy-inline-error class="submit-inline-error" wx:if="{{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) && !(quoteRefusal && hostResv.required)}}" kind="data"
     title="{{quoteRefusal ? '暂不可报名' : '这次报名还没完成'}}" sub="{{submitError}}"
     action="{{quoteRefusal ? '' : '重新提交'}}" bind:action="handlePayment" />
   <!-- 拍板 2026-09-16 #10:商家闭店时报名入口先说清原因(点了也会被后端拒),已售不受影响。 -->
