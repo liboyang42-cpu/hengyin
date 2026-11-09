@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -22,6 +23,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -118,7 +120,7 @@ class MarketingProductGiftClaimMySqlIT {
 
     @Test
     void concurrentClaimOfTheSameGiftHasExactlyOneWinner() throws Exception {
-        long orderId = insertPaidGiftOrder("G-ONE-WINNER-" + UUID.randomUUID(), BUYER, "req-gift-1");
+        long orderId = insertPaidGiftOrder(fixtureOrderNo(), BUYER, "req-gift-1");
         long giftId = insertPendingGift(orderId, futureDate(30), TOKEN);
 
         List<Long> winners = runConcurrently(4, index -> tx.execute(status -> {
@@ -143,7 +145,7 @@ class MarketingProductGiftClaimMySqlIT {
 
     @Test
     void expiredClaimCodeIsRejectedAndExpiryIsTerminal() {
-        long orderId = insertPaidGiftOrder("G-EXPIRED-" + UUID.randomUUID(), BUYER, "req-gift-2");
+        long orderId = insertPaidGiftOrder(fixtureOrderNo(), BUYER, "req-gift-2");
         long giftId = insertPendingGift(orderId, pastDate(1), "token-expired");
 
         assertEquals(0, giftMapper.claimCas(giftId, RECIPIENT, "late-claim", new Date()),
@@ -162,7 +164,7 @@ class MarketingProductGiftClaimMySqlIT {
         String requestId = "same-request-" + UUID.randomUUID();
         List<Long> results = runConcurrently(4, index -> tx.execute(status -> {
             try {
-                orderMapper.insert(order(BUYER, requestId, "O-" + index + "-" + UUID.randomUUID()));
+                orderMapper.insert(order(BUYER, requestId, fixtureOrderNo()));
                 return 1L;
             } catch (DataIntegrityViolationException duplicate) {
                 return 0L;
@@ -182,7 +184,7 @@ class MarketingProductGiftClaimMySqlIT {
 
     @Test
     void oneGiftPerOrderAndRegistrationBindingHappensOnce() {
-        long orderId = insertPaidGiftOrder("G-SINGLE-" + UUID.randomUUID(), BUYER, "req-gift-3");
+        long orderId = insertPaidGiftOrder(fixtureOrderNo(), BUYER, "req-gift-3");
         long giftId = insertPendingGift(orderId, futureDate(10), "token-single");
 
         assertThrows(DataIntegrityViolationException.class,
@@ -199,7 +201,7 @@ class MarketingProductGiftClaimMySqlIT {
 
     @Test
     void frozenAllocationRejectsDuplicateTopicAndKeepsPayableSum() {
-        long orderId = insertPaidGiftOrder("G-LINES-" + UUID.randomUUID(), BUYER, "req-gift-4");
+        long orderId = insertPaidGiftOrder(fixtureOrderNo(), BUYER, "req-gift-4");
         MarketingProductOrderLine first = line(orderId, 41L, "6.00", "4.00", 0);
         MarketingProductOrderLine second = line(orderId, 42L, "6.00", "6.00", 1);
         assertEquals(1, orderMapper.insertFrozenLine(first));
@@ -224,13 +226,18 @@ class MarketingProductGiftClaimMySqlIT {
 
     @Test
     void claimedStatusWithoutClaimantIsRejectedByCheck() {
-        long orderId = insertPaidGiftOrder("G-CHECK-" + UUID.randomUUID(), BUYER, "req-gift-5");
-        assertThrows(DataIntegrityViolationException.class, () -> db.update(
+        long orderId = insertPaidGiftOrder(fixtureOrderNo(), BUYER, "req-gift-5");
+        DataAccessException rejected = assertThrows(DataAccessException.class, () -> db.update(
                 "INSERT INTO gift_entitlement (public_id, order_id, product_id, buyer_member_id,"
                         + " claim_token_hash, status, claimed_member_id, claimed_at, create_time, update_time)"
                         + " VALUES ('half-claimed',?,?,?,?,1,NULL,NULL,NOW(),NOW())",
                 orderId, productId, BUYER, sha256("half-claimed-token")),
                 "status=1 却没有 claimed_member_id/claimed_at 必须被 ck_gift_entitlement_claim 拒绝");
+        assertTrue(rejected.getMostSpecificCause() instanceof SQLException);
+        SQLException cause = (SQLException) rejected.getMostSpecificCause();
+        assertEquals(3819, cause.getErrorCode(), "必须是 MySQL CHECK 失败，不能把其他 SQL 错误当作通过");
+        assertEquals("HY000", cause.getSQLState());
+        assertTrue(cause.getMessage().contains("ck_gift_entitlement_claim"));
         assertEquals(0, db.queryForObject(
                 "SELECT COUNT(*) FROM gift_entitlement WHERE status=1", Integer.class));
     }
@@ -259,6 +266,12 @@ class MarketingProductGiftClaimMySqlIT {
         return product.getId();
     }
 
+    // 合成夹具：保留完整 UUID 的唯一性，35 位符合 order_no VARCHAR(40)，不截断真实订单号。
+    private static String fixtureOrderNo() {
+        return "ITG" + UUID.randomUUID().toString().replace("-", "");
+    }
+
+    // 仅预置数据库约束测试的已付状态，不代表真实验付或支付链路证明。
     private long insertPaidGiftOrder(String orderNo, long memberId, String requestId) {
         MarketingProductOrder order = order(memberId, requestId, orderNo);
         order.setFulfillmentKind(2);
@@ -271,6 +284,7 @@ class MarketingProductGiftClaimMySqlIT {
 
     private MarketingProductOrder order(long memberId, String requestId, String orderNo) {
         MarketingProductOrder order = new MarketingProductOrder();
+        assertTrue(orderNo.length() <= 40, "合成订单号须符合实际 schema");
         order.setOrderNo(orderNo);
         order.setMemberId(memberId);
         order.setProductId(productId);

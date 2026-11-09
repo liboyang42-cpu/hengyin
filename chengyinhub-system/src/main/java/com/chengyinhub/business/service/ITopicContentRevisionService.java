@@ -37,6 +37,9 @@ public interface ITopicContentRevisionService {
     /** 当前发布头对应的修订;老主题没有任何修订时返回 null(调用方按 legacy 处理)。 */
     TopicContentRevisionView currentPublished(Long topicId);
 
+    /** 采用专用当前读，调用方已持主题写锁；含私有快照，禁止下发。 */
+    CmsTopicContentRevision currentForAdoption(Long topicId);
+
     /** 指定修订的公共视图;revisionId 不属于该 topic 时返回 null。 */
     TopicContentRevisionView publishedRevision(Long topicId, Long revisionId);
 

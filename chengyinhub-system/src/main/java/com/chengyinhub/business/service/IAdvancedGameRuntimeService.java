@@ -12,6 +12,9 @@ public interface IAdvancedGameRuntimeService {
 
     Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId);
 
+    Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
+
     Map<String, Object> act(Long memberId, Long sessionId, Integer expectedVersion,
                             String idempotencyKey, String action, Map<String, Object> payload);
 

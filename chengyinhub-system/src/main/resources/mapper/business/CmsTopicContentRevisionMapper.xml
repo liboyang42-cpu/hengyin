@@ -92,6 +92,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         limit 1
     </select>
 
+    <select id="selectLatestForAdoption" resultMap="RevisionResult" useCache="false" flushCache="true">
+        select <include refid="revisionColumns"/>
+        from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no desc
+        limit 1
+        for update
+    </select>
+
     <select id="selectViewByTopicIdAndId" resultMap="RevisionViewResult">
         select <include refid="viewColumns"/>
         from cms_topic_content_revision

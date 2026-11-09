@@ -36,7 +36,7 @@ class WorkshopPurchaseMyBatisIT {
         try(var connection=ds.getConnection()){ItSchema.applyMigrations(connection,"sql/migration_z_workshop_purchase_20261109.sql","sql/migration_z_workshop_paid_review_20261109.sql");}
         fixtureTable(jdbc,"CmsTemplateLibraryMapper","CmsTemplateLibraryResult","cms_template_library");
         fixtureTable(jdbc,"CmsMemberTemplateMapper","CmsMemberTemplateResult","cms_member_template");
-        jdbc.execute("create table cms_topic_node(id bigint primary key,topic_id bigint,template_id bigint,merchant_member_id bigint)");
+        fixtureNodeReferences(jdbc);
         jdbc.update("insert into cms_member_template(id,member_id,title,question_answer,status,draft_status,publish_status,del_flag,interaction_type) values(80,99,'purchased title','frozen answer',0,0,0,0,'A')");
         jdbc.update("insert into cms_template_library(id,member_template_id,member_id,title,question_answer,status,publish_status,del_flag) values(8,800,99,'legacy free title','free answer',1,1,0)");
         jdbc.update("insert into cms_member_template(id,member_id,title,status,draft_status,publish_status,del_flag,update_time) values(20,7,'target',0,0,0,0,'2026-11-09 00:00:00.000')");
@@ -188,7 +188,7 @@ class WorkshopPurchaseMyBatisIT {
         try(var c=ds.getConnection()){ItSchema.applyMigrations(c,"sql/migration_z_workshop_purchase_20261109.sql","sql/migration_z_workshop_paid_review_20261109.sql");}
         fixtureTable(jdbc,"CmsTemplateLibraryMapper","CmsTemplateLibraryResult","cms_template_library");
         fixtureTable(jdbc,"CmsMemberTemplateMapper","CmsMemberTemplateResult","cms_member_template");
-        jdbc.execute("create table cms_topic_node(id bigint primary key,topic_id bigint,template_id bigint,merchant_member_id bigint)");
+        fixtureNodeReferences(jdbc);
         jdbc.update("insert into cms_member_template(id,member_id,title,status,draft_status,publish_status,del_flag) values(80,99,'private paid',0,0,0,0)");
         var factory=new SqlSessionFactoryBean();factory.setDataSource(ds);
         factory.setTypeAliases(CmsTemplateLibrary.class,TemplateLibraryVO.class,CmsMemberTemplate.class,MemberTemplateVO.class);
@@ -293,6 +293,10 @@ class WorkshopPurchaseMyBatisIT {
                 }
             }
         }
+    }
+
+private void fixtureNodeReferences(JdbcTemplate jdbc) {
+        jdbc.execute("create table cms_topic_node(id bigint primary key,topic_id bigint,template_id bigint,merchant_member_id bigint)");
     }
 
     private void fixtureTable(JdbcTemplate jdbc,String mapper,String resultMap,String table) throws Exception {

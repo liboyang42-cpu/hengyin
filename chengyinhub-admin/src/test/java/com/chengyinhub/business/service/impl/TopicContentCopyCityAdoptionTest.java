@@ -64,6 +64,13 @@ class TopicContentCopyCityAdoptionTest {
     private final AtomicLong chapterIds = new AtomicLong(600L);
     private final AtomicLong nodeIds = new AtomicLong(1100L);
     private CmsTopic original;
+    private TopicContentCopyServiceImpl revisionCopy;
+    private TopicContentRevisionServiceImpl revisionService;
+    private com.chengyinhub.business.mapper.CmsTopicContentRevisionMapper revisionMapper;
+    private com.chengyinhub.business.domain.CmsTopicContentRevision currentRevision;
+    private TopicRoutePublicationCompiler revisionCompiler;
+    private com.chengyinhub.business.mapper.CmsMemberTemplateMapper revisionTemplates;
+    private com.chengyinhub.business.service.support.ThemeStateKeyService revisionKeys;
 
     @BeforeEach
     void setUp() {
@@ -156,8 +163,221 @@ class TopicContentCopyCityAdoptionTest {
     }
 
     private Long copy(Map<String, Object> params) {
-        return com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service)
-                .copyCmsTopic(SOURCE_ID, params);
+        return (revisionCopy == null ? com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service)
+                : revisionCopy).copyCmsTopic(SOURCE_ID, params);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void clearRevisionTransaction() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.clear();
+    }
+
+    private CmsTopicNode sourceNode() {
+        return nodeMapper.selectCmsTopicNodeList(new CmsTopicNode()).get(0);
+    }
+
+    private void wireRevisionAdoption() {
+        revisionCopy = com.chengyinhub.business.service.support.TopicCopyTestWiring.owner(service);
+        revisionMapper = mock(com.chengyinhub.business.mapper.CmsTopicContentRevisionMapper.class);
+        revisionService = new TopicContentRevisionServiceImpl();
+        ReflectionTestUtils.setField(revisionService, "revisionMapper", revisionMapper);
+        ReflectionTestUtils.setField(revisionService, "cmsTopicMapper", topicMapper);
+        when(topicMapper.selectCmsTopicByIdForUpdate(SOURCE_ID)).thenReturn(original);
+        when(revisionMapper.selectLatestForAdoption(SOURCE_ID)).thenAnswer(inv -> currentRevision);
+        when(revisionMapper.selectMaxRevisionNo(SOURCE_ID))
+                .thenAnswer(inv -> currentRevision == null ? null : currentRevision.getRevisionNo());
+
+        CmsTopicNode node = sourceNode();
+        node.setStatus(1L);
+        when(nodeMapper.selectByTopicForUpdate(SOURCE_ID)).thenReturn(Collections.singletonList(node));
+        java.util.List<CmsTopicChapter> chapters = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter());
+        when(chapterMapper.selectByTopicForUpdate(SOURCE_ID)).thenReturn(chapters);
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keyMapper =
+                mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);
+        when(keyMapper.lockTopicForStateKeyWrite(SOURCE_ID)).thenReturn(SOURCE_ID);
+        when(keyMapper.selectByTopicIdForUpdate(SOURCE_ID)).thenReturn(Collections.emptyList());
+        revisionKeys = new com.chengyinhub.business.service.support.ThemeStateKeyService(keyMapper);
+        revisionTemplates = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
+        ReflectionTestUtils.setField(revisionCopy, "cmsMemberTemplateMapper", revisionTemplates);
+        ReflectionTestUtils.setField(ReflectionTestUtils.getField(revisionCopy, "cmsMemberTemplateService"),
+                "cmsMemberTemplateMapper", revisionTemplates);
+        revisionCompiler = new TopicRoutePublicationCompiler(nodeMapper,
+                revisionTemplates, chapterMapper, keyMapper,
+                java.time.Clock.systemUTC(), new com.fasterxml.jackson.databind.ObjectMapper(),
+                new com.chengyinhub.business.service.support.TopicRouteConfigValidator(), topicMapper);
+        com.chengyinhub.business.service.ITopicRouteRuntimeService runtime =
+                mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(runtime.freezePublication(any(CmsTopic.class), any(), any())).thenAnswer(inv ->
+                revisionCompiler.freezePublication(inv.getArgument(0), inv.getArgument(1), inv.getArgument(2)));
+        ReflectionTestUtils.setField(revisionCopy, "productRoleService",
+                mock(com.chengyinhub.business.service.IProductRoleService.class));
+        ReflectionTestUtils.setField(revisionCopy, "contentRevisions", revisionService);
+        ReflectionTestUtils.setField(revisionCopy, "topicRouteRuntimeService", runtime);
+        ReflectionTestUtils.setField(revisionCopy, "themeStateKeyService", revisionKeys);
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+    }
+
+    private void publishRevision(long id) {
+        String frozen = revisionCompiler.freezePublication(original, null,
+                revisionKeys.listCurrentDeclarations(SOURCE_ID));
+        doAnswer(inv -> {
+            com.chengyinhub.business.domain.CmsTopicContentRevision row = inv.getArgument(0);
+            row.setId(id);
+            currentRevision = row;
+            return 1;
+        }).when(revisionMapper).insertRevision(any());
+        revisionService.recordPublishedRevision(
+                com.chengyinhub.business.domain.dto.TopicContentRevisionWrite.of(SOURCE_ID, frozen));
+        original.setPublishedConfigVersion(original.getPublishedConfigVersion() == null
+                ? 1L : original.getPublishedConfigVersion() + 1L);
+        original.setPublishedRouteGraphJson(frozen);
+    }
+
+    @Test
+    void actualPublishedRevisionIsCopiedAndLaterSourceEditsCannotChangeIt() {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        String published = currentRevision.getSnapshotJson();
+        copy(Map.of("copyType", 2, "memberId", 200L, "bindingIntent", "NEW_CITY",
+                "targetCityCode", "320100", "sourceContentRevisionId", "9001"));
+        CmsTopic firstCopy = persisted.get();
+        CmsTopicNode firstNode = copiedNode();
+        assertEquals("9001", TopicLocationContract.summary(firstCopy.getContentContractJson())
+                .get("sourceContentRevisionId"));
+        assertEquals("41", TopicLocationContract.summary(firstCopy.getContentContractJson())
+                .get("sourceTemplateTopicId"));
+        assertEquals(7L, TopicLocationContract.summary(firstCopy.getContentContractJson())
+                .get("sourceConfigVersion"));
+        assertNull(firstNode.getLatitude());
+        String copiedContract = firstCopy.getContentContractJson();
+        sourceNode().setName("新版站点");
+        publishRevision(9002L);
+        assertEquals("9002", String.valueOf(currentRevision.getId()));
+        assertEquals(copiedContract, firstCopy.getContentContractJson());
+        assertEquals("外滩观景台", firstNode.getName());
+        assertTrue(published.contains("外滩观景台"));
+        assertTrue(currentRevision.getSnapshotJson().contains("新版站点"));
+        assertThrows(IllegalArgumentException.class, () -> copy(
+                Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001")));
+        copy(Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", 9002L));
+        assertEquals("9002", TopicLocationContract.summary(persisted.get().getContentContractJson())
+                .get("sourceContentRevisionId"));
+        assertEquals("新版站点", nodeRows.get(nodeIds.get()).getName());
+    }
+
+    @Test
+    void revisionAdoptionPrivatelyCopiesEvenASameOwnerTemplate() {
+        wireRevisionAdoption();
+        original.setMemberId(200L);
+        sourceNode().setTemplateId(701L);
+        com.chengyinhub.business.domain.CmsMemberTemplate template =
+                new com.chengyinhub.business.domain.CmsMemberTemplate();
+        template.setId(701L);
+        template.setMemberId(200L);
+        template.setValidationMethod(1);
+        template.setQuestionAnswer("A");
+        template.setQuestionName("原题目");
+        when(revisionTemplates.selectCmsMemberTemplateById(701L)).thenReturn(template);
+        when(revisionTemplates.selectCmsMemberTemplateByIdsForUpdate(any()))
+                .thenReturn(Collections.singletonList(template));
+        AtomicReference<com.chengyinhub.business.domain.CmsMemberTemplate> privateTemplate = new AtomicReference<>();
+        doAnswer(inv -> {
+            com.chengyinhub.business.domain.CmsMemberTemplate row = inv.getArgument(0);
+            row.setId(702L);
+            privateTemplate.set(row);
+            return 1;
+        }).when(revisionTemplates).insertCmsMemberTemplate(any());
+        publishRevision(9001L);
+        copy(Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001"));
+        assertEquals(702L, copiedNode().getTemplateId());
+        assertEquals("A", privateTemplate.get().getQuestionAnswer());
+        template.setQuestionAnswer("B");
+        assertEquals("A", privateTemplate.get().getQuestionAnswer());
+        assertEquals("9001", TopicLocationContract.summary(persisted.get().getContentContractJson())
+                .get("sourceContentRevisionId"));
+        assertThrows(IllegalArgumentException.class,
+                () -> copy(Map.of("copyType", 2, "memberId", 200L)));
+        verify(topicMapper, org.mockito.Mockito.times(1)).insertCmsTopic(any());
+    }
+
+    @Test
+    void publishedNodesWithoutAnyCopyableChapterCannotClaimAdoption() {
+        wireRevisionAdoption();
+        sourceNode().setChapterId(null);
+        when(chapterMapper.selectByTopicForUpdate(SOURCE_ID)).thenReturn(Collections.emptyList());
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
+        publishRevision(9001L);
+        assertThrows(IllegalArgumentException.class, () -> copy(
+                Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001")));
+        assertNoCopyWrites("原复制器会跳过无章节来源，不得声称已复制真实修订");
+    }
+
+    @Test
+    void aSourceDraftChangeIsRejectedRatherThanStampedWithThePublishedId() {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        sourceNode().setName("尚未发布的站点");
+        assertThrows(IllegalArgumentException.class,
+                () -> copy(Map.of("copyType", 2, "memberId", 200L)));
+        assertNoCopyWrites("草稿漂移不能冒充发布内容");
+    }
+
+    @Test
+    void olderOrForeignRequestedRevisionIsRejectedBeforeCopyWrites() {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        for (Object requested : new Object[]{9000L, 8000L, "0", "-1", "1.5", "", "abc",
+                "9223372036854775808"}) {
+            assertThrows(IllegalArgumentException.class, () -> copy(
+                    Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", requested)));
+        }
+        assertNoCopyWrites("不匹配或非法来源修订");
+    }
+
+    @Test
+    void aRevisionFromAnotherTopicCannotBeAdoptedEvenWithItsExactId() {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        currentRevision.setTopicId(999L);
+        assertThrows(IllegalArgumentException.class, () -> copy(
+                Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001")));
+        assertNoCopyWrites("修订主题归属不一致");
+    }
+
+    @Test
+    void unavailableOrTamperedPublishedSnapshotIsRejectedBeforeCopyWrites() {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        original.setPublishedRouteGraphJson("{}");
+        assertThrows(IllegalArgumentException.class, () -> copy(Map.of("copyType", 2, "memberId", 200L)));
+        original.setPublishedRouteGraphJson(currentRevision.getSnapshotJson());
+        currentRevision.setContentSha256("not-the-stored-hash");
+        assertThrows(IllegalArgumentException.class, () -> copy(Map.of("copyType", 2, "memberId", 200L)));
+        assertNoCopyWrites("发布头或真实内容hash不一致");
+    }
+
+    @Test
+    void aLegacySourceKeepsNullRevisionAndCannotSatisfyAnExplicitRequest() {
+        wireRevisionAdoption();
+        original.setPublishedConfigVersion(3L);
+        original.setPublishedRouteGraphJson("{\"legacy\":true}");
+        assertThrows(IllegalArgumentException.class, () -> copy(
+                Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001")));
+        assertNoCopyWrites("旧源不能伪造发布历史");
+        copy(Map.of("copyType", 2, "memberId", 200L));
+        JsonNode adoption = TopicLocationContract.parse(persisted.get().getContentContractJson()).path("adoption");
+        assertTrue(adoption.has("sourceContentRevisionId"));
+        assertTrue(adoption.path("sourceContentRevisionId").isNull());
+        verify(revisionMapper, org.mockito.Mockito.never()).insertRevision(any());
+    }
+
+    @Test
+    void partialMetadataCopyCannotClaimAnAdoptedRevision() {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        assertThrows(IllegalArgumentException.class, () -> copy(
+                Map.of("copyType", 1, "memberId", 200L, "sourceContentRevisionId", "9001")));
+        assertNoCopyWrites("只复制主题元信息不能声称复制发布游玩内容");
     }
 
     private CmsTopicNode copiedNode() {

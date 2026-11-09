@@ -119,6 +119,7 @@ public class TopicLocationBindingService {
                 topic.getContentContractJson(), topic.getCityCode()));
         data.put("sourceTemplateTopicId", summary.get("sourceTemplateTopicId"));
         data.put("sourceConfigVersion", summary.get("sourceConfigVersion"));
+        data.put("sourceContentRevisionId", summary.get("sourceContentRevisionId"));
         data.put("adoption", contract.path("adoption").isMissingNode() ? null : contract.path("adoption"));
         return data;
     }

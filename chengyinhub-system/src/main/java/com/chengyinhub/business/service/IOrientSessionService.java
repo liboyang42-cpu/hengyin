@@ -10,7 +10,13 @@ import java.util.Map;
 public interface IOrientSessionService {
     boolean enabled();
     Map<String, Object> prepare(Long memberId, Long topicId, Long activityId, String idempotencyKey);
+
+    Map<String, Object> prepare(Long memberId, Long topicId, Long activityId, String idempotencyKey,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
     Map<String, Object> start(Long memberId, Long sessionId, Long ackConfigVersion, String idempotencyKey);
+
+    Map<String, Object> start(Long memberId, Long sessionId, Long ackConfigVersion, String idempotencyKey,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
     Map<String, Object> abandon(Long memberId, Long sessionId, String idempotencyKey);
     /** 供 F1c 防作弊等服务端调用;不对玩家开放。 */
     Map<String, Object> disqualify(Long memberId, Long sessionId, String reasonCode, String idempotencyKey);

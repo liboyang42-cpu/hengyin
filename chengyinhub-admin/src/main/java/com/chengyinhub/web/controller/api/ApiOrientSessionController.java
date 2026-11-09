@@ -44,24 +44,42 @@ public class ApiOrientSessionController extends BaseController {
 
     @Operation(summary = "准备:取得/建立本人本场的路线局,返回需确认的规则版本")
     @PostMapping("/prepare")
+    public AjaxResult prepare(Long topicId, Long activityId, String idempotencyKey,
+            String clientPlatform, String clientVersion, String supportedCapabilities) {
+        return call(memberId -> supportedCapabilities == null
+                ? orientSessionService.prepare(memberId, topicId, activityId, idempotencyKey)
+                : orientSessionService.prepare(memberId, topicId, activityId, idempotencyKey,
+                        com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                                .parse(clientPlatform, clientVersion, supportedCapabilities)));
+    }
+
     public AjaxResult prepare(Long topicId, Long activityId, String idempotencyKey) {
-        return call(memberId -> orientSessionService.prepare(memberId, topicId, activityId, idempotencyKey));
+        return prepare(topicId, activityId, idempotencyKey, null, null, null);
     }
 
     @Operation(summary = "开赛:首次需确认规则版本并由服务端起表;重进续用原计时")
     @PostMapping("/start")
-    public AjaxResult start(Long sessionId, Long ackConfigVersion, String idempotencyKey) {
+    public AjaxResult start(Long sessionId, Long ackConfigVersion, String idempotencyKey,
+            String clientPlatform, String clientVersion, String supportedCapabilities) {
         long startedAt = System.nanoTime();
         // 401/409 等业务拒绝不是成功；成功率只认 code=200。抛异常（极少）按 fault 计。
         GameSloResult sloResult = GameSloResult.FAULT;
         try {
-            AjaxResult result = call(memberId -> orientSessionService.start(memberId, sessionId, ackConfigVersion, idempotencyKey));
+            AjaxResult result = call(memberId -> supportedCapabilities == null
+                    ? orientSessionService.start(memberId, sessionId, ackConfigVersion, idempotencyKey)
+                    : orientSessionService.start(memberId, sessionId, ackConfigVersion, idempotencyKey,
+                            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                                    .parse(clientPlatform, clientVersion, supportedCapabilities)));
             sloResult = GameSloMetrics.classify(result);
             return result;
         } finally {
             // 每个请求恰好一次，成功与异常路径共用同一记录点。
             recordStart(sloResult, startedAt);
         }
+    }
+
+    public AjaxResult start(Long sessionId, Long ackConfigVersion, String idempotencyKey) {
+        return start(sessionId, ackConfigVersion, idempotencyKey, null, null, null);
     }
 
     private void recordStart(GameSloResult result, long startedAt) {

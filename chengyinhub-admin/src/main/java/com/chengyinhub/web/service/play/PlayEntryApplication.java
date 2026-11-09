@@ -80,7 +80,7 @@ public class PlayEntryApplication {
     }
 
     /**
-     * 同一入口的可选端能力声明（只读投影，不参与准入、不授予权益）。
+     * 同一入口的可选端能力声明（已有局只读兼容结论，隐式新建局前校验，不授予权益）。
      * 不传 = 老客户端，兼容结论为「未确认」，不当作不支持。
      */
     public AjaxResult nodes(Long actorMemberId, Long activityId, Long topicId,
@@ -204,10 +204,13 @@ public class PlayEntryApplication {
         if (registered && topicRouteRuntimeService != null
                 && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
-                routeState = topicRouteRuntimeService.state(memberId, tId, progActId);
+                routeState = capabilities == null ? topicRouteRuntimeService.state(memberId, tId, progActId)
+                        : topicRouteRuntimeService.state(memberId, tId, progActId,
+                                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                                        .parse(clientPlatform, clientVersion, capabilities));
                 if (routeState != null && routeState.getSessionId() != null)
                     contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,true,routeTopic);
-            } catch (IllegalArgumentException | IllegalStateException e) {
+            } catch (IllegalArgumentException | IllegalStateException | com.chengyinhub.common.exception.ServiceException e) {
                 return error(e.getMessage());
             }
         }

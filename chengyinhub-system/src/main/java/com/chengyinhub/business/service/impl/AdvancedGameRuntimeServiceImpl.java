@@ -222,8 +222,47 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (declaration != null && declaration.supplied()) {
+            requireStartCapabilities(memberId, activityId, topicId, nodeId, declaration);
+        }
+        return start(memberId, activityId, topicId, nodeId, teamId);
+    }
+
+    /** Only pure snapshot/mapper reads occur before an explicit unsupported declaration is rejected. */
+    private void requireStartCapabilities(Long memberId, Long activityId, Long topicId, Long nodeId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0 || nodeId == null || nodeId <= 0)
+            throw new IllegalArgumentException("参数有误");
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
+        if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalArgumentException("节点不属于该主题");
+        JsonNode snapshot = topicRouteRuntimeService == null ? null
+                : topicRouteRuntimeService.queryNodeContentSnapshot(memberId, topicId, activityId, nodeId);
+        JsonNode originals = queryDefaultNodeContents(memberId, activityId, topicId);
+        JsonNode original = originals == null || snapshot != null
+                && (snapshot.hasNonNull("gameSessionId") || snapshot.hasNonNull("contentRouteSessionId"))
+                ? null : originals.get(String.valueOf(nodeId));
+        JsonNode source = original != null ? original : snapshot;
+        if (original == null)
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(snapshot, declaration);
+        JsonNode config = source == null ? null : source.path("nodeConfigs").get(String.valueOf(nodeId));
+        JsonNode content = source == null ? null : source.path("nodeAnswers").get(String.valueOf(nodeId));
+        if (config == null) {
+            if (node.getTemplateId() == null) throw new IllegalStateException("该节点没有玩法模板");
+            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if (template == null) throw new IllegalStateException("玩法模板不存在");
+            config = readJson(configValidator.validateAndNormalize(template.getAdvancedConfigJson()), "高级玩法配置不可用");
+        }
+        com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.advancedSnapshot(nodeId, config, content),
+                declaration);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId) {
-        return start(memberId, activityId, topicId, nodeId, teamId, null);
+        return start(memberId, activityId, topicId, nodeId, teamId, (GameRuntimeSession) null);
     }
 
     private Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,

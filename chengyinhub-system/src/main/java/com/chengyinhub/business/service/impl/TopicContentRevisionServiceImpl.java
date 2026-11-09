@@ -146,6 +146,13 @@ public class TopicContentRevisionServiceImpl implements ITopicContentRevisionSer
     }
 
     @Override
+    public CmsTopicContentRevision currentForAdoption(Long topicId) {
+        requireWriteTransaction();
+        if (topicId == null || topicId <= 0L) throw new IllegalArgumentException("来源主题缺失");
+        return revisionMapper.selectLatestForAdoption(topicId);
+    }
+
+    @Override
     public TopicContentRevisionView publishedRevision(Long topicId, Long revisionId) {
         if (topicId == null || topicId <= 0L || revisionId == null || revisionId <= 0L) return null;
         return revisionMapper.selectViewByTopicIdAndId(topicId, revisionId);

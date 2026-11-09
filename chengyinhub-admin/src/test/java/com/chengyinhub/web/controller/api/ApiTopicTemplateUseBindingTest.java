@@ -122,6 +122,32 @@ class ApiTopicTemplateUseBindingTest {
 
     @SuppressWarnings("unchecked")
     @Test
+    void usePassesRequestedSourceRevisionWithoutChangingTheTopicIdObject() {
+        com.fasterxml.jackson.databind.node.ObjectNode contract = TopicLocationContract.parse(newCityContract());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) contract.path("adoption"))
+                .put("sourceContentRevisionId", "9001");
+        when(topicService.selectCmsTopicById(NEW_TOPIC))
+                .thenReturn(createdTopic("320100", TopicLocationContract.canonical(contract.toString())));
+        AjaxResult result = controller.use(String.valueOf(TEMPLATE_ID), null, "NEW_CITY", "320100", "9001");
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        assertEquals(NEW_TOPIC, ((Map<String, Object>) result.get(AjaxResult.DATA_TAG)).get("topicId"));
+        assertEquals("9001", ((Map<String, Object>) result.get(AjaxResult.DATA_TAG)).get("sourceContentRevisionId"));
+        ArgumentCaptor<Map<String, Object>> params = ArgumentCaptor.forClass(Map.class);
+        verify(topicService).copyCmsTopic(eq(TEMPLATE_ID), params.capture());
+        assertEquals("9001", params.getValue().get("sourceContentRevisionId"));
+    }
+
+    @Test
+    void aRejectedSourceRevisionIsReturnedAsABusinessError() {
+        when(topicService.copyCmsTopic(eq(TEMPLATE_ID), any()))
+                .thenThrow(new IllegalArgumentException("来源修订与当前发布不一致"));
+        AjaxResult result = controller.use(String.valueOf(TEMPLATE_ID), null, null, null, "9000");
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals("来源修订与当前发布不一致", result.get(AjaxResult.MSG_TAG));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     void legacyUseSendsNoIntentAndReportsWarningsOnly() {
         when(topicService.selectCmsTopicById(NEW_TOPIC)).thenReturn(createdTopic("310100",
                 TopicLocationContract.buildAdoptionContract(legacySource(),

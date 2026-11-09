@@ -114,7 +114,7 @@ class MarketingRevenueReversalQueueMySqlIT {
         // 只跑建表迁移会让 task_kind=3(CHANNEL_REVERSE) 无法插入，那是与生产不一致的另一套 schema。
         P0AcceptanceSchema.migrations(source,
                 "migration_marketing_revenue_allocation_20261108.sql",
-                "migration_z_marketing_revenue_channel_reverse_kind_20261108.sql");
+                "migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql");
 
         var session = P0AcceptanceSchema.sql(source,
                 "MarketingRevenueAllocationMapper", "MarketingRevenueAllocationLineMapper",
@@ -143,6 +143,8 @@ class MarketingRevenueReversalQueueMySqlIT {
 
     @BeforeEach
     void clearOwnedTables() {
+        // 夹具清理遵守自引用外键：先删冲销子行，再删原应计行。
+        db.update("DELETE FROM marketing_revenue_allocation_line WHERE reversal_of_line_id IS NOT NULL");
         for (String table : List.of("marketing_revenue_allocation_line", "marketing_revenue_allocation",
                 "marketing_revenue_posting_task", "marketing_revenue_rule")) {
             db.update("DELETE FROM " + table);

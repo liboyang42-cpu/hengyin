@@ -66,6 +66,21 @@ public final class ArrivalReading {
         return out;
     }
 
+/** 普通路线也只读取命令已锁定原局的站点，不补读作者后来修改的内容。 */
+    public static ObjectNode projectFrozen(String snapshotJson, Long nodeId) {
+        if (snapshotJson == null || nodeId == null) return null;
+        try {
+            JsonNode snapshot = JSON.readTree(snapshotJson);
+            if (snapshot == null || !snapshot.path("routeStations").isArray()) return null;
+            for (JsonNode station : snapshot.path("routeStations")) {
+                if (station.path("nodeId").asLong(Long.MIN_VALUE) == nodeId.longValue()) return project(station);
+            }
+        } catch (com.fasterxml.jackson.core.JsonProcessingException invalidSnapshot) {
+            return null;
+        }
+        return null;
+    }
+
     /**
      * 从冻结站点投影：没有字段/结构损坏都返回 null（读数只影响呈现，不能让一次真实到达失败）。
      * 只复制 level/log；其他任何键（题目、答案、秘密）一律不读。

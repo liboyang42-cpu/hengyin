@@ -101,12 +101,21 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> prepare(Long memberId, Long topicId, Long activityId, String idempotencyKey) {
+        return prepare(memberId, topicId, activityId, idempotencyKey,
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> prepare(Long memberId, Long topicId, Long activityId, String idempotencyKey,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
         requireEnabled();
         String key = requireKey(idempotencyKey);
         if (!positive(memberId) || !positive(topicId) || (activityId != null && activityId < 0)) throw badRequest("参数有误");
         long act = activityId == null ? 0L : activityId;
         requireOrienteeringTopic(topicId);
-        requirePlayable(memberId, topicId, act);
+        requireStartCapabilities(memberId, topicId, act, declaration);
+        requirePlayable(memberId, topicId, act, declaration);
         String instance = routeRuntime.playInstance(memberId, topicId, act);
         if (instance != null && instance.startsWith("game:")) {
             throw new OrientSessionException("ORIENT_TEAM_UNSUPPORTED", 409, "组队定向暂不支持该流程");
@@ -136,10 +145,19 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> start(Long memberId, Long sessionId, Long ackConfigVersion, String idempotencyKey) {
+        return start(memberId, sessionId, ackConfigVersion, idempotencyKey,
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> start(Long memberId, Long sessionId, Long ackConfigVersion, String idempotencyKey,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
         requireEnabled();
         String key = requireKey(idempotencyKey);
         OrientSessionRow row = lockOwned(memberId, sessionId);
         requireOrienteeringTopic(row.getTopicId());
+        requireStartCapabilities(row, memberId, declaration);
         String fingerprint = fingerprint("START", memberId, sessionId, ackConfigVersion);
         Map<String, Object> replayed = replay(row, memberId, key, fingerprint);
         if (replayed != null) return replayed;
@@ -421,10 +439,56 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         return row;
     }
 
+    private void requireStartCapabilities(Long memberId, Long topicId, Long activityId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (declaration == null || !declaration.supplied()) return;
+        try {
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                    routeRuntime.queryNodeContentSnapshot(memberId, topicId, activityId, null), declaration);
+        } catch (com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException e) {
+            throw new OrientSessionException("CONTENT_CAPABILITY_UNSUPPORTED", 409, e.getMessage());
+        } catch (ServiceException e) {
+            throw new OrientSessionException("ORIENT_ACCESS_DENIED", e.getCode() == null ? 403 : e.getCode(), e.getMessage());
+        }
+    }
+
+    private void requireStartCapabilities(OrientSessionRow row, Long memberId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (declaration == null || !declaration.supplied()) return;
+        TopicRouteSession frozen = routeMapper.selectAccessibleById(row.getId(), memberId);
+        if (frozen == null || !memberId.equals(frozen.getMemberId()) || !row.getTopicId().equals(frozen.getTopicId())
+                || !row.getActivityId().equals(frozen.getActivityId()))
+            throw new OrientSessionException("ORIENT_SESSION_UNAVAILABLE", 409, "本局内容快照不可用");
+        try {
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                    new com.chengyinhub.business.service.support.TopicRouteConfigValidator()
+                            .readTree(frozen.getConfigSnapshotJson()), declaration);
+        } catch (com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException e) {
+            throw new OrientSessionException("CONTENT_CAPABILITY_UNSUPPORTED", 409, e.getMessage());
+        }
+    }
+
     /** 报名/场次/路线发布等可玩性校验沿用既有路线运行时(state 内的 requireScope),不在这里另判。 */
     private void requirePlayable(Long memberId, Long topicId, Long activityId) {
         try {
             routeRuntime.state(memberId, topicId, activityId);
+        } catch (ServiceException e) {
+            throw new OrientSessionException("ORIENT_ACCESS_DENIED", e.getCode() == null ? 403 : e.getCode(), e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new OrientSessionException("ORIENT_NOT_PLAYABLE", 400, e.getMessage());
+        }
+    }
+
+    private void requirePlayable(Long memberId, Long topicId, Long activityId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (declaration == null || !declaration.supplied()) {
+            requirePlayable(memberId, topicId, activityId);
+            return;
+        }
+        try {
+            routeRuntime.state(memberId, topicId, activityId, declaration);
+        } catch (com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException e) {
+            throw new OrientSessionException("CONTENT_CAPABILITY_UNSUPPORTED", 409, e.getMessage());
         } catch (ServiceException e) {
             throw new OrientSessionException("ORIENT_ACCESS_DENIED", e.getCode() == null ? 403 : e.getCode(), e.getMessage());
         } catch (IllegalArgumentException | IllegalStateException e) {

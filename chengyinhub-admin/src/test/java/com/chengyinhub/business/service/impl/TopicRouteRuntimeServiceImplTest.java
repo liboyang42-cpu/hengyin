@@ -865,6 +865,37 @@ class TopicRouteRuntimeServiceImplTest {
     }
 
     @Test
+    void implicitCreationRejectsExplicitMissingCapabilitiesBeforeSessionOrProgressWrites() {
+        var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "");
+        assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                () -> runtime.state(7L, 10L, 0L, declaration));
+        assertNull(stored[0]);
+        assertNull(storedAction[0]);
+        verify(routeMapper, never()).insertSession(any());
+        verify(routeMapper, never()).insertAction(any());
+        verify(routeMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void implicitCreationAcceptsMatchingCapabilitiesAndExistingRunsIgnoreNewLiveRequirements() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        JsonNode published = json.readTree(runtime.freezePublication(topic, topic.getRouteGraphJson()));
+        Map<String, Integer> supported = new java.util.TreeMap<>();
+        for (JsonNode required : com.chengyinhub.business.service.support.ContentCapabilityRequirements.required(published))
+            supported.put(required.path("key").asText(), required.path("minVersion").asInt());
+        assertTrue(supported.containsKey("route.branch"));
+        var declaration = new com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration(
+                "ios", "1", supported, false);
+        TopicRouteState opened = runtime.state(7L, 10L, 0L, declaration);
+        assertEquals(99L, opened.getSessionId());
+        topic.setJourneyStoryJson("{\"openingChapterId\":999}");
+        var empty = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "");
+        assertEquals(opened.getSessionId(), runtime.state(7L, 10L, 0L, empty).getSessionId());
+    }
+
+    @Test
     void reviewedLinearTopicWithPublishedVersionCanOpenANewRouteState() {
         CmsTopic topic = topicMapper.selectCmsTopicById(10L);
         topic.setRouteMode("LINEAR");

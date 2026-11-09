@@ -735,7 +735,7 @@ def _schema_contract_dump(node):
 
 
 def check_schema_manifest_order_source(source):
-    """Exact ledger pipeline + the two approved fresh-only forward compositions."""
+    """Exact ledger pipeline and four approved fresh-only replacement pairs."""
     import hashlib
 
     try:
@@ -764,6 +764,13 @@ def check_schema_manifest_order_source(source):
         'NOTICE_OLD': 'ea92bb087d55f82092043e1eaa8a0ef4eb035a1bbdf675cf71961f339715a2bd',
         'NOTICE_V2': 'fc92ac6b04a54d3f69d4c748819a46f0e820da9781647928fc91a32f6108704d',
         'notice_forward_plan': 'df04e9a8cbbfdd83df9920382eadff6c4fdddbcf9dcefa121ab1f8bb3b316ca3',
+        'INDEX_CATALOG_OLD': '3743b7b8996ba12f35ee477545d019a4e903791cba7db6c8ceb5b538ea7bd1e3',
+        'INDEX_CATALOG_NEW': '060ae3bd677eff95793ccee9ef839a2eb3240b4f26272d1ac3b770255d59c90a',
+        'INDEX_REVENUE_OLD': '0e191a01fd6213f0a947214e48bdc873a0d05a30db4422546d4a55b8522695f1',
+        'INDEX_REVENUE_NEW': '861fac40516e297b176760e236fdd74e79537aecdb035a8d5f5444b56718add0',
+        'INDEX_REVENUE_PARENT': '14ac2b6d2c6bbf784b03a5b7f1dcac126581d3fc90577444ebb860b98733acd5',
+        'INDEX_ASSERTION_FORWARD_FILES': '2cfc9dd14034ac9b2636393d74d3b0714dca45b868433ab0850740e4307c9d0b',
+        'index_assertion_forward_plan': '52139380c7e42e90a6083aa114d43a7a524f588af829c5c31f345f3e2ce70284',
     }
     for name, digest in contracts.items():
         definitions = [node for node in tree.body
@@ -860,6 +867,8 @@ def broadcast_forward_plan(migrations, selected):
         'selected = notice_forward["selected"] if notice_forward else selected',
         'broadcast_forward = broadcast_forward_plan(all_migrations, selected)',
         'selected = broadcast_forward["selected"] if broadcast_forward else selected',
+        'index_assertion_forward = index_assertion_forward_plan(all_migrations, selected)',
+        'selected = index_assertion_forward["selected"] if index_assertion_forward else selected',
         'deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]',
         'ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]',
     ]
@@ -870,13 +879,13 @@ def broadcast_forward_plan(migrations, selected):
         writes = [node for node in ast.walk(main) if isinstance(node, ast.Name)
                   and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id == target]
         matches = [i for i, node in enumerate(main.body) if ast.dump(node) == ast.dump(wanted)]
-        if len(matches) != 1 or len(writes) != (3 if target == "selected" else 1):
+        if len(matches) != 1 or len(writes) != (4 if target == "selected" else 1):
             problems.append("schema runner must preserve ledger selection: " + target)
         else:
             indices.append(matches[0])
 
     # This whole direct try/finally is the sole legal preparation/reporting block.
-    # The two exact selected rebindings above are the only approved replacement filters.
+    # The three exact selected rebindings above cover only the four fixed replacement pairs.
     # The exact absence check, CREATE without IF NOT EXISTS, reporting and close all
     # precede imports/run_file. Existing or concurrently created schemas cannot be adopted.
     expected_prepare = ast.parse("""\
@@ -885,7 +894,7 @@ try:
     cur.execute("SELECT VERSION(), @@version_comment")
     ver = cur.fetchone()
     print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-    if notice_forward or broadcast_forward:
+    if notice_forward or broadcast_forward or index_assertion_forward:
         # This check precedes every DROP/CREATE/import, including explicit --drop.
         cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
         fresh = cur.fetchone()
@@ -895,7 +904,9 @@ try:
         # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
         cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
         for forward, old, new in ((notice_forward, NOTICE_OLD, NOTICE_V2),
-                                  (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):
+                                  (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION),
+                                  (index_assertion_forward, INDEX_CATALOG_OLD, INDEX_CATALOG_NEW),
+                                  (index_assertion_forward, INDEX_REVENUE_OLD, INDEX_REVENUE_NEW)):
             if forward:
                 print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
                       (old, new, json.dumps(forward["fingerprints"], sort_keys=True)))
@@ -922,7 +933,8 @@ finally:
     expected_loop = ast.parse(
         'for m in ordered:\n'
         '    strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)\n'
-        '                     or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))\n'
+        '                     or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION)\n'
+        '                     or (bool(index_assertion_forward) and m["migrationId"] in (INDEX_CATALOG_NEW, INDEX_REVENUE_NEW)))\n'
         '    ok = run_file(cur, REPO / m["path"], m["migrationId"], results, '
         'keep_going=False if strict_notice else a.keep_going, schema_only=True, observations=observations)\n'
         '    if not ok and (strict_notice or not a.keep_going):\n'
@@ -956,15 +968,15 @@ finally:
                    and isinstance(node.func, ast.Name) and node.func.id == "connect"]
     if sorted(map(ast.dump, connections)) != sorted(map(ast.dump, [expected_connect.value, expected_reconnect.value])):
         problems.append("schema runner must preserve its exact scratch connections")
-    # The other four loops only report the two fixed replacements, failures/observations. An extra loop may not
+    # The other four loops only report the four fixed replacements, failures/observations. An extra loop may not
     # replay another selection even if it does not mention `ordered`.
     if len([node for node in ast.walk(main) if isinstance(node, (ast.For, ast.AsyncFor, ast.While))]) != 5:
         problems.append("schema runner must not add execution loops")
-    flow = {"manifest", "all_migrations", "selected", "ordered", "notice_forward", "broadcast_forward", "deferred"}
+    flow = {"manifest", "all_migrations", "selected", "ordered", "notice_forward", "broadcast_forward", "index_assertion_forward", "deferred"}
     protected = flow | contract_names | {"build_manifest", "migrations_after_baseline", "run_file"}
     for node in ast.walk(tree):
         if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)) and node.id in protected:
-            # Only the nine exact direct ledger assignments and the pinned top-level
+            # Only the eleven exact direct ledger assignments and the pinned top-level
             # constants are legal writes; no extra selected/ordered rebind is admitted.
             parents = [parent for parent in ast.walk(tree) if isinstance(parent, ast.Assign)
                        and len(parent.targets) == 1 and parent.targets[0] is node]
@@ -980,7 +992,9 @@ finally:
                         and node.module == "ci.migration_ledger" and alias.name == "build_manifest" and alias.asname is None):
                     problems.append("schema runner must not shadow ledger/notice contracts: " + bound)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if isinstance(node.func.value, ast.Name) and node.func.value.id in flow:
+            if (isinstance(node.func.value, ast.Name)
+                    and (node.func.value.id in flow
+                         or (node.func.value.id == "INDEX_ASSERTION_FORWARD_FILES" and node.func.attr != "items"))):
                 problems.append("schema runner must not mutate ledger selection")
         if (isinstance(node, ast.Attribute) and isinstance(node.ctx, (ast.Store, ast.Del))
                 and isinstance(node.value, ast.Name) and node.value.id == "a"

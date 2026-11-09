@@ -2,6 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.mapper.MarketingRevenueAllocationLineMapper">
 
+    <resultMap id="RevenueAllocationLineResult" type="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+        <id property="id" column="id"/>
+        <result property="allocationId" column="allocation_id"/>
+        <result property="entryType" column="entry_type"/>
+        <result property="lineRole" column="line_role"/>
+        <result property="recipientMemberId" column="recipient_member_id"/>
+        <result property="fundingSide" column="funding_side"/>
+        <result property="basisFen" column="basis_fen"/>
+        <result property="rate" column="rate"/>
+        <result property="amountFen" column="amount_fen"/>
+        <result property="currency" column="currency"/>
+        <result property="entryKey" column="entry_key"/>
+        <result property="eventRef" column="event_ref"/>
+        <result property="eventAmountFen" column="event_amount_fen"/>
+        <result property="eventCurrency" column="event_currency"/>
+        <result property="eventOrderType" column="event_order_type"/>
+        <result property="eventOrderId" column="event_order_id"/>
+        <result property="reversalOfLineId" column="reversal_of_line_id"/>
+        <result property="sourceFact" column="source_fact"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
     <sql id="LineColumns">
         id, allocation_id, entry_type, line_role, recipient_member_id, funding_side,
         basis_fen, rate, amount_fen, currency, entry_key, event_ref, event_amount_fen,
@@ -25,7 +47,7 @@
     </insert>
 
     <select id="selectByAllocationId"
-            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+            resultMap="RevenueAllocationLineResult">
         select <include refid="LineColumns"/>
         from marketing_revenue_allocation_line
         where allocation_id = #{allocationId}
@@ -33,7 +55,7 @@
     </select>
 
     <select id="selectByEvent"
-            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+            resultMap="RevenueAllocationLineResult">
         select <include refid="LineColumns"/>
         from marketing_revenue_allocation_line
         where allocation_id = #{allocationId} and event_ref = #{eventRef}
@@ -47,7 +69,7 @@
     </select>
 
     <select id="selectByRecipient"
-            resultType="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+            resultMap="RevenueAllocationLineResult">
         select <include refid="LineColumns"/>
         from marketing_revenue_allocation_line
         where recipient_member_id = #{recipientMemberId}

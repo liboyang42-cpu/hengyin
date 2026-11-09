@@ -273,6 +273,37 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         this.narrativeProgress = new TopicRouteNarrativeProgress(topicMapper, JSON, engine, completionRulePolicy, themeEngine);
     }
 
+    /** Explicit renderer declarations gate implicit creation only; an existing run keeps its frozen read contract. */
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public TopicRouteState state(Long memberId, Long topicId, Long activityId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (declaration != null && declaration.supplied()) {
+            JsonNode shared = gameSessionRuntimeService == null ? null
+                    : gameSessionRuntimeService.querySharedRouteSnapshot(memberId, topicId, activityId, null);
+            if (shared == null) {
+                Scope scope = currentScope(memberId, topicId, activityId, false);
+                if (currentSession(memberId, topicId, scope.activityId) == null) {
+                    List<CmsTopicNode> liveNodes = nodes(topicId);
+                    JourneyTemplateProbe probe = publicationCompiler().probe(liveNodes);
+                    boolean branch = TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope));
+                    if (branch || journeyConfigured(scope, probe)) {
+                        String published = scope.topic.getPublishedRouteGraphJson();
+                        if (branch && (published == null || published.trim().isEmpty()))
+                            throw new IllegalStateException("路线尚未发布");
+                        String snapshot = branch ? freezeJourney(published, scope.topic, liveNodes, probe)
+                                : published != null && validator.readTree(published).path("runtimeSnapshotVersion").asInt() == 1
+                                ? freezePublishedJourney(scope.topic)
+                                : freezeJourney(linearSnapshot(liveNodes), scope.topic, liveNodes, probe);
+                        com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                                validator.readTree(snapshot), declaration);
+                    }
+                }
+            }
+        }
+        return state(memberId, topicId, activityId);
+    }
+
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public TopicRouteState state(Long memberId, Long topicId, Long activityId) {

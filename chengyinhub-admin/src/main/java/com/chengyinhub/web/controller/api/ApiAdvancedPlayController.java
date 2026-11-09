@@ -46,9 +46,18 @@ public class ApiAdvancedPlayController extends BaseController {
         AjaxResult response;
         GameSloResult sloResult;
         try {
-            response = success(CheckReceiptProjection.response(runtimeService.start(getAppUserId(),
-                    longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
-                    longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")))));
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration =
+                    com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.parseValue(
+                            body.get("clientPlatform") instanceof String platform ? platform : null,
+                            body.get("clientVersion") instanceof String version ? version : null,
+                            body.get("supportedCapabilities"));
+            Long memberId = getAppUserId();
+            Map<String, Object> result = declaration.supplied()
+                    ? runtimeService.start(memberId, longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
+                            longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")), declaration)
+                    : runtimeService.start(memberId, longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
+                            longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")));
+            response = success(CheckReceiptProjection.response(result));
             sloResult = GameSloResult.SUCCESS;
         } catch (RuntimeException e) {
             // 原行为不变：异常仍收敛成同一条 error(msg)，只是分类后记一次指标。

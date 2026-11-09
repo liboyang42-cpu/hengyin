@@ -108,8 +108,8 @@ class MarketingPromotionRefundLedgerMySqlIT {
                 "marketing_promotion_redemption", "cms_registration", "marketing_promotion")) {
             db.update("DELETE FROM " + table);
         }
-        // 报名单事实：主单无 parent；子单同 parent；另一个会员同 parent；另一 parent 不得归并。
-        db.update("INSERT INTO cms_registration (id,member_id,parent_order_no) VALUES (?,?,NULL)",
+        // 夹具按 createMultiTicketRegistrationsInternal：首单与子单都写同一个 parentOrderNo。
+        db.update("INSERT INTO cms_registration (id,member_id,parent_order_no) VALUES (?,?,'PO-1')",
                 PROMO_ORDER, MEMBER);
         db.update("INSERT INTO cms_registration (id,member_id,parent_order_no) VALUES (?,?,'PO-1')",
                 SIBLING_ORDER, MEMBER);
@@ -117,6 +117,8 @@ class MarketingPromotionRefundLedgerMySqlIT {
                 5003L, OTHER_MEMBER);
         db.update("INSERT INTO cms_registration (id,member_id,parent_order_no) VALUES (?,?,'PO-2')",
                 5004L, MEMBER);
+        db.update("INSERT INTO cms_registration (id,member_id,parent_order_no) VALUES (?,?,NULL)",
+                5005L, MEMBER);
         promotionId = insertPromotion("PROMO-" + UUID.randomUUID().toString().substring(0, 8));
     }
 
@@ -136,6 +138,16 @@ class MarketingPromotionRefundLedgerMySqlIT {
                 "同 parent 但不同会员的订单不得合并");
         assertTrue(refundFactMapper.resolvePromoOrderIds(REGISTRATION, 5004L).isEmpty(),
                 "不同 parent_order_no 不得合并");
+        assertTrue(refundFactMapper.resolvePromoOrderIds(REGISTRATION, 5005L).isEmpty(),
+                "无 parent 的独立订单不得按会员归并");
+        insertAdjustment(5005L, MEMBER, promotionId);
+        assertEquals(List.of(5005L), refundFactMapper.resolvePromoOrderIds(REGISTRATION, 5005L),
+                "无 parent 的独立订单仍须直接解析自己的快照");
+
+        insertAdjustment(SIBLING_ORDER, MEMBER, promotionId);
+        assertEquals(List.of(SIBLING_ORDER, PROMO_ORDER),
+                refundFactMapper.resolvePromoOrderIds(REGISTRATION, SIBLING_ORDER),
+                "同一 parent 多份快照必须全部返回，供 consumer 拒绝歧义");
     }
 
     // ------------------------------------------------------------------ 累计到全额

@@ -261,6 +261,20 @@ class TopicContentRevisionServiceImplTest {
         assertNull(service.currentPublished(null));
     }
 
+    @Test
+    void adoptionUsesTheDedicatedCurrentReadInsideTheCopyWriteTransaction() {
+        CmsTopicContentRevision current = revision(91L, 1L, CanonicalDigest.sha256Hex(FROZEN_A), null);
+        when(revisions.selectLatestForAdoption(TOPIC)).thenReturn(current);
+        assertThrows(IllegalStateException.class, () -> service.currentForAdoption(TOPIC));
+        runInWriteTransaction(() -> {
+            assertSame(current, service.currentForAdoption(TOPIC));
+            assertThrows(IllegalArgumentException.class, () -> service.currentForAdoption(0L));
+        });
+        verify(revisions).selectLatestForAdoption(TOPIC);
+        verify(revisions, never()).selectLatestByTopicId(anyLong());
+        verify(revisions, never()).selectLatestViewByTopicId(anyLong());
+    }
+
     private static CmsTopicContentRevision revision(long id, long no, String sha, String requestId) {
         CmsTopicContentRevision row = new CmsTopicContentRevision();
         row.setId(id);

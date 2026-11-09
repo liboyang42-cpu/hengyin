@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PublicContentCatalogMyBatisIT {
 
-    private static final String MIGRATION = "sql/migration_public_content_catalog_20261108.sql";
+    private static final String MIGRATION = "sql/migration_public_content_catalog_index_shape_20261109.sql";
     private static final String SUITE = "public_catalog";
 
     private SqlSession open() throws Exception {

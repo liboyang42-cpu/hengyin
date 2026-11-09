@@ -65,6 +65,9 @@ public interface ITopicRouteRuntimeService {
     /** 本人在该主题/场次是否有进行中的局(用于「已开局可打完」)；默认无。 */
     default boolean hasRunningSession(Long memberId, Long topicId, Long activityId) { return false; }
     TopicRouteState state(Long memberId, Long topicId, Long activityId);
+
+    TopicRouteState state(Long memberId, Long topicId, Long activityId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
     /** Pure current-run projection; null means no initialized session. Never initializes or refreshes state. */
     TopicRouteState queryState(Long memberId, Long topicId, Long activityId);
     TopicRouteState completeOpening(Long memberId, Long topicId, Long activityId, Long chapterId, Integer expectedVersion);

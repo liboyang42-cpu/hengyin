@@ -117,7 +117,8 @@ class PlayerMarketingReadMySqlIT {
 
     @BeforeEach
     void wipeOwnedScratchRows() {
-        // 先子后父，顺序由真实 FK 决定。
+        // 本类独占 scratch 夹具：自引用冲销子行先删，再按真实 FK 删父行。
+        db.update("DELETE FROM marketing_revenue_allocation_line WHERE reversal_of_line_id IS NOT NULL");
         for (String table : List.of("marketing_revenue_allocation_line", "marketing_revenue_allocation",
                 "marketing_revenue_posting_task", "marketing_revenue_rule",
                 "marketing_attribution", "marketing_referral_credential",
@@ -311,6 +312,11 @@ class PlayerMarketingReadMySqlIT {
         assertEquals(50L, bucket.getNetFen());
         assertEquals("CNY", bucket.getCurrency());
         assertNull(bucket.getAmountUnavailableReason());
+
+        // 显式覆盖有冲销子行时的夹具清理，不依赖下一个用例的执行顺序。
+        wipeOwnedScratchRows();
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM marketing_revenue_allocation_line", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM marketing_revenue_allocation", Integer.class));
     }
 
     @Test

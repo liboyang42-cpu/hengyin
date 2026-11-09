@@ -69,7 +69,7 @@ class ContentLandingMetadataVersionMySqlIT {
         assertTrue(com.chengyinhub.business.service.MysqlIntegrationTestConfig.isMysql8OrNewer(
                 db.queryForObject("SELECT VERSION()", String.class)), "需要 Oracle MySQL >= 8");
 
-        P0AcceptanceSchema.migrations(source, "migration_public_content_catalog_20261108.sql");
+        P0AcceptanceSchema.migrations(source, "migration_public_content_catalog_index_shape_20261109.sql");
         mapper = P0AcceptanceSchema.sql(source, "ContentLandingMetadataMapper")
                 .getMapper(ContentLandingMetadataMapper.class);
     }

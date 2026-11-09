@@ -109,4 +109,59 @@ class ContentCapabilityRequirementsTest {
         assertFalse(keys.contains("answer.gps"), "换了完成方式就不能再声明上一个完成方式");
         assertFalse(keys.contains("location.gps"));
     }
+
+    @Test
+    void openingObjectAndLegacyBranchEdgesContributeRequiredCapabilities() {
+        ObjectNode source = JSON.createObjectNode();
+        source.putObject("openingChapter").putArray("blocks").addObject().put("type", "audio");
+        source.putArray("edges").addObject().put("fromNodeId", 1).put("toNodeId", 2);
+        List<String> required = keys(ContentCapabilityRequirements.required(source));
+        assertTrue(required.contains("chapter.blocks"));
+        assertTrue(required.contains("chapter.blocks.audio"));
+        assertTrue(required.contains("route.branch"));
+    }
+
+    @Test
+    void explicitEmptyListsAreUnsupportedButAbsentDeclarationsStayUnconfirmed() {
+        for (Object raw : java.util.List.of("", java.util.List.of())) {
+            var declaration = ContentCapabilityRequirements.Declaration.parseValue("ios", "1", raw);
+            assertTrue(declaration.supplied());
+            assertTrue(declaration.declared());
+            assertFalse(ContentCapabilityRequirements.compatibility(snapshot(), declaration).path("supported").asBoolean());
+            assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                    () -> ContentCapabilityRequirements.assertStartCompatible(snapshot(), declaration));
+        }
+        assertDoesNotThrow(() -> ContentCapabilityRequirements.assertStartCompatible(snapshot(),
+                ContentCapabilityRequirements.Declaration.parse("ios", "1", null)));
+    }
+
+    @Test
+    void startChecksFrozenRequirementsEvenIfAClientOrAuthorSuppliesAnEmptyRequiredList() {
+        ObjectNode source = snapshot();
+        source.putArray("requiredCapabilities");
+        var missing = ContentCapabilityRequirements.Declaration.parse("ios", "1", "game.qa@1");
+        assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                () -> ContentCapabilityRequirements.assertStartCompatible(source, missing));
+        java.util.Map<String, Integer> versions = new java.util.TreeMap<>();
+        for (JsonNode required : ContentCapabilityRequirements.required(source))
+            versions.put(required.path("key").asText(), required.path("minVersion").asInt());
+        assertDoesNotThrow(() -> ContentCapabilityRequirements.assertStartCompatible(source,
+                new ContentCapabilityRequirements.Declaration("ios", "1", versions, false)));
+        versions.put("game.qa", 0);
+        assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                () -> ContentCapabilityRequirements.assertStartCompatible(source,
+                        new ContentCapabilityRequirements.Declaration("ios", "1", versions, false)));
+    }
+
+    @Test
+    void malformedExplicitStartCannotFallBackToLegacyCompatibility() {
+        for (Object raw : java.util.List.of("game.qa@bad", "game.qa@0", java.util.Map.of("requiredCapabilities", java.util.List.of()))) {
+            var declaration = ContentCapabilityRequirements.Declaration.parseValue("ios", "1", raw);
+            assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                    () -> ContentCapabilityRequirements.assertStartCompatible(snapshot(), declaration));
+        }
+        var rows = ContentCapabilityRequirements.Declaration.parseValue("ios", "1",
+                java.util.List.of(java.util.Map.of("key", "game.qa", "version", 2)));
+        assertEquals(2, rows.capabilities().get("game.qa"));
+    }
 }

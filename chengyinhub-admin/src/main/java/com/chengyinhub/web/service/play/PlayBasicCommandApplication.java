@@ -729,7 +729,9 @@ public class PlayBasicCommandApplication {
             }
         }
 
-        JsonNode arrivalReading = ArrivalReading.project(frozenStation);
+        JsonNode arrivalReading = frozenStation != null ? ArrivalReading.project(frozenStation)
+                : originalRun.session() == null ? null
+                : ArrivalReading.projectFrozen(originalRun.session().getConfigSnapshotJson(), nId);
         if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
@@ -748,6 +750,7 @@ public class PlayBasicCommandApplication {
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
                 RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);
+        if (arrivalReading != null) data.put("arrivalReading", arrivalReading);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);

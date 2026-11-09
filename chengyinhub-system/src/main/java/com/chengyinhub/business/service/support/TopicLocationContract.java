@@ -96,7 +96,7 @@ public final class TopicLocationContract {
             "previousBinding");
     private static final Set<String> KNOWN_PREVIOUS_BINDING_KEYS =
             set("cityCode", "nodeId", "verificationStatus", "confirmedAt");
-    private static final Set<String> KNOWN_ADOPTION_KEYS = set("sourceTemplateTopicId", "sourceConfigVersion",
+    private static final Set<String> KNOWN_ADOPTION_KEYS = set("sourceTemplateTopicId", "sourceConfigVersion", "sourceContentRevisionId",
             "adoptedAt", "bindingIntent", "targetCityCode", "legacy");
     /** 城市事实字段不得出现在合同里：坐标/地址/门牌唯一真源是实例节点。 */
     private static final Set<String> CITY_FACT_KEYS =
@@ -243,7 +243,7 @@ public final class TopicLocationContract {
      */
     public static String buildAdoptionContract(CmsTopic source, List<CmsTopicNode> sourceNodes,
                                                Map<Long, Long> nodeIdMap, String intent,
-                                               String targetCityCode, Date now) {
+                                               String targetCityCode, Date now, Long sourceContentRevisionId) {
         if (source == null || source.getId() == null) throw new IllegalArgumentException("来源主题缺失");
         if (!INTENTS.contains(intent)) throw new IllegalArgumentException("采用方式不合法");
         String targetCity = cityCode(targetCityCode, "targetCityCode");
@@ -276,6 +276,8 @@ public final class TopicLocationContract {
         adoption.put("sourceTemplateTopicId", String.valueOf(source.getId()));
         if (source.getConfigVersion() == null) adoption.putNull("sourceConfigVersion");
         else adoption.put("sourceConfigVersion", source.getConfigVersion());
+        if (sourceContentRevisionId == null) adoption.putNull("sourceContentRevisionId");
+        else adoption.put("sourceContentRevisionId", String.valueOf(sourceContentRevisionId));
         adoption.put("adoptedAt", DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS, now));
         adoption.put("bindingIntent", intent);
         if (targetCity == null) adoption.putNull("targetCityCode");
@@ -283,6 +285,12 @@ public final class TopicLocationContract {
         adoption.put("legacy", INTENT_LEGACY.equals(intent));
         result.set("adoption", adoption);
         return canonical(result.toString());
+    }
+
+    public static String buildAdoptionContract(CmsTopic source, List<CmsTopicNode> sourceNodes,
+                                               Map<Long, Long> nodeIdMap, String intent,
+                                               String targetCityCode, Date now) {
+        return buildAdoptionContract(source, sourceNodes, nodeIdMap, intent, targetCityCode, now, null);
     }
 
     private static boolean hasLocationSlots(String raw) {
@@ -692,6 +700,7 @@ public final class TopicLocationContract {
         Map<String, Object> summary = new LinkedHashMap<String, Object>();
         summary.put("sourceTemplateTopicId", null);
         summary.put("sourceConfigVersion", null);
+        summary.put("sourceContentRevisionId", null);
         summary.put("bindingIntent", INTENT_LEGACY);
         summary.put("targetCityCode", null);
         summary.put("pendingRebindSlotKeys", new ArrayList<String>());
@@ -707,6 +716,7 @@ public final class TopicLocationContract {
         JsonNode adoption = root.path("adoption");
         if (!adoption.isMissingNode()) {
             summary.put("sourceTemplateTopicId", adoption.path("sourceTemplateTopicId").asText(null));
+            summary.put("sourceContentRevisionId", adoption.path("sourceContentRevisionId").asText(null));
             if (adoption.hasNonNull("sourceConfigVersion")) {
                 summary.put("sourceConfigVersion", adoption.path("sourceConfigVersion").asLong());
             }
@@ -866,6 +876,9 @@ public final class TopicLocationContract {
         if (version.isMissingNode() || version.isNull()) out.putNull("sourceConfigVersion");
         else if (version.isIntegralNumber() && version.asLong() >= 0) out.put("sourceConfigVersion", version.asLong());
         else throw new IllegalArgumentException("sourceConfigVersion 必须是非负整数");
+        Long sourceRevisionId = parseId(adoption.path("sourceContentRevisionId"), "sourceContentRevisionId");
+        if (sourceRevisionId == null) out.putNull("sourceContentRevisionId");
+        else out.put("sourceContentRevisionId", String.valueOf(sourceRevisionId));
         String adoptedAt = text(adoption, "adoptedAt", 19, true);
         if (DateUtils.parseDate(adoptedAt) == null) throw new IllegalArgumentException("adoptedAt 时间格式不合法");
         out.put("adoptedAt", adoptedAt);

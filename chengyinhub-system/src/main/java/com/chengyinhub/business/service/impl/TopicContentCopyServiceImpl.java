@@ -61,6 +61,9 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     @Autowired private TopicPlatformContentSlotGuard platformContentSlotGuard;
     @Autowired private ThemeStateKeyService themeStateKeyService;
     @Autowired private TopicContentWriteGuard contentWriteGuard;
+    @Autowired private com.chengyinhub.business.service.ITopicContentRevisionService contentRevisions;
+    @Autowired @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
 
     @Autowired
     private com.chengyinhub.business.service.support.WorkshopLicenseGuard workshopLicenses;
@@ -77,9 +80,6 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         if (params != null && params.get("memberId") != null) {
             throw new IllegalArgumentException("官方主题复制不得指定 memberId；收款主体固定为平台配置账号");
         }
-        if (!productRoleService.isPlatformOwned(id)) {
-            throw new IllegalArgumentException("官方主题入口只能复制 PLATFORM 内容主体；广场主题请从其发布链路复制");
-        }
         return copyCmsTopicWithContentOwner(id, params, RoleEntityType.PLATFORM);
     }
 
@@ -95,7 +95,8 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         // 与章节/节点/路线写者共用同一把父行 fence：来源快照与子内容一致，且本事务只写副本。
         // 手工 new 的旧单测没注入(同 TopicPublicationContentGuard 的既有口径)：运行态必注入。
         if (contentWriteGuard != null) contentWriteGuard.lockTopicContent(id);
-        CmsTopic originalTopic = cmsTopicMapper.selectCmsTopicById(id);
+        CmsTopic originalTopic = contentRevisions == null ? cmsTopicMapper.selectCmsTopicById(id)
+                : cmsTopicMapper.selectCmsTopicByIdForUpdate(id);
         if (originalTopic == null) {
             throw new RuntimeException("原主题不存在");
         }
@@ -107,6 +108,11 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         assertAdoptionCityRelationLegal(bindingIntent, targetCityCode, originalTopic.getCityCode());
 
         Integer copyType = Convert.toInt(params == null ? null : params.get("copyType"), 1);
+        Long sourceRevisionId = validateSourceRevision(originalTopic, params, copyType);
+        // 先冻结并锁全量源内容，再做普通读，避免 RR 的旧快照污染后续复制。
+        if (RoleEntityType.PLATFORM.equals(forcedContentEntityType) && !productRoleService.isPlatformOwned(id)) {
+            throw new IllegalArgumentException("官方主题入口只能复制 PLATFORM 内容主体；广场主题请从其发布链路复制");
+        }
         CmsTopic newTopic = copyTopicBasicInfo(originalTopic, bindingIntent, targetCityCode);
         Long memberId = params == null ? null : Convert.toLong(params.get("memberId"));
         if (RoleEntityType.PLATFORM.equals(forcedContentEntityType)) {
@@ -132,14 +138,14 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
 
         if (copyType >= 2) {
             Map<Long, Long> npcIdMap = new LinkedHashMap<Long, Long>();
-            CopiedContentIds copiedMaps = copyChaptersAndNodes(id, newTopic, npcIdMap, bindingIntent);
+            CopiedContentIds copiedMaps = copyChaptersAndNodes(id, newTopic, npcIdMap, bindingIntent, sourceRevisionId != null);
             // R8-STORY:副本章节是新 id,剧情 chapterId 必须跟着重映射,否则副本剧情指向来源主题;
             // R13-NPC:副本 NPC 同样是新 id,call / epilogues 的 npcId 一起重映射。
             remapCopiedJourneyStory(id, newTopicId, originalTopic.getJourneyStoryJson(), copiedMaps.chapterOldToNew, copiedMaps.oldToNew, npcIdMap);
             preserveSameOwnerCopiedCompletionRule(originalTopic, newTopic);
             // 站点玩法里引用的状态键要跟着走:副本不注册,发布闸「以下状态键未注册」把套模板的人整个挡住
             copyStateKeys(id, newTopicId);
-            materializeLocationContract(originalTopic, newTopic, copiedMaps, bindingIntent, targetCityCode);
+            materializeLocationContract(originalTopic, newTopic, copiedMaps, bindingIntent, targetCityCode, sourceRevisionId);
         }
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
@@ -152,6 +158,62 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         if (params == null) return null;
         Object value = params.get(key);
         return value == null ? null : String.valueOf(value);
+    }
+
+    private Long validateSourceRevision(CmsTopic source, Map<String, Object> params, int copyType) {
+        Long requested = null;
+        if (params != null && params.get("sourceContentRevisionId") != null) {
+            String raw = String.valueOf(params.get("sourceContentRevisionId"));
+            if (!raw.matches("[1-9][0-9]*")) throw new IllegalArgumentException("sourceContentRevisionId 必须是正整数");
+            try { requested = Long.valueOf(raw); }
+            catch (NumberFormatException invalid) {
+                throw new IllegalArgumentException("sourceContentRevisionId 超出范围", invalid);
+            }
+        }
+        if (copyType < 2) {
+            if (requested != null) throw new IllegalArgumentException("锁定来源修订需要复制完整主题内容");
+            return null;
+        }
+        // 手工 new 的历史夹具未装配服务；运行态为必需依赖，显式请求绝不降级。
+        if (contentRevisions == null) {
+            if (requested != null) throw new IllegalArgumentException("来源修订服务不可用");
+            return null;
+        }
+        com.chengyinhub.business.domain.CmsTopicContentRevision revision =
+                contentRevisions.currentForAdoption(source.getId());
+        if (revision == null) {
+            if (requested != null) throw new IllegalArgumentException("来源尚无可采用的真实发布修订");
+            return null;
+        }
+        if (!Objects.equals(source.getId(), revision.getTopicId()) || revision.getId() == null
+                || revision.getId() <= 0L || requested != null && !requested.equals(revision.getId())) {
+            throw new IllegalArgumentException("来源修订与当前发布不一致");
+        }
+        String frozen = revision.getSnapshotJson();
+        if (source.getPublishedConfigVersion() == null || source.getPublishedConfigVersion() <= 0L
+                || StringUtils.isBlank(frozen)
+                || !Objects.equals(revision.getContentSha256(),
+                    com.chengyinhub.business.service.support.CanonicalDigest.sha256Hex(frozen))
+                || !Objects.equals(frozen, source.getPublishedRouteGraphJson())) {
+            throw new IllegalArgumentException("来源修订与当前发布快照不一致");
+        }
+        try {
+            // shortcut: 仅采用当前发布游玩内容，历史修订须等作者树可完整还原后再开放。
+            String live = topicRouteRuntimeService.freezePublication(source,
+                    "BRANCH_GRAPH".equals(source.getRouteMode()) ? source.getRouteGraphJson() : null,
+                    themeStateKeyService.listCurrentDeclarations(source.getId()));
+            CmsTopicChapter chapterQuery = new CmsTopicChapter();
+            chapterQuery.setTopicId(source.getId());
+            if (CollectionUtils.isEmpty(cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery))) {
+                throw new IllegalArgumentException("来源发布内容没有可完整复制的章节");
+            }
+            if (!topicRouteConfigValidator.readTree(frozen).equals(topicRouteConfigValidator.readTree(live))) {
+                throw new IllegalArgumentException("来源草稿已偏离发布修订，请先发布再采用");
+            }
+        } catch (IllegalArgumentException | IllegalStateException invalid) {
+            throw new IllegalArgumentException("来源草稿不能按当前发布修订采用：" + invalid.getMessage(), invalid);
+        }
+        return revision.getId();
     }
 
     /**
@@ -193,12 +255,12 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
      */
     private void materializeLocationContract(CmsTopic sourceTopic, CmsTopic newTopic,
                                              CopiedContentIds copiedMaps, String bindingIntent,
-                                             String targetCityCode) {
+                                             String targetCityCode, Long sourceRevisionId) {
         if (newTopic.getId() == null || newTopic.getId() <= 0L) {
             throw new IllegalStateException("地点合同写入失败：副本主题身份缺失");
         }
         String contract = TopicLocationContract.buildAdoptionContract(sourceTopic, copiedMaps.sourceNodes,
-                copiedMaps.oldToNew, bindingIntent, targetCityCode, new Date());
+                copiedMaps.oldToNew, bindingIntent, targetCityCode, new Date(), sourceRevisionId);
 
         // 唯一写口：owner 在 SQL 里再判一次；通用 updateCmsTopic 不带这一列（见 mapper 注释）。
         int rows = cmsTopicMapper.updateTopicLocationContract(newTopic.getId(), newTopic.getMemberId(),
@@ -334,7 +396,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     }
 
     private CopiedContentIds copyChaptersAndNodes(Long originalTopicId, CmsTopic newTopic,
-                                                  Map<Long, Long> npcIdMap, String bindingIntent) {
+                                                  Map<Long, Long> npcIdMap, String bindingIntent, boolean revisionAdoption) {
         CopiedContentIds copiedMaps = new CopiedContentIds();
         Long newTopicId = newTopic.getId();
         // 查询原主题的章节
@@ -424,7 +486,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
 
         // 复制节点
         com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig = com.chengyinhub.business.service.support.ThemeRuntimeConfig.parseDraft(newTopic.getThemeRuntimeConfigJson());
-        Map<Long, Long> nodeIdMap = copyNodes(originalTopicId, newTopicId, chapterIdMap, newTopic.getMemberId(), npcIdMap, runtimeConfig, bindingIntent, copiedMaps);
+        Map<Long, Long> nodeIdMap = copyNodes(originalTopicId, newTopicId, chapterIdMap, newTopic.getMemberId(), npcIdMap, runtimeConfig, bindingIntent, copiedMaps, revisionAdoption);
         CmsTopic runtimePatch = new CmsTopic(); runtimePatch.setId(newTopicId);
         runtimePatch.setThemeRuntimeConfigJson(TopicTemplateRuleIdentityRemapper.remap(com.chengyinhub.business.service.support.ThemeRuntimeConfig.remapAll(runtimeConfig == null ? newTopic.getThemeRuntimeConfigJson() : runtimeConfig.toString(), nodeIdMap, chapterIdMap, npcIdMap), nodeIdMap));
         if (runtimePatch.getThemeRuntimeConfigJson() != null && cmsTopicMapper.updateCmsTopic(runtimePatch) != 1) throw new IllegalStateException("主题运行配置复制失败");
@@ -497,7 +559,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     private Map<Long, Long> copyNodes(Long originalTopicId, Long newTopicId, Map<Long, Long> chapterIdMap,
                                       Long newOwnerMemberId, Map<Long, Long> npcIdMap,
                                       com.fasterxml.jackson.databind.node.ObjectNode runtimeConfig,
-                                      String bindingIntent, CopiedContentIds copiedMaps) {
+                                      String bindingIntent, CopiedContentIds copiedMaps, boolean revisionAdoption) {
         Map<Long, Long> nodeIdMap = new HashMap<>();
         // 查询原主题的所有节点
         CmsTopicNode nodeQuery = new CmsTopicNode();
@@ -552,7 +614,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
                     && com.chengyinhub.business.util.NarrativeNpcRefs.hasNpcRefs(sourceTemplate.getAdvancedConfigJson());
             boolean templateHasNodeRefs = sourceTemplate != null && !com.chengyinhub.business.util.StateKeyRefs.collectSysNodeIds(sourceTemplate.getAdvancedConfigJson()).isEmpty();
             Long copiedTemplateId = copyTemplateForOwner(originalNode.getTemplateId(), newOwnerMemberId,
-                    templateIdMap, templateHasNpcRefs || templateHasNodeRefs);
+                    templateIdMap, revisionAdoption || templateHasNpcRefs || templateHasNodeRefs);
             newNode.setTemplateId(copiedTemplateId);
             if (runtimeConfig != null && runtimeConfig.path("templateBindings").has(String.valueOf(originalNode.getId()))) {
                 com.fasterxml.jackson.databind.node.ObjectNode binding = (com.fasterxml.jackson.databind.node.ObjectNode) runtimeConfig.path("templateBindings").get(String.valueOf(originalNode.getId()));

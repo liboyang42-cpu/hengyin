@@ -29,12 +29,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -145,6 +148,10 @@ class MarketingRevenueAllocationMySqlIT {
 
     @BeforeEach
     void clearOwnedTables() {
+        // 夹具隔离：PER_CLASS 复用实例，三分钱用例不能污染后续的 100 元事实桩。
+        seededPaidFen = 10000L;
+        // 自引用外键要求先删冲销子行，再删原应计行，不关闭约束。
+        db.update("DELETE FROM marketing_revenue_allocation_line WHERE reversal_of_line_id IS NOT NULL");
         for (String table : List.of("marketing_revenue_allocation_line", "marketing_revenue_allocation",
                 "marketing_revenue_posting_task", "marketing_revenue_rule")) {
             db.update("DELETE FROM " + table);
@@ -259,7 +266,7 @@ class MarketingRevenueAllocationMySqlIT {
     @Test
     void threeOneCentRefundsFullyReverseOnRealInnoDb() {
         seedActiveRule();
-        // 0.03 实付、无扣费 → 净额恰 3 分，按 1/3 + 2/3 二分得 1 分 / 2 分。
+        // 夹具：0.03 实付、无扣费 → 净额恰 3 分；既有 50%/50% 规则向下取整得 1 分 / 2 分。
         // 三笔各退 1 分必须把净额冲满，用来钉住"逐笔取整不丢分"。
         seededPaidFen = 3L;
         allocationService.accrue(zeroFeeAccrualRequest());
@@ -320,11 +327,18 @@ class MarketingRevenueAllocationMySqlIT {
     void activeRuleWithoutContractAndPayeeIsRejectedByCheckConstraint() {
         seedDraft("topic:42:s1", 1);
         // CHECK ck_revenue_rule_active_needs_contract 必须挡住"没有合同就给钱"。
-        assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
+        assertCheckViolation("ck_revenue_rule_active_needs_contract",
                 () -> db.update("UPDATE marketing_revenue_rule SET status=1, contract_ref=NULL,"
                         + " payee_member_id=NULL WHERE rule_key='topic:42:s1'"));
         assertEquals(0, db.queryForObject(
                 "SELECT COUNT(*) FROM marketing_revenue_rule WHERE status=1", Integer.class));
+    }
+
+    private void assertCheckViolation(String constraint, org.junit.jupiter.api.function.Executable write) {
+        DataAccessException failure = assertThrows(DataAccessException.class, write);
+        SQLException sql = assertInstanceOf(SQLException.class, failure.getMostSpecificCause());
+        assertEquals(3819, sql.getErrorCode(), "必须由 MySQL CHECK 拒绝，不能是其它 SQL 错误");
+        assertTrue(sql.getMessage().contains("'" + constraint + "'"), sql.getMessage());
     }
 
     // ------------------------------------------------------------------ 约束与符号
@@ -336,26 +350,32 @@ class MarketingRevenueAllocationMySqlIT {
         long allocationId = allocationMapper.selectByOrder(
                 MarketingRevenueAllocation.ORDER_REGISTRATION, REGISTRATION_ID).getId();
 
+        long originLineId = db.queryForObject(
+                "SELECT id FROM marketing_revenue_allocation_line WHERE allocation_id=? AND line_role='author'",
+                Long.class, allocationId);
+        int linesBefore = count("marketing_revenue_allocation_line");
+
         // 应计分录不得为负。
-        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> db.update(
+        assertCheckViolation("ck_revenue_line_sign", () -> db.update(
                 "INSERT INTO marketing_revenue_allocation_line"
                         + " (allocation_id,entry_type,line_role,funding_side,basis_fen,rate,amount_fen,"
                         + " currency,entry_key,create_time)"
                         + " VALUES(?,1,'author',0,100,0.5,-1,'CNY','neg-accrue',NOW())", allocationId));
         // 冲销分录必须带事件身份（event_ref/金额/币种/原单/reversal_of_line_id）。
-        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> db.update(
+        assertCheckViolation("ck_revenue_line_event_presence", () -> db.update(
                 "INSERT INTO marketing_revenue_allocation_line"
                         + " (allocation_id,entry_type,line_role,funding_side,basis_fen,rate,amount_fen,"
                         + " currency,entry_key,create_time)"
                         + " VALUES(?,2,'author',0,100,0.5,-1,'CNY','no-event',NOW())", allocationId));
         // 冲销分录不得为正。
-        assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () -> db.update(
+        assertCheckViolation("ck_revenue_line_sign", () -> db.update(
                 "INSERT INTO marketing_revenue_allocation_line"
                         + " (allocation_id,entry_type,line_role,funding_side,basis_fen,rate,amount_fen,"
                         + " currency,entry_key,event_ref,event_amount_fen,event_currency,event_order_type,"
                         + " event_order_id,reversal_of_line_id,create_time)"
                         + " VALUES(?,2,'author',0,100,0.5,1,'CNY','pos-reverse','refund:1',50,'CNY',1,555,"
-                        + " 1,NOW())", allocationId));
+                        + " ?,NOW())", allocationId, originLineId));
+        assertEquals(linesBefore, count("marketing_revenue_allocation_line"), "约束拒绝后不得留下无效分录");
     }
 
     // ------------------------------------------------------------------ REQUIRES_NEW
@@ -467,7 +487,7 @@ class MarketingRevenueAllocationMySqlIT {
     @Test
     void failedExecutionRollsBackItsOwnWorkButStillPersistsTheFailureRecord() {
         seedActiveRule();
-        // 造一个必然冲突的应计：先正常应计一次，再把规则改成不同费率后重复入队同一单。
+        // 先种入应计快照与待消费任务；下方以不存在的退款单验证失败事务回滚。
         allocationService.accrue(accrualRequest());
         long allocationId = allocationMapper.selectByOrder(
                 MarketingRevenueAllocation.ORDER_REGISTRATION, REGISTRATION_ID).getId();
@@ -486,12 +506,14 @@ class MarketingRevenueAllocationMySqlIT {
         // 该单没有退款单，reverse 会因 REFUND_NOT_FOUND 抛出。
         long failingRefundId = 999999L;
         TransactionTemplate exec = new TransactionTemplate(new DataSourceTransactionManager(source));
-        assertThrows(MarketingRevenueException.class, () -> exec.execute(status -> {
+        MarketingRevenueException failure = assertThrows(MarketingRevenueException.class, () -> exec.execute(status -> {
             RevenueReversalRequest request = new RevenueReversalRequest();
             request.setRefundId(failingRefundId);
             allocationService.reverse(request);
             return null;
         }));
+
+        assertEquals("REFUND_NOT_FOUND", failure.getReasonCode(), "缺失退款夹具必须命中查无分支");
 
         // 执行事务已回滚（没有新分录），失败状态由独立事务写入。
         assertEquals(linesBefore, count("marketing_revenue_allocation_line"),
@@ -657,6 +679,10 @@ class MarketingRevenueAllocationMySqlIT {
         RefundApplicationMapper mapper = mock(RefundApplicationMapper.class);
         when(mapper.selectRefundApplicationById(anyLong())).thenAnswer(invocation -> {
             long id = invocation.getArgument(0);
+            // 夹具只有这些退款单；未种入的 id 必须遵守 mapper 的查无返回 null 合同。
+            if (!List.of(9001L, 9101L, 9102L, 9201L, 9202L, 9203L).contains(id)) {
+                return null;
+            }
             com.chengyinhub.business.domain.RefundApplication refund =
                     new com.chengyinhub.business.domain.RefundApplication();
             refund.setId(id);

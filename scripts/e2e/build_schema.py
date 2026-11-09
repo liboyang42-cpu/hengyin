@@ -486,6 +486,69 @@ def broadcast_forward_plan(migrations, selected):
     }
 
 
+# Fixed index-assertion repairs: full original bodies survive in additive replacements.
+# This is not a configurable migration filter and is valid only for an absent scratch schema.
+INDEX_CATALOG_OLD = "public_content_catalog_20261108"
+INDEX_CATALOG_NEW = "public_content_catalog_index_shape_20261109"
+INDEX_REVENUE_OLD = "z_marketing_revenue_channel_reverse_kind_20261108"
+INDEX_REVENUE_NEW = "z_marketing_revenue_channel_reverse_kind_index_shape_20261109"
+INDEX_REVENUE_PARENT = "marketing_revenue_allocation_20261108"
+INDEX_ASSERTION_FORWARD_FILES = {
+    INDEX_CATALOG_OLD: ("chengyinhub-admin/sql/migration_public_content_catalog_20261108.sql",
+                        "2d238c2e96ab388ac7494389562ccf5037616fa452e20a3220076c228c71a9b6"),
+    INDEX_CATALOG_NEW: ("chengyinhub-admin/sql/migration_public_content_catalog_index_shape_20261109.sql",
+                        "82816800400ec24bf6fdfb353393f7671685daf8c32a370e94afa0a93d1ae05e"),
+    INDEX_REVENUE_OLD: ("chengyinhub-admin/sql/migration_z_marketing_revenue_channel_reverse_kind_20261108.sql",
+                        "99dab1cc3390cfc2f9139fbd901631570abb616df67776409ab31adec0a5930f"),
+    INDEX_REVENUE_NEW: ("chengyinhub-admin/sql/migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql",
+                        "51a6741ef64cf2645c93fb6f5b08cbb3f9ca8a2fafd748f350de19453d00fe07"),
+    INDEX_REVENUE_PARENT: ("chengyinhub-admin/sql/migration_marketing_revenue_allocation_20261108.sql",
+                           "8717990a778f42620bbc9bf809e64275e0c4013ecee0353c7c04c287b5100592"),
+}
+
+
+def index_assertion_forward_plan(migrations, selected):
+    ids = {INDEX_CATALOG_OLD, INDEX_CATALOG_NEW, INDEX_REVENUE_OLD, INDEX_REVENUE_NEW}
+    paths = {INDEX_ASSERTION_FORWARD_FILES[key][0] for key in ids}
+    if not any(row.get("migrationId") in ids or row.get("path") in paths
+               for row in migrations + selected):
+        return None
+    dependencies = {
+        INDEX_CATALOG_OLD: [], INDEX_CATALOG_NEW: [INDEX_CATALOG_OLD],
+        INDEX_REVENUE_OLD: [INDEX_REVENUE_PARENT], INDEX_REVENUE_NEW: [INDEX_REVENUE_OLD],
+        INDEX_REVENUE_PARENT: [],
+    }
+    positions, pending_positions = {}, {}
+    for key, (path, expected_sha) in INDEX_ASSERTION_FORWARD_FILES.items():
+        rows = [(i, row) for i, row in enumerate(migrations)
+                if row.get("migrationId") == key or row.get("path") == path]
+        pending = [(i, row) for i, row in enumerate(selected)
+                   if row.get("migrationId") == key or row.get("path") == path]
+        if len(rows) != 1 or len(pending) != 1:
+            raise RuntimeError("index assertion forward requires both complete pending pairs and parent: " + key)
+        index, entry = rows[0]
+        pending_index, pending_entry = pending[0]
+        target = REPO / path
+        if (entry.get("migrationId") != key or entry.get("path") != path
+                or entry.get("sha256") != expected_sha or pending_entry != entry
+                or entry.get("order") != index + 1 or entry.get("executionPhase") is not None
+                or entry.get("dependsOn") != dependencies[key]
+                or target.is_symlink() or not target.is_file()
+                or hashlib.sha256(target.read_bytes()).hexdigest() != expected_sha):
+            raise RuntimeError("index assertion forward identity/fingerprint/dependency/order drift: " + key)
+        positions[key], pending_positions[key] = index, pending_index
+    for sequence in (positions, pending_positions):
+        if (not sequence[INDEX_CATALOG_OLD] < sequence[INDEX_CATALOG_NEW]
+                or not sequence[INDEX_REVENUE_PARENT] < sequence[INDEX_REVENUE_OLD] < sequence[INDEX_REVENUE_NEW]):
+            raise RuntimeError("index assertion forward prerequisite/sequence drift")
+    return {
+        "fingerprints": {key: {"path": value[0], "sha256": value[1]}
+                         for key, value in INDEX_ASSERTION_FORWARD_FILES.items()},
+        "selected": [row for row in selected
+                     if row["migrationId"] not in (INDEX_CATALOG_OLD, INDEX_REVENUE_OLD)],
+    }
+
+
 def main():
     global POLICY_CUSTODY
     ap = argparse.ArgumentParser()
@@ -513,6 +576,8 @@ def main():
     selected = notice_forward["selected"] if notice_forward else selected
     broadcast_forward = broadcast_forward_plan(all_migrations, selected)
     selected = broadcast_forward["selected"] if broadcast_forward else selected
+    index_assertion_forward = index_assertion_forward_plan(all_migrations, selected)
+    selected = index_assertion_forward["selected"] if index_assertion_forward else selected
     deferred = [m for m in selected if m.get("executionPhase") == "POST_DEPLOY"]
     ordered = [m for m in selected if m.get("executionPhase") != "POST_DEPLOY"]
     if deferred:
@@ -524,7 +589,7 @@ def main():
         cur.execute("SELECT VERSION(), @@version_comment")
         ver = cur.fetchone()
         print("目标实例: %s / %s  @ %s:%d" % (ver[0], ver[1], a.host, a.port))
-        if notice_forward or broadcast_forward:
+        if notice_forward or broadcast_forward or index_assertion_forward:
             # This check precedes every DROP/CREATE/import, including explicit --drop.
             cur.execute("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=%s", (a.schema,))
             fresh = cur.fetchone()
@@ -534,7 +599,9 @@ def main():
             # No IF NOT EXISTS: a concurrent creator must fail, never adopt an unknown/typed schema.
             cur.execute("CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4" % a.schema)
             for forward, old, new in ((notice_forward, NOTICE_OLD, NOTICE_V2),
-                                      (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):
+                                      (broadcast_forward, BROADCAST_OLD, BROADCAST_UNION),
+                                      (index_assertion_forward, INDEX_CATALOG_OLD, INDEX_CATALOG_NEW),
+                                      (index_assertion_forward, INDEX_REVENUE_OLD, INDEX_REVENUE_NEW)):
                 if forward:
                     print("REPLACED_UNAPPLIED %s -> %s fingerprints=%s" %
                           (old, new, json.dumps(forward["fingerprints"], sort_keys=True)))
@@ -575,7 +642,8 @@ def main():
         pre_migration_problems = len(results)
         for m in ordered:
             strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)
-                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))
+                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION)
+                             or (bool(index_assertion_forward) and m["migrationId"] in (INDEX_CATALOG_NEW, INDEX_REVENUE_NEW)))
             ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
                           keep_going=False if strict_notice else a.keep_going,
                           schema_only=True, observations=observations)

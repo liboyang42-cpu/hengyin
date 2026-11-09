@@ -1209,7 +1209,8 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
         keep = "keep_going=False if strict_notice else a.keep_going,"
         loop = ('        for m in ordered:\n'
                 '            strict_notice = ((bool(notice_forward) and m["migrationId"] == NOTICE_V2)\n'
-                '                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION))\n'
+                '                             or (bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION)\n'
+                '                             or (bool(index_assertion_forward) and m["migrationId"] in (INDEX_CATALOG_NEW, INDEX_REVENUE_NEW)))\n'
                 '            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
                 '                          keep_going=False if strict_notice else a.keep_going,\n'
                 '                          schema_only=True, observations=observations)\n'
@@ -1276,12 +1277,12 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
         self._assert_schema_mutations_rejected(source, [
             ("skip selector", 'notice_forward = notice_forward_plan(all_migrations, selected)', 'notice_forward = None'),
             ("swap selector inputs", 'notice_forward_plan(all_migrations, selected)', 'notice_forward_plan(selected, all_migrations)'),
-            ("drop bypass", '        if notice_forward or broadcast_forward:\n', '        if (notice_forward or broadcast_forward) and not a.drop:\n'),
+            ("drop bypass", '        if notice_forward or broadcast_forward or index_assertion_forward:\n', '        if (notice_forward or broadcast_forward) and not a.drop:\n'),
             ("invert fresh readback", 'fresh[0] != 0', 'fresh[0] < 0'),
             ("allow noninteger readback", 'type(fresh[0]) is not int', 'False'),
             ("probe foreign schema", 'schema_name=%s", (a.schema,)', 'schema_name=%s", ("foreign",)'),
             ("adopt concurrent schema", '"CREATE DATABASE `%s` DEFAULT CHARACTER SET utf8mb4"', '"CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4"'),
-            ("delete existing before probe", '        if notice_forward or broadcast_forward:\n', '        if notice_forward or broadcast_forward:\n            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)\n'),
+            ("delete existing before probe", '        if notice_forward or broadcast_forward or index_assertion_forward:\n', '        if notice_forward or broadcast_forward or index_assertion_forward:\n            cur.execute("DROP DATABASE IF EXISTS `%s`" % a.schema)\n'),
             ("drop exact replacement selection", 'selected = notice_forward["selected"] if notice_forward else selected', 'selected = selected'),
             ("reverse replacement selection", 'selected = notice_forward["selected"] if notice_forward else selected', 'selected = list(reversed(notice_forward["selected"])) if notice_forward else selected'),
             ("hide replacement receipt", 'REPLACED_UNAPPLIED %s -> %s fingerprints=%s', 'APPLIED %s -> %s fingerprints=%s'),
@@ -1343,8 +1344,8 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
         self._assert_schema_mutations_rejected(source, [
             ("skip broadcast selector", 'broadcast_forward = broadcast_forward_plan(all_migrations, selected)', 'broadcast_forward = None'),
             ("swap broadcast inputs", 'broadcast_forward_plan(all_migrations, selected)', 'broadcast_forward_plan(selected, all_migrations)'),
-            ("omit broadcast absence gate", 'if notice_forward or broadcast_forward:', 'if notice_forward:'),
-            ("require both before fresh gate", 'if notice_forward or broadcast_forward:', 'if notice_forward and broadcast_forward:'),
+            ("omit broadcast absence gate", 'if notice_forward or broadcast_forward or index_assertion_forward:', 'if notice_forward:'),
+            ("require both before fresh gate", 'if notice_forward or broadcast_forward or index_assertion_forward:', 'if notice_forward and broadcast_forward:'),
             ("drop broadcast replacement", 'selected = broadcast_forward["selected"] if broadcast_forward else selected', 'selected = selected'),
             ("reverse broadcast replacement", 'selected = broadcast_forward["selected"] if broadcast_forward else selected', 'selected = list(reversed(broadcast_forward["selected"])) if broadcast_forward else selected'),
             ("additional selected rebind", '    if deferred:\n', '    selected = selected\n    if deferred:\n'),
@@ -1356,7 +1357,7 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
             ("disable union strictness", 'bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION', 'False'),
             ("strict old instead of union", 'bool(broadcast_forward) and m["migrationId"] == BROADCAST_UNION', 'bool(broadcast_forward) and m["migrationId"] == BROADCAST_OLD'),
             ("omit broadcast replacement receipt", '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)', '(None, BROADCAST_OLD, BROADCAST_UNION)'),
-            ("invent third replacement", '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)):', '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION), (broadcast_forward, "other", "new")):'),
+            ("invent additional replacement", '(index_assertion_forward, INDEX_REVENUE_OLD, INDEX_REVENUE_NEW)):', '(index_assertion_forward, INDEX_REVENUE_OLD, INDEX_REVENUE_NEW), (broadcast_forward, "other", "new")):'),
             ("wrong receipt identity", '(broadcast_forward, BROADCAST_OLD, BROADCAST_UNION)', '(broadcast_forward, BROADCAST_UNION, BROADCAST_OLD)'),
             ("mark replacement applied", 'REPLACED_UNAPPLIED %s -> %s fingerprints=%s', 'APPLIED %s -> %s fingerprints=%s'),
         ])

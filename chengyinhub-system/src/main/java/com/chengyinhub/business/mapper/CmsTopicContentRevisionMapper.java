@@ -33,6 +33,9 @@ public interface CmsTopicContentRevisionMapper {
     /** 当前发布头对应的修订(最大 revision_no);老主题没有修订返回 null。 */
     CmsTopicContentRevision selectLatestByTopicId(@Param("topicId") Long topicId);
 
+    /** 采用写事务的当前读；必须先持 cms_topic 父行锁。 */
+    CmsTopicContentRevision selectLatestForAdoption(@Param("topicId") Long topicId);
+
     /** 窄视图,不含 snapshot_json。 */
     TopicContentRevisionView selectViewByTopicIdAndId(@Param("topicId") Long topicId, @Param("id") Long id);
 

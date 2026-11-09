@@ -20,6 +20,29 @@ class ArrivalReadingTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    @Test
+    void ordinaryRunReadsOnlyItsFrozenMatchingStation() throws Exception {
+        ObjectNode snapshot = JSON.createObjectNode();
+        snapshot.putArray("routeStations").add(station("{\"level\":2,\"log\":\"原局读数\",\"answer\":\"secret\"}"));
+        String frozen = snapshot.toString();
+        ObjectNode reading = ArrivalReading.projectFrozen(frozen, 10L);
+        assertEquals(2, reading.path("level").asInt());
+        assertEquals("原局读数", reading.path("log").asText());
+        assertEquals(2, reading.size());
+        assertNull(ArrivalReading.projectFrozen(frozen, 11L));
+        ((ObjectNode) snapshot.path("routeStations").get(0).path("arrivalReading")).put("log", "后来编辑");
+        assertEquals("原局读数", ArrivalReading.projectFrozen(frozen, 10L).path("log").asText());
+    }
+
+    @Test
+    void oldOrMalformedRunHasNoPresentationReading() {
+        assertNull(ArrivalReading.projectFrozen(null, 10L));
+        assertNull(ArrivalReading.projectFrozen("not-json", 10L));
+        assertNull(ArrivalReading.projectFrozen("{}", 10L));
+        assertNull(ArrivalReading.projectFrozen("{\"routeStations\":{}}", 10L));
+        assertNull(ArrivalReading.projectFrozen("{\"routeStations\":[]}", null));
+    }
+
     private static JsonNode station(String readingJson) throws Exception {
         ObjectNode station = JSON.createObjectNode().put("nodeId", 10L);
         if (readingJson != null) station.set(ArrivalReading.FIELD, JSON.readTree(readingJson));

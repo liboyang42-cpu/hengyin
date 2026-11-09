@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -253,6 +254,24 @@ class TopicLocationContractTest {
         JsonNode view = TopicLocationContract.view(contract);
         assertFalse(view.path("locationBindings").get(0).has("observationNote")
                 && !view.path("locationBindings").get(0).path("observationNote").isNull());
+    }
+
+    @Test
+    void adoptionRevisionSurvivesCanonicalReadbackAndLegacyStaysNull() {
+        String adopted = TopicLocationContract.buildAdoptionContract(source(null, "310100"),
+                Collections.singletonList(node(11L, "原城地址")), Collections.singletonMap(11L, 111L),
+                "NEW_CITY", "320100", new Date(), 9001L);
+        assertEquals("9001", TopicLocationContract.summary(adopted).get("sourceContentRevisionId"));
+        assertEquals("9001", TopicLocationContract.parse(adopted).path("adoption")
+                .path("sourceContentRevisionId").asText());
+        String legacy = TopicLocationContract.buildAdoptionContract(source(null, "310100"),
+                Collections.singletonList(node(11L, "原城地址")), Collections.singletonMap(11L, 111L),
+                "LEGACY", null, new Date());
+        assertNull(TopicLocationContract.summary(legacy).get("sourceContentRevisionId"));
+        com.fasterxml.jackson.databind.node.ObjectNode invalid = TopicLocationContract.parse(adopted);
+        ((com.fasterxml.jackson.databind.node.ObjectNode) invalid.path("adoption"))
+                .put("sourceContentRevisionId", "not-a-revision");
+        assertThrows(IllegalArgumentException.class, () -> TopicLocationContract.canonical(invalid.toString()));
     }
 
     @Test

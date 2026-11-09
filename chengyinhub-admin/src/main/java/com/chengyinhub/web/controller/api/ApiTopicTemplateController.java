@@ -172,7 +172,8 @@ public class ApiTopicTemplateController extends BaseController {
 
     @Operation(summary = "使用主题模板(复制生成我的草稿)")
     @PostMapping("/use")
-    public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode) {
+    public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode,
+                          String sourceContentRevisionId) {
         Long principalMemberId;
         try {
             principalMemberId = getAppUserId();
@@ -199,7 +200,11 @@ public class ApiTopicTemplateController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         }
-        return useTemplateForMember(tid, memberId, bindingIntent, targetCityCode);
+        return useTemplateForMember(tid, memberId, bindingIntent, targetCityCode, sourceContentRevisionId);
+    }
+
+    public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode) {
+        return use(id, scope, bindingIntent, targetCityCode, null);
     }
 
     /** 旧调用方/单测入口：不传采用方式 = LEGACY，复制结果与旧版一致。 */
@@ -208,13 +213,14 @@ public class ApiTopicTemplateController extends BaseController {
     }
 
     private AjaxResult useTemplateForMember(Long tid, Long memberId, String bindingIntent,
-                                            String targetCityCode) {
+                                            String targetCityCode, String sourceContentRevisionId) {
         // 全量复制(章节/节点/协作/票种)+ 归属改为明确作用域会员 → 生成草稿
         Map<String, Object> params = new HashMap<>();
         params.put("copyType", 3);
         params.put("memberId", memberId);
         if (bindingIntent != null && !bindingIntent.trim().isEmpty()) params.put("bindingIntent", bindingIntent);
         if (targetCityCode != null && !targetCityCode.trim().isEmpty()) params.put("targetCityCode", targetCityCode);
+        if (sourceContentRevisionId != null) params.put("sourceContentRevisionId", sourceContentRevisionId);
         Long newTopicId;
         try {
             newTopicId = cmsTopicService.copyCmsTopic(tid, params);
@@ -229,6 +235,7 @@ public class ApiTopicTemplateController extends BaseController {
         Map<String, Object> summary = com.chengyinhub.business.service.support.TopicLocationContract.summary(contractJson);
         data.put("sourceTemplateTopicId", summary.get("sourceTemplateTopicId"));
         data.put("sourceConfigVersion", summary.get("sourceConfigVersion"));
+        data.put("sourceContentRevisionId", summary.get("sourceContentRevisionId"));
         data.put("cityCode", created == null ? null : created.getCityCode());
         data.put("bindingIntent", summary.get("bindingIntent"));
         data.put("targetCityCode", summary.get("targetCityCode"));

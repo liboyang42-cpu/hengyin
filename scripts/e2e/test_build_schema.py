@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from scripts.e2e import build_schema
+from ci.test_composite_index_assertion_replacements import CompositeIndexReplacementContract, FixedIndexForwardSelection
 
 
 class BuildSchemaMigrationSelectionTest(unittest.TestCase):

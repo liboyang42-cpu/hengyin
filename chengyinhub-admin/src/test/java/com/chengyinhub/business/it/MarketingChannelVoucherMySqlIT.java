@@ -238,11 +238,16 @@ class MarketingChannelVoucherMySqlIT {
 
     @Test
     void expiredVoucherCannotBeRedeemedEvenIfStatusIsStillActive() {
-        db.update("UPDATE marketing_channel_voucher SET expires_at = DATE_SUB(NOW(), INTERVAL 1 MINUTE)"
-                + " WHERE id=?", voucherId);
+        // 过期夹具同时回拨发行时间，保留 ck_channel_voucher_window 的合法窗口。
+        db.update("UPDATE marketing_channel_voucher SET issued_at = DATE_SUB(NOW(), INTERVAL 2 MINUTE),"
+                + " expires_at = DATE_SUB(NOW(), INTERVAL 1 MINUTE) WHERE id=?", voucherId);
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM marketing_channel_voucher"
+                + " WHERE id=? AND status=? AND issued_at < expires_at AND expires_at < NOW()",
+                Integer.class, voucherId, ChannelVoucher.STATUS_ACTIVE));
         ChannelVoucherException rejected = assertThrows(ChannelVoucherException.class,
                 () -> tx.execute(status -> service.redeem(MEMBER_A, request("expired-1"))));
         assertEquals("CODE_EXPIRED", rejected.getReasonCode());
+        assertEquals(ChannelVoucher.STATUS_ACTIVE, voucherMapper.selectById(voucherId).getStatus());
         assertEquals(0, db.queryForObject(
                 "SELECT COUNT(*) FROM marketing_channel_redemption", Integer.class));
         assertEquals(0, grantPort.calls.get(), "过期码不得触发权威授权");
