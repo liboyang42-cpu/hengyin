@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const qv = require('../../utils/commerce/quote-view.js');
+const qv = require('../../pages/activity/utils/quote-view.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 

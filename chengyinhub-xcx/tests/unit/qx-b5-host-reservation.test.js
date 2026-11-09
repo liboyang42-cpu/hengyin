@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { hostReservationView } = require('../../utils/commerce/host-reservation.js');
+const { hostReservationView } = require('../../pages/activity/utils/host-reservation.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 

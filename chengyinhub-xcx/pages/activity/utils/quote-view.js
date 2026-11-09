@@ -1,7 +1,7 @@
 // U07-01 / U07-02 / §17.5 / §17.6:结算页只读服务端报价。
 // 本模块不算价、不推断资格:所有金额、优惠、交付条款都原样取自 /api/registration/quote
 // 与 /api/marketing/promotions/catalog 的回包;拿不到的字段保持「不显示」,不补 0、不补默认条款。
-const datetime = require('../datetime.js');
+const datetime = require('../../../utils/datetime.js');
 const { formatMinuteDots } = datetime;
 // datetime.toTimestamp 无效时返回 NaN;这里统一成 null,便于「缺字段 = 不显示」判断
 function toTimestamp(v) {

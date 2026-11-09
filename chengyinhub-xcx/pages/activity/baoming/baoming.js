@@ -25,8 +25,8 @@ const { isValidMobile } = require('../../../utils/form-state.js');
 const indexFormat = require('../../../utils/index/index-format.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
-const quoteView = require('../../../utils/commerce/quote-view.js');
-const { hostReservationView } = require('../../../utils/commerce/host-reservation.js');
+const quoteView = require('../utils/quote-view.js');
+const { hostReservationView } = require('../utils/host-reservation.js');
 const referral = require('../../../utils/commerce/referral.js');
 
 // 成功弹窗:停留时长 + 退场动画时长。后者必须和 wxss 里 --cy-motion-slow(350ms) 一致,
