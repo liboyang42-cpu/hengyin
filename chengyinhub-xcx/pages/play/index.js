@@ -406,7 +406,7 @@ function buildMockPlayData(kind) {
   };
 }
 
-const themeBackpack = require('./utils/theme-backpack.js');
+const themeBackpack = require('./utils/theme-backpack.js'); const coopHelp = require('./utils/coop-help-methods.js');
 const r5PlayerRuntime = require('./utils/r5-player-runtime.js');
 const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
@@ -438,7 +438,7 @@ Page({
     const ending = this._afterR5Verdict; this._afterR5Verdict = null;
     this.setData({ 'r5Verdict.show': false }, () => { if (ending) ending(); });
   },
-  ...themeBackpack.methods(req),
+  ...themeBackpack.methods(req), ...coopHelp.methods(req),
   // UG-05..09 提示阶梯:非基础写入,走普通请求;JSON 体由服务端 @RequestBody 读取。
   ...playHelpPanel.methods((url, method, data) => {
     const json = { 'content-type': 'application/json' };
@@ -470,7 +470,7 @@ Page({
     guardAppealView: null,
     communityPostWrite: false,
     ...r5PlayerRuntime.data,
-    ...themeBackpack.data,
+    ...themeBackpack.data, ...coopHelp.data,
     ...themeRecords.data,
     ...playerOps.data,
     ...playOverlays.data,

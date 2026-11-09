@@ -1,1 +1,6 @@
 @import "../team.wxss";
+
+/* U06-01 邀请期限:与成员/加入方式同一张卡,下方一行 */
+.tj-invite { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-3); padding-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-border-line); }
+.tj-invite .team-meta-key { margin-top: 0; }
+.tj-invite__v { font-size: var(--cy-font-body); font-weight: 700; }

@@ -69,7 +69,8 @@
         "temp/index",
         "activity/index",
         "topicadd/topicadd",
-        "template-intro/index"
+        "template-intro/index",
+        "preset/index"
       ]
     },
     {

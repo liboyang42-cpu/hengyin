@@ -1,3 +1,4 @@
+const teamSeats = require('../utils/team-seats.js');
 const toast = require('../../../utils/toast.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
@@ -15,6 +16,8 @@ Page({
     joining: false,
     joinError: '',
     ticketRequired: false,
+    inviteText: '',
+    joinHint: '',
     error: '',
     errorKind: 'network',
     errorSub: '',
@@ -123,6 +126,10 @@ Page({
             refreshing: false,
             team: res.data.team,
             joined: !!res.data.joined,
+            // U06-01:邀请期限与入队阻塞码只作提示;末席与票仍由 /join 回包裁决
+            inviteText: teamSeats.inviteText(res.data.invite),
+            joinHint: teamSeats.blockerText(res.data.viewer, 'join').text,
+            ticketRequired: that.data.ticketRequired || teamSeats.blockerText(res.data.viewer, 'join').code === 'TICKET_REQUIRED',
             error: '',
             errorSub: ''
           });

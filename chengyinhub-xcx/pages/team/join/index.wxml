@@ -32,8 +32,10 @@
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</text><text class="team-meta-key">加入方式</text></view>
       </view>
+      <view class="tj-invite" wx:if="{{inviteText}}"><text class="team-meta-key">邀请</text><text class="tj-invite__v">{{inviteText}}</text></view>
     </view>
     <cy-inline-error wx:if="{{joinError}}" kind="error" title="{{joinError}}" />
+    <text wx:elif="{{joinHint && !joined}}" class="team-reject" aria-role="status">{{joinHint}}</text>
     <view class="team-actions">
       <view wx:if="{{joined}}" class="team-action primary" bindtap="goDetail"
             aria-role="button" aria-label="查看已加入的队伍" hover-class="cy-pressed" hover-stay-time="80">查看队伍</view>

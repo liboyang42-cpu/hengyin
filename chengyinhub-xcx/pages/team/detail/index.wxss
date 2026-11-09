@@ -18,3 +18,11 @@ button.team-action::after { border: 0; }
 .tm-dot.on { background: var(--cy-text-title); border-color: var(--cy-text-title); }
 .tm-rank { flex: none; width: 46rpx; font-weight: 800; color: var(--cy-text-secondary); }
 .tm-val { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+
+/* U06-01 席位:键值行,值右对齐;票已失效用危险色 */
+.tm-seats { padding-top: var(--cy-space-1); padding-bottom: var(--cy-space-1); }
+.tm-seat { display: flex; align-items: center; justify-content: space-between; min-height: 72rpx; border-bottom: 1rpx solid var(--cy-border-line); font-size: var(--cy-font-body); }
+.tm-seat:last-child { border-bottom: 0; }
+.tm-seat__k { color: var(--cy-text-secondary); }
+.tm-seat__v { font-weight: 700; color: var(--cy-text-title); }
+.tm-seat__v.is-bad { color: var(--cy-danger); }

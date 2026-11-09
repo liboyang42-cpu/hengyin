@@ -1,0 +1,33 @@
+<!-- U02-03 地点待办:入口一行 + full 档弹层(每个地点:看什么 / 怎么做 / 看不到时 + 当前绑定状态) -->
+<view wx:if="{{view}}" class="lt-entry" bindtap="openSheet" aria-role="button" aria-label="地点待办" hover-class="cy-pressed" hover-stay-time="80">
+  <cy-icon name="pin" size="32" />
+  <text class="lt-entry__t">地点待办</text>
+  <text class="lt-entry__v {{view.blockingCount ? 'is-bad' : ''}}">{{summary || view.rows.length + ' 个地点'}}</text>
+  <cy-icon name="chevron-right" size="24" />
+</view>
+<!-- root-portal 把弹层挂到页面根:编辑器底栏 z-index 在页面根层,组件内的 fixed 弹层会被它压住 -->
+<root-portal enable="{{true}}" wx:if="{{view}}">
+<cy-sheet show="{{open}}" title="地点待办" fixed="full" handle bind:close="closeSheet" bind:requestclose="closeSheet">
+  <view class="lt">
+    <view class="lt-src" wx:if="{{view.source}}">
+      <text>{{view.source.topicText}}</text>
+      <text>{{view.source.revisionText}}</text>
+      <text wx:if="{{view.source.intentText}}">{{view.source.intentText}}</text>
+    </view>
+    <view class="lt-row" wx:for="{{view.rows}}" wx:key="slotKey">
+      <view class="lt-row__hd">
+        <text class="lt-row__t ep1">{{item.title}}</text>
+        <text class="lt-tag lt-tag--bad" wx:if="{{item.blocking}}">挡住发布</text>
+        <text class="lt-tag" wx:elif="{{item.warn}}">待复核</text>
+      </view>
+      <view class="lt-kv" wx:if="{{item.what}}"><text class="lt-k">看什么</text><text class="lt-v">{{item.what}}</text></view>
+      <view class="lt-kv" wx:if="{{item.how}}"><text class="lt-k">怎么做</text><text class="lt-v">{{item.how}}</text></view>
+      <view class="lt-kv"><text class="lt-k">看不到时</text><text class="lt-v">{{item.fallback}}</text></view>
+      <view class="lt-kv"><text class="lt-k">状态</text><text class="lt-v {{item.blocking ? 'is-bad' : ''}}">{{item.statusText}}</text></view>
+      <view class="lt-act" data-slot="{{item.slotKey}}" bindtap="pickNode" aria-role="button" aria-label="为{{item.title}}选择节点" aria-busy="{{busyKey === item.slotKey}}" hover-class="cy-pressed" hover-stay-time="80">{{busyKey === item.slotKey ? '绑定中…' : (item.bound ? '换一个节点' : '选择节点')}}</view>
+      <text class="lt-err" wx:if="{{rowError[item.slotKey]}}" aria-role="alert">{{rowError[item.slotKey]}}</text>
+    </view>
+  </view>
+</cy-sheet>
+<cy-option-sheet show="{{pickShow}}" title="选择节点" items="{{pickItems}}" immediate bind:select="onPicked" bind:cancel="closePick" />
+</root-portal>

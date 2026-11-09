@@ -151,6 +151,8 @@
 
     <!-- 第 1 页 · 创作:章节与节点。剧情已移入章节弹窗(§4.5),这里只留状态标记。 -->
     <block wx:if="{{editorPage === 1}}">
+      <!-- qx-b4 U02-03:模板采用来的主题才有地点合同;没有合同组件自己不渲染 -->
+      <location-todos wx:if="{{editingTopicId}}" topic-id="{{editingTopicId}}" scope="{{operationScope}}" chapters="{{formData.chapters}}" />
       <view class="slopes-section" id="routeSection">
         <view class="slopes-section-hd">
           <text class="slopes-section-tit">章节</text>

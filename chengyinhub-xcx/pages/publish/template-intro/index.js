@@ -284,6 +284,11 @@ Page({
   },
 
   // ---------------------------------------------------------------- 开始创建(整页虚化后进下一页)
+  goPreset() {
+    if (this.data.navigating) return;
+    wx.navigateTo({ url: '/pages/publish/preset/index', fail: () => this.setData({ navigationError: '预设页面没有打开，请重试' }) });
+  },
+
   goCreate() {
     if (this.data.navigating) return;
     this.setData({ navigating: true, navigationError: '' }, () => this._measureHole());

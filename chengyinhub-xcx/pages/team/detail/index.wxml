@@ -33,6 +33,12 @@
       </view>
     </view>
 
+    <!-- U06-01 席位:持有效票 / 票已失效 / 待审申请(不占席) / 还可加入 + 邀请到期 -->
+    <view class="team-card tm-seats" wx:if="{{seatRows.length || inviteText}}">
+      <view class="tm-seat" wx:for="{{seatRows}}" wx:key="key"><text class="tm-seat__k">{{item.label}}</text><text class="tm-seat__v {{item.bad ? 'is-bad' : ''}}">{{item.value}}</text></view>
+      <view class="tm-seat" wx:if="{{inviteText}}"><text class="tm-seat__k">邀请</text><text class="tm-seat__v">{{inviteText}}</text></view>
+    </view>
+
     <view class="team-actions" wx:if="{{team.status == 0}}">
       <button class="team-action primary" open-type="share" hover-class="cy-pressed" hover-stay-time="80">邀请队友</button>
       <view wx:if="{{!joined}}" class="team-action secondary" bindtap="goJoin"

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -342,6 +343,33 @@ class TopicContentCopyCityAdoptionTest {
         assertThrows(IllegalArgumentException.class, () -> copy(
                 Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001")));
         assertNoCopyWrites("修订主题归属不一致");
+    }
+
+    @Test
+    void mysqlNormalizedPublishedHeadStillMatchesItsRevision() throws Exception {
+        // MySQL JSON 列读回是规范化文本(键按长度重排、逗号冒号后加空格);语义相同仍是同一份发布内容
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode tree = json.readTree(currentRevision.getSnapshotJson());
+        java.util.TreeMap<String, Object> reordered = new java.util.TreeMap<>(java.util.Comparator.reverseOrder());
+        tree.fields().forEachRemaining(e -> reordered.put(e.getKey(), e.getValue()));
+        String normalized = json.writeValueAsString(reordered).replace(",\"", ", \"").replace("\":", "\": ");
+        assertNotEquals(currentRevision.getSnapshotJson(), normalized);
+        original.setPublishedRouteGraphJson(normalized);
+        copy(Map.of("copyType", 2, "memberId", 200L, "bindingIntent", "NEW_CITY",
+                "targetCityCode", "320100", "sourceContentRevisionId", "9001"));
+        assertEquals("9001", TopicLocationContract.summary(persisted.get().getContentContractJson())
+                .get("sourceContentRevisionId"));
+    }
+
+    @Test
+    void sameJsonDocumentRejectsDifferentContentAndUnreadableText() {
+        assertTrue(TopicContentCopyServiceImpl.sameJsonDocument("{\"a\":1,\"b\":[1,2]}", "{\"b\": [1, 2], \"a\": 1}"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument("{\"a\":1}", "{\"a\": 2}"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument("{\"b\":[1,2]}", "{\"b\": [2, 1]}"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument("{\"a\":1}", "not json"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument(null, "{}"));
     }
 
     @Test

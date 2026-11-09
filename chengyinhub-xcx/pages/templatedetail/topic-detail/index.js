@@ -4,6 +4,7 @@
 // 能力 = 概要一行 + 按站列出这一站玩什么、玩家做什么、大概多久。数据只读 /api/template/topic-template/info。
 const art = require('../shelf/art.js');
 const cyToast = require('../../../utils/toast.js');
+const adoption = require('../utils/topic-adoption.js');
 
 const app = getApp();
 const TABS = [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }];
@@ -85,7 +86,17 @@ Page({
     stops: [],
     summary: [],
     medalName: '',
-    medalImg: ''
+    medalImg: '',
+    deliveryRows: [],
+    // U02-02:采用方式弹层(沿用原地点 / 换一个城市)
+    adoptShow: false,
+    adoptIntent: '',
+    adoptCityName: '',
+    adoptCityCode: '',
+    adoptRebind: 0,
+    adoptError: '',
+    adoptBusy: false,
+    adoptUnknown: false
   },
 
   onLoad(options) {
@@ -148,13 +159,31 @@ Page({
           stops: stops,
           summary: buildSummary(info, stops),
           medalName: info.finishMedalName || '',
-          medalImg: info.finishMedalImg || ''
+          medalImg: info.finishMedalImg || '',
+          deliveryRows: adoption.deliveryRows(info.contentDelivery)
         });
+        that._delivery = info.contentDelivery || null;
+        that._loadCredits(seq, nodeImgs);
       },
       fail(res) {
         if (seq !== that._seq) return;
         that.setData({ loading: false, loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
       }
+    });
+  },
+
+  // U02-05:节点图署名 / AI 标识 / 来源待确认,逐张只读;最多前 8 张,换页或重载后迟到回包丢弃
+  _loadCredits(seq, imgs) {
+    (imgs || []).slice(0, 8).forEach((g, i) => {
+      app.sendRequest({
+        hideLoading: true, autoErrorToast: false,
+        url: '/api/media/asset/attribution', method: 'GET', data: { reference: g.img },
+        success: res => {
+          if (seq !== this._seq || !res || String(res.code) !== '200') return;
+          const credit = adoption.creditText(res.data);
+          if (credit && this.data.gallery[i] && this.data.gallery[i].img === g.img) this.setData({ ['gallery[' + i + '].credit']: credit });
+        }
+      });
     });
   },
 
@@ -173,33 +202,74 @@ Page({
     wx.previewImage({ current: url, urls: this.data.gallery.map(function (g) { return g.img; }) });
   },
 
-  // 「应用」= 整包复制成我的草稿,进主题配置(与模板预览原来的「用这个模板」同一条链路),不再二次确认
+  // 「应用」= 整包复制成我的草稿,进主题配置。U02-02:来源有真实地点时先选「沿用原地点 / 换一个城市」;
+  // 纯线上内容(没有地点事实)没有可换的城市,直接按旧版采用。
   useTemplate() {
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return; // 游客写前登录
     if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
-    // 后端每次调用都整包复制出新草稿,连点两下就是两份:在途时挡住
-    if (this._using) { cyToast('正在配置，请稍候'); return; }
     if (!this._id) return;
-    const that = this;
     // 第十二轮 k9(p3 N6):本页已经复制出一份草稿,从编辑器回来再点「应用」就回到那一份,不再每点一次多一份草稿
     if (this._copiedId) { this._openCopiedDraft(this._copiedId); return; }
+    const loc = this._delivery && this._delivery.locationRequirement;
+    if (!loc || loc.physicalPlaceRequired !== true || !adoption.sourceCityOf(this._delivery)) { this._submitUse(''); return; }
+    const n = Number(loc.stationWithAddressCount);
+    this.setData({ adoptShow: true, adoptError: '', adoptRebind: Number.isSafeInteger(n) && n > 0 ? n : 0 });
+  },
+
+  closeAdopt() { if (!this.data.adoptBusy) this.setData({ adoptShow: false }); },
+
+  pickSameCity() { if (!this.data.adoptBusy && !this.data.adoptUnknown) this.setData({ adoptIntent: 'SAME_CITY', adoptError: '' }); },
+
+  // 原生地区选择器 level=city:code[1] 是 6 位城市 adcode,与服务端 targetCityCode 同口径
+  onAdoptCity(e) {
+    if (this.data.adoptBusy || this.data.adoptUnknown) return;
+    const d = e && e.detail || {};
+    const code = Array.isArray(d.code) ? String(d.code[1] || '') : '';
+    const name = Array.isArray(d.value) ? String(d.value[1] || d.value[0] || '') : '';
+    this.setData({ adoptIntent: 'NEW_CITY', adoptCityCode: code, adoptCityName: name, adoptError: /^\d{6}$/.test(code) ? '' : '没有读到这个城市的编码，请重新选择' });
+  },
+
+  confirmAdopt() {
+    if (this.data.adoptBusy) return;
+    if (this.data.adoptUnknown) { wx.navigateTo({ url: '/subpackageA/pages/myproject/index' }); return; }
+    if (!this.data.adoptIntent) { this.setData({ adoptError: '请选择沿用原地点或换一个城市' }); return; }
+    this._submitUse(this.data.adoptIntent);
+  },
+
+  _submitUse(intent) {
+    // 后端每次调用都整包复制出新草稿,连点两下就是两份:在途时挡住
+    if (this._using) { cyToast('正在配置，请稍候'); return; }
+    const built = adoption.usePayload({ id: this._id, scope: this._scope, intent, targetCityCode: this.data.adoptCityCode,
+      sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) });
+    if (built.error) { this.setData({ adoptError: built.error }); return; }
+    const that = this;
     this._using = true;
+    this.setData({ adoptBusy: true, adoptError: '' });
     app.sendRequest({
       url: '/api/template/topic-template/use',
       method: 'POST',
-      data: { id: this._id, scope: this._scope },
+      data: built.data,
       success(res) {
         that._using = false;
         if (that._unloaded) return; // 复制回包晚于离开本页:不再把用户拉去编辑器
-        const copiedId = res && res.code == '200' && res.data && res.data.topicId;
-        if (!copiedId) { cyToast((res && res.msg) || '使用模板失败'); return; }
+        const result = adoption.useResult(res);
+        if (!result.ok) {
+          // 服务端明确拒绝:原文写在选项下面,保留已选的采用方式
+          if (that.data.adoptShow) that.setData({ adoptBusy: false, adoptError: result.message || '使用模板失败' });
+          else { that.setData({ adoptBusy: false }); cyToast(result.message || '使用模板失败'); }
+          return;
+        }
+        const copiedId = result.topicId;
         that._copiedId = copiedId;
+        that.setData({ adoptBusy: false, adoptShow: false });
         that._openCopiedDraft(copiedId);
       },
       fail() {
         that._using = false;
         if (that._unloaded) return;
-        cyToast('网络错误，请重试');
+        // 结果未知:/use 没有请求号可查,不自动重发(会多复制一份);保留所选方式,去我的草稿核对
+        if (that.data.adoptShow) that.setData({ adoptBusy: false, adoptUnknown: true, adoptError: '采用结果未确认' });
+        else { that.setData({ adoptBusy: false }); cyToast('网络错误，请重试'); }
       }
     });
   },

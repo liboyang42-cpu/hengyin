@@ -318,7 +318,7 @@ function continuationFixture() {
     Page: page => { definition = page; }, getApp: () => h.app,
     require: id => {
       if (id === '../../../utils/toast.js') return () => {};
-      assert.ok(['../../../utils/user-character.js', '../../../utils/team-event-command.js'].includes(id), id);
+      assert.ok(['../../../utils/user-character.js', '../../../utils/team-event-command.js', '../utils/team-seats.js'].includes(id), id); // qx-b4:席位纯函数
       return require(path.resolve(root, 'pages/team/join', id));
     },
     getCurrentPages: () => h.pages, wx: h.wx, setTimeout: () => 0,
