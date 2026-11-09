@@ -135,6 +135,36 @@ class VideoBountyServiceTest {
         return request;
     }
 
+    // ------------------------------------------------------------------ qx-c1 #6 作者侧活动列表
+
+    @Test
+    void openCampaignListShowsOnlyActiveCampaignsWithoutMoneyRules() {
+        VideoCampaign paused = campaign();
+        paused.setCampaignKey("paused-1");
+        paused.setStatus(2);
+        VideoCampaign active = campaign();
+        active.setTitle("秋季探店视频");
+        active.setDescription("拍一条你玩过的主题");
+        when(campaigns.selectOpen()).thenReturn(java.util.List.of(active, paused));
+
+        java.util.List<java.util.Map<String, Object>> rows = service.listOpenCampaigns();
+
+        assertEquals(1, rows.size(), "paused/closed campaigns never reach the author picker");
+        assertEquals(java.util.List.of("campaignKey", "title", "description", "windowDays"),
+                new java.util.ArrayList<>(rows.get(0).keySet()));
+        assertEquals(CAMPAIGN_KEY, rows.get(0).get("campaignKey"));
+        assertEquals(7, rows.get(0).get("windowDays"));
+        String dumped = rows.toString();
+        assertFalse(dumped.contains("500") || dumped.contains("2.00") || dumped.contains("EUR") || dumped.contains(String.valueOf(OWNER)),
+                "no rate, cap, currency or owner: " + dumped);
+    }
+
+    @Test
+    void emptyOpenCampaignListIsAnEmptyArray() {
+        when(campaigns.selectOpen()).thenReturn(null);
+        assertTrue(service.listOpenCampaigns().isEmpty());
+    }
+
     // ------------------------------------------------------------------ 投稿去重
 
     @Test

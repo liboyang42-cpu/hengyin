@@ -1,0 +1,48 @@
+[
+ {
+  "label": "#4 operator login",
+  "request": {
+   "method": "POST",
+   "path": "/login",
+   "form": null,
+   "body": {
+    "username": "e2e_operator",
+    "password": "<rig fixture password>"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "token": "<redacted-rig-jwt>"
+  }
+ },
+ {
+  "label": "#4 run lines as cy_operator (not granted)",
+  "request": {
+   "method": "GET",
+   "path": "/business/playhelp/run/770001",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "没有权限，请联系管理员授权",
+   "code": 403
+  }
+ },
+ {
+  "label": "#4 topic config as cy_operator (not granted)",
+  "request": {
+   "method": "GET",
+   "path": "/business/playhelp/topic/990013/config",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "没有权限，请联系管理员授权",
+   "code": 403
+  }
+ }
+]

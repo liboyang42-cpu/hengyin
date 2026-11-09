@@ -875,6 +875,25 @@ public class VideoBountyServiceImpl implements IVideoBountyService
         return campaignMapper.selectList(status);
     }
 
+    @Override
+    public List<java.util.Map<String, Object>> listOpenCampaigns() {
+        List<java.util.Map<String, Object>> rows = new java.util.ArrayList<>();
+        List<VideoCampaign> open = campaignMapper.selectOpen();
+        if (open == null) return rows;
+        for (VideoCampaign campaign : open) {
+            // 与投稿同一判据:只认进行中;防御式再判一次,mapper 条件漂移时不把暂停/关闭的活动露给作者。
+            if (campaign == null || !Integer.valueOf(VideoCampaign.STATUS_ACTIVE).equals(campaign.getStatus())
+                    || !"0".equals(campaign.getDelFlag() == null ? "0" : campaign.getDelFlag())) continue;
+            java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("campaignKey", campaign.getCampaignKey());
+            row.put("title", campaign.getTitle());
+            row.put("description", campaign.getDescription());
+            row.put("windowDays", campaign.getWindowDays());
+            rows.add(row);
+        }
+        return rows;
+    }
+
     // ------------------------------------------------------------------ 成交归因(只读归因域)
 
     /**
@@ -1060,7 +1079,7 @@ public class VideoBountyServiceImpl implements IVideoBountyService
         }
         com.chengyinhub.business.domain.BusinessAuditEvent audit =
                 new com.chengyinhub.business.domain.BusinessAuditEvent();
-        audit.setDomainType("VIDEO_BOUNTY_SUBMISSION");
+        audit.setDomainType("VIDEO_BOUNTY");   // business_audit_event.domain_type 是 VARCHAR(16)
         audit.setDomainId(before.getId());
         audit.setOwnerMemberId(before.getMemberId());
         audit.setActorType(com.chengyinhub.business.domain.BusinessAuditEvent.ACTOR_TYPE_SYS_USER);

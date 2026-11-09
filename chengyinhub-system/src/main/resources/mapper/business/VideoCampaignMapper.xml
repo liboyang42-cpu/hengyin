@@ -42,6 +42,13 @@
     ORDER BY id DESC
   </select>
 
+  <select id="selectOpen" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_campaign
+    WHERE del_flag = '0' AND status = 1
+    ORDER BY id DESC
+    LIMIT 50
+  </select>
+
   <insert id="insertCampaign" parameterType="com.chengyinhub.business.domain.VideoCampaign"
           useGeneratedKeys="true" keyProperty="id">
     INSERT INTO video_bounty_campaign

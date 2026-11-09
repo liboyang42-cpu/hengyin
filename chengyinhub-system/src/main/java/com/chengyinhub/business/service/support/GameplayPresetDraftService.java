@@ -112,11 +112,14 @@ public class GameplayPresetDraftService {
             }
         }
         Map<String, String> resolved = new LinkedHashMap<>();
-        List<String> missing = new ArrayList<>();
+        List<Map<String, String>> missing = new ArrayList<>();
         for (GameplayPresetCatalog.Field field : preset.fields()) {
             Object value = input.get(field.key());
             if (value == null || (value instanceof String text && text.trim().isEmpty())) {
-                missing.add(field.label() + "（" + field.key() + "）");
+                Map<String, String> required = new LinkedHashMap<>();
+                required.put("key", field.key());
+                required.put("label", field.label());
+                missing.add(required);
                 continue;
             }
             resolved.put(field.key(), switch (field.kind()) {
@@ -128,7 +131,8 @@ public class GameplayPresetDraftService {
             });
         }
         if (!missing.isEmpty()) {
-            throw new IllegalArgumentException("预设还缺这些必填内容，补齐后才能建草稿：" + String.join("、", missing));
+            // 清单走结构化 requiredFields，不拼进消息：长消息会被 UserSafeMessage 的 120 字上限压成「系统繁忙」。
+            throw new MissingFieldsException(missing);
         }
         return resolved;
     }
@@ -239,5 +243,20 @@ public class GameplayPresetDraftService {
         // 保存前自查一遍：作者填的内容也必须过真实保存闸，不能等到下游才炸。
         new AdvancedGameConfigValidator().validateAndNormalize(config.toString());
         return config;
+    }
+
+    /** 预设必填项没填齐：短消息 + 结构化 {@code requiredFields}（[{key,label}]），按声明顺序一次列全。 */
+    public static final class MissingFieldsException extends IllegalArgumentException {
+        private static final long serialVersionUID = 1L;
+        public static final String CODE = "PRESET_FIELDS_REQUIRED";
+        public static final String MESSAGE = "预设还有必填内容没填，补齐后才能建草稿";
+        private final List<Map<String, String>> requiredFields;
+
+        public MissingFieldsException(List<Map<String, String>> requiredFields) {
+            super(MESSAGE);
+            this.requiredFields = List.copyOf(requiredFields);
+        }
+
+        public List<Map<String, String>> getRequiredFields() { return requiredFields; }
     }
 }

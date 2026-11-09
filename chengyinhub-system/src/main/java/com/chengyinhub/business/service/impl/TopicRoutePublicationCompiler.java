@@ -798,6 +798,16 @@ final class TopicRoutePublicationCompiler {
             if (scene == null || !scene.isObject()) continue;
             if (selectedScene != null && !selectedScene.equals(scene.path("id").asText())) continue;
             JsonNode byNode = scene.path("nodeConfigs").path(String.valueOf(nodeId));
+            // qx-c1 #5(b):到达设置的独立兄弟表 nodeArrivals 优先(逐字段);旧发布写在 nodeConfigs 里的照旧读取。
+            JsonNode arrival = scene.path(ThemeRuntimeConfig.NODE_ARRIVALS).path(String.valueOf(nodeId));
+            if (arrival.isObject()) {
+                com.fasterxml.jackson.databind.node.ObjectNode merged = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+                for (String field : new String[]{ArrivalPolicy.FIELD, ArrivalReading.FIELD}) {
+                    if (arrival.hasNonNull(field)) merged.set(field, arrival.get(field));
+                    else if (byNode.isObject() && byNode.hasNonNull(field)) merged.set(field, byNode.get(field));
+                }
+                return merged;
+            }
             if (byNode.isObject()) return byNode;
         }
         return null;

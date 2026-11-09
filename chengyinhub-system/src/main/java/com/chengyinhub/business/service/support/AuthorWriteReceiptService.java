@@ -21,7 +21,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class AuthorWriteReceiptService {
     private static final Set<String> OPERATIONS = Set.of("ACTIVITY_PUBLISH", "ACTIVITY_UPDATE",
-            "TEMPLATE_PUBLISH", "TEMPLATE_DRAFT", "TEMPLATE_PRESET_DRAFT", "NPC_CHAT_DELETE");
+            "TEMPLATE_PUBLISH", "TEMPLATE_DRAFT", "TEMPLATE_PRESET_DRAFT", "NPC_CHAT_DELETE", "TOPIC_TEMPLATE_USE");
     private final AuthorWriteReceiptMapper mapper;
     private final TransactionTemplate transaction;
 

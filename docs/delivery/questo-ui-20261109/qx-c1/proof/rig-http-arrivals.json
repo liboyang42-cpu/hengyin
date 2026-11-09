@@ -1,0 +1,194 @@
+[
+ {
+  "label": "#5b edit-detail",
+  "request": {
+   "method": "POST",
+   "path": "/api/topic/edit-detail",
+   "form": {
+    "id": 990014
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "collaboratorIds": [],
+    "tickets": [],
+    "chapters": [],
+    "themeRuntimeConfig": null,
+    "isDraft": true,
+    "topic": {
+     "createBy": "system_copy",
+     "createTime": "2026-11-10 06:41:43",
+     "updateBy": "place-country:9004",
+     "updateTime": "2026-11-10 06:41:43",
+     "remark": null,
+     "id": 990014,
+     "memberId": 9004,
+     "contentPublisherType": null,
+     "onlinePaymentAvailable": null,
+     "saleReviewPending": null,
+     "sessionPrice": null,
+     "sessionMeetingPoint": null,
+     "sessionTicketCount": null,
+     "excludeTemplates": null,
+     "merchantPoolOnly": null,
+     "clubId": null,
+     "signupCount": null,
+     "isDraft": null,
+     "inviteWindowOpen": null,
+     "teamStatus": null,
+     "topicType": 2,
+     "feePlatformRate": null,
+     "feeGuaranteeBaseRate": null,
+     "feeGuaranteeStepRate": null,
+     "feeGuaranteeMaxMerchant": null,
+     "productType": 2,
+     "circleThemeCode": null,
+     "sourceTemplateTopicId": null,
+     "cityCode": null,
+     "circleReviewedAt": null,
+     "roamReferralEnabled": null,
+     "completeRuleJson": null,
+     "routeMode": "LINEAR",
+     "routeGraphJson": null,
+     "configVersion": 1,
+     "publishedRouteGraphJson": null,
+     "publishedConfigVersion": 0,
+     "lookJson": null,
+     "gameModuleEnabled": null,
+     "nextSessionStart": null,
+     "topicId": null,
+     "name": "E2E 探店日一期",
+     "subtitle": "隔离验收样板",
+     "description": "仅用于本机 cy_e2e_ 免费流程入口验收",
+     "totalTime": 0,
+     "totalMileage": null,
+     "locationCount": 0,
+     "addressName": "",
+     "templateCount": 0,
+     "startDate": null,
+     "endDate": null,
+     "imgUrl": null,
+     "imgArr": null,
+     "categoryIds": "0",
+     "status": 0,
+     "reason": null,
+     "userStatus": 0,
+     "merchantStatus": 0,
+     "openClubPool": 0,
+     "merchantSignUpStartDate": null,
+     "merchantSignUpEndDate": null,
+     "delFlag": 0,
+     "isSync": 0,
+     "sysCategoryList": null,
+     "cmsCollaboratorsList": null,
+     "cmsMemberTemplateList": null,
+     "cmsRegistrationMerchantList": null,
+     "cmsTopicChapterList": null,
+     "omsTicketList": null,
+     "isLike": null,
+     "isLikeMemberId": null,
+     "viewerMemberId": null,
+     "isFollowTheUser": null,
+     "salesAmout": null,
+     "viewCount": null,
+     "rating": null,
+     "ratingTotal": null,
+     "minAmout": null,
+     "checkStatus": 0,
+     "isSettlement": 0,
+     "isRecommend": 0,
+     "chaptersList": null,
+     "umsMember": null,
+     "isNew": null,
+     "merchantCount": null,
+     "remainingMerchantCount": null,
+     "publishMode": "pro",
+     "betaFlag": 0,
+     "audioUrl": null,
+     "audioDuration": null,
+     "selfPlay": 0,
+     "selfPlayPrice": null,
+     "selfPlayQuota": null,
+     "teamMode": 0,
+     "teamMaxMembers": 4,
+     "xpBudget": 3000,
+     "recruitDeadline": null,
+     "recruitExtendCount": 0,
+     "lifecycle": 0,
+     "clubCoopOpen": 1,
+     "clubPinned": 0,
+     "clubMemberOnly": 0,
+     "saleEndAt": null,
+     "sellingStartedAt": null,
+     "sourceTopicId": null,
+     "finishMedalName": null,
+     "finishMedalImg": null,
+     "completeRewardCouponId": null
+    },
+    "openingChapterId": null,
+    "journeyRules": null,
+    "editScope": "FULL",
+    "look": null,
+    "journeyStory": null
+   }
+  }
+ },
+ {
+  "label": "#5b save draft with nodeArrivals",
+  "request": {
+   "method": "POST",
+   "path": "/api/topic/update",
+   "form": null,
+   "body": {
+    "id": 990014,
+    "name": "E2E 探店日一期",
+    "description": "仅用于本机 cy_e2e_ 免费流程入口验收",
+    "chapters": [
+     {
+      "name": "第一章",
+      "nodes": [
+       {
+        "clientNodeKey": "bell",
+        "name": "钟楼",
+        "address": "上海市黄浦区",
+        "longitude": "121.47",
+        "latitude": "31.23",
+        "sortID": 1
+       }
+      ]
+     }
+    ],
+    "themeRuntimeConfig": "{\"schemaVersion\": 1, \"currentScene\": \"s1\", \"scenes\": [{\"id\": \"s1\", \"name\": \"第一幕\", \"nodeArrivals\": {\"client:bell\": {\"arrivalPolicy\": {\"radiusMeters\": 60, \"maxAccuracyMeters\": 40, \"maxAgeSeconds\": 120}, \"arrivalReading\": {\"level\": 2, \"log\": \"你听见钟声\"}}}}]}",
+    "saveDraft": 1,
+    "requestId": "qxc1-arrivals-0001"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "保存成功",
+   "code": 200,
+   "data": 990014
+  }
+ },
+ {
+  "label": "#5b read-back",
+  "readBack": {
+   "node": [
+    {
+     "id": 880002
+    }
+   ],
+   "theme": "{\"schemaVersion\":1,\"currentScene\":\"s1\",\"scenes\":[{\"id\":\"s1\",\"name\":\"第一幕\",\"nodeArrivals\":{\"880002\":{\"arrivalPolicy\":{\"version\":1,\"radiusMeters\":60.0,\"maxAccuracyMeters\":40.0,\"maxAgeSeconds\":120,\"fallbackMode\":\"NONE\"},\"arrivalReading\":{\"level\":2,\"log\":\"你听见钟声\"}}}}],\"capacity\":0}"
+  }
+ },
+ {
+  "label": "summary",
+  "readBack": {
+   "#5b": true
+  }
+ }
+]
