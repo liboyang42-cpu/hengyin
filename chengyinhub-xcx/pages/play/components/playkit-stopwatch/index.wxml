@@ -3,7 +3,7 @@
      ⚠️ 逐值抄自 playkit.html 的 #kit2 .phone/.screen/.mid/.chip/.giant/.pill/.cap/.bar。
      台面那三件(退出 / 还能错几次 / 判定屏)仍走 cy-play-stage:十九个玩法共用一套,
      这是先前的产品拍板,不因这一屏例外。原型 375px 画布,1px = 2rpx。 -->
-<cy-play-stage id="cy-play-stage" skin="glass" show="{{show}}" back-label="退出" tries="{{tries}}" count-in
+<cy-play-stage id="cy-play-stage" skin="glass" show="{{show}}" back-label="退出" tries="{{tries}}" used="{{used}}" count-in
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
   <view class="sw">
     <!-- 背景景深:玻璃要有东西可透,不然「毛玻璃」只是一块灰 -->
@@ -18,10 +18,7 @@
         <view class="sw__lbl sw__lbl--tol">误差</view>
         <view class="sw__tol pe pe--roll" style="--pe-d:.35s">±{{tolText}}<text class="sw__unit2">秒</text></view>
         <view class="sw__tip pe pe--up" style="--pe-d:.7s">
-          <view>开跑 1 秒后数字会消失</view>
-          <view>点屏幕任意处停</view>
           <view>本机测量读数，仅供娱乐参考。</view>
-          <view>与目标相差不超过 {{tolText}} 秒算命中。</view>
           <view>切到后台会中断本机计时，返回后请重新开始。</view>
           <view wx:if="{{rewardNote}}">{{rewardNote}}</view>
         </view>

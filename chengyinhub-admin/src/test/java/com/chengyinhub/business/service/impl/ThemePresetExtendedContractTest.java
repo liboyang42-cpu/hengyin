@@ -180,7 +180,8 @@ class ThemePresetExtendedContractTest {
             final long chargedId = chargedNode;
             IllegalArgumentException qaRejected = assertThrows(IllegalArgumentException.class,
                     () -> GameplaySupportMatrix.validateNode(theme, chargedId, "charged-qa", charged, 3));
-            assertTrue(qaRejected.getMessage().contains("免费重答"), qaRejected.getMessage());
+            // 主干把发布闸原因译成作者可读文案(GameplaySupportMatrix.REASONS):「免费重答」→「不能限制尝试次数」。
+            assertTrue(qaRejected.getMessage().contains("不能限制尝试次数"), qaRejected.getMessage());
         }
 
         // 排序同样不许悄悄改成有限次数；用 T04 自己的主题骨架验一次即可。
@@ -190,7 +191,7 @@ class ThemePresetExtendedContractTest {
         long sortNode = Long.parseLong(PRESETS[0][1]);
         IllegalArgumentException sortRejected = assertThrows(IllegalArgumentException.class,
                 () -> GameplaySupportMatrix.validateNode(sortTheme, sortNode, "charged-sort", chargedSort, 3));
-        assertTrue(sortRejected.getMessage().contains("免费重答"), sortRejected.getMessage());
+        assertTrue(sortRejected.getMessage().contains("不能限制尝试次数"), sortRejected.getMessage());
     }
 
     // ---------------------------------------------------------------- 3 模板冻结与地点绑定
@@ -415,9 +416,11 @@ class ThemePresetExtendedContractTest {
         CmsMemberTemplate draftA = new CmsMemberTemplate();
         draftA.setId(draftForA); draftA.setMemberId(90L); draftA.setTitle(source.getTitle());
         draftA.setAdvancedConfigJson(firstNodeConfig);
+        draftA.setOriginalTemplateId(canonicalTemplateId); // 生产 saveOrUpdateDraft 把来源写进新草稿,采用回读按它核对
         CmsMemberTemplate draftB = new CmsMemberTemplate();
         draftB.setId(draftForB); draftB.setMemberId(91L); draftB.setTitle(source.getTitle());
         draftB.setAdvancedConfigJson(firstNodeConfig);
+        draftB.setOriginalTemplateId(canonicalTemplateId); // 生产 saveOrUpdateDraft 把来源写进新草稿,采用回读按它核对
         draftsById.put(draftForA, draftA);
         draftsById.put(draftForB, draftB);
 
@@ -441,13 +444,14 @@ class ThemePresetExtendedContractTest {
         when(mapper.sourceCanonicalId(anyLong())).thenReturn(canonicalTemplateId);
         when(mapper.lockSource(anyLong())).thenReturn(source);
         when(mapper.lockDraft(anyLong())).thenAnswer(invocation -> draftsById.get(invocation.getArgument(0)));
-        when(mapper.finish(anyLong(), anyString(), anyString(), any(), any(), any())).thenAnswer(invocation -> {
+        when(mapper.finish(anyLong(), anyString(), anyString(), any(), any(), any(), any())).thenAnswer(invocation -> {
             Map<String, Object> row = rows.get(invocation.getArgument(0) + ":" + invocation.getArgument(1));
             if (row == null) return 0;
             row.put("status", invocation.getArgument(2));
             if (invocation.getArgument(3) != null) row.put("draftId", invocation.getArgument(3));
             row.put("reason", invocation.getArgument(4));
             row.put("draftVersion", invocation.getArgument(5));
+            row.put("inheritedConfigHash", invocation.getArgument(6));
             return 1;
         });
         when(publisher.saveOrUpdateDraft(any(), eq(90L), anyString())).thenReturn(draftForA);

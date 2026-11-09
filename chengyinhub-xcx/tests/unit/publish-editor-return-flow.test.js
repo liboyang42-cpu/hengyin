@@ -95,7 +95,8 @@ test('负控：把 navigateTo 变回 redirectTo 时，契约必须识别出返�
  * 它用 String.replace 只换第一处,新加的那处顶在前面,变异后另一处仍是 reLaunch,
  * 契约照样绿。所以这里改成「逐条都要满足」+「全仓不许出现指向模板库的 redirectTo」。 */
 function hasCleanTemplateLibraryExit(source) {
-  const viaCreationSuccess = /flow\[key\]\s*===\s*'templates'\)\s*wx\.reLaunch\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
+  // 第十轮 f1 item 2:从「发活动」页来的,先回活动草稿(backToActivityDraft),否则照旧 reLaunch 模板库。
+  const viaCreationSuccess = /flow\[key\]\s*===\s*'templates'(?:\s*&&\s*!backToActivityDraft\(\))?\)\s*wx\.reLaunch\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
   const viaResultSheet = /onResultSheetClose\(\)\s*\{[\s\S]{0,240}?wx\.reLaunch\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
   const noDirtyExit = !/wx\.(redirectTo|navigateTo)\(\{\s*url:\s*'\/subpackageMember\/mytemplate\/mytemplate'/.test(source)
   return viaCreationSuccess && viaResultSheet && noDirtyExit

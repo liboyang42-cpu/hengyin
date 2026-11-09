@@ -1,12 +1,15 @@
 const modal = require('../../utils/modal.js');
-const toast = require('../../utils/toast.js');
+const toast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const app = getApp();
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
+const { mapFontSize } = require('../../utils/font-scale.js');
 const discoverSearch = require('../../utils/discover-search.js');
 const { openScene } = require('../../utils/scene-entry.js');
 const { buildNodeLevelMarkerStyle } = require('../roam/node-level-style.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { appendByIndex } = require('../../utils/list-append.js');
+const { playerMapStyle, lightMapStyle } = require('../../utils/map-style.js');
+const { isMerchantView } = require('../../utils/roleGuard.js');
 const DATE_YEARS = Array.from({ length: 81 }, (_, index) => 1970 + index);
 const DATE_MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
@@ -43,6 +46,9 @@ function formatUpdatedAt(date) {
 
 Page({
   data: {
+    // 第九轮 m1:玩家进来是暗色样式,商家视角进来是浅色样式(onLoad 里按身份定)
+    mapSubkey: '',
+    mapLayerStyle: 1,
     // 自定义导航(ADA:全屏地图只留浮动圆钮)。20 是状态栏兜底高,
     // globalData 取不到时至少不会把返回钮压进状态栏。
     statusBarHeight: 20,
@@ -536,7 +542,7 @@ Page({
       callout: {
         content: activity.name + (activity.mapPointKind === 'topic' ? ' · 主题节点' : ''),
         color: '#333', /* ds-ok: 原生 <map> callout 只收字面色值,不吃 CSS var */
-        fontSize: 12,
+        fontSize: mapFontSize(12),
         borderRadius: 4,
         bgColor: '#fff', /* ds-ok: 同上,marker 样式在 JS 侧注入原生层 */
         padding: 8,
@@ -1022,6 +1028,12 @@ Page({
     if (id) openScene('play-activity-detail', { id });
   },
 
+  // 第九轮 m1-9:卡上地址有坐标就开地图,没有坐标照旧进活动
+  onAddressTap(e) {
+    if (openAddress().coords(e.currentTarget.dataset)) openAddress().openFromEvent(e);
+    else this.goActivity(e);
+  },
+
   // 主题点位仅在活动真实关联 topicId 时提供入口，避免独立活动被误标。
   goTopic(e) {
     const id = e.currentTarget.dataset.id;
@@ -1147,7 +1159,11 @@ Page({
     this.mapContext = wx.createMapContext('myMap', this);
 
     const navRow = this.readNavRow();
+    const mapStyle = isMerchantView() ? lightMapStyle() : playerMapStyle();
     this.setData({
+      mapSubkey: mapStyle.subkey,
+      mapLayerStyle: mapStyle.layerStyle,
+      merchantView: isMerchantView(),
       statusBarHeight: app.globalData.statusBarHeight || 20,
       navTop: navRow.navTop,
       navRight: navRow.navRight,

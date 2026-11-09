@@ -291,12 +291,39 @@ public final class JourneyReviewTexts {
         return entries;
     }
 
-    /** 模板库提交里、既有 joinText 之外的玩家可见散字段(选项/规则说明/勋章名已在 joinText 内)。 */
+    /**
+     * 主题/活动绑定的玩法(cms_member_template)的全部字符串与配置正文,不依赖玩法字段白名单。
+     * 随主题/活动发布或编辑时与主内容走同一道闸
+     * (check-1104 j5 B1:主题内节点玩法原先只走媒体闸,文字未送机审就随主题公开)。
+     */
+    public static List<Entry> collectBoundTemplate(com.chengyinhub.business.domain.CmsMemberTemplate t) {
+        List<Entry> entries = new ArrayList<Entry>();
+        if (t == null) return entries;
+        // 绑定时扫描全部字符串叶子,新玩法/嵌套配置不能靠新增字段名绕过现有门禁。
+        collectBoundTexts(MAPPER.valueToTree(t), "", entries, new java.util.HashSet<String>());
+        return entries;
+    }
+
+    private static void collectBoundTexts(JsonNode node, String path, List<Entry> entries, java.util.Set<String> seen) {
+        if (node == null) return;
+        if (node.isTextual()) {
+            // Plain text may look like JSON; retain it as well as any decoded nested text.
+            if (seen.add(node.asText().trim())) add(entries, path, node.asText());
+            JsonNode nested = parse(node.asText());
+            if (nested != null && (nested.isContainerNode() || nested.isTextual())) collectBoundTexts(nested, path, entries, seen);
+        } else if (node.isObject()) {
+            node.fields().forEachRemaining(field -> collectBoundTexts(field.getValue(),
+                    path.isEmpty() ? field.getKey() : path + "." + field.getKey(), entries, seen));
+        } else if (node.isArray()) {
+            for (JsonNode child : node) collectBoundTexts(child, path + "[]", entries, seen);
+        }
+    }
+
+    /** 草稿/模板编辑也收全部字符串叶子,避免已绑定的玩法通过编辑新配置绕过绑定期检查。 */
     public static List<Entry> collectTemplateFields(com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest r) {
         List<Entry> entries = new ArrayList<Entry>();
         if (r == null) return entries;
-        addTemplateStory(entries, r.getHint1(), r.getHint2(), r.getAnswerReveal(), r.getStoryText(),
-                r.getStoryJson(), r.getPhotoRequireDesc(), r.getRewardRulesJson());
+        collectBoundTexts(MAPPER.valueToTree(r), "", entries, new java.util.HashSet<String>());
         return entries;
     }
 
@@ -569,6 +596,37 @@ public final class JourneyReviewTexts {
         return batch.isEmpty() ? null : checkBatch(securityService, openid, batch);
     }
 
+    /**
+     * 第十二轮 k9(j5 N5):拒绝提示里的字段名给作者看。「节点玩法「桥边问答」.title」这种
+     * 「人能认的名字 + 内部键」只留名字,内部键换成中文(认不出的键就只留名字);
+     * 没有人能认的名字的字段保持原样,不丢定位信息。
+     */
+    public static String plainField(String field) {
+        if (field == null) return "";
+        int close = field.lastIndexOf('」');
+        if (close < 0 || close == field.length() - 1) return field;
+        String head = field.substring(0, close + 1);
+        String tail = field.substring(close + 1);
+        String key = tail.substring(tail.lastIndexOf('.') + 1).replace("[]", "");
+        String label;
+        switch (key) {
+            case "title": label = "标题"; break;
+            case "name": label = "名称"; break;
+            case "desc": case "description": case "intro": label = "说明"; break;
+            case "content": case "text": case "body": label = "内容"; break;
+            case "question": case "questionName": case "prompt": label = "题目"; break;
+            case "answer": case "answers": label = "答案"; break;
+            case "options": case "option": label = "选项"; break;
+            case "hint": case "hints": label = "提示"; break;
+            case "hint1": label = "一级提示"; break;
+            case "hint2": label = "二级提示"; break;
+            case "hint3": label = "三级提示"; break;
+            case "line": case "lines": label = "台词"; break;
+            default: label = ""; break;
+        }
+        return label.isEmpty() ? head : head + "的" + label;
+    }
+
     private static String checkBatch(IWxContentSecurityService securityService, String openid, List<Entry> batch) {
         String[] parts = new String[batch.size()];
         for (int i = 0; i < batch.size(); i++) {
@@ -581,7 +639,7 @@ public final class JourneyReviewTexts {
         for (Entry entry : batch) {
             String one = securityService.checkText(entry.getText(), openid);
             if (one != null && !IWxContentSecurityService.isDetectionUnavailable(one)) {
-                return one + "（字段：" + entry.getField() + "）";
+                return one + "（字段：" + plainField(entry.getField()) + "）";
             }
         }
         return msg;

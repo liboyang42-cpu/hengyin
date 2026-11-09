@@ -211,10 +211,11 @@ def validate(source: str, backend_script: str | None = None, production_workflow
     if backend_script is None:
         backend_script = (Path(__file__).resolve().parent / "backend-test.sh").read_text()
     assert_contains(backend_script, "\nmvn -B clean test\n")
-    assert_contains(backend_script, "\nCHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 \\\n  mvn -B -pl chengyinhub-admin -am test")
+    assert_contains(backend_script, "\nCHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 CHENGYIN_SELFCREATE_IT_MYSQL=1 \\\n  mvn -B -pl chengyinhub-admin -am test")
     assert_contains(backend_script, "\n  ConsentRecordIdempotencyMySqlIT\n")
     assert_contains(backend_script, "\n  ThemeCompletionRewardCapMySqlIT\n")
     assert_contains(backend_script, "\n  ScopedLeaderboardMySqlIT\n")
+    assert_contains(backend_script, "\n  FreeSelfPlayCreateRealDbIT\n")
     assert_contains(backend_script, "\n  TopicDeliveryMetadataMySqlIT\n)")
 
     # 小程序的 analytics 白名单合同直接读该 Controller；只改服务端
@@ -593,6 +594,9 @@ def main() -> None:
         ("consent idempotency IT disabled", backend_script.replace("CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 ", "", 1)),
         ("consent idempotency IT unlisted", backend_script.replace("\n  ConsentRecordIdempotencyMySqlIT\n", "\n", 1)),
         ("theme completion cap IT unlisted", backend_script.replace("\n  ThemeCompletionRewardCapMySqlIT\n", "\n", 1)),
+        ("free self-play IT disabled", backend_script.replace("CHENGYIN_SELFCREATE_IT_MYSQL=1 ", "", 1)),
+        ("free self-play IT unlisted", backend_script.replace("\n  FreeSelfPlayCreateRealDbIT\n", "\n", 1)),
+        ("full unit accidentally enables self-create IT", backend_script.replace("\nmvn -B clean test\n", "\nCHENGYIN_SELFCREATE_IT_MYSQL=1 mvn -B clean test\n", 1)),
         ("full unit accidentally enables funds IT", backend_script.replace("\nmvn -B clean test\n", "\nCHENGYIN_FUNDS_MYSQL_IT=1 mvn -B clean test\n", 1)),
     ):
         if mutated == backend_script:

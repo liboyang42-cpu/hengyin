@@ -187,6 +187,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <!-- 按事件类型+事件ID获取累计收益 -->
+    <!-- 退款扣回按实际入账人(2026-11-02):某事件的净正向入账人,最近入账在前 -->
+    <select id="selectIncomeMemberIdsByEventTypeAndEventId" resultType="java.lang.Long">
+        SELECT member_id
+        FROM ums_member_balance_detail
+        WHERE event_type = #{eventType}
+          AND event_id = #{eventId}
+          AND change_type = 1
+          AND del_flag = 0
+        GROUP BY member_id
+        HAVING SUM(change_balance) &gt; 0
+        ORDER BY MAX(id) DESC
+    </select>
+
     <select id="selectIncomeByEventTypeAndEventId" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(change_balance), 0)
         FROM ums_member_balance_detail

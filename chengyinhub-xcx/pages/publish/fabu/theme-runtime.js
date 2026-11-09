@@ -1,5 +1,6 @@
 const app = getApp();
 const toast = require('../../../utils/toast.js');
+const modal = require('../../../utils/modal.js');
 const initial = require('../utils/publish/story-initial-state.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const values = require('./theme-values.js');
@@ -44,7 +45,7 @@ function validate(c, rules, policies) {
   const survivalIssue = require('./theme-runtime-survival.js').validate(c, undefined, rules); if (survivalIssue) return survivalIssue; // survival
   for (const key of ['hpName', 'luckName', 'actionName']) if (String(c[key] || '').length > 20) return '数值名称不能超过 20 字';
   const zeroIssue = zeroHp.validate(c, rules, policies); if (zeroIssue) return zeroIssue;
-  if (!Number.isInteger(c.capacity) || c.capacity < 1 || c.capacity > 999) return '物品容量请输入 1 到 999 的整数';
+  if (!Number.isInteger(c.capacity) || c.capacity < (c.items.length ? 1 : 0) || c.capacity > 999) return '物品容量请输入 1 到 999 的整数';
   for (const i of c.items) {
     if (!String(i.name || '').trim()) return '请输入物品或勋章名称';
     if (i.slotCost != null && (i.kind !== 'ITEM' || !Number.isInteger(i.slotCost) || i.slotCost < 1 || i.slotCost > 999)) return '每件占格请输入 1 到 999 的整数';
@@ -227,7 +228,8 @@ const methods = {
     const valueRows = purposeOptions(c, initial.parse(this.data.formData.journeyRules)).filter(row => row.key === 'HP' || values.COUNTER.test(row.key || ''));
     const fallbackKey = row && row.fallback && row.fallback.statKey ? row.fallback.statKey : 'HP';
     const valueIndex = Math.max(0, valueRows.findIndex(v => v.key === fallbackKey));
-    const reason = !game.runtimeScope ? '请先选择进行方式' : !actKey ? '请先保存本章节点' : !items.length ? '请先在主题里添加物品' : '';
+    const savedCount = this._chapterSavedNodes(index).length;
+    const reason = !game.runtimeScope ? '请先选择进行方式' : !actKey ? (savedCount ? '本章节点还没有绑定玩法' : '请先保存本章节点') : !items.length ? '请先在主题里添加物品' : '';
     this.setData({ runtimeChapterRation: {
       enabled: !!row, actKey, rationKey: row ? row.rationKey : '', itemIndex, itemLabel: itemIndex >= 0 ? items[itemIndex].name : '请选择',
       quantity: String(row ? row.quantity : 1), fallback: String(row ? (row.fallback ? row.fallback.amount : row.fallbackHpCost || 0) : 0), values: valueRows, valueIndex, items, reason,
@@ -285,6 +287,20 @@ const methods = {
     this._saveRuntime(c);
   },
   // 「全部完成」开关:开 = 全部完成(默认);关 = 至少完成填写的站数
+  /* 有互斥组时「全部完成」只能是「每组选一个、其余都做」:按组计数的单位数落成 ANY_N,开关不再停在开 */
+  _groupUnits(groups) {
+    const rules = this.data.runtimeChapterRules, extra = (rules.extraNodes || []).length;
+    return rules.nodes.length - extra - groups.reduce((total, ids) => total + Math.max(0, ids.length - 1), 0);
+  },
+  _syncGroupCompletion() {
+    const rules = this.data.runtimeChapterRules, ids = rules.groups.map(group => group.ids).filter(list => list.length >= 2);
+    if (!ids.length) return;
+    const patch = {};
+    if (rules.completionType !== 'ANY_N') patch['runtimeChapterRules.completionType'] = 'ANY_N';
+    patch['runtimeChapterRules.quantity'] = String(Math.max(1, this._groupUnits(ids)));
+    this.setData(patch);
+    this._refreshOverflowOptions();
+  },
   onChapterCompleteAll(e) {
     const all = !!e.detail.value;
     this.setData({ 'runtimeChapterRules.completionType': all ? 'ALL' : 'ANY_N', 'runtimeChapterRules.overflowSlot': all ? '' : this.data.runtimeChapterRules.overflowSlot });
@@ -328,6 +344,7 @@ const methods = {
     group.ids = group.ids.includes(id) ? group.ids.filter(value => value !== id) : group.ids.concat(id);
     group.options.forEach(option => { option.selected = group.ids.includes(option.id); });
     this.setData({ 'runtimeChapterRules.groups': groups });
+    this._syncGroupCompletion();
   },
   removeChapterExclusiveGroup(e) {
     const groups = this.data.runtimeChapterRules.groups.slice(); groups.splice(Number(e.currentTarget.dataset.index), 1);
@@ -398,12 +415,34 @@ const methods = {
     const rolePatch = this._storyRolePatch(c);
     this.setData({ storyNodeRoles: rolePatch.storyNodeRoles, storyRoleOptions: rolePatch.storyRoleOptions });
   },
+  /* 第十三轮 m1:章节有了完成要求、互斥组或额外站点,保存时每一站都编成任务,玩法要能确认完成。
+     加规则的当下就按站名说清:哪一站的玩法在这里用不了(不让加),哪几站要重新打开玩法存一次。 */
+  _chapterTaskStations(c) {
+    const matrix = this.data.supportMatrix, out = { blocked: '', resave: [] };
+    if (!matrix || !supportMatrix.chapterTasks(c)) return out;
+    (this.data.formData.chapters || []).forEach(ch => (ch.nodes || []).forEach(node => {
+      const template = (this._templateDetailsById || {})[node.templateId] || node.templateInfo;
+      if (out.blocked || !template || !Object.prototype.hasOwnProperty.call(template, 'advancedConfigJson')) return;
+      const ctx = supportMatrix.context(c, node);
+      if (ctx.challenge || !supportMatrix.validate(matrix, template, ctx)) return;
+      const advanced = supportMatrix.config(template), name = node.name || '这一站';
+      const row = supportMatrix.mains(matrix, supportMatrix.pickAs(advanced, ctx))[0];   // 按会自动落结果规则后的口径认主玩法(翻卡这类非结果规则下算附加项)
+      const cannot = row && row.key && supportMatrix.choice(matrix, row.key, supportMatrix.pickAs(advanced, ctx), ctx);
+      const plain = !Object.keys(advanced).some(key => advanced[key] && advanced[key].enabled === true);
+      if (!row && plain) out.blocked = '「' + name + '」：这一站的参与方式要选「定位到达」或「扫码」';
+      else if (cannot || !row) out.blocked = '「' + name + '」：' + (cannot || '这一站的玩法确认不了玩家完成，请先换一种玩法');
+      else out.resave.push(name);
+    }));
+    return out;
+  },
   _saveChapterRules() {
     const costs = this._chapterCostsPatch();
     if (costs.error) { toast(costs.error); return false; }
     if (!this._saveChapterRation()) return false;
     this._saveChapterCosts(this.data.runtimeChapterRules.index, costs.patch);
     const draft = this.data.runtimeChapterRules, index = draft.index;
+    const groupIds = draft.groups.map(group => group.ids).filter(list => list.length >= 2);
+    if (groupIds.length && draft.completionType !== 'ANY_N') { draft.completionType = 'ANY_N'; draft.quantity = String(Math.max(1, this._groupUnits(groupIds))); }
     const completion = draft.completionType === 'ANY_N' ? { type: 'ANY_N', quantity: Number(draft.quantity) } : null;
     if (completion && String(draft.overflowSlot || '').trim()) completion.overflowSlot = String(draft.overflowSlot).trim();
     const exclusiveGroups = draft.groups.map(group => group.ids);
@@ -419,7 +458,10 @@ const methods = {
     if (completion) row.completion = completion; else if (hadRules) row.completion = { type: 'ALL' }; else delete row.completion;
     if (exclusiveGroups.length) row.exclusiveGroups = exclusiveGroups; else delete row.exclusiveGroups;
     if (extraNodes.length) row.extraNodes = extraNodes; else delete row.extraNodes;
+    const tasks = this._chapterTaskStations(c);
+    if (tasks.blocked) { toast(tasks.blocked); return false; }
     this._saveRuntime(c);
+    if (tasks.resave.length) modal.show({ title: '还差一步', content: tasks.resave.map(name => '「' + name + '」').join('') + '要重新打开玩法，点一次保存，才能和这一章的设置一起用', showCancel: false, confirmText: '知道了' });
     if (this._applyStructureChapterCompletion) this._applyStructureChapterCompletion(index, completion); // structure
     return true;
   },

@@ -6,6 +6,7 @@
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   }
 }

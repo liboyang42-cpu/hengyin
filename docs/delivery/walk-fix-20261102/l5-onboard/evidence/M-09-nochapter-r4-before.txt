@@ -1,0 +1,12 @@
+== merchant-recruitment-chapters topic 990020 (merchant 9002)
+{"code": 200, "msg": "操作成功", "data": [], "chapterCount": null, "emptyTopicJoinable": null}
+== POST /api/merchant/chapter-node/submit without chapterId, topicId=990020
+{"code": 500, "msg": "缺少章节"}
+== DB read-back
+chapters
+0
+applications
+0
+nodes
+0
+

@@ -87,6 +87,7 @@ class ActivityPublishReviewModeTest {
         ActivityReviewPolicy policy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(policy, "configService", config);
 
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
@@ -115,6 +116,42 @@ class ActivityPublishReviewModeTest {
         verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString(), eq(false));
         verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), any());
         verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    /** check-1104 j5 B2:场地名/地址与票种名称/说明同样是玩家可见文字,必须进门禁;命中即拒绝发布。 */
+    @Test
+    void venueAndTicketTextGoThroughTheGate() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        when(wxSec.checkText(org.mockito.ArgumentMatchers.contains("违规"), anyString())).thenReturn("内容含违规词");
+        String[][] cases = {{"addressName", "违规书房"}, {"address", "违规路1号"}, {"ticketName", "违规票"},
+                {"ticketDescription", "违规说明"}};
+        for (String[] c : cases) {
+            CmsActivityPublishRequest r = activity("3");
+            ActivityTicketRequest ticket = new ActivityTicketRequest();
+            ticket.setName("标准票");
+            ticket.setPrice(new BigDecimal("39"));
+            if ("addressName".equals(c[0])) r.setAddressName(c[1]);
+            if ("address".equals(c[0])) r.setAddress(c[1]);
+            if ("ticketName".equals(c[0])) ticket.setName(c[1]);
+            if ("ticketDescription".equals(c[0])) ticket.setDescription(c[1]);
+            r.setTickets(Collections.singletonList(ticket));
+
+            AjaxResult result = controller.publish(r);
+
+            assertEquals("活动内容包含违规信息，请修改后重试", result.get(AjaxResult.MSG_TAG), c[0]);
+        }
+        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
+
+        CmsActivityPublishRequest clean = activity("3");
+        clean.setAddressName("梧桐里书房");
+        clean.setAddress("复兴西路62号");
+        ActivityTicketRequest ticket = new ActivityTicketRequest();
+        ticket.setName("单人票");
+        ticket.setDescription("含一杯饮品");
+        ticket.setPrice(new BigDecimal("39"));
+        clean.setTickets(Collections.singletonList(ticket));
+        assertEquals(200, controller.publish(clean).get(AjaxResult.CODE_TAG));
+        verify(wxSec).checkText("周末徒步\n一起走走\n梧桐里书房\n复兴西路62号\n单人票\n含一杯饮品", "openid-x");
     }
 
     /** 俱乐部收费场(既有口径)同样先发后审:价格/报名不再强制人工。 */
@@ -176,16 +213,16 @@ class ActivityPublishReviewModeTest {
         verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
     }
 
-    /** 机审给不出结论:先发后审照常上架,但在审核台留一张非阻断的抽检单。 */
+    /** Round5B-3:机审给不出结论 → 不上架,落待审(publishActivity preReview=true),不再「先上架 + 抽检单」。 */
     @Test
-    void reviewRequiredTextPublishesButLeavesSpotCheckTask() {
+    void reviewRequiredTextIsHeldForHumanReviewInsteadOfPublished() {
         when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
 
         AjaxResult result = controller.publish(activity("3"));
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString(), eq(false));
-        verify(auditTaskService).submit(eq(AuditTask.BIZ_ACTIVITY), eq(9L), eq(MEMBER_ID),
+        verify(cmsActivityService).publishActivity(any(), eq(MEMBER_ID), anyString(), eq(true));
+        verify(auditTaskService, never()).submit(eq(AuditTask.BIZ_ACTIVITY), eq(9L), eq(MEMBER_ID),
                 eq("post_review_flag"), anyString());
     }
 

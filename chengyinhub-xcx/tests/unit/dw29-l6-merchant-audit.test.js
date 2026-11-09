@@ -73,7 +73,7 @@ test('M-25:玩家视角订单页照旧(带 detailId 打开订单详情,不跳转
 });
 
 test('G-10 / M-35:商家从账户收益进收益明细带 theme=merchant', () => {
-  const js = read('components/cy/scene-asset-earnings/index.js');
+  const js = read('subpackageA/components/scene-asset-earnings/index.js');
   const m = js.match(/openIncomeDetail\(\)\s*\{([^\n]*)\n/);
   assert.ok(m, '缺少 openIncomeDetail');
   assert.match(m[1], /income-detail\/income-detail' \+ \(this\.data\.theme === 'merchant' \? '\?theme=merchant' : ''\)/);
@@ -99,7 +99,8 @@ test('G-10 / M-35:收益明细页 theme=merchant 时根节点浅色、导航栏�
 
 test('M-30:品牌中心「合作经营」的承接摘要放进「承接设置」行内,与合作诉求一样右对齐', () => {
   const wxml = read('pages/merchant/decor/index.wxml');
-  const start = wxml.indexOf('让合作发生在店里');
+  // 第十轮 f3 p2 F-10:「让合作发生在店里」头图已删,锚点改为合作经营分支本身
+  const start = wxml.indexOf("view === 'coop'");
   const block = wxml.slice(start, wxml.indexOf('title="合作诉求"', start));
   assert.match(block,
     /<view class="dc-heading" bindtap="goCoopSetting"[^>]*>\s*承接设置\s*<text class="dc-muted">\{\{coopSummary \|\| '完善你的承接能力'\}\}<\/text>\s*<\/view>/);

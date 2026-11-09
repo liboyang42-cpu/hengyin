@@ -25,6 +25,8 @@ beforeEach(() => {
   global.Component = (config) => { sandbox.componentConfig = config }
   delete require.cache[COMPONENT_JS]
   delete require.cache[path.join(ROOT, 'utils/coupon-form.js')]
+  // 保留未开放表单的错误恢复覆盖;默认上线关闭由 coupon-creation-launch-closed.test.js 验证。
+  require(path.join(ROOT, 'utils/coupon-form.js')).CREATION_ENABLED = true
   require(COMPONENT_JS)
 })
 

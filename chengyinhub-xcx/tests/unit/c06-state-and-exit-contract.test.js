@@ -243,11 +243,13 @@ test('C06-2 行为:缺参零请求落 missing;fail/非200 落 error;正常落 re
   ctx.requests[0].fail()
   assert.equal(ctx.page.data.loadState, 'error', 'fail 必须落 error')
 
-  // ③ 业务失败 ⇒ error
+  // ③ 业务拒绝(服务端回了非 200)⇒ denied:给原因 + 返回消息列表,不给点了也不会变的「重试」
+  //    (R11 p1 F-8 改口:原先落 error,而 error 那块是空白 load-failure,底部却叫人「点上方重试」)
   ctx = loadPage(CHAT_JS)
   ctx.page.onLoad({ conversationId: '11' })
   ctx.requests[0].success({ code: 500, msg: '炸了' })
-  assert.equal(ctx.page.data.loadState, 'error', '非 200 必须落 error')
+  assert.equal(ctx.page.data.loadState, 'denied', '服务端拒绝必须落 denied')
+  assert.equal(ctx.page.data.loadErrorText, '炸了')
 
   // ④ 成功 ⇒ ready(零条也是 ready,空态由 msgs.length 决定)
   ctx = loadPage(CHAT_JS)
@@ -575,8 +577,8 @@ test('C06-5 行为:缺场次参数落 missing,且重试证明无效(故不得给
 
 test('negative control: 把缺参改回 emptyKind:error ⇒ 缺参又被渲染成可重试的加载失败', () => {
   const { page } = loadPage('pages/play/index.js', null, (src) => src.replace(
-    "emptyTip: '链接已失效，请返回重新进入', emptyKind: 'missing'",
-    "emptyTip: '链接已失效，请返回重新进入', emptyKind: 'error'",
+    "emptyTip: '链接已失效', emptyKind: 'missing'",
+    "emptyTip: '链接已失效', emptyKind: 'error'",
   ))
   page.data.activityId = ''
   page.data.topicId = ''
@@ -716,7 +718,7 @@ function decorateCard(extraJson, overrides, transform) {
 }
 
 function assertGenericCardAffordance(wxml) {
-  const card = wxml.match(/<cy-card wx:elif="\{\{item\.msgType == 3\}\}"[^>]*>/)
+  const card = wxml.match(/<cy-card wx:elif="\{\{item\.msgType == 3 \|\| item\.activityNotice\}\}"[^>]*>/)
   assert.ok(card, '通用卡片节点必须存在')
   assert.match(card[0], /interactive="\{\{item\.cardTarget\}\}"/,
     '通用卡的可点性必须由 decorate 算出的 cardTarget 决定:' + card[0])

@@ -79,6 +79,55 @@ test('normNode 把后端下发的题面媒体带进节点,不在这一层丢掉'
   assert.deepEqual(node.optionMedia, { A: { img: 'https://cdn/a.jpg' } })
 })
 
+test('三个存量商家题图按已有清单恢复原图，高级玩法返回实际答题卡且不改源配置', async () => {
+  const { legacyMerchantGameImageUrl } = require('../../pages/play/utils/merchant-game-assets.js')
+  for (const name of ['signature-dish-blitz', 'stain-detective', 'home-safety-mines']) {
+    const page = makePage()
+    const original = { nodeId: 7, validationMethod: 3, advancedConfigJson: JSON.stringify({ timer: { enabled: true } }),
+      questionImg: `/images/merchant-games/${name}.jpg`, storyImg: `/images/merchant-games/${name}.jpg` }
+    const before = structuredClone(original)
+    const expected = `https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/${name}.jpg`
+    const node = page.normNode(original, 0)
+    page._playOwner = '1'
+    page._boundPlayOwner = () => '1'
+    page._isPlayAccountCurrent = () => true
+    page._sessionKey = () => 'same-session'
+    page._advancedGameComponent = () => null
+    page.data.advancedPlay = { show: true, node }
+    await page.onAdvancedReady({ detail: { nodeId: node.nodeId } })
+    assert.equal(legacyMerchantGameImageUrl(original.questionImg), expected)
+    assert.equal(page.data.game.qImg, expected)
+    assert.equal(node.cover, original.storyImg, '未消费的旧剧情图字段不改写')
+    assert.deepEqual(original, before)
+  }
+})
+
+test('商家题图只映射精确清单，未知或歧义路径不会变成可用原图', () => {
+  const { legacyMerchantGameImageUrl } = require('../../pages/play/utils/merchant-game-assets.js')
+  for (const url of [
+    '/images/merchant-games/missing.jpg',
+    '/images/merchant-games/../merchant-games/stain-detective.jpg',
+    '/images/merchant-games/%2e%2e/stain-detective.jpg',
+    '/images/merchant-games/stain-detective.jpg?next=home-safety-mines.jpg',
+    '/images/merchant-games/stain-detective.jpg#fragment',
+    '/images/merchant-games/stain-detective.jpg/extra',
+    '/images/merchant-games/stain-detective.jpg\n',
+    '/images/merchant-games/\\stain-detective.jpg',
+    '//www.chengyinhub.com/images/merchant-games/stain-detective.jpg',
+    'http://www.chengyinhub.com/images/merchant-games/stain-detective.jpg',
+    'https://www.chengyinhub.com.evil.test/images/merchant-games/stain-detective.jpg',
+    'https://user@www.chengyinhub.com/images/merchant-games/stain-detective.jpg',
+    'https://127.0.0.1/images/merchant-games/stain-detective.jpg',
+  ]) {
+    const page = makePage()
+    const node = page.normNode({ nodeId: 7, validationMethod: 3, questionImg: url }, 0)
+    page.startGame(node)
+    assert.equal(legacyMerchantGameImageUrl(url), '', url)
+    assert.equal(page.data.game.qImg, url.replace(/^http:\/\/www\.chengyinhub\.com\//, 'https://www.chengyinhub.com/'))
+  }
+  for (const value of [null, undefined, 7, {}]) assert.equal(legacyMerchantGameImageUrl(value), '')
+})
+
 test('答题卡按字母把媒体贴到对应选项上,没配媒体的选项拿到空串而不是 undefined', () => {
   const page = makePage()
   page.data.sheet = {

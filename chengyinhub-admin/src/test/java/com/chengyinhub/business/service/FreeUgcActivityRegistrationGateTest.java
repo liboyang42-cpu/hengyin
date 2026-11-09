@@ -330,6 +330,8 @@ class FreeUgcActivityRegistrationGateTest {
     @Test
     void freeTopic_topicLevelQuote_doesNotRequireSelling() {
         givenTopic(0, 1, CommercialTopicPolicy.Evaluation.ugc());
+        // 2026-11-03 集成:主题级(ownerType=1)报价改为与下单同一条自玩通行证口径,主题须开放自玩;免费 = 自玩价 0
+        givenSelfPlay(BigDecimal.ZERO);
         OmsTicket topicTicket = ticket(21L, BigDecimal.ZERO);
         topicTicket.setOwnerType(1L);
         topicTicket.setOwnerId(TOPIC);

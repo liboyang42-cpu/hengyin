@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,7 +58,16 @@ class ClubEventOpsMapperContractTest {
         assertTrue(xml.contains("a.club_id = #{clubId}"));
         assertTrue(xml.contains("w.club_id = #{clubId} and w.activity_id = #{activityId}"));
         assertTrue(xml.contains("uk_club_event_delivery_recipient") || xml.contains("insertDelivery"));
-        assertFalse(xml.toLowerCase().contains("phone as"));
+        // 2026-11-02 用户(C-05):本场名册可给有 CUSTOMER_PHONE_READ 的人看完整号码,判权在
+        // ClubEventAttendanceServiceImpl(无权限即删,见 ClubEventAttendanceServiceImplTest)。
+        // 所以手机号只许出现在 selectPaidRoster 这一处,通知受众等其它查询仍一律不许投影手机号。
+        int rosterStart = xml.indexOf("<select id=\"selectPaidRoster\"");
+        int rosterEnd = xml.indexOf("</select>", rosterStart);
+        assertTrue(rosterStart >= 0 && rosterEnd > rosterStart, "selectPaidRoster missing");
+        String roster = xml.substring(rosterStart, rosterEnd).toLowerCase();
+        String rest = (xml.substring(0, rosterStart) + xml.substring(rosterEnd)).toLowerCase();
+        assertEquals(1, roster.split("m\\.phone as phone", -1).length - 1, "名册只带一个受判权的手机号列");
+        assertFalse(rest.contains("phone as"));
         assertFalse(xml.toLowerCase().contains("mobile as"));
     }
 

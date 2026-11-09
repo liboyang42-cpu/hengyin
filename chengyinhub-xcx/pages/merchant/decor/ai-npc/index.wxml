@@ -1,3 +1,4 @@
+<wxs src="../../../../utils/wxs/display-label.wxs" module="dl" />
 <view class="dc-page theme-merchant">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
@@ -286,7 +287,7 @@
         <cy-btn variant="secondary" bindtap="confirmNewVoiceRequest" disabled="{{voiceBusy}}">确认后另起独立请求</cy-btn>
       </view>
       <view wx:for="{{voiceHistory}}" wx:key="requestId">
-        <text>原声音请求 · {{item.state}}</text>
+        <text>原声音请求 · {{dl.voice(item.state)}}</text>
         <cy-btn variant="ghost" data-request="{{item.requestId}}" bindtap="readVoiceHistory">查看原结果</cy-btn>
       </view>
       <text wx:if="{{voiceHistoryResult}}">{{voiceHistoryResult}}</text>

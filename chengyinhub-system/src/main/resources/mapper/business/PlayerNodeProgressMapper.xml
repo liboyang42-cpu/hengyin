@@ -40,12 +40,35 @@
         </where>
     </select>
 
+    <!-- 主题详情「已参加」。j2 F-06:场次已付(报名成功)的人也算参加,不只数已开始打卡的人;
+         报名口径同 CmsTopicMapper 的 viewer_reg(主题票 owner_type=1 / 本主题场次票 owner_type=2)。 -->
     <select id="countPlayersByTopicId" resultType="long">
-        select count(distinct member_id)
-        from player_node_progress
-        where topic_id = #{topicId}
-          and del_flag = 0
+        select count(distinct joined.member_id)
+        from (
+            select member_id
+            from player_node_progress
+            where topic_id = #{topicId}
+              and del_flag = 0
+            union
+            select reg.member_id
+            from cms_registration reg
+            left join cms_activity act
+              on reg.owner_type = 2 and act.id = reg.owner_id
+            where reg.member_id &gt; 0
+              and reg.payment_status = 2
+              and reg.registration_status = 2
+              and ((reg.owner_type = 1 and (reg.owner_id = #{topicId} or reg.topic_id = #{topicId}))
+                or (reg.owner_type = 2 and act.topic_id = #{topicId}))
+        ) joined
     </select>
+
+    <update id="markGameplayQuestDone" parameterType="PlayerNodeProgress">
+        update player_node_progress set status = 1, checkin_time = now()
+        <if test="puzzleScore != null">, puzzle_score = #{puzzleScore}</if>
+        <if test="completionMode != null">, completion_mode = #{completionMode}</if>
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+          and node_id = #{nodeId} and play_instance_id = #{playInstanceId} and status = 0 and del_flag = 0
+    </update>
 
     <select id="selectPlayerNodeProgressById" resultMap="PlayerNodeProgressResult">
         <include refid="selectPlayerNodeProgressVo"/>

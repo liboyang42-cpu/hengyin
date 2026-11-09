@@ -3,6 +3,7 @@
   <cy-result-sheet show="{{_sheet}}" kind="fail" title="暂时不能查看" why="{{reason || '当前账号没有查看权限'}}" bind:close="onExit" />
 </view>
 
-<view wx:if="{{state === 'login'}}" class="gate" style="padding-top: {{top}}px;" aria-role="alert">
+<!-- 第十二轮 k9(p2 N-9):登录门从导航栏下方开始盖,页面自己的返回键露在上面;原来整屏盖住,游客只能按系统手势离开 -->
+<view wx:if="{{state === 'login'}}" class="gate" style="top: {{top}}px;" aria-role="alert">
   <cy-empty kind="no-permission" fill size="lg" title="登录后查看" sub="{{reason}}" cta="登录" bind:cta="onLogin" />
 </view>

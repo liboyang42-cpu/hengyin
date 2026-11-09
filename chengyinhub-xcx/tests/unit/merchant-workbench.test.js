@@ -83,8 +83,9 @@ test('项目卡状态:已确认按档期写报名中 / 进行中，审核中写�
     [{ startDate: today }, ''],
     [{ status: 1, startDate: '2026-08-04' }, '已结束'],
     [{ projectSource: 'chapter', status: 1, offerActive: true }, '承接中'],
-    [{ projectSource: 'chapter', status: 1, offerActive: false, startDate: today }, '待补供给'],
+    [{ projectSource: 'chapter', status: 1, offerActive: false, startDate: today }, '还差一步：设置到店权益'],
     [{ projectSource: 'chapter', status: 0, offerActive: true, startDate: today }, '待审核'],
+    [{ projectSource: 'chapter', status: '0', source: '1', offerActive: false, startDate: today }, '待接受'],
     [{ projectSource: 'chapter', status: 1, startDate: today }, ''],
     [{ projectSource: 'chapter', status: '1', offerActive: '1' }, '承接中'],
     [{ projectSource: 'unknown', status: 1, startDate: today }, ''],
@@ -271,4 +272,18 @@ test('负控:描边+阴影真的双上时必须判红,且 none 的两种写法�
   assert.ok(!HAS_SHADOW.test('.y { box-shadow: none;\n  border: 2rpx dashed #ccc; }'), 'box-shadow: none 不算有阴影');
   assert.ok(!HAS_SHADOW.test('.y { box-shadow:none;\n  border: 2rpx dashed #ccc; }'), 'box-shadow:none 不算有阴影');
   assert.ok(!HAS_BORDER.test('.z { box-shadow: var(--s);\n  border: none; }'), 'border: none 不算有描边');
+});
+
+
+test('受邀判据只接受明确status0/source1，不把空值或布尔值当邀请', () => {
+  const { isPendingChapterInvite } = require('../../utils/merchant-workbench');
+  for (const status of [0, '0']) for (const source of [1, '1']) {
+    assert.equal(isPendingChapterInvite({ status, source }), true);
+  }
+  for (const status of [null, undefined, '', false, 1, 2]) {
+    assert.equal(isPendingChapterInvite({ status, source: 1 }), false);
+  }
+  for (const source of [null, undefined, '', true, 0, 2]) {
+    assert.equal(isPendingChapterInvite({ status: 0, source }), false);
+  }
 });

@@ -18,4 +18,11 @@ class MonthlyRecapServiceTest {
     @Test void paginationUsesOriginalOwnerKindAndLargeStringId(){Map<String,Object> a=new HashMap<>(),b=new HashMap<>();a.put("id","9007199254740999");b.put("id","8");when(mapper.page(7L,"stamps","2026-10-01 00:00:00","2026-11-01 00:00:00",99L,2)).thenReturn(Arrays.asList(a,b));Map<String,Object> result=service.read(7L,"2026-10","stamps",99L,1);assertEquals(true,result.get("hasMore"));assertEquals("9007199254740999",result.get("nextBeforeId"));}
     @Test void invalidKindAndPageDoNotReachMapper(){assertThrows(ServiceException.class,()->service.read(7L,"2026-10","secret",null,20));assertThrows(ServiceException.class,()->service.read(7L,"2026-10","routes",0L,20));assertThrows(ServiceException.class,()->service.read(7L,"2026-10","routes",null,51));verifyNoInteractions(mapper);}
     @Test void countsAreSeparateSourceFactsNotInferredFromPage(){when(mapper.count(7L,"routes","2026-10-01 00:00:00","2026-11-01 00:00:00")).thenReturn(27L);when(mapper.page(anyLong(),anyString(),anyString(),anyString(),isNull(),anyInt())).thenReturn(Collections.emptyList());Map<?,?> counts=(Map<?,?>)service.read(7L,"2026-10","routes",null,20).get("counts");assertEquals(27L,counts.get("routes"));assertEquals(0L,counts.get("places"));}
+    @Test void negativeCompletionFactCursorIsOnlyValidForRoutes() {
+        when(mapper.page(7L,"routes","2026-10-01 00:00:00","2026-11-01 00:00:00",-9L,21)).thenReturn(Collections.emptyList());
+        service.read(7L,"2026-10","routes",-9L,20);
+        verify(mapper).page(7L,"routes","2026-10-01 00:00:00","2026-11-01 00:00:00",-9L,21);
+        assertThrows(ServiceException.class,()->service.read(7L,"2026-10","places",-9L,20));
+        assertThrows(ServiceException.class,()->service.read(7L,"2026-10","stamps",-9L,20));
+    }
 }

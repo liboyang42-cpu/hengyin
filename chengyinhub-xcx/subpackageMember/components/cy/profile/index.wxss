@@ -1006,6 +1006,15 @@
 .pc-pile-t { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 2rpx;
   font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 26rpx; /* ds-ok: 宋体名字 */ font-weight: 600; }
 .pc-pile-n { font-family: -apple-system, "PingFang SC", sans-serif; font-size: 22rpx; /* ds-ok: 数量小字 */ font-weight: 500; color: #8A8F99; /* ds-ok: 同上 */ }
+/* P-22(2026-11-02 走查):玩家页是深色,收集册跟上面「总积分排名」同一张卡的底、边、字,不再单独一块浅色纸页。
+   三叠小卡与册名保留,只换成深色套件的面、边和无衬线字。 */
+.pc-player .pc-album { margin-top: 0; border-radius: var(--cy-radius-md); padding: var(--cy-space-3-5) 32rpx var(--cy-space-4);
+  background: var(--cy-color-bg-elevated); border: 1rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-primary); }
+.pc-player .pc-album-t { font-family: inherit; font-size: var(--cy-type-label); font-weight: 400; color: var(--cy-color-text-secondary); }
+.pc-player .pc-album-arrow { color: var(--cy-color-text-tertiary); }
+.pc-player .pc-pile-c { background: var(--cy-color-action-secondary-bg); box-shadow: none; border: 1rpx solid var(--cy-color-border-subtle); }
+.pc-player .pc-pile-t { font-family: inherit; font-size: var(--cy-type-label); font-weight: 600; }
+.pc-player .pc-pile-n { font-family: inherit; color: var(--cy-color-text-tertiary); }
 
 /* 2026-10-30 V-19 业主定 B:权益 / 入口行用各自的线条图标(24pt),不垫圆底;没解锁的图标与字变灰,行尾锁 */
 .pc-benefit-ic { flex: none; color: var(--cy-color-text-primary); }

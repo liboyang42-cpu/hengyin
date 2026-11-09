@@ -177,8 +177,13 @@ test('★精准停表照的是试玩台 #kit2 那块浅色玻璃屏,不是主手
   assert.ok(/font-size: var\(--cy-type-data-xl\)/.test(s), '准备屏的误差使用 data-xl token')
 
   const m = wxml('playkit-stopwatch')
-  assert.ok(m.includes('开跑 1 秒后数字会消失') && m.includes('点屏幕任意处停'),
-    '准备屏那两行提示逐字照原型')
+  assert.doesNotMatch(m, /<view>开跑 1 秒后数字会消失<\/view>|<view>点屏幕任意处停<\/view>/,
+    '上线口径不重复准备屏说明行')
+  assert.match(m, /\{\{targetText\}\}/)
+  assert.match(m, /\{\{tolText\}\}/)
+  assert.match(m, /aria-label="\{\{phase === 'over' \? '再来一局' : '点屏幕任意处停'\}\}"/)
+  assert.match(m, /本机测量读数/)
+
   assert.ok(m.includes('目标') && m.includes('误差'), '目标 / 误差是一对带标签的数，不是一句说明')
   assert.ok(/—— · ——/.test(m), '数字藏了要有两道破折号占位，不能整块消失')
 })

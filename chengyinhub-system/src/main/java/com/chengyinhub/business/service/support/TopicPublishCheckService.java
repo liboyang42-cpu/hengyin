@@ -129,7 +129,8 @@ public class TopicPublishCheckService {
 
         List<CmsTopicNode> nodes = enabledNodes(topic.getId());
         Set<String> derivedTemplateClues = new LinkedHashSet<String>();
-        boolean anyBlockNeedsJourneyState = collectBlockConfigIssues(nodes, unparsableNodes, issues, derivedTemplateClues);
+        boolean anyBlockNeedsJourneyState = collectBlockConfigIssues(nodes, unparsableNodes, issues, derivedTemplateClues,
+                refs.isJourneyRulesCheckEnabled());
 
         Map<String, String> registered = registeredKeys(topic.getId());
         for (String clue : derivedTemplateClues) registered.putIfAbsent(clue, ThemeStateKey.TYPE_FLAG);
@@ -272,7 +273,8 @@ public class TopicPublishCheckService {
      * JSON 都解析不了的节点已由收集阶段报出(同一句「不是合法 JSON」),这里不重复报。
      */
     private boolean collectBlockConfigIssues(List<CmsTopicNode> nodes, Set<Long> unparsableNodes,
-                                             List<PublishCheckIssue> issues, Set<String> derivedTemplateClues) {
+                                             List<PublishCheckIssue> issues, Set<String> derivedTemplateClues,
+                                             boolean journeyCheckEnabled) {
         boolean anyBlockNeedsJourneyState = false;
         Set<Long> nodeIdSet = new LinkedHashSet<Long>();
         for (CmsTopicNode node : nodes) {
@@ -292,6 +294,10 @@ public class TopicPublishCheckService {
             }
             try {
                 advancedGameConfigValidator.validateAndNormalize(template.getAdvancedConfigJson());
+                // R11 g1 F2:已存的模板同样查 —— 只配 D20 三档难度(主题没开检定)/ 相册又没有结果规则,玩家到站开不了局
+                String unplayable = advancedGameConfigValidator.outcomeRulesMissingReason(
+                        template.getAdvancedConfigJson(), journeyCheckEnabled);
+                if (unplayable != null) throw new IllegalArgumentException(unplayable);
                 derivedTemplateClues.addAll(StateKeyRefs.declaredTemplateClues(
                         PREVIEW_JSON.readTree(template.getAdvancedConfigJson())).keySet());
                 // R22-SEC S16:NODE_COMPLETED 引用的 nodeId 归属与发布闸同一口径,试检查也提前报出。

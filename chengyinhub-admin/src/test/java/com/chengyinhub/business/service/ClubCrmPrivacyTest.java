@@ -120,8 +120,9 @@ class ClubCrmPrivacyTest {
         return new ObjectMapper().writeValueAsString(value);
     }
 
+    /** 2026-11-02 用户:主理人 / 副主理人看完整号码并可拨打(游戏中要能联系玩家);运营等其余岗位仍是脱敏串。 */
     @Test
-    void 主理人看到的手机号是脱敏串明文不得出现在回包里() throws Exception {
+    void 主理人与副主理人看完整号码可拨打运营仍是脱敏串() throws Exception {
         when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
                 .thenReturn(Collections.singletonList(rawCustomer()));
         when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
@@ -129,9 +130,22 @@ class ClubCrmPrivacyTest {
         when(mapper.countClubCustomersNewThisMonth(CLUB)).thenReturn(24);
 
         ClubCustomerVO.ListPage page = service.listCustomers(OWNER, CLUB, "all", "");
-        assertEquals(MASKED_PHONE, page.getItems().get(0).getPhoneText());
-        String body = json(page);
-        assertFalse(body.contains(PLAIN_PHONE), "列表回包里出现了完整手机号:" + body);
+        assertEquals(PLAIN_PHONE, page.getItems().get(0).getPhoneText());
+        assertTrue(page.getItems().get(0).isPhoneCallable());
+
+        Long coOwner = 12L;
+        when(memberService.canGovernClub(any(Club.class), eq(coOwner))).thenReturn(true);
+        when(accessService.resolve(eq(coOwner), eq(CLUB), any())).thenReturn(context(coOwner, ClubRoleCode.CLUB_CO_OWNER));
+        assertEquals(PLAIN_PHONE, service.listCustomers(coOwner, CLUB, "all", "").getItems().get(0).getPhoneText());
+
+        Long operator = 13L;
+        when(memberService.canGovernClub(any(Club.class), eq(operator))).thenReturn(true);
+        when(accessService.resolve(eq(operator), eq(CLUB), any())).thenReturn(context(operator, ClubRoleCode.CLUB_OPERATOR));
+        ClubCustomerVO.ListPage masked = service.listCustomers(operator, CLUB, "all", "");
+        assertEquals(MASKED_PHONE, masked.getItems().get(0).getPhoneText());
+        assertFalse(masked.getItems().get(0).isPhoneCallable());
+        String body = json(masked);
+        assertFalse(body.contains(PLAIN_PHONE), "运营的列表回包里出现了完整手机号:" + body);
     }
 
     @Test
@@ -170,9 +184,14 @@ class ClubCrmPrivacyTest {
         assertNull(denied.getSummary().getPaidAmount(), "没有 FINANCE_READ 时金额必须缺席,给 0 是假事实");
         assertEquals(MASKED_PHONE, denied.getSummary().getPhoneText(), "legacy 管理员有 MEMBER_LIST_READ,看得到脱敏号");
 
+        assertFalse(denied.getSummary().isPhoneCallable(), "legacy 管理员没有 CUSTOMER_PHONE_READ,不给拨号");
+        assertFalse(json(denied).contains(PLAIN_PHONE));
+
+        // 2026-11-02 用户:主理人看完整号码并可拨打
         ClubCustomerVO.Detail owner = service.customerDetail(OWNER, CLUB, CUSTOMER);
         assertEquals(0, new BigDecimal("486.00").compareTo(owner.getSummary().getPaidAmount()));
-        assertFalse(json(owner).contains(PLAIN_PHONE));
+        assertEquals(PLAIN_PHONE, owner.getSummary().getPhoneText());
+        assertTrue(owner.getSummary().isPhoneCallable());
     }
 
     @Test
@@ -290,7 +309,7 @@ class ClubCrmPrivacyTest {
         assertThrows(ServiceException.class, () -> service.customerDetail(OWNER, null, CUSTOMER));
     }
     @Test
-    void freeCancelledRegistrationUsesMaskedParticipantNameAndIsNotSold() {
+    void freeCancelledRegistrationShowsFullParticipantNameAndIsNotSold() {
         ClubCustomerVO.RawTopicRow cancelled = rawTopicRow();
         cancelled.setRegistrationStatus(3);
         cancelled.setPayableAmount(java.math.BigDecimal.ZERO);
@@ -304,25 +323,62 @@ class ClubCrmPrivacyTest {
         assertEquals("CANCELLED", row.getStatusCode());
         assertEquals("已取消", row.getStatusText());
         assertEquals(0, result.getSoldCount().intValue());
-        assertEquals(com.chengyinhub.business.security.PiiCryptoService.maskName("陈小林"), row.getDisplayName());
-        assertFalse(row.getDisplayName().equals("陈小林"));
+        // C-05(2026-11-02 用户):报名参与者显示报名时填写的全名
+        assertEquals("陈小林", row.getDisplayName());
         cancelled.setPointUsed(20L);
         assertEquals("REFUNDED", service.topicCustomers(OWNER, CLUB, TOPIC, "all").getSessions().get(0).getRows().get(0).getStatusCode());
     }
 
 
-    /** F-W1-08:客户列表与详情不再把所有人显示成默认昵称「城瘾用户」。 */
+    /** C-05(2026-11-02 用户):客户列表与客户详情显示本俱乐部报名时填写的全名,没填才退回昵称。 */
     @Test
-    void defaultNicknameInCustomerListAndDetailFallsBackToMemberNumber() {
+    void customerListAndDetailShowSignupFullName() {
         ClubCustomerVO.RawCustomer raw = rawCustomer();
         raw.setDisplayName("城瘾用户");
+        raw.setParticipantName("周一鸣");
         when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
                 .thenReturn(Collections.singletonList(raw));
         when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
-        assertEquals("成员#" + raw.getMemberId(),
+        assertEquals("周一鸣", service.listCustomers(OWNER, CLUB, "all", "").getItems().get(0).getDisplayName());
+        when(mapper.selectClubCustomerSummary(CLUB, CUSTOMER)).thenReturn(raw);
+        assertEquals("周一鸣", service.customerDetail(OWNER, CLUB, CUSTOMER).getSummary().getDisplayName());
+    }
+
+    /** 2026-11-02 用户:核销员默认看不到号码;主理人给他勾了「可见客户手机号」后,只在那一场看到完整号码。 */
+    @Test
+    void checkinStaffSeesFullPhoneOnlyForTheSessionWithTheToggle() {
+        Long session = 501L;
+        when(mapper.selectTopicCustomers(CLUB, TOPIC)).thenReturn(Collections.singletonList(rawTopicRow()));
+        when(accessService.resolve(CHECKIN, CLUB, null)).thenReturn(context(CHECKIN, ClubRoleCode.EVENT_CHECKIN));
+        when(accessService.resolve(CHECKIN, CLUB, session)).thenReturn(new ClubAccessContext(CHECKIN, CLUB, OWNER, session,
+                Collections.singleton(ClubRoleCode.EVENT_CHECKIN)));
+        ClubCustomerVO.TopicRow off = service.topicCustomers(CHECKIN, CLUB, TOPIC, "all").getSessions().get(0).getRows().get(0);
+        assertEquals(ClubCrmAppServiceImpl.PHONE_UNAVAILABLE_TEXT, off.getPhoneText());
+        assertFalse(off.isPhoneCallable());
+
+        when(accessService.resolve(CHECKIN, CLUB, session)).thenReturn(new ClubAccessContext(CHECKIN, CLUB, OWNER, session,
+                Collections.singleton(ClubRoleCode.EVENT_CHECKIN), Collections.<com.chengyinhub.business.access.club.ClubEventAccess>emptyList(),
+                Collections.singleton(com.chengyinhub.business.access.club.ClubPermission.CUSTOMER_PHONE_READ)));
+        ClubCustomerVO.TopicRow on = service.topicCustomers(CHECKIN, CLUB, TOPIC, "all").getSessions().get(0).getRows().get(0);
+        assertEquals(PLAIN_PHONE, on.getPhoneText());
+        assertTrue(on.isPhoneCallable());
+    }
+
+    /** F-W1-08:客户列表与详情不再把所有人显示成默认昵称「城瘾用户」。 */
+    @Test
+    void defaultNicknameInCustomerListAndDetailFallsBackToLastSeenTimeNotMemberNumber() {
+        ClubCustomerVO.RawCustomer raw = rawCustomer();
+        raw.setDisplayName("城瘾用户");
+        // 第十二轮 k3(p3 N4):不再给「成员#id」,带最近一次时刻。
+        raw.setLastInteractionTime(java.util.Date.from(java.time.ZonedDateTime.of(2026, 11, 5, 10, 21, 0, 0,
+                java.time.ZoneId.of("Asia/Shanghai")).toInstant()));
+        when(mapper.selectClubCustomers(eq(CLUB), anyString(), anyString(), anyInt()))
+                .thenReturn(Collections.singletonList(raw));
+        when(mapper.selectProfiles(CLUB)).thenReturn(Collections.<ClubCustomerVO.Profile>emptyList());
+        assertEquals("城瘾用户 · 11月5日 10:21",
                 service.listCustomers(OWNER, CLUB, "all", "").getItems().get(0).getDisplayName());
         when(mapper.selectClubCustomerSummary(CLUB, CUSTOMER)).thenReturn(raw);
-        assertEquals("成员#" + raw.getMemberId(),
+        assertEquals("城瘾用户 · 11月5日 10:21",
                 service.customerDetail(OWNER, CLUB, CUSTOMER).getSummary().getDisplayName());
     }
 

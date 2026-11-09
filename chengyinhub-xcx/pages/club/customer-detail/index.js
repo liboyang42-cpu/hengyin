@@ -8,7 +8,9 @@
 //   2) 金额:paidAmount 为 null = 本岗位无金额查看权限(K2-B),不是加载失败。
 //   3) 是否能编辑标签备注:canEdit 由服务端下发,前端不按角色自行推断。
 const toast = require('../../../utils/toast.js');
+const { callMember } = require('../utils/club-phone-call.js');
 const app = getApp();
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && c !== 403 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 const { buildTagRemarkDraft, positiveId, shapeCustomerDetail } = require('../customers/view-model.js');
 
 function jsonBody(data) { return JSON.stringify(data || {}); }
@@ -67,6 +69,13 @@ Page({
 
   onPullDownRefresh() { this.load(); },
 
+  // 2026-11-02:只有服务端判了 phoneCallable(主理人/副主理人)才出这颗键
+  callCustomer() {
+    const s = this.data.detail && this.data.detail.summary;
+    if (!s || !s.phoneCallable) return;
+    callMember(s.phoneText, () => toast('拨号未完成，请重试'));
+  },
+
   goBack() {
     if (getCurrentPages().length > 1) { wx.navigateBack({ delta: 1 }); return; }
     wx.redirectTo({ url: '/pages/club/customers/index?clubId=' + (this._clubId || '') });
@@ -76,7 +85,7 @@ Page({
 
   load() {
     if (!this._clubId || this._memberId == null) {
-      this.setData({ state: 'error', errorText: '缺少客户信息，请从客户列表重新进入' });
+      this.setData({ state: 'refused', errorText: '链接已失效' });
       return;
     }
     const epoch = (this._epoch || 0) + 1;
@@ -95,6 +104,8 @@ Page({
         if (epoch !== that._epoch) return;
         if (!res || res.code != '200') {
           if (isAuthFailure(res)) { that.deny(res); return; }
+          // p3 F3:服务端明确拒绝(如「这位客户没有在本俱乐部的成交记录」)讲原因并给返回;其余仍按加载失败留白。
+          if (refusalOf(res)) { that.setData({ state: 'refused', errorText: refusalOf(res) }); return; }
           that.setData({ state: 'error', errorText: (res && res.msg) || '网络异常，稍后再试一次' });
           return;
         }

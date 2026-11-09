@@ -119,7 +119,9 @@ class MerchantGamePortfolio35ContractTest {
         String javascript = read(PLAY_JS);
         String wxml = read(PLAY_WXML);
         assertTrue(javascript.contains("onShareAppMessage(event)"));
-        assertTrue(javascript.contains("onShareTimeline()"));
+        // 第七轮 C 第 1 项:游玩页在朋友圈单页模式下无法开局,刻意不实现 onShareTimeline;好友分享落公开主题详情。
+        assertFalse(javascript.contains("onShareTimeline()"));
+        assertTrue(javascript.contains("playMenuShare(this.data)"));
         assertTrue(javascript.contains("saveFinishCard()"));
         assertTrue(javascript.contains("shareFinish()"));
         assertTrue(wxml.contains("bindtap=\"saveFinishCard\""));

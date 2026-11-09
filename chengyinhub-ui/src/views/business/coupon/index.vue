@@ -6,12 +6,6 @@
       description="管理可发放的优惠券配置，查看领取与核销事实。发行上限、领取和核销计数不会在这里手工改写。"
       :updated-at="updatedAt"
     >
-      <el-button
-        v-hasPermi="['business:coupon:add']"
-        type="primary"
-        icon="el-icon-plus"
-        @click="handleAdd"
-      >新建优惠券</el-button>
     </cy-page-header>
 
     <section class="cy-panel coupon-directory__filters">
@@ -156,7 +150,7 @@
       </div>
     </el-drawer>
 
-    <el-dialog :title="form.id ? '编辑优惠券配置' : '新建优惠券'" :visible.sync="formOpen" width="680px" append-to-body :close-on-click-modal="false">
+    <el-dialog title="编辑优惠券配置" :visible.sync="formOpen" width="680px" append-to-body :close-on-click-modal="false">
       <el-form ref="couponForm" :model="form" :rules="rules" label-width="108px">
         <el-row :gutter="16">
           <el-col :span="12">
@@ -268,7 +262,7 @@
 </template>
 
 <script>
-import { listCoupon, getCoupon, addCoupon, updateCoupon } from '@/api/business/coupon'
+import { listCoupon, getCoupon, updateCoupon } from '@/api/business/coupon'
 import { checkPermi } from '@/utils/permission'
 import CyDataTable from '@/components/CyDataTable'
 import CyDetailGrid from '@/components/CyDetailGrid'
@@ -557,13 +551,6 @@ export default {
       if (!row || !row.id) return
       this.$router.push({ name: 'couponLedger', params: { couponId: row.id } })
     },
-    handleAdd() {
-      this.form = createCouponForm()
-      this.formOpen = true
-      this.$nextTick(() => {
-        if (this.$refs.couponForm) this.$refs.couponForm.clearValidate()
-      })
-    },
     handleEdit(row) {
       if (!row || !row.id) return
       const requestId = ++this.editRequestId
@@ -604,13 +591,14 @@ export default {
       return payload
     },
     submitForm() {
+      if (!this.form.id) return
       this.$refs.couponForm.validate(valid => {
         if (!valid || this.saving) return
         const payload = this.payloadForForm()
         this.saving = true
-        const request = payload.id ? updateCoupon(payload) : addCoupon(payload)
+        const request = updateCoupon(payload)
         request.then(() => {
-          this.$modal.msgSuccess(payload.id ? '优惠券配置已更新' : '优惠券已创建')
+          this.$modal.msgSuccess('优惠券配置已更新')
           this.formOpen = false
           this.getList()
         }).catch(() => {}).finally(() => {

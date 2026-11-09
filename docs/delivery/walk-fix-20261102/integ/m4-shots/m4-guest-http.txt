@@ -1,0 +1,61 @@
+# 第九轮 m4 第 1 项:游客读三条 GET 的 HTTP 回证(rig,候选 b5924778,一次性库 cy_e2e_51;不带 Authorization)
+
+## GET /api/preset/route/list
+{"msg":"操作成功","code":200,"data":[{"createBy":null,"createTime":null,"updateBy":null,"updateTime":null,"remark":null,"id":9401,"city":"上海","name":"人民广场一圈","previewImg":null,"routeGeometry":null,"totalDistance":2.40,"totalTime":90,"defaultCategoryIds":null,"sort":1,"status":null,"delFlag":null,"nodes":null}]}
+[HTTP 200]
+
+## GET /api/preset/route/list?city=%E4%B8%8A%E6%B5%B7
+{"msg":"操作成功","code":200,"data":[{"createBy":null,"createTime":null,"updateBy":null,"updateTime":null,"remark":null,"id":9401,"city":"上海","name":"人民广场一圈","previewImg":null,"routeGeometry":null,"totalDistance":2.40,"totalTime":90,"defaultCategoryIds":null,"sort":1,"status":null,"delFlag":null,"nodes":null}]}
+[HTTP 200]
+
+## GET /api/preset/route/info?id=9401
+{"msg":"操作成功","code":200,"data":{"createBy":null,"createTime":null,"updateBy":null,"updateTime":null,"remark":null,"id":9401,"city":"上海","name":"人民广场一圈","previewImg":null,"routeGeometry":null,"totalDistance":2.40,"totalTime":90,"defaultCategoryIds":null,"sort":1,"status":null,"delFlag":null,"nodes":[{"createBy":null,"createTime":null,"updateBy":null,"updateTime":null,"remark":null,"id":14,"routeId":9401,"name":"人民公园","address":"南京西路231号","longitude":"121.4710","latitude":"31.2325","imgUrl":null,"nodeTime":30,"sort":1,"playTemplateId":null,"delFlag":null},{"createBy":null,"createTime":null,"updateBy":null,"updateTime":null,"remark":null,"id":15,"routeId":9401,"name":"上海博物馆","address":"人民大道201号","longitude":"121.4757","latitude":"31.2283","imgUrl":null,"nodeTime":40,"sort":2,"playTemplateId":null,"delFlag":null},{"createBy":null,"createTime":null,"updateBy":null,"updateTime":null,"remark":null,"id":16,"routeId":9401,"name":"大世界","address":"西藏南路1号","longitude":"121.4808","latitude":"31.2297","imgUrl":null,"nodeTime":20,"sort":3,"playTemplateId":null,"delFlag":null}]}}
+[HTTP 200]
+
+## GET /api/preset/route/info?id=9402
+{"msg":"路线不存在","code":500}
+[HTTP 200]
+
+## GET /api/city/nodes/9501
+{"msg":"操作成功","code":200,"data":{"averageRating":null,"ratingCount":0,"quotesJson":null,"templateDesc":null,"photoCredit":null,"galleryJson":null,"photoRequired":false,"photoRequireDesc":null,"badgeCode":null,"poiId":9501,"name":"探店日样板咖啡 · 人民广场店","description":"m4-fixture","lat":31.231000,"lng":121.474000,"radiusM":80,"nodeLevel":1,"tags":null,"coverImg":null,"cityCode":null,"status":1,"distance":null,"merchantId":8001,"merchantName":"探店日样板咖啡","merchantLogo":null,"merchantAddress":"上海市黄浦区咖啡","merchantPhone":null,"templateId":null,"templateTitle":null,"interactionType":null,"validationMethod":null,"couponId":null,"questionName":null,"questionA":null,"questionB":null,"questionC":null,"questionD":null,"completed":null,"favorited":null,"needRedeem":false}}
+[HTTP 200]
+
+## GET /api/city/nodes/9502
+{"msg":"据点未开放或已下线","code":410}
+[HTTP 200]
+
+## GET /api/city/nodes/9503
+{"msg":"据点未开放或已下线","code":410}
+[HTTP 200]
+
+# 兄弟路径与写接口:游客必须 401
+GET /api/preset/style/list -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+GET /api/preset/route/info/extra -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+POST /api/preset/route/list -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+GET /api/city/nodes?lat=31.23&lng=121.47 -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+GET /api/city/nodes/favorites -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+GET /api/city/nodes/merchant/8001 -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+POST /api/city/nodes/9501/favorite -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+POST /api/city/nodes/9501/complete -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+POST /api/city/nodes/9501 -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+GET /api/city/nodes/12a -> 401 {"msg":"登录状态已失效，请重新登录","code":401}
+
+# 对照:会员 9004(带 Authorization,令牌不入档)
+## GET /api/preset/route/info?id=9401 (member)
+{"msg":"操作成功","code":200,"data":{"createBy":"admin-ops","createTime":"2026-11-04 07:11:11","updateBy":"admin-ops","updateTime":null,"remark":"m4 内部备注","id":9401,"city":"上海","name":"人民广场一圈","previewImg":null,"routeGeometry":null,"totalDistance":2.40,"totalTime":90,"defaultCategoryIds":null,"sort":1,"status":"1","delFlag":0,"nodes":[{"createBy":"admin-ops","createTime":"2026-11-04 07:11:11","updateBy":null,"updateTime":null,"remark":"m4 内部备注","id":14,"routeId":9401,"name":"人民公园","address":"南京西路231号","longitude":"121.4710","latitude":"31.2
+## GET /api/city/nodes/9501 (member)
+{"msg":"操作成功","code":200,"data":{"averageRating":null,"ratingCount":0,"quotesJson":null,"templateDesc":null,"photoCredit":null,"galleryJson":null,"photoRequired":false,"photoRequireDesc":null,"badgeCode":null,"poiId":9501,"name":"探店日样板咖啡 · 人民广场店","description":"m4-fixture","lat":31.231000,"lng":121.474000,"radiusM":80,"nodeLevel":1,"tags":null,"coverImg":null,"cityCode":null,"status":1,"distance":null,"merchantId":8001,"merchantName":"探店日样板咖啡","merchantLogo":null,"merchantAddress":"上海市黄浦区咖啡","merchantPhone":null,"templateId":null,"
+## GET /api/city/nodes/9502 (member)
+{"msg":"操作成功","code":200,"data":{"averageRating":null,"ratingCount":0,"quotesJson":null,"templateDesc":null,"photoCredit":null,"galleryJson":null,"photoRequired":false,"photoRequireDesc":null,"badgeCode":null,"poiId":9502,"name":"已停业面包店","description":"m4-fixture","lat":31.230000,"lng":121.476000,"radiusM":80,"nodeLevel":1,"tags":null,"coverImg":null,"cityCode":null,"status":1,"distance":null,"merchantId":8004,"merchantName":"探店日样板面包","merchantLogo":null,"merchantAddress":"上海市黄浦区面包","merchantPhone":null,"templateId":null,"templateTitle":null,"i
+
+# 回读:商家 8001 的电话在库里(13800009999),游客响应里没有;路线 createBy/remark 在库里,游客响应里没有
+id	phone	status
+8001	13800009999	1
+8004		0
+id	status	create_by	remark
+9401	1	admin-ops	m4 内部备注
+9402	0	admin-ops	m4 内部备注
+id	status	merchant_id
+9501	1	8001
+9502	1	8004
+9503	0	8002

@@ -17,7 +17,7 @@ test('BL-256: 8 处入口都先判跳转锁,complete 里解锁', () => {
     ['pages/roam/index.js', /const key = e && e\.detail && e\.detail\.key; if \(this\._navigating\) return;[\s\S]{0,700}exploration-export\/index', complete: /],
     ['subpackageRoam/nearby/index.js', new RegExp("openMyTeamsPage\\(\\) \\{ " + LOCK + "'\\/subpackageRoam\\/my-teams\\/index', complete: ")],
     ['pages/topic/merchantinfo/merchantinfo.js', /openStation\(activityId, focus\) \{[\s\S]{0,300}?if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{[\s\S]{0,200}?complete: \(\) => \{ this\._navigating = false; \}/],
-    ['components/cy/scene-route-content/index.js', new RegExp(LOCK + "'\\/pages\\/club\\/governance\\/index\\?clubId=' \\+ clubId, complete: ")],
+    ['subpackageMember/components/cy/scene-route-content/index.js', new RegExp(LOCK + "'\\/pages\\/club\\/governance\\/index\\?clubId=' \\+ clubId, complete: ")],
     ['pages/club/edit/index.js', new RegExp(LOCK + "'\\/pages\\/club\\/governance\\/index\\?clubId=' \\+ this\\.data\\.clubId, complete: ")],
     // 2026-10-22 owner 裁决(L05 交接):更多→协作邀请改指站内收件箱 im/list(会话 + 收到的邀请)
     ['pages/merchant/index/index.js', new RegExp("goMessages\\(\\) \\{\\s*" + LOCK + "'\\/subpackageB\\/pages\\/im\\/list\\/index', complete: ")],
@@ -27,7 +27,7 @@ test('BL-256: 8 处入口都先判跳转锁,complete 里解锁', () => {
 
 test('BL-256: 兜底清锁都在(返回本页后入口不会锁死)', () => {
   assert.match(read('pages/club/edit/index.js'), /onShow\(\) \{ this\._navigating = false; \}/)
-  assert.match(read('components/cy/scene-route-content/index.js'), /pageLifetimes: \{ show\(\) \{ this\._navigating = false \} \}/)
+  assert.match(read('subpackageMember/components/cy/scene-route-content/index.js'), /pageLifetimes: \{ show\(\) \{ this\._navigating = false \} \}/)
   assert.match(read('pages/roam/index.js'), /onShow\(\)\s*\{[\s\S]{0,700}?this\._navigating = false;/)
 })
 

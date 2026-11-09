@@ -42,10 +42,10 @@ test('报名状态 3=已取消、4=已过期(后端 CmsRegistration 口径),不�
   assert.equal(s4.text, '已过期', '状态 4 以前落到「订单状态更新中」');
   assert.match(read('subpackageMember/signup/index.js'), /status === 4 \? '票已过期' : '票已取消'/);
   const refunded = summarizeOrderState({ refundApplication: { payoutStatus: 1 } });
-  assert.equal(refunded.text, '已退款');
+  assert.equal(refunded.text, '退款成功');
   const detail = read('subpackageMember/components/cy/scene-member-order-detail/index.js');
   assert.doesNotMatch(detail, /退款已完成/);
-  assert.match(detail, /stateKey === 'refunded' \? '已退款'/);
+  assert.match(detail, /stateKey === 'refunded' \? '退款成功'/);
 });
 
 test('活动时间文案的非时间态回落到 activity-status 真源，列表页与漫游任务列表不再各说各话', () => {

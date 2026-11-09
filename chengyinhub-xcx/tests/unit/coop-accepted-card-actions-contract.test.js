@@ -264,7 +264,8 @@ test('详情页:已接受合作不渲染不可提交的留言输入框', () => {
   }));
   env.page.onLoad({ inviteId: '7', box: 'received' });
   assert.equal(env.page.data.inputKind, '');
-  assert.match(read('pages/coop/invite-detail/index.wxml'), /需要对齐事项时，请点击上方“联系合作方”进入单聊/);
+  // 第十二轮 k3(p2 N-14):那行「请点击上方“联系合作方”」指错方向且是说明文,已删;入口就是下方的按钮。
+  assert.doesNotMatch(read('pages/coop/invite-detail/index.wxml'), /需要对齐事项时，请点击上方/);
 });
 
 test('详情页:发件箱已接受可取消合作(锁价置灰只说明),走 handle status=3 并回读', () => {

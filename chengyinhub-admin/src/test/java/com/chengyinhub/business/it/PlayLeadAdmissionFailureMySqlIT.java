@@ -135,7 +135,7 @@ class PlayLeadAdmissionFailureMySqlIT {
             jdbc.update("DELETE FROM " + table);
         }
         jdbc.update("INSERT INTO ums_member(id,point) VALUES(7,100),(8,100)");
-        jdbc.update("INSERT INTO cms_topic(id,name,product_type,status,user_status,del_flag) VALUES(300,'hint fixture',2,1,1,0)");
+        jdbc.update("INSERT INTO cms_topic(id,name,product_type,status,user_status,del_flag) VALUES(300,'hint fixture',1,1,1,0)");
         jdbc.update("INSERT INTO cms_activity(id,topic_id,start_date,end_date,del_flag) VALUES(500,300,DATE_SUB(NOW(),INTERVAL 1 DAY),DATE_ADD(NOW(),INTERVAL 1 DAY),0)");
         jdbc.update("INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES(14,'hint',10,1,14,1,0)");
         for (long[] scope : new long[][]{{1,7,1,300,2},{2,7,2,500,1},{3,8,1,300,2}}) {
@@ -164,7 +164,9 @@ class PlayLeadAdmissionFailureMySqlIT {
         CmsMemberTemplate template = new CmsMemberTemplate(); template.setId(39L); template.setHint1("hint-one"); template.setHint2("hint-two");
         when(templates.selectCmsMemberTemplateById(39L)).thenReturn(template);
         ICmsTopicService topics = mock(ICmsTopicService.class);
-        CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setProductType(2);
+        // Linear (product_type=1): since P-13 free exploration (2) is never led and never reads club_lead_state,
+        // so only a linear topic can exercise the lead gate this IT is about.
+        CmsTopic topic = new CmsTopic(); topic.setId(TOPIC); topic.setProductType(1);
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
         CmsPointsSettingServiceImpl settings = new CmsPointsSettingServiceImpl(); ReflectionTestUtils.setField(settings, "cmsPointsSettingMapper", sql.getMapper(CmsPointsSettingMapper.class));
         CmsActivityServiceImpl activities = new CmsActivityServiceImpl(); ReflectionTestUtils.setField(activities, "cmsActivityMapper", sql.getMapper(CmsActivityMapper.class));
@@ -175,6 +177,11 @@ class PlayLeadAdmissionFailureMySqlIT {
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "currentPlayActivityMapper", sql.getMapper(CmsActivityMapper.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "cmsRegistrationMapper", sql.getMapper(CmsRegistrationMapper.class));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "clubLeadMapper", sql.getMapper(ClubLeadMapper.class));
+        // Linear route gate (isPrevDone/unlock-after) reads completion facts. The owned player_node_progress table stays
+        // empty (asserted by vector()), so this explicit double reports exactly that: no completed station.
+        IPlayerNodeProgressService progress = mock(IPlayerNodeProgressService.class);
+        when(progress.selectPlayerNodeProgressList(any())).thenReturn(List.of());
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "playerNodeProgressService", progress);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(target, "umsMemberPointsDetailService", details);
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         when(registrations.selectCmsRegistrationList(any())).thenAnswer(i -> sql.getMapper(CmsRegistrationMapper.class).selectCmsRegistrationList(i.getArgument(0)));
@@ -254,19 +261,25 @@ class PlayLeadAdmissionFailureMySqlIT {
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", routeProxy.getProxy());
         PreferencePlayService preferences = mock(PreferencePlayService.class);
         when(preferences.load(eq(MEMBER), eq(TOPIC), eq(NODE), any())).thenReturn(Map.of("question", "original-preference"));
-        when(preferences.submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), any(), any()))
+        when(preferences.submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), any(), eq("default"), any()))
                 .thenReturn(Map.of("needsTiebreak", false));
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "preferencePlayService", preferences);
         PreferenceSubmitRequest command = new PreferenceSubmitRequest(); command.setActivityId("500");
         command.setRouteActionId("preference-original"); command.setExpectedRouteVersion(0); command.setChoices(Map.of("one", "A"));
+        // Original-runtime identity the basic-intent gate requires: no personal/shared run yet -> session 0.
+        // Without it submitPreference is refused by that identity gate before any lead/route read.
+        command.setRouteSessionId(0L);
         Map<String,Object> before = vector();
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
         jdbc.execute("RENAME TABLE club_lead_state TO c_hidden_lead_state");
         try {
             unavailable(() -> controller.preference(NODE, "500", null));
+            assertEquals(0, claims.get(), "GET admission never claims a command");
             unavailable(() -> controller.submitPreference(NODE, command));
+            assertEquals(1, claims.get(), "POST must reach the real claim INSERT, not an earlier identity/authorization rejection");
+            verify(observedReceipts, never()).completeReceipt(any());
             verifyNoInteractions(routeTarget, preferences);
-            assertEquals(before, vector()); assertEquals(0, claims.get());
+            assertEquals(before, vector(), "the actual transaction must roll back the new original command claim");
             assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_session", Long.class));
             assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_action", Long.class));
         } finally { jdbc.execute("RENAME TABLE c_hidden_lead_state TO club_lead_state"); }
@@ -276,7 +289,7 @@ class PlayLeadAdmissionFailureMySqlIT {
         assertEquals(200, controller.submitPreference(NODE, command).get("code"));
         verify(routeTarget).canPlay(MEMBER, TOPIC, ACTIVITY, NODE, null);
         verify(routeTarget).canPlay(MEMBER, TOPIC, ACTIVITY, NODE, "preference-original");
-        verify(preferences).submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), same(command), any());
+        verify(preferences).submit(eq(MEMBER), eq(TOPIC), eq(ACTIVITY), eq(NODE), any(), same(command), eq("default"), any());
         assertEquals("preference-original", command.getRouteActionId()); assertEquals(Integer.valueOf(0), command.getExpectedRouteVersion());
         assertEquals(Map.of("one", "A"), command.getChoices());
         assertEquals(1L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_session", Long.class));
@@ -284,7 +297,10 @@ class PlayLeadAdmissionFailureMySqlIT {
         String snapshot = jdbc.queryForObject("SELECT config_snapshot_json FROM topic_route_session", String.class);
         assertEquals(branch, new ObjectMapper().readTree(snapshot).has("edges"));
         assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM topic_route_action", Long.class));
-        assertEquals(before, vector(), "route admission alone must not complete preference, debit or grant rewards");
+        // The only new row is the applied command receipt of this one POST; no points, flows, progress or registration change.
+        Map<String,Object> afterSubmit = new HashMap<>(before); afterSubmit.put("receipts", 1L);
+        assertEquals(afterSubmit, vector(), "route admission alone must not complete preference, debit or grant rewards");
+        assertEquals("PLAY_BASIC_PREFERENCE:APPLIED", jdbc.queryForObject("SELECT CONCAT(action,':',outcome) FROM game_command_receipt", String.class));
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive(), "GET/POST must not gain an outer transaction");
     }
 
@@ -306,12 +322,18 @@ class PlayLeadAdmissionFailureMySqlIT {
 
     @Test void realLeadStorageFaultReturnsNoHintAndHasZeroEconomicOrRegistrationEffect() {
         Map<String,Object> before = vector(); ApiPlayProgressController controller = hintController(MEMBER);
+        // A real led session: lead row for this activity, first gathering, so the gate demonstrably reads it.
+        jdbc.update("INSERT INTO club_lead_state(activity_id,leader_member_id,status,create_time) VALUES(500,8,1,NOW())");
+        AjaxResult gathering = controller.unlockHint(NODE, "500", null);
+        assertEquals("队伍集合中,等队长开始行程", gathering.get("msg"), "lead gate must be live for this linear led session");
+        assertEquals(before, vector()); assertEquals(0, claims.get());
+        jdbc.update("UPDATE club_lead_state SET status=2 WHERE activity_id=500");
         jdbc.execute("RENAME TABLE club_lead_state TO c_hidden_lead_state");
         try {
             unavailable(() -> controller.unlockHint(NODE, "500", null));
             assertEquals(before, vector()); assertEquals(0, claims.get());
         } finally { jdbc.execute("RENAME TABLE c_hidden_lead_state TO club_lead_state"); }
-        // Successful query with no lead row remains a legitimate non-lead activity after recovery.
+        // After recovery the same running lead (node not held by any chapter) admits the hint exactly once.
         AjaxResult recovered = controller.unlockHint(NODE, "500", null);
         assertEquals(200, recovered.get("code"));
         assertEquals(Map.of("hint1", "hint-one", "hint2", "hint-two", "cost", COST), recovered.get("data"));
@@ -321,6 +343,7 @@ class PlayLeadAdmissionFailureMySqlIT {
 
     @Test void realLeadStorageFaultRollsBackTheOriginalBasicActionClaimWithoutTerminalReceipt() {
         Map<String,Object> before = vector(); ApiPlayProgressController controller = controller(MEMBER);
+        jdbc.update("INSERT INTO club_lead_state(activity_id,leader_member_id,status,create_time) VALUES(500,8,2,NOW())");
         jdbc.execute("RENAME TABLE club_lead_state TO c_hidden_lead_state");
         try {
             unavailable(() -> controller.answer("500", "401", "answer", null, "lead-storage-fault", 0, 0L, null, null));

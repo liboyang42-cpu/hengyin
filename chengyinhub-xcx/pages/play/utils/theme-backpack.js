@@ -530,12 +530,14 @@ function methods(req) {
       return binding ? binding.index : -1;
     },
     _endThemeChapter() {
+      if (this._chapterReadCursor) return Promise.resolve(true);
       const index = this._themeChapterIndex();
       if ((this.data.nodes || []).some(n => String(n.chapterId) === String((this.data.chapter || {}).id) && !n.done)) return Promise.resolve(true);
       if (!(this.data.themeBag.chapterIndexes || []).includes(index)) return Promise.resolve(true);
       return this.refreshThemeBackpack().then(() => this._themeChapterCommand('CHAPTER_END', String(index)));
     },
     _enterThemeChapter() {
+      if (this._chapterReadCursor) return;
       if (!this.data.themeBag.sessionId || this.data.isPreview || this.data.isMock) return;
       const index = this._themeChapterIndex();
       if (index < 0 || !(this.data.themeBag.chapterIndexes || []).includes(index) || this._themeChapterEntered === index || this._themeSending) return;

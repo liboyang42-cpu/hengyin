@@ -22,7 +22,7 @@ function paths(config) {
 }
 function localReason(config, path) {
   if (path.startsWith('qa.options.') && config.qa?.multi === true) return '多选题请使用通过/没通过之后';
-  if (path.startsWith('random.items.') && config.random?.drawCount > 1) return '多张抽卡请使用通过/没通过之后';
+  if (path.startsWith('random.items.') && config.random?.drawCount > 1) return '多张翻卡请使用通过/没通过之后';
   if (path.startsWith('diceRoll.faces.') && (config.diceRoll?.mode === 'd20' || config.diceRoll?.diceCount === 2)) return '此形式请使用通过/没通过之后';
   if (path.startsWith('branch.')) return '暂未开放';
   return '';

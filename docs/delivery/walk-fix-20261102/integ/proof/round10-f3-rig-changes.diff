@@ -1,0 +1,71 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b2..f7db92af6 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -52,7 +52,10 @@ def start(fail_path=""):
+     # [SEAM] login: profile "local" lets the product's own non-prod switch send jscode2session to the rig's fake
+     # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
+     cmd += ["--spring.profiles.active=druid,local",
+-            "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
++            "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097"),
++            # j6 HARNESS: dummy OSS config so URL builders do not throw (no OSS is reachable from the rig)
++            "--CHENGYIN_OSS_ENDPOINT=oss-rig.invalid", "--CHENGYIN_OSS_ACCESS_KEY_ID=rigdummy",
++            "--CHENGYIN_OSS_ACCESS_KEY_SECRET=rigdummysecret", "--CHENGYIN_OSS_BUCKET_NAME=rig-bucket"]
+     log = open(LOG, "ab")
+     p = subprocess.Popen(cmd, cwd=str(RIG_HOME / "work"), env=env(), stdout=log, stderr=subprocess.STDOUT,
+                          start_new_session=True)
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+index 3098b6817..519bbf866 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
+   }
+   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
+   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
+-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
++  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
++    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
++    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
++    return node; }
+   const props = {};
+   for (const [k, v] of el.attrs) {
+     if (k === 'wx:if') node.if = compileValue(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+index 5f970336a..5fc545901 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -207,7 +207,7 @@ function navBar(page) {
+ }
+ MP.refreshNav = function () { var p = cur(); if (p) navBar(p); };
+ function hide(page) { if (!page) return; page.__host.style.display = 'none'; try { page.onHide && page.onHide(); } catch (e) { console.error('onHide', e); } if (page.__compPage) page.__m.pl.hide.forEach(function (f) { try { f.call(page); } catch (e) {} }); }
+-function show(page, first) { page.__host.style.display = ''; MP.curPage = page; navBar(page); if (!first) { try { page.onShow && page.onShow(); } catch (e) { console.error('onShow', e); } if (page.__compPage) page.__m.pl.show.forEach(function (f) { try { f.call(page); } catch (e) {} }); } }
++function show(page, first) { page.__host.style.display = ''; MP.curPage = page; navBar(page); if (!first) { try { page.onShow && page.onShow(); } catch (e) { console.error('onShow', e); } if (page.__compPage) page.__m.pl.show.forEach(function (f) { try { f.call(page); } catch (e) {} }); /* F3 HARNESS PATCH: WeChat fires pageLifetimes.show on every component of the page when it is shown again */ (function walk(n) { if (!n) return; var kids = n.children || []; for (var i = 0; i < kids.length; i++) { var el = kids[i]; if (el.__inst && el.__inst !== page && !el.__inst.__dead) el.__inst.__m.pl.show.forEach(function (f) { try { f.call(el.__inst); } catch (e) {} }); walk(el.shadowRoot); walk(el); } })(page.__root || page.__host.shadowRoot || page.__host); } }
+ function open(path, query) {
+   var page = MP.openPage(path, query, stackEl);
+   page.__host.classList.add('mp-pagehost');
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde8..c0f9d7229 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -192,7 +192,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
+index 5d6a74b83..4404764de 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/up.sh
++++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
+@@ -5,7 +5,7 @@
+ #        RIG_SKIP_BUILD=1 bash up.sh   # reuse existing candidate jar
+ set -euo pipefail
+ export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
+-SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
++SHA=${RIG_SHA:-7ceb2cf3ff39cc5c22d1f1dc607dbcbc63c36702}
+ RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
+ export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"

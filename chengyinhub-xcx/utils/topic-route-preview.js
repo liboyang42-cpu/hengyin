@@ -1,5 +1,6 @@
 // Presentation only: complete verified provider segments, or explicitly labelled chapter-local node previews.
 // Does not calculate route distance, walking time, GPS validity, progress, completion or rewards.
+const { readFontScale, mapFontSize } = require('./font-scale.js');
 function routeCoordinate(value, limit) {
   if (typeof value !== 'number' && typeof value !== 'string') return null;
   if (typeof value === 'string' && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) return null;
@@ -44,6 +45,7 @@ function build(chaptersList) {
         });
       }
     });
+    const fontScale = readFontScale();
     const markers = valid.map(function (node, i) {
       const point = routePoint(node);
       return {
@@ -52,7 +54,7 @@ function build(chaptersList) {
         callout: {
           content: (i + 1) + (node.name ? ' ' + node.name : ''),
           color: '#FFFFFF', bgColor: '#1A1A1A', /* ds-ok: 原生地图callout不支持CSS token，沿用既有颜色 */
-          padding: 6, borderRadius: 8, fontSize: 11, display: 'BYCLICK'
+          padding: 6, borderRadius: 8, fontSize: mapFontSize(11, fontScale), display: 'BYCLICK'
         }
       };
     });

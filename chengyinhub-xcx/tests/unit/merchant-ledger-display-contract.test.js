@@ -13,7 +13,7 @@ function ledgerPage() {
     Page: definition => { page = definition; },
     getApp: () => ({}),
     require: request => request.includes('merchant-finance')
-      ? { money: value => Number(value).toFixed(2) }
+      ? { money: value => Number(value).toFixed(2), yuan: require(path.resolve(__dirname, '../../utils/money-format.js')).yuan }
       : {},
     console,
   });
@@ -31,7 +31,7 @@ function detailPage(file, payload, query) {
     Page: definition => { page = definition; },
     getApp: () => app,
     require: requestPath => requestPath.includes('merchant-finance')
-      ? { isFinanceObjectPayload: result => !!result && result.code === 200 && !!result.data, money: value => Number(value).toFixed(2) }
+      ? { isFinanceObjectPayload: result => !!result && result.code === 200 && !!result.data, money: value => Number(value).toFixed(2), yuan: require(path.resolve(__dirname, '../../utils/money-format.js')).yuan }
       : requestPath.includes('page-motion') ? { countMoney() {}, countIn() {}, enter() {} } // 动效是装饰,合同测试里置空
       : (requestPath.includes('response-shape')
         ? {
@@ -74,8 +74,8 @@ function assertNoCashMarkup(wxml) {
   // 不变量没变 —— 零现金不得出现金额串、不得回落成「待主题结算」。
   assert.doesNotMatch(wxml, /fin-row__v[^>]*>\s*待主题结算/,
     '零现金不得回落成待主题结算');
-  assert.match(wxml, /class="fin-row__v fin-row__v--\{\{item\.amountTone\}\}"\s+wx:if="\{\{merchantAccess\.canReadFinance\}\}">\{\{item\.amountDisplay\}\}<\/text>/,
-    '右列必须只渲染金额位(零现金由 amountDisplay 给破折号)');
+  assert.match(wxml, /class="fin-row__v fin-row__v--\{\{item\.amountTone\}\}"\s+wx:if="\{\{merchantAccess\.canReadFinance && item\.amountDisplay\}\}">\{\{item\.amountDisplay\}\}<\/text>/,
+    '右列必须只渲染金额位(M-27:零现金右列留空)');
   assert.match(wxml, /<cy-badge class="fin-row__chip" type="status" variant="\{\{item\.stateVariant\}\}" label="\{\{item\.stateText\}\}"/,
     '状态必须走服务端归因后的 stateText,且以 chip 呈现');
 }
@@ -91,8 +91,7 @@ test('三种零现金原因不显示金额，列表右列只展示服务端状�
   for (const [noCashReason, expected] of cases) {
     const row = redemptionRow({ settlementAmount: '0.00', displayState: 'NO_CASH_SETTLEMENT', noCashReason });
     assert.equal(row.amountText, null, `${expected} 不能渲染 +¥0.00`);
-    assert.equal(row.amountDisplay, '—', `${expected} 右列必须是中性破折号而不是金额串`);
-    assert.doesNotMatch(row.amountDisplay, /¥|\d/, `${expected} 不得保留金额串`);
+    assert.equal(row.amountDisplay, null, `${expected} 右列留空(M-27),不得画破折号或金额串`);
     assert.equal(row.stateText, expected, `${expected} 必须从服务端文案透传`);
   }
   assertNoCashMarkup(read('pages/merchant/ledger/index.wxml'));
@@ -102,8 +101,8 @@ test('负控：把零现金右列改回写死待主题结算必须判红', () =>
   const wxml = read('pages/merchant/ledger/index.wxml');
   assertNoCashMarkup(wxml);
   const broken = wxml.replace(
-    'class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance}}">{{item.amountDisplay}}</text>',
-    'class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance}}">待主题结算</text>');
+    'class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance && item.amountDisplay}}">{{item.amountDisplay}}</text>',
+    'class="fin-row__v fin-row__v--{{item.amountTone}}" wx:if="{{merchantAccess.canReadFinance && item.amountDisplay}}">待主题结算</text>');
   assert.notEqual(broken, wxml, '负控锚点失效');
   assert.throws(() => assertNoCashMarkup(broken), /零现金不得回落成待主题结算/);
 });

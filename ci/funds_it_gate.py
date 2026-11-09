@@ -124,7 +124,12 @@ EXPECTED = {
     # 2026-09-21 CYV-P1-003:+2 人工退款冻结/解冻与 RR 旧快照并发负控；+1 服务端版本锁定 8.0.45。
     # 2026-10-03:92 → 93，新增已取消活动在 RR 旧快照下仍拒核销的真库用例。
     # Frozen merge retains 101 original cases plus 7 zero-cash retry controls: 108 real @Test methods.
-    "RegistrationFundsMybatisIntegrationTest": 108,
+    # 2026-11-04 第十轮 f4 第 2 项:108 → 110,+2 = 关掉「被邀请用户报名」积分后支付仍成功且只发首购奖励 / 迁移前对照组。
+    # 2026-11-04 第十一轮 h3:110 → 113,+3 = 积分规则 2/3/5/6 启用照发且回调重放不重复 /
+    # 停用(status=0)一分不发订单照常完成 / 已删除(del_flag≠0)一分不发。
+    # 2026-11-05 第十二轮 k1 第 5 项:113 → 114,+1 = 同会员同场次有可扣款单时拒第二笔并指回、
+    # 被之后付成功的另一笔取代的旧单不再发支付参数(j6 N1)。
+    "RegistrationFundsMybatisIntegrationTest": 114,
     # 2026-09-15:9 → 10,+1 = cityNodeFrozenCouponSurvivesStockFailureAndConcurrentRetry
     # (f178b58ae 有意新增:据点冻结券在库存失败后保留权益、并发重试只发一张)。
     # 2026-09-17 release-0917 集成:fix-club-0917 拍板6 停用 verify_answer,删掉 5 条答题验票真库 IT
@@ -208,7 +213,9 @@ EXPECTED = {
     # ~/Documents/城瘾/小程序/修复交接材料/worktree收口_0915/暗测试真跑_报告.md。
     # 合并保留原支付事实/退款恢复两组用例，共 36 条。
     "CoopDepositRefundMybatisIntegrationTest": 36,
-    "GrowthMissionProofMybatisIntegrationTest": 25,
+    # 2026-11-04 第十一轮 g3 第 2 项(4751ec46):25 → 26,+1 = leaderboardsHoldPlayerAccountsWithPointsOnly
+    # (成长周榜 Top 与我的名次只排 role=player 且积分 > 0 的账号,商家账号查不到名次;真 XML + 真库)。
+    "GrowthMissionProofMybatisIntegrationTest": 26,
     "MerchantIdentityMybatisIntegrationTest": 21,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,
@@ -259,7 +266,7 @@ EXPECTED = {
     "RoamShareSnapshotConcurrencyMySqlIT": 3,
     # 2026-09-21 CYV-P1-002:主理人转让与活动取消在 MySQL RR/RC 下的锁后权限、
     # 精确 topic/club/activity scope 和并发退款幂等。
-    "ClubEventTransferCancellationMySqlIT": 14,
+    "ClubEventTransferCancellationMySqlIT": 15,
     # Frozen merge retains master nine financial cases plus original UNKNOWN recovery.
     "RefundRetryAndRemainderMySqlIT": 10,
     "SignupNoticeAfterCommitPersistenceMySqlIT": 18,
@@ -271,11 +278,17 @@ EXPECTED = {
     "RoamPresenceRevokeDurabilityMySqlIT": 10,
     "RoamPresenceRevokeJobMySqlIT": 4,
     "WxBillIngestionPersistenceTest": 6,
+    # 2026-11-05 第十二轮 k5:俱乐部场次按核销付费的商家费(14 天、半退、团码、结算、重跑、暂扣补结、
+    # 超额拒结、结算后退款冲回、主题现金基数与退款闸不吃在世俱乐部场次)。
+    # 2026-11-05 第十三轮 m6:7 → 8,+1 = freeExploreSalesWithNoSettlementPathAlarmInsteadOfSittingSilent
+    # (四店 ¥69 未做 FINAL / 别家俱乐部场次:到结算时点抛错告警、不动钱;FINAL 后、全退后不告警)。
+    "ClubSessionMerchantFeeMySqlIT": 15,
 }
 
 # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。
 SOURCE_FILES = {
     "WxBillIngestionPersistenceTest": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java",
+    "ClubSessionMerchantFeeMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubSessionMerchantFeeMySqlIT.java",
     "CommunityPostCommentIdempotencyMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CommunityPostCommentIdempotencyMySqlIT.java",
     "MissingBusinessSeedsMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java",
     "RefundRetryAndRemainderMySqlIT": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java",

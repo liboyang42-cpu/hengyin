@@ -1,0 +1,26 @@
+# M-01 before (origin/master 014fc0d8, rig). Perk created through /api/coop/perk-template/save with the merchant form's fields (no redeemRule).
+id	merchant_id	name	redeem_rule
+990031	9002	手冲一杯 + 日期章明信片	NULL
+16:    {"phone": "13900000002", "member": 9002, "template": 6001, "perk": 990031, "store": "样板咖啡"},
+platform       PASS     topic=990014 exit=0 2.4s problems=[]
+merchant_club  PASS     topic=990014 exit=0 9.7s problems=[]
+sale_close     FAIL     topic=990014 exit=1 1.8s problems=['链路退出码 1', '链路输出含 ✗ 失败标记', '终态回读不符: lifecycle 应为 3=SELLING 且 selling_started_at 非空', '终态回读不符: 开售快照唯一']
+logs: /root/walk-rig/out/chains-run/chains
+chains rc=1
+id	merchant_id	name	redeem_rule
+2	9002	手冲一杯 + 日期章明信片	NULL
+
+## sale_close.log (excerpt)
+   [库回读] topic_edition_cost       ((1, 1, Decimal('2000.00'), 1),)
+
+──────── 步骤 7:声明 ORGANIZER actor(SALE_SNAPSHOT_MISSING_ORGANIZER_ACTOR 就是缺它)
+   organizer-actor                    操作成功
+
+──────── 步骤 8:canonical15 人工事实草稿(PUT /business/audit/topic/{id}/sale-canonical-draft)
+   PUT sale-canonical-draft           {"msg": "SALE_SNAPSHOT_MISSING_MICRO_EXPERIENCES", "code": 500, "_status": 200}
+   [库回读] 草稿行                      ()
+
+──────── 步骤 9:开售提审 → 审核通过 → SELLING
+   sale-submit                        {"msg": "缺少 canonical15 草稿，拒绝开售提审", "code": 500, "_status": 200}
+   [库回读] lifecycle/selling_started_at ((2, None),)
+

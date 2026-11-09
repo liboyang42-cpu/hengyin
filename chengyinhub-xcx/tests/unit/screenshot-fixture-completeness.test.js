@@ -91,7 +91,7 @@ const CONTRACTS = {
     sources: ['subpackageMember/components/cy/profile/index.js', 'subpackageMember/components/cy/profile/index.wxml'],
     shell: ['pages/member/index/index.wxml', 'id="profile"'],
     target: '#profile',
-    paths: ['activeTab', 'profileMetricState', 'profilePoint', 'rankDisplay.no', 'rankDisplay.delta', 'exploreStat.shops', 'exploreStat.weekExp'],
+    paths: ['activeTab', 'profileMetricState', 'profilePoint', 'rankDisplay.no', 'rankDisplay.delta', 'exploreStat.shops', 'exploreStat.places', 'exploreStat.weekExp'],
     equals: {
       activeTab: 'achievements',
       profileMetricState: 'ready',
@@ -99,6 +99,7 @@ const CONTRACTS = {
       'rankDisplay.no': '12',
       'rankDisplay.delta': '↑ 3',
       'exploreStat.shops': 12,
+      'exploreStat.places': 12,
       'exploreStat.weekExp': 80,
     },
   },
@@ -351,12 +352,13 @@ const CONTRACTS = {
   C40: {
     sources: ['pages/club/create/index.js', 'pages/club/create/index.wxml'],
     role: 'club',
-    paths: ['step', 'dots', 'typeOptions[].val', 'typeOptions[].sub', 'dirOptions'],
+    // 第十轮 f3 第 5 项:类型选项的副标题行按 owner 说明小字规则撤掉,源码不再消费 sub。
+    paths: ['step', 'dots', 'typeOptions[].val', 'dirOptions'],
     arrays: ['dots', 'dirOptions'],
     equals: { step: 1 },
   },
   C46: {
-    sources: ['components/cy/scene-club-edit/index.js', 'components/cy/scene-club-edit/index.wxml'],
+    sources: ['pages/club/components/cy/scene-club-edit/index.js', 'pages/club/components/cy/scene-club-edit/index.wxml'],
     shell: ['pages/club/edit/index.wxml', '<cy-scene-club-edit'],
     target: 'cy-scene-club-edit',
     paths: ['loadState', 'name', 'city', 'description', 'activityPrefs', 'typeOptions[].val', 'dirOptions', 'memberReservedQuota'],
@@ -388,7 +390,7 @@ const CONTRACTS = {
     equals: { tab: 0, tabKey: '0', listState: 'ready', 'received[].decisionReady': true },
   },
   C60: {
-    sources: ['components/cy/scene-merchant-profit/index.js', 'components/cy/scene-merchant-profit/index.wxml'],
+    sources: ['subpackageA/components/scene-merchant-profit/index.js', 'subpackageA/components/scene-merchant-profit/index.wxml'],
     shell: ['pages/coop/finance/index.wxml', 'id="merchantProfit"'],
     target: '#merchantProfit',
     paths: ['loaded', 'loadErr', 'statItems', 'myIncomeTotal', 'canWithdraw', 'pendingCount', 'topics[].topicName', 'topics[].incomeText'],
@@ -411,14 +413,14 @@ const CONTRACTS = {
     equals: { loadState: 'ready', 'info.status': 1 },
   },
   D21: {
-    sources: ['components/cy/scene-member-withdraw-history/index.js', 'components/cy/scene-member-withdraw-history/index.wxml'],
+    sources: ['subpackageMember/components/cy/scene-member-withdraw-history/index.js', 'subpackageMember/components/cy/scene-member-withdraw-history/index.wxml'],
     shell: ['subpackageMember/tixianjilu/tixianjilu.wxml', 'id="withdrawHistory"'],
     target: '#withdrawHistory',
     paths: ['loading', 'loadErr', 'nodata', 'list[].createTimeText', 'list[].receivedAmountText', 'list[].statusText', 'list[].statusVariant'],
     equals: { loading: false, loadErr: false, nodata: false, 'list[].statusText': '提现中', 'list[].statusVariant': 'warn' },
   },
   D30: {
-    sources: ['components/cy/scene-asset-income-detail/index.js', 'components/cy/scene-asset-income-detail/index.wxml'],
+    sources: ['subpackageA/components/scene-asset-income-detail/index.js', 'subpackageA/components/scene-asset-income-detail/index.wxml'],
     shell: ['subpackageA/pages/assetcenter/income-detail/income-detail.wxml', 'id="incomeDetail"'],
     target: '#incomeDetail',
     paths: ['activeFilter', 'loading', 'loadErr', 'hasMore', 'list'],
@@ -426,7 +428,7 @@ const CONTRACTS = {
     equals: { activeFilter: 'all', loading: false, loadErr: false, hasMore: false },
   },
   D31: {
-    sources: ['components/cy/scene-asset-income-detail/index.js', 'components/cy/scene-asset-income-detail/index.wxml'],
+    sources: ['subpackageA/components/scene-asset-income-detail/index.js', 'subpackageA/components/scene-asset-income-detail/index.wxml'],
     shell: ['subpackageA/pages/assetcenter/income-detail/income-detail.wxml', 'id="incomeDetail"'],
     target: '#incomeDetail',
     paths: ['loading', 'loadErr', 'list'],
@@ -587,8 +589,9 @@ test('A14/A15、B66、C03 与子组件正文使用状态专属 DOM 断言', () =
     assert.equal(SELECTORS[id].selector, '.team')
     assert.ok(SELECTORS[id].forbid.includes('cy-error'))
   }
-  assert.equal(SELECTORS.C60.selector, '.stat-grid, .fc-card, .fc-explainer')
-  assert.equal(SELECTORS.C60.min, 3)
+  // 打磨第 3 轮 §4-13 M-15:列表下的口径说明 .fc-explainer 已删
+  assert.equal(SELECTORS.C60.selector, '.stat-grid, .fc-card')
+  assert.equal(SELECTORS.C60.min, 2)
   assert.equal(SELECTORS.D21.selector, '.txjl_li')
   assert.equal(SELECTORS.A24.selector, '.hot-keys .li, .search-actions')
   assert.equal(SELECTORS.A24.min, 2)

@@ -23,7 +23,7 @@ public class TemplateAdoptionService {
     private final TemplateAdoptionReceiptMapper mapper;
     private final ITemplatePublishService drafts;
     private final TransactionTemplate tx;
-    private final ObjectMapper json = new ObjectMapper();
+    private static final ObjectMapper json = new ObjectMapper();
     public TemplateAdoptionService(TemplateAdoptionReceiptMapper mapper, ITemplatePublishService drafts,
                                    PlatformTransactionManager manager) {
         this.mapper = mapper; this.drafts = drafts;
@@ -55,13 +55,26 @@ public class TemplateAdoptionService {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
         catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
     }
-    private JsonNode canonical(JsonNode n) {
+    private static JsonNode canonical(JsonNode n) {
         if (n.isObject()) {
             ObjectNode result = json.createObjectNode(); List<String> keys = new ArrayList<>(); n.fieldNames().forEachRemaining(keys::add);
             Collections.sort(keys); for (String k : keys) result.set(k, canonical(n.get(k))); return result;
         }
         if (n.isArray()) { var result = json.createArrayNode(); n.forEach(v -> result.add(canonical(v))); return result; }
         return n;
+    }
+    /** 私有复用基线只认规范化后的完整配置；不改变原来源/草稿版本合同。 */
+    public static String inheritedAdvancedConfigHash(String raw) {
+        String normalized = new AdvancedGameConfigValidator().validateAndNormalize(raw);
+        try {
+            return hash("template-adoption-advanced-v1\n"
+                    + (normalized == null ? "null" : canonical(json.readTree(normalized)).toString()));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalArgumentException("采用玩法配置无法计算版本", e);
+        }
+    }
+    public boolean hasCompletedInheritedConfig(Long owner, Long draftId, Long sourceId, String configHash) {
+        return mapper.countCompletedInheritedConfig(owner, draftId, sourceId, configHash) > 0;
     }
     // Versioned fingerprint of author fields copied by the existing adoption service, not counters or audit timestamps.
     String sourceVersion(CmsTemplateLibrary source) {
@@ -118,7 +131,7 @@ public class TemplateAdoptionService {
             if (!"PENDING".equals(row.get("status"))) return view(row);
             SourceSnapshot source = lockedSource(sourceId);
             if (!available(source.source()) || !version.equals(source.version())) {
-                finish(actor, key, "REJECTED", null, "SOURCE_VERSION_CONFLICT", null); return view(mapper.lock(actor, key));
+                finish(actor, key, "REJECTED", null, "SOURCE_VERSION_CONFLICT", null, null); return view(mapper.lock(actor, key));
             }
             // Existing service retains qualification, media, coupon/reward and ownership validation.
             // Canonical + library locks remain held until draft + receipt commit; RC reads cannot use an old snapshot.
@@ -127,14 +140,17 @@ public class TemplateAdoptionService {
             Long draftId = drafts.saveOrUpdateDraft(request, owner, username);
             if (draftId == null || draftId <= 0) throw new IllegalStateException("采用草稿编号缺失");
             var created = mapper.lockDraft(draftId);
-            if (created == null || !owner.equals(created.getMemberId())) throw new IllegalStateException("采用草稿归属回读失败");
-            finish(actor, key, "COMPLETED", draftId, null, draftVersion(created));
+            if (created == null || !owner.equals(created.getMemberId())
+                    || !sourceId.equals(created.getOriginalTemplateId()))
+                throw new IllegalStateException("采用草稿归属或来源回读失败");
+            finish(actor, key, "COMPLETED", draftId, null, draftVersion(created),
+                    inheritedAdvancedConfigHash(created.getAdvancedConfigJson()));
             return view(mapper.lock(actor, key));
         }); } catch (IllegalArgumentException rejected) {
             // The execution transaction has rolled back. Persist only a definite validation rejection.
             return tx.execute(t -> {
                 Map<String,Object> row = mapper.lock(actor,key); check(row,owner,scope,fingerprint);
-                if ("PENDING".equals(row.get("status"))) finish(actor,key,"REJECTED",null,rejectionCode(rejected),null);
+                if ("PENDING".equals(row.get("status"))) finish(actor,key,"REJECTED",null,rejectionCode(rejected),null,null);
                 return view(mapper.lock(actor,key));
             });
         }
@@ -144,8 +160,10 @@ public class TemplateAdoptionService {
         String message = rejected == null ? null : rejected.getMessage();
         return message != null && message.contains("未解锁") ? "ADOPTION_CAPABILITY_LOCKED" : "ADOPTION_VALIDATION_REJECTED";
     }
-    private void finish(Long actor, String key, String state, Long draft, String reason, String draftVersion) {
-        if (mapper.finish(actor, key, state, draft, reason, draftVersion) != 1) throw new IllegalStateException("采用回执更新失败");
+    private void finish(Long actor, String key, String state, Long draft, String reason, String draftVersion,
+                        String inheritedConfigHash) {
+        if (mapper.finish(actor, key, state, draft, reason, draftVersion, inheritedConfigHash) != 1)
+            throw new IllegalStateException("采用回执更新失败");
     }
     private void check(Map<String, Object> row, Long owner, String scope, String fingerprint) {
         if (row == null || !owner.toString().equals(String.valueOf(row.get("owner"))) || !scope.equals(row.get("scope")))

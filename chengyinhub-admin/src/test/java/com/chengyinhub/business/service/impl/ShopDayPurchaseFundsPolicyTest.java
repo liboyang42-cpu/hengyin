@@ -49,7 +49,7 @@ class ShopDayPurchaseFundsPolicyTest {
     private static final Long ACTIVITY_ID = 200L;
     private static final Long TOPIC_ID = 201L;
     private static final Long TICKET_ID = 300L;
-    private static final String POINTS_FORBIDDEN = "探店日不支持积分抵扣，请关闭积分后按全价购买";
+    private static final String POINTS_FORBIDDEN = "自由探索不支持积分抵扣，请关闭积分后按全价购买";
 
     @Test
     void shopDayQuoteWithPointsFailsBeforeMemberReadAndPriceCalculation() {
@@ -205,7 +205,7 @@ class ShopDayPurchaseFundsPolicyTest {
         }
 
         private static TopicSaleSnapshot snapshot() {
-            return TopicSaleCanonicalTestFixture.snapshot(TOPIC_ID);
+            return TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC_ID);
         }
     }
 }

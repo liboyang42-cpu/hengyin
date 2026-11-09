@@ -44,11 +44,12 @@ const MATRIX = [
   ['subpackageRoam/my-teams/index.js', "url: '/api/orient/team/lobby'", 'required', 'member', 'global-authenticated-read'],
   // 契约 §1.3 / §4:主题详情开局前准备读 /api/play/setup(requireLogin,只读已发布主题);活动详情联系主办读 /api/play/contact(requireLogin,只回俱乐部名称与电话)。
   ['pages/topic/index/index.js', "url: '/api/play/setup'", 'required', 'member', 'public-detail+viewer-personalization'],
-  ['components/cy/event-attendance/index.js', "url:'/api/play/contact'", 'required', 'member', 'public-detail+viewer-personalization'],
+  ['pages/activity/components/event-attendance/index.js', "url:'/api/play/contact'", 'required', 'member', 'public-detail+viewer-personalization'],
   ['subpackageMember/orient-score/index.js', "url: '/api/play/orient/session/current'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/session/'", 'required', 'member', 'self-account'],
   ['subpackageMember/orient-score/index.js', "url: BASE + '/receipt'", 'required', 'member', 'self-account'],
   ['subpackageMember/character/index.js', "url: '/api/play/character'", 'required', 'member', 'self-account'],
+  ['subpackageMember/components/scene-member-participation-detail/index.js', "url: '/api/play/character'", 'required', 'member', 'self-account'],
   // 原发送结果只读恢复：本人请求回执，且服务端再次校验当前发布主体/岗位；两端均保留默认认证。
   ['pages/coop/invite/index.js', "url: '/api/coop/invite/request'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
   ['pages/coop/invite/index.js', "url: '/api/coop/invite/requests'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
@@ -78,7 +79,7 @@ const MATRIX = [
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
   // 2026-10-29 M-32:俱乐部计酬并进账户收益「本月收入明细」,同端点同权限档(商家 FINANCE_READ 派生店主)。
-  ['components/cy/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
+  ['subpackageA/components/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
@@ -104,7 +105,10 @@ const MATRIX = [
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
   ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
-  ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'required', 'member', 'global-read+viewer-personalization'],
+  // 2026-11-04 第九轮 m4(owner 批准):分享来的据点游客可读(SecurityConfig 精确 GET 数字 id),游客走 CityNodeGuestProjection。
+  ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  // 第九轮 m1 第 3 项:漫游地点卡只读同一个节点详情接口里的评分(与上一条同一后端、同一权限)
+  ['subpackageRoam/components/roam-place-card/index.js', "url: '/api/city/nodes/' + p.shareId", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-25 官方地点:地图点位卡展开读节点(相册 / 玩法 / 完成状态),挑战页读同一节点,与据点详情同端点同权限档。
   ['subpackageRoam/nearby/index.js', "url: '/api/city/nodes/' + id", 'required', 'member', 'global-read+viewer-personalization'],
   ['pages/play/poi-challenge/index.js', "url: '/api/city/nodes/' + this._poiId", 'required', 'member', 'global-read+viewer-personalization'],
@@ -123,6 +127,8 @@ const MATRIX = [
   ['utils/game-session-client.js', "url: '/api/game/session/receipt'", 'required', 'player/merchant/club', 'activity-perspective-access'],
   ['utils/game-session-client.js', "url: exported ? '/api/game/session/shared/export'", 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
+  // R29C:只读登录会员的原会话快照，服务端逐项校验会话/会员/场次/主题及历史可读性。
+  ['pages/play/index.js', "req('/api/play/history'", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
      行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
   ['pages/play/index.js', "req('/api/play/nodes', 'GET', params).then((res) => { // 补拉", 'required', 'member', 'current-session'],
@@ -154,6 +160,8 @@ const MATRIX = [
   // 2026-09-17 第二轮拍板 22:首页「继续游戏」只列本人仍可继续的游戏会话(服务端按 uid 取,不收 memberId 参数)。
   // 2026-09-17 第二轮拍板 17:朋友分享的足迹快照,未登录可读;只凭随机 32 位令牌取已裁剪/平移的快照,不带分享者身份。
   ['utils/roam-share-snapshot.js', "url: '/api/roam/share/snapshot', method: 'GET'", 'optional', 'visitor/member', 'share-token-snapshot'],
+  // 2026-11-03 第九轮 m-rain:漫游地图天气氛围,匿名可读(SecurityConfig 精确 GET),只回 kind/intensity,按 IP 限流。
+  ['subpackageRoam/components/map-weather/index.js', "url: '/api/map/weather', method: 'GET'", 'optional', 'visitor/member', 'public-map-weather'],
   // 2026-09-15 地图组队 P 方案:附近公开队伍。ApiPlayTeamController#nearby 走 getAppUserId 未登录即拒;viewerStatus/pendingCount 按 viewer 算。
   // (同日下线组局的 /api/roam/pois 与 /api/roam/hangout/detail 两条 GET:地图上不再有局卡与打卡点列表。
   //  同日撤掉漫游地图 f-hangout 一档:roam 不再调 /api/roam/hangout/nearby,搭子局已下线,该卡整卡退场。)
@@ -169,8 +177,9 @@ const MATRIX = [
   // 文档二 L3：下一站条件与效果读同一个注册表补名字（主题本人或商家代管 scope）。
   ['pages/publish/fabu/theme-route-names.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['pages/publish/fabu/theme-d20-page.js', "url: '/api/topic/play-setup', method: 'GET'", 'required', 'publisher', 'self-publisher'],
-  ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'required', 'member', 'global-authenticated-read'],
-  ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-11-04 第九轮 m4(owner 批准):官方路线列表与详情游客可读,只回已上架路线,游客走 PresetRouteGuestProjection。
+  ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'optional', 'visitor/member', 'public-official-route'],
+  ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'optional', 'visitor/member', 'public-official-route'],
   ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/ai/npc/event'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/tiles/page'", 'required', 'member', 'self-member-history'],
@@ -190,7 +199,7 @@ const MATRIX = [
   //   GET 只读本人可管理的商家行,失败即不出现(fail-closed),账号身份由后端 principal 定。
   ['utils/marketing-consent-entry.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
   // 2026-10-20 FOLLOWUP-A-1:主题/玩法举报先读平台举报原因,与动态举报同一端点(默认认证,无个人态)。
-  ['utils/content-report.js', "url: '/api/v1/community/capabilities'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/topic/utils/content-report.js', "url: '/api/v1/community/capabilities'", 'required', 'member', 'global-authenticated-read'],
   // 2026-10-20 FOLLOWUP-A-2:作者本人内容的审核时间线,ApiAuditController.timeline 按内容 owner 校验。
   ['subpackageA/pages/myproject/index.js', "url: '/api/audit/timeline'", 'required', 'author', 'self-publisher'],
   // 2026-10-19 Claude 小程序线移植到 master:本线新增 20 处 GET 逐条归类(收藏据点页暂不进 master)。全部不在 SecurityConfig permitAll 清单 ⇒ required;
@@ -234,8 +243,8 @@ const MATRIX = [
   // 2026-10-27 W8 收口逐条复核后端(均未进 SecurityConfig permitAll，全部默认认证)：
   //   赛事联络/签到:玩家读 OfficialEventAttendanceService.read(id, uid, false) 仅公开可见赛事 + 本人 mine 投影;
   //   管理读先 canPublish(uid) 再 organizer(e, uid)。
-  ['components/cy/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance/manage'", 'required', 'publisher', 'controlled-event-operator'],
-  ['components/cy/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance'}", 'required', 'member', 'public-detail+viewer-personalization'],
+  ['pages/activity/components/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance/manage'", 'required', 'publisher', 'controlled-event-operator'],
+  ['pages/activity/components/event-attendance/index.js', "url:'/api/official/events/'+id+'/attendance'}", 'required', 'member', 'public-detail+viewer-personalization'],
   //   注册属性绑定:AuthorAttributeRegistryReader.read 校验主题 memberId == 登录人(商家 scope 先换 PROJECT_MANAGE 主体)。
   ['pages/publish/fabu/index.js', "url: '/api/topic/attribute-binding'", 'required', 'publisher', 'self-publisher'],
   //   公共玩法采用来源/原请求结果/采用详情:TemplateAdoptionService principal(actor, owner) + 按 actor 读原请求。
@@ -269,6 +278,8 @@ const MATRIX = [
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/casebook'", 'required', 'member', 'current-session'],
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/casebook', 'GET', this._scope(), undefined, true).then", 'required', 'member', 'current-session'],
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/backpack'", 'required', 'member', 'current-session'],
+  // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取。只认登录本人,服务端再核这一场已付费、作者没关(ApiPlayTeamController /trail/state)。
+  ['pages/play/index.js', "req('/api/team/trail/state', 'GET'", 'required', 'member', 'current-session'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -279,7 +290,7 @@ const VALID_SCOPES = new Set([
   'self-member-history', 'activity-perspective-access',
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
-  'share-token-snapshot', 'owned-merchant-or-club-receivable', 'owned-media-asset',
+  'share-token-snapshot', 'public-map-weather', 'public-official-route', 'owned-merchant-or-club-receivable', 'owned-media-asset',
   'controlled-event-operator', 'public-profile-gallery', 'active-team-member', 'owned-topic-target-merchant-stations',
 ]);
 
@@ -423,7 +434,10 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-29 M-32:账户收益本月收入明细读俱乐部计酬一处(同 club-direct-ledger 端点与权限档,已入 MATRIX),109 → 110。
   // R03/R12 原写入结果仅按登录actor、操作种类和原请求号回读；新增一条本人回执GET。
   // 2026-11-01:商家工作台删除开通前置检查,少一处 GET(/api/merchant/ops/prerequisites) 111 → 110
-  assert.equal(directCount, 110, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-03 第九轮 m-rain:漫游地图天气氛围一处匿名 GET /api/map/weather(已入 MATRIX),110 → 111。
+  // 2026-11-04 第九轮 m-card:漫游地点卡读节点评分一处 GET /api/city/nodes/{id}(与据点详情同一接口,已入 MATRIX),111 → 112。
+  // 2026-11-04 第十一轮 g3 p1 F-7:参与详情探一次本人角色卡(同 GET /api/play/character,本人账号、只读),只在主题真有角色属性时摆入口,112 → 113。
+  assert.equal(directCount, 113, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -433,7 +447,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-28 L9 集成:游玩菜单联系主办 / 商家改读 L8 GET /api/play/contact(已入 MATRIX),38 → 39。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 39 叠加本线 p74 20km 兜底读一处,39 → 40。
   // 2026-10-30 #686 故事流顶栏:案件册两处 + 各站奖励一处 req 包装 GET(本人本局,已逐条入 MATRIX),41 → 44。
-  assert.equal(wrapperCount, 44, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
+  // R29C:原会话历史 GET /api/play/history 一处，按登录会员与原会话归属只读，45 → 46。
+  assert.equal(wrapperCount, 46, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
@@ -457,7 +473,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
 });
 
 // 仅接受两种完整 DSL；参数中不允许嵌套调用，括号必须成对。
-// 固定全部 15 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
+// 固定全部 17 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
 const SECURITY_RULES = [
   'url=>permitAll',
   '"/login","/register","/captchaImage"=>permitAll',
@@ -473,7 +489,9 @@ const SECURITY_RULES = [
   '"/api/merchant/public-detail"=>permitAll',
   '"/api/merchant/public-home","/api/user/public-info"=>permitAll',
   'HttpMethod.GET,"/api/roam/share/snapshot"=>permitAll',
-  'HttpMethod.POST,"/api/merchant/list"=>permitAll'
+  'HttpMethod.GET,"/api/map/weather"=>permitAll',
+  'HttpMethod.POST,"/api/merchant/list"=>permitAll',
+  'HttpMethod.GET,"/api/preset/route/list","/api/preset/route/info","/api/city/nodes/{id:\\\\d+}"=>permitAll'
 ];
 
 function assertSecurityRules(source) {
@@ -490,7 +508,7 @@ function assertSecurityRules(source) {
   assert.match(code, /\.anyRequest\(\)\.authenticated\(\)/);
 }
 
-test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 仍需鉴权', () => {
+test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 只放行单个数字 id 的 GET', () => {
   assertSecurityRules(fs.readFileSync(SECURITY, 'utf8'));
 });
 
@@ -503,7 +521,7 @@ for (const dsl of ['legacy', 'boot4']) {
     ? `.requestMatchers(legacyMatchers(${args})).permitAll()`
     : `.antMatchers(${args}).permitAll()`;
 
-  test(`${dsl} DSL 正例保留全部 15 条权限规则`, () => assertSecurityRules(source));
+  test(`${dsl} DSL 正例保留全部 17 条权限规则`, () => assertSecurityRules(source));
   const mutations = [
     ['official POST 改写 GET', (s) => s.replace('HttpMethod.GET, "/api/official/events"', 'HttpMethod.POST, "/api/official/events"')],
     ['official 移除 GET 限制', (s) => s.replace('HttpMethod.GET, "/api/official/events"', '"/api/official/events"')],
@@ -513,6 +531,11 @@ for (const dsl of ['legacy', 'boot4']) {
     ['city nodes 所有方法放行', (s) => s.replace('.anyRequest().authenticated()', rule('"/api/city/nodes/**"') + '.anyRequest().authenticated()')],
     ['roam share POST 放行', (s) => s.replace('HttpMethod.GET, "/api/roam/share/snapshot"', 'HttpMethod.POST, "/api/roam/share/snapshot"')],
     ['roam share 扩大通配符', (s) => s.replace('"/api/roam/share/snapshot"', '"/api/roam/share/**"')],
+    ['map weather 不限方法', (s) => s.replace('HttpMethod.GET, "/api/map/weather"', '"/api/map/weather"')],
+    ['map weather 扩大通配符', (s) => s.replace('"/api/map/weather"', '"/api/map/**"')],
+    ['city node 详情放成单层通配', (s) => s.replace('"/api/city/nodes/{id:\\\\d+}"', '"/api/city/nodes/*"')],
+    ['preset 列表不限方法', (s) => s.replace('HttpMethod.GET, "/api/preset/route/list"', '"/api/preset/route/list"')],
+    ['preset 扩大通配符', (s) => s.replace('"/api/preset/route/list", "/api/preset/route/info"', '"/api/preset/**"')],
     ['兜底匿名', (s) => s.replace('.anyRequest().authenticated()', '.anyRequest().permitAll()')],
     ['GET 正例藏入注释', (s) => s.replace(rule('HttpMethod.GET, "/api/roam/share/snapshot"'), (r) => `/* ${r} */`)],
   ];
@@ -547,6 +570,7 @@ function playGetSources() {
   const support = 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/';
   return {
     controller: fs.readFileSync(PLAY_PROGRESS_CONTROLLER, 'utf8'),
+    history: java(app + 'play/PlayHistoryQueryApplication.java'),
     preference: java(app + 'play/PlayPreferenceApplication.java'),
     player: java(app + 'play/PlayPlayerQueryApplication.java'),
     context: java(app + 'play/PlayNodeContext.java'),
@@ -587,6 +611,39 @@ function actorEntry(source, methodName) {
   inOrder(method, 'Long memberId = actorMemberId;', 'if (memberId <= 0) return error("请先登录");');
   return method;
 }
+
+function assertHistoryGetContract(s) {
+  assert.match(javaMethod(s.controller, 'public AjaxResult history('),
+    /return playHistoryQueryApplication\.history\(currentMemberId\(\), activityId, topicId, routeSessionId\);/);
+  const method = javaMethod(s.history, 'public AjaxResult history(');
+  inOrder(method,
+    'if (memberId == null || memberId <= 0) return error("请先登录");',
+    'TopicRouteSession session = historySessionMapper.selectAccessibleById(routeSessionId, memberId);',
+    'if (session == null || !routeSessionId.equals(session.getId()) || !memberId.equals(session.getMemberId())',
+    '|| !activityId.equals(session.getActivityId()) || !topicId.equals(session.getTopicId()))',
+    'return error("本局不存在或无权查看");',
+    'if (topic == null || playCompletionFacts.topicHistoryBlocked(topic)) return error("历史内容不可用");',
+    'snapshot = json.readTree(session.getConfigSnapshotJson());');
+}
+
+test('原会话历史 GET 绑定登录会员、原会话归属及主题历史可读性，缺任一守卫判红', () => {
+  const source = playGetSources();
+  assertHistoryGetContract(source);
+  for (const [file, guard] of [
+    ['controller', 'currentMemberId(), activityId, topicId, routeSessionId'],
+    ['history', 'memberId == null || memberId <= 0'],
+    ['history', 'selectAccessibleById(routeSessionId, memberId)'],
+    ['history', '!routeSessionId.equals(session.getId())'],
+    ['history', '!memberId.equals(session.getMemberId())'],
+    ['history', '!activityId.equals(session.getActivityId())'],
+    ['history', '!topicId.equals(session.getTopicId())'],
+    ['history', 'playCompletionFacts.topicHistoryBlocked(topic)'],
+  ]) {
+    const changed = { ...source, [file]: source[file].replace(guard, 'false') };
+    assert.notEqual(changed[file], source[file]);
+    assert.throws(() => assertHistoryGetContract(changed), assert.AssertionError);
+  }
+});
 
 function assertPreferenceGetContract(s) {
   const controller = javaMethod(s.controller, 'public AjaxResult preference(');

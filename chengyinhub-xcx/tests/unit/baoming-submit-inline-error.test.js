@@ -131,11 +131,12 @@ test('提交错误在固定动作区使用可访问 inline error，并为扩展�
   assert.ok(barStart >= 0 && errorStart > barStart && payButton > errorStart,
     '持久错误必须位于付款按钮所在的固定动作区，并出现在按钮之前')
   assert.match(wxml,
-    /<cy-inline-error class="submit-inline-error"[^>]*wx:if="\{\{submitError\}\}"[^>]*title="这次报名还没完成"[^>]*sub="\{\{submitError\}\}"[^>]*action="重新提交"[^>]*bind:action="handlePayment"/s)
+    // R11 p1 F-10:已报名时服务端拒绝不再叠蓝框(上方「你已报名 · 查看我的报名」就是本页状态)
+    /<cy-inline-error class="submit-inline-error"[^>]*wx:if="\{\{submitError && !\(quoteRefusal && activityInfo\.isSignUp === 1\)\}\}"[^>]*title="[^"]*这次报名还没完成[^"]*"[^>]*sub="\{\{submitError\}\}"[^>]*action="[^"]*重新提交[^"]*"[^>]*bind:action="handlePayment"/s)
   assert.match(wxml,
-    /class="bmbottom-spacer"[\s\S]*?--baoming-action-extra: \{\{submitError \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
+    /class="bmbottom-spacer"[\s\S]*?--baoming-action-extra: \{\{submitError && !\(quoteRefusal && activityInfo\.isSignUp === 1\) \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
   assert.match(wxml,
-    /class="bmbottom"[\s\S]*?--baoming-action-extra: \{\{submitError \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
+    /class="bmbottom"[\s\S]*?--baoming-action-extra: \{\{submitError && !\(quoteRefusal && activityInfo\.isSignUp === 1\) \? 'calc\(var\(--cy-btn-h\) \+ var\(--cy-space-2\)\)' : '0rpx'\}\}/)
   assert.match(wxss,
     /\.bmbottom\s*,\s*\.bmbottom-spacer\s*\{[^}]*var\(--baoming-action-extra, 0rpx\)[^}]*env\(safe-area-inset-bottom\)/s,
     '错误出现时动作栏和正文占位必须使用同一高度算式')
@@ -161,4 +162,22 @@ test('报名与支付事实携带Checkout原registrationId及稳定原事件键'
   } finally {
     analytics.track = original
   }
+})
+
+// 第十轮 f1 item 8(j6 F5 / r1 F3):参与人列表先回包、/api/user/info 后回包时,资料不能把已选参与人的
+// 姓名冲掉 —— 否则第一次付款必误报「参与人信息需要包含姓名」。错误仍写在参与人一栏下方(红字,kind=error)。
+test('资料晚于参与人回包:已选参与人的姓名/手机保留,付款不误报缺姓名', () => {
+  const page = loadReadyPage()
+  page.data.userInfo = {}
+  page.updateUserInfoFromAddress(page.data.selectedAddress)
+  page.getUserInfo()
+  const info = requests.find((r) => r.url === '/api/user/info')
+  info.success({ code: 200, data: { id: 9, name: '城瘾用户', nickname: '城瘾用户', point: 50 } })
+  assert.equal(page.data.userInfo.realName, '林一')
+  assert.equal(page.data.userInfo.phone, '13800138000')
+  page.handlePayment()
+  assert.equal(page.data.participantError, '', '已选了有姓名的参与人,不得报「需要包含姓名」')
+  assert.ok(latestHandlers, '校验通过后必须进入下单')
+  const wxml = fs.readFileSync(path.join(PAGE_DIR, 'baoming.wxml'), 'utf8')
+  assert.match(wxml, /<cy-inline-error class="participant-err" wx:if="\{\{pageState === 'ready' && participantError\}\}" kind="field"/)
 })

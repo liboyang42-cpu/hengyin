@@ -1,0 +1,49 @@
+
+== publisher identity (paid publish needs it)
+
+== one text-question game (template) for the stations, approved by admin
+{"msg": "操作成功", "code": 200, "data": 6006, "_status": 200}
+approve template {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] template                 ((6006, 1, 1, 1),)
+
+== executing club leader 9008 identity (open-session needs it)
+
+== publish a paid city theme (V2 create, product_type=1)
+{"msg": "主题发布成功", "code": 200, "data": {"topicId": 990015, "auditTaskId": 7, "reviewState": "PENDING", "bundledTemplateIds": [6006], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}, "_status": 200}
+   [库回读] topic                    ((990015, 1, 7, 1, 1, 0),)
+
+== admin approves the publish audit tasks
+TOPIC_PROJECT_REVIEW {"msg": "审核处理成功", "code": 200, "_status": 200}
+TOPIC {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] lifecycle after project review ((2, 1, 1),)
+   [库回读] content slot             (('CONTENT', 'CLUB', 7001, 1),)
+
+== publisher invites club 7002 to organise; its leader accepts (ORGANIZER coop_order)
+self mode: no partner club invited
+   [库回读] coop_order               ()
+
+== recruit deadline job: RECRUITING -> PRICING
+   [库回读] lifecycle                ((2,),)
+
+== author pricing page preview + confirm the final price
+preview {"msg": "操作成功", "code": 200, "data": {"platformRate": 0.1, "sumShareRate": 0, "sumFixedFee": 0, "leadCostPerHead": 0, "perkCost": 0.0, "costC": 0.0, "priceMin": 0.0, "subType": "guided", "lineup": [], "cityReferencePrice": null, "cityReferenceSampleSize": 0, "cityReferenceLabel": null, "canConfirm": true, "confirmBlockReason": null, "currentPrice": 69.0}, "_status": 200}
+confirm {"msg": "终价已确认，已提交开售审核，审核通过后开售。注意：平台正在办理支付资质，开放前这个主题开售后玩家还不能在线付款报名", "code": 200, "_status": 200}
+   [库回读] sale review task         ((8, 'TOPIC_SALE_REVIEW', 0),)
+
+== admin: sale-submit (idempotent) then approve the sale review
+sale-submit {"msg": "已提交开售审核", "lifecycle": "PRICING", "code": 200, "taskId": 8, "reviewRequired": true, "_status": 200}
+approve {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] lifecycle/selling_started_at ((3, datetime.datetime(2026, 11, 2, 17, 36, 11)),)
+   [库回读] payee facts untouched (no coop_order, no corporate payee snapshot) ((0, 1),)
+
+== club 7001 opens a session; player 9009 quotes and signs up
+open-session {"msg": "开团成功", "code": 200, "data": {"activityId": 12}, "_status": 200}
+activity 12 tickets ((80, Decimal('69.00')),)
+quote {"msg": "sellingStartedAt 尚未到达，拒绝售卖", "code": 500, "_status": 200}
+RESULT_TOPIC 990015 ACTIVITY 12 TICKET 80
+
+== player 9009: consent, create the registration, pay through the rig seam -> real /api/registration/callback
+quote refused; no registration created (expected for a club-owned paid theme: assertCollectible)
+quote (re-run after selling_started_at passed) {"msg": "该产品暂不支持在线支付(平台正在办理支付资质,预计 2 个月内开放);如需报名请联系主办方", "code": 500, "_status": 200}
+   [库回读] no registration for this session ((0,),)
+   [库回读] topic                    ((990015, 3, datetime.datetime(2026, 11, 2, 17, 36, 11), 7001, 9003),)

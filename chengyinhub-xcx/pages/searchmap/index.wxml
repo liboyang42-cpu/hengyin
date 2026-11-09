@@ -18,7 +18,7 @@
       <view class="item-tit ep1">{{item.name}}</view>
       <view class="item-association" wx:if="{{item.topicId}}">关联主题路线</view>
       <view class="item-meta">
-        <view class="item-meta-row">
+        <view class="item-meta-row cy-addr-tap" catchtap="onAddressTap" data-id="{{item.id}}" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.addressName || item.name}}" data-address="{{item.address}}" hover-class="{{item.latitude && item.longitude ? 'cy-pressed' : 'none'}}" hover-stay-time="80" hover-stop-propagation aria-role="button" aria-label="在地图中打开 {{item.address || item.name}}">
           <cy-icon name="poi-landmark" size="24" />
           <text class="item-meta-txt ep1">{{item.address || '位置暂未提供'}}</text>
         </view>
@@ -31,7 +31,8 @@
   </view>
 </template>
 
-<view class="theme-dark">
+<!-- 第十二轮 k7(j4 N6):商家身份看的是浅色底图,返回 / 搜索 / 筛选也跟着用商家浅色 -->
+<view class="{{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -43,6 +44,7 @@
     longitude="{{longitude}}"
     scale="{{scale}}"
     markers="{{markers}}"
+    subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
     bindtap="onMapTap"
     bindmarkertap="onMarkerTap"
     bindregionchange="onRegionChange"
@@ -225,7 +227,7 @@
   </view>
 </cy-sheet>
 
-<cy-category-sheet show="{{merchantCategorySheetVisible}}" type="{{1}}" num="{{1}}"
+<cy-category-sheet show="{{merchantCategorySheetVisible}}" type="MERCHANT" num="{{1}}"
   ids="{{filterConditions.categoryId || ''}}" bind:select="onMerchantCategoryChange" bind:close="closeMerchantCategorySheet" />
 
 <cy-date-sheet show="{{dateSheetVisible}}" title="{{datePickerTitle}}" dark="{{true}}"

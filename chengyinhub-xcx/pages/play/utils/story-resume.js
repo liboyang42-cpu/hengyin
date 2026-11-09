@@ -5,6 +5,7 @@
  *   pos        读到哪一段 {chapterId, i, nodeId}
  *   gates      看过开场门的章节 id
  *   openNodeId 退出时正开着的那个玩法
+ *   trails     读过收尾文字的章节 id → true(P-29:换章前先读完本章收尾,读过的重进不再停)
  * 以及玩法里填了一半的草稿(draftKey,由玩法组件自己存取)。存不上 / 读不出都当没有,不打断游玩。
  */
 const { pausedRunStorageKey } = require('./play-run-session.js');

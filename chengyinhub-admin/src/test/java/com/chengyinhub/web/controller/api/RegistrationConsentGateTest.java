@@ -63,15 +63,15 @@ class RegistrationConsentGateTest {
     }
 
     @Test
-    void topicTicketLimitReturnsReadableMessageAfterCurrentConsent() {
+    void saleSnapshotMissingReturnsReadableMessageAfterCurrentConsent() {
         when(consentMapper.selectLatest(7L, DOC, SCENE)).thenReturn(consent("AGREE", VERSION));
         when(checkoutService.createOrReplay(7L, request))
-                .thenThrow(new IllegalStateException("SHOP_DAY_ACCOUNT_TICKET_LIMIT_REACHED"));
+                .thenThrow(new IllegalStateException("SALE_SNAPSHOT_MISSING"));
 
         AjaxResult result = controller.createRegistration(request);
 
         assertEquals(500, result.get("code"));
-        assertEquals("已达到该主题的购票上限", result.get("msg"));
+        assertEquals("该主题的开售信息还没准备好，暂不能报名", result.get("msg"));
         verify(checkoutService).createOrReplay(7L, request);
     }
 

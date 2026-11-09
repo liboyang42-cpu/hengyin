@@ -38,6 +38,8 @@ function buildHeroCta(info, opts) {
   const lc = Number(d.lifecycle);
   if (lc === 1 || lc === 2 || lc === 7) return { kind: 'locked', text: lc === 7 ? '立项待审 · 未开售' : (lc === 1 ? '招募中 · 未开售' : '定价中 · 未开售') };
   if (o.merchantClosed) return { kind: '', text: '' };
+  // j2 F-06:从俱乐部场次卡进来的人是来报这一场的,有可报名场次就先给场次,不推自玩通行证
+  if (o.preferSession && Array.isArray(d.activityList) && d.activityList.length) return { kind: 'signup', text: '立即报名' };
   if (Number(d.selfPlay) === 1) return { kind: 'selfplay', text: (o.priceText || '') + ' 随时开玩' };
   return { kind: 'signup', text: '立即报名' };
 }
@@ -214,7 +216,9 @@ function passWindow(opts) {
     if (!until) until = ninety;
   }
   const days = Math.max(0, Math.ceil((until.getTime() - now.getTime()) / 86400000));
-  const m = until.getMonth() + 1, dd = until.getDate();
+  // 第十二轮 k7 N6:到期落在零点 = 能玩的最后一天是前一天;与订单页「可玩至」同一个日期
+  const last = until.getHours() === 0 && until.getMinutes() === 0 && until.getSeconds() === 0 ? new Date(until.getTime() - 1) : until;
+  const m = last.getMonth() + 1, dd = last.getDate();
   return {
     untilText: pad2(m) + '/' + pad2(dd),
     daysText: String(days),

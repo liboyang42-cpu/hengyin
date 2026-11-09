@@ -25,7 +25,7 @@
                   class="item-pic-image" binderror="onCoverError" data-index="{{index}}" data-key="{{item.id}}" />
                 <view class="btns flex-ac">
                   <view class="david_moban">
-                    <image lazy-load="true" src="/images/icon_star.png" mode="widthFix" />
+                    <image lazy-load="true" src="/subpackageMember/images/icon_star.png" mode="widthFix" />
                     {{item.rating }}
                   </view>
                   <view class="david_moban" wx:if="{{item.useNum != null && item.useNum !== ''}}">{{ item.useNum || 0 }} 次引用</view>

@@ -260,6 +260,10 @@ function summarizeMerchantProjection(projection) {
   if (stations.some((item) => item.status === 'PAUSED')) {
     return { state: 'paused', text: '本站已暂停', tone: 'paused', pendingVerificationCount: pending, stationCount: stations.length }
   }
+  // 第十轮 f3 第 4 项(j2 F-17):商家已点「准备完成」、只差活动开场时,不再说「本站待准备」。
+  if (stations.some((item) => item.status === 'READY')) {
+    return { state: 'setup', text: '等待活动开场', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
+  }
   return { state: 'setup', text: '本站待准备', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
 }
 
@@ -314,6 +318,7 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
     topicId: positiveId(entry && entry.topicId),
     activityName: safeText(entry && entry.activityName, 120),
     stationCount: positiveId(entry && entry.stationCount),
+    invitedCount: positiveId(entry && entry.invitedCount) || 0,
     startAt: safeText(entry && entry.startAt, 32),
     endAt: safeText(entry && entry.endAt, 32),
   })).filter((entry) => entry.activityId && entry.topicId && entry.activityName && entry.stationCount)
@@ -342,7 +347,10 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
       matched = authorizedEntries.filter((entry) => entry.topicId === positiveId(card.ownerId)
         && !exactActivityIds.has(entry.activityId))
     }
-    matched.forEach((entry) => attachedActivityIds.add(entry.activityId))
+    // 第十一轮 h4 L2:项目卡(主题级「承接」卡)不渲染 gameEntries,挂在它上面的场次站点等于看不见,
+    // 商家只能绕「承接页 › 更多 › 服务时段」两步进本站页。只有同一场次的活动卡才算已有入口;
+    // 主题卡上的场次照样补出直达本站页的场次卡(一场一张,不与主题卡重复)。
+    if (card.bizType === 'activity') matched.forEach((entry) => attachedActivityIds.add(entry.activityId))
     const gameEntries = matched.map(decorateEntry)
     return Object.assign({}, card, { gameEntries })
   })
@@ -350,12 +358,15 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
     .filter((entry) => !attachedActivityIds.has(entry.activityId))
     .map((entry) => ({
       key: 'game-station-' + entry.activityId,
+      gameStationCard: true,
       role: 'join',
       roleName: '承接',
       roleLabel: '我承接的',
       title: entry.activityName,
-      meta: entry.startAt || '',
-      statusLabel: '',
+      // 第十二轮 k4(j2 N-02):时间到分钟;还有站待接受邀请时卡上写明,并排到最前(见下)
+      meta: minuteText(entry.startAt),
+      statusLabel: entry.invitedCount > 0 ? '待接受邀请' : '',
+      statusTone: entry.invitedCount > 0 ? 'fix' : '',
       catLabel: '活动',
       thumb: '',
       id: entry.activityId,
@@ -369,7 +380,15 @@ function attachMerchantGameEntries(cards, entries, stateByActivity) {
       msgCount: 0,
       gameEntries: [decorateEntry(entry)],
     }))
-  return decoratedCards.concat(missingCards)
+  const waiting = missingCards.filter((card) => card.statusLabel)
+  const rest = missingCards.filter((card) => !card.statusLabel)
+  return waiting.concat(decoratedCards, rest)
+}
+
+// 'yyyy-MM-dd HH:mm:ss' → 'yyyy-MM-dd HH:mm';别的形状原样返回
+function minuteText(value) {
+  const text = String(value || '')
+  return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? text.slice(0, 16) : text
 }
 
 function hasStation(projection, station) {

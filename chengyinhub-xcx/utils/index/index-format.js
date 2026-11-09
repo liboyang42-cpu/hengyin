@@ -1,7 +1,7 @@
 // FE-12 首页格式化纯函数。从 pages/index/index.js 抽出:日期时间展示格式化 + 主题列表日期整形。
 // 无 wx / 无 this / 无副作用,可直接单测。逻辑与原 index 内联实现逐字一致。
 
-// 日期时间展示 "YYYY年M月D日 周X 上午/下午HH:mm"。
+// 日期时间展示 "YYYY年M月D日 周X HH:mm"(24 小时制)。
 function formatDateTimeForDisplay(date) {
   if (!date) return '';
 
@@ -16,23 +16,11 @@ function formatDateTimeForDisplay(date) {
   const month = months[date.getMonth()];
   const day = date.getDate();
 
-  // 获取小时和分钟
-  let hours = date.getHours();
+  // j1 F18:24 小时制,0 点不再读成「上午12:xx」。
+  const formattedHours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
 
-  // 判断上午/下午
-  const period = hours >= 12 ? '下午' : '上午';
-
-  // 转换为12小时制
-  if (hours > 12) {
-    hours -= 12;
-  } else if (hours === 0) {
-    hours = 12;
-  }
-
-  const formattedHours = hours.toString().padStart(2, '0');
-
-  return `${year}年${month}${day}日 ${weekDay} ${period}${formattedHours}:${minutes}`;
+  return `${year}年${month}${day}日 ${weekDay} ${formattedHours}:${minutes}`;
 }
 
 // 主题列表日期整形:就地补 month/day/dateTime 与 endmonth/endday/endDateTime(= 原 processTopicDate)。

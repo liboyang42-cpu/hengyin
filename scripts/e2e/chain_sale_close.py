@@ -75,18 +75,9 @@ def assert_payee_readback(response, expected_status):
     return data
 
 
-def main(tid):
-    atok = admin_token()
-    etok, _ = app_token(EXEC_CLUB_PHONE)
-
-    step("执行俱乐部主理人:通过真实入口登记发布者实名(开场次同属发布行为)")
-    status = http("POST", "/api/publisher/identity/status", token=etok, json_body={})
-    if not ((status.get("data") or {}).get("registered")):
-        status = http("POST", "/api/publisher/identity", token=etok, json_body={
-            "realName": "测试执行主理人", "idCard": "110101199001010031",
-            "consent": True, "source": "topic_publish"})
-    show("publisher/identity", json.dumps(status, ensure_ascii=False)[:180])
-
+def open_sessions(tid, etok):
+    """开团在开售提审之前(主题停在 2=PRICING):自由探索的开售审核要先见到场次票(SALE_TICKET_PROJECTION_MISSING)。
+    第十一轮 i1:h4「未开售不能开一场」只对自由探索 + 本俱乐部生效合作单在 PRICING 放行,正是这一步要的状态。"""
     step("俱乐部开团:一天一场,开 4 场(POST /api/club/open-session)")
     # ★ 这就是任务书里「俱乐部接手主题 → 定 4 个场次」的真实入口。
     #   ClubSessionServiceImpl.open 要求该俱乐部对本主题有【生效合作单】,然后建 cms_activity
@@ -127,6 +118,23 @@ def main(tid):
     readback("活动票投影(每场应与主题票同数)",
              "SELECT owner_id,COUNT(*) FROM oms_ticket WHERE owner_type=2 AND owner_id IN "
              "(SELECT id FROM cms_activity WHERE topic_id=%s) GROUP BY owner_id", (tid,))
+    return 0
+
+
+def main(tid):
+    atok = admin_token()
+    etok, _ = app_token(EXEC_CLUB_PHONE)
+
+    step("执行俱乐部主理人:通过真实入口登记发布者实名(开场次同属发布行为)")
+    status = http("POST", "/api/publisher/identity/status", token=etok, json_body={})
+    if not ((status.get("data") or {}).get("registered")):
+        status = http("POST", "/api/publisher/identity", token=etok, json_body={
+            "realName": "测试执行主理人", "idCard": "110101199001010031",
+            "consent": True, "source": "topic_publish"})
+    show("publisher/identity", json.dumps(status, ensure_ascii=False)[:180])
+
+    if open_sessions(tid, etok) != 0:
+        return 1
 
     step("俱乐部对公收款人:建资料 → 审核通过(SALE_PAYEE_NOT_VERIFIED 就是缺它)")
     # 明显假值,不编得像真的;真实入口在后台 /business/club-payee。

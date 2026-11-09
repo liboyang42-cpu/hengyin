@@ -17,7 +17,7 @@ const { shouldUseAr, arSupported, pillOf } = require('./ar-gate.js');
 // C1:扫码比对节点静态码 —— 只证明码对得上,不证明人在现场
 const { SCAN_MATCH_NOTE } = require('../../utils/sensor-contract.js');
 
-const TITLE = '扫一下门口的码';
+const TITLE = '扫描这一站的二维码';
 // AR 迟迟放不下 / 认不出:15 秒后自动回落屏幕叠加 —— 服务端早已算过这一站,画面不能一直卡在「找地面」
 const AR_GIVE_UP_MS = 15000;
 
@@ -49,6 +49,7 @@ Component({
   properties: {
     inline: { type: Boolean, value: false }, // 故事流内嵌:取景收成流里一块,不接真 AR(xr-frame 要整窗画布)
     show: { type: Boolean, value: false },
+    sessionId: { type: null, value: '' },
     // ⚠️ 默认值只在**没传**这个属性时生效。分发器一律传 kit.title,商家没填就是 ''
     // —— 那会把这一行顶掉,而不是回落到默认。所以回落放在 titleText 上。
     title: { type: String, value: '' },
@@ -91,6 +92,9 @@ Component({
     arW: 0, arH: 0, arRW: 0, arRH: 0,
   },
   observers: {
+    'show, sessionId': function () {
+      this._scanEpoch = (this._scanEpoch || 0) + 1; this._scanning = false; this._lastCode = '';
+    },
     'show, kind, title': function (show, kind) {
       if (!show) {
         this._lastCode = '';
@@ -116,7 +120,7 @@ Component({
     'arMode': function () { this._refreshAr(); },
   },
   lifetimes: {
-    detached() { clearTimeout(this._overTimer); clearTimeout(this._arTimer); },
+    detached() { this._scanEpoch = (this._scanEpoch || 0) + 1; clearTimeout(this._overTimer); clearTimeout(this._arTimer); },
   },
   methods: {
     _normalizeKind: normalizeKind,      // 纯算法出口,供单测
@@ -129,16 +133,23 @@ Component({
      * 取消扫码不报错:那是玩家改主意,不是出事。
      */
     onScan() {
-      if (this.data.reply || this.data.imageUrl || this.data.audioUrl || this.data.overlayUrl) return;   // 已经扫过了
+      if (this._scanning || this.data.reply || this.data.imageUrl || this.data.audioUrl || this.data.overlayUrl) return;   // 已经扫过了
+      const app = getApp(), owner = app.getUserID(), generation = app._loginEpoch;
+      const sessionId = this.data.sessionId, epoch = this._scanEpoch;
+      const current = () => this.data.show && epoch === this._scanEpoch && sessionId === this.data.sessionId
+        && owner === app.getUserID() && generation === app._loginEpoch;
+      this._scanning = true;
       wx.scanCode({
         onlyFromCamera: false,
         success: (res) => {
+          if (!current()) return;
+          this._scanning = false;
           const code = String((res && res.result) || '').trim();
           if (!code) { cyToast('没读到码'); return; }
           motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
           this.triggerEvent('scanned', { code: code });
         },
-        fail: () => {},
+        fail: () => { if (current()) this._scanning = false; },
       });
     },
 
@@ -150,8 +161,9 @@ Component({
       const code = String((e && e.detail && e.detail.result) || '').trim();
       if (!code || code === this._lastCode) return;
       this._lastCode = code;
+      const epoch = this._scanEpoch;
       setTimeout(() => {
-        if (!this.data.overlayUrl && this.data.reply === '' && this._lastCode === code) this._lastCode = '';
+        if (epoch === this._scanEpoch && !this.data.overlayUrl && this.data.reply === '' && this._lastCode === code) this._lastCode = '';
       }, 6000);
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
       this.triggerEvent('scanned', { code: code });

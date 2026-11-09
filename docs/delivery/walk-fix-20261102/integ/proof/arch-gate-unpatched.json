@@ -1,0 +1,51 @@
+{
+ "verdict": "BLOCKED",
+ "candidate_sha": "441bd89e79312e500fd78d554562b47ba1abe9d0",
+ "comparison_base_sha": "c6eac3b8cebf7311e8f00f208d294c3c8212aaec",
+ "ci_checkout_sha": "441bd89e79312e500fd78d554562b47ba1abe9d0",
+ "findings": [
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ContentSafetyRecheckMapper.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.mapper.ContentSafetyRecheckMapper"
+  },
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ContentSensitiveMapper.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.mapper.ContentSensitiveMapper"
+  },
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IContentSafetyRecheckService.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.service.IContentSafetyRecheckService"
+  },
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISensitiveContentRescanService.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.service.ISensitiveContentRescanService"
+  },
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ContentSafetyRecheckServiceImpl.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"
+  },
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SensitiveContentLibraryImpl.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl"
+  },
+  {
+   "detail": "register exact technical owner in an independently reviewed verifier",
+   "key": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/SensitiveContentRescanServiceImpl.java",
+   "rule": "NEW_UNOWNED_BOUNDARY",
+   "type": "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl"
+  }
+ ],
+ "review_items_count": 215
+}

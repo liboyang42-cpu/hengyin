@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.vo.TopicChapterVO;
 import com.chengyinhub.system.domain.SysCategory;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -86,6 +87,41 @@ public class CmsTopic extends BaseEntity
     private Date operationEndDate;
     @JsonIgnore
     private Boolean merchantSupplyGapOnly;
+    /**
+     * C-02 提示位(不落库,只在主理人「开一场」可开团列表里填):本主题的付费场次能否在线收款。
+     * 与 CmsRegistrationServiceImpl.assertCollectible 同一判据(productRoleService.isPlatformOwned)。
+     */
+    private Boolean onlinePaymentAvailable;
+    public Boolean getOnlinePaymentAvailable() { return onlinePaymentAvailable; }
+    public void setOnlinePaymentAvailable(Boolean onlinePaymentAvailable) { this.onlinePaymentAvailable = onlinePaymentAvailable; }
+
+    /** 第十轮 f2 walk:定价中(lifecycle 2)且终价已提交、开售审核在等平台(俱乐部「现在要做」用);不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient Boolean saleReviewPending;
+    public Boolean getSaleReviewPending() { return saleReviewPending; }
+    public void setSaleReviewPending(Boolean saleReviewPending) { this.saleReviewPending = saleReviewPending; }
+
+    /** 第十二轮 k4(j2 N-01):已中标却还没有合作单的站名,只对主题发布者本人下发(俱乐部「现在要做」用);不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private transient java.util.List<String> uncontractedStations;
+    public java.util.List<String> getUncontractedStations() { return uncontractedStations; }
+    public void setUncontractedStations(java.util.List<String> uncontractedStations) { this.uncontractedStations = uncontractedStations; }
+
+    /** C-17:开一场时只读展示的票价(最低价,元)与集合点,取自主题票;不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient BigDecimal sessionPrice;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient String sessionMeetingPoint;
+    public BigDecimal getSessionPrice() { return sessionPrice; }
+    public void setSessionPrice(BigDecimal sessionPrice) { this.sessionPrice = sessionPrice; }
+    /** 第十二轮 k3(p3 N11):开一场按票种数决定是否给「容量」栏(多票种沿用各票容量,不再写一行解释)。不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private transient Integer sessionTicketCount;
+    public Integer getSessionTicketCount() { return sessionTicketCount; }
+    public void setSessionTicketCount(Integer sessionTicketCount) { this.sessionTicketCount = sessionTicketCount; }
+    public String getSessionMeetingPoint() { return sessionMeetingPoint; }
+    public void setSessionMeetingPoint(String sessionMeetingPoint) { this.sessionMeetingPoint = sessionMeetingPoint; }
     @JsonIgnore
     private Boolean pendingClubApplicationOnly;
     @JsonIgnore
@@ -93,6 +129,8 @@ public class CmsTopic extends BaseEntity
     /** C 端通用列表专用：隐藏父俱乐部已解散的主题；后台审计查询不设置。 */
     @JsonIgnore
     private Boolean activeClubOnly;
+    /** 只取在售/草稿主题行,不含模板行(is_template=1);我的项目「主题」tab 用,模板在「模板」tab。 */
+    private Boolean excludeTemplates;
 
     /**
      * 非持久:只要「商家真的能承接」的那些主题 —— 商家侧合作中心那条池子专用。
@@ -211,6 +249,14 @@ public class CmsTopic extends BaseEntity
     /** 客户端入口开关；服务端从已加载配置校验后赋值，绝不替代配置真源。 */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private transient Boolean gameModuleEnabled;
+
+    /** C-19:俱乐部活动卡用的本俱乐部场次时间(进行中的那场,否则最近一场未开始的);只读富化,不落库。 */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private transient Date nextSessionStart;
+
+    public Date getNextSessionStart() { return nextSessionStart; }
+    public void setNextSessionStart(Date nextSessionStart) { this.nextSessionStart = nextSessionStart; }
 
     /** 选择主题的ID */
     @Excel(name = "选择主题的ID")
@@ -827,6 +873,8 @@ public class CmsTopic extends BaseEntity
     public void setMerchantPoolOnly(Boolean merchantPoolOnly) { this.merchantPoolOnly = merchantPoolOnly; }
     public Boolean getActiveClubOnly() { return activeClubOnly; }
     public void setActiveClubOnly(Boolean activeClubOnly) { this.activeClubOnly = activeClubOnly; }
+    public Boolean getExcludeTemplates() { return excludeTemplates; }
+    public void setExcludeTemplates(Boolean excludeTemplates) { this.excludeTemplates = excludeTemplates; }
 
     public void setClubId(Long clubId)
     {

@@ -1,5 +1,5 @@
 <wxs src="../../../utils/time-format.wxs" module="tf" />
-<view class="fabu theme-topic-editor">
+<view class="fabu theme-topic-editor {{step === 2 ? 'fabu--review' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -13,7 +13,7 @@
     <cy-error load-failure fill="{{true}}" title="暂时无法确认身份" sub="{{accessError}}" bind:retry="retryAccessCheck" auto-back />
   </view>
   <view class="publish-access-state" wx:elif="{{accessState === 'denied'}}">
-    <cy-error fill size="lg" title="当前身份不能发布活动" sub="{{deniedReason}}" retry="" bind:back="onNavBack" auto-back custom-back />
+    <cy-empty title="暂时不能发布活动" sub="{{deniedReason}}" cta="返回" bind:cta="onNavBack" />
   </view>
   <block wx:elif="{{accessState === 'ready'}}">
   <view class="publish-access-state" wx:if="{{activityLoadError}}">
@@ -35,16 +35,15 @@
         <view class="item-cont {{focusField === 'name' ? 'is-focused' : ''}} {{errors.name ? 'is-error' : ''}}">
           <input type="text" placeholder="活动标题" placeholder-class="fld-ph" value="{{formData.name}}" bindinput="onInputChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-field="name" />
         </view>
-        <cy-inline-error class="form-inline-error" wx:if="{{errors.name}}" title="{{errors.name}}" action="清除" data-field="name" bind:action="clearFormField" />
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.name}}" title="{{errors.name}}" />
       </view>
 
       <view class="li" id="field-address">
         <view class="item-tit">活动地点<text>*</text></view>
-        <view class="item-cont {{errors.addressName ? 'is-error' : ''}} {{timeLocationLocked ? 'is-sold-locked' : ''}}" bindtap="choosePoiForNode" aria-role="button" aria-label="为该节点选点" hover-class="cy-pressed" hover-stay-time="80">
-          <input type="text" placeholder="请输入活动地点" placeholder-class="fld-ph" value="{{formData.addressName}}" disabled   data-field="addressName" />
+        <view class="item-cont {{errors.addressName ? 'is-error' : ''}} {{timeLocationLocked ? 'is-sold-locked' : ''}}" bindtap="choosePoiForNode" aria-role="button" aria-label="选择活动地点" hover-class="cy-pressed" hover-stay-time="80">
+          <input type="text" placeholder="选择活动地点" placeholder-class="fld-ph" value="{{formData.addressName}}" disabled   data-field="addressName" />
         </view>
-        <cy-inline-error class="form-inline-error" wx:if="{{errors.addressName}}" title="{{errors.addressName}}" />
-        <view class="field-purpose">用于地图与到场导航，拒绝不影响填写</view>
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.addressName}}" title="{{errors.addressName}}" />
       </view>
 
       <view class="ul flex-b date-type-fields" id="field-date">
@@ -63,7 +62,7 @@
               <image lazy-load="true" src="/pages/publish/images/icon_date3.png" mode="widthFix" />
             </view>
           </view>
-          <cy-inline-error class="form-inline-error" wx:if="{{errors.startDate || errors.endDate}}" title="{{errors.startDate || errors.endDate}}" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.startDate || errors.endDate}}" title="{{errors.startDate || errors.endDate}}" />
           <!-- CR-63:已售出(有已支付报名)后时间与地点锁死。服务端为准,这里说明原因。 -->
           <view class="field-purpose field-purpose--locked" wx:if="{{timeLocationLocked}}">已售出，时间和地点不可改</view>
         </view>
@@ -81,18 +80,19 @@
               </view>
             </view>
           </view>
-          <cy-inline-error class="form-inline-error" wx:if="{{errors.categoryIds}}" title="{{errors.categoryIds}}" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.categoryIds}}" title="{{errors.categoryIds}}" />
         </view>
       </view>
       </view>
 
-      <view wx:if="{{step === 1}}">
+      <view wx:if="{{step === 1}}" id="field-content">
+      <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.content}}" title="{{errors.content}}" />
       <view class="li li2" id="field-description">
         <view class="item-tit">活动说明<text>*</text></view>
         <view class="item-cont item-cont2 {{focusField === 'description' ? 'is-focused' : ''}} {{errors.description ? 'is-error' : ''}}">
           <textarea style="width: 100%;" value="{{formData.description}}" auto-height placeholder="活动说明" placeholder-class="fld-ph" bindinput="onInputChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-field="description" />
         </view>
-        <cy-inline-error class="form-inline-error" wx:if="{{errors.description}}" title="{{errors.description}}" action="清除" data-field="description" bind:action="clearFormField" />
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.description}}" title="{{errors.description}}" />
       </view>
 
       <view class="li" id="field-cover">
@@ -111,12 +111,12 @@
             bind:preview="onCoverPreview"
             bind:retry="retryCoverUpload"
           />
-          <cy-inline-error class="form-inline-error" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
         </view>
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
       </view>
 
       <view class="li" id="field-template">
-        <view class="item-tit">选择模板<text>*</text></view>
+        <view class="item-tit">选择模板</view>
         <view class="item-cont {{errors.templateId ? 'is-error' : ''}}">
           <view class="picker picker2 flex-cb" bindtap="showTemp" hover-class="cy-pressed" hover-stay-time="80">
             <view class="tit {{selectedTempInfo ? 'selected-text' : 'placeholder-text'}}">
@@ -127,7 +127,7 @@
             </view>
           </view>
         </view>
-        <cy-inline-error class="form-inline-error" wx:if="{{errors.templateId}}" title="{{errors.templateId}}" />
+        <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors.templateId}}" title="{{errors.templateId}}" />
       </view>
       </view>
 
@@ -135,7 +135,6 @@
       <cy-inline-error load-failure wx:if="{{ownerLoadError}}" title="发起人信息未加载" sub="{{ownerLoadError}}" action="重试" bind:action="getUserData" />
       <view class="li">
         <view class="item-tit">合作者<text>*</text></view>
-        <view class="item-tip">合作者可编辑内容，不参与结算</view>
         <view class="item-cont2 hezuo">
           <view class="dl" wx:for="{{formData.collaboratorList}}" wx:key="id">
             <view class="dd flex-cb" style="padding: 16rpx 26rpx;">
@@ -145,7 +144,7 @@
                 </view>
                 <view class="name">{{item.nickname}}</view>
               </view>
-              <view class="zw" wx:if="{{item.isOwner==1}}">主理人</view>
+              <view class="zw" wx:if="{{item.isOwner==1}}">{{item.ownerLabel || '主理人'}}</view>
               <view class="david_ty_rl_hcz_li_right" wx:if="{{item.isOwner!=1}}" bindtap="removeCollaborator" data-index="{{index}}" aria-role="button" aria-label="移除合作者 {{item.nickname}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view>
             </view>
           </view>
@@ -165,17 +164,16 @@
           <view class="item-cont {{focusField === 'ticketName' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketName' + ticketIndex] ? 'is-error' : ''}}">
             <input type="text" placeholder="请输入票单名称" placeholder-class="fld-ph" value="{{ticket.name}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketName{{ticketIndex}}" data-field="name" data-index="{{ticketIndex}}" />
           </view>
-          <cy-inline-error class="form-inline-error" wx:if="{{errors['ticketName' + ticketIndex]}}" title="{{errors['ticketName' + ticketIndex]}}" action="清除" data-ticket-index="{{ticketIndex}}" data-ticket-field="name" data-error-key="ticketName{{ticketIndex}}" bind:action="clearFormField" />
+          <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors['ticketName' + ticketIndex]}}" title="{{errors['ticketName' + ticketIndex]}}" />
         </view>
 
         <view class="ul flex-b">
           <view class="li">
-            <view class="item-tit">票面价格</view>
+            <view class="item-tit">票面价格<text>*</text></view>
             <view class="item-cont {{focusField === 'ticketPrice' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketPrice' + ticketIndex] ? 'is-error' : ''}}">
-              <input type="number" placeholder="请输入价格" placeholder-class="fld-ph" value="{{ticket.price}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketPrice{{ticketIndex}}" data-field="price" data-index="{{ticketIndex}}" />
+              <input type="digit" placeholder="请输入价格" placeholder-class="fld-ph" value="{{ticket.price}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketPrice{{ticketIndex}}" data-field="price" data-index="{{ticketIndex}}" />
             </view>
-            <cy-inline-error class="form-inline-error" wx:if="{{errors['ticketPrice' + ticketIndex]}}" title="{{errors['ticketPrice' + ticketIndex]}}" />
-            <view class="field-purpose field-purpose--locked" wx:if="{{merchantHost}}">{{merchantFreeOnlyMsg}}</view>
+            <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors['ticketPrice' + ticketIndex]}}" title="{{errors['ticketPrice' + ticketIndex]}}" />
           </view>
 
           <view class="li">
@@ -183,11 +181,21 @@
             <view class="item-cont {{focusField === 'ticketStock' + ticketIndex ? 'is-focused' : ''}} {{errors['ticketStock' + ticketIndex] ? 'is-error' : ''}}">
               <input type="number" placeholder="请输入库存" placeholder-class="fld-ph" value="{{ticket.totalStock}}" bindinput="onTicketChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ticketStock{{ticketIndex}}" data-field="totalStock" data-index="{{ticketIndex}}" />
             </view>
-            <cy-inline-error class="form-inline-error" wx:if="{{errors['ticketStock' + ticketIndex]}}" title="{{errors['ticketStock' + ticketIndex]}}" action="清除" data-ticket-index="{{ticketIndex}}" data-ticket-field="totalStock" data-error-key="ticketStock{{ticketIndex}}" bind:action="clearFormField" />
+            <cy-inline-error class="form-inline-error" kind="field" wx:if="{{errors['ticketStock' + ticketIndex]}}" title="{{errors['ticketStock' + ticketIndex]}}" />
           </view>
         </view>
       </view>
 
+    <view class="publish-review" wx:if="{{step === 2}}">
+      <!-- CU-C-103:这是编辑已有活动的**保存**页,不是发布页。原来不分新建/编辑都写
+           「发布前摘要」+「发布后会在活动列表展示,继续即按当前公开范围发布」,
+           用户会以为保存=重新发布或改公开范围(后端 /api/activity/update 只改内容,
+           不碰 publish_status,也不重新送审)。 -->
+      <view class="publish-review__title">{{editingActivityId ? '修改摘要' : '发布前摘要'}}</view>
+      <view class="publish-review__text">{{publishSummary}}</view>
+      <!-- j1 F6 / 文案表(第十轮 f3):新建那一路的「默认公开…」提示删去,摘要框变矮;编辑态仍说明保存不改公开范围 -->
+      <view class="publish-review__visibility" wx:if="{{editingActivityId}}">本次保存只更新上面这些内容，不会改变活动的公开范围。</view>
+    </view>
       <view>
         <cy-btn variant="secondary" style="width:268rpx;margin:20rpx auto 0 auto" bindtap="addTicket"><cy-icon name="plus" size="28" /> 添加票单</cy-btn>
       </view>
@@ -226,14 +234,14 @@
         <view class="temp-list">
           <cy-skeleton wx:if="{{templateLoadState === 'loading' && !tempList.length}}" type="card" count="2" />
           <cy-error load-failure wx:elif="{{templateLoadState === 'error'}}" title="模板加载失败" sub="{{templateError}}" bind:retry="getTempList" />
-          <cy-empty wx:elif="{{templateLoadState === 'empty'}}" kind="empty" title="还没有可用模板" sub="先创建节点玩法，再回来选择。" cta="创建节点玩法" bind:cta="createTemplate" />
+          <cy-empty wx:elif="{{templateLoadState === 'empty'}}" kind="empty" title="还没有可用模板" cta="创建节点玩法" bind:cta="createTemplate" />
           <view class="ul flex-w" wx:else>
             <view bindtap="selectTemp" class="li {{selectedTempId === item.id ? 'selected' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" aria-role="radio" aria-checked="{{selectedTempId === item.id}}" aria-label="选择模板 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="item">
                 <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pic" />
                 <!-- <view class="attr flex-ce">
                   <view class="dd flex-cc">
-                    <image lazy-load="true" src="/images/icon_star.png" mode="widthFix" />{{item.rating}}
+                    <image lazy-load="true" src="/subpackageMember/images/icon_star.png" mode="widthFix" />{{item.rating}}
                   </view>
                   <view class="dd flex-cc">
                     {{item.useNum}} 使用
@@ -243,7 +251,7 @@
                   <view class="tit ep1">{{item.title}}</view>
                   <view class="david_mbxi">
                   <view class="david_mbxi_li"><image lazy-load="true" src="/pages/publish/images/d_mbico1.png" mode="widthFix" />{{ item.players }}</view>
-                  <view class="david_mbxi_li"><image lazy-load="true" src="/pages/publish/images/d_mbico2.png" mode="widthFix" />{{ item.duration === 0 ? 0 : (item.duration || '--') }}分钟</view>
+                  <view wx:if="{{item.duration > 0}}" class="david_mbxi_li"><image lazy-load="true" src="/pages/publish/images/d_mbico2.png" mode="widthFix" />{{ item.duration || 0 }}分钟</view>
                 </view>
                 </view>
               </view>
@@ -257,16 +265,7 @@
   </cy-sheet>
 
   <view class="fabu-btn safebot">
-    <view class="publish-review" wx:if="{{step === 2}}">
-      <!-- CU-C-103:这是编辑已有活动的**保存**页,不是发布页。原来不分新建/编辑都写
-           「发布前摘要」+「发布后会在活动列表展示,继续即按当前公开范围发布」,
-           用户会以为保存=重新发布或改公开范围(后端 /api/activity/update 只改内容,
-           不碰 publish_status,也不重新送审)。 -->
-      <view class="publish-review__title">{{editingActivityId ? '修改摘要' : '发布前摘要'}}</view>
-      <view class="publish-review__text">{{publishSummary}}</view>
-      <view class="publish-review__visibility">{{editingActivityId ? '本次保存只更新上面这些内容，不会改变活动的公开范围。' : '默认公开：发布后会在活动列表展示，继续即按当前公开范围发布。'}}</view>
-    </view>
-    <cy-inline-error wx:if="{{submitError}}" title="活动尚未发布" sub="{{submitError}}" action="重试" bind:action="submitForm" />
+    <cy-inline-error wx:if="{{submitError}}" title="{{editingActivityId ? '修改没有保存' : '活动尚未发布'}}" sub="{{submitError}}" action="重试" bind:action="submitForm" />
     <view class="wrap flex-cb">
       <cy-btn wx:if="{{step === 0}}" variant="secondary" style="width:170rpx" bindtap="onCancel">取消</cy-btn>
       <cy-btn wx:else variant="secondary" style="width:170rpx" bindtap="prevStep">上一步</cy-btn>

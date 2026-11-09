@@ -15,6 +15,8 @@ public interface RefundApplicationMapper {
 
     int insertRefundApplication(RefundApplication refund);
 
+    int insertVerifiedManualCaseRefund(RefundApplication refund);
+
     int updateRefundStatusIfPending(@Param("id") Long id,
                                     @Param("status") Integer status,
                                     @Param("reviewerId") Long reviewerId,

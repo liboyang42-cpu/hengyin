@@ -457,6 +457,29 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select count(1) from cms_activity where member_id = #{member_id} and del_flag=0
     </select>
 
+    <!-- 活动配额「同时存在」口径(ROUND10 j1 F1,2026-11-04 拍板):商家与俱乐部同为 3 场,
+         已结束(end_date 已过)、已取消(cancel_time 非空)的不占名额。
+         selectCmsActivityNumByMemberId 是主页/名片的历史总数,口径不同,不要合并。 -->
+    <select id="selectActivityQuotaUsedByMemberId" resultType="Integer">
+        select count(1) from cms_activity
+        where member_id = #{memberId} and del_flag = 0
+          and cancel_time is null
+          and (end_date is null or end_date &gt; now())
+          <!-- 2026-11-05 业主:俱乐部开的场次(挂主题、且场次或主题属于俱乐部)不占「同时 3 个活动」名额(j6 N7);
+               商家与俱乐部自己发布的活动(不挂主题)、商家主题的自办场次照常计数 -->
+          and not (
+              topic_id is not null and topic_id &gt; 0
+              and (
+                  (club_id is not null and club_id &gt; 0)
+                  or exists (
+                      select 1 from cms_topic quota_topic
+                      where quota_topic.id = cms_activity.topic_id
+                        and quota_topic.club_id is not null and quota_topic.club_id &gt; 0
+                  )
+              )
+          )
+    </select>
+
     <!-- 查询需要结算的活动；product_type=2 来自 ProductType.FREE_EXPLORE -->
     <!-- 2026-09-16 用户硬规则「收款方的钱,等所有玩家都确定退不了才可提现」:结算即入余额可提现,
          所以还有已付未退未核销、退款截止未到的票就不结。截止口径与 RefundPolicy 同源:
@@ -483,8 +506,52 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                   SELECT 1 FROM cms_topic topic
                   WHERE topic.id = activity.topic_id
                     AND topic.product_type = 2
+                    AND NOT (
+                        COALESCE(topic.club_id, 0) > 0 AND COALESCE(activity.club_id, 0) = topic.club_id
+                        AND EXISTS (
+                            SELECT 1 FROM topic_sale_snapshot ss WHERE ss.topic_id = topic.id
+                              AND ss.schema_version = 'CANONICAL_15_V1'
+                              AND CASE WHEN JSON_VALID(ss.canonical_json) THEN
+                                  JSON_UNQUOTE(JSON_EXTRACT(ss.canonical_json, '$.completionPolicy.evidenceRule'))
+                                  ELSE NULL END <> 'FOUR_STORE_REDEEM'
+                        )
+                    )
               )
           )
+        ]]>
+    </select>
+
+    <!-- 第十三轮 m6(2026-11-05):自由探索场次到了与 selectActivitiesForSettlement 同一个结算时点,
+         却不属于场次结算能付的那一种(四店探店日 FOUR_STORE_REDEEM 且期级 FINAL 还没做 / 场次俱乐部不是主题俱乐部 /
+         缺冻结开售合同)。这里只把它们找出来,由结算任务按实收金额告警并让任务记 FAIL,不动钱、不置已结算。
+         上面的选单谓词逐字取反;四店已做 FINAL 的(topic_edition_finalization 有行)归期级 FINAL 管,不再告警。 -->
+    <select id="selectFreeExploreActivitiesWithoutSettlementPath" resultMap="CmsActivityResult">
+        <![CDATA[
+        SELECT activity.* FROM cms_activity activity
+        JOIN cms_topic topic ON topic.id = activity.topic_id AND topic.product_type = 2
+        WHERE activity.del_flag = 0
+          AND activity.status = 1
+          AND activity.is_settlement = 0
+          AND activity.end_date <= DATE_SUB(NOW(), INTERVAL ${@com.chengyinhub.business.support.FundsHoldPolicy@WITHDRAWABLE_AFTER_END_DAYS} DAY)
+          AND NOT EXISTS (
+              SELECT 1 FROM cms_registration r
+              WHERE r.owner_type = 2 AND r.owner_id = activity.id
+                AND r.payment_status = 2 AND r.registration_status = 2
+                AND (r.verification_status IS NULL OR r.verification_status <> 1)
+                AND COALESCE(r.refund_deadline, DATE_SUB(activity.start_date, INTERVAL 24 HOUR)) > NOW()
+          )
+          AND NOT (
+              COALESCE(topic.club_id, 0) > 0 AND COALESCE(activity.club_id, 0) = topic.club_id
+              AND EXISTS (
+                  SELECT 1 FROM topic_sale_snapshot ss WHERE ss.topic_id = topic.id
+                    AND ss.schema_version = 'CANONICAL_15_V1'
+                    AND CASE WHEN JSON_VALID(ss.canonical_json) THEN
+                        JSON_UNQUOTE(JSON_EXTRACT(ss.canonical_json, '$.completionPolicy.evidenceRule'))
+                        ELSE NULL END <> 'FOUR_STORE_REDEEM'
+              )
+          )
+          AND NOT EXISTS (SELECT 1 FROM topic_edition_finalization f WHERE f.topic_id = topic.id)
+        ORDER BY activity.id
         ]]>
     </select>
 

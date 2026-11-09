@@ -52,6 +52,7 @@ Component({
     targetSeconds: { type: Number, value: 10 },
     toleranceMs: { type: Number, value: 300 },
     tries: { type: Number, value: 0 },      // 0 = 不限
+    used: { type: Number, value: 0 },       // 第十二轮 k8 N9:服务端已记的失手次数(重进不从满格算)
     // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
     attemptId: { type: Number, value: 0 },
     rewardCeiling: { type: String, value: '' },
@@ -158,7 +159,8 @@ Component({
       const diff = diffSeconds(elapsed, this.data.targetSeconds);
       const hit = diff <= tol;
       const late = elapsed / 1000 > this.data.targetSeconds;
-      const detail = diff < 0.005 ? '正好命中' : (late ? '晚 ' : '早 ') + diff.toFixed(2) + ' 秒';
+      // 第十二轮 k7 N9:偏差按判定的精度写(容差是 ±0.300 秒),「早 0.30 秒」却判没中会让人以为判错了
+      const detail = diff < 0.0005 ? '正好命中' : (late ? '晚 ' : '早 ') + diff.toFixed(3) + ' 秒';
 
       // 「做成了」= 按下停那一刻,不管准不准 —— 那一下是玩家真正做的动作
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });

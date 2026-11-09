@@ -154,13 +154,15 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         }
         List<PlayTeamMember> members = teamMapper.selectActiveMembers(teamId);
         Map<String, Object> result = new HashMap<>();
-        result.put("team", team);
+        // j4 F10:非成员凭邀请码只看邀请页要用的:标题、人数、状态、加入方式与成员昵称头像。
+        // 不回邀请码、队长 / 成员 id、场次归属与创建时间。队伍 id 留着:入队命令按它冻结目标(邀请换队即拒)。
+        result.put("team", joined ? team : invitePreview(team));
         List<Map<String, Object>> visibleMembers = new ArrayList<>();
         if (members != null) {
             for (PlayTeamMember member : members) {
                 if (member == null) continue;
                 Map<String, Object> visible = new LinkedHashMap<>();
-                visible.put("memberId", member.getMemberId());
+                if (joined) visible.put("memberId", member.getMemberId());
                 visible.put("role", member.getRole());
                 visible.put("memberName", member.getMemberName());
                 visible.put("memberAvatar", member.getMemberAvatar());
@@ -175,6 +177,17 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         result.put("invite", inviteProjection(team));
         result.put("viewer", viewerProjection(team, viewerMemberId, activeMembership));
         return result;
+    }
+
+    private static Map<String, Object> invitePreview(PlayTeam team) {
+        Map<String, Object> preview = new LinkedHashMap<>();
+        preview.put("id", team.getId());
+        preview.put("title", team.getTitle());
+        preview.put("status", team.getStatus());
+        preview.put("joinMode", team.getJoinMode());
+        preview.put("joinedCount", team.getJoinedCount());
+        preview.put("maxMembers", team.getMaxMembers());
+        return preview;
     }
 
     @Override
@@ -218,12 +231,11 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
             if (teamMapper.reactivateMember(teamId, memberId) == 0) {
                 // uk_team_member 只有一行:能复用(0/2/5/6)的已在上面复活;
                 // 走到这里要么已经入队,要么是被拒绝/被移出的历史(3/4),两者不能并成一句话。
-                PlayTeamMember existing = teamMapper.selectMemberRow(teamId, memberId);
-                if (existing != null && existing.getStatus() != null
-                        && existing.getStatus() == PlayTeamMember.STATUS_JOINED) {
+                // 第十一轮 g2(j4 F1):被移出 / 被拒的人凭旧链接再来,按钮旁要看到真话 —— 不说「你已在队伍中」。
+                if (teamMapper.selectActiveMember(teamId, memberId) != null) {
                     throw new TeamRejection("ALREADY_JOINED", "你已在队伍中");
                 }
-                throw new TeamRejection("APPLY_REJECTED", "你已被移出或未获同意，不能加入这支队伍");
+                throw new TeamRejection("APPLY_REJECTED", "暂时无法加入该队伍");
             }
         }
         expirePendingIfFull(teamId);

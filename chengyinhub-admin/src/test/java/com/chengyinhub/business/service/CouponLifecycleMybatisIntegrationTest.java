@@ -293,7 +293,7 @@ class CouponLifecycleMybatisIntegrationTest {
         for (String limit : new String[]{"1", "NULL", "0", "-1"}) {
             for (String invalid : new String[]{"end_time=DATE_SUB(NOW(), INTERVAL 1 DAY)",
                     "start_time=DATE_ADD(NOW(), INTERVAL 1 DAY)",
-                    "enable_time=DATE_ADD(NOW(), INTERVAL 1 DAY)", "status=3", "status=4"}) {
+                    "enable_time=DATE_ADD(NOW(), INTERVAL 1 DAY)", "status=3", "status=4", "status=5"}) {
                 execute("UPDATE sms_coupon SET start_time=NULL,end_time=NULL,enable_time=NULL,status=1,"
                         + "publish_count=" + limit + ",receive_count=0 WHERE id=30",
                         "UPDATE sms_coupon SET " + invalid + " WHERE id=30");

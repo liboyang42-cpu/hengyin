@@ -180,7 +180,9 @@ function normalizeMerchantEntry(raw) {
     activityName: activityName,
     startAt: startAt,
     endAt: endAt,
-    stationCount: stationCount
+    stationCount: stationCount,
+    // 第十二轮 k4(j2 N-02):待接受邀请的站数(服务端 count(INVITED)),首页卡据此标「待接受邀请」并排前
+    invitedCount: Number.isSafeInteger(Number(raw.invitedCount)) && Number(raw.invitedCount) > 0 ? Number(raw.invitedCount) : 0
   };
 }
 

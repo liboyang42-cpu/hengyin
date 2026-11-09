@@ -1,0 +1,154 @@
+[
+ {
+  "check": "admin import word",
+  "pass": true,
+  "resp": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "imported": 1,
+    "skipped": 0
+   },
+   "_status": 200
+  }
+ },
+ {
+  "check": "admin import allow phrase",
+  "pass": true,
+  "resp": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "imported": 1,
+    "skipped": 0
+   },
+   "_status": 200
+  }
+ },
+ {
+  "check": "db word row",
+  "pass": true
+ },
+ {
+  "check": "db allow row",
+  "pass": true
+ },
+ {
+  "check": "comment with library word refused",
+  "pass": true,
+  "resp": {
+   "msg": "内容包含违规信息，请修改后重试",
+   "code": 500,
+   "_status": 200
+  },
+  "rows": 0
+ },
+ {
+  "check": "comment with symbol-split word refused",
+  "pass": true,
+  "resp": {
+   "msg": "内容包含违规信息，请修改后重试",
+   "code": 500,
+   "_status": 200
+  },
+  "rows": 0
+ },
+ {
+  "check": "comment with allow-listed phrase passes",
+  "pass": true,
+  "resp_code": 200,
+  "rows": 1
+ },
+ {
+  "check": "comment with external image URL refused",
+  "pass": true,
+  "resp": {
+   "msg": "媒体来源未经审核，请重新上传",
+   "code": 500,
+   "_status": 200
+  },
+  "rows": 0
+ },
+ {
+  "check": "hit rows recorded (type/id/category only)",
+  "pass": true,
+  "before": 0,
+  "after": 2,
+  "sample": [
+   [
+    "TEXT",
+    "TEXT_CHECK",
+    null,
+    "OTHER",
+    "BLOCK"
+   ],
+   [
+    "TEXT",
+    "TEXT_CHECK",
+    null,
+    "OTHER",
+    "BLOCK"
+   ]
+  ]
+ },
+ {
+  "check": "community post with library word refused",
+  "pass": true,
+  "resp": {
+   "msg": "内容未通过安全检查，请修改后重试",
+   "code": 400,
+   "_status": 200
+  },
+  "post": 1,
+  "lifecycle": [
+   [
+    "DRAFT"
+   ]
+  ]
+ },
+ {
+  "check": "community post with allow phrase publishes",
+  "pass": true,
+  "resp_code": 200,
+  "post": 2,
+  "lifecycle": [
+   [
+    "PUBLISHED"
+   ]
+  ]
+ },
+ {
+  "check": "theme with library word refused",
+  "pass": true,
+  "resp": {
+   "msg": "主题内容包含违规信息，请修改后重试",
+   "code": 400,
+   "_status": 200
+  },
+  "rows": []
+ },
+ {
+  "check": "control: same theme with allow phrase is accepted",
+  "pass": true,
+  "resp": {
+   "msg": "主题发布成功",
+   "code": 200,
+   "data": {
+    "topicId": 990014,
+    "auditTaskId": 2,
+    "reviewState": "PENDING",
+    "bundledTemplateIds": [],
+    "published": true,
+    "commercialAwaitingReview": true,
+    "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"
+   },
+   "_status": 200
+  },
+  "rows": [
+   [
+    990014,
+    1
+   ]
+  ]
+ }
+]

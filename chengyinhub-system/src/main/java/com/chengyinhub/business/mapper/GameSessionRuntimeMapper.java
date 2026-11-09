@@ -23,6 +23,9 @@ public interface GameSessionRuntimeMapper {
     int readyRouteCheckpoints(@Param("sessionId") Long sessionId, @Param("startAt") Date startAt,
                               @Param("endAt") Date endAt, @Param("now") Date now);
     List<Map<String, Object>> selectClubRouteTeamProgressProjection(Long sessionId);
+
+    /** C-04:每支有效队伍已完成的本场站点(teamId,nodeId),用于统计「已完成本章、等放行」的队伍数。 */
+    List<Map<String, Object>> selectRouteTeamCompletedNodes(Long sessionId);
     int insertSession(GameSession session);
     int updateSessionCas(@Param("id") Long id, @Param("expectedRevision") Integer expectedRevision,
                          @Param("fromStatus") String fromStatus, @Param("toStatus") String toStatus,
@@ -75,6 +78,8 @@ public interface GameSessionRuntimeMapper {
     GameTeamRoleAssignment selectRole(@Param("sessionId") Long sessionId, @Param("memberId") Long memberId);
     List<GameTeamRoleAssignment> selectRoles(Long sessionId);
     List<Map<String, Object>> selectClubMemberProjection(Long sessionId);
+    /** 第十轮 f2 walk:本场已付报名的姓名密文(没组队的玩家不在成员投影里,排行榜按它取报名姓名)。 */
+    List<Map<String, Object>> selectActivitySignupNames(@Param("activityId") Long activityId);
     List<Map<String, Object>> selectClubTeamProgressProjection(Long sessionId);
     Map<String, Object> selectClubRecapAggregate(@Param("sessionId") Long sessionId,
                                                  @Param("activityId") Long activityId);
@@ -139,6 +144,15 @@ public interface GameSessionRuntimeMapper {
                                   @Param("targetId") Long targetId,
                                   @Param("roleCode") String roleCode,
                                   @Param("now") Date now);
+    int insertBroadcastMemberDeliveries(@Param("broadcastId") Long broadcastId,
+                                        @Param("activityId") Long activityId,
+                                        @Param("memberIds") List<Long> memberIds,
+                                        @Param("now") Date now);
+    int insertBroadcastAllPaidDeliveries(@Param("broadcastId") Long broadcastId,
+                                         @Param("activityId") Long activityId,
+                                         @Param("now") Date now);
+    int countPaidPlayers(Long activityId);
+    List<Map<String, Object>> selectClubUnteamedPaidMembers(Long sessionId);
     List<GameBroadcastDelivery> selectPendingDeliveries(Long broadcastId);
     GameBroadcast selectBroadcast(Long id);
     int resetFailedDeliveries(@Param("broadcastId") Long broadcastId, @Param("now") Date now);

@@ -45,7 +45,7 @@ class BeforeStartPreparedWxTest {
     @Test void prepareFreezesTheOriginalFiveFieldsWithoutTokenOrProviderIo() {
         PreparedBeforeStart frozen=wx.prepareBeforeStart(100L,"原票次","2026-10-24 14:05");
         assertEquals(100L,frozen.memberId());assertEquals("original-openid",frozen.openid());
-        assertEquals("before-start-template",frozen.templateId());assertEquals("pages/play/index",frozen.page());
+        assertEquals("before-start-template",frozen.templateId());assertEquals("subpackageMember/order/order",frozen.page());
         assertEquals(Map.of("thing1","原票次","date5","2026-10-24 14:05","thing8","详见活动详情",
                 "thing7","请准时到场","thing12","原昵称"),frozen.fields());
         assertThrows(UnsupportedOperationException.class,() -> frozen.fields().put("thing1","changed"));
@@ -60,16 +60,20 @@ class BeforeStartPreparedWxTest {
         JSONObject body=JSON.parseObject(wx.body);
         assertEquals("original-openid",body.getString("touser"));
         assertEquals("before-start-template",body.getString("template_id"));
-        assertEquals("pages/play/index",body.getString("page"));
+        assertEquals("subpackageMember/order/order",body.getString("page"));
         assertEquals(Set.of("thing1","date5","thing8","thing7","thing12"),body.getJSONObject("data").keySet());
         frozen.fields().forEach((key,value) -> assertEquals(value,body.getJSONObject("data").getJSONObject(key).getString("value")));
         verify(members,times(2)).selectUmsMemberById(100L);assertEquals(1,wx.posts);
     }
-    @Test void evenAnOriginallyEmptyPageIsFrozenRatherThanUsingLaterDefault() {
+    // 第七轮 C 第 5 项:出发提醒落「我的订单」,不再跟随可配的首页 defaultPage;冻结后的 page 仍原样发出。
+    @Test void beforeStartLandsOnOrderListRegardlessOfDefaultPageAndStaysFrozen() {
         ReflectionTestUtils.setField(wx,"defaultPage","");
         PreparedBeforeStart frozen=wx.prepareBeforeStart(100L,"原票次","2026-10-24 14:05");
+        assertEquals("subpackageMember/order/order",frozen.page());
         ReflectionTestUtils.setField(wx,"defaultPage","pages/new/page");
-        assertTrue(wx.sendPreparedBeforeStart(frozen));assertEquals("",JSON.parseObject(wx.body).getString("page"));
+        assertTrue(wx.sendPreparedBeforeStart(frozen));assertEquals("subpackageMember/order/order",JSON.parseObject(wx.body).getString("page"));
+        PreparedBeforeStart legacy=new PreparedBeforeStart(100L,"original-openid","before-start-template","",frozen.fields());
+        assertTrue(wx.sendPreparedBeforeStart(legacy));assertEquals("",JSON.parseObject(wx.body).getString("page"));
     }
     @Test void missingDedicatedTemplateNeverFallsBackToBroadcastAndDoesNotAcquireToken() {
         ReflectionTestUtils.setField(wx,"tplBeforeStart","");

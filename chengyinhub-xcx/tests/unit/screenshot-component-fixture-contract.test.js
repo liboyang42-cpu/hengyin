@@ -175,10 +175,10 @@ test('C20/C44/D08：生成 fixture 保留新 DOM 真正消费的字段', () => {
 
 test('俱乐部编辑组件与申请页复用可编译的表单样式单一真源', () => {
   const pageStyle = read('pages/club/apply/index.wxss')
-  const componentStyle = read('components/cy/scene-club-edit/index.wxss')
-  const sharedStyle = read('style/club-apply-form.wxss')
+  const componentStyle = read('pages/club/components/cy/scene-club-edit/index.wxss')
+  const sharedStyle = read('pages/club/style/club-apply-form.wxss')
 
-  assert.match(pageStyle, /@import ['"]\.\.\/\.\.\/\.\.\/style\/club-apply-form\.wxss['"];/)
+  assert.match(pageStyle, /@import ['"]\.\.\/style\/club-apply-form\.wxss['"];/)
   assert.match(componentStyle, /@import ['"]\.\.\/\.\.\/\.\.\/style\/club-apply-form\.wxss['"];/)
   assert.doesNotMatch(componentStyle, /@import[^;]*pages\/club\/apply/)
   for (const selector of ['.body', '.card', '.frow', '.chip', '.bottom']) {

@@ -1,5 +1,6 @@
 <view class="cd-page theme-merchant m-flush-nav" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain custom-back bind:back="onNavBack" />
@@ -10,10 +11,13 @@
   <cy-error load-failure wx:elif="{{pageState === 'error'}}" fill size="lg" title="客户详情加载失败"
             sub="{{errorMessage}}" retry="重新加载" bind:retry="retry" auto-back />
 
+  <cy-empty wx:elif="{{pageState === 'missing'}}" fill size="lg" kind="empty"
+            title="找不到这位客户" cta="返回客户列表" bind:cta="onNavBack" />
+
   <!-- D 无客户权限(Figma 71:442) -->
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission"
-            title="当前岗位没有客户查看权限" sub="请联系店主开通"
-            cta="返回客户列表" bind:cta="onNavBack" />
+            title="{{notMerchant ? '当前账号不能查看客户' : '当前岗位没有客户查看权限'}}" sub="{{notMerchant ? '' : '请联系店主开通'}}"
+            cta="{{notMerchant ? '返回' : '返回客户列表'}}" bind:cta="onNavBack" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="cd-scroll cy-fade-in" enhanced show-scrollbar="{{false}}">
     <!-- 客户身份(Figma 71:287) -->
@@ -111,7 +115,7 @@
         <text class="cd-field-action {{tagSubmitting ? 'cd-field-action--busy' : ''}}" bindtap="submitTag"
               aria-role="button" aria-label="添加标签" hover-class="cy-pressed" hover-stay-time="80">{{tagSubmitting ? '添加中…' : '添加'}}</text>
       </view>
-      <cy-inline-error class="cd-editor-error" wx:if="{{tagError}}" kind="data"
+      <cy-inline-error class="cd-editor-error" wx:if="{{tagError}}" kind="error"
         title="标签未添加" sub="{{tagError}}" />
 
       <text class="cd-editor-label">客户备注</text>
@@ -122,7 +126,7 @@
                   bindinput="onNoteInput" />
         <text class="cd-textarea-count">{{noteContent.length}}/500</text>
       </view>
-      <cy-inline-error class="cd-editor-error" wx:if="{{noteError}}" kind="data"
+      <cy-inline-error class="cd-editor-error" wx:if="{{noteError}}" kind="error"
         title="备注未保存" sub="{{noteError}}" />
 
       <!-- 稿的编辑弹窗没画这块,但线上已有这些能力,收编时不能顺手删掉:

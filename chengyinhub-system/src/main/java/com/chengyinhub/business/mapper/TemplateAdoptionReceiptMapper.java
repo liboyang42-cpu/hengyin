@@ -11,6 +11,9 @@ public interface TemplateAdoptionReceiptMapper {
     Long sourceCanonicalId(@Param("id") Long id);
     CmsTemplateLibrary lockSource(@Param("id") Long id);
     com.chengyinhub.business.domain.CmsMemberTemplate lockDraft(@Param("id") Long id);
+    int countCompletedInheritedConfig(@Param("owner") Long owner, @Param("draftId") Long draftId,
+                                      @Param("sourceId") Long sourceId, @Param("configHash") String configHash);
     int finish(@Param("actor") Long actor, @Param("requestId") String requestId,
-               @Param("status") String status, @Param("draftId") Long draftId, @Param("reason") String reason, @Param("draftVersion") String draftVersion);
+               @Param("status") String status, @Param("draftId") Long draftId, @Param("reason") String reason, @Param("draftVersion") String draftVersion,
+               @Param("inheritedConfigHash") String inheritedConfigHash);
 }

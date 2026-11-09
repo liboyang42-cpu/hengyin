@@ -4,7 +4,7 @@
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-sheet": "/components/cy/sheet/index",
-    "cy-scene-member-withdraw-history": "/components/cy/scene-member-withdraw-history/index",
+    "cy-scene-member-withdraw-history": "/subpackageMember/components/cy/scene-member-withdraw-history/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-consent-check": "/components/cy/consent-check/index",
     "cy-inline-error": "/components/cy/inline-error/index",

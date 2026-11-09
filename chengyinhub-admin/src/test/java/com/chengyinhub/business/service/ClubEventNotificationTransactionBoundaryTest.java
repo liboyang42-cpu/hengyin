@@ -187,7 +187,7 @@ class ClubEventNotificationTransactionBoundaryTest {
             return jdbc.update("update outbox set next_attempt_at=? "
                             + "where delivery_id=? and status='PENDING' and next_attempt_at<=current_timestamp",
                     call.getArgument(1), deliveryId);
-        }).when(mapper).claimNotificationOutbox(any(), any());
+        }).when(mapper).claimNotificationOutbox(any(), any(), any());
         ClubEventNotificationTransactionService target =
                 new ClubEventNotificationTransactionService(mapper, transactionalFailingIm);
         IClubEventNotificationTransactionService service = proxy(target,
@@ -220,21 +220,21 @@ class ClubEventNotificationTransactionBoundaryTest {
         when(result.insertOutbox(any(), any())).thenAnswer(call -> jdbc.update(
                 "insert into outbox(delivery_id,status,next_attempt_at) values (?,'PENDING',?)",
                 call.getArgument(0), call.getArgument(1)));
-        when(result.selectDispatchableByCampaign(any(), any(Integer.class))).thenAnswer(call -> {
+        when(result.selectDispatchableByCampaign(any(), any(Integer.class), any())).thenAnswer(call -> {
             List<ClubEventDelivery> rows = jdbc.query(
                     "select d.id,d.campaign_id,d.recipient_member_id,d.status,d.attempt_count,d.message_id,"
                             + "d.last_error,d.sent_at,d.version from delivery d "
                             + "inner join outbox o on o.delivery_id=d.id and o.status='PENDING' "
-                            + "and o.next_attempt_at<=current_timestamp "
+                            + "and o.next_attempt_at<=? "
                             + "where d.campaign_id=? and d.status in ('PENDING','FAILED') "
                             + "order by d.id limit ? for update",
-                    (rs, rowNum) -> delivery(rs), call.getArgument(0), call.getArgument(1));
+                    (rs, rowNum) -> delivery(rs), call.getArgument(2), call.getArgument(0), call.getArgument(1));
             return rows;
         });
-        when(result.claimNotificationOutbox(any(), any())).thenAnswer(call -> jdbc.update(
+        when(result.claimNotificationOutbox(any(), any(), any())).thenAnswer(call -> jdbc.update(
                 "update outbox set next_attempt_at=? "
-                        + "where delivery_id=? and status='PENDING' and next_attempt_at<=current_timestamp",
-                call.getArgument(1), call.getArgument(0)));
+                        + "where delivery_id=? and status='PENDING' and next_attempt_at<=?",
+                call.getArgument(1), call.getArgument(0), call.getArgument(2)));
         when(result.selectDeliveryByIdForUpdate(11L)).thenAnswer(call -> jdbc.queryForObject(
                 "select id,campaign_id,recipient_member_id,status,attempt_count,message_id,last_error,sent_at,version "
                         + "from delivery where id=11 for update",

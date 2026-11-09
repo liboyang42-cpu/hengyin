@@ -1,5 +1,6 @@
 <view class="acl-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <!-- 2026-09-17 用户裁决:结构照 Revolut Business 316-318(左对齐大标题 + 文字标签 + 搜索 + 按日分组行),颜色走商家主题。 -->
@@ -48,7 +49,8 @@
           <text class="acl-group-total" wx:if="{{group.totalText && !keyword && !(hasMore && index === groups.length - 1)}}">{{group.totalText}}</text>
         </view>
         <view class="fin-card acl-card">
-          <view class="fin-row acl-row" wx:for="{{group.items}}" wx:key="refundId"
+          <view class="fin-row acl-row" wx:for="{{group.items}}" wx:key="recordKey"
+                data-recordtype="{{item.recordType}}" data-manualcaseid="{{item.manualCaseId}}"
                 data-refundid="{{item.refundId}}" bindtap="openDetail"
                 aria-role="button" aria-label="打开售后 {{item.titleText}}，{{item.statusText}}{{item.takeoverText ? '，' + item.takeoverText : ''}}，{{item.refundAmountText}}"
                 hover-class="cy-pressed" hover-stay-time="80">

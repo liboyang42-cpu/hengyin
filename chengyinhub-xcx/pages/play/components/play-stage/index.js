@@ -38,6 +38,8 @@ Component({
        不数完就开跑等于把「还没准备好」那半秒记进成绩里。 */
     countIn: { type: Boolean, value: false },
     tries: { type: Number, value: 0 },            // 0 = 不限次数
+    // 第十二轮 k8 N9:服务端已记下的失手次数。重进时剩余次数 = tries − used,以前每次重进都从满格算,多给一次
+    used: { type: Number, value: 0 },
     calibrateLabel: { type: String, value: '' },  // 非空 = 开局前要校准
     calibrateMs: { type: Number, value: 1200 },
   },
@@ -78,14 +80,14 @@ Component({
       if (!show) { this._stopServerDeadline(); return; }
       if (deadlineAt > 0) this._syncServerDeadline(); else this._stopServerDeadline();
     },
-    'show, tries, limitSeconds': function (show, tries, limitSeconds) {
+    'show, tries, limitSeconds, used': function (show, tries, limitSeconds, used) {
       if (!show) { this._stopAll(); return; }
       const n = tries > 0 ? tries : 0;
       const top = this._layout(limitSeconds > 0 || this.data.deadlineAt > 0, n > 0);
       this.setData({
         contentTop: top.contentTop,
         triesTop: top.triesTop,
-        triesTotal: n, triesLeft: n,
+        triesTotal: n, triesLeft: Math.max(0, n - (used > 0 ? Math.floor(used) : 0)),
         triesDots: Array.from({ length: n }, (_, i) => i),
         // 还没开跑时条是**满**的、读数是总时长。初值留 0 的话,
         // 玩家在 3-2-1 那两秒里看到的是「限时 0s」—— 像是已经超时了

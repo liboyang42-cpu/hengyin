@@ -388,9 +388,10 @@ page {
   opacity: 0.35;
 }
 
+/* 第十轮 f4(f1 遗留):页内底栏实高 ≈ 16 + 88 + 16rpx + 安全区 = 120rpx + 安全区,原来的 120rpx 垫底
+ * 刚好与底栏等高,滚到底项目卡下沿就贴在底栏渐变里,看着被盖住一截。与玩家首页 .v3-scroll-pad 同口径留一档间距。 */
 .rv-scroll-pad {
-  height: calc(120rpx + constant(safe-area-inset-bottom));
-  height: calc(120rpx + env(safe-area-inset-bottom));
+  height: calc(var(--cy-tabbar-h) + var(--cy-space-6));
 }
 
 .rv-tap {
@@ -493,14 +494,6 @@ page {
   flex-shrink: 0;
   color: var(--cy-text-secondary);
 }
-
-/* 核销必须落到可辨识的三态,不能只给一闪而过的 toast。 */
-.verify-result { padding: var(--cy-legacy-36) var(--cy-space-4) var(--cy-space-3-5); text-align: center; /* ds-ok: 36rpx和28rpx无精确匹配的spacing token */ }
-.verify-result__title { display: block; font-size: var(--cy-font-title); font-weight: 700; color: var(--cy-text-title); }
-.verify-result__message { display: block; margin-top: var(--cy-legacy-18); font-size: var(--cy-font-body); line-height: 1.6; color: var(--cy-text-secondary); }
-.verify-result__action { margin: var(--cy-space-4) auto 0; width: 100%; padding: var(--cy-legacy-22) 0; border-radius: var(--cy-radius-md); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: 600; }
-.verify-result--duplicate .verify-result__title { color: var(--cy-gold); }
-.verify-result--failure .verify-result__title { color: var(--cy-danger); }
 
 /* ===== 我的消息(设计稿 3910:702):事件流,单卡分隔线 ===== */
 .rv-msgs {

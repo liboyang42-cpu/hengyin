@@ -1,0 +1,7 @@
+
+──────── 步骤 1:完成奖励回读
+   explore-completion                 {"msg": "操作成功", "code": 200, "data": {"registrationId": 75, "topicId": 990014, "completed": true, "requiredChapterCount": 4, "redeemedChapterCount": 4, "stamps": [{"chapterId": 42, "title": "第1章 咖啡 · 样板咖啡第1站", "obtainedAt": "2026-11-02 16:31:04", "collected": true}, {"chapterId": 43, "title": "第2章 书店 · 样板书店第2站", "obtainedAt": "2026-11-02 16:32:43", "collected": true}, {"chapterId": 44, "title": "第
+   [库回读] redemption               ((42, 9002, 'ACTIVE'), (43, 9005, 'ACTIVE'), (44, 9006, 'ACTIVE'), (45, 9007, 'ACTIVE'))
+   [库回读] 通关勋章                     ((3, 'TOPIC_FINISH_990014', 990014),)
+   [库回读] 通关积分                     ()
+   [库回读] 通关经验                     ((2, 9004, 990014, 1200, datetime.datetime(2026, 11, 2, 16, 32, 44), datetime.datetime(2026, 11, 2, 8, 32, 44), 2),)

@@ -320,7 +320,8 @@ public class TopicPublicationService {
         java.util.Map<String, Object> snap = new java.util.LinkedHashMap<>();
         snap.put("bizType", AuditTask.BIZ_TOPIC);
         snap.put("bizId", topicId);
-        snap.put("holdReason", com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
+        snap.put("holdReason", StringUtils.isEmpty(topic.getReason())
+                ? com.chengyinhub.business.util.TopicContentSafetyHold.REASON : topic.getReason());
         snap.put("name", topic.getName());
         snap.put("imgUrl", topic.getImgUrl());
         snap.put("imgArr", topic.getImgArr());
@@ -381,7 +382,7 @@ public class TopicPublicationService {
             return false;
         }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
-        if (quotaError != null) throw new ServiceException(quotaError);
+        if (quotaError != null) throw new ServiceException(quotaError, com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST);
         publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId), declarations, publishRequestId);
         CmsTopic published = new CmsTopic();
         published.setId(topicId);

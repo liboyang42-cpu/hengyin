@@ -85,7 +85,7 @@ test('A 退出账号仍是中性语义,红只留给注销', () => {
   assert.doesNotMatch(seg, /variant="danger"/, '可逆操作不得用 danger')
   assert.doesNotMatch(seg, /variant="accent"/, '也不得借品牌紫')
   assert.match(seg, /variant="secondary"/)
-  assert.match(read('components/cy/scene-settings-deregister/index.wxml'), /variant="danger"/, '注销必须仍是唯一那处红')
+  assert.match(read('pages/deregister/components/scene-settings-deregister/index.wxml'), /variant="danger"/, '注销必须仍是唯一那处红')
 })
 
 // R4:这条原先只断言 ≥4.5:1,而夜端 text-secondary(8.70:1)/ text-tertiary(5.44:1) 都能过线
@@ -295,7 +295,7 @@ test('B-R4 协议入口已弹窗化,兜底路由表仍与真实入口对齐(入�
   const shezhi = read('pages/shezhi/shezhi.js')
   const shezhiWxml = read('pages/shezhi/shezhi.wxml')
   const dereg = read('utils/deregister-flow.js')
-  const deregWxml = read('components/cy/scene-settings-deregister/index.wxml')
+  const deregWxml = read('pages/deregister/components/scene-settings-deregister/index.wxml')
 
   // ① 入口改成弹窗,且 type 传对(传错会静默回退成用户服务协议,注销须知就打不开了)
   assert.match(shezhi, /goUserAgreement\(\)\s*\{\s*this\.setData\(\{\s*showAgreementSheet:\s*true/,

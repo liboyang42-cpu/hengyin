@@ -51,8 +51,10 @@
       <cy-inline-error load-failure wx:elif="{{shopLoadError}}" kind="network" title="店铺资料没读出来"
         sub="{{shopLoadError}}" action="重试" bind:action="loadShop" />
       <block wx:elif="{{picked}}">
-        <view class="cnc-addr">{{picked.name || '我的店'}}</view>
-        <view class="cnc-addr-sub" wx:if="{{picked.address}}">{{picked.address}}</view>
+        <view class="cy-addr-tap" bindtap="viewPicked" aria-role="button" aria-label="在地图中查看店址" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="cnc-addr">{{picked.name || '我的店'}}</view>
+          <view class="cnc-addr-sub" wx:if="{{picked.address}}">{{picked.address}}</view>
+        </view>
         <block wx:if="{{pickedFromProfile}}">
           <view class="cnc-hint" wx:if="{{!addressConfirmed}}">
             玩家需到达店址 {{radius || 80}} 米内，请确认位置

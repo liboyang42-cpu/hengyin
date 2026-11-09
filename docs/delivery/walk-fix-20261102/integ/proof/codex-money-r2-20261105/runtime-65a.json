@@ -1,0 +1,6 @@
+{
+  "backend": "http://127.0.0.1:18099",
+  "health": "UP",
+  "database_uuid": "19025e57-d901-11f1-b086-9ae8535e5aec",
+  "verifiedCommit": "65a1e33df848c3c225d13b58f8235a54feb2e100"
+}

@@ -1,0 +1,12 @@
+from common import *
+atok = admin()
+q('before', "SELECT id,club_id,topic_id,start_date,end_date,is_settlement FROM cms_activity WHERE id=13")
+q('reg', "SELECT id,member_id,payable_amount,payment_status,registration_status,verification_status,fee_platform_rate FROM cms_registration WHERE owner_id=13 AND owner_type=2")
+note('TIME SHIFT: activity 13 (chain session) now ended 15 days ago')
+ex("UPDATE cms_activity SET start_date=DATE_SUB(DATE_ADD(NOW(), INTERVAL 8 HOUR), INTERVAL 15 DAY) - INTERVAL 2 HOUR, end_date=DATE_SUB(DATE_ADD(NOW(), INTERVAL 8 HOUR), INTERVAL 15 DAY) WHERE id=13")
+run_job(atok, 'settlementTask', 8)
+q('alarms/log', "SELECT job_log_id,status,LEFT(exception_info,300) FROM sys_job_log ORDER BY job_log_id DESC LIMIT 1")
+q('after', "SELECT id,is_settlement FROM cms_activity WHERE id=13")
+q('balances', "SELECT id,balance FROM ums_member WHERE id IN (9001,9002,9003,9005,9006,9007,9008,9009) ORDER BY id")
+q('detail', "SELECT id,member_id,event_type,event_id,change_balance,after_balance FROM ums_member_balance_detail WHERE event_id=13")
+q('sd', "SELECT id,source_id,receiver_type,receiver_id,gross_amount,settlement_amount,status FROM settlement_detail WHERE source_id IN (74)")

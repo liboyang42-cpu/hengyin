@@ -99,6 +99,7 @@
   white-space: nowrap;
 }
 .ts__tag--on .ts__label { color: #131313; }   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+.ts__primary { flex: none; margin-left: 6rpx; font-size: var(--cy-font-caption, 22rpx); font-weight: 600; color: #131313; }   /* ds-ok: 同上定值 */
 .ts__check {
   flex: none;
   margin-left: 2rpx;

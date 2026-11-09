@@ -52,6 +52,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.OwnershipUtils;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.DistanceCalculatorUtils;
 import com.chengyinhub.common.utils.StringUtils;
@@ -200,6 +201,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private CmsTopicNodeMapper cmsTopicNodeMapper;
 
+    @Autowired
+    private OrientMapper orientMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.OrientSwitches orientSwitches;
+
 
     /** B1 发布期状态键闸。手工 new 的旧单测不注入该字段时闸跳过;Spring 运行态必注入。 */
     @Autowired
@@ -284,6 +291,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
 
     @Autowired
     private com.chengyinhub.business.service.IPricingService pricingService;
+
+    /** 俱乐部自有主题自玩现金的收款人 = 俱乐部当前主理人。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.ClubPrincipalPayee clubPrincipalPayee;
 
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
@@ -706,6 +717,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         List<CoopOrder> effectiveOrders = coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId());
         if (effectiveOrders.isEmpty() && totalSales != null && totalSales.signum() > 0) {
+            if (isClubSelfPlayTopic(topic)) {
+                // 2026-11-02 业主口径:俱乐部自有主题无合作单也要能卖能结 —— 平台按主题费率留成,其余记给俱乐部当前主理人。
+                return settleClubSelfPlayTopic(topic);
+            }
             throw new ServiceException("NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN: topicId=" + topic.getId());
         }
         requireClassicTopicCashBasis(topic.getId());
@@ -756,6 +771,92 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     /**
+     * 主题结算用的平台率(2026-11-03 业主拍板:平台自有主题不收 3%)。
+     *
+     * <p>内容槽 = PLATFORM({@code isPlatformOwned})的主题结算时平台率取 0:PLATFORM 行仍写(金额 0,
+     * 它是本主题"已分项结算"的幂等标记),原本那 3% 留在发起人保底/毛利残差里。平台主题的发起人
+     * {@code cms_topic.member_id} 就是平台配置账号({@code insertCmsTopic}/{@code resolvePayeeMemberId}),
+     * 所以这笔钱的实际收款人不变,只是不再记成从主办方抽走的佣金。其余主题仍读锁价快照。
+     * 未注入 productRoleService(纯单元装配)时按非自营处理,即旧行为。
+     */
+    private BigDecimal settlementPlatformRate(CmsTopic topic) {
+        if (productRoleService != null && topic != null && topic.getId() != null
+                && productRoleService.isPlatformOwned(topic.getId())) {
+            return BigDecimal.ZERO;
+        }
+        return pricingService.platformRateOf(topic);
+    }
+
+    /** 俱乐部自有主题(cms_topic.club_id > 0):发布者是俱乐部,收款人是俱乐部当前主理人。 */
+    private boolean isClubSelfPlayTopic(CmsTopic topic) {
+        return topic.getClubId() != null && topic.getClubId() > 0;
+    }
+
+    /**
+     * 俱乐部自有主题、无生效合作单的自玩通行证现金(owner_type=1)结算(2026-11-02)。
+     *
+     * <p>沿用 coop 分项台账的形状,不新建表:一条 PLATFORM 对账行(status=1,不放款),
+     * 一条 INITIATOR_MARGIN 行(status=0,T+7 由 {@link #payoutDueCoopSettlements} 打进余额)记给俱乐部当前主理人。
+     * 平台率读主题锁价快照 {@code cms_topic.fee_platform_rate},缺快照回落 settlement_rule(topic) 的 live 值
+     * (见 {@code PricingServiceImpl.platformRateOf})。两行之和 = 销售额,分毫不差。
+     *
+     * <p>现金基数只取本主题 owner_type=1 的锁读行:挂在本主题下的俱乐部场次报名(owner_type=2)
+     * 由活动结算按场次给主理人,不能在这里再算一遍。
+     */
+    private boolean settleClubSelfPlayTopic(CmsTopic topic) {
+        for (CoopSettlement ex : coopSettlementMapper.selectByTopicId(topic.getId())) {
+            if ("PLATFORM".equals(ex.getLineType())) {
+                throw new IllegalStateException("MANUAL_REPAIR:SELF_PLAY_TOPIC_ALREADY_SETTLED topicId=" + topic.getId());
+            }
+        }
+        requireClassicTopicCashBasis(topic.getId());
+        List<CmsRegistration> topicRows = coopSettlementEvidenceMapper.selectTopicCashRowsForUpdate(topic.getId());
+        if (topicRows == null) {
+            throw new IllegalStateException("MANUAL_REPAIR:CURRENT_CASH_ROWS_REQUIRED");
+        }
+        List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topic.getId());
+        if (refunds == null || !refunds.isEmpty()) {
+            throw new IllegalStateException("MANUAL_REPAIR:REFUND_NET_BASIS_UNPROVEN");
+        }
+        TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topic.getId(), topicRows);
+        BigDecimal totalSales = basis.getTotalSales();
+        if (totalSales.signum() <= 0) {
+            logger.info("俱乐部自有主题 {} 无自玩现金,跳过结算", topic.getId());
+            return true;
+        }
+        if (topic.getFeePlatformRate() == null) {
+            // 存量自玩主题仍用既有规则，但原始退款凭证必须绑定本次实际冻结的四项费率。
+            pricingService.freezeFeeSnapshot(topic.getId());
+            topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topic.getId());
+        }
+        Long principal = clubPrincipalPayee.forTopic(topic);
+        BigDecimal platformRate = settlementPlatformRate(topic);
+        if (platformRate == null || platformRate.signum() < 0 || platformRate.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalStateException("主题平台费率无效 topicId=" + topic.getId() + " rate=" + platformRate);
+        }
+        BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal principalAmount = totalSales.subtract(platformAmount);
+        Date now = new Date();
+        Date payable = com.chengyinhub.business.support.FundsHoldPolicy.payableAfterEnd(topic.getEndDate(), now);
+        String regIds = joinVerifiedRegIds(basis.getVerifiedRegistrationIds());
+        CoopSettlement platformLine = newSettlementLine(topic, null, platformAmount, "PLATFORM", "platform", 1,
+                payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
+        CoopSettlement principalLine = newSettlementLine(topic, principal, principalAmount, "INITIATOR_MARGIN", "initiator", 0,
+                payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
+        for (CoopSettlement line : List.of(platformLine, principalLine)) {
+            if (coopSettlementMapper.insertCoopSettlement(line) != 1) {
+                throw new IllegalStateException("自玩结算应付写入失败 topicId=" + topic.getId()
+                        + " lineType=" + line.getLineType());
+            }
+        }
+        coopSettlementOriginalProducer.freezeClubSelfPlayOriginals(topic, basis, now);
+        pointsAwardService.awardPublisherSettlement(topic.getMemberId(), topic.getId());
+        logger.info("俱乐部自有主题自玩结算: topicId={} 销售额={} 平台={}(率{}) 主理人{}应收={}",
+                topic.getId(), totalSales, platformAmount, platformRate, principal, principalAmount);
+        return true;
+    }
+
+    /**
      * 计算各项佣金
      */
     private TopicSettlementDTO calculateCommissions(CmsTopic topic, SettlementRule rule, BigDecimal totalSales) {
@@ -780,12 +881,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 totalSales.multiply(settlement.getPlatformCommissionRate()).setScale(2, RoundingMode.HALF_UP)
         );
 
-        settlement.setMerchantTotalCommissionAmount(
-                totalSales.multiply(settlement.getMerchantCommissionRate()).setScale(2, RoundingMode.HALF_UP)
-        );
-
         settlement.setPublisherCommissionAmount(
                 totalSales.multiply(settlement.getPublisherCommissionRate()).setScale(2, RoundingMode.HALF_UP)
+        );
+
+        // 商家份额取余数(ROUND10 j1 F3,与 CmsActivityServiceImpl 同口径):三份之和恒等于销售额。
+        settlement.setMerchantTotalCommissionAmount(
+                totalSales.subtract(settlement.getPlatformCommissionAmount())
+                        .subtract(settlement.getPublisherCommissionAmount())
         );
 
         // 验证佣金分配是否合理
@@ -840,7 +943,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         // [P0-28 批1] 读**主题锁价时冻的快照**,不是 live 值 —— 用 live 值 = 调一次费率
         // 追溯改写所有已售未结订单,平台多抽 → 发起人 margin<0 → 守恒断言拒结 → 款项悬空。
-        BigDecimal platformRate = pricingService.platformRateOf(topic);
+        BigDecimal platformRate = settlementPlatformRate(topic);
         BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
         BigDecimal verifiedSales = cashBasis.getVerifiedSales();
         int verifiedHeads = cashBasis.getVerifiedHeads();
@@ -876,11 +979,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (plansByOrder.putIfAbsent(order.getId(), plan) != null)
                 throw new IllegalStateException("MANUAL_REPAIR:DUPLICATE_EFFECTIVE_COOP_ORDER");
         }
-        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(
-                new ArrayList<>(plansByOrder.values()));
+        // 第十二轮 k5:商家费按俱乐部场次付的单不进主题级计划(不落 claim、不付钱),其余照旧校验。
+        List<CoopSettlementPlan> topicPlans = new ArrayList<>();
+        for (CoopSettlementPlan plan : plansByOrder.values()) {
+            if (!ICoopSettlementClaimService.ROUTE_SETTLED_PER_SESSION.equals(plan.getRoute())) topicPlans.add(plan);
+        }
+        com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(topicPlans);
         Set<Long> verifiedMerchantPayees = new HashSet<>();
         for (CoopOrder o : effectiveOrders) {
             CoopSettlementPlan claimPlan = plansByOrder.get(o.getId());
+            if (ICoopSettlementClaimService.ROUTE_SETTLED_PER_SESSION.equals(claimPlan.getRoute())) continue;
             if (coopSettlementMapper.countByOrderId(o.getId()) > 0) continue; // Already validated, never silently exempt a contract.
             boolean isClub = "club".equals(o.getToType());
             if ("NONE".equals(claimPlan.getRoute())) {
@@ -989,11 +1097,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private TopicSettlementCashBasis lockTopicCashBasis(Long topicId) {
         List<CmsRegistration> topicRows = coopSettlementEvidenceMapper.selectTopicCashRowsForUpdate(topicId);
         List<CmsRegistration> activityRows = coopSettlementEvidenceMapper.selectTopicActivityCashRowsForUpdate(topicId);
-        if (topicRows == null || activityRows == null) {
+        // 第十二轮 k5:在世俱乐部场次的票由活动结算按场次结(含商家核销费),不进主题现金基数;
+        // 其余活动壳的报名照旧交给基数(上面有已付钱仍按 ACTIVITY_CASH_BASIS_UNSUPPORTED 拒结)。
+        // 全部场次报名已在上一句锁住,锁序不变。
+        List<CmsRegistration> shellRows = activityRows == null ? null
+                : coopSettlementEvidenceMapper.selectTopicNonClubSessionCashRowsForUpdate(topicId);
+        if (topicRows == null || activityRows == null || shellRows == null) {
             throw new IllegalStateException("MANUAL_REPAIR:CURRENT_CASH_ROWS_REQUIRED");
         }
         List<CmsRegistration> locked = new ArrayList<>(topicRows);
-        locked.addAll(activityRows);
+        locked.addAll(shellRows);
         CoopSettlementOriginalLedger.requireNoApprovedRefundsForOriginalClose(coopSettlementOriginalMapper, topicId);
         TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topicId, locked);
         List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topicId);
@@ -1006,6 +1119,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     /** 零现金也必须校验冻结来源、合法路径与封窗；未证正报酬不以零终态消耗合同。 */
     private void validateZeroCashCoopContracts(CmsTopic topic, List<CoopOrder> orders) {
         if (orders.isEmpty()) return;
+        if (settledPerClubSession(topic)) {
+            // 第十二轮 k5:主题级没有现金、钱全在俱乐部场次上 ⇒ 商家按场次在活动结算里拿核销费,
+            // 这里不准备主题级计划(那必然 NO_PROVEN_FULFILLMENT),也不改合作单状态
+            // (场次可能晚于主题结算,仍要按生效合作单付费)。主题照常关账,不告警、不重复付钱。
+            logger.info("主题 {} 无主题级现金、由俱乐部场次按场结算,合作单 {} 张不在主题级结算", topic.getId(), orders.size());
+            return;
+        }
         if (coopSettlementClaimService == null) {
             throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_SERVICE_REQUIRED");
         }
@@ -1026,6 +1146,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         com.chengyinhub.business.service.support.CoopSettlementContract.requireIndependentOrderScopes(plans);
         for (CoopSettlementPlan plan : plans) coopSettlementClaimService.persist(plan, null);
+    }
+
+    /** 第十二轮 k5:本主题有在世俱乐部场次(场次票由活动结算按场结,商家核销费在那里付)。 */
+    private boolean settledPerClubSession(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || coopSettlementEvidenceMapper == null) return false;
+        List<Long> sessions = coopSettlementEvidenceMapper.selectLiveClubSessionIdsByTopicId(topic.getId());
+        return sessions != null && !sessions.isEmpty();
     }
 
     /** 旧主题票现金总额不覆盖活动壳；不得把活动履约归入 TOPIC_EDITION 或按零元关账。 */
@@ -1939,9 +2066,28 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return cmsTopicMapper.selectTopicIsTemplate(id);
     }
 
+    /**
+     * p3 N1:旧实现把在售主题本身置 is_template=1,主题从此离开在售口径、无路可回。
+     * 现在复制主题 + 章节 + 节点(copyType 2,不带票、场次、名单与协作者)成一条新模板行,
+     * 副本沿用原主题已通过的审核态并上架到模板库;原主题一个字段都不改。
+     */
     @Override
-    public int saveAsTemplate(Long id, Long memberId, Integer flag) {
-        return cmsTopicMapper.updateTopicIsTemplate(id, memberId, flag);
+    @Transactional(rollbackFor = Exception.class)
+    public Long saveAsTemplate(Long id, Long memberId) {
+        CmsTopic source = cmsTopicMapper.selectCmsTopicById(id);
+        if (source == null || OwnershipUtils.notOwner(source.getMemberId(), memberId)
+                || Integer.valueOf(2).equals(source.getDelFlag())) {
+            throw new ServiceException("只能把自己的主题另存为模板");
+        }
+        Map<String, Object> params = new HashMap<>();
+        params.put("copyType", 2);
+        params.put("memberId", memberId);
+        Long templateId = copyCmsTopic(id, params);
+        if (templateId == null || templateId <= 0L
+                || cmsTopicMapper.markTopicTemplateCopy(templateId, memberId, source.getCheckStatus()) != 1) {
+            throw new ServiceException("另存为模板失败");
+        }
+        return templateId;
     }
 
     @Override
@@ -1957,6 +2103,27 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     public Integer selectTopicIsDraft(Long id) {
         return cmsTopicMapper.selectTopicIsDraft(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long holdUncheckedTopicForReview(Long topicId, Long submitterId) {
+        if (topicId == null || topicId <= 0L) return null;
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (current == null) return null;
+        cmsTopicMapper.updateReviewFlag(topicId, 1);
+        // 人工已驳回(status=2)的不改写驳回原因,本来就不公开。
+        if (Integer.valueOf(2).equals(current.getStatus())) return null;
+        CmsTopic held = new CmsTopic();
+        held.setId(topicId);
+        held.setUserStatus(0);
+        held.setCheckStatus(2);
+        held.setReason(com.chengyinhub.business.util.TopicContentSafetyHold.REASON_UNCHECKED);
+        if (cmsTopicMapper.updateCmsTopic(held) != 1) throw new ServiceException("主题待复核状态保存失败");
+        syncCreativeSquarePostVisibility(topicId, false);
+        Integer isDraft = cmsTopicMapper.selectTopicIsDraft(topicId);
+        if (isDraft != null && isDraft == 1) return null;
+        return topicPublicationService.requestContentSafetyRelistReview(topicId, submitterId);
     }
 
     @Override
@@ -2384,6 +2551,48 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     /**
+     * 第十轮 f2 第 2 项(j2 F-01a):商家报名窗口没有任何 app 端写入口,开了商家承接(merchant_status=1)的主题商家一点
+     * 「申请承接」就是「报名时间信息不完整」。这里从主题自身日期补齐:开始 = 现在,结束 = 招商截止
+     * (有则用;招商截止之后会锁价,再报名也发不出邀约),否则主题结束日。
+     *
+     * <p>只补「库里两头都空」的主题:已有值(含生产存量、运营在后台设过的)一律不动;
+     * {@code updateCmsTopic} 的动态 SET 对 null 跳过,patch 不填 = 不改。
+     */
+    static void fillMerchantSignUpWindow(CmsTopic target, CmsTopic existing, Date now) {
+        if (target == null || now == null || !Integer.valueOf(1).equals(target.getMerchantStatus())) return;
+        boolean existingHas = existing != null
+                && (existing.getMerchantSignUpStartDate() != null || existing.getMerchantSignUpEndDate() != null);
+        if (existingHas || target.getMerchantSignUpStartDate() != null || target.getMerchantSignUpEndDate() != null) {
+            return;
+        }
+        Date end = target.getRecruitDeadline() != null ? target.getRecruitDeadline()
+                : target.getEndDate() != null ? target.getEndDate()
+                : existing == null ? null
+                : existing.getRecruitDeadline() != null ? existing.getRecruitDeadline() : existing.getEndDate();
+        if (end == null || end.before(now)) return;
+        target.setMerchantSignUpStartDate(now);
+        target.setMerchantSignUpEndDate(end);
+    }
+
+    /**
+     * 第十轮 f2 第 4 项(j2 F-02):编辑器从不上送主题售票截止(saleEndAt),开售终审第一句就拒。
+     * 俱乐部自己的城市定向是「主题 + 多场开一场」:每场有自己的集合时刻与报名/退款钟,主题只要在
+     * 档期内一直可售,所以售票截止跟主题结束时间走。只在调用方没给、库里也没另设(空或仍等于旧结束日)时补。
+     */
+    static void defaultClubSaleEnd(CmsTopic target, CmsTopic existing) {
+        if (target == null || target.getSaleEndAt() != null) return;
+        Long clubId = target.getClubId() != null ? target.getClubId() : existing == null ? null : existing.getClubId();
+        Integer productType = target.getProductType() != null ? target.getProductType()
+                : existing == null ? null : existing.getProductType();
+        if (clubId == null || clubId <= 0 || (!Integer.valueOf(ProductType.ORIENTEERING).equals(productType)
+                && !Integer.valueOf(ProductType.FREE_EXPLORE).equals(productType))) return;
+        if (existing != null && existing.getSaleEndAt() != null
+                && !existing.getSaleEndAt().equals(existing.getEndDate())) return;
+        Date end = target.getEndDate() != null ? target.getEndDate() : existing == null ? null : existing.getEndDate();
+        if (end != null) target.setSaleEndAt(end);
+    }
+
+    /**
      * 公开承接池(open_club_pool)建题落值口 —— 2026-09-15 裁决 12B:专业版与简易版统一默认开,
      * 主办仍可手动关。
      *
@@ -2531,7 +2740,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         topic.setFinishMedalImg(dto.getFinishMedalImg());
         topic.setCompleteRewardCouponId(completeRewardCouponId);
 
-        Long totalTime = calculateTotalTime(allNodes);
+        Long totalTime = totalTimeSeconds(allNodes);
         topic.setTotalTime(totalTime);
         topic.setTotalMileage(totalMileage);
         topic.setLocationCount(Convert.toLong(allNodes.size()));
@@ -2587,6 +2796,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto.getRecruitDeadline() != null) {
             topic.setRecruitDeadline(dto.getRecruitDeadline());
         }
+        fillMerchantSignUpWindow(topic, null, new Date());
+        defaultClubSaleEnd(topic, null);
         topic.setDelFlag(0);
         // 首次写入先落兼容的 LINEAR；BRANCH_GRAPH 必须等节点取得 DB id 后再同事务重映射并发布。
         topic.setRouteMode("LINEAR");
@@ -3003,7 +3214,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setFinishMedalName(dto.getFinishMedalName());
         patch.setFinishMedalImg(dto.getFinishMedalImg());
         patch.setCompleteRewardCouponId(completeRewardCouponId);
-        patch.setTotalTime(calculateTotalTime(allNodes));
+        patch.setTotalTime(totalTimeSeconds(allNodes));
         patch.setTotalMileage(calculateTotalDistance(nodesForDistance(allNodes, dto.getChapters(), chapterFlowV2)));
         patch.setLocationCount(Convert.toLong(allNodes.size()));
         patch.setTemplateCount(calculateTemplateCount(allNodes));
@@ -3025,6 +3236,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (dto.getRecruitDeadline() != null) {
             patch.setRecruitDeadline(dto.getRecruitDeadline());
         }
+        fillMerchantSignUpWindow(patch, exist, new Date());
+        defaultClubSaleEnd(patch, exist);
         patch.setAddressName(firstLocationAddress(dto.getChapters()));
         patch.setUpdateBy(username);
         patch.setUpdateTime(new Date());
@@ -3050,6 +3263,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         boolean allowBundledDraft = chapterFlowV2
                 && (draft || !isSimplePublishMode(patch.getPublishMode()));
         // 重建会删掉全部节点再插回(插回一律 status=1);先记下后台隐藏的,插回后按旧 id 还原,作者重存不得取消隐藏
+        List<OrientTaskAlternative> alternatives = Collections.emptyList();
+        if (Integer.valueOf(ProductType.ORIENTEERING).equals(exist.getProductType())) {
+            contentWriteGuard.lockTopicContent(topicId);
+            if (orientMapper.alternativeTableExists()) {
+                alternatives = orientMapper.selectAlternativesForTopicRebuild(topicId);
+            } else if (orientSwitches.altTaskOn()) {
+                throw new IllegalStateException("替代完成方式配置表不存在");
+            }
+        }
         Set<Long> hiddenNodeIds = contentGraphAuthoringService.selectHiddenNodeIds(topicId);
         com.chengyinhub.business.service.support.TopicAuthoredGraphIds routeNodeMaps;
         if (contentGraphAuthoringService.shouldCompileChapterFlow(chapterFlowV2, productType, dto.getChapters())) {
@@ -3061,6 +3283,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             routeNodeMaps = contentGraphAuthoringService.saveTopicChapters(dto.getChapters(), topicId, username, memberId,
                     productType, chapterFlowV2, allowBundledDraft);
         }
+        copyRebuiltNodeAlternatives(topicId, alternatives, routeNodeMaps);
         contentGraphAuthoringService.restoreHiddenNodes(hiddenNodeIds, routeNodeMaps.oldToNew);
         contentGraphAuthoringService.remapRebuiltTemplateNodes(topicId,routeNodeMaps.oldToNew,memberId);
         contentGraphAuthoringService.restoreNodeUnlocks(existingUnlocks, routeNodeMaps);
@@ -3127,6 +3350,33 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 第一次保存草稿就建等于草稿立即可售。发布时由 publishDraft 补建。
         if (!draft) {
             refreshSelfHostActivity(topicId, memberId, username);
+        }
+    }
+
+    private void copyRebuiltNodeAlternatives(Long topicId, List<OrientTaskAlternative> alternatives,
+            com.chengyinhub.business.service.support.TopicAuthoredGraphIds ids) {
+        for (OrientTaskAlternative old : alternatives) {
+            Long newId = ids.oldToNew.get(old.getTaskId());
+            if (newId == null) continue;
+            CmsTopicNode node = cmsTopicNodeMapper.selectCmsTopicNodeById(newId);
+            if (!topicId.equals(old.getTopicId()) || !ids.newNodeIds.contains(newId)
+                    || node == null || !topicId.equals(node.getTopicId())) {
+                throw new IllegalStateException("替代完成方式节点重映射失败");
+            }
+            // Keep old rows and player facts on their historical task identity.
+            OrientTaskAlternative copy = new OrientTaskAlternative();
+            copy.setTopicId(topicId);
+            copy.setTaskId(newId);
+            copy.setAlternativeTaskType(old.getAlternativeTaskType());
+            copy.setPromptText(old.getPromptText());
+            copy.setAnswerHash(old.getAnswerHash());
+            copy.setEnabled(old.getEnabled());
+            copy.setCreateBy(old.getCreateBy());
+            copy.setCreateTime(old.getCreateTime());
+            copy.setUpdateTime(old.getUpdateTime());
+            if (orientMapper.insertAlternative(copy) != 1) {
+                throw new IllegalStateException("替代完成方式重建保存失败");
+            }
         }
     }
 
@@ -3416,6 +3666,15 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         return BigDecimal.valueOf(totalDistance);
     }
 
+    /**
+     * cms_topic.total_time 的单位是秒(建表注释「总时长,单位秒」,种子主题与小程序/后台格式化都按秒)。
+     * 节点 nodeTime 是分钟,这里换成秒再落库 —— 之前直接落分钟和,详情页把 270 分钟读成「约 4 分钟」(R11 j3 F7)。
+     */
+    public Long totalTimeSeconds(List<NodeDTO> nodes) {
+        return calculateTotalTime(nodes) * 60L;
+    }
+
+    /** 节点建议时长之和,单位分钟(nodeTime)。 */
     public Long calculateTotalTime(List<NodeDTO> nodes) {
         if (CollectionUtils.isEmpty(nodes)) {
             return 0L;

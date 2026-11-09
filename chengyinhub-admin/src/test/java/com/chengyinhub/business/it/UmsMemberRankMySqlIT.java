@@ -92,6 +92,11 @@ class UmsMemberRankMySqlIT {
                                 + "(990012,200,300.00,0,'2020-01-02 00:00:00'),"
                                 + "(990013,200,200.00,0,'2020-01-03 00:00:00'),"
                                 + "(990014,99999,99999.00,2,'2019-01-01 00:00:00')");
+                        // 第十一轮 g3(4751ec46,p1 F-3/F-4):积分名次只排玩家账号,0 分没有名次。
+                        // 商家账号积分再高、0 分玩家都不进积分排序;余额排名口径未改,仍按全部未删账号。
+                        statement.execute("INSERT INTO ums_member(id,point,balance,del_flag,create_time,role) VALUES"
+                                + "(990015,50000,50.00,0,'2018-01-01 00:00:00','merchant'),"
+                                + "(990016,0,10.00,0,'2018-01-02 00:00:00','player')");
                     }
                 }
                 ds = new PooledDataSource("com.mysql.cj.jdbc.Driver", url, testConfig.user(), testConfig.password());
@@ -117,7 +122,10 @@ class UmsMemberRankMySqlIT {
                         Connection connection = session.getConnection();
                         connection.setReadOnly(true);
                         try (ResultSet rows = connection.createStatement().executeQuery(
-                                "SELECT id FROM ums_member WHERE del_flag=0 ORDER BY " + score + " DESC,create_time ASC")) {
+                                "point".equals(score)
+                                        ? "SELECT id FROM ums_member WHERE del_flag=0 AND role='player' AND IFNULL(point,0)>0"
+                                          + " ORDER BY point DESC,create_time ASC,id ASC"
+                                        : "SELECT id FROM ums_member WHERE del_flag=0 ORDER BY balance DESC,create_time ASC")) {
                             while (rows.next()) ordered.add(rows.getLong(1));
                         }
                         assertTrue(ordered.contains(990011L));
@@ -141,6 +149,11 @@ class UmsMemberRankMySqlIT {
                                     + rank.get("total_users").getClass().getName());
                         }
                         assertNull("point".equals(score) ? mapper.selectUserRankInfo(-1L) : mapper.selectUserBalanceRankInfo(-1L));
+                        if ("point".equals(score)) {
+                            assertFalse(ordered.contains(990015L) || ordered.contains(990016L));
+                            assertNull(mapper.selectUserRankInfo(990015L), "商家账号不进积分名次");
+                            assertNull(mapper.selectUserRankInfo(990016L), "0 分玩家没有名次");
+                        }
                     }
                     for (String kind : new String[]{"Points", "Balance"}) {
                         String mapperResource = "mapper/business/UmsMember" + kind + "DetailMapper.xml";

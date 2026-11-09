@@ -26,6 +26,9 @@ class RegistrationQuotePaymentChannelContractTest {
         RegistrationCheckoutServiceImpl service = new RegistrationCheckoutServiceImpl();
         ReflectionTestUtils.setField(service, "registrationService", mock(ICmsRegistrationService.class));
         ReflectionTestUtils.setField(service, "wechatPayService", pay);
+        // 主干 r1 F3 的买家门禁先于报价执行;本合同只验通道投影,门禁放行。
+        ReflectionTestUtils.setField(service, "registrationOrderCreateGate",
+                mock(com.chengyinhub.business.service.IRegistrationOrderCreateGate.class));
         return service;
     }
 

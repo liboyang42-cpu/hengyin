@@ -155,7 +155,7 @@ class ClubRegistrationRosterSessionLabelTest {
             }
             return Collections.singletonList(sessionTicket(probe.getOwnerId()));
         }).when(ticketService).selectOmsTicketList(any());
-        when(registrationService.selectRegistrationSummaries(any())).thenReturn(Collections.emptyList());
+        when(registrationService.selectRosterSummaries(any())).thenReturn(Collections.emptyList());
 
         Map<String, Object> body = new HashMap<>();
         body.put("clubId", CLUB);

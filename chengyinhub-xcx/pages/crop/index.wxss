@@ -88,6 +88,9 @@
   transform-origin: center center;
   will-change: transform;
 }
+/* 「还原」回位带一段过渡,看得见撤回了什么;手势拖动/缩放时不挂这个类,跟手不拖影 */
+.crop__img--settling { transition: transform var(--cy-motion-standard) var(--cy-ease-out); }
+@media (prefers-reduced-motion: reduce) { .crop__img--settling { transition: none; } }
 
 /* 底栏:取消 / 选取。底色取页面纯黑:原 --cy-comp-crop-bar-bg 映射到 bg-elevated,
    是抬高一层的深灰,压在纯黑取景台上会浮出一条灰底;顶部一条细线承担与取景区的分隔。 */

@@ -77,16 +77,43 @@ test('BL-254:两处与同页其它入口共用一把锁,onShow 兜底清锁', ()
 test('BL-254:topicId 无效时不跳也不上锁', () => {
   const { page, navs } = loadPage()
   page.openProjectCard(CARD({ biztype: 'topic', topicid: '' }))
-  page.goHostProject(CARD({ topicid: '-1' }))
+  for (const topicid of [undefined, '-1', '0', 'invalid', '1.5', '9007199254740992']) {
+    page.goHostProject(CARD({ topicid }))
+  }
   assert.equal(navs.length, 0)
   assert.notEqual(page._navigating, true)
   page.goManageCoupon()
   assert.equal(navs.length, 1)
 })
 
-test('BL-254:两处跳转带 complete 清锁,onShow 仍兜底清锁', () => {
+for (const [label, row, source, parameter] of [
+  ['待接受邀请', { topicId: 42, status: '0', source: '1' }, 'chapter', 'id'],
+  ['已接受邀请', { topicId: 42, status: 1, source: 1 }, 'chapter', 'topicId'],
+  ['普通待审申请', { topicId: 42, status: 0, source: 0 }, 'chapter', 'topicId'],
+  ['其他主题邀请', { topicId: 43, status: 0, source: 1 }, 'chapter', 'topicId'],
+  ['非章节卡片', { topicId: 42, status: 0, source: 1 }, 'host', 'topicId'],
+]) {
+  test(`BL-254:goHostProject ${label} 保持精确路由与共享连点锁`, () => {
+    const { page, navs } = loadPage()
+    page._chapterProjectList = [row]
+    const event = CARD({ topicid: '42', source })
+    const url = `/pages/topic/merchantinfo/merchantinfo?${parameter}=42&scope=MERCHANT`
+    page.goHostProject(event)
+    assert.equal(page._navigating, true)
+    page.goHostProject(event)
+    page.goManageCoupon()
+    assert.equal(navs.length, 1)
+    assert.equal(navs[0].url, url)
+    navs[0].complete()
+    assert.equal(page._navigating, false)
+    page.goHostProject(event)
+    assert.equal(navs.length, 2)
+    assert.equal(navs[1].url, url)
+  })
+}
+
+test('BL-254:优惠券跳转带 complete 清锁,onShow 仍兜底清锁', () => {
   const source = fs.readFileSync(path.join(ROOT, PAGE), 'utf8')
   assert.match(source, /goManageCoupon\(\) \{\n    if \(this\._navigating\) return; this\._navigating = true; wx\.navigateTo\(\{[^\n]*complete: \(\) => \{ this\._navigating = false; \}/)
-  assert.match(source, /goHostProject\(e\) \{[\s\S]{0,200}topicId <= 0 \|\| this\._navigating\) return;[^\n]*\n    this\._navigating = true; wx\.navigateTo\(\{[^\n]*complete: \(\) => \{ this\._navigating = false; \}/)
   assert.match(source, /onShow\(options\) \{[\s\S]{0,200}this\._navigating = false;/)
 })

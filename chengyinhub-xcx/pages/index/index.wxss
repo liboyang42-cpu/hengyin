@@ -233,7 +233,8 @@ page {
   justify-content: center;
   color: var(--cy-color-text-primary);   /* cy-icon 走 currentColor */
 }
-.v3-hero-mem {
+.v3-hero-mem,
+.v3-hero-guest-city {
   flex: none;
   gap: var(--cy-space-1-5);
   pointer-events: auto;
@@ -251,7 +252,8 @@ page {
   font-weight: 500;
   color: var(--cy-color-text-secondary);
 }
-.v3-hero-mem-loc {
+.v3-hero-mem-loc,
+.v3-hero-guest-city__txt {
   font-size: var(--cy-type-label);
   color: var(--cy-color-text-tertiary);
 }
@@ -339,7 +341,7 @@ page {
 .v3-sec-first { margin-top: 0; padding-top: var(--cy-space-6); }
 /* ADA 8pt:section 间距恒 64rpx(2026-08-20 由 48 加大;标题到自己卡片 20rpx 保持不变,
    保证「离自己的卡近、离别人的卡远」的亲密性关系) */
-.v3-sec { margin-top: var(--cy-space-6); }
+.v3-sec { margin-top: var(--cy-space-6); position: relative; } /* H-03b:「正在更新…」用 cy-refresh-float 浮在区块内,刷新不占高 */
 .v3-sec-reco { margin-top: var(--cy-space-6); }
 .v3-sec-head { padding: 0 var(--cy-space-4) var(--cy-space-4); align-items: baseline; }
 /* 字阶:2026-08-20 用户要求首页模块标题比 section-title(36) 再大一档 → 回到 40rpx;
@@ -355,7 +357,6 @@ page {
 .v3-sec-state { padding: 0 var(--cy-space-4); }
 .v3-sec-sync {
   display: block;
-  padding: 0 var(--cy-space-4) var(--cy-space-2);
   color: var(--cy-color-text-tertiary);
   font-size: var(--cy-type-caption);
 }
@@ -365,7 +366,7 @@ page {
 
 /* —— 附近活动:双列竖卡 —— */
 /* ADA 8pt:卡间恒 24rpx */
-.v3-nearby-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); }
+.v3-nearby-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); vertical-align: top; } /* 实测:inline-flex 落在基线上,区块底多出约 6px 字下沿空隙,区块间距 38 对 32 */
 .v3-nearby-card {
   position: relative;
   flex: none;
@@ -402,8 +403,8 @@ page {
   border-radius: 8rpx;
   font-size: var(--cy-type-micro);
   font-weight: 700;
-  background: var(--cy-color-action-danger-bg);
-  color: var(--cy-color-action-danger-fg);
+  background: var(--cy-color-action-primary-bg);
+  color: var(--cy-color-action-primary-fg);
 }
 .v3-nearby-time {
   flex: 1;
@@ -529,7 +530,7 @@ page {
 }
 
 /* —— 即将上线:Figma 3586:13013 图片底卡 —— */
-.v3-upcoming-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); }
+.v3-upcoming-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); vertical-align: top; } /* 实测:inline-flex 落在基线上,区块底多出约 6px 字下沿空隙,区块间距 38 对 32 */
 .v3-upreview {
   position: relative;
   flex: none;
@@ -580,7 +581,7 @@ page {
 /* P-03(2026-10-27):「主题 / 活动」tab 下的横线和第一张卡之间留 24rpx。 */
 .v3-feed .page-tab { padding: 0 var(--cy-space-4); margin-bottom: var(--cy-space-3); }
 
-.v2-feed { padding: 0 var(--cy-page-x); }
+.v2-feed { padding: 0 var(--cy-page-x); } .v2-feed-sk { display: block; margin: 0 calc(-1 * var(--cy-page-x)); } /* H-04:骨架自带 --cy-page-x 内边距,抵掉外层同值,骨架卡与真卡同一左缘 */
 .v2-fitem { margin-bottom: var(--cy-space-5); }
 /* 2026-10-28 业主:主题都有封面 —— 整张卡就是封面图,类型 / 名字 / 标签压在底部渐变上 */
 .v2-fcard {

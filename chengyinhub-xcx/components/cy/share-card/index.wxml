@@ -12,19 +12,21 @@
     <view class="sc-card sc-card--act" wx:if="{{kind === 'activity'}}">
       <image class="sc-cover" wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" />
       <view class="sc-in">
-        <text class="sc-eb">活动</text>
+        <text class="sc-eb">{{label}}</text>
         <text class="sc-t">{{title}}</text>
         <view class="sc-when" wx:if="{{date || when}}"><text class="sc-date" wx:if="{{date}}">{{date}}</text><text class="sc-whenl">{{when}}</text></view>
         <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
       </view>
     </view>
     <!-- 主题:封面铺满整张卡并压暗,大号粗斜体主题名,下面一条竖着的路线,站点编号连成线 -->
-    <view class="sc-card sc-card--theme" wx:elif="{{kind === 'theme'}}">
+    <!-- 第九轮 m2 补充第 4 项:店铺卡与主题卡同一版式 —— 店铺封面铺满压暗,店名、地址,右下是店铺码(不再是一块空色) -->
+    <view class="sc-card sc-card--theme {{kind === 'shop' ? 'sc-card--shop' : ''}}" wx:elif="{{kind === 'theme' || kind === 'shop'}}">
       <image class="sc-bgimg" wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" />
       <view class="sc-shade"></view>
       <view class="sc-in">
-        <text class="sc-eb">{{meta ? '主题 · ' + meta : '主题'}}</text>
+        <text class="sc-eb">{{kind === 'shop' ? '店铺' : (meta ? '主题 · ' + meta : '主题')}}</text>
         <text class="sc-big">{{title}}</text>
+        <text class="sc-m" wx:if="{{kind === 'shop' && when}}">{{when}}</text>
         <view class="sc-line" wx:if="{{stops.length}}">
           <view class="sc-line-i" wx:for="{{stops}}" wx:key="index"><view class="sc-line-dot">{{index + 1}}</view><text class="sc-line-t">{{item}}</text></view>
         </view>
@@ -49,7 +51,7 @@
   </view>
 
   <scroll-view class="sc-ch" scroll-x enhanced show-scrollbar="{{false}}">
-    <button class="sc-ch-i sc-ch-btn" open-type="share" aria-label="发给微信好友"><view class="sc-ch-c"><cy-icon name="share" size="44" /></view><text>微信好友</text></button>
+    <button class="sc-ch-i sc-ch-btn" open-type="share" data-share-kind="card" aria-label="发给微信好友"><view class="sc-ch-c"><cy-icon name="share" size="44" /></view><text>微信好友</text></button>
     <view class="sc-ch-i" wx:for="{{channels}}" wx:key="key" data-key="{{item.key}}" bindtap="onChannel" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="sc-ch-c"><cy-icon name="{{item.icon}}" size="44" /></view><text>{{item.label}}</text>
     </view>

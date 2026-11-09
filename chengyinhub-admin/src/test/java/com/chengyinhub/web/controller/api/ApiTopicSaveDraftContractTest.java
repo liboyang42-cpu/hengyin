@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -56,6 +57,7 @@ class ApiTopicSaveDraftContractTest {
     @BeforeEach
     void setUp() {
         controller = spy(new ApiTopicController());
+        ReflectionTestUtils.setField(controller, "responseObjectMapper", new com.fasterxml.jackson.databind.ObjectMapper());
         // 手工 new 不走 @Value 默认值,旧写门禁显式开闸(与 Spring 运行时默认一致)。
         ReflectionTestUtils.setField(controller, "legacyCommunityWritesEnabled", true);
         topicService = mock(ICmsTopicService.class);
@@ -64,6 +66,9 @@ class ApiTopicSaveDraftContractTest {
         doReturn(MEMBER).when(controller).getAppUserId();
         doReturn("member901").when(controller).getAppUserName();
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        // 草稿发布口会读库内节点绑定的玩法去复检文字(j5 B1);这里没有绑定玩法
+        ReflectionTestUtils.setField(controller, "cmsTopicNodeService",
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.ICmsTopicNodeService.class));
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
         ReflectionTestUtils.setField(controller, "umsCreativeSquareService", creativeSquareService);
         redis = mock(com.chengyinhub.common.core.redis.RedisCache.class);
@@ -84,6 +89,7 @@ class ApiTopicSaveDraftContractTest {
 
     private TopicCreateDTO draftDto() {
         TopicCreateDTO dto = new TopicCreateDTO();
+        dto.setImgUrl("media-asset:1"); // P-17:发布必须带封面
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setName("尚未发布的新主题");
         dto.setPublishMode("pro");
@@ -205,6 +211,25 @@ class ApiTopicSaveDraftContractTest {
         AjaxResult result = controller.topicEditDetail(String.valueOf(TOPIC_ID), null);
         assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
         return (java.util.Map<String, Object>) result.get(AjaxResult.DATA_TAG);
+    }
+
+    @Test
+    void publishedStartedThemeCanBeReadBackWithoutOpeningItsEditWindow() {
+        editDetail(1, 0);
+        CmsTopic topic = topicService.selectCmsTopicById(TOPIC_ID);
+        topic.setStartDate(new java.util.Date(System.currentTimeMillis() - 60_000));
+        for (int userStatus : new int[]{1, 0}) {
+            topic.setUserStatus(userStatus);
+            AjaxResult denied = controller.authorEditDetail(String.valueOf(TOPIC_ID), null);
+            assertNotEquals(200, denied.get(AjaxResult.CODE_TAG));
+            assertEquals("主题已开始，内容已锁定；如需调整，请新建未来档期主题", denied.get(AjaxResult.MSG_TAG));
+        }
+        AjaxResult saved = controller.authorSavedDetail(String.valueOf(TOPIC_ID), null);
+        assertEquals(200, saved.get(AjaxResult.CODE_TAG));
+        com.fasterxml.jackson.databind.JsonNode data = (com.fasterxml.jackson.databind.JsonNode) saved.get(AjaxResult.DATA_TAG);
+        assertEquals(false, data.path("isDraft").asBoolean()); assertEquals("NONE", data.path("editScope").asText());
+        topic.setMemberId(999L);
+        assertNotEquals(200, controller.authorSavedDetail(String.valueOf(TOPIC_ID), null).get(AjaxResult.CODE_TAG));
     }
 
     private static final String REQUEST_ID = "draftAbc123456789XY";

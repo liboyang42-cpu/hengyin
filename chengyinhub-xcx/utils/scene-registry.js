@@ -51,7 +51,7 @@ const SCENES = {
   'qr-group-code': { route: '/pages/club/group-code/index', title: '团核销码', theme: 'player', variant: 'full', canBack: true },
   'qr-citynode': { route: '/subpackageRoam/citynode-code/index', title: '节点核销码', theme: 'player', variant: 'full', canBack: true },
   'qr-ticket': { route: '/pages/play/index', title: '入场码', theme: 'player', variant: 'full', canBack: true },
-  'roam-stamp-album': { route: '/subpackageP3/pages/stamp-album/index/index', title: '集邮册', theme: 'player', variant: 'full' },
+  'roam-stamp-album': { route: '/subpackageP3/pages/stamp-album/index/index', title: '集邮册', theme: 'player', variant: 'page' },
 
   // ⚠️ 以下三条是 master 在本分支切出之后新增的,cherry-pick 会静默把它们吞掉。
   //   merchant-profit 来自 #604(分润记录标出收款方);两条 participation 是「参与详情=场景」

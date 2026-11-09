@@ -562,7 +562,7 @@ class MerchantIdentityMybatisIntegrationTest {
             return db.update("INSERT INTO identity_points_receipt(event_id,change_points,change_reason) VALUES(?,?,?)",row.getEventId(),row.getChangePoints(),row.getChangeReason());
         });
         ICmsPointsSettingService settings = mock(ICmsPointsSettingService.class);
-        CmsPointsSetting setting = new CmsPointsSetting();setting.setValue(new java.math.BigDecimal("17"));
+        CmsPointsSetting setting = new CmsPointsSetting();setting.setValue(new java.math.BigDecimal("17"));setting.setStatus(1L); // 第十二轮 k1 第 11 项:只有启用的规则 7 才发
         when(settings.selectCmsPointsSettingById(7L)).thenReturn(setting);
         ReflectionTestUtils.setField(merchantTarget,"umsMemberService",accounts);
         ReflectionTestUtils.setField(merchantTarget,"umsMemberPointsDetailService",details);

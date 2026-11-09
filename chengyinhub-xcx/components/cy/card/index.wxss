@@ -15,6 +15,8 @@
   box-shadow: inset 0 1rpx 0 0 var(--cy-comp-card-highlight), var(--cy-comp-card-shadow-day);
 }
 
+.cy-card--media { border-radius: var(--cy-radius-2xl); }
+
 .cy-card--flat {
   background: transparent;
   border: none;

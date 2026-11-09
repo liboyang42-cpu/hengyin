@@ -1301,6 +1301,7 @@
    },
    "exploreStat": {
     "shops": 12,
+    "places": 12,
     "weekExp": 80
    }
   },
@@ -16112,7 +16113,7 @@
    "mock": true,
    "node": {
     "nodeId": 47,
-    "gameTitle": "城市盲盒"
+    "gameTitle": "城市随机卡"
    },
    "state": {
     "sessionId": "shot-random",
@@ -17386,7 +17387,7 @@
    "kit": {
     "type": "predict",
     "question": "明天哪款会卖得最好?",
-    "hint": "押一个,商家给答案时揭晓。",
+    "hint": "选一个,商家给答案时揭晓。",
     "options": [
      {
       "key": "A",
@@ -17471,7 +17472,7 @@
      },
      {
       "t": "今日销冠",
-      "how": "竞猜转盘"
+      "how": "预测转盘"
      },
      {
       "t": "深夜面馆",
@@ -17479,7 +17480,7 @@
      },
      {
       "t": "开一张卡",
-      "how": "抽卡"
+      "how": "翻卡"
      },
      {
       "t": "街角花店",
@@ -18228,7 +18229,7 @@
       }
      ],
      "betCount": 12,
-     "betText": "12 个人押了这一轮",
+     "betText": "12 个人选了这一轮",
      "optionText": "2 个选项",
      "daysLeft": 1,
      "deadlineText": "还剩 1 天"

@@ -38,4 +38,16 @@ class MonthlyRecapMapperTest {
         String s=sql("page","stamps").getSql().replaceAll("\\s+"," ").toLowerCase();
         assertTrue(s.contains("s.member_id=? and s.del_flag=0 and s.check_state!=2"));assertFalse(s.contains("pic_url"));assertFalse(s.contains("caption"));
     }
+    @Test void firstThemeCompletionFactsAreOwnedVisibleAndNotDoubleCounted() throws Exception {
+        String s=sql("page","routes").getSql().replaceAll("\\s+"," ").toLowerCase();
+        assertTrue(s.contains("select -b.id as id"));
+        assertTrue(s.contains("b.member_id=? and b.source_type=2 and b.del_flag=0"));
+        assertTrue(s.contains("b.badge_code=concat('topic_finish_',b.source_id)"));
+        assertTrue(s.contains("b.obtain_time >= ? and b.obtain_time < ?"));
+        assertTrue(s.contains("not exists (select 1 from topic_route_session completed_route"));
+        assertTrue(s.contains("completed_route.member_id=b.member_id and completed_route.topic_id=b.source_id"));
+        assertTrue(s.contains("registration.payment_status=2 and registration.registration_status=2"));
+        assertTrue(s.contains("a.topic_id=b.source_id and a.status=1 and a.publish_status=1"));
+        assertFalse(s.contains("b.badge_name"));
+    }
 }

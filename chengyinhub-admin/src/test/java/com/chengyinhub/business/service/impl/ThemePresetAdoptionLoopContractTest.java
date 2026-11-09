@@ -502,13 +502,14 @@ class ThemePresetAdoptionLoopContractTest {
             });
             when(receipts.lock(anyLong(), anyString())).thenAnswer(call -> new HashMap<>(
                     rows.getOrDefault(call.getArgument(0) + ":" + call.getArgument(1), Map.of())));
-            when(receipts.finish(anyLong(), anyString(), anyString(), any(), any(), any())).thenAnswer(call -> {
+            when(receipts.finish(anyLong(), anyString(), anyString(), any(), any(), any(), any())).thenAnswer(call -> {
                 Map<String, Object> row = rows.get(call.getArgument(0) + ":" + call.getArgument(1));
                 if (row == null) return 0;
                 row.put("status", call.getArgument(2));
                 if (call.getArgument(3) != null) row.put("draftId", call.getArgument(3));
                 row.put("reason", call.getArgument(4));
                 row.put("draftVersion", call.getArgument(5));
+                row.put("inheritedConfigHash", call.getArgument(6));
                 return 1;
             });
             PlatformTransactionManager manager = mock(PlatformTransactionManager.class);

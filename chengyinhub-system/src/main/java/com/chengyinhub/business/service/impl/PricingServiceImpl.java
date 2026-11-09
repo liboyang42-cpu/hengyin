@@ -38,18 +38,12 @@ public class PricingServiceImpl implements IPricingService {
     private com.chengyinhub.business.mapper.MerchantChapterOfferMapper offerMapper;
 
     /**
-     * [P0-28 批1] 费率兜底值 —— **不是真源**,真源是 settlement_rule。
-     *
-     * <p>这三个数原本是硬编码常量(注释还写着「后续拍板改此常量或提配置」——配置没提),
-     * 于是调一次抽成要走一遍发版,而库里 settlement_rule.platform_commission_rate 是同一概念的另一份、
-     * 后台可改 ⇒ 运营在后台调成 0.15,这里还是 0.10,定出的地板价低 5 个点 → 结算 margin<0 → 拒结悬空。
-     *
-     * <p>现在只在**查不到规则行**时兜底(并打 error)。取值刻意等于原硬编码值,保证 fallback 时行为不变。
+     * 第十二轮 k1 第 7 项(p3 N2):费率真源只有 settlement_rule(merchant_id=0, biz_type=topic)。
+     * 原来查不到规则行、读库出错或字段为空时静默回落硬编码 10% / 5% / 2% / 5 家 —— 生产已是 3%,
+     * 一回落就按 10% 定价、冻快照、结算。现在一律拒绝(抛 IllegalStateException),不再有兜底常量。
+     * 生产库这三列 NOT NULL DEFAULT(migration_fee_snapshot_20260716),只有规则行缺失才会触发。
      */
-    private static final BigDecimal FALLBACK_PLATFORM_RATE = new BigDecimal("0.10");
-    private static final BigDecimal FALLBACK_GUARANTEE_BASE = new BigDecimal("0.05");
-    private static final BigDecimal FALLBACK_GUARANTEE_STEP = new BigDecimal("0.02");
-    private static final int FALLBACK_GUARANTEE_MAX_MERCHANT = 5;
+    static final String RULE_MISSING = "平台费率规则缺失(settlement_rule merchant_id=0, biz_type=topic),拒绝按默认费率计价";
 
     /** 主题费率规则的坐标:平台默认行(merchant_id=0) + 主题业务线。 */
     private static final Long PLATFORM_DEFAULT_MERCHANT = 0L;
@@ -83,25 +77,14 @@ public class PricingServiceImpl implements IPricingService {
      */
     @Override
     public BigDecimal platformRate() {
-        SettlementRule rule = topicRule();
-        if (rule == null || rule.getPlatformCommissionRate() == null) {
-            logger.error("settlement_rule 查不到 (merchant_id=0, biz_type=topic) 的平台抽成率,"
-                    + "回落硬编码 {} —— 单真源名存实亡,请补上这一行", FALLBACK_PLATFORM_RATE);
-            return FALLBACK_PLATFORM_RATE;
-        }
-        return rule.getPlatformCommissionRate();
+        return requireTopicRule().getPlatformCommissionRate();
     }
 
     @Override
     public BigDecimal initiatorGuaranteeRate(int verifiedMerchantCount) {
-        SettlementRule rule = topicRule();
-        BigDecimal base = rule != null && rule.getGuaranteeBaseRate() != null
-                ? rule.getGuaranteeBaseRate() : FALLBACK_GUARANTEE_BASE;
-        BigDecimal step = rule != null && rule.getGuaranteeStepRate() != null
-                ? rule.getGuaranteeStepRate() : FALLBACK_GUARANTEE_STEP;
-        int max = rule != null && rule.getGuaranteeMaxMerchant() != null
-                ? rule.getGuaranteeMaxMerchant() : FALLBACK_GUARANTEE_MAX_MERCHANT;
-        return guaranteeRate(base, step, max, verifiedMerchantCount);
+        SettlementRule rule = requireTopicRule();
+        return guaranteeRate(rule.getGuaranteeBaseRate(), rule.getGuaranteeStepRate(),
+                rule.getGuaranteeMaxMerchant(), verifiedMerchantCount);
     }
 
     /**
@@ -167,13 +150,21 @@ public class PricingServiceImpl implements IPricingService {
                 + " ≥ 票价 ⇒ 每张票必亏。请提高票价、降低人头费、或把部分章节改成权益档/引流档。";
     }
 
-    private SettlementRule topicRule() {
+    /** 规则行与四个费率字段必须齐全;缺任何一个都拒绝,不回落任何默认值。 */
+    private SettlementRule requireTopicRule() {
+        SettlementRule rule;
         try {
-            return settlementRuleService.getActiveRule(PLATFORM_DEFAULT_MERCHANT, BIZ_TYPE_TOPIC);
-        } catch (Exception e) {
-            logger.error("读 settlement_rule 失败,回落硬编码费率", e);
-            return null;
+            rule = settlementRuleService.getActiveRule(PLATFORM_DEFAULT_MERCHANT, BIZ_TYPE_TOPIC);
+        } catch (RuntimeException e) {
+            logger.error("读 settlement_rule 失败,拒绝计价", e);
+            throw new IllegalStateException(RULE_MISSING, e);
         }
+        if (rule == null || rule.getPlatformCommissionRate() == null || rule.getGuaranteeBaseRate() == null
+                || rule.getGuaranteeStepRate() == null || rule.getGuaranteeMaxMerchant() == null) {
+            logger.error(RULE_MISSING);
+            throw new IllegalStateException(RULE_MISSING);
+        }
+        return rule;
     }
 
     /**
@@ -183,15 +174,11 @@ public class PricingServiceImpl implements IPricingService {
      * 那正是快照要防的「改一个数追溯改写已售未结订单」。
      */
     private void applyFeeSnapshot(CmsTopic upd) {
-        SettlementRule feeRule = topicRule();
-        upd.setFeePlatformRate(feeRule != null && feeRule.getPlatformCommissionRate() != null
-                ? feeRule.getPlatformCommissionRate() : FALLBACK_PLATFORM_RATE);
-        upd.setFeeGuaranteeBaseRate(feeRule != null && feeRule.getGuaranteeBaseRate() != null
-                ? feeRule.getGuaranteeBaseRate() : FALLBACK_GUARANTEE_BASE);
-        upd.setFeeGuaranteeStepRate(feeRule != null && feeRule.getGuaranteeStepRate() != null
-                ? feeRule.getGuaranteeStepRate() : FALLBACK_GUARANTEE_STEP);
-        upd.setFeeGuaranteeMaxMerchant(feeRule != null && feeRule.getGuaranteeMaxMerchant() != null
-                ? feeRule.getGuaranteeMaxMerchant() : FALLBACK_GUARANTEE_MAX_MERCHANT);
+        SettlementRule feeRule = requireTopicRule();
+        upd.setFeePlatformRate(feeRule.getPlatformCommissionRate());
+        upd.setFeeGuaranteeBaseRate(feeRule.getGuaranteeBaseRate());
+        upd.setFeeGuaranteeStepRate(feeRule.getGuaranteeStepRate());
+        upd.setFeeGuaranteeMaxMerchant(feeRule.getGuaranteeMaxMerchant());
     }
 
     @Override
@@ -298,7 +285,11 @@ public class PricingServiceImpl implements IPricingService {
         String blockReason = lifecycleRow == null ? LIFECYCLE_BLOCK_REASON : lifecycleBlockReason(lifecycleRow);
         if (blockReason == null) blockReason = supplyBlockReason(cmsTopicMapper.selectProductTypeById(topicId), topicId);
         r.setCanConfirm(blockReason == null);
+        // P-34(第三轮):已过定价阶段(开售及以后)单独标出,定价页不再误报「合作阵容锁定后可定价」
+        r.setPriced(lifecycleRow != null && lifecycleRow.getLifecycle() != null && lifecycleRow.getLifecycle() > 2);
         r.setConfirmBlockReason(blockReason);
+        r.setCurrentPrice(currentPrice(topicId, subType));
+        r.setTickets(ticketRows(topicId, subType));
         java.util.Map<String, Object> reference = pricingReferenceMapper == null
                 ? null : pricingReferenceMapper.selectCityReference(topicId, subType);
         if (reference != null && reference.get("referencePrice") != null) {
@@ -311,6 +302,66 @@ public class PricingServiceImpl implements IPricingService {
             r.setCityReferenceSampleSize(0);
         }
         return r;
+    }
+
+    /** P-01:城市定向作者自己发的票(未标 sub_type、未删除)。 */
+    private List<OmsTicket> authoredCityTickets(Long topicId) {
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setDelFlag(0);
+        List<OmsTicket> rows = omsTicketMapper.selectOmsTicketList(q);
+        List<OmsTicket> out = new ArrayList<>();
+        if (rows != null) for (OmsTicket t : rows) {
+            if (t != null && t.getSubType() == null && Integer.valueOf(0).equals(t.getDelFlag() == null ? 0 : t.getDelFlag())) {
+                out.add(t);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * 第四轮(多票价):定价页逐张确认用的票行。与 confirmPrice 写作者票的条件一致:
+     * 城市定向、有人带档、还没有 sub_type=guided 的票。只读。
+     */
+    private List<PricingResult.TicketPrice> ticketRows(Long topicId, String subType) {
+        List<PricingResult.TicketPrice> out = new ArrayList<>();
+        if ("self".equals(subType) || omsTicketMapper == null || cmsTopicMapper == null) return out;
+        if (!Integer.valueOf(ProductType.ORIENTEERING).equals(cmsTopicMapper.selectProductTypeById(topicId))) return out;
+        if (!guidedTickets(topicId).isEmpty()) return out;
+        for (OmsTicket t : authoredCityTickets(topicId)) {
+            out.add(new PricingResult.TicketPrice(t.getId(), t.getName(), t.getPrice()));
+        }
+        return out;
+    }
+
+    private List<OmsTicket> guidedTickets(Long topicId) {
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setSubType("guided");
+        List<OmsTicket> rows = omsTicketMapper.selectOmsTicketList(q);
+        return rows == null ? java.util.Collections.<OmsTicket>emptyList() : rows;
+    }
+
+    /** P-34:定价页预填作者已填过的价;读不到就不填(页面回落到地板价)。只读。 */
+    private BigDecimal currentPrice(Long topicId, String subType) {
+        if ("self".equals(subType)) {
+            CmsTopic topic = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicById(topicId);
+            return topic == null ? null : topic.getSelfPlayPrice();
+        }
+        if (omsTicketMapper == null) return null;
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setDelFlag(0);
+        List<OmsTicket> tickets = omsTicketMapper.selectOmsTicketList(q);
+        BigDecimal best = null;
+        if (tickets != null) for (OmsTicket t : tickets) {
+            if (t == null || t.getPrice() == null) continue;
+            if (best == null || t.getPrice().compareTo(best) > 0) best = t.getPrice();
+        }
+        return best;
     }
 
     private static final String LIFECYCLE_BLOCK_REASON = "主题未在定价阶段,不能确认终价";
@@ -334,6 +385,24 @@ public class PricingServiceImpl implements IPricingService {
     @Transactional(rollbackFor = Exception.class)
     public int confirmPrice(Long topicId, BigDecimal guidedPrice, BigDecimal selfPrice,
                             Integer guidedInventory, BigDecimal leadCost, Integer teamSize) {
+        return confirmPrice(topicId, guidedPrice, selfPrice, guidedInventory, leadCost, teamSize, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int confirmPrice(Long topicId, BigDecimal guidedPrice, BigDecimal selfPrice,
+                            Integer guidedInventory, BigDecimal leadCost, Integer teamSize,
+                            java.util.Map<Long, BigDecimal> ticketPrices) {
+        boolean perTicket = ticketPrices != null && !ticketPrices.isEmpty();
+        if (perTicket) {
+            // 第四轮(多票价):地板与必亏闸按最低那张票判 —— 最低价过了,其余都过。不信任前端另传的 guidedPrice。
+            BigDecimal lowest = null;
+            for (BigDecimal p : ticketPrices.values()) {
+                if (p == null) throw new IllegalStateException("每张票都要填写终价");
+                if (lowest == null || p.compareTo(lowest) < 0) lowest = p;
+            }
+            guidedPrice = lowest;
+        }
         // [资损·TOCTOU] 行锁读主题,与 acceptInviteWithLock 的行锁串行:确保"读单算地板→lifecycle=3"
         // 期间无并发 acceptInvite 挤入新分成单,消除锁价快照与结算阵容不一致的悬空窗。
         CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
@@ -345,8 +414,9 @@ public class PricingServiceImpl implements IPricingService {
         if (supplyBlock != null) throw new IllegalStateException(supplyBlock);
 
         // 校验各票价 ≥ 各自底价(guided 摊带队成本,self 不摊)
+        BigDecimal guidedFloor = null;
         if (guidedPrice != null) {
-            BigDecimal guidedFloor = previewTopic(topicId, leadCost, teamSize, "guided").getPriceMin();
+            guidedFloor = previewTopic(topicId, leadCost, teamSize, "guided").getPriceMin();
             if (guidedPrice.compareTo(guidedFloor) < 0)
                 throw new IllegalStateException("有人带票价不能低于底价 " + guidedFloor);
         }
@@ -391,12 +461,41 @@ public class PricingServiceImpl implements IPricingService {
             q.setSubType("guided");
             List<OmsTicket> existing = omsTicketMapper.selectOmsTicketList(q);
             int inv = guidedInventory != null && guidedInventory > 0 ? guidedInventory : 100;
-            if (existing != null && !existing.isEmpty()) {
+            List<OmsTicket> authored = (existing == null || existing.isEmpty())
+                    && Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())
+                    ? authoredCityTickets(topicId) : java.util.Collections.<OmsTicket>emptyList();
+            if (perTicket) assertCoversAuthored(authored, ticketPrices);
+            if (!authored.isEmpty()) {
+                // P-01:编辑器发的城市定向票不带 sub_type,它们本身就是有人带的场次票(带时间、集合点、库存)。
+                // 原来这里会另插一张无时间的「有人带」票 ⇒ 开售终审恒拒「ticket.startTime 与 ticket.endTime 必须同时存在」。
+                // 现在沿用作者的票:不新插、不改库存。
+                // P-34(第三轮):主办方在定价页确认的终价写进作者的票 —— 原来只校验不写,确认 ¥79 后票还是作者填的 ¥69,
+                // 玩家实际按旧价付款。终价已在上面按地板价校验过。
+                // 第四轮:作者发了几张不同价的票时,每张写自己的终价(逐张已按地板校验),库存不动。
+                for (OmsTicket a : authored) {
+                    BigDecimal price = perTicket ? ticketPrices.get(a.getId()) : guidedPrice;
+                    if (a.getPrice() != null && a.getPrice().compareTo(price) == 0) continue;
+                    OmsTicket t = new OmsTicket();
+                    t.setId(a.getId());
+                    t.setPrice(price);
+                    t.setUpdateTime(DateUtils.getNowDate());
+                    if (omsTicketMapper.updateOmsTicket(t) != 1) {
+                        throw new IllegalStateException("票种「" + a.getName() + "」已变化，无法确认终价");
+                    }
+                }
+            } else if (existing != null && !existing.isEmpty()) {
                 OmsTicket t = new OmsTicket();
                 t.setId(existing.get(0).getId());
                 t.setPrice(guidedPrice);
                 t.setTotalInventory((long) inv);
                 t.setRemainingInventory((long) inv);
+                if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+                    OmsTicket original = existing.get(0);
+                    if (original.getStartTime() == null) t.setStartTime(topic.getStartDate());
+                    if (original.getEndTime() == null) t.setEndTime(topic.getEndDate());
+                    if (original.getSignupDeadline() == null) t.setSignupDeadline(topic.getSaleEndAt());
+                    if ((original.getRefundRule() == null || original.getRefundRule().trim().isEmpty())) t.setRefundRule(freeExploreRefundRule());
+                }
                 t.setUpdateTime(DateUtils.getNowDate());
                 if (omsTicketMapper.updateOmsTicket(t) != 1) {
                     // updateOmsTicket 的库存谓词拒绝时，不能继续把主题报成“已开售”。
@@ -408,7 +507,8 @@ public class PricingServiceImpl implements IPricingService {
                 t.setMemberId(topic.getMemberId());
                 t.setOwnerType(1L);
                 t.setOwnerId(topicId);
-                t.setName("有人带");
+                // 第十二轮 k4(j2 N-05):自由探索没有带队,票名不能叫「有人带」(详情又写「场次内自由顺序，不带队」)
+                t.setName(Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType()) ? "门票" : "有人带");
                 t.setSubType("guided");
                 // [P0-02] 跟主题真源走,别硬编码 —— saveTickets 只覆盖创建路径,而这里是**开售时**
                 // 插的第二条票产生路径。硬编码 1 会在一个 product_type=2 的主题上当场造出混票,
@@ -419,6 +519,12 @@ public class PricingServiceImpl implements IPricingService {
                 t.setPrice(guidedPrice);
                 t.setTotalInventory((long) inv);
                 t.setRemainingInventory((long) inv);
+                if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+                    t.setStartTime(topic.getStartDate());
+                    t.setEndTime(topic.getEndDate());
+                    t.setSignupDeadline(topic.getSaleEndAt());
+                    t.setRefundRule(freeExploreRefundRule());
+                }
                 t.setDelFlag(0);
                 t.setCreateBy("pricing");
                 t.setCreateTime(DateUtils.getNowDate());
@@ -448,7 +554,26 @@ public class PricingServiceImpl implements IPricingService {
         return 1;
     }
 
+    /** 逐张定价必须恰好覆盖作者的全部票:多一张(别的主题/已删)、少一张(页面过期)都拒。 */
+    private static void assertCoversAuthored(List<OmsTicket> authored, java.util.Map<Long, BigDecimal> ticketPrices) {
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (OmsTicket a : authored) ids.add(a.getId());
+        if (authored.isEmpty() || !ids.equals(ticketPrices.keySet())) {
+            throw new IllegalStateException("票种已变化，请刷新后重新确认终价");
+        }
+    }
+
     private static BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
+    }
+
+    /**
+     * 第十三轮 m6:确认终价生成的自由探索「门票」原来不带退款规则,开售合同(canonical-15 的 ticketPolicies)
+     * 要求每张票有 refundRule ⇒ 平台存开售草稿恒拒 SALE_SNAPSHOT_MISSING_REFUND_RESCHEDULE_POLICY,而定价后
+     * 票已冻结、后台改不了,俱乐部自有自由探索永远开不了售。2026-11-03 业主:③ 探索票与场次票同三档
+     * (RefundPolicy.snapshotOnPurchase → START_24H_100_50_0,钟 = 场次开始),文字沿用同一条既有规则句,不另写。
+     */
+    private static String freeExploreRefundRule() {
+        return com.chengyinhub.business.util.RefundPolicy.SESSION_REFUND_RULE_TEXT;
     }
 }

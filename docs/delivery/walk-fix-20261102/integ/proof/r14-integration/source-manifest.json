@@ -1,0 +1,281 @@
+{
+  "base": "4aff0697d715b0ecb278b7fb0a631e65484fd84e",
+  "purpose": "Exact combined backend source/test/gate hashes; execution receipts reported separately",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java",
+      "sha256": "7eca9cd561e58b3f4b8b3e996a6b63d69f560d9b105e8922c14e5b9f5cc774e1",
+      "lane": "ACCESS"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiClubSettlementControllerTest.java",
+      "sha256": "919bd236bc6f9595cd2656a41c8a9ce3e13cc0131d24052ebcaa67796d94f8be",
+      "lane": "ACCESS"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubHistoricalSettlementAccessH2Test.java",
+      "sha256": "2510d4d76fd40f6bf097f3cdd45be0533d524b8716bddd8ad829d65e4d52f476",
+      "lane": "ACCESS"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementMapper.java",
+      "sha256": "0ec58115c6d23bf0bf0cb8928009d4589cc7a99de9135668b66b051a1ef0133a",
+      "lane": "ACCESS"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementMapper.xml",
+      "sha256": "f6e69e488a598ca9620d6627c954a790e59fb1d41454700a53526a101be24aa4",
+      "lane": "ACCESS"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubHistoricalSettlementAccessMySqlIT.java",
+      "sha256": "1ad9ae559651a5700538d497edfa702450210f182a43ca41cc8d1c275585cc8b",
+      "lane": "ACCESS"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "sha256": "95c11fd25a3e813bbc66927b110dc8b8ccdf9010e109defb5940a5573857f235",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java",
+      "sha256": "f9049bbac91498fac92177dcea2b5137b197da00c9d92bf7f2d0f44f7faf6135",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/util/JourneyReviewTexts.java",
+      "sha256": "42ab4afe838079f131276278fe35dc46138480648657c5265e660953085df9ab",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ActivityBoundGameContentSafetyTest.java",
+      "sha256": "80b765f30cf0d87c7f1c78ccd783ef44af16dab849df0db70c001f5c7a675ee4",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/BoundTemplateReviewTextsTest.java",
+      "sha256": "432ca2dcb5634a4221b2b0759a2e69d646522fc86adcbe7edba0a93062a20de9",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ThemeBoundTemplateTextSafetyTest.java",
+      "sha256": "f0e26a385c78ca85859053868ba58f24c8797080a683b145d13f52573382c321",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsActivityAdminReviewGateTest.java",
+      "sha256": "0a601fb3873edec4c02f1f3f270916b763461c4754b60bb758c26765a4fabe12",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiVerifyGroupCodeTest.java",
+      "sha256": "37fe91adb919f5840eff6a317cd8fbe0d07acd1fa142851281e0da2508daf2e7",
+      "lane": "POLICY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java",
+      "sha256": "3a56607fc0cae545ff2924dd139f7e1019cf751f477b1b8f180f4c40ecf03b3a",
+      "lane": "VIDEO"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/R14BranchPublicationRuntimeTest.java",
+      "sha256": "b07091ea5495eba1dac3d1d8aaedd6b7d9edb1a73485c7f440d4180e982c759e",
+      "lane": "GAME"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAllianceMvpRealDbIT.java",
+      "sha256": "a03732af5b375a8ccf21557ee1632fd2d7613a2eed657e4c2f849f98c2752697",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+      "sha256": "5fb7bda9cb40d62195322762e1c58365fd5eeea244c29f252add52c68fd6bcf7",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ActivityCancelManualRefundCaseServiceImplTest.java",
+      "sha256": "b98fa9785ba6390247ba9cec3b4bfdb7538ef3a29010cb310706c3fa3b7425d6",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03AssetMybatisIntegrationTest.java",
+      "sha256": "859cb46bc5f828072f68d5692c2333150ac6fb37a44950c98ea36821d0b5c5bf",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubSessionMerchantFeeMySqlIT.java",
+      "sha256": "217c9d85930bd60948a49f9e931d90f319fd3b6114ba7f8a20cc6fd98add536c",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreQtyGateTest.java",
+      "sha256": "927c6022ed7bd2b0b7f8f4d96fa0c09172cfca58615232d63bc8f21bbea000b4",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreReserveWiringTest.java",
+      "sha256": "5f00b85abcba8862f0d4c343072f77c2fcdcff6fea7a9c23932b147e26b8b787",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ExploreSaleSnapshotGateTest.java",
+      "sha256": "da0de3d994e226d31283b26c8053134ee80576dde5063a573400707007683444",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantPayableServiceTest.java",
+      "sha256": "da6c236a2b2ebe0ec8df42c9541d99c8d4f489e8baaaedba2b17cf5c107fab38",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PaymentCallbackFenceEntryTest.java",
+      "sha256": "8752d85952e1f09fa4bdd75ade12793d1676d49fe6a117577c4e9a84e490d4bb",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayNoTicketLimitTest.java",
+      "sha256": "02545541b9a2962c7b944da00ff42efc73726a51d47dbb0daab86fb464827767",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayOneTicketMySqlIT.java",
+      "sha256": "8095ac183f86e13bd566d89a014ac05b1cba5488585f350b9139645c663dfdb5",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleCanonicalTestFixture.java",
+      "sha256": "db31b8970f12718327b0ce0a133adeae3f39edba5b1a8af1e89feb9ab59853ec",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleCanonicalV1Test.java",
+      "sha256": "3663fd92119a86f237ff888c32bd0c395dfd38cd8a66939d3b531911341fbf5e",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleFinalizationServiceImplTest.java",
+      "sha256": "b6436f57557a7e8fc6246ae549b226899c92c79ff896bb0b699feaa1df48b57f",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubSessionServiceImplTest.java",
+      "sha256": "4f9f37ede068a3b34b575b7b2f4568f02ff7d52611f2815b073e30ca5cba468b",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundsChainO07PinMySqlIT.java",
+      "sha256": "636ff92cbb00da614209ce821b154f51b592b5dd4d0f6de4b2ab445580ec35a7",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ShopDayPurchaseFundsPolicyTest.java",
+      "sha256": "64d57452d600d10fe67210ae39ac4c159d3f5d0bbc08d1ea6e9e9157a54ab0aa",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TicketSourceAttributionTrustBoundaryTest.java",
+      "sha256": "6ae5f183aa041a2b40e517ce84506bdaed31c0a078cc19c02f3b3f6de5675673",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/snapshot/TopicSaleCanonicalV1.java",
+      "sha256": "d12c0d4d03128e0d9e8acd7dd922c9cdd11117542261d7cb84fdcb342314d0f4",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/RefundApplicationMapper.java",
+      "sha256": "458c64d51c52a28d6759291c10392c831a5ef0ce9c188bcbbe04e604a8ecf4f7",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/SettlementDetailMapper.java",
+      "sha256": "9bd2260b9ad2705c555eafe5be55fdaaa6482f18c97331d69926221f7cbb1298",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IRefundService.java",
+      "sha256": "e382e3e191eed33bbe0fa17c281f5d2e3df0cf8d6298158bbc727b32e55a26fa",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ActivityCancelManualRefundCaseServiceImpl.java",
+      "sha256": "7eacb1c26db997252f1a09ea40848ad2b2cc1b0b3955671f893132f3cef7727c",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubSessionServiceImpl.java",
+      "sha256": "ae2ab95c3309fd6fbe21c0a44110dd328076490ba398d9a84ac23d11b31f36cd",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "01f6f995106dfc2ad4444a7a1b881b9ec31f896db6aa79d0c30562a3a588f037",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPayableServiceImpl.java",
+      "sha256": "b2d6ff43e5e9724405b654dc74e8ab480cd242da5a9593dbd5baeffd1f5df9d8",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "sha256": "ae064a8ca44a0a2943786dd14d4e7e1673cb7222a426a08072b4cb65dfc1f24e",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
+      "sha256": "6f1946326607fe7b680ca518429a4216bb5d9d0f40903b49ee0fa4d3c9c90d9f",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ClubSessionMerchantFee.java",
+      "sha256": "c5bd2d5880c1df9dafa2e8396d738944e2ab45bb560cc53f2f1b9c3c5782cc61",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ExploreSaleSnapshotGate.java",
+      "sha256": "f4ce18d16e19e4c4d716f729314a97d36e71123b6706380961ae2fa583937a4d",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/TopicSaleCanonicalBuilder.java",
+      "sha256": "58e0f2318cbd58dcd1244ab7f4821d227db4084a48f128906d71fcca74b3aa1b",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "sha256": "e4199bc140f0ed7b64d389a7c9747ff74b538d2eeb686a425ffbd7570a26d4a7",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/SettlementDetailMapper.xml",
+      "sha256": "a3ceda9ae6095bf2849e0d65ebf4173b0ebd8f41b12931d85b2d111ede67b87b",
+      "lane": "MONEY"
+    },
+    {
+      "path": "ci/funds_it_gate.py",
+      "sha256": "df1e296ee3e8b1d1370b1d57539d3f3cbd286dcdfb33749b26e8ce8a78dbdd26",
+      "lane": "MONEY"
+    },
+    {
+      "path": "ci/test_funds_it_gate.py",
+      "sha256": "890f3c063f01e4f01e4f6100436e6c1ddf8c3c4c2ead6d79037fc82de34375f7",
+      "lane": "MONEY"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubSessionMerchantFeeSettlementTest.java",
+      "sha256": "6815f99cabb42984bb15af6be6120e572890b003540f7647ed07a92a8cccc42e",
+      "lane": "MONEY"
+    },
+    {
+      "path": "ci/real-storage-it-registry.json",
+      "sha256": "a037acc2feccb551a884675f18432e7f134b39fbab50027a33c5d6468b1720b1",
+      "lane": "Coordinator"
+    },
+    {
+      "path": "ci/test_real_storage_it.py",
+      "sha256": "f2a5a6293122b92d6b30bc06d036fc1bb4811e2235b6a31ac82ac44d0e71e62b",
+      "lane": "Coordinator"
+    }
+  ]
+}

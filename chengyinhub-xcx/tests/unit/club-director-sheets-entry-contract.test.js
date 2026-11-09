@@ -60,3 +60,28 @@ test('D6:弹层成员列表喂 roleMemberRows(带 teamId:memberId),行点击有�
   DIRECTOR_METHODS.openRoleSheet.call(noPerm);
   assert.equal(noPerm.data.roleSheetVisible, undefined, '没有 ASSIGN_ROLES 不许开弹层');
 });
+
+// C-04(2026-11-02 walk-fix):现场工具行(放行 / 队伍进度 / 角色 / 现场事件)必须在底栏留白之前,
+// 否则被固定底栏盖住,放行按钮在手机上点不到(走查 rig 实测 队伍进度 就是这样)。
+test('导演台现场工具行排在 footspacer 之前', () => {
+  const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/club/topic-detail/index.wxml'), 'utf8')
+  const tools = wxml.indexOf('<view class="ctd-tools"')
+  const spacer = wxml.indexOf('<view class="ctd-footspacer">')
+  require('node:assert/strict').ok(tools > 0 && spacer > 0 && tools < spacer, '工具行跑到了底栏留白之后')
+})
+
+// F-15(2026-11-04 j2 走查):放行行在榜单之下、紧贴固定底栏,停在榜单那一屏时压在「结束活动」底下,
+// 点放行打开了结束确认。放行行紧跟放行说明、排在榜单之前;底栏留白计入 safe-area,与底栏自身同口径。
+test('F-15 放行行排在榜单之前，底栏留白计入 safe-area', () => {
+  const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict')
+  const dir = path.resolve(__dirname, '../../pages/club/topic-detail')
+  const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8').replace(/<!--[\s\S]*?-->/g, '')
+  const tools = wxml.indexOf('<view class="ctd-tools"')
+  const board = wxml.indexOf('<cy-club-director-row-list rows="{{leaderboard.rows}}"')
+  assert.ok(tools > 0 && board > 0 && tools < board, '放行行又排到了榜单之后')
+  const wxss = fs.readFileSync(path.join(dir, 'index.wxss'), 'utf8')
+  const spacer = /\.ctd-footspacer\s*\{([^}]*)\}/.exec(wxss)
+  const bar = /\.ctd-footbar\s*\{([^}]*)\}/.exec(wxss)
+  assert.match(bar[1], /env\(safe-area-inset-bottom\)/)
+  assert.match(spacer[1], /env\(safe-area-inset-bottom\)/, '底栏留白没算 safe-area,最后一行会停在底栏底下')
+})

@@ -19,18 +19,19 @@ Component({
     show: { type: Boolean, value: false },
     look: { type: Object, value: null },
     reducedMotion: { type: Boolean, value: false },
+    content: { type: Object, value: null },
     embedded: { type: Boolean, value: false },
   },
   data: { cls: '', sample: SAMPLE.STARDUST, tx: 'IRIS', title: '', fx: 'rise', fxIn: false, chars: null },
   observers: {
-    'show, look'(show, look) {
+    'show, look, content'(show, look, content) {
       this._stop();
       if (!show) return;
       const n = themeLook.normalizeLook(look);
       const style = themeLook.styleOf(n.style);
       this._look = n;
       const time = (n.times || []).find((t) => t);
-      this.setData({ cls: themeLook.lookClass(n) + (time ? ' look-time--' + time.toLowerCase() : ''), sample: SAMPLE[n.style], tx: themeLook.resolveTransition(n), title: style.label });
+      this.setData({ cls: themeLook.lookClass(n) + (time ? ' look-time--' + time.toLowerCase() : ''), sample: content || SAMPLE[n.style], tx: themeLook.resolveTransition(n), title: style.label });
       this._playText(n);
       // 等面板升起、画布有尺寸再开画;常驻时只是换风格,画布已在
       this._t = setTimeout(() => this._paint(), this._painted && this.properties.embedded ? 0 : 360);
@@ -68,7 +69,7 @@ Component({
     // 示例正文按当前文字动效重播一次(与玩家页同一份 TEXT_FX;解码在这里逐拍换字符)
     _playText(n) {
       clearTimeout(this._fxT); (this._fxD || []).forEach(clearTimeout); this._fxD = [];
-      const fx = themeLook.textFxFor(n, 0), text = SAMPLE[n.style].story;
+      const fx = themeLook.textFxFor(n, 0), text = this.data.sample.story || '';
       const chars = themeLook.textFxChars(fx) ? Array.from(text).reduce((acc, ch) => { if (acc.length && PUNCT.test(ch)) acc[acc.length - 1] += ch; else acc.push(ch); return acc; }, [])
         .map((ch, i) => { const a = Math.random() * 6.283, d = 30 + Math.random() * 50; return { i, ch, r: Math.random().toFixed(3), dx: (Math.cos(a) * d).toFixed(1), dy: (Math.sin(a) * d).toFixed(1) }; }) : null;
       this.setData({ fx, chars, fxIn: false });

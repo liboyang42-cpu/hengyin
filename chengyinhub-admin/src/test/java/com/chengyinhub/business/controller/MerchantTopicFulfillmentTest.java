@@ -145,6 +145,50 @@ class MerchantTopicFulfillmentTest {
         assertEquals(upcoming.getStartDate(), runs.get(0).get("startTime"));
     }
 
+    /** M-04:自由探索章节承接商家(无中标行,只有生效 offer)也能看到当天俱乐部场次与人数。 */
+    @Test
+    void upcomingRunsIncludeChapterOfferTopicsForFreeExploreStopHolders() {
+        long merchantId = 7L;
+        long topicId = 990014L;
+        ICmsRegistrationMerchantService merchantService = mock(ICmsRegistrationMerchantService.class);
+        when(merchantService.selectCmsRegistrationMerchantList(any())).thenReturn(Collections.emptyList());
+        CmsTopic topic = new CmsTopic();
+        topic.setId(topicId);
+        topic.setName("梧桐里·武康路探店日");
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        when(topicService.selectCmsTopicById(topicId)).thenReturn(topic);
+        ICmsTopicNodeService nodeService = mock(ICmsTopicNodeService.class);
+        IOmsTicketService ticketService = mock(IOmsTicketService.class);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.<OmsTicket>emptyList());
+        ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(java.util.Arrays.asList(
+                paidRegistration(1L), paidRegistration(2L), paidRegistration(3L), paidRegistration(4L)));
+        IClubService clubService = mock(IClubService.class);
+        com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
+        club.setName("执行俱乐部");
+        when(clubService.selectClubById(9L)).thenReturn(club);
+        long now = System.currentTimeMillis();
+        com.chengyinhub.business.domain.CmsActivity today = session(13L, 9L, now + 600_000L, now + 4 * 3600_000L);
+        com.chengyinhub.business.service.ICmsActivityService activityService =
+                mock(com.chengyinhub.business.service.ICmsActivityService.class);
+        when(activityService.selectCmsActivityList(any())).thenReturn(Collections.singletonList(today));
+        com.chengyinhub.business.mapper.MerchantChapterOfferMapper offers =
+                mock(com.chengyinhub.business.mapper.MerchantChapterOfferMapper.class);
+        when(offers.selectLiveTopicIdsByMerchant(merchantId)).thenReturn(Collections.singletonList(topicId));
+
+        MerchantFulfillmentReadServiceImpl service = (MerchantFulfillmentReadServiceImpl) fulfillmentReadService(merchantService, topicService, clubService,
+                nodeService, ticketService, registrationService, activityService);
+        assertTrue(service.listUpcomingRuns(merchantId, null).isEmpty(), "未接线 offer 时与旧行为一致(负控)");
+        service.setChapterOfferMapper(offers);
+        List<Map<String, Object>> runs = service.listUpcomingRuns(merchantId, null);
+
+        assertEquals(1, runs.size());
+        assertEquals(13L, runs.get(0).get("activityId"));
+        assertEquals("执行俱乐部", runs.get(0).get("clubName"));
+        assertEquals(4, runs.get(0).get("paidCount"));
+        assertTrue(service.listUpcomingRuns(merchantId, 1L).isEmpty(), "topicId 过滤仍生效");
+    }
+
     private static com.chengyinhub.business.domain.CmsActivity session(long id, long clubId, long start, long end) {
         com.chengyinhub.business.domain.CmsActivity a = new com.chengyinhub.business.domain.CmsActivity();
         a.setId(id);

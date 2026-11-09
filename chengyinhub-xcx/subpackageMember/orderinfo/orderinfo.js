@@ -1,11 +1,20 @@
-// 深链兼容壳。订单详情与支付/退款逻辑在 components/cy/scene-member-order-detail。
+// 深链兼容壳。旧 id 详情与订单中心入口分别委托组件。
 const { openScene } = require('../../utils/scene-entry.js');
 
 Page({
-  data: { id: '', navScrolled: false },
+  data: { id: '', navScrolled: false, orderCenter: false },
   onLoad(options) {
+    if (options && Object.prototype.hasOwnProperty.call(options, 'outTradeNo')) {
+      this._outTradeNo = options.outTradeNo;
+      this.setData({ orderCenter: true });
+      return;
+    }
     this.setData({ id: (options && options.id) || '' });
   },
+  onReady() {
+    if (this.data.orderCenter) this.selectComponent('#orderCenterEntry').initialize(this._outTradeNo);
+  },
+  onUnload() { this._outTradeNo = null; },
   // 透明导航只留给首屏;滚动后转实底,内容不再压到返回键和胶囊下面。
   onPageScroll(e) {
     const scrolled = !!(e && e.scrollTop > 60);

@@ -10,10 +10,11 @@
 .canyu-refreshing{ padding: var(--cy-space-1) var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-elevated); white-space: nowrap; color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 .canyubox cy-inline-error{ display: block; margin: 0 var(--cy-space-2) var(--cy-space-3); }
 /* 用户备注:"下面居中下移"——加载失败态整体在 tab 下方区域垂直居中并偏下,不贴顶 */
-.canyubox_li{overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); margin: 0 var(--cy-page-x) var(--cy-space-4); }
-.canyubox_li_tgb{position: relative; overflow: hidden;}
-.canyubox_li_left{ position: relative; overflow: hidden;}
-.canyubox_li_left image{ width:432rpx; height: 336rpx; vertical-align: top;}
+.canyubox_li{overflow: hidden; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); margin: 0 var(--cy-page-x) var(--cy-space-5); } /* 卡间距与我的订单同为 space-5(订单卡间距是用户定的) */
+/* 卡高由文字块撑开(最少一张封面高 336rpx):原来文字块绝对定位、卡高只认封面,「查看报名凭证」被卡底裁掉 */
+.canyubox_li_tgb{position: relative; overflow: hidden; display: flex; justify-content: flex-end; min-height: 336rpx;}
+.canyubox_li_left{ position: absolute; left: 0; top: 0; bottom: 0; overflow: hidden;}
+.canyubox_li_left image{ width:432rpx; height: 100%; min-height: 336rpx; vertical-align: top;}
 /* 图片右缘淡入卡面的罩层。原为近白字面值；本页使用玩家暗色主题，
    换 token 后跟随卡面真值(浅色白/暗色近黑),
    不再把「卡是白的」焊死在页面里。末端用 transparent 关键字(小程序无 color-mix())。 */
@@ -22,7 +23,7 @@
 }
 /* 文字块自带 space-3 内边距 = 文字与其下方图片右缘之间的呼吸;box-sizing 保证加了内边距
    仍占原来的 336rpx 宽度,不把块撑出卡外。 */
-.canyubox_li_right { position: absolute; right: var(--cy-legacy-36); top: var(--cy-space-4); width: 336rpx; padding: var(--cy-space-3); box-sizing: border-box;}
+.canyubox_li_right { position: relative; flex: none; margin: var(--cy-space-4) var(--cy-legacy-36) var(--cy-space-4) 0; width: 336rpx; padding: var(--cy-space-3); box-sizing: border-box;}
 .canyubox_li_right_top{overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: var(--cy-space-1); margin-bottom: var(--cy-space-2);}
 /* 标题吃满文字块整宽(288rpx ≈ 8 字/行)、最多两行;不再与状态签并排分宽 */
 .canyubox_li_right_top_name{ width: 100%; font-size: var(--cy-type-section-title); font-weight: bold; line-height: var(--cy-leading-tight); word-break: break-all;}
@@ -33,3 +34,5 @@
 .canyubox_li_right_time image{ width: 24rpx; height: 24rpx; vertical-align: top;margin: var(--cy-legacy-4) var(--cy-legacy-6) 0 0;}
 .canyubox_li_right_txt{font-size: var(--cy-type-label); color: var(--cy-color-text-secondary);}
 .canyubox_li_right_txt image{ width: 24rpx; height: 24rpx; vertical-align: top; margin: var(--cy-legacy-4) var(--cy-legacy-6) 0 0;}
+/* 2026-11-02 round2:与我的订单/积分明细同一入场(utils/page-motion.js;容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡) */
+.canyubox_li { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-l-s, 0) * (0ms + min(var(--pmi, 0), 8) * 30ms)), calc(var(--pm-l-s, 0) * (0ms + min(var(--pmi, 0), 8) * 30ms)), 0s, 0s; }

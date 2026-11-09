@@ -30,7 +30,8 @@
     <view class="ti__target pk-in">{{target}}</view>
 
     <block wx:if="{{phase === 'intro'}}">
-      <view class="ti__hint pe pe--up" style="--pe-d:.7s">{{r5 ? (deadlineAt ? '在限时挑战结束前完成输入' : '不限时，一字不差地打完它') : seconds + ' 秒内一字不差地打完它'}}</view>
+      <!-- 第十二轮 k7 N8:交错了不再悄悄回到「开始」:这一行先说没打对 -->
+      <view class="ti__hint pe pe--up" style="--pe-d:.7s">{{attempts > 0 && !passed ? '没打对，再打一次' : r5 ? (deadlineAt ? '在限时挑战结束前完成输入' : '不限时，一字不差地打完它') : seconds + ' 秒内一字不差地打完它'}}</view>
     </block>
     <block wx:else>
       <input class="ti__input" value="{{typed}}" disabled="{{locked || phase !== 'run'}}"

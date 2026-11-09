@@ -73,22 +73,21 @@
           <view class="ma-shop-lines">
             <text class="ma-shop-time" wx:if="{{shop.businessTime}}">{{shop.businessTime}}</text>
             <text class="ma-shop-name" wx:if="{{shop.name}}">{{shop.name}}</text>
-            <text class="ma-shop-addr" wx:if="{{shop.address}}">{{shop.address}}</text>
+            <text class="ma-shop-addr cy-addr-tap" wx:if="{{shop.address}}" bindtap="onAddressTap" data-lat="{{shop.lat}}" data-lng="{{shop.lng}}" data-name="{{shop.name}}" data-address="{{shop.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{shop.address}}" hover-class="cy-pressed" hover-stay-time="80">{{shop.address}}</text>
           </view>
         </view>
-        <view class="ma-shop-note">
-          <text class="ma-shop-note-t">你的门店</text>
-        </view>
+        <!-- 2026-11-02 r2:卡内原来又写了一遍「你的门店」(卡上方的分组标题已有),删掉重复;
+             这里留三行注释占位,行号不动, -->
+        <!-- 台账按行号的条目不漂。 -->
       </view>
 
       <view class="ma-card wizard-card cy-rise-in">
-        <view class="ma-row" id="field-address" hover-class="ma-row--pressed" hover-stay-time="80" bindtap="choosePoiForNode">
+        <view class="ma-row" id="field-address" hover-class="cy-pressed" hover-stay-time="80" bindtap="choosePoiForNode">
           <view class="ma-row-tit">承接地点<text class="ma-req">*</text></view>
           <view class="ma-row-cont {{focusField === 'address' ? 'is-focused' : ''}} {{errors.address ? 'is-error' : ''}} {{address ? 'is-filled' : ''}}">
             <input class="ma-inp" disabled type="text" placeholder="点击选择承接地点" placeholder-class="ma-ph" value="{{address}}" />
           </view>
-          <cy-inline-error class="ma-inline-error" wx:if="{{errors.address}}" title="{{errors.address}}" />
-          <text class="ma-hint ma-purpose">用于地图与到场导航，拒绝不影响填写</text>
+          <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.address}}" title="{{errors.address}}" />
         </view>
       </view>
 
@@ -100,12 +99,12 @@
             bindinput="onRuleInstructionsChange" bindfocus="onFieldFocus" bindblur="onFieldBlur" data-focuskey="ruleInstructions" maxlength="500" />
           <view class="ma-count">{{ruleInstructions.length}}/500</view>
         </view>
-        <cy-inline-error class="ma-inline-error" wx:if="{{errors.ruleInstructions}}" title="{{errors.ruleInstructions}}" action="清除" bind:action="clearRuleInstructions" />
+        <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.ruleInstructions}}" title="{{errors.ruleInstructions}}" />
       </view>
 
       <view class="ma-card wizard-card cy-rise-in" id="field-pic">
         <view class="ma-row-tit">承接图片<text class="ma-req">*</text></view>
-        <view class="ma-upload" wx:if="{{!picUrl}}" hover-class="ma-pgrid-add--pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="上传现场照片">
+        <view class="ma-upload" wx:if="{{!picUrl}}" hover-class="cy-pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="上传现场照片">
           <view class="ma-upload-title"><cy-icon name="plus" size="28" /><text>上传现场照片</text></view>
           <text class="ma-upload-hint">5:3 横图，1–9 张</text>
         </view>
@@ -119,31 +118,30 @@
               <view class="ma-pgrid-del__glyph"><cy-icon name="close-sm" size="24" /></view>
             </view>
           </view>
-          <view class="ma-pgrid-cell ma-pgrid-add" hover-class="ma-pgrid-add--pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="添加场地照片">
+          <view class="ma-pgrid-cell ma-pgrid-add" hover-class="cy-pressed" hover-stay-time="80" bindtap="uploadPic" aria-role="button" aria-label="添加场地照片">
             <view class="ma-pgrid-plus"><cy-icon name="plus" size="48" /></view>
             <text class="ma-pgrid-txt">添加照片</text>
           </view>
         </view>
-        <cy-inline-error class="ma-inline-error" wx:if="{{errors.picUrl}}" title="{{errors.picUrl}}" />
+        <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.picUrl}}" title="{{errors.picUrl}}" />
       </view>
 
       <!-- 可配合的时间:稿 133:310 把这三项收成一组,并给了组说明 ——
            它们回答的是同一个问题「这一站能接多少团、什么时候接」,散在地点那张卡里读不出这层意思 -->
       <view class="ma-group-head">
         <text class="ma-group-t">可配合的时间</text>
-        <text class="ma-group-s">决定这一站能接多少团、什么时候接</text>
       </view>
       <view class="ma-card wizard-card cy-rise-in">
-        <view class="ma-row" id="field-date-range" hover-class="ma-row--pressed" hover-stay-time="80" bindtap="openAvailabilityPicker" aria-role="button" aria-label="选择可配合日期区间">
+        <view class="ma-row" id="field-date-range" hover-class="cy-pressed" hover-stay-time="80" bindtap="openAvailabilityPicker" aria-role="button" aria-label="选择可配合日期区间">
           <view class="ma-row-tit">可配合日期<text class="ma-req">*</text></view>
           <view class="ma-row-cont ma-range-cont {{errors.availabilityRange ? 'is-error' : ''}} {{startDate && endDate ? 'is-filled' : ''}}">
             <text class="{{startDate && endDate ? '' : 'ma-ph'}}">{{startDate && endDate ? startDate + '  至  ' + endDate : '点击选择日期区间'}}</text>
             <cy-icon name="calendar" size="28" />
           </view>
-          <cy-inline-error class="ma-inline-error" wx:if="{{errors.availabilityRange}}" title="{{errors.availabilityRange}}" />
+          <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.availabilityRange}}" title="{{errors.availabilityRange}}" />
         </view>
 
-        <view class="ma-row" id="field-time" hover-class="ma-row--pressed" hover-stay-time="80" bindtap="handleTimePopup" data-action="open">
+        <view class="ma-row" id="field-time" hover-class="cy-pressed" hover-stay-time="80" bindtap="handleTimePopup" data-action="open">
           <!-- 稿(Figma 133:310,2026-09-06 改)把这一项从必填改成选填,值默认取门店营业时间。
                商家答不出「我每天 18:07 到 21:53 能接待」;逼填只会得到一个随手选的假值,
                而那个值玩家在「我的参与」里看得见。后端本来就没有非空校验。 -->
@@ -151,7 +149,7 @@
           <view class="ma-row-cont {{errors.cooperateDate ? 'is-error' : (cooperateDate ? 'is-filled' : '')}}">
             <text class="{{cooperateDate ? '' : 'ma-ph'}}">{{cooperateDate || '点击选择时段'}}</text>
           </view>
-          <cy-inline-error class="ma-inline-error" wx:if="{{errors.cooperateDate}}" title="{{errors.cooperateDate}}" />
+          <cy-inline-error class="ma-inline-error" kind="field" wx:if="{{errors.cooperateDate}}" title="{{errors.cooperateDate}}" />
         </view>
 
         <view class="ma-row">

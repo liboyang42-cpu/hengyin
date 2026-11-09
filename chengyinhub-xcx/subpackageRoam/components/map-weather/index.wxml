@@ -1,0 +1,2 @@
+<!-- 第九轮 m-rain:地图上的实时雨/雪/雾,只装饰,不接手势、不读屏 -->
+<canvas wx:if="{{on}}" type="2d" id="mapweather" class="mapweather" aria-hidden="true"></canvas>

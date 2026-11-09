@@ -15,6 +15,9 @@ function exactRegistrationId(value) {
 // UI-17 返修(2026-09-18):cy-nav-bar 是 fixed(fixed 导航不占文档流),页面正文必须自己让出
 // 导航实高,否则卡片顶端会钻到导航底下被截掉一截(总控截图实证)。拿不到 globalData 时用兜底值。
 const appGlobal = (app && app.globalData) || {};
+// 第十二轮 k2(j1 N1):与 utils/ticket-game.js activityHasGame 同口径(本页由沙箱测试加载,不多加 require)。
+function activityHasGame(a) { return !a || typeof a !== 'object' || Number(a.topicId) > 0 || Number(a.templateId) > 0; }
+
 Page({
 
   /**
@@ -162,7 +165,7 @@ Page({
       this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
       this._focusLookupPending = null;
       this.setData({ currentSwiperTicket: i,
-        focusState: this._explicitFocus ? 'ready' : '', focusError: '' });
+        focusState: this._explicitFocus ? 'ready' : '', focusError: '' }); this._showQrIfNoGame();
       this.syncCurrentTeam();
       return;
     }
@@ -270,7 +273,7 @@ Page({
         kind: 'topic',
         wKey: 'topic-' + item.id,
         wTitle: t.name || '—',
-        wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
+        wImg: t.imgUrl || '', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
     const activities = ((this._activity && this._activity.list) || []).map(function (item) {
@@ -279,8 +282,8 @@ Page({
         kind: 'activity',
         wKey: 'activity-' + item.id,
         wTitle: a.name || '—',
-        wImg: a.imgUrl || '/images/route_city_cover.png',
-        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
+        wImg: a.imgUrl || '', // 第十二轮 k8 F13:没封面就不出图,不拿通用路线示意图(假路线 + 灰条)充数
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', wProgress: exploreProgressOf(item), wNoGame: !activityHasGame(item.cmsActivity), // ds-ok v13 卡角色;k2 j1 N1 没有游戏的票直接出码
       });
     });
     const seen = new Set();
@@ -315,7 +318,7 @@ Page({
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
     });
     if (!this._entering && (state !== 'ready' || this._entered)) this._deckLay(); this._bgTo(cur.wImg); // 入场 / 新卡落入动画进行中不重排,否则第二路列表回来会把动画打断
-    if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
+    this._showQrIfNoGame(); if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
   },
 
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
@@ -336,6 +339,13 @@ Page({
   },
 
   /* 2026-10-28 业主:点卡片 = 翻到背面看入场码,再点翻回。拖动换卡时不算点(onDeckEnd 先清掉 _moved)。 */
+  // 第十二轮 k2(j1 N1):没有游戏的票,票面就是入场码 —— 落到它时直接翻到码面,不需要玩家先猜「点一下」
+  _showQrIfNoGame() {
+    const item = (this.data.ticketList || [])[this.data.currentSwiperTicket];
+    if (!item || !item.wNoGame || this.data.flipped) return;
+    this.setData({ flipped: true });
+    if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
+  },
   onCardTap(e) {
     if (this._moved || this._throwing || this.data.entering) return;
     const index = Number(e.currentTarget.dataset.index);
@@ -343,7 +353,7 @@ Page({
     const flipped = !this.data.flipped;
     this.setData({ flipped });
     const item = (this.data.ticketList || [])[index];
-    if (!flipped || !item) return;
+    if (!flipped || !item || item.topicCompleted === true) return;
     if (String(item.id) !== this._qrFor || !(this._qrExpiresAt > Date.now() + QR_REFRESH_LEAD_MS)) this._loadQr(item);
     else if (!this._qrTimer) this._scheduleQrRefresh(item, this._qrExpiresAt - Date.now() - QR_REFRESH_LEAD_MS);
   },
@@ -678,7 +688,7 @@ Page({
     const next = (thrown + 1) % n;
     this._throwing = true;
     this._clearQrTimer(); this._qrFor = '';
-    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' });
+    this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' }); this._showQrIfNoGame();
     this._deckLay();
     this.setData({ ['deckPoses[' + thrown + ']']: out });
     this._bgTo(list[next] && list[next].wImg);
@@ -707,11 +717,32 @@ const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }
 function walletCard(item) {
   // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
   const days = passDaysLeft(item.wUntil);
-  return Object.assign(item, { wSub: days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天'), wExpiry: passExpiryText(item.wUntil) });
+  const progress = item.wProgress ? ' · 已核销 ' + item.wProgress.redeemed + '/' + item.wProgress.required + ' 家' : '';
+  // P-27:场次票卡面写「几点 · 在哪」,到期留在背面(wExpiry);读不到开场时间才回落「场次 · 剩几天」
+  const session = item.kind === 'activity' ? sessionLine(item.cmsActivity) : '';
+  const head = item.topicCompleted === true ? '已通关' : (session || (days === null ? item.wType : item.wType + (days === 0 ? ' · 今天过期' : ' · 剩 ' + days + ' 天')));
+  // 第十二轮 k4(j2 F-22):已通关的票不再出入场码,也不写「今天过期」
+  return Object.assign(item, { wSub: head + progress, wExpiry: item.topicCompleted === true ? '' : passExpiryText(item.wUntil) });
+}
+/* 场次开场时间(服务端 yyyy-MM-dd HH:mm:ss,北京时间)+ 地点;缺开场时间返回空串 */
+function sessionLine(a) {
+  const m = String((a && a.startDate) || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return '';
+  const place = String((a && (a.addressName || a.address)) || '').trim();
+  return Number(m[2]) + '月' + Number(m[3]) + '日 ' + m[4] + ':' + m[5] + (place ? ' · ' + place : '');
+}
+/* P-03:服务端给 ③ 探索票下发的「已核销几家/共几家」;没有就 null(与 utils/order-status.js exploreProgressOf 同口径) */
+function exploreProgressOf(item) {
+  const p = item && item.exploreProgress;
+  if (!p || !(Number(p.required) > 0)) return null;
+  return { redeemed: Number(p.redeemed) || 0, required: Number(p.required), active: p.active === true };
 }
 /* 能用的票:已报名(已付款 / 免费)、没核验、没取消没过期,到期日也还没过 */
 function usableTicket(item) {
-  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || item.verificationStatus == 1) return false;
+  // P-03:探索票核销过一家仍可用,直到必选章全部核销或场次结束(服务端 exploreProgress.active)
+  const exploreActive = !!(item.wProgress && item.wProgress.active);
+  if (Number(item.registrationStatus) !== 2 || Number(item.paymentStatus) !== 2 || (item.verificationStatus == 1 && !exploreActive)) return false;
+  if (item.wProgress && !item.wProgress.active) return false;
   const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
   return !(until && !isNaN(until.getTime()) && until.getTime() < Date.now());
 }

@@ -1,0 +1,18 @@
+(console output of setup_club_theme.py, run once on the rig; copied from the session)
+步骤 1:主理人实名(真实入口)        identity {"msg": "操作成功", "code": 200, "data": {"registered": true}}
+步骤 2:主理人建一个打卡玩法模板    template {"msg": "操作成功", "code": 200, "data": 6005}
+步骤 3:建期                         create {"msg": "主题发布成功", "data": {"topicId": 990016, "auditTaskId": 6, "reviewState": "PENDING", "bundledTemplateIds": [6005], "published": true, "commercialAwaitingReview": true}}
+   review 5 TOPIC_PROJECT_REVIEW      审核处理成功
+   review 6 TOPIC                     请刷新审核内容后重试   (topic status/user_status were already 1 afterwards)
+   [库回读] topic        ((990016, club 7002, member 9008, product_type 1, lifecycle 2, status 1, user_status 1, fee_platform_rate None, self_play 1, 29.99),)
+   [库回读] tickets      ((81, owner_type 1, 990016, '场次票', 39.99, '开场前24小时可退'),)
+   [库回读] content slot (('CONTENT', 'CLUB', 7002, 1),)
+Then (session commands, not in the script):
+   POST /api/topic/pricing/confirm (owner 9008)  -> 「终价已确认，请等待开售审核」; cms_topic.fee_platform_rate frozen at 0.0300
+       (from the settlement_rule rows the new migration had just set)
+   PUT /business/topic/990016/organizer-actor     -> SALE_ORGANIZER_ONLY_FREE_EXPLORE (lane l3-sell's gate)
+   POST /business/audit/topic/990016/sale-submit  -> 「缺少 canonical15 草稿，拒绝开售提审」
+   FIXTURE SQL: UPDATE cms_topic SET lifecycle=3, selling_started_at=NOW() WHERE id=990016 AND lifecycle=2
+   FIXTURE SQL: INSERT settlement_rule activity/topic rows in the pre-migration production shape (see migration-rerun.txt)
+   applied unchanged migration_20260815_tandianri_h8_publisher_points_funds.sql to the rig DB (schema builder had skipped it)
+   POST /api/club/open-session 990016 -> activity 14 (unused probe)

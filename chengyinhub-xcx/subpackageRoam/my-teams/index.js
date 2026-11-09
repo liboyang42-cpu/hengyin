@@ -8,14 +8,20 @@ const modal = require('../../utils/modal');
 const cyToast = require('../../utils/toast.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const app = getApp();
-const teamOperation = require('../../utils/roam-team-operation.js');
-const teamRecovery = require('../../utils/roam-team-recovery.js');
+const teamOperation = require('../utils/roam-team-operation.js');
+const teamRecovery = require('../utils/roam-team-recovery.js');
 const JSON_HEADER = { 'Content-Type': 'application/json' };
 const TEAM_PAGE = '/pages/team/detail/index';
 const RADIUS = 3000;
 
 // 队伍名与队伍详情页同一口径(title,缺省「一起出发的玩家队伍」);场次名放到副标题,不顶替队名
-function nameOf(t) { return String((t && t.title) || '').trim() || '一起出发的玩家队伍'; }
+// 第十二轮 k7(j4 F15):没起名的队伍按队长昵称区分(「阿青的队伍」),读不到队长才落回统一的缺省名
+function nameOf(t) {
+  const title = String((t && t.title) || '').trim();
+  if (title) return title;
+  const leader = String((t && t.leaderName) || '').trim();
+  return leader ? leader + '的队伍' : '一起出发的玩家队伍';
+}
 // 队伍头像叠层:有真头像用真头像,不够的用默认 Memoji 补到成员数(最多 3 个),不再用首字
 const FACE = '/images/d_profile.png';
 function avatarsOf(list, count) { const real = (list || []).filter(Boolean).slice(0, 3); const n = Math.max(1, Math.min(3, Math.max(real.length, Number(count) || 1))); const out = real.slice(); while (out.length < n) out.push(FACE); return out.map((src, k) => ({ k, src })); }
@@ -23,9 +29,12 @@ function members(t) { const j = Number(t && t.joinedCount) || 0; const m = Numbe
 function dateText(v) { if (!v) return ''; const s = String(v).replace('T', ' '); return s.slice(5, 16).replace('-', '/'); }
 
 Page({
-  afterTeamCommandTerminal() {
+  afterTeamCommandTerminal(receipt, command) {
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
-    this.setData({ openLoading: false, openLoaded: false });
+    // 被拒:后端理由贴在发起这次操作的那张卡下面(j4 F1)
+    const rejected = receipt && receipt.state === 'REJECTED' && command;
+    this.setData({ openLoading: false, openLoaded: false,
+      commandReject: rejected ? { teamId: String(command.targetId), message: String(receipt.message || '') || '操作没有完成，请刷新后重试' } : null });
     this.reload();
   },
   reloadTeamCommands() { teamRecovery.mount(this, app, wx); },
@@ -34,7 +43,7 @@ Page({
     teamRecovery.manager(this, app, wx).act(ds.teamId, ds.action);
   },
 
-  data: { lobby: null, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false, openError: '' }, // MT-01:四格读数先占位(「—」),到数不再把下面整页往下推
+  data: { lobby: null, commandReject: null, pending: {}, teamCommandRows: [], teamCommandError: '', reducedMotion: false, privacyGateShow: false, tab: 'mine', loading: true, mineError: false, groups: [], stats: [{ k: '已通过', v: null }, { k: '审核中', v: null }, { k: '带队', v: null }, { k: '未通过', v: null }], openRows: [], openLoading: false, openLoaded: false, openError: '' }, // MT-01:四格读数先占位(「—」),到数不再把下面整页往下推
 
   onLoad(options) {
     this._seq = 0; this.setData({ reducedMotion: readReducedMotion() });
@@ -94,7 +103,7 @@ Page({
       if (!t || !t.id || Number(t.status) === 3 || Number(t.status) === 4 || seen[t.id]) return;
       seen[t.id] = true;
       const isLead = me && String(t.leaderMemberId) === me;
-      const row = { key: 'j' + t.id, teamId: t.id, name: nameOf(t), avatars: avatarsOf([], t.joinedCount), members: members(t),
+      const row = { key: 'j' + t.id, teamId: t.id, status: Number(t.status), name: nameOf(t), avatars: avatarsOf([], t.joinedCount), members: members(t),
         sub: (t.expireTime ? dateText(t.expireTime) + ' 开始' : '') || (isLead ? '你是队长' : '已在队伍里'),
         badge: isLead ? '队长' : '已通过', tone: isLead ? 'lead' : 'ok', action: { text: '进入队伍', kind: 'primary', act: 'enter' } };
       (isLead ? lead : ok).push(row);
@@ -112,6 +121,27 @@ Page({
     this.setData({ loading: false, groups, stats: [{ k: '已通过', v: got && !got.joined ? null : ok.length }, { k: '审核中', v: got && !got.apps ? null : wait.length }, { k: '带队', v: got && !got.joined ? null : lead.length }, { k: '未通过', v: got && !got.apps ? null : bad.length }] });
     // 没有任何队伍时,「我的」下面直接接附近招募,不让页面停在空态
     if (!groups.length || this.data.tab === 'open') this.loadOpen();
+    this._loadPending(lead);
+  },
+  // j4 F4:我带的、还在招募的队伍在卡片上写出待处理的入队申请数;进队伍详情就能处理(与地图半屏同一接口)。
+  // 按队伍 id 记在 pending 里(静态字段),读不到时这张卡写「申请数没读到」。
+  _loadPending(lead) {
+    const current = teamOperation.capture(this, app);
+    const seq = this._seq;
+    this.setData({ pending: {} });
+    lead.forEach((row) => {
+      const teamId = teamOperation.teamId(row.teamId);
+      if (!teamId || row.status !== 0) return;
+      const put = (entry) => { if (current() && seq === this._seq) this.setData({ pending: Object.assign({}, this.data.pending, { [String(row.teamId)]: entry }) }); };
+      app.sendRequest({ url: '/api/team/applications', method: 'POST', hideLoading: true, autoErrorToast: false,
+        data: JSON.stringify({ teamId }), header: JSON_HEADER,
+        success: (res) => {
+          if (!(res && res.code == 200 && Array.isArray(res.data))) { put({ error: true, text: '' }); return; }
+          const n = res.data.filter((a) => a && a.memberId).length;
+          put({ error: false, text: n ? n + ' 条入队申请' : '' });
+        },
+        fail: () => put({ error: true, text: '' }) });
+    });
   },
   _joinedIds() { const r = this._rows || {}; const ids = {}; (r.lead || []).concat(r.ok || []).forEach((x) => { ids[String(x.teamId)] = true; }); return ids; },
 

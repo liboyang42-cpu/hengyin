@@ -4,10 +4,10 @@ function canonicalCode(value) {
   return Number(value);
 }
 
+const { yuan } = require('../../../../utils/money-format.js');
+
 function moneyText(value) {
-  if (value === null || value === undefined || value === '') return null;
-  const amount = Number(value);
-  return Number.isFinite(amount) ? `¥${amount.toFixed(2)}` : null;
+  return yuan(value);
 }
 
 function firstMoney(order) {

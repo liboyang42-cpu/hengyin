@@ -195,6 +195,9 @@ public interface ICmsRegistrationService
      */
     public java.util.List<java.util.Map<String, Object>> countByParticipateDate(Long ownerType, Long ownerId);
 
+    /** 按父单号统计报名张数(parentOrderNo, cnt),供取消确认判断单票单 */
+    java.util.List<java.util.Map<String, Object>> countByParentOrderNos(java.util.Collection<String> parentOrderNos);
+
     /**
      * 根据报名编号查询
      * @param registrationNo 报名编号

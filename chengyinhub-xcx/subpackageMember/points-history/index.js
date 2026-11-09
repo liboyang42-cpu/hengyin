@@ -2,7 +2,7 @@
 const app = getApp()
 const cyToast = require('../../utils/toast.js'); const pageMotion = require('../../utils/page-motion.js')
 const { isBizOk } = require('../../utils/response-shape.js')
-const { PAGE_SIZE, FILTERS, normalizeRows, filterRows, groupByMonth } = require('./rows.js')
+const { PAGE_SIZE, FILTERS, normalizeRows, filterRows, groupByMonth, visibleRows } = require('./rows.js')
 
 Page({
   data: {
@@ -15,6 +15,7 @@ Page({
     filters: FILTERS,
     filter: 'all',
     filterEmpty: false,
+    paged: false,
     refreshing: false,
   },
   onLoad() { this.load() },
@@ -36,7 +37,7 @@ Page({
           else that.setData({ state: 'error' })
           return
         }
-        that._all = all
+        that._all = visibleRows(all)
         that._shown = Math.min(PAGE_SIZE, that._filtered().length)
         that._sync()
       },
@@ -56,6 +57,7 @@ Page({
       groups: groupByMonth(list.slice(0, this._shown)),
       hasMore: this._shown < list.length,
       filterEmpty: !list.length,
+      paged: list.length > PAGE_SIZE,
       state: all.length ? 'ready' : 'empty',
     })
   },

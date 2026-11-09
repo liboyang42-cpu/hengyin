@@ -16,7 +16,7 @@
     "cy-modal": "/components/cy/modal/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-qr-voucher": "/components/cy/qr-voucher/index",
-    "cy-scene-club-edit": "/components/cy/scene-club-edit/index",
+    "cy-scene-club-edit": "/pages/club/components/cy/scene-club-edit/index",
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
     "cy-search": "/components/cy/search/index",
     "cy-sheet": "/components/cy/sheet/index",

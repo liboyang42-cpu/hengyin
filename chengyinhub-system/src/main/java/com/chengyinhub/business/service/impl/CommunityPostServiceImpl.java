@@ -237,6 +237,53 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 CommunityPost.LIFECYCLE_DRAFT.equals(current.getLifecycle()) ? "NOT_REQUIRED" : "PENDING", now);
         CommunityPost replacement = mapPost(memberId, request);
         replacement.setId(postId);
+        // 第十二轮 k2(j5 N1,业主「自动检测,不靠人」):改一条已发布的帖文,与新发帖同一道机审。
+        // 拦 → 整次编辑回滚、原帖照旧在线;过 → 新内容直接在线;机审说「待定」才转人审(与新发帖同口径)。
+        // 第十二轮 k8(rig 回走):机审放在写正文之前,正文只写一次、版本只 +1。原来先写成 CHECKING(+1)
+        // 再 CHECKING→PUBLISHED(+1),一次编辑版本 +2,编辑面板按「版本 = 期望 + 1」核对,
+        // 每次保存都报「修改结果未确认」、面板关不掉。整段在同一事务里,任何一步失败都回滚。
+        if (CommunityPost.LIFECYCLE_PUBLISHED.equals(current.getLifecycle())
+                && CommunityPost.LIFECYCLE_CHECKING.equals(decision.getLifecycle())) {
+            replaceRelations(replacement, request, now);
+            PublishSafetyRequest safety = new PublishSafetyRequest();
+            safety.setContentType(AuditTask.BIZ_COMMUNITY_POST);
+            safety.setContentId(postId);
+            safety.setMemberId(memberId);
+            safety.setOpenid(mapper.selectMemberWxOpenId(memberId));
+            safety.setText(((replacement.getTitle() == null ? "" : replacement.getTitle() + "\n")
+                    + (replacement.getBody() == null ? "" : replacement.getBody())).trim());
+            List<Map<String, Object>> media = mediaForRead(mapper.selectMediaForSafety(postId));
+            List<String> mediaUrls = new ArrayList<>();
+            for (Map<String, Object> row : media) {
+                Object url = value(row, "derived_object_key");
+                if (url != null && !blank(url.toString())) mediaUrls.add(url.toString());
+            }
+            safety.setMediaUrls(mediaUrls);
+            safety.setHasGeo(!"NONE".equals(replacement.getLocationPrecision()));
+            Map<String, Object> safetySnapshot = new HashMap<>();
+            safetySnapshot.put("post", replacement);
+            safetySnapshot.put("media", media);
+            safety.setSnapshot(json(safetySnapshot));
+            safety.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
+            SafetyDecision safetyDecision = safetyGate.decide(safety);
+            if (safetyDecision == null || safetyDecision.isBlock()) {
+                throw error("内容未通过安全检查，请修改后重试", 400);
+            }
+            String target = safetyDecision.isPass() ? CommunityPost.LIFECYCLE_PUBLISHED : CommunityPost.LIFECYCLE_CHECKING;
+            if (mapper.updateContentCas(replacement, expectedVersion, target, now) != 1) stale();
+            if (safetyDecision.isPass()) {
+                mapper.updateMediaReviewState(postId, "PASS", now);
+                mapper.updateAuditMarks(postId, AUDIT_LEVEL_MACHINE, null, safetyDecision.isFlagged() ? 1 : null, now);
+                mapper.upsertSearchDocument(postId, "VISIBLE", now);
+                submitMediaForAsyncCheck(postId, safety.getOpenid(), mediaUrls);
+            } else {
+                mapper.upsertSearchDocument(postId, "HIDDEN", now);
+                mapper.updateMediaReviewState(postId, "HOLD", now);
+                if (safetyDecision.isFlagged()) mapper.updateAuditMarks(postId, null, null, 1, now);
+            }
+            outbox(postId, "POST_EDITED", payload("version", expectedVersion + 1), now);
+            return detail(memberId, postId);
+        }
         if (mapper.updateContentCas(replacement, expectedVersion, decision.getLifecycle(), now) != 1) stale();
         replaceRelations(replacement, request, now);
         mapper.upsertSearchDocument(postId, "HIDDEN", now);
@@ -1321,6 +1368,15 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         mapper.upsertSearchDocument(postId, approved ? "VISIBLE" : "HIDDEN", now);
         notifyMember(post.getAuthorId(), postId, 0L, "SYSTEM_GOVERNANCE", approved ? "APPROVED" : "REMOVED", now);
         outbox(postId, approved ? "POST_REVIEW_APPROVED" : "POST_REVIEW_REJECTED", payload("postId", postId), now);
+        if (approved && CommunityPost.LIFECYCLE_CHECKING.equals(post.getLifecycle())) {
+            // Round5C:先审带图的帖文由自动复检放行后,图片照直发帖一样送微信异步检测,违规回调自动下架。
+            List<String> mediaUrls = new ArrayList<>();
+            for (Map<String, Object> row : mediaForRead(mapper.selectMediaForSafety(postId))) {
+                Object url = value(row, "derived_object_key");
+                if (url != null && !blank(url.toString())) mediaUrls.add(url.toString());
+            }
+            submitMediaForAsyncCheck(postId, mapper.selectMemberWxOpenId(post.getAuthorId()), mediaUrls);
+        }
     }
 
     /**

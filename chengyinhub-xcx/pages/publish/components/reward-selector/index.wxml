@@ -9,7 +9,7 @@
   </view>
 </view>
 
-<cy-sheet show="{{open}}" title="选择奖励" handle="{{true}}" footer="{{allowCreate}}" bind:close="closeSelector">
+<cy-sheet show="{{open}}" title="选择奖励" handle="{{true}}" footer="{{allowCreate && couponCreationEnabled}}" bind:close="closeSelector">
   <view class="reward-sheet">
     <!-- 优惠券 / 体验卡 两档筛选(2026-09-08)。两者同在券这条链路上,只是 couponType 不同,
          混在一张列表里选不出来 —— 一个是"减多少钱",一个是"给一次体验"。 -->
@@ -39,13 +39,13 @@
   </view>
 
   <!-- CTA 走 footer slot(2026-09-19 用户返工:对齐其他弹窗结构,不埋在滚动正文里) -->
-  <view wx:if="{{allowCreate}}" slot="footer" class="reward-sheet__footer">
+  <view wx:if="{{allowCreate && couponCreationEnabled}}" slot="footer" class="reward-sheet__footer">
     <cy-btn variant="primary" style="flex:1" bindtap="createCoupon">新建{{rewardKind === 'PASS' ? '体验卡' : '优惠券'}}</cy-btn>
   </view>
 </cy-sheet>
 
 <!-- 创建优惠券:半屏 sheet,不离开发布流程。dirty 时遮罩/✕ 不会静默关闭丢数据。 -->
-<cy-sheet variant="full" show="{{creating}}" title="创建{{rewardKind === 'PASS' ? '体验卡' : '优惠券'}}" handle="{{true}}" footer="{{true}}" dirty="{{createDirty}}"
+<cy-sheet variant="full" show="{{creating && couponCreationEnabled}}" title="创建{{rewardKind === 'PASS' ? '体验卡' : '优惠券'}}" handle="{{true}}" footer="{{true}}" dirty="{{createDirty}}"
   bind:close="onCreateClose" bind:requestclose="onCreateRequestClose">
   <view class="create-form">
     <view class="create-field">

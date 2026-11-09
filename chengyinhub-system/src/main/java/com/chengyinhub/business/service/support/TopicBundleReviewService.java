@@ -34,9 +34,14 @@ import java.util.TreeMap;
 /** 专业主题 V2 的一次提交审核快照；表示层和 hash 规则只在这一处。 */
 @Service
 public class TopicBundleReviewService {
-    private static final double DEFAULT_LATITUDE = 31.2304d;
-    private static final double DEFAULT_LONGITUDE = 121.4737d;
-    private static final double COORDINATE_EPSILON = 0.00001d;
+    /**
+     * P-16：编辑器地图「未动过」时的兜底中心(小程序 utils/location/last-location.js FIXED)。
+     * 原值 31.2304/121.4737 ±1e-5 恰好是人民广场的真实 POI，会误拒作者亲手选的站点，却放过真正的编辑器兜底值。
+     * 现在只拒与兜底值六位小数完全一致的点：作者在地图上真的选到这里的概率可忽略，编辑器选点时也会先提醒。
+     */
+    private static final double DEFAULT_LATITUDE = 31.230416d;
+    private static final double DEFAULT_LONGITUDE = 121.473701d;
+    private static final double COORDINATE_EPSILON = 0.0000005d;
 
     private final CmsTopicMapper topicMapper;
     private final CmsTopicChapterMapper chapterMapper;
@@ -71,7 +76,7 @@ public class TopicBundleReviewService {
      * 因此允许「零玩法」提交，但仅当每个未配玩法的站点都落在开放承接(recruitEnabled=1)的章节里；
      * 商家玩法在入驻时走供给审核，不绕过审核。owner 2026-10-20 决定(#299)。
      */
-    static boolean awaitsMerchantGameplay(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+    public static boolean awaitsMerchantGameplay(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
         if (topic == null || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
             return false;
         }
@@ -132,7 +137,7 @@ public class TopicBundleReviewService {
             sortNodes(nodes);
             validateMerchantReferences(topic, nodes, merchantOwners);
         }
-        if (chapters.isEmpty() || nodes.isEmpty()) {
+        if (chapters.isEmpty() || (nodes.isEmpty() && !awaitsMerchantGameplay(topic, chapters, nodes))) {
             throw publicationInvalid(new IllegalArgumentException("专业主题至少需要一个章节和一个节点"));
         }
 
@@ -540,10 +545,14 @@ public class TopicBundleReviewService {
         if (latitude < 0.8293d || latitude > 55.8271d || longitude < 72.004d || longitude > 137.8347d) {
             throw publicationInvalid(new IllegalArgumentException("节点坐标不在 GCJ-02 中国范围内:" + node.getId()));
         }
-        if (Math.abs(latitude - DEFAULT_LATITUDE) <= COORDINATE_EPSILON
-                && Math.abs(longitude - DEFAULT_LONGITUDE) <= COORDINATE_EPSILON) {
-            throw publicationInvalid(new IllegalArgumentException("节点仍是默认上海坐标，请重新在地图确认:" + node.getId()));
+        if (isUntouchedEditorDefault(latitude, longitude)) {
+            throw publicationInvalid(new IllegalArgumentException("站点「" + node.getName().trim() + "」还在地图默认位置，请在地图上选定真实地点"));
         }
+    }
+
+    static boolean isUntouchedEditorDefault(double latitude, double longitude) {
+        return Math.abs(latitude - DEFAULT_LATITUDE) <= COORDINATE_EPSILON
+                && Math.abs(longitude - DEFAULT_LONGITUDE) <= COORDINATE_EPSILON;
     }
 
     private double coordinate(String raw, String label) {

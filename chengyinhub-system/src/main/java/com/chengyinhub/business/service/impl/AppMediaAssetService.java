@@ -63,10 +63,10 @@ public class AppMediaAssetService {
     @Transactional
     public Map<String,Object> stage(Long memberId,String objectKey) {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
-        if(memberId==null || memberId<=0 || objectKey==null || !objectKey.matches("upload/[0-9a-f]{32}\\.(mp3|m4a|aac|wav|glb|jpg|jpeg|png|gif)"))
+        if(memberId==null || memberId<=0 || objectKey==null || !objectKey.matches("upload/[0-9a-f]{32}\\.(mp3|m4a|aac|wav|glb|mp4|jpg|jpeg|png|gif)"))
             throw new ServiceException("媒体归属或文件来源无效");
         Map<String,Object> row=new LinkedHashMap<>(); row.put("memberId",memberId);row.put("objectKey",objectKey);
-        row.put("mediaType",objectKey.endsWith(".glb")?"MODEL3D":objectKey.matches(".*\\.(jpg|jpeg|png|gif)")?"IMAGE":"AUDIO");row.put("version",0);row.put("reviewState","HOLD");
+        row.put("mediaType",objectKey.endsWith(".mp4")?"VIDEO":objectKey.endsWith(".glb")?"MODEL3D":objectKey.matches(".*\\.(jpg|jpeg|png|gif)")?"IMAGE":"AUDIO");row.put("version",0);row.put("reviewState","HOLD");
         if(mapper.insert(row)!=1 || !(row.get("id") instanceof Number))throw new ServiceException("媒体审核记录保存失败");
         submit(row);
         return publicStatus(row);
@@ -138,6 +138,17 @@ public class AppMediaAssetService {
         item.put("previewUrl",row==null?null:"LOCAL".equals(row.get("storageType"))?localApprovedUrl(objectKey)
                 :FileOssUploadUtils.generateShortLivedPresignedUrl(objectKey,300));
         return item;
+    }
+    /**
+     * Round5B-5:送微信异步图片检测要一个能抓取的地址,不能把库里的 media-asset:N 引用原样当 URL 发出去。
+     * 不论审核态(待审的正是要检测的):本地图用发布地址,OSS 图用 1 小时短签名(微信异步拉取)。
+     */
+    public String securityCheckFetchUrl(Long id) {
+        Map<String,Object> row=id==null?null:mapper.select(id);
+        if(row==null)throw new ServiceException("媒体不存在");
+        String objectKey=String.valueOf(row.get("objectKey"));
+        if("LOCAL".equals(row.get("storageType")))return localApprovedUrl(objectKey);
+        return FileOssUploadUtils.generateShortLivedPresignedUrl(objectKey,3600);
     }
     public String approvedUrl(Long id) {
         Map<String,Object> row=mapper.select(id);

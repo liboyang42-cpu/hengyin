@@ -205,6 +205,22 @@ class PlayerProgressionServiceImplTest {
     }
 
     @Test
+    void topicMileageCountsWhenChaptersCarryNone() {
+        // R11 j3 F10:编辑器只把距离写在主题上,章节列为空时通关不能记 0 公里
+        when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(growthRow(1L, 1));
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(Collections.singletonList(new CmsTopicChapter()));
+        com.chengyinhub.business.mapper.CmsTopicMapper topics = mock(com.chengyinhub.business.mapper.CmsTopicMapper.class);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setTotalMileage(new BigDecimal("1.20"));
+        when(topics.selectCmsTopicById(20L)).thenReturn(topic);
+        ReflectionTestUtils.setField(svc, "cmsTopicMapper", topics);
+
+        svc.onTopicComplete(1L, 20L);
+
+        assertEquals(new BigDecimal("1.20"), writtenGrowth().getTotalMileage());
+    }
+
+    @Test
     void missingTopicClearDefinitionDoesNotInventIdempotencyMarker() {
         when(growthMapper.selectByMemberForUpdate(1L)).thenReturn(growthRow(1L, 1));
         CmsTopicChapter chapter = new CmsTopicChapter();

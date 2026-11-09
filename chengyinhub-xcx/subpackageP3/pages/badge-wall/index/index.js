@@ -207,7 +207,7 @@ Page({
     unlockedCount: 0,
     lockedCount: 0,
     sheetOn: false, pins: {},
-    ringDots: [], ringOn: false, ringSay: '', flyIdx: -1, fly: { show: false, on: false, src: '', style: '', name: '', meta: '', locked: false },
+    ringDots: [], ringOn: false, flyIdx: -1, fly: { show: false, on: false, src: '', style: '', name: '', meta: '', locked: false },
     sheet: { name: '', rarZh: '', rarColor: '', desc: '', time: '', source: '', cond: '' }
   },
 
@@ -405,7 +405,7 @@ Page({
       badgeGroups: badgeGroups,
       unlockedCount: unlockedCount,
       lockedCount: list.length - unlockedCount,
-      ringDots: ring.dots, ringSay: ring.say, ringOn: false,
+      ringDots: ring.dots, ringOn: false,
     });
     // 点阵进场:先全灰落定,下一拍挂 is-on,亮着的点按各自 transition-delay 一颗颗变红(纯过渡,不用 keyframes)
     clearTimeout(this._ringTimer);

@@ -159,8 +159,15 @@ public class SecurityConfig
                         .requestMatchers(legacyMatchers("/api/merchant/public-home", "/api/user/public-info")).permitAll()
                         // 足迹分享落地页(第二轮拍板 17):只凭随机令牌读已裁剪快照,方法内不取登录态。精确 GET 一条。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/roam/share/snapshot")).permitAll()
+                        // 第九轮地图天气氛围:只回 rain/snow/fog/clear 与强度,方法内不取登录态,按 IP 限流。精确 GET 一条。
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/map/weather")).permitAll()
                         // 发现商家公开列表(脱敏同 public-detail,方法内不取登录态,强制 status=1):仅精确 POST /list。
                         .requestMatchers(legacyMatchers(HttpMethod.POST, "/api/merchant/list")).permitAll()
+                        // 第九轮 m4(owner 2026-11-04 批准):分享来的官方路线与据点给游客看。精确三条 GET,
+                        // 据点只认纯数字 id,/nodes/favorites、/nodes/merchant/*、/nodes/{id}/complete 照旧要登录。
+                        // 游客响应走 PresetRouteGuestProjection / CityNodeGuestProjection,只回已上架的公开字段。
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/preset/route/list", "/api/preset/route/info",
+                                "/api/city/nodes/{id:\\d+}")).permitAll()
 
                         // 除上面外的所有请求全部需要鉴权认证
                     .anyRequest().authenticated();

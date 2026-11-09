@@ -7,6 +7,11 @@ const discoverSearch = require('../../../utils/discover-search.js');
 const { openScene } = require('../../../utils/scene-entry.js');
 const { memberId, failureStatus, retryLogin, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const DEFAULT_RESULT_TABS = [{ key: 'all', label: '全部' }];
+// Round5 #3:合并搜索默认关闭(chengyin.search.unified.enabled),关闭时回 503。已登录用户此时退回
+// 与游客相同的主题/活动列表请求;记住一段时间,免得每次搜索先撞一次 503。
+const UNIFIED_RETRY_MS = 10 * 60 * 1000;
+let unifiedUnavailableUntil = 0;
+function unifiedAvailable() { return Date.now() >= unifiedUnavailableUntil; }
 
 Page({
   data: {
@@ -92,7 +97,8 @@ Page({
     const { keyword, categoryId } = this.data;
     const filters = this._filters || {};
     const owner = memberId(app);
-    const useUnified = !!owner && discoverSearch.unifiedCompatible(keyword, categoryId, filters);
+    const unifiedOpen = unifiedAvailable();
+    const useUnified = !!owner && unifiedOpen && discoverSearch.unifiedCompatible(keyword, categoryId, filters);
     const requests = discoverSearch.buildRequests(keyword, categoryId, filters)
       .filter(request => (owner || request.auth === false) && (!useUnified || !['topic', 'activity'].includes(request.type)));
     const queryKey = String(keyword || '').trim() + '::' + String(categoryId || '')
@@ -114,7 +120,7 @@ Page({
         ? ['topic', 'activity', 'post'] : ['topic', 'activity'], page: 0, items: [], loading: false } : null;
     this.setData({ clubLoginRequired: !owner, clubSearchDenied: '', contentEnabled: useUnified, keywordEditing: false,
       contentLoading: false, contentHasMore: useUnified, contentError: '',
-      contentFilterNotice: owner && String(keyword).trim() && !useUnified ? '清除类别、日期和价格筛选后，可同时搜索公开帖文' : '' });
+      contentFilterNotice: owner && unifiedOpen && String(keyword).trim() && !useUnified ? '清除类别、日期和价格筛选后，可同时搜索公开帖文' : '' });
     const isCurrent = () => !this._hidden && !this._unloaded && seq === this._searchSeq && owner === memberId(app);
     const groupsByType = {};
     let pending = requests.length;
@@ -252,6 +258,13 @@ Page({
           contentError: '', contentEnabled: false, clubLoginRequired: anonymous });
       }, this.runSearch, status)) return;
       const code = failureStatus(res, status);
+      // 合并搜索未开放(503/404):本轮改走主题/活动列表请求重搜,不给已登录用户空结果。
+      if (code === 503 || code === 404) {
+        unifiedUnavailableUntil = Date.now() + UNIFIED_RETRY_MS;
+        this.setData({ contentLoading: false, contentHasMore: false, contentError: '' });
+        this.runSearch();
+        return;
+      }
       if (code === 401 || code === 403) {
         state.items = []; state.page = 0; this._contentGroups = [];
         this.setData({ resultGroups: this.data.resultGroups.filter(g => !['topic', 'activity', 'post'].includes(g.type)) });

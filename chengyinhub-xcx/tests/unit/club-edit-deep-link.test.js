@@ -19,19 +19,19 @@ function mount(options) {
   global.getApp = () => ({ globalData: {}, sendRequest(request) { requests.push(request) } })
   global.Page = definition => { pageDefinition = definition }
   global.Component = definition => { componentDefinition = definition }
-  for (const file of ['pages/club/edit/index.js', 'components/cy/scene-club-edit/index.js']) {
+  for (const file of ['pages/club/edit/index.js', 'pages/club/components/cy/scene-club-edit/index.js']) {
     const absolute = path.join(root, file)
     delete require.cache[require.resolve(absolute)]
     require(absolute)
   }
   const tag = fs.readFileSync(path.join(root, 'pages/club/edit/index.wxml'), 'utf8').match(/<cy-scene-club-edit\b[^>]*>/)[0]
-  const condition = tag.match(/wx:if="\{\{(\w+)\}\}"/)
+  const condition = tag.match(/wx:if="\{\{(\w+)(?: && !(\w+))?\}\}"/) // 第十轮 j6 F8:另带 !gateDenied
   const page = Object.assign({}, pageDefinition, {
     data: structuredClone(pageDefinition.data),
     setData(patch) { Object.assign(this.data, patch); render() },
   })
   function render() {
-    if (condition && !page.data[condition[1]]) return
+    if (condition && (!page.data[condition[1]] || (condition[2] && page.data[condition[2]]))) return
     if (editor) { editor.setData({ clubId: page.data.clubId }); return }
     editor = Object.assign({}, componentDefinition.methods, {
       data: Object.assign(structuredClone(componentDefinition.data), { clubId: page.data.clubId }),

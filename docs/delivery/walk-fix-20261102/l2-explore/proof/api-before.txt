@@ -1,0 +1,4 @@
+P-21 registrationMerchantCount = 0
+P-19 activityList = [{"id": 14, "name": "E2E 探店日一期", "clubName": null}, {"id": 13, "name": "E2E 探店日一期", "clubName": null}, {"id": 9, "name": "E2E 探店日一期", "clubName": null}, {"id": 10, "name": "E2E 探店日一期", "clubName": null}, {"id": 11, "name": "E2E 探店日一期", "clubName": null}, {"id": 12, "name": "E2E 探店日一期", "clubName": null}]
+P-39 stamps = [{"title": "第1章 咖啡 · 探店日样板咖啡", "obtainedAt": "2026-11-02T15:34:01.000+08:00"}, {"title": "第2章 书店 · 探店日样板书店", "obtainedAt": "2026-11-02T15:34:02.000+08:00"}, {"title": "第3章 花店 · 探店日样板花店", "obtainedAt": "2026-11-02T15:34:02.000+08:00"}, {"title": "第4章 面包 · 探店日样板面包", "obtainedAt": "2026-11-02T15:34:02.000+08:00"}]
+P-20 organizerName = 执行俱乐部主理人

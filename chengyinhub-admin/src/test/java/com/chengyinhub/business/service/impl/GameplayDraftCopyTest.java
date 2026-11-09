@@ -55,7 +55,7 @@ class GameplayDraftCopyTest {
         assertEquals("unmatched", compiled.path("gameplayRuntime").path("acts").get(2).path("actKey").asText());
         ThemeRuntimeConfig.parseDraft(compiled.toString());
         topic.setThemeRuntimeConfigJson(compiled.toString());
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).getMessage().contains("不能为空"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).toString().contains("不能为空"));
     }
 
     @Test void nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish() throws Exception {
@@ -99,7 +99,7 @@ class GameplayDraftCopyTest {
             assertEquals(operationId, compiled.path("gameplayRuntime").path("plans").get(0).path("operationNodeId").asLong());
             ThemeRuntimeConfig.parseDraft(compiled.toString()); topic.setThemeRuntimeConfigJson(compiled.toString());
             assertEquals(compiled, json.readTree(service.compileTemplateRules(topic)), "首次保存后再次保存不漂移");
-            String error = assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).getMessage();
+            String error = assertThrows(IllegalArgumentException.class, () -> freezePublication(service, topic)).toString();
             assertTrue(error.contains("完成证明"), error);
             assertEquals(json.valueToTree(stateKeys), json.valueToTree(stateMapper.selectByTopicIdForUpdate(77L)));
             ObjectNode ready = ((ObjectNode)compiled).deepCopy();

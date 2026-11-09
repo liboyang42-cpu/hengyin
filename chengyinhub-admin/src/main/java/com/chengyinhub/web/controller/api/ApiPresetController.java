@@ -2,6 +2,7 @@ package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.CmsPresetRoute;
 import com.chengyinhub.business.domain.dto.GameplayPresetDraftCommand;
+import com.chengyinhub.business.domain.vo.PresetRouteGuestProjection;
 import com.chengyinhub.business.service.IPresetService;
 import com.chengyinhub.business.service.support.AuthorWriteReceiptService;
 import com.chengyinhub.business.service.support.GameplayPresetCatalog;
@@ -57,7 +58,9 @@ public class ApiPresetController extends BaseController {
     @Operation(summary = "城市路线列表")
     @GetMapping("/route/list")
     public AjaxResult routeList(@RequestParam(required = false) String city) {
-        return AjaxResult.success(presetService.listRoutes(city));
+        List<CmsPresetRoute> routes = presetService.listRoutes(city);
+        // 第九轮 m4:游客可读(SecurityConfig 精确放行),游客响应走公开字段投影。
+        return AjaxResult.success(isGuest() ? PresetRouteGuestProjection.applyAll(routes) : routes);
     }
 
     @Operation(summary = "单条路线含站点")
@@ -67,7 +70,17 @@ public class ApiPresetController extends BaseController {
         if (route == null) {
             return AjaxResult.error("路线不存在");
         }
-        return AjaxResult.success(route);
+        return AjaxResult.success(isGuest() ? PresetRouteGuestProjection.apply(route) : route);
+    }
+
+    /** 未登录(或令牌无效)按游客处理;只决定响应投影,不放宽任何可见性。 */
+    private boolean isGuest() {
+        try {
+            Long uid = getAppUserId();
+            return uid == null || uid <= 0;
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     // ------------------------------------------------------------------ 固定玩法预设（T01–T08）

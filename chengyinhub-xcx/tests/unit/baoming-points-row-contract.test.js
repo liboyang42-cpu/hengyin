@@ -8,7 +8,8 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8')
 
 function assertPointsRowContract(js, wxml) {
   // 行必须受 pointsUsable 门禁:服务端关闭积分抵扣(D2)后不许再渲染可点的 -¥0.00
-  assert.match(wxml, /class="setly_li" wx:if="\{\{pointsUsable !== false\}\}"/)
+  // R11 p1 F-10:没积分整行收起(userInfo.point != 0)
+  assert.match(wxml, /class="setly_li" wx:if="\{\{pointsUsable !== false( && selectedTicket\.price > 0)?( && userInfo\.point != 0)?\}\}"/)
   assert.match(js, /useDiscount && pd <= 0/)
   assert.match(js, /pointsUsable: false/)
 }

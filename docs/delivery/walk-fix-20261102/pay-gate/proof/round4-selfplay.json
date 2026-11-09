@@ -1,0 +1,64 @@
+{
+ "S4_legacy_no_snapshot_within_24h": {
+  "registrationId": 81,
+  "callback": 204,
+  "frozen": [
+   [
+    81,
+    1,
+    2,
+    "29.99",
+    0,
+    "START_24H_100_50_0",
+    1,
+    "2026-11-04 00:00:00",
+    2,
+    2
+   ]
+  ],
+  "view": {
+   "refundInfo": {
+    "refundable": true,
+    "reason": "可全额退款,原路退回(预计1-3个工作日)",
+    "deadline": "2026-11-04T00:00:00.000+08:00",
+    "manualReview": false,
+    "ratio": 1
+   },
+   "refundDeadlineDisplay": "可免费取消至 11月4日 00:00"
+  },
+  "cancel": {
+   "response": {
+    "code": 200,
+    "msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分",
+    "data": {
+     "registrationId": 81,
+     "scope": "REGISTRATION",
+     "cancellationStatus": "CANCELLED",
+     "cashRefundStatus": "DISPATCHING",
+     "cashRefundAmount": 29.99,
+     "pointsUsed": 0,
+     "pointsReturned": 0,
+     "pointsRefundStatus": "NOT_NEEDED"
+    }
+   },
+   "registration": [
+    [
+     4,
+     3,
+     "29.99",
+     0
+    ]
+   ],
+   "refund_application": [
+    [
+     "RF81",
+     "29.99",
+     "29.99",
+     1,
+     6,
+     "用户申请退款"
+    ]
+   ]
+  }
+ }
+}

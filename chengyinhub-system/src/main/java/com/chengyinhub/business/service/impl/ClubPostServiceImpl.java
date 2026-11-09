@@ -324,8 +324,13 @@ public class ClubPostServiceImpl implements IClubPostService
     @Override
     public List<ClubPost> selectSiteFeed(Long viewerId, Long beforeId, int limit) {
         // 51 = 单页上限 50 + 1 条探针(调用方据此判断 hasMore)。
+        return selectSiteFeedByAuthor(viewerId, beforeId, limit, null);
+    }
+
+    @Override
+    public List<ClubPost> selectSiteFeedByAuthor(Long viewerId, Long beforeId, int limit, Long authorId) {
         return clubPostMapper.selectSiteFeed(viewerId, beforeId != null && beforeId > 0 ? beforeId : null,
-                limit <= 0 ? 21 : Math.min(limit, 51));
+                limit <= 0 ? 21 : Math.min(limit, 51), authorId);
     }
 
     // ---- 帖文转发(dw29 L8) ----

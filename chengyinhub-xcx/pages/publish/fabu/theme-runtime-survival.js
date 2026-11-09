@@ -95,12 +95,12 @@ function pruneActRefs(runtime, removedActKeys) {
   ((game.survival || {}).recoveries || []).forEach((row, i) => { if ((row.actKeys || []).some(k => removed.has(k))) notices.push((row.kind === 'REST' ? '休整' : '救助') + (i + 1) + '：引用的幕已删除，请重新选择'); });
   return notices;
 }
-const data = { survivalEditor: { show: false, section: '', kind: '', index: -1, row: null, error: '' }, themeReplayEnabled: false, themeReplayError: '', survivalActCheckedCount: 0, survivalSummary: { recoveryText: '未配置', facilityText: '未配置', cardText: '默认' }, survivalRecoveryKinds: RECOVERY_KINDS, survivalDraft: {}, survivalRecoveries: [], survivalRations: [], survivalFacilities: [], survivalActs: [], survivalItems: [], survivalNodes: [], survivalLocations: [], survivalStates: [], survivalSelected: {}, survivalConditionRows: [], survivalActChecks: [], survivalMaterialItems: [], survivalCardFields: [], survivalTargets: TARGETS, survivalScopes: SCOPES, survivalOps: OPS };
+const data = { survivalEditor: { show: false, section: '', kind: '', index: -1, row: null, error: '' }, themeReplayEnabled: false, themeReplayError: '', themeTeamTrail: true, survivalActCheckedCount: 0, survivalSummary: { recoveryText: '未配置', facilityText: '未配置', cardText: '默认' }, survivalRecoveryKinds: RECOVERY_KINDS, survivalDraft: {}, survivalRecoveries: [], survivalRations: [], survivalFacilities: [], survivalActs: [], survivalItems: [], survivalNodes: [], survivalLocations: [], survivalStates: [], survivalSelected: {}, survivalConditionRows: [], survivalActChecks: [], survivalMaterialItems: [], survivalCardFields: [], survivalTargets: TARGETS, survivalScopes: SCOPES, survivalOps: OPS };
 const methods = {
   _pruneSurvivalActRefs: pruneActRefs,
   _refreshSurvivalSummary(c = this._runtimeConfig()) {
     const game = c.gameplayRuntime || {}, rows = (game.survival || {}).recoveries || [], rations = (game.survival || {}).rations || [], facilities = game.facilities || [];
-    this.setData({ themeReplayEnabled: c.replayEnabled === true, survivalSummary: { recoveryText: rows.length || rations.length ? '休整 ' + rows.filter(r => r.kind === 'REST').length + ' · 救助 ' + rows.filter(r => r.kind === 'RESCUE').length + ' · 配给 ' + rations.length : '未配置', facilityText: facilities.length ? '独立 ' + facilities.filter(f => !f.facilityKey.startsWith('tpl_node_')).length + ' · 节点生成 ' + facilities.filter(f => f.facilityKey.startsWith('tpl_node_')).length : '未配置', cardText: c.card ? '已自定义' : '默认' } });
+    this.setData({ themeReplayEnabled: c.replayEnabled === true, themeTeamTrail: c.teamTrail === true || (c.teamTrail !== false && ((c.gameplayRuntime || {}).runtimeScope) !== 'PLAYER'), survivalSummary: { recoveryText: rows.length || rations.length ? '休整 ' + rows.filter(r => r.kind === 'REST').length + ' · 救助 ' + rows.filter(r => r.kind === 'RESCUE').length + ' · 配给 ' + rations.length : '未配置', facilityText: facilities.length ? '独立 ' + facilities.filter(f => !f.facilityKey.startsWith('tpl_node_')).length + ' · 节点生成 ' + facilities.filter(f => f.facilityKey.startsWith('tpl_node_')).length : '未配置', cardText: c.card ? '已自定义' : '默认' } });
   },
   openSurvivalEditor(e) {
     this._survivalDraft = clone(this._runtimeConfig()); this._survivalDirty = {};
@@ -203,6 +203,14 @@ const methods = {
     c.replayEnabled = value; this._saveRuntime(c);
     if (this._survivalDraft) { this._survivalDraft.replayEnabled = value; this._refreshSurvival(); }
     this.setData({ themeReplayEnabled: value, themeReplayError: '' }); return true;
+  },
+  toggleThemeTeamTrail(e) {
+    const c = this._runtimeConfig(), value = e.detail.value === true;
+    // 个人独立进行的单人主题默认关:作者打开要明写 true;队伍玩法默认开,开 = 不写
+    if (value && (c.gameplayRuntime || {}).runtimeScope === 'PLAYER') c.teamTrail = true;
+    else if (value) delete c.teamTrail; else c.teamTrail = false;
+    this._saveRuntime(c);
+    this.setData({ themeTeamTrail: value }); return true;
   },
   toggleSurvivalReplay(e) { this._survivalDraft.replayEnabled = e.detail.value === true; this._survivalDirty.replayEnabled = true; this._refreshSurvival(); },
   removeSurvivalRow() {

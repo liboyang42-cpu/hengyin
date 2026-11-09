@@ -1,0 +1,8 @@
+{
+ "verdict": "PASS_WITH_REVIEW_ITEMS",
+ "candidate_sha": "fce3537eb8d3de79deca163cb5273ac4f106a3f5",
+ "comparison_base_sha": "c6eac3b8cebf7311e8f00f208d294c3c8212aaec",
+ "ci_checkout_sha": "fce3537eb8d3de79deca163cb5273ac4f106a3f5",
+ "findings": [],
+ "review_items_count": 215
+}

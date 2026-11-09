@@ -33,6 +33,27 @@ function roleEvent(p, nodeId, value) {
   return { currentTarget: { dataset: { nodeid: nodeId } }, detail: { value: p.data.storyRoleOptions.findIndex(o => o.value === value) } };
 }
 
+test('个人进行方式的空背包容量 0 不阻断时间或步数彩蛋保存，有物品仍要求容量', () => {
+  const structure = require('../../pages/publish/fabu/theme-runtime-structure.js');
+  for (const trigger of [0, 1]) {
+    const p = page();
+    p.data.formData.themeRuntimeConfig = JSON.stringify(structure.setMode('', 'PLAYER', p.data.formData.chapters, p.data.supportMatrix).value);
+    p.data.runtimeEditor = { kind: 'eggs', index: 0 };
+    p.addRuntimeEgg();
+    for (const [field, value] of Object.entries({ name: '夜航', content: '听见了风', trigger })) {
+      p.onRuntimeEgg({ currentTarget: { dataset: { index: 0, field } }, detail: { value } });
+    }
+    assert.equal(p._validateRuntimeConfig(), '');
+    const saved = JSON.parse(p._runtimePayload());
+    assert.equal(saved.capacity, 0);
+    assert.equal(saved.chapters[0].eggs[0].trigger, trigger ? 'STEPS' : 'TIME');
+    p._saveRuntime({ ...saved, items: [{ id: 'reward', kind: 'ITEM', name: '纪念', image: 'https://example.com/reward.png' }] });
+    assert.match(p._validateRuntimeConfig(), /物品容量/);
+    p._saveRuntime({ ...p._runtimeConfig(), capacity: 1 });
+    assert.equal(p._validateRuntimeConfig(), '');
+  }
+});
+
 test('归零策略使用服务器矩阵，通用局回填 BLOCK_PAID，旧局保留 LEGACY_END', () => {
   const p = page();
   p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER', survival: { zeroHpPolicy: 'BLOCK_PAID' } } });
@@ -581,4 +602,36 @@ test('章末配给不足时可扣自定义数值（温度），扣 0 不要求�
   assert.equal(runtime.validate(JSON.parse(p.data.formData.themeRuntimeConfig), initial.parse(p.data.formData.journeyRules), ['BLOCK_HP_COST']), '', '生命未开启也能扣自定义数值');
   p._openChapterRules(0);
   assert.equal(p.data.runtimeChapterRation.fallback, '2'); assert.equal(p.data.runtimeChapterRation.values[p.data.runtimeChapterRation.valueIndex].key, 'counter.temp');
+});
+
+test('M2 E12:选了互斥组后「全部完成」落成按组计数,不再停在开', () => {
+  const p = page();
+  p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }, { id: 102, name: '乙' }, { id: 103, name: '丙' }];
+  p._openChapterRules(0);
+  assert.equal(p.data.runtimeChapterRules.completionType, 'ALL');
+  p.addChapterExclusiveGroup();
+  p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 101 } } });
+  p.toggleChapterExclusiveNode({ currentTarget: { dataset: { index: 0, id: 102 } } });
+  assert.equal(p.data.runtimeChapterRules.completionType, 'ANY_N');
+  assert.equal(p.data.runtimeChapterRules.quantity, '2');
+  assert.equal(p._saveChapterRules(), true);
+  assert.deepEqual(p._runtimeConfig().chapters[0].completion, { type: 'ANY_N', quantity: 2 });
+});
+
+test('M2 E13:本章节点已保存时,章末配给不再说「请先保存本章节点」', () => {
+  const p = page();
+  p.data.formData.chapters[0].nodes = [{ id: 101, name: '甲' }];
+  p._openChapterRules(0);
+  assert.notEqual(p.data.runtimeChapterRation.reason, '请先保存本章节点');
+});
+
+test('M2 P1:个人独立进行的单人主题,同场路线默认关,作者打开才明写 true', () => {
+  const p = page();
+  Object.assign(p, require('../../pages/publish/fabu/theme-runtime-survival.js').methods);
+  const c = p._runtimeConfig(); c.gameplayRuntime = { runtimeScope: 'PLAYER' }; p._saveRuntime(c);
+  p._refreshSurvivalSummary();
+  assert.equal(p.data.themeTeamTrail, false);
+  p.toggleThemeTeamTrail({ detail: { value: true } });
+  assert.equal(p._runtimeConfig().teamTrail, true);
+  assert.equal(p.data.themeTeamTrail, true);
 });

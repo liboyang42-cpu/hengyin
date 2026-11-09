@@ -24,6 +24,8 @@ public interface IClubMembershipService {
     ClubMembershipRenewalVO resumeInvoice(Long principalMemberId, ClubMembershipActionRequest request);
     ClubMembershipRenewalVO closeInvoice(Long principalMemberId, ClubMembershipActionRequest request);
     ClubMembershipInvoice invoice(Long principalMemberId, Long clubId, Long invoiceId);
+    /** 订单中心纯本地读取，保留原会费账单访问与归属校验。 */
+    ClubMembershipInvoice invoiceReadOnly(Long principalMemberId, Long clubId, Long invoiceId);
     List<ClubMembershipInvoice> financeInvoices(Long principalMemberId, Long clubId);
     void cancelTerm(Long principalMemberId, ClubMembershipActionRequest request);
     ClubMembershipRefundReview requestRefundReview(Long principalMemberId, ClubMembershipActionRequest request);

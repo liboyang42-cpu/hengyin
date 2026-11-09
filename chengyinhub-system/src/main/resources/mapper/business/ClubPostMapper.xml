@@ -129,6 +129,7 @@
           and not exists(select 1 from im_block b
                          where (b.member_id = #{viewerId} and b.blocked_member_id = cp.author_member_id)
                             or (b.member_id = cp.author_member_id and b.blocked_member_id = #{viewerId}))
+          <if test="authorId != null"> and cp.author_member_id = #{authorId}</if>
           <if test="beforeId != null"> and cp.id &lt; #{beforeId}</if>
         order by cp.id desc
         limit #{limit}

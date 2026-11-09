@@ -85,6 +85,8 @@ MYBATIS_ITS=(
   TemplateMarketLifecycleMySqlIT
   WorkshopPurchaseMyBatisIT
   WorkshopAppleIapMyBatisIT
+  TemplateAdoptionReceiptMyBatisIT
+  TemplateAdoptionRoundTripMySqlIT
   AdvancedGameRuntimeMySqlIT
   ThemeRuntimeMySqlIT
   GenericRouteRuntimeMySqlIT
@@ -105,6 +107,9 @@ MYBATIS_ITS=(
   # 2026-09-15 F15 联系号码接口:归属/负责/同意/日限与审计在真库上的边界(越权拒、撤回同意拒、
   # 俱乐部带团拒、昨日不占今日额度、第 51 次拒且不写审计)。不点名 = 没人看着这条链。
   MerchantCrmContactRevealMySqlIT
+  # 2026-11-04 ROUND10 f4 3a:自由探索买家进商家名册 —— 主题方与审核通过的参与商家可见、待审/外店零行;
+  #   参与商家不经通用名册拿号码(单店另有授权)。
+  MerchantCrmFreeExploreRosterMySqlIT
   # 2026-09-15 R9-41 假绿修复后登记:待审/驳回/下线的 *在线* 投放(status=1)只有
   # RoamMapper.xml 的 cityNodeContentApproved 能挡,删闸即红。不点名 = CI 永远跑不到这条边界。
   CityNodePendingVisibilityMySqlIT
@@ -165,6 +170,7 @@ MYBATIS_ITS=(
   # DOC2 FXA(#478-3):主题通关奖封顶判据读真 game_runtime_session JSON 快照 —— 任一已完成站自报/兜底 ⇒ 封顶,
   #   别人的局、别的场次不算,视觉复核改判 PASS 后解除。
   ThemeCompletionRewardCapMySqlIT
+  FreeSelfPlayCreateRealDbIT
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT
@@ -182,7 +188,7 @@ IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 #   surefire 3.x 还要 -Dsurefire.failIfNoSpecifiedTests=false(与 -DfailIfNoTests 是两个开关,
 #   少一个上游模块照样以「No tests matching pattern」失败)。
 #   「到底跑没跑」的保证**不靠这两个开关**,靠下面 assert_it_ran.py 的回读。
-CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 \
+CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 CHENGYIN_SELFCREATE_IT_MYSQL=1 \
   mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
   -Dsurefire.failIfNoSpecifiedTests=false -Dchengyin.npc.expiry.mysql.it=true -Dtest="$IT_LIST"
 

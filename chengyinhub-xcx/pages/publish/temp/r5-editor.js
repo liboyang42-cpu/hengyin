@@ -5,6 +5,8 @@ const matrix = require('../utils/publish/gameplay-support-matrix.js');
 const clone = value => JSON.parse(JSON.stringify(value));
 const PARTICIPATION = [{ key: 'direct', label: '直接参与', value: 0, sub: '直接开始', reason: '' }, { key: 'gps', label: '定位到达', value: 5, sub: '到达节点后开始', reason: '' }, { key: 'scan', label: '扫码参与', value: 4, sub: '扫现场码后开始', reason: '' }];
 const REMOVED = ['branch', 'silentOrder', 'diyName', 'musicCorner', 'slowTask', 'multiplayer'];
+const NEW_GAME_DEFAULTS = { 'ballShake.seconds': 12, 'typeIn.seconds': 10, 'photoCheck.maxTries': 3 };
+const LEGACY_LABELS = { 'ballShake.timed': '旧限时开关', 'ballShake.seconds': '旧限时秒数', 'typeIn.seconds': '旧输入限时秒数', 'sort.maxAttempts': '旧排序次数', 'qa.maxTries': '旧答题次数', 'photoCheck.maxTries': '旧拍照次数', 'estimate.maxTries': '旧估值次数', 'pricePair.maxTries': '旧比价次数', 'hiddenObject.maxTries': '旧找物次数' };
 function legacyRows(config) {
   const rows = [];
   const add = (path, label) => { const value = after.get(config, path); if (value != null) rows.push({ path, label, value: clone(value), displayValue: typeof value === 'object' ? JSON.stringify(value) : String(value), readOnly: true }); };
@@ -12,7 +14,8 @@ function legacyRows(config) {
   REMOVED.filter(key => config[key]?.enabled).forEach(key => add(key, '旧规则：' + key));
   for (const path of ['ballShake.timed', 'ballShake.seconds', 'typeIn.seconds', 'sort.maxAttempts', 'qa.maxTries', 'photoCheck.maxTries', 'estimate.maxTries', 'pricePair.maxTries', 'hiddenObject.maxTries']) {
     const value = after.get(config, path);
-    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, '旧设置：' + path);
+    // 新建玩法自带的默认值不是「旧设置」,不列出来;作者改过或老数据里的非默认值才只读展示,标签用中文不露字段名
+    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && value !== NEW_GAME_DEFAULTS[path] && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, LEGACY_LABELS[path] || ('旧设置：' + path));
   }
   if (config.variants?.length) add('variants', '旧放宽条件');
   return rows;
@@ -23,10 +26,10 @@ function view(config, validationMethod, support, context, category = '全部') {
   const section = catalog.findGame(catalog.detectGame(config))?.section;
   const gameItems = catalog.BASE_GAMES.filter(item => category === '全部' || item.category === category).map(item => {
     const key = item.gameKey || item.forms?.[0].gameKey;
-    const reason = item.reason || matrix.choice(support, key, config, context);
+    const reason = item.reason || matrix.choice(support, key, matrix.pickAs(config, context), context);
     return Object.assign({}, item, { sub: item.sub || '', disabled: !!reason, reason });
   });
-  const rows = section ? after.paths(config).filter(path => path.startsWith('outcomeRules.') || path.startsWith(section + '.') && !(section === 'qa' && config.qa.mode !== 'PICK') && !(section === 'diceRoll' && config.diceRoll.mode === 'd20')).map(path => {
+  const predictNoShop = section === 'predict' && !(context && context.shop) && config.outcomeRules == null; /* 第十一轮 g4 第 5 项:预测站没有承接商家就不提供结果反馈(有了 outcomeRules 要等商家给答案才算完,没商家永远完不了);已配过的旧模板照常列出,作者还能关掉 */ const rows = section && !predictNoShop ? after.paths(config).filter(path => path.startsWith('outcomeRules.') || path.startsWith(section + '.') && !(section === 'qa' && config.qa.mode !== 'PICK') && !(section === 'diceRoll' && config.diceRoll.mode === 'd20')).map(path => {
     const reason = after.get(config, path)?.nextStepId && support?.outcomeRules?.nextStepId !== 'SETTLED_FEEDBACK' ? '旧后段只读，暂未开放' : after.localReason(config, path);
     return { path, label: path === 'outcomeRules.pass' ? after.once(config) ? '完成之后' : '通过之后' : path === 'outcomeRules.fail' ? '没通过之后' : '选了之后', draft: after.draft(after.get(config, path)), summary: summary(after.get(config, path)), disabled: !!reason, reason };
   }) : [];
@@ -38,16 +41,16 @@ function view(config, validationMethod, support, context, category = '全部') {
   // 2026-10-23 主人:选择玩法照原型 —— 每个玩法自己一枚标签(选项问答 / 猜图 / 闭眼盲品 / 竞猜 …),
   // 不再先选一类再在卡里挑「形式」。有形式的那几类按形式摊开,标签 key 用玩法 key。
   const flat = item => (item.forms || []).length ? item.forms.map(f => { const g = catalog.findGame(f.gameKey) || {}; return { key: f.gameKey, pickKey: f.gameKey, label: g.label || f.label, icon: g.icon || item.icon, sub: g.sub || '', category: item.category }; }) : [Object.assign({}, item, { pickKey: item.gameKey || '' })];
-  const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: [].concat(...catalog.BASE_GAMES.filter(item => item.category === title).map(flat)).map(item => Object.assign({}, item, { sub: item.sub || '', reason: item.reason || (item.pickKey ? matrix.choice(support, item.pickKey, config, context) : '') })) })).filter(group => group.items.length);
+  const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: [].concat(...catalog.BASE_GAMES.filter(item => item.category === title).map(flat)).map(item => Object.assign({}, item, { sub: item.sub || '', reason: item.reason || (item.pickKey ? matrix.choice(support, item.pickKey, matrix.pickAs(config, context), context) : '') })) })).filter(group => group.items.length);
   gameGroups.forEach(group => { group.rows = tagRows(group.items); });
   // 玩法图标按分类上一层浅色(2026-10-22 原型定稿:只有玩法有图标,颜色不用渐变)
   const tint = { 问答: 'qa', 推理: 'logic', 互动: 'play', 挑战: 'challenge' }[(catalog.BASE_GAMES.find(item => item.key === selected.baseKey) || {}).category] || 'plain';
-  selected.forms = selected.forms.map(item => Object.assign({}, item, { sub: '', reason: matrix.choice(support, item.gameKey, config, context) }));
-  return Object.assign(selected, { toolRows, toolOptions, gameSummary: game ? game.label + ((selected.forms.find(item => item.key === selected.formKey)?.label) ? ' · ' + selected.forms.find(item => item.key === selected.formKey).label : '') + ' · ' + summary(config.outcomeRules?.pass) : '未选择玩法', scanSummary: config.scan?.kind === 'VOICE' ? '语音回复' : config.scan?.kind === 'IMAGE' ? '图片回复' : config.scan?.reply || '未配置扫码回复', participation, participationOptions: PARTICIPATION, category, categories: catalog.CATEGORIES, gameItems, gameGroups, afterRows: rows, fbRows: feedbackRows(config, rows), optionAfterRows: rows.filter(row => !FB_KEYS[row.path]).map(row => Object.assign({}, row, { label: afterLabel(config, row.path, row.label) })), fbSteps: feedbackSteps(config, section, after.once(config)), gameTint: tint, valueSlots: tools.slotsOf(config).filter(slot => slot.kind === 'VALUE'), legacyRows: legacyRows(config), nextStepOptions, feedbackStepOptions: nextStepOptions.slice(1).map(({ key, label }) => ({ key, label })), nextDisabledReason: support?.outcomeRules?.nextStepId === 'SETTLED_FEEDBACK' ? '' : '暂未开放', error: '' });
+  selected.forms = selected.forms.map(item => Object.assign({}, item, { sub: '', reason: matrix.choice(support, item.gameKey, matrix.pickAs(config, context), context) }));
+  return Object.assign(selected, { toolRows, toolOptions, gameSummary: game ? game.label + ((selected.forms.find(item => item.key === selected.formKey)?.label) ? ' · ' + selected.forms.find(item => item.key === selected.formKey).label : '') + ' · ' + summary(config.outcomeRules?.pass) : '未选择玩法', scanSummary: config.scan?.kind === 'VOICE' ? '语音回复' : config.scan?.kind === 'IMAGE' ? '图片回复' : config.scan?.reply || '未配置扫码回复', participation, participationOptions: context && context.settled ? PARTICIPATION.map(row => row.key === 'direct' ? Object.assign({}, row, { reason: '开了状态或 d20 检定的主题里要选定位到达或扫码' }) : row) : PARTICIPATION, category, categories: catalog.CATEGORIES, gameItems, gameGroups, afterRows: rows, fbRows: feedbackRows(config, rows), optionAfterRows: rows.filter(row => !FB_KEYS[row.path]).map(row => Object.assign({}, row, { label: afterLabel(config, row.path, row.label) })), fbSteps: feedbackSteps(config, section, after.once(config)), gameTint: tint, valueSlots: tools.slotsOf(config).filter(slot => slot.kind === 'VALUE'), legacyRows: legacyRows(config), nextStepOptions, feedbackStepOptions: nextStepOptions.slice(1).map(({ key, label }) => ({ key, label })), nextDisabledReason: support?.outcomeRules?.nextStepId === 'SETTLED_FEEDBACK' ? '' : '暂未开放', error: '' });
 }
 // 结果反馈(2026-10-22 主人定稿):三步说明 + 成功/失败各一行;其余「选了某项之后」单独列出,标签写清是哪一项。
 const FB_KEYS = { 'outcomeRules.pass': 'pass', 'outcomeRules.fail': 'fail' };
-const FIRST_STEP = { coinFlip: '玩家抛硬币', check: '玩家掷 D20', estimate: '玩家猜一个数', pricePair: '玩家挑一张图', hiddenObject: '玩家在图上找目标', random: '玩家抽一张卡', predict: '玩家押一个答案', blindTaste: '玩家闭眼尝一口再选', sort: '玩家把几条排好顺序', match: '玩家把两列一一连好', classify: '玩家把每条归到一类', photoCheck: '玩家拍照提交', steps: '玩家走够步数', reaction: '玩家等屏幕变色再点', ballShake: '玩家倾斜手机让球撞够次数', quietHold: '玩家保持安静到时间', compass: '玩家把手机对准方位', shout: '玩家喊到声音够大', countdown: '玩家在倒计时里完成', stopwatch: '玩家盲停在目标秒数', typeIn: '玩家照着一行字打出来' };
+const FIRST_STEP = { coinFlip: '玩家抛硬币', check: '玩家掷 D20', estimate: '玩家猜一个数', pricePair: '玩家挑一张图', hiddenObject: '玩家在图上找目标', random: '玩家抽一张卡', predict: '玩家选一个答案', blindTaste: '玩家闭眼尝一口再选', sort: '玩家把几条排好顺序', match: '玩家把两列一一连好', classify: '玩家把每条归到一类', photoCheck: '玩家拍照提交', steps: '玩家走够步数', reaction: '玩家等屏幕变色再点', ballShake: '玩家倾斜手机让球撞够次数', quietHold: '玩家保持安静到时间', compass: '玩家把手机对准方位', shout: '玩家喊到声音够大', countdown: '玩家在倒计时里完成', stopwatch: '玩家盲停在目标秒数', typeIn: '玩家照着一行字打出来' };
 function feedbackSteps(config, section, isOnce) {
   if (!section) return [];
   let first = FIRST_STEP[section] || '玩家完成这一关';
@@ -179,12 +182,16 @@ const methods = {
     const query = this.createSelectorQuery();
     query.select('.cg-tstrip').boundingClientRect();
     query.selectAll('.cg-tblock').boundingClientRect();
-    query.exec(res => { const strip = res && res[0], blocks = res && res[1]; if (!strip || !blocks) return; this._tstripWidth = strip.width; this._tblockLefts = blocks.map(rect => rect.left - strip.left); });
+    query.select('.cg-tstrip__in').boundingClientRect();
+    query.exec(res => { const strip = res && res[0], blocks = res && res[1], inner = res && res[2]; if (!strip || !blocks) return; this._tstripWidth = strip.width; this._tstripInnerWidth = inner && inner.width; this._tblockLefts = blocks.map(rect => rect.left - strip.left); });
   },
   onGameStripScroll(e) {
     const lefts = this._tblockLefts; if (!lefts || !lefts.length) return;
     const x = e.detail.scrollLeft; let index = 0;
-    lefts.forEach((left, i) => { if (left <= x + 40) index = i; });
+    // 第十轮 f3 第 4 项(p3 F10):半屏还在入场缩放时量到的位置偏小,按「真实滚动宽 / 量到的内宽」换回实际坐标,
+    // 否则一滚就把高亮推到后面的分组(停在「问答」列却亮「互动」)。
+    const ratio = e.detail.scrollWidth && this._tstripInnerWidth ? e.detail.scrollWidth / this._tstripInnerWidth : 1;
+    lefts.forEach((left, i) => { if (left * ratio <= x + 40) index = i; });
     if (e.detail.scrollWidth && x + 8 >= e.detail.scrollWidth - (this._tstripWidth || 0)) index = lefts.length - 1;
     if (index !== this.data.sheetGroup) this.setData({ sheetGroup: index, sheetNavAnchor: 'gnav-' + index });
   },
@@ -193,6 +200,8 @@ const methods = {
   pickParticipation(e) {
     const value = e.currentTarget.dataset.key || e.detail.value;
     const option = PARTICIPATION.find((row, i) => row.key === value || i === Number(value)); if (!option) return;
+    const shown = ((this.data.r5Editor || {}).participationOptions || []).find(row => row.key === option.key);
+    if (shown && shown.reason) return;   // 第十二轮 k7 N5:任务站不能选直接参与,理由写在选项上
     const config = clone(this.data.advanced); config.scan.enabled = option.key === 'scan';
     this._r5ParticipationChanged = true;
     this._setFormState({ advanced: config, 'formData.validationMethod': option.value });

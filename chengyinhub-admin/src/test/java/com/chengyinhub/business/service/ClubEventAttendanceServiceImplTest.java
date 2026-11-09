@@ -84,6 +84,48 @@ class ClubEventAttendanceServiceImplTest {
         verify(access).require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_CHECKIN);
     }
 
+    /** 2026-11-02 用户:本场领队(执行方)在名册上看到完整号码;没有号码权限的核销员一个号码都拿不到。 */
+    @Test
+    void rosterGivesFullPhoneOnlyToPhoneReaders() {
+        Map<String, Object> lead = row(51L, "城瘾用户", NOW, null, 0);
+        lead.put("phone", "13812345621");
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Collections.singletonList(lead));
+        when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());
+        Map<String, Object> roster = service.roster(ACTOR, CLUB, ACTIVITY);
+        assertEquals(true, roster.get("phoneIncluded"));
+        assertEquals("13812345621", ((Map<?, ?>) ((List<?>) roster.get("arrived")).get(0)).get("phone"));
+
+        Map<String, Object> again = row(51L, "城瘾用户", NOW, null, 0);
+        again.put("phone", "13812345621");
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Collections.singletonList(again));
+        when(access.require(ACTOR, CLUB, ACTIVITY, ClubPermission.EVENT_CHECKIN))
+                .thenReturn(new ClubAccessContext(ACTOR, CLUB, 99L, ACTIVITY,
+                        Collections.singleton(ClubRoleCode.EVENT_CHECKIN)));
+        Map<String, Object> plain = service.roster(ACTOR, CLUB, ACTIVITY);
+        assertEquals(false, plain.get("phoneIncluded"));
+        assertEquals(false, ((Map<?, ?>) ((List<?>) plain.get("arrived")).get(0)).containsKey("phone"));
+    }
+
+    /** C-05(2026-11-02):名册以报名姓名示人;没填姓名、昵称是默认「城瘾用户」时不给编号(第十二轮 k3),不下发密文列。 */
+    @Test
+    void rosterShowsSignupNameAndNeverTheStoredColumn() {
+        Map<String, Object> named = row(51L, "城瘾用户", NOW, null, 0);
+        named.put("realNameStored", "周晓舟");
+        Map<String, Object> unnamed = row(52L, "城瘾用户", null, null, 0);
+        Map<String, Object> nick = row(54L, "阿舟", null, null, 0);
+        when(mapper.selectPaidRoster(ACTIVITY)).thenReturn(Arrays.asList(named, unnamed, nick));
+        when(mapper.selectWaitlistRoster(ACTIVITY)).thenReturn(Collections.emptyList());
+
+        Map<String, Object> roster = service.roster(ACTOR, CLUB, ACTIVITY);
+
+        Map<?, ?> arrivedRow = (Map<?, ?>) ((List<?>) roster.get("arrived")).get(0);
+        assertEquals("周晓舟", arrivedRow.get("displayName"));
+        assertEquals(false, arrivedRow.containsKey("realNameStored"));
+        List<?> noShow = (List<?>) roster.get("noShow");
+        assertEquals("城瘾用户", ((Map<?, ?>) noShow.get(0)).get("displayName"));
+        assertEquals("阿舟", ((Map<?, ?>) noShow.get(1)).get("displayName"));
+    }
+
     @Test
     void jdbcLocalDateTimeCheckinIsReturnedAsArrived() {
         LocalDateTime arrivedAt = LocalDateTime.of(2026, 9, 22, 8, 3, 51);

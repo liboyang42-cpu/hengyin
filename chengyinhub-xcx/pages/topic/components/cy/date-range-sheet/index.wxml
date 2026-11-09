@@ -20,7 +20,7 @@
 
     <!-- 越界提示:不落值必须同时说清为什么没落值,否则用户看到的是「点了没反应」。
          走 cy-inline-error 而不是自造一行字 —— 站内联反馈只有这一个组件。 -->
-    <cy-inline-error wx:if="{{_overTitle}}" kind="data" title="{{_overTitle}}" sub="{{_overSub}}" />
+    <cy-inline-error wx:if="{{_overTitle}}" kind="error" title="{{_overTitle}}" sub="{{_overSub}}" />
 
     <cy-calendar
       class="drs__cal"

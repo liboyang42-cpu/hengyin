@@ -12,7 +12,7 @@ Page({
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
     clubId: null,
-    requests: [],
+    requests: [], leavingMemberId: null, // CP-14:处理完的那张卡先淡出再从列表摘掉
     // 副标题带待审条数(Figma 30:11)。
     // ⚠️ 2026-09-11 复核:上一版注释写「后端 owner-only」是错的 ——
     //    ClubMemberServiceImpl.canApproveMembers 放行三种人:主理人、role=1 管理员、
@@ -42,7 +42,8 @@ Page({
   buildIntro(count) {
     // CU-C-96:待审为 0 时顶部条不再重复「暂无待审申请」—— 中央空态已经写着同一句,
     // 同屏两句一字不差的话既占位又让人以为漏看了一处。
-    return (count > 0 ? count + ' 条待审 · ' : '') + '可直接通过或拒绝'
+    // 第十轮 f3 第 5 项(p3 F7):动作说明属说明小字 —— 每张卡上就是「通过 / 拒绝」两颗按钮,只报条数。
+    return count > 0 ? count + ' 条待审' : ''
   },
 
   onLoad(options) {
@@ -138,25 +139,26 @@ Page({
     const row = this.data.requests.find(function (item) {
       return String(item.memberId) === String(memberId)
     })
-    const name = (row && row.nickname) || '城瘾玩家'
-    modal.show(approve ? {
+    // 第十二轮 k3(p3 N4):默认昵称分不出人时,确认层带上申请时刻(与卡片上「申请于」同一个值)。
+    const baseName = (row && row.nickname) || '城瘾玩家'
+    const name = baseName === '城瘾用户' && row && row.requestTimeText ? baseName + ' · ' + row.requestTimeText + ' 申请' : baseName
+    // 第十二轮 k9(p3 N13):拒绝原来要点三次(拒绝 → 危险确认 → 原因弹层 → 确认拒绝)。拒绝可逆、原因选填,
+    // 并成一个弹层:标题指名道姓,原因可不填,点「确认拒绝」就发。
+    if (!approve) { this.askRejectReason(memberId, name); return }
+    modal.show({
       title: '通过「' + name + '」的入会申请',
       content: '通过后，对方将成为正式成员，可查看成员名单并使用成员功能。',
       confirmText: '通过',
       cancelText: '取消',
       success(result) { if (result.confirm) that.review(memberId, approve) },
-    } : {
-      dangerKey: 'club.joinRequest.reject',   // 登记表 scripts/danger-action-registry.json 指向的确认层
-      dangerParams: { name },
-      success(result) { if (result.confirm) that.askRejectReason(memberId) },
     })
   },
 
   // F-L3-09:拒绝原因选填,随「入会申请未通过」通知发给申请人;后端同样限 500 字并做内容检查。
-  askRejectReason(memberId) {
+  askRejectReason(memberId, name) {
     const that = this
     modal.show({
-      title: '拒绝原因（选填）',
+      title: '拒绝「' + (name || '城瘾玩家') + '」的入会申请?',
       editable: true,
       // PR10 F-L3-09:500 字原因用多行框,不再挤在单行 input 里
       multiline: true,
@@ -214,10 +216,10 @@ Page({
           actingAction: '',
           actionErrorMemberId: null,
           actionErrorText: '',
-          requests: that.data.requests.filter(function (item) { return item.memberId != memberId }),
+          leavingMemberId: memberId,
           introText: that.buildIntro(that.data.requests.filter(function (item) { return item.memberId != memberId }).length),
         })
-        toast.success(approve ? '已通过' : '已拒绝')
+        toast.success(approve ? '已通过' : '已拒绝'); setTimeout(function () { that.setData({ leavingMemberId: null, requests: that.data.requests.filter(function (item) { return item.memberId != memberId }) }) }, 160)
         const channel = that.getOpenerEventChannel && that.getOpenerEventChannel()
         if (channel && channel.emit) channel.emit('joinRequestsChanged')
       },

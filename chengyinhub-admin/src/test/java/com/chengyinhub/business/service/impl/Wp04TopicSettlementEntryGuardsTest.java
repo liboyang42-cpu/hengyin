@@ -34,6 +34,8 @@ class Wp04TopicSettlementEntryGuardsTest {
         CmsRegistration activity = new CmsRegistration(); activity.setId(51L); activity.setOwnerType(2L);
         activity.setOwnerId(201L); activity.setTopicId(11L); activity.setPaymentStatus(2); activity.setVerificationStatus(0);
         when(f.evidence.selectTopicActivityCashRowsForUpdate(11L)).thenReturn(List.of(activity));
+        // 第十二轮 k5:不是在世俱乐部场次的活动壳,照旧进主题现金基数并拒结。
+        when(f.evidence.selectTopicNonClubSessionCashRowsForUpdate(11L)).thenReturn(List.of(activity));
         IllegalStateException failure = assertThrows(IllegalStateException.class,
                 () -> ReflectionTestUtils.invokeMethod(f.service,"settleTopic",f.topic,new SettlementRule()));
         assertTrue(failure.getMessage().contains("ACTIVITY_CASH_BASIS_UNSUPPORTED"));
@@ -48,6 +50,8 @@ class Wp04TopicSettlementEntryGuardsTest {
         CmsRegistration activity = new CmsRegistration(); activity.setId(51L); activity.setOwnerType(2L);
         activity.setOwnerId(201L); activity.setTopicId(11L); activity.setPaymentStatus(2); activity.setVerificationStatus(0);
         when(f.evidence.selectTopicActivityCashRowsForUpdate(11L)).thenReturn(List.of(activity));
+        // 第十二轮 k5:不是在世俱乐部场次的活动壳,照旧进主题现金基数并拒结。
+        when(f.evidence.selectTopicNonClubSessionCashRowsForUpdate(11L)).thenReturn(List.of(activity));
         IllegalStateException failure = assertThrows(IllegalStateException.class,
                 () -> ReflectionTestUtils.invokeMethod(f.service,"settleTopic",f.topic,new SettlementRule()));
         assertTrue(failure.getMessage().contains("ACTIVITY_CASH_BASIS_UNSUPPORTED"));

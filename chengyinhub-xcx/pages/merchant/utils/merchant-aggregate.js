@@ -95,7 +95,7 @@ function normalizeMarketingAnalytics(data) {
       || (data.windowDays !== 7 && data.windowDays !== 30)
       || !data.window || typeof data.window !== 'object'
       || data.window.timezone !== 'Asia/Shanghai'
-      || data.window.basis !== 'COMPLETE_CALENDAR_DAYS'
+      || data.window.basis !== 'DAYS_INCL_TODAY'
       || !Array.isArray(data.stages) || data.stages.length !== ANALYTICS_STAGE_CODES.length
       || !data.touchpoints || typeof data.touchpoints !== 'object'
       || data.touchpoints.coverage !== 'PARTIAL'
@@ -158,7 +158,7 @@ function normalizeMarketingAnalytics(data) {
     windowDays: data.windowDays,
     window: {
       timezone: 'Asia/Shanghai',
-      basis: 'COMPLETE_CALENDAR_DAYS',
+      basis: 'DAYS_INCL_TODAY',
       previousStartInclusive: previousStart,
       currentStartInclusive: currentStart,
       endExclusive,

@@ -365,6 +365,18 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     public ClubMembershipInvoice invoice(Long principalMemberId, Long clubId, Long invoiceId) {
         // D-12：开关关闭时既有账单仍可查询，只做成员与归属校验。
         resolveMember(principalMemberId, clubId);
+        return ownedInvoice(principalMemberId, clubId, invoiceId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClubMembershipInvoice invoiceReadOnly(Long principalMemberId, Long clubId, Long invoiceId) {
+        if (!positive(principalMemberId) || !positive(clubId)) forbidden();
+        validateMemberAccess(clubAccessService.resolveReadOnly(principalMemberId, clubId, null), principalMemberId, clubId);
+        return ownedInvoice(principalMemberId, clubId, invoiceId);
+    }
+
+    private ClubMembershipInvoice ownedInvoice(Long principalMemberId, Long clubId, Long invoiceId) {
         ClubMembershipInvoice row = clubMembershipMapper.selectInvoiceById(invoiceId);
         validateOwnedInvoice(row, clubId, principalMemberId);
         row.setIdempotencyKey(null);
@@ -588,6 +600,11 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     private ClubAccessContext resolveMember(Long principalMemberId, Long clubId) {
         if (!positive(principalMemberId) || !positive(clubId)) forbidden();
         ClubAccessContext access = clubAccessService.resolve(principalMemberId, clubId, null);
+        return validateMemberAccess(access, principalMemberId, clubId);
+    }
+
+    private ClubAccessContext validateMemberAccess(ClubAccessContext access, Long principalMemberId, Long clubId) {
+        if (!positive(principalMemberId) || !positive(clubId)) forbidden();
         if (access == null || !principalMemberId.equals(access.getPrincipalMemberId())
                 || !clubId.equals(access.getClubId())) forbidden();
         return access;

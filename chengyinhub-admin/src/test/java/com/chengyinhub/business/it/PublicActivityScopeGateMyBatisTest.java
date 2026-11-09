@@ -114,6 +114,60 @@ class PublicActivityScopeGateMyBatisTest {
         }
     }
 
+    /**
+     * ROUND10 j1 F1(2026-11-04 拍板):商家与俱乐部活动上限都是「同时 3 场」,已结束、已取消的不占名额。
+     * 配额口径是独立的一条 SQL;主页/名片的历史总数仍走 selectCmsActivityNumByMemberId,不能被一起改窄。
+     */
+    @Test
+    void activityQuotaCountsOnlyLiveUncancelledRows() throws Exception {
+        try (SqlSession session = factory().openSession(true);
+             Statement statement = session.getConnection().createStatement()) {
+            recreateTables(statement);
+            seed(statement);
+            // 补两行:未定结束时间的(视为未结束,占名额)与已删除的(不占);另一个会员的行不串号。
+            statement.execute("INSERT INTO cms_activity (id,member_id,name,status,publish_status,del_flag,"
+                    + "cancel_time,end_date,club_id,create_time) VALUES "
+                    + "(6,7,'无结束时间',0,0,0,NULL,NULL,NULL,NOW()),"
+                    + "(7,7,'已删除',1,1,2,NULL,DATE_ADD(NOW(), INTERVAL 30 DAY),NULL,NOW()),"
+                    + "(8,8,'别人的',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 30 DAY),NULL,NOW())");
+            CmsActivityMapper mapper = session.getMapper(CmsActivityMapper.class);
+            CmsActivityServiceImpl service = new CmsActivityServiceImpl();
+            ReflectionTestUtils.setField(service, "cmsActivityMapper", mapper);
+            // 未结束·公域、未结束·社群(俱乐部同口径)、无结束时间 = 3;已结束×2、已取消、已删除、别人的都不算
+            assertEquals(3, service.selectActivityQuotaUsedByMemberId(7L),
+                    "配额只数未结束且未取消的活动;已结束的(公域和社群都一样)不能再占 3 场名额");
+            assertEquals(1, service.selectActivityQuotaUsedByMemberId(8L));
+            // 历史总数口径不变:未删除的 6 行都算
+            assertEquals(6, service.selectCmsActivityNumByMemberId(7L));
+        }
+    }
+
+    /**
+     * 第十二轮 k1 第 4 项(j6 N7,2026-11-05 业主):俱乐部开的场次不占「同时 3 个活动」名额。
+     * 场次 = 挂主题(topic_id)的活动;场次本身挂 club_id,或所挂主题属于俱乐部(公开自办场次不挂 club_id)都算俱乐部场次。
+     * 商家与俱乐部自己发布的活动(不挂主题,含挂 club_id 的社群活动)、商家主题的自办场次仍计数。
+     */
+    @Test
+    void clubSessionsDoNotTakeActivityQuota() throws Exception {
+        try (SqlSession session = factory().openSession(true);
+             Statement statement = session.getConnection().createStatement()) {
+            recreateTables(statement);
+            seed(statement);
+            statement.execute("INSERT INTO cms_topic (id, club_id, del_flag) VALUES (80, 700, 0), (81, NULL, 0)");
+            statement.execute("INSERT INTO cms_activity (id,member_id,name,status,publish_status,del_flag,"
+                    + "cancel_time,end_date,topic_id,club_id,create_time) VALUES "
+                    + "(11,7,'俱乐部场次·挂 club_id',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 3 DAY),80,700,NOW()),"
+                    + "(12,7,'俱乐部场次·挂 club_id',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 4 DAY),80,700,NOW()),"
+                    + "(13,7,'俱乐部公开主题自办场次',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 5 DAY),80,NULL,NOW()),"
+                    + "(14,7,'商家主题自办场次',1,1,0,NULL,DATE_ADD(NOW(), INTERVAL 6 DAY),81,NULL,NOW())");
+            CmsActivityServiceImpl service = new CmsActivityServiceImpl();
+            ReflectionTestUtils.setField(service, "cmsActivityMapper", session.getMapper(CmsActivityMapper.class));
+            // seed 里未结束·公域 + 未结束·社群(不挂主题的俱乐部活动,照常计数)= 2;商家主题自办场次 +1;三条俱乐部场次不算
+            assertEquals(3, service.selectActivityQuotaUsedByMemberId(7L),
+                    "俱乐部场次不占名额;发布的活动与商家主题场次照常计数");
+        }
+    }
+
     private List<Long> ids(List<CmsActivity> rows) {
         return rows.stream().map(CmsActivity::getId).sorted().collect(Collectors.toList());
     }

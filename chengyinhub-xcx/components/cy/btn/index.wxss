@@ -75,9 +75,9 @@
 /* accent(品牌紫渐变)已按规范真源 §2.1 废止 —— 变体本身删除,index.js 的 observer
    把 accent / 旧 kind="blue" 一并映射到 primary，避免调用点漏改后落到无样式的
    .btn--accent 上变成一个没有背景的透明按钮。 */
-.btn--ghost {     /* 弱操作 / 工具:玻璃底 */
+.btn--ghost {     /* 弱操作 / 工具:玻璃底(日间商家域为浅灰底,见 --cy-comp-btn-ghost-bg) */
   color: var(--cy-text-title);
-  background: var(--cy-bg-glass);
+  background: var(--cy-comp-btn-ghost-bg, var(--cy-bg-glass));
 }
 /* danger:实心红底白字(规范真源 §2.1,用户裁决)。原来是「红描边 + 透明底」，
    描边已废止;危险操作要在一屏里一眼可辨,实心比描边更强。 */

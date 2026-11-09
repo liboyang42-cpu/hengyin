@@ -93,14 +93,14 @@ function assertSharedPlayerCardRecipe(sources) {
 //   const sources = {
 //     sheet: read('components/cy/scene-sheet/index.wxss'),
 //     reference: read('components/cy/scene-roam-history/index.wxss'),
-//     route: read('components/cy/scene-route-content/index.wxss'),
+//     route: read('subpackageMember/components/cy/scene-route-content/index.wxss'),
 //     coupon: read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxss'),
 //     orderHistory: read('subpackageMember/components/cy/scene-member-order-history/index.wxss'),
 //     orderDetail: read('subpackageMember/components/cy/scene-member-order-detail/index.wxss'),
 //     profile: read('subpackageMember/components/cy/profile/index.wxss'),
-//     income: read('components/cy/scene-asset-income-detail/index.wxss'),
-//     invite: read('components/cy/scene-member-invite-history/index.wxss'),
-//     withdraw: read('components/cy/scene-member-withdraw-history/index.wxss'),
+//     income: read('subpackageA/components/scene-asset-income-detail/index.wxss'),
+//     invite: read('subpackageA/components/scene-member-invite-history/index.wxss'),
+//     withdraw: read('subpackageMember/components/cy/scene-member-withdraw-history/index.wxss'),
 //   }
 //   assertSharedPlayerCardRecipe(sources)
 //   assert.throws(() => assertSharedPlayerCardRecipe({
@@ -113,7 +113,7 @@ function assertSharedPlayerCardRecipe(sources) {
 // })
 
 test('half 场景即使位于深链子栈也只能显示叉号，不得被栈长带回返回键', () => {
-  const wxml = read('components/cy/scene-deep-link/index.wxml')
+  const wxml = read('subpackageMember/components/cy/scene-deep-link/index.wxml')
   assert.match(wxml, /can-back="\{\{sceneCurrent\.variant !== 'half' && \(sceneCurrent\.canBack \|\| sceneStack\.length > 1\)\}\}"/)
 })
 
@@ -145,8 +145,8 @@ test('商家弹窗复用 Airbnb 白底平行+发丝线代码，不渲染灰色�
   const sources = {
     sheet: read('components/cy/scene-sheet/index.wxss'),
     more: read('pages/merchant/index/index.wxss'),
-    route: read('components/cy/scene-route-content/index.wxss'),
-    withdraw: read('components/cy/scene-member-withdraw-history/index.wxss'),
+    route: read('subpackageMember/components/cy/scene-route-content/index.wxss'),
+    withdraw: read('subpackageMember/components/cy/scene-member-withdraw-history/index.wxss'),
   }
   assertMerchantWhiteRecipe(sources)
   assert.throws(() => assertMerchantWhiteRecipe({

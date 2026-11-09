@@ -6,7 +6,9 @@
   <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="我的角色卡" safe-top="{{false}}" />
   <view class="character-content">
-    <block wx:if="{{state === 'ready' || state === 'template'}}">
+    <!-- 第十二轮 k9(p1 N-8):主题没有可见属性时这张卡没有内容可看,链接直达给「链接已失效 · 返回」,不叠四行解释 -->
+    <cy-empty wx:if="{{(state === 'ready' || state === 'template') && !card.attributes.length && !card.rpg}}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="backToParticipation" />
+    <block wx:elif="{{state === 'ready' || state === 'template'}}">
       <cy-card>
         <view class="character-heading">
           <text class="character-title">{{card.created ? '本人角色卡' : '角色模板'}}</text>
@@ -14,9 +16,6 @@
         </view>
         <text class="character-note">{{card.definitionNote}}</text>
       </cy-card>
-      <view wx:if="{{!card.attributes.length && !card.rpg}}" class="character-section">
-        <cy-empty kind="empty" title="{{card.created ? '暂无可展示属性' : '模板暂无可展示属性'}}" sub="该主题尚未配置可见属性" />
-      </view>
       <view wx:for="{{card.attributes}}" wx:key="stateKey" class="character-section">
         <cy-card>
           <view class="character-heading">

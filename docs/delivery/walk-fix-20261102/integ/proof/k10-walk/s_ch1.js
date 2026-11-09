@@ -1,0 +1,10 @@
+await h.tap("创建章节"); await sleep(1200);
+await h.typeAt((await h.inputs()).findIndex(x=>x.ph==="章节名称"),"序章 · 停电的唱片店",true);
+await w.page.mouse.click(195,243); await sleep(700); await h.tap("文字",{exact:true}); await sleep(700);
+await h.typeAt((await h.inputs()).findIndex(x=>x.ph==="写下这一段故事…"),"雨打在卷帘门上。门缝里塞着一张便条：「磁带在三条街里。先去报亭。」");
+await h.tap("完成",{exact:true}); await sleep(1000);
+await h.tap("编辑章节"); await sleep(1000);
+const up = await h.up("添加音频","k10-intro.mp3");
+await w.shot("k10-c03-ch1edit");
+await w.page.mouse.click(336,123); await sleep(1200);
+return [up, (await h.say()).slice(0,300)];

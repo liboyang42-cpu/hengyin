@@ -245,7 +245,7 @@ def main():
                              #   发布者 9003 自己要是 club_leader 才能开商家池(resolveMerchantPoolFlag),
                              #   所以「发布者的俱乐部」与「执行俱乐部」只能是两个。
                              (9008, "执行俱乐部主理人", "13900000008"),
-                             # ③ 一个账号一张票(ExploreAccountTicketGate),同一期要跑第二张票就得换人
+                             # 第二个玩家账号(2026-11-02 起已不限每人 1 张,保留它给多人链路用)
                              (9009, "玩家二号", "13900000009")):
         merchant_owner = mid in (9002, 9005, 9006, 9007)
         ex("INSERT INTO ums_member(id,nickname,phone,role,user_type,status,create_time) "

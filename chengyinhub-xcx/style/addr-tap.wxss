@@ -1,0 +1,4 @@
+/* 第九轮 m1-9 地址点开地图:一行小字的触达区垂直撑到 88rpx,版面不动。
+   isolated 组件收不到全局样式,在自己的 wxss 里 @import 这一份。 */
+.cy-addr-tap { position: relative; }
+.cy-addr-tap::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: var(--cy-comp-icon-pair-standard-hit); transform: translateY(-50%); }

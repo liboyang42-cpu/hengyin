@@ -3,9 +3,12 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.domain.vo.NearbyNodeVO;
 import com.chengyinhub.business.service.IApiMapService;
 import com.chengyinhub.business.service.IMapGeocodeService;
+import com.chengyinhub.business.service.IMapWeatherService;
+import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,6 +46,9 @@ public class ApiMapController extends BaseController {
 
     @Autowired
     private IMapGeocodeService mapGeocodeService;
+
+    @Autowired
+    private IMapWeatherService mapWeatherService;
 
     @Value("${tencent.map.reverse-geocode-per-minute:60}")
     private int reverseGeocodePerMinute;
@@ -136,6 +143,45 @@ public class ApiMapController extends BaseController {
         }
         return AjaxResult.success(mapGeocodeService.searchPlaces(kw, lng, lat));
     }
+
+    /** 第九轮地图氛围:匿名可读(SecurityConfig 精确放行 GET 这一条),只回 kind/intensity,供应商失败一律 clear。 */
+    @GetMapping("/weather")
+    @Operation(summary = "地图天气氛围")
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.IP)
+    public AjaxResult weather(String lat, String lng) {
+        Double la = Convert.toDouble(lat);
+        Double lo = Convert.toDouble(lng);
+        if (la == null || lo == null || !(la >= -90D && la <= 90D) || !(lo >= -180D && lo <= 180D)) {
+            return AjaxResult.error("经纬度格式不正确");
+        }
+        return AjaxResult.success(mapWeatherService.weatherAt(la, lo));
+    }
+
+    /** 2026-11-03 第九轮 m1-9:只有文字地址的地方点开地图。与逆地理、搜地点共用同一份每分钟额度;拿不准回空。 */
+    @PostMapping("/geocode")
+    @Operation(summary = "地址转坐标(只读展示)")
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.IP)
+    public AjaxResult geocode(String address, String region) {
+        String addr = address == null ? "" : address.trim();
+        String city = region == null ? "" : region.trim();
+        if (addr.isEmpty() || addr.length() > MAX_ADDRESS_LENGTH || city.length() > MAX_KEYWORD_LENGTH) {
+            return AjaxResult.error("地址格式不正确");
+        }
+        if (!tryConsumeReverseGeocodeBudget()) {
+            return AjaxResult.success(Collections.emptyMap());
+        }
+        double[] coords = mapGeocodeService.locateAddress(addr, city);
+        if (coords == null) {
+            return AjaxResult.success(Collections.emptyMap());
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("lng", coords[0]);
+        data.put("lat", coords[1]);
+        return AjaxResult.success(data);
+    }
+
+    /** 地址最长字数:门牌地址够用 */
+    private static final int MAX_ADDRESS_LENGTH = 120;
 
     private synchronized boolean tryConsumeReverseGeocodeBudget() {
         long now = System.currentTimeMillis();

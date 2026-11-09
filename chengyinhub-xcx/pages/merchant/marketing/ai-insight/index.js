@@ -616,7 +616,9 @@ Page({
         max: isMax,
       };
     });
-    return { bars, total, peakText: peak ? peak + '上到店最多' : '' };
+    // M-26:服务端时段是单字(早/午/晚/夜),直接拼「上」会读成「午上」。
+    const PEAK_WORD = { 早: '早上', 午: '中午', 晚: '晚上', 夜: '夜里' };
+    return { bars, total, peakText: peak ? (PEAK_WORD[peak] || peak) + '到店最多' : '' };
   },
 
   _buildSources(facts) {

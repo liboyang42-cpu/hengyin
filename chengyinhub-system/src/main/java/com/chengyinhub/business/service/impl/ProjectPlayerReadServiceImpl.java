@@ -121,7 +121,7 @@ public class ProjectPlayerReadServiceImpl implements IProjectPlayerReadService {
                     && (topic.getClubId() == null || topic.getClubId() <= 0L);
             if (!merchantPublisher) {
                 if (shopDayMerchantRosterService == null) {
-                    throw new RuntimeException("探店日商家名单服务未就绪");
+                    throw new RuntimeException("自由探索商家名单服务未就绪");
                 }
                 return shopDayMerchantRosterService.list(memberId, topicId, sensitiveContactVisible);
             }

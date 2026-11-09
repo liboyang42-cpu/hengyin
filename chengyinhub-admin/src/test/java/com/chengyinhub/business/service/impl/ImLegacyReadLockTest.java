@@ -66,6 +66,21 @@ class ImLegacyReadLockTest {
         }
     }
 
+    /** 第十二轮 k2(j6 N6):外人对别人的会话标已读 / 删除,与读消息同一回答 403「无权查看该会话」,不落任何行。 */
+    @Test
+    void outsiderReadAndDeleteAnswerForbiddenAndChangeNothing() {
+        for (Runnable call : new Runnable[] { () -> service.markRead(9L, 100L), () -> service.markRead(9L, 100L, 5L),
+                () -> service.deleteConversation(9L, 100L) }) {
+            ServiceException error = assertThrows(ServiceException.class, call::run);
+            assertEquals(Integer.valueOf(403), error.getCode());
+            assertEquals("无权查看该会话", error.getMessage());
+        }
+        verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());
+        verify(members, never()).markDeleted(anyLong(), anyLong());
+        service.deleteConversation(1L, 100L);
+        verify(members).markDeleted(100L, 1L);
+    }
+
     @Test
     void deletedMembershipRejectsBeforeMessageReadOrMutation() {
         active.setDeleted(1);
@@ -93,10 +108,11 @@ class ImLegacyReadLockTest {
     }
 
     @Test
-    void missingMembershipKeepsLegacyNoopAndReadHasTransactionBoundary() throws Exception {
+    void missingMembershipIsForbiddenAndReadHasTransactionBoundary() throws Exception {
+        // 第十二轮 k2(j6 N6):原先不在会话里也静默回「操作成功」;现与读消息同一回答 403。
         when(members.selectByConvAndMemberForUpdate(100L, 1L)).thenReturn(null);
         when(members.selectByConvAndMember(100L, 1L)).thenReturn(null);
-        assertDoesNotThrow(() -> service.markRead(1L, 100L));
+        assertEquals(Integer.valueOf(403), assertThrows(ServiceException.class, () -> service.markRead(1L, 100L)).getCode());
         // 锁序防死锁：最新可见消息在成员锁之前以共享锁读取；拒绝时仍不得写任何消息/已读事实。
         verify(messages, never()).insertImMessage(any());
         verify(members, never()).markReadVisible(anyLong(), anyLong(), anyLong(), anyString());

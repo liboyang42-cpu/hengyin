@@ -1,0 +1,18 @@
+await h.sc(800);
+await h.tap("添加章节"); await sleep(1200);
+await h.setAt((await h.inputs()).findIndex(x => x.ph === "章节名称"), "尾声 · 磁带转起来");
+await w.page.mouse.click(195, 243); await sleep(700); await h.tap("文字", { exact: true }); await sleep(700);
+await h.setAt((await h.inputs()).findIndex(x => x.ph === "写下这一段故事…"), "三段磁带接在一起。按下播放键，雨停了。");
+await h.tap("完成", { exact: true }); await sleep(1200);
+await h.sc(1200);
+globalThis.FIND = "编辑章节";
+const pos = await w.page.evaluate((t) => { const out = []; (function walk(root) { for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) walk(el.shadowRoot); if (el.childElementCount === 0 && el.textContent.trim() === t) { const b = el.getBoundingClientRect(); if (b.height > 0) out.push([b.x + b.width / 2, b.y + b.height / 2]); } } })(document); return out; }, "编辑章节");
+const last = pos[pos.length - 1];
+await w.page.mouse.click(last[0], last[1]); await sleep(1300);
+const up = await h.up("添加音频", "k10-ending.mp3");
+await h.sc(1500);
+const sw = await w.page.evaluate(() => { let r = null; (function walk(root) { for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) walk(el.shadowRoot); if (el.childElementCount === 0 && el.textContent.trim() === '设为结局') { const b = el.getBoundingClientRect(); if (b.height > 0) r = [b.x, b.y + b.height / 2]; } } })(document); return r; });
+await w.page.mouse.click(336, sw[1]); await sleep(900);
+await w.shot("k10-e30-ending");
+const t = (await h.say()).slice(-500);
+return [up.slice(-80), t];

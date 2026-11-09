@@ -207,6 +207,60 @@ class ChapterMerchantNodeServiceImplTest {
                 "新提交一律待审 —— 直接可见就等于没有审核");
     }
 
+    /** M-07:首个承接商家接管本章唯一的主办方占位节点，玩家不再看到同一章两个点。 */
+    @Test
+    @Timeout(5)
+    void firstMerchantAdoptsTheChapterPlaceholderInsteadOfAddingASecondStop() {
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper =
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
+        CmsTopicNode placeholder = new CmsTopicNode();
+        placeholder.setId(74L);
+        placeholder.setTopicId(TOPIC);
+        placeholder.setChapterId(CHAPTER);
+        placeholder.setName("占位");
+        placeholder.setUnlockAfterNodeId(73L);
+        CmsTopicNode otherChapter = new CmsTopicNode();
+        otherChapter.setId(73L);
+        otherChapter.setTopicId(TOPIC);
+        otherChapter.setChapterId(CHAPTER + 1);
+        when(nodeMapper.selectByTopicForUpdate(TOPIC)).thenReturn(java.util.Arrays.asList(otherChapter, placeholder));
+
+        service.submit(ME, CHAPTER, draft());
+
+        verify(nodeSvc, never()).insertCmsTopicNode(any());
+        ArgumentCaptor<CmsTopicNode> cap = ArgumentCaptor.forClass(CmsTopicNode.class);
+        verify(nodeSvc).updateCmsTopicNode(cap.capture());
+        assertEquals(Long.valueOf(74L), cap.getValue().getId(), "剧情块引用的那一行被接管");
+        assertEquals(ME, cap.getValue().getMerchantMemberId());
+        assertEquals("幸会咖啡", cap.getValue().getName());
+        assertEquals(Long.valueOf(73L), cap.getValue().getUnlockAfterNodeId(), "解锁关系保留");
+        assertEquals(Integer.valueOf(ChapterMerchantNodeServiceImpl.AUDIT_PENDING), cap.getValue().getNodeAuditStatus());
+    }
+
+    /** M-07:本章已有别家商家点位(含待审)或占位不唯一时不猜，照旧另建一行。 */
+    @Test
+    @Timeout(5)
+    void placeholderIsNotAdoptedWhenAnotherMerchantAlreadyHoldsTheChapter() {
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper =
+                mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
+        CmsTopicNode placeholder = new CmsTopicNode();
+        placeholder.setId(74L);
+        placeholder.setChapterId(CHAPTER);
+        CmsTopicNode other = new CmsTopicNode();
+        other.setId(75L);
+        other.setChapterId(CHAPTER);
+        other.setMerchantMemberId(OTHER);
+        other.setNodeAuditStatus(ChapterMerchantNodeServiceImpl.AUDIT_PENDING);
+        when(nodeMapper.selectByTopicForUpdate(TOPIC)).thenReturn(java.util.Arrays.asList(placeholder, other));
+
+        service.submit(ME, CHAPTER, draft());
+
+        assertNull(captureSaved().getId(), "新建一行");
+        verify(nodeSvc, never()).updateCmsTopicNode(any());
+    }
+
     /**
      * ★闸①:完全不在这一章的承接链路里(没申请也没供给)⇒ 拒。
      * 否则任何商家都能往别人主题里塞节点。

@@ -304,6 +304,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             bindCanonicalEventLead(actorMemberId, request.getClubId(), access.getOwnerMemberId(),
                     leadMemberId, activityId, series.getId());
         }
+        series.setWindowWarning(clubSessionService.themeWindowWarning(request.getTopicId(), dates));
         return series;
     }
 

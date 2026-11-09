@@ -48,11 +48,12 @@ function createAudioSession(wxApi) {
     // its identity; duplicate registration must retain pending resume state.
     if (entries.has(ctx)) return ctx;
     hook();
+    ctx.obeyMuteSwitch = false;
     entries.set(ctx, { kind: (opts && opts.kind) || 'audio', wasPlaying: false, interrupted: false });
     return ctx;
   }
   function unregister(ctx) { entries.delete(ctx); }
-  function pauseAll() { entries.forEach((ent, ctx) => pauseEntry(ctx, ent, false)); }
+  function pauseAll(resumable = true) { entries.forEach((ent, ctx) => { pauseEntry(ctx, ent, false); if (!resumable) ent.wasPlaying = false; }); }
   function resumeAll() { entries.forEach((ent, ctx) => { if (ent.wasPlaying) resumeEntry(ctx, ent); }); }
 
   function apply(on) {

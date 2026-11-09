@@ -1,7 +1,8 @@
 const modal = require('../../../utils/modal.js');
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
+const { isValidMobile } = require('../../../utils/form-state.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantIdentity = require('../../../utils/merchant-identity-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
@@ -13,7 +14,7 @@ const STEP_HEADLINES = ['先认识你的店', '告诉大家怎样找到你', '�
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const timeOptions = require('../../../utils/time-picker-options.js');
-const publisherIdentity = require('../../../utils/publisher-identity.js');
+const publisherIdentity = require('../../../utils/publisher-identity.js'); const merchantIndustry = require('../utils/merchant-industry.js'); // M-16
 
 function displayText(value) {
   if (value === null || value === undefined) return '';
@@ -74,7 +75,7 @@ Page({
     dots: [0, 1, 2, 3],
     // 表单字段
     name: '',             // 店铺名称
-    preference: '',       // 经营类目(逗号分隔)
+    industryIds: [], industryNames: '', industrySheet: { show: false, options: [], value: [], loading: false, error: '' }, // M-16 行业类型胶囊(与门店信息同一份)
     phone: '',
     address: '',          // 店铺地址
     // 选点坐标:wx.chooseLocation 本来就跟 address 一起返回,以前被丢掉了,
@@ -92,7 +93,7 @@ Page({
     identityConsented: false,
     identityHint: publisherIdentity.CONSENT_TEXT,
     identityDoneHint: publisherIdentity.ALREADY_REGISTERED_HINT,
-    canNext: false,
+    canNext: false, fieldErrors: {}, hoursErrors: { days: '', time: '' }, // 第五轮 D:字段下方红字(键 = 字段名)
     submitting: false,
     submitError: '',
     submitErrorKind: '',
@@ -143,7 +144,7 @@ Page({
       wizardMorph.cancelIntroMorph(this); this._bootstrapSettled = false;
       this.setData({
         mode: 'form', introMode: true, step: 1,
-        name: '', preference: '', phone: '', address: '',
+        name: '', phone: '', address: '',
         locationLat: null, locationLng: null, businessTime: '', description: '',
         businessLicense: '', derivatives: [], canNext: false,
         submitting: false, submitError: '', submitErrorKind: '',
@@ -251,7 +252,7 @@ Page({
             apply: apply,
             step: keepDraft ? that.data.step : 1,
             name: keepDraft ? that.data.name : apply.name,
-            preference: keepDraft ? that.data.preference : apply.preference,
+            industryIds: keepDraft ? that.data.industryIds : industryIdsOf(source),
             phone: keepDraft ? that.data.phone : apply.phone,
             address: keepDraft ? that.data.address : apply.address,
             // 故意不回填坐标:回填了再提交,服务端会把它当成"商家刚在地图上点的"而标成已确认。
@@ -299,7 +300,7 @@ Page({
       step: step,
       stepIn: false
     }, this.validate);
-    if (step === 4) this.ensureIdentityStatus();
+    if (step === 4) this.ensureIdentityStatus(); if (this.data.industryIds.length && !this.data.industryNames && !this._industryRows) this.loadIndustryRows(); // M-16 回填的行业类型补名字
     var that = this;
     wx.nextTick(function () { that.setData({ stepIn: true }); });
   },
@@ -357,24 +358,94 @@ Page({
   },
   onInput(e) { var f = e.currentTarget.dataset.field;
     this.setData({ [f]: e.detail.value }, this.validate);
+    if (this.data.fieldErrors[f]) this.setData({ fieldErrors: Object.assign({}, this.data.fieldErrors, { [f]: '' }) });
   },
 
   // 置灰的「继续/提交」被点 → 报出本步第一条没交的必填,别让按钮静默地按不动。
+  // 第五轮 D(业主):填写类问题写在对应字段下方红字并滚到第一条;同意勾选仍按原样弹提示。
   onNextDisabledTap() {
     const d = this.data;
-    if (d.step === 1) toast(!d.name ? '请填写店铺名称' : '请填写联系电话');
-    else if (d.step === 2) toast(!d.address ? '请填写店铺地址' : '请选择营业时间');
-    else if (d.step === 3) toast('请上传营业执照');
-    else if (d.step === 4) {
-      // 第 4 步唯一拦人的项是经营者实名,报第一条不满足的原因(规则在 utils/publisher-identity.js)
-      const check = publisherIdentity.checkIdentityForm(this.identityForm());
-      if (!check.ok) toast(check.message);
+    const errors = {};
+    if (d.step === 1) {
+      if (!d.name) errors.name = '请填写店铺名称';
+      // M-16(l5):行业类型必填,同样写在该行下方红字
+      if (!d.industryIds.length) errors.industryIds = '请选择行业类型';
+      if (!d.phone) errors.phone = '请填写联系电话';
+      else if (!isValidMobile(d.phone)) errors.phone = '请填写11位手机号';
+    } else if (d.step === 2) {
+      if (!d.address) errors.address = '请填写店铺地址';
+      if (!d.businessTime) errors.businessTime = '请选择营业时间';
+    } else if (d.step === 3) {
+      if (!d.businessLicense) errors.businessLicense = '请上传营业执照';
+    } else if (d.step === 4) {
+      // 第 4 步唯一拦人的项是经营者实名(规则在 utils/publisher-identity.js)
+      const form = this.identityForm();
+      if (!publisherIdentity.identitySatisfied(form)) {
+        const fe = publisherIdentity.identityFieldErrors(form);
+        if (fe.realName) errors.realName = fe.realName;
+        if (fe.idCard) errors.idCard = fe.idCard;
+        // 姓名与证件都没问题时,唯一缺的是单独同意:属同意类,保留原提示。
+        if (!fe.realName && !fe.idCard && fe.consent) toast(fe.consent);
+        // M-19(l5):实名块在预览下面,一屏看不到;只差同意勾选时没有红字可滚,直接滚到实名块
+        if (!fe.realName && !fe.idCard && typeof wx !== 'undefined' && typeof wx.pageScrollTo === 'function') wx.pageScrollTo({ selector: '#apply-identity', duration: this.data.reducedMotion ? 0 : 300 });
+      }
     }
+    const keys = APPLY_FIELD_ORDER.filter(function (k) { return errors[k]; });
+    if (!keys.length) return;
+    this.setData({ fieldErrors: Object.assign({}, d.fieldErrors, errors) });
+    this.scrollToField(keys[0]);
   },
+
+  // 本页随页面整体滚动(.page 是 min-height,scroll-view 不限高),所以用 pageScrollTo;
+  // 顶部固定导航栏会盖住目标,向上让出导航栏高度再留一点间距。
+  scrollToField(key) {
+    if (typeof wx === 'undefined' || typeof wx.pageScrollTo !== 'function') return;
+    var d = this.data;
+    var navHeight = (Number(d.statusBarHeight) || 0) + (Number(d.navBarHeight) || 0);
+    wx.pageScrollTo({ selector: '#apply-field-' + key, duration: 250, offsetTop: -(navHeight + 12) });
+  },
+
+  // ===== M-16 行业类型:入驻时问一次,与门店信息「行业类型」同一份胶囊、同一条保存口径 =====
+  openIndustrySheet() {
+    if (this.data.submitting) return;
+    const ids = this.data.industryIds;
+    const rows = this._industryRows;
+    const options = rows ? merchantIndustry.buildIndustryOptions(rows, ids) : [];
+    // 弹层的勾选态取自已确认的 industryIds;重开时给一份新数组,组件 value 观察者会把上次没确认的勾选复位
+    this.setData({ industryIds: ids.slice(), industrySheet: { show: true, options, value: ids.slice(), loading: !rows, error: '' } });
+    if (!rows) this.loadIndustryRows();
+  },
+  loadIndustryRows() {
+    const that = this;
+    app.sendRequest({ hideLoading: true, autoErrorToast: false, url: '/api/category/list', method: 'POST', data: { type: 'MERCHANT', parentid: '0' },
+      success(res) {
+        if (String(res && res.code) !== '200' || !Array.isArray(res.data)) {
+          that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '行业类型没能载入，请重试' });
+          return;
+        }
+        that._industryRows = res.data;
+        const options = merchantIndustry.buildIndustryOptions(res.data, that.data.industryIds);
+        that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '', 'industrySheet.options': options,
+          industryNames: industryNamesOf(options, that.data.industryIds) });
+      },
+      fail() { that.setData({ 'industrySheet.loading': false, 'industrySheet.error': '网络异常，请重试' }); },
+    });
+  },
+  onIndustryChange(e) {
+    this.setData({ 'industrySheet.value': ((e && e.detail && e.detail.value) || []).map(String) });
+  },
+  confirmIndustrySheet(e) {
+    const value = ((e && e.detail && e.detail.value) || this.data.industrySheet.value || []).map(String);
+    if (!value.length) { toast('请至少选择一个行业类型'); return; }
+    this.setData({ industryIds: value, industryNames: industryNamesOf(this.data.industrySheet.options, value),
+      'industrySheet.show': false, 'fieldErrors.industryIds': '' }, this.validate);
+  },
+  closeIndustrySheet() { this.setData({ 'industrySheet.show': false }); },
+  retryIndustrySheet() { this.setData({ 'industrySheet.loading': true, 'industrySheet.error': '' }); this.loadIndustryRows(); },
 
   validate() {
     var d = this.data, ok = false;
-    if (d.step === 1) ok = !!(d.name && d.phone);
+    if (d.step === 1) ok = !!(d.name && isValidMobile(d.phone) && d.industryIds.length);
     else if (d.step === 2) ok = !!(d.address && d.businessTime);
     else if (d.step === 3) ok = !!d.businessLicense;
     // 预览确认页的硬性缺项只有实名:姓名 + 身份证号 + 单独同意三项齐了「提交申请」才亮
@@ -399,6 +470,10 @@ Page({
     this.setData({ identityConsented: !!e.detail.checked }, this.validate);
   },
 
+  // 第九轮 m1-9:预览与申请状态里的店铺地址一点开地图
+  onApplyAddressTap() { const a = this.data.apply || {}; openAddress().openAddress({ lat: a.locationLat, lng: a.locationLng, name: a.name, address: a.address }, { geocode: true }); },
+  onPickedAddressTap() { const d = this.data; openAddress().openAddress({ lat: d.locationLat, lng: d.locationLng, name: d.name, address: d.address }); },
+
   // ===== 店铺地址:微信原生位置选择(2026-07-31) =====
   chooseLocation() {
     const that = this;
@@ -416,13 +491,16 @@ Page({
   openLocationPicker(identityTicket) {
     var that = this;
     var ticket = identityTicket || this.identityTicket();
-    wx.chooseLocation({
+    // 第九轮 m1-9:改店址时选点器从已选的点打开
+    var lat = Number(this.data.locationLat), lng = Number(this.data.locationLng);
+    wx.chooseLocation(Object.assign(lat && lng ? { latitude: lat, longitude: lng } : {}, {
       success: function (res) {
         if (!that.isIdentityTicketCurrent(ticket)) return;
         that.setData({
           address: res.address || res.name || '',
           locationLat: res.latitude,
-          locationLng: res.longitude
+          locationLng: res.longitude,
+          'fieldErrors.address': ''
         }, that.validate);
       },
       fail: function (err) {
@@ -441,19 +519,19 @@ Page({
           }
         });
       }
-    });
+    }));
   },
 
   // ===== 经营时间:周一~周日 + 起止时段(2026-07-31) =====
   openHoursPicker() {
-    this.setData({ hoursPickerShow: true });
+    this.setData({ hoursPickerShow: true, hoursErrors: { days: '', time: '' } });
   },
   closeHoursPicker() { this.setData({ hoursPickerShow: false }); },
   toggleHoursDay(e) {
     var i = e.currentTarget.dataset.index;
     var days = this.data.hoursDraft.days.slice();
     days[i] = Object.assign({}, days[i], { on: !days[i].on });
-    this.setData({ 'hoursDraft.days': days });
+    this.setData({ 'hoursDraft.days': days, 'hoursErrors.days': '' });
   },
   openHoursTime(e) {
     const field = e.currentTarget.dataset.field;
@@ -461,16 +539,17 @@ Page({
     this.selectComponent('#hours-' + field).open();
   },
   onHoursStartChange(e) {
-    this.setData({ 'hoursDraft.start': e.detail.value });
+    this.setData({ 'hoursDraft.start': e.detail.value, 'hoursErrors.time': '' });
   },
   onHoursEndChange(e) {
-    this.setData({ 'hoursDraft.end': e.detail.value });
+    this.setData({ 'hoursDraft.end': e.detail.value, 'hoursErrors.time': '' });
   },
   confirmHoursPicker() {
     var d = this.data.hoursDraft;
     var onDays = d.days.filter(function (x) { return x.on; });
+    // 第五轮 D:两条问题写在弹层对应一栏下方红字,不再弹提示;拦截不变。
     if (!onDays.length) {
-      toast('至少选择一个经营日');
+      this.setData({ 'hoursErrors.days': '至少选择一个经营日' });
       return;
     }
     // 经营时间【允许跨夜】(酒吧 20:00-02:00 是真实场景),但必须说清是次日,
@@ -478,14 +557,15 @@ Page({
     var startMin = timeOptions.minutesOfDay.apply(null, d.start.split(':'));
     var endMin = timeOptions.minutesOfDay.apply(null, d.end.split(':'));
     if (startMin === endMin) {
-      toast('开始与结束时间不能相同');
+      this.setData({ 'hoursErrors.time': '开始与结束时间不能相同' });
       return;
     }
     var overnight = endMin < startMin;
     var dayText = onDays.length === 7 ? '周一至周日' : '周' + onDays.map(function (x) { return x.label; }).join('、');
     this.setData({
       businessTime: dayText + ' ' + d.start + '-' + (overnight ? '次日' : '') + d.end,
-      hoursPickerShow: false
+      hoursPickerShow: false,
+      'fieldErrors.businessTime': ''
     }, this.validate);
   },
 
@@ -495,7 +575,7 @@ Page({
     var identityTicket = this.identityTicket();
     app.chooseImage(function (urls) {
       if (!that.isIdentityTicketCurrent(identityTicket)) return;
-      that.setData({ businessLicense: urls[0] || '' }, that.validate);
+      that.setData({ businessLicense: urls[0] || '', 'fieldErrors.businessLicense': '' }, that.validate);
     }, 1);
   },
   removeLicense() { this.setData({ businessLicense: '' }, this.validate); },
@@ -537,7 +617,7 @@ Page({
       if (!r.ok) {
         that.setData({
           submitting: false,
-          submitErrorKind: r.network ? 'network' : 'data',
+          submitErrorKind: r.network ? 'network' : 'error',
           submitError: r.message
         });
         return;
@@ -553,7 +633,7 @@ Page({
     var payload = {
       id: d.apply && d.apply.status === 2 ? d.apply.id : null,
       name: d.name,
-      preference: d.preference,
+      categoryIds: d.industryIds.join(','),
       phone: d.phone,
       address: d.address,
       locationLat: d.locationLat,
@@ -654,4 +734,18 @@ Page({
 function currentIdentityKey() {
   var userId = typeof app.getUserID === 'function' ? app.getUserID() : app.globalData && app.globalData.user_id;
   return String(userId || '');
+}
+
+// 第五轮 D:字段在页面上的先后,滚动到第一条红字时用。
+const APPLY_FIELD_ORDER = ['name', 'industryIds', 'phone', 'address', 'businessTime', 'businessLicense', 'realName', 'idCard'];
+
+/** M-16:申请回读里的行业类型(多选列优先,旧数据退回单值 categoryId)。 */
+function industryIdsOf(source) {
+  const raw = source && source.categoryIds ? source.categoryIds : (source && source.categoryId != null ? source.categoryId : '');
+  return String(raw).split(',').map(x => x.trim()).filter(x => /^\d+$/.test(x) && x !== '0');
+}
+
+/** 胶囊上用短名;行上显示与门店信息一致的「·」连接。 */
+function industryNamesOf(options, ids) {
+  return (ids || []).map(id => ((options || []).filter(o => o.key === String(id))[0] || {}).label).filter(Boolean).join(' · ');
 }

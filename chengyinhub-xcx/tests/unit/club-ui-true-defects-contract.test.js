@@ -8,10 +8,10 @@ const ROOT = path.resolve(__dirname, '../..')
 const DETAIL_WXML = 'pages/club/detail/index.wxml'
 const DETAIL_WXSS = 'pages/club/detail/index.wxss'
 const EDIT_PAGE_JS = 'pages/club/edit/index.js'
-const EDIT_SCENE_JS = 'components/cy/scene-club-edit/index.js'
-const EDIT_SCENE_WXML = 'components/cy/scene-club-edit/index.wxml'
-const EDIT_SCENE_JSON = 'components/cy/scene-club-edit/index.json'
-const EDIT_SCENE_WXSS = 'components/cy/scene-club-edit/index.wxss'
+const EDIT_SCENE_JS = 'pages/club/components/cy/scene-club-edit/index.js'
+const EDIT_SCENE_WXML = 'pages/club/components/cy/scene-club-edit/index.wxml'
+const EDIT_SCENE_JSON = 'pages/club/components/cy/scene-club-edit/index.json'
+const EDIT_SCENE_WXSS = 'pages/club/components/cy/scene-club-edit/index.wxss'
 const MIN_TOUCH_RPX = 88
 const OWNER_STAGES = ['publish', 'invite', 'pending', 'accepted']
 
@@ -125,7 +125,7 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
     Component(config) { definition = config },
     setTimeout() { return 0 },
     require(request) {
-      if (request.endsWith('/club-edit-draft.js')) return require('../../utils/club-edit-draft.js')
+      if (request.endsWith('/club-edit-draft.js')) return require('../../pages/club/utils/club-edit-draft.js')
       throw new Error('unexpected require: ' + request)
     },
     wx: {
@@ -338,7 +338,9 @@ test('X08：缺少 clubId 不发请求、不猜第一个俱乐部，只给返回
   harness.component.loadClub()
   assert.equal(harness.requests.length, 0, '缺参不得请求 /api/club/my 后猜 owned[0]')
   assert.equal(harness.component.data.loadState, 'missing-param')
-  assert.match(harness.component.data.loadErrorText, /俱乐部|返回/)
+  assert.equal(harness.component.data.loadErrorText, '', '缺参由标题与返回按钮说明，不新增重复副文案')
+  const view = read('pages/club/components/cy/scene-club-edit/index.wxml')
+  assert.match(view, /loadState === 'missing-param'[^>]*title="没有指定俱乐部"[^>]*retry="返回俱乐部"[^>]*bind:retry="onBack"/)
   harness.component.onBack()
   assert.ok(harness.events.some((event) => event.name === 'back'), '缺参返回动作必须交还宿主')
 })

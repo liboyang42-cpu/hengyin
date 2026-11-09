@@ -68,7 +68,7 @@
   </view>
 
   <!-- ===== 四个关系入口 ===== -->
-  <view class="qa">
+  <view class="qa" wx:if="{{ quickActions.length }}">
     <view class="qa-btn" wx:for="{{ quickActions }}" wx:key="key"
           data-key="{{ item.key }}" bindtap="emit" data-act="onQuickAction" aria-role="button" aria-label="{{item.label}}" hover-class="qa-btn--tap">
       <view class="qa-ico"><cy-icon wx:if="{{item.iconName}}" name="{{item.iconName}}" size="40" /><image wx:else class="qa-ico-img" src="{{ item.icon }}" mode="aspectFit" /></view>
@@ -85,13 +85,13 @@
                 retry="重试" data-act="retryMyChapterNodes" bind:retry="emit" />
       <view class="card chapter-project-item" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
         <text class="fact-main">{{chapterNode.name}}</text>
-        <view class="chapter-project-meta">{{chapterNode.address || '未填地址'}} · {{chapterNode.auditLabel}}</view>
+        <view class="chapter-project-meta"><text wx:if="{{chapterNode.address}}" class="cy-addr-tap" bindtap="onAddressTap" data-lat="{{chapterNode.latitude}}" data-lng="{{chapterNode.longitude}}" data-name="{{chapterNode.name}}" data-address="{{chapterNode.address}}" data-geo="1" aria-role="button" aria-label="在地图中打开 {{chapterNode.address}}" hover-class="cy-pressed" hover-stay-time="80">{{chapterNode.address}}</text><text wx:else>未填地址</text> · {{chapterNode.auditLabel}}</view>
         <view class="chapter-project-meta" wx:if="{{chapterNode.nodeAuditReason}}">驳回原因：{{chapterNode.nodeAuditReason}}</view>
         <view class="chapter-project-actions">
           <cy-btn wx:if="{{chapterNode.auditLabel === '已通过'}}" variant="ghost" size="sm"
                   data-act="openNodeNpcForm" data-node-id="{{chapterNode.id}}" data-node-name="{{chapterNode.name}}"
                   bindtap="emit">节点NPC</cy-btn>
-          <text wx:else class="chapter-project-meta">审核通过后可配置节点内容</text>
+          <text wx:elif="{{chapterNode.auditLabel !== '待审核'}}" class="chapter-project-meta">审核通过后可配置节点内容</text>
         </view>
       </view>
       <cy-empty wx:if="{{myChapterNodesLoaded && !myChapterNodes.length && !myChapterNodesError}}" title="还没有自己的节点" />
@@ -110,7 +110,7 @@
                   data-act="withdrawChapterApplication" data-application-id="{{application.id}}" bindtap="emit">撤回申请</cy-btn>
         </view>
         <view class="chapter-project-meta" wx:if="{{application.offerActive && !application.offerWithdrawn}}">
-          实际供给已生效<text wx:if="{{application.circleSupplyCheckedAtText}}"> · 最近确认 {{application.circleSupplyCheckedAtText}}</text>
+          实际供给已生效<text wx:if="{{application.quotaLeftText}}"> · {{application.quotaLeftText}}</text><text wx:if="{{application.circleSupplyCheckedAtText}}"> · 最近确认 {{application.circleSupplyCheckedAtText}}</text>
         </view>
         <view class="chapter-project-meta" wx:if="{{application.offerPendingReview}}">实际供给待审核</view>
         <view class="chapter-project-meta" wx:if="{{application.offerWithdrawn}}">{{application.offerWithdrawReason}}</view>
@@ -351,7 +351,8 @@
           <text class="prep-label">达成时间</text>
           <text class="prep-text">{{ coopPartner.acceptedText }}</text>
         </view>
-        <view class="sec-empty">{{ coopPartner.note || '这一屏没有节点可列:你接的是整条路线的合作（到店核销与分成）,不针对某一站。' }}</view>
+        <!-- 第十二轮 k6(p2 N-5):删去兜底说明句(说「分成」,而引流型合同没有分成;也是说明文案) -->
+        <view class="sec-empty" wx:if="{{ coopPartner.note }}">{{ coopPartner.note }}</view>
       </view>
     </view>
   </view>

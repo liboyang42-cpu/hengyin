@@ -10,10 +10,6 @@
   <cy-page-title title="城瘾玩法" safe-top="{{false}}" flush="{{true}}" />
 
   <!-- 主张句:粗细混排(细体承接语 + 粗体主张)。层级低于上面的页标题,不抢 H1。 -->
-  <view class="gl-hero">
-    <view class="gl-hero-tit"><text class="gl-hero-thin">三种玩法,</text><text class="gl-hero-bold">即开即玩</text></view>
-    
-  </view>
 
   <!-- 三种玩法:说明 + 各自真实入口 -->
   <view class="gl-modes">
@@ -21,9 +17,7 @@
       <view class="gl-mode-hd">
         <view class="gl-mode-ico"><cy-icon name="{{item.icon}}" size="44" /></view>
         <view class="gl-mode-name">{{item.name}}</view>
-        <view class="gl-mode-tag">{{item.tag}}</view>
       </view>
-      <view class="gl-mode-desc">{{item.desc}}</view>
       <view class="gl-mode-act">
         <cy-btn variant="primary" size="sm" class="gl-mode-btn" bindtap="goMode" data-key="{{item.key}}">去看看</cy-btn>
       </view>

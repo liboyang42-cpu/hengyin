@@ -82,7 +82,7 @@ class GameplayOutcomeRulesTest {
     @Test void rejectsMultipleDrawLocalAfterAndAllowsFeedbackComposition() {
         ObjectNode root=template();root.remove("qa");ObjectNode random=root.putObject("random").put("enabled",true).put("drawCount",2);
         random.putArray("items").addObject().put("id","a").put("label","A").putObject("after");
-        assertTrue(assertThrows(IllegalArgumentException.class,()->GameplayOutcomeRules.validateBlock(root)).getMessage().contains("多张抽卡"));
+        assertTrue(assertThrows(IllegalArgumentException.class,()->GameplayOutcomeRules.validateBlock(root)).getMessage().contains("多张翻卡"));
         random.put("drawCount",1);assertDoesNotThrow(()->GameplayOutcomeRules.validateBlock(root));
         root.putObject("branch").put("enabled",true);assertDoesNotThrow(()->GameplayOutcomeRules.validateBlock(root));
     }

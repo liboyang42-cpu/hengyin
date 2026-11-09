@@ -84,7 +84,7 @@
 
 /* 首屏隐藏→向下滑动升起(滑动弹出) */
 .tabbar .list {
-  transition: transform 0.32s ease, opacity 0.32s ease;
+  transition: transform var(--cy-motion-slow) var(--cy-ease-out), opacity var(--cy-motion-slow) var(--cy-ease-out);
 }
 .tabbar.is-down .list {
   transform: translateY(140%);

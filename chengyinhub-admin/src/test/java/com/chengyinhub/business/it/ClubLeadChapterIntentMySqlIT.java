@@ -53,6 +53,10 @@ class ClubLeadChapterIntentMySqlIT {
         try (Connection connection = ds.getConnection()) {
             ItSchema.apply(connection, "it-schema/run41-prod-ddl.sql");
             ItSchema.applyMigrations(connection, "sql/migration_club_lead.sql", "sql/migration_club_role_assignment_20260823.sql", "sql/migration_20260823_game_session_runtime.sql");
+            // migration_20261102_club_checkin_phone_visible.sql (C-05): ClubRoleAssignmentMapper reads this column.
+            try (java.sql.Statement ddl = connection.createStatement()) {
+                ddl.execute("ALTER TABLE club_role_assignment ADD COLUMN customer_phone_visible TINYINT NOT NULL DEFAULT 0 AFTER version");
+            }
         }
         Configuration config = new Configuration(new Environment("c-chapter", new SpringManagedTransactionFactory(), ds));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");

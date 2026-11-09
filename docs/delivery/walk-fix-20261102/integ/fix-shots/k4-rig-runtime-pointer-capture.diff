@@ -1,0 +1,26 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde8..4adfcbad5 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -192,7 +192,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+@@ -578,8 +578,11 @@ function installEvents(el) {
+         }
+         if (type === 'tap' && el.__suppressClick) { el.__suppressClick = false; return; }
+         if (type === 'tap' && el.__tag === 'button' && isOn((el.__vp || {}).disabled)) return;
+-        if (type === 'touchstart' && (el.__on.touchmove || el.__on.touchend)) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
++        // k4 (round 12): capture lazily, only once the pointer actually drags. Capturing on pointerdown retargets the
++        // following click to this element, so taps on descendants (e.g. the theme page's dock CTA under .topic) never fired.
++        if (type === 'touchstart' && (el.__on.touchmove || el.__on.touchend)) { el.__capturePointer = e.pointerId; }
+         if (type === 'touchmove' && !(e.buttons || e.pointerType === 'touch')) return;
++        if (type === 'touchmove' && el.__capturePointer != null) { try { el.setPointerCapture(el.__capturePointer); } catch (x) {} el.__capturePointer = null; }
+         if (b.c) e.stopPropagation();
+         callHandler(el, b, mkEvent(el, type, null, e, e.target && e.target.__ds ? e.target : el));
+       };

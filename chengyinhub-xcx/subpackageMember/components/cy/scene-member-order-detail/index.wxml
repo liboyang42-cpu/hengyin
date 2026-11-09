@@ -19,7 +19,7 @@
     <image class="hero-img" lazy-load="true" src="{{heroImage}}" mode="aspectFill" />
     <view class="hero-mask"></view>
     <view class="hero-text">
-      <view class="hero-amt">{{money.amount(cnt.f(info.actualPaidAmount, odK))}}</view>
+      <view class="hero-amt">{{money.amount2(cnt.f(info.actualPaidAmount, odK))}}</view>
       <view class="hero-title ep1">{{productTitle}}</view>
       <view class="hero-when" wx:if="{{whenText}}">{{whenText}}</view>
       <view class="hero-pill hero-pill--{{statusTone}}" wx:if="{{info.statusText}}">{{info.statusText}}</view>
@@ -34,11 +34,11 @@
     <!-- 刷新失败但保留上次的订单:放在头图下第一张卡的位置,一眼能看到 -->
     <cy-inline-error wx:if="{{loadErrorText}}" kind="network" title="{{loadErrorText}}" action="重试" bind:action="reloadOrder" />
     <view class="ocard state-notice" wx:if="{{stateNotice.show}}">
-      <view class="state-notice__head">
+      <view class="state-notice__head" wx:if="{{stateNotice.title || stateNotice.tag}}">
         <text class="state-notice__k">{{stateNotice.title}}</text>
         <text class="state-notice__tag state-notice__tag--{{statusTone}}" wx:if="{{stateNotice.tag}}">{{stateNotice.tag}}</text>
       </view>
-      <text class="state-notice__s" wx:if="{{stateNotice.sub}}">{{stateNotice.sub}}</text>
+      <text class="{{stateNotice.title ? 'state-notice__s' : 'state-notice__k'}}" wx:if="{{stateNotice.sub}}">{{stateNotice.sub}}</text>
     </view>
 
     <!-- 稿 578:2298 的这一段只有「退款状态卡 → 订单明细 → 支付明细」,没有快捷入口卡。
@@ -66,7 +66,7 @@
         <text class="orow-k">票种</text>
         <text class="orow-v">{{info.ticketName}} × {{orderQty}}</text>
       </view>
-      <view class="orow" wx:if="{{whenText}}">
+      <view class="orow" wx:if="{{whenText && !expiresIsPass}}">
         <text class="orow-k">日期与时间</text>
         <text class="orow-v">{{whenText}}</text>
       </view>
@@ -84,19 +84,24 @@
     <view class="ocard">
       <view class="orow">
         <text class="orow-k">票价</text>
-        <text class="orow-v">{{money.amount(ticketPriceShown)}} × {{orderQty}}</text>
+        <text class="orow-v">{{money.amount2(ticketPriceShown)}} × {{orderQty}}</text>
       </view>
       <view class="orow" wx:if="{{showPointPay}}">
         <text class="orow-k">积分抵扣{{info.pointUsed ? '（' + info.pointUsed + ' 积分）' : ''}}</text>
-        <text class="orow-v">-{{money.amount(info.pointPaymentAmount)}}</text>
+        <text class="orow-v">-{{money.amount2(info.pointPaymentAmount)}}</text>
       </view>
+      <!-- 第十二轮 k9(j6 F9 / N8):还没付的单不写「实付」 -->
       <view class="orow" wx:if="{{showWechatPay}}">
-        <text class="orow-k">微信实付</text>
-        <text class="orow-v">{{money.amount(info.wechatPaymentAmount)}}</text>
+        <text class="orow-k">{{info.paymentStatus == 2 || info.orderStateKey === 'refunding' || info.orderStateKey === 'refunded' ? '微信实付' : '微信待付'}}</text>
+        <text class="orow-v">{{money.amount2(info.wechatPaymentAmount)}}</text>
       </view>
       <view class="orow orow--total">
         <text class="orow-k">合计</text>
-        <text class="orow-v">{{money.amount(info.payableAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.payableAmount)}}</text>
+      </view>
+      <view class="orow" wx:if="{{info.refundAmountShown}}">
+        <text class="orow-k">退款</text>
+        <text class="orow-v">{{money.amount2(info.refundAmountShown)}}</text>
       </view>
     </view>
 
@@ -166,11 +171,11 @@
       </view>
       <view class="orow" wx:if="{{showWechatPay}}">
         <text class="orow-k">微信实付</text>
-        <text class="orow-v">{{money.amount(info.wechatPaymentAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.wechatPaymentAmount)}}</text>
       </view>
       <view class="orow" wx:if="{{showPointPay}}">
         <text class="orow-k">积分实付</text>
-        <text class="orow-v">{{money.amount(info.pointPaymentAmount)}}</text>
+        <text class="orow-v">{{money.amount2(info.pointPaymentAmount)}}</text>
       </view>
       <!-- 与订单号行一致:动作不进信息卡,交易单号只是一行纯值 -->
       <view class="orow" wx:if="{{info.transactionId}}">
@@ -229,7 +234,7 @@
         <text class="orow-v">{{verificationTimeText}}</text>
       </view>
       <view class="orow" wx:if="{{expiresAtText}}">
-        <text class="orow-k">权益到期</text>
+        <text class="orow-k">{{expiresIsPass ? '可玩至' : '权益到期'}}</text>
         <text class="orow-v">{{expiresAtText}}</text>
       </view>
     </view>
@@ -289,7 +294,6 @@
       <view class="section-title">{{info.isFreeOrder ? '报名与客服' : '退款与客服'}}</view>
       <view class="refund-main">{{info.refundDeadlineDisplay || info.refundDisplayText || '支付成功后将按订单退款截止时间判断是否可原路退款。'}}</view>
       <view class="refund-sub" wx:if="{{info.isFreeOrder}}">本单未收取费用。如需咨询报名安排，请联系客服。</view>
-      <view class="refund-sub" wx:else>退款按本单实际支付原路处理，有疑问可联系客服。</view>
       <view class="refund-org" wx:if="{{info.organizerDisplayName}}">{{info.organizerLabel}}：{{info.organizerDisplayName}}</view>
     </cy-card>
 
@@ -313,6 +317,9 @@
          失败/加载态下不会漏出来。sticky 而非 fixed,留在 sheet 的滚动容器里。 -->
     <view class="bp-cta-bar" wx:if="{{primaryCta === 'pay'}}">
       <view class="primary-cta" bindtap="payOrder" aria-role="button" aria-label="去支付" hover-class="cy-pressed" hover-stay-time="80">{{paying ? '支付中...' : '去支付'}}</view>
+    </view>
+    <view class="bp-cta-bar" wx:elif="{{primaryCta === 'play' || primaryCta === 'record'}}">
+      <view class="primary-cta" bindtap="startPlay" aria-role="button" aria-label="{{primaryCta === 'record' ? '查看记录' : '开始游戏'}}" hover-class="cy-pressed" hover-stay-time="80">{{primaryCta === 'record' ? '查看记录' : '开始游戏'}}</view>
     </view>
   <!-- 队伍人数选择(2026-09-02 由 wx.showActionSheet 收编)。放在 ready 闸内:
        .detail 的直属子节点必须受 loadState 闸控制,失败态不该还挂着一个弹层。 -->

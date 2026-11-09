@@ -234,18 +234,19 @@ class PublicVisibilityMyBatisTest {
             assertTrue(activityMapper.selectCmsActivityList(dissolvedOwnerQuery).isEmpty(),
                     "玩家我发布的活动列表不得保留已解散俱乐部场次");
 
-            assertProjectOwnership(ownerRows);
+            assertProjectOwnership(ownerRows, topicMapper);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void assertProjectOwnership(List<CmsActivity> ownerRows) {
+    private void assertProjectOwnership(List<CmsActivity> ownerRows, CmsTopicMapper topicMapper) {
         ICmsTopicService topicService = mock(ICmsTopicService.class);
         ICmsActivityService activityService = mock(ICmsActivityService.class);
         ICmsRegistrationMerchantService merchantService = mock(ICmsRegistrationMerchantService.class);
         ApiProjectController controller = spy(new ApiProjectController());
         doReturn(42L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper", topicMapper);
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantService", merchantService);
         com.chengyinhub.business.service.ICoopInviteService inviteService =

@@ -16,6 +16,7 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.SettlementRule;
 import com.chengyinhub.business.domain.dto.RegistrationOrderResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
+import com.chengyinhub.business.service.IRegistrationCreationTransaction;
 import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.service.impl.AlarmService;
 import com.chengyinhub.business.service.impl.CmsPointsSettingServiceImpl;
@@ -734,6 +735,170 @@ class RegistrationFundsMybatisIntegrationTest {
         } finally {
             pool.shutdownNow();
         }
+    }
+
+    /**
+     * ROUND10 f4 第 2 项:「被邀请用户报名任意活动」(id 6,100 分/每次报名)由迁移关掉后,
+     * 支付成功仍落 SUCCESS、票状态照常迁移;邀请人只拿 id 5 的首购奖励,不再拿每次报名的 100 分。
+     * 对照组:迁移前同一笔回调会给邀请人写 event_type = 6 的流水。
+     */
+    @Test
+    void inviteeSignupRuleOffStillPaysAndOnlyAwardsFirstPurchase() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,0),(6,'被邀请用户报名任意活动',100,1,6,1,0)");
+        applyInviteeSignupPointsOffMigration();
+        applyInviteeSignupPointsOffMigration(); // 可重跑
+
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_points_setting WHERE id=6 AND status=0 AND value=0"));
+        assertEquals(1, number("SELECT COUNT(*) FROM cms_points_setting WHERE id=5 AND status=1 AND value=500"),
+                "id 5 首购奖励不动");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(500, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=5"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"),
+                "关掉后不再按每次报名给邀请人发分");
+    }
+
+    @Test
+    void inviteeSignupRuleStillOnBeforeMigrationAwardsPerSignup() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,0),(6,'被邀请用户报名任意活动',100,1,6,1,0)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(600, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"));
+    }
+
+    /**
+     * ROUND11 h3(2026-11-04 业主拍板:后台「停用」开关必须真停发放)对照组:
+     * id 2/3/5/6 全部启用时,支付回调照原值发分;同一回调重放不重复写流水、不重复加分。
+     */
+    @Test
+    void enabledPointsRulesPayAsBeforeAndCallbackReplayDoesNotDuplicate() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,0),(6,'被邀请用户报名任意活动',100,1,6,1,0)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(115, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(600, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_type=2"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_type=3"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=5"));
+        assertEquals(1, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=99 AND event_type=6"));
+    }
+
+    /**
+     * 第十二轮 k1 第 5 项(j6 N1):同会员同场次有一笔还能被扣款的单时,第二笔被拒并指回那一笔(待支付、支付中都挡,
+     * 不扣库存不落行);之后另一笔付成功的旧单不再发支付参数;旧单关掉后照常能再买(C-22 跨订单多张票不受影响)。
+     */
+    @Test
+    void secondOrderForSameSessionIsRefusedWhileFirstIsStillChargeable() throws Exception {
+        execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11",
+                "UPDATE oms_ticket SET remaining_inventory=10,start_time=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_time=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=9",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_date=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=55");
+        IRegistrationCreationTransaction creation = (IRegistrationCreationTransaction) registrationService;
+        RegistrationRequest second = new RegistrationRequest();
+        second.setOwnerType(2);
+        second.setOwnerId(55L);
+        second.setTicketId(9L);
+        second.setIsUsePoint(0);
+        second.setRealName("同一场第二笔");
+        second.setPhone("fixture-contact");
+        long rows = number("SELECT COUNT(*) FROM cms_registration");
+
+        RegistrationPendingOrderException unpaid = assertThrows(RegistrationPendingOrderException.class,
+                () -> creation.create(7L, second, "k1-n1-a", "a".repeat(64)));
+        assertEquals(RegistrationPendingOrderException.PENDING_ORDER_EXISTS, unpaid.getErrorCode());
+        assertEquals(11L, unpaid.getRegistrationId(), "把玩家指回那一笔");
+        assertEquals(rows, number("SELECT COUNT(*) FROM cms_registration"), "不落第二笔");
+        assertEquals(10, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"), "不扣库存");
+
+        // 发起过微信支付(支付中)同样挡,哪怕本地已过期、尚未对账关单 —— 微信侧可能还能付
+        registrationService.beginPaymentAttempt(11L, 7L);
+        execute("UPDATE cms_registration SET pay_expire_time=DATE_SUB(NOW(),INTERVAL 1 MINUTE) WHERE id=11");
+        assertEquals(11L, assertThrows(RegistrationPendingOrderException.class,
+                () -> creation.create(7L, second, "k1-n1-b", "b".repeat(64))).getRegistrationId());
+        assertEquals(rows, number("SELECT COUNT(*) FROM cms_registration"));
+
+        // 历史遗留:这一单之后同场次已有一笔付成功 ⇒ 这一单不再发支付参数
+        execute("UPDATE cms_registration SET payment_status=0,pay_expire_time=DATE_ADD(NOW(),INTERVAL 30 MINUTE) WHERE id=11",
+                "INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,member_id,point_used,payable_amount,"
+                        + "wechat_payment_amount,fee_platform_rate,payment_status,registration_status,pay_expire_time,verification_status,points_returned) "
+                        + "VALUES (12,'T20260724PAID',2,55,9,7,0,100,100,0.1000,2,2,DATE_ADD(NOW(),INTERVAL 30 MINUTE),0,0)");
+        RegistrationPendingOrderException superseded = assertThrows(RegistrationPendingOrderException.class,
+                () -> registrationService.beginPaymentAttempt(11L, 7L));
+        assertEquals(RegistrationPendingOrderException.ORDER_SUPERSEDED, superseded.getErrorCode());
+        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"), "拒绝不改状态");
+
+        // 旧单关掉后照常可买;已付的另一笔不挡新单(C-22:跨订单为不同参与人买多张)
+        execute("UPDATE cms_registration SET registration_status=3,payment_status=3 WHERE id=11");
+        java.util.List<CmsRegistration> created = creation.create(7L, second, "k1-n1-c", "c".repeat(64));
+        assertEquals(1, created.size());
+        assertEquals(rows + 2, number("SELECT COUNT(*) FROM cms_registration"));
+        assertEquals(9, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+    }
+
+    /**
+     * ROUND11 h3:id 2/3/5/6 在后台「停用」(status=0)而 value 仍是原值时,支付回调一分不发,
+     * 订单照常完成;重放回调同样不发;规则行的存量值不被改动。
+     */
+    @Test
+    void disabledPointsRulesPayNothingAndOrderStillCompletes() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "UPDATE cms_points_setting SET status=0 WHERE id IN (2,3)",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,0,0),(6,'被邀请用户报名任意活动',100,1,6,0,0)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE event_type IN (2,3,5,6)"),
+                "停用的规则不得写任何积分流水");
+        assertEquals(615, number("SELECT SUM(value) FROM cms_points_setting WHERE id IN (2,3,5,6)"),
+                "不改存量规则值(10+5+500+100)");
+    }
+
+    /**
+     * ROUND11 h3:规则行仍 status=1 但已删除(del_flag=1,以及 RuoYi 口径 del_flag=2)时同样一分不发,订单照常完成。
+     */
+    @Test
+    void deletedPointsRulesPayNothingAndOrderStillCompletes() throws Exception {
+        execute("UPDATE ums_member SET invite_user_id='99' WHERE id=7",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (99,1,0,0)",
+                "UPDATE cms_points_setting SET del_flag=1 WHERE id=2",
+                "UPDATE cms_points_setting SET del_flag=2 WHERE id=3",
+                "INSERT INTO cms_points_setting(id,title,value,type,event_type,status,del_flag) VALUES "
+                        + "(5,'邀请1位完成首次购买的用户',500,1,5,1,1),(6,'被邀请用户报名任意活动',100,1,6,1,1)");
+
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(2, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(0, number("SELECT point FROM ums_member WHERE id=99"));
+        assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE event_type IN (2,3,5,6)"));
     }
 
     @Test
@@ -2032,6 +2197,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(reconstructedCheckout, "registrationService", fresh);
         ReflectionTestUtils.setField(reconstructedCheckout, "registrationOrderService", registrationOrderService);
         ReflectionTestUtils.setField(reconstructedCheckout, "wechatPayService", unavailable);
+        ReflectionTestUtils.setField(reconstructedCheckout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
         RegistrationCheckoutResult replay = reconstructedCheckout.retryPayment(7L, original.getId(), true);
         assertEquals(completed.getData(), replay.getData());
         assertEquals(committed, zeroRecoveryRows());
@@ -2366,6 +2532,8 @@ class RegistrationFundsMybatisIntegrationTest {
         assertEquals(64, text("SELECT request_fingerprint FROM cms_registration WHERE id="
                 + created.getPrimary().getId()).length());
 
+        // 第十二轮 k1 第 5 项(j6 N1):同场次有一笔还能扣款的单时不建第二笔;先把上一笔收掉,本用例只验指纹冲突
+        execute("UPDATE cms_registration SET registration_status=3,payment_status=3 WHERE id=" + created.getPrimary().getId());
         RegistrationRequest conflictBase = request("legacy-null-conflict");
         RegistrationOrderResult conflictOrder = createOrReplay(conflictBase);
         execute("UPDATE cms_registration SET request_fingerprint=NULL WHERE id=" + conflictOrder.getPrimary().getId());
@@ -2954,6 +3122,7 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "registrationService", registrationService);
         ReflectionTestUtils.setField(target, "registrationOrderService", registrationOrderService);
         ReflectionTestUtils.setField(target, "wechatPayService", wechatPayService);
+        ReflectionTestUtils.setField(target, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
         return target;
     }
 
@@ -2996,6 +3165,19 @@ class RegistrationFundsMybatisIntegrationTest {
                 + "AND table_name='" + tableName + "' AND index_name='" + indexName + "'";
         String definition = text(sql);
         return definition == null ? "" : definition;
+    }
+
+    private void applyInviteeSignupPointsOffMigration() throws Exception {
+        java.nio.file.Path root = java.nio.file.Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        if (root.getFileName() != null && "chengyinhub-admin".equals(root.getFileName().toString())) {
+            root = root.getParent();
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource(root.resolve(
+                    "chengyinhub-admin/sql/migration_20261104_invitee_signup_points_off.sql")));
+        }
+        assertEquals(0, number("SELECT COUNT(*) FROM cms_points_setting WHERE id = 6 "
+                + "AND (status IS NULL OR status <> 0 OR value IS NULL OR value <> 0)"), "迁移读回断言");
     }
 
     private void applyFundsMigration() throws Exception {

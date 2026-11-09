@@ -65,6 +65,15 @@
       </view>
     </view>
 
+    <view class="node-card" id="fieldThemeAudio">
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="play" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">主题配乐</text></view>
+        <view wx:if="{{formData.audioUrl}}" class="node-pill" bindtap="clearThemeAudio" aria-role="button" aria-label="移除主题配乐" hover-class="cy-pressed">移除</view>
+        <view class="node-pill" bindtap="uploadThemeAudio" aria-role="button" aria-label="上传主题配乐" hover-class="cy-pressed">{{formData.audioUrl ? '更换' : '上传'}}<cy-icon name="plus" size="24" /></view>
+      </view>
+    </view>
+
     <view class="node-card" id="fieldLook" bindtap="openLookEditor" aria-role="button" aria-label="设置画面风格" hover-class="cy-pressed" hover-stay-time="80">
       <view class="node-card__row">
         <view class="node-card__ico"><cy-icon name="image" size="32" /></view>
@@ -103,8 +112,6 @@
       <!-- PRIVATE-GROUP-game-support-copy:只说明来源与渠道,不改开关与能力 -->
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩法支持</text><text class="node-card__value">支持状态以玩法支持矩阵为准。反馈或工单是独立渠道，提交后不会改变支持状态。</text></view></view>
       <view class="node-card__hr"></view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">值域</text><text class="node-card__value">开局值在第一章「初始状态」配置</text></view></view>
-      <view class="node-card__hr"></view>
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">{{runtimeHpLabel}}</text><text class="node-card__value">{{runtimeHpEnabled ? '已启用 · 玩家可见 · 0 至 ' + runtimeHpMax : '未启用'}}</text></view><cy-switch checked="{{runtimeHpEnabled}}" data-stat="hp" bindchange="onRuntimeStatToggle" /><view class="node-pill" data-stat="hp" bindtap="editRuntimeStat" aria-role="button" aria-label="编辑{{runtimeHpLabel}}" hover-class="cy-pressed">编辑<cy-icon name="chevron-right" size="24" /></view></view>
       <view wx:if="{{runtimeEditingStat === 'hp'}}">
       <view class="rt-field"><text>显示名称</text><input value="{{runtimeHpName}}" placeholder="生命值" maxlength="20" data-field="hpName" bindinput="onRuntimeName" /></view>
@@ -125,14 +132,14 @@
         <cy-switch checked="{{true}}" data-key="{{item.key}}" bindchange="onValueEnabled" accessibility-label="启用{{item.label}}" />
         <view class="node-pill" data-index="{{vi}}" bindtap="openValueEditor" aria-role="button" aria-label="编辑{{item.label}}" hover-class="cy-pressed">编辑<cy-icon name="chevron-right" size="24" /></view>
       </view>
-      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">自定义整数值</text><text class="node-card__value">最多 32 项</text></view><view class="node-pill" bindtap="openValueEditor" aria-role="button" aria-label="添加自定义整数值" hover-class="cy-pressed">添加<cy-icon name="plus" size="24" /></view></view>
+      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">自定义整数值</text></view><view class="node-pill" bindtap="openValueEditor" aria-role="button" aria-label="添加自定义整数值" hover-class="cy-pressed">添加<cy-icon name="plus" size="24" /></view></view>
       <!-- 无实际效果时是否消耗（R3）：值域的共同规则，放在值域卡末尾，缺省关闭 -->
       <view class="node-card__hr"></view>
       <view class="node-card__row">
         <view class="node-card__main"><text class="node-card__title">没有实际效果时也消耗</text><text class="node-card__value pd-summary-2l">{{runtimeConsumeOnNoEffectDisabledReason || (runtimeConsumeOnNoEffect ? '数值已满时使用恢复，仍扣费用并计一次' : '数值已满时使用恢复，不扣费用、不计次数')}}</text></view>
         <cy-switch checked="{{runtimeConsumeOnNoEffect}}" disabled="{{!!runtimeConsumeOnNoEffectDisabledReason}}" bindchange="onThemeConsumeOnNoEffect" accessibility-label="没有实际效果时也消耗" />
       </view>
-      <cy-inline-error wx:if="{{runtimeValueError}}" title="{{runtimeValueError}}" />
+      <cy-inline-error kind="error" wx:if="{{runtimeValueError}}" title="{{runtimeValueError}}" />
     </view>
     <!-- 玩法规则（R3 修正）：只留主题级的进行方式、结果卡与再玩一次。恢复/救助、公共设施、运行结局不在主题设置里配置——
          恢复写在独立玩法模板的原有效果里，设施即带核验/费用/次数/效果的玩法模板，结局归最终章。 -->
@@ -167,10 +174,17 @@
       <view class="node-card__hr"></view>
       <view class="node-card__row">
         <view class="node-card__ico"><cy-icon name="play" size="32" /></view>
-        <view class="node-card__main"><text class="node-card__title">允许再玩一次</text><text class="node-card__value">仅个人进行方式生效</text></view>
+        <view class="node-card__main"><text class="node-card__title">允许再玩一次</text></view>
         <cy-switch checked="{{themeReplayEnabled}}" bindchange="toggleThemeReplay" accessibility-label="允许再玩一次" />
       </view>
       <cy-inline-error class="node-binding__error pd-rules__error" wx:if="{{themeReplayError}}" kind="error" title="{{themeReplayError}}" />
+      <!-- 第九轮 m2 第 2 项:作者可以整体关掉同场队伍互相看到路线(默认开) -->
+      <view class="node-card__hr"></view>
+      <view class="node-card__row">
+        <view class="node-card__ico"><cy-icon name="route" size="32" /></view>
+        <view class="node-card__main"><text class="node-card__title">同场路线</text></view>
+        <cy-switch checked="{{themeTeamTrail}}" bindchange="toggleThemeTeamTrail" accessibility-label="同场路线" />
+      </view>
       <!-- 文档二 L1(10-27 业主):d20、RPG 规则、角色属性合成一个入口。开关关着时下面那一行不出现。 -->
       <view class="node-card__hr"></view>
       <view class="node-card__row">
@@ -215,7 +229,7 @@
           <input class="pd-completion-rule__input {{completionRuleError || errors.completionRule ? 'is-error' : ''}}" type="number" value="{{completionRequiredCount}}" bindinput="onCompletionRequiredCountInput" />
           <text>/ {{totalNodes || 0}} 个节点即通关</text>
         </view>
-        <cy-inline-error class="pd-completion-rule__error" wx:if="{{completionRuleError || errors.completionRule}}" title="{{completionRuleError || errors.completionRule}}" />
+        <cy-inline-error kind="error" class="pd-completion-rule__error" wx:if="{{completionRuleError || errors.completionRule}}" title="{{completionRuleError || errors.completionRule}}" />
       </block>
     </view>
 

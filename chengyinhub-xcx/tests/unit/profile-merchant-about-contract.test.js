@@ -66,6 +66,7 @@ function setByPath(target, key, value) {
 function mountProfile(opts) {
   const options = Object.assign({ loginId: '', role: 'player', viewer: 'other', userId: '' }, opts)
   const requests = []
+  const clubPostRequests = []
   const navigations = []
   const themes = []
   const locations = []
@@ -82,7 +83,9 @@ function mountProfile(opts) {
     setUserRole() {},
     getPageSize: () => 10,
     getTotalPage: () => 1,
-    sendRequest(request) { requests.push(request) },
+    // 第十轮 f3 j5 H4:本人帖文首屏另取一路俱乐部帖文(/api/club/post/feed author=me),单独计数,
+    // 本文件对社区帖文请求次数的断言(脏刷只拉一次等)口径不变。
+    sendRequest(request) { (request.url === '/api/club/post/feed' ? clubPostRequests : requests).push(request) },
   }
 
   // ⚠️ 全局不还原:utils/theme.js 这类依赖在**调用时**读 getApp/wx,不是 require 时。
@@ -147,6 +150,7 @@ function mountProfile(opts) {
   component.profileApp = app
   component.profileShow = () => definition.pageLifetimes.show.call(component)
   component.requests = requests
+  component.clubPostRequests = clubPostRequests
   component.navigations = navigations
   component.themes = themes
   component.locations = locations
@@ -999,6 +1003,7 @@ test('缓存推文返回仅脏时重拉一次，不吞广场全局脏标', async
   component.answer('/api/v1/community/me/posts', { code: 200, data: { items: [{ post: { id: 59, authorId: 5, commentCount: 1 } }], hasMore: false } })
   await settlePosts()
   assert.equal(component.data.list[0].commentCount, 1)
+  assert.equal(component.clubPostRequests.length, 1, '本人帖文刷新时俱乐部帖文同轮重取')
   assert.equal(component.profileApp.globalData.squareListDirty, true)
   component.profileShow()
   assert.equal(component.requests.length, 1)

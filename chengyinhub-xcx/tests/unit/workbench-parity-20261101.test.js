@@ -8,7 +8,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '../..');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const { hostPrimary } = require('../../utils/project-progress.js');
+const { hostPrimary } = require('../../pages/topic/utils/project-progress.js');
 
 test('主办底部主键按 lifecycle 变,售票 / 进行中是去核销', () => {
   assert.deepEqual(hostPrimary({ lifecycle: 7 }), { text: '等待审核中', act: '', key: '', disabled: true });

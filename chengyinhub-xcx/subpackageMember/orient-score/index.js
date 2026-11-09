@@ -35,7 +35,7 @@ Page({
     if (this.data.busy && !changed) return;
     this._epoch += 1;
     this._recovering = false;
-    if (!this._scope) { this.setData({ state: 'missing-param', stateTitle: '缺少合法对局参数', score: null }); return; }
+    if (!this._scope) { this.setData({ state: 'missing-param', stateTitle: '链接已失效', score: null }); return; }
     if (!identity.owner || !identity.auth) {
       if (this._workflow) this._workflow.destroy();
       this._workflow = null; this._identity = null;
@@ -55,7 +55,7 @@ Page({
     else this.readSessions(capture);
   },
   readSessions(capture) {
-    if (!this._scope.topicId) { this.setData({ state: 'missing-param', stateTitle: '请从带主题信息的对局记录进入' }); return; }
+    if (!this._scope.topicId) { this.setData({ state: 'missing-param', stateTitle: '链接已失效' }); return; }
     const data = { topicId: this._scope.topicId };
     if (this._scope.activityId) data.activityId = this._scope.activityId;
     app.sendRequest({ url: '/api/play/orient/session/current', method: 'GET', data, hideLoading: true,
@@ -328,5 +328,7 @@ Page({
     });
   },
   retry() { this.load(); },
+  // 链接本身缺参时重读不会变,给「返回」(R11 p1 F-14)
+  onStateCta() { if (this.data.state === 'missing-param') { wx.navigateBack({ fail() { wx.switchTab({ url: '/pages/member/index/index' }); } }); return; } this.retry(); },
   onPullDownRefresh() { this.load(); wx.stopPullDownRefresh(); }
 });

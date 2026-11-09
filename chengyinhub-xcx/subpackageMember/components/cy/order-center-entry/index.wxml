@@ -1,0 +1,15 @@
+<wxs src="../../../../utils/wxs/money.wxs" module="money" />
+<cy-scene-member-order-detail wx:if="{{id}}" id="orderDetail" order-id="{{id}}" bind:back="backToOrderList" bind:close="backToOrderList" />
+<view wx:else class="entry-body" style="padding-top:{{navTop}}px">
+  <cy-empty wx:if="{{entryState !== 'ready'}}" kind="{{entryState}}" title="{{entryTitle}}" cta="{{entryAction}}" bind:cta="onEntryAction" style="margin:auto 0" />
+  <block wx:elif="{{summary}}">
+    <cy-card>
+      <view class="entry-title">{{summary.title}}</view>
+      <view class="entry-status">{{summary.statusText}}</view>
+      <view class="entry-row"><text>金额</text><text class="entry-value">{{money.amount(summary.amountText)}}</text></view>
+      <view class="entry-row"><text>订单号</text><text class="entry-value" user-select>{{summary.orderNo}}</text></view>
+      <view wx:if="{{summary.createdAtText}}" class="entry-row"><text>创建时间</text><text class="entry-value">{{summary.createdAtText}}</text></view>
+    </cy-card>
+    <button class="entry-button" open-type="contact">联系客服</button>
+  </block>
+</view>

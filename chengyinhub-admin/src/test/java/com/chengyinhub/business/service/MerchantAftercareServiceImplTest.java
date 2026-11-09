@@ -114,6 +114,55 @@ class MerchantAftercareServiceImplTest {
     }
 
     @Test
+    void manualCaseIsReadOnlyTypedAndNeverQueriesOrdinaryRefundOrLeaksFullOrderFacts() {
+        MerchantAftercareListRow row = new MerchantAftercareListRow();
+        row.setRecordType("MANUAL_CASE");
+        row.setManualCaseId(REFUND); // 两种资源可以同号，不能偷换成 refundId。
+        row.setManualCaseStatus("PENDING_ASSESSMENT");
+        row.setActivityTitle("探店主题");
+        row.setRefundAmount(new BigDecimal("100.00"));
+        row.setCustomerNickname("不向履约商家投影付款人");
+        row.setReason("平台内部评估备注");
+        when(mapper.countOwnedRefundList(MERCHANT, OWNER, "PROCESSING")).thenReturn(1L);
+        when(mapper.selectOwnedRefundList(MERCHANT, OWNER, "PROCESSING", 0, 20))
+                .thenReturn(Collections.singletonList(row));
+        when(mapper.selectOwnedManualCaseDisplay(MERCHANT, OWNER, REFUND)).thenReturn(row);
+
+        MerchantAftercareListItemVO item = service.list(PRINCIPAL, "PROCESSING", 1, 20).getItems().get(0);
+        assertEquals("MANUAL_CASE", item.getRecordType());
+        assertEquals(REFUND, item.getManualCaseId());
+        assertNull(item.getRefundId());
+        assertEquals("PROCESSING", item.getBucket());
+        assertEquals("PENDING_ASSESSMENT", item.getProcessing());
+        assertFalse(item.isCanRespond());
+        assertFalse(item.isRefunded());
+        assertNull(item.getRefundAmount());
+        assertNull(item.getCustomerNickname());
+        assertNull(item.getReason());
+        assertNull(item.getMerchantNetAmount());
+
+        MerchantAftercareDetailVO detail = service.manualCaseDetail(PRINCIPAL, REFUND);
+        assertEquals("MANUAL_CASE", detail.getRecordType());
+        assertEquals(REFUND, detail.getManualCaseId());
+        assertNull(detail.getRefundId());
+        assertNull(detail.getRefundStatus());
+        assertNull(detail.getPayoutStatus());
+        assertNull(detail.getRefundAmount());
+        assertNull(detail.getCustomerNickname());
+        assertNull(detail.getReason());
+        assertFalse(detail.isCanRespond());
+        assertTrue(detail.getAllowedDecisions().isEmpty());
+        assertTrue(detail.getResponses().isEmpty());
+        verify(mapper, never()).selectOwnedRefundById(any(), any(), any());
+        verify(mapper, never()).selectResponses(any(), any());
+        verifyNoInteractions(audits, evidenceUrlSigner);
+
+        assertEquals(404, assertThrows(ServiceException.class,
+                () -> service.manualCaseDetail(PRINCIPAL, 999L)).getCode());
+        assertThrows(ServiceException.class, () -> service.manualCaseDetail(PRINCIPAL, null));
+    }
+
+    @Test
     void listUsesOwnerScopeAndSeparatesAwaitingReplyFromPlatformProcessing() {
         MerchantAftercareListRow waiting = listRow(41L, 0,
                 RefundApplication.PAYOUT_DISPATCH_PENDING, "PENDING");

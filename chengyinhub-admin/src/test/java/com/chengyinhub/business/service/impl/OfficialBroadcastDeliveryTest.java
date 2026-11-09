@@ -87,7 +87,7 @@ class OfficialBroadcastDeliveryTest {
             when(audience.selectPlayerIds(any())).thenReturn(Collections.singletonList(10L));
             when(members.lockMemberById(anyLong())).thenAnswer(call -> call.getArgument(0));
             when(im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenReturn(501L);
-            when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(true);
+            when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class))).thenReturn(true);
             restart();
         }
 
@@ -174,26 +174,26 @@ class OfficialBroadcastDeliveryTest {
         assertEquals(1, f.restart().dispatch(f.broadcast));
         assertEquals(OfficialBroadcast.ST_SENT, f.broadcast.getStatus());
         verify(f.im, times(1)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
-        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
     void falseCannotProveSuccessOrSafeRetryAcrossRestart() {
         Fixture f = new Fixture();
-        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(false);
+        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class))).thenReturn(false);
         f.service.dispatch(f.broadcast);
         assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
         assertEquals(0, f.row("subscribe").getReached());
         assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
         f.restart().runDueScheduled();
-        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
         verify(f.im, times(1)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
     }
 
     @Test
     void remoteExceptionRetainsUnknownIntentAndOriginalIdentity() {
         Fixture f = new Fixture(broadcast("subscribe"));
-        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString()))
+        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class)))
                 .thenThrow(new IllegalStateException("response lost after acceptance"));
         f.service.dispatch(f.broadcast);
         Long original = f.row("subscribe").getId();
@@ -201,7 +201,7 @@ class OfficialBroadcastDeliveryTest {
         assertEquals(original, f.row("subscribe").getId());
         assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
         assertEquals(0, f.broadcast.getReachedCount());
-        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -213,7 +213,7 @@ class OfficialBroadcastDeliveryTest {
         assertThrows(IllegalStateException.class, () -> f.service.dispatch(f.broadcast));
         assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
         f.restart().dispatch(f.broadcast);
-        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -227,7 +227,7 @@ class OfficialBroadcastDeliveryTest {
         assertEquals(1, f.restart().dispatch(f.broadcast));
         assertEquals(502L, f.row("inapp").getMessageId());
         assertEquals(OfficialBroadcast.ST_SENT, f.broadcast.getStatus());
-        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        verify(f.wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -247,7 +247,7 @@ class OfficialBroadcastDeliveryTest {
                 .when(f.transactions).getTransaction(argThat(definition -> definition != null
                         && definition.getPropagationBehavior() != org.springframework.transaction.TransactionDefinition.PROPAGATION_NOT_SUPPORTED));
         doAnswer(call -> { insideTemplate.set(false); return null; }).when(f.transactions).commit(any());
-        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenAnswer(call -> {
+        when(f.wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString(), nullable(String.class))).thenAnswer(call -> {
             assertEquals(OfficialBroadcastLog.UNKNOWN, f.row("subscribe").getDeliveryState());
             assertFalse(insideTemplate.get(), "claim template must have committed before remote call");
             return true;

@@ -94,7 +94,6 @@
   background: var(--cy-color-bg-surface);
   border-radius: var(--cy-radius-xl);
 }
-.tile--tap { opacity: 0.88; }
 
 .tile-ico { color: var(--cy-color-text-primary); }
 
@@ -129,7 +128,6 @@
   align-items: center;
   gap: var(--cy-space-1);
 }
-.sec-link--tap { opacity: 0.6; }
 
 .sec-link-txt {
   font-size: var(--cy-type-label);
@@ -158,7 +156,6 @@
   background: var(--cy-color-bg-surface);
   border-radius: var(--cy-radius-xl);
 }
-.mine-tap { opacity: 0.7; }
 
 .mine-num {
   font-size: var(--cy-type-display);
@@ -178,7 +175,6 @@
 .deck { position: relative; }
 .deck--g1 { padding-top: 22rpx; }
 .deck--g2 { padding-top: 44rpx; }
-.deck-tap { opacity: 0.9; }
 
 /* 影卡 = 同一块黑降透明度。用一个 token 表达「同一叠卡,后面的更远」,
    比借用两个语义不对的灰色 token 干净。 */
@@ -251,7 +247,6 @@
   overflow: hidden;
   border-radius: var(--cy-radius-xl);
 }
-.coop--tap { opacity: 0.92; }
 
 .coop-img {
   display: block;

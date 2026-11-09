@@ -63,6 +63,28 @@ class CoopSettlementOriginalProducerTest {
         producer.freezeOriginals(topic,basis(),new Date(5000));
         verify(originals,never()).selectPaymentVerifiedReferenceForUpdate(1L);verify(ledger).freezeOriginals(any(),anyList(),anyList());
     }
+    @Test void clubSelfPlayFreezesOnlyItsExistingPlatformAndPrincipalHeads() {
+        topic.setClubId(42L);
+        heads.remove(1);heads.get(1).setAmount(new BigDecimal("18.00"));
+        producer.freezeClubSelfPlayOriginals(topic,basis(),new Date(5000));
+        ArgumentCaptor<List<CoopSettlementOriginalComponent>> components=ArgumentCaptor.forClass(List.class);
+        verify(ledger).freezeOriginals(any(),anyList(),components.capture());
+        assertEquals(4,components.getValue().size());
+        assertEquals(new BigDecimal("20.00"),components.getValue().stream().map(CoopSettlementOriginalComponent::getOriginalAmount)
+                .reduce(new BigDecimal("0.00"),BigDecimal::add));
+        assertTrue(components.getValue().stream().noneMatch(c->"INITIATOR_GUARANTEE".equals(c.getLineType())));
+    }
+    @Test void missingGuaranteeInClassicRouteAndForeignSelfPlayScopeStillRefuse() {
+        heads.remove(1);heads.get(1).setAmount(new BigDecimal("18.00"));
+        assertTrue(assertThrows(IllegalStateException.class,()->producer.freezeOriginals(topic,basis(),new Date(5000)))
+                .getMessage().contains("ORIGINAL_ACCOUNTING_HEAD_REQUIRED:INITIATOR_GUARANTEE"));
+        assertTrue(assertThrows(IllegalStateException.class,()->producer.freezeClubSelfPlayOriginals(topic,basis(),new Date(5000)))
+                .getMessage().contains("CLUB_SELF_PLAY_SCOPE_REQUIRED"));
+        topic.setClubId(42L);heads.add(head(4L,"INITIATOR_GUARANTEE",7L,"0"));
+        assertTrue(assertThrows(IllegalStateException.class,()->producer.freezeClubSelfPlayOriginals(topic,basis(),new Date(5000)))
+                .getMessage().contains("CLUB_SELF_PLAY_HEAD_SET_REQUIRED"));
+        verifyNoInteractions(ledger);
+    }
     @Test void missingOriginalPaymentReceiptCannotFreezeAHead() {
         when(originals.selectPaymentVerifiedReferenceForUpdate(1L)).thenReturn(null);
         assertThrows(IllegalStateException.class,()->producer.freezeOriginals(topic,basis(),new Date(5000)));

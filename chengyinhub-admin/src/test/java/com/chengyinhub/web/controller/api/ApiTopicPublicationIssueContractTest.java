@@ -48,6 +48,9 @@ class ApiTopicPublicationIssueContractTest {
         ReflectionTestUtils.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
         ReflectionTestUtils.setField(controller, "memberIdentityService", mock(MemberIdentityService.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
+        // 主干 j5 B1:草稿发布口按库内节点绑定的玩法再过一次文字闸;本合同不带节点。
+        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", mock(ICmsTopicNodeService.class));
+        ReflectionTestUtils.setField(controller, "memberTemplateService", mock(ICmsMemberTemplateService.class));
         IWxContentSecurityService security = mock(IWxContentSecurityService.class);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", security);
         TopicContentSafetyTestFixtures.wire(controller, security);
@@ -73,6 +76,7 @@ class ApiTopicPublicationIssueContractTest {
         dto.setName("待发布主题");
         dto.setProductType(ProductType.FREE_EXPLORE);
         dto.setPublishMode("pro");
+        dto.setImgUrl("https://www.chengyinhub.com/cover.png"); // 主干 P-17:发布必须带封面
         return dto;
     }
 

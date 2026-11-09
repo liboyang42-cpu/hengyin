@@ -30,6 +30,7 @@ Component({
   },
 
   data: {
+    couponCreationEnabled: couponForm.CREATION_ENABLED,
     open: false,
     loading: false,
     selectedLabel: '',
@@ -151,6 +152,7 @@ Component({
     // 从选择器发起「创建」:不再 navigateTo 整页跳走,原地开一层半屏 sheet,
     // 选择器 sheet(this.data.open)保持不变——建完/取消都直接回到它,不丢已选状态。
     createCoupon() {
+      if (!couponForm.CREATION_ENABLED) return;
       const isPass = this.data.rewardKind === 'PASS';
       const createForm = couponForm.createDefaultFormData();
       if (isPass) createForm.couponType = 4;
@@ -251,6 +253,7 @@ Component({
     },
 
     onCreateSubmit() {
+      if (!couponForm.CREATION_ENABLED) return;
       if (this.data.isSubmitting) return;
       const formData = this.data.createForm;
       const check = couponForm.validate(formData);

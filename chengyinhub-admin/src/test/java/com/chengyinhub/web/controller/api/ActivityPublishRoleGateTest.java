@@ -73,6 +73,7 @@ class ActivityPublishRoleGateTest
         member = new UmsMember();
         member.setId(MEMBER_ID);
         when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(member);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "roleService", roleService);
         ReflectionTestUtils.setField(controller, "quotaService", quotaService);
@@ -85,6 +86,7 @@ class ActivityPublishRoleGateTest
         when(contentSafetyGate.decide(any())).thenReturn(SafetyDecision.pass());
         ActivityReviewPolicy activityReviewPolicy = new ActivityReviewPolicy();
         ReflectionTestUtils.setField(activityReviewPolicy, "configService", mock(ISysConfigService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "contentSafetyGate", contentSafetyGate);
         ReflectionTestUtils.setField(controller, "activityReviewPolicy", activityReviewPolicy);
         ReflectionTestUtils.setField(controller, "auditTaskService", mock(IAuditTaskService.class));
@@ -196,6 +198,7 @@ class ActivityPublishRoleGateTest
         IClubEventOpsService clubEventOpsService = mock(IClubEventOpsService.class);
         when(clubEventOpsService.cancelActivityByOwnerWithClubWrapUp(MEMBER_ID, 9L, "天气原因"))
                 .thenReturn(new ActivityCancelResult(1, 0, 0));
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "clubEventOpsService", clubEventOpsService);
 
         AjaxResult result = controller.activityCancel("9", "天气原因", null);
@@ -248,6 +251,7 @@ class ActivityPublishRoleGateTest
         ReflectionTestUtils.setField(realWrapUp, "cancellationTopicMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         com.chengyinhub.business.service.CancellationPhaseTestSupport.wireReceiptMocks(realWrapUp);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "clubEventOpsService", realWrapUp);
 
         AjaxResult result = controller.activityCancel("9", "天气原因", null);
@@ -314,6 +318,69 @@ class ActivityPublishRoleGateTest
         verify(roleService, never()).resolveRole(member);
     }
 
+    /**
+     * 第十轮 f1 item 2(j1 F1/F2):进「发活动」页先问 publish_precheck,与 publish 同一套身份/审核/配额判据;
+     * 拒绝一律 403 带原话,页面据此在进页时讲,不等填完三步。只读:不进配额锁、不发布。
+     */
+    @Test
+    void precheckRefusesMerchantWhoseRoleCannotCreateEventsBeforeTheFormIsFilled()
+    {
+        grantMerchantProjectManage();
+        when(quotaService.checkCreate(MERCHANT_OWNER_ID, IQuotaService.TYPE_EVENT)).thenReturn("当前身份不可创建活动");
+
+        AjaxResult result = controller.publishPrecheck("MERCHANT");
+
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
+        assertEquals("当前身份不可创建活动", result.get(AjaxResult.MSG_TAG));
+        verify(quotaService, never()).runWithCreateGuard(anyLong(), anyString(), any());
+        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
+    }
+
+    @Test
+    void precheckPassesApprovedMerchantWithQuotaAgainstTheOwnerNotTheStaffActor()
+    {
+        grantMerchantProjectManage();
+
+        AjaxResult result = controller.publishPrecheck("MERCHANT");
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        verify(quotaService).checkCreate(MERCHANT_OWNER_ID, IQuotaService.TYPE_EVENT);
+        verify(quotaService, never()).checkCreate(MEMBER_ID, IQuotaService.TYPE_EVENT);
+    }
+
+    @Test
+    void precheckRefusesPlayerAndUnapprovedMerchantWith403()
+    {
+        when(roleService.resolveRole(member)).thenReturn(IRoleService.ROLE_PLAYER);
+        AjaxResult player = controller.publishPrecheck(null);
+        assertEquals(403, player.get(AjaxResult.CODE_TAG));
+        assertEquals("仅俱乐部主理人或商家可发布活动", player.get(AjaxResult.MSG_TAG));
+
+        when(merchantAccessService.require(MEMBER_ID, MerchantPermission.PROJECT_MANAGE))
+                .thenReturn(new MerchantAccessContext(MEMBER_ID, null, MERCHANT_OWNER_ID, "MERCHANT_OWNER"));
+        AjaxResult unapproved = controller.publishPrecheck("MERCHANT");
+        assertEquals(403, unapproved.get(AjaxResult.CODE_TAG));
+        assertEquals("商家未通过入驻审核，暂不能发布活动", unapproved.get(AjaxResult.MSG_TAG));
+
+        when(merchantAccessService.require(MEMBER_ID, MerchantPermission.PROJECT_MANAGE))
+                .thenThrow(new ServiceException("商家身份无效或权限不足", 403));
+        AjaxResult noAccess = controller.publishPrecheck("MERCHANT");
+        assertEquals(403, noAccess.get(AjaxResult.CODE_TAG));
+        verify(quotaService, never()).checkCreate(anyLong(), anyString());
+    }
+
+    @Test
+    void clubPrecheckUsesTheSameQuotaGate()
+    {
+        when(roleService.resolveRole(member)).thenReturn(IRoleService.ROLE_CLUB);
+        when(quotaService.checkCreate(MEMBER_ID, IQuotaService.TYPE_EVENT)).thenReturn("已达到当前身份活动数量上限（3）");
+
+        AjaxResult result = controller.publishPrecheck(null);
+
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
+        assertEquals("已达到当前身份活动数量上限（3）", result.get(AjaxResult.MSG_TAG));
+    }
+
     /** 玩家/未入驻拿 MERCHANT scope 也发不出去:身份闸在商家域同样生效,且不落库。 */
     @Test
     void merchantScopeWithoutPermissionCannotPublish()
@@ -330,19 +397,19 @@ class ActivityPublishRoleGateTest
     }
 
     /**
-     * 收款缺口(9-15 定稿「钱进商家子商户号」未落地,现码一律进平台商户号):
-     * 商家主办只放开免费场,票价>0 直接拒并给明确文案,不是静默失败。
+     * 2026-11-02 pay-gate:商家主办也可发收费场,票款走平台商户号(商户号只管承接其他商家)。
      */
     @Test
-    void merchantScopePublishRejectsPaidTicketWithExplicitMessage()
+    void merchantScopePublishAllowsPaidTicketThroughPlatformMerchant()
     {
         grantMerchantProjectManage();
+        passCreateGuardThrough();
+        when(cmsActivityService.publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean())).thenReturn(9L);
 
         AjaxResult result = controller.publish(merchantRequestWithPrice("69"));
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
-        assertEquals("商家主办活动还没开通收款，票价只能是 0", result.get(AjaxResult.MSG_TAG));
-        verify(cmsActivityService, never()).publishActivity(any(), anyLong(), anyString(), anyBoolean());
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        verify(cmsActivityService).publishActivity(any(), eq(MERCHANT_OWNER_ID), anyString(), anyBoolean());
     }
 
     /** 负控的另一半:0 元票是「免费场」不是「没开通收款」,必须放行 —— 误把 >0 写成 >=0 会在这儿红。 */

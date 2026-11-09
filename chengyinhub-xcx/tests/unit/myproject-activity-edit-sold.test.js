@@ -45,7 +45,13 @@ beforeEach(() => {
 function makePage() {
   const inst = Object.assign({}, pageConfig);
   inst.data = JSON.parse(JSON.stringify(pageConfig.data));
-  inst.setData = function (patch) { Object.assign(inst.data, patch); };
+  inst.setData = function (patch) {
+    for (const [path, value] of Object.entries(patch)) {
+      const keys = path.split('.');
+      const parent = keys.slice(0, -1).reduce((obj, key) => obj[key], inst.data);
+      parent[keys.at(-1)] = value;
+    }
+  };
   return inst;
 }
 
@@ -106,3 +112,70 @@ test('待核销统计只有明确非负整数才展示，缺值不得冒充零',
   assert.deepEqual(page.data.list.slice(-3).map(row => row._pendingVerifyText), ['待核销 0', '待核销 0', '待核销 3'])
   assert.equal(page.data.list[1]._pendingVerifyText, '')
 })
+
+
+function openTopicMenu(page, state = 'offline', id = 990039) {
+  page.setData({ typeTab: 'topic' });
+  page.loadProjects();
+  sent.at(-1).success({ code: 200, data: { rows: [{ id, bizType: 'topic', state, title: '主题' }], total: 1 } });
+  if (page.data.operationScope === 'MERCHANT') {
+    sent.findLast(r => r.url === '/api/registration/merchant/list').success({ code: 200, data: [] });
+    sent.findLast(r => r.url === '/api/merchant/chapter-application/mine').success({ code: 200, data: [] });
+  }
+  page.onCardLong({ currentTarget: { dataset: { item: page.data.list[0] } } });
+  const request = sent.at(-1);
+  assert.equal(request.url, '/api/project/home');
+  assert.deepEqual(JSON.parse(request.data), { topicId: id, scope: page.data.operationScope });
+  return request;
+}
+
+test('已下架主题菜单在服务端拒绝编辑时不提供编辑，其余管理动作保留', () => {
+  const page = makePage();
+  const request = openTopicMenu(page);
+  assert.equal(page.data.opsSheet.canEdit, false, '资格返回前不承诺可编辑');
+  request.success({ code: 200, data: { role: 'host', host: { canEdit: false, editReason: '主题已开始，内容已锁定' } } });
+  assert.equal(page.data.opsSheet.canEdit, false);
+  assert.equal(page.data.opsSheet.canToggle, true);
+  assert.equal(page.data.opsSheet.canDelete, true);
+});
+
+test('草稿、驳回和下架主题仅凭已有服务端门禁显示编辑并保留商家 scope', () => {
+  for (const state of ['draft', 'rejected', 'offline']) {
+    const page = makePage();
+    page.data.operationScope = 'MERCHANT';
+    openTopicMenu(page, state).success({ code: 200, data: { role: 'host', host: { canEdit: true } } });
+    assert.equal(page.data.opsSheet.canEdit, true, state);
+    page.onOpsPick({ currentTarget: { dataset: { k: 'edit' } } });
+    assert.equal(navigations.at(-1), '/pages/publish/fabu/index?id=990039&scope=MERCHANT');
+  }
+});
+
+test('主题编辑门禁缺失、非布尔许可、承接身份或失败均不提供编辑', () => {
+  for (const data of [null, {}, { role: 'host', host: {} }, { role: 'host', host: { canEdit: 'true' } },
+    { role: 'join', host: { canEdit: true } }]) {
+    const page = makePage();
+    openTopicMenu(page).success({ code: 200, data });
+    assert.equal(page.data.opsSheet.canEdit, false);
+  }
+  for (const callback of ['fail', 'successStatusAbnormal', 'success']) {
+    const page = makePage();
+    openTopicMenu(page)[callback]({ code: 500, msg: '加载失败' });
+    assert.equal(page.data.opsSheet.canEdit, false);
+    assert.equal(toasts.at(-1), '加载失败');
+  }
+});
+
+test('迟到门禁回包不能覆盖新菜单、重开菜单、关闭菜单或失效会话', () => {
+  const allowed = { code: 200, data: { role: 'host', host: { canEdit: true } } };
+  for (const change of ['other', 'reopen', 'close', 'hidden', 'session']) {
+    const page = makePage();
+    const stale = openTopicMenu(page);
+    if (change === 'other') openTopicMenu(page, 'offline', 990040);
+    if (change === 'reopen') { page.closeOpsSheet(); openTopicMenu(page); }
+    if (change === 'close') page.closeOpsSheet();
+    if (change === 'hidden') page._visible = false;
+    if (change === 'session') page._readEpoch = (page._readEpoch || 0) + 1;
+    stale.success(allowed);
+    assert.equal(page.data.opsSheet.canEdit, false, change);
+  }
+});

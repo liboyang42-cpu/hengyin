@@ -2,6 +2,8 @@ const cyToast = require('../../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
+const { ROAM_SHARE_COVER } = require('../../../utils/roam-menu-share.js');
+const { applicantRows } = require('../../../utils/team-applicant-rows.js');
 const app = getApp();
 
 // Preserve numeric IDs for existing callers, but never round a Long string.
@@ -12,11 +14,21 @@ const requestId = value => {
 
 const STATUS_TEXT = ['招募中', '已满员', '进行中', '已结束', '已解散'];
 
+// 第十二轮 k7(j4 F15):没起名的队伍按队长昵称叫,与「我的队伍」、附近招募同一口径
+function teamTitleOf(team, members) {
+  const title = String((team && team.title) || '').trim();
+  if (title) return title;
+  const lead = (members || []).find((m) => m && Number(m.role) === 1);
+  const name = String((lead && (lead.memberName || lead.name)) || '').trim();
+  return name ? name + '的队伍' : '一起出发的玩家队伍';
+}
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    commandRecovery: null, recoveryShown: false,
+    commandRecovery: null, recoveryShown: false, commandReject: null,
+    applicants: [], applicantsState: '',
     board: null,
     boardState: '',
     boardMessage: '',
@@ -52,23 +64,34 @@ Page({
         refreshing: false,
         error: '队伍链接不完整',
         errorKind: 'missing-param',
-        errorSub: '请返回重新进入',
+        errorSub: '',
         errorAction: '返回上一页'
       });
     }
   },
-  onShow() { this._hidden = false; if (this.teamId) { this._openRecovery(); this.load(); } },
+  onShow() { this._hidden = false; if (this.teamId && !this._left) { this._openRecovery(); this.load(); } },
   onHide() { this._hidden = true; if (this._recovery) this._recovery.dispose(); this._resetReads(); },
   onUnload() { this._disposed = true; if (this._recovery) this._recovery.dispose(); this._resetReads(); },
 
   _openRecovery() {
     if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
-    this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM', targetId: this.teamId,
-      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false; // 本页刚发出的请求在途时不弹恢复卡(按钮自带忙态);回包未知/失败、重进页面读到存档、APPLIED 回执照常显示
-        this.setData({ commandRecovery: value, recoveryShown: !!(value.state || value.busy) && !(fresh && value.busy), joinModeSaving: value.busy || value.state === 'UNKNOWN' }); },
+    this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM', targetId: this.teamId, settle: true,
+      // 第十一轮 g2(j4 F1):终态回执由共享层静默归档;恢复卡只留给结果未知(card)。被拒时后端理由贴在对应按钮旁。
+      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false;
+        const out = value.outcome && value.outcome.state === 'REJECTED' ? value.outcome : null;
+        this.setData({ commandRecovery: value, recoveryShown: !!(value.card || value.busy) && !(fresh && value.busy),
+          joinModeSaving: value.busy || value.state === 'UNKNOWN',
+          commandReject: out && !value.busy ? { action: out.action, message: out.message || '操作没有完成，请刷新后重试' } : null }); },
       terminal: (result, command) => {
         this._resetReads();
-        if (result.state === 'APPLIED' && ['quit', 'disband'].includes(command.action)) this._clearMembership();
+        if (result.state === 'APPLIED' && ['quit', 'disband'].includes(command.action)) {
+          // j4 F3:已不在队里,不再重读一支看不见的队伍(会留下「已满员 2/2」压着空名单),直接回到上一页 / 我的队伍。
+          this._clearMembership();
+          this._left = true;
+          cyToast(command.action === 'quit' ? '已退出队伍' : '队伍已解散');
+          wx.navigateBack({ delta: 1, fail() { wx.redirectTo({ url: '/subpackageRoam/my-teams/index' }); } });
+          return;
+        }
         this.load();
       } });
   },
@@ -162,6 +185,7 @@ Page({
             loading: false,
             refreshing: false,
             team: team,
+            teamTitle: teamTitleOf(team, res.data.members || []),
             members: res.data.members || [],
             joined: !!res.data.joined,
             leader: !!res.data.leader,
@@ -172,22 +196,25 @@ Page({
             errorSub: ''
           });
           that._loadBoard(context, team, res.data.joined === true);
+          that._loadApplicants(context, !!res.data.leader && team.status === 0);
         } else {
           // PR10 F-W1-12:未登录(无会话 / 401)的按钮是「登录」(走 retryLogin),不是只会再撞一次的「重新加载」。
           const needLogin = isLoginRequired(app, res);
           const authDenied = needLogin || String(res && res.code) === '403';
+          // j4 F2:服务端明确拒绝(无权查看该队伍、队伍不存在)是业务结论:写出理由并给返回出路,不留白、不留旧队伍。
+          const refused = !authDenied && !!res && res.errorCode === 'TEAM_INFO_REFUSED';
           that._clearMembership();
-          if (authDenied) that.setData({ team: null });
+          if (authDenied || refused) that.setData({ team: null, applicants: [], applicantsState: '' });
           // F-W1-12:静默重登后仍 401/403 是身份问题,留可见的登录/权限说明,不按加载失败留白。
           that.setData({
             loading: false,
             refreshing: false,
-            error: authDenied ? '登录后查看队伍' : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
-            errorKind: authDenied ? 'no-permission' : 'data',
-            errorSub: authDenied ? '请重新登录后再打开这支队伍' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
+            error: authDenied ? '登录后查看队伍' : refused ? app.getRequestErrorMessage(res, '无法查看这支队伍') : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
+            errorKind: authDenied ? 'no-permission' : refused ? 'missing-param' : 'data',
+            errorSub: authDenied ? '' : refused ? '' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
             boardState: needLogin ? 'login' : 'error',
             boardMessage: '队伍成员资格暂未确认，请重新加载',
-            errorAction: needLogin ? '登录' : '重新加载'
+            errorAction: needLogin ? '登录' : refused ? '返回上一页' : '重新加载'
           });
         }
       },
@@ -287,6 +314,7 @@ Page({
         this.setData({ members: d.members.map(m => ({ memberId: exactId(m.memberId),
           memberName: m.name || '城瘾玩家', memberAvatar: m.avatar || '', role: m.role })),
           'team.joinedCount': d.threshold.activeCount,
+          teamTitle: teamTitleOf(this.data.team, d.members.map(m => ({ name: m.name, role: m.role }))),
           joined: true, leader: self.role == null ? this.data.leader : self.role == 1 });
         // Only project server completion facts; never infer team completion from member counts.
         const tasks = d.tasks.map(t => ({ taskId: exactId(t.taskId), name: t.name || '未命名任务',
@@ -303,6 +331,41 @@ Page({
       },
       fail: (res, status) => { if (finish()) reject(res, status); }
     });
+  },
+  // j4 F4:队长在队伍详情就能看到并处理入队申请(与地图队伍半屏同一接口、同一行形状、同一条 handle 原请求)。
+  _loadApplicants(context, show) {
+    if (!show) { this.setData({ applicants: [], applicantsState: '' }); return; }
+    if (this.data.applicantsState !== 'ready') this.setData({ applicantsState: 'loading' });
+    app.sendRequest({
+      url: '/api/team/applications', method: 'POST', hideLoading: true, autoErrorToast: false,
+      data: JSON.stringify({ teamId: requestId(context.teamId) }), header: { 'Content-Type': 'application/json' },
+      success: res => {
+        if (!this._readCurrent(context)) return;
+        if (!(res && res.code == 200 && Array.isArray(res.data))) { this.setData({ applicantsState: 'error' }); return; }
+        this.setData({ applicants: applicantRows(res.data), applicantsState: 'ready' });
+      },
+      fail: () => { if (this._readCurrent(context)) this.setData({ applicantsState: 'error' }); }
+    });
+  },
+  retryApplicants() { this.load(); },
+  approveApplicant(e) { this._handleApplicant(e.currentTarget.dataset.id, true); },
+  rejectApplicant(e) {
+    this._confirmationReader = reader(app);
+    const dc = this.selectComponent && this.selectComponent('#dcReject');
+    if (dc) dc.open('team.reject', { name: e.currentTarget.dataset.name || '这位玩家', id: exactId(e.currentTarget.dataset.id) });
+  },
+  onConfirmReject(e) {
+    if (this._confirmationReader && !sameReader(app, this._confirmationReader)) return;
+    const dc = this.selectComponent && this.selectComponent('#dcReject');
+    if (dc) dc.close();
+    this._handleApplicant(e.detail.params.id, false);
+  },
+  _handleApplicant(id, approved) {
+    const memberId = exactId(id);
+    if (!memberId || !this.data.leader || this._hidden || this._disposed) return;
+    if (!this._recovery) this._openRecovery();
+    if (this._recovery.pending()) return;
+    this._freshCommand = true; return this._recovery.start('handle', { memberId, approved });
   },
   _loadRanking(context, ownerType, ownerId) {
     this.setData({ rankingState: 'loading', boardRanks: [] });
@@ -396,7 +459,10 @@ Page({
   quit() {
     this._confirmationReader = reader(app);
     const dc = this.selectComponent && this.selectComponent('#dcQuit');
-    if (dc) dc.open('team.quit', {});
+    if (!dc) return;
+    // j4 F9:队员与队长看各自适用的后果(队员不写「你是队长的话…」,也不写不实的「不可撤销」)
+    if (this.data.leader) dc.open('team.quit-leader', {});
+    else dc.open('team.quit', {});
   },
 
   kick(e) {
@@ -433,13 +499,16 @@ Page({
     this._freshCommand = true; return this._recovery.start(action, data.memberId == null ? {} : { memberId: exactId(data.memberId) });
   },
 
+  // 第七轮 C 第 3 项:卡片图固定用仓内插画 —— 不给 imageUrl 时微信截本页,成员名单、头像和队伍状态
+  // 都会进卡片。链接只带邀请码(加入页按码读,后端只回队伍标题、人数与成员昵称头像),不带队伍 id 或成员信息。
   onShareAppMessage() {
     if (!this.data.team || !this.data.team.inviteCode) {
-      return { title: '队伍邀请已失效', path: '/pages/index/index' };
+      return { title: '队伍邀请已失效', path: '/pages/index/index', imageUrl: ROAM_SHARE_COVER };
     }
     return {
       title: this.data.team.title || '来和我一起组队出发',
-      path: '/pages/team/join/index?code=' + encodeURIComponent(this.data.team.inviteCode)
+      path: '/pages/team/join/index?code=' + encodeURIComponent(this.data.team.inviteCode),
+      imageUrl: ROAM_SHARE_COVER
     };
   }
 });

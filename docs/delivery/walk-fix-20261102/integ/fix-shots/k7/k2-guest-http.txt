@@ -1,0 +1,27 @@
+# guest (no token) reads, exactly the page's bodies; private-field scan regex: "(phone|mobile|memberId|authorMemberId|reposterMemberId|isLiked|viewerReposted|isFollowTheUser|viewerCanManage|joinMessage|realName|registrationName)"
+## POST /api/club/topics {"id":7002}
+{"msg":"操作成功","code":200,"data":[{"createBy":"13900000003","createTime":"2026-11-05 14:33:06","updateBy":null,"updateTime":"2026-11-05 14:33:19","remark":null,"id":990014,"memberId":null,"contentPublisherType":null,"onlinePaymentAvailable":null,"saleReviewPending":null,"sessionPrice":null,"sessionMeetingPoint":null,"sessionTicketCount":null,"merchantPoolOnly":null,"clubId":7001,"signupCount":5,"isDraft":null,"inviteWindowOpen":null,"teamStatus":null,"topicType":2,"feePlatformRate":0.0300,"feeGuaranteeBaseRate":0.0500,"feeGuaranteeStepRate":0.0200,"feeGuaranteeMaxMerchant":5,"productType":1,"circleThemeCode":null,"sourceTemplateTopicId":null,"circleReviewedAt":null,"roamReferralEnabled":null,"completeRuleJson":null,"routeMode":"LINEAR","routeGraphJson":null,"configVersion":1,"publishedRouteGraphJson":null,"publishedConfigVersion":5,"lookJson":null,"gameModuleEnabled":true,"nextSes
+private fields: "isFollowTheUser" "memberId" 
+## POST /api/club/post/list {"id":7002,"clubId":7002,"limit":20}
+{"msg":"操作成功","code":200,"data":[{"createBy":null,"createTime":"2026-11-05 14:55:58","updateBy":null,"updateTime":null,"remark":null,"id":2,"clubId":7002,"authorMemberId":null,"content":"第一次参加,请多关照。","images":null,"refType":null,"refId":null,"sportName":null,"sportCover":null,"sportTopicId":null,"isTopicTemplate":null,"refUnavailable":null,"type":0,"likeCount":0,"commentCount":0,"repostCount":0,"delFlag":0,"isPinned":0,"pinnedAt":null,"version":0,"nickname":"城瘾用户","avatar":"","isLiked":null,"viewerReposted":null,"isFollowTheUser":null,"clubName":null,"clubLogo":null,"edited":false,"viewerCanManage":null},{"createBy":null,"createTime":"2026-11-05 14:55:58","updateBy":null,"updateTime":null,"remark":null,"id":1,"clubId":7002,"authorMemberId":null,"content":"周六人民广场集合,一起走第一章。","images":null,"refType":null,"refId":null,"sportNa
+private fields: "authorMemberId" "isFollowTheUser" "isLiked" "viewerCanManage" "viewerReposted" 
+## POST /api/club/members {"clubId":7002}
+{"msg":"操作成功","code":200,"data":[{"nickname":"执行俱乐部主理人","avatar":"","role":2,"isOwner":true,"levelId":1,"joinTime":null},{"nickname":"玩家小城","avatar":"","role":0,"isOwner":false,"levelId":1,"joinTime":"2026-11-05T14:41:17.000+08:00"},{"nickname":"城瘾用户","avatar":"","role":0,"isOwner":false,"levelId":1,"joinTime":"2026-11-05T14:41:17.000+08:00"},{"nickname":"阿青","avatar":"","role":0,"isOwner":false,"levelId":1,"joinTime":"2026-11-05T14:41:17.000+08:00"},{"nickname":"小周","avatar":"","role":0,"isOwner":false,"levelId":1,"joinTime":"2026-11-05T14:41:17.000+08:00"},{"nickname":"玩家二号","avatar":"","role":0,"isOwner":false,"levelId":1,"joinTime":"2026-11-05T06:32:27.000+08:00"}]}
+
+private fields: 
+## POST /api/club/leaderboard {"id":7002,"sortBy":"total"}
+{"msg":"操作成功","code":200,"data":[]}
+
+private fields: 
+## siblings / writes stay closed for a guest
+POST /api/club/post/create -> HTTP 401
+POST /api/club/post/like -> HTTP 401
+POST /api/club/post/comment/list -> HTTP 401
+POST /api/club/join -> HTTP 401
+POST /api/club/home -> HTTP 401
+POST /api/club/topic-registrations -> HTTP 401
+## non-null values of private keys (guest)
+/api/club/topics rows 1 non-null private: [('[0].createBy', '13900000003')]
+/api/club/post/list rows 2 non-null private: []
+/api/club/members rows 6 non-null private: []
+/api/club/leaderboard rows 0 non-null private: []

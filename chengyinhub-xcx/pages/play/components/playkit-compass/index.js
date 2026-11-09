@@ -85,6 +85,9 @@ Component({
     // C1:服务端发的挑战身份(0 = 没有,照旧只交方位)与奖励上限(空 = 服务端没说,不承诺)
     attemptId: { type: Number, value: 0 },
     rewardCeiling: { type: String, value: '' },
+    // P-23:服务端说本人能跳过(读取失败两次 + 作者允许或队长放行);skipped = 这一站是跳过的
+    canSkip: { type: Boolean, value: false },
+    skipped: { type: Boolean, value: false },
   },
   data: {
     stageKeys: [0],
@@ -169,6 +172,8 @@ Component({
       this._abort();
       this.setData({ noData: true });
       cyToast('方向读取失败，请重试或退出');
+      // P-23:失败次数由服务端记,够两次后它才会给出「跳过这一站」
+      this.triggerEvent('readfail');
     },
     _armWatchdog(attempt, ms) {
       if (this._watchdog) clearTimeout(this._watchdog);
@@ -299,6 +304,14 @@ Component({
       attempt.phase = 'done';
       if (this._current(attempt)) this.triggerEvent('submit', withAttempt({ bearing },
         { attemptId: freshAttempt(this.data.attemptId, attempt.attemptAtRun) }));
+    },
+
+    /* P-23:跳过由服务端判(次数、作者开关或队长放行都在服务端),这里只发请求 */
+    onSkip() {
+      if (!this.data.canSkip || this.data.done || this._sent || this._attempt || this._skipping) return;
+      this._skipping = true;
+      setTimeout(() => { this._skipping = false; }, 1500);
+      this.triggerEvent('skip');
     },
 
     onVerdict(e) {

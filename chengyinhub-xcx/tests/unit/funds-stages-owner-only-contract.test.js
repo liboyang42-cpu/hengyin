@@ -11,7 +11,7 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
 
 function loadMerchantProfit(mutate) {
-  let source = read('components/cy/scene-merchant-profit/index.js')
+  let source = read('subpackageA/components/scene-merchant-profit/index.js')
   if (mutate) {
     const changed = mutate(source)
     assert.notEqual(changed, source, '负控锚点失效')
@@ -21,7 +21,7 @@ function loadMerchantProfit(mutate) {
   let definition
   vm.runInNewContext(source, {
     getApp: () => ({ getUserID:()=>7, sendRequest: (o) => requests.push(o) }),
-    require: p => p.includes('login-reload') ? require('../../utils/session/login-reload.js') : (p.includes('page-motion') ? require('../../utils/page-motion.js') : ({})),
+    require: p => p.includes('money-format') ? require('../../utils/money-format.js') : p.includes('login-reload') ? require('../../utils/session/login-reload.js') : (p.includes('page-motion') ? require('../../utils/page-motion.js') : ({})),
     Component: (v) => { definition = v },
     wx: { navigateTo() {} },
   })
@@ -46,7 +46,7 @@ test('商家分润页:只有后端判定 isOwner===true 才显示三段,员工/�
   assert.equal(run(false), false, '门店员工进入不显示')
   assert.equal(run(undefined), false, '后端没说是本人就不显示')
   assert.equal(run('true'), false, '字符串 true 不算')
-  assert.match(read('components/cy/scene-merchant-profit/index.wxml'), /<cy-funds-stages class="funds" wx:if="\{\{isOwner\}\}" \/>/)
+  assert.match(read('subpackageA/components/scene-merchant-profit/index.wxml'), /<cy-funds-stages class="funds" wx:if="\{\{isOwner\}\}" \/>/)
 })
 
 test('负控:商家分润页若把 isOwner 恒置 true,员工也会看到本人余额 ⇒ 必须判红', () => {
@@ -68,7 +68,7 @@ function loadClubSettlement() {
   return (isOwner) => {
     requests.length = 0
     page.onLoad({ clubId: '21' })
-    const data = { settledAmountText: '¥0.00', settledAmountStatus: 'verified', unverifiedSettledCount: 0, pendingAdjustment: null, topics: [] }
+    const data = { settledAmountText: '¥0.00', settledAmountStatus: 'verified', unverifiedSettledCount: 0, pendingAdjustment: null, topics: [], sessions: [] }
     if (isOwner !== undefined) data.isOwner = isOwner
     requests[0].success({ code: 200, data })
     return page.data.summary.isOwner
@@ -81,5 +81,5 @@ test('俱乐部分润页:只有主理人本人(isOwner===true)显示三段,管�
   assert.equal(run(false), false, '管理员不显示')
   assert.equal(run(undefined), false)
   const wxml = read('pages/club/settlement/index.wxml')
-  assert.match(wxml, /<cy-funds-stages class="section" wx:if="\{\{summary && summary\.isOwner && \(state === 'ready' \|\| state === 'empty'\)\}\}"(?: bind:stages="onStages")? \/>/)
+  assert.match(wxml, /<cy-funds-stages class="section" wx:if="\{\{summary && \(summary\.isOwner \|\| summary\.personal\) && \(state === 'ready' \|\| state === 'empty'\)\}\}"(?: bind:stages="onStages")? \/>/)
 })

@@ -228,13 +228,11 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
                 umsMemberPointsDetail.setEventId(umsMember.getId());
                 List<UmsMemberPointsDetail> umsMemberPointsDetailList = umsMemberPointsDetailService.selectUmsMemberPointsDetailList(umsMemberPointsDetail);
 
-                if (umsMemberPointsDetailList.size() <= 0) {
-
-                    int points = 0;
-                    CmsPointsSetting cmsPointsSetting = cmsPointsSettingService.selectCmsPointsSettingById(7L);
-                    if (cmsPointsSetting != null) {
-                        points = cmsPointsSetting.getValue().intValue();
-                    }
+                // 停用的规则 7 一分不发,也不写 0 分流水
+                int points = umsMemberPointsDetailList.size() > 0 ? 0
+                        : com.chengyinhub.business.service.support.PointsRuleSwitch.activeValue(
+                                cmsPointsSettingService.selectCmsPointsSettingById(7L));
+                if (points > 0) {
 
                     umsMemberService.addPoints(inveteUmsMember.getId(), points);
 

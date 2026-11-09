@@ -42,6 +42,13 @@ class TopicPurchaseGateTest {
         topic.setDelFlag(0);
         topic.setLifecycle(3); // 唯一可直售态 SELLING
         topic.setUserStatus(userStatus);
+        // 2026-11-03 集成:ownerType=1 报价改为与下单同口径(自玩通行证 selfPlayPrice),
+        // 负控主题因此按真实可售的自玩主题造:开放自玩、自玩价 100、已开售未截止。
+        topic.setSelfPlay(1);
+        topic.setSelfPlayPrice(new BigDecimal("100.00"));
+        topic.setFeePlatformRate(new BigDecimal("0.1000"));
+        topic.setSellingStartedAt(new java.util.Date(System.currentTimeMillis() - 60_000L));
+        topic.setSaleEndAt(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
 
         CmsTopicMapper topicMapper = mock(CmsTopicMapper.class);
         when(topicMapper.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);

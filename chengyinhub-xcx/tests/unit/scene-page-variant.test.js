@@ -56,3 +56,24 @@ test('P-55:设置里的营销消息与优惠券是独立页面,不再挂弹层',
   assert.match(page, /<cy-marketing-consent show="\{\{ready\}\}" layout="page" \/>/)
   assert.match(read('pages/shezhi/components/marketing-consent/index.wxml'), /class="mc mc--\{\{layout\}\}"/)
 })
+
+test('V3-23: roam/play 集邮入口进入已有收集册页面，不创建旧弹层', () => {
+  const vm = require('node:vm');
+  const { openScene: openPageScene } = require('../../utils/scene-entry.js');
+  const urls = [];
+  const before = global.wx;
+  global.wx = { navigateTo: options => urls.push(options.url) };
+  try {
+    assert.equal(getScene('roam-stamp-album').variant, 'page');
+    for (const file of ['pages/roam/index.js', 'pages/play/index.js']) {
+      const source = read(file);
+      const start = source.indexOf('  openScene(id, params = {}) {');
+      const end = source.indexOf('\n  },', start);
+      assert.ok(start >= 0 && end > start);
+      const host = vm.runInNewContext('({' + source.slice(start, end + 4).trim() + '})', { getScene, openPageScene });
+      host.setData = () => assert.fail('The obsolete album sheet must not open');
+      assert.equal(host.openScene('roam-stamp-album'), true);
+    }
+    assert.deepEqual(urls, ['/subpackageP3/pages/stamp-album/index/index', '/subpackageP3/pages/stamp-album/index/index']);
+  } finally { global.wx = before; }
+});

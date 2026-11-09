@@ -342,3 +342,29 @@ test('负控:场景 refresh 不校验独立 seq 时旧回调必须能覆盖(证�
   done(old, 'OLD-TOKEN')
   assert.throws(() => assert.equal(instance.data.qr, 'NEW-TOKEN'), assert.AssertionError)
 })
+
+test('独立券页：归属拒绝清掉旧码，给返回而不是重试', () => {
+  for (const callback of ['success', 'successStatusAbnormal', 'fail']) {
+    const h = mount(QR_PAGE, 'page');
+    h.instance.onLoad({ couponHistoryId: '88' });
+    h.instance.onShow();
+    h.instance.data.qrcodeUrl = 'OLD-CREDENTIAL';
+    h.requests[0].opts[callback]({ code: 500, msg: '无权查看该券' });
+    assert.equal(h.instance.data.entryState, 'notmine', callback);
+    assert.equal(h.instance.data.qrcodeUrl, '', callback);
+    assert.equal(h.instance.data.countdown, 0, callback);
+  }
+});
+
+test('归属拒绝后换到真正持券账号，成功回读恢复亮码而非沿用拒绝态', () => {
+  const h = mount(QR_PAGE, 'page');
+  h.instance.onLoad({ couponHistoryId: '88' }); h.instance.onShow();
+  h.requests[0].opts.success({ code: 500, msg: '无权查看该券' });
+  h.requests[0].opts.complete();
+  assert.equal(h.instance.data.entryState, 'notmine');
+  h.instance.onHide(); h.owner.value = 'B'; h.instance.onShow();
+  assert.equal(h.instance.data.qrcodeUrl, '');
+  succeed(tokenRequests(h).at(-1), paidToken('ACCOUNT-B-QR'));
+  assert.equal(h.instance.data.entryState, 'ready');
+  assert.equal(h.instance.data.qrcodeUrl, 'ACCOUNT-B-QR');
+});

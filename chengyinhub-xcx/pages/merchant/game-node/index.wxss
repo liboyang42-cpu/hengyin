@@ -56,12 +56,6 @@ page {
 }
 
 .gn-hero-copy { min-width: 0; flex: 1; }
-.gn-eyebrow {
-  display: block;
-  font-size: var(--cy-font-caption);
-  color: var(--cy-text-secondary);
-  font-variant-numeric: tabular-nums;
-}
 .gn-title {
   display: block;
   margin-top: var(--cy-space-1);
@@ -119,7 +113,6 @@ page {
 
 .gn-section-head { margin-bottom: var(--cy-space-3); }
 .gn-section-title { display: block; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.gn-section-sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); line-height: 1.5; color: var(--cy-text-secondary); }
 
 .gn-runbook-row {
   padding: var(--cy-space-3) 0;
@@ -158,6 +151,7 @@ page {
   color: var(--cy-color-text-inverse);
 }
 .gn-check--on { border-color: var(--cy-color-selection); background: var(--cy-color-selection); }
+.gn-check { transition: background-color var(--cy-motion-check-fill) var(--cy-ease-out), border-color var(--cy-motion-check-fill) var(--cy-ease-out); } /* M-31:勾选框填色而不是瞬切 */
 .gn-check-label { flex: 1; font-size: var(--cy-font-label); color: var(--cy-text-body); }
 
 .gn-field { margin-bottom: var(--cy-space-3); }
@@ -205,6 +199,7 @@ page {
 .gn-receipt-sub { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 .gn-receipt-outcome { color: var(--cy-color-status-success); }
 .gn-muted { display: block; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.gn-muted--above-btn { margin-bottom: var(--cy-space-2); } /* 说明与下方「恢复接待」留距,与本页其它按钮上方间距同为 space-2 */
 
 .gn-sheet { padding: 0 var(--cy-space-4) calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
 .gn-sheet-tip { display: block; margin-bottom: var(--cy-space-3); font-size: var(--cy-font-label); line-height: 1.5; color: var(--cy-text-secondary); }

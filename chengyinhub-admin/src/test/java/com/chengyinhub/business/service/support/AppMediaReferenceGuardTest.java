@@ -244,6 +244,63 @@ class AppMediaReferenceGuardTest {
         verifyNoInteractions(assets);
     }
 
+    @Test void exactPublishedLegacyCoversAreReadOnlyAndDoNotAuthorizeNewMedia() {
+        for (String reference : new String[]{
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t1.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t2.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t3.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t4.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t5.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t6.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t7.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t8.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/upload/tmp_912332fefb01ff45beec6fbd905d7f8b_1777787760915.jpg",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/upload/tmp_16c1799962a7a5f0ad150acecabc057d_1777789299453.jpg"}) {
+            assertEquals(reference, guard.visibleUrl(reference, null));
+            assertEquals(reference, guard.visibleUrl(reference, 22L));
+            assertThrows(ServiceException.class, () -> guard.requireAttachment(22L, reference, true));
+            assertThrows(ServiceException.class, () -> guard.processingUrl(reference, 22L));
+            for (String altered : new String[]{reference + "?x=1", reference + "#fragment",
+                    reference.replace("https://", "http://"),
+                    reference.replace(".aliyuncs.com/", ".aliyuncs.com.evil.test/"),
+                    reference.replace("https://", "https://user@"),
+                    reference.replace("/chenyin/", "/chenyin/../chenyin/"),
+                    reference.replace("/upload/", "/upload/../upload/")}) {
+                if (!altered.equals(reference)) assertEquals("", guard.visibleUrl(altered, null), altered);
+            }
+        }
+        assertEquals("", guard.visibleUrl("https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t9.png", null));
+        verifyNoInteractions(assets);
+    }
+
+    @Test void registryStateOverridesEveryExactLegacyCoverExemption() {
+        for (String reference : new String[]{
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t1.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t2.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t3.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t4.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t5.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t6.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t7.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/chenyin/t8.png",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/upload/tmp_912332fefb01ff45beec6fbd905d7f8b_1777787760915.jpg",
+                "https://xianghuioss.oss-cn-shanghai.aliyuncs.com/upload/tmp_16c1799962a7a5f0ad150acecabc057d_1777789299453.jpg"}) {
+            String key = java.net.URI.create(reference).getPath().substring(1);
+            for (String review : new String[]{"HOLD", "REJECTED", "UNAVAILABLE", "PENDING"}) {
+                when(mapper.selectByObjectKey(key)).thenReturn(Map.of("id", 7L, "memberId", 11L,
+                        "objectKey", key, "reviewState", review, "ownerType", "APP"));
+                assertEquals("", guard.visibleUrl(reference, null));
+                assertEquals("", guard.visibleUrl(reference, 22L));
+                assertEquals("owned-short-preview", guard.visibleUrl(reference, 11L));
+                assertThrows(ServiceException.class, () -> guard.requireAttachment(11L, reference, true));
+            }
+            when(mapper.selectByObjectKey(key)).thenReturn(Map.of("id", 7L, "memberId", 11L,
+                    "objectKey", key, "reviewState", "APPROVED", "ownerType", "APP"));
+            assertEquals("approved-storage-url", guard.visibleUrl(reference, null));
+            assertEquals("media-asset:7", guard.requireAttachment(22L, reference, true));
+        }
+    }
+
     @Test void ugcStoreGalleryAcceptsEveryApprovedUploadEvenFromAnotherStaffAccount() {
         state("APPROVED");
         String signed = "https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/" + KEY + "?Expires=1&OSSAccessKeyId=a&Signature=b";

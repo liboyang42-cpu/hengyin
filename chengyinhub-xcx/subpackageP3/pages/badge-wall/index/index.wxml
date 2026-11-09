@@ -40,7 +40,7 @@
         <view wx:for="{{ringDots}}" wx:key="i" class="bw-dot {{item.lit ? 'is-lit' : ''}}" style="left:{{item.x || 0}}%;top:{{item.y || 0}}%;transition-delay:{{item.d || 0}}ms;"></view>
         <view class="bw-ring__num"><text class="bw-ring__n">{{unlockedCount}}</text><text class="bw-ring__t">共 {{badges.length}}</text></view>
       </view>
-      <text class="bw-say" aria-hidden="true">{{ringSay}}</text>
+      <!-- R11 p1 F-12:圆环里的「N / 共 M」已经说了,不再配一句「N 枚勋章。一枚不少。」 -->
     </view>
     <!-- 2026-10-28 业主:一行两个勋章,直接看到勋章长什么样;没解锁的变灰,但还认得出是什么。勋章下面不垫灰色方块。 -->
     <block wx:for="{{badgeGroups}}" wx:for-item="group" wx:key="key">

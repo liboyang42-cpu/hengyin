@@ -4,10 +4,11 @@
 // 纯函数在 utils/map-team.js(卡片五态 / errorCode 分支 / P6 三态)与 utils/roam-hangout*.js(主题点位 canvas),本文件只做接线。
 // ⚠️ 失败只按 errorCode 分支(map-team.resolveTeamError),走 cy-result-sheet 失败半屏,不解析 msg。
 const app = getApp();
-const teamOperation = require('../../utils/roam-team-operation.js');
-const teamRecovery = require('../../utils/roam-team-recovery.js');
+const teamOperation = require('../utils/roam-team-operation.js');
+const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
-const { MAP_STYLE } = require('../../utils/map-style.js');
+const { playerMapStyle } = require('../../utils/map-style.js'); function openAddress() { return require('../../utils/open-address.js') }
+const PLAYER_MAP_STYLE = playerMapStyle();
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
@@ -66,7 +67,7 @@ Page({
     const cur = this.data.current;
     if (cur && String(cur.teamId) === command.targetId) {
       if (cur.viewerStatus === 'LEADER') this.loadApplicants();
-      if (receipt.state === 'REJECTED') this._showFail(T.resolveTeamError(command.action, receipt));
+      if (receipt.state === 'REJECTED') this._showFail(T.resolveTeamError(command.action, { errorCode: receipt.errorCode, msg: receipt.message })); // j4 F1:回执理由在 message,resolveTeamError 认 msg
     }
   },
   reloadTeamCommands() { teamRecovery.mount(this, app, wx); },
@@ -78,8 +79,8 @@ Page({
   data: { teamCommandRows: [], teamCommandError: '',
     safeBottom: 0,
     hudTop: 90,
-    fmSubkey: MAP_STYLE.subkey,
-    fmLayerStyle: MAP_STYLE.layerStyle,
+    fmSubkey: PLAYER_MAP_STYLE.subkey,
+    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
     center: DEFAULT_CENTER,
     scale: 15,
     markers: [],
@@ -1138,7 +1139,7 @@ Page({
   onPoiNavigate() {
     const c = this.data.poiCard;
     if (!c || c.lat == null || c.lng == null) return;
-    wx.openLocation({ latitude: c.lat, longitude: c.lng, name: c.title, address: c.address, scale: 17 });
+    openAddress().openAddress({ lat: c.lat, lng: c.lng, name: c.title, address: c.address });
   },
 
   /* 主题照片条贴在半屏上沿:本页半屏高随内容走,共用样式里按 70vh 算的位置会飘到筛选行上 */

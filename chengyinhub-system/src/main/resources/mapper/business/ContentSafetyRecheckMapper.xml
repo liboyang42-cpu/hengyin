@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentSafetyRecheckMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.ContentSafetyRecheck" id="RecheckResult">
+        <id property="id" column="id"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="textBody" column="text_body"/>
+        <result property="mediaJson" column="media_json"/>
+        <result property="businessReview" column="business_review"/>
+        <result property="state" column="state"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="maxAttempts" column="max_attempts"/>
+        <result property="nextAttemptAt" column="next_attempt_at"/>
+        <result property="lastErrorCode" column="last_error_code"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="cols">
+        id, biz_type, biz_id, member_id, text_body, media_json, business_review, state, attempt_count,
+        max_attempts, next_attempt_at, last_error_code, create_time, update_time
+    </sql>
+
+    <select id="selectPendingByBiz" resultMap="RecheckResult">
+        SELECT <include refid="cols"/> FROM content_safety_recheck
+        WHERE biz_type = #{bizType} AND biz_id = #{bizId} AND state = 0
+        ORDER BY id DESC LIMIT 1
+    </select>
+
+    <insert id="insertRecheck" parameterType="com.chengyinhub.business.domain.ContentSafetyRecheck"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content_safety_recheck
+            (biz_type, biz_id, member_id, text_body, media_json, business_review, state, attempt_count,
+             max_attempts, next_attempt_at, create_time, update_time)
+        VALUES (#{bizType}, #{bizId}, #{memberId}, #{textBody}, #{mediaJson}, #{businessReview}, 0, 0,
+                #{maxAttempts}, #{nextAttemptAt}, #{createTime}, #{createTime})
+    </insert>
+
+    <update id="refreshPending">
+        UPDATE content_safety_recheck
+        SET member_id = #{memberId}, text_body = #{textBody}, media_json = #{mediaJson},
+            business_review = #{businessReview}, attempt_count = 0, next_attempt_at = #{now},
+            last_error_code = NULL, update_time = #{now}
+        WHERE id = #{id} AND state = 0
+    </update>
+
+    <select id="selectDue" resultMap="RecheckResult">
+        SELECT <include refid="cols"/> FROM content_safety_recheck
+        WHERE state = 0 AND next_attempt_at &lt;= #{now}
+        ORDER BY next_attempt_at, id
+        LIMIT #{limit}
+    </select>
+
+    <update id="reschedule">
+        UPDATE content_safety_recheck
+        SET attempt_count = #{attemptCount}, next_attempt_at = #{nextAttemptAt}, last_error_code = #{errorCode},
+            update_time = #{now}
+        WHERE id = #{id} AND state = 0 AND attempt_count = #{expectedAttempt}
+    </update>
+
+    <update id="finish">
+        UPDATE content_safety_recheck
+        SET state = #{state}, last_error_code = #{errorCode}, update_time = #{now}
+        WHERE id = #{id} AND state = 0 AND attempt_count = #{expectedAttempt}
+    </update>
+</mapper>

@@ -52,6 +52,17 @@ class ApiMerchantAftercareControllerTest {
     }
 
     @Test
+    void manualCaseDetailUsesIndependentIdAndAuthenticatedPrincipal() {
+        IMerchantAftercareService service = mock(IMerchantAftercareService.class);
+        MerchantAftercareDetailVO detail = new MerchantAftercareDetailVO();
+        detail.setRecordType("MANUAL_CASE");
+        detail.setManualCaseId(41L);
+        when(service.manualCaseDetail(PRINCIPAL, 41L)).thenReturn(detail);
+        assertEquals(detail, controller(service).manualCaseDetail(41L).get(AjaxResult.DATA_TAG));
+        verify(service).manualCaseDetail(PRINCIPAL, 41L);
+    }
+
+    @Test
     void serviceDenialKeepsItsFailClosedStatusCode() {
         IMerchantAftercareService service = mock(IMerchantAftercareService.class);
         when(service.detail(PRINCIPAL, 99L)).thenThrow(new ServiceException("售后单不存在或无权访问", 404));

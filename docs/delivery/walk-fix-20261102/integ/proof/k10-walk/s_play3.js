@@ -1,0 +1,10 @@
+const A = async () => { const a = await h.audio(); return { st: a.state.map(s => [s.id, s.src.slice(0, 8), s.paused ? 'paused' : 'PLAY', s.volume, s.t]), log: a.log.map(l => [l.id, l.ev, l.at, l.v, (l.src || '').slice(0, 8)].filter(x => x != null && x !== '')) }; };
+const clr = () => w.page.evaluate(() => { window.MPWEB.audioLog.length = 0; });
+const out = {};
+await clr();
+await sleep(6000);
+await h.tap("继续探索").catch(() => {}); await sleep(2500);
+await w.shot("k10-r07-ch2"); out.ch2 = await A(); out.t0 = (await h.say()).slice(-200); await clr();
+await w.loc(31.2345, 121.4790); await sleep(3000);
+await w.shot("k10-r08-at-bridge"); out.t1 = (await h.say()).slice(-200);
+return out;

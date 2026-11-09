@@ -205,7 +205,10 @@ class TopicPublicationFreezePreviewNoEarlyExitTest {
                 () -> compiler.previewPublication(topic, null, Collections.emptyList()));
         assertFalse(String.valueOf(refused.getMessage()).contains("自动线索声明必须加入主题写事务"),
                 "失败点不能是线索登记闸:" + refused.getMessage());
-        assertTrue(String.valueOf(refused.getMessage()).contains("通用运行规则须配置实际幕和任务"),
+        // 主干在同一段 validateGameplayRuntime 里先逐站核验玩法能否判完成(GameplaySupportMatrix.validateNode),
+        // 这一站只有线索、没有可判定玩法,会先于「实际幕和任务」报出 —— 两者都证明预演跑到了线索点之后。
+        String message = String.valueOf(refused.getMessage());
+        assertTrue(message.contains("通用运行规则须配置实际幕和任务") || message.contains("这种玩法还不能确认玩家是否完成"),
                 "冻结链尾部校验必须继续执行:" + refused.getMessage());
     }
 

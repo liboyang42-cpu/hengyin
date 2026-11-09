@@ -34,7 +34,7 @@ public class ClubEditionCompensationController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:topic:edit')")
-    @Log(title = "探店日俱乐部计划工时", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索俱乐部计划工时", businessType = BusinessType.UPDATE)
     @PutMapping("/{topicId}/hours/plan")
     public AjaxResult planHours(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");
@@ -44,7 +44,7 @@ public class ClubEditionCompensationController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:clubhours:confirm')")
-    @Log(title = "探店日俱乐部实际工时确认", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索俱乐部实际工时确认", businessType = BusinessType.UPDATE)
     @PutMapping("/{topicId}/hours/confirm")
     public AjaxResult confirmHours(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");
@@ -62,7 +62,7 @@ public class ClubEditionCompensationController extends BaseController {
      * ⚠️ 它<b>不是</b>第二条写已确认工时的路 —— 它只清空并退回状态，金额永远由 confirm 那条 CAS 写。
      */
     @PreAuthorize("@ss.hasPermi('business:clubhours:correct')")
-    @Log(title = "探店日俱乐部已确认工时更正", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索俱乐部已确认工时更正", businessType = BusinessType.UPDATE)
     @PostMapping("/{topicId}/hours/correct")
     public AjaxResult correctConfirmedHours(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");
@@ -86,7 +86,7 @@ public class ClubEditionCompensationController extends BaseController {
      * 它们的 service 侧没有把操作人钉到某个具体身份上。
      */
     @PreAuthorize("@ss.hasPermi('business:clubextra:approve')")
-    @Log(title = "探店日额外工时事前预审批", businessType = BusinessType.INSERT)
+    @Log(title = "自由探索额外工时事前预审批", businessType = BusinessType.INSERT)
     @PostMapping("/{topicId}/extra/preapprove")
     public AjaxResult preapproveExtra(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         compensationService.preapproveExtraHours(topicId, longOf(body, "clubId"), text(body, "category"),
@@ -96,7 +96,7 @@ public class ClubEditionCompensationController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:clubextra:approve')")
-    @Log(title = "探店日额外工时审批更正", businessType = BusinessType.INSERT)
+    @Log(title = "自由探索额外工时审批更正", businessType = BusinessType.INSERT)
     @PostMapping("/{topicId}/extra/correct")
     public AjaxResult correctExtra(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         compensationService.correctExtraHours(topicId, longOf(body, "clubId"), longOf(body, "correctionOf"),
@@ -105,7 +105,7 @@ public class ClubEditionCompensationController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:clubquality:confirm')")
-    @Log(title = "探店日质量奖励一次确认", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索质量奖励一次确认", businessType = BusinessType.UPDATE)
     @PostMapping("/{topicId}/quality/confirm")
     public AjaxResult confirmQuality(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");
@@ -128,7 +128,7 @@ public class ClubEditionCompensationController extends BaseController {
      * 剔除的是失分事件不是报酬，所以该维不扣分、照贡献满额。
      */
     @PreAuthorize("@ss.hasPermi('business:clubquality:exclude')")
-    @Log(title = "探店日质量奖励过错排除", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索质量奖励过错排除", businessType = BusinessType.UPDATE)
     @PostMapping("/{topicId}/quality/exclude")
     public AjaxResult excludeQuality(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");

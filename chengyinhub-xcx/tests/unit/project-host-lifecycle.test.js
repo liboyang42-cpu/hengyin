@@ -37,6 +37,25 @@ test('经典路线的审核与招募显示保留，包括招满后的显示', ()
   assert.equal(badge({ productType: 1, status: null }), '状态待确认');
 });
 
+test('R15 已发布普通 CITY 保留 lifecycle0，胶囊、主按钮与进度不再表示草稿', () => {
+  const topic = { id: 990037, productType: 1, status: 1, userStatus: 1, lifecycle: 0 };
+  assert.equal(badge(topic), '已发布');
+  const instance = { data: { hostOwnerType: 'club' }, setData(patch) { Object.assign(this.data, patch); } };
+  component.observers['hostRecruit, clubSheet, hostTopic, hostPlayers'].call(
+    instance, { nodeTotal: 1, nodeFilled: 0 }, { items: [] }, topic, { paidCount: 0 });
+  assert.deepEqual(instance.data.hostPrimary,
+    { text: '查看客户', act: 'onQuickAction', key: 'customer', disabled: false });
+  assert.deepEqual(instance.data.hostProgress.map(s => [s.key, s.state]), [['config', 'done'], ['publish', 'done']]);
+  assert.equal(instance.data.showVerify, false, '已发布不推断商业售票或核销资格');
+  assert.equal(topic.lifecycle, 0);
+  assert.equal(badge({ ...topic, status: 0 }), '草稿');
+  assert.equal(badge({ ...topic, status: 2 }), '草稿');
+  for (let lifecycle = 1; lifecycle <= 7; lifecycle++) {
+    const expected = ['草稿', '招募中', '待定价', '售票中', '进行中', '结算中', '已关闭', '立项待审'][lifecycle];
+    assert.equal(badge({ ...topic, lifecycle }), expected);
+  }
+});
+
 test('主办封面使用阶段显示，不再直接把上架状态印成招募', () => {
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/topic/components/project-host/index.wxml'), 'utf8');
   assert.match(wxml, /\{\{ hostStatusText \}\}/);

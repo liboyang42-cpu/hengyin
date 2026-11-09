@@ -31,7 +31,8 @@
     <cy-skeleton class="fill-slot" type="ticket" count="1" loading-label="正在加载我的票" />
   </view>
   <view class="davidwu" wx:elif="{{walletState === 'error'}}">
-    <cy-state-shell class="fill-slot" kind="error" title="票夹没能打开" sub="{{walletErrorMsg}}" primary="重试" fill="{{true}}" size="lg" theme="player" bind:primary="retryWallet" auto-back />
+    <!-- j6 F3(第十轮 owner):票夹读失败要看得见并能重试,不按「加载失败留白」 -->
+    <cy-empty class="fill-slot" kind="data" title="票夹没能打开" sub="{{walletErrorMsg}}" cta="重试" fill="{{true}}" size="lg" bind:cta="retryWallet" />
   </view>
   <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
   <view class="davidwu" wx:elif="{{walletState === 'login'}}">
@@ -52,15 +53,16 @@
           <view class="wc__face wc__front">
             <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
             <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
-            <view class="wc__im"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
+            <view class="wc__im" wx:if="{{item.wImg}}"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
           </view>
           <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket}}">
             <text class="wc__bn ep1">{{item.wTitle}}</text>
-            <view class="wc__qr">
+            <view class="wc__qr" wx:if="{{!item.topicCompleted}}">
               <!-- 2026-10-29 业主:码居中、码心黑色 logo、彩色波动效(cy-dot-qr);翻到背面才挂画布 -->
               <cy-dot-qr wx:if="{{qrState === 'ready' && flipped}}" src="{{qrUrl}}" size="{{360}}" reduced-motion="{{reduced}}" />
               <text wx:elif="{{qrState === 'error'}}" class="wc__qr-tip" catchtap="retryQr" aria-role="button" aria-label="重新生成入场码" hover-class="cy-pressed" hover-stay-time="80">重新生成</text>
-              <text wx:else class="wc__qr-tip">生成中…</text>
+              <!-- 第十二轮 k8 F13:只在真的在取码时写「生成中…」,没翻面(idle)不留一句永远不会填上的话 -->
+              <text wx:elif="{{qrState === 'loading'}}" class="wc__qr-tip">生成中…</text>
             </view>
             <text wx:if="{{item.wExpiry}}" class="wc__exp">{{item.wExpiry}}</text>
           </view>
@@ -83,9 +85,9 @@
       <cy-icon name="arrow-right" size="24" />
     </view>
   </view>
-  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="开始游戏：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="wl-start {{entering ? 'wl-start--go' : ''}} {{startLit ? 'wl-start--lit' : ''}}" wx:if="{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame}}" bindtap="goTicket" data-index="{{currentSwiperTicket}}" data-go="1" aria-role="button" aria-label="{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}：{{ticketList[currentSwiperTicket].wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="wl-start__fill"></view><view class="wl-start__shine" wx:if="{{!reduced}}"></view>
-    <view class="wl-start__lbl"><image class="wl-start__play" src="./icon_play.svg" mode="aspectFit" /><text>开始游戏</text></view>
+    <view class="wl-start__lbl"><image class="wl-start__play" src="./icon_play.svg" mode="aspectFit" /><text>{{ticketList[currentSwiperTicket].topicCompleted ? '查看记录' : '开始游戏'}}</text></view>
   </view>
   <view class="wl-burst {{entering ? 'wl-burst--go' : ''}}" wx:if="{{walletState === 'ready'}}"></view>
 </view>

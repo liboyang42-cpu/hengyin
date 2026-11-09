@@ -29,11 +29,29 @@ test('发布成功后直接落项目主页,不是玩家买票页', () => {
   assert.match(js, /if \(next\) wx\.redirectTo/, '面板收掉必须真的跳过去，不能只是关掉面板');
 });
 
-test('「我的项目」列表点主题卡进项目主页', () => {
-  const js = read('subpackageA/pages/myproject/index.js');
-  assert.match(js, PROJECT_HOME);
+test('「我的项目」待接受邀请进入招商页，已承接与主办仍进项目主页', () => {
+  const pagePath = path.resolve(__dirname, '../../subpackageA/pages/myproject/index.js');
+  const previous = { wx: global.wx, getApp: global.getApp, Page: global.Page };
+  const urls = [];
+  let page;
+  global.getApp = () => ({ globalData: {} });
+  global.wx = { getStorageSync: () => '', navigateTo: options => urls.push(options.url) };
+  global.Page = definition => { page = definition; };
+  try {
+    delete require.cache[require.resolve(pagePath)];
+    require(pagePath);
+    for (const [pending, state, key] of [[true, 'pending', 'id'], [false, 'running', 'topicId'], [undefined, 'pending', 'topicId']]) {
+      page.onCardTap.call({ data: { operationScope: 'MERCHANT' } }, { currentTarget: { dataset: {
+        item: { id: 9170200, bizType: 'topic', state, _pendingChapterInvite: pending }
+      } } });
+      assert.equal(urls.at(-1), '/pages/topic/merchantinfo/merchantinfo?' + key + '=9170200&scope=MERCHANT');
+    }
+  } finally {
+    Object.assign(global, previous);
+    delete require.cache[require.resolve(pagePath)];
+  }
   // 活动详情已收成场景单一真源；主题去向变更不能把活动入口删掉或退回深链页。
-  assert.match(js, /openScene\('play-activity-detail',\s*\{\s*id\s*\}\)/, '活动仍应进入活动详情场景');
+  assert.match(read('subpackageA/pages/myproject/index.js'), /openScene\('play-activity-detail',\s*\{\s*id\s*\}\)/, '活动仍应进入活动详情场景');
 });
 
 // 原本这里还有第三条:商家工作台「我发布的主题」卡片。#516 重做工作台时把那个列表

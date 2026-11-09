@@ -9,6 +9,10 @@
     <view wx:for="{{items}}" wx:key="id" class="wallet-card {{item._isUsable ? 'wallet-card--usable' : ''}}" bindtap="openCode" data-item="{{item}}" aria-role="{{item._canView ? 'button' : 'group'}}" aria-label="{{item._canView ? (item._isUsable ? '出示' : '查看') : ''}}{{item._name}}，{{item._statusText}}" hover-class="{{item._canView ? 'cy-pressed' : 'none'}}" hover-stay-time="80" style="--pmi:{{index}};">
       <view class="wallet-card__head"><text class="wallet-card__name">{{item._name}}</text><cy-badge type="status" variant="{{item._statusVariant}}" label="{{item._statusText}}" /></view>
       <text wx:if="{{item._description}}" class="wallet-card__desc">{{item._description}}</text>
+      <view wx:if="{{item._shopAddress}}" class="wallet-card__shop">
+        <text class="wallet-card__addr cy-addr-tap" catchtap="openShop" data-item="{{item}}" aria-role="button" aria-label="在地图中打开 {{item._shopName || item._shopAddress}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation>{{item._shopAddress}}</text>
+        <view wx:if="{{item._shopNav}}" class="wallet-card__nav cy-addr-tap" catchtap="openShop" data-item="{{item}}" aria-role="button" aria-label="导航到{{item._shopName || item._shopAddress}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation><cy-icon name="pin" size="24" /><text>导航</text></view>
+      </view>
       <view class="wallet-card__foot"><text>{{item._dateText}}</text><view wx:if="{{item._canView}}" class="wallet-card__action"><text>{{item._isUsable ? '出示核销码' : '查看可用时间'}}</text><cy-icon name="arrow-right" size="24" /></view></view>
     </view>
   </view>

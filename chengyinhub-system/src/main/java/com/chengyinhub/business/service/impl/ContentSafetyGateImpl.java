@@ -22,10 +22,12 @@ import org.springframework.stereotype.Service;
  * 裁决规则(优先级从上到下;「PRE / POST」= 请求的 reviewMode):
  *  0) EXEMPT                  → PASS
  *  1) 文本命中风险            → BLOCK(不公开,两种模式都拦)
- *  2) 机审要人工/审不了/异常/缺 openid → PRE: HOLD(fail-safe);POST: PASS 打标(passFlagged,留待抽检)
+ *  2) 机审要人工/审不了/异常/缺 openid → HOLD(两种模式都不公开)。Round5C:不等人工,
+ *     进 IContentSafetyRecheckService 自动复检队列,通过自动发布、违规/耗尽自动驳回并通知作者
  *  3) 带结构化商业字段(点位/价格/报名)→ PRE: HOLD(强制人工复核后上架);POST: 放行
- *  4) 含图片                  → PRE: HOLD(仅作者可见);POST: 放行(调用方保留异步图片检测 + 违规回调下架)
- *  5) 文本检测被关闭          → PRE: HOLD(fail-safe);POST: PASS 打标
+ *  4) 含图片                  → PRE: HOLD(仅作者可见,Round5C 自动复检后发布);POST: 图片能送检则放行(异步检测 + 违规回调下架),
+ *                               送不了检(总开关关 / 缺 openid)→ HOLD
+ *  5) 文本检测被关闭          → HOLD(两种模式)
  *  6) 纯文本且通过            → PASS
  * reviewMode 为空或无法识别 → 按 PRE_REVIEW:门禁分不出调用方,PRE_REVIEW 是全部存量调用方今天的语义,
  * 也是最严的一档,脏值绝不 fail-open 成先发后审/豁免。
@@ -44,6 +46,14 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
     @Autowired
     private IAuditTaskService auditTaskService;
 
+    /** Round5C:机审没结论的 HOLD 进自动复检队列;可选注入,老测试直接 new 门禁时为空。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IContentSafetyRecheckService recheckService;
+
+    /** Round5D 自建敏感词库;可选注入。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
+
     @Override
     public SafetyDecision decide(PublishSafetyRequest req) {
         if (req == null || req.getContentType() == null) {
@@ -56,6 +66,13 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
         boolean pre = mode == ReviewMode.PRE_REVIEW;
         boolean hasText = req.getText() != null && !req.getText().trim().isEmpty();
         boolean enabled = wxContentSecurityService.isEnabled();
+
+        // 0') Round5D:自建敏感词库先查,命中即 BLOCK —— 微信关闭/不可用/缺 openid 时同样生效。
+        if (hasText && sensitiveLibrary != null
+                && sensitiveLibrary.blockingCategory(req.getText(), req.getContentType(), req.getContentId()) != null) {
+            logger.info("UGC门禁 BLOCK 敏感词库命中 contentType={} id={}", req.getContentType(), req.getContentId());
+            return SafetyDecision.block("TEXT_RISK");
+        }
 
         // 1)/2) 文本检测:命中 → BLOCK;异常 → PRE: fail-safe HOLD / POST: 打标放行
         if (hasText && enabled) {
@@ -82,6 +99,12 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
                         req.getContentType(), req.getContentId(), mode, e);
                 return unsure(req, pre, "DETECT_ERROR", "HIGH");
             }
+        }
+
+        // 3') Round5B-3:先发后审带图,但图片送不了检(总开关关 / 缺 openid)→ 没人能审这张图,HOLD 进人工审核
+        boolean hasMedia = req.getMediaUrls() != null && !req.getMediaUrls().isEmpty();
+        if (!pre && hasMedia && !wxContentSecurityService.canSubmitMedia(req.getOpenid())) {
+            return hold(req, "MEDIA_UNCHECKED", "NORMAL");
         }
 
         // 3) 结构化商业字段 → 先审模式强制人工复核
@@ -116,14 +139,16 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
         return ReviewMode.PRE_REVIEW;
     }
 
-    /** 机审没给出确定结论:先审 → HOLD;先发后审 → 公开但打标 */
+    /**
+     * 机审没给出确定结论:两种模式都 HOLD(Round5B-3)。没审过的公开内容不能先上架再抽检;
+     * 先发后审只对「机审明确通过」的内容生效。调用方按 HOLD 落待审 / 下架留置并进审核台。
+     */
     private SafetyDecision unsure(PublishSafetyRequest req, boolean pre, String reasonCode, String riskLevel) {
-        if (pre) {
-            return hold(req, reasonCode, riskLevel);
+        if (!pre) {
+            logger.warn("UGC门禁 POST_REVIEW 机审未完成,转人工审核不公开 contentType={} id={} reason={}",
+                    req.getContentType(), req.getContentId(), reasonCode);
         }
-        logger.info("UGC门禁 POST_REVIEW 打标放行 contentType={} id={} reason={}",
-                req.getContentType(), req.getContentId(), reasonCode);
-        return SafetyDecision.passFlagged(reasonCode);
+        return hold(req, reasonCode, riskLevel);
     }
 
     private SafetyDecision hold(PublishSafetyRequest req, String reasonCode, String riskLevel) {
@@ -136,6 +161,10 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
                 withGateReason(req.getSnapshot(), reasonCode, riskLevel));
         logger.info("UGC门禁 HOLD contentType={} id={} reason={} auditTaskId={}",
                 req.getContentType(), req.getContentId(), reasonCode, taskId);
+        if (recheckService != null
+                && com.chengyinhub.business.service.IContentSafetyRecheckService.UNCHECKED_REASONS.contains(reasonCode)) {
+            recheckService.enqueue(req, req.getContentId());
+        }
         return SafetyDecision.hold(reasonCode, taskId);
     }
 

@@ -1,5 +1,5 @@
 <!-- 探索目标:漫游护照方卡进入。进度来自服务端已完成记录;创建/取消/原操作重试沿用归档 exploration-goals(index.js)。 -->
-<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}"><cy-access-gate kind="login" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar plain />
   <cy-page-title title="探索目标" />
@@ -50,7 +50,7 @@
 
   <view class="tu-sec">我的目标<text class="tu-sec__aside" wx:if="{{rows.length || 0}}">{{rows.length || 0}} 个</text></view>
   <view class="tu-loading" wx:if="{{busy && !rows.length}}">正在读取…</view>
-  <view class="tu-card gl-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openRecord" aria-role="button" aria-label="查看目标 {{item.target}} {{item.metricText}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="tu-card gl-row cy-rise-in" style="animation-delay: {{index < 6 ? index * 60 : 360}}ms" wx:for="{{rows}}" wx:key="id" data-id="{{item.id}}" bindtap="openRecord" aria-role="button" aria-label="查看目标 {{item.target}} {{item.metricText}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="gl-row__top">
       <text class="gl-row__t">{{item.progressText}}{{item.target}} {{item.unit}}</text>
       <text class="tu-badge {{item.badge}}">{{item.stateText}}</text>

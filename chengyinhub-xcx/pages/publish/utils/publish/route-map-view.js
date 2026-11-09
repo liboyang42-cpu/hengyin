@@ -17,6 +17,7 @@
 
 const proEditorPolicy = require('./pro-editor-policy.js');
 const lastLocation = require('../../../../utils/location/last-location.js');
+const { readFontScale, mapFontSize } = require('../../../../utils/font-scale.js');
 
 const ROUTE_COLORS = ['#1A1A1A', '#155DFC', '#12B886', '#0CA5A5', '#F59F00', '#E64980'];
 const MAP_PIN = '/pages/publish/images/map-pin.png';
@@ -26,6 +27,15 @@ const DRAFT_COLOR = '#ADB5BD'; // 草稿(未配游戏)
 const SELECTED_COLOR = '#1A1A1A'; // 列表↔地图联动选中态(去紫,与 route-map/topic 同值)
 // BL-23:兜底不再写死城市坐标 —— 无有效节点时取「上次成功定位 → 固定坐标」(utils/location/last-location.js)
 const MAP_DEFAULT_CENTER = { longitude: lastLocation.FIXED.longitude, latitude: lastLocation.FIXED.latitude };
+// P-16:地图没拖过就点「保存位置」,中心仍是兜底坐标(六位小数一致)。这不是作者选的点,在选点处就拦下;
+// 后端只拒同一个值,真实的人民广场站点(作者拖到那里或从地点搜索选中)照常放行。
+function isUntouchedDefaultCenter(center) {
+  if (!center) return false;
+  const lat = Number(center.latitude);
+  const lng = Number(center.longitude);
+  return Math.abs(lat - MAP_DEFAULT_CENTER.latitude) <= 0.0000005
+    && Math.abs(lng - MAP_DEFAULT_CENTER.longitude) <= 0.0000005;
+}
 function fallbackCenter() {
   const fb = lastLocation.resolve();
   return { longitude: fb.longitude, latitude: fb.latitude };
@@ -48,6 +58,7 @@ function buildRouteMapView(state) {
     const markers = [];
     const polyline = [];
     const allPoints = [];
+    const fontScale = readFontScale();
     let globalNo = 0; // 全局站点序号(跨章节连续)
     const selectedLid = state.selectedNodeLid; // 列表↔地图联动选中节点
     const markerMap = {}; // markerId → {chapterLid, nodeLid} 反查表(供 M1.2 bindmarkertap)
@@ -100,7 +111,7 @@ function buildRouteMapView(state) {
           ? {
               content: String(globalNo),
               color: '#ffffff',
-              fontSize: 9,
+              fontSize: mapFontSize(9, fontScale),
               bgColor: pinColor,
               borderRadius: 20,
               padding: 4,
@@ -111,7 +122,7 @@ function buildRouteMapView(state) {
           : {
               content: String(globalNo),
               color: '#ffffff',
-              fontSize: 11,
+              fontSize: mapFontSize(11, fontScale),
               bgColor: pinColor,
               borderRadius: 20,
               borderWidth: 2,
@@ -153,7 +164,7 @@ function buildRouteMapView(state) {
         label: {
           content: '待编排',
           color: '#ffffff',
-          fontSize: 10,
+          fontSize: mapFontSize(10, fontScale),
           bgColor: DRAFT_COLOR,
           borderRadius: 20,
           padding: 5,
@@ -197,7 +208,7 @@ function buildRouteMapView(state) {
         label: {
           content: state.popChapterNodesAction === 0 ? '待添加' : '编辑中',
           color: '#ffffff',
-          fontSize: 11,
+          fontSize: mapFontSize(11, fontScale),
           bgColor: SELECTED_COLOR,
           borderRadius: 20,
           borderWidth: 2,
@@ -235,4 +246,5 @@ module.exports = {
   DRAFT_COLOR: DRAFT_COLOR,
   SELECTED_COLOR: SELECTED_COLOR,
   MAP_DEFAULT_CENTER: MAP_DEFAULT_CENTER,
+  isUntouchedDefaultCenter: isUntouchedDefaultCenter,
 };

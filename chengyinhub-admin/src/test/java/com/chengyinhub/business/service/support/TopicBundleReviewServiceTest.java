@@ -134,6 +134,31 @@ class TopicBundleReviewServiceTest {
     }
 
     @Test
+    void freeExploreRecruitmentCanBeReviewedBeforeMerchantsCreateNodes() {
+        CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
+        stubLockedRows();
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        chapter.setRecruitEnabled(1);
+        chapter.setBlocksJson("[]");
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
+        when(nodeMapper.selectByTopicForUpdate(10L)).thenReturn(Collections.emptyList());
+
+        TopicBundleReviewService.Submission submission = service.freezeForSubmission(10L, 7L);
+        assertTrue(submission.getBundledTemplateIds().isEmpty());
+        assertDoesNotThrow(() -> service.applyDecision(10L, 7L, submission.getSnapshotJson(), true));
+        verify(templateMapper, never()).approveBundledDraft(any(), any());
+
+        chapter.setRecruitEnabled(0);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+        chapter.setRecruitEnabled(1);
+        topic.setProductType(1);
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        when(chapterMapper.selectCmsTopicChapterList(any())).thenReturn(Collections.emptyList());
+        assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
+    }
+
+    @Test
     void storyGameWithoutLocationCanBeSubmittedAndReviewed() {
         CmsTopicChapter chapter = chapterMapper.selectCmsTopicChapterList(new CmsTopicChapter()).get(0);
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeList(new CmsTopicNode()).get(0);
@@ -233,8 +258,9 @@ class TopicBundleReviewServiceTest {
 
         template.setAdvancedConfigJson(null);
         CmsTopicNode node = nodeMapper.selectCmsTopicNodeList(new CmsTopicNode()).get(0);
-        node.setLatitude("31.2304");
-        node.setLongitude("121.4737");
+        // P-16:只拒编辑器未动过的兜底中心(31.230416,121.473701);31.2304,121.4737 是真实的人民广场
+        node.setLatitude("31.230416");
+        node.setLongitude("121.473701");
         assertThrows(IllegalArgumentException.class, () -> service.freezeForSubmission(10L, 7L));
     }
 

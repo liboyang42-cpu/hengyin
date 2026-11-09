@@ -13,6 +13,47 @@ const {
   shapeAftercareListPage,
 } = require('../../pages/merchant/aftercare/detail/view-model');
 
+function manualCase(overrides) {
+  return Object.assign({ recordType: 'MANUAL_CASE', manualCaseId: 81,
+    manualCaseStatus: 'PENDING_ASSESSMENT', refundId: null, refundAmount: null,
+    processing: 'PENDING_ASSESSMENT', merchantOpinion: 'NOT_REQUIRED', bucket: 'PROCESSING',
+    canRespond: false, refunded: false, allowedDecisions: [], responses: [],
+    activityTitle: '探店主题', createTime: '2026-11-06 10:00:00' }, overrides);
+}
+
+test('人工退款工单保留独立类型与ID，只读状态不冒充退款成功', () => {
+  const raw = manualCase();
+  const page = shapeAftercareListPage({ bucket: 'PROCESSING', pageNum: 1, pageSize: 20,
+    total: 1, hasMore: false, items: [raw] }, 'PROCESSING');
+  assert.ok(page);
+  assert.equal(page.items[0].manualCaseId, 81);
+  assert.equal(page.items[0].refundId, null);
+  assert.equal(page.items[0].recordKey, 'MANUAL_CASE:81');
+  assert.equal(page.items[0].statusText, '玩家申请退款 · 平台评估中');
+  assert.equal(page.items[0].canRespond, false);
+  const detail = shapeAftercareDetail(raw);
+  assert.ok(detail);
+  assert.equal(detail.isManualCase, true);
+  assert.equal(detail.refundId, null);
+  assert.equal(detail.hasRefundAmount, false);
+  assert.deepEqual(detail.allowedDecisions, []);
+  assert.ok(detail.timelineNodes.every(node => !/已批准|已退款/.test(node.title)));
+});
+
+test('人工工单拒绝混入refundId、回应能力、未脱敏金额及未知类型/状态', () => {
+  for (const override of [{ refundId: 81 }, { canRespond: true },
+    { allowedDecisions: ['AGREE'] }, { refundAmount: '80.00' },
+    { recordType: 'UNRECOGNIZED' }, { manualCaseStatus: 'UNKNOWN' },
+    { processing: 'REFUNDED' }, { manualCaseId: true },
+    { manualCaseStatus: '__proto__', processing: '__proto__' }]) {
+    assert.equal(shapeAftercareDetail(manualCase(override)), null, JSON.stringify(override));
+  }
+  const completed = shapeAftercareDetail(manualCase({ manualCaseStatus: 'MANUAL_REFUND_EVIDENCE_VERIFIED',
+    processing: 'MANUAL_REFUND_EVIDENCE_VERIFIED', bucket: 'COMPLETED' }));
+  assert.ok(completed);
+  assert.equal(completed.refunded, false, '平台复核凭证不复用普通退款资金状态');
+});
+
 function assertPendingNotRefunded(shape) {
   const detail = shape({
     refundId: 81,
@@ -181,7 +222,7 @@ test('负控：把 pending 映成 refunded 时，款项状态断言必须判红'
     "const refunded = source.processing === 'WAITING_PLATFORM_REVIEW';",
   );
   assert.notEqual(mutated, source, '负控锚点失效');
-  const sandbox = { module: { exports: {} }, exports: {} };
+  const sandbox = { module: { exports: {} }, exports: {}, require: (request) => require(path.resolve(path.dirname(file), request)) };
   vm.runInNewContext(mutated, sandbox);
   assert.throws(
     () => assertPendingNotRefunded(sandbox.module.exports.shapeAftercareDetail),

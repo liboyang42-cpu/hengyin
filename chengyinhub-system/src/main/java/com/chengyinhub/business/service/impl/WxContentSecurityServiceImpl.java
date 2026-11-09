@@ -121,6 +121,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Autowired
     private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditTaskServiceProvider;
 
+    /** Round5D 自建敏感内容库;可选注入,老测试直接 new 时为空(只走微信)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
+
     /** 内容安全下架关闭未结申诉时给作者的说明。 */
     static final String APPEAL_CLOSED_BY_SAFETY = "图片未通过内容安全检测已被下架，原申诉已关闭；请更换图片后重新提交审核";
     // 社区帖文图片:命中 → 帖文生命周期 HIDE。CommunityPostServiceImpl 反向依赖本服务(送检),ObjectProvider 懒取破环
@@ -165,6 +169,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         if (StringUtils.isEmpty(content))
         {
             return null;
+        }
+
+        // Round5D:自建敏感词库先查,命中即拒(不论微信开关/openid/可用性);只回既有违规文案,不暴露命中词。
+        if (sensitiveLibrary != null
+                && sensitiveLibrary.blockingCategory(content, "TEXT_CHECK", null) != null)
+        {
+            return com.chengyinhub.business.service.ISensitiveContentLibrary.VIOLATION_MESSAGE;
         }
 
         if (!isEnabled())
@@ -287,6 +298,11 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         if (!isEnabled() || StringUtils.isBlank(mediaUrl) || StringUtils.isBlank(openid))
         {
+            // Round5B-3:不再静默跳过。能否送检由 canSubmitMedia 在发布前判定,送不了的内容由门禁 HOLD。
+            if (StringUtils.isNotBlank(mediaUrl))
+            {
+                log.error("[内容安全] 图片未送检(总开关关闭或缺 openid),需人工复审 mediaLength={}", mediaUrl.length());
+            }
             return null;
         }
         try
@@ -344,9 +360,19 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     public void submitMediaCheck(int bizType, Long bizId, String imgArr, String openid)
     {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
-        if (!isEnabled() || bizId == null || StringUtils.isEmpty(imgArr))
+        if (bizId == null || StringUtils.isEmpty(imgArr))
         {
             return;
+        }
+        if (!isEnabled())
+        {
+            // Round5B-3/5C:总开关关闭不再静默;公开内容已由门禁 HOLD 并进自动复检。
+            log.error("[内容安全] 图片检测总开关关闭,未送微信 bizType={}, bizId={}", bizType, bizId);
+            // Round5D:本地已知违规图比对不依赖微信,仍逐张做(submitMediaCheckOne 内部判断)。
+            if (sensitiveLibrary == null || !sensitiveLibrary.hasImageEntries())
+            {
+                return;
+            }
         }
         // 图片地址串支持逗号或分号分隔
         String[] imgs = imgArr.split("[,;]");
@@ -370,13 +396,38 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     public String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid)
     {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
-        if (!isEnabled() || bizId == null || StringUtils.isEmpty(fetchUrl) || StringUtils.isEmpty(identity))
+        if (bizId == null || StringUtils.isEmpty(fetchUrl) || StringUtils.isEmpty(identity))
+        {
+            return null;
+        }
+        boolean localImageCheck = sensitiveLibrary != null && sensitiveLibrary.hasImageEntries();
+        if (!isEnabled() && !localImageCheck)
         {
             return null;
         }
         String img = fetchUrl.trim();
         try
         {
+            // Round5B-5:落库形态是 media-asset:N 的,先解析成真实可抓取地址再送检;identity 仍是库里的引用,
+            // 回调按引用哈希核对「当前媒体」。解析不了就不送,按未送检告警(不把引用当 URL 发给微信)。
+            if (img.matches("media-asset:[1-9][0-9]{0,18}"))
+            {
+                img = resolveMediaAssetFetchUrl(img);
+                if (StringUtils.isEmpty(img))
+                {
+                    log.error("[内容安全] 媒体引用无法解析为可抓取地址,未送检,需人工复审: bizType={}, bizId={}", bizType, bizId);
+                    return null;
+                }
+            }
+            // Round5D:已知违规图(SHA-256 / dHash)本地先认;命中走与微信 risky 回调同一条自动下架路径,不再送微信。
+            if (localImageCheck && knownBadImage(bizType, bizId, img))
+            {
+                return null;
+            }
+            if (!isEnabled())
+            {
+                return null;
+            }
             String traceId = checkMediaAsync(img, openid);
             if (StringUtils.isNotEmpty(traceId))
             {
@@ -412,6 +463,75 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     bizType, bizId, img.length(), e.getClass().getSimpleName());
             return null;
         }
+    }
+
+    /** Round5D:异步图片路径的本地已知违规图比对;命中即按 risky 自动下架并记命中。 */
+    boolean knownBadImage(int bizType, Long bizId, String fetchUrl)
+    {
+        byte[] bytes;
+        try
+        {
+            bytes = fetchImageBytes(fetchUrl);
+        }
+        catch (Exception e)
+        {
+            log.warn("[敏感内容库] 图片抓取失败,跳过本地比对 bizType={}, bizId={}, exceptionType={}",
+                    bizType, bizId, e.getClass().getSimpleName());
+            return false;
+        }
+        String category = bytes == null ? null : sensitiveLibrary.matchImage(bytes);
+        if (category == null)
+        {
+            return false;
+        }
+        sensitiveLibrary.recordHit("IMAGE", "WX_BIZ_" + bizType, bizId, category, "REMOVED");
+        log.warn("[敏感内容库] 已知违规图片,自动下架 bizType={}, bizId={}, category={}", bizType, bizId, category);
+        takeDownForSafety(bizType, bizId);
+        return true;
+    }
+
+    static final int MAX_FETCH_BYTES = 10 * 1024 * 1024;
+
+    /** HTTP 缝:测试覆写。只抓 http(s),5 秒连接 / 10 秒读取,超过 10MB 放弃。 */
+    byte[] fetchImageBytes(String url) throws java.io.IOException
+    {
+        if (url == null || !(url.startsWith("https://") || url.startsWith("http://")))
+        {
+            return null;
+        }
+        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) java.net.URI.create(url).toURL().openConnection();
+        conn.setConnectTimeout(5000);
+        conn.setReadTimeout(10000);
+        conn.setInstanceFollowRedirects(false);
+        try (java.io.InputStream in = conn.getInputStream())
+        {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0)
+            {
+                out.write(buf, 0, n);
+                if (out.size() > MAX_FETCH_BYTES)
+                {
+                    return null;
+                }
+            }
+            return out.toByteArray();
+        }
+        finally
+        {
+            conn.disconnect();
+        }
+    }
+
+    @Override
+    public boolean takeDownForSafety(int bizType, Long bizId)
+    {
+        if (bizId == null)
+        {
+            return false;
+        }
+        return processMediaCheckResult(bizType, bizId, "sensitive-library", true);
     }
 
     @Override
@@ -480,12 +600,14 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             }
             JSONObject result = obj.getJSONObject("result");
             String suggest = result == null ? "" : Convert.toStr(result.get("suggest"), "");
-            if (!"pass".equalsIgnoreCase(suggest) && !"risky".equalsIgnoreCase(suggest))
+            if (!"pass".equalsIgnoreCase(suggest) && !"risky".equalsIgnoreCase(suggest)
+                    && !"review".equalsIgnoreCase(suggest))
             {
                 return CallbackResult.INVALID_PAYLOAD;
             }
             traceId = obj.getString("trace_id");
-            risky = "risky".equalsIgnoreCase(suggest);
+            // Round5C:suggest=review 与 risky 同等处理 —— 走同一条自动下架 + 作者通知路径,不挂人工审核单。
+            risky = "review".equalsIgnoreCase(suggest) || "risky".equalsIgnoreCase(suggest);
         }
         catch (Exception e)
         {
@@ -640,7 +762,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 if (!Integer.valueOf(2).equals(current.getStatus()))
                 {
                     t.setCheckStatus(2);
-                    t.setReason(TopicContentSafetyHold.REASON);
+                    t.setReason(com.chengyinhub.business.service.support.SystemNoticeCard.isTextHit()
+                            ? TopicContentSafetyHold.REASON_TEXT : TopicContentSafetyHold.REASON);
                 }
                 int affected = cmsTopicService.updateCmsTopic(t);
                 if (affected <= 0)
@@ -902,9 +1025,37 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
                 return confirmMutation(affected, "官方活动封面违规已自动下线", bizId);
             }
+            else if (bizType == BIZ_TYPE_NODE_TEMPLATE)
+            {
+                // Round5C:据点互动模板(cms_member_template)图片 risky/review ⇒ 自动下架(status=2,publish_status=0,
+                // check_status=2)并通知作者,不挂人工审核单;作者更换图片后按既有提交口重新送审。
+                com.chengyinhub.business.domain.CmsMemberTemplate template =
+                        cmsMemberTemplateMapper.selectCmsMemberTemplateById(bizId);
+                if (template == null)
+                {
+                    return false;
+                }
+                if (Long.valueOf(0L).equals(template.getPublishStatus()) && Integer.valueOf(2).equals(template.getCheckStatus()))
+                {
+                    return confirmAlreadyApplied("据点模板图片违规已自动下架", bizId);
+                }
+                com.chengyinhub.business.domain.CmsMemberTemplate down = new com.chengyinhub.business.domain.CmsMemberTemplate();
+                down.setId(bizId);
+                down.setStatus(2L);
+                down.setCheckStatus(2);
+                down.setPublishStatus(0L);
+                down.setReason("模板图片违规已自动下架");
+                int affected = cmsMemberTemplateMapper.updateCmsMemberTemplate(down);
+                if (affected > 0)
+                {
+                    notifyImageTakedown(template.getMemberId(), com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, bizId,
+                            com.chengyinhub.business.service.support.SystemNoticeCard.item("据点模板", template.getTitle()));
+                }
+                return confirmMutation(affected, "据点模板图片违规已自动下架", bizId);
+            }
             else
             {
-                // 其它业务类型(如据点模板,量小且权限门控)暂无自动下架,落 ERROR 告警供人工核查下架
+                // 其它业务类型暂无自动下架,落 ERROR 告警供人工核查下架
                 log.error("[内容安全] 图片违规但该业务类型无自动下架处理,需人工核查下架: bizType={}, bizId={}", bizType, bizId);
                 return false;
             }
@@ -922,6 +1073,24 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
      * confirmAlreadyApplied 不通知);回调收件箱同事务置 DONE,同一 trace 重放不会再进来 —— 每次下架只通知一次。
      * 走嵌套事务 + 只告警:通知失败不能挡住违规内容下架。
      */
+    @Autowired
+    private org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> mediaAssetServiceProvider;
+
+    String resolveMediaAssetFetchUrl(String reference)
+    {
+        try
+        {
+            AppMediaAssetService assets = mediaAssetServiceProvider == null ? null : mediaAssetServiceProvider.getIfAvailable();
+            if (assets == null) return null;
+            return assets.securityCheckFetchUrl(Long.valueOf(reference.substring("media-asset:".length())));
+        }
+        catch (RuntimeException unresolved)
+        {
+            log.error("[内容安全] 媒体引用解析失败 exceptionType={}", unresolved.getClass().getSimpleName());
+            return null;
+        }
+    }
+
     private void notifyImageTakedown(Long memberId, String bizType, Long bizId, String item)
     {
         if (memberId == null || memberId <= 0 || imServiceProvider == null)
@@ -1164,6 +1333,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 com.chengyinhub.business.domain.CmsMemberTemplate template =
                         cmsMemberTemplateMapper.selectCmsMemberTemplateById(id);
                 return template != null && containsMediaHash(hash, template.getImgUrl(), template.getMedalImg());
+            case BIZ_TYPE_NODE_TEMPLATE:
+                com.chengyinhub.business.domain.CmsMemberTemplate nodeTemplate =
+                        cmsMemberTemplateMapper.selectCmsMemberTemplateById(id);
+                return nodeTemplate != null && containsMediaHash(hash, nodeTemplate.getImgUrl());
             case BIZ_TYPE_HANGOUT:
                 com.chengyinhub.business.domain.RoamHangout hangout = roamHangoutMapper.selectById(id, 0L);
                 return hangout != null && containsMediaHash(hash, hangout.getCoverUrl());

@@ -218,3 +218,18 @@ test('旧会话finish与discover回执不改新会话页面', async () => {
   requests.find((r) => r.url === '/api/roam/poi/discover').success({ code: 200, data: {} }); await tick();
   assert.notEqual(page.data.finish.xpAwarded, 999); assert.deepEqual(page._foundRoamPois, {});
 });
+
+/* R11 g1(j4 F11):服务端确认到点后,「确认到点」原地换成完成态;再打开同一张卡也是完成态 */
+test('确认到点成功后卡片换成完成态,不再给「确认到点」', async () => {
+  const page = loadPage(); prepareArrive(page, 10); preparePoi(page);
+  page.data.paceCard = page._paceCardFor(page._pois[0]);
+  assert.equal(page.data.paceCard.confirmed, false)
+  page.discoverRoamPoi(1)
+  requests.find((r) => r.url === '/api/roam/poi/discover').success({ code: 200, data: {} }); await tick();
+  assert.equal(page.data.paceCard.confirmed, true)
+  assert.equal(page.data.paceCard.meaning, '')
+  assert.equal(page._paceCardFor(page._pois[0]).confirmed, true, '再打开仍是完成态')
+  const wxml = require('node:fs').readFileSync(require('node:path').resolve(__dirname, '../../pages/roam/index.wxml'), 'utf8')
+  assert.match(wxml, /wx:if="\{\{paceCard\.canDiscover && !paceCard\.confirmed && !paceCard\.meaning && !paceCard\.checkinErr\}\}"[^>]*>确认到点/)
+  assert.match(wxml, /pc-action--done" wx:if="\{\{paceCard\.canDiscover && paceCard\.confirmed\}\}"[^>]*>已到达/)
+})

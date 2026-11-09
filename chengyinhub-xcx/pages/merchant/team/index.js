@@ -1,7 +1,7 @@
 const toast = require('../../../utils/toast.js');
 const { chinaParts } = require('../../../utils/datetime.js');
 const app = getApp();
-const { failureStatus, recoverReadSession } = require('../../../utils/session/login-reload.js');
+const { failureStatus, recoverReadSession, retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-shape.js');
 const {
@@ -162,6 +162,16 @@ function formatDate(value) {
   return `${p.year}-${pad(p.month)}-${pad(p.day)} ${pad(p.hours)}:${pad(p.minutes)}`;
 }
 
+// 第十二轮 k3(p2 N-6、j1 N12):两位店员都叫「城瘾用户」时店主分不清,默认昵称带上加入时刻(不给编号)。
+function operatorName(source) {
+  const nick = typeof source.nickname === 'string' ? source.nickname.trim() : '';
+  if (nick && nick !== '城瘾用户') return nick;
+  const p = chinaParts(source.acceptedAt);
+  if (!p) return '城瘾用户';
+  const pad = (n) => (n < 10 ? `0${n}` : String(n));
+  return `城瘾用户 · ${p.month}月${p.day}日 ${pad(p.hours)}:${pad(p.minutes)} 加入`;
+}
+
 function shapeOperator(row) {
   const source = row;
   if (!isStrictPositiveId(source && source.id)
@@ -173,7 +183,7 @@ function shapeOperator(row) {
       || !nullableString(source.avatar)) return null;
   return {
     id: source.id,
-    nickname: typeof source.nickname === 'string' && source.nickname.trim() ? source.nickname.trim() : '未设置昵称',
+    nickname: operatorName(source),
     avatar: typeof source.avatar === 'string' ? source.avatar : '',
     roleCode: source.roleCode || '',
     roleName: roleName(source.roleCode),
@@ -236,6 +246,8 @@ Page({
     hasIncomingInvite: false,
     accepting: false,
     acceptResult: '',
+    acceptOk: false,
+    invitePreview: null,
     roleSheet: { show: false, mode: '', operator: null },
     submitting: false,
     createdInvite: null,
@@ -273,17 +285,13 @@ Page({
       this.loadAccess();
       return;
     }
-    this.setData({ accessState: 'loading', accessError: '', accessErrorIsDenied: false });
-    const that = this;
-    ensureSession(app).then(function (ok) {
-      if (that._hidden || that._unloaded || that._inviteRequestIds === null || entryEpoch !== that._teamEntryEpoch) return;
-      if (!ok || !app.getUserID()) {
-        that.setData({ accessState: 'error', accessError: '登录失败，请重试', accessErrorIsDenied: true });
-        return;
-      }
-      that.enterTeam(that._authRetryUsed);
-    });
+    // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1)。落「登录后查看」,点「登录」才登录;
+    // 邀请 token 已在 onLoad 存进内存 handoff,登录回来照常进邀请落地页。
+    this.setData({ accessState: 'login', accessError: '', accessErrorIsDenied: false });
+    waitForInitialSession(this, app, function () { if (entryEpoch === this._teamEntryEpoch) this.enterTeam(false); });
   },
+
+  onTeamLogin() { retryLogin(this, app, function () { this.enterTeam(false); }); },
 
   // 401:静默重登一次后自动重载;重登失败落页内错误态,不整屏「去登录」。
   recoverSession() {
@@ -296,7 +304,7 @@ Page({
     const that = this;
     const entryEpoch = this._teamEntryEpoch;
     const owner = String(app.getUserID() || '');
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._hidden || that._unloaded || that._inviteRequestIds === null || entryEpoch !== that._teamEntryEpoch
           || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok || !app.getUserID()) {
@@ -378,6 +386,7 @@ Page({
           accessState: access.active ? 'ready' : 'invite',
           accessError: '',
         });
+        if (!access.active) this.loadInvitePreview();
         if (access.canManageOperators) {
           this.loadRoles();
           this.loadTeam();
@@ -651,7 +660,8 @@ Page({
     // 三段式第一段:文案改由 utils/danger-actions.js 统一给(原来只有一句话,不列后果)
     this._dangerConfirm = { show: false, type: 'operator', target, title: '', content: '' };
     const dc = this.selectComponent && this.selectComponent('#dc');
-    if (dc) dc.open('merchant.operator.remove', { name: target.nickname });
+    // 第十二轮 k3:移除确认带上岗位,店主不会点错人。
+    if (dc) dc.open('merchant.operator.remove', { name: target.nickname + ' · ' + target.roleName });
   },
 
   askRevokeInvite(event) {
@@ -755,9 +765,35 @@ Page({
     else dc.failed(text || '操作失败');
   },
 
+  // j1 F22:落地页说清是哪家店、什么岗位。凭邀请 token 读(后端只回门店名与岗位),失效就直接讲失效。
+  loadInvitePreview() {
+    const token = this._incomingInviteToken;
+    if (!token) return;
+    const owner = String(app.getUserID() || '');
+    const current = () => !this._unloaded && token === this._incomingInviteToken && owner === String(app.getUserID() || '');
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/merchant/operators/invite/preview',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({ token }),
+      success: (res) => {
+        if (!current()) return;
+        const data = res && (res.code === 200 || res.code === '200') && isRecord(res.data) ? res.data : null;
+        if (data && typeof data.merchantName === 'string' && typeof data.roleName === 'string') {
+          this.setData({ invitePreview: { merchantName: data.merchantName, roleName: data.roleName } });
+          return;
+        }
+        this.setData({ invitePreview: null, acceptResult: app.getRequestErrorMessage(res, '邀请无效或已失效') });
+      },
+      fail: () => { if (current()) this.setData({ invitePreview: null, acceptResult: '网络异常，请重试' }); },
+    });
+  },
+
   acceptIncomingInvite() {
     if (!this._incomingInviteToken || this.data.accepting) return;
-    this.setData({ accepting: true, acceptResult: '' });
+    this.setData({ accepting: true, acceptResult: '', acceptOk: false });
     const reqId = this._acceptInviteRequestId || requestId('merchant-accept');
     this._acceptInviteRequestId = reqId;
     app.sendRequest({
@@ -782,7 +818,7 @@ Page({
         this._acceptInviteRequestId = '';
         this._incomingInviteToken = '';
         clearInviteHandoff();
-        this.setData({ hasIncomingInvite: false, acceptResult: '已加入经营团队' });
+        this.setData({ hasIncomingInvite: false, acceptResult: '已加入经营团队', acceptOk: true });
         toast.success('已加入团队');
         this.loadAccess();
       },

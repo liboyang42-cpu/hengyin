@@ -5,7 +5,8 @@
 // ⚠️ 失败只按 errorCode 分支,不解析 msg(msg 只原样当失败原因展示)。
 
 const { MAP_AVATAR_COLORS: C } = require('../../utils/play-visual-tokens.js');
-const { toTimestamp } = require('../../utils/datetime.js');
+// 申请人行与失效倒计时在主包共用(队伍详情页也列申请,第十一轮 g2 j4 F4)
+const { expireLeft, applicantRows } = require('../../utils/team-applicant-rows.js');
 
 const RADII = [1000, 3000, 5000, 10000, 20000];
 // 走查 P-38(业主):筛选条「全部」= 所有距离,不在范围档位里;服务端照样按距离由近到远截断条数
@@ -30,22 +31,11 @@ function statusOf(t) {
 }
 
 function teamName(t) {
-  return String((t && t.title) || '').trim() || '玩家队伍';
-}
-
-/**
- * 申请失效倒计时,以服务端 applyExpireTime 为准(语义 = min(申请+24h, 场次开始),
- * 见 migration_20260915_play_team_public_apply.sql)。拿不到或已过期 → ''(由调用方兜底)。
- */
-function expireLeft(v, now) {
-  const at = toTimestamp(v);
-  if (isNaN(at)) return '';
-  const diff = at - (now == null ? Date.now() : now);
-  if (diff <= 0) return '';
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return '1 分钟';
-  if (min < 60) return min + ' 分钟';
-  return Math.floor(min / 60) + ' 小时';
+  // 第十二轮 k7(j4 F15):没起名的队伍按队长昵称区分
+  const title = String((t && t.title) || '').trim();
+  if (title) return title;
+  const leader = String((t && t.leaderName) || '').trim();
+  return leader ? leader + '的队伍' : '玩家队伍';
 }
 
 /** P2/P3/P4/P5/被拒/已加入 → 卡片该出什么。按钮对象 { text, action };null = 不出。 */
@@ -200,36 +190,6 @@ function buildTeamMarkers(teams, icons, fallbackIcon) {
       width: icon ? 54 : 14, height: icon ? 54 : 14, anchor: { x: 0.5, y: 0.5 }, zIndex: 12, iconPath: icon || fallbackIcon });
   });
   return out;
-}
-
-function parseAt(v) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(String(v || ''));
-  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)).getTime() : null;
-}
-
-function ago(v, now) {
-  const at = parseAt(v);
-  if (at == null) return '';
-  const min = Math.max(0, Math.floor(((now == null ? Date.now() : now) - at) / 60000));
-  if (min < 1) return '刚刚申请';
-  if (min < 60) return min + ' 分钟前申请';
-  if (min < 1440) return Math.floor(min / 60) + ' 小时前申请';
-  return Math.floor(min / 1440) + ' 天前申请';
-}
-
-/** P5 申请人行。服务端只回未过期待审,且申请时已验票。 */
-function applicantRows(list, now) {
-  return (Array.isArray(list) ? list : []).filter((a) => a && a.memberId).map((a) => {
-    const left = expireLeft(a.applyExpireTime, now);
-    // 申请留言(2026-09-17 拍板第19条):两端接通后队长审批时能看到申请人说的一句话。
-    // 服务端已做 200 字上限与内容安全机审;这里只做展示形状(引号),空串/null 不渲染。
-    const message = String(a.applyMessage == null ? '' : a.applyMessage).trim();
-    return {
-      memberId: a.memberId, name: a.memberName || '玩家', avatar: a.memberAvatar || '',
-      sub: ['持本场票', ago(a.appliedAt, now), left ? left + '后失效' : ''].filter(Boolean).join(' · '),
-      messageText: message ? '“' + message + '”' : '',
-    };
-  });
 }
 
 function leaderSub(t) {

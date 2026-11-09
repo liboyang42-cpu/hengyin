@@ -225,8 +225,12 @@ class ProductSourceWiringTest {
     @Test
     void settlementReadsFeeSnapshotNotLive() throws Exception {
         String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java");
+        // 两处结算(coop 主题 + 俱乐部自有主题自玩,2026-11-02)都经 settlementPlatformRate 取率;
+        // 它只在平台自有主题时取 0(2026-11-03 业主拍板),其余读快照 —— 快照读法在全类只剩它这一处。
         assertEquals(1, countOccurrences(src, "pricingService.platformRateOf(topic)"),
                 "结算必须按主题快照取平台率");
+        assertEquals(2, countOccurrences(src, "= settlementPlatformRate(topic)"),
+                "两处结算都必须经同一个平台率入口");
         assertEquals(1, countOccurrences(src, "pricingService.initiatorGuaranteeRateOf(topic,"),
                 "结算必须按主题快照取保底率");
         assertEquals(0, countOccurrences(src, "pricingService.platformRate()"),
@@ -245,8 +249,9 @@ class ProductSourceWiringTest {
                 "旧的业务真源常量 PLATFORM_RATE 必须消失(FALLBACK_PLATFORM_RATE 是兜底,不算)");
         assertEquals(1, countOccurrences(src, "settlementRuleService.getActiveRule("),
                 "费率必须来自 settlement_rule —— 这就是「调价不用发版」的全部内容");
-        assertEquals(1, countOccurrences(src, "FALLBACK_PLATFORM_RATE = new BigDecimal(\"0.10\")"),
-                "兜底值应保留且等于原硬编码值,保证查不到规则时行为不变");
+        // 第十二轮 k1 第 7 项(p3 N2):查不到规则拒绝,不再有任何硬编码兜底费率
+        assertEquals(0, countOccurrences(src, "FALLBACK_"),
+                "费率不得静默回落到硬编码值(原 FALLBACK_PLATFORM_RATE = 0.10)");
     }
 
     /** 主理人财务页也读快照 —— 否则页面显示的钱和结算实际算的钱对不上。 */

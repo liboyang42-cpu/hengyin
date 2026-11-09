@@ -8,13 +8,12 @@ test('formatDateTimeForDisplay:空 → 空串', () => {
   assert.equal(formatDateTimeForDisplay(undefined), '');
 });
 
-test('formatDateTimeForDisplay:完整日期/星期/上下午/12时制补零', () => {
-  // 2026-07-08 是周三;09:05 上午
-  assert.equal(formatDateTimeForDisplay(new Date(2026, 6, 8, 9, 5)), '2026年7月8日 周三 上午09:05');
-  // 下午 13:00 → 下午01:00
-  assert.equal(formatDateTimeForDisplay(new Date(2026, 6, 8, 13, 0)), '2026年7月8日 周三 下午01:00');
-  // 0 点 → 12(上午12:30)
-  assert.equal(formatDateTimeForDisplay(new Date(2026, 6, 8, 0, 30)), '2026年7月8日 周三 上午12:30');
+test('formatDateTimeForDisplay:完整日期/星期/24 小时制补零(第十轮 f3 j1 F18)', () => {
+  // 2026-07-08 是周三
+  assert.equal(formatDateTimeForDisplay(new Date(2026, 6, 8, 9, 5)), '2026年7月8日 周三 09:05');
+  assert.equal(formatDateTimeForDisplay(new Date(2026, 6, 8, 13, 0)), '2026年7月8日 周三 13:00');
+  // 0 点不再读成「上午12:30」
+  assert.equal(formatDateTimeForDisplay(new Date(2026, 6, 8, 0, 30)), '2026年7月8日 周三 00:30');
 });
 
 test('processTopicDate:补 month/day/dateTime + endDateTime;缺失才补', () => {

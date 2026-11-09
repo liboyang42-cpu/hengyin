@@ -17,6 +17,11 @@ public class ClubSettlementSummaryRow extends CoopSettlement {
 
     public BigDecimal getExecutedAdjustmentAmount() { return executedAdjustmentAmount; }
     public void setExecutedAdjustmentAmount(BigDecimal value) { executedAdjustmentAmount = value; }
+    public BigDecimal getOriginalAmount() { return getAmount(); }
+    public BigDecimal getNetAmount() {
+        return getAmount() == null || executedAdjustmentAmount == null
+                ? null : getAmount().add(executedAdjustmentAmount);
+    }
     public BigDecimal getActualPaidAmount() { return actualPaidAmount; }
     public void setActualPaidAmount(BigDecimal value) { actualPaidAmount = value; }
     public Date getActualPayoutTime() { return actualPayoutTime; }

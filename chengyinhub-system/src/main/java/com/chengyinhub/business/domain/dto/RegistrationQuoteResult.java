@@ -122,6 +122,15 @@ public class RegistrationQuoteResult {
         public void setAmountFromServer(Boolean amountFromServer) { this.amountFromServer = amountFromServer; }
     }
 
+    /** 此刻下单后取消可退的百分比(2026-11-02 退款档位):100 / 50 / 0;null = 非场次单或算不出来。 */
+    @Schema(description = "此刻下单后取消可退的百分比(100/50/0;null=未知)")
+    private Integer refundPercentNow;
+    /** 第十二轮 k6(p1 N-1):这单能否用积分抵扣(自由探索、没积分、可抵 0 ⇒ false);null = 未判定(老路径)。 */
+    private Boolean pointsUsable;
+
+    public Boolean getPointsUsable() { return pointsUsable; }
+    public void setPointsUsable(Boolean pointsUsable) { this.pointsUsable = pointsUsable; }
+
     public RegistrationQuoteResult() {
     }
 
@@ -219,6 +228,14 @@ public class RegistrationQuoteResult {
 
     public Boolean getRefundableNow() {
         return refundableNow;
+    }
+
+    public Integer getRefundPercentNow() {
+        return refundPercentNow;
+    }
+
+    public void setRefundPercentNow(Integer refundPercentNow) {
+        this.refundPercentNow = refundPercentNow;
     }
 
     public void setRefundableNow(Boolean refundableNow) {

@@ -29,8 +29,22 @@ function buttonUrl(message, index) {
   const button = Array.isArray(buttons) && buttons[Number(index)];
   return url && button && button.action === url ? url : '';
 }
+function activityNoticeUrl(message) {
+  if (!message || ![0, '0'].includes(message.senderId) || ![1, '1'].includes(message.msgType)
+      || typeof message.extraJson !== 'string') return '';
+  let extra;
+  try { extra = JSON.parse(message.extraJson); } catch (_) { return ''; }
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra)
+      || !['CLUB_CAMPAIGN', 'ACTIVITY_CANCELLED'].includes(extra.type)
+      || ['action', 'url', 'path'].some(key => Object.prototype.hasOwnProperty.call(extra, key))) return '';
+  const id = positiveId(extra.activityId);
+  if (!id || extra.type === 'CLUB_CAMPAIGN' && (!positiveId(extra.campaignId) || !positiveId(extra.clubId))) return '';
+  return '/pages/activity/detail/index?id=' + id;
+}
 // Legacy system cards may link to these current business pages; dataset URLs are never authority.
 function genericActionInfo(message, index) {
+  const noticeUrl = index === undefined && activityNoticeUrl(message);
+  if (noticeUrl) return { url: noticeUrl, bcId: null };
   if (!message || ![0, '0'].includes(message.senderId) || ![3, '3'].includes(message.msgType)) return null;
   const card = message.card;
   if (!card || typeof card !== 'object' || Array.isArray(card) || card.cardType !== 'generic'
@@ -52,4 +66,4 @@ function genericActionInfo(message, index) {
   const bcId = positiveId(card.bcId);
   return url || index === undefined && bcId ? { url, bcId } : null;
 }
-module.exports = { positiveId, recordOf, originalUrl, buttonUrl, genericActionInfo };
+module.exports = { positiveId, recordOf, originalUrl, buttonUrl, activityNoticeUrl, genericActionInfo };

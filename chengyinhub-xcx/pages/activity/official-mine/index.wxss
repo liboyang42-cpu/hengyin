@@ -30,7 +30,6 @@
   border-radius: var(--cy-radius-lg);
   background: var(--cy-bg-card);
 }
-.om-card--pressed { opacity: .78; }
 .om-row { display: flex; justify-content: space-between; align-items: center; gap: var(--cy-space-2); }
 .om-t { flex: 1; font-size: var(--cy-font-subtitle); font-weight: 700; }
 .om-sub {

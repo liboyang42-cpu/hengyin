@@ -127,7 +127,7 @@ class ApiRegistrationRefundProjectionTest {
 
         row.setWechatPaymentAmount(new java.math.BigDecimal("9.90"));
         assertEquals(200, RegistrationQueryTestFixtures.wire(controller).getRegistrationDetail("13").get("code"));
-        assertEquals("可全额退款,原路退回(预计1-3个工作日)", row.getRefundInfo().reason, "有现金的单文案不变");
+        assertEquals("可全额退款，原路退回(预计1-3个工作日)", row.getRefundInfo().reason, "有现金的单文案不变");
     }
 
     @Test

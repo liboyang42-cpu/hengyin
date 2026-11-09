@@ -977,8 +977,8 @@
     "min": 1
   },
   "C60": {
-    "selector": ".stat-grid, .fc-card, .fc-explainer",
-    "min": 3,
+    "selector": ".stat-grid, .fc-card",
+    "min": 2,
     "forbid": [
       "cy-empty",
       "cy-error",

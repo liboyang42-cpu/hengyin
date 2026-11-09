@@ -1714,6 +1714,74 @@
           "com.chengyinhub.business.mapper.": [],
           "com.chengyinhub.web.": []
         }
+      },
+      {
+        "id": "L8_RECHECK_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ContentSafetyRecheckMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"]
+      },
+      {
+        "id": "L8_RECHECK",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IContentSafetyRecheckService", "com.chengyinhub.business.service.impl.ContentSafetyRecheckServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.business.task.ContentSafetyRecheckTask", "com.chengyinhub.web.controller.api.ApiTopicController"]
+      },
+      {
+        "id": "L8_SENSITIVE_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ContentSensitiveMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl", "com.chengyinhub.web.controller.business.SensitiveLibraryController"],
+        "allowed_consumers": ["com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl", "com.chengyinhub.web.controller.business.SensitiveLibraryController"]
+      },
+      {
+        "id": "L8_SENSITIVE_LIBRARY",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ISensitiveContentLibrary", "com.chengyinhub.business.service.impl.SensitiveContentLibraryImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.business.SensitiveLibraryController", "com.chengyinhub.web.controller.api.AppUploadService"]
+      },
+      {
+        "id": "L8_SENSITIVE_RESCAN",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ISensitiveContentRescanService", "com.chengyinhub.business.service.impl.SensitiveContentRescanServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.business.task.SensitiveContentRescanTask"]
+      },
+      {
+        "id": "R9_MAP_WEATHER",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IMapWeatherService", "com.chengyinhub.business.service.impl.MapWeatherServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMapController"]
+      },
+      {
+        "id": "R9_TEAM_TRAIL",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ITeamTrailService", "com.chengyinhub.business.service.impl.TeamTrailServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayTeamController"]
+      },
+      {
+        "id": "B_ORDER_CENTER_API",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.controller.api.ApiOrderCenterController"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+          "com.chengyinhub.business.mapper.ClubMembershipMapper"
+        ]
+      },
+      {
+        "id": "B_ORDER_CENTER_QUERY",
+        "module": "chengyinhub-admin",
+        "members": [
+          "com.chengyinhub.web.service.order.OrderCenterQueryApplication"
+        ],
+        "forbidden_backrefs": [
+          "com.chengyinhub.web.controller.api.ApiOrderCenterController",
+          "com.chengyinhub.common.core.controller.BaseController",
+          "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
+          "com.chengyinhub.business.service.impl.RefundServiceImpl"
+        ]
       }
     ],
     "allowed_directions": [
@@ -2166,7 +2234,16 @@
       [
         "G_SETTLEMENT_EVIDENCE",
         "G_STATION_FULFILLMENT_RECORD"
-      ]
+      ],
+      ["L8_RECHECK", "L8_RECHECK_STORAGE"],
+      ["L8_RECHECK", "L8_SENSITIVE_LIBRARY"],
+      ["L8_SENSITIVE_LIBRARY", "L8_SENSITIVE_STORAGE"],
+      ["L8_SENSITIVE_RESCAN", "L8_SENSITIVE_STORAGE"],
+      ["L8_SENSITIVE_RESCAN", "L8_SENSITIVE_LIBRARY"],
+      ["B_ORDER_CENTER_API", "B_ORDER_CENTER_QUERY"],
+      ["B_ORDER_CENTER_QUERY", "B_PAYMENT_FACADE"],
+      ["B_ORDER_CENTER_QUERY", "C_REGISTRATION_QUERY_APPLICATION"],
+      ["B_ORDER_CENTER_QUERY", "E_CLM_SHARED_PROOF_PORT"]
     ],
     "exact_directions": [
       {
@@ -2230,6 +2307,46 @@
           [
             "com.chengyinhub.business.service.impl.WechatPaymentIntentStore",
             "com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_ORDER_CENTER_API",
+        "target_owner": "B_ORDER_CENTER_QUERY",
+        "references": [
+          [
+            "com.chengyinhub.web.controller.api.ApiOrderCenterController",
+            "com.chengyinhub.web.service.order.OrderCenterQueryApplication"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_ORDER_CENTER_QUERY",
+        "target_owner": "B_PAYMENT_FACADE",
+        "references": [
+          [
+            "com.chengyinhub.web.service.order.OrderCenterQueryApplication",
+            "com.chengyinhub.business.service.IWechatPayService"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_ORDER_CENTER_QUERY",
+        "target_owner": "C_REGISTRATION_QUERY_APPLICATION",
+        "references": [
+          [
+            "com.chengyinhub.web.service.order.OrderCenterQueryApplication",
+            "com.chengyinhub.web.service.registration.RegistrationQueryApplication"
+          ]
+        ]
+      },
+      {
+        "source_owner": "B_ORDER_CENTER_QUERY",
+        "target_owner": "E_CLM_SHARED_PROOF_PORT",
+        "references": [
+          [
+            "com.chengyinhub.web.service.order.OrderCenterQueryApplication",
+            "com.chengyinhub.business.mapper.ClubMembershipMapper"
           ]
         ]
       }

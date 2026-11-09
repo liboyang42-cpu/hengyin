@@ -21,7 +21,7 @@ public final class AppMediaSchema {
     }
     public static final Set<String> MEDIA_FIELDS = Set.of("logo", "cover", "caseImages", "certImages", "avatar",
             "clubLogo", "images", "imgUrl", "imgArr", "medalImg", "storyImg", "audioUrl", "questionImg",
-            "questionAudio", "finishMedalImg", "coverImage", "gallery", "pics", "casePics", "routePreviewImg",
+            "questionAudio", "videoUrl", "videoPosterUrl", "finishMedalImg", "coverImage", "gallery", "pics", "casePics", "routePreviewImg",
             "sportCover", "picUrl", "pic", "albumPics", "coverImg", "npcAvatar", "avatarUrl", "coverUrl",
             "iconUrl", "previewImg", "imageUrl", "imageUrls", "modelUrl", "overlayUrl", "markerUrl",
             "sourceUrl", "cutoutUrl", "frames", "img", "frameUrl", "fbImgs", "lastFeedbackImages", "lastImageUrl", "audio", "image", "authorAvatar", "memberAvatar", "operatorAvatar", "ownerAvatar", "targetAvatar",

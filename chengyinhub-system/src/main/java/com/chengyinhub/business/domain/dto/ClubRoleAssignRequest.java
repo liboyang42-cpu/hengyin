@@ -17,6 +17,11 @@ public class ClubRoleAssignRequest {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date expiresAt;
     private String requestId;
+    /** 活动核销员「可见客户手机号」,默认否。 */
+    private Boolean customerPhoneVisible;
+
+    public Boolean getCustomerPhoneVisible() { return customerPhoneVisible; }
+    public void setCustomerPhoneVisible(Boolean customerPhoneVisible) { this.customerPhoneVisible = customerPhoneVisible; }
 
     public Long getClubId() { return clubId; }
     public void setClubId(Long clubId) { this.clubId = clubId; }

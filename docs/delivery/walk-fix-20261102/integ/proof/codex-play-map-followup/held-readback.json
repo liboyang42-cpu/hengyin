@@ -1,0 +1,32 @@
+{
+  "blockedSecond": {
+    "msg": "本章还没开启,等队长放行",
+    "code": 500,
+    "intentTerminal": true,
+    "_status": 200
+  },
+  "before": [
+    [
+      9008,
+      80,
+      2
+    ]
+  ],
+  "release": {
+    "msg": "已开启:待放行章节2",
+    "code": 200,
+    "data": {
+      "commandId": "playmap-held-release-81",
+      "expectedChapterId": 80,
+      "targetChapterId": 81
+    },
+    "_status": 200
+  },
+  "after": [
+    [
+      9008,
+      81,
+      2
+    ]
+  ]
+}

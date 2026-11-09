@@ -22,7 +22,7 @@ const ROOT = path.resolve(__dirname, '../..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 const CARD_JS = 'components/cy/merchant-card/index.js';
-const DISCOVER_JS = 'components/cy/scene-roam-discover/index.js';
+const DISCOVER_JS = 'pages/play/components/scene-roam-discover/index.js';
 const RELATION_JS = 'pages/merchant/relation/index.js';
 const RELATION_WXML = 'pages/merchant/relation/index.wxml';
 
@@ -65,7 +65,7 @@ function loadRelationInternals(source) {
 }
 
 test('发现列表调用方把品类名喂给卡片', () => {
-  const wxml = read('components/cy/scene-roam-discover/index.wxml');
+  const wxml = read('pages/play/components/scene-roam-discover/index.wxml');
   assert.match(wxml, /category-name="\{\{item\.categoryName\}\}"/);
   const source = read(DISCOVER_JS);
   assert.match(source, /categoryName: firstCategoryName\(row\)/, '列表项必须带上后端下发的品类名');

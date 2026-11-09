@@ -15,9 +15,9 @@
       action="重试" bind:action="retryLoad" />
     <!-- 卡1:hero(唯一大数字)+ 记录信息并进来。原「记录信息」只有一两行,单开一卡是纯浪费。 -->
     <view class="fin-hero order-summary" aria-role="region"
-      aria-label="{{detail.canReadFinance ? detail.title + '，我的收入 ' + (detail.amountDisplay || detail.amountFallback) + '，' + detail.stateText : detail.title + '，' + detail.stateText}}">
-      <text class="fin-hero__lab">{{detail.canReadFinance ? detail.title + ' · 我的收入' : detail.title}}</text>
-      <block wx:if="{{detail.canReadFinance}}">
+      aria-label="{{detail.canReadFinance && !detail.noCash ? detail.title + '，我的收入 ' + (detail.amountDisplay || detail.amountFallback) + '，' + detail.stateText : detail.title + '，' + detail.stateText}}">
+      <text class="fin-hero__lab">{{detail.canReadFinance && !detail.noCash ? detail.title + ' · 我的收入' : detail.title}}</text>
+      <block wx:if="{{detail.canReadFinance && !detail.noCash}}">
         <text class="fin-hero__amt" wx:if="{{detail.amountText != null}}">{{cnt.money(detail.amountDisplay, odK)}}</text>
         <text class="fin-hero__amt fin-hero__amt--mute" wx:else>{{detail.amountFallback}}</text>
       </block>
@@ -55,7 +55,7 @@
     <cy-skeleton type="card" count="{{1}}" />
   </block>
   <cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-param'}}" kind="missing-param"
-    size="lg" fill title="缺少核销记录信息" sub="请返回重新进入"
+    size="lg" fill title="缺少核销记录信息"
     cta="返回上一页" bind:cta="onNavBack" />
   <cy-empty class="order-detail__state" wx:elif="{{loadState === 'missing-record'}}" kind="empty"
     size="lg" fill title="核销记录不可见"

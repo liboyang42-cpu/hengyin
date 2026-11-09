@@ -64,6 +64,13 @@ public final class TopicPublicationTestWiring {
     public static <T> T wire(T value) {
         CmsTopicServiceImpl facade = facade(value);
         if (facade == null) return value;
+        if (ReflectionTestUtils.getField(facade, "orientMapper") == null) {
+            ReflectionTestUtils.setField(facade, "orientMapper",
+                    Mockito.mock(com.chengyinhub.business.mapper.OrientMapper.class));
+        }
+        if (ReflectionTestUtils.getField(facade, "orientSwitches") == null) {
+            ReflectionTestUtils.setField(facade, "orientSwitches", Mockito.mock(OrientSwitches.class));
+        }
         var topicMapper = (com.chengyinhub.business.mapper.CmsTopicMapper) ReflectionTestUtils.getField(facade, "cmsTopicMapper");
         // Existing unit fixtures predate the narrow parent-lock query. Keep their original topic doubles;
         // only supply the newly introduced lock acknowledgement, never override an explicit new stub.

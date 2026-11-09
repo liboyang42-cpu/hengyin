@@ -127,7 +127,7 @@
             <cy-icon class="review-image-plus" name="plus" size="32" /><text>添加图片</text>
           </view>
         </view>
-        <cy-inline-error wx:if="{{submitError}}" class="review-error" kind="data"
+        <cy-inline-error wx:if="{{submitError}}" class="review-error" kind="error"
                          title="评价未提交" sub="{{submitError}}" />
         <cy-btn class="review-submit" variant="primary" loading="{{submitting}}"
                 disabled="{{!canSubmit || submitting}}" bindtap="submitReview">
@@ -229,7 +229,7 @@
             <image src="/pages/merchant/images/merchant/reviews/icon-send.svg" mode="aspectFit" />
           </view>
         </view>
-        <cy-inline-error wx:if="{{replyReviewId === item.id && replyError}}" class="review-error" kind="data"
+        <cy-inline-error wx:if="{{replyReviewId === item.id && replyError}}" class="review-error" kind="{{replyPending ? 'data' : 'error'}}"
                          title="{{replyPending ? '回复待确认' : '回复提示'}}" sub="{{replyError}}" />
 
         <view class="review-actions">
@@ -242,7 +242,7 @@
           <text class="review-editor-sub">举报已提交审核</text>
           <textarea class="review-textarea review-textarea--compact" value="{{reportReason}}" maxlength="500"
                     placeholder="请说明不实、攻击、广告或其他违规事实" placeholder-class="review-placeholder" bindinput="inputReport" />
-          <cy-inline-error wx:if="{{reportError}}" class="review-error" kind="data"
+          <cy-inline-error wx:if="{{reportError}}" class="review-error" kind="error"
                            title="举报未提交" sub="{{reportError}}" />
           <view class="review-editor-actions">
             <cy-btn variant="ghost" disabled="{{reportSubmitting}}" bindtap="cancelReport">取消</cy-btn>

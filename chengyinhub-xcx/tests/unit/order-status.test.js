@@ -23,7 +23,7 @@ function registration(extra) {
     registrationStatus: 2,
     verificationStatus: 0,
     cmsTopic: { startDate: '2026-07-21 13:00:00', endDate: '2026-07-21 18:00:00' },
-    refundInfo: { refundable: true, reason: '可全额退款,原路退回(预计1-3个工作日)' }
+    refundInfo: { refundable: true, reason: '可全额退款，原路退回(预计1-3个工作日)' }
   }, extra || {});
 }
 
@@ -46,7 +46,7 @@ test('payoutStatus=2 PENDING_MANUAL 归入退款中并提示人工处理', () =>
     refundApplication: { payoutStatus: 2 }
   }), NOW);
   assert.equal(summary.key, 'refunding');
-  assert.equal(summary.text, '退款处理中');
+  assert.equal(summary.text, '正在退款');
   assert.equal(summary.refundText, '原路退款异常，平台正在人工处理');
 });
 
@@ -56,7 +56,7 @@ test('payoutStatus=4 MANUAL_VERIFIED 归入已退款', () => {
     refundApplication: { payoutStatus: 4 }
   }), NOW);
   assert.equal(summary.key, 'refunded');
-  assert.equal(summary.text, '已退款');
+  assert.equal(summary.text, '退款成功');
   assert.equal(summary.refundText, '退款已原路退回');
 });
 
@@ -111,11 +111,11 @@ test('零元单(退款额 ≤ 0)不出任何退款承诺', () => {
 test('仍在进行的已支付订单错过退款窗口时显示不可退款', () => {
   const row = registration({
     cmsTopic: { startDate: '2026-07-21 10:00:00', endDate: '2026-07-21 18:00:00' },
-    refundInfo: { refundable: false, reason: '已错过主题有效期,不可退款' }
+    refundInfo: { refundable: false, reason: '已错过主题有效期，不可退款' }
   });
   const summary = summarizeOrderState(row, NOW);
   assert.equal(summary.key, 'non_refundable');
-  assert.equal(summary.refundText, '已错过主题有效期,不可退款');
+  assert.equal(summary.refundText, '已错过主题有效期，不可退款');
 });
 
 
@@ -205,7 +205,7 @@ test('U-023:人工案件下退款已到账(payout 1/4)显示已退款，未到�
       refundInfo: { refundable: false, reason: '人工案件权威处理结果' } });
     const summary = summarizeOrderState(row, NOW);
     assert.equal(summary.key, 'refunded', 'payout=' + payoutStatus + ' 已到账不能被人工售后遮住');
-    assert.equal(summary.text, '已退款');
+    assert.equal(summary.text, '退款成功');
     assert.equal(canRequestOrderRefund(row), false);
   }
   for (const payoutStatus of [0, 2, 3, 5, 6]) {
@@ -214,3 +214,26 @@ test('U-023:人工案件下退款已到账(payout 1/4)显示已退款，未到�
     assert.equal(summarizeOrderState(row, NOW).key, 'manual_refund', 'payout=' + payoutStatus + ' 未到账仍走人工售后');
   }
 });
+
+test('P-03:探索票核销一家是进行中,不是已完成;集齐或场次结束才完成', () => {
+  const { summarizeOrderState: summarize } = require('../../utils/order-status')
+  const base = { registrationStatus: 2, paymentStatus: 2, verificationStatus: 1, purchaseKind: 3,
+    firstSuccessfulScanAt: '2026-11-02 13:38:00', payableAmount: 69, serverNow: Date.now() }
+  const one = summarize(Object.assign({}, base, { exploreProgress: { redeemed: 1, required: 4, active: true } }))
+  assert.equal(one.key, 'in_progress')
+  assert.equal(one.progressText, '已核销 1/4 家')
+  const all = summarize(Object.assign({}, base, { exploreProgress: { redeemed: 4, required: 4, completed: true, active: false } }))
+  assert.equal(all.key, 'completed')
+  const legacy = summarize(base)
+  assert.equal(legacy.key, 'completed', '没有服务端进度时保持原口径')
+})
+
+test('P-22:城市定向通关后订单是已完成,不是待核销', () => {
+  const { summarizeOrderState: summarize } = require('../../utils/order-status')
+  const row = { registrationStatus: 2, paymentStatus: 2, verificationStatus: 0, payableAmount: 0, topicCompleted: true,
+    cmsActivity: { startDate: '2026-11-02 13:35:00', endDate: '2099-11-02 23:59:59' }, serverNow: Date.now() }
+  const s = summarize(row)
+  assert.equal(s.key, 'completed')
+  assert.equal(s.topicCompleted, true)
+  assert.notEqual(summarize(Object.assign({}, row, { topicCompleted: undefined })).key, 'completed')
+})

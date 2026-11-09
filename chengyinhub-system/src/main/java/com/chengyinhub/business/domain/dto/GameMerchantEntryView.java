@@ -14,6 +14,8 @@ public class GameMerchantEntryView {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endAt;
     private Integer stationCount;
+    /** 第十二轮 k4(j2 N-02):本商家在这一场里还待接受邀请(INVITED)的站数,首页卡据此标「待接受邀请」并排到前面。 */
+    private Integer invitedCount;
 
     public Long getActivityId() { return activityId; }
     public void setActivityId(Long activityId) { this.activityId = activityId; }
@@ -27,4 +29,6 @@ public class GameMerchantEntryView {
     public void setEndAt(Date endAt) { this.endAt = endAt; }
     public Integer getStationCount() { return stationCount; }
     public void setStationCount(Integer stationCount) { this.stationCount = stationCount; }
+    public Integer getInvitedCount() { return invitedCount; }
+    public void setInvitedCount(Integer invitedCount) { this.invitedCount = invitedCount; }
 }

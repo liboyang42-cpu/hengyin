@@ -43,14 +43,21 @@ class WechatMemberRegistrationTest {
             return 1;
         });
         when(points.insertUmsMemberPointsDetail(any())).thenReturn(1);
+        // 第十二轮 k1 第 3 项:注册赠送只读启用的规则 1(业主定 50),余额与流水同一个数
+        CmsPointsSetting welcome = new CmsPointsSetting();
+        welcome.setValue(new java.math.BigDecimal("50"));
+        welcome.setStatus(1L);
+        when(settings.selectCmsPointsSettingById(1L)).thenReturn(welcome);
     }
 
     @Test void createsOneMemberAndGiftThenRetryOnlyReads() {
         CmsPointsSetting setting = new CmsPointsSetting();
         setting.setValue(new java.math.BigDecimal("73"));
+        setting.setStatus(1L);
         when(settings.selectCmsPointsSettingById(1L)).thenReturn(setting);
         UmsMember created = service.getOrCreateWechatMember("wx-id");
-        assertEquals(50L, created.getPoint());
+        // 旧实现余额写死 50、流水读规则 1(=73):两边对不上。现在余额与流水都是规则 1 的值
+        assertEquals(73L, created.getPoint());
         assertEquals("configured-avatar", created.getAvatar());
         verify(points).insertUmsMemberPointsDetail(argThat(detail ->
                 detail.getMemberId().equals(42L) && detail.getChangePoints().equals(73L)));
@@ -59,6 +66,16 @@ class WechatMemberRegistrationTest {
         verify(mapper, times(1)).insertUmsMember(any());
         verify(points, times(1)).insertUmsMemberPointsDetail(any());
         assertEquals(2, transactions.commits);
+    }
+
+    @Test void disabledWelcomeRuleGrantsNothingAndWritesNoLedger() {
+        CmsPointsSetting disabled = new CmsPointsSetting();
+        disabled.setValue(new java.math.BigDecimal("50"));
+        disabled.setStatus(0L);
+        when(settings.selectCmsPointsSettingById(1L)).thenReturn(disabled);
+        UmsMember created = service.getOrCreateWechatMember("wx-id");
+        assertEquals(0L, created.getPoint(), "停用的规则 1 一分不发");
+        verifyNoInteractions(points);
     }
 
     @Test void expectedConflictReadsOnlyAfterRollbackInFreshTransaction() {

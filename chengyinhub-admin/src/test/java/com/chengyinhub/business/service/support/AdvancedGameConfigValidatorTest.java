@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdvancedGameConfigValidatorTest {
@@ -233,7 +234,7 @@ class AdvancedGameConfigValidatorTest {
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(json));
-        assertEquals("盲盒物品 ID 不能重复", error.getMessage());
+        assertEquals("卡片 ID 不能重复", error.getMessage());
     }
 
     @Test
@@ -255,7 +256,7 @@ class AdvancedGameConfigValidatorTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(json));
 
-        assertEquals("盲盒音频地址最多 500 个字", error.getMessage());
+        assertEquals("卡片音频地址最多 500 个字", error.getMessage());
     }
 
     @Test
@@ -269,8 +270,8 @@ class AdvancedGameConfigValidatorTest {
         IllegalArgumentException schemeError = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(insecureUrl));
 
-        assertEquals("盲盒音频地址格式不正确", typeError.getMessage());
-        assertEquals("盲盒音频地址格式不正确", schemeError.getMessage());
+        assertEquals("卡片音频地址格式不正确", typeError.getMessage());
+        assertEquals("卡片音频地址格式不正确", schemeError.getMessage());
     }
 
     @Test
@@ -1591,5 +1592,25 @@ class AdvancedGameConfigValidatorTest {
         return "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\","
                 + "\"title\":\"暗号是什么\",\"answerText\":\"芝麻开门\",\"maxTries\":0}" + comma
                 + policyFragment + "}";
+    }
+
+    /* R11 g1 F2:编辑器选 D20 三档难度时没带 outcomeRules,存得进去、开局却报「该模板未配置高级玩法」。
+       主题发布检查:这两段单独启用又没有结果规则时给出原因(check 在主题开了检定时走旅程检定,放行)。 */
+    @Test
+    void r11CheckOrAlbumAloneWithoutOutcomeRulesIsUnplayable() {
+        AdvancedGameConfigValidator v = new AdvancedGameConfigValidator();
+        String check = "{\"schemaVersion\":1,\"check\":{\"enabled\":true,\"checkId\":\"c1\",\"tier\":\"medium\",\"successText\":\"成\",\"failText\":\"败\"}";
+        assertFalse(v.hasEnabledMechanic(check + "}"));
+        assertEquals("D20 三档难度请配置通过和没通过之后", v.outcomeRulesMissingReason(check + "}", false));
+        assertNull(v.outcomeRulesMissingReason(check + "}", true), "主题开了检定:check 走旅程检定");
+        String withRules = check + ",\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}";
+        assertTrue(v.hasEnabledMechanic(withRules));
+        assertNull(v.outcomeRulesMissingReason(withRules, false));
+        String withQa = check + ",\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"t\",\"answerText\":\"a\"}}";
+        assertNull(v.outcomeRulesMissingReason(withQa, false), "另有可玩玩法时检定照旧走旅程检定");
+        String album = "{\"schemaVersion\":1,\"album\":{\"enabled\":true,\"images\":[{\"url\":\"https://www.chengyinhub.com/a.png\",\"line\":\"x\"}]}}";
+        assertEquals("相册请配置完成之后", v.outcomeRulesMissingReason(album, true));
+        assertNull(v.outcomeRulesMissingReason("{\"schemaVersion\":1,\"coinFlip\":{\"enabled\":true,\"heads\":{\"label\":\"正面\",\"action\":\"a\"},\"tails\":{\"label\":\"反面\",\"action\":\"b\"}}}", false));
+        assertNull(v.outcomeRulesMissingReason("", false));
     }
 }

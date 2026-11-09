@@ -92,6 +92,14 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @Tag(name = "商户相关")
 @RequestMapping("/api/merchant")
 public class ApiMerchantController extends BaseController {
+
+    /** 第十二轮 k4(j2 N-02):站点待接受邀请进「我的消息」。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
+
+    @Autowired
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
     @Autowired
     private com.chengyinhub.business.service.ConsentGuard consentGuard;
 
@@ -409,6 +417,32 @@ public class ApiMerchantController extends BaseController {
         }
         return success(vo);
     }
+
+    /**
+     * 第九轮 m1-9:商家主页「分享」里的店铺小程序码。只给公开可见的商家出码;
+     * scene = {@code sh.<商家会员ID>},落地页 pages/index/index 转商家主页(userId=会员ID&tab=about)。
+     * 码按 scene 永久复用(同主题 / 活动分享码,服务内缓存),不会每次分享都生成。
+     */
+    @Operation(summary = "商家主页分享卡的店铺小程序码")
+    @PostMapping("/share-code")
+    public AjaxResult shareCode(String memberId) {
+        Long principal;
+        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (principal == null || principal <= 0) return error("请先登录");
+        Long subject = com.chengyinhub.common.core.text.Convert.toLong(memberId, 0L);
+        if (subject <= 0) return error("商家不存在或未开放");
+        if (!isPubliclyVisible(mmsMerchantService.selectMmsMerchantByMemberId(subject))) return error("商家不存在或未开放");
+        Map<String, Object> data = new HashMap<>();
+        try {
+            data.put("qrcodeUrl", playerWxacodeService.getOrCreateScene("sh." + subject));
+        } catch (IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return success(data);
+    }
+
+    @Autowired
+    private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
 
     /** 公开可见 = 审核通过 && 账号启用 && 未删除。未知值一律失败关闭。 */
     private boolean isPubliclyVisible(MmsMerchant m) {
@@ -1695,6 +1729,29 @@ public class ApiMerchantController extends BaseController {
                 events.add(e);
             }
         }
+        // 第十二轮 k4(j2 N-02):场次里有本店站点待接受邀请 —— 主理人开局被「待商家接受」挡着,商家却毫无察觉。
+        // 由真实站点行(game_station_run.status=INVITED)派生,不另建消息表;排在最前。
+        if (gameSessionRuntimeService != null && (access.hasPermission(MerchantPermission.VERIFY)
+                || access.hasPermission(MerchantPermission.PROJECT_MANAGE))) {
+            try {
+                for (com.chengyinhub.business.domain.dto.GameMerchantEntryView entry : gameSessionRuntimeService.merchantEntries(
+                        com.chengyinhub.business.domain.dto.GameActorContext.merchant(principalMemberId, access))) {
+                    if (entry == null || entry.getInvitedCount() == null || entry.getInvitedCount() <= 0) continue;
+                    Map<String, Object> e = new HashMap<>();
+                    e.put("type", "stationInvite");
+                    e.put("label", "站点邀请");
+                    e.put("content", entry.getInvitedCount() + " 个站点待接受邀请 · 「" + entry.getActivityName() + "」"); // 预览一行会截断,要做的事放前面
+                    e.put("ownerType", 2L);
+                    e.put("ownerId", entry.getActivityId());
+                    e.put("gameActivityId", entry.getActivityId());
+                    e.put("_t", Long.MAX_VALUE);
+                    e.put("time", entry.getStartAt() == null ? "" : fmt.format(entry.getStartAt()));
+                    events.add(e);
+                }
+            } catch (RuntimeException unavailable) {
+                // 站点入口读不到不影响其它动态
+            }
+        }
         events.sort((a, b) -> Long.compare((Long) b.get("_t"), (Long) a.get("_t")));
         java.util.List<Map<String, Object>> top = events.size() > 10 ? new java.util.ArrayList<>(events.subList(0, 10)) : events;
         // 核销事件的项目归属得一条条回查 registration ⇒ 只查最终下发的这 10 条。
@@ -1999,6 +2056,7 @@ public class ApiMerchantController extends BaseController {
         row.setSettlementAmount(null);
         row.setSettlementState(null);
         row.setSettlementRoute(null);
+        row.setDestination(null);
         row.setDisplayState(null);
         row.setNoCashReason(null);
         row.setPublicSettlement(null);
@@ -2006,6 +2064,28 @@ public class ApiMerchantController extends BaseController {
 
     @Operation(summary = "商家入驻")
     @Log(title = "商家入驻", businessType = BusinessType.INSERT)
+    /** 入驻行业类型:最多 5 个、去重、必须都是在用的商家行业记录(type 6,或存量商家用的 type 1);空串 = 没选;不合法返回 null。 */
+    private String[] registrationCategoryIds(String raw) {
+        java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
+        for (String part : raw.split(",")) {
+            String id = part.trim();
+            if (id.isEmpty()) continue;
+            if (!id.matches("[1-9]\\d{0,9}")) return null;
+            ids.add(id);
+        }
+        if (ids.size() > 5) return null;
+        if (ids.isEmpty()) return new String[0];
+        String[] picked = ids.toArray(new String[0]);
+        List<SysCategory> rows = sysCategoryService.selectSysCategoryListByIds(picked);
+        int valid = 0;
+        if (rows != null) for (SysCategory row : rows) {
+            if (row != null && com.chengyinhub.business.support.ChapterRecruitmentRules.isMerchantCategoryType(row.getType())
+                    && Long.valueOf(0L).equals(row.getParentId()) && Integer.valueOf(1).equals(row.getStatus())
+                    && (row.getDelFlag() == null || row.getDelFlag() == 0)) valid++;
+        }
+        return valid == picked.length ? picked : null;
+    }
+
     @PostMapping("/merchant_registration")
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult merchantRegistration(@Validated @RequestBody MerchantRegistrationDTO request) {
@@ -2019,6 +2099,15 @@ public class ApiMerchantController extends BaseController {
 
         if (member_id == null || member_id <= 0) {
             return error("请先登录");
+        }
+
+        // Round5B-6:入驻资料(店名/简介/周边/偏好/地址/营业时间)审核通过后公开,提交时先过文本机审;
+        // 入驻本身还有平台人审,机审只「要人工」不拒。
+        try {
+            submissionSafety.requireText(member_id, true, request.getName(), request.getDescription(),
+                    request.getDerivatives(), request.getPreference(), request.getAddress(), request.getBusinessTime());
+        } catch (com.chengyinhub.common.exception.ServiceException unsafe) {
+            return error(unsafe.getMessage());
         }
 
         // 新入驻与接受员工邀请统一先锁会员行，避免并发把同一账号写成“商家 Owner + 其他店员工”。
@@ -2041,6 +2130,15 @@ public class ApiMerchantController extends BaseController {
         mmsMerchant.setMemberId(member_id);
         mmsMerchant.setName(request.getName());
         mmsMerchant.setCategoryId(request.getCategoryId());
+        if (request.getCategoryIds() != null) {
+            // M-16:入驻时就用门店信息同一份行业类型胶囊问一次;只认在用的 type=1 记录,第一个为主行业
+            String[] picked = registrationCategoryIds(request.getCategoryIds());
+            if (picked == null) return error("行业类型无效，请重新选择");
+            if (picked.length > 0) {
+                mmsMerchant.setCategoryIds(String.join(",", picked));
+                mmsMerchant.setCategoryId(Integer.valueOf(picked[0]));
+            }
+        }
         mmsMerchant.setDescription(request.getDescription());
         mmsMerchant.setDerivatives(request.getDerivatives());
         mmsMerchant.setPreference(request.getPreference());

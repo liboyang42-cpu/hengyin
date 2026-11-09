@@ -1,0 +1,15 @@
+id	latitude	longitude
+9801	31.230400	121.473700
+9802	None	None
+jobs_new_targets
+0
+type	count(*)
+1	8
+6	9
+role	can_create_event	max_events
+player	0	0
+club	1	3
+merchant	1	3
+biz_type	platform_commission_rate	merchant_rate
+activity	0.0300	0.9700
+topic	0.0300	0.9700

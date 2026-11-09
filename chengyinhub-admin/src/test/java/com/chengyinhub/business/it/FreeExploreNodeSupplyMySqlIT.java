@@ -142,7 +142,8 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_20260820_questo_puzzle_atmosphere.sql",
                 "migration_circle_theme_batch2_20260821.sql",
                 "migration_x10_chapter_audio_20260905.sql",
-                "migration_topic_chapter_finish_time_20260910.sql"));
+                "migration_topic_chapter_finish_time_20260910.sql",
+                "migration_20261105_chapter_video.sql"));
         MIGRATIONS.put("cms_topic_node", List.of("migration_node_unlock_after_20260820.sql"));
         // 两份 20261003 是同一组列的先后两版守卫脚本;后一版(merchant_offer_withdrawal_columns)是
         // 「先只读断言形状、再补列」的收口版,覆盖 offer 三列 + application 一列,只叠它,不叠两遍。

@@ -9,7 +9,7 @@ import java.util.*;
 /** 通用主题配置。目录、触发和场景只含受控数据，不接受脚本或系统属性写入。 */
 public final class ThemeRuntimeConfig {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "actionName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters", "gameplayRuntime", "templateBindings");
+    private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "actionName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters", "gameplayRuntime", "templateBindings", "teamTrail");
     public static ObjectNode parse(String raw) { return parse(raw,false); }
     public static ObjectNode parseDraft(String raw) { return parse(raw,true); }
     public static ObjectNode parseForNodeSave(String raw) { return parse(raw, true, true); }
@@ -29,7 +29,7 @@ public final class ThemeRuntimeConfig {
             if(config.has("rescueLimit"))integer(config,"rescueLimit",0,10);
             for(JsonNode source:rows(config,"actionSources",3))if(!source.isTextual() || !set("NODE","CHOICE","DRAW").contains(source.asText()))fail("行动计数来源不支持");
             text(config, "hpName", 20, false); text(config, "luckName", 20, false); text(config, "actionName", 20, false);
-            bool(config, "replayEnabled"); bool(config,"allowDiscard");
+            bool(config, "replayEnabled"); bool(config,"allowDiscard"); bool(config, "teamTrail");
             Set<String> items = new HashSet<>();
             for (JsonNode item : rows(config, "items", 200)) {
                 fields(item, set("id", "kind", "name", "image", "stat", "statKey", "slotCost", "delta", "wear", "mode"));

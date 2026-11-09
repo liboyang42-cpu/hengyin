@@ -6,7 +6,7 @@
 //   组件自己再数一遍秒只负责显示,不参与判定。
 // ★ 判定在服务端:内容相等 + 用时 <= seconds 都在后端算,组件只报原始输入。
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
-const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
+const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 
 Component({

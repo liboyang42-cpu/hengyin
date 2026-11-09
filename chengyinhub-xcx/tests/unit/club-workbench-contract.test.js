@@ -31,7 +31,7 @@ test('俱乐部详情用第四个 owner-only 管理 tab 承接工作台，玩家
   const style = read('pages/club/detail/index.wxss')
 
   assert.match(view, /<cy-tabs\b[^>]*tabs="\{\{clubTabs\}\}"[^>]*active="\{\{activeTab\}\}"/)
-  assert.match(page, /\{ key: 'posts', label: '帖子' \}/)
+  assert.match(page, /\{ key: 'posts', label: '帖文' \}/)  // 第十轮 f3 j5 L8:约定用语是「帖文」
   assert.match(page, /\{ key: 'events', label: '活动' \}/)
   assert.match(page, /\{ key: 'overview', label: '概览' \}/)
   assert.match(page, /PUBLIC_TABS\.concat\(\[\{ key: 'manage', label: '管理' \}\]\)/)

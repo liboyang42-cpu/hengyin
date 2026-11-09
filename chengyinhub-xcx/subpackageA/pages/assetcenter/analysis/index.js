@@ -1,6 +1,6 @@
 // 账户收益 · 分析:近 6 个月收入 / 提现的柱图 + 本月收入来源。只读余额流水,不新增接口。
 const app = getApp()
-const earningsView = require('../../../../utils/earnings-view.js')
+const earningsView = require('../../../utils/earnings-view.js')
 
 function asWithdraw(rows) {
   // 提现 = eventType 3 的支出;换成「收入」形状复用同一套按月聚合

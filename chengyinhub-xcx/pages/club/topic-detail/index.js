@@ -5,6 +5,7 @@
 // (「这一站玩什么」是讲给商家听的「玩家到店会跟你做什么」),不是俱乐部要看的东西。
 // 日常详情不跳 merchantinfo；只有「承接审核」显式复用它已有的主办方审核台，避免复制审核链。
 const toast = require('../../../utils/toast.js');
+const { callMember } = require('../utils/club-phone-call.js');
 const cancellationIntent = require('../../../utils/topic-cancellation-intent.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const app = getApp();
@@ -59,6 +60,8 @@ function flattenCustomerRows(sessions) {
         initial: name.slice(0, 1),
         timeText: timeText,
         phoneText: r.phoneText || '',
+        // 2026-11-02:服务端判了能拨(主理人/副主理人/本场领队/勾了开关的核销员)才给拨号键
+        phoneCallable: r.phoneCallable === true && /^1\d{10}$/.test(String(r.phoneText || '')),
         statusCode: r.statusCode,
         statusText: r.statusText || '',
         verifyText: r.timeText && r.timeText !== '—' ? r.timeText : '',
@@ -68,6 +71,8 @@ function flattenCustomerRows(sessions) {
   return out;
 }
 
+// p3 F3:服务端明确拒绝(不是本俱乐部的主题 / 不存在)要讲原因并给返回;网络与系统繁忙仍按加载失败留白。
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 function isSuccess(res) { return !!res && (res.code === '200' || res.code === 200); }
 function positiveId(v) { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null; }
 
@@ -92,6 +97,11 @@ const STATES = {
   selfrun:   { text: '进行中',  primary: '去核销',       disabled: false, verify: true,  reject: false, sessions: true  },
   ended:     { text: '已结束',  primary: '查看结算报告',  disabled: false, verify: true,  reject: false, sessions: true  },
 };
+
+// cms_topic.lifecycle 1 招募中 / 2 定价与开售审核中:都还不能报名(3 SELLING 才能)。
+// 第十轮 f2(j2 F-05):与「更多」里的阶段同一口径(ClubTopicSettingServiceImpl.lifecycleText),不再头部说
+// 「待开售审核」、更多里说「定价中」。
+const NOT_ON_SALE_TEXT = { 1: '招募中 · 未开售', 2: '定价中 · 未开售', 7: '立项待审 · 未开售' };
 
 // 场次状态(导演台 projection.status / topic-manage-stats.sessionStatus 同一套枚举)→ 页面六态
 const SESSION_STATUS_KEYS = {
@@ -158,12 +168,14 @@ Page({
   data: {
     loaded: false,
     loadError: false,
+    loadRefusal: '',
     chromeClearTop: 0,
     // PR10 F-W5-08(c):滚过封面后导航转实底(cy-nav-bar scrolled),内容不再从状态栏/返回键底下透出来
     navScrolled: false,
     topic: {},
     statusKey: 'reviewing',
     statusText: '',
+    lifecycle: null,
     // 胶囊圆点的展示态(空=跟 statusKey);只影响展示,不参与主键判定
     statusDisplayKey: '',
     primary: { text: '', disabled: true },
@@ -299,7 +311,7 @@ Page({
       header: jsonHeader(),
       success(res) {
         if (seq !== that._manageStatsSeq) return;
-        if (!isSuccess(res) || !res.data) { that.failManageStats(); return; }
+        if (!isSuccess(res) || !res.data) { that.failManageStats(res); return; }
         that._manageStats = res.data;
         if (that._lastRaw) that.applyDetail(that._lastRaw);
         if (refreshActiveDirector && res.data.canDirect === true) that.loadProjection();
@@ -309,17 +321,18 @@ Page({
   },
 
   // 记下失败再出错误态:详情可能晚到,applyDetail 不能把这次失败盖成「加载成功的普通成员视图」。
-  failManageStats() {
+  failManageStats(res) {
     // 已展示过内容(onShow 后台刷新)时失败:保留旧统计与已加载内容,只给非阻塞提示;首屏失败照旧整页错误。
     if (this._manageStats && this._lastRaw && this.data.loaded && !this.data.loadError) { toast('刷新失败，请重试'); return; }
     this._manageStatsFailed = true;
-    this.setData({ loaded: true, loadError: true });
+    this._loadRefusal = refusalOf(res);
+    this.setData({ loaded: true, loadError: true, loadRefusal: this._loadRefusal });
   },
 
   onRetry() {
     // 缺 topicId 时重发什么都是同一个 400/失败 —— 出口只能是回去,不是再来一次(E-12)。
     if (this.data.missingParam) { this.goBack(); return; }
-    this.setData({ loaded: false, loadError: false });
+    this.setData({ loaded: false, loadError: false, loadRefusal: '' });
     this.fetchDetail();
     this.loadManageStats(true);
   },
@@ -344,7 +357,7 @@ Page({
       header: { 'Content-Type': 'application/x-www-form-urlencoded' },
       success(res) {
         if (!current()) return;
-        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); return; }
+        if (!isSuccess(res) || !res.data) { if (!that._lastRaw) that.setData({ loaded: true, loadError: true, loadRefusal: refusalOf(res) }); else toast('刷新失败，请重试'); return; }
         that.applyDetail(res.data);
       },
       fail() { if (!current()) return; if (!that._lastRaw) that.setData({ loaded: true, loadError: true }); else toast('刷新失败，请重试'); },
@@ -353,7 +366,7 @@ Page({
 
   applyDetail(raw) {
     this._lastRaw = raw;
-    if (this._manageStatsFailed) { this.setData({ loaded: true, loadError: true }); return; }
+    if (this._manageStatsFailed) { this.setData({ loaded: true, loadError: true, loadRefusal: this._loadRefusal || '' }); return; }
     // 俱乐部视角下身份还没拿到就不渲染,免得主理人先看到一闪普通成员视图;统计到了会用 _lastRaw 重放
     if (this._clubId && !this._manageStats) return;
     // P0(2026-09-05 审核):/api/topic/info-to-user 不返回 preparingAt/startedAt/endedAt 这类场次字段,
@@ -370,15 +383,19 @@ Page({
     this._canViewVerify = stats.canViewVerify === true;
     const statusKey = (auditKey === 'reviewing' || auditKey === 'rejected')
       ? auditKey
-      : (this._directorStatusKey || auditKey);
+      : (this._directorStatusKey ? this.sessionOverKey(this._directorStatusKey) : auditKey);
+    // 统计晚于 projection 到达时,p3 N19 的「已取消」也要在这里补上
+    if (statusKey === 'ended' && this._directorStatusKey && this.sessionOverCancelled(this._directorStatusKey)) this._sessionCancelled = true;
     const state = STATES[statusKey] || STATES.reviewing;
     const plan = this.resolvePrimary(state, statusKey, raw);
     this.setData({
       loaded: true,
       loadError: false,
       statusKey,
+      lifecycle: Number(raw.lifecycle),
       // 重放详情(统计晚到/按场次重拉)时别把 projection 给的「已取消」冲回「已结束」
-      statusText: statusKey === 'ended' && this._sessionCancelled ? '已取消' : state.text,
+      // C-01/P-01:还在招募或定价/开售审核里的主题没开售,不能写「已确认」让主理人以为成员能报名了
+      statusText: statusKey === 'ended' && this._sessionCancelled ? '已取消' : (statusKey === 'confirmed' && NOT_ON_SALE_TEXT[Number(raw.lifecycle)]) || state.text,
       primary: plan.primary,
       sessionHint: plan.sessionHint,
       showReject: state.reject && !!raw.rejectReason,
@@ -387,7 +404,8 @@ Page({
         cover: resolveTopicCover(raw) || raw.cover || raw.coverUrl || '',
         merchantLogo: raw.merchantLogo || '',
         dateRange: this.formatRange(raw.startDate, raw.endDate),
-        verifyModeText: raw.verifyModeText || '玩家可到店核销',
+        // C-27:没有任何商家信息的主题(纯城市定向)不再默认写「玩家可到店核销」
+        verifyModeText: raw.verifyModeText || (raw.merchantLogo ? '玩家可到店核销' : ''),
         chips: this.buildChips(raw, stats),
         structureText: this.buildStructureText(raw, stats),
         statusChips: this.buildTopicStatusChips(raw),
@@ -396,6 +414,8 @@ Page({
       sessions: state.sessions ? this.buildSessions(raw) : [],
       canManageSessions: this._canManageSessions,
       canReviewChapterApplications: stats.canReviewChapterApplications === true,
+      // C-02:非平台主题的付费场次暂不能在线收款,告诉主理人;平台放开后后端不再给 true,这句自然消失。
+      paymentNotice: stats.paidSessionsBlocked === true ? '这个主题暂不能在线收款，玩家无法在线报名付费场次' : '',
     });
     this.applyVerifyVisibility();
     this._topicActivities = (Array.isArray(raw.activityList) ? raw.activityList : [])
@@ -425,7 +445,8 @@ Page({
     const match = this._opsTimeMatch();
     this.setData({
       opsTimeAvailable: !!match,
-      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey(),
+      // C-23:已有报名时一进页就显示已锁定,不用先点保存吃一次拒绝;最终仍以后端为准。
+      opsTimeLocked: this._opsTimeSoldKey === this._opsTimeContextKey() || this._opsTimeHasSignups(),
       opsTimeText: match ? (Number(match[2]) + '月' + Number(match[3]) + '日 ' + match[4]) : '',
     });
   },
@@ -448,9 +469,14 @@ Page({
     this.setData({ opsTimeSubmitting: false, opsTimeSheetVisible: false, 'resultSheet.show': false });
   },
 
+  _opsTimeHasSignups() {
+    const stats = this._manageStats || {};
+    return !!this._directorActivityId && Number(stats.sessionHeadcount) > 0;
+  },
+
   openOpsTimeSheet() {
     this._syncOpsTimeContext();
-    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey()) return;
+    if (this.data.opsTimeSubmitting || this._opsTimeSoldKey === this._opsTimeContextKey() || this._opsTimeHasSignups()) return;
     const match = this._opsTimeMatch();
     if (!match) { this.syncOpsTime(); return; }
     this.setData({
@@ -614,13 +640,14 @@ Page({
 
   // 导演台每次拉到 projection 都回调这里:场次状态 → 页面六态。审核中/未通过仍以审核态为准。
   applyProjectionStatus(status) {
-    const key = SESSION_STATUS_KEYS[String(status || '').toUpperCase()];
-    if (!key) return;
-    this._directorStatusKey = key;
+    const projected = SESSION_STATUS_KEYS[String(status || '').toUpperCase()];
+    if (!projected) return;
+    this._directorStatusKey = projected;
     if (this._auditKey === 'reviewing' || this._auditKey === 'rejected') return;
+    const key = this.sessionOverKey(projected);
     const state = STATES[key];
     // 已取消的场次按「已结束」渲染,但不开核销区(取消场没有可核销的人)
-    const cancelled = String(status || '').toUpperCase() === 'CANCELLED';
+    const cancelled = String(status || '').toUpperCase() === 'CANCELLED' || this.sessionOverCancelled(projected);
     this._sessionCancelled = cancelled;
     // 开始准备/开始活动/结束活动是导演台写动作,只给 canDirect;已结束的主键是结算报告,不归导演台
     const directorAction = key !== 'ended';
@@ -631,6 +658,17 @@ Page({
     });
     this.applyVerifyVisibility();
   },
+
+  // 第十二轮 k9(p3 N19):从没开过局的场次(导演台 projection 恒为 NOT_PREPARED)过了结束时间或被取消后,
+  // 主键仍是「开始准备」,点下去什么也做不成。topic-manage-stats 的本场 sessionStatus 按服务端时钟
+  // 已经判它 FINISHED / CANCELLED(没有 game_session 时才会这样落)—— 这时按已结束渲染,主键回到结算报告。
+  sessionOverStatus(projectedKey) {
+    if (projectedKey !== 'confirmed' || !this._directorActivityId) return '';
+    const s = String((this._manageStats || {}).sessionStatus || '').toUpperCase();
+    return s === 'FINISHED' || s === 'CANCELLED' ? s : '';
+  },
+  sessionOverKey(projectedKey) { return this.sessionOverStatus(projectedKey) ? 'ended' : projectedKey; },
+  sessionOverCancelled(projectedKey) { return this.sessionOverStatus(projectedKey) === 'CANCELLED'; },
 
   // 底部主键在**没场次**时的出口(§5-断6)。导演台的状态流转(开始准备/开始活动/结束活动)
   // 都以一场具体场次为对象(onPrimary 的 _directorActivityId 闸),主题下没有这一场时它
@@ -739,7 +777,8 @@ Page({
     //(剧情与玩法 / 核销台账 / 场次管理 / 退出与暂停规则)。
     // 主题内容仍去编辑主题页,由弹层里那一行带过去;结束主题不放在俱乐部这一层。
     if (key === 'more') { this.openTopicSetting(); return; }
-    if (key === 'merchant') { this.openMerchants(); return; }
+    // ROUND4:能审承接的人直接进主题工作台的 P-6 招商层(merchantinfo 内现成),其他人仍看只读商家列表
+    if (key === 'merchant') { if (this.data.canReviewChapterApplications) { this.goMerchantRecruit(); return; } this.openMerchants(); return; }
     if (key === 'customer') { this.openCustomers(); return; }
     if (key === 'groupcode') { this.goGroupCode(); return; }
     this.notReady(action.label);
@@ -881,7 +920,9 @@ Page({
     const pending = '待确认';
     const rows = (this.data.teams || []).map(function (team) {
       const row = {
-        id: team.teamId != null ? team.teamId : team.nameText,
+        // 没组队的付款玩家一人一行(第十一轮 h4 L3),按人区分 id
+        id: team.teamId != null ? team.teamId
+          : (team.unteamed && team.members && team.members[0] ? 'm' + team.members[0].memberId : team.nameText),
         title: team.nameText,
         subtitle: team.issueText || team.progressText,
         value: team.statusText,
@@ -964,6 +1005,9 @@ Page({
   },
   closeCustomers() { this._customerSeq = (this._customerSeq || 0) + 1; this.setData({ customerSheetVisible: false }); },
 
+  callCustomerRow(e) {
+    callMember(e.currentTarget.dataset.phone, () => toast('拨号未完成，请重试'))
+  },
   onCustomerFilter(e) {
     const value = e.currentTarget.dataset.value || '';
     if (value === this.data.customerFilter) return;
@@ -1213,6 +1257,15 @@ Page({
   // 原来拼 ?topicId= 会打开空白新建表单 —— 保存多出一条主题,原主题没改。
   goEditTopic() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + this._topicId, complete: () => { this._navigating = false; } }); },
 
+  // 第十轮 f2 第 1 项(j2 F-05):定价中的主题,主理人从俱乐部这边就能去确认终价。
+  goPricing() {
+    if (!this._topicId) return;
+    this.setData({ settingSheetVisible: false });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/topic/pricing/index?topicId=' + this._topicId + '&club=1',
+      complete: () => { this._navigating = false; } });
+  },
+
   goChapterApplications() {
     if (!this.data.canReviewChapterApplications || !this._topicId) return;
     this.setData({ settingSheetVisible: false });
@@ -1221,7 +1274,13 @@ Page({
       complete: () => { this._navigating = false; } });
   },
 
-  /* ——— Figma J3-A(按节点)/ J3-B(按章节)招商台 ——— */
+  goMerchantRecruit() {
+    if (!this.data.canReviewChapterApplications || !this._topicId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._topicId + '&scope=CLUB&open=merchant',
+      complete: () => { this._navigating = false; } });
+  },
+
 
   openTeamSheet() { this.setData({ teamSheetVisible: true }); },
   closeTeamSheet() { this.setData({ teamSheetVisible: false }); },

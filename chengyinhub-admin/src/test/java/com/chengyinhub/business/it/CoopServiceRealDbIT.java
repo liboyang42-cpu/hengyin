@@ -99,6 +99,10 @@ class CoopServiceRealDbIT {
             st.execute("DELETE FROM coop_invite");
             st.execute("DELETE FROM coop_order");
             st.execute("DELETE FROM coop_credit_log");
+            // 250c6c69 起 createCoopOrder 先锁原邀约主题(lockInviteTopic),不存在即拒绝建单;
+            // 邀约 topic_id=500 必须有真实在架、招募期内的 cms_topic 行,否则接受路径在建单处失败。
+            st.execute("INSERT INTO cms_topic(id,member_id,name,status,user_status,lifecycle,recruit_deadline,open_club_pool,del_flag)"
+                    + " VALUES(500,10,'coop real db synthetic',1,1,1,DATE_ADD(NOW(),INTERVAL 30 DAY),0,0)");
 
             CoopInviteMapper im = s.getMapper(CoopInviteMapper.class);
             CoopOrderMapper om = s.getMapper(CoopOrderMapper.class);
@@ -115,6 +119,10 @@ class CoopServiceRealDbIT {
                     s.getMapper(com.chengyinhub.business.mapper.CmsTopicMapper.class));
             ReflectionTestUtils.setField(svc, "coopPerkMapper",
                     s.getMapper(com.chengyinhub.business.mapper.CoopPerkMapper.class));
+            // 主题非开放俱乐部池,走真实 RecruitmentWindowPolicy 招商闸(同 CoopInviteOriginalRequestMySqlIT)。
+            ReflectionTestUtils.setField(svc, "clubCoopWindowPolicy",
+                    new com.chengyinhub.business.service.support.ClubCoopWindowPolicy(
+                            mock(com.chengyinhub.business.service.support.CommercialTopicPolicy.class)));
             com.chengyinhub.business.mapper.ClubMapper clubs = mock(com.chengyinhub.business.mapper.ClubMapper.class);
             com.chengyinhub.business.domain.Club club = new com.chengyinhub.business.domain.Club();
             club.setId(20L);

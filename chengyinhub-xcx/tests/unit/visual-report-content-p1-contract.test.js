@@ -39,17 +39,17 @@ function assertMyInviteContract(route, scene, wxss, script) {
 test('邀请记录独立路由正文落页、奖励中性化，并提供加载/错误/空态', () => {
   assertMyInviteContract(
     read('subpackageMember/myinvite/myinvite.wxml'),
-    read('components/cy/scene-member-invite-history/index.wxml'),
-    read('components/cy/scene-member-invite-history/index.wxss'),
-    read('components/cy/scene-member-invite-history/index.js'),
+    read('subpackageA/components/scene-member-invite-history/index.wxml'),
+    read('subpackageA/components/scene-member-invite-history/index.wxss'),
+    read('subpackageA/components/scene-member-invite-history/index.js'),
   )
 })
 
 test('negative control: 邀请奖励退回成功绿时必须判红', () => {
   const route = read('subpackageMember/myinvite/myinvite.wxml')
-  const scene = read('components/cy/scene-member-invite-history/index.wxml')
-  const script = read('components/cy/scene-member-invite-history/index.js')
-  const wxss = read('components/cy/scene-member-invite-history/index.wxss')
+  const scene = read('subpackageA/components/scene-member-invite-history/index.wxml')
+  const script = read('subpackageA/components/scene-member-invite-history/index.js')
+  const wxss = read('subpackageA/components/scene-member-invite-history/index.wxss')
   const reward = rule(wxss, '.ir-reward')
   const broken = wxss.replace(reward, reward.replace('var(--cy-color-text-tertiary)', 'var(--cy-color-status-success)'))
   assert.notEqual(broken, wxss, '负控锚点失效：中性奖励文本不存在')
@@ -58,9 +58,9 @@ test('negative control: 邀请奖励退回成功绿时必须判红', () => {
 
 test('negative control: myinvite 再套常驻半屏或错误态 fill 缺失时必须判红', () => {
   const route = read('subpackageMember/myinvite/myinvite.wxml')
-  const scene = read('components/cy/scene-member-invite-history/index.wxml')
-  const script = read('components/cy/scene-member-invite-history/index.js')
-  const wxss = read('components/cy/scene-member-invite-history/index.wxss')
+  const scene = read('subpackageA/components/scene-member-invite-history/index.wxml')
+  const script = read('subpackageA/components/scene-member-invite-history/index.js')
+  const wxss = read('subpackageA/components/scene-member-invite-history/index.wxss')
   const withSheet = route.replace(
     '<cy-scene-member-invite-history id="inviteHistory" />',
     '<cy-sheet show="{{true}}" title="邀请记录"><cy-scene-member-invite-history id="inviteHistory" /></cy-sheet>',

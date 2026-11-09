@@ -1,5 +1,5 @@
 const cyModal = require('../../../utils/modal.js');
-const cyLoading = require('../../../utils/loading.js');
+const cyLoading = require('../../../utils/loading.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const cyToast = require('../../../utils/toast.js');
 const broadcastSheet = require('../utils/broadcast-sheet.js');
 const app = getApp();
@@ -8,7 +8,7 @@ const app = getApp();
    写法与现码 pages/publish/fabu/index.js:69 的同名局部常量一致 —— 不抽成公共模块:
    小程序这批单测用的是 `unexpected require` 白名单沙箱,多一个跨文件 require
    会同时打破十几个测试装置,代价远大于这一行重复。 */
-const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../../../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
+const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime');
 /* 数据条的格子只有一份实现:玩家深色版(214:384)与本页浅色版(181:575)是同一块。 */
@@ -21,6 +21,7 @@ const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const codeTextUtil = require('../utils/code-text.js');
 const hostLayers = require('./host-layers.js'); // 2026-10-31 P-6:主办工作台叠层(邀约 / 主页 / 档位 / 附近商家)
+const { isPublishedOrdinaryCity } = require('../utils/project-progress.js');
 
 function recruitBoundaryLabel(allowed, maxXp) {
   const parts = [];
@@ -284,13 +285,13 @@ Page({
     selectedTemplateName: '',
     selectedChapterId: 0,
     selectedChapterText: '',
-    selectedChapterTermsMode: '',
+    selectedChapterTermsMode: '', selectedChapterPerkMin: '', // 本章权益零售价门槛,挂在报名表「常备权益」下
     selectedChapterCircleMode: false,
     allNodesList: [],
     allChaptersList: [],
     chapterRecruitmentLoading: false,
     chapterRecruitmentState: 'loading', // loading | error | category-missing | ready
-    chapterRecruitmentError: '',
+    chapterRecruitmentError: '', chapterEmptyTopic: false, // 2026-11-03 业主:零章节且招商开着 ⇒ 只带玩法报名,服务端建章
     ownerChapterApplications: [],
     ownerChapterApplicationsLoaded: false,
     ownerChapterApplicationsState: 'idle',
@@ -325,7 +326,7 @@ Page({
     this._hidden = false;
     options = options || {};
     this._projectRouteRegId = options.topicId && options.id ? parseInt(options.id) : 0;
-    this.setData({ operationScope: ['MERCHANT', 'CLUB'].includes(options.scope) ? options.scope : '' });
+    this.setData({ operationScope: ['MERCHANT', 'CLUB'].includes(options.scope) ? options.scope : '' }); this._openOnHost = options.open === 'merchant' ? 'merchant' : ''; // ROUND4:俱乐部「商家」直达现成招商层
     try {
       const w = (wx.getWindowInfo && wx.getWindowInfo()) || wx.getSystemInfoSync();
       const mb = wx.getMenuButtonBoundingClientRect && wx.getMenuButtonBoundingClientRect();
@@ -359,17 +360,18 @@ Page({
   },
 
   onShow() {
+    const resumed = this._hidden;
     this._hidden = false;
     if (this._projectReadOwner !== undefined && this._projectReadOwner !== projectSessionKey()) {
       this.clearProjectPrivate(!projectMemberId());
       this.reloadProjectPrivate();
-    } else if (this._readSessionChanged) {
+    } else if (this._readSessionChanged || resumed || this._clubSheetReturn) {
       this._readSessionChanged = false;
       this.reloadProjectPrivate();
     }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
-    if (this._clubSheetReturn) { this._clubSheetReturn = false; this.loadProjectHome(); if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
+    this._resumeCategoryReturn(); if (this._clubSheetReturn) { this._clubSheetReturn = false; if (this.data.clubSheet.show) this.loadClubCandidates(); if (this.data.merchantSheet.show) this.loadRegApplies(); } merchantTheme.merchantPageShow(); this._navigating = false;
   },
   onHide() { this._hidden = true; merchantTheme.merchantPageRestore(); },
   onUnload() {
@@ -486,13 +488,13 @@ Page({
       selectedTemplateName: "",
       selectedChapterId: 0,
       selectedChapterText: "",
-      selectedChapterTermsMode: "",
+      selectedChapterTermsMode: "", selectedChapterPerkMin: "",
       selectedChapterCircleMode: false,
       allNodesList: [],
       allChaptersList: [],
       chapterRecruitmentLoading: false,
       chapterRecruitmentState: "idle",
-      chapterRecruitmentError: "",
+      chapterRecruitmentError: "", chapterEmptyTopic: false,
       ownerChapterApplications: [],
       ownerChapterApplicationsLoaded: false,
       ownerChapterApplicationsState: "idle",
@@ -652,16 +654,16 @@ Page({
         if (current.handle(res)) return;
         if (res && res.code == '200' && Array.isArray(res.data)) {
           that.setData({
-            allChaptersList: that.buildMerchantChapters(res.data),
+            allChaptersList: that.buildMerchantChapters(res.data), chapterEmptyTopic: Number(res.chapterCount) === 0 && res.emptyTopicJoinable === true, // 零章节 ≠ 章节都没开
             chapterRecruitmentLoading: false,
             chapterRecruitmentState: 'ready',
             chapterRecruitmentError: '',
           });
-          that.refreshMyChapterApplications();
+          that.refreshMyChapterApplications(); if (that._reopenAfterCategory) { that._reopenAfterCategory = false; that.bmClick2({ currentTarget: { dataset: { apply: 1 } } }); } // M-08 按最新章节重算并打开
           return;
         }
         // Q5 V1:品类缺失是可执行的前置态,不是「路线没开招募」的业务空。
-        const categoryMissing = String((res && res.msg) || '').indexOf('请先完善商家品类') >= 0;
+        const categoryMissing = String((res && res.msg) || '').indexOf('请先选择行业类型') >= 0;
         that.setData(categoryMissing ? {
           allChaptersList: [],
           chapterRecruitmentLoading: false,
@@ -713,6 +715,11 @@ Page({
 
   refreshMyChapterApplications() {
     const rows = Array.isArray(this.data.myChapterApplications) ? this.data.myChapterApplications : [];
+    // M-21:填好供给后重读申请,头部状态签跟着变,不再留着「还差一步」与「实际供给已生效」并存。
+    if (this.data.chapterProject && rows.length) {
+      const active = rows.some(row => row.offerState !== 'WITHDRAWN' && (row.offerActive === true || Number(row.offerActive) === 1));
+      this.setData({ stateText: active ? '承接中' : '还差一步：设置到店权益' });
+    }
     this.setData({
       myChapterApplications: rows.map(row => {
         const termsMode = this.chapterTermsMode(row.chapterId, row.termsMode);
@@ -733,6 +740,9 @@ Page({
           canConfigureNode: !nodeReadOnlyReason && (status === 0 || status === 1),
           nodeReadOnlyReason,
           canReconfirmCircleSupply: !offerWithdrawn && offerActive && !!Number(row.offerId) && !!row.circleThemeCode,
+          // M-24:剩余 = 核销额度 − 已用;额度未知就不写。
+          quotaLeftText: Number(row.offerQuotaTotal) > 0
+            ? '剩余 ' + Math.max(0, Number(row.offerQuotaTotal) - (Number(row.offerQuotaUsed) || 0)) + ' / ' + Number(row.offerQuotaTotal) : '',
           circleSupplyCheckedAtText: row.circleSupplyCheckedAt
             ? String(row.circleSupplyCheckedAt).slice(0, 10) : '',
           canWithdraw: !offerWithdrawn && status === 0,
@@ -742,6 +752,12 @@ Page({
         });
       }),
     });
+    if (this.data.chapterProject) {
+      // 生命周期未读回前不下结论(仍给「编辑」);读回后由 loadChapterProjectLifecycle 再刷一次
+      const lifecycleKnown = !!(this.data.info && this.data.info.lifecycle != null);
+      this.setData({ quickActions: this.buildQuickActions('chapterProject', null,
+        !lifecycleKnown || this.data.myChapterApplications.some(row => row.canConfigureNode)) });
+    }
   },
 
   withdrawChapterOffer(e) {
@@ -986,7 +1002,7 @@ Page({
     const endDate = hasApplicationWindow ? chinaDayEnd(endDateStr) : 0;
     const chapterApplicationOpen = isFreeExplore
       ? that.data.chapterRecruitmentState === 'ready'
-        && hasOpenRecruitmentChapter
+        && (hasOpenRecruitmentChapter || that.data.chapterEmptyTopic)
         && that.data.info.memberId != app.getUserID()
       : hasApplicationWindow
         && now >= startDate && now <= endDate
@@ -1040,7 +1056,7 @@ Page({
   },
 
   goMerchantCategory() {
-    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层装修页
+    if (this._navigating) return; this.setData({ topicShow: false }); this._categoryReturn = true; // 跳转中不响应连点,免得叠两层装修页;M-08 回来要重拉章节
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
@@ -1092,19 +1108,19 @@ Page({
   onChapterTargetConfirm(e) {
     const d = e.detail || {};
     const chapter = d.chapter || {};
-    if (!d.chapterId) return;
-    if (!this.guardChapterNodeConfiguration(d.chapterId)) return;
+    const emptyTopic = !d.chapterId && d.emptyTopic === true && this.data.chapterEmptyTopic; // 零章节:服务端提交时建章
+    if (d.chapterId ? !this.guardChapterNodeConfiguration(d.chapterId) : !emptyTopic) return;
     this.setData({
       topicShow: false,
       selectedChapterId: d.chapterId,
       selectedChapterText: d.chapterName || chapter.name || '',
-      selectedChapterTermsMode: chapter.termsMode,
+      selectedChapterTermsMode: emptyTopic ? 'PERK' : chapter.termsMode, selectedChapterPerkMin: String((chapter.recruitStatus || {}).perkMinValue || ''),
       selectedChapterCircleMode: !!(this.data.info && this.data.info.circleThemeCode),
       selectedTemplateId: Number(d.templateId) || 0,
       selectedTemplateName: d.templateName || '',
-      presetChapterNode: this.myNodeOfChapter(d.chapterId),
+      presetChapterNode: emptyTopic ? null : this.myNodeOfChapter(d.chapterId),
       chapterNodeFormVisible: true,
-      chapterNodeFormMode: this.myConfigurableChapterApplication(d.chapterId) ? 'node' : 'application',
+      chapterNodeFormMode: !emptyTopic && this.myConfigurableChapterApplication(d.chapterId) ? 'node' : 'application',
     });
   },
 
@@ -1156,10 +1172,10 @@ Page({
   },
 
 
-  goCreateTemplate() {
-    if (this._navigating) return; this.setData({ topicShow: false }); // 跳转中不响应连点,免得叠两层模板编辑页
-    // 与 chapter-node-form 的「去创建玩法」同一条路,两处不能分家
-    this._navigating = true; wx.navigateTo({ url: '/pages/publish/temp/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
+  /* M-09:选章节弹层只选章节;选玩法、去创建玩法都在报名表(chapter-node-form,from=join 发布后回来选上)。
+     M-08:从「去选择行业类型」回来重拉章节,拉回后按最新章节重算招商状态再开弹层(_reopenAfterCategory)。 */
+  _resumeCategoryReturn() {
+    if (this._categoryReturn) { this._categoryReturn = false; this._reopenAfterCategory = true; this.loadMerchantRecruitmentChapters(); }
   },
 
   goSettlement() {
@@ -1255,9 +1271,9 @@ Page({
       return;
     }
     if (this._chapterApplying) return;
-    const draft = (e && e.detail) || {};
-    if (!draft.chapterId || !draft.name || !draft.templateId) return;
-    if (!this.guardChapterNodeConfiguration(draft.chapterId)) return;
+    const draft = (e && e.detail) || {}; const emptyTopic = !draft.chapterId && this.data.chapterEmptyTopic && this.data.chapterNodeFormMode === 'application';
+    if ((!draft.chapterId && !emptyTopic) || !draft.name || !draft.templateId) return;
+    if (!emptyTopic && !this.guardChapterNodeConfiguration(draft.chapterId)) return;
     if (this.data.chapterNodeFormMode === 'node') {
       const application = this.myConfigurableChapterApplication(draft.chapterId);
       if (!application || Number(draft.chapterId) !== Number(this.data.selectedChapterId)) return;
@@ -1269,7 +1285,7 @@ Page({
     }
     this._chapterApplying = true;
     this.setData({ chapterNodeSubmitting: true });
-    cyLoading.show('提交申请中...');
+    cyLoading.show('提交申请中...'); if (emptyTopic) return this.submitChapterNodeDraft(draft, true); // 零章节:建章+申请+点位一个事务,不先 apply
     app.sendRequest({
       url: '/api/merchant/chapter-application/apply',
       method: 'POST',
@@ -1360,7 +1376,7 @@ Page({
       presetChapterNode: null,
       selectedChapterId: chapterId,
       selectedChapterText: application.chapterName || '',
-      selectedChapterTermsMode: application.termsMode,
+      selectedChapterTermsMode: application.termsMode, selectedChapterPerkMin: String(application.perkMinValue || ((this.data.allChaptersList || []).find(c => Number(c.id) === Number(chapterId)) || { recruitStatus: {} }).recruitStatus.perkMinValue || ''),
       selectedChapterCircleMode: !!(this.data.info && this.data.info.circleThemeCode),
     });
   },
@@ -1511,8 +1527,8 @@ Page({
     });
   },
 
-  submitChapterNodeDraft(draft) {
-    if (!this.guardChapterNodeConfiguration(draft.chapterId)) {
+  submitChapterNodeDraft(draft, emptyTopic) {
+    if (!emptyTopic && !this.guardChapterNodeConfiguration(draft.chapterId)) {
       this.finishChapterNodeSubmit();
       return;
     }
@@ -1521,7 +1537,7 @@ Page({
       method: 'POST',
       header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
-        chapterId: draft.chapterId,
+        ...(emptyTopic ? { topicId: this.data.topicId, message: draft.message || '' } : { chapterId: draft.chapterId }),
         templateId: draft.templateId,
         name: String(draft.name).trim(),
         address: draft.address || '',
@@ -1533,7 +1549,7 @@ Page({
         if (res.code == '200') {
           this.setData({ chapterNodeFormVisible: false });
           this.loadMyChapterNodes(true);
-          this.loadMyChapterApplications(true);
+          this.loadMyChapterApplications(true); if (emptyTopic) this.loadMerchantRecruitmentChapters(); // 章节已建出
           cyToast.success(this.data.chapterNodeFormMode === 'node' ? '节点已保存，请查看承接进度' : '已提交，等待审核');
           return;
         }
@@ -1844,7 +1860,7 @@ Page({
       header: { 'Content-Type': 'application/json' },
       success(res) {
         if (current.handle(res)) return;
-        if (!current()) return;
+        if (!current()) return; if (res && res.code != '200' && /既不是该主题的发布者/.test(String(res.msg || ''))) { that.setData({ missingParam: true }); return; } // 第十二轮 k9(p2 N-9):与本主题无关的账号拿到链接 = 链接已失效,不留空白页
         if (res.code != '200' || !res.data || typeof res.data !== 'object' || Array.isArray(res.data)) {
           that.setData({ loadFailed: true });
           return;
@@ -1854,7 +1870,7 @@ Page({
           that.setData({ loadFailed: false, role: 'host', chapterProject: false });
           that.applyHome(d);
           that.loadOwnerChapterApplications();
-          that.loadPendingMerchantNodes();
+          that.loadPendingMerchantNodes(); if (that._openOnHost === 'merchant') { that._openOnHost = ''; that.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } }); }
           return;
         }
         // 承接方:聚合接口里带着报名记录,拿它的 id 回到既有详情流程
@@ -1897,7 +1913,7 @@ Page({
             scheduleValue: topic.startDate && topic.endDate
               ? (that.formatDayMonth(topic.startDate) + ' – ' + that.formatDayMonth(topic.endDate)) : '',
             stateText: chapterApplications.some(row => row.offerActive === true || Number(row.offerActive) === 1)
-              ? '承接中' : '待填写供给', stateClass: 'state-ok',
+              ? '承接中' : '还差一步：设置到店权益', stateClass: 'state-ok',
             myChapterApplications: chapterApplications,
             myChapterApplicationsLoaded: true,
             myChapterNodes: [], myChapterNodesLoaded: false, myChapterNodesError: '',
@@ -2047,9 +2063,9 @@ Page({
             return;
           }
           cyToast(approved ? '已通过申请' : '已婉拒申请');
+          that.loadProjectHome(); // 第十二轮 k4(j2 N-07):先发主页读,再强制重读两张审核表 —— 反过来主页读会作废这两条在途读,列表停在旧态
           that.loadOwnerChapterApplications(true);
           that.loadPendingMerchantNodes(true);
-          that.loadProjectHome();
         },
         fail(res) { app.tips(app.getRequestErrorMessage(res, '审核失败')); },
         complete() { that._chapterApplicationAuditing = false; },
@@ -2146,6 +2162,7 @@ Page({
       recruitStations: hostLayers.decorateStations(host.recruitChapters),
       hostTopic: {
         status: topic.status,
+        userStatus: topic.userStatus,
         productType: topic.productType,
         lifecycle: topic.lifecycle,
         name: topic.name || '未命名路线',
@@ -2171,7 +2188,7 @@ Page({
       hostMerchants: (host.merchants || []).map(function (m) {
         return Object.assign({}, m, {
           initial: (m.name || '?').slice(0, 1),
-          statusText: Number(m.auditStatus) === 1 ? '已中标'
+          statusText: Number(m.auditStatus) === 1 ? (m.inviteState === 'none' ? '未发邀约' : (m.inviteState === 'sent' ? '邀约待接受' : '已中标')) // 第十二轮 k4(j2 N-01)
             : (Number(m.status) === 2 ? '已驳回' : (Number(m.status) === 1 ? '已通过' : '待审核')),
         });
       }),
@@ -2338,9 +2355,10 @@ Page({
     /* 走查 v2 R15(业主 2026-10-30):承办方不给「俱乐部 / 商家」—— 那是主办的事;只留扫码、客户,
        再加一个本站二维码(玩法要求扫码参与时贴在店里),复用已有的本站打卡码 / 章节节点码。 */
     const QR = { key: 'stationQr', label: '二维码', iconName: 'qr' };
-    if (role === 'coopPartner') return [SCAN];
-    if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER,
-      { key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }];
+    if (role === 'coopPartner') return []; // k9(p2 N-17):底栏已有唯一的「扫码核销」,快捷格不再放第二个扫码
+    /* p2 F-11(第十轮 f3):主题锁定等原因下没有一章可编辑时不给「编辑」——点了只闪一句提示,读成没反应 */
+    if (role === 'chapterProject') return [SCAN, { key: 'chapterCheckin', label: '二维码', iconName: 'qr' }, CUSTOMER]
+      .concat(canEdit === false ? [] : [{ key: 'chapterEdit', label: '编辑', icon: '/pages/topic/images/icon_qa_edit.svg' }]);
     // 承接方:编辑那一项的闸是 canEditRegistration(),但「更多」本身任何状态都能开。
     return [SCAN, QR, CUSTOMER, MORE];
   },
@@ -2476,7 +2494,8 @@ Page({
       || sourceRows.some(function (r) { return !!r.entitlementStatus; });
     const rows = sourceRows.map(function (r) {
       const state = shopDay
-        ? (r.serviceStartedAt ? 'redeemed' : 'arrived')
+        // M-12:已付款、本站权益未用、还没到店的玩家也在名单里(NOT_ARRIVED),归「还没到店」。
+        ? (r.serviceStartedAt ? 'redeemed' : (r.entitlementStatus === 'NOT_ARRIVED' ? 'pending' : 'arrived'))
         : (r.state || (r.arrived ? 'arrived' : 'pending'));
       return Object.assign({}, r, {
         state: state,
@@ -2510,16 +2529,16 @@ Page({
       { key: 'done', title: '已核销', has: function (s) { return s === 'arrived' || s === 'redeemed'; } },
       { key: 'refunded', title: '已退款', has: function (s) { return s === 'refunded'; } },
     ];
-    const groups = filter === 'all' && !shopDay
+    const groups = filter === 'all'
       ? SECTIONS.map(function (sec) {
         return { key: sec.key, title: sec.title, rows: kept.filter(function (r) { return sec.has(r.state); }) };
       }).filter(function (g) { return g.rows.length; })
       : (kept.length ? [{ key: filter, title: '', rows: kept }] : []);
     /* F7:没开放售票哪来的客户 —— 主题还没开售(草稿 / 立项待审 / 招募 / 待定价)且一单没有时,
        这里就写「未售票」,汇总格写「—」,不摆三个 0 让人以为卖了却没人买。开售后的 0 是真 0,照常显示。 */
-    const lifecycle = Number((this.data.hostTopic && this.data.hostTopic.lifecycle != null)
-      ? this.data.hostTopic.lifecycle : (this.data.info && this.data.info.lifecycle));
-    const notSelling = !shopDay && !rows.length && [0, 7, 1, 2].indexOf(lifecycle) > -1;
+    const topic = (this.data.hostTopic && this.data.hostTopic.lifecycle != null) ? this.data.hostTopic : this.data.info;
+    const lifecycle = Number(topic && topic.lifecycle);
+    const notSelling = !shopDay && !rows.length && !isPublishedOrdinaryCity(topic) && [0, 7, 1, 2].indexOf(lifecycle) > -1;
     // CU-C-125:空态判据是**筛完之后**的 kept,不是未筛的 rows —— 拿 rows 判,一单没卖时
     // 四个 Tab 会说同一句「还没有人下单」,而选中「待核销」时真正要回答的是这一档有没有记录。
     // 「全部客户都已核销」这类说法也一起换掉:已接洽的人既不在待核销也不在已核销,
@@ -2606,7 +2625,7 @@ Page({
         that.setData({ regApplies: { state: 'ready', rows: rows.filter(function (r) {
           return r && Number(r.topicId) === topicId && Number(r.auditStatus) === 0;
         }).map(function (r) {
-          return { id: r.id, name: r.merchantName || '未具名商家', logo: r.merchantLogo || '', initial: String(r.merchantName || '商').slice(0, 1),
+          return { id: r.id, memberId: r.memberId, name: r.merchantName || '未具名商家', logo: r.merchantLogo || '', initial: String(r.merchantName || '商').slice(0, 1),
             place: r.nodeName || r.addressName || r.address || '' };
         }) } });
       },
@@ -2632,11 +2651,37 @@ Page({
           success(res) {
             that._regConfirming = false;
             // 确认后这一行从「收到的申请」里消失、已招数跟着变,界面本身就是回执,不再弹成功提示(成功 toast 棘轮)
-            if (res && res.code == '200') { that.loadRegApplies(); that.loadProjectHome(); }
+            if (res && res.code == '200') {
+              that.loadRegApplies(); that.loadProjectHome();
+              // 第十轮 f2(j2 F-10):确认只是占位,下一步是发带条款的合作邀约 —— 直接进邀约页,别让流程断在这里。
+              that.goTermsInvite(ds.id, ds.name);
+            }
           },
           fail() { that._regConfirming = false; },
         });
       },
+    });
+  },
+
+  // 第十二轮 k4(j2 N-01):「已确认」里还没发邀约的商家,随时可以从这一行再进带条款的邀约页
+  sendTermsInviteRow(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const m = (this.data.hostMerchants || []).find((item) => String(item.registrationId) === String(ds.id));
+    if (!m || !m.memberId) return;
+    this.goTermsInvite(null, m.name, { memberId: m.memberId, name: m.name, logo: m.logo });
+  },
+
+  goTermsInvite(regId, name, known) {
+    const topicId = Number(this.data.topicId || (this.data.info && this.data.info.topicId));
+    const row = known || ((this.data.regApplies && this.data.regApplies.rows) || []).find((item) => String(item.id) === String(regId));
+    const toId = row && row.memberId;
+    if (!topicId || !toId) return;
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({
+      url: '/pages/coop/invite/index?type=0&toId=' + toId + '&toName=' + encodeURIComponent(name || row.name || '')
+        + (row.logo ? '&toLogo=' + encodeURIComponent(row.logo) : '')
+        + '&topicId=' + topicId + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
+      complete: () => { this._navigating = false; },
     });
   },
 
@@ -3430,7 +3475,7 @@ Page({
       closeClubSheet: 1, closePlayerSheet: 1, closeMerchantSheet: 1,
       closeMoreSheet: 1, onMorePick: 1,
       copyText: 1, goInviteClub: 1, onPlayerFilter: 1, inviteClubRow: 1, openClubHome: 1, loadClubCandidates: 1,
-      loadRegApplies: 1, confirmRegRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
+      loadRegApplies: 1, confirmRegRow: 1, sendTermsInviteRow: 1, selfTakeNode: 1, recruitNode: 1, contactHost: 1, openBroadcast: 1, openClubNotify: 1,
       // 2026-11-01 定向广播叠层与客户多选
       closeBroadcast: 1, onBroadcastInput: 1, sendBroadcast: 1, pickBroadcastRow: 1, setBroadcastScope: 1, clearBroadcastPicks: 1, togglePlayerPick: 1, pickPlayerRow: 1,
       // CU-C-67:客户名单读失败后的局部重试(错态与零单分开之后要有恢复动作)
@@ -3807,6 +3852,23 @@ Page({
   toggleChapterRecruit() {
     const c = this.chapterRecruitChapter();
     if (!c || !c.id) { app.tips('还没读到章节，稍后再试'); return; }
+    if (this._chapterRecruitBusy) return;
+    // 第十一轮 h4 L1:开放后这一章必须有商家承接成功才能过开售审核(TopicSaleFinalizationServiceImpl
+    // 必选章供给闸)。以前开了就静默生效,到开售审核才被拒;在开的这一刻讲清后果。
+    if (Number(c.recruitEnabled) !== 1) {
+      const that = this;
+      cyModal.show({
+        title: '开放商家承接',
+        content: '开放后，这一章要有商家承接成功才能开售。没有商家承接时，提交开售前请回到这里关闭。',
+        confirmText: '开放',
+        success(res) { if (res && res.confirm) that.submitChapterRecruit(c); },
+      });
+      return;
+    }
+    this.submitChapterRecruit(c);
+  },
+
+  submitChapterRecruit(c) {
     if (this._chapterRecruitBusy) return;
     this._chapterRecruitBusy = true;
     this.setData({ 'moreSheet.groups': this.buildMoreGroups().groups });
@@ -4515,4 +4577,7 @@ Page({
   contactService() {
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } });
   },
+
+  // 第九轮 m1-9:我的节点地址一点开地图(放页尾:上方 UI 基线按行号锚定)
+  onAddressTap(e) { openAddress().openFromEvent(e); }
 });

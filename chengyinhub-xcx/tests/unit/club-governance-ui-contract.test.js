@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '../..')
 function read(relative) { return fs.readFileSync(path.join(ROOT, relative), 'utf8') }
 function applyDataPatch(data, patch) { Object.keys(patch).forEach((key) => { data[key] = patch[key] }) }
 
-function createHarness(source) {
+function createHarness(source, extraGlobals) {
   let definition
   const requests = []
   const toasts = []
@@ -17,7 +17,7 @@ function createHarness(source) {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     sendRequest(options) { requests.push(options) },
   }
-  vm.runInNewContext(source || read('pages/club/governance/index.js'), {
+  vm.runInNewContext(source || read('pages/club/governance/index.js'), Object.assign({
     getApp: () => app,
     Page(page) { definition = page },
     require(request) {
@@ -42,7 +42,7 @@ function createHarness(source) {
       },
       stopPullDownRefresh() {},
     },
-  }, { filename: path.join(ROOT, 'pages/club/governance/index.js') })
+  }, extraGlobals || {}), { filename: path.join(ROOT, 'pages/club/governance/index.js') })
   const page = Object.assign({}, definition, {
     data: Object.assign({}, definition.data),
     setData(patch) { applyDataPatch(this.data, patch) },
@@ -198,9 +198,11 @@ test('只有 owner 展示主理人转让，提交携带 target/scope/requestId',
   const harness = createHarness()
   openManagerPage(harness)
   assert.equal(harness.page.data.isOwner, true)
-  harness.page.pickMember({ currentTarget: { dataset: { memberId: 902 } } })
   const before = harness.requests.length
   harness.page.transferSelectedOwner()
+  assert.equal(harness.page.data.memberPickerFor, 'transfer')
+  assert.equal(harness.page.data.memberPickerVisible, true)
+  harness.page.pickMember({ currentTarget: { dataset: { memberId: 902 } } })
   const request = requestByUrl(harness, '/api/club/governance/owner/transfer', before)
   assert.ok(request)
   const body = JSON.parse(request.data)
@@ -222,6 +224,43 @@ test('只有 owner 展示主理人转让，提交携带 target/scope/requestId',
   requestByUrl(coOwner, '/api/club/members').success({ code: 200, data: [{ memberId: 902 }] })
   requestByUrl(coOwner, '/api/club/governance/list').success({ code: 200, data: [] })
   assert.equal(coOwner.page.data.isOwner, false)
+})
+
+test('p3 N9:封禁与转让各选各的成员,转让成功先在本页提示结果再离开', () => {
+  const timers = []
+  const navigations = []
+  const harness = createHarness(undefined, {
+    setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length },
+    getCurrentPages: () => [{}, {}],
+  })
+  openManagerPage(harness, [
+    { memberId: 902, nickname: '小林', isOwner: false },
+    { memberId: 903, nickname: '周小雨', isOwner: false },
+  ])
+  // 封禁这边选了小林
+  harness.page.openMemberPicker()
+  harness.page.pickMember({ currentTarget: { dataset: { memberId: 902 } } })
+  assert.equal(harness.page.data.selectedMemberId, 902)
+  // 转让走自己的选择:打开时不带封禁那边的预选,选周小雨不改封禁的选择
+  harness.page.transferSelectedOwner()
+  assert.equal(harness.page.data.memberPickerFor, 'transfer')
+  const sheet = read('pages/club/governance/index.wxml')
+  assert.match(sheet, /memberPickerFor === 'ban' && selectedMemberId == item\.memberId \? '已选'/,
+    '选择器的「已选」只属于封禁那份选择')
+  assert.doesNotMatch(sheet, /转让给所选成员/)
+  const before = harness.requests.length
+  harness.page.pickMember({ currentTarget: { dataset: { memberId: 903 } } })
+  assert.equal(harness.page.data.selectedMemberId, 902, '转让选人不能改动封禁的选择')
+  assert.equal(harness.page.data.memberPickerFor, 'ban')
+  const request = requestByUrl(harness, '/api/club/governance/owner/transfer', before)
+  assert.equal(JSON.parse(request.data).targetMemberId, 903)
+
+  request.success({ code: 200 })
+  request.complete()
+  assert.ok(harness.toasts.some((t) => t.title === '主理人已转让给 周小雨'), '转让结果必须提示出来')
+  assert.notEqual(harness.page.data.actingKey, '', '等待离开期间本页按钮保持不可点')
+  assert.equal(timers.length, 1)
+  assert.ok(timers[0].ms >= 1000, '提示要留够读的时间再离开')
 })
 
 test('平台永久封禁不提供俱乐部解封动作，有效记录仍清晰展示来源', () => {

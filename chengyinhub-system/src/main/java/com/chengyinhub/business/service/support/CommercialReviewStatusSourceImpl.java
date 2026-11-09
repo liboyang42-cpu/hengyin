@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.mapper.AuditTaskMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
+import com.chengyinhub.common.exception.ServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
@@ -142,13 +143,15 @@ public class CommercialReviewStatusSourceImpl implements CommercialReviewStatusS
             if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) {
                 throw new IllegalStateException("立项审核主题不存在或已删除");
             }
+            // 只在批准迁移时拦新无窗，历史公开只读回放保持原合同。
+            if (lockTopic) TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic);
             CommercialTopicPolicy.Evaluation current = commercialTopicPolicy.evaluate(topicId);
             JsonNode currentNode = objectMapper.readTree(objectMapper.writeValueAsString(
                     commercialTopicPolicy.projectParameters(topic, current)));
             if (!approved.equals(currentNode)) {
                 throw new IllegalStateException("立项审核通过后商圈、四店或履约窗已变化，请重新提审");
             }
-        } catch (IllegalStateException e) {
+        } catch (ServiceException | IllegalStateException e) {
             throw e;
         } catch (Exception e) {
             throw new IllegalStateException("立项审核快照不可解析，拒绝迁移", e);

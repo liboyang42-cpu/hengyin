@@ -1,0 +1,30 @@
+{
+  "at": 1793906794776,
+  "chapter": 130,
+  "loading": true,
+  "playing": false,
+  "error": "",
+  "media": [
+    {
+      "kind": "audio",
+      "id": 11,
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/a91e653bf6c54f258ce86b8011ba7a8e.mp3",
+      "paused": false,
+      "currentTime": 0,
+      "readyState": 0,
+      "volume": 0.25
+    },
+    {
+      "kind": "audio",
+      "id": 13,
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "paused": false,
+      "currentTime": 0,
+      "readyState": 0,
+      "volume": 1
+    }
+  ],
+  "aria": [
+    "旁白加载中"
+  ]
+}

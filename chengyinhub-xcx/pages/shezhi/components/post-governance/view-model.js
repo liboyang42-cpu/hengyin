@@ -53,7 +53,7 @@ function enforcementRows(items) {
     return {
       id: positiveId(row.id),
       typeText: TYPE_TEXT[type] || '处置',
-      targetText: positiveId(row.post_id) ? '帖子处置' : '账号处置',
+      targetText: positiveId(row.post_id) ? '帖文处置' : '账号处置',
       timeText: timeText(row.create_time),
       endText: timeText(row.ends_at),
       stateKey: state.key,

@@ -23,20 +23,8 @@
     <!-- 2026-09-16:银行卡表单退役(2026-09-15 收款模型定稿 §3:平台不打款,提现一律走客服线下处理)。
          姓名/银行名称/银行账号/手机号是敏感个人信息,页面不再采集,也不再要单独同意;
          整页只留一个客服入口。后端 /api/withdrawal/* 与共享校验工具不动。 -->
-    <view class="txcon">
-      <view class="txcon_ly">
-        <view class="txcon_ly_name">提现方式</view>
-        <view class="txcon_ly_inp">
-          <text class="tx-cs-note">添加客服微信，线下处理</text>
-        </view>
-      </view>
-    </view>
 
     <view class="tx-bottom">
-      <view class="txtpis">
-        <view class="txtpis_tit">提现说明</view>
-        <view class="txtpis_txt">提现已改为客服协助线下处理，请添加平台客服微信确认。</view>
-      </view>
       <view class="tx-cta">
         <cy-btn variant="primary" bindtap="saveData">联系客服提现</cy-btn>
       </view>

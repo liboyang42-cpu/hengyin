@@ -164,21 +164,20 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ReflectionTestUtils.setField(checkout, "registrationService", service);
         ReflectionTestUtils.setField(checkout, "registrationOrderService", mock(IRegistrationOrderService.class));
         ReflectionTestUtils.setField(checkout, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
         return checkout;
     }
 
+    /** 2026-11-02 pay-gate:非平台发布者的收费独立活动,票款走平台商户号 ⇒ 报价与重试支付照常。 */
     @Test
-    void userPublishedStandalonePaidOrderIsRefusedBeforeAnyWechatPrepayOnRetry() {
+    void userPublishedStandalonePaidActivityQuotesAndRetriesThroughPlatformMerchant() {
         givenStandaloneActivity(7L);
         givenTicket(new BigDecimal("100.00"));
+
+        assertEquals(0, new BigDecimal("100.00").compareTo(
+                service.quoteRegistration(MEMBER, 2, ACTIVITY, TICKET, null, 0).getPayAmount()));
         when(registrationMapper.selectCmsRegistrationById(REG)).thenReturn(pendingOrder(new BigDecimal("100.00")));
-
-        RuntimeException e = assertThrows(RuntimeException.class, () -> checkout().retryPayment(MEMBER, REG));
-
-        assertTrue(e.getMessage().contains("暂不支持在线支付"), e.getMessage());
-        verify(wechat, never()).createOrder(any());
-        verify(wechat, never()).createAppOrder(any());
-        verify(registrationMapper, never()).claimPaymentProcessing(anyLong(), anyLong(), any());
+        assertEquals(REG, service.preparePaymentRetry(REG, MEMBER).getId());
     }
 
     @Test
@@ -239,6 +238,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ReflectionTestUtils.setField(checkout, "registrationService", registrations);
         ReflectionTestUtils.setField(checkout, "registrationOrderService", orders);
         ReflectionTestUtils.setField(checkout, "wechatPayService", wechat);
+        ReflectionTestUtils.setField(checkout, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
 
         checkout.createOrReplay(MEMBER, new com.chengyinhub.business.domain.dto.RegistrationRequest());
 

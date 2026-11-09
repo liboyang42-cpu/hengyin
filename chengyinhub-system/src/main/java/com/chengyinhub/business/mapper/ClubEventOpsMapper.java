@@ -157,9 +157,11 @@ public interface ClubEventOpsMapper {
     int insertDelivery(ClubEventDelivery delivery);
     int insertOutbox(@Param("deliveryId") Long deliveryId, @Param("nextAttemptAt") java.util.Date nextAttemptAt);
     int claimNotificationOutbox(@Param("deliveryId") Long deliveryId,
-                                @Param("leaseUntil") java.util.Date leaseUntil);
+                                @Param("leaseUntil") java.util.Date leaseUntil,
+                                @Param("now") java.util.Date now);
     java.util.List<ClubEventDelivery> selectDispatchableByCampaign(@Param("campaignId") Long campaignId,
-                                                                   @Param("limit") int limit);
+                                                                   @Param("limit") int limit,
+                                                                   @Param("now") java.util.Date now);
     ClubEventDelivery selectDeliveryByIdForUpdate(@Param("id") Long id);
     int isEligibleNotificationRecipient(@Param("campaignId") Long campaignId,
                                         @Param("clubId") Long clubId,

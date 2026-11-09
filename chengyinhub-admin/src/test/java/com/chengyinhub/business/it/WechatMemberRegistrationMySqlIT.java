@@ -89,7 +89,14 @@ class WechatMemberRegistrationMySqlIT {
             UmsMemberServiceImpl service = new UmsMemberServiceImpl();
             ReflectionTestUtils.setField(service, "umsMemberMapper", mapper);
             ReflectionTestUtils.setField(service, "pointsDetailService", gifts);
-            ReflectionTestUtils.setField(service, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
+            var welcome = new com.chengyinhub.business.domain.CmsPointsSetting();
+            welcome.setId(1L);
+            welcome.setStatus(1L);
+            welcome.setDelFlag(0L);
+            welcome.setValue(new java.math.BigDecimal("50"));
+            ICmsPointsSettingService pointRules = mock(ICmsPointsSettingService.class);
+            when(pointRules.selectCmsPointsSettingById(1L)).thenReturn(welcome);
+            ReflectionTestUtils.setField(service, "cmsPointsSettingService", pointRules);
             ReflectionTestUtils.setField(service, "transactionManager", new DataSourceTransactionManager(ds));
             ReflectionTestUtils.setField(service, "appSessionRegistryService", mock(IAppSessionRegistryService.class));
             ReflectionTestUtils.setField(service, "defaultAvatarUrl", "");
@@ -114,6 +121,8 @@ class WechatMemberRegistrationMySqlIT {
             assertEquals(winner, service.getOrCreateWechatMember("concurrent").getId());
             assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM ums_member WHERE wx_open_id='concurrent'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=?", Integer.class, winner));
+            assertEquals(50L, jdbc.queryForObject("SELECT point FROM ums_member WHERE id=?", Long.class, winner).longValue());
+            assertEquals(50L, jdbc.queryForObject("SELECT change_points FROM ums_member_points_detail WHERE member_id=?", Long.class, winner).longValue());
             ReflectionTestUtils.setField(service, "umsMemberMapper", mapper);
 
             // Fail after both real INSERTs to prove neither partial write survives.

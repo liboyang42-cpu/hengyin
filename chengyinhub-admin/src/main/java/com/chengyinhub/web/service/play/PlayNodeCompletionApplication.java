@@ -319,6 +319,11 @@ public class PlayNodeCompletionApplication {
             rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
             // 跳过不是任何通过码:分支结论、条件奖励都不得把它当成功。
             advancedOutcomeCode = null;
+        } else if (advancedGameRuntimeService != null
+                && advancedGameRuntimeService.sensorStationSkipped(memberId, actId, node.getTopicId(), node.getId())) {
+            // P-23:读不出方向被跳过的一站 —— 0 解谜分,完成方式记成 SKIPPED,回看时知道这一站是跳过的
+            puzzleScore = PuzzleScorePolicy.skippedScore();
+            completionMode = PuzzleScorePolicy.COMPLETION_SKIPPED;
         }
         Map<String, Object> conditionalReward = null;
         // ③ 与 ①② 在本方法里有两处分歧(首完判据 + 发奖范围),求一次共用,免得两处各判各的再漂开。
@@ -376,6 +381,11 @@ public class PlayNodeCompletionApplication {
             // 游戏完成 = 条件更新 0→1,更新到即本次首次完成;已是 1 = 真重复。
             // mode1 的行恒 status=1,条件更新恒 0 行,不受影响。
             if (rows == 0 && shopDay && shopDayProofService.markGameDone(memberId, actId, node.getTopicId(), node.getId())) {
+                rows = 1;
+            }
+            if (rows == 0 && !shopDay && topicRouteRuntimeService != null
+                    && topicRouteRuntimeService.completeCompassCheckArrival(memberId,node.getTopicId(),actId,
+                            node.getId(),puzzleScore,completionMode)) {
                 rows = 1;
             }
         }

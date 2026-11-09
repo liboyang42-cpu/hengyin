@@ -119,6 +119,9 @@ test('activity without collaboratorsList prefills nothing and new activity keeps
 })
 
 test('collaborator section is labelled as display-only credits', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/activity/index.wxml'), 'utf8')
+  // 第十轮 f3(j1 文案表):页内重复的一行删去,只在真正选人的合作者弹层里说一次
+  const page = fs.readFileSync(path.join(ROOT, 'pages/publish/activity/index.wxml'), 'utf8')
+  assert.doesNotMatch(page, /合作者可编辑内容，不参与结算/)
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/components/collaborator-picker/index.wxml'), 'utf8')
   assert.match(wxml, /合作者可编辑内容，不参与结算/)
 })

@@ -22,6 +22,7 @@ const roleGuard = require('./utils/roleGuard.js');
 const { safeUserMessage } = require('./utils/transport/safe-user-message.js');
 const requireLoginGuard = require('./utils/auth/require-login.js');
 const { avatarSrc } = require('./utils/identity-sync.js');
+const singlePage = require('./utils/single-page-mode.js');
 App({
   // 开发版判定:只用于开发调试入口(如 debug_user_view、显式预览参数);不得用于伪造登录身份(F-W1-01)。
   isDevEnv: function () {
@@ -38,6 +39,11 @@ App({
   // 不代表已登录;需要登录态的页面/动作用 getAuthorization()/getUserID() 判定真实会话。
   onLaunch(e) {
     installUpdateManager(this, wx);
+    // 第七轮 C 第 1 项:朋友圈单页模式(场景 1154)不能登录、跳页、支付。只在这种进入方式下包一层,
+    // 点到这些动作时提示「请前往小程序使用完整服务」,不让按钮无声失效。完整模式不安装、零影响。
+    if (singlePage.isSinglePageMode(wx)) {
+      singlePage.installSinglePageGuard(wx, singlePage.createNotifier(function (text) { cyToast(text); }));
+    }
     const runtimeConfig = config.resolveFromWx(wx);
     // 全局基调:暗色(全站默认深空黑;原生导航栏/状态栏同步深色)。个别浅色页根节点挂 class="theme-light"。
     applyTheme('dark');
@@ -129,7 +135,8 @@ App({
     if (!that.getUsageConsent().granted()) {
       that.loadFeatureFlags();
       // Public initialization completes without obtaining an openid or waiting for a choice.
-      setTimeout(() => { if (!that._usageDeclined) that.openPrivacyAuthorizationPage(); }, 0);
+      // 朋友圈单页模式不能跳到隐私页;公开内容照常浏览,进完整小程序后再走同意流程。
+      if (!singlePage.isSinglePageMode(wx)) setTimeout(() => { if (!that._usageDeclined) that.openPrivacyAuthorizationPage(); }, 0);
       return Promise.resolve();
     }
     // owner 2026-10-24:「没登录也能浏览,写库时才弹窗登录」。冷启动只恢复本机已缓存的会话
@@ -680,6 +687,23 @@ App({
     // ⚠️ 响应结构不同:chooseImage 给 res.tempFilePaths(字符串数组),
     //    chooseMedia 给 res.tempFiles(对象数组,路径在 .tempFilePath)。下面两种都兜,
     //    因为低版本基础库回退到 chooseImage 时仍是旧结构。
+    var usePaths = function (paths) {
+      if (!paths.length) { operation.finish(); return; }
+      if (options.skipCrop) { doUpload(paths); return; }
+      that.cropAll(paths, ratio, options.cropShape).then(function (out) {
+        if (operation.isAborted()) return;
+        // null = 用户取消整批。给一次提示:选了 9 张裁到第 9 张才取消,
+        // 无声返回会让人以为卡住了(旧代码单张时无声尚可,排队后是随张数放大的悬崖)
+        if (!out) { operation.finish(); cyToast('已取消上传'); return; }
+        doUpload(out);
+      }).catch(function () {
+        if (operation.isAborted()) return;
+        operation.finish();
+        that.showModal({ content: '图片处理失败，请重试' });
+      });
+    };
+    // 第九轮 m1-9:微信头像选择器(button open-type="chooseAvatar")已经给了临时图,跳过相册,照常裁剪、上传
+    if (Array.isArray(options.paths)) { usePaths(options.paths.filter(function (p) { return typeof p === 'string' && p; })); return operation; }
     wx.chooseMedia({
       count: pickCount,
       mediaType: ['image'],
@@ -688,20 +712,7 @@ App({
       sourceType: options.cameraOnly ? ['camera'] : ['album', 'camera'],
       success: function (res) {
         if (operation.isAborted()) return;
-        var paths = pickImagePaths(res);
-        if (!paths.length) { operation.finish(); return; }
-        if (options.skipCrop) { doUpload(paths); return; }
-        that.cropAll(paths, ratio, options.cropShape).then(function (out) {
-          if (operation.isAborted()) return;
-          // null = 用户取消整批。给一次提示:选了 9 张裁到第 9 张才取消,
-          // 无声返回会让人以为卡住了(旧代码单张时无声尚可,排队后是随张数放大的悬崖)
-          if (!out) { operation.finish(); cyToast('已取消上传'); return; }
-          doUpload(out);
-        }).catch(function () {
-          if (operation.isAborted()) return;
-          operation.finish();
-          that.showModal({ content: '图片处理失败，请重试' });
-        });
+        usePaths(pickImagePaths(res));
       },
       fail: function (res) {
         if (operation.isAborted()) return;
@@ -772,7 +783,10 @@ App({
             if (r.ok) {
               typeof callback == 'function' && callback(r.results);
             } else {
-              that.showModal({ content: '上传失败：' + ((r.failures[0] && r.failures[0].msg) || '') });
+              const first = r.failures[0] || {};
+              // 音频等进审核队列不是失败:直说「已提交审核」,不挂「上传失败」
+              const waiting = first.status === 'review_pending' && !first.rejected;
+              that.showModal({ content: waiting ? (first.msg || '文件已提交审核，通过后请重试此文件') : '上传失败：' + (first.msg || '') });
             }
           }
         }));

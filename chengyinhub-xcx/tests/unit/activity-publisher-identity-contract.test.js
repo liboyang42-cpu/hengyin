@@ -142,17 +142,17 @@ test('清空价格保留未填写态，按钮不可继续；输入0才恢复免�
   assert.equal(h.page.data.formData.tickets[0].price, '')
   assert.equal(h.page.data.canContinue, false)
   h.page.onTicketChange({ currentTarget: { dataset: { field: 'price', index: 0 } }, detail: { value: '0' } })
-  assert.equal(h.page.data.formData.tickets[0].price, 0)
+  // 第十二轮 k1 第 9 项(j1 N2):打字时保留字符串,提交时才数值化
+  assert.equal(h.page.data.formData.tickets[0].price, '0')
   assert.equal(h.page.data.identityRequired, false)
   assert.equal(h.page.data.canContinue, true)
 })
-test('商家收费禁令仍在，不能借实名登记打开付费活动', () => {
+test('商家收费场不再被客户端挡下（2026-11-02 pay-gate），也不出旧禁令文案', () => {
   const h = harness([1])
-  h.page.data.merchantHost = true
+  h.page.merchantHost = true
   h.page.data.identityRegistered = true
   h.page.submitForm()
-  assert.equal(h.requests.length, 0)
-  assert.match(h.toasts[0], /票价只能是 0/)
+  assert.ok(!h.toasts.some((t) => /票价只能是 0/.test(String(t))))
 })
 test('状态查询迟到不能给新账号登记态', () => {
   const h = harness([1])
@@ -180,5 +180,6 @@ test('实名输入只接受姓名与证件字段，不能改登记或权限状�
   input('identityRegistered', true)
   input('merchantHost', true)
   assert.equal(h.page.data.identityRegistered, false)
-  assert.equal(h.page.data.merchantHost, false)
+  assert.notEqual(h.page.merchantHost, true)
+  assert.equal(h.page.data.merchantHost, undefined)
 })

@@ -7,6 +7,7 @@ const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAudi
 const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
 const systemCard = require('./system-card-target.js');
 const roleGuard = require('../../../../utils/roleGuard.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const app = getApp();
 // 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
@@ -49,7 +50,7 @@ Page({
     reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
-    readOnlyTip: '系统通知不支持回复，有新动态会出现在这里',
+    readOnlyTip: '系统通知不支持回复',
     // M-01 / G-10:商家视角整页浅色;商家的系统通知会话标题进导航栏、去掉「更多」、通知改整宽卡片。
     isMerchantView: false,
     sysNotice: false,
@@ -88,9 +89,10 @@ Page({
     // 站点各写一次)是为了不漏:loadState 的落点很多,漏一处就又变成"没有原因的死输入栏"。
     sendBlockedMap: {
       loading: '消息加载中…',
-      missing: '链接已失效，请返回重新进入',
+      missing: '',
       closed: '组局已结束，不能继续聊天',
       error: '消息加载失败，点上方「重试」再试',
+      denied: '不能在这个会话发消息',
     },
     topicCache: {},
     routePickerOpen: false,
@@ -173,7 +175,7 @@ Page({
       moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
-    });
+    }); this._needPeerName = !name && Number(type) === 1; // 第十二轮 k9(p1 N-10):链接没带对方名字时,首屏读完再去会话列表取
     // 坏链接(没有 conversationId)不是「空对话」:不打后端,也不给可用输入栏。
     if (!conversationId) { this.setData({ loadState: 'missing' }); return; }
     /* CU-M-125:系统通知(type=2,后端 ImConversation.TYPE_SYSTEM)没有收件人,走查实测发出去
@@ -228,6 +230,28 @@ Page({
       });
     });
     this._reportUnreadIds = [];
+  },
+
+  // 第十二轮 k9(p1 N-10):链接直达没带 name 时,从会话列表(只读)取对方昵称,不停在通用的「对话」。
+  _fillPeerName() {
+    if (this._peerNameAsked) return;
+    this._peerNameAsked = true;
+    const conversationId = this.data.conversationId;
+    const memberId = this.data.myId;
+    const current = this._viewGuard();
+    // Optional title only: failures keep the generic title and leave messages/send state intact.
+    app.sendRequest({
+      url: '/api/im/conversations', method: 'POST', hideLoading: true, silentError: true,
+      success: (res) => {
+        if (!current() || !this._isReadContextCurrent(conversationId, memberId) || this.data.name) return;
+        const rows = isBizOk(res) && isRecordList(res.data) ? res.data : [];
+        const row = rows.find(item => String(item.conversationId) === String(conversationId));
+        const nickname = row && Number(row.type) === 1 && row.counterparty ? String(row.counterparty.nickname || '').trim() : '';
+        if (nickname) this.setData({ name: nickname, heroName: nickname });
+      },
+      fail() {},
+      successStatusAbnormal() {},
+    });
   },
 
   // 会话身份兜底:只按会话类型给通用称呼,绝不臆造对方昵称。
@@ -315,17 +339,18 @@ Page({
             server.clientMessageId === m.clientMessageId && server.senderId == m.senderId));
           const msgs = list.concat(pending);
           that.setData({ msgs, sending: msgs.some(m => m.sending), hasMore: !!res.data.hasMore, cursor: res.data.nextCursor || 0, loadState: 'ready', loadErrorText: '', loadMoreError: '' });
+          if (that._needPeerName && !that.data.name) that._fillPeerName();
           // 拉黑只存服务端:重进会话按回包禁用输入框,不然能打字、一发就失败(3-22)
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;
-          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
+          that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
             moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);
           that.recoverPending();
           return;
         }
-        that._setMessageLoadError(res);
+        that._setMessageLoadError(res, res && res.code != null && res.code != 200);
       },
       fail(res) {
         if (!current()) return;
@@ -340,7 +365,9 @@ Page({
     });
   },
 
-  _setMessageLoadError(response) {
+  // R11 p1 F-8:服务端明确拒绝(不是你的会话/已不存在)= 原因 + 返回消息列表,重试也不会变;
+  // 网络或服务异常 = 真的给「重试」(底部那句「点上方重试」才不是空话)。
+  _setMessageLoadError(response, refused) {
     if (response && response.errorCode === 'HANGOUT_CLOSED') {
       this._closedReturnPath = response.returnPath || '/subpackageB/pages/im/list/index';
       this.setData({ loadState: 'closed', loadErrorText: response.msg || '该组局已结束，聊天已关闭' });
@@ -349,7 +376,7 @@ Page({
     const msg = app.getRequestErrorMessage
       ? app.getRequestErrorMessage(response, '消息加载失败，请重试')
       : ((response && (response.msg || response.errMsg)) || '消息加载失败，请重试');
-    this.setData({ loadState: 'error', loadErrorText: msg });
+    this.setData({ loadState: refused ? 'denied' : 'error', loadErrorText: msg });
   },
 
   returnToMessageList() {
@@ -411,7 +438,11 @@ Page({
       // 文字按纯文本展示:服务端过滤会把 x<y 存成 x&lt;y。content 保留原值(重排时会再过一遍 decorate,
       // 不能在原字段上反复解码),气泡读 displayContent。图片消息的 content 是地址,不动。
       const displayContent = m.msgType == 2 ? m.content : decodeDisplayText(m.content);
-      if (m.msgType == 3) {
+      const activityNotice = [2, '2'].includes(that.data.type) ? systemCard.activityNoticeUrl(m) : '';
+      if (activityNotice) {
+        const lines = String(displayContent || '').split('\n');
+        card = { cardType: 'generic', title: lines.shift() || '活动通知', sub: lines.join('\n') };
+      } else if (m.msgType == 3) {
         try { card = JSON.parse(m.extraJson || '{}'); } catch (e) { card = {}; }
         if (!card || typeof card !== 'object' || Array.isArray(card)) card = {};
         if (!card.cardType) card.cardType = 'generic';
@@ -419,13 +450,13 @@ Page({
       }
       const projected = Object.assign({}, m, { card });
       const systemRecord = !!systemCard.recordOf(projected), currentOriginalUrl = systemCard.originalUrl(projected);
-      const genericAction = systemCard.genericActionInfo(projected);
+      const genericAction = m.msgType == 3 || activityNotice ? systemCard.genericActionInfo(projected) : null;
       const genericButtons = !systemRecord && Array.isArray(card && card.buttons) ? card.buttons.map((button, index) =>
         systemCard.genericActionInfo(projected, index) ? { index, text: button.text || '查看详情', type: button.type } : null).filter(Boolean) : [];
       const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
+      return Object.assign({}, m, { timeDivider: divider, noticeTime: t ? fmtAbs(t) : '', activityNotice: !!activityNotice, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();
@@ -1040,20 +1071,19 @@ Page({
 
   // 位置卡:写死 openLocation,不读 extra_json 里的 action(spec §3.3 防钓鱼)
   onLocationTap(e) {
-    const ds = e.currentTarget.dataset;
-    wx.openLocation({
-      latitude: Number(ds.lat),
-      longitude: Number(ds.lng),
-      name: ds.name || '',
-      address: ds.address || '',
-      scale: 16,
-    });
+    // 第九轮 m1-9:统一走 utils/open-address.js;坐标不合法就不开,不再把 NaN 交给 openLocation
+    openAddress().openAddress(e.currentTarget.dataset);
   },
 
   // 路线卡:写死主题详情,不读 extra_json 里的 action
   onRouteTap(e) {
     const id = e.currentTarget.dataset.topicid;
     if (!id || this._navigating) return; // 跳转中不响应连点
+    // P-36:报名卡的主题暂时读不到(如下架)时,票本身仍有效 —— 带去票夹,而不是一句「暂不可用」
+    if (e.currentTarget.dataset.cardtype === 'signup' && this.data.topicCache[id] === null) {
+      this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false; } });
+      return;
+    }
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
     if (this.data.topicCache[id] === null || this.data.topicCache[id] && this.data.topicCache[id].name === '路线已不可用') { app.tips && app.tips('该路线暂不可用'); return; }
     this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });

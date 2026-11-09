@@ -31,7 +31,7 @@ function columns(list, size) {
 
 function decorateTopic(item) {
   const a = art.topicArt(item.name);
-  const games = Number(item.templateCount || 0);
+  const games = Number(item.gameCount || 0);
   const chapters = Number(item.chapterCount || 0);
   const meta = [];
   // 未经试走的主题不能看起来像已验证:非 VERIFIED(含未下发)一律标「实验模板」
@@ -101,7 +101,7 @@ Component({
 
   data: {
     tab: 'topic',
-    tabItems: [{ key: 'topic', label: '主题', icon: '/images/tpl-tab-topic.svg' }, { key: 'game', label: '玩法', icon: '/images/tpl-tab-game.svg' }],
+    tabItems: [{ key: 'topic', label: '主题', icon: '/pages/templatedetail/images/tpl-tab-topic.svg' }, { key: 'game', label: '玩法', icon: '/pages/templatedetail/images/tpl-tab-game.svg' }],
     glow: '',
     featIndex: 0,
     // 远端封面不可用时显示已有的明确失败态，不能拿别的业务内容图冒充模板封面

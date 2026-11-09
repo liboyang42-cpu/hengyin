@@ -29,13 +29,17 @@
     <view class="wk__stats pe pe--up" style="--pe-d:.75s">
       <view class="wk__stat"><view class="wk__dt">目标</view><view class="wk__dd">{{goalText}}</view></view>
       <view class="wk__stat"><view class="wk__dt">已走</view><view class="wk__dd">{{stepsText}}</view></view>
-      <view class="wk__stat"><view class="wk__dt">少排</view><view class="wk__dd">{{co2}} kg</view></view>
+      <view class="wk__stat" wx:if="{{co2 > 0}}"><view class="wk__dt">少排</view><view class="wk__dd">{{co2}} kg</view></view>
     </view>
 
-    <view class="wk__foot">{{mode === 'goal' ? '先设目标，再同步微信运动。' : '步数只能同步，不能填 —— 能填的话这个玩法就没意义了。'}}</view>
+    <view class="wk__foot" wx:if="{{mode === 'goal'}}">先设目标，再同步微信运动。</view>
+    <cy-inline-error class="wk__err" wx:if="{{readError && !skipped}}" kind="field" title="{{readError}}" />
+    <view wx:if="{{skipped}}" class="wk__foot">这一站已跳过</view>
+    <view wx:elif="{{canSkip && !syncing}}" class="wk__skip" bindtap="onSkip"
+          aria-role="button" aria-label="跳过这一站" hover-class="wk__skip--press" hover-stay-time="80">跳过这一站</view>
   </view>
 
-  <view class="wk__cta {{syncing ? 'wk__cta--busy' : ''}}" bindtap="onCta"
+  <view wx:if="{{!skipped}}" class="wk__cta {{syncing ? 'wk__cta--busy' : ''}}" bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="wk__cta--press" hover-stay-time="80">
     {{ctaLabel}}
   </view>

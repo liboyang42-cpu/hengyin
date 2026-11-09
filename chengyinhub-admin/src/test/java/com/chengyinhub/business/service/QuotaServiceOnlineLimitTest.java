@@ -217,6 +217,7 @@ class QuotaServiceOnlineLimitTest {
         // 负控:达上限时必须抛错且绝不执行写操作,否则并发下会真实超发(资损)
         ServiceException ex = assertThrows(ServiceException.class,
                 () -> svc.runWithThemeOnlineGuard(100L, null, () -> { ran.set(true); return "ok"; }));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, ex.getCode());
         assertTrue(ex.getMessage().contains("上限"), "异常应含上限文案: " + ex.getMessage());
         assertFalse(ran.get(), "达上限必须跳过写操作(防超发)");
         verify(umsMemberService).lockMemberById(100L); // 校验前也已加锁
@@ -227,7 +228,7 @@ class QuotaServiceOnlineLimitTest {
     @Test
     void createGuard_event_belowLimit_runsWrite() {
         stubPlayer(null, 3, null); // maxEvents=3
-        when(cmsActivityService.selectCmsActivityNumByMemberId(anyLong())).thenReturn(2);
+        when(cmsActivityService.selectActivityQuotaUsedByMemberId(anyLong())).thenReturn(2);
         AtomicBoolean ran = new AtomicBoolean(false);
         Long id = svc.runWithCreateGuard(100L, IQuotaService.TYPE_EVENT, () -> { ran.set(true); return 9L; });
         assertEquals(9L, id, "活动2<上限3应执行并返回写结果");
@@ -238,13 +239,23 @@ class QuotaServiceOnlineLimitTest {
     @Test
     void createGuard_event_atLimit_throwsAndSkipsWrite() {
         stubPlayer(null, 3, null);
-        when(cmsActivityService.selectCmsActivityNumByMemberId(anyLong())).thenReturn(3);
+        when(cmsActivityService.selectActivityQuotaUsedByMemberId(anyLong())).thenReturn(3);
         AtomicBoolean ran = new AtomicBoolean(false);
         // 负控:活动达上限必须抛错且不写,否则并发创建会真实超发
         assertThrows(ServiceException.class,
                 () -> svc.runWithCreateGuard(100L, IQuotaService.TYPE_EVENT, () -> { ran.set(true); return 9L; }));
         assertFalse(ran.get(), "活动达上限必须跳过写操作");
         verify(umsMemberService).lockMemberById(100L);
+    }
+
+    @Test
+    void createEvent_countsOnlyLiveActivities_notLifetimeTotal() {
+        // ROUND10 j1 F1:历史总数 7(含已结束/已取消)但同时存在只有 2 场 ⇒ 第 3 场必须放行
+        stubPlayer(null, 3, null);
+        when(cmsActivityService.selectCmsActivityNumByMemberId(anyLong())).thenReturn(7);
+        when(cmsActivityService.selectActivityQuotaUsedByMemberId(100L)).thenReturn(2);
+        assertNull(svc.checkCreate(100L, IQuotaService.TYPE_EVENT), "已结束/已取消的活动不占名额");
+        verify(cmsActivityService, never()).selectCmsActivityNumByMemberId(anyLong());
     }
 
     @Test

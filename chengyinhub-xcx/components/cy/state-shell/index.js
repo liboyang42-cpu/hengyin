@@ -7,7 +7,7 @@ const STATE_DEFAULTS = {
   network:         { renderer: 'empty', emptyKind: 'offline',         title: '网络没连上',     sub: '' },
   'no-permission': { renderer: 'empty', emptyKind: 'no-permission',   title: '暂时不能查看',   sub: '' },
   'not-started':   { renderer: 'empty', emptyKind: 'not-started',     title: '还没开始',       sub: '' },
-  'missing-param': { renderer: 'empty', emptyKind: 'missing-param',   title: '链接已失效', sub: '请返回重新进入' },
+  'missing-param': { renderer: 'empty', emptyKind: 'missing-param',   title: '链接已失效', sub: '' },   // R11 p1 F-12:返回键就是这句话
   data:            { renderer: 'error', emptyKind: '',                title: '这部分没加载成功', sub: '' },
   error:           { renderer: 'error', emptyKind: '',                title: '出错了',         sub: '' },
 };

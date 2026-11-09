@@ -113,7 +113,10 @@ test('协调者界面合同：直接切换章节开幕、主题/节点摘要与�
   assert.deepEqual(p.data.structureSummary, { modeLabel: '队伍共用现场', endingsText: '2 个 · 默认收尾：安全撤离', endingsError: '' });
   // 10-28 e-node：摘要只写到达地点；打开了换个方式时写「可扫码或答题」。
   assert.equal(p.data.nodeStructureSummary, '出发站');
-  p._altDrafts = { [p.data.nodesForm.id]: { SCAN: { on: true }, QUIZ: { on: true } } }; p._refreshStructureSummary();
+  p._hydrateStructureAlts({ nodeAlternativeConfigsLoaded: true, nodeAlternativeConfigs: { [p.data.nodesForm.id]: [
+    { type: 'SCAN', enabled: true, promptText: '', answerConfigured: true },
+    { type: 'QUIZ', enabled: true, promptText: '', answerConfigured: true },
+  ] } }, p.data.formData.chapters); p._refreshStructureSummary();
   assert.equal(p.data.nodeStructureSummary, '可扫码或答题');
   assert.equal(p.data.structureModeOptions.find(row => row.selected).key, 'WORLD_SHARED');
   assert.equal(p.data.chapterHostUnlock, true); assert.equal(p.data.chapterHostUnlockDisabledReason, '');

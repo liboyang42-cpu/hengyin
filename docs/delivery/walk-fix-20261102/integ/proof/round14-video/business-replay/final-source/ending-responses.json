@@ -1,0 +1,116 @@
+[
+  {
+    "url": "http://127.0.0.1:18197/__api/api/play/journey/ending",
+    "status": 200,
+    "body": {
+      "msg": "操作成功",
+      "code": 200,
+      "data": {
+        "hp": 0,
+        "card": null,
+        "luck": 0,
+        "story": {
+          "code": "ending1",
+          "badge": null,
+          "costs": [],
+          "found": 0,
+          "title": "R14-VIDEO-雨停结局",
+          "total": 0,
+          "chapter": {
+            "id": 130,
+            "name": "R14-VIDEO-雨停结局",
+            "blocks": [
+              {
+                "key": "lid13",
+                "type": "text",
+                "content": "R14-VIDEO：红色天光，雨停的结局。"
+              }
+            ],
+            "audioUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+            "videoUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+            "videoPosterUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/68dd8b2efd264e4b8376166c638d2b3f.jpg",
+            "atmospherePreset": "DEFAULT"
+          },
+          "summary": "R14-VIDEO：红色天光，雨停的结局。",
+          "exhibits": [],
+          "epilogues": []
+        },
+        "title": "R14-VIDEO-雨停结局",
+        "hpName": "生命值",
+        "reason": "COMPLETED",
+        "actions": 0,
+        "catalog": [],
+        "endedAt": 1793907429159,
+        "rescues": 0,
+        "sceneId": "",
+        "success": true,
+        "summary": "R14-VIDEO：红色天光，雨停的结局。",
+        "acquired": {},
+        "endingId": "ending1",
+        "luckName": "幸运值",
+        "inventory": {},
+        "sceneName": "",
+        "attributes": [],
+        "endingCount": 0,
+        "code": "ending1"
+      }
+    }
+  },
+  {
+    "url": "http://127.0.0.1:18197/__api/api/play/journey/ending",
+    "status": 200,
+    "body": {
+      "msg": "操作成功",
+      "code": 200,
+      "data": {
+        "hp": 0,
+        "card": null,
+        "luck": 0,
+        "story": {
+          "code": "ending1",
+          "badge": null,
+          "costs": [],
+          "found": 0,
+          "title": "R14-VIDEO-雨停结局",
+          "total": 0,
+          "chapter": {
+            "id": 130,
+            "name": "R14-VIDEO-雨停结局",
+            "blocks": [
+              {
+                "key": "lid13",
+                "type": "text",
+                "content": "R14-VIDEO：红色天光，雨停的结局。"
+              }
+            ],
+            "audioUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+            "videoUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+            "videoPosterUrl": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/68dd8b2efd264e4b8376166c638d2b3f.jpg",
+            "atmospherePreset": "DEFAULT"
+          },
+          "summary": "R14-VIDEO：红色天光，雨停的结局。",
+          "exhibits": [],
+          "epilogues": []
+        },
+        "title": "R14-VIDEO-雨停结局",
+        "hpName": "生命值",
+        "reason": "COMPLETED",
+        "actions": 0,
+        "catalog": [],
+        "endedAt": 1793907429159,
+        "rescues": 0,
+        "sceneId": "",
+        "success": true,
+        "summary": "R14-VIDEO：红色天光，雨停的结局。",
+        "acquired": {},
+        "endingId": "ending1",
+        "luckName": "幸运值",
+        "inventory": {},
+        "sceneName": "",
+        "attributes": [],
+        "endingCount": 0,
+        "code": "ending1"
+      }
+    }
+  }
+]

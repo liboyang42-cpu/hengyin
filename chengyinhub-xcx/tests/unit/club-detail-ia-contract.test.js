@@ -21,6 +21,7 @@ function loadDetail() {
     globalData: {},
     sendRequest(request) { requests.push(request) },
     getUserRole: () => 'member',
+    getUserID: () => '9004',   // 第十轮 f3 j6 F7:名单/榜单只给已登录访客,桩默认已登录
     getAvatar: () => '',
   }
   vm.runInNewContext(read(DETAIL_JS), {
@@ -268,7 +269,7 @@ test('俱乐部主理人从活动或管理项目进主办视图，其余身份�
   const member = loadDetail()
   member.page.data.club = { isOwner: false }
   member.page.goTopic({ currentTarget: { dataset: { id: 703 } } })
-  assert.deepEqual(member.navigations, ['/pages/topic/index/index?id=703'])
+  assert.deepEqual(member.navigations, ['/pages/topic/index/index?id=703&via=session'])
 })
 
 test('owner primary 按发布、邀请、待回应、已接受四阶段从现有读模型派生', () => {

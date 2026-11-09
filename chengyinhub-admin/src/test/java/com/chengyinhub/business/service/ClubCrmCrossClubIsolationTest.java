@@ -81,11 +81,12 @@ class ClubCrmCrossClubIsolationTest {
     }
 
     @Test
-    void ownerOfClubASeesOnlyClubAScopedMaskedDetail() {
+    void ownerOfClubASeesOnlyClubAScopedDetail() {
         ClubCustomerVO.Detail detail = service.customerDetail(OWNER_A, CLUB_A, CUSTOMER);
 
         assertEquals(CUSTOMER, detail.getSummary().getMemberId());
-        assertFalse(detail.getSummary().getPhoneText().contains(PLAIN_PHONE));
+        // 2026-11-02 用户:主理人看自己俱乐部客户的完整号码(可拨打);隔离靠的是下面只查 CLUB_A
+        assertEquals(PLAIN_PHONE, detail.getSummary().getPhoneText());
         verify(mapper).selectClubCustomerSummary(CLUB_A, CUSTOMER);
         verify(mapper).selectClubCustomerRecords(eq(CLUB_A), eq(CUSTOMER), anyInt());
         verify(mapper).selectProfile(CLUB_A, CUSTOMER);

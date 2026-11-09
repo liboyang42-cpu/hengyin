@@ -2,7 +2,7 @@
 """5-1 平台链路:建期 → 配 4 章节 → 立项审 → 通过 → 交给商家/俱乐部链推进至 PRICING。"""
 import sys, pathlib, datetime, json
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from chain_lib import http, q, admin_token, app_token, step, show, readback
+from chain_lib import http, q, ex, admin_token, app_token, step, show, readback
 
 PUBLISHER_PHONE = "13900000003"   # 俱乐部主理人本人建期:开招商与转交俱乐部都要求这个身份
 PUBLISHER_MEMBER = 9003
@@ -31,9 +31,26 @@ def club_publish_fields():
     return {"clubId": CLUB_ID}
 
 
-def fixture_topic_image_fields():
-    """空值明确触发现有封面 fallback，避免裸文件名被当网络图片请求。"""
-    return {"imgUrl": ""}
+def seed_approved_cover(execute, query, member_id):
+    """P-17(2026-11-02):发布必须带封面。封面只认已过审的媒体资产引用(发布端拒未登记的路径),
+    所以按 Java IT 的 MediaFixture 同口径落一条 APPROVED 图片资产(夹具写,只进临时库)。"""
+    key = "upload/e2e-topic-cover-%d.jpg" % member_id
+    execute("INSERT INTO app_media_asset(member_id,object_key,media_type,review_state,version,create_time,update_time) "
+            "SELECT %s,%s,'IMAGE','APPROVED',0,NOW(),NOW() FROM DUAL WHERE NOT EXISTS "
+            "(SELECT 1 FROM app_media_asset WHERE member_id=%s AND object_key=%s)",
+            (member_id, key, member_id, key))
+    rows = query("SELECT id FROM app_media_asset WHERE member_id=%s AND object_key=%s ORDER BY id LIMIT 1",
+                 (member_id, key))
+    if not rows:
+        raise RuntimeError("封面夹具未落库")
+    return "media-asset:%d" % rows[0][0]
+
+
+def fixture_topic_image_fields(cover_ref):
+    """封面引用由 seed_approved_cover 给出；不再用空串(发布会被 P-17 拒),也不用裸文件名。"""
+    if not cover_ref or not str(cover_ref).startswith("media-asset:"):
+        raise RuntimeError("封面必须是已过审媒体资产引用:%r" % (cover_ref,))
+    return {"imgUrl": cover_ref}
 
 
 def assert_topic_club_ownership(rows):
@@ -96,7 +113,7 @@ def main():
         "chapters": chapters, "tickets": [],
     }
     dto.update(club_publish_fields())
-    dto.update(fixture_topic_image_fields())
+    dto.update(fixture_topic_image_fields(seed_approved_cover(ex, q, PUBLISHER_MEMBER)))
     r = http("POST", "/api/topic/v2/create", token=ptok, json_body=dto)
     show("POST /api/topic/v2/create", json.dumps(r, ensure_ascii=False)[:220])
     # V2 建期回包是审核结果对象 {"topicId":..,"reviewState":..};旧接口回 int 或 {"id":..}。

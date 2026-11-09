@@ -152,7 +152,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                ca.name as activityName,
                ca.start_date as assemblyTime,
                coalesce(nullif(ca.address_name, ''), ca.address) as assemblyLocation,
-               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), concat('成员#', coalesce(cls.leader_member_id, club.member_id))) as leaderDisplayName,
+               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), '城瘾用户') as leaderDisplayName,
                cls.current_chapter_id as currentChapterId,
                cls.status as status,
                cls.broadcast_text as broadcastText,
@@ -205,7 +205,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                ca.start_date as assemblyTime,
                coalesce(nullif(ca.address_name, ''), ca.address) as assemblyLocation,
                cls.leader_member_id as leaderMemberId,
-               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), concat('成员#', cls.leader_member_id)) as leaderDisplayName,
+               coalesce(nullif(leader.nickname, ''), nullif(leader.name, ''), '城瘾用户') as leaderDisplayName,
                cls.current_chapter_id as currentChapterId,
                cls.status as status
         from cms_activity ca
@@ -231,7 +231,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             resultType="com.chengyinhub.business.domain.dto.ClubFulfillmentWorkspaceDTO$Attendance">
         select checkin.activity_id as activityId,
                checkin.member_id as memberId,
-               coalesce(nullif(member.nickname, ''), nullif(member.name, ''), concat('成员#', checkin.member_id)) as memberDisplayName,
+               coalesce(nullif(member.nickname, ''), nullif(member.name, ''), '城瘾用户') as memberDisplayName,
                checkin.arrived_at as arrivedAt
         from club_lead_checkin checkin
         inner join cms_activity ca on ca.id = checkin.activity_id and ca.del_flag = 0

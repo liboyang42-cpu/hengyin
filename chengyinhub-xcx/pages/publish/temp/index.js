@@ -1,4 +1,6 @@
 const templateAdoption = require('../utils/publish/template-adoption.js');
+// R11 g1 F2:服务端只在带 outcomeRules 时才把这两段当作一站玩法(AdvancedGameConfigValidator.hasEnabledMechanic)
+const OUTCOME_REQUIRED_SECTIONS = ['check', 'album'];
 const authorWrites = require('../../../utils/author-write-recovery.js');
 const { applyTheme } = require('../../../utils/theme.js');
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
@@ -37,7 +39,7 @@ const templateAuthorFields = require('../utils/publish/template-author-fields.js
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
 const { formatDurationMinutes, gameTemplateCover } = require('../../../utils/template-display.js');
 const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
-const { loadStoryFont } = require('../utils/publish/story-font.js');
+const { loadStoryFont } = require('../utils/publish/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../../utils/config.js');
 const { splitRuleSteps } = require('../../../utils/rule-steps.js');
 const { rejectionNamesCover } = require('../utils/publish/cover-rejection.js');
 
@@ -728,7 +730,15 @@ Page({
     this._setFormState({ 'advanced.random.items': this.data.advanced.random.items.filter((_, i) => i !== index) });
   },
   _setBranchSteps: function (steps) {
+    // Round5 #11:步骤 / 选项 ID 与结局 outcomeCode 由系统生成且不给创作者看;旧数据缺的在这里补齐,
+    // 起点步骤失效时落到第一段(旧设置分支同样适用)。
+    steps = (steps || []).map((step) => (step && step.terminal && !step.outcomeCode && step.id
+      ? Object.assign({}, step, { outcomeCode: step.id }) : step));
     const patch = { 'advanced.branch.steps': steps };
+    if (this.data.advanced.branch.enabled && this.data.advanced.outcomeRules?.version !== 1
+        && !steps.some(step => step.id === this.data.advanced.branch.startStepId)) {
+      patch['advanced.branch.startStepId'] = steps[0]?.id || '';
+    }
     if (this.data.gameKey && !this.data.r5Editor.nextDisabledReason && this.data.gameSection !== 'branch' && (this.data.advanced.outcomeRules?.version === 1 || !this.data.advanced.branch.enabled)) {
       patch['advanced.branch.enabled'] = steps.length > 0;
       patch['advanced.branch.startStepId'] = steps.some(step => step.id === this.data.advanced.branch.startStepId) ? this.data.advanced.branch.startStepId : steps[0]?.id || '';
@@ -1368,7 +1378,7 @@ Page({
     this.setData({ creatorLoginRequired: false });
     this._editorMemberId = editorMemberId();
     options = options || {};
-    this._supportContext = supportMatrix.parse(safeDecode(options.supportContext));
+    this._supportContext = supportMatrix.parse(safeDecode(options.supportContext)); if (options.scope === 'MERCHANT') this._supportContext.shop = true; // 第十一轮 g4 第 5 项:商家自己的玩法就是承接商家
     this._loadSupportMatrix();
     this._focusTool = safeDecode(options.focusTool);
     this._focusPlan = safeDecode(options.focusPlan);
@@ -2232,7 +2242,7 @@ Page({
     if (key === 'story' && this.data.storyBeats.length === 0) {
       patch.storyBeats = [{ id: 1, text: '', tag: '', imgs: [] }];
     }
-    this._setFormState(patch);
+    this._setFormState(patch); const anchor = key === 'finish' ? 'sec-join' : (key === 'reward' && this.data.gameKey !== 'album' ? 'sec-reward' : ''); if (anchor) { this.setData({ scrollIntoView: '' }); setTimeout(() => { this.setData({ scrollIntoView: anchor }); }, 30); } // CP-13:新模块接在长表单末尾,关掉面板后滚过去,看得见加在哪
   },
 
   removeModule: function (e) {
@@ -2315,7 +2325,7 @@ Page({
       interactionType: 'sec-basic',
       finish: 'sec-module',
       advanced: 'sec-module',
-      reward: 'sec-module',
+      reward: this.hasModule('reward') && this.data.gameKey !== 'album' ? 'sec-reward' : 'sec-module', // M-20:停在「完成奖励」卡上,模块被移除才退回模块区顶
       story: 'fieldStory'
     };
     const target = selectorMap[key];
@@ -2365,13 +2375,16 @@ Page({
     const selectedCategoryIds = selectedIds || [];
     const selectedCategoryNames = selectedCategories ? selectedCategories.map(item => item.categoryName) : [];
     const selectedCategoryNamesStr = selectedCategoryNames.join('，');
-    that._setFormState({
+    const patch = {
       selectedCategoryIds: selectedCategoryIds,
       selectedCategoryNames: selectedCategoryNames,
       selectedCategoryNamesStr: selectedCategoryNamesStr,
       categoryList: withCategoryIcons(selectedCategories),
       'formData.activityCategoryids': selectedCategoryIds.join(',')
-    });
+    };
+    // 选上类别就清掉「请选择至少一个玩法类别」,与标题/描述输入时清红字同一做法
+    if (selectedCategoryIds.length) patch['errors.categoryIds'] = '';
+    that._setFormState(patch);
   },
 
   getCategoryNamesByIds: function (ids, callback) {
@@ -2508,7 +2521,20 @@ Page({
         this.setData({ supportMatrixLoading: false,
       supportMatrixLoadError: matrix ? '' : '玩法支持信息未加载，请重试' }); this._refreshSupportMatrix(); });
   },
+  /* 第十三轮 m1:主题后来加了互斥选项或完成要求,每一站都成了任务站。重新打开已存的玩法时,
+     能结算的玩法按选中时同一口径补上结果规则,参与方式没选定位或扫码的默认定位到达;作者点一次保存就落库。 */
+  _settleLoadedGame: function () {
+    const ctx = this._supportContext, advanced = this.data.advanced;
+    if (!this._supportMatrix || !ctx || !ctx.settled || ctx.challenge || this.data.previewMode || !this.data.gameSection || !advanced || advanced.outcomeRules) return;
+    const next = supportMatrix.settleOutcome(this._supportMatrix, ctx, JSON.parse(JSON.stringify(advanced)), this.data.gameSection);
+    if (!next.outcomeRules) return;
+    const patch = { advanced: next };
+    if (![4, 5].includes(Number(this.data.formData.validationMethod)) && !this._r5ParticipationChanged) patch['formData.validationMethod'] = 5;
+    this._setFormState(patch);
+    this._settledOnLoad = true;
+  },
   _refreshSupportMatrix: function () {
+    this._settleLoadedGame();
     const matrix = this._supportMatrix, advanced = this.data.advanced;
     const reasons = {}, conditions = {};
     templateTools.TOOLS.forEach(tool => {
@@ -2518,7 +2544,7 @@ Page({
         : supportMatrix.condition(matrix, this.data.gameKey, tool.key);
     });
     nodeGameCatalog.ALL.forEach(game => {
-      reasons[game.key] = supportMatrix.choice(matrix, game.key, advanced, this._supportContext);
+      reasons[game.key] = supportMatrix.choice(matrix, game.key, supportMatrix.pickAs(advanced, this._supportContext), this._supportContext);   // 第十二轮 k7 N5:任务站按会自动落结果规则判
     });
     if (this._refreshR5Editor) this._refreshR5Editor();
     this.setData({ supportReasons: reasons, supportConditions: conditions,
@@ -2769,7 +2795,7 @@ Page({
     const game = nodeGameCatalog.findGame(key);
     if (!game) return;
     const locked = (this.data.lockedGames || {})[key]
-      || supportMatrix.choice(this._supportMatrix, key, this.data.advanced, this._supportContext);
+      || supportMatrix.choice(this._supportMatrix, key, supportMatrix.pickAs(this.data.advanced, this._supportContext), this._supportContext);   // 第十二轮 k7 N5
     if (locked) { toast(locked); return; }
     /* 整段 advanced 一次写回,不用「advanced.xx.enabled」这种拼出来的路径 ——
        拼路径的写法过不了零消费门禁,也让人看不出到底动了哪几段。 */
@@ -2780,13 +2806,19 @@ Page({
       if (k !== game.section && k !== this.data.gameSection && this.data.advanced[k] && this.data.advanced[k].enabled && advanced[k]) advanced[k].enabled = true;
     });
     if (key === 'typeIn' && e.currentTarget.dataset.r5 && !advanced.outcomeRules) advanced.outcomeRules = { version: 1, pass: {}, fail: {} };
+    /* R11 g1 F2:D20 三档难度(check)与相册(album)只有带 outcomeRules 时服务端才当它是玩法,
+       没有就开局报「该模板未配置高级玩法」,整条线性路线断在这一站。选中时就落一份,形状同结果反馈编辑器。
+       (主题开了检定时 check 也能走旅程检定;带上结果规则两条路都开得了局。) */
+    if (advanced && OUTCOME_REQUIRED_SECTIONS.includes(game.section) && !advanced.outcomeRules) {
+      advanced.outcomeRules = Object.assign({ version: 1, pass: {} }, require('../utils/publish/outcome-after.js').once(advanced) ? {} : { fail: {} });
+    } supportMatrix.settleOutcome(this._supportMatrix, this._supportContext, advanced, game.section);   // 第十二轮 k7 N5:状态 / 检定主题的任务站,能结算的玩法选中就落结果规则
     /* R14 检定的 checkId 是这一处检定的稳定标识。选中时就在本地模型里落一个 ——
        拖到保存时才由 normalize 补,会让同一次编辑里两次存盘生成两个不同的 id。 */
     if (advanced && advanced.check && advanced.check.enabled && !advanced.check.checkId) {
       advanced.check.checkId = rowId('check');
     }
     // validationMethod 只由参与方式修改；主玩法判定由 enabled section 决定。
-    const present = this._presentPatch(advanced, game.section);
+    const present = this._presentPatch(advanced, game.section); if (this._supportContext && this._supportContext.settled && ![4, 5].includes(Number(this.data.formData.validationMethod)) && !this._r5ParticipationChanged) this._setFormState({ 'formData.validationMethod': 5 });   // 第十二轮 k7 N5:任务站参与方式默认定位到达
     this.setData({
       advanced: advanced,
       gameKey: key,
@@ -2847,7 +2879,7 @@ Page({
 
   openPreview: function () { if (this.data.submitting) return; // CP-11:按钮不再转圈,保存中点击不开预览
     this._pvTypeStartedAt = 0; this._pvAdvanced = null;
-    loadStoryFont(); // P-60:预览里的故事正文同玩家端手写体
+    loadStoryFont(STORY_FONT_URL); // P-60:预览里的故事正文同玩家端手写体
     // 查看预览前必填校验
     const formData = this.prepareFormData();
     if (!this.validateForm(formData, false)) return;
@@ -3034,7 +3066,7 @@ Page({
     formData.categoryIds = this.data.selectedCategoryIds.join(',');
     formData.imgArr = formData.imgUrl;
 
-    if (this.data.gameKey === 'qaShot') formData.validationMethod = 2;
+    if (this.data.gameKey === 'qaShot') { if (this.data.advanced && this.data.advanced.scan && this.data.advanced.scan.enabled) formData.validationMethod = 4; /* 拍照站开了扫码参与就存 4,不再按旧值存 2 被服务端拒(第十三轮 m7,全游戏 bug 8) */ else if (![4, 5].includes(Number(formData.validationMethod))) formData.validationMethod = 2; /* 选了定位到达就保留 5:有进行方式的主题里站点要先「到达」才能开始任务,存成 2 的拍照站永远到不了(第十三轮 m3) */ } else if (this.data.advanced && this.data.advanced.scan && this.data.advanced.scan.enabled) formData.validationMethod = 4; // 扫码参与存成 4;读回来只靠 scan.enabled 显示「扫码」,存的却是旧值 2,发布时被服务端拒(第十三轮 m3)
     // 完成方式模块:未添加则清空相关字段
 
       // 旧编辑器把高级问答保存成空旧题；重存时接回高级判题后的服务端收尾。
@@ -3163,7 +3195,7 @@ Page({
     // 也只要求标题)。公共玩法库那条路一条不松。
     const storyGame = this.data.from === 'fabu';
     if (!storyGame) {
-      if (!f.description || !f.description.trim()) errors.description = '请填写玩法描述';
+      if (!f.description || !f.description.trim()) errors.description = '请填写玩法看点';
       else if (f.description.length > this.data.descriptionMaxLength) errors.description = `玩法描述不超过${this.data.descriptionMaxLength}字`;
       if (this.data.selectedCategoryIds.length === 0) errors.categoryIds = '请选择至少一个玩法类别';
     } else if (f.description && f.description.length > this.data.descriptionMaxLength) errors.description = `玩法描述不超过${this.data.descriptionMaxLength}字`;
@@ -3273,11 +3305,11 @@ Page({
   },
 
   // 「查看预览」置灰 = 还有必填没交。点它不空转:走一遍发布同款全量校验,
-  // toast 报第一条缺项 + 定位滚动(errors 落字段旁红字),比「点了没反应」给得多。
+  // 定位滚动到第一条缺项,问题写在字段下方红字(errors 落字段旁)。
+  // 2026-11-03 第四轮业主标准:输入问题只在字段下方用红色 cy-inline-error 说,
+  // 不再另弹 toast 报第一条缺项;滚动定位照旧由 validateForm 完成。
+  // (本段保持原行数,下方登记在基线里的行号不挪。)
   onPreviewDisabledTap: function () {
-    const errors = this._collectValidationErrors(false);
-    const firstKey = PUBLISH_ERROR_ORDER.find(k => errors[k]);
-    if (firstKey) toast(errors[firstKey]);
     this.validateForm(this.data.formData, false);
   },
 
@@ -3483,7 +3515,7 @@ Page({
               submitError: '',
               creationSuccess: {
                 show: true, eyebrow: '节点玩法已保存', title: tpl.title || '新玩法', icon: that._gameIcon(),
-                detail: '已绑定当前主题，将随主题一起审核。',
+                detail: '',
                 // 故事玩法不出人数 / 时长(W-04),表单里那两个是默认值,作者从没填过 —— 不印
                 metaPrimary: '',
                 metaSecondary: '',
@@ -3491,7 +3523,7 @@ Page({
                 primaryAction: 'back', secondaryAction: 'dismiss', closeAction: 'back'
               }
             });
-          } else {
+          } else if (that.data.from === 'join' && !isDraft) { that._returnToJoinForm(createdId, current); } else { // M-09
             that._submitting = false;
             that.data.dirty = false;
             that.setData({
@@ -3570,7 +3602,7 @@ Page({
      「节点玩法已保存」那支仍走 creation-success 的两颗按钮(它有 dismiss = 留在原地)。 */
   onResultSheetClose() {
     if (!currentEditor(this)()) return;
-    this.setData({ 'resultSheet.show': false });
+    this.setData({ 'resultSheet.show': false }); if (backToActivityDraft()) return;
     wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
   },
 
@@ -3584,7 +3616,7 @@ Page({
     this.setData({ 'creationSuccess.show': false });
     if (flow[key] === 'dismiss') return;
     if (flow[key] === 'back') this.exitPage();
-    else if (flow[key] === 'templates') wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
+    else if (flow[key] === 'templates' && !backToActivityDraft()) wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
   },
 
   // ===== 回填 =====
@@ -3662,8 +3694,9 @@ Page({
         selectedCategoryNamesStr: selectedNames.join('，')
       });
     }
+    this._settledOnLoad = false;
     this.fillFormWithTemplateData(data);
-    this.data.dirty = false;
+    this.data.dirty = this._settledOnLoad === true;   // 第十三轮 m1:打开时补了结果规则,离开前要存
     this.setData({ editorLoading: false, loadError: '' });
   },
 
@@ -3696,7 +3729,7 @@ Page({
       target:{editor:'temp',sourceId:String(sourceId)},
       onBusy:busy=>{this._adoptingTemplate=busy;},
       onRejected:res=>{if(!sourceData||!isMediaRejection(res))return false;this._openWithUnusableMedia(sourceData,res);return true;},
-      onError:message=>{this._adoptionUnconfirmed=true;this.setData({editorLoading:false,loadErrorIsOperation:true,loadError:message});},
+      onError:(message,status)=>{const rejected=status==='REJECTED';this._adoptionUnconfirmed=!rejected;this.setData({editorLoading:false,loadErrorIsOperation:!rejected,loadErrorIsAccess:rejected,loadError:message});},
       onReady:detail=>{
         if(detail.canEdit!==true){this.setData({editorLoading:false,loadError:'采用草稿归属未确认'});return false;}
         this._adoptionUnconfirmed=false;this._templateId=positiveId(detail.id);this.data.isMyScope=true;this._templateCanEdit=true;
@@ -4016,4 +4049,23 @@ Page({
     this.setData({ editorLoading: false, loadError: '' });
     return true;
   },
+  /* M-09(2026-11-02):从「申请承接章节」的报名表进来建玩法,发布后回到报名表并选上新玩法,
+     不再跳去模板库 —— 那样商家找不回刚才那一章。 */
+  _returnToJoinForm(createdId, current) {
+    const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
+    if (ch && ch.emit) ch.emit('templateCreated', { id: createdId, title: this.data.formData.title });
+    this._submitting = false;
+    this.data.dirty = false;
+    this.setData({ submitting: false, submittingAction: '', submitError: '' });
+    toast.success('玩法已发布');
+    setTimeout(() => { if (current()) this.exitPage(); }, 600);
+  },
 });
+// j1 F2:从「发活动」页去建玩法时,活动草稿页还在栈里 —— 建完回到它,不 reLaunch 冲掉草稿。
+function backToActivityDraft() {
+  const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
+  const at = pages.findIndex(page => page && page.route === 'pages/publish/activity/index');
+  if (at < 0 || at >= pages.length - 1) return false;
+  wx.navigateBack({ delta: pages.length - 1 - at });
+  return true;
+}

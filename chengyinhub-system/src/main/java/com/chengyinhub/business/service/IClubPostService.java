@@ -55,6 +55,9 @@ public interface IClubPostService
     /** 全站帖文流(发现页):可见性与拉黑在 SQL 里判,limit 夹到 [1,51]。 */
     List<ClubPost> selectSiteFeed(Long viewerId, Long beforeId, int limit);
 
+    /** 同 selectSiteFeed,只取 authorId 本人的帖文(可见性口径不变);我的主页 → 帖文用,authorId 恒为当前登录者。 */
+    List<ClubPost> selectSiteFeedByAuthor(Long viewerId, Long beforeId, int limit, Long authorId);
+
     // ---- 帖文转发(dw29 L8)。可见性、封禁与锁由接口层先过完,与点赞同一顺序;这里只管去重、撤销和转发数。 ----
 
     /** 本人对这条帖文当前是否有有效转发 */

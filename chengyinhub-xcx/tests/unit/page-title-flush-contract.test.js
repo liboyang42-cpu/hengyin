@@ -70,7 +70,7 @@ function pagesUsingFlush() {
 // show 恒为 true 的全屏 cy-sheet,标题被整个盖住,没有可观测症状;而且它不属于
 // 俱乐部端,本轮改不到、也没法截图验证。留在这里是为了记账,不是为了放行:
 // 谁动那一页,顺手摘掉 flush 并把这条删了。
-const LEGACY_FLUSH_MISUSE = ['pages/deregister']
+const LEGACY_FLUSH_MISUSE = []
 
 test('凡是传了 flush 的页面,父容器必须真的有横向内边距', () => {
   const offenders = []

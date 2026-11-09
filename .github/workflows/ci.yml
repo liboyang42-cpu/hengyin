@@ -157,6 +157,7 @@ jobs:
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
               - 'ci/test_community_legacy_owner_mysql_integration.py'
               - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
+              - 'ci/test_review_wording_seeded_text_mysql_integration.py'
               - 'ci/test_migration_runner_ci_contract.py'
               - 'ci/funds-mysql-it-gate.sh'
               # 改后端 job 自身时必须跑后端测试，不能靠 skipped 通过。
@@ -265,6 +266,7 @@ jobs:
               - 'ci/test_merchant_offer_withdrawal_columns_mysql_integration.py'
               - 'ci/test_community_legacy_owner_mysql_integration.py'
               - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
+              - 'ci/test_review_wording_seeded_text_mysql_integration.py'
               - 'ci/sql_splitter.py'
               - 'ci/migration-dependencies.json'
               - 'ci/release_manifest.py'
@@ -381,7 +383,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: bf6282ef77a56abaa01e1d494ca7377c2c759245
+          ref: 9cd002fb9db978d0ab1f5b6b0504481c4ae3571a
           path: .architecture-gate
           fetch-depth: 0
           persist-credentials: false
@@ -437,7 +439,7 @@ jobs:
     # 默认 workflow_dispatch 仍全开；只有显式 selected 按精确 admission 执行。
     if: ${{ (github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && needs.changes.outputs.run_backend == 'true') || ((github.event_name != 'workflow_dispatch' || inputs.validation_scope != 'selected') && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true')) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     # PublicVisibilityMyBatisTest 故意设计成"fixture 不可达即失败"(拒绝静默跳过),
     # 硬编码连动态端口上的 mysql:8.0.45,自建表、用完即弃,与生产/funds-mysql-it.yml
     # 用的远程测试库完全隔离。版本锁死见 ci/test_migration_runner_ci_contract.py。
@@ -648,7 +650,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: bf6282ef77a56abaa01e1d494ca7377c2c759245
+          ref: 9cd002fb9db978d0ab1f5b6b0504481c4ae3571a
           path: chengyinhub-admin/target/f-private-port-verifier
           fetch-depth: 1
           persist-credentials: false
@@ -834,6 +836,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Ensure ripgrep for static scanning
+        run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y ripgrep
+          fi
+          rg --version
       - name: Verify mini program unit discovery manifest
         # 必须在 node --test 之外先跑；否则 glob 漏掉 smoke 本身时仍可假绿。
         run: node ci/xcx-unit-manifest.js --selftest

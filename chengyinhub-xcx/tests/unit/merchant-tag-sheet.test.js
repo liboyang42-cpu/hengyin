@@ -179,3 +179,21 @@ test('门店信息:onChipSheetChange 把组件回传的选中落回 options.chec
   page.saveChipSheet()
   assert.deepEqual(JSON.parse(requests.at(-1).data), { categoryIds: '11,12' })
 })
+
+// 第十轮 f3 j1 文案表:去掉「可多选，最多 5 个，第一个作为主行业」灰字,改为计数带上限、第一个选中标「主」。
+test('primaryFirst:第一个选中的胶囊标主,计数带上限,行业页不再传说明灰字', () => {
+  const c = create({ items: items(4), primaryFirst: true, max: 5 })
+  tap(c, 'k2')
+  tap(c, 'k0')
+  const flat = c.data._rows.flat()
+  assert.equal(flat.find(t => t.key === 'k2').primary, true)
+  assert.equal(flat.find(t => t.key === 'k0').primary, false)
+  tap(c, 'k2')
+  assert.equal(c.data._rows.flat().find(t => t.key === 'k0').primary, true, '取消第一个后顺位成主')
+  const plain = create({ items: items(2) })
+  tap(plain, 'k1')
+  assert.equal(plain.data._rows.flat().some(t => t.primary), false, '未开 primaryFirst 不标主')
+  assert.match(read(DIR + '/index.wxml'), /已选 \{\{_sel\.length\}\}\{\{max > 0 \? '\/' \+ max : ''\}\}/)
+  assert.doesNotMatch(read('pages/merchant/apply/index.wxml'), /第一个作为主行业/)
+  assert.doesNotMatch(read('pages/merchant/decor/index.wxml'), /第一个作为主行业/)
+})

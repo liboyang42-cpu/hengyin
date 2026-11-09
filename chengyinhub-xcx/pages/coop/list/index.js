@@ -57,10 +57,16 @@ const REG_AUDIT = [
   { text: '已中标', badge: 'accepted:check' },
   { text: '已落选', badge: 'muted:close-sm' },
 ];
+// 第十二轮 k4(j2 N-01):已中标后还要发带条款邀约、对方接受才成合作单 —— 徽章说清卡在哪一步
+const REG_INVITE = {
+  none: { text: '未发邀约', badge: 'pending:clock' },
+  sent: { text: '邀约待接受', badge: 'pending:clock' },
+};
 function decorateReg(it) {
   const audit = it && it.auditStatus != null && Number.isInteger(Number(it.auditStatus))
     ? Number(it.auditStatus) : null;
-  const st = audit != null && REG_AUDIT[audit] ? REG_AUDIT[audit] : null;
+  const st = audit === 1 && REG_INVITE[it.inviteState] ? REG_INVITE[it.inviteState]
+    : (audit != null && REG_AUDIT[audit] ? REG_AUDIT[audit] : null);
   const badge = badgeOf(st ? st.badge : 'muted:close-sm');
   return Object.assign({}, it, {
     rowKey: 'reg-' + it.id,
@@ -840,12 +846,7 @@ Page({
               confirmText: '去发邀约', cancelText: '稍后',
               success(r2) {
                 if (!r2.confirm || !toId) return;
-                that._navigateTo({ url: '/pages/coop/invite/index?type=0&toId=' + toId
-                  + '&toName=' + encodeURIComponent(toName)
-                  + (toLogo ? '&toLogo=' + encodeURIComponent(toLogo) : '')
-                  + (toMeta ? '&toMeta=' + encodeURIComponent(toMeta) : '')
-                  + '&topicId=' + topicId
-                  + (that._operationScope ? '&scope=MERCHANT' : '') });
+                that.goTermsInvite({ currentTarget: { dataset: { memberid: toId, name: toName, logo: toLogo, meta: toMeta, topicid: topicId } } });
               },
             });
           },
@@ -858,6 +859,18 @@ Page({
       },
       fail() { that._finishAction(actionKey, '', '操作确认没有打开，请重试'); },
     });
+  },
+
+  // 第十二轮 k4(j2 N-01):已中标的报名行补发带条款邀约,与确认后弹窗「去发邀约」同一张邀约页
+  goTermsInvite(e) {
+    const ds = e.currentTarget.dataset;
+    if (!ds.memberid || !ds.topicid) return;
+    this._navigateTo({ url: '/pages/coop/invite/index?type=0&toId=' + ds.memberid
+      + '&toName=' + encodeURIComponent(ds.name || '该商家')
+      + (ds.logo ? '&toLogo=' + encodeURIComponent(ds.logo) : '')
+      + (ds.meta ? '&toMeta=' + encodeURIComponent(ds.meta) : '')
+      + '&topicId=' + ds.topicid
+      + (this._operationScope ? '&scope=MERCHANT' : '') });
   },
 
   _initWorkflow() {

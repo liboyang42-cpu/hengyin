@@ -82,7 +82,7 @@ public interface ClubPostMapper
     List<ClubPost> selectFeedByClubIds(@org.apache.ibatis.annotations.Param("clubIds") List<Long> clubIds,
                                        @org.apache.ibatis.annotations.Param("limit") int limit);
 
-    /** 全站帖文流(发现页):审核通过且对 viewer 可见的俱乐部的帖文,排除双向拉黑,按 id 倒序,beforeId 为翻页游标。 */
+    /** 全站帖文流(发现页):审核通过且对 viewer 可见的俱乐部的帖文,排除双向拉黑,按 id 倒序,beforeId 为翻页游标;authorId 非空时只取该作者的帖文(我的主页 → 帖文)。 */
     List<ClubPost> selectSiteFeed(@Param("viewerId") Long viewerId, @Param("beforeId") Long beforeId,
-                                  @Param("limit") int limit);
+                                  @Param("limit") int limit, @Param("authorId") Long authorId);
 }

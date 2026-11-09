@@ -2,15 +2,16 @@ const modal = require('../../../../utils/modal.js'); const pageMotion = require(
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
-const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js');
+const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, isSelfPlayPass, passUntilText } = require('../../../../utils/order-status.js');
 const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
 const subscribe = require('../../../../utils/subscribe.js');
+const refundAmount = require('../../../utils/order-refund-amount.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 const { failureStatus } = require('../../../../utils/session/login-reload.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
 
-/* 稿 578:2312 的状态药丸:退款处理中是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
+/* 稿 578:2312 的状态药丸:正在退款是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
    不为这一页新起一套色 —— 药丸在本仓是 cy-badge 的语言,这里只是把订单态映射过去。 */
 /* 稿 578:2313 那张卡在稿上画的是退款态。2026-09-11 用户定:
    「是退款、还是已完成、未开始,要有不同状态的」—— 所以它不是一张退款卡,
@@ -30,6 +31,8 @@ const STATE_TITLE = {
   refunded: '退款已受理',
   // unknown 不给标题:状态本身没读出来时整块不出,不说一句正确的废话
 };
+
+const NOTICE_TITLE_KEYS = ['refunding', 'refunded', 'manual_refund'];
 
 const STATUS_TONE = {
   pending_payment: 'warning',
@@ -104,7 +107,7 @@ function emptyCompletion() {
 function stampSubText(stamp) {
   if (!stamp || !stamp.collected) return '待核销'
   const at = String(stamp.obtainedAt || '')
-  return at ? at.slice(5, 16) : '已收集'
+  return at ? at.replace('T', ' ').slice(5, 16) : '已收集'
 }
 
 /**
@@ -173,15 +176,43 @@ function toCompletionView(vo) {
   return view
 }
 
-// V-20:订单详情不再放「查看票夹」,底部主 CTA 只剩待支付的「去支付」。
-function resolvePrimaryCta(orderStateKey) {
-  return orderStateKey === 'pending_payment' ? 'pay' : '';
+// V-20:订单详情不再放「查看票夹」。待支付是「去支付」;
+// F-06(j2):已付、还能玩的票是「开始游戏」,直接进 play(与票夹「开始游戏」同一目标),不绕票夹。
+const PLAYABLE_STATES = ['not_started', 'in_progress', 'non_refundable'];
+const { ticketHasGame } = require('../../../../utils/ticket-game.js');   // 第十二轮 k2(j1 N1):没有游戏的场次票不出「开始游戏」
+function resolvePrimaryCta(info) {
+  const value = info || {};
+  if (value.orderStateKey === 'pending_payment') return 'pay';
+  if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
+    && PLAYABLE_STATES.indexOf(value.orderStateKey) >= 0 && playQuery(value) && ticketHasGame(value)) return 'play';
+  if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
+    && value.orderStateKey === 'completed' && resolveExploreOrder(value) && playQuery(value) && ticketHasGame(value)) return 'record';
+  return '';
+}
+
+// 与票夹 _openTicket 同口径:场次票(ownerType=2)带 activityId,主题票带 topicId。
+function playQuery(info) {
+  const value = info || {};
+  const activity = Number(value.ownerType) === 2;
+  const ownerId = activity
+    ? ((value.cmsActivity && value.cmsActivity.id) || value.ownerId)
+    : ((value.cmsTopic && value.cmsTopic.id) || value.ownerId);
+  if (!ownerId || !value.id) return '';
+  return (activity ? 'activityId=' : 'topicId=') + ownerId;
+}
+
+function isCityOrder(info) {
+  const topic = (info && info.cmsTopic) || {};
+  const activity = (info && info.cmsActivity) || {};
+  const type = topic.productType != null ? topic.productType : activity.productType;
+  return Number(type) === 1;
 }
 
 function buildOrderTimeline(info) {
   const value = info || {};
   const stateKey = value.orderStateKey || '';
-  const paid = Number(value.paymentStatus) === 2;
+  // 退款单的 payment_status 是 4(已退款):它付过钱,时间线要走 付款成功 → 正在退款 / 退款成功,不能落回「等待支付」。
+  const paid = Number(value.paymentStatus) === 2 || stateKey === 'refunding' || stateKey === 'refunded';
   const verified = Number(value.verificationStatus) === 1;
   const rows = [{
     key: 'created',
@@ -191,18 +222,19 @@ function buildOrderTimeline(info) {
   }];
 
   if (paid) {
-    rows.push({ key: 'paid', label: isFreeOrder(value) ? '免费报名成功' : '支付已完成', time: toDisplayTime(value.paymentTime), state: 'done' });
+    rows.push({ key: 'paid', label: isFreeOrder(value) ? '免费报名成功' : '付款成功', time: toDisplayTime(value.paymentTime), state: 'done' });
   } else if (stateKey === 'cancelled') {
     rows.push({ key: 'cancelled', label: '订单已取消', time: '', state: 'done' });
     return rows;
   } else {
-    rows.push({ key: 'payment', label: '等待支付', time: '完成后更新', state: 'current' });
+    rows.push({ key: 'payment', label: '等待支付', time: '', state: 'current' });
     return rows;
   }
 
   const scanTime = toDisplayTime(value.firstSuccessfulScanAt);
   if (scanTime) {
-    rows.push({ key: 'first_scan', label: '首次扫码成功', time: scanTime, state: 'done' });
+    // 第十二轮 k7 N6:自玩通行证没有扫码这回事,这一刻是开局到第一站
+    rows.push({ key: 'first_scan', label: isSelfPlayPass(value) ? '开始游玩' : '首次扫码成功', time: scanTime, state: 'done' });
   }
 
   if (stateKey === 'refunding' || stateKey === 'refunded') {
@@ -210,17 +242,20 @@ function buildOrderTimeline(info) {
       ? (value.refundApplication.payoutTime || value.refundApplication.updateTime) : '';
     rows.push({
       key: 'refund',
-      label: stateKey === 'refunded' ? '已退款' : '退款处理中',   // 与 utils/order-status 同词
+      label: stateKey === 'refunded' ? '退款成功' : '正在退款',   // 与 utils/order-status 同词(业主定稿:付款成功 → 正在退款 → 退款成功)
       time: toDisplayTime(refundTime),
       state: stateKey === 'refunded' ? 'done' : 'current',
     });
     return rows;
   }
 
+  // R11 j3 F9:自玩通行证没有到店核销、也不去集合点,时间线不画它走不到的那一步
+  if (isSelfPlayPass(value) && !verified && stateKey !== 'manual_refund') return rows;
   rows.push({
     key: 'verification',
-    label: verified ? '权益已核销' : (stateKey === 'manual_refund' ? '尚未核销' : '等待到店核销'),
-    time: verified ? toDisplayTime(value.verificationTime) : (stateKey === 'manual_refund' ? '' : '完成后更新'),
+    // P-20:城市定向没有「到店核销」,是到集合点开场
+    label: verified ? '权益已核销' : (stateKey === 'manual_refund' ? '尚未核销' : (isCityOrder(value) ? '到集合点开场' : '等待到店核销')),
+    time: verified ? toDisplayTime(value.verificationTime) : '',   // 空心圆已说明还没发生,不写「完成后更新」(R11 p1 F-2)
     state: verified ? 'done' : 'current',
   });
   if (stateKey === 'manual_refund') {
@@ -278,7 +313,7 @@ Component({
       participateDateText: '',
       verificationTimeText: '',
       orderTimeline: [],
-      expiresAtText: '',
+      expiresAtText: '', expiresIsPass: false,
       primaryCta: '',
       ticketPriceShown: '',
       // 稿 578:2298:头图上的金额行/时间行与状态药丸,退款状态卡
@@ -500,6 +535,16 @@ Component({
 
     /* V-20 业主 2026-10-29:订单详情不再放「查看票夹」,原 goSignInfo 出口随按钮一起删除。 */
 
+    startPlay() {
+      const info = this.data.info || {};
+      const query = playQuery(info);
+      if (!query || this._playNavigating) return;
+      this._playNavigating = true;
+      const name = this.data.productTitle ? '&topicName=' + encodeURIComponent(this.data.productTitle) : '';
+      wx.navigateTo({ url: '/pages/play/index?' + query + '&registrationId=' + info.id + '&entry=ticket' + name,
+        complete: () => { this._playNavigating = false; } });
+    },
+
     startOrderTeam() {
       const info = this.data.info || {}
       const activity = info.cmsActivity || {}
@@ -569,13 +614,13 @@ Component({
       that._finishCancelPrompt = finishCancelPrompt;
       modal.show({
         dangerKey: paid ? (info.isFreeOrder ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',
-        dangerParams: { deadline: info.refundDeadlineDisplay || '已核销或已过开始时间不可退' },
+        dangerParams: { deadline: refundAmount.cancelConfirmDeadline(info) },
         success(res) {
           if (!finishCancelPrompt() || !isCurrent()) return;
           if (!res.confirm) return;
           if (that.data.cancelling) return;
           // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
-          if (paid && !info.isFreeOrder) subscribe.request(['refund', 'refundRejected']);
+          if (paid && !info.isFreeOrder) subscribe.request(['refund']);
           that.setData({ cancelling: true });
           cyLoading.show('处理中...');
           // 请求拥有的 loading/锁须释放；账号校验只限制业务回执更新。
@@ -835,6 +880,7 @@ Component({
 
     formatDateTime(dateTimeStr) {
       if (!dateTimeStr) return { date: '', time: '' };
+      const dateOnly = /^\d{4}-\d{1,2}-\d{1,2}$/.test(String(dateTimeStr).trim());   // 主题日期没有钟点,不补 00:00
       try {
         const date = new Date(String(dateTimeStr).replace(/-/g, '/'));
         const year = date.getFullYear();
@@ -844,7 +890,7 @@ Component({
         const minutes = date.getMinutes().toString().padStart(2, '0');
         return {
           date: year + '.' + month + '.' + day,
-          time: hours + ':' + minutes
+          time: dateOnly ? '' : hours + ':' + minutes
         };
       } catch (error) {
         return { date: '', time: '' };
@@ -932,6 +978,7 @@ Component({
               }
             }
             info.canRequestRefund = canRequestOrderRefund(info);
+            info.refundAmountShown = refundAmount.refundedAmount(info);
             const isTopicOrder = Number(info.ownerType) === 1;
             // purchaseKind 非空时权威；仅存量 NULL 单回落到明确 chapterId，权益延迟到达时可补正类型。
             const isExploreOrder = resolveExploreOrder(info);
@@ -939,7 +986,7 @@ Component({
             info.isExploreOrder = isExploreOrder;
             info.organizerLabel = isTopicOrder ? '主理人' : '主办方';
             info.organizerDisplayName = info.organizerName || (isTopicOrder ? '主题主理人' : '活动主办方');
-            info.typeLabel = isTopicOrder ? '城市路线' : (isExploreOrder ? '探店日' : '城市定向场次');
+            info.typeLabel = isTopicOrder ? '城市路线' : (isExploreOrder ? '自由探索' : '城市定向场次');
             info.primaryActionText = isTopicOrder ? '进入路线' : (isExploreOrder ? '进入游玩' : '继续探索');
             info.secondaryActionText = isTopicOrder ? '路线详情' : '回场次详情';
             // 探店日票面:场次时间槽与集合点来自票种快照(omsTicket),拿不到就不显示、不编
@@ -962,16 +1009,17 @@ Component({
             if (info.orderStateKey === 'pending_payment' && info.payExpireTime) {
               const expire = toDisplayTime(info.payExpireTime);
               info.orderHint = expire ? ('请在 ' + expire + ' 前完成支付') : '请完成支付后使用票夹';
-            } else if (info.orderStateKey === 'refunding' || info.orderStateKey === 'refunded' || info.orderStateKey === 'non_refundable' || info.orderStateKey === 'manual_refund') {
+            } else if (info.orderStateKey === 'refunding' || info.orderStateKey === 'refunded' || info.orderStateKey === 'manual_refund') {
               info.orderHint = info.refundDeadlineDisplay || info.refundDisplayText;
+            } else if (summary.exploreProgress) {
+              // P-03:探索票核销一家不算完成,告诉玩家还剩几家
+              info.orderHint = summary.progressText;
             } else if (info.orderStateKey === 'completed') {
               info.orderHint = Number(info.verificationStatus) === 1 ? '本次订单已核销'
                 : (summary.firstScanCompleted ? '首次扫码成功，订单已完成'
                   : (isTopicOrder ? '本次路线已结束' : '本次活动已结束'));
             } else if (Number(info.registrationStatus) === 2 && Number(info.paymentStatus) === 2) {
-              info.orderHint = isTopicOrder
-                ? '票夹已生成，可进入路线查看城市节点与打卡反馈'
-                : (isExploreOrder ? '票夹已生成，请按场次时间到集合点开场' : '票夹已生成，可继续探索或现场核验');
+              info.orderHint = '';
             } else if (Number(info.registrationStatus) === 1 || [0, 1].includes(Number(info.paymentStatus))) {
               info.orderHint = '请完成支付后使用票夹';
             } else if (Number(info.registrationStatus) === 2 && info.paymentStatus == null) {
@@ -1009,18 +1057,24 @@ Component({
             const teamModeValue = info.cmsActivity ? Number(info.cmsActivity.teamMode) : 0;
             const startRaw = info.cmsActivity && info.cmsActivity.startDate ? String(info.cmsActivity.startDate) : '';
             const startMs = startRaw ? Date.parse(startRaw.indexOf('T') > 0 ? startRaw : startRaw.replace(/-/g, '/')) : NaN;
+            // 已完成的订单(路线走完 / 已核销)不再出「和队友一起出发」
             info.teamOpen = Number(info.ownerType) === 2 && Number(info.registrationStatus) === 2
+              && info.orderStateKey !== 'completed'
               && (teamModeValue === 1 || teamModeValue === 2);
             info.teamStarted = info.teamOpen && !(startMs > Date.now());
 
             const qty = Number(info.orderNum) > 0 ? Number(info.orderNum) : 1;
             const pointAmt = Number(info.pointPaymentAmount);
             const wechatAmt = Number(info.wechatPaymentAmount);
-            const primaryCta = resolvePrimaryCta(info.orderStateKey);
+            const primaryCta = resolvePrimaryCta(info);
             // V-20:票价显示真实单价;免费报名没有票价快照时就是 ¥0,不写「—」。
             const ticketPriceRaw = info.ticketPrice;
+            // R11 j3 F9:自玩通行证没有票种快照,单价取下单原价 ÷ 数量,不写「—」
+            const originalRaw = Number(info.originalAmount);
             const ticketPriceShown = ticketPriceRaw !== undefined && ticketPriceRaw !== null && ticketPriceRaw !== ''
-              ? ticketPriceRaw : (info.isFreeOrder ? 0 : '');
+              ? ticketPriceRaw : (info.isFreeOrder ? 0
+                : (info.originalAmount !== null && info.originalAmount !== undefined && info.originalAmount !== '' && Number.isFinite(originalRaw)
+                  ? Math.round(originalRaw * 100 / qty) / 100 : ''));
 
             pageMotion.enter(that, 'pmPage'); pageMotion.countIn(that, 'odK'); that.setData({
               /* 稿 578:2298(D07)「大金额与状态先行」——头图上第一眼是实付金额,
@@ -1028,19 +1082,20 @@ Component({
                  ⚠️ 时间这一行头图与「订单明细」里的「日期与时间」是同一个事实,
                     所以只算一次:有场次时间槽(探店日票种快照)就用它,否则用日期 · 时间。
                     两处各拼一遍必然有一天分叉。 */
-              whenText: info.sessionTimeText || [eventDate, eventTime].filter(Boolean).join(' · '),
+              whenText: isSelfPlayPass(info) ? passUntilText(info.expiresAt) : (info.sessionTimeText || [eventDate, eventTime].filter(Boolean).join(' · ')),   // 第十二轮 k7 N6:通行证只有「可玩至」一个日期
               statusTone: STATUS_TONE[info.orderStateKey] || 'neutral',
               /* 稿 578:2313 那张卡:标题 / 一句话 / 右上角一个状态词。
                  ⚠️ 退款中那档含「待平台审核」,标题只能说「退款申请已提交」,没批准前不说「已受理」;
-                    当前走到哪一步由右上角那个词说(退款审核中 / 退款处理中 / 已退款)。
-                    终态在全仓统一叫「已退款」,别另起说法(cross-end-copy 契约钉着这条)。 */
-              stateNotice: STATE_TITLE[info.orderStateKey]
-                ? { show: true,
-                    title: info.isFreeOrder && (info.orderStateKey === 'not_started' || info.orderStateKey === 'in_progress')
-                      ? '免费报名成功' : STATE_TITLE[info.orderStateKey],
-                    sub: info.orderHint || '',
-                    tag: info.statusText || '' }
-                : { show: false },
+                    当前走到哪一步由右上角那个词说(退款审核中 / 正在退款 / 退款成功)。
+                    玩家订单终态统一叫「退款成功」(2026-11-02 业主定稿),别另起说法(cross-end-copy 契约钉着这条)。 */
+              // R11 p1 F-2:状态只在头图药丸说一次。卡上只留药丸没说的那句(核销进度/下一步/退款进度),
+              // 标题只给退款与售后这类药丸之外的事实;右上角不再重复药丸那个词。
+              stateNotice: (function () {
+                const title = info.isFreeOrder && (info.orderStateKey === 'not_started' || info.orderStateKey === 'in_progress')
+                  ? '免费报名成功' : (NOTICE_TITLE_KEYS.indexOf(info.orderStateKey) >= 0 ? STATE_TITLE[info.orderStateKey] : '');
+                const sub = info.orderHint || '';
+                return title || sub ? { show: true, title: title, sub: sub, tag: '' } : { show: false };
+              })(),
               info: info,
               heroImage: resolveHeroImage(info),
               productTitle: productTitle,
@@ -1051,7 +1106,8 @@ Component({
               participateDateText: toDisplayTime(info.participateDate) || (info.participateDate || ''),
               verificationTimeText: Number(info.verificationStatus) === 1 ? toDisplayTime(info.verificationTime) : '',
               orderTimeline: buildOrderTimeline(info),
-              expiresAtText: toDisplayTime(info.expiresAt),
+              expiresAtText: isSelfPlayPass(info) ? passUntilText(info.expiresAt).replace(/^可玩至 /, '') : toDisplayTime(info.expiresAt),
+              expiresIsPass: isSelfPlayPass(info),
               primaryCta: primaryCta,
               ticketPriceShown: ticketPriceShown,
               loadState: 'ready', loadErrorText: '', loadFailureVisible: false

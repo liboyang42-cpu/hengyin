@@ -1,0 +1,41 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-R2-album-card | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 N | PLAY-MAP-1105-R2-album-card · 序章 | 出发 | 序 | 章 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | PLAY-MAP-1105-R2-album-card · 序章 | 雨停了。老周留下一张字条：去外滩，钟声会告诉你下一步。 | 出发 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | PLAY-MAP-1105-R2-album-card · 第一章 江边1 | 继续探索 | 第 | 1 | 章 | / | 共 | 1 | 章 | 第 | 一 | 章 | 江 | 边 | 1 | 第 | 1 | 章 | 开 | 始 | 了 | 。 | 1 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 N | PLAY-MAP-1105-R2-album-card · 第一章 江边1 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 N | PLAY-MAP-1105-R2-album-card · 第一章 江边1 | 第1章开始了。沿着江边往北走。 | 继续探索 | 第 1 站 | 01 相册与翻卡 | 上海市黄浦区中山东一路1号 | 相册与翻卡·PLAY-M | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 相册 | 1 / 1 | 收起相册 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+TEXT[album-first] 相册 | 1 / 1 | 收起相册 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT album-before-card
+BEFORE {"show":false,"kit":{"type":"album","sessionId":3,"version":0,"present":"inline","title":"相册","images":[{"url":"http://127.0.0.1:28099/profile/upload/2026/11/05/j3cat.png","line":"","caption":"老照片"}],"completionEnabled":false,"beforeCard":true,"done":false},"readyForBase":false}
+TEXT[card-after-album] 线索牌 | 还没翻开 | ? | 换一张 | 就这张 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT card-after-album
+TEXT[card-content] 线索牌 | 这一关 | 钟楼卡 | 这一关 | 钟楼卡 | 去看看门牌号 | 回到牌堆 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT card-real-content
+AFTER {"show":false,"kit":{"type":"random","sessionId":3,"version":2,"present":"inline","deckName":"线索牌","drawn":[{"id":"item_1","label":"钟楼卡","content":"去看看门牌号"}],"drawCount":1,"remaining":0},"readyForBase":true}
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990015 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990015 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990015 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990015 200 200 操作成功 
+NET GET /api/orient/scoring/session/2 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/2/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793874283288-s6yl8q3y"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793874283288-99h68aub"}
+NET POST /api/play/journey/opening/complete 200 200 操作成功 {"topicId":990015,"chapterId":45,"expectedVersion":0}
+NET GET /api/play/nodes?topicId=990015 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990015 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990015 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990015 200 200 操作成功 
+NET GET /api/orient/scoring/session/2 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/2/leaderboard 200 500 城市定向计分暂未开放 
+NET GET /api/play/encounter?topicId=990015&activityId=0&nodeId=72 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990015","nodeId":"72"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":3,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_ALBUM","payload":{"viewed":true}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":3,"version":1,"idempotencyKey":"TEST_ACTION","action":"DRAW","payload":{}}

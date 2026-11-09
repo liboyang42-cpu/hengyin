@@ -91,7 +91,7 @@ test('未加入的访客点每张项目卡:只进玩家报名页,零管理路由
   h.page.data.clubId = 9
   h.page.data.club = { id: 9, isOwner: false, isJoined: false, viewerIsAdmin: false }
   tapAllCards(h)
-  assert.deepEqual(h.navigations, ['/pages/topic/index/index?id=701'])
+  assert.deepEqual(h.navigations, ['/pages/topic/index/index?id=701&via=session'])
   assert.equal(h.requests.length, 0, '访客不得触发 /api/topic/info-to-user 等管理读取')
 })
 
@@ -115,7 +115,7 @@ test('上一身份残留的 canManageActivities:新详情判定为访客后撤�
   assert.equal(h.page.data.canManageActivities, false)
   h.requests.length = 0
   tapAllCards(h)
-  assert.deepEqual(h.navigations, ['/pages/topic/index/index?id=701'])
+  assert.deepEqual(h.navigations, ['/pages/topic/index/index?id=701&via=session'])
   assert.equal(h.requests.length, 0)
 })
 

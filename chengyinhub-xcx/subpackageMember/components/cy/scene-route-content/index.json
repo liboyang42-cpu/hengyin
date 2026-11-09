@@ -1,0 +1,16 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-empty": "/components/cy/empty/index",
+    "cy-error": "/components/cy/error/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-scene-club-edit": "/pages/club/components/cy/scene-club-edit/index",
+    "cy-scene-settings-deregister": "/pages/deregister/components/scene-settings-deregister/index",
+    "cy-consent-check": "/components/cy/consent-check/index"
+  },
+  "componentPlaceholder": {
+    "cy-scene-club-edit": "view",
+    "cy-scene-settings-deregister": "view"
+  }
+}

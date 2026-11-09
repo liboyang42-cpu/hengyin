@@ -13,6 +13,17 @@ class TopicCompletionRulePolicyTest {
     private final TopicCompletionRulePolicy policy = new TopicCompletionRulePolicy();
 
     @Test
+    void cityTemplateThreeOfFourKeepsMerchantRedemptionSeparate() {
+        String rule = "{\"nodeCompletion\":{\"mode\":\"AT_LEAST\",\"requiredCount\":3}}";
+        String normalized = policy.validateAndNormalize(rule, 4, ProductType.ORIENTEERING);
+        assertFalse(policy.isCompleted(normalized, 4, 2));
+        assertTrue(policy.isCompleted(normalized, 4, 3));
+        assertTrue(policy.isCompleted(normalized, 4, 4));
+        assertThrows(IllegalArgumentException.class,
+                () -> policy.validateAndNormalize(rule, 4, ProductType.FREE_EXPLORE));
+    }
+
+    @Test
     void atLeastRuleUsesServerNodeTotal() {
         String json = policy.validateAndNormalize(
                 "{\"nodeCompletion\":{\"mode\":\"AT_LEAST\",\"requiredCount\":3}}",

@@ -88,15 +88,19 @@ function actionRows(view, nodes) {
     const costOptions = options(source.costOptions || quest.costOptions, view, source.costs);
     const blocked = !hasState && !active && view.awaitingChallenge && (costOptions.length > 0 || hasFees(source.costs));
     rows.push({ ...status, kind: 'QUEST', key, nodeId: quest.nodeId, title: quest.title || nodeName(quest.nodeId), operation,
-      actionText: proofPending ? '待审核' : operation === 'QUEST_START' ? '开始任务' : operation === 'QUEST_RESOLVE' ? source.trustedPass === true ? '结算任务' : '完成任务' : '打开任务',
+      // 第十二轮 k7 N3:服务端 PROOF_PENDING 只表示「本站玩法还没过」(TopicRouteRuntimeServiceImpl personalToolSummary),
+      // 不代表交过凭证在等审核 —— 屏上不再写「待审核 / 凭证未通过」,主按钮就是回到这一站的玩法
+      actionText: proofPending ? '打开任务' : operation === 'QUEST_START' ? '开始任务' : operation === 'QUEST_RESOLVE' ? source.trustedPass === true ? '结算任务' : '完成任务' : '打开任务',
       proofText: source.trustedPass === true ? source.enabled === true ? '凭证已通过，可结算' : '凭证已通过，当前不可结算' : '',
       openable: !ended && active && proofPending && source.trustedPass === false,
       enabled: !ended && (!hasState || source.enabled === true) && (operation === 'OPEN_QUEST' || !!allowed(operation, key) || previewAllowed(operation, key)) && !blocked, blocked, costOptions, frozenIndex: active && Number.isInteger(frozenQuest) ? frozenQuest : -1,
       choices: personal ? [...new Set(available.filter(action => action.contentId === key && ['QUEST_RESOLVE', 'GAMEPLAY_PREVIEW'].includes(action.operation) && action.choiceKey).map(action => action.choiceKey))].map((choiceKey, index) => ({ choiceKey, label: '方案 ' + (index + 1) })) : (quest.choices || []).map((choice, index) => ({ choiceKey: choice.choiceKey, label: choice.label || choice.title || '方案 ' + (index + 1) })),
-      disabledText: proofPending ? '待审核 / 凭证未通过，请打开原任务确认' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
+      disabledText: proofPending ? '' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
       frozenText: active && costOptions[frozenQuest] ? costOptions[frozenQuest].label + ' · ' + costOptions[frozenQuest].amountText : '',
       chargeNote: !ended && active ? '任务进行中不扣费用，结算时才按实际扣除' : '',
-      cancelable: !ended && active && !!allowed('QUEST_CANCEL', key) });
+      cancelable: !ended && active && !!allowed('QUEST_CANCEL', key),
+      // 第十二轮 k7 N3:次数用完的任务不再摆一颗「开始任务」,也不重复「剩 0 次」
+      hideAction: source.disabledReason === 'LIMIT_REACHED', ...(source.disabledReason === 'LIMIT_REACHED' ? { remainingText: '' } : {}) });
   }
   const tools = personal ? view.tools || [] : (view.interactionTools || []).filter(tool => tool.kind === 'FACILITY');
   for (const tool of tools) {

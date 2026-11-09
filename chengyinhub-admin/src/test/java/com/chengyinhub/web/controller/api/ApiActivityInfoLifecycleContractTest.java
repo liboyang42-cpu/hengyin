@@ -98,6 +98,18 @@ class ApiActivityInfoLifecycleContractTest
         assertEquals(0, info(activity(1L, 1L, daysAgo(1), daysAhead(1))).getPlayNodeCount());
     }
 
+    /** 第十轮 f1 item 2:商家发活动不必带玩法。template_id 为空/0 的详情照常返回、没有玩法行,不去查 id in (null)。 */
+    @Test
+    void activityWithoutGameReadsWithoutQueryingTemplates()
+    {
+        CmsActivity noGame = activity(1L, 1L, daysAgo(1), daysAhead(1));
+        noGame.setTemplateId(null);
+        ActivityInfoVO vo = info(noGame);
+        assertEquals(0, vo.getPlayNodeCount());
+        assertTrue(vo.getMemberTemplateList() == null || vo.getMemberTemplateList().isEmpty());
+        assertEquals(0, info(activity(1L, 1L, daysAgo(1), daysAhead(1))).getPlayNodeCount());
+    }
+
     @Test
     void activityInfo_stampsServerNowForSignupGreying()
     {
@@ -127,7 +139,13 @@ class ApiActivityInfoLifecycleContractTest
         ICmsActivityService activityService = mock(ICmsActivityService.class);
         when(activityService.selectCmsActivityDetailById(anyLong(), anyLong())).thenReturn(activity);
         ICmsMemberTemplateService memberTemplateService = mock(ICmsMemberTemplateService.class);
-        when(memberTemplateService.selectCmsMemberTemplateByIds(any())).thenReturn(Collections.emptyList());
+        when(memberTemplateService.selectCmsMemberTemplateByIds(any())).thenAnswer(invocation -> {
+            java.util.List<Long> ids = invocation.getArgument(0);
+            for (Long id : ids) {
+                if (id == null || id <= 0) throw new AssertionError("没有玩法的活动不该拿 " + id + " 去查模板");
+            }
+            return Collections.emptyList();
+        });
         IViewCollaboratorsService collaboratorsService = mock(IViewCollaboratorsService.class);
         when(collaboratorsService.selectViewCollaboratorsList(any())).thenReturn(Collections.emptyList());
         IViewCommentService commentService = mock(IViewCommentService.class);
@@ -140,7 +158,8 @@ class ApiActivityInfoLifecycleContractTest
         when(statisticsMapper.statisticsSalesAmoutByOwner(any())).thenReturn(Collections.emptyList());
 
         ApiActivityController controller = spy(new ApiActivityController());
-        doReturn(0L).when(controller).getAppUserId();
+        // Round5 #6:/api/activity/info 对游客开放后 viewer=0 即游客(走公开投影);本契约测的是登录视角,用已登录 viewer。
+        doReturn(9001L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsActivityService", activityService);
         ICmsTopicNodeService nodes = mock(ICmsTopicNodeService.class);
         when(nodes.selectCmsTopicNodeList(any())).thenAnswer(invocation -> {

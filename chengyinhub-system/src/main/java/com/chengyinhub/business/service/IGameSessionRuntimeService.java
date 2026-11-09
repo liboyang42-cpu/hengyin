@@ -42,8 +42,14 @@ public interface IGameSessionRuntimeService {
     boolean isGameSessionEnabled(com.chengyinhub.business.domain.CmsTopic topic);
     String routeSessionStatus(Long activityId);
     boolean isRouteLeaderboardHidden(Long activityId);
+    /** R11 g1(j3 F4):带队路线局进行中时已放行到的章节(game_session.current_chapter_id);不是进行中的路线局或尚未放行返回 null。只读。 */
+    default Long routeCurrentChapterId(Long activityId) { return null; }
+    /** C-04:带队路线局进行中、节点所在章节晚于已放行章节时返回「等队长放行」;否则 null。 */
+    default String routeChapterGateError(Long activityId, Long nodeId) { return null; }
     void assertRoutePlayable(Long activityId, Long nodeId);
     void assertRouteReception(Long activityId, Long nodeId);
+    /** F-13:带队路线局在前面各闸都放行、只缺上一站商家接待时返回拒绝原因,不抛异常;否则 null(交原锁定路径判)。 */
+    default String routeReceptionError(Long activityId, Long nodeId) { return null; }
     List<GameMerchantEntryView> merchantEntries(GameActorContext actor);
     GameSessionView view(GameActorContext actor, Long activityId);
     Map<String, Object> exportRecap(GameActorContext actor, Long activityId);

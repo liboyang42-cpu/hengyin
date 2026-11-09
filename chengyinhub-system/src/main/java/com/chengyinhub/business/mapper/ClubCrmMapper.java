@@ -58,4 +58,18 @@ public interface ClubCrmMapper {
     /** Figma K3 核销详情:一条报名单的凭证快照。clubId 进 where,不是查完再比归属。 */
     ClubCustomerVO.RawCheckinRow selectCheckinDetail(@Param("clubId") Long clubId,
                                                      @Param("registrationId") Long registrationId);
+
+    /**
+     * C-13:按场次汇总票款(分):实收=曾支付成功(payment_status 2 已支付 / 4 已退款)的应付额;
+     * 已退=已批准(status=1)的退款申请金额。只读本俱乐部场次(owner_type=2 且 club_id 匹配)。
+     */
+    List<java.util.Map<String, Object>> selectSessionMoney(@Param("clubId") Long clubId,
+                                                          @Param("activityIds") List<Long> activityIds);
+
+    /**
+     * j2 F-08:这些成员在本俱乐部(主题 / 社群活动)最近一张报名填写的姓名,密文列,按报名 id 倒序,
+     * 每人取第一行即最近一张。只供 Service 解密后给主理人一侧用。
+     */
+    List<java.util.Map<String, Object>> selectSignupNames(@Param("clubId") Long clubId,
+                                                          @Param("memberIds") java.util.Collection<Long> memberIds);
 }

@@ -135,6 +135,18 @@ class GameSessionRuntimeMapperSqlTest {
         String roster = sql("selectClubMemberProjection", params());
         String team = sql("selectTeamActionProjection", params());
         String deliveries = sql("insertBroadcastDeliveries", params());
+        // 2026-11-01 按人发:和全员广播同一范围闸(本局队伍在队 + 已支付),memberIds 只在里面收窄
+        java.util.Map<String, Object> memberParams = new java.util.HashMap<>(params());
+        memberParams.put("memberIds", java.util.Arrays.asList(1L, 2L));
+        String memberDeliveries = sql("insertBroadcastMemberDeliveries", memberParams);
+        // 第十一轮 h4 L3:按人发与「全部」的范围 = 本场已付款未退的玩家,不再要求先进队(没组队的付款玩家以前收不到)。
+        String allPaidDeliveries = sql("insertBroadcastAllPaidDeliveries", params());
+        for (String paidScope : new String[]{memberDeliveries, allPaidDeliveries}) {
+            assertTrue(paidScope.contains("from cms_registration reg where reg.owner_type=2 and reg.owner_id=?"), paidScope);
+            assertTrue(paidScope.contains("reg.payment_status=2 and reg.registration_status=2"), paidScope);
+            assertFalse(paidScope.contains("play_team"), paidScope);
+        }
+        assertTrue(memberDeliveries.replace(" ", "").contains("reg.member_idin(?,?)"), memberDeliveries);
 
         assertTrue(locked.contains("status in ('assigned','confirmed')"), locked);
         assertTrue(locked.endsWith("for update"), locked);
@@ -444,7 +456,14 @@ class GameSessionRuntimeMapperSqlTest {
         assertTrue(aggregate.contains("c.action in ('station_pause','club_station_pause')"), aggregate);
         assertTrue(stations.contains("c.action in ('station_pause','club_station_pause')"), stations);
         assertPaidActivityMemberScope(aggregate);
-        assertPaidActivityMemberScope(stations);
+        // 第十一轮 h4 L3:持票、有完成进度、每站到达/完成都按「本场已付款未退」算,不再要求先进队。
+        assertTrue(aggregate.contains("reg.member_id=p.member_id and reg.owner_type=2 and reg.owner_id=s.activity_id"
+                + " and reg.payment_status=2 and reg.registration_status=2"), aggregate);
+        assertTrue(stations.contains("reg.member_id=p.member_id and reg.owner_type=2 and reg.owner_id=r.activity_id"
+                + " and reg.payment_status=2 and reg.registration_status=2"), stations);
+        assertFalse(stations.contains("play_team"), stations);
+        String paidPlayers = aggregate.substring(0, aggregate.indexOf("as paidplayers"));
+        assertFalse(paidPlayers.contains("play_team"), paidPlayers);
         assertTrue(teams.contains("p.topic_id=s.topic_id and p.status=1 and p.del_flag=0"), teams);
         assertTrue(teams.contains("sr.game_session_id=s.id and sr.node_id=p.node_id"), teams);
     }

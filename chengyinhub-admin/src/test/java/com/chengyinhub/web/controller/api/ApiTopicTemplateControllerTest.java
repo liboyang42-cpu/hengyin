@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -63,6 +64,22 @@ class ApiTopicTemplateControllerTest {
         ApiTopicTemplateController spied = spy(controller);
         doReturn(memberId).when(spied).getAppUserId();
         return spied;
+    }
+
+    @Test
+    void useRequestsPersistedDraftForTheAuthenticatedMember() {
+        ApiTopicTemplateController c = loggedInAs(9L);
+        when(cmsTopicService.selectTopicIsTemplate(42L)).thenReturn(1);
+        Map<String, Object> params = Map.of("copyType", 3, "memberId", 9L, "saveDraft", true);
+        when(cmsTopicService.copyCmsTopic(42L, params)).thenReturn(43L);
+
+        AjaxResult result = c.use("42", null);
+
+        assertEquals(200, result.get("code"));
+        // Questo 采用读回只在 data 上增量加键(来源血缘/采用方式),data.topicId 原键不变。
+        assertEquals(43L, ((Map<?, ?>) result.get("data")).get("topicId"));
+        verify(cmsTopicService).copyCmsTopic(42L, params);
+        verifyNoInteractions(merchantAccessService);
     }
 
     // ====== /info 门禁测试 ======

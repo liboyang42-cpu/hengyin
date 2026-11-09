@@ -70,6 +70,7 @@ Page({
   },
 
 
+  goBackOrHome() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/index/index' }) }) },   // 第十二轮 k2(p1 N-4)
   onLoad(query) {
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
     // 顶边复查(2026-09-18):.mp-sheet 长题面会顶进胶囊行,高度上限须从胶囊实测反算

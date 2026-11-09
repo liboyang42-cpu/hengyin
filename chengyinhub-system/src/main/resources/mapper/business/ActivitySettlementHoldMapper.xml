@@ -66,19 +66,43 @@
 
     <!-- 与 CmsActivityMapper.selectActivitiesForSettlement 同一批候选口径(已上架、未结算、非 FREE_EXPLORE);
          退款截止口径与该选单的 NOT EXISTS 同源。 -->
+    <!-- check-1104 j1 F12:集合前 24 小时内退 50% 的报名(4/3)退款时整单待结算明细作废,但结算会把
+         「实付 − 已批准退款」补进销售额付给主办方(CmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId)。
+         待结算必须同口径算进这部分,否则显示的待结算比结算实付少。留存部分与结算一样计入正常销售额,不进客诉档。 -->
     <select id="selectUnsettledActivityFundsByMember" resultType="com.chengyinhub.business.domain.dto.MemberActivityFundsRow">
         SELECT a.id AS activityId, a.topic_id AS topicId, a.end_date AS endDate,
-               COALESCE(SUM(CASE WHEN oc.registration_id IS NULL THEN r.payable_amount END), 0) AS normalSales,
-               COALESCE(SUM(CASE WHEN oc.registration_id IS NOT NULL THEN r.payable_amount END), 0) AS disputedSales,
-               MAX(CASE WHEN r.verification_status IS NULL OR r.verification_status &lt;&gt; 1
+               COALESCE(SUM(CASE WHEN r.payment_status = 4 THEN
+                                     CASE WHEN ra.refunded &lt; r.payable_amount THEN r.payable_amount - ra.refunded END
+                                 WHEN oc.registration_id IS NULL THEN r.payable_amount END), 0) AS normalSales,
+               COALESCE(SUM(CASE WHEN r.payment_status = 2 AND oc.registration_id IS NOT NULL THEN r.payable_amount END), 0) AS disputedSales,
+               MAX(CASE WHEN r.payment_status = 2 AND (r.verification_status IS NULL OR r.verification_status &lt;&gt; 1)
                         THEN COALESCE(r.refund_deadline, DATE_SUB(a.start_date, INTERVAL 24 HOUR)) END) AS lastRefundDeadline
         FROM cms_activity a
         JOIN cms_registration r ON r.owner_type = 2 AND r.owner_id = a.id
-             AND r.payment_status = 2 AND r.registration_status = 2
+             AND ((r.payment_status = 2 AND r.registration_status = 2)
+                  OR (r.payment_status = 4 AND r.registration_status = 3))
+        LEFT JOIN (
+            SELECT source_id, SUM(refund_amount) AS refunded
+            FROM refund_application
+            WHERE source_type = 'registration' AND status = 1 AND del_flag = 0
+            GROUP BY source_id
+        ) ra ON ra.source_id = r.id
         LEFT JOIN (<include refid="openComplaintRegistrations"/>) oc ON oc.registration_id = r.id
         WHERE a.member_id = #{memberId} AND a.del_flag = 0 AND a.status = 1 AND a.is_settlement = 0
           AND (a.topic_id IS NULL
-               OR NOT EXISTS (SELECT 1 FROM cms_topic t WHERE t.id = a.topic_id AND t.product_type = 2))
+               OR NOT EXISTS (
+                   SELECT 1 FROM cms_topic t WHERE t.id = a.topic_id AND t.product_type = 2
+                     AND NOT (
+                         COALESCE(t.club_id, 0) > 0 AND COALESCE(a.club_id, 0) = t.club_id
+                         AND EXISTS (
+                             SELECT 1 FROM topic_sale_snapshot ss WHERE ss.topic_id = t.id
+                               AND ss.schema_version = 'CANONICAL_15_V1'
+                               AND CASE WHEN JSON_VALID(ss.canonical_json) THEN
+                                   JSON_UNQUOTE(JSON_EXTRACT(ss.canonical_json, '$.completionPolicy.evidenceRule'))
+                                   ELSE NULL END &lt;&gt; 'FOUR_STORE_REDEEM'
+                         )
+                     )
+               ))
         GROUP BY a.id, a.topic_id, a.end_date
     </select>
 

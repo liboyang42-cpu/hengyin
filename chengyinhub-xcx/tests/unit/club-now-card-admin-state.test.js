@@ -73,3 +73,45 @@ test('负控:普通成员根本不该进管理 tab,更不该拿到 admin 阶段'
   page.updateOwnerStage()
   assert.notEqual(page.data.ownerStage, 'admin', '非治理者不得落到 admin 终态')
 })
+
+// C-16(2026-11-02 walk-fix):「现在要做」不再对审核中 / 无商家城市定向 / 有邀约待确认的主理人说「邀请商家」。
+function ownerReady(page, topics, rows, messages) {
+  page.data.club = { id: 1, isOwner: true, viewerIsAdmin: false }
+  page.data.clubId = 1
+  page.data.topicState = 'ready'
+  page.data.ownerProjectState = 'ready'
+  page.data.inviteFeedbackState = 'ready'
+  page.data.sentInvites = []
+  page.data.projectRows = rows || []
+  page.data.messages = messages || []
+  page._topics = topics
+  page.updateOwnerStage()
+}
+
+test('C-16:审核中的主题优先显示「主题审核中」', () => {
+  const page = loadPage()
+  ownerReady(page, [], [{ bizType: 'topic', state: 'pending', clubId: 1 }])
+  assert.equal(page.data.ownerStage, 'review')
+  assert.equal(page.data.ownerPrimaryLabel, '主题审核中')
+  ownerReady(page, [{ id: 11, productType: 2 }], [{ bizType: 'topic', state: 'pending', clubId: 1 }])
+  assert.equal(page.data.ownerStage, 'review', '另有主题在审时不让人先去邀商家')
+})
+
+test('C-16:只有城市定向主题时引导开一场，自由探索仍邀请商家', () => {
+  const page = loadPage()
+  ownerReady(page, [{ id: 11, productType: 1 }])
+  assert.equal(page.data.ownerStage, 'run')
+  assert.equal(page.data.ownerPrimaryLabel, '开一场')
+  ownerReady(page, [{ id: 11, productType: 2 }])
+  assert.equal(page.data.ownerStage, 'invite')
+})
+
+test('C-16:收到待确认合作邀约时优先提示邀约数量', () => {
+  const page = loadPage()
+  ownerReady(page, [{ id: 11, productType: 1 }], [], [
+    { status: 0, toType: 'club', toId: 1, topicId: 99 },
+    { status: 1, toType: 'club', toId: 1, topicId: 98 },
+  ])
+  assert.equal(page.data.ownerStage, 'coopInvite')
+  assert.equal(page.data.ownerStageHint, '有 1 条合作邀约待确认')
+})

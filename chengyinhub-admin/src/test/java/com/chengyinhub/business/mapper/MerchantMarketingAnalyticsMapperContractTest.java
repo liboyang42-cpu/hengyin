@@ -61,6 +61,19 @@ class MerchantMarketingAnalyticsMapperContractTest {
         assertTrue(source.contains("union all"), "五类事实必须保留独立事件，不做相邻 join");
     }
 
+    /**
+     * M-10(2026-11-02 第3轮业主裁决):商家的内容只有主题和活动;活动是组织者自己办的一场。
+     * 自由探索场次票(owner_type=2, purchase_kind=3)属于开场的俱乐部,不得因为带了本店章节权益
+     * 就记成本店报名/支付 —— 本店在那里只有核销(redemption.merchant_id)。
+     */
+    @Test
+    void registrationsOnlyCountTheMerchantsOwnThemesAndActivities() throws Exception {
+        String sql = boundSql();
+        assertFalse(sql.contains("purchase_kind"), sql);
+        assertFalse(sql.contains("merchant_chapter_offer"), sql);
+        assertFalse(sql.contains("registration_entitlement"), sql);
+    }
+
     @Test
     void signupAndPaymentFactsMustNotFilterMissingCmsRegistrationDelFlag() throws Exception {
         String sql = boundSql();

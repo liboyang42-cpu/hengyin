@@ -1541,7 +1541,9 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         // mybiz=合作分润工作台:只展示承接方/商家应收(LEAD_FEE/MERCHANT_VERIFY);发起人保底/毛利(INITIATOR)
         // 属发起人自身主题收入(走 clubFinance/finance),不进商家工作台。旧数据 payee_type=null(=商家)照常展示;平台行 merchant_id=null 本就不会命中。
         List<CoopSettlement> filtered = new ArrayList<>();
-        for (CoopSettlement s : coopSettlementMapper.selectByMerchant(merchantId)) {
+        if (merchantId == null) return filtered;
+        for (CoopSettlement s : coopSettlementMapper.selectSummaryByMerchant(merchantId)) {
+            if (s == null || !merchantId.equals(s.getMerchantId())) continue;
             String pt = s.getPayeeType();
             if (pt == null || "merchant".equals(pt) || "club".equals(pt)) filtered.add(s);
         }
@@ -1657,6 +1659,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
 
     @Override
     public Long savePerkTemplate(CoopPerkTemplate t) {
+        t.setRedeemRule(CoopPerk.redeemRuleOrDefault(t.getRedeemRule()));
         t.setDelFlag(0);
         t.setCreateTime(DateUtils.getNowDate());
         coopPerkTemplateMapper.insertCoopPerkTemplate(t);
@@ -1692,7 +1695,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         p.setUnitCost(t.getUnitCost());
         p.setRetailValue(t.getRetailValue());
         p.setQuota(quota);
-        p.setRedeemRule(t.getRedeemRule());
+        p.setRedeemRule(CoopPerk.redeemRuleOrDefault(t.getRedeemRule()));
         p.setValidEnd(t.getValidEnd());
         p.setDelFlag(0);
         p.setCreateTime(DateUtils.getNowDate());
@@ -1752,7 +1755,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             p.setUnitCost(t.getUnitCost());
             p.setRetailValue(t.getRetailValue());
             p.setQuota(t.getQuota());
-            p.setRedeemRule(t.getRedeemRule());
+            p.setRedeemRule(CoopPerk.redeemRuleOrDefault(t.getRedeemRule()));
             p.setValidEnd(t.getValidEnd());
             p.setDelFlag(0);
             p.setCreateTime(DateUtils.getNowDate());
@@ -1796,6 +1799,43 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
     }
 
     // —— 保证金 ——
+
+    @Override
+    @Transactional(readOnly = true)
+    public CoopInvite readOwnedDeposit(Long principalMemberId, String outTradeNo) {
+        if (principalMemberId == null || principalMemberId <= 0) {
+            throw new ServiceException("请先登录", HttpStatus.UNAUTHORIZED);
+        }
+        CoopInvite invite = coopInviteMapper.selectByDepositOutTradeNo(outTradeNo);
+        if (invite == null || !Integer.valueOf(0).equals(invite.getDelFlag())
+                || !principalMemberId.equals(depositOwedParty(invite))) {
+            throw new ServiceException("无权查看该保证金订单", HttpStatus.FORBIDDEN);
+        }
+        try {
+            merchantAccessService.require(principalMemberId, MerchantPermission.COOP_MANAGE);
+        } catch (ServiceException denied) {
+            // 与合作列表一致：有商家档案时不得降级为普通用户绕过停用或权限限制。
+            if (mmsMerchantMapper.selectMmsMerchantByMemberId(principalMemberId) != null) throw denied;
+        }
+        if (invite.getInviteType() != null && invite.getInviteType() == 0
+                && CoopInvite.TO_MERCHANT.equals(invite.getToType())) {
+            assertActiveMerchant(invite.getToId());
+        } else if (invite.getInviteType() != null && invite.getInviteType() == 1
+                && invite.getOriginApplyId() != null && "merchant".equals(invite.getFromType())) {
+            assertActiveMerchant(invite.getFromId());
+        }
+        if ("club".equals(invite.getToType()) && clubMapper.selectClubById(invite.getToId()) == null) {
+            throw new ServiceException("合作不可用", HttpStatus.FORBIDDEN);
+        }
+        if (invite.getTopicId() != null) {
+            CmsTopic topic = cmsTopicMapper.selectCmsTopicById(invite.getTopicId());
+            if (topic == null || (topic.getClubId() != null && topic.getClubId() > 0
+                    && clubMapper.selectClubById(topic.getClubId()) == null)) {
+                throw new ServiceException("合作不可用", HttpStatus.FORBIDDEN);
+            }
+        }
+        return invite;
+    }
 
     @Override
     public Long depositOwedParty(CoopInvite inv) {

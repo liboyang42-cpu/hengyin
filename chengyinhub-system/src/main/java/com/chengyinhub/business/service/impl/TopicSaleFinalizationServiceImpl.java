@@ -10,6 +10,10 @@ import com.chengyinhub.business.domain.TopicSaleSnapshot;
 import com.chengyinhub.business.domain.ProductRole;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1;
+import com.chengyinhub.business.domain.Club;
+import com.chengyinhub.business.domain.ClubLeader;
+import com.chengyinhub.business.mapper.ClubLeaderMapper;
+import com.chengyinhub.business.mapper.ClubMapper;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
@@ -55,6 +59,8 @@ import java.util.Objects;
 public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationService {
 
     @Autowired private com.chengyinhub.business.service.support.PureContentExploreService pureContentExploreService;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper registrationMerchantMapper;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CmsTopicNodeMapper topicNodeMapper;
 
     /** A1 证据截止复用原统一等待期；既有冻结条款保持原值。 */
     private static final long EVIDENCE_DUE_DAYS = com.chengyinhub.business.support.FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS;
@@ -78,6 +84,11 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
     private CmsActivityMapper activityMapper;
     @Autowired
     private IProductRoleService productRoleService;
+    /** P-01：俱乐部自办城市主题的归属核验(主题绑定俱乐部的所有人 = 发布者)。 */
+    @Autowired
+    private ClubMapper clubMapper;
+    @Autowired
+    private ClubLeaderMapper clubLeaderMapper;
     /** A4 开售闸。★必填注入：缺 bean 时 Spring 起不来，绝不允许「没配就跳过冻结」这种 fail-open。 */
     @Autowired
     private IClubCorporatePayeeService clubPayeeService;
@@ -146,9 +157,9 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         terminator.terminatePendingUnderTopicLock(topicId, finalizeNow);
 
         List<OmsTicket> tickets = activeTickets(topicId);
-        TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow);
+        TopicSaleTimeValidator.assertValid(topic, tickets, finalizeNow, () -> hasRecruitedPartners(topicId));
         List<MerchantChapterOffer> offers = validOffers(topicId, finalizeNow);
-        assertRequiredChapterCoverage(topicId, offers);
+        assertRequiredChapterCoverage(topic, offers);
 
         CoopOrderLineupSource.ReadResult orderLineup = coopOrderLineupSource.readEffectiveLineup(topicId);
         if (!orderLineup.getRepairReasons().isEmpty()) {
@@ -157,34 +168,14 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         transferGate.assertTransferred(topic, orderLineup);
         assertNoDuplicateLineup(offers, orderLineup.getEntries());
         assertOrganizer(topic, orderLineup.getEntries());
+        assertStationMerchantsContracted(topic, orderLineup.getEntries());
         assertFrozenCommercialFacts(topic, tickets, offers);
 
         if (canonicalExplore) {
             assertActivityTicketProjection(topicId, tickets);
             ApprovedSaleCanonical approved = approvedCanonicalSource.read(topicId, topic.getProductType());
             if (approved.getCanonical().requiresFourStoreContract()) {
-                assertShopDayTermsArePerk(topicId, offers);
-                // 主办方角色槽仍是开售闸（平台主体、声明人非空），只是不再兼任 EXTRA 审批人。
-                ProductRole organizerActor = assertShopDayOrganizerActor(topicId);
-                freezeCanonical15(topic, finalizeNow);
-                // 唯一执行俱乐部只解析一次，A4 快照与 A1/A2 条款必须绑同一个 club。
-                Long executingClub = resolveExecutingClub(orderLineup.getEntries());
-                // E2 资格槽与 terms 用同一个 executingClub，并在同一开售事务内落库、读回。
-                // declaredBy 复用已经验证过的 ORGANIZER 操作账号，只作本次自动冻结的审计 actor。
-                productRoleService.declareDistributionSlotForSale(
-                        topicId, executingClub, organizerActor.getDeclaredBy());
-                // A4 开售闸：唯一执行俱乐部的对公收款人必须已审核，且在同一事务里冻结成不可变快照。
-                // 放在 PRICING→SELLING CAS 之前 ⇒ 任一失败整体回滚，绝不进入 SELLING。
-                clubPayeeService.snapshotForSale(topicId, executingClub, finalizeNow);
-                // A1/A2 开售闸：40 元费率、每维 200、证据截止一并冻结。
-                // ★没有这一脚，club_edition_compensation_terms 永远空表 ⇒ Q/EXTRA 的六个写入口与 FINAL
-                //   全部抛 EDITION_TERMS_MISSING，「开售后计划工时冻结」那道闸也永不通电。
-                // 履约窗结束与审批人一并冻进条款：总纲 §2.1.2 要求「超范围劳动的小时单价和审批人必须在
-                // 开售快照中冻结」。★审批人由 freezeTermsForSale 自己从当期成本版本上<b>显式登记的项目负责人</b>
-                // 读取并做可达校验 —— 不再复用 ORGANIZER 槽的 declared_by（那是「谁点了那个按钮」的审计字段，
-                // 契约明写「不参与主体归属判断」，幂等重试还保留最初那个人）。
-                compensationService.freezeTermsForSale(topicId, executingClub, finalizeNow, evidenceDueAt(topic),
-                        fulfillmentEndAt(topic));
+                throw new IllegalStateException("四店固定补偿产品已停止新开售，已售合同继续履行");
             } else {
                 freezeCanonical15(topic, finalizeNow);
             }
@@ -395,11 +386,16 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         return valid;
     }
 
-    private void assertRequiredChapterCoverage(Long topicId, List<MerchantChapterOffer> offers) {
+    private void assertRequiredChapterCoverage(CmsTopic topic, List<MerchantChapterOffer> offers) {
+        Long topicId = topic.getId();
         if (pureContentExploreService != null && pureContentExploreService.isPureContent(topicId)) return;
         List<CmsTopicChapter> required = chapterMapper.selectRequiredByTopic(topicId);
         if (required == null) return;
+        // P-01:城市定向的「必选章」是玩家必须走完的章(编辑器默认全是 1),不等于要商家供给;
+        // 只有开了商家承接(recruit_enabled=1)的章才必须有生效 SUPPLY。自由探索照旧每个必选章都要。
+        boolean city = Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType());
         for (CmsTopicChapter chapter : required) {
+            if (city && chapter != null && !Integer.valueOf(1).equals(chapter.getRecruitEnabled())) continue;
             boolean covered = false;
             for (MerchantChapterOffer offer : offers) {
                 if (chapter != null && chapter.getId() != null && chapter.getId().equals(offer.getChapterId())) {
@@ -408,8 +404,12 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
                 }
             }
             if (!covered) {
-                throw new IllegalStateException("必选章节 chapterId=" + (chapter == null ? null : chapter.getId())
-                        + " 缺有效 SUPPLY 供给");
+                // 第十一轮 h4 L1:审核员与主理人读的是这句话,写人话并点名章节;chapterId 留在括号里便于排查。
+                String chapterName = chapter == null || chapter.getName() == null || chapter.getName().trim().isEmpty()
+                        ? "未命名章节" : chapter.getName().trim();
+                throw new IllegalStateException("「" + chapterName + "」还没有商家承接成功，不能开售。"
+                        + (city ? "请主理人在这一章关闭商家承接，或等商家承接后再提交" : "请等商家承接后再提交")
+                        + "(章节 " + (chapter == null ? null : chapter.getId()) + ")");
             }
         }
     }
@@ -444,18 +444,73 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
         }
     }
 
+    /** P-01：招募期已邀来合作方(冻结阵容非空)⇒ recruitDeadline 是那段招募的真实截止。只读，供时间断言用。 */
+    private boolean hasRecruitedPartners(Long topicId) {
+        CoopOrderLineupSource.ReadResult lineup = coopOrderLineupSource.readEffectiveLineup(topicId);
+        return lineup != null && lineup.getEntries() != null && !lineup.getEntries().isEmpty();
+    }
+
     private void assertOrganizer(CmsTopic topic, List<CoopOrderLineupSource.LineupEntry> orders) {
         int organizers = 0;
         for (CoopOrderLineupSource.LineupEntry entry : orders) {
             if ("ORGANIZER".equals(entry.getRole())) organizers++;
         }
         boolean guided = Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType());
+        // P-01(2026-11-02 用户批准)：绑了俱乐部、且没有合作俱乐部(冻结阵容里没有 ORGANIZER)的城市定向，
+        // 发布它的俱乐部本身算主办方——俱乐部自己的付费城市主题可以走开售审核。只认发布者本人名下的俱乐部；
+        // 不写合作单、不碰收款与分账(票款仍归内容槽)，在线收款仍由 assertCollectible 决定。
+        if (guided && organizers == 0 && publishingClubOwnsTopic(topic)) return;
         if (guided && organizers != 1) {
             throw new IllegalStateException("GUIDED_TICKET 必须恰好一个 ORGANIZER，当前=" + organizers);
         }
         if (!guided && organizers > 1) {
             throw new IllegalStateException("FREE_EXPLORE ORGANIZER 至多一个，当前=" + organizers);
         }
+    }
+
+    /**
+     * 第十轮 f2 第 6 项(j2 F-01e):城市定向里已中标某站的商家(承接报名审核通过且选定),
+     * 开售前必须已有生效的合作单 —— 商家扫团码只认合作单(GroupCodeServiceImpl),没有它开局后
+     * 玩家过了上一站就卡住。开售就在这里拦下,并说清是哪一站。
+     */
+    void assertStationMerchantsContracted(CmsTopic topic, List<CoopOrderLineupSource.LineupEntry> entries) {
+        if (registrationMerchantMapper == null || topic == null
+                || !Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType())) return;
+        com.chengyinhub.business.domain.CmsRegistrationMerchant query = new com.chengyinhub.business.domain.CmsRegistrationMerchant();
+        query.setTopicId(topic.getId());
+        query.setAuditStatus(1L);
+        query.setStatus(1L);
+        query.setDelFlag(0);
+        List<com.chengyinhub.business.domain.CmsRegistrationMerchant> winners = registrationMerchantMapper.selectCmsRegistrationMerchantList(query);
+        if (winners == null || winners.isEmpty()) return;
+        java.util.Set<Long> contracted = new java.util.HashSet<>();
+        for (CoopOrderLineupSource.LineupEntry entry : entries) {
+            if ("MERCHANT".equals(entry.getSubjectType()) && entry.getSubjectId() != null) contracted.add(entry.getSubjectId());
+        }
+        java.util.Set<String> missing = new java.util.LinkedHashSet<>();
+        for (com.chengyinhub.business.domain.CmsRegistrationMerchant winner : winners) {
+            if (winner == null || winner.getMemberId() == null || contracted.contains(winner.getMemberId())) continue;
+            com.chengyinhub.business.domain.CmsTopicNode node = topicNodeMapper == null || winner.getNodeId() == null
+                    ? null : topicNodeMapper.selectCmsTopicNodeById(winner.getNodeId());
+            String name = node == null || node.getName() == null || node.getName().trim().isEmpty() ? "未命名站点" : node.getName().trim();
+            missing.add("「" + name + "」");
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException(String.join("、", missing) + "的商家还没有生效的合作单，不能开售");
+        }
+    }
+
+    /** 主题绑定的俱乐部存在、未删除，且其所有人就是主题发布者本人(主理人身份仍有效)。缺任何事实都不算。 */
+    private boolean publishingClubOwnsTopic(CmsTopic topic) {
+        if (clubMapper == null || clubLeaderMapper == null) return false;
+        Long clubId = topic.getClubId();
+        Long publisher = topic.getMemberId();
+        if (clubId == null || clubId <= 0 || publisher == null || publisher <= 0) return false;
+        Club club = clubMapper.selectClubById(clubId);
+        if (club == null || (club.getDelFlag() != null && club.getDelFlag() != 0)) return false;
+        if (!publisher.equals(club.getMemberId())) return false;
+        ClubLeader leader = clubLeaderMapper.selectClubLeaderByMemberId(publisher);
+        return leader != null && (leader.getStatus() == null || leader.getStatus() == 1);
     }
 
     private void assertFrozenCommercialFacts(CmsTopic topic, List<OmsTicket> tickets,

@@ -401,13 +401,16 @@ test('成长中心：下拉刷新仍重拉两组数据，内部诊断不进入�
 
 test('总积分排名单位保留真实名次并对缺失或0提供兜底', () => {
   const wxml=fs.readFileSync(WXML_PATH,'utf8')
-  const expression=wxml.match(/第\s*{{([^}]+)}}\s*名/)
+  // R11 p1 F-4(业主):0 分/没有名次时不写「第 — 名」,只留「总积分榜」入口;有名次才写第几名
+  const expression=wxml.match(/wx:if="{{([^}]+)}}"[^>]*>总积分榜 · 第\s*{{([^}]+)}}\s*名/)
   assert.ok(expression)
-  assert.match(expression[1], /^\s*me\.rank\s*\|\|\s*['"]—['"]\s*$/)
-  const render=new Function('me','return '+expression[1])
-  for(const rank of [1,7,100]) assert.equal(render({rank}),rank)
-  for(const rank of [undefined,null,0]) assert.equal(render({rank}),'—')
-  assert.match(wxml,/wx:elif="{{rankLoaded}}"[^>]*>暂无排名/)
+  assert.match(expression[1], /^\s*me\s*&&\s*me\.rank\s*$/)
+  // 第十一轮 i1:WXML 孤立单位门禁要求「名」前的插值带 || 兜底;外层 wx:if 已保证有名次才显示,兜底永远走不到
+  assert.match(expression[2].trim(), /^me\.rank\s*\|\|\s*\S+$/)
+  const visible=new Function('me','return !!('+expression[1]+')')
+  for(const rank of [1,7,100]) assert.equal(visible({rank}),true)
+  for(const rank of [undefined,null,0]) assert.equal(visible({rank}),false)
+  assert.match(wxml,/wx:elif="{{rankLoaded}}"[^>]*>总积分榜</)
 })
 
 

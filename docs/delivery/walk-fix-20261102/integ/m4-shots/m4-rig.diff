@@ -1,0 +1,198 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..9a31e566 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -23,6 +23,9 @@ LOG = RIG_HOME / "out" / "application.log"
+ def env():
+     work = RIG_HOME / "work"
+     e = ca.app_env(dict(os.environ), work)
++    # M2-ROUTES RIG PATCH: optional public media base (admin image uploads register approved LOCAL images against it)
++    if os.environ.get("APP_MEDIA_PUBLIC_BASE_URL"):
++        e["APP_MEDIA_PUBLIC_BASE_URL"] = os.environ["APP_MEDIA_PUBLIC_BASE_URL"]
+     sf = RIG_HOME / "secrets.env"
+     if sf.exists():
+         for line in sf.read_text().splitlines():
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+index 3098b681..519bbf86 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
+   }
+   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
+   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
+-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
++  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
++    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
++    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
++    return node; }
+   const props = {};
+   for (const [k, v] of el.attrs) {
+     if (k === 'wx:if') node.if = compileValue(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+index 5f970336..6c64a88b 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -352,6 +352,7 @@ MP.pickerSeam = function (el) {
+    marker data are visible. Tiles, gestures and native callouts are NOT VERIFIED. */
+ (function () {
+ var MP = window.MPWEB;
++MP.lastMapView = function () { var best = null; (MP.__mapEls || []).forEach(function (e) { if (e.isConnected && e.__mapView && (!best || e.__mapView.W * e.__mapView.H > best.W * best.H)) best = e.__mapView; }); return best; };
+ MP.drawMap = function (el, p) {
+   var cv = el.__mapCv;
+   if (!cv) { cv = el.__mapCv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0'; el.insertBefore(cv, el.firstChild); if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; }
+@@ -361,27 +362,75 @@ MP.drawMap = function (el, p) {
+     el.__mapRaf = 0; var p = el.__mapProps || {};
+     var W = el.clientWidth, H = el.clientHeight; if (!W || !H) { setTimeout(function () { MP.drawMap(el, p); }, 200); return; }
+     cv.width = W * 2; cv.height = H * 2; var g = cv.getContext('2d'); g.setTransform(2, 0, 0, 2, 0, 0);
+-    g.fillStyle = '#1a1d21'; g.fillRect(0, 0, W, H);
++    /* M4 RIG PATCH: MP.rigTint tints the stand-in to a style's land colour (black / white / paper / 2077). */
++    var TINTS = { black: ['#1a1d21', '#262a30', '#30353c'], white: ['#F1F1EF', '#FFFFFF', '#D6D6D3'], paper: ['#ECE2CC', '#F7F0E0', '#D3C4A4'], '2077': ['#0E0B1C', '#1D1736', '#3B2160'] };
++    var tint = TINTS[MP.rigTint] || TINTS.black;
++    g.fillStyle = tint[0]; g.fillRect(0, 0, W, H);
+     var seed = 11; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+-    for (var i = 0; i < 18; i++) { g.save(); g.translate(W * rnd(), H * rnd()); g.rotate(rnd() * Math.PI); g.fillStyle = i % 4 ? '#262a30' : '#30353c'; g.fillRect(-W * 2, -2, W * 4, i % 4 ? 3 : 6); g.restore(); }
++    for (var i = 0; i < 18; i++) { g.save(); g.translate(W * rnd(), H * rnd()); g.rotate(rnd() * Math.PI); g.fillStyle = i % 4 ? tint[1] : tint[2]; g.fillRect(-W * 2, -2, W * 4, i % 4 ? 3 : 6); g.restore(); }
+     var markers = (p.markers || []).filter(function (m) { return m && m.latitude != null && m.longitude != null; });
+     var lines = (p.polyline || []); var circles = p.circles || [];
+-    var pts = markers.map(function (m) { return [+m.latitude, +m.longitude]; });
+-    lines.forEach(function (l) { (l.points || []).forEach(function (q) { pts.push([+q.latitude, +q.longitude]); }); });
+-    var c0 = [+(p.latitude || (pts[0] || [31.23])[0]), +(p.longitude || (pts[0] || [0, 121.47])[1])];
+-    if (!pts.length) pts.push(c0);
+-    var la = pts.map(function (x) { return x[0]; }), ln = pts.map(function (x) { return x[1]; });
+-    var cx = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, ln) + Math.max.apply(0, ln)) / 2 : c0[1];
+-    var cy = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, la) + Math.max.apply(0, la)) / 2 : c0[0];
+-    var scale = +(p.scale || 16); var span = Math.max(Math.max.apply(0, ln) - Math.min.apply(0, ln), Math.max.apply(0, la) - Math.min.apply(0, la), 360 / Math.pow(2, scale) * 1.5);
+-    var k = Math.min(W, H) * 0.72 / span;
+-    function P(lat, lng) { return [W / 2 + (lng - cx) * k, H / 2 - (lat - cy) * k * 1.17]; }
+-    lines.forEach(function (l) { var ps = l.points || []; if (ps.length < 2) return; g.strokeStyle = l.color || '#5A90D6'; g.lineWidth = Math.max(2, +(l.width || 4) / 2); if (l.dottedLine) g.setLineDash([6, 5]); g.beginPath(); ps.forEach(function (q, j) { var xy = P(+q.latitude, +q.longitude); j ? g.lineTo(xy[0], xy[1]) : g.moveTo(xy[0], xy[1]); }); g.stroke(); g.setLineDash([]); });
+-    circles.forEach(function (c) { var xy = P(+c.latitude, +c.longitude); var r = (+c.radius || 50) / 111000 * k; g.strokeStyle = c.color || 'rgba(90,144,214,.8)'; g.fillStyle = c.fillColor || 'rgba(90,144,214,.15)'; g.beginPath(); g.arc(xy[0], xy[1], r, 0, 6.283); g.fill(); g.stroke(); });
+-    markers.forEach(function (m) { var xy = P(+m.latitude, +m.longitude); g.fillStyle = '#e5e7eb'; g.beginPath(); g.arc(xy[0], xy[1], 7, 0, 6.283); g.fill(); g.strokeStyle = '#5A90D6'; g.lineWidth = 2; g.stroke();
+-      var t = (m.callout && m.callout.content) || (m.label && m.label.content) || m.title || ''; if (t) { g.font = '600 11px -apple-system,sans-serif'; g.fillStyle = 'rgba(0,0,0,.65)'; var tw = g.measureText(t).width; g.fillRect(xy[0] - tw / 2 - 4, xy[1] - 26, tw + 8, 16); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(t, xy[0], xy[1] - 14); } });
+-    if (p['show-location'] && MP.cfg && MP.location) { var me = MP.location(); var xy2 = P(me.lat, me.lng); g.fillStyle = 'rgba(74,222,128,.25)'; g.beginPath(); g.arc(xy2[0], xy2[1], 14, 0, 6.283); g.fill(); g.fillStyle = '#4ADE80'; g.beginPath(); g.arc(xy2[0], xy2[1], 5, 0, 6.283); g.fill(); }
+-    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = '10px sans-serif'; g.textAlign = 'left'; g.fillText('rig map stand-in · ' + markers.length + ' markers', 6, H - 6);
++    /* M2-ROUTES STAND-IN PATCH: when the page drives the view (custom callouts, or MP.mapTrueScale) project with
++       the page's own centre + scale (Web Mercator, 256 px tiles) instead of fitting all points. */
++    var hasCallouts = markers.some(function (m) { return m.customCallout; });
++    var trueScale = (hasCallouts || MP.mapTrueScale) && !MP.mapFitAll && p.latitude != null && p.longitude != null;
++    var P;
++    if (trueScale) {
++      var z = +(p.scale || 16), ppd = 256 * Math.pow(2, z) / 360;
++      var my = function (lat) { var r = lat * Math.PI / 180; return Math.log(Math.tan(Math.PI / 4 + r / 2)) * 180 / Math.PI; };
++      var clat = +p.latitude, clng = +p.longitude, cmy = my(clat);
++      P = function (lat, lng) { return [W / 2 + (lng - clng) * ppd, H / 2 - (my(lat) - cmy) * ppd]; };
++      el.__mapView = { W: W, H: H, ppd: ppd, clat: clat, clng: clng, scale: z };
++      (MP.__mapEls || (MP.__mapEls = [])).indexOf(el) < 0 && MP.__mapEls.push(el);
++    } else {
++      var pts = markers.map(function (m) { return [+m.latitude, +m.longitude]; });
++      lines.forEach(function (l) { (l.points || []).forEach(function (q) { pts.push([+q.latitude, +q.longitude]); }); });
++      var c0 = [+(p.latitude || (pts[0] || [31.23])[0]), +(p.longitude || (pts[0] || [0, 121.47])[1])];
++      if (!pts.length) pts.push(c0);
++      var la = pts.map(function (x) { return x[0]; }), ln = pts.map(function (x) { return x[1]; });
++      var cx = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, ln) + Math.max.apply(0, ln)) / 2 : c0[1];
++      var cy = (p['include-points'] || pts.length > 1) ? (Math.min.apply(0, la) + Math.max.apply(0, la)) / 2 : c0[0];
++      var scale = +(p.scale || 16); var span = Math.max(Math.max.apply(0, ln) - Math.min.apply(0, ln), Math.max.apply(0, la) - Math.min.apply(0, la), 360 / Math.pow(2, scale) * 1.5);
++      var k = Math.min(W, H) * 0.72 / span;
++      P = function (lat, lng) { return [W / 2 + (lng - cx) * k, H / 2 - (lat - cy) * k * 1.17]; };
++      el.__mapView = null;
++    }
++    // polylines: real width (px), colour incl. #RRGGBBAA, border, round caps
++    lines.forEach(function (l) { var ps = l.points || []; if (ps.length < 2) return;
++      var path = function () { g.beginPath(); ps.forEach(function (q, j) { var xy = P(+q.latitude, +q.longitude); j ? g.lineTo(xy[0], xy[1]) : g.moveTo(xy[0], xy[1]); }); };
++      var w = Math.max(1, +(l.width || 4)), bw = +(l.borderWidth || 0);
++      g.lineCap = 'round'; g.lineJoin = 'round'; if (l.dottedLine) g.setLineDash([6, 5]);
++      if (bw > 0 && l.borderColor) { path(); g.strokeStyle = l.borderColor; g.lineWidth = w + bw * 2; g.stroke(); }
++      path(); g.strokeStyle = l.color || '#5A90D6'; g.lineWidth = w; g.stroke(); g.setLineDash([]); });
++    circles.forEach(function (c) { var xy = P(+c.latitude, +c.longitude); var r = trueScale ? (+c.radius || 50) / 111000 * el.__mapView.ppd : (+c.radius || 50) / 111000 * k; g.strokeStyle = c.color || 'rgba(90,144,214,.8)'; g.fillStyle = c.fillColor || 'rgba(90,144,214,.15)'; g.lineWidth = +(c.strokeWidth || 1); g.beginPath(); g.arc(xy[0], xy[1], r, 0, 6.283); g.fill(); g.stroke(); });
++    // markers: draw iconPath at width/height/anchor; fall back to a dot. Images load async → redraw once loaded.
++    var imgs = el.__mapImgs || (el.__mapImgs = {}); var pending = false; var byId = {};
++    markers.slice().sort(function (a, b) { return (+a.zIndex || 0) - (+b.zIndex || 0); }).forEach(function (m) { var xy = P(+m.latitude, +m.longitude);
++      var mw = +(m.width || 30), mh = +(m.height || mw), an = m.anchor || { x: .5, y: 1 };
++      byId[m.id] = { x: xy[0], y: xy[1], w: mw, h: mh, ax: an.x == null ? .5 : +an.x, ay: an.y == null ? 1 : +an.y, cc: m.customCallout };
++      var drawn = false;
++      if (m.iconPath) { var src = MP.assetUrl ? MP.assetUrl(m.iconPath) : m.iconPath; var im = imgs[src];
++        if (!im) { im = imgs[src] = new Image(); im.onload = im.onerror = function () { MP.drawMap(el, el.__mapProps); }; im.src = src; }
++        if (im.complete && im.naturalWidth) { g.save(); g.globalAlpha = m.alpha == null ? 1 : +m.alpha; g.drawImage(im, xy[0] - mw * byId[m.id].ax, xy[1] - mh * byId[m.id].ay, mw, mh); g.restore(); drawn = true; }
++        else if (!im.complete) pending = true; }
++      if (!drawn) { g.fillStyle = '#e5e7eb'; g.beginPath(); g.arc(xy[0], xy[1], 7, 0, 6.283); g.fill(); g.strokeStyle = '#5A90D6'; g.lineWidth = 2; g.stroke(); }
++      var t = (m.callout && m.callout.content) || (m.label && m.label.content) || ''; if (t && !m.customCallout) { g.font = '600 11px -apple-system,sans-serif'; g.fillStyle = 'rgba(0,0,0,.65)'; var tw = g.measureText(t).width; g.fillRect(xy[0] - tw / 2 - 4, xy[1] - mh * byId[m.id].ay - 18, tw + 8, 16); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(t, xy[0], xy[1] - mh * byId[m.id].ay - 6); } });
++    // cover-view callouts (slot="callout", child marker-id) → absolutely placed above their marker, like customCallout:
++    // bottom-centre at (marker x + anchorX, marker top + anchorY). Callouts without a visible marker are hidden.
++    var slot = null; for (var ci = 0; ci < el.children.length; ci++) { if (el.children[ci].getAttribute && el.children[ci].getAttribute('slot') === 'callout') slot = el.children[ci]; }
++    if (slot) { slot.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden';
++      var sc = MP.scale || 1;
++      Array.prototype.forEach.call(slot.children, function (c) { var mid = (c.__vp || {})['marker-id']; var mk = byId[mid];
++        if (!mk || !mk.cc) { c.style.display = 'none'; return; }
++        c.style.display = ''; c.style.position = 'absolute'; c.style.pointerEvents = 'auto';
++        var r = c.getBoundingClientRect(); var cw = r.width / sc, ch = r.height / sc;
++        var top = mk.y - mk.h * mk.ay + (+mk.cc.anchorY || 0) - ch, left = mk.x + (+mk.cc.anchorX || 0) - cw / 2;
++        c.style.left = left.toFixed(1) + 'px'; c.style.top = top.toFixed(1) + 'px'; c.style.margin = '0'; });
++      if (el.__calloutFor !== p) { el.__calloutFor = p; setTimeout(function () { if (el.__mapProps === p) MP.drawMap(el, p); }, 400); }
++    }
++    /* M2-ROUTES STAND-IN PATCH: the native map fires bindupdated after each render; pages use it as a first-frame watchdog */
++    if (MP.fire) setTimeout(function () { MP.fire(el, 'updated', {}); }, 0);
++    g.fillStyle = 'rgba(255,255,255,.35)'; g.font = '10px sans-serif'; g.textAlign = 'left'; g.fillText('rig map stand-in · ' + markers.length + ' markers' + (trueScale ? ' · scale ' + (+p.scale || 16) : ''), 6, H - 6);
+   });
+ };
+ })();
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..b3aa93cc 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -40,6 +40,7 @@ function rpxStr(s) {
+ MP.rpxStr = rpxStr;
+ function assetUrl(p, dir) {
+   if (!p || typeof p !== 'string') return p;
++  if (MP.fsFiles && MP.fsFiles[p]) return MP.fsFiles[p]; /* M2-ROUTES HARNESS PATCH: in-memory user files */
+   if (/^(https?:|data:|blob:|wxfile:)/.test(p)) return MP.mapRemote ? MP.mapRemote(p) : p;
+   var path;
+   if (p[0] === '/') path = p.slice(1);
+@@ -192,7 +193,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+@@ -985,7 +986,12 @@ var wxImpl = {
+   loadFontFace: function (o) { var fam = String(o.family || ''); var p = document.fonts && document.fonts.load ? document.fonts.load('16px "' + fam + '"', '城瘾故事') : Promise.resolve([]); p.then(function (list) { if (list && list.length) { o.success && o.success({ status: 'loaded' }); } else { o.fail && o.fail({ errMsg: 'loadFontFace:fail' }); } o.complete && o.complete(); }, function () { o.fail && o.fail({ errMsg: 'loadFontFace:fail' }); o.complete && o.complete(); }); },
+   canIUse: function () { return true; }, isVKSupport: function () { return false; },
+   createCameraContext: function () { return { takePhoto: function (o) { MP.ui.choosePhoto(function (p) { o.success && o.success({ tempImagePath: p }); }); }, onCameraFrame: function () { return { start: function () {}, stop: function () {} }; } }; },
+-  createMapContext: function () { return { moveToLocation: function () {}, includePoints: function () {}, getCenterLocation: function (o) { o && o.success && o.success({ latitude: 31.25, longitude: 121.5 }); }, getScale: function (o) { o && o.success && o.success({ scale: 16 }); }, translateMarker: function () {}, addMarkers: function () {}, removeMarkers: function () {}, moveAlong: function () {}, setBoundary: function () {}, initMarkerCluster: function () {}, on: function () {} }; },
++  createMapContext: function () { return { /* M2-ROUTES HARNESS PATCH: getRegion/getScale from the stand-in's last true-scale view */
++    getRegion: function (o) { var v = MP.lastMapView && MP.lastMapView(); if (!v) { o && o.fail && o.fail({ errMsg: 'getRegion:fail' }); return; }
++      var dLng = v.W / 2 / v.ppd, dLat = v.H / 2 / v.ppd * Math.cos(v.clat * Math.PI / 180);
++      var r = { southwest: { latitude: v.clat - dLat, longitude: v.clng - dLng }, northeast: { latitude: v.clat + dLat, longitude: v.clng + dLng } };
++      setTimeout(function () { o && o.success && o.success(r); o && o.complete && o.complete(r); }, 0); },
++    moveToLocation: function () {}, includePoints: function () {}, getCenterLocation: function (o) { o && o.success && o.success({ latitude: 31.25, longitude: 121.5 }); }, getScale: function (o) { o && o.success && o.success({ scale: 16 }); }, translateMarker: function () {}, addMarkers: function () {}, removeMarkers: function () {}, moveAlong: function () {}, setBoundary: function () {}, initMarkerCluster: function () {}, on: function () {} }; },
+   getRecorderManager: function () {
+     if (recorder) return recorder;
+     var L = { start: [], stop: [], frame: [], error: [], pause: [], resume: [] }; var timer = null;
+@@ -1010,7 +1016,12 @@ var wxImpl = {
+   openPrivacyContract: function (o) { return ok(o); }, getPrivacySetting: function (o) { return ok(o, { needAuthorization: false }); }, onNeedPrivacyAuthorization: function () {}, requirePrivacyAuthorize: function (o) { return ok(o); },
+   reportAnalytics: function () {}, reportEvent: function () {}, getRealtimeLogManager: function () { return { info: function () {}, warn: function () {}, error: function () {}, setFilterMsg: function () {}, addFilterMsg: function () {} }; },
+   getLogManager: function () { return { log: function () {}, info: function () {}, warn: function () {}, debug: function () {} }; }, getPerformance: function () { return { now: function () { return Date.now(); }, createObserver: function () { return { observe: function () {}, disconnect: function () {} }; } }; },
+-  getFileSystemManager: function () { return { readFile: function (o) { o.fail && o.fail({}); }, writeFile: function (o) { o.success && o.success({}); }, access: function (o) { o.fail && o.fail({}); }, readFileSync: function () { return ''; }, getFileInfo: function (o) { o.success && o.success({ size: 1000 }); }, saveFile: function (o) { o.success && o.success({ savedFilePath: o.tempFilePath }); } }; },
++  getFileSystemManager: function () { /* M2-ROUTES HARNESS PATCH: writeFileSync/unlink keep files in memory (MP.fsFiles) as data: URLs */
++    var fsf = MP.fsFiles || (MP.fsFiles = {});
++    var mime = function (pth) { return /\.png$/i.test(pth) ? 'image/png' : /\.jpe?g$/i.test(pth) ? 'image/jpeg' : 'application/octet-stream'; };
++    var put = function (pth, data, enc) { fsf[pth] = enc === 'base64' ? 'data:' + mime(pth) + ';base64,' + data : 'data:text/plain;charset=utf-8,' + encodeURIComponent(String(data)); };
++    return { writeFileSync: function (pth, data, enc) { put(pth, data, enc); }, unlinkSync: function (pth) { delete fsf[pth]; }, unlink: function (o) { delete fsf[o.filePath]; o.success && o.success({}); }, accessSync: function (pth) { if (!fsf[pth]) throw new Error('no such file'); }, readdirSync: function () { return []; },
++      readFile: function (o) { o.fail && o.fail({}); }, writeFile: function (o) { put(o.filePath, o.data, o.encoding); o.success && o.success({}); }, access: function (o) { o.fail && o.fail({}); }, readFileSync: function () { return ''; }, getFileInfo: function (o) { o.success && o.success({ size: 1000 }); }, saveFile: function (o) { o.success && o.success({ savedFilePath: o.tempFilePath }); } }; },
+   getImageInfo: function (o) { var im = new Image(); im.onload = function () { o.success && o.success({ width: im.naturalWidth, height: im.naturalHeight, path: o.src }); o.complete && o.complete(); }; im.onerror = function () { o.fail && o.fail({ errMsg: 'fail' }); }; im.src = assetUrl(o.src); },
+   compressImage: function (o) { return ok(o, { tempFilePath: o.src }); },
+   createAnimation: function () { var steps = [], cur = []; var api = { export: function () { var s = steps.concat(cur.length ? [cur] : []); steps = []; cur = []; return { actions: s }; }, step: function () { steps.push(cur); cur = []; return api; } }; ['opacity', 'translateX', 'translateY', 'translate', 'scale', 'rotate', 'width', 'height', 'backgroundColor', 'top', 'left'].forEach(function (k) { api[k] = function () { cur.push([k, [].slice.call(arguments)]); return api; }; }); return api; },
+diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
+index 5d6a74b8..8d72d28f 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/up.sh
++++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
+@@ -5,7 +5,7 @@
+ #        RIG_SKIP_BUILD=1 bash up.sh   # reuse existing candidate jar
+ set -euo pipefail
+ export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
+-SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
++SHA=${RIG_SHA:-12d84be82353db6be7e562135d04cc8ae9e3f48b}   # round 9 m2-routes recheck: integ/launch-test-20261103 tip
+ RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
+ export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"

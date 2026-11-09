@@ -79,9 +79,9 @@ const req = (url) => sandbox.requests.find((r) => r.url === url)
 /* ---------- ① deregister:失败不得渲染成永久转圈 ---------- */
 
 const DEREG_JS = 'pages/deregister/index.js'
-const DEREG_SCENE_JS = 'components/cy/scene-settings-deregister/index.js'
+const DEREG_SCENE_JS = 'pages/deregister/components/scene-settings-deregister/index.js'
 const DEREG_WXML = 'pages/deregister/index.wxml'
-const DEREG_SCENE_WXML = 'components/cy/scene-settings-deregister/index.wxml'
+const DEREG_SCENE_WXML = 'pages/deregister/components/scene-settings-deregister/index.wxml'
 const DEREG_FLOW_JS = 'utils/deregister-flow.js'
 
 test('① status 接口失败 ⇒ 落 ERROR 态(行为)', () => {

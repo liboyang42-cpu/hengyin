@@ -1,0 +1,349 @@
+{
+  "video": [
+    {
+      "t": 1793907430943,
+      "id": 4,
+      "event": "loadstart",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0,
+      "paused": true,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907431142,
+      "id": 4,
+      "event": "canplay",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907431142,
+      "id": 4,
+      "event": "play",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907431142,
+      "id": 4,
+      "event": "playing",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907431405,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0.207892,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907431669,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0.471916,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907431936,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 0.738535,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907432201,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 1.004182,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907432467,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 1.269317,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907432732,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 1.534401,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907432997,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 1.800026,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433219,
+      "id": 4,
+      "event": "timeupdate",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433219,
+      "id": 4,
+      "event": "pause",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433219,
+      "id": 4,
+      "event": "ended",
+      "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    }
+  ],
+  "audio": [
+    {
+      "t": 1793907433220,
+      "id": 3,
+      "event": "src",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": true,
+      "readyState": 1,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433220,
+      "id": 3,
+      "event": "play()",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": true,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433221,
+      "id": 3,
+      "event": "play",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433221,
+      "id": 3,
+      "event": "waiting",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433222,
+      "id": 3,
+      "event": "loadstart",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 0,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433499,
+      "id": 3,
+      "event": "canplay",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433499,
+      "id": 3,
+      "event": "playing",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907433763,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0.197019,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907434029,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0.463437,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907434295,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0.729769,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907434561,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 0.995308,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907434827,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 1.261137,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907435092,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 1.526479,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907435358,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 1.792273,
+      "paused": false,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907435569,
+      "id": 3,
+      "event": "timeupdate",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907435569,
+      "id": 3,
+      "event": "pause",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    },
+    {
+      "t": 1793907435570,
+      "id": 3,
+      "event": "ended",
+      "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+      "currentTime": 2,
+      "paused": true,
+      "readyState": 4,
+      "volume": 1,
+      "error": null
+    }
+  ],
+  "bag": false,
+  "full": true
+}

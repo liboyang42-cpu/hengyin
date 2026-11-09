@@ -1,0 +1,80 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..c82090ac 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -23,6 +23,10 @@ LOG = RIG_HOME / "out" / "application.log"
+ def env():
+     work = RIG_HOME / "work"
+     e = ca.app_env(dict(os.environ), work)
++    # rig (l3-sell R5D, as round 4): dummy OSS settings so media URLs serialise; nothing is uploaded to OSS
++    for k, v in (("CHENGYIN_OSS_ENDPOINT", "oss-rig.invalid"), ("CHENGYIN_OSS_BUCKET_NAME", "rig-dummy"),
++                 ("CHENGYIN_OSS_ACCESS_KEY_ID", "rig-dummy-id"), ("CHENGYIN_OSS_ACCESS_KEY_SECRET", "rig-dummy")):
++        e.setdefault(k, v)
+     sf = RIG_HOME / "secrets.env"
+     if sf.exists():
+         for line in sf.read_text().splitlines():
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+index 3098b681..519bbf86 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
+   }
+   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
+   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
+-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
++  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
++    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
++    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
++    return node; }
+   const props = {};
+   for (const [k, v] of el.attrs) {
+     if (k === 'wx:if') node.if = compileValue(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..e46008f3 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -192,7 +192,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+@@ -1015,7 +1015,21 @@ var wxImpl = {
+   compressImage: function (o) { return ok(o, { tempFilePath: o.src }); },
+   createAnimation: function () { var steps = [], cur = []; var api = { export: function () { var s = steps.concat(cur.length ? [cur] : []); steps = []; cur = []; return { actions: s }; }, step: function () { steps.push(cur); cur = []; return api; } }; ['opacity', 'translateX', 'translateY', 'translate', 'scale', 'rotate', 'width', 'height', 'backgroundColor', 'top', 'left'].forEach(function (k) { api[k] = function () { cur.push([k, [].slice.call(arguments)]); return api; }; }); return api; },
+   env: { USER_DATA_PATH: 'wxfile://usr' }, getXrFrameSystem: function () { return null; },
+-  pageScrollTo: function (o) { return ok(o); }, startPullDownRefresh: function () {}, stopPullDownRefresh: function () {},
++  // rig (l3-sell R5D): scroll the page host to scrollTop, or to selector + offsetTop (shadow DOM pierced)
++  pageScrollTo: function (o) {
++    try {
++      var p = getCurrentPages().slice(-1)[0], host = p && p.__host;
++      if (host) {
++        var top = Number(o && o.scrollTop) || 0;
++        if (o && o.selector) {
++          var t = (function find(root) { var x = root.querySelector(o.selector); if (x) return x; var all = root.querySelectorAll('*'); for (var i = 0; i < all.length; i++) if (all[i].shadowRoot) { var y = find(all[i].shadowRoot); if (y) return y; } return null; })(p.__root || host);
++          if (t) { var r = t.getBoundingClientRect(), r0 = host.getBoundingClientRect(); top = host.scrollTop + (r.top - r0.top) / (MP.scale || 1) + (Number(o.offsetTop) || 0); }
++        }
++        host.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
++      }
++    } catch (e) {}
++    return ok(o);
++  }, startPullDownRefresh: function () {}, stopPullDownRefresh: function () {},
+   hideHomeButton: function () {}, hideKeyboard: function () {}, setBackgroundColor: function () {}, setBackgroundTextStyle: function () {},
+   onThemeChange: function () {}, offThemeChange: function () {}, onWindowResize: function () {}, offWindowResize: function () {},
+ };
+diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
+index 5d6a74b8..05346cdd 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/up.sh
++++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
+@@ -5,7 +5,7 @@
+ #        RIG_SKIP_BUILD=1 bash up.sh   # reuse existing candidate jar
+ set -euo pipefail
+ export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
+-SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
++SHA=60a55fe1fa4680602aa5935e2d5f958c4b0b2195
+ RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
+ export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"

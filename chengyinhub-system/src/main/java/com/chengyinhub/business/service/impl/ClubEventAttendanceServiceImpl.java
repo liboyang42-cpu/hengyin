@@ -46,8 +46,15 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         List<Map<String, Object>> registered = new ArrayList<>();
         List<Map<String, Object>> arrived = new ArrayList<>();
         List<Map<String, Object>> noShow = new ArrayList<>();
+        // 2026-11-02 用户:主理人、副主理人、本场领队(执行方)与勾了「可见客户手机号」的核销员
+        // 在本场名册上看到完整号码并可拨打;其余岗位名册上仍没有号码。判定只看服务端权限。
+        boolean phoneReader = access.hasPermission(ClubPermission.CUSTOMER_PHONE_READ);
         for (Map<String, Object> raw : safeMaps(mapper.selectPaidRoster(activityId))) {
+            Object phone = raw == null ? null : raw.get("phone");
             Map<String, Object> row = sanitizeRosterRow(raw);
+            if (phoneReader && phone instanceof String && ((String) phone).trim().matches("1\\d{10}")) {
+                row.put("phone", ((String) phone).trim());
+            }
             boolean effectiveArrived = effectiveArrived(row);
             Date effectiveAt = effectiveArrivedAt(row);
             row.put("arrived", effectiveArrived);
@@ -67,7 +74,7 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         result.put("waitlist", waitlist);
         result.put("arrived", arrived);
         result.put("noShow", noShow);
-        result.put("phoneIncluded", false);
+        result.put("phoneIncluded", phoneReader);
         // CU-C-73:可更正时段(活动开始 → 结束后 48 小时)随名册一起下发。前端手上没有
         // 本场起止时间,只能在提交那一刻吃服务端 409;拿到这段区间就能先把按钮置灰。
         result.put("correctionWindow", correctionWindow(activity, now()));
@@ -216,6 +223,26 @@ public class ClubEventAttendanceServiceImpl implements IClubEventAttendanceServi
         row.remove("phone");
         row.remove("email");
         row.remove("address");
+        // C-05:名册行以报名时填写的姓名示人(带队现场按名单点人);没填姓名时退回昵称,
+        // 默认昵称「城瘾用户」分不出人时带报名时刻。密文只在服务端解,不下发。
+        Object stored = row.remove("realNameStored");
+        String realName = null;
+        if (stored instanceof String && !((String) stored).trim().isEmpty()) {
+            try {
+                com.chengyinhub.business.security.PiiCryptoService pii =
+                        com.chengyinhub.business.security.PiiCryptoService.getInstance();
+                String plain = pii == null ? (((String) stored).startsWith("v1:") ? null : (String) stored) : pii.decrypt((String) stored);
+                realName = plain == null || plain.trim().isEmpty() ? null : plain.trim();
+            } catch (RuntimeException unreadable) {
+                realName = null;
+            }
+        }
+        Object nickname = row.get("nickname");
+        String nick = nickname == null ? "" : String.valueOf(nickname).trim();
+        // 第十二轮 k3(p3 N4):兜底不再给「成员#id」,默认昵称带报名时刻。
+        Object signedAt = row.get("createTime") instanceof java.util.Date ? row.get("createTime") : row.get("registrationTime");
+        row.put("displayName", com.chengyinhub.business.util.OrganiserPersonName.pick(realName, nick, null,
+                signedAt instanceof java.util.Date ? (java.util.Date) signedAt : null, "报名"));
         return row;
     }
 

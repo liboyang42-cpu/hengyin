@@ -628,6 +628,25 @@ test('本店现场名单为空只描述现场记录，不推断主题没有订�
  * 主办视图的数据整形。数字一律兜底 —— 后端少给一个字段就渲染出 undefined,
  * 是这类聚合页最常见的翻车方式。
  */
+test('R15 普通 CITY 发布后的空客户态不再声称未售票，原始生命周期与编辑闸保持', () => {
+  const page = makePage();
+  page.data.role = 'host';
+  const topic = { id: 990037, productType: 1, status: 1, userStatus: 1, lifecycle: 0 };
+  page.applyHome({ topic, host: { ownerType: 'club', canEdit: false } });
+  assert.equal(page.data.hostTopic.userStatus, 1);
+  assert.equal(page.data.hostTopic.lifecycle, 0);
+  page.openMoreSheet();
+  assert.equal(page.findMoreRow('topic').disabled, true);
+  const empty = page.buildPlayerSheet({ rows: [], summary: { paidCount: 0 } }, 'all');
+  assert.equal(empty['playerSheet.notSelling'], false);
+  assert.equal(empty['playerSheet.emptyText'], '暂无报名');
+  assert.equal(empty['playerSheet.summary'].paidCount, 0);
+  for (const variant of [{ status: 0 }, { status: 2 }, { userStatus: 0 }, { productType: 2 }, { lifecycle: 1 }, { lifecycle: 2 }, { lifecycle: 7 }]) {
+    page.applyHome({ topic: { ...topic, ...variant }, host: {} });
+    assert.equal(page.buildPlayerSheet({ rows: [] }, 'all')['playerSheet.notSelling'], true, JSON.stringify(variant));
+  }
+});
+
 test('主办段整形:进度条按节点数等分，数字有兜底', () => {
   const page = makePage();
   page.applyHome({

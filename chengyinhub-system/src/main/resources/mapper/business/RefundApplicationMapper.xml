@@ -95,6 +95,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          #{createdByUserId}, #{delFlag}, #{payoutStatus}, now())
     </insert>
 
+    <insert id="insertVerifiedManualCaseRefund" useGeneratedKeys="true" keyProperty="id">
+        insert into refund_application
+          (refund_no, source_type, source_id, owner_type, owner_id, member_id, merchant_id,
+           paid_amount, refund_amount, status, reason, adjustment_created, idempotency_key,
+           created_by_user_id, del_flag, payout_status, payout_method, payout_receipt_url,
+           payout_handler_id, payout_handled_at, payout_reviewer2_id, payout_reviewed2_at, create_time)
+        values
+          (#{refundNo}, #{sourceType}, #{sourceId}, #{ownerType}, #{ownerId}, #{memberId}, #{merchantId},
+           #{paidAmount}, #{refundAmount}, 1, #{reason}, 1, #{idempotencyKey},
+           #{createdByUserId}, 0, 4, #{payoutMethod}, #{payoutReceiptUrl},
+           #{payoutHandlerId}, #{payoutHandledAt}, #{payoutReviewer2Id}, #{payoutReviewed2At}, now())
+    </insert>
+
     <update id="updateRefundStatusIfPending">
         update refund_application
         set status = #{status},

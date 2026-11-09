@@ -93,7 +93,7 @@ test('loadMerchantEntries 只读取服务端按当前登录商家派生的活动
     code: 200,
     data: [{
       activityId: 71, topicId: 88, activityName: '商圈谜案季',
-      startAt: '2026-08-23 10:00:00', endAt: '2026-08-23 18:00:00', stationCount: 2,
+      startAt: '2026-08-23 10:00:00', endAt: '2026-08-23 18:00:00', stationCount: 2, invitedCount: 1,
       merchantMemberId: 3001, moduleConfigSnapshotJson: '不得透传',
     }],
   })
@@ -103,6 +103,7 @@ test('loadMerchantEntries 只读取服务端按当前登录商家派生的活动
     data: [{
       activityId: 71, topicId: 88, activityName: '商圈谜案季',
       startAt: '2026-08-23 10:00:00', endAt: '2026-08-23 18:00:00', stationCount: 2,
+      invitedCount: 1, // 第十二轮 k4(j2 N-02):待接受邀请的站数要透传,首页卡才标得出「待接受邀请」
     }],
   })
 })

@@ -117,7 +117,10 @@ class E01_10Test {
                     if (!interleaved && method.getName().equals(pauseAfter)) {
                         // The actual production query has completed. The independent writer commits before the next query.
                         assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
-                        assertTrue(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
+                        // f301b763: series reads lock the authorization principal FOR UPDATE, so the production
+                        // transaction is read-write REPEATABLE READ (a MySQL read-only transaction rejects that lock;
+                        // B04ScheduleReadbackMySqlIT proves the negative control on a real server).
+                        assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
                         assertEquals(Integer.valueOf(Connection.TRANSACTION_REPEATABLE_READ),
                                 TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
                         interleaved = true;

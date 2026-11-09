@@ -2,7 +2,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { createReplyRecovery } = require('./reply-recovery');
 const merchantTheme = require('../../../utils/merchant-theme.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession, isGuest } = require('../utils/session/ensure-session.js'); const { retryLogin: loginThenReload } = require('../../../utils/session/login-reload.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const {
   buildCreateDraft,
@@ -95,6 +95,8 @@ Page({
     if (this._hidden || this._unloaded) return;
     const entryEpoch = this._reviewEntryEpoch = (this._reviewEntryEpoch || 0) + 1;
     this._authRetryUsed = authRetryUsed === true;
+    // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1);落「登录后查看」,点「重新登录」才登录。
+    if (isGuest(app)) { this.setData({ pageState: 'login-required', errorMessage: '' }); return; }
     this.setData({ pageState: 'loading', errorMessage: '' });
     const that = this;
     ensureSession(app).then(function (ok) {
@@ -118,7 +120,7 @@ Page({
     const that = this;
     const entryEpoch = this._reviewEntryEpoch;
     const owner = String(app.getUserID() || '');
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._hidden || that._unloaded || entryEpoch !== that._reviewEntryEpoch
           || (app.getUserID() && owner !== String(app.getUserID()))) return;
       if (!ok) {
@@ -169,6 +171,7 @@ Page({
 
   // F-W1-12:登录失败不是「加载失败」,留可见的登录说明;重新登录走管理态入口的静默登录。
   retryLogin() {
+    if (isGuest(app)) { loginThenReload(this, app, function () { this.enterManage(false); }); return; }
     this.enterManage(false);
   },
 

@@ -127,7 +127,7 @@ test('M-08 / M-09:整张图在舞台内、框外压暗不裁黑;Logo 为圆;遮�
 });
 
 test('M-32:俱乐部计酬本月待结清/已结清行并进本月收入明细,按来源标注,时间倒序;不计入余额合计', () => {
-  const ev = require(path.join(ROOT, 'utils/earnings-view.js'));
+  const ev = require(path.join(ROOT, 'subpackageA/utils/earnings-view.js'));
   const { ledgerView } = require(path.join(ROOT, 'components/cy/club-direct-ledger/view-model.js'));
   const now = new Date(2026, 9, 29, 12);
   const row = (id, status, time, fee) => ({ id, redemptionId: 100 + id, topicId: 9, payerClubId: 3, merchantMemberId: 7,
@@ -158,24 +158,24 @@ test('M-32:俱乐部计酬本月待结清/已结清行并进本月收入明细,�
 });
 
 test('M-32:商家账户收益读俱乐部计酬并进明细;结算明细页不再单列「俱乐部计酬」卡', () => {
-  const scene = read('components/cy/scene-asset-earnings/index.wxml');
+  const scene = read('subpackageA/components/scene-asset-earnings/index.wxml');
   assert.match(scene, /<cy-earnings-overview merchant="\{\{theme === 'merchant'\}\}" bind:detail="openIncomeDetail" \/>/);
   assert.match(scene, /wx:if="\{\{balance === '0\.00' && theme !== 'merchant'\}\}"/, '商家余额为 0 也要看得到本月俱乐部计酬');
-  const js = read('components/cy/earnings-overview/index.js');
+  const js = read('subpackageA/components/earnings-overview/index.js');
   assert.match(js, /if \(this\.properties\.merchant\) this\.loadClubPay\(epoch\);/);
   assert.match(js, /url: '\/api\/club-direct-merchant\/merchant', method: 'GET'/);
   assert.match(js, /ledgerView\(res, \{ kind: 'merchant' \}\)/);
   const ledgerWxml = read('pages/merchant/ledger/index.wxml');
   assert.doesNotMatch(ledgerWxml, /cy-club-direct-ledger/);
   assert.doesNotMatch(read('pages/merchant/ledger/index.json'), /cy-club-direct-ledger/);
-  // 俱乐部侧的「商家计酬」不动
-  assert.match(read('pages/club/settlement/index.wxml'), /<cy-club-direct-ledger class="section" wx:if="\{\{clubId\}\}" kind="club"/);
+  // 当前授权俱乐部账目保留；历史收款人的个人投影不得挂整个俱乐部应收账本。
+  assert.match(read('pages/club/settlement/index.wxml'), /<cy-club-direct-ledger class="section" wx:if="\{\{summary && !summary\.personal && clubId\}\}" kind="club"/);
 });
 
 function loadOverview(requests, merchant) {
   let def = null;
-  const file = path.join(ROOT, 'components/cy/earnings-overview/index.js');
-  vm.runInNewContext(read('components/cy/earnings-overview/index.js'), {
+  const file = path.join(ROOT, 'subpackageA/components/earnings-overview/index.js');
+  vm.runInNewContext(read('subpackageA/components/earnings-overview/index.js'), {
     Component: (d) => { def = d; },
     getApp: () => ({ globalData: {}, getUserID: () => 7, getUserRole: () => 'merchant', getUserType: () => 2,
       sendRequest: (o) => requests.push(o) }),

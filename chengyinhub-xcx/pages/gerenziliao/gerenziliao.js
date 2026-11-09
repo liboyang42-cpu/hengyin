@@ -93,6 +93,7 @@ Page({
     loadErrorSub: '',
     saving: false,
     saveError: '',
+    saveRetryable: false,
     saveSucceeded: false,
     saveSteps: ['保存资料'],
   },
@@ -597,18 +598,22 @@ Page({
         if (!that.currentProfileContext(context) || that._hidden || seq !== that._profileReadSeq) return;
         that._profileLoading = false;
         if (res && res.code == "200" && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
-          that._loadedProfileName = res.data.name;
+          // j5 H5:name 空时显示 nickname,并作已存值
+          const shownName = typeof res.data.name === 'string' && res.data.name.trim() ? res.data.name
+            : (typeof res.data.nickname === 'string' ? res.data.nickname : res.data.name);
+          that._loadedProfileName = shownName;
           // 处理个人项目图片字符串转数组
           let casePicsList = [];
           if (typeof res.data.casePics === 'string' && res.data.casePics.trim() !== '') {
             casePicsList = res.data.casePics.split(';').filter(url => url.trim() !== '');
           }
 
-          that._savedName = typeof res.data.name === 'string' ? res.data.name : '';
+          that._savedName = typeof shownName === 'string' ? shownName : '';
           that.setData({
             userInfo: {
               ...that.data.userInfo,
-              ...res.data
+              ...res.data,
+              name: shownName
             },
             phoneMasked: maskPhone(res.data.phone),
             avatarSrc: avatarSrc(res.data.avatar, app.getImgUrl && app.getImgUrl.bind(app)),
@@ -713,12 +718,14 @@ Page({
       tagIds: this.data.selectedCategoryIds.join(',')
     };
 
-    this.setData({ saving: true, saveError: '', saveSucceeded: false });
+    this.setData({ saving: true, saveError: '', saveRetryable: false, saveSucceeded: false });
 
     app.sendRequest({
       url: '/api/user/update',
       data: JSON.stringify(data),
       method: "POST",
+      // j5 L4:失败原因只在保存区说一次,请求层不再另弹 toast。
+      autoErrorToast: false,
       header: {
         'Content-Type': 'application/json'
       },
@@ -758,7 +765,7 @@ Page({
       },
       fail: function (res) {
         that.applyProfileResult(context, () => {
-          that.setData({ saving: false, saveError: '网络没连上，请检查后重试' });
+          that.setData({ saving: false, saveError: '网络没连上，请检查后重试', saveRetryable: true });
         });
       }
     });
@@ -780,7 +787,13 @@ Page({
     }, 1, { crop: true, cropScale: '16:9' });
   },
 
-  uploadPic() {
+  // 第九轮 m1-9:微信头像选择器回来的临时图,走同一条裁剪、上传、审核链路
+  onChooseAvatar(e) {
+    const url = e && e.detail && e.detail.avatarUrl;
+    if (url) this.uploadPic([url]);
+  },
+
+  uploadPic(paths) {
     let that = this;
     const context = this.profileContext();
     let previousSrc = null;
@@ -792,6 +805,7 @@ Page({
       });
     }, 1, {
       crop: true, cropScale: '1:1',
+      paths: Array.isArray(paths) ? paths : undefined,
       // V-15:裁完就把本机图换上头像位,上传、审核期间都不留空圈
       onUploadStart(filePaths) {
         if (!that.currentProfileContext(context) || !filePaths || !filePaths[0]) return;

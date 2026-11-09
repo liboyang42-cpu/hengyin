@@ -21,6 +21,8 @@
         <result property="couponOptedIn" column="coupon_opted_in"/>
     </resultMap>
 
+    <!-- 与商家客户名册(MerchantCrmAppMapper.OwnedRegistrationScope)同一口径:自由探索主题方与审核通过的
+         参与商家也在可授权列表里;授权仍需玩家主动打开。 -->
     <sql id="EligibleMerchantScope">
         m.del_flag = 0 and m.status = 1 and m.account_status = 1
         and not exists (
@@ -36,7 +38,6 @@
               (r.owner_type = 1 and exists (
                 select 1 from cms_topic t
                 where t.id = r.owner_id and t.del_flag = 0
-                  and (t.product_type is null or t.product_type &lt;&gt; 2)
                   and (t.member_id = m.member_id or exists (
                     select 1 from cms_registration_merchant rm
                     where rm.topic_id = t.id and rm.member_id = m.member_id
@@ -45,9 +46,22 @@
               ))
               or (r.owner_type = 2 and exists (
                 select 1 from cms_activity a
-                left join cms_topic at on at.id = a.topic_id
-                where a.id = r.owner_id and a.member_id = m.member_id and a.del_flag = 0
-                  and (at.id is null or at.product_type is null or at.product_type &lt;&gt; 2)
+                where a.id = r.owner_id and a.del_flag = 0
+                  and (a.member_id = m.member_id or exists (
+                    select 1 from cms_topic ft
+                    where ft.id = a.topic_id and ft.del_flag = 0 and ft.product_type = 2
+                      and (ft.member_id = m.member_id
+                        or exists (
+                          select 1 from cms_registration_merchant frm
+                          where frm.topic_id = ft.id and frm.member_id = m.member_id
+                            and frm.audit_status = 1 and frm.del_flag = 0
+                        )
+                        or exists (
+                          select 1 from merchant_chapter_application fca
+                          where fca.topic_id = ft.id and fca.merchant_id = m.member_id
+                            and fca.status = 1 and fca.del_flag = 0
+                        ))
+                  ))
               ))
             )
         )

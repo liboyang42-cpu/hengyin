@@ -98,6 +98,18 @@ class ClubTopicManageStatsServiceTest {
         assertFalse(data.containsKey("canManageEvents"), "共用字段已拆掉,不许再下发");
     }
 
+    /**
+     * F-04(j2):俱乐部自己的(非平台自营)付费主题照常在线收款 —— assertCollectible 只拒查不到票款归属的单,
+     * 本俱乐部的主题查得到。工作台不得再说「这个主题暂不能在线收款」。
+     */
+    @Test
+    void clubOwnedPaidThemeIsReportedCollectible() {
+        Map<String, Object> data = service.topicManageStats(OWNER, CLUB, TOPIC, null);
+
+        assertEquals(Boolean.TRUE, data.get("onlinePaymentAvailable"));
+        assertEquals(Boolean.FALSE, data.get("paidSessionsBlocked"));
+    }
+
     /** 俱乐部自建、没有合作单的主题:isTopicOwner=false ⇒ 导演台不给(后端 requireClubOwner 会拒);场次管理照给。 */
     @Test
     void ownerOfSelfBuiltTopicWithoutCoopOrderCannotDirectButCanManageSessions() {

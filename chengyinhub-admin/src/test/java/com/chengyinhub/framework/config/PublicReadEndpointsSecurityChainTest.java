@@ -121,11 +121,35 @@ class PublicReadEndpointsSecurityChainTest {
     }
 
     @Test
-    void cityNodesRequireAuthenticationForGetAndPost() throws Exception {
+    void cityNodeListAndAllWritesRequireAuthenticationButSingleNodeGetIsPublic() throws Exception {
+        // 第九轮 m4(owner 2026-11-04):只开 GET /api/city/nodes/{数字 id};列表、写和本人接口照旧 401。
+        mockMvc.perform(get("/api/city/nodes/123")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+        mockMvc.perform(get("/api/city/nodes")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
         for (String route : new String[]{"/api/city/nodes", "/api/city/nodes/123"}) {
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+        for (String route : new String[]{"/api/city/nodes/favorites", "/api/city/nodes/merchant/5",
+                "/api/city/nodes/123/complete", "/api/city/nodes/123/favorite", "/api/city/nodes/12a"}) {
             mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+    }
+
+    @Test
+    void officialRouteListAndInfoAreAnonymousOnlyForGetAndSiblingsAreNot() throws Exception {
+        for (String route : new String[]{"/api/preset/route/list", "/api/preset/route/info"}) {
+            mockMvc.perform(get(route)).andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200));
+            mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value(401));
+        }
+        for (String route : new String[]{"/api/preset/style/list", "/api/preset/route/info/extra",
+                "/api/preset/route/listing", "/api/preset/route"}) {
+            mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
     }
@@ -206,6 +230,18 @@ class PublicReadEndpointsSecurityChainTest {
     }
 
     @Test
+    void mapWeatherIsAnonymousOnlyForExactGetAndMapSiblingsAreNot() throws Exception {
+        mockMvc.perform(get("/api/map/weather").param("lat", "30.27").param("lng", "120.15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+        // 负控:写成 /api/map/** 或不限方法时以下会变 200。
+        mockMvc.perform(post("/api/map/weather")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/map/weather/extra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/map/reverse-geocode")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/map/nearby")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void legacyUserInfoAndSiblingsStillRequireAuthentication() throws Exception {
         // 负控:放行必须精确到路径。写成 /api/user/** 或 /api/merchant/** 时这几条会变 200。
         mockMvc.perform(post("/api/user/info"))
@@ -232,14 +268,19 @@ class PublicReadEndpointsSecurityChainTest {
         // owner 2026-10-24「游客可浏览，写入时弹窗登录」:四条公开读走 @Anonymous(同 GuestBrowseProbeController),
         // 真实控制器上的注解范围由 GuestBrowseAnonymousReadTest 逐方法钉住。
         for (String route : new String[]{"/api/topic/info-to-user", "/api/club/detail", "/api/club/list",
+                "/api/club/topics", "/api/club/post/list", "/api/club/members", "/api/club/leaderboard",
                 "/api/creativesquare/info"}) {
             mockMvc.perform(post(route)).andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200));
         }
         // 负控:写兄弟与本人数据接口照旧 401;放行不能顺着前缀吃进去。
-        for (String route : new String[]{"/api/club/join", "/api/club/quit", "/api/club/home", "/api/club/members",
+        for (String route : new String[]{"/api/club/join", "/api/club/quit", "/api/club/home",
                 "/api/club/post/create", "/api/club/post/like", "/api/topic/like", "/api/topic/info-to-merchant",
                 "/api/creativesquare/like", "/api/creativesquare/action", "/api/comment/add",
-                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra"}) {
+                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra",
+                "/api/club/post/comment/list", "/api/club/post/update", "/api/club/post/delete",
+                "/api/club/member/remove", "/api/club/topic-registrations",
+                "/api/club/members/extra", "/api/club/topics/extra", "/api/club/post/list/extra",
+                "/api/club/leaderboard/extra"}) {
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
@@ -360,10 +401,30 @@ class PublicReadEndpointsSecurityChainTest {
         @PostMapping("/api/creativesquare/info")
         AjaxResult squareInfo() { return AjaxResult.success(); }
 
-        @PostMapping({"/api/club/join", "/api/club/quit", "/api/club/home", "/api/club/members",
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/topics")
+        AjaxResult clubTopics() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/post/list")
+        AjaxResult clubPosts() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/members")
+        AjaxResult clubMembers() { return AjaxResult.success(); }
+
+        @com.chengyinhub.common.annotation.Anonymous
+        @PostMapping("/api/club/leaderboard")
+        AjaxResult clubLeaderboard() { return AjaxResult.success(); }
+
+        @PostMapping({"/api/club/join", "/api/club/quit", "/api/club/home",
                 "/api/club/post/create", "/api/club/post/like", "/api/topic/like", "/api/topic/info-to-merchant",
                 "/api/creativesquare/like", "/api/creativesquare/action", "/api/comment/add",
-                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra"})
+                "/api/registration/create", "/api/club/detail/extra", "/api/topic/info-to-user/extra",
+                "/api/club/post/comment/list", "/api/club/post/update", "/api/club/post/delete",
+                "/api/club/member/remove", "/api/club/topic-registrations",
+                "/api/club/members/extra", "/api/club/topics/extra", "/api/club/post/list/extra",
+                "/api/club/leaderboard/extra"})
         AjaxResult siblings() { return AjaxResult.success(); }
     }
 
@@ -388,7 +449,12 @@ class PublicReadEndpointsSecurityChainTest {
         @org.springframework.web.bind.annotation.RequestMapping({"/api/roam/share/snapshot",
                 "/api/roam/share/revoke", "/api/play/run-session/list",
                 "/api/official/events", "/api/official/events/123", "/api/official/events/123/signup",
-                "/api/city/nodes", "/api/city/nodes/123"})
+                "/api/city/nodes", "/api/city/nodes/123",
+                "/api/city/nodes/favorites", "/api/city/nodes/merchant/5", "/api/city/nodes/123/complete",
+                "/api/city/nodes/123/favorite", "/api/city/nodes/12a",
+                "/api/preset/route/list", "/api/preset/route/info", "/api/preset/style/list",
+                "/api/preset/route/info/extra", "/api/preset/route/listing", "/api/preset/route",
+                "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby"})
         AjaxResult probeAnyMethod() {
             return AjaxResult.success();
         }

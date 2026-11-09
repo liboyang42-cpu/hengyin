@@ -1,0 +1,18 @@
+
+──────── 步骤 1:主理人实名(真实入口)
+   identity                           {"msg": "操作成功", "code": 200, "data": {"registered": true}, "_status": 200}
+
+──────── 步骤 2:主理人建一个打卡玩法模板(真实入口 /api/template/draft)
+   template                           {"msg": "操作成功", "code": 200, "data": 6005, "_status": 200}
+
+──────── 步骤 3:建期:俱乐部 7002 自有经典定向主题(自玩通行证 + 场次票)
+   create                             {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990015, "auditTaskId": 5, "reviewState": "PENDING", "bundledTemplateIds": [6005], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售"}, "_status": 200}
+   review 4 TOPIC_PROJECT_REVIEW      审核处理成功
+   review 5 TOPIC                     请刷新审核内容后重试
+   [库回读] topic                    ((990015, 7002, 9008, 1, 2, 1, 1, None, 1, Decimal('29.99')),)
+   [库回读] tickets                  ((80, 1, 990015, '场次票', Decimal('39.99'), '开场前24小时可退'),)
+   [库回读] content slot             (('CONTENT', 'CLUB', 7002, 1),)
+   pricing/confirm                    {"msg": "终价已确认，请等待开售审核", "code": 200, "_status": 200}
+   [库回读] lifecycle/fee            ((2, Decimal('0.1000')),)
+
+TOPIC_ID=990015

@@ -35,7 +35,8 @@ test('null-state route/signup card copy is generic and never claims delisted or 
   const nullBlock = wxml.slice(wxml.indexOf("topicCache[item.card.topicId] === null"));
   const sub = nullBlock.slice(0, nullBlock.indexOf('</block>'));
   assert.match(sub, /路线暂不可用/);
-  assert.match(sub, /活动暂不可用/);
+  // P-36:报名卡的票仍有效,降级态把人带去票夹
+  assert.match(sub, /票已放进票夹/);
   assert.doesNotMatch(sub, /下架|不公开|私密/);
 });
 
@@ -57,4 +58,13 @@ test('network failure while fetching a signup topic lands in the same generic nu
   assert.equal(h.page.data.topicCache[9], null);
   h.page.onRouteTap(tap(9));
   assert.deepEqual(h.tips, ['该路线暂不可用']);
+});
+
+test('P-36: an unavailable signup card opens the ticket wallet instead of a dead toast', t => {
+  const h = harness(t);
+  h.page.data.topicCache = { 9: null };
+  h.page.onRouteTap({ currentTarget: { dataset: { topicid: 9, cardtype: 'signup' } } });
+  assert.deepEqual(h.tips, []);
+  assert.equal(h.nav.length, 1);
+  assert.match(JSON.stringify(h.nav[0]), /subpackageMember\/signup\/index/);
 });

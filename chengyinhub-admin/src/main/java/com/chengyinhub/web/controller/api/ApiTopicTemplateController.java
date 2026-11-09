@@ -221,6 +221,7 @@ public class ApiTopicTemplateController extends BaseController {
         if (bindingIntent != null && !bindingIntent.trim().isEmpty()) params.put("bindingIntent", bindingIntent);
         if (targetCityCode != null && !targetCityCode.trim().isEmpty()) params.put("targetCityCode", targetCityCode);
         if (sourceContentRevisionId != null) params.put("sourceContentRevisionId", sourceContentRevisionId);
+        params.put("saveDraft", true);
         Long newTopicId;
         try {
             newTopicId = cmsTopicService.copyCmsTopic(tid, params);
@@ -377,7 +378,14 @@ public class ApiTopicTemplateController extends BaseController {
         if (topic.getStatus() == null || topic.getStatus() != 1) {
             return error("仅审核通过的主题可另存为模板");
         }
-        int rows = cmsTopicService.saveAsTemplate(tid, memberId, 1);
-        return rows > 0 ? success("已另存为主题模板") : error("操作失败");
+        Long templateId;
+        try {
+            templateId = cmsTopicService.saveAsTemplate(tid, memberId);
+        } catch (ServiceException e) {
+            return error(e.getMessage());
+        }
+        Map<String, Object> data = new HashMap<>();
+        data.put("templateId", templateId);
+        return AjaxResult.success("已另存为主题模板", data);
     }
 }

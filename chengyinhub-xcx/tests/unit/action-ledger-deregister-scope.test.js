@@ -5,7 +5,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { targetsForHandler, deregisterRequestPlan, sourceFilesFor, handlerSlices } = require('../../scripts/uiaudit/build-action-ledger')
 const ROOT = path.resolve(__dirname, '../..')
-const file = 'components/cy/scene-settings-deregister/index.js'
+const file = 'pages/deregister/components/scene-settings-deregister/index.js'
 const targets = handler => targetsForHandler(path.join(ROOT, file), handler)
 const urls = handler => targets(handler).apiContracts.map(row => row.url)
 

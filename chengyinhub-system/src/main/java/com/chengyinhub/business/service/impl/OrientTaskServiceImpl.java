@@ -71,6 +71,8 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
     @Autowired
     private ICmsTopicNodeService topicNodeService;
     @Autowired
+    private com.chengyinhub.business.mapper.CmsTopicNodeMapper topicNodeMapper;
+    @Autowired
     private ICmsActivityService activityService;
     @Autowired
     private IOrientGeoService geoService;
@@ -78,6 +80,8 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
     private IOrientSafetyService safetyService;
     @Autowired
     private OrientSwitches switches;
+    @Autowired
+    private com.chengyinhub.business.service.support.TopicContentWriteGuard contentWriteGuard;
 
     @Autowired
     private TopicRouteSessionMapper routeMapper;
@@ -92,26 +96,31 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
                                                     String promptText, String answer, Boolean enabled) {
         switches.require(switches.altTaskOn());
         OrientOwnership.requireTopicOwner(topicService, memberId, topicId);
-        CmsTopicNode node = requireTask(topicId, taskId);
+        contentWriteGuard.lockTopicContent(topicId);
+        CmsTopicNode node = topicNodeMapper.selectContentByIdForUpdate(taskId);
+        if (node == null || !topicId.equals(node.getTopicId())) {
+            throw new OrientRejection(OrientRejection.NOT_FOUND, "任务不存在");
+        }
         AltType type = parseType(typeRaw);
         String prompt = trimToNull(promptText);
         if (prompt != null && prompt.length() > 500) {
             throw new OrientRejection(OrientRejection.BAD_REQUEST, "提示文字不能超过 500 字");
         }
-        String answerHash = null;
+        OrientTaskAlternative existing = orientMapper.selectAlternativeForUpdate(node.getId(), type.name());
+        String answerHash = existing == null ? null : existing.getAnswerHash();
         if (type == AltType.PHOTO) {
             if (trimToNull(answer) != null) {
                 throw new OrientRejection(OrientRejection.BAD_REQUEST, "拍照替代不需要答案");
             }
+            answerHash = null;
         } else {
             String normalized = normalizeAnswer(answer);
-            if (normalized.isEmpty()) {
+            if (!normalized.isEmpty()) answerHash = CanonicalDigest.sha256Hex(normalized);
+            if (!Boolean.FALSE.equals(enabled) && trimToNull(answerHash) == null) {
                 throw new OrientRejection(OrientRejection.BAD_REQUEST, type == AltType.SCAN ? "请填写扫码内容" : "请填写答案");
             }
-            answerHash = CanonicalDigest.sha256Hex(normalized);
         }
         Date now = new Date();
-        OrientTaskAlternative existing = orientMapper.selectAlternative(node.getId(), type.name());
         OrientTaskAlternative row = existing == null ? new OrientTaskAlternative() : existing;
         row.setPromptText(prompt);
         row.setAnswerHash(answerHash);
@@ -123,15 +132,9 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
             row.setAlternativeTaskType(type.name());
             row.setCreateBy(memberId);
             row.setCreateTime(now);
-            try {
-                orientMapper.insertAlternative(row);
-            } catch (DuplicateKeyException race) {
-                OrientTaskAlternative winner = orientMapper.selectAlternative(node.getId(), type.name());
-                row.setId(winner.getId());
-                orientMapper.updateAlternative(row);
-            }
-        } else {
-            orientMapper.updateAlternative(row);
+            if (orientMapper.insertAlternative(row) != 1) throw new IllegalStateException("替代完成方式保存失败");
+        } else if (orientMapper.updateAlternative(row) != 1) {
+            throw new IllegalStateException("替代完成方式保存失败");
         }
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("taskId", node.getId());
@@ -139,6 +142,30 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
         data.put("enabled", row.getEnabled() == 1);
         data.put("promptText", prompt);
         return data;
+    }
+
+    @Override
+    public Map<String, List<Map<String, Object>>> authorAlternativeConfigs(Long memberId, Long topicId) {
+        if (!switches.altTaskOn()) return null;
+        OrientOwnership.requireTopicOwner(topicService, memberId, topicId);
+        CmsTopicNode query = new CmsTopicNode();
+        query.setTopicId(topicId);
+        Map<String, List<Map<String, Object>>> configs = new LinkedHashMap<>();
+        for (CmsTopicNode node : topicNodeService.selectCmsTopicNodeList(query)) {
+            if (!topicId.equals(node.getTopicId())) throw new IllegalStateException("替代完成方式节点归属不符");
+            List<Map<String, Object>> alternatives = new ArrayList<>();
+            for (OrientTaskAlternative row : orientMapper.selectAlternativesByTask(node.getId())) {
+                if (!topicId.equals(row.getTopicId())) throw new IllegalStateException("替代完成方式主题归属不符");
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("type", row.getAlternativeTaskType());
+                item.put("promptText", row.getPromptText() == null ? "" : row.getPromptText());
+                item.put("enabled", Integer.valueOf(1).equals(row.getEnabled()));
+                item.put("answerConfigured", trimToNull(row.getAnswerHash()) != null);
+                alternatives.add(item);
+            }
+            configs.put(node.getId().toString(), alternatives);
+        }
+        return configs;
     }
 
     @Override

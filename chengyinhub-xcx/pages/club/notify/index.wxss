@@ -3,6 +3,7 @@ page { background: var(--cy-bg-page); }
 
 /* 区块之间 20px(手册写 32,存量已知不一致,按 20 做);分区标题→本组 16px。 */
 .section { margin: 40rpx var(--cy-page-x) 0; } /* ds-ok: 40rpx = Figma 区块间距 20px，无匹配半步 token 见 style/TOKEN-MAPPING.md */
+cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区块之间,不是标题→首块;与结算/运营/勋章同一口径(约 9px) */
 .section-title { display: block; color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 700; }
 /* 投递状态这一组标题右侧挂「刷新」(CU-C-135):标题贴左、动作贴右,与其它区块的
    裸标题一致,只是多一个次级动作位。 */
@@ -51,3 +52,6 @@ page { background: var(--cy-bg-page); }
 .row-count { flex: none; margin-right: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 第四轮:字段下方红字 */
+.field-err { margin-top: var(--cy-space-1); }

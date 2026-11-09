@@ -1,48 +1,44 @@
-// BL-76 商家核销记录(只读):POST /api/merchant/verification-records
-// 后端直接返回 cms_registration_scan 行(CmsRegistrationScan),按 createTime 倒序、一次全量。
-// 只用实体已有字段:id / registrationId / name / status(0 未验证 1 已验证) / validationMethod / createTime。
+// 商家核销记录(只读)。M-03(2026-11-02 走查):与「核销与退款」同一真源
+// POST /api/merchant/finance/redemptions(redemption 行,按商家归属取),不再读玩家节点作答的
+// cms_registration_scan —— 那张表的 status 不是核销事实,5 笔真核销曾显示成「已核销 0 · 未核销 10」。
+// 行字段只用 MerchantRedemptionView 已有的:recordKey / recordId / chapterName / topicName / storeName /
+// fulfillmentState(ACTIVE|REVERSED) / occurredAt。
 const STATUS_TABS = [
   { key: 'VERIFIED', label: '已核销' },
-  { key: 'UNVERIFIED', label: '未核销' },
+  { key: 'REVERSED', label: '已撤销' },
 ];
-
-const METHOD_TEXT = { 1: '文字验证', 2: '图片验证', 3: '选项验证' };
 
 function text(value) {
   return value == null ? '' : String(value).trim();
 }
 
-function isVerified(row) {
-  return Number(row && row.status) === 1;
-}
-
 function shapeRecord(row) {
   if (!row || typeof row !== 'object') return null;
-  const id = text(row.id);
+  const id = text(row.recordKey) || text(row.recordId);
   if (!id) return null;
-  const createTime = text(row.createTime);
-  const registrationId = Number(row.registrationId);
-  const verified = isVerified(row);
+  const occurredAt = text(row.occurredAt);
+  const reversed = text(row.fulfillmentState) === 'REVERSED';
   return {
     id,
-    nameText: text(row.name) || '未命名节点',
-    registrationText: Number.isSafeInteger(registrationId) && registrationId > 0 ? `报名 #${registrationId}` : '',
-    methodText: METHOD_TEXT[Number(row.validationMethod)] || '',
-    statusKey: verified ? 'VERIFIED' : 'UNVERIFIED',
-    statusText: verified ? '已核销' : '未核销',
-    statusTone: verified ? 'success' : 'neutral',
-    dateKey: createTime.slice(0, 10),
-    timeText: createTime.slice(11, 16),
+    nameText: text(row.chapterName) || text(row.storeName) || '本店站点',
+    subText: text(row.topicName),
+    statusKey: reversed ? 'REVERSED' : 'VERIFIED',
+    statusText: reversed ? '已撤销' : '已核销',
+    statusTone: reversed ? 'neutral' : 'success',
+    dateKey: occurredAt.slice(0, 10),
+    timeText: occurredAt.slice(11, 16),
   };
 }
 
+/** 接受分页载荷 {rows,total};返回 null 表示载荷不可信。 */
 function shapeRecordList(data) {
-  if (!Array.isArray(data)) return null;
-  return data.map(shapeRecord).filter(Boolean);
+  const rows = data && typeof data === 'object' && !Array.isArray(data) ? data.rows : null;
+  if (!Array.isArray(rows)) return null;
+  return rows.map(shapeRecord).filter(Boolean);
 }
 
 function countByStatus(items) {
-  const counts = { VERIFIED: 0, UNVERIFIED: 0 };
+  const counts = { VERIFIED: 0, REVERSED: 0 };
   (items || []).forEach((item) => { counts[item.statusKey] += 1; });
   return counts;
 }

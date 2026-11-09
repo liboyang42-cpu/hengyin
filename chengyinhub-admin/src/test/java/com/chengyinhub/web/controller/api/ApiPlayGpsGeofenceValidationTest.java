@@ -339,6 +339,38 @@ class ApiPlayGpsGeofenceValidationTest
         verifyNoProgressAndNoReward();
     }
 
+    /** 第十二轮 k2(业主 2026-11-05):本人已解开这一站的玩法 ⇒ 远处重进也算完成,奖励照常;没解开仍被围栏拒。 */
+    @Test
+    void solvedAdvancedGameCompletesStationWithoutArrivalFence()
+    {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null, null);
+
+        assertEquals(200, result.get("code"), "解开的站重进不再要现场定位");
+        verify(advanced, org.mockito.Mockito.atLeastOnce()).completeGate(PLAYER, ACTIVITY, TOPIC, NODE);
+        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void unsolvedAdvancedGameStillNeedsArrivalFence()
+    {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(false);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+
+        AjaxResult result = arrive("121.6", "31.4");
+
+        assertEquals("还没到这一站附近", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
     private AjaxResult arriveWithAccuracy(String accuracy)
     {
         return BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), NODE_LNG, NODE_LAT, null, null, null, accuracy);
@@ -463,6 +495,198 @@ class ApiPlayGpsGeofenceValidationTest
         node.setLatitude(null);
 
         assertEquals(200, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null, "500").get("code"), "无坐标节点不走坐标判定,精度闸不适用");
+    }
+
+    @Test
+    void verifiedPhotoGameReplacesTheOldPhotoSheetButNoProofStillRefuses() {
+        node.setTemplateId(60L);
+        CmsMemberTemplate template = new CmsMemberTemplate(); template.setValidationMethod(2);
+        when(templateService.selectCmsMemberTemplateById(60L)).thenReturn(template);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced = mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+        assertEquals("该站需完成对应任务后才能打卡", arrive(null, null).get("msg"));
+        verifyNoProgressAndNoReward();
+        when(advanced.hasStationGameProof(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        assertEquals(200, arrive(null, null).get("code"));
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void freeCollectStoreArrivalAloneCannotFinishAnAdvancedScan() {
+        freeCollectStation(4, true, false);
+        assertEquals("该站需完成对应任务后才能打卡", arrive(null, null).get("msg"));
+        verifyNoProgressAndNoReward();
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never())
+                .markGameDone(anyLong(), anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void freeCollectStoreProofWithoutCheckinCannotCreateArrivalOrCompletion() {
+        freeCollectStation(4, false, true);
+        assertEquals("请扫店内的码", arrive(null, null).get("msg"));
+        verifyNoProgressAndNoReward();
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void freeCollectStoreOrdinaryArrivalCannotUseASolvedGameAsStationProof() {
+        var advanced = freeCollectStation(0, true, true);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        assertEquals("请扫店内的码", arrive(NODE_LNG, NODE_LAT).get("msg"));
+        verify(advanced, never()).hasStationGameProof(anyLong(), anyLong(), anyLong(), anyLong());
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void freeCollectStoreCurrentPhotoProofCompletesGameWithoutRedeemingOrEconomicRewards() {
+        freeCollectStation(2, true, true);
+        assertFreeCollectGameCompletion();
+    }
+
+    @Test
+    void freeCollectStoreCurrentScanProofCompletesOnceAcrossReceiptReplayAndNewIntent() {
+        freeCollectStation(4, true, true);
+        assertFreeCollectGameCompletion();
+    }
+
+    @Test
+    void freeCollectStoreVerifiedProofStillMustPassTheExistingCompletionGate() {
+        var advanced = freeCollectStation(4, true, true);
+        when(advanced.completeGate(PLAYER, ACTIVITY, TOPIC, NODE))
+                .thenThrow(new com.chengyinhub.common.exception.ServiceException("原局任务尚未通过"));
+        AjaxResult result = arrive(null, null);
+        assertEquals("ADVANCED_FIRST", result.get("errorCode"));
+        assertEquals("原局任务尚未通过", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void freeCollectStoreProofCannotBypassPendingCompassOrRewriteArrival() {
+        var advanced = freeCollectStation(4, true, true);
+        var route = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(route.pendingCompassCheck(PLAYER, TOPIC, ACTIVITY, NODE)).thenReturn(true);
+        PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", route);
+        // The service's real D20 guard is covered by completedCompassCannotBypassTheCoLocatedOriginalCheck.
+        when(advanced.completeGate(PLAYER, ACTIVITY, TOPIC, NODE)).thenAnswer(call -> {
+            if (route.pendingCompassCheck(PLAYER, TOPIC, ACTIVITY, NODE))
+                throw new com.chengyinhub.common.exception.ServiceException("请先完成本站 D20 检定", 409);
+            return null;
+        });
+        assertEquals("请先完成本站 D20 检定", arrive(null, null).get("msg"));
+        verify(advanced).completeGate(PLAYER, ACTIVITY, TOPIC, NODE);
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void freeCollectStorePersonalRuntimeCannotBorrowTheLegacyCompletionOrArrivalWrite() {
+        freeCollectStation(4, true, true);
+        var route = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        when(route.genericPlayer(PLAYER, TOPIC, ACTIVITY)).thenReturn(true);
+        when(route.nodeArrivalConfig(PLAYER, TOPIC, ACTIVITY, NODE)).thenReturn(
+                new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                        .put("longitude", NODE_LNG).put("latitude", NODE_LAT));
+        PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", route);
+        var session = new com.chengyinhub.business.domain.TopicRouteSession();
+        session.setId(99L); session.setPlayInstanceId("default");
+        session.setConfigSnapshotJson("{\"nodeAnswers\":{\"" + NODE + "\":{\"validationMethod\":4}}}");
+        var denied = org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> PlayNodeAccessTestFixtures.invokeMethod(controller, "arriveOnce", PLAYER,
+                        ACTIVITY.toString(), NODE.toString(), null, null, null, "personal-proof", 0,
+                        null, null, null, null, new com.chengyinhub.web.service.play.PlayOriginalRun(session, 99L, null, null)));
+        assertEquals("通用个人任务请使用任务结算，不能领取旧节点奖励", denied.getMessage());
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
+        verify(route, never()).recordPlayerArrival(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any());
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void freeCollectStoreSharedRuntimeCannotBorrowTheLegacyCompletionOrArrivalWrite() {
+        freeCollectStation(4, true, true);
+        var shared = mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        when(shared.sharedRouteSnapshot(PLAYER, TOPIC, ACTIVITY, NODE))
+                .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode());
+        PlayNodeAccessTestFixtures.setField(controller, "gameSessionRuntimeService", shared);
+        var route = mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        var snapshot = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                .put("runtimeInstance", "game:90").put("authorityEpoch", 1);
+        snapshot.putObject("nodeAnswers").putObject(NODE.toString()).put("validationMethod", 4);
+        when(route.queryNodeContentSnapshot(PLAYER, TOPIC, ACTIVITY, NODE)).thenReturn(snapshot);
+        when(route.nodeArrivalConfig(PLAYER, TOPIC, ACTIVITY, NODE)).thenReturn(
+                new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                        .put("longitude", NODE_LNG).put("latitude", NODE_LAT));
+        PlayNodeAccessTestFixtures.setField(controller, "topicRouteRuntimeService", route);
+        var denied = org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> PlayNodeAccessTestFixtures.invokeMethod(controller, "arriveOnce", PLAYER,
+                        ACTIVITY.toString(), NODE.toString(), null, null, null, "shared-proof", 0,
+                        null, null, "game:90", 1, new com.chengyinhub.web.service.play.PlayOriginalRun(null, 90L, "game:90", 1)));
+        assertEquals("共享局任务请使用本队任务结算入口", denied.getMessage());
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
+        verify(shared, never()).recordSharedBasicArrival(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any());
+        verifyNoProgressAndNoReward();
+    }
+
+    private com.chengyinhub.business.service.IAdvancedGameRuntimeService freeCollectStation(
+            int validation, boolean arrived, boolean passed) {
+        fixture(ICmsTopicService.class, "cmsTopicService").selectCmsTopicById(TOPIC)
+                .setProductType(com.chengyinhub.common.constant.PlayMode.FREE_COLLECT);
+        node.setTemplateId(60L);
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setValidationMethod(validation);
+        template.setCouponId(91L);
+        when(templateService.selectCmsMemberTemplateById(60L)).thenReturn(template);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").hasArrived(PLAYER, ACTIVITY, NODE))
+                .thenReturn(arrived);
+        var advanced = mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.hasStationGameProof(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(passed);
+        PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+        return advanced;
+    }
+
+    private void assertFreeCollectGameCompletion() {
+        PlayerNodeProgress row = new PlayerNodeProgress();
+        row.setId(9001L); row.setMemberId(PLAYER); row.setActivityId(ACTIVITY);
+        row.setTopicId(TOPIC); row.setNodeId(NODE); row.setStatus(0); row.setCheckinTime(new Date());
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.singletonList(row));
+        when(progressService.insertPlayerNodeProgress(any()))
+                .thenThrow(new org.springframework.dao.DuplicateKeyException("uk_progress"));
+        IShopDayProofService proof = fixture(IShopDayProofService.class, "shopDayProofService");
+        when(proof.markGameDone(PLAYER, ACTIVITY, TOPIC, NODE)).thenAnswer(call -> {
+            if (row.getStatus() != 0) return false;
+            row.setStatus(1); return true;
+        });
+        AjaxResult first = BasicPlayCommandFixtures.arrive(controller, ACTIVITY.toString(), NODE.toString(),
+                null, null, null, "free-collect-station", null, null);
+        assertEquals(200, first.get("code"));
+        assertEquals(Boolean.TRUE, ((java.util.Map<?, ?>) first.get("data")).get("firstTime"));
+        AjaxResult replay = BasicPlayCommandFixtures.arrive(controller, ACTIVITY.toString(), NODE.toString(),
+                null, null, null, "free-collect-station", null, null);
+        assertEquals(com.chengyinhub.common.utils.JsonUtils.toJsonString(first),
+                com.chengyinhub.common.utils.JsonUtils.toJsonString(replay));
+        AjaxResult duplicate = arrive(null, null);
+        assertEquals(200, duplicate.get("code"));
+        assertEquals(Boolean.FALSE, ((java.util.Map<?, ?>) duplicate.get("data")).get("firstTime"));
+        assertEquals(Boolean.FALSE, ((java.util.Map<?, ?>) duplicate.get("data")).get("completed"));
+        assertEquals(1, row.getStatus());
+        verify(proof, org.mockito.Mockito.times(2)).markGameDone(PLAYER, ACTIVITY, TOPIC, NODE);
+        verify(proof, never()).markArrived(anyLong(), anyLong(), any());
+        verify(proof, never()).submitPhoto(anyLong(), anyLong(), anyLong(), any());
+        verify(progressionService).onNodeDone(PLAYER);
+        verify(fixture(IGrowthService.class, "growthService"))
+                .addExp(org.mockito.ArgumentMatchers.eq(PLAYER), org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.eq("节点探索"));
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+        verify(fixture(ISmsCouponHistoryService.class, "smsCouponHistoryService"), never()).grantCouponById(anyLong(), anyLong());
+        verify(fixture(IRewardDropService.class, "rewardDropService"), never()).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
+        IPerkLedgerService ledger = fixture(IPerkLedgerService.class, "perkLedgerService");
+        verify(ledger, never()).redeemChapter(anyLong(), anyLong(), anyLong(), anyLong());
+        assertEquals(0, ledger.listEntitlements(REGISTRATION).get(0).getStatus());
+        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+        verify(completionAwardService, never()).grantOnce(anyLong(), anyLong(), anyLong(), any(), any());
+    }
+
+    private <T> T fixture(Class<T> type, String field) {
+        return type.cast(PlayNodeAccessTestFixtures.getField(controller, field));
     }
 
     private void stubGpsValidationNode()

@@ -34,6 +34,10 @@ public interface CoopSettlementMapper {
     /** 某商家的结算记录(工作台) */
     public List<CoopSettlement> selectByMerchant(@Param("merchantId") Long merchantId);
 
+    /** 只读展示投影，原始结算金额保持不变；仅汇总本行已执行调整。 */
+    List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectSummaryByMerchant(
+            @Param("merchantId") Long merchantId);
+
     /** T7:某主题的全部结算单(俱乐部财务页按主题聚合商家应收/打款状态) */
     public List<CoopSettlement> selectByTopicId(@Param("topicId") Long topicId);
 
@@ -50,6 +54,19 @@ public interface CoopSettlementMapper {
     java.util.List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectSummaryByBeneficiary(
             @org.apache.ibatis.annotations.Param("role") String role,
             @org.apache.ibatis.annotations.Param("beneficiaryId") Long beneficiaryId);
+
+    /** F-16:本俱乐部已结算场次的活动结算流水(收款人到账 + 平台服务费),俱乐部分润页只读展示。 */
+    java.util.List<com.chengyinhub.business.domain.vo.ClubSessionSettlementRow> selectClubSessionSettlements(
+            @org.apache.ibatis.annotations.Param("clubId") Long clubId);
+
+    /** 本人历史收款，身份只从服务端登录态传入，不依赖当前岗位。 */
+    List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectPersonalClubSummary(
+            @Param("clubId") Long clubId, @Param("memberId") Long memberId);
+
+    List<com.chengyinhub.business.domain.vo.ClubSessionSettlementRow> selectPersonalClubSessions(
+            @Param("clubId") Long clubId, @Param("memberId") Long memberId);
+
+    List<java.util.Map<String, Object>> selectPersonalSettlementClubs(@Param("memberId") Long memberId);
 
     /** 同 selectSummaryByBeneficiary 口径,按主题取(发起人分润页 clubFinance)。 */
     java.util.List<com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow> selectSummaryByTopicId(

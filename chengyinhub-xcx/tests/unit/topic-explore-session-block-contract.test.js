@@ -7,9 +7,9 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8')
 
 function assertSessionBlockContract(js, wxml) {
-  // 探店日详情页必须渲染真场次卡(时间/集合点/余席/价/限购),不再只有「阵容」花名册
+  // 探店日详情页必须渲染真场次卡(时间/集合点/余席/价),不再只有「阵容」花名册
   assert.match(wxml, /wx:if="\{\{isExplore\}\}"[\s\S]{0,200}场次/)
-  for (const bind of ['item.sessionTimeText', 'item.meetingPoint', 'item.remaining', '每人限购 1 张']) {
+  for (const bind of ['item.sessionTimeText', 'item.meetingPoint', 'item.remaining', '场次内自由顺序']) {
     assert.ok(wxml.includes(bind), '场次卡缺绑定:' + bind)
   }
   // 2026-09-06:原来这一行断言的是「非探店日那支里有『阵容』」—— 那块是 omsTicketList 里
@@ -24,7 +24,7 @@ function assertSessionBlockContract(js, wxml) {
   assert.match(js, /list\[i\]\['remaining'\]/)
 }
 
-test('探店日详情页场次块契约(时间槽/集合点/余席/限购提示)', () => {
+test('探店日详情页场次块契约(时间槽/集合点/余席)', () => {
   assertSessionBlockContract(
     read('pages/topic/index/index.js'),
     read('pages/topic/index/index.wxml'))
@@ -150,4 +150,9 @@ test('待审主题所有购票入口均停在未开售提示，开售及普通�
   // 2026-10-22 v13:详情页没有底栏,未开售的说明写在头图那颗按钮上(topic-motion.buildHeroCta)
   assert.match(read('pages/topic/utils/topic-motion.js'), /lc === 7 \? '立项待审 · 未开售'/)
   assert.match(read('pages/topic/index/index.js'), /if \(kind === 'locked'\) return this\.lockedTip\(\)/)
+})
+
+test('C-22(2026-11-02 业主裁决):详情页不再写任何「限 1 张」', () => {
+  const wxml = read('pages/topic/index/index.wxml')
+  assert.doesNotMatch(wxml, /限购|限\s*1\s*张|每人限/)
 })

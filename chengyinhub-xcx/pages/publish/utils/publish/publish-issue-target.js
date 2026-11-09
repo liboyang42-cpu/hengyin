@@ -103,4 +103,8 @@ function planIssue(runtime) {
   return plan ? '方案 ' + plan.endingKey + ' 须有对应结局和唯一默认收尾' : '';
 }
 
-module.exports = { fromMessage, templateField, costIssue, planIssue, parse };
+function isContentRejection(message) {
+  return /未通过安全检查|内容包含违规信息/.test(String(message || ''));
+}
+
+module.exports = { isContentRejection, fromMessage, templateField, costIssue, planIssue, parse };

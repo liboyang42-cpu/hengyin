@@ -121,6 +121,10 @@ function loadPage(options = {}) {
       if (request.endsWith('time-picker-options.js')) {
         return require(path.join(ROOT, 'utils/time-picker-options.js'))
       }
+      // M-16 行业类型胶囊短表(与门店信息同一份):纯函数真模块
+      if (request.endsWith('merchant-industry.js')) {
+        return require(path.join(ROOT, 'pages/merchant/utils/merchant-industry.js'))
+      }
       // 减动效偏好:用真模块,桩会和真值漂移
       if (request.endsWith('motion-preference.js')) {
         return require(path.join(ROOT, 'utils/motion-preference.js'))
@@ -142,6 +146,7 @@ function loadPage(options = {}) {
       if (uiSandbox.isUiModule(request)) return uiSandbox.loadUiModule(request, sandbox)
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request.endsWith('/utils/form-state.js')) return require('../../utils/form-state.js') // 纯函数:手机号格式
       throw new Error(`unexpected require: ${request}`)
     },
   }
@@ -394,7 +399,7 @@ test('状态优化不改变商家入驻 API、JSON header 与既有字段全集'
   Object.assign(page.data, {
     bootstrapState: 'ready', mode: 'form', step: 4, canNext: true,
     identityRegistered: true,
-    name: '河畔咖啡', preference: '餐饮', phone: '13800138000', address: '滨江路 8 号',
+    name: '河畔咖啡', industryIds: ['4001', '3'], phone: '13800138000', address: '滨江路 8 号',
     locationLat: 31.2, locationLng: 121.4, businessTime: '周一至周日 10:00-22:00',
     description: '江边咖啡', businessLicense: 'license.jpg', derivatives: ['a.jpg', 'b.jpg'],
   })
@@ -407,8 +412,10 @@ test('状态优化不改变商家入驻 API、JSON header 与既有字段全集'
   assert.equal(request.header['Content-Type'], 'application/json')
   assert.deepEqual(Object.keys(payload).sort(), [
     'address', 'businessLicense', 'businessTime', 'derivatives', 'description', 'id',
-    'locationLat', 'locationLng', 'name', 'phone', 'preference',
+    // M-16(2026-11-02):自由填写的经营类目换成「行业类型」胶囊,入驻单带 categoryIds(第一个为主行业)
+    'locationLat', 'locationLng', 'name', 'phone', 'categoryIds',
   ].sort())
+  assert.equal(payload.categoryIds, '4001,3')
   assert.equal(payload.derivatives, 'a.jpg,b.jpg')
 })
 
@@ -938,7 +945,7 @@ test('实名登记失败停在第 4 步:入驻单不许跟着发出去', () => {
   assert.equal(requests.length, 1, '实名没登记成功就不许再发入驻单')
   assert.equal(page.data.submitting, false)
   assert.equal(page.data.submitError, '该证件已绑定其他账号')
-  assert.equal(page.data.submitErrorKind, 'data')
+  assert.equal(page.data.submitErrorKind, 'error', '第四轮业主标准:证件问题是输入问题,红色,不用蓝色提示框')
   assert.equal(page.data.identityRegistered, false)
   assert.equal(page.data.step, 4, '报错留在原地，草稿不丢')
   assert.equal(page.data.name, '河畔咖啡')

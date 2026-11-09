@@ -151,14 +151,15 @@ public class GrowthServiceImpl implements IGrowthService {
     }
 
     private Integer rankOrNull(Map<String, Object> myRank) {
-        if (myRank == null || toLong(myRank.get("totalUsers")) <= 0) return null;
+        // R11 p1 F-4:0 分没有名次;非玩家账号查不到 base 行,myRank 为空同样没有名次。
+        if (myRank == null || toLong(myRank.get("totalUsers")) <= 0 || toLong(myRank.get("score")) <= 0) return null;
         return toInteger(myRank.get("userRank"));
     }
 
     /** 复用现有「TOP X%」分桶口径(见 UmsMemberMapper.selectUserRankInfo)。 */
     private String rankBucket(Integer rank, int total) {
         if (rank == null || total <= 0) {
-            return "TOP100%";
+            return null;
         }
         double pct = (double) rank / total;
         if (pct <= 0.2) return "TOP20%";

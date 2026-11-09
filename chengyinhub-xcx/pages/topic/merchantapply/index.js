@@ -1,6 +1,6 @@
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const { memberId, failureStatus, retryLogin, recoverReadSession } = require('../../../utils/session/login-reload.js');
 // 时/分选项与 HH:mm 格式化的单一真源(补零口径全仓一致)
@@ -237,6 +237,8 @@ Page({
             businessTime: String(d.businessTime || '').trim(),
             // 封面优先门头图,没有再退店招 logo;都没有就不出图(不摆灰方块)
             cover: String(d.coverImage || d.logo || '').split(',')[0].trim(),
+            // 第九轮 m1-9:门店地址一点开地图
+            lat: d.locationLat, lng: d.locationLng,
           },
         });
         that.applyShopBusinessTime(String(d.businessTime || '').trim());
@@ -341,7 +343,6 @@ Page({
         const canSubmit = !!address.trim()
           && !!startDate
           && !!endDate
-          && !!cooperateDate
           && !!ruleInstructions.trim()
           && !!picUrl;
         this.setData({
@@ -410,12 +411,9 @@ Page({
   },
 
   // 置灰的提交钮被点 → 报出还差哪一项。静默置灰等于把「为什么不能提交」留给用户猜。
+  // 第四轮(业主):问题写在各字段下方红字(validateForm 的 errors),不再弹提示。
   onSubmitDisabledTap() {
-    const d = this.data;
-    if (!(d.address || '').trim()) toast('请先选择承接地点');
-    else if (!d.startDate || !d.endDate) toast('请选择可配合日期区间');
-    else if (!(d.ruleInstructions || '').trim()) toast('请填写可用空间与现场条件');
-    else if (!d.picUrl) toast('请添加场地照片');
+    this.validateForm();
   },
 
   // ===== cy-sheet 关闭契约 =====
@@ -455,10 +453,13 @@ Page({
   },
 
   // ===== 位置 =====
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   choosePoiForNode() {
     const that = this;
     pickLocation({
       guideOnDeny: false,
+      latitude: that.data.latitude, longitude: that.data.longitude,
       onPick(poi) {
         that.setData({
           address: poi.address,
@@ -611,16 +612,19 @@ Page({
     const order = [];
     const fail = (key, msg) => { errors[key] = msg; order.push(key); };
 
-    if (!address.trim()) fail('address', '请输入活动地点');
+    if (!address.trim()) fail('address', '请选择承接地点');
     if (!startDate || !endDate) fail('availabilityRange', '请选择可配合日期');
-    if (cooperateDate === '') fail('cooperateDate', '请选择可配合时间段');
+    if (cooperateDate) {
+      const parts = cooperateDate.match(/^([01]?\d|2[0-3]):([0-5]\d)-([01]?\d|2[0-3]):([0-5]\d)$/);
+      if (!parts || !timeOptions.isEndAfterStart(
+        { hour: parts[1], minute: parts[2] }, { hour: parts[3], minute: parts[4] }
+      )) fail('cooperateDate', '请选择完整时段，结束时间必须晚于开始时间');
+    }
     if (!ruleInstructions.trim()) fail('ruleInstructions', '请输入节点接待说明');
     if (picUrl === '') fail('picUrl', '请上传节点现场图片');
 
     this.setData({ errors });
-    if (!order.length) return true;
-    toast(errors[order[0]]);
-    return false;
+    return !order.length;
   },
 
   clearRuleInstructions() {
@@ -713,7 +717,7 @@ Page({
     const topicId = this.data.topicId;
     if (!topicId) { wx.reLaunch({ url: '/pages/merchant/index/index' }); return; }
     wx.redirectTo({
-      url: '/pages/topic/merchantinfo/merchantinfo?id=' + topicId + '&scope=MERCHANT',
+      url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT',
       fail() { wx.reLaunch({ url: '/pages/merchant/index/index' }); },
     });
   },

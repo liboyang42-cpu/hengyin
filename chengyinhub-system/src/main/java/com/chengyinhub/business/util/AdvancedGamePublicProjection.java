@@ -697,6 +697,7 @@ public final class AdvancedGamePublicProjection {
         value.put("holdSeconds", source.path("holdSeconds").asInt(3));
         putIfText(value, "hint", source);
         value.put("xp", source.path("xp").asInt(0));
+        value.put("allowSkip", source.path("allowSkip").asBoolean(false));
     }
 
     /** 喊一嗓子的公开面(现场感契约 §5.1,注册表第六张):与 quietHold 同形但无 sub;

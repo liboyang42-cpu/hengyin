@@ -45,6 +45,7 @@ class CircleExploreServiceTest {
         memberService = mock(IUmsMemberService.class);
         registrationService = mock(ICmsRegistrationService.class);
         service = new CircleExploreServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "exploreMapper", exploreMapper);
         ReflectionTestUtils.setField(service, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(service, "supplyService", supplyService);
@@ -275,6 +276,29 @@ class CircleExploreServiceTest {
         assertEquals(Long.valueOf(800L), record.getValue().getOfferId());
         assertEquals(Long.valueOf(88L), record.getValue().getSupplyProfileId());
         assertEquals("这是我的私人记录", record.getValue().getNote());
+    }
+
+    /** Round5B-6:同行记录文字机审不通过(违规或审不了)不落库。 */
+    @Test
+    void recordNoteThatFailsTextCheckIsRefusedBeforeInsert() {
+        com.chengyinhub.business.service.support.UgcSubmissionSafety safety =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", safety);
+        when(safety.textVerdict(100L, "违规记录")).thenReturn("内容包含违规信息，请修改后重试");
+        CircleExploreSession session = activeSession("SOLO");
+        when(exploreMapper.selectSessionById(55L)).thenReturn(session);
+        when(exploreMapper.countMember(55L, 100L)).thenReturn(1);
+        when(topicMapper.selectCmsTopicById(9L)).thenReturn(topic("SOLO"));
+        MerchantCircleSupplyProfile supply = new MerchantCircleSupplyProfile();
+        supply.setId(88L);
+        supply.setOfferId(800L);
+        supply.setCurrent(1);
+        when(supplyService.listPublicSupplies(9L)).thenReturn(openSupplies(supply));
+
+        IllegalStateException refused = org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.record(55L, 800L, "违规记录", 100L));
+        assertEquals("内容包含违规信息，请修改后重试", refused.getMessage());
+        verify(exploreMapper, org.mockito.Mockito.never()).insertRecord(any());
     }
 
     @Test

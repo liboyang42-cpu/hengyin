@@ -9,7 +9,8 @@
   <!-- 身份/加载失败不再整屏拦:静默登录失败或身份没能确认时,只在页内挂一条
        内联错误 + 重试。整屏身份闸(未登录即锁屏、确认中占屏、无身份占屏)已删除
        (2026-09-16 裁决:商家自己的账号被登录闸拦住只是添麻烦)。 -->
-  <scroll-view class="rv-scroll" scroll-y enhanced show-scrollbar="{{false}}"
+  <cy-empty wx:if="{{consoleLogin}}" kind="no-permission" fill size="lg" title="登录后查看经营台" cta="登录" bind:cta="onConsoleLogin" />
+  <scroll-view wx:else class="rv-scroll" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{scrollIntoView}}"
                style="{{pmPage === 1 ? '--pm-w:1;' : (pmPage === 2 ? '--pm-w-d:.32s;--pm-w-s:1;' : '')}}height: 100vh; padding-top: {{statusBarHeight + navBarHeight}}px;"
                refresher-enabled
@@ -126,9 +127,9 @@
     <view class="rv-aftercare-alert"
           wx:if="{{merchantAccess.canManageProjects && todo.pendingPredict > 0}}"
           bindtap="goPredictInbox" hover-class="rv-tap"
-          aria-role="button" aria-label="有 {{todo.pendingPredict || 0}} 轮竞猜待给答案，打开竞猜待办">
+          aria-role="button" aria-label="有 {{todo.pendingPredict || 0}} 轮预测待给答案，打开预测待办">
       <view class="rv-aftercare-alert__mark"></view>
-      <text class="rv-aftercare-alert__text">有 {{todo.pendingPredict || 0}} 轮竞猜待给答案</text>
+      <text class="rv-aftercare-alert__text">有 {{todo.pendingPredict || 0}} 轮预测待给答案</text>
       <view class="rv-aftercare-alert__chev" aria-hidden="true"><cy-icon name="arrow-right" size="24" /></view>
     </view>
 
@@ -136,7 +137,8 @@
          一个项目都没有时整块不显示(含「项目」标题与空态)——去合作中心的入口不在这里
          (2026-09-18 用户走查 UI-01)。仍在加载或加载失败时整块保留,骨架/错误才有地方渲染。 -->
     <view class="rv-section" wx:if="{{merchantAccess.canManageProjects && (projectCards.length || joinLoading || hostLoading || todoLoading || gameEntryLoading || joinError || hostError)}}">
-      <view class="rv-section-head">
+      <!-- p2 F-5:加载失败(错误按业主规则留白)且一张卡都没有时,不留孤零零的「项目」标题 -->
+      <view class="rv-section-head" wx:if="{{projectCards.length || !(joinError || hostError)}}">
         <text class="rv-section-title">项目</text>
         <!-- 卡片只铺前几条,总数得报真实的 joinTotal/hostProjectTotal(取自全量 list,
              不是被截断的那份),否则 30 个项目会被说成 4 个;2026-09-16 起只数未结束的,
@@ -156,7 +158,7 @@
           <view class="rv-project-track">
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
           <view class="rv-project-card" bindtap="openProjectCard"
-                data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}"
+                data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}" data-gameactivityid="{{item.gameStationCard ? item.id : ''}}"
                 hover-class="rv-tap" aria-role="button"
                 aria-label="打开{{item.roleLabel || ''}}项目{{item.title}}{{item.statusLabel ? '，' + item.statusLabel : ''}}{{item.verifyCount ? '，' + item.verifyCount + ' 张待核销' : ''}}">
             <image class="rv-project-cover" wx:if="{{img.first(item.thumb)}}"
@@ -258,7 +260,7 @@
         <!-- 工作台没有铃铛,协作邀请(=合作中心铃铛那一页)从这里进;接口要 COOP_MANAGE,核销/财务岗不给入口。
              CU-M-150:这一页只有「收到的 / 我发出的」协作记录,聊天与系统通知在「站内消息」,入口名不再写「消息中心」。 -->
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoop}}" bindtap="onMoreItem" data-action="messages" aria-role="button" aria-label="打开协作邀请" hover-class="cy-pressed" hover-stay-time="80">
-          <image class="rv-more-ico" src="/images/nav_msg.svg" mode="aspectFit" />
+          <image class="rv-more-ico" src="/pages/merchant/images/nav_msg.svg" mode="aspectFit" />
           <text class="rv-more-label">协作邀请</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadAftercare}}" bindtap="onMoreItem" data-action="aftercare" aria-role="button" aria-label="打开退款售后" hover-class="cy-pressed" hover-stay-time="80">
@@ -315,13 +317,11 @@
   </view>
 
   <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'merchant-verification-result'}}" catchtouchmove="blockSceneTouch">
-    <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="closeVerificationResult">
-    <view class="verify-result verify-result--{{verificationResult.state}}">
-      <text class="verify-result__title">{{verificationResult.title}}</text>
-      <text class="verify-result__message">{{verificationResult.message}}</text>
-      <view class="verify-result__action" bindtap="closeVerificationResult" aria-role="button" aria-label="关闭核销结果" hover-class="cy-pressed" hover-stay-time="80">知道了</view>
-    </view>
-  </cy-scene-sheet>
+    <!-- M-05/M-23:核销结果走现成的 cy-result-sheet(成功绿勾章,同 pages/merchant/customer),不另画面板、不带标题栏。 -->
+    <cy-result-sheet show="{{true}}" kind="{{verificationResult.kind}}" title="{{verificationResult.title}}"
+      sub="{{verificationResult.sub}}" meta="{{verificationResult.meta}}" pill="{{verificationResult.pill}}" why="{{verificationResult.why}}"
+      duration="{{0}}" primary-text="{{merchantAccess.canVerify ? '继续扫码' : '完成'}}" secondary-text="{{merchantAccess.canVerify ? '完成' : ''}}"
+      bind:primary="onVerificationPrimary" bind:secondary="closeVerificationResult" bind:close="closeVerificationResult" />
   </view>
 
   <tabBar mode="merchant" activeKey="workbench" />

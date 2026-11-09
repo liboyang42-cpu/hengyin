@@ -2,6 +2,7 @@ const toast = require('../../../utils/toast.js');
 const modal = require('../../../utils/modal.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const session = require('../../../utils/session/login-reload.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 
 function identityKey() {
@@ -194,6 +195,13 @@ Page({
   _setFailure(value, hadSnapshot) {
     const kind = failureKind(value);
     const text = failureText(value, '附近商家加载失败');
+    // j6 F12:游客从没登录过,后端 401 原文「登录状态已失效」是错话;给「登录后查看」与登录入口。
+    if (kind === 'permission' && !session.memberId(app) && !isLocationPermissionFailure(value)) {
+      this._loadedScope = '';
+      this.setData({ merchants: [], pageState: 'guest', refreshing: false,
+        refreshErrorKind: '', refreshErrorText: '', errorKind: '', errorText: '' });
+      return;
+    }
     if (kind === 'permission') {
       this._loadedScope = '';
       this.setData({
@@ -511,6 +519,8 @@ Page({
   },
 
   goBack() { wx.navigateBack({ fail() { wx.reLaunch({ url: '/pages/merchant/index/index' }); } }); },
+
+  loginToView() { session.retryLogin(this, app, function () { this.locate(); }); },
 
   openLocationSettings() {
     const key = 'location-settings';

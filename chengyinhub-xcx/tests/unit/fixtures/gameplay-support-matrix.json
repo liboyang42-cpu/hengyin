@@ -105,24 +105,26 @@
       {
         "key": "qaShot",
         "section": "qa",
-        "category": "NO_BRIDGE",
+        "category": "PROOF",
         "mode": "SHOT",
         "r5CompletionProof": true,
-        "completionProof": false,
+        "completionProof": true,
         "requiresProof": false,
         "effectSlotSupport": true,
         "effectSlotScopes": [
-          "OWNER"
+          "OWNER",
+          "WORLD",
+          "PARTICIPANTS"
         ],
         "tools": {
-          "costs": "UNSUPPORTED",
-          "costOptions": "UNSUPPORTED",
-          "limitsScope": "UNSUPPORTED",
-          "targetScope": "UNSUPPORTED",
-          "resourceSlots": "UNSUPPORTED",
-          "trade": "UNSUPPORTED",
-          "vote": "UNSUPPORTED",
-          "decidesEnding": "UNSUPPORTED",
+          "costs": "OWNER_OR_TEAM",
+          "costOptions": "OWNER_OR_TEAM",
+          "limitsScope": "OWNER_OR_TEAM",
+          "targetScope": "OWNER_OR_TEAM",
+          "resourceSlots": "OWNER_OR_TEAM",
+          "trade": "WORLD_SHARED_ONLY",
+          "vote": "WORLD_SHARED_ONLY",
+          "decidesEnding": "WORLD_SHARED_ONLY",
           "zeroChallenge": "UNSUPPORTED"
         }
       },

@@ -4,11 +4,14 @@ const { newSessionKey } = require('./roam-recovery.js');
 const TERMINAL = ['APPLIED', 'REJECTED', 'CANCELLED'];
 
 // One frozen intention per actor/domain/target. Absence from the server never clears it.
-function createRecovery({ app, platform, domain, targetId, scopeKey, changed, terminal }) {
+// settle(第十一轮 g2,j4 F1):终态回执是确定结果 —— APPLIED / CANCELLED 静默归档,REJECTED 归档后把后端理由
+// 放进 outcome 交给页面贴在按钮旁;只有结果未知(UNKNOWN / 记录读写失败)才需要恢复卡(card)。
+// 不传 settle 的调用方保持原语义:终态回执留到用户点确认。
+function createRecovery({ app, platform, domain, targetId, scopeKey, changed, terminal, settle }) {
   let target = exactId(targetId);
   const actor = reader(app);
   const key = 'cy-team-event-command-v1:' + actor.id + ':' + domain + ':' + (scopeKey ? 'scope:' + encodeURIComponent(scopeKey) : target);
-  let record = null, busy = false, disposed = false, storageError = '';
+  let record = null, busy = false, disposed = false, storageError = '', outcome = null;
   const current = () => !disposed && sameReader(app, actor);
   const emit = () => {
     if (!current()) return;
@@ -17,6 +20,8 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
       input: record ? JSON.parse(JSON.stringify(record.command)) : null,
       receipt: record && record.result ? JSON.parse(JSON.stringify(record.result)) : null,
       label: record ? ({ 'attendance-config': '保存联络与签到配置', 'attendance-verify': '核验到场', 'attendance-claim': '领取签到码', 'attendance-rotate': '更换签到码', join: '接受邀请入队', apply: '申请入队', signup: '报名活动', quit: '退出队伍', kick: '移出队员', disband: '解散队伍', 'join-mode': '修改招募方式', withdraw: '撤回申请', handle: '处理入队申请', schedule: '发布活动', pause: '暂停活动', resume: '恢复活动' }[record.command.action] || '原操作') : '正在保存原请求',
+      outcome: outcome ? { ...outcome } : null,
+      card: !!storageError || !!record && !(settle && record.result),
       busy, message: storageError || (record && record.result && record.result.message) || '原请求结果待确认；输入已保留，请查询或按原请求重试' });
   };
   // Another page can settle or replace this slot while this instance is alive.
@@ -47,6 +52,14 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
       record = saved;
     }
   } catch (error) { storageError = '原请求记录不可读，不能安全提交新操作'; }
+  // Settled receipts leave only a plain outcome; the durable slot is archived so no card stays behind.
+  function settleRecord() {
+    if (!settle || !record || !record.result || busy) return;
+    const r = record.result;
+    outcome = { state: r.state, action: record.command.action, errorCode: r.errorCode || '',
+      message: r.state === 'REJECTED' ? String(r.message || '') : '' };
+    api.acknowledge();
+  }
   emit();
   function send(mode) {
     if (!current() || !record || storageError || busy || record.result) return;
@@ -61,7 +74,7 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
       if (result && result.requestId === command.requestId && TERMINAL.includes(result.state)) {
         try { save({ ...record, result }); }
         catch (error) { storageError = '结果保存失败，原请求仍保留；请重进后查询'; emit(); return; }
-        emit(); terminal(result, command); return;
+        emit(); terminal(result, command); settleRecord(); return;
       }
       // Includes 4xx/5xx, malformed JSON and UNKNOWN. They do not prove rollback or non-arrival.
       emit();
@@ -88,9 +101,10 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
       }
     } catch (error) { finish(null); }
   }
-  return {
+  const api = {
     setTarget(value) { if (!record && !busy && current()) target = exactId(value); },
     async start(action, payload) {
+      if (current() && !record && !busy) outcome = null;
       if (!current() || record || storageError || busy || !actor.id || !actor.token || !target) { emit(); return; }
       if (!ownsSnapshot()) return;
       busy = true; emit();
@@ -119,5 +133,8 @@ function createRecovery({ app, platform, domain, targetId, scopeKey, changed, te
     pending: () => !!record || !!storageError || busy,
     dispose() { disposed = true; },
   };
+  // A terminal receipt stored by an earlier page (killed before archiving) settles the same way on reopen.
+  if (settle && record && record.result && current()) settleRecord();
+  return api;
 }
 module.exports = { createRecovery };

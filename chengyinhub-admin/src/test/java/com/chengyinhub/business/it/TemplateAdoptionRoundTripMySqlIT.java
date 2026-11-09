@@ -2,6 +2,8 @@ package com.chengyinhub.business.it;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
+import com.chengyinhub.business.domain.dto.TemplateAdoptionCommand;
+import com.chengyinhub.business.service.support.TemplateAdoptionService;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
@@ -31,6 +33,9 @@ class TemplateAdoptionRoundTripMySqlIT {
     private static ITemplatePublishService publish;
     private static JdbcTemplate db;
     private static SqlSessionTemplate sql;
+    private static TemplateAdoptionService adoption;
+    private static ICapabilityGuard capabilities;
+    private static IAuditTaskService audit;
     private final ObjectMapper json = new ObjectMapper();
 
     @BeforeAll static void start() throws Exception {
@@ -47,9 +52,13 @@ class TemplateAdoptionRoundTripMySqlIT {
         db = new JdbcTemplate(source);
         db.execute("CREATE TABLE cms_template_library LIKE cms_member_template");
         db.execute("ALTER TABLE cms_template_library ADD member_template_id BIGINT, ADD pack_type INT");
+        try (Connection c = source.getConnection()) {
+            ItSchema.applyMigrations(c, "sql/migration_20261027_template_adoption_receipt.sql",
+                    "sql/migration_20261107_template_adoption_inherited_config_hash.sql");
+        }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain,com.chengyinhub.business.domain.vo");
-        factory.setMapperLocations(new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"), new ClassPathResource("mapper/business/CmsTemplateLibraryMapper.xml"), new ClassPathResource("mapper/business/AppMediaAssetMapper.xml"));
+        factory.setMapperLocations(new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"), new ClassPathResource("mapper/business/CmsTemplateLibraryMapper.xml"), new ClassPathResource("mapper/business/AppMediaAssetMapper.xml"), new ClassPathResource("mapper/business/TemplateAdoptionReceiptMapper.xml"));
         sql = new SqlSessionTemplate(factory.getObject());
         members = sql.getMapper(CmsMemberTemplateMapper.class); libraries = sql.getMapper(CmsTemplateLibraryMapper.class);
         CmsMemberTemplateServiceImpl memberService = new CmsMemberTemplateServiceImpl(); ReflectionTestUtils.setField(memberService, "cmsMemberTemplateMapper", members);
@@ -57,11 +66,16 @@ class TemplateAdoptionRoundTripMySqlIT {
         TemplatePublishServiceImpl target = new TemplatePublishServiceImpl();
         ReflectionTestUtils.setField(target, "memberTemplateService", memberService); ReflectionTestUtils.setField(target, "memberTemplateMapper", members);
         ReflectionTestUtils.setField(target, "templateLibraryService", libraryService); ReflectionTestUtils.setField(target, "libraryMapper", libraries);
-        ReflectionTestUtils.setField(target, "auditTaskService", mock(IAuditTaskService.class));
-        ReflectionTestUtils.setField(target, "auditTaskMapper", mock(AuditTaskMapper.class)); ReflectionTestUtils.setField(target, "capabilityGuard", mock(ICapabilityGuard.class));
+        audit = mock(IAuditTaskService.class);
+        ReflectionTestUtils.setField(target, "auditTaskService", audit);
+        capabilities = mock(ICapabilityGuard.class);
+        ReflectionTestUtils.setField(target, "auditTaskMapper", mock(AuditTaskMapper.class)); ReflectionTestUtils.setField(target, "capabilityGuard", capabilities);
         ReflectionTestUtils.setField(target, "mediaPublicationGuard", MediaPublicationMySqlFixture.guard(sql, members));
         ProxyFactory proxy = new ProxyFactory(target); proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source), new AnnotationTransactionAttributeSource()));
         publish = (ITemplatePublishService) proxy.getProxy();
+        adoption = new TemplateAdoptionService(sql.getMapper(TemplateAdoptionReceiptMapper.class), publish,
+                new DataSourceTransactionManager(source));
+        ReflectionTestUtils.setField(target, "adoptionService", adoption);
     }
     @AfterAll static void close() throws Exception {
         try { if (source != null) source.forceCloseAll(); }
@@ -69,7 +83,77 @@ class TemplateAdoptionRoundTripMySqlIT {
     }
 
     private static final String SCAN_QA="{\"schemaVersion\":1,\"present\":\"inline\",\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"欢迎\"},\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"答案\",\"answerText\":\"yes\"}}";
-    @BeforeEach void clean() { db.update("DELETE FROM cms_template_library"); db.update("DELETE FROM cms_member_template"); }
+    @BeforeEach void clean() { reset(capabilities, audit); db.update("DELETE FROM template_adoption_receipt"); db.update("DELETE FROM cms_template_library"); db.update("DELETE FROM cms_member_template"); }
+
+    @Test void seededPublicAdoptionUsesRealReceiptAndDraftServiceWithoutInventingReviewApproval() throws Exception {
+        // TEST-only copies of public IDs 50/53; generated IDs below are local fixture identities.
+        String seed = java.nio.file.Files.readString(java.nio.file.Path.of("sql/migration_seed_merchant_game_a8_20260823.sql"));
+        String[][] specs = {
+                {"signature_dish_blitz", "招牌菜限时盲猜", "哪一项最像这家店今天的招牌主角?", "店员重点推荐的当日招牌", "菜单里最贵的一项", "颜色最鲜艳的一项", "名字最长的一项"},
+                {"fitness_reaction_60", "60秒健身知识反应赛", "开始训练前 哪个做法更稳妥?", "先确认器械和身体状态再开始", "直接使用最大重量", "忽略教练和场馆提示", "不热身马上冲刺"}
+        };
+        when(capabilities.checkAdvancedMechanics(eq(7L), anyString())).thenReturn("当前身份未解锁博弈机制");
+        Set<Long> draftIds = new HashSet<>();
+        for (String[] spec : specs) {
+            var config = java.util.regex.Pattern.compile("VALUES \\('" + spec[0] + "', '(.*?)', NULL\\);").matcher(seed);
+            assertTrue(config.find(), "Use the actual authored seed config");
+            int start = seed.indexOf("-- TEMPLATE " + spec[0] + "|");
+            int end = seed.indexOf("-- TEMPLATE ", start + 1);
+            String block = seed.substring(start, end < 0 ? seed.length() : end);
+            for (int i = 1; i < spec.length; i++) assertTrue(block.contains("'" + spec[i] + "'"));
+            var answer = java.util.regex.Pattern.compile(java.util.regex.Pattern.quote("'" + spec[6] + "'") + "\\s*,\\s*'([^']+)'").matcher(block);
+            assertTrue(answer.find(), "Keep the authored answer, not a fixture-selected replacement");
+            CmsTemplateLibrary original = new CmsTemplateLibrary();
+            original.setMemberId(100000L); original.setTitle(spec[1]); original.setValidationMethod(3);
+            original.setQuestionName(spec[2]); original.setQuestionA(spec[3]); original.setQuestionB(spec[4]);
+            original.setQuestionC(spec[5]); original.setQuestionD(spec[6]); original.setCorrectAnswer(answer.group(1));
+            original.setAdvancedConfigJson(config.group(1)); original.setCreateBy("r30_test_fixture");
+            original.setStatus(1L); original.setPublishStatus(1L); original.setDelFlag(0);
+            assertEquals(1, libraries.insertCmsTemplateLibrary(original));
+            TemplateAdoptionCommand command = new TemplateAdoptionCommand();
+            command.setOriginalTemplateId(original.getId().toString()); command.setScope("");
+            command.setRequestId("r30_seed_" + spec[0]);
+            command.setSourceVersion((String) adoption.source(7L, 7L, command.getOriginalTemplateId()).get("sourceVersion"));
+            var actualReceipts = sql.getMapper(TemplateAdoptionReceiptMapper.class);
+            var failedFinish = mock(TemplateAdoptionReceiptMapper.class, org.mockito.AdditionalAnswers.delegatesTo(actualReceipts));
+            doThrow(new IllegalStateException("R30 injected receipt finish failure")).when(failedFinish)
+                    .finish(any(), eq(command.getRequestId()), eq("COMPLETED"), any(), any(), any(), any());
+            var failedAdoption = new TemplateAdoptionService(failedFinish, publish, new DataSourceTransactionManager(source));
+            int before = db.queryForObject("SELECT COUNT(*) FROM cms_member_template", Integer.class);
+            assertThrows(IllegalStateException.class, () -> failedAdoption.adopt(7L, 7L, command, "r30_test_fixture"));
+            assertEquals(before, db.queryForObject("SELECT COUNT(*) FROM cms_member_template", Integer.class), "Real draft insert and receipt completion must roll back together");
+            assertEquals("PENDING", adoption.receipt(7L, 7L, "", command.getRequestId()).get("status"));
+            Map<String, Object> adopted = adoption.adopt(7L, 7L, command, "r30_test_fixture");
+            assertEquals("COMPLETED", adopted.get("status"));
+            Map<String, Object> receipt = adoption.receipt(7L, 7L, "", command.getRequestId());
+            assertEquals(adopted.get("draftId"), receipt.get("draftId"));
+            Long id = Long.valueOf((String) receipt.get("draftId")); assertTrue(draftIds.add(id));
+            CmsMemberTemplate draft = members.selectCmsMemberTemplateById(id);
+            assertTrue(adoption.matchesDraft(receipt, draft));
+            assertEquals(7L, draft.getMemberId()); assertEquals(original.getId(), draft.getOriginalTemplateId());
+            assertEquals(original.getCorrectAnswer(), draft.getCorrectAnswer()); assertEquals(spec[2], draft.getQuestionName());
+            assertEquals(json.readTree(original.getAdvancedConfigJson()), json.readTree(draft.getAdvancedConfigJson()));
+            CmsTemplatePublishRequest own = new CmsTemplatePublishRequest();
+            BeanUtils.copyProperties(draft, own, "duration");
+            own.setTitle(spec[1] + " R30 TEST");
+            assertEquals(id, publish.saveOrUpdateDraft(own, 7L, "r30_test_fixture"));
+            when(audit.submitOrRefreshTemplate(eq(id), eq(7L), anyString())).thenThrow(new IllegalStateException("R30 injected review handoff failure"));
+            assertThrows(IllegalStateException.class, () -> publish.publishTemplateWithTransaction(own, 7L, "r30_test_fixture"));
+            assertEquals(0, members.selectCmsMemberTemplateById(id).getDraftStatus(), "Failed submit must roll back the existing draft update");
+            assertEquals("COMPLETED", adoption.receipt(7L, 7L, "", command.getRequestId()).get("status"));
+            when(audit.submitOrRefreshTemplate(eq(id), eq(7L), anyString())).thenReturn(1L);
+            assertEquals(id, publish.publishTemplateWithTransaction(own, 7L, "r30_test_fixture"));
+            CmsMemberTemplate submitted = members.selectCmsMemberTemplateById(id);
+            assertEquals(1, submitted.getDraftStatus()); assertEquals(0L, submitted.getStatus());
+            assertEquals(0L, submitted.getPublishStatus(), "Submit is not review approval or runtime readiness");
+            assertEquals(original.getCorrectAnswer(), submitted.getCorrectAnswer());
+            assertEquals(json.readTree(original.getAdvancedConfigJson()), json.readTree(submitted.getAdvancedConfigJson()));
+            assertEquals(spec[1], libraries.selectCmsTemplateLibraryById(original.getId()).getTitle());
+            assertEquals(id.toString(), adoption.adopt(7L, 7L, command, "r30_test_fixture").get("draftId"));
+        }
+        assertEquals(2, draftIds.size());
+        assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM template_adoption_receipt WHERE status='COMPLETED' AND inherited_advanced_config_hash IS NOT NULL", Integer.class));
+    }
     @Test void scanParticipationDoesNotForcePublishedMainGameplayFullscreen() throws Exception {
         CmsTemplatePublishRequest request=new CmsTemplatePublishRequest();request.setTitle("扫码答题");request.setValidationMethod(4);request.setAdvancedConfigJson(SCAN_QA);
         Long id=publish.publishTemplateWithTransaction(request,7L,"author");CmsMemberTemplate saved=members.selectCmsMemberTemplateById(id);

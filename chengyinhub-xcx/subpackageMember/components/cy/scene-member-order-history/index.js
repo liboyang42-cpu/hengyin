@@ -2,6 +2,7 @@
 
 const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const cyLoading = require('../../../../utils/loading.js');
+function openAddress() { return require('../../../../utils/open-address.js') }
 const toast = require('../../../../utils/toast.js');
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
@@ -15,8 +16,9 @@ const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-env
 // 页面壳与场景弹窗的差别只有一处:打开订单详情时往哪走(见 openDetail 的 open 事件)。
 const app = getApp()
 const policy = require('../../../../utils/identity/identity-policy.js')
-const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js')
+const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, isSelfPlayPass, passUntilText } = require('../../../../utils/order-status.js')
 const { resolveActualPaidAmount, isFreeOrder } = require('../../../../utils/order-actual-pay.js')
+const refundAmount = require('../../../utils/order-refund-amount.js')
 const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js')
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js')
 
@@ -26,6 +28,9 @@ const { createRegistrationPaymentVerifier } = require('../../../../utils/checkou
 function refundDeadlineText(row) {
   const info = row && row.refundInfo
   if (!info) return '退款规则以提交后的平台判定为准'
+  // 2026-11-03:集合前 24 小时内只退部分(ratio<1),不是「免费取消」,照后端 reason 说。
+  const ratio = Number(info.ratio)
+  if (info.refundable && info.reason && info.ratio != null && ratio < 1) return info.reason
   if (info.refundable && info.deadline) {
     return '可免费取消至 ' + formatRefundDeadline(info.deadline)
   }
@@ -60,7 +65,9 @@ function formatActivityTime(value) {
   try {
     const date = new Date(String(value).replace(/-/g, '/'))
     const pad = (n) => String(n).padStart(2, '0')
-    return `${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+    const day = `${pad(date.getMonth() + 1)}.${pad(date.getDate())}`
+    // 第十二轮 k7 N6:只有日期的值(零点)只写日期,不写 00:00
+    return date.getHours() === 0 && date.getMinutes() === 0 ? day : `${day} ${pad(date.getHours())}:${pad(date.getMinutes())}`
   } catch (e) {
     return ''
   }
@@ -84,7 +91,7 @@ Component({
       { key: 'in_progress', label: '进行中' },
       { key: 'completed', label: '已完成' },
       { key: 'refunding', label: '退款中' },
-      { key: 'refunded', label: '已退款' },
+      { key: 'refunded', label: '退款成功' },
       { key: 'non_refundable', label: '不可退款' },
       { key: 'manual_refund', label: '人工售后' },
     ],
@@ -216,6 +223,10 @@ Component({
               const product = item.cmsActivity || item.cmsTopic || {}
               const address = typeof product.addressName === 'string' ? product.addressName.trim() : ''
               item.addressText = address && address.toLowerCase() !== 'null' ? address : '—'
+              // 第九轮 m1-9:地点一点开地图。活动有选点坐标;主题只有文字,走缓存的地址解析
+              item.addrTap = item.addressText !== '—'
+              item.addrLat = product.latitude
+              item.addrLng = product.longitude
               if (item.createTime) item.createTimeFormatted = formatDateTime(item.createTime)
               if (item.cmsActivity && item.cmsActivity.startDate && item.cmsActivity.endDate) {
                 item.cmsActivity.timeRangeFormatted = formatActivityTimeRange(item.cmsActivity.startDate, item.cmsActivity.endDate)
@@ -223,6 +234,8 @@ Component({
               if (item.cmsTopic && item.cmsTopic.startDate && item.cmsTopic.endDate) {
                 item.cmsTopic.timeRangeFormatted = formatActivityTimeRange(item.cmsTopic.startDate, item.cmsTopic.endDate)
               }
+              // 第十二轮 k7 N6:自玩通行证只有一个有效日期(可玩至几号),不摆主题的起止日
+              if (item.cmsTopic && isSelfPlayPass(item) && item.expiresAt) item.cmsTopic.timeRangeFormatted = passUntilText(item.expiresAt)
               const summary = summarizeOrderState(item)
               item.orderStateKey = summary.key
               item.orderStateText = summary.text
@@ -290,6 +303,12 @@ Component({
       this.triggerEvent('open', { id: 'member-order-detail', params: { id } })
     },
 
+    // 第九轮 m1-9:地点行开地图;没有地点就照旧进订单详情
+    onAddressTap(e) {
+      if (e.currentTarget.dataset.address) openAddress().openFromEvent(e)
+      else this.openDetail(e)
+    },
+
     goDiscoverRoutes() {
       wx.switchTab({ url: '/pages/index/index' })
     },
@@ -330,12 +349,12 @@ Component({
       that._finishCancelPrompt = finishCancelPrompt
       modal.show({
         dangerKey: status === 2 ? (isFreeOrder(that.data.list[index]) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',   // 三段式文案在 utils/danger-actions.js
-        dangerParams: { deadline: refundDeadlineText(that.data.list[index]) },
+        dangerParams: { deadline: refundAmount.cancelConfirmDeadline(that.data.list[index], refundDeadlineText(that.data.list[index])) },
         success(res) {
           if (!finishCancelPrompt() || !isCurrent()) return
           if (res.confirm) {
             // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
-            if (status === 2 && !isFreeOrder(that.data.list[index])) subscribe.request(['refund', 'refundRejected'])
+            if (status === 2 && !isFreeOrder(that.data.list[index])) subscribe.request(['refund'])
             that.cancelOrderRequest(id, index, status)
           }
         },

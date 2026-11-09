@@ -103,3 +103,33 @@ test('负控:删掉 recordId 观察器(退回只读 attached)必须复现「永�
     assert.AssertionError,
   )
 })
+
+
+for (const channel of ['success', 'successStatusAbnormal', 'fail']) {
+  test('another player participation has a visible return path via ' + channel, () => {
+    const { ctx, requests } = loadComponent(read(COMPONENT + '.js'))
+    ctx._applyRecordId('75')
+    requests[0][channel]({ code: 500, msg: '无权查看该报名信息' })
+    assert.equal(ctx.data.loadState, 'missing-param')
+    assert.equal(ctx.data.errorActionText, '返回')
+    let back = 0
+    ctx.triggerEvent = name => { if (name === 'back') back++ }
+    ctx.onErrorAction()
+    assert.equal(back, 1)
+    assert.equal(requests.length, 1, 'return does not retry a refused record')
+  })
+}
+
+test('ordinary participation read failure stays retryable and stale refusals are ignored', () => {
+  const { ctx, requests } = loadComponent(read(COMPONENT + '.js'))
+  ctx._applyRecordId('75')
+  requests[0].successStatusAbnormal({ code: 500, msg: '服务暂不可用' })
+  assert.equal(ctx.data.loadState, 'error')
+  ctx.onErrorAction()
+  assert.equal(requests.length, 2)
+  ctx._applyRecordId('76')
+  requests[1].fail({ code: 403 })
+  assert.equal(ctx.data.loadState, 'loading')
+  requests[2].success({ code: 200, data: { id: 76, ownerType: 1 } })
+  assert.equal(ctx.data.loadState, 'ready')
+})

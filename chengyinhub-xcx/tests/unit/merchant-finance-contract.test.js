@@ -67,7 +67,7 @@ test('500 与 200 空 payload 都只显示 cy-error：恢复回落分支即红',
 
 test('深链资金场景已移除：任一旧 scene 复活即红', () => {
   const sources = [
-    read('components/cy/scene-deep-link/index.js'), read('components/cy/scene-route-content/index.js'), read('utils/scene-registry.js'),
+    read('subpackageMember/components/cy/scene-deep-link/index.js'), read('subpackageMember/components/cy/scene-route-content/index.js'), read('utils/scene-registry.js'),
   ].join('\n');
   const assertNoMerchantFinanceScenes = (input) => assert.doesNotMatch(input, /merchant-ledger|merchant-withdraw|merchant-withdraw-records/);
   assertNoMerchantFinanceScenes(sources);

@@ -48,6 +48,45 @@ public class PricingResult implements Serializable {
     /** canConfirm=false 时的原因,与 confirmPrice 拒绝时的原话一致;可确认时为空。 */
     private String confirmBlockReason;
 
+    /** P-34:作者已经填过的票价(有人带取主题票最高价,无人带取自玩价);没有则为空。定价页用它预填。 */
+    private BigDecimal currentPrice;
+
+    /** P-34:主题已过定价阶段(lifecycle>2,终价已确认),只读展示。 */
+    private Boolean priced;
+
+    /**
+     * 第四轮(多票价):城市定向作者自己发的票(有人带档),每张一行,定价页逐张确认终价。
+     * 只有一张票时页面照旧走单价;非城市定向/无人带档为空。
+     */
+    private List<TicketPrice> tickets;
+
+    public List<TicketPrice> getTickets() { return tickets; }
+    public void setTickets(List<TicketPrice> tickets) { this.tickets = tickets; }
+
+    public static class TicketPrice implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private Long ticketId;
+        private String name;
+        private BigDecimal price;
+
+        public TicketPrice() { }
+        public TicketPrice(Long ticketId, String name, BigDecimal price) {
+            this.ticketId = ticketId; this.name = name; this.price = price;
+        }
+        public Long getTicketId() { return ticketId; }
+        public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public BigDecimal getPrice() { return price; }
+        public void setPrice(BigDecimal price) { this.price = price; }
+    }
+
+    public Boolean getPriced() { return priced; }
+    public void setPriced(Boolean priced) { this.priced = priced; }
+
+    public BigDecimal getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
+
     public static class Lineup implements Serializable {
         private static final long serialVersionUID = 1L;
         private Long toId;

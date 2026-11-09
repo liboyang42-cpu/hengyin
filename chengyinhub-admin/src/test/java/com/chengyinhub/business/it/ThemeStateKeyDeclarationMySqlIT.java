@@ -46,7 +46,8 @@ class ThemeStateKeyDeclarationMySqlIT {
         db = new JdbcTemplate(source);
         P0AcceptanceSchema.baseTables(db, "cms_topic");
         P0AcceptanceSchema.createTableFromMigration(db, "migration_theme_state_key_20260916.sql");
-        P0AcceptanceSchema.migrations(source, "migration_20261022_theme_state_key_attribute_def.sql");
+        P0AcceptanceSchema.migrations(source, "migration_20261022_theme_state_key_attribute_def.sql",
+                "migration_20261026_theme_attribute_registry_version.sql"); // ThemeStateKeyService.lockRegistry
         SqlSessionTemplate sql = P0AcceptanceSchema.sql(source, "ThemeStateKeyMapper");
         keys = sql.getMapper(ThemeStateKeyMapper.class);
         DataSourceTransactionManager manager = new DataSourceTransactionManager(source);

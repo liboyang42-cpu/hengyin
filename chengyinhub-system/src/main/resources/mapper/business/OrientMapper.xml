@@ -130,6 +130,22 @@
         where task_id = #{taskId} order by alternative_task_type
     </select>
 
+    <select id="selectAlternativeForUpdate" resultMap="OrientTaskAlternativeResult">
+        select <include refid="alternativeColumns"/> from orient_task_alternative
+        where task_id = #{taskId} and alternative_task_type = #{type} for update
+    </select>
+
+    <select id="selectAlternativesForTopicRebuild" resultMap="OrientTaskAlternativeResult" useCache="false" flushCache="true">
+        select a.* from orient_task_alternative a
+        inner join cms_topic_node n on n.id = a.task_id and n.topic_id = a.topic_id
+        where a.topic_id = #{topicId} order by a.id for update
+    </select>
+
+    <select id="alternativeTableExists" resultType="boolean" useCache="false" flushCache="true">
+        select exists(select 1 from information_schema.tables
+            where table_schema = database() and table_name = 'orient_task_alternative' and table_type = 'BASE TABLE')
+    </select>
+
     <insert id="insertAlternative" parameterType="com.chengyinhub.business.domain.OrientTaskAlternative"
             useGeneratedKeys="true" keyProperty="id">
         insert into orient_task_alternative (topic_id, task_id, alternative_task_type, prompt_text, answer_hash,

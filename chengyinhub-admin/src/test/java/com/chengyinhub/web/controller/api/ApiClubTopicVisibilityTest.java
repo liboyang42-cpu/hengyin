@@ -63,6 +63,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club activeClub = new Club();
         activeClub.setId(73L);
+        activeClub.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(activeClub);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -87,6 +88,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club activeClub = new Club();
         activeClub.setId(73L);
+        activeClub.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(activeClub);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -215,6 +217,7 @@ class ApiClubTopicVisibilityTest {
         IClubService clubService = mock(IClubService.class);
         Club club = new Club();
         club.setId(73L);
+        club.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
         when(clubService.selectClubById(73L)).thenReturn(club);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
 
@@ -222,5 +225,101 @@ class ApiClubTopicVisibilityTest {
         body.setId(73L);
         List<?> rows = (List<?>) controller.topics(body).get("data");
         assertEquals(Integer.valueOf(4), ((CmsTopic) rows.get(0)).getSignupCount(), "4 张已付场次票必须计入团卡人数");
+    }
+
+    // 第十轮 f2 walk:公开团卡列表原样下发 publishedRouteGraphJson,任何登录用户都能读到各站答案。
+    @Test
+    void topicListNeverCarriesRouteAnswersOrPlayConfig() {
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        CmsTopic published = topic(9L, "{\"schemaVersion\":1}");
+        published.setPublishedRouteGraphJson("{\"nodeAnswers\":{\"71\":{\"questionAnswer\":\"8\",\"answerReveal\":\"8\"}}}");
+        published.setRouteGraphJson("{\"nodeAnswers\":{\"71\":{\"questionAnswer\":\"8\"}}}");
+        published.setJourneyRulesJson("{\"rules\":[]}");
+        published.setJourneyStoryJson("{\"endings\":[]}");
+        published.setCompleteRuleJson("{\"mode\":\"ALL\"}");
+        published.setName("人民广场 · 喷泉报时");
+        published.setCreateBy("13900000003");
+        published.setUpdateBy("13900000003");
+        when(topicService.selectPublicCmsTopicList(any())).thenReturn(Collections.singletonList(published));
+        ApiClubController controller = new ApiClubController();
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        IGameSessionRuntimeService runtimeService = mock(IGameSessionRuntimeService.class);
+        when(runtimeService.isGameSessionEnabled(published)).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", runtimeService);
+        ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        IOmsTicketService ticketService = mock(IOmsTicketService.class);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(controller, "cmsActivityService",
+                mock(com.chengyinhub.business.service.ICmsActivityService.class));
+        IClubService clubService = mock(IClubService.class);
+        Club club = new Club();
+        club.setId(73L);
+        club.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
+        when(clubService.selectClubById(73L)).thenReturn(club);
+        ReflectionTestUtils.setField(controller, "clubService", clubService);
+
+        Club body = new Club();
+        body.setId(73L);
+        CmsTopic row = (CmsTopic) ((List<?>) controller.topics(body).get("data")).get(0);
+        assertEquals(null, row.getPublishedRouteGraphJson(), "已发布路线图带各站答案,不能出公开列表");
+        assertEquals(null, row.getRouteGraphJson());
+        assertEquals(null, row.getGameModuleConfigJson());
+        assertEquals(null, row.getJourneyRulesJson());
+        assertEquals(null, row.getJourneyStoryJson());
+        assertEquals(null, row.getCompleteRuleJson());
+        assertTrue(row.getGameModuleEnabled(), "开关先按原配置算好再清掉配置");
+        assertEquals("人民广场 · 喷泉报时", row.getName());
+        // 第十二轮 k7(走查 k2 游客俱乐部页):审计列是作者登录名(手机号),不出列表
+        assertEquals(null, row.getCreateBy());
+        assertEquals(null, row.getUpdateBy());
+    }
+
+    // 第十轮 f2 walk:确认终价后仍是 lifecycle 2,团卡要能分出「开售审核在等平台」,驳回后回到待定价。
+    @Test
+    void pricingTopicCarriesWhetherTheSaleReviewIsWaiting() {
+        CmsTopic waiting = topic(21L, null); waiting.setLifecycle(2);
+        CmsTopic rejected = topic(22L, null); rejected.setLifecycle(2);
+        CmsTopic unpriced = topic(23L, null); unpriced.setLifecycle(2);
+        CmsTopic selling = topic(24L, null); selling.setLifecycle(3);
+        ICmsTopicService topicService = mock(ICmsTopicService.class);
+        when(topicService.selectPublicCmsTopicList(any())).thenReturn(Arrays.asList(waiting, rejected, unpriced, selling));
+        com.chengyinhub.business.service.IAuditTaskService audits = mock(com.chengyinhub.business.service.IAuditTaskService.class);
+        when(audits.selectAuditTaskList(any())).thenAnswer(inv -> {
+            com.chengyinhub.business.domain.AuditTask q = inv.getArgument(0);
+            assertEquals(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC_SALE_REVIEW, q.getBizType());
+            com.chengyinhub.business.domain.AuditTask t = new com.chengyinhub.business.domain.AuditTask();
+            if (Long.valueOf(21L).equals(q.getBizId())) { t.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING); return Collections.singletonList(t); }
+            if (Long.valueOf(22L).equals(q.getBizId())) { t.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_REJECTED); return Collections.singletonList(t); }
+            return Collections.emptyList();
+        });
+        ApiClubController controller = new ApiClubController();
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
+        ReflectionTestUtils.setField(controller, "auditTaskService", audits);
+        ReflectionTestUtils.setField(controller, "gameSessionRuntimeService", mock(IGameSessionRuntimeService.class));
+        ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
+        when(registrationService.selectCmsRegistrationList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        IOmsTicketService ticketService = mock(IOmsTicketService.class);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "omsTicketService", ticketService);
+        ReflectionTestUtils.setField(controller, "cmsActivityService",
+                mock(com.chengyinhub.business.service.ICmsActivityService.class));
+        IClubService clubService = mock(IClubService.class);
+        Club club = new Club();
+        club.setId(73L);
+        club.setStatus(1L); // 第十二轮 k2:游客只看在营业的俱乐部
+        when(clubService.selectClubById(73L)).thenReturn(club);
+        ReflectionTestUtils.setField(controller, "clubService", clubService);
+        Club body = new Club();
+        body.setId(73L);
+        List<?> rows = (List<?>) controller.topics(body).get("data");
+        assertEquals(Boolean.TRUE, ((CmsTopic) rows.get(0)).getSaleReviewPending());
+        assertEquals(Boolean.FALSE, ((CmsTopic) rows.get(1)).getSaleReviewPending(), "驳回后回到待定价");
+        assertEquals(Boolean.FALSE, ((CmsTopic) rows.get(2)).getSaleReviewPending());
+        assertEquals(null, ((CmsTopic) rows.get(3)).getSaleReviewPending(), "已开售不查开售审核");
+        verify(audits, org.mockito.Mockito.times(3)).selectAuditTaskList(any());
     }
 }

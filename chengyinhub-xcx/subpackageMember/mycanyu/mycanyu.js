@@ -1,7 +1,7 @@
 const app = getApp();
 const { summarizeOrderState } = require('../../utils/order-status.js');
 const { getScene } = require('../../utils/scene-registry.js');
-const { isRecordList } = require('../../utils/response-shape.js');
+const { isRecordList } = require('../../utils/response-shape.js'); const pageMotion = require('../../utils/page-motion.js');
 
 function registrationId(value) {
   if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : '';
@@ -177,7 +177,7 @@ Page({
           that.allList = res.data.map(item => that.normalize(item));
           that._participationListOwner = owner;
           that._participationReadEpoch = epoch;
-          that.renderList();
+          if (!hasSnapshot) pageMotion.enter(that, 'pmList'); that.renderList(); // 首次落地依次浮上来,与我的订单/积分明细同一入场
           that.setData({ firstLoading: false, refreshing: false, errorMsg: '' });
           return;
         }
@@ -233,7 +233,5 @@ Page({
     this.getList(true);
   },
 
-  onShareAppMessage() {
-    return { title: '我的参与', path: '/subpackageMember/mycanyu/mycanyu' };
-  }
+  // 第七轮 C 第 2 项:「我的参与」是登录后的私人列表,不提供转发(原先转发出去接收人只看到自己的空列表/登录弹窗)。
 });

@@ -50,11 +50,21 @@ public class CoopSettlementOriginalProducer {
 
     @Transactional(propagation=Propagation.MANDATORY,rollbackFor=Exception.class)
     public void freezeOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt) {
+        freezeOriginals(observed,basis,frozenAt,false);
+    }
+
+    @Transactional(propagation=Propagation.MANDATORY,rollbackFor=Exception.class)
+    public void freezeClubSelfPlayOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt) {
+        freezeOriginals(observed,basis,frozenAt,true);
+    }
+
+    private void freezeOriginals(CmsTopic observed, TopicSettlementCashBasis basis, Date frozenAt, boolean clubSelfPlay) {
         if(!TransactionSynchronizationManager.isActualTransactionActive() || TransactionSynchronizationManager.isCurrentTransactionReadOnly())
             throw repair("ORIGINAL_PRODUCER_TRANSACTION_REQUIRED");
         if(observed==null || observed.getId()==null || basis==null || frozenAt==null) throw repair("ORIGINAL_PRODUCER_SCOPE_REQUIRED");
         CmsTopic topic=topics.selectCmsTopicByIdForUpdate(observed.getId());
         if(topic==null || !observed.getId().equals(topic.getId())) throw repair("ORIGINAL_TOPIC_FENCE_REQUIRED");
+        if(clubSelfPlay && (topic.getClubId()==null || topic.getClubId()<=0)) throw repair("CLUB_SELF_PLAY_SCOPE_REQUIRED");
         if(!Integer.valueOf(1).equals(topic.getIsSettlement())) throw repair("ORIGINAL_SETTLEMENT_CLAIM_REQUIRED");
         if(topic.getMemberId()==null || topic.getFeePlatformRate()==null || topic.getFeeGuaranteeBaseRate()==null
                 || topic.getFeeGuaranteeStepRate()==null || topic.getFeeGuaranteeMaxMerchant()==null) throw repair("FROZEN_TOPIC_FIELDS_REQUIRED");
@@ -126,7 +136,10 @@ public class CoopSettlementOriginalProducer {
                 if("MERCHANT_VERIFY".equals(head.getLineType()) && sum.signum()>0) verifiedMerchants.add(head.getMerchantId());
             } else throw repair("ORIGINAL_HEAD_KIND_UNPROVEN:"+head.getLineType());
         }
+        if(clubSelfPlay && (heads.size()!=2 || !accounting.containsKey("PLATFORM") || !accounting.containsKey("INITIATOR_MARGIN")))
+            throw repair("CLUB_SELF_PLAY_HEAD_SET_REQUIRED");
         for(String kind:List.of("PLATFORM","INITIATOR_GUARANTEE")) {
+            if(clubSelfPlay && "INITIATOR_GUARANTEE".equals(kind)) continue; // No co-op order: the existing self-play split has no guarantee head.
             CoopSettlement head=accounting.get(kind);if(head==null) throw repair("ORIGINAL_ACCOUNTING_HEAD_REQUIRED:"+kind);
             for(var share:CoopOriginalAllocation.allocate(money(head.getAmount()),weights).entrySet()) {
                 components.add(component(head,share.getKey(),share.getKey(),share.getValue(),null,weights,payments));

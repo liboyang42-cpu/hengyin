@@ -1000,7 +1000,8 @@ public class MarketingProductFulfillmentServiceImpl implements IMarketingProduct
     private void applyRefundSnapshot(CmsRegistration row, GrantLine line, CmsTopic topic) {
         Integer purchaseKind = row.getPurchaseKind();
         if (Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(purchaseKind)) {
-            RefundPolicy.Snapshot snapshot = RefundPolicy.snapshotOnPurchase(purchaseKind, row.getExpiresAt());
+            RefundPolicy.Snapshot snapshot = RefundPolicy.snapshotOnPurchase(purchaseKind, null, row.getExpiresAt());
+            // 促销商品发放的 ③ 没有票种开始时刻:不凭空捏三档的钟,沿用到期锚点(EXPLORE_END_100_0)。
             if (snapshot == null) {
                 throw new IllegalStateException(REFUND_DECISION_POINT_MISSING
                         + ":③ 探索票缺少到期锚点 topicId=" + line.topicId);

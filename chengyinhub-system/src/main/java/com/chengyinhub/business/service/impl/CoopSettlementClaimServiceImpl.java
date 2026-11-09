@@ -222,6 +222,11 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
         evidenceService.requireUnrefundedCashBasis(snapshot.getTopicId());
         List<CoopSettlementOriginLine> lines = CoopSettlementContract.originLines(snapshot, candidates, cutoff);
         if (!"NONE".equals(snapshot.getCompensationMode()) && lines.isEmpty()) {
+            if (!evidenceService.liveClubSessionIds(snapshot.getTopicId()).isEmpty()) {
+                // 第十二轮 k5:主题级没有可证履约,但主题有俱乐部场次 ⇒ 这张单的商家费按场次在活动结算里付。
+                // 不写 claim、不落零元终态、不改合作单状态(之后结算的场次仍按它付)。
+                return new CoopSettlementPlan(snapshot, ROUTE_SETTLED_PER_SESSION, lines);
+            }
             throw manualRepair("NO_PROVEN_FULFILLMENT:不得以零元终态消耗合作单");
         }
         String route = "NONE".equals(snapshot.getCompensationMode()) ? "NONE" : "COOP_ORDER";
@@ -232,6 +237,9 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public void persist(CoopSettlementPlan plan, CoopSettlement head) {
         if (plan == null) throw new IllegalArgumentException("plan 不能为空");
+        if (ROUTE_SETTLED_PER_SESSION.equals(plan.getRoute())) {
+            throw new IllegalStateException(CoopSettlementContract.LEDGER_CONFLICT + ":按场次结算的合作单不在主题级落账");
+        }
         lockTopic(plan.getSnapshot() == null ? null : plan.getSnapshot().getTopicId());
         if ("NONE".equals(plan.getRoute())) {
             for (CoopSettlementOriginLine line : plan.getOriginLines()) claim(plan, line);

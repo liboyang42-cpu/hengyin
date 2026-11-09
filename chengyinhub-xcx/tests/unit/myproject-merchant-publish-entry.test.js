@@ -100,6 +100,15 @@ function loadActivities(page, rows) {
   page.setData({ typeTab: 'activity' });
   page.loadProjects();
   last('/api/project/my').success({ code: '200', data: { rows: rows, total: rows.length } });
+  answerJoinReads();
+}
+
+// 第十轮 f1 p2 F-3:商家态「我的项目」还读两路承接项目(与工作台「全部 N」同源);这里没有承接,回空。
+function answerJoinReads() {
+  const legacy = last('/api/registration/merchant/list');
+  if (legacy) legacy.success({ code: '200', data: { rows: [] } });
+  const chapter = last('/api/merchant/chapter-application/mine');
+  if (chapter) chapter.success({ code: '200', data: [] });
 }
 
 // ---- 入口判据 --------------------------------------------------------------
@@ -222,6 +231,7 @@ function projects(request, id) {
   request.success({ code: 200, data: { rows: [
     { id, bizType: 'topic', state: 'draft', title: '回包归属测试' }
   ], total: 1 } });
+  answerJoinReads();
 }
 
 test('old owner response after hiding and changing account must not fill private cards', () => {

@@ -107,10 +107,15 @@ class OrientTaskServiceImplTest {
         ReflectionTestUtils.setField(service, "playTeamMapper", playTeamMapper);
         ReflectionTestUtils.setField(service, "topicService", topicService);
         ReflectionTestUtils.setField(service, "topicNodeService", nodeService);
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodeMapper = mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class);
+        when(nodeMapper.selectContentByIdForUpdate(TASK)).thenReturn(node);
+        ReflectionTestUtils.setField(service, "topicNodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "activityService", mock(ICmsActivityService.class));
         ReflectionTestUtils.setField(service, "geoService", geo);
         ReflectionTestUtils.setField(service, "safetyService", safety);
         ReflectionTestUtils.setField(service, "switches", switches);
+        ReflectionTestUtils.setField(service, "contentWriteGuard",
+                mock(com.chengyinhub.business.service.support.TopicContentWriteGuard.class));
         routeMapper = mock(com.chengyinhub.business.mapper.TopicRouteSessionMapper.class);
         scoring = mock(com.chengyinhub.business.service.IOrientScoringService.class);
         originalRun = new com.chengyinhub.business.domain.TopicRouteSession();
@@ -130,6 +135,101 @@ class OrientTaskServiceImplTest {
         service.configureAlternative(OWNER, TOPIC, TASK, "SCAN", null, "BUND-2026", true);
         service.configureAlternative(OWNER, TOPIC, TASK, "QUIZ", "外滩建筑群叫什么?", "万国 建筑博览群", true);
         service.configureAlternative(OWNER, TOPIC, TASK, "PHOTO", "拍下海关大楼钟楼", null, true);
+    }
+
+    @Test
+    void existingAnswerSurvivesPromptDisableAndReenableWithoutInput() {
+        for (String type : List.of("SCAN", "QUIZ")) {
+            String hash = db.mapper.selectAlternative(TASK, type).getAnswerHash();
+            for (boolean enabled : List.of(true, false, true)) {
+                Map<String, Object> response = service.configureAlternative(OWNER, TOPIC, TASK, type,
+                        "updated prompt", "  ", enabled);
+                assertEquals(hash, db.mapper.selectAlternative(TASK, type).getAnswerHash());
+                assertEquals(enabled ? 1 : 0, db.mapper.selectAlternative(TASK, type).getEnabled());
+                assertEquals("updated prompt", response.get("promptText"));
+                assertFalse(response.containsKey("answerHash"));
+            }
+        }
+    }
+
+    @Test
+    void firstEnabledQuizOrScanRequiresAnswerButDisabledMayRemainUnconfigured() throws Exception {
+        db.exec("delete from orient_task_alternative");
+        for (String type : List.of("SCAN", "QUIZ")) {
+            assertEquals(OrientRejection.BAD_REQUEST, assertThrows(OrientRejection.class,
+                    () -> service.configureAlternative(OWNER, TOPIC, TASK, type, "prompt", null, true)).getErrorCode());
+            service.configureAlternative(OWNER, TOPIC, TASK, type, "prompt", null, false);
+            assertNull(db.mapper.selectAlternative(TASK, type).getAnswerHash());
+            assertThrows(OrientRejection.class,
+                    () -> service.configureAlternative(OWNER, TOPIC, TASK, type, "prompt", "", true));
+            service.configureAlternative(OWNER, TOPIC, TASK, type, "prompt", "real authored answer", true);
+            assertTrue(db.mapper.selectAlternative(TASK, type).getAnswerHash() != null);
+        }
+    }
+
+    @Test
+    void newAuthoredAnswerReplacesHashThroughExistingNormalizationAndPhotoRejectsAnswer() throws Exception {
+        String scanHash = db.mapper.selectAlternative(TASK, "SCAN").getAnswerHash();
+        service.configureAlternative(OWNER, TOPIC, TASK, "SCAN", null, " ＮＥＷ－ＣＯＤＥ ", true);
+        assertFalse(scanHash.equals(db.mapper.selectAlternative(TASK, "SCAN").getAnswerHash()));
+        service.configureAlternative(OWNER, TOPIC, TASK, "QUIZ", "new prompt", " ＮＥＷ   Answer ", true);
+        assertEquals("REJECTED", service.submit(cmd("QUIZ", "replace-old-answer", c -> c.answer = "万国 建筑博览群")).get("outcome"));
+        assertEquals("COMPLETED", service.submit(cmd("QUIZ", "replace-new-answer", c -> c.answer = "new answer")).get("outcome"));
+        assertThrows(OrientRejection.class,
+                () -> service.configureAlternative(OWNER, TOPIC, TASK, "PHOTO", "photo", "answer", false));
+        service.configureAlternative(OWNER, TOPIC, TASK, "PHOTO", "photo", null, false);
+        assertNull(db.mapper.selectAlternative(TASK, "PHOTO").getAnswerHash());
+    }
+
+    @Test
+    void authorProjectionIncludesDisabledAndVerifiedEmptyNodesWithoutSecrets() {
+        service.configureAlternative(OWNER, TOPIC, TASK, "QUIZ", "disabled prompt", null, false);
+        CmsTopicNode empty = new CmsTopicNode(); empty.setId(12L); empty.setTopicId(TOPIC);
+        ICmsTopicNodeService nodes = (ICmsTopicNodeService) ReflectionTestUtils.getField(service, "topicNodeService");
+        when(nodes.selectCmsTopicNodeList(any())).thenReturn(List.of(node, empty));
+        Map<String, List<Map<String, Object>>> configs = service.authorAlternativeConfigs(OWNER, TOPIC);
+        assertEquals(List.of(), configs.get("12"));
+        assertEquals(3, configs.get(Long.toString(TASK)).size());
+        for (Map<String, Object> item : configs.get(Long.toString(TASK))) {
+            assertEquals(java.util.Set.of("type", "promptText", "enabled", "answerConfigured"), item.keySet());
+            assertEquals(!"PHOTO".equals(item.get("type")), item.get("answerConfigured"));
+            if ("SCAN".equals(item.get("type"))) assertEquals("", item.get("promptText"));
+            if ("QUIZ".equals(item.get("type"))) assertEquals(false, item.get("enabled"));
+        }
+        assertFalse(configs.toString().contains(db.mapper.selectAlternative(TASK, "QUIZ").getAnswerHash()));
+        empty.setTopicId(TOPIC + 1);
+        assertThrows(IllegalStateException.class, () -> service.authorAlternativeConfigs(OWNER, TOPIC));
+    }
+
+    @Test
+    void authorProjectionKeepsOwnerProductAndFeatureGuards() {
+        assertThrows(OrientRejection.class, () -> service.authorAlternativeConfigs(null, TOPIC));
+        assertEquals(OrientRejection.NOT_OWNER, assertThrows(OrientRejection.class,
+                () -> service.authorAlternativeConfigs(PLAYER, TOPIC)).getErrorCode());
+        topic.setProductType(2);
+        assertEquals(OrientRejection.NOT_ORIENTEERING, assertThrows(OrientRejection.class,
+                () -> service.authorAlternativeConfigs(OWNER, TOPIC)).getErrorCode());
+        topic.setProductType(ProductType.ORIENTEERING);
+        config.put(OrientSwitches.KEY_ALT_TASK, "false");
+        assertNull(service.authorAlternativeConfigs(OWNER, TOPIC));
+        assertEquals(OrientRejection.DISABLED, assertThrows(OrientRejection.class,
+                () -> service.configureAlternative(OWNER, TOPIC, TASK, "SCAN", null, null, false)).getErrorCode());
+    }
+
+    @Test
+    void configureZeroRowWriteFailsInsteadOfReportingSuccess() {
+        com.chengyinhub.business.mapper.OrientMapper mapper = mock(com.chengyinhub.business.mapper.OrientMapper.class);
+        ReflectionTestUtils.setField(service, "orientMapper", mapper);
+        assertThrows(IllegalStateException.class,
+                () -> service.configureAlternative(OWNER, TOPIC, TASK, "QUIZ", "prompt", "answer", true));
+        when(mapper.selectAlternativeForUpdate(TASK, "QUIZ")).thenReturn(db.mapper.selectAlternative(TASK, "QUIZ"));
+        assertThrows(IllegalStateException.class,
+                () -> service.configureAlternative(OWNER, TOPIC, TASK, "QUIZ", "prompt", null, false));
+        com.chengyinhub.business.mapper.CmsTopicNodeMapper nodes =
+                (com.chengyinhub.business.mapper.CmsTopicNodeMapper) ReflectionTestUtils.getField(service, "topicNodeMapper");
+        when(nodes.selectContentByIdForUpdate(TASK)).thenReturn(null);
+        assertEquals(OrientRejection.NOT_FOUND, assertThrows(OrientRejection.class,
+                () -> service.configureAlternative(OWNER, TOPIC, TASK, "QUIZ", "prompt", null, false)).getErrorCode());
     }
 
     @Test

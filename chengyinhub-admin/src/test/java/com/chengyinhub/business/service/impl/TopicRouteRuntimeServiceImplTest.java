@@ -260,11 +260,11 @@ class TopicRouteRuntimeServiceImplTest {
         JsonNode frozen = json.readTree(runtime.freezePublication(topic, null));
         assertNull(com.chengyinhub.business.service.support.GameplaySupportMatrix.basicCompletionKind(frozen.path("nodeConfigs").path("1"), 5));
         topic = personalR5Topic(0, true); final CmsTopic direct = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).getMessage().contains("个人任务"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(direct, null)).toString().contains("参与方式要选「定位到达」或「扫码」"));
         topic = personalR5Topic(4, false); final CmsTopic noCode = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCode, null)).getMessage().contains("真实节点码"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCode, null)).toString().contains("真实节点码"));
         topic = personalR5Topic(5, false); final CmsTopic noCoordinates = topic;
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCoordinates, null)).getMessage().contains("有效站点坐标"));
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(noCoordinates, null)).toString().contains("有效站点坐标"));
     }
 
     @Test
@@ -335,7 +335,7 @@ class TopicRouteRuntimeServiceImplTest {
         config.putObject("interactionTools").put("allowTrade", true);
         recovery.setAdvancedConfigJson(config.toString());
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
-                .getMessage().contains("归零挑战不能配置普通结算工具"));
+                .toString().contains("归零挑战不能配置普通结算工具"));
 
         config.remove("interactionTools"); recovery.setAdvancedConfigJson(config.toString());
         ObjectNode compiled = (ObjectNode) json.readTree(runtime.compileTemplateRules(topic));
@@ -344,7 +344,7 @@ class TopicRouteRuntimeServiceImplTest {
         ((ObjectNode) compiled.with("gameplayRuntime").withArray("acts").get(0)).withArray("questKeys").add("node_2");
         topic.setThemeRuntimeConfigJson(compiled.toString());
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null))
-                .getMessage().contains("归零挑战不能配置普通结算工具"));
+                .toString().contains("归零挑战不能配置普通结算工具"));
     }
 
     @Test
@@ -355,7 +355,7 @@ class TopicRouteRuntimeServiceImplTest {
                 json.readTree("{\"challengeNodeId\":2,\"alternativeNodeIds\":[3],\"restoreTo\":4,\"limit\":2}"));
         topic.setThemeRuntimeConfigJson(author.toString());
         assertTrue(assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic))
-                .getMessage().contains("归零挑战不能配置普通结算工具"));
+                .toString().contains("归零挑战不能配置普通结算工具"));
         assertFalse(json.readTree(topic.getThemeRuntimeConfigJson()).path("gameplayRuntime")
                 .path("survival").path("zeroChallenge").has("version"));
         ObjectNode game = author.with("gameplayRuntime");
@@ -418,6 +418,7 @@ class TopicRouteRuntimeServiceImplTest {
                 + "{\"code\":\"done\",\"title\":\"结束\",\"fallback\":true,\"chapterId\":90}]}}");
         CmsTopicChapter ending = new CmsTopicChapter();
         ending.setId(90L); ending.setTopicId(10L); ending.setName("原结局");
+        ending.setVideoUrl("media-asset:51"); ending.setVideoPosterUrl("media-asset:52");
         ending.setAudioUrl("/fixture-ending.mp3"); ending.setAtmospherePreset("night");
         ending.setBlocksJson("[{\"type\":\"text\",\"content\":\"原正文\"}]");
         CmsTopicChapter foreign = new CmsTopicChapter();
@@ -429,6 +430,8 @@ class TopicRouteRuntimeServiceImplTest {
         JsonNode frozen = json.readTree(stored[0].getConfigSnapshotJson());
         assertEquals("原结局", frozen.path("endingChapters").path("90").path("name").asText());
         assertEquals("/fixture-ending.mp3", frozen.path("endingChapters").path("90").path("audioUrl").asText());
+        assertEquals("media-asset:51", frozen.path("endingChapters").path("90").path("videoUrl").asText());
+        assertEquals("media-asset:52", frozen.path("endingChapters").path("90").path("videoPosterUrl").asText());
         assertTrue(frozen.path("endingChapters").path("90").path("blocks").toString().contains("原正文"));
         assertEquals(0, frozen.path("thoughtChapters").size(), "结局不进入可推进章节");
         ending.setName("改后结局"); ending.setBlocksJson("[]");

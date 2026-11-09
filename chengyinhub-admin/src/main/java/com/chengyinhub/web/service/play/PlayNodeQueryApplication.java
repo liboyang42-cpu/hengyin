@@ -57,6 +57,26 @@ public class PlayNodeQueryApplication {
     private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
     @Autowired
     private NpcProfileService npcProfileService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
+
+    static final String MERCHANT_CLOSED_TODAY = "今日已打烊";
+
+    /** 只读营业开关;查不到或出错按营业处理(不凭空告诉玩家店关了)。 */
+    boolean merchantClosed(Map<Long, Boolean> cache, Long merchantMemberId) {
+        if (merchantMemberId == null || mmsMerchantService == null || cache == null) return false;
+        Boolean cached = cache.get(merchantMemberId);
+        if (cached != null) return cached;
+        boolean closed = false;
+        try {
+            com.chengyinhub.business.domain.MmsMerchant merchant = mmsMerchantService.selectMmsMerchantByMemberId(merchantMemberId);
+            closed = merchant != null && Integer.valueOf(0).equals(merchant.getBusinessStatus());
+        } catch (RuntimeException ignored) {
+            closed = false;
+        }
+        cache.put(merchantMemberId, closed);
+        return closed;
+    }
     @Autowired
     private com.chengyinhub.business.service.IXpBudgetService xpBudgetService;
     @Autowired
@@ -189,6 +209,7 @@ public class PlayNodeQueryApplication {
         // 节点 NPC 按 nodeId 记一次(CR-927):节点级内容逐节点不同,且一章一商家、四到六家的量,
         // 逐节点 resolve 一条 selectEnabledByScope 是可接受的;同一节点在循环里只出一次。
         read.nodeNpcCache = new HashMap<>();
+        read.merchantClosedCache = new HashMap<>();
         read.entitlementByChapter = new HashMap<>();
         if (read.playMode == PlayMode.FREE_COLLECT && read.progActId != null && read.progActId > 0) {
             CmsRegistration explore = playCompletionFacts.exploreRegistration(read.memberId, read.progActId);
@@ -430,7 +451,10 @@ public class PlayNodeQueryApplication {
         }
         if (read.playMode == 2 && !playNodeContext.isPureOnlineNode(n)) {
             // S4: 服务端算营业态三态(营业中/即将打烊/已打烊/空),前端地点大卡直接显示(展示字段,与评分排序解耦)
-            m.put("openStatus", PlayNarrativeSupport.computeOpenStatus(n.getBusinessTime(), read.nowMinuteOfDay));
+            // M-14(2026-11-02):商家在工作台点了「已打烊」,玩家站点卡沿用同一营业态位显示「今日已打烊」;
+            // 只是告知,不挡到店核销。
+            m.put("openStatus", merchantClosed(read.merchantClosedCache, n.getMerchantMemberId()) ? MERCHANT_CLOSED_TODAY
+                    : PlayNarrativeSupport.computeOpenStatus(n.getBusinessTime(), read.nowMinuteOfDay));
             PlayerNodeProgress proof = read.progressByNode.get(n.getId());
             boolean arrived = proof != null && proof.getCheckinTime() != null;
             boolean selfReported = arrived && StringUtils.isNotBlank(proof.getPicUrl());
@@ -849,6 +873,7 @@ public class PlayNodeQueryApplication {
         boolean capacityUnavailable;
         Map<String, com.chengyinhub.business.domain.CoopPerk> perkByChapterMerchant;
         Map<Long, NpcProfileVO> nodeNpcCache;
+        Map<Long, Boolean> merchantClosedCache;
         Map<Long, RegistrationEntitlement> entitlementByChapter;
         int nowMinuteOfDay;
         java.util.Set<Long> playableNodeIds;

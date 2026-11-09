@@ -23,7 +23,11 @@ from sql_splitter import split_statements  # noqa: E402
 MANAGED_DIR = "chengyinhub-admin/sql"
 MIGRATION_PREFIX = "migration_"
 # Only these explicitly approved new registration repairs are deferred; historical phases remain immutable.
-POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job"}
+# 20261104_content_safety_jobs_post_deploy: ROUND10 r1 F1/F2 - two sys_job rows whose beans only the new jar has.
+POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job",
+                          "20261104_content_safety_jobs_post_deploy",
+                          # 第十二轮 k1 第 10 项(r1 F2):旧 jar 编辑器仍按分钟写,必须等新 jar 起来再换算
+                          "20261104_topic_total_time_seconds"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",
@@ -65,6 +69,8 @@ EXPLICIT_AUXILIARY_SQL = {
         "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
+    # 第十一轮 h2 的只读证据(存量文字预检 SELECT),不进发布台账、不在任何库上执行。
+    "docs/delivery/walk-fix-20261102/integ/proof/round11-h2/stored-text-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     # Historical source-only station proposal; canonical executable DDL is the
     # separately managed migration_20261025_coop_order_station_fulfillment.sql.
     "docs/delivery/architecture-day/G/supply-order-fulfillment-contract/PROPOSED_TABLE.sql":

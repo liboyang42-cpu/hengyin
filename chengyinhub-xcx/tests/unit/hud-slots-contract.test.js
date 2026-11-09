@@ -109,3 +109,13 @@ test('每个槽的优先级表内没有重名(重名会让后一个永远拿不�
     assert.strictEqual(new Set(arr).size, arr.length, slot + ' 优先级表里有重复项');
   });
 });
+
+// C-12(2026-11-02 walk-fix):带队人结束本场后,玩家顶部条换成「本场已结束」与自己的完成数。
+test('topBanner:本场已结束时仍出带领条，文案换成结束与完成数', () => {
+  assert.strictEqual(hud.topBanner('', '', false, { exists: true, status: 1, ended: true }), 'leadbar');
+  assert.strictEqual(hud.topBanner('', '', false, { exists: true, status: 1, ended: false }), '');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8');
+  assert.match(wxml, /wx:if="\{\{lead\.ended\}\}">本场已结束 · 你完成了 \{\{doneCount\}\}\/\{\{total\}\} 站/);
+  const js = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
+  assert.match(js, /ended: d\.sessionEnded === true/);
+});

@@ -1,4 +1,4 @@
-@import '../../../style/merchant-light.wxss';
+@import '../../../style/merchant-light-scope.wxss';
 
 page { min-height: 100vh; background: var(--cy-color-bg-page); }
 

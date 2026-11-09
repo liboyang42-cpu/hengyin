@@ -74,3 +74,17 @@ condition = "AND"
 paths = ['''(^|/)chengyinhub-admin/src/test/java/com/chengyinhub/business/service/VideoBountyServiceTest\.java$''']
 regexTarget = "line"
 regexes = ['''^\s*private static final String CAMPAIGN_KEY = "launch-[0-9]{4}q[0-9]";\s*$''']
+
+# One historical rig request ID, not an API credential; retain exact path and full-line matching.
+[[rules.allowlists]]
+condition = "AND"
+paths = ['''(^|/)docs/delivery/walk-fix-20261102/integ/fix-shots/i1-walk-readbacks\.txt$''']
+regexTarget = "line"
+regexes = ['''^\s*NET\ POST\ /api/play/advanced/action\ 200\ 200\ 操作成功\ \{"sessionId":2,"version":0,"idempotencyKey":"adv\-2\-v0\-0968ec51","action":"REPORT_SENSOR_FAILURE","payload":\{"game":"quietHold","denied":true\}\}$''']
+
+# A second historical rig request ID; exact path and full request only.
+[[rules.allowlists]]
+condition = "AND"
+paths = ['''(^|/)docs/delivery/walk-fix-20261102/l1-play/RIG-NOTES\.md$''']
+regexTarget = "line"
+regexes = ['''^\s*request:\ \{"sessionId":5,"version":0,"idempotencyKey":"adv\-5\-v0\-ecaf236b","action":"SUBMIT_QA","payload":\{"input":"吴淞江"\}\}$''']

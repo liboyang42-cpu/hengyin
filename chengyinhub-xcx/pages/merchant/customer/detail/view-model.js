@@ -1,3 +1,4 @@
+const { yuan } = require('../../../../utils/money-format.js');
 const { chinaParts, toTimestamp } = require('../../../../utils/datetime.js');
 
 const TYPE_TEXT = Object.freeze({
@@ -68,7 +69,7 @@ function shapeCustomerDetail(raw, expectedId) {
       pendingCount,
       refundedCount,
       paidAmount: amount,
-      paidAmountText: amount == null ? '无查看权限' : `¥${amount.toFixed(2)}`,
+      paidAmountText: amount == null ? '无查看权限' : yuan(amount),
       lastInteractionTimeText: formatTime(raw.summary.lastInteractionTime),
     },
     systemTags,
