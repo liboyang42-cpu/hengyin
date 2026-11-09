@@ -41,6 +41,37 @@
 .ir-more-action { display: flex; align-items: center; justify-content: center; min-height: var(--cy-btn-h-sm); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-primary); }
 .ir-more--loading { color: var(--cy-color-text-tertiary); }
 
+/* V1-P59(IqRophy):汇总卡里叠放的被邀请人头像,后一个压前一个,外圈是卡片底色 */
+.ir-stack { display: flex; align-items: center; margin-top: var(--cy-space-3); }
+.ir-stack-i { flex: none; width: 64rpx; height: 64rpx; padding: 4rpx; border-radius: 50%; background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle)); }
+.ir-stack-i + .ir-stack-i { margin-left: -16rpx; }
+
+/* V1-P59 / G-11 入场(utils/page-motion.js 的 --pm-* 约定):--pm-i 为 1 时先隐着,置 2 后依次上浮;
+   只写 translate 与 filter:opacity(),不碰 transform / opacity,静止时过渡时长为 0,按压反馈照常。
+   头像从左侧依次叠进来(IqRophy),每月一张记录卡像聊天卡片一张张升起(uixsiam09)。 */
+.ir-summary, .ir-group {
+  filter: opacity(calc(1 - var(--pm-i, 0)));
+  translate: 0 calc(var(--pm-i, 0) * 40rpx);
+  transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
+}
+.ir-stack-i {
+  filter: opacity(calc(1 - var(--pm-i, 0)));
+  translate: calc(var(--pm-i, 0) * -24rpx) 0;
+  transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
+  transition-delay: calc(var(--pm-i-s, 0) * 140ms);
+}
+.ir-stack-i:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 200ms); }
+.ir-stack-i:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 260ms); }
+.ir-stack-i:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 320ms); }
+.ir-stack-i:nth-child(5) { transition-delay: calc(var(--pm-i-s, 0) * 380ms); }
+.ir-group { transition-delay: calc(var(--pm-i-s, 0) * 300ms); }
+.ir-group:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 90ms); }
+.ir-group:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 160ms); }
+.ir-group:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 230ms); }
+@media (prefers-reduced-motion: reduce) {
+  .ir-summary, .ir-group, .ir-stack-i { filter: none; translate: none; transition: none; }
+}
+
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
