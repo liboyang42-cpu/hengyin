@@ -6,7 +6,7 @@
 .sc-stage { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 48rpx 0 32rpx; }
 .sc-card { position: relative; display: flex; flex-direction: column; width: 560rpx; min-height: 820rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: rgba(0, 0, 0, .28); box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, .35); } /* ds-ok P-8 卡片压在色块底上 */
 .sc-in { position: relative; flex: 1; display: flex; flex-direction: column; padding: 40rpx; box-sizing: border-box; }
-.sc-eb { font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
+.sc-eb { font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .7); display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字;一行,与导出图同(qx-a7) */
 .sc-t { margin-top: 12rpx; font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.2; color: #FFFFFF; } /* ds-ok 卡片压字 */
 .sc-m { margin-top: 8rpx; font-size: var(--cy-type-body); color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
 .sc-c { text-align: center; }

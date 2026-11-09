@@ -7,6 +7,7 @@
 const cyToast = require('../../../utils/toast.js');
 const cyModal = require('../../../utils/modal.js');
 const { ALBUM_SAVE, classifyAlbumSaveError } = require('../../../utils/album-save-outcome.js');
+const { tintFromPixels } = require('../../../utils/share-tint.js');
 
 const KINDS = {
   activity: { label: '活动', colors: ['#5A3426', '#8E6430', '#1E2A24', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿) */
@@ -43,6 +44,7 @@ Component({
       const kind = KINDS[c.kind] ? c.kind : 'theme';
       this._id = String(c.id || '');
       this._image = '';
+      this._open = (this._open || 0) + 1;
       this.setData({
         statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
         kind, label: KINDS[kind].label, title: c.title || KINDS[kind].label,
@@ -52,6 +54,7 @@ Component({
         colors: KINDS[kind].colors, colorIndex: 0, bg: KINDS[kind].colors[0], qr: '',
       });
       this._loadCode();
+      this._loadTint();
     },
   },
   methods: {
@@ -75,6 +78,35 @@ Component({
     // 主题出主题码;勋章出首页码(不带 id)
     app.sendRequest({ url: '/api/topic/share-code', method: 'POST', hideLoading: true,
       data: kind === 'theme' && /^\d{1,18}$/.test(id) ? { id } : {}, success: done });
+  },
+
+  /* qx-a7 V1-P36(Spotify):第一个色块取封面主色,默认就用它;取不到就保留原四个色块。
+     用户已经点过别的色块就不再改底色。 */
+  _loadTint() {
+    const src = this.data.cover;
+    const open = this._open;
+    if (!src || typeof wx.createOffscreenCanvas !== 'function') return;
+    let off;
+    try { off = wx.createOffscreenCanvas({ type: '2d', width: 24, height: 24 }); } catch (e) { return; }
+    if (!off || typeof off.createImage !== 'function') return;
+    const img = off.createImage();
+    img.onload = () => {
+      if (open !== this._open || !this.data.show) return;
+      let tint = '';
+      try {
+        const g = off.getContext('2d');
+        g.drawImage(img, 0, 0, 24, 24);
+        tint = tintFromPixels(g.getImageData(0, 0, 24, 24).data);
+      } catch (e) { tint = ''; }
+      if (!tint) return;
+      const base = KINDS[this.data.kind].colors;
+      const colors = [tint].concat(base.filter((c) => c !== tint).slice(0, base.length - 1));
+      const keep = this.data.colorIndex !== 0;
+      if (!keep) this._image = '';
+      this.setData({ colors, bg: keep ? this.data.bg : tint });
+    };
+    img.onerror = () => {};
+    img.src = src;
   },
 
   close() { this.triggerEvent('close'); },
@@ -162,14 +194,15 @@ Component({
       const round = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
       g.save(); round(cx, cy, cw, ch, 40); g.clip();
       g.fillStyle = '#1A1B20'; g.fillRect(cx, cy, cw, ch); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      const line = (text, maxW) => { let t = String(text || ''); if (g.measureText(t).width <= maxW) return t; while (t.length > 1 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; };
       const fit = (img, x, y, w, h) => { const s = Math.max(w / img.width, h / img.height); g.drawImage(img, x + (w - img.width * s) / 2, y + (h - img.height * s) / 2, img.width * s, img.height * s); };
       g.textAlign = 'left';
       let ty = cy + 70;
       if (d.kind === 'theme' || d.kind === 'shop') {
         if (cover) fit(cover, cx, cy, cw, ch);
         g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(cx, cy, cw, ch); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = 'rgba(255,255,255,.72)'; g.font = '600 24px sans-serif'; g.fillText(d.kind === 'shop' ? '店铺' : (d.meta ? '主题 · ' + d.meta : '主题'), cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = '#FFFFFF'; g.font = 'italic 900 64px sans-serif'; g.fillText(d.title.slice(0, 8), cx + 40, ty + 84); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = 'rgba(255,255,255,.72)'; g.font = '600 24px sans-serif'; g.fillText(line(d.kind === 'shop' ? '店铺' : (d.meta ? '主题 · ' + d.meta : '主题'), cw - 80), cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = '#FFFFFF'; g.font = 'italic 900 64px sans-serif'; g.fillText(line(d.title, cw - 80), cx + 40, ty + 84); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         if (d.kind === 'shop' && d.when) { g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.when.slice(0, 18), cx + 40, ty + 134); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         ty += 160;
         d.stops.forEach((s, i) => {
@@ -183,7 +216,7 @@ Component({
         if (cover) fit(cover, cx, cy, cw, 420);
         ty = cy + 480;
         g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '600 24px sans-serif'; g.fillText(d.label, cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = '#FFFFFF'; g.font = '800 44px sans-serif'; g.fillText(d.title.slice(0, 11), cx + 40, ty + 64); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = '#FFFFFF'; g.font = '800 44px sans-serif'; g.fillText(line(d.title, cw - 80), cx + 40, ty + 64); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         if (d.date) { g.font = 'italic 900 72px sans-serif'; g.fillText(d.date, cx + 40, ty + 160); }
         g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.when.slice(0, 18), cx + 40, ty + 206); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       } else {
@@ -194,7 +227,7 @@ Component({
         g.fillStyle = glow; g.fillRect(cx, cy, cw, ch);
         if (cover) g.drawImage(cover, mx - 130, my - 130, 260, 260);
         else { g.fillStyle = '#E9B44C'; g.beginPath(); g.arc(mx, my, 120, 0, Math.PI * 2); g.fill(); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.textAlign = 'center'; g.fillStyle = '#FFFFFF'; g.font = '800 48px sans-serif'; g.fillText(d.title.slice(0, 10), mx, my + 210); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.textAlign = 'center'; g.fillStyle = '#FFFFFF'; g.font = '800 48px sans-serif'; g.fillText(line(d.title, cw - 80), mx, my + 210); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         if (d.meta) { g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.meta.slice(0, 18), mx, my + 258); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
         g.textAlign = 'left';
       }
