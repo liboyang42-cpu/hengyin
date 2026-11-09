@@ -99,7 +99,8 @@
         <text class="orow-k">合计</text>
         <text class="orow-v">{{money.amount2(info.payableAmount)}}</text>
       </view>
-      <view class="orow" wx:if="{{info.refundAmountShown}}">
+      <!-- U07-04:有退款进度块时金额只在那里按阶段写,这里不再出一个看似已到账的「退款」行 -->
+      <view class="orow" wx:if="{{info.refundAmountShown && !info.settleView.show}}">
         <text class="orow-k">退款</text>
         <text class="orow-v">{{money.amount2(info.refundAmountShown)}}</text>
       </view>
