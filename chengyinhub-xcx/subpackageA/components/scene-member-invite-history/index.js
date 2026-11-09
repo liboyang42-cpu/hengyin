@@ -124,6 +124,17 @@ function buildGroups(records, rewards, rewardReady) {
   return groups
 }
 
+// V1-P59(IqRophy):汇总卡里叠放的被邀请人头像,只用后端返回的真实记录,最多 5 个
+const STACK_MAX = 5
+const pageMotion = require('../../../utils/page-motion.js')
+function buildStack(records) {
+  return (records || []).slice(0, STACK_MAX).map((record) => ({
+    id: record.id,
+    avatar: record.avatar || '',
+    nickname: typeof record.nickname === 'string' ? record.nickname.trim() : '',
+  }))
+}
+
 Component({
   properties: {
     theme: { type: String, value: 'player' },
@@ -140,10 +151,13 @@ Component({
     groups: [],
     rewardReady: true,
     earnedTotalText: '0',
+    stack: [],
+    // utils/page-motion.js:1 = 先隐着渲染,2 = 依次浮上来,0 = 静止
+    pmIn: 0,
   },
   lifetimes: {
     attached() { this.load(true) },
-    detached() { this._detached = true; this._loadSeq = (this._loadSeq || 0) + 1 },
+    detached() { this._detached = true; this._loadSeq = (this._loadSeq || 0) + 1; clearTimeout(this._pmInTimer) },
   },
   pageLifetimes: {
     show() { this._hidden = false; if (this._readSessionChanged || this._readOwner !== undefined && this._readOwner !== memberId(app)) { this._readSessionChanged = false; this.load(true) } },
@@ -153,7 +167,7 @@ Component({
     load(reset) {
       if (this._detached) return
       const owner = memberId(app)
-      if (owner !== this._readOwner) { this._readOwner = owner; this._loadSeq = (this._loadSeq || 0) + 1; this._loading = false; this._records = []; this._rewards = {}; this.setData({ groups: [], total: 0, hasMore: false }); reset = true }
+      if (owner !== this._readOwner) { this._readOwner = owner; this._loadSeq = (this._loadSeq || 0) + 1; this._loading = false; this._records = []; this._rewards = {}; this.setData({ groups: [], stack: [], total: 0, hasMore: false }); reset = true }
       if (!owner) { waitForInitialSession(this, app, () => this.load(true)); this.setData({ authRequired: true, accessDenied: false, loadErr: true, loading: false }); return }
       if (this._loading) return
       const pageNo = reset ? 1 : (this._pageNo || 1) + 1
@@ -242,6 +256,8 @@ Component({
         const total = responseTotal
         let earnedTotal = 0
         Object.keys(this._rewards || {}).forEach((key) => { earnedTotal += this._rewards[key].points })
+        // 首次拿到记录时汇总卡与记录行依次浮上来;刷新、翻页不重播
+        if (merged.length) pageMotion.enter(this, 'pmIn', { once: true })
         this.setData({
           loading: false,
           loadErr: false,
@@ -252,6 +268,7 @@ Component({
           groups: buildGroups(merged, this._rewards || {}, this._rewardReady),
           rewardReady: this._rewardReady,
           earnedTotalText: pointText(earnedTotal) || '0',
+          stack: buildStack(merged),
         })
       })
     },

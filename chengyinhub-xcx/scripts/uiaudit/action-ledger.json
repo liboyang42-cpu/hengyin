@@ -2470,6 +2470,19 @@
           ]
         },
         {
+          "route": "subpackageA/pages/assetcenter/earnings/index",
+          "segments": [
+            {
+              "selector": "cy-scene-member-invite-history",
+              "index": 0
+            },
+            {
+              "selector": "cy-avatar",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageB/pages/im/chat/index",
           "segments": [
             {
@@ -2564,6 +2577,19 @@
             },
             {
               "selector": "cy-avatar.ir-avatar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/myinvite/myinvite",
+          "segments": [
+            {
+              "selector": "#inviteHistory",
+              "index": 0
+            },
+            {
+              "selector": "cy-avatar",
               "index": 0
             }
           ]
@@ -430284,7 +430310,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:58"
+        "staticSource": "components/cy/share-card/index.js:61"
       }
     },
     {
@@ -430412,7 +430438,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:80"
+        "staticSource": "components/cy/share-card/index.js:112"
       }
     },
     {
@@ -430539,7 +430565,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:82"
+        "staticSource": "components/cy/share-card/index.js:114"
       }
     },
     {
@@ -430688,7 +430714,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:93"
+        "staticSource": "components/cy/share-card/index.js:125"
       }
     },
     {
@@ -1389749,7 +1389775,7 @@
       }
     },
     {
-      "id": "subpackageA/components/scene-member-invite-history/index.wxml:20:bind:retry:retry:0",
+      "id": "subpackageA/components/scene-member-invite-history/index.wxml:24:bind:retry:retry:0",
       "route": "component:subpackageA/components/scene-member-invite-history/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1389794,7 +1389820,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retry",
-        "line": 20,
+        "line": 24,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{loadErr && !groups.length}}",
         "loadFailureCondition": "{{!authRequired && !accessDenied}}",
@@ -1389858,11 +1389884,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:258"
+        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:275"
       }
     },
     {
-      "id": "subpackageA/components/scene-member-invite-history/index.wxml:43:bindtap:loadMore:1",
+      "id": "subpackageA/components/scene-member-invite-history/index.wxml:47:bindtap:loadMore:1",
       "route": "component:subpackageA/components/scene-member-invite-history/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1389907,7 +1389933,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 43,
+        "line": 47,
         "selectorHint": ".ir-more",
         "visibleCondition": "{{hasMore && !loading && !loadMoreError}}",
         "disabledCondition": null,
@@ -1389970,11 +1389996,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:259"
+        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:276"
       }
     },
     {
-      "id": "subpackageA/components/scene-member-invite-history/index.wxml:45:bindtap:loadMore:2",
+      "id": "subpackageA/components/scene-member-invite-history/index.wxml:49:bindtap:loadMore:2",
       "route": "component:subpackageA/components/scene-member-invite-history/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1390019,7 +1390045,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 45,
+        "line": 49,
         "selectorHint": ".ir-more",
         "visibleCondition": "{{loadMoreError && groups.length && !loading}}",
         "disabledCondition": null,
@@ -1390082,7 +1390108,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:259"
+        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:276"
       }
     },
     {
@@ -1463016,7 +1463042,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/myinvite/myinvite.js:13"
+        "staticSource": "subpackageMember/myinvite/myinvite.js:17"
       }
     },
     {
