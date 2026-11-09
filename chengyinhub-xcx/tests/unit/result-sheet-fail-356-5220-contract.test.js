@@ -62,7 +62,7 @@ test('④ cy-sheet 钩子都带回退,回退值就是改前的值', () => {
   const handle = rule(SHEET, '.sh__handle')
   assert.match(handle, /width:\s*var\(--cy-comp-sheet-handle-w,\s*64rpx\)/)
   assert.match(handle, /height:\s*var\(--cy-comp-sheet-handle-h,\s*8rpx\)/)
-  assert.match(handle, /background:\s*var\(--cy-comp-sheet-handle-bg,\s*var\(--cy-border-line\)\)/)
+  assert.match(handle, /background:\s*var\(--cy-comp-sheet-handle-bg,\s*var\(--cy-color-sheet-handle\)\)/)
   assert.match(handle, /margin:\s*var\(--cy-comp-sheet-handle-mt,\s*16rpx\) auto var\(--cy-comp-sheet-handle-mb,\s*8rpx\)/)
 })
 

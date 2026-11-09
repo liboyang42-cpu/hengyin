@@ -3,22 +3,24 @@ const toast = require('../../utils/toast.js');
 const reducedMotionBehavior = require('../../behaviors/reduced-motion.js');
 
 // 2026-08-20 图标换 SVG 重绘版:旧 icon_f1~f5 PNG 画成超椭圆大圆角(「tab 栏太圆」的根源在图标不在栏)。
-// 新图标 24 网格 / rx=2 / 1.8 描边;商家恒 monochrome ⇒ wxml 只取 iconPath,selectedIconPath 同源占位。
+// 2026-11-09 V3-25 业主「底部的导航…都不是很清晰…最好选中之后是填充的」:玩家/商家同一族 SVG,
+// 24 网格 / 1.8 圆头描边;每枚一对 —— iconPath 描边、selectedIconPath 同形填充(icon_tab_*_on.svg)。
+// 选中色仍由 wxss 滤镜统一给品牌紫,资源本身只管形状。
 const MERCHANT_LIST = [
-  { key: "workbench", pagePath: "/pages/merchant/index/index",           text: "工作台", iconPath: "/images/icon_tab_workbench.svg", selectedIconPath: "/images/icon_tab_workbench.svg" },
-  { key: "marketing", pagePath: "/pages/merchant/marketing/index",       text: "营销",   iconPath: "/images/icon_tab_marketing.svg", selectedIconPath: "/images/icon_tab_marketing.svg" },
-  { key: "template",  pagePath: "/pages/template/index?mode=merchant",   text: "模板",   iconPath: "/images/icon_tab_template.svg", selectedIconPath: "/images/icon_tab_template.svg" },
-  { key: "relation",  pagePath: "/pages/merchant/relation/index",        text: "合作",   iconPath: "/images/icon_tab_relation.svg", selectedIconPath: "/images/icon_tab_relation.svg" },
-  { key: "mine",      pagePath: "/pages/member/index/index?mode=merchant", text: "我的",  iconPath: "/images/icon_tab_mine.svg", selectedIconPath: "/images/icon_tab_mine.svg" }
+  { key: "workbench", pagePath: "/pages/merchant/index/index",           text: "工作台", iconPath: "/images/icon_tab_workbench.svg", selectedIconPath: "/images/icon_tab_workbench_on.svg" },
+  { key: "marketing", pagePath: "/pages/merchant/marketing/index",       text: "营销",   iconPath: "/images/icon_tab_marketing.svg", selectedIconPath: "/images/icon_tab_marketing_on.svg" },
+  { key: "template",  pagePath: "/pages/template/index?mode=merchant",   text: "模板",   iconPath: "/images/icon_tab_template.svg", selectedIconPath: "/images/icon_tab_template_on.svg" },
+  { key: "relation",  pagePath: "/pages/merchant/relation/index",        text: "合作",   iconPath: "/images/icon_tab_relation.svg", selectedIconPath: "/images/icon_tab_relation_on.svg" },
+  { key: "mine",      pagePath: "/pages/member/index/index?mode=merchant", text: "我的",  iconPath: "/images/icon_tab_mine.svg", selectedIconPath: "/images/icon_tab_mine_on.svg" }
 ];
 
 // C 端(玩家)一级导航
 const CONSUMER_LIST = [
-  { pagePath: "/pages/index/index",        text: "首页",   iconPath: "/images/icon_f1.png", selectedIconPath: "/images/icon_f01d.png" },
-  { pagePath: "/pages/roam/index",         text: "漫游",   iconPath: "/images/icon_roam.png", selectedIconPath: "/images/icon_roam_d.png" },
-  { pagePath: "/pages/template/index",     text: "发布",   iconPath: "/images/icon_f3.png", selectedIconPath: "/images/icon_f03d.png" },
-  { pagePath: "/pages/talent/list/index",  text: "俱乐部", iconPath: "/images/icon_f4.png", selectedIconPath: "/images/icon_f04d.png" },
-  { pagePath: "/pages/member/index/index", text: "我的",   iconPath: "/images/icon_f5.png", selectedIconPath: "/images/icon_f05d.png" }
+  { pagePath: "/pages/index/index",        text: "首页",   iconPath: "/images/icon_tab_home.svg", selectedIconPath: "/images/icon_tab_home_on.svg" },
+  { pagePath: "/pages/roam/index",         text: "漫游",   iconPath: "/images/icon_tab_roam.svg", selectedIconPath: "/images/icon_tab_roam_on.svg" },
+  { pagePath: "/pages/template/index",     text: "发布",   iconPath: "/images/icon_tab_template.svg", selectedIconPath: "/images/icon_tab_template_on.svg" },
+  { pagePath: "/pages/talent/list/index",  text: "俱乐部", iconPath: "/images/icon_tab_club.svg", selectedIconPath: "/images/icon_tab_club_on.svg" },
+  { pagePath: "/pages/member/index/index", text: "我的",   iconPath: "/images/icon_tab_mine.svg", selectedIconPath: "/images/icon_tab_mine_on.svg" }
 ];
 
 // 悬浮发布钮唯一落位页(2026-09-19 口径:只在模板页出,不再 C 端全局挂)

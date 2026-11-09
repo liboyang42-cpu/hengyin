@@ -194,7 +194,7 @@ page { background: var(--cy-color-bg-page); }
 .sheet.sheet--story{z-index:109;} /* ds-ok 地点详情位于遮罩上 */
 .mask{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:108;
   background:rgba(0,0,0,.62); animation:fade var(--cy-motion-sheet-full-in) var(--cy-ease-standard); } /* ds-ok 原型 .dim;2026-10-23 与面板同档同曲线(原 .25s) */
-.sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:#000000; /* ds-ok 原型 .sheet */
+.sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); /* V3-18 纯黑 → 弹层抬升灰 */
   border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 28px */
   /* 88% 在刘海机上顶边会落进胶囊行(12% 高≈101px vs 胶囊底≈103px)——与 .psheet 同法,页面根给实测值,取两者较小 */
   /* C-12(2026-11-02 用户):站点卡内容短时整张撑到 full 档,下面空出一大块黑底。改为 half 档起步、随内容长到 full 档封顶 */
@@ -221,7 +221,7 @@ page { background: var(--cy-color-bg-page); }
   animation:stamp .5s var(--cy-ease-spring) both; } /* ds-ok Figma 实测(用户裁决字面值) */
 .sheet-body{ padding:var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); } /* ds-ok 原型 .sheet padding 0 24px 22px */
 /* 原型 .grab:40×4,radius 2,白 22%,上 10px 居中 */
-.sheet-grab{ width:77rpx; height:8rpx; border-radius:4rpx; background:rgba(255,255,255,.22); /* ds-ok 原型 .grab */
+.sheet-grab{ width:77rpx; height:8rpx; border-radius:4rpx; background:var(--cy-color-sheet-handle); /* ds-ok 原型 .grab;V3-18 抓手提亮 */
   margin:19rpx auto var(--cy-space-4); }
 /* ★ 半屏正文三档逐条照原型 .h1 / .sub / .mini 抄
  * (2026-09-09 用户裁决:所有页面与 HTML 一模一样)。1px = 1.923rpx。
@@ -595,7 +595,7 @@ page { background: var(--cy-color-bg-page); }
  * 行本身(.drow/.dic/.dcopy/.dt/.ds/.dv/.darr/.dsw)在 style/proto-sheet.wxss 里,与漫游抽屉同一份;
  * 这儿只留抽屉面自己:黑底 + 顶部 28px 圆角、左右 24px、底 26px(原型 .sheet + .drw)。
  * ⚠️ 原型没有内层那张卡 —— 行直接排在黑面上,别再套回 #1E2028 的圆角卡。 */
-.pbar--tools{ background:#000000; border-top:none; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet 28px */
+.pbar--tools{ background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-top:none; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet 28px */
   padding-bottom:calc(50rpx + env(safe-area-inset-bottom)); } /* ds-ok 原型 .drw padding-bottom 26px */
 .tools{ box-sizing:border-box; margin-top:19rpx; padding:0 46rpx; max-height:52vh; } /* ds-ok 原型 .drw padding 0 24px */
 .tools .drow:first-child{ border-top:0; } /* ds-ok 原型 .drw .grab + .drow */
@@ -619,8 +619,8 @@ page { background: var(--cy-color-bg-page); }
 .gp2mask{ position:absolute; inset:0; z-index:69; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 任务=弹窗不是全屏(用户裁决):底部半屏 sheet,地图还看得见 */
 .gp2{ position:absolute; left:0; right:0; bottom:0; z-index:70; height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); box-sizing:border-box;
-  background:#0A0A0A; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; display:flex; flex-direction:column; } /* ds-ok Figma 实测(用户裁决字面值) */
-.gp2__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:#4A5565; margin:23rpx auto 8rpx; flex:none; } /* ds-ok Figma 实测(用户裁决字面值) */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; display:flex; flex-direction:column; } /* V3-18 纯黑 → 弹层抬升灰 */
+.gp2__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-sheet-handle); margin:23rpx auto 8rpx; flex:none; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__head{ flex:none; display:flex; align-items:center; padding:0 31rpx 8rpx; }
 .gp2__back{ width:88rpx; height:88rpx; display:flex; align-items:center; justify-content:center; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__back--ghost{ pointer-events:none; opacity:0; }
@@ -719,7 +719,7 @@ page { background: var(--cy-color-bg-page); }
 .gp2[class*="atmosphere--"] .gp2__ctl-b{ color:var(--atmo-muted); }
 .gp2__ctl{ margin-top:31rpx; display:flex; justify-content:space-between; }
 .gp2__ctl-a,.gp2__ctl-b{ font-size:25rpx; color:#6A7282; text-decoration:underline; } /* ds-ok Figma 实测(用户裁决字面值) */
-.gp2__ctaw{ padding:15rpx 31rpx calc(31rpx + env(safe-area-inset-bottom)); background:#0A0A0A; } /* ds-ok Figma 实测(用户裁决字面值) */
+.gp2__ctaw{ padding:15rpx 31rpx calc(31rpx + env(safe-area-inset-bottom)); background:transparent; } /* V3-18 底栏透出弹层同一张灰 */
 /* 底栏上沿渐隐:滚动区下一行字被底栏一刀切成半截,看着像被遮住(2026-10-27 实测),渐隐告诉玩家下面还有内容 */
 .gp2__ctaw{ position:relative; }
 .gp2__ctaw::before{ content:''; position:absolute; left:0; right:0; top:-64rpx; height:64rpx; pointer-events:none; background:linear-gradient(180deg, rgba(10,10,10,0), #0A0A0A); } /* ds-ok 与底栏同色 */
@@ -768,8 +768,8 @@ page { background: var(--cy-color-bg-page); }
 /* 章节选择弹窗(自由探索) */
 .chpick-mask{ position:absolute; inset:0; z-index:64; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick{ position:absolute; left:0; right:0; bottom:0; z-index:65; max-height:70vh; overflow-y:auto;
-  background:#0A0A0A; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; padding:0 31rpx calc(31rpx + env(safe-area-inset-bottom)); } /* ds-ok Figma 实测(用户裁决字面值) */
-.chpick__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:#4A5565; margin:23rpx auto 8rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; padding:0 31rpx calc(31rpx + env(safe-area-inset-bottom)); } /* ds-ok Figma 实测(用户裁决字面值) */
+.chpick__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-sheet-handle); margin:23rpx auto 8rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__hd{ font-size:34rpx; font-weight:700; color:#FFFFFF; padding:8rpx 0 15rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__row{ display:flex; align-items:center; gap:23rpx; padding:19rpx; border-radius:31rpx; margin-bottom:15rpx; /* ds-ok Figma 实测(用户裁决字面值) */
   background:#111318; } /* ds-ok Figma 实测(用户裁决字面值) */

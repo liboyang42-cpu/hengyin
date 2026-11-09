@@ -6,10 +6,33 @@ import glob, os, urllib.parse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))          # chengyinhub-xcx/
 SRC = os.path.join(os.path.dirname(ROOT), 'design', 'icons', 'coolicons')   # 仓库根/design(不进小程序包)
 DST = os.path.join(ROOT, 'components', 'cy', 'icon', 'icons.wxss')
+# 2026-11-09 V3-30 业主「icon 普遍偏右下角…里面没有居中的感觉」:逐枚渲染量了 alpha 外接框,
+# 偏离画布中心 ≥1.5% 的改 viewBox 起点(图形一笔不动,只平移取景),不在使用处补偏移。
+# 三角形(play)按质心居中;成对方向箭头(back / chevron-right / slide-arrow)贴边对齐是有意的,不动。
+OPTICAL_ORIGIN = {
+    'calendar': (0, -1),
+    'camera': (0, -0.5),
+    'category-food': (-1, 0),
+    'category-repair': (0, 0.45),
+    'category-travel': (0, -0.5),
+    'comment': (0, 1.05),
+    'gift': (0, -0.5),
+    'gps': (0.45, 0.45),
+    'heart-filled': (0, 0.5),
+    'heart': (0, 0.5),
+    'mtab-customers': (0, 0.5),
+    'poi-shop': (1, -0.5),
+    'tab-club': (0, 0.5),
+    'tab-feed': (0, 0.5),
+    'turn-right': (0, 0.75),
+}
+import re
 rules, names = [], []
 for f in sorted(glob.glob(f'{SRC}/*.svg')):
     sem = os.path.basename(f)[:-4]
     svg = open(f).read()
+    if sem in OPTICAL_ORIGIN:
+        svg = re.sub(r'viewBox="0 0 ', 'viewBox="%s %s ' % OPTICAL_ORIGIN[sem], svg, count=1)
     uri = urllib.parse.quote(svg, safe="~()*!.'")
     # URI 只存一次进 CSS 变量,基类经 var() 双前缀引用 —— icons.wxss 体积减半
     rules.append(f'.cyi--{sem} {{ --cyi-m: url("data:image/svg+xml,{uri}"); }}')

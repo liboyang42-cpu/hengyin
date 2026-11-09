@@ -17,7 +17,7 @@
   opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
 .pdim.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .psheet{ position:fixed; left:0; right:0; bottom:0; z-index:70; box-sizing:border-box;
-  background:#000; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet #000 / 28px */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* 2026-11-09 V3-18 纯黑 → 弹层抬升灰(token);圆角原型 28px */
   padding:0 var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); /* ds-ok 原型 padding:0 24px 22px */
   /* ⚠️ 原型 .sheet 自己没有 max-height —— 它靠每屏 s.style.top 定高,内容多就长。
      这里必须分两档,不能一刀 70vh:注册表里 roam-share / roam-task-list / roam-poi-detail /
@@ -53,7 +53,7 @@
    ⚠️ 不改分档天花板,也不动原型半屏自己的 60/70 基数。 */
 .pdim--confirm{ z-index:var(--cy-z-sheet); }
 .psheet--confirm{ z-index:calc(var(--cy-z-sheet) + 1); }
-.psheet__grab{ width:77rpx; height:8rpx; border-radius:4rpx; margin:19rpx auto 0; background:rgba(255,255,255,.22); } /* ds-ok 原型 .grab 40×4 / radius 2 / 上 10px */
+.psheet__grab{ width:77rpx; height:8rpx; border-radius:4rpx; margin:19rpx auto 0; background:var(--cy-color-sheet-handle); } /* ds-ok 原型 .grab 40×4 / radius 2 / 上 10px;V3-18 抓手随弹层提亮 */
 /* 抓杆有几处是可点的(点它收起半屏),而它本身只有 4px 高 —— 视觉照原型不动,
    命中区用透明 ::after 撑到 44px(cy-info-pop 同款写法,a11y 门禁认这一种)。 */
 .psheet__grab{ position:relative; }
@@ -94,8 +94,8 @@
 .dsw{ flex:none; margin-left:auto; position:relative; width:85rpx; height:50rpx; border-radius:999rpx; background:#1E2228; } /* ds-ok 原型 .dsw 44×26 / #1E2228 */
 .dsw::after{ content:''; position:absolute; left:50%; top:50%; width:88rpx; height:88rpx; transform:translate(-50%,-50%); }
 .dsw-i{ position:absolute; top:6rpx; left:6rpx; width:38rpx; height:38rpx; border-radius:50%; background:#8A93A0; transition:transform .18s var(--cy-ease-out), background .18s var(--cy-ease-out); } /* ds-ok 原型 .dsw i 20px #8A93A0 / top-left 3px */
-.dsw.is-on{ background:#FFFFFF; } /* ds-ok 原型 .dsw.on */
-.dsw.is-on .dsw-i{ transform:translateX(35rpx); background:#0A0A0A; } /* ds-ok 原型 translateX(18px) / #0A0A0A */
+.dsw.is-on{ background:var(--cy-comp-switch-on); } /* 2026-11-09 V3-20 业主「我们所有的开关都应该是绿色的」:原型白轨 → 开关绿 token */
+.dsw.is-on .dsw-i{ transform:translateX(35rpx); background:#FFFFFF; } /* ds-ok 原型 translateX(18px);V3-20 绿轨上白滑块(同 cy-switch) */
 
 
 /* ══ 原型半屏正文里那几件共用的(h1 / h2 / sub / mini / kv / avs / btnRow)══════════

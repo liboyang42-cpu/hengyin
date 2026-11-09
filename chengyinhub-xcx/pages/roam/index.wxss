@@ -128,8 +128,8 @@ page{ background:var(--cy-color-bg-page); }
 .entry-layer__copy text:last-child{ margin-top:var(--cy-space-1); color:var(--cy-comp-sheet-player-text-secondary); font-size:var(--cy-type-caption); }
 .entry-layer__switch{ position:relative; flex:none; width:88rpx; height:52rpx; border-radius:var(--cy-radius-pill); background:var(--cy-comp-sheet-player-action-secondary); }
 .entry-layer__switch view{ position:absolute; left:6rpx; top:6rpx; width:40rpx; height:40rpx; border-radius:50%; background:var(--cy-comp-sheet-player-muted); transition:transform var(--cy-motion-fast) var(--cy-ease-out); }
-.entry-layer__switch.is-on{ background:var(--cy-comp-sheet-player-text); }
-.entry-layer__switch.is-on view{ transform:translateX(36rpx); background:var(--cy-color-text-inverse); }
+.entry-layer__switch.is-on{ background:var(--cy-comp-switch-on); } /* V3-20 开关一律绿 */
+.entry-layer__switch.is-on view{ transform:translateX(36rpx); background:#FFFFFF; } /* ds-ok V3-20 绿轨白滑块,同 cy-switch */
 .entry-layer__note{ margin-top:var(--cy-space-3); padding:var(--cy-space-3); border-radius:var(--cy-radius-md); background:var(--cy-comp-sheet-player-card); color:var(--cy-comp-sheet-player-text-secondary); font-size:var(--cy-type-caption); line-height:1.5; }
 /* ===================== A4 起始过场 · 深色 NRC 布局 ===================== */
 /* ds-ok 首页几何来自确认 HTML，安全区保留小程序原有胶囊计算。 */
