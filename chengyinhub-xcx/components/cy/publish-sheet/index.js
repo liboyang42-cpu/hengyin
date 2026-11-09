@@ -19,7 +19,7 @@ Component(withNativeBackGuard({
     show: {
       type: Boolean, value: false,
       observer(v) {
-        if (v) this.setData({ level: 'cards', selectedMode: 1 });
+        if (v) this.setData({ selectedMode: 1 });
       }
     },
     pub: { type: Object, value: null },
@@ -27,7 +27,7 @@ Component(withNativeBackGuard({
     merchant: { type: Boolean, value: false }
   },
   data: {
-    level: 'cards', selectedMode: 1, quickOpen: false
+    selectedMode: 1, quickOpen: false
   },
   lifetimes: {
     detached() {
@@ -35,7 +35,7 @@ Component(withNativeBackGuard({
     }
   },
   observers: {
-    '_render, level': function (render, level) {
+    '_render': function (render) {
       if (this._openTimer) { clearTimeout(this._openTimer); this._openTimer = null; }
       this.setData({ quickOpen: false });
       if (!render) return;
@@ -43,7 +43,7 @@ Component(withNativeBackGuard({
       // opacity 0→1 的过渡根本没起点。隔一帧(~16ms)再置 quickOpen,先让透明态画出来。
       this._openTimer = setTimeout(() => {
         this._openTimer = null;
-        if (this.data.show && this.data.level === level) this.setData({ quickOpen: true });
+        if (this.data.show) this.setData({ quickOpen: true });
       }, 16);
     }
   },

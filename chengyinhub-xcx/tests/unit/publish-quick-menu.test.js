@@ -72,7 +72,6 @@ for (const mode of [1, 2]) {
     const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
     sheet.data.variant = 'quick'; sheet.data.pub = { permission: {} };
     sheet.chooseTopicMode({ currentTarget: { dataset: { mode } } });
-    assert.equal(sheet.data.level, 'cards');
     assert.deepEqual(urls, [`/pages/publish/fabu/index?mode=${mode}`]);
     assert.equal(sheet.chooseSimple, undefined);
   });
@@ -90,7 +89,7 @@ test('模版保留现有介绍入口；信息未就绪时不会进入发布流�
   const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
   sheet.data.variant = 'quick';
   sheet.goTemplate(); sheet.chooseTopicMode({ currentTarget: { dataset: { mode: 2 } } });
-  assert.equal(urls.length, 0); assert.equal(sheet.data.level, 'cards');
+  assert.equal(urls.length, 0);
   sheet.data.pub = { permission: {} }; sheet.goTemplate();
   assert.deepEqual(urls, ['/pages/publish/template-intro/index']);
 });

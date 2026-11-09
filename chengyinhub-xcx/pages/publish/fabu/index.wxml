@@ -146,7 +146,7 @@
         <text class="pd-modecard__name">票务设置</text>
         <!-- P-4(V-25):票务有必填没填时,「编辑」换成红色「* 还有 N 项未填」;点卡照旧进票务页 -->
         <!-- V3-45(2026-11-09):未填提示与「主题详情」同一行样式(pd-missing),后面不带箭头 -->
-        <view wx:if="{{ticketMissing.total}}" class="pd-modecard__action pd-missing"><text class="req-left__star">* </text>还有 {{ticketMissing.total}} 项未填</view>
+        <view wx:if="{{ticketMissing.total}}" class="pd-modecard__action pd-missing"><text class="req-left__star">* </text>还有 {{ticketMissing.total || 0}} 项未填</view>
         <view wx:else class="pd-modecard__action"><text>编辑</text><cy-icon name="chevron-right" size="24" /></view>
       </view>
     </view>
