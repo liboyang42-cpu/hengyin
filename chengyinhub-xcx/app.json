@@ -266,7 +266,10 @@
         "appeal-mine/index",
         "signup/index",
         "tixian/tixian",
-        "tixianjilu/tixianjilu"
+        "tixianjilu/tixianjilu",
+        "market/passes/index",
+        "market/pass/index",
+        "market/gift/index"
       ]
     },
     {
