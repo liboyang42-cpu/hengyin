@@ -65,7 +65,8 @@ function harness(noBackground) {
   h.tracker.revoke = key => { h.revokedOrder = ++h.order; return revoke(key) }
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
   const context = { wx, app, playLocationOwnerSequence: 0, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) },
-    playAccuracy: require('../../pages/play/utils/play-accuracy.js') }
+    playAccuracy: require('../../pages/play/utils/play-accuracy.js'),
+    arrivalReading: require('../../pages/play/utils/arrival-reading.js') }   // qx-b1:定位样本带采样时刻
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey

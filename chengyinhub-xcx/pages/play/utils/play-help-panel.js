@@ -97,8 +97,8 @@ function chargeLine(use) {
 function methods(send) {
   const panel = {
     _helpCapture() {
-      const app = getApp();
-      return { owner: String(app.getUserID ? app.getUserID() || '' : ''), runId: id((this._routeState || {}).sessionId),
+      const app = typeof getApp === 'function' ? getApp() : null;
+      return { owner: String(app && app.getUserID ? app.getUserID() || '' : ''), runId: id((this._routeState || {}).sessionId),
         nodeId: id(this.data.game && this.data.game.nodeId), epoch: this._helpEpoch || 0 };
     },
     _helpCurrent(c) {
