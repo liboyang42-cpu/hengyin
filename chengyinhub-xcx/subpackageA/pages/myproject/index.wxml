@@ -44,13 +44,12 @@
         <view class="mp-main">
           <image lazy-load="true" class="mp-cover" src="{{item.cover || '/images/route_free_cover.png'}}" mode="aspectFill" />
           <view class="mp-body">
-            <view class="mp-when-row">
-              <text class="mp-when">{{item._whenText}}</text>
-              <cy-badge type="status" variant="{{item._stateVariant}}" label="{{item.stateText}}" />
-            </view>
+            <!-- V3-38(2026-11-09 业主「审核中和标题应该在一行」):状态词从档期行挪到标题行右侧 -->
+            <view class="mp-when" wx:if="{{item._whenText}}">{{item._whenText}}</view>
             <view class="mp-tit-row">
               <view class="mp-dot" wx:if="{{item._dot}}"></view>
               <view class="mp-tit">{{item.title}}</view>
+              <cy-badge class="mp-badge" type="status" variant="{{item._stateVariant}}" label="{{item.stateText}}" />
             </view>
             <view class="cy-addr-tap" wx:if="{{item._address}}" catchtap="onAddressTap" data-lat="{{item.latitude}}" data-lng="{{item.longitude}}" data-name="{{item.title}}" data-address="{{item._address}}" data-geo="1" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation aria-role="button" aria-label="在地图中打开 {{item._address}}"><view class="mp-addr">{{item._address}}</view></view>
             <view class="mp-stats">
@@ -88,15 +87,21 @@
         <view class="mp-main">
           <image lazy-load="true" class="mp-cover" src="{{item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" />
           <view class="mp-body">
-            <view class="mp-tit">{{item.title}}</view>
-            <view class="mp-tags">
-              <text class="mp-type">节点玩法</text>
-              <cy-badge type="status" variant="{{item._stateVariant}}" label="{{item._statusText}}" />
-              <text class="mp-owner">{{item._marketText}}</text>
+            <!-- V3-38/39(2026-11-09 业主):状态与标题同一行,状态只写两三个字(通过/审核中/未通过/草稿);
+                 类型与广场状态并成一行次要字,引用与时长一行,不再挤成换行的药丸。 -->
+            <view class="mp-tit-row">
+              <view class="mp-tit">{{item.title}}</view>
+              <cy-badge class="mp-badge" type="status" variant="{{item._stateVariant}}" label="{{item._statusShort}}" />
             </view>
-            <view class="mp-stats">
-              <text class="mp-stat" wx:if="{{item.useNum != null && item.useNum !== ''}}">{{ item.useNum || 0 }} 次引用</text>
-              <text class="mp-stat" wx:if="{{item.duration}}">{{ item.duration || 0 }} 分钟</text>
+            <view class="mp-meta">
+              <text>节点玩法</text>
+              <text class="mp-meta-sep">·</text>
+              <text>{{item._marketText}}</text>
+            </view>
+            <view class="mp-meta">
+              <text wx:if="{{item.useNum != null && item.useNum !== ''}}">{{ item.useNum || 0 }} 次引用</text>
+              <text class="mp-meta-sep" wx:if="{{item.useNum != null && item.useNum !== '' && item.duration}}">·</text>
+              <text wx:if="{{item.duration}}">{{ item.duration || 0 }} 分钟</text>
             </view>
             <view class="mp-stats" wx:if="{{item.reason}}"><text class="mp-stat">个人审核：{{item.reason}}</text></view>
             <view class="mp-stats" wx:if="{{item.marketReason}}"><text class="mp-stat">广场：{{item.marketReason}}</text></view>

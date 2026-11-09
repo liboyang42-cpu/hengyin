@@ -54,16 +54,17 @@ test('V-20 票价显示真实单价，免费单没有快照时是 ¥0 而不是�
   assert.match(wxml, /<text class="orow-k">票价<\/text>\s*<text class="orow-v">\{\{money\.amount2?\(ticketPriceShown\)\}\} × \{\{orderQty\}\}<\/text>/)
 })
 
-// j2 F-06(第十轮):V-20 去掉的是「查看票夹」;已付进行中的订单底部改出「开始游戏」直进 play(不经票夹),
-// 原断言「进行中订单底部不出主 CTA」随之更新。
-test('V-20 订单详情不再有「查看票夹」按钮，进行中订单底部是直进 play 的「开始游戏」', () => {
+// V3-03(2026-11-09 业主):「订单这里不需要有开始游戏按钮 开始游戏只从票夹那进去」⇒
+// 进行中订单底部不再出「开始游戏」(j2 F-06 那颗收回),入口只在票夹。
+test('V-20 订单详情不再有「查看票夹」按钮，进行中订单底部也不出「开始游戏」', () => {
   const wxml = read(DIR + 'index.wxml').replace(/<!--[\s\S]*?-->/g, '')
   assert.doesNotMatch(wxml, /查看票夹/)
   assert.doesNotMatch(wxml, /bindtap="goSignInfo"/)
   assert.match(wxml, /class="bp-cta-bar" wx:if="\{\{primaryCta === 'pay'\}\}"/)
   const vm = load({ id: 7, ownerType: 1, ownerId: 70, registrationStatus: 2, paymentStatus: 2, verificationStatus: 0, cmsTopic: { id: 70, name: 't' } })
   assert.equal(vm.data.info.orderStateKey, 'in_progress')
-  assert.equal(vm.data.primaryCta, 'play')
+  assert.equal(vm.data.primaryCta, '')
+  assert.doesNotMatch(wxml, /开始游戏/)
 })
 
 test('V-20 page 档订单详情的宿主不吃 touchmove，正文能滑到底', () => {

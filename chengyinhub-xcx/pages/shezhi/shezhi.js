@@ -218,6 +218,7 @@ Page({
     this.openScene('settings-deregister');
   },
 
+  goFeedback() { this.openScene('settings-feedback'); },
   goAppeals() {
     wx.navigateTo({ url: '/subpackageMember/appeal-mine/index' });
   },

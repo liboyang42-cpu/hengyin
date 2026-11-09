@@ -17,6 +17,8 @@ function marketView(t) {
   return {
     _statusText: draft ? '草稿' : approved ? '个人审核通过' : rejected ? '个人审核未通过'
       : reviewing ? '个人审核中' : '状态待确认',
+    // V3-39(2026-11-09 业主「通过 两个字就好」):我的项目卡片上的短状态词;长文案 _statusText 留给其它入口。
+    _statusShort: draft ? '草稿' : approved ? '通过' : rejected ? '未通过' : reviewing ? '审核中' : '待确认',
     _stateClass: draft ? 'st-draft' : approved ? 'st-online' : rejected ? 'st-rejected' : 'st-pending',
     _marketText: noMarket ? '未提交广场' : pending ? '广场审核中' : online ? '广场已上架'
       : delisted ? '广场已下架' : market && is(t.marketStatus, 2) ? '广场需重新提交' : '—',

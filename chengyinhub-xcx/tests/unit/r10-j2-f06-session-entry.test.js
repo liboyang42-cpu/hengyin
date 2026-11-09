@@ -54,19 +54,15 @@ test('F-06 ① 从俱乐部场次卡进来:主按钮去选场次,不是「随时
   assert.match(topic, /that\._viaSession = options\.via === 'session'/)
 })
 
-test('F-06 ③ 订单页:已付未开始的场次票底部「开始游戏」直进 play', () => {
+// V3-03(2026-11-09 业主「订单这里不需要有开始游戏按钮 开始游戏只从票夹那进去」):F-06 ③ 那颗收回。
+test('F-06 ③ 订单页:已付未开始的场次票底部不再出「开始游戏」(只从票夹进)', () => {
   const vm = load({ id: 74, ownerType: 2, ownerId: 9, registrationStatus: 2, paymentStatus: 2, verificationStatus: 0,
-    refundInfo: { refundable: true }, cmsActivity: { id: 9, name: '沪上慢走', topicId: 5, startDate: future, endDate: '2099-11-04 18:00:00' } })   // 第十二轮 k2:有游戏的场次(没有游戏的票不出「开始游戏」,见 k2-no-game-ticket)
+    refundInfo: { refundable: true }, cmsActivity: { id: 9, name: '沪上慢走', topicId: 5, startDate: future, endDate: '2099-11-04 18:00:00' } })
   assert.equal(vm.data.info.orderStateKey, 'not_started')
-  assert.equal(vm.data.primaryCta, 'play')
+  assert.equal(vm.data.primaryCta, '')
   vm.startPlay()
-  assert.equal(sandbox.navs[0], '/pages/play/index?activityId=9&registrationId=74&entry=ticket&topicName=' + encodeURIComponent('沪上慢走'))
-  const wxml = read(DIR + 'index.wxml')
-  const button = wxml.match(/wx:elif="{{([^}]+)}}">\s*<view class="primary-cta" bindtap="startPlay"[^>]*>{{([^}]+)}}<\/view>/)
-  assert.ok(button)
-  const evaluate = require('node:vm').runInNewContext
-  assert.equal(evaluate(button[1], vm.data), true)
-  assert.equal(evaluate(button[2], vm.data), '开始游戏')
+  assert.equal(sandbox.navs.length, 0, '没有主 CTA 时 startPlay 也不跳 play')
+  assert.doesNotMatch(read(DIR + 'index.wxml').replace(/<!--[\s\S]*?-->/g, ''), /开始游戏/)
 })
 
 test('F-06 ③ 待支付仍是「去支付」;已取消、已完成不出「开始游戏」', () => {
@@ -90,8 +86,7 @@ test('completed exploration order reuses exact registered play route as View Rec
     assert.ok(element);
     assert.equal(evaluate(element[1], instance.data), true);
     const label = element[2].match(/^{{([^}]+)}}$/);
-    assert.ok(label);
-    assert.equal(evaluate(label[1], instance.data), '查看记录');
+    assert.equal(label ? evaluate(label[1], instance.data) : element[2].trim(), '查看记录');
     instance.startPlay();
     assert.equal(sandbox.navs.at(-1), '/pages/play/index?activityId=9350605&registrationId=9350807&entry=ticket&topicName=' + encodeURIComponent('双店'));
     assert.equal(instance.data.info.verificationStatus, 1);
