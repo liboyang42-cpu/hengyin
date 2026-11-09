@@ -83,6 +83,13 @@ class GameplayReskinMySqlIT {
         java.util.Map<String, Object> approved = mediaAssets.stageApprovedImage(7L,
                 "upload/0123456789abcdef0123456789abcdef.png");
         assertEquals(1L, ((Number) approved.get("assetId")).longValue());
+        assertEquals("unknown", mediaMapper.select(1L).get("sourceType"));
+        // This synthetic image is owned by the fixture author; record the declaration through the real owner gate.
+        new org.springframework.transaction.support.TransactionTemplate(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(source))
+                .execute(tx -> mediaAssets.saveProvenance(1L, 7L, java.util.Map.of(
+                        "sourceType", "original", "licenseNote", "Synthetic image owned by test fixture author")));
+        assertEquals("original", mediaMapper.select(1L).get("sourceType"));
         java.util.Map<String, Object> stored = mediaMapper.select(1L);
         assertEquals(7L, ((Number) stored.get("memberId")).longValue());
         assertEquals("APP", stored.get("ownerType"));
