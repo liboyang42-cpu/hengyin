@@ -3216,80 +3216,6 @@ page { background: var(--cy-btn-solid-bg); }
   background: var(--cy-color-border-subtle);
 }
 
-/* 插入点:收起是一颗小圆,展开成横线 + 两颗药丸。两态等高,展开不跳版。 */
-.story-insert {
-  position: relative;
-  height: var(--cy-btn-h);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.story-insert__plus {
-  position: relative; z-index: 1;
-  width: 44rpx; height: 44rpx;
-  border-radius: var(--cy-radius-pill);
-  border: 2rpx solid var(--cy-color-border-subtle);
-  background: var(--cy-color-bg-surface);
-  color: var(--cy-color-text-tertiary);
-  font-size: var(--cy-font-caption);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.story-insert__rule {
-  position: absolute;
-  left: 88rpx; right: 40rpx;
-  height: 2rpx;
-  background: var(--cy-color-border-subtle);
-}
-
-.story-insert__menu { position: relative; z-index: 1; display: flex; gap: var(--cy-space-2); }
-/* 正文只保留文字、图片、音频、地点四个插入入口。 */
-.story-insert.is-open { height: auto; padding: var(--cy-space-2) 0; }
-.story-insert.is-open .story-insert__menu { display: flex; flex-wrap: wrap; justify-content: center; padding: 0 var(--cy-space-4); }
-.story-insert.is-open .story-insert__rule { display: none; }
-.story-insert__action { flex: none; white-space: nowrap; }
-
-/* 2026-09-05 按稿把药丸做小(26px),但**命中区不缩**(用户裁决 A)。
-   稿子给的 26px 低于 44px 触控下限,而 publish-story-editor-hit-targets-contract
-   正是为此存在的。做法:这一层只当命中区(min-height 仍是 --cy-btn-h、无边框无底色),
-   看得见的药丸由 ::before 画成 50rpx 高、垂直居中 —— 看起来是稿子的尺寸,手指够到的还是 44px。
-   ⚠️ 别把 min-height 改回 height 或改小:那样两件事会一起变,契约会红。 */
-.story-insert__action {
-  position: relative;
-  min-height: var(--cy-btn-h);
-  padding: 0 17rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--cy-space-1);
-  color: var(--cy-color-text-secondary);
-  font-size: var(--cy-font-caption);
-}
-
-.story-insert__action::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 0; right: 0; top: 50%;
-  height: 50rpx;
-  margin-top: -25rpx;
-  border-radius: var(--cy-radius-pill);
-  border: 2rpx solid var(--cy-color-border-subtle);
-  background: var(--cy-color-bg-surface);
-}
-
-/* ⚠️ 实底那档要画在 ::before 那颗药丸上,不能画在外层 —— 外层现在是 44rpx 高、无圆角的
-   透明命中区(见上面 B7 的说明),在它身上刷底色会盖住药丸,整条渲染成一根黑色长条。 */
-.story-insert__action--node { color: var(--cy-btn-solid-fg); }
-
-.story-insert__action--node::before {
-  border-color: transparent;
-  background: var(--cy-btn-solid-bg);
-}
-
 /* 文字块:无边框直接写,左侧一颗小圆点挂在导引线上。 */
 .story-text-block { position: relative; padding: 12rpx var(--cy-space-4) 12rpx 88rpx; }
 
@@ -3727,6 +3653,73 @@ page { background: var(--cy-btn-solid-bg); }
 }
 
 .story-editor__bottom { height: var(--cy-space-6); }
+
+/* ── 文章式编辑(2026-11-09 qx-a5d)。一章是一篇连续的文章:段落之间不画框、不画插入缝、
+   不挂导引线圆点;插入的玩法/图片/音频/分割线/地点是文章里的卡片。长按任何块可拖动。 */
+.story-article::before { display: none; }
+.story-article { padding-top: var(--cy-space-2); }
+.story-article .story-block { position: relative; transition: transform .18s ease; }
+.story-article .story-block.is-lifted {
+  z-index: 5;
+  transition: none;
+  background: var(--cy-color-bg-surface);
+  border-radius: var(--cy-radius-sm);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.18); /* ds-ok: 拖拽抬起态的临时投影,非主题分层(同 .slopes-node-movable.is-dragging) */
+}
+.story-article .story-text-block { padding: 10rpx var(--cy-space-4); }
+.story-article .story-text-block.is-selected { padding-right: 112rpx; }
+.story-article .story-text-block::before { display: none; }
+.story-article .story-text-block__input { min-height: 0; padding: 6rpx 0; }
+.story-article .story-media-block,
+.story-article .story-dream-block,
+.story-article .story-mood-block { padding: var(--cy-space-2) var(--cy-space-4); }
+.story-article .story-node-block { padding: var(--cy-space-2) var(--cy-space-4); }
+.story-article .story-node-block__num {
+  left: calc(var(--cy-space-4) + 12rpx); top: calc(var(--cy-space-2) + 12rpx);
+  transform: none; z-index: 1;
+  width: 40rpx; height: 40rpx;
+}
+
+.story-divider-block { position: relative; display: flex; align-items: center; justify-content: center; min-height: var(--cy-btn-h); padding: 0 var(--cy-space-4); }
+.story-divider-block__rule { width: 30%; height: 2rpx; background: var(--cy-color-border-strong); }
+
+/* 文末空白:点它继续写;空章时显示占位,看起来就是一篇还没写的文章 */
+.story-tail { min-height: 240rpx; padding: 6rpx var(--cy-space-4) 0; }
+.story-tail__placeholder { color: var(--cy-color-text-placeholder); font-size: var(--cy-font-body); line-height: 1.7; }
+
+/* 顶部插入栏:不输入时贴在标题下方;键盘弹起时贴到键盘上沿(bottom 由 wxml 按键盘高度注入) */
+.story-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-1);
+  padding: 0 var(--cy-space-3);
+  border-bottom: 2rpx solid var(--cy-color-border-subtle);
+  background: var(--cy-color-bg-surface);
+  overflow-x: auto;
+}
+.story-toolbar.is-docked {
+  position: fixed; left: 0; right: 0; z-index: 6;
+  background: var(--cy-color-bg-surface);
+  border-bottom: 0;
+  border-top: 2rpx solid var(--cy-color-border-subtle);
+}
+.story-toolbar__item {
+  flex: none;
+  min-height: var(--cy-btn-h);
+  padding: 0 var(--cy-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-1);
+  color: var(--cy-color-text-secondary);
+  font-size: var(--cy-font-label);
+  white-space: nowrap;
+}
+.story-toolbar__rule { width: 28rpx; height: 3rpx; border-radius: var(--cy-radius-pill); background: currentColor; }
+
+@media (prefers-reduced-motion: reduce) {
+  .story-article .story-block { transition: none; }
+}
 
 .chapter-story-entry-hint {
   margin-top: var(--cy-space-3);
