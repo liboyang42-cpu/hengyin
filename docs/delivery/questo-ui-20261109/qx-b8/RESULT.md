@@ -23,7 +23,8 @@
 
 - `node tests/lint/ui-integrity.js`：结果是 `UI-GATE-0:PASS`。基线没有新增条目。我的插入让两个已有锚点只发生了行号位移：play U4-DYNAMIC 从 1847 移到 1849，U5 loadMilestone 从 8809 移到 8831。调用行逐字相同，理由和条数都没变。按仓库惯例，我重新标注了这两个锚点，按 `baselineKeyDigest` 重算了 keyDigest，并在基线文件头写了日期注释。
 - `build-route-matrix.js --check` 通过，共 159 条路由；`build-action-ledger.js` 通过，共 5758 个控件。台账在基线上原本就已漂移，这次用 `--write` 重建后提交，所以 diff 很大。
-- 单测：qx-b8 两个文件、play-*、topic* 和相关旧测试一起跑，1088 例全部通过。全量结果见 PR 描述。
+- 全量单测 `node --test 'tests/unit/*.test.js'`：16781 例，16776 通过，5 例失败。这 5 例在基线 `449fb80d` 的干净 worktree 上同样失败，与本道无关：advanced-game-config-slowtask 的 Validator 段名单、get-auth-matrix 38/39/40、playkit-shell-present 的默认呈现。
+- 新页登记进了各盘点测试：route-matrix-freshness 159、title-system 159/158、nav-page-title-spacing 的 NAV_WITHOUT_L1_TITLE、page-cleanup 文档。孤儿页豁免按「待拍板入口」写明理由，与 needs owner 1 对应。GET 权限矩阵为 `/report` 加了一行，档位 member/current-session，wrapper 计数 46→47。台账计数：控件 5751→5758，tap 2876→2880，事件合同 2875→2878。
 - 没有运行 `ci/xcx-check.sh`，也没有运行 `ds-hardcode-gate-selftest.sh`。
 
 ## Rig 说明（HARNESS，不是产品问题）
