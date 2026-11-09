@@ -456,6 +456,97 @@ function textCaret(blocks, key, cursor) {
   return { index: index, block: blocks[index], text: text, cursor: cursor };
 }
 
+// 文章式编辑(2026-11-09 qx-a5d):一章是一篇连续的文章,换行 = 新的一段。
+// 输入框里出现新的换行(回车或粘贴多段)时,按行拆成相邻的段落块。
+// 中间的空行丢掉(玩家端也按 /\n+/ 分段,空行本来就不显示);首段与末段即使为空也保留,
+// 末段是光标要落进去的那一段。单段仍按服务端 5000 字上限再切,不切断 emoji。
+function chunkText(content) {
+  var parts = [];
+  do {
+    var end = Math.min(5000, content.length);
+    if (end < content.length && /[\uD800-\uDBFF]/.test(content.charAt(end - 1)) && /[\uDC00-\uDFFF]/.test(content.charAt(end))) end--;
+    parts.push(content.slice(0, end));
+    content = content.slice(end);
+  } while (content.length);
+  return parts;
+}
+
+function paragraphParts(content, cursor) {
+  var text = String(content == null ? '' : content);
+  var lines = text.split('\n');
+  var at = Number.isInteger(cursor) && cursor >= 0 && cursor <= text.length ? cursor : text.length;
+  var parts = [];
+  var focus = null;
+  var offset = 0;
+  lines.forEach(function (raw, index) {
+    var line = raw.replace(/\r$/, '');
+    var start = offset;
+    offset += raw.length + 1;
+    var keep = index === 0 || index === lines.length - 1 || line !== '';
+    if (!keep) return;
+    chunkText(line).forEach(function (chunk, chunkIndex, chunks) {
+      var chunkStart = start + chunkIndex * 5000;
+      parts.push(chunk);
+      if (!focus && at >= chunkStart && (at <= chunkStart + chunk.length || chunkIndex === chunks.length - 1 && at <= start + raw.length)) {
+        focus = { part: parts.length - 1, cursor: Math.min(chunk.length, at - chunkStart) };
+      }
+    });
+  });
+  if (!focus) {
+    // 光标落在被丢掉的空行上:放到下一段的开头(没有下一段就放到最后一段末尾)
+    var lastKept = 0;
+    var running = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var lineStart = running;
+      running += lines[i].length + 1;
+      if (at < lineStart) break;
+      if (i === 0 || i === lines.length - 1 || lines[i].replace(/\r$/, '') !== '') lastKept++;
+    }
+    focus = lastKept < parts.length ? { part: lastKept, cursor: 0 } : { part: parts.length - 1, cursor: parts[parts.length - 1].length };
+  }
+  return { parts: parts, focusPart: focus.part, focusCursor: focus.cursor };
+}
+
+// 能按段拆开的只有普通正文:节点叙事段(beat)要贴着站点,带说话人(who)的段拆开后
+// 每段都会被冠上「谁：」,这两种保留段内换行,行为与改版前一致。
+function canSplitParagraphs(block) {
+  return !!block && block.type === 'text' && !hasNarrativeBeat(block) && !(block.who != null && String(block.who).trim() !== '');
+}
+
+function newlineCount(text) {
+  var m = String(text == null ? '' : text).match(/\n/g);
+  return m ? m.length : 0;
+}
+
+// 顶部插入栏用:把「插到光标处」翻译成模型命令。光标仍在原文字块里且那段文字没变 → insertAtCaret
+// (中间就拆段,段首段尾就插在前后);否则按 fallbackIndex 插。节点叙事段不能拆,插到它后面。
+function caretInsertCommand(chapter, caret, insert, makeKey) {
+  var blocks = (chapter && chapter.blocks) || [];
+  var command = clone(insert || {});
+  if (caret && caret.blockKey) {
+    var index = blocks.findIndex(function (block) { return block && block.key === caret.blockKey && block.type === 'text'; });
+    var block = blocks[index];
+    var text = block ? String(block.content == null ? '' : block.content) : '';
+    var cursor = Number(caret.cursor);
+    if (block && (caret.content == null || caret.content === text) && Number.isInteger(cursor) && cursor >= 0 && cursor <= text.length) {
+      if (hasNarrativeBeat(block) && cursor > 0 && cursor < text.length) {
+        command.index = index + 1;
+        return command;
+      }
+      return {
+        type: 'insertAtCaret',
+        blockKey: block.key,
+        cursor: cursor,
+        trailingBlockKey: cursor > 0 && cursor < text.length ? makeKey() : undefined,
+        insert: command,
+      };
+    }
+  }
+  if (!Number.isInteger(command.index)) command.index = blocks.length;
+  command.index = Math.max(0, Math.min(blocks.length, command.index));
+  return command;
+}
+
 function applyStoryCommand(input, command) {
   var draft = clone(input || {}) || {};
   draft.chapter = draft.chapter || { nodes: [], blocks: [] };
@@ -506,6 +597,34 @@ function applyStoryCommand(input, command) {
     draft.chapter.blocks.splice.apply(draft.chapter.blocks, [paste.index, 1].concat(replacements));
     synchronizeChapter(draft.chapter);
     return { draft: draft };
+  }
+
+  // 文章式编辑:正文里敲回车 / 粘贴多段 → 拆成相邻段落块,返回光标应该落到的段与位置。
+  // 只有换行数比原文多(或单段超过服务端 5000 字上限)时才拆;老段落里本来就有的换行,不因为改一个字就被重排。
+  if (command.type === 'splitParagraphs') {
+    var splitIndex = draft.chapter.blocks.findIndex(function (item) {
+      return item && item.key === command.blockKey && item.type === 'text';
+    });
+    if (splitIndex < 0) throw new Error('未找到要编辑的文字块');
+    var splitBlock = draft.chapter.blocks[splitIndex];
+    var nextContent = String(command.content == null ? '' : command.content);
+    if (!canSplitParagraphs(splitBlock) || (newlineCount(nextContent) <= newlineCount(splitBlock.content) && nextContent.length <= 5000)) {
+      splitBlock.content = nextContent;
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, focusBlockKey: splitBlock.key, focusCursor: Number.isInteger(command.cursor) ? command.cursor : nextContent.length };
+    }
+    var plan = paragraphParts(nextContent, command.cursor);
+    if (draft.chapter.blocks.length + plan.parts.length - 1 > MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
+    var paraKeys = command.blockKeys || [];
+    if (!Array.isArray(paraKeys) || paraKeys.length < plan.parts.length - 1) throw new Error('分段缺少内容块标识');
+    var paragraphs = plan.parts.map(function (part, index) {
+      var key = index === 0 ? splitBlock.key : freshBlockKey(draft.chapter.blocks, paraKeys[index - 1]);
+      if (index > 0 && paraKeys.indexOf(key) !== index - 1) throw new Error('内容块标识无效或重复');
+      return Object.assign(clone(splitBlock), { key: key, content: part });
+    });
+    draft.chapter.blocks.splice.apply(draft.chapter.blocks, [splitIndex, 1].concat(paragraphs));
+    synchronizeChapter(draft.chapter);
+    return { draft: draft, focusBlockKey: paragraphs[plan.focusPart].key, focusCursor: plan.focusCursor };
   }
 
   if (command.type === 'moveBlock') {
@@ -831,6 +950,9 @@ module.exports = {
   collectStoryVars: collectStoryVars,
   insertVarAt: insertVarAt,
   varInsertIndex: varInsertIndex,
+  paragraphParts: paragraphParts,
+  canSplitParagraphs: canSplitParagraphs,
+  caretInsertCommand: caretInsertCommand,
   DREAM_MAX_IMAGES: DREAM_MAX_IMAGES,
   MEDIA_ALT_TEXT_MAX: MEDIA_ALT_TEXT_MAX,
 };

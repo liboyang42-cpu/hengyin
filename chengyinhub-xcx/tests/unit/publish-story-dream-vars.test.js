@@ -234,12 +234,13 @@ test('★负控:把「没记到光标」也当 0 处理,上一条必须判红', 
   assert.notEqual(broken, '你好{name}', '把 -1 当 0 的写法确实会插错位置，上一条才抓得到')
 })
 
-test('正文菜单仅含文字图片音频地点，旧相册块仍可编辑', () => {
+test('正文插入栏只有玩法图片音频分割线地点，旧相册块仍可编辑', () => {
   const wxml = read('pages/publish/fabu/index.wxml')
-  assert.equal((wxml.match(/catchtap="insertStoryGameAt"/g) || []).length, 0)
-  for (const handler of ['insertStoryTextAt', 'insertStoryImageAt', 'insertStoryAudioAt', 'insertStoryNodeAt']) {
-    assert.equal((wxml.match(new RegExp('catchtap="' + handler + '"', 'g')) || []).length, 2)
+  // 插入一律走顶部插入栏(插到光标处),不再有逐缝的「+」菜单
+  for (const handler of ['insertStoryGameAt', 'insertStoryTextAt', 'insertStoryImageAt', 'insertStoryAudioAt', 'insertStoryNodeAt', 'toggleStoryInsertMenu']) {
+    assert.equal((wxml.match(new RegExp('catchtap="' + handler + '"', 'g')) || []).length, 0)
   }
+  assert.equal((wxml.match(/catchtap="onStoryToolbarInsert"/g) || []).length, 5)
   assert.doesNotMatch(wxml, /class="story-varsheet__hint"/, '变量列表不显示说明小字')
   for (const handler of ['insertStoryDreamAt', 'insertStoryVoiceAt', 'insertStoryOddAt', 'insertStoryRevealAt', 'openStoryVarSheet', 'toggleStoryTextSettings']) {
     assert.ok(!wxml.includes('catchtap="' + handler + '"'))

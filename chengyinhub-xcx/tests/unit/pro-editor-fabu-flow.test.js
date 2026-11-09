@@ -727,16 +727,16 @@ test('编辑结局后，两种新建入口都清空上章身份和设置，连�
   }
 })
 
-test('伏笔配置留在主题详情，正文两处菜单只提供文字、图片、音频、地点', () => {
+test('伏笔配置留在主题详情，正文只有一条顶部插入栏：玩法、图片、音频、分割线、地点', () => {
+  // 2026-11-09 用户:「玩法/图片/音频之类的统一顶部标签 然后添加」—— 取代每个缝里的两处菜单
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
   const topic = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/topic-detail-sheet.wxml'), 'utf8')
   assert.match(topic, /bindtap="openThoughts"/)
-  const menus = [...wxml.matchAll(/<view class="story-insert__menu">([\s\S]*?)\n\s*<\/view>/g)]
-  assert.equal(menus.length, 2)
-  for (const menu of menus) {
-    assert.deepEqual([...menu[1].matchAll(/catchtap="(\w+)"/g)].map(m => m[1]),
-      ['insertStoryTextAt', 'insertStoryImageAt', 'insertStoryAudioAt', 'insertStoryNodeAt'])
-  }
+  assert.doesNotMatch(wxml, /story-insert__menu/)
+  const bars = [...wxml.matchAll(/<view class="story-toolbar [^"]*"[^>]*>([\s\S]*?)\n\s*<\/view>\n/g)]
+  assert.equal(bars.length, 1)
+  assert.deepEqual([...bars[0][1].matchAll(/data-kind="(\w+)" catchtap="onStoryToolbarInsert"/g)].map(m => m[1]),
+    ['game', 'image', 'audio', 'divider', 'node'])
   assert.match(wxml, /bind:change="onToggleNodeGame"/)
 })
 

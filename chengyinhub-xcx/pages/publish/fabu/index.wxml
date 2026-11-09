@@ -434,10 +434,9 @@
   </scroll-view>
 
   <!-- 城市定向故事流：唯一写入口。插入点在动作前可见，节点配置跨二级页时锚点留在 page.data。 -->
-  <!-- 故事流编辑器。按 Figma 4028:13330 改成半屏 sheet(原为全屏页):
-       抓手 + 章节名称居中标题 + 章节名单独一行 + 左侧导引线贯穿。
-       ⚠️ 节点块【不做拖拽手柄】—— 稿子里画了,但 8-10 用户裁决「拖拽小程序实现比较困难
-       就暂时先不做」。这是有意省略,不是漏做,别照稿补回来(见 vault《章节内容块化》§6.4)。 -->
+  <!-- 故事流编辑器 = 文章式编辑(2026-11-09 用户:「看一下 x article 是怎么做的…统一顶部标签…添加之后可以拖动」)。
+       一章是一篇连续的文章:回车/粘贴多段自动分段;顶部插入栏把玩法/图片/音频/分割线/地点插到光标处;
+       任何块(段落也算)长按即可拖动排序。 -->
   <view class="story-editor {{popChapter ? 'is-stacked' : ''}}" wx:if="{{storyEditor.show && !runtimeEditor.show}}" catchtouchmove="noop">
     <view class="story-editor__backdrop" catchtouchmove="noop" bindtap="closeStoryEditor" aria-role="button" aria-label="关闭故事编辑器" hover-class="cy-pressed" hover-stay-time="80"></view>
     <view class="story-editor__sheet" style="top: {{chrome.sheetTop}}px">
@@ -455,47 +454,48 @@
         maxlength="30"
         placeholder="章节名称" />
     </view>
-    <scroll-view class="story-editor__scroll" scroll-y enhanced show-scrollbar="{{false}}">
-      <view class="story-editor__pending" wx:if="{{storyPendingMaterialLocalId}}">待编排节点已选，请在目标缝点「添加节点」</view>
-      <view class="story-editor__rail">
+    <view class="story-toolbar {{storyEditor.kb > 0 ? 'is-docked' : ''}}" style="{{storyEditor.kb > 0 ? 'bottom:' + storyEditor.kb + 'px' : ''}}">
+      <view class="story-toolbar__item" data-kind="game" catchtap="onStoryToolbarInsert" aria-role="button" aria-label="插入玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="tab-explore" size="32" /><text>玩法</text></view>
+      <view class="story-toolbar__item" data-kind="image" catchtap="onStoryToolbarInsert" aria-role="button" aria-label="插入图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="32" /><text>图片</text></view>
+      <view class="story-toolbar__item" data-kind="audio" catchtap="onStoryToolbarInsert" aria-role="button" aria-label="插入音频" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play" size="32" /><text>音频</text></view>
+      <view class="story-toolbar__item" data-kind="divider" catchtap="onStoryToolbarInsert" aria-role="button" aria-label="插入分割线" hover-class="cy-pressed" hover-stay-time="80"><view class="story-toolbar__rule"></view><text>分割线</text></view>
+      <view class="story-toolbar__item" wx:if="{{!formData.chapters[storyEditor.chapterIndex].opening}}" data-kind="node" catchtap="onStoryToolbarInsert" aria-role="button" aria-label="插入地点" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="pin" size="32" /><text>地点</text></view>
+    </view>
+    <scroll-view class="story-editor__scroll" scroll-y="{{!storyDrag.key}}" enhanced show-scrollbar="{{false}}" scroll-top="{{storyScrollTop}}" bindscroll="onStoryScroll" style="{{storyEditor.kb > 0 ? 'padding-bottom:' + (storyEditor.kb + 56) + 'px' : ''}}">
+      <view class="story-editor__pending" wx:if="{{storyPendingMaterialLocalId}}">待编排节点已选，请把光标放到要插入的位置，再点「地点」</view>
+      <view class="story-editor__rail story-article {{storyDrag.key ? 'is-dragging' : ''}}">
         <block
           wx:for="{{formData.chapters[storyEditor.chapterIndex].blocks || []}}"
           wx:key="key"
           wx:for-item="block"
           wx:for-index="blockIndex">
-          <view class="story-insert {{storyEditor.insertMenuAt === blockIndex ? 'is-open' : ''}}" data-index="{{blockIndex}}" bindtap="toggleStoryInsertMenu" aria-role="button" aria-label="在第{{blockIndex + 1}}段前添加内容" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="story-insert__rule"></view>
-            <view class="story-insert__plus" wx:if="{{storyEditor.insertMenuAt !== blockIndex}}"><cy-icon name="plus" size="24" /></view>
-            <block wx:else>
-              <view class="story-insert__menu">
-                <view class="story-insert__action" data-index="{{blockIndex}}" catchtap="insertStoryTextAt" aria-role="button" aria-label="添加文字块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>文字</text></view>
-                <view class="story-insert__action" data-index="{{blockIndex}}" catchtap="insertStoryImageAt" aria-role="button" aria-label="添加图片块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>图片</text></view>
-                <view class="story-insert__action" data-index="{{blockIndex}}" catchtap="insertStoryAudioAt" aria-role="button" aria-label="添加音频块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>音频</text></view>
-                <view class="story-insert__action story-insert__action--node" wx:if="{{!formData.chapters[storyEditor.chapterIndex].opening}}" data-index="{{blockIndex}}" catchtap="insertStoryNodeAt" aria-role="button" aria-label="添加地点" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>地点</text></view>
-              </view>
-            </block>
-          </view>
-
-          <view class="story-text-block" wx:if="{{block.type === 'text'}}">
+          <view class="story-block {{storyDrag.key === block.key ? 'is-lifted' : ''}}" id="sb-{{block.key}}" data-blockkey="{{block.key}}" data-index="{{blockIndex}}"
+                style="{{storyDrag.key ? 'transform: translateY(' + (storyDrag.key === block.key ? storyDrag.dy : (storyDrag.shift[blockIndex] || 0)) + 'px)' : ''}}"
+                bindlongpress="onStoryDragStart" bindtouchmove="onStoryDragMove" bindtouchend="onStoryDragEnd" bindtouchcancel="onStoryDragEnd">
+          <view class="story-text-block {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}}" wx:if="{{block.type === 'text'}}">
             <textarea
               class="story-text-block__input"
               value="{{block.content}}"
               data-blockkey="{{block.key}}"
               bindinput="onStoryTextInput"
               focus="{{storyEditor.focusBlockKey === block.key}}"
-              maxlength="5000"
+              cursor="{{storyEditor.focusBlockKey === block.key ? storyEditor.focusCursor : -1}}"
+              maxlength="-1"
               auto-height
               fixed="{{true}}"
-              cursor-spacing="120"
-              bindfocus="selectStoryBlock"
+              adjust-position="{{false}}"
+              show-confirm-bar="{{false}}"
+              disable-default-padding="{{true}}"
+              bindkeyboardheightchange="onStoryKeyboard"
+              bindfocus="onStoryTextFocus"
               bindblur="onStoryTextBlur"
-              placeholder="写下这一段故事…" />
+              placeholder="{{blockIndex === 0 ? '写下这一章的故事…' : ''}}" />
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryText" aria-role="button" aria-label="删除文字块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="trash-2" size="28" /></view></view>
           </view>
 
           <view class="story-media-block story-media-block--image"
                 wx:elif="{{block.type === 'image'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <image class="story-media-block__img" src="{{block.url}}" mode="widthFix" lazy-load="true" />
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除图片块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
           </view>
@@ -505,7 +505,7 @@
                里面是播放符号 + 文件名。它有位置:玩家读到这一段才响,不是整章底噪。 -->
           <view class="story-media-block"
                 wx:elif="{{block.type === 'audio'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <!-- ⚠️ 灰底必须画在**内层**:外层 .story-media-block 带着 88rpx 左内距(让开导引线),
                  底色画在外层会连内距一起铺满 —— 左边压过竖线、右边越过插入缝的横线。
                  图片块用的是同一条:底色在 __img 上,不在外层。 -->
@@ -533,7 +533,7 @@
                1–6 张;一张都没有的相册存不进去(见 utils/publish/pro-editor-story.js)。 -->
           <view class="story-dream-block"
                 wx:elif="{{block.type === 'dream'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <view class="story-dream-block__head">
               <input class="story-dream-block__line" value="{{block.title}}" maxlength="20" placeholder="相册（不填就叫相册）" data-blockkey="{{block.key}}" bindinput="onAlbumTitleInput" aria-label="相册名称" />
               <text class="story-dream-block__count">{{block.images.length}} / 6 张</text>
@@ -559,7 +559,7 @@
                名字与步数阈值在「伏笔」那张卡里配。 -->
           <view class="story-mood-block"
                 wx:elif="{{block.type === 'thought'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <cy-dropdown topic-editor="{{true}}" range="{{thoughtOptions}}" range-key="name" data-blockkey="{{block.key}}" bind:change="onStoryThoughtChange">
               <view class="story-mood-block__body" aria-role="button" aria-label="换伏笔" hover-class="cy-pressed" hover-stay-time="80">
                 <text class="story-mood-block__tag">伏笔</text>
@@ -573,7 +573,7 @@
           <!-- 内心声音块(2026-09-23,《预制人生》参照极乐迪斯科):选哪个声音 + 它说的那句话 -->
           <view class="story-mood-block"
                 wx:elif="{{block.type === 'voice'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <cy-dropdown topic-editor="{{true}}" range="{{voiceNames}}" data-blockkey="{{block.key}}" data-field="who" bind:change="onStoryPlainPick">
               <view class="story-mood-block__body" aria-role="button" aria-label="换内心声音" hover-class="cy-pressed" hover-stay-time="80">
                 <text class="story-mood-block__tag">内心声音</text>
@@ -593,7 +593,7 @@
           <!-- 反转块(2026-09-23,终章):读到这里,整章正文翻成对话框里「我」发出去的消息 -->
           <view class="story-mood-block"
                 wx:elif="{{block.type === 'reveal'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <view class="story-mood-block__body">
               <text class="story-mood-block__tag">反转</text>
               <input class="story-mood-block__name" value="{{block.who}}" placeholder="对面是谁(可空)" data-blockkey="{{block.key}}" data-field="who" bindinput="onStoryPlainInput" maxlength="20" />
@@ -605,7 +605,7 @@
           <!-- 异常块(2026-09-23):越往后越不正常 —— 从这里起的档位,到下一个异常块或章末为止 -->
           <view class="story-mood-block"
                 wx:elif="{{block.type === 'odd'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <cy-dropdown topic-editor="{{true}}" range="{{oddLevels}}" data-blockkey="{{block.key}}" data-field="level" bind:change="onStoryPlainPick">
               <view class="story-mood-block__body" aria-role="button" aria-label="设置文字效果" hover-class="cy-pressed" hover-stay-time="80">
                 <text class="story-mood-block__tag">文字效果</text>
@@ -621,7 +621,7 @@
                预设清单的真源是服务端 ChapterFlowCompiler.MOOD_PRESETS。 -->
           <view class="story-mood-block"
                 wx:elif="{{block.type === 'mood'}}"
-                bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}">
+                data-blockkey="{{block.key}}">
             <cy-dropdown topic-editor="{{true}}" range="{{moodOptions}}" range-key="label" data-blockkey="{{block.key}}" bind:change="onStoryMoodChange">
               <view class="story-mood-block__body" aria-role="button" aria-label="换氛围" hover-class="cy-pressed" hover-stay-time="80">
                 <text class="story-mood-block__tag">氛围</text>
@@ -632,7 +632,12 @@
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除氛围块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
           </view>
 
-          <view class="story-node-block {{block._nodeName ? '' : 'is-blank'}}" wx:else bindtap="editStoryNode" bindlongpress="selectStoryBlock" data-blockkey="{{block.key}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="story-divider-block" wx:elif="{{block.type === 'divider'}}" data-blockkey="{{block.key}}">
+            <view class="story-divider-block__rule"></view>
+            <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除分割线" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
+          </view>
+
+          <view class="story-node-block {{block._nodeName ? '' : 'is-blank'}}" wx:else bindtap="editStoryNode" data-blockkey="{{block.key}}" hover-class="cy-pressed" hover-stay-time="80">
             <view class="story-node-block__num">{{block._nodeNumber}}</view>
             <view class="story-node-block__card">
               <view class="story-node-block__thumb">
@@ -653,24 +658,10 @@
               <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryNode" aria-role="button" aria-label="删除节点块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="story-block-x__glyph"><cy-icon name="trash-2" size="28" /></view></view>
             </view>
           </view>
+          </view>
         </block>
-
-        <view
-          class="story-insert story-insert--last {{storyEditor.insertMenuAt === formData.chapters[storyEditor.chapterIndex].blocks.length ? 'is-open' : ''}}"
-          data-index="{{formData.chapters[storyEditor.chapterIndex].blocks.length}}"
-          bindtap="toggleStoryInsertMenu"
-          aria-role="button"
-          aria-label="在故事流末尾添加内容" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="story-insert__rule"></view>
-          <view class="story-insert__plus" wx:if="{{storyEditor.insertMenuAt !== formData.chapters[storyEditor.chapterIndex].blocks.length}}"><cy-icon name="plus" size="24" /></view>
-          <block wx:else>
-              <view class="story-insert__menu">
-                <view class="story-insert__action" data-index="{{formData.chapters[storyEditor.chapterIndex].blocks.length}}" catchtap="insertStoryTextAt" aria-role="button" aria-label="添加文字块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>文字</text></view>
-                <view class="story-insert__action" data-index="{{formData.chapters[storyEditor.chapterIndex].blocks.length}}" catchtap="insertStoryImageAt" aria-role="button" aria-label="添加图片块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>图片</text></view>
-                <view class="story-insert__action" data-index="{{formData.chapters[storyEditor.chapterIndex].blocks.length}}" catchtap="insertStoryAudioAt" aria-role="button" aria-label="添加音频块" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>音频</text></view>
-                <view class="story-insert__action story-insert__action--node" wx:if="{{!formData.chapters[storyEditor.chapterIndex].opening}}" data-index="{{formData.chapters[storyEditor.chapterIndex].blocks.length}}" catchtap="insertStoryNodeAt" aria-role="button" aria-label="添加地点" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><cy-icon name="plus" size="24" /><text>地点</text></view>
-              </view>
-          </block>
+        <view class="story-tail {{(formData.chapters[storyEditor.chapterIndex].blocks || []).length ? '' : 'is-empty'}}" catchtap="onStoryTailTap" aria-role="button" aria-label="在文末继续写" hover-class="none">
+          <text class="story-tail__placeholder" wx:if="{{!(formData.chapters[storyEditor.chapterIndex].blocks || []).length}}">写下这一章的故事…</text>
         </view>
       </view>
       <view class="story-editor__bottom"></view>

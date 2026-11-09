@@ -24,7 +24,7 @@ function assertContract(overrides = {}) {
   const wxml = overrides.wxml === undefined ? fs.readFileSync(WXML, 'utf8') : overrides.wxml
   const wxss = overrides.wxss === undefined ? fs.readFileSync(WXSS, 'utf8') : overrides.wxss
 
-  for (const selector of ['.story-editor__back', '.story-editor__done', '.story-insert', '.story-insert__action', '.node-pill', '.node-sheet__done']) {
+  for (const selector of ['.story-editor__back', '.story-editor__done', '.story-toolbar__item', '.node-pill', '.node-sheet__done']) {
     assert.match(rule(wxss, selector), /(min-)?height:\s*var\(--cy-btn-h\)/, `${selector} 高度不足 44px`)
   }
   for (const selector of ['.story-block-x', '.pd-round-back', '.modal-close']) {
@@ -34,7 +34,7 @@ function assertContract(overrides = {}) {
   }
 
   for (const label of [
-    '退出故事流编辑器', '完成故事流编辑', '添加文字块', '添加图片块', '添加音频块', '添加地点',
+    '退出故事流编辑器', '完成故事流编辑', '插入玩法', '插入图片', '插入音频', '插入分割线', '插入地点', '在文末继续写',
     '删除文字块', '删除图片块', '删除节点块', '关闭叙事编辑器',
     // 10-28 原型 A e-node：地点、玩法模板两行改用 L1 cy-list-row，可读名称由组件按「名称 + 当前值」生成。
     '完成玩法模板选择', '完成节点编辑', '确认创作模式',
