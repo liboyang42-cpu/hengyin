@@ -176,7 +176,7 @@ Page({
   _loadCredits(seq, imgs) {
     (imgs || []).slice(0, 8).forEach((g, i) => {
       app.sendRequest({
-        hideLoading: true, silentError: true, autoErrorToast: false,
+        hideLoading: true, autoErrorToast: false,
         url: '/api/media/asset/attribution', method: 'GET', data: { reference: g.img },
         success: res => {
           if (seq !== this._seq || !res || String(res.code) !== '200') return;

@@ -3,8 +3,8 @@ const coop = require('./coop-help.js');
 
 const data = { coopHelp: null };
 
-function methods(req) {
-  return {
+// 方法表写成顶层对象字面量(UI 门禁的混入扫描按 `const X = { … }` 认方法);请求函数由 methods(req) 注入。
+const coopMethods = {
     openCoopHelp(e) {
       const view = this.data.themeBag || {};
       const questKey = e.currentTarget.dataset.key;
@@ -38,7 +38,7 @@ function methods(req) {
       if (!body) { this.setData({ 'coopHelp.loading': false, 'coopHelp.error': '本题合作状态已变化，请刷新' }); return Promise.resolve(false); }
       const seq = this._coopSeq;
       this.setData({ 'coopHelp.busyLevel': operation === 'VIEW' ? null : level, 'coopHelp.error': '' });
-      return req('/api/play/help/shared', 'POST', body, { 'content-type': 'application/json' }, true).then(res => {
+      return this._coopReq('/api/play/help/shared', 'POST', body, { 'content-type': 'application/json' }, true).then(res => {
         if (seq !== this._coopSeq || !this.data.coopHelp) return false;
         const r = coop.outcome(res);
         const patch = { 'coopHelp.loading': false, 'coopHelp.busyLevel': null };
@@ -70,7 +70,10 @@ function methods(req) {
         return true;
       });
     }
-  };
+};
+
+function methods(req) {
+  return Object.assign({ _coopReq: req }, coopMethods);
 }
 
 module.exports = { data, methods };
