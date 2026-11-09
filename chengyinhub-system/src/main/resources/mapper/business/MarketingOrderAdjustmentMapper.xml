@@ -48,7 +48,7 @@
 
     <!-- 当前读(不是快照读):调用方已先锁住 marketing_offer 行,这里要看到并发那一笔刚提交的使用事实,
          否则 REPEATABLE READ 下普通读仍用旧快照 = 限次照样被突破。命中 idx_adjustment_offer(offer_id, member_id)。 -->
-    <select id="countByOfferAndMemberForUpdate" resultType="int">
+    <select id="countByOfferAndMemberForUpdate" resultType="int" useCache="false" flushCache="true">
         select count(1) from marketing_order_adjustment
         where offer_id = #{offerId} and member_id = #{memberId}
         for update

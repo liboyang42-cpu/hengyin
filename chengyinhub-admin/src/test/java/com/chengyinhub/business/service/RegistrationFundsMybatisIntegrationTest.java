@@ -2259,7 +2259,8 @@ class RegistrationFundsMybatisIntegrationTest {
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
         for (String port : List.of("platformMemberId", "cmsRegistrationMapper", "cmsActivityMapper", "cmsTopicMapper",
                 "omsTicketMapper", "umsMemberMapper", "umsMemberPointsDetailMapper", "cmsRegistrationScanMapper",
-                "cmsPointsSettingService", "settlementEntryService", "verifiedPaymentFacts", "systemNotificationIntents",
+                "cmsPointsSettingService", "settlementEntryService", "verifiedPaymentFacts",
+                "marketingRevenuePostingService", "systemNotificationIntents",
                 "imService", "committedBusinessNotice", "growthService"))
             ReflectionTestUtils.setField(target, port, ReflectionTestUtils.getField(registrationTarget, port));
         ProxyFactory proxy = new ProxyFactory(target); proxy.setInterfaces(ICmsRegistrationService.class);

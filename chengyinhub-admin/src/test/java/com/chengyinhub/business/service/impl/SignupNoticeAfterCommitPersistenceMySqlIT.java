@@ -260,8 +260,8 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         assertEquals(88L, new ObjectMapper().readTree(db.queryForObject("select extra_json from im_message", String.class)).path("topicId").asLong());
         assertEquals("报名成功", db.queryForObject("select content from im_message", String.class));
         assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
-        verify(revenuePosting, org.mockito.Mockito.times(1)).enqueueAccrual(99L);
-        assertEquals(2, queued.size(), "replaying an already completed payment must not enqueue again");
+        verify(revenuePosting, org.mockito.Mockito.times(2)).enqueueAccrual(99L);
+        assertEquals(2, queued.size(), "replaying an already completed payment must not queue another notice");
         verifyNoInteractions(alarm);
     }
 

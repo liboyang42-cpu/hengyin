@@ -575,7 +575,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 ? priceOrder(memberId, ownerType, ownerId,
                         Collections.singletonList(
                                 new MarketingPromotionRequest.Line(ticketId, qty, ticketPrice)),
-                        offerCode, listTotal, memberTotal, userPoint, isUsePoint, new Date())
+                        offerCode, listTotal, memberTotal, userPoint,
+                        (isUsePoint != null && isUsePoint == 1) ? 1 : 0, new Date())
                 : null;
         PriceCalc calc = priced != null
                 ? priced.calc

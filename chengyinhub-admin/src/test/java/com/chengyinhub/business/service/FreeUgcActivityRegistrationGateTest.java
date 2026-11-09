@@ -283,7 +283,7 @@ class FreeUgcActivityRegistrationGateTest {
 
         RuntimeException error = assertThrows(RuntimeException.class, () -> ReflectionTestUtils.invokeMethod(service,
                 "createMultiTicketRegistrationsInternal", 2L, 2, ACTIVITY, 0, "张三", "13800000000", null, null,
-                Arrays.asList(item), null, null, null));
+                Arrays.asList(item), null, null, null, null, null));
         assertTrue(String.valueOf(error.getMessage()).contains("票价已变更"), String.valueOf(error.getMessage()));
     }
 

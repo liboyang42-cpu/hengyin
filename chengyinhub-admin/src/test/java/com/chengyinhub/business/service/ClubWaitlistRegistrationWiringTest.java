@@ -17,7 +17,7 @@ class ClubWaitlistRegistrationWiringTest {
         assertTrue(source.contains("clubWaitlistOrderBridge.claimForOrder(memberId, request, new Date())"));
         assertTrue(source.contains("clubWaitlistOrderBridge.bindRegistration(waitlistClaim, registration.getId())"));
         assertTrue(source.contains("waitlistClaim.getExpiresAt().before(expireTime)"));
-        assertTrue(source.contains("if (waitlistClaim == null) {\n            long remainInv"),
+        assertTrue(source.contains("if (waitlistClaim == null) {\n            // 报价侧用同一条判定(RegistrationQuantityPolicy),文案一字不差。\n            RegistrationQuantityPolicy.assertPurchasable"),
                 "普通库存扣减必须被 waitlistClaim == null 包住");
     }
 

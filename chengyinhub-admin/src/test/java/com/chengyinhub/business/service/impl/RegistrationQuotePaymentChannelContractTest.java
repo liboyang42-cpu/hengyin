@@ -36,7 +36,7 @@ class RegistrationQuotePaymentChannelContractTest {
         RegistrationQuoteResult quote = new RegistrationQuoteResult();
         quote.setPayAmount(amount);
         quote.setQuoteSign("sign");
-        when(registrations.quoteRegistration(any(), any(), any(), any(), any(), any())).thenReturn(quote);
+        when(registrations.quoteRegistration(any(), any())).thenReturn(quote);
         return service;
     }
 
