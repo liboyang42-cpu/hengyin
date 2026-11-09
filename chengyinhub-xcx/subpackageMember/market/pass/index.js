@@ -110,7 +110,8 @@ Page({
       success: (res) => {
         if (isBizOk(res) && res.data) { this._afterOrder(res.data); return }
         const code = res && res.reasonCode
-        this.setData({ buying: false, buyError: mv.reasonText(code) })
+        // 有 reasonCode 按码说;没有码时原样显示后端提示,不改写
+        this.setData({ buying: false, buyError: code ? mv.reasonText(code) : ((res && res.msg) || mv.reasonText(null)) })
         if (code === 'QUOTE_EXPIRED' || code === 'QUOTE_STALE') this.quote()
       },
       // 结果未知:保留同一 requestId,再点即原样重发,由服务端重放原单
