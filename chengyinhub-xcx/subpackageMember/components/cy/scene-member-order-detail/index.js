@@ -534,6 +534,8 @@ Component({
     /* V-20 业主 2026-10-29:订单详情不再放「查看票夹」,原 goSignInfo 出口随按钮一起删除。 */
 
     startPlay() {
+      // V3-03:订单页只剩「查看记录」能进 play;开始游戏只从票夹进
+      if (this.data.primaryCta !== 'record') return;
       const info = this.data.info || {};
       const query = playQuery(info);
       if (!query || this._playNavigating) return;

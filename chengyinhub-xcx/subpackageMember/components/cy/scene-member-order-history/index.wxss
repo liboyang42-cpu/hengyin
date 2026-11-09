@@ -23,9 +23,9 @@
 /* padding-top = tab 与下方第一张卡的间距 */
 /* R1-C04:.order-loading / .order-skel-* 已由 <cy-skeleton> 取代,定义随之移除 */
 /* 玩家弹窗卡片统一消费 scene-roam-history 的共享变量。 */
-.orderbox_li{overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-bg-card)); padding: var(--cy-space-4) var(--cy-space-4) 0; margin: 0 0 var(--cy-space-3); box-shadow: var(--cy-scene-card-shadow, var(--cy-shadow-card)); border: 2rpx solid var(--cy-scene-card-border, var(--cy-border-card));}
+.orderbox_li{overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-bg-card)); padding: var(--cy-space-4) var(--cy-space-4) 0; margin: 0 0 var(--cy-scene-card-gap, var(--cy-space-5)); box-shadow: var(--cy-scene-card-shadow, var(--cy-shadow-card)); border: 2rpx solid var(--cy-scene-card-border, var(--cy-border-card));}
 /* gap = 缩略图与右侧文字块的横向间距 */
-/* V3-22:封面与文字列顶边对齐;卡距 space-3、卡内统一 space-4 边距,底行与上面同一条左边 */
+/* V3-22:封面与文字列顶边对齐;卡内统一 space-4 边距,底行与上面同一条左边(卡间距仍按第3批 UI 复查的 space-5) */
 .orderbox_li_con{overflow: hidden; margin: 0 0 var(--cy-space-3) 0; display: flex; align-items: flex-start; gap: var(--cy-space-3);}
 .orderbox_li_con_tu{ width: 176rpx; height: 176rpx; flex-shrink: 0; overflow: hidden; border-radius: var(--cy-radius-md); background: var(--cy-bg-subtle);}
 .orderbox_li_con_tu .moh-cover{ width: 100%; height: 100%; vertical-align: top;}

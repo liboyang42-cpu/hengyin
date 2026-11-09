@@ -37,7 +37,7 @@ test('V3-22 订单卡:类别与状态同一行,不写订单号,没有地点不�
   assert.equal(addr.length, 2)
   addr.forEach(tag => assert.match(tag, /wx:if="\{\{item\.addrTap\}\}"/))
   const wxss = read(HISTORY + 'index.wxss')
-  assert.match(wxss, /\.orderbox_li\{[^}]*margin: 0 0 var\(--cy-space-3\);/)
+  assert.match(wxss, /\.orderbox_li\{[^}]*padding: var\(--cy-space-4\) var\(--cy-space-4\) 0;/)
   assert.match(wxss, /\.orderbox_li_con\{[^}]*align-items: flex-start;/)
   assert.match(wxss, /\.moh-head \.moh-state\{margin-left: auto;/)
 })
