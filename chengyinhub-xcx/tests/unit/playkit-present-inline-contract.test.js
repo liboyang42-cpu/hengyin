@@ -149,7 +149,8 @@ test('★kit 段的外层仍是循环里那个唯一的 .chfull__para —— 少
   const loops = wxml.match(/<view wx:for="\{\{chapterParas\}\}"[^>]*class="chfull__para(?:\s[^"]*)?"/g) || []
   assert.equal(loops.length, 1, '.chfull__para 的外层循环只能有一个，且不带条件')
   // 内嵌 kit 的渲染分支在同一个循环体内(wx:elif),不是另起一个循环
-  assert.match(wxml, /wx:elif="\{\{item\.kind === 'kit'\}\}"[\s\S]*?cy-playkit kit="\{\{playKit\.kit\}\}" show="\{\{true\}\}"/,
+  // V3-10/53/11:要整屏的玩法在同一块里换成入口卡(wx:if playKit.card),其余仍是同一份 playKit.kit 内嵌
+  assert.match(wxml, /wx:elif="\{\{item\.kind === 'kit'\}\}"[\s\S]*?cy-playkit wx:else kit="\{\{playKit\.kit\}\}" show="\{\{true\}\}"/,
     'kit 段没有在循环里渲染，或 kit 绑的不是页面上那份 playKit.kit')
 })
 

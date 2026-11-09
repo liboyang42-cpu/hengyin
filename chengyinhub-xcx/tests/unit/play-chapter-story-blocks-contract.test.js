@@ -324,11 +324,12 @@ test('入口卡换成内嵌玩法时重新对准一次锚点(先清空再设),�
   page._kit = () => null
   page._inlineKit = () => ({ present: 'inline' })
   page.onAdvancedSession({ detail: { sessionId: 1, version: 1, present: 'inline', playKit: { qa: { mode: 'PICK', title: '站起来回答', options: [] } } } })
-  assert.deepEqual(seen.slice(-2), ['', 'chapter-game-51'], '同值 setData 不会让 scroll-view 再对准一次')
+  // V3-10/53(2026-11-06):内嵌块高跟内容走,对准块内锚点 chapter-kit-<id>(锚点已让出顶栏与渐隐)
+  assert.deepEqual(seen.slice(-2), ['', 'chapter-kit-51'], '同值 setData 不会让 scroll-view 再对准一次')
   const before = seen.length
   page.data.chapterFull = true
   await new Promise((r) => setTimeout(r, 1300))
-  assert.deepEqual(seen.slice(before), ['', 'chapter-game-51'],
+  assert.deepEqual(seen.slice(before), ['', 'chapter-kit-51'],
     '第一次长距离滚动途中上方还在重排，实测停在顶栏底下 95px —— 要再对准一次')
 })
 
@@ -480,7 +481,7 @@ test('正文走真实高级玩法入口，内嵌完成继续调用权威收尾�
   page.onAdvancedSession({ detail: view })
   assert.equal(page.data.playKit.show, false)
   assert.equal(page.data.chapterParas[0].kind, 'kit')
-  assert.equal(page.data.chapterGameAnchor, 'chapter-game-51')
+  assert.equal(page.data.chapterGameAnchor, 'chapter-kit-51')
   page.data.chapterGameAnchor = ''
   page.onAdvancedSession({ detail: view })
   assert.equal(page.data.chapterGameAnchor, '', '后续回包不把阅读位置拉回玩法')

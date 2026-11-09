@@ -8,8 +8,6 @@
 .voucher__qr-tip { font-size: 27rpx; color: rgba(17,17,17,.55); padding: 20rpx 30rpx; } /* ds-ok */
 .voucher__exp { margin-top: 40rpx; font-size: 23rpx; color: rgba(17,17,17,.5); } /* ds-ok */
 .ep1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.voucher__acts { width: calc(100% - 76rpx); margin: var(--cy-space-5) auto 0; display: flex; align-items: center; gap: 23rpx; }
-.voucher__back { flex: none; width: 88rpx; height: 88rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-glass); display: flex; align-items: center; justify-content: center; color: var(--cy-text-title); }
 .voucher__cta { flex: 1; height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-text-title); color: var(--cy-bg-page); font-size: var(--cy-font-subtitle); font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。

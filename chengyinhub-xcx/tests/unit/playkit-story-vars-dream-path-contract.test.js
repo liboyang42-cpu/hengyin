@@ -175,8 +175,8 @@ test('缺 url 的梦帧整帧丢掉;一帧都不剩时这一块不出现在正�
 
   const empty = makePage({ description: '', blocks: [{ type: 'dream', key: 'd', images: [{ line: '没图' }] }] }, [])
   empty.openChapterFull()
-  assert.deepEqual(empty.data.chapterParas.map(p => p.kind), ['text'], '梦块空了就退回「这一章还没有写下的内容。」')
-  assert.equal(empty.data.chapterParas[0].text, '这一章还没有写下的内容。')
+  // V3-15(2026-11-06 业主「这种提示句不应该出现在剧情里面」):没内容就空着,不再补一句系统提示
+  assert.deepEqual(empty.data.chapterParas.map(p => p.kind), [], '梦块空了这一块不出现，也不补系统提示句')
 })
 
 test('减动效时照片带不自动滚 —— 这不是判定,不该跟系统偏好较劲', () => {

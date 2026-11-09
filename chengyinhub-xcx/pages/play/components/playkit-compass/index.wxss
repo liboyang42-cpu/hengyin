@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: center;
   gap: 40rpx;                                                       /* ds-ok 原型 20px */
-  padding: 112rpx 56rpx 68rpx;                                      /* ds-ok 原型 56px 28px 34px */
+  padding: var(--pk-card-pad, 112rpx 56rpx 68rpx);                  /* ds-ok 原型 56px 28px 34px;内嵌由故事流给 */
   text-align: center;
 }
 
