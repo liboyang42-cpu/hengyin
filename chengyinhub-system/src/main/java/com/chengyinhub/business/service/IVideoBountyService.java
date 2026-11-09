@@ -114,6 +114,13 @@ public interface IVideoBountyService
 
     List<VideoCampaign> listCampaigns(Integer status);
 
+    /**
+     * qx-c1 #6: author-side picker. Only campaigns that accept submissions right now (same rule as submit:
+     * status ACTIVE, not deleted). Rows carry only {campaignKey,title,description,windowDays}: no rates, caps,
+     * budgets, owner or payout flags.
+     */
+    List<java.util.Map<String, Object>> listOpenCampaigns();
+
     // ------------------------------------------------------------------ 成交归因(消费归因域,不自建推荐码)
 
     /**
