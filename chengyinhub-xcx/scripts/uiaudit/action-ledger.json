@@ -90573,6 +90573,19 @@
             },
             {
               "selector": "cy-cell",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-cell",
               "index": 2
             }
           ]
@@ -90652,6 +90665,19 @@
             {
               "selector": "cy-cell",
               "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-cell",
+              "index": 9
             }
           ]
         },
@@ -91193,6 +91219,19 @@
             },
             {
               "selector": "cy-cell",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-cell",
               "index": 2
             }
           ]
@@ -91272,6 +91311,19 @@
             {
               "selector": "cy-cell",
               "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-cell",
+              "index": 9
             }
           ]
         },
@@ -1424674,7 +1424726,99 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:220:bindtap:goEarnings:19",
+      "id": "subpackageMember/components/cy/profile/index.wxml:214:bind:tap:goVideoBounty:19",
+      "route": "component:subpackageMember/components/cy/profile/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/profile/index.wxml",
+        "js": "subpackageMember/components/cy/profile/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-cell",
+        "event": "bind:tap",
+        "handler": "goVideoBounty",
+        "line": 214,
+        "selectorHint": "cy-cell[bind:tap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageA/pages/video-bounty/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/profile/index.js:2351"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/profile/index.wxml:224:bindtap:goEarnings:20",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1424719,7 +1424863,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEarnings",
-        "line": 220,
+        "line": 224,
         "selectorHint": ".pc-asset",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424766,7 +1424910,99 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:236:bind:tap:goClubWorkbench:20",
+      "id": "subpackageMember/components/cy/profile/index.wxml:237:bind:tap:goPasses:21",
+      "route": "component:subpackageMember/components/cy/profile/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/profile/index.wxml",
+        "js": "subpackageMember/components/cy/profile/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-cell",
+        "event": "bind:tap",
+        "handler": "goPasses",
+        "line": 237,
+        "selectorHint": "cy-cell[bind:tap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/passes/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/profile/index.js:2349"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/profile/index.wxml:244:bind:tap:goClubWorkbench:22",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1424811,7 +1425047,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "goClubWorkbench",
-        "line": 236,
+        "line": 244,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424858,7 +1425094,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:244:bind:tap:goMerchantTeam:21",
+      "id": "subpackageMember/components/cy/profile/index.wxml:252:bind:tap:goMerchantTeam:23",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1424903,7 +1425139,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "goMerchantTeam",
-        "line": 244,
+        "line": 252,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1424950,7 +1425186,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:256:bind:comment:onPostCardDetail:24",
+      "id": "subpackageMember/components/cy/profile/index.wxml:264:bind:comment:onPostCardDetail:26",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1424995,7 +1425231,7 @@
         "tag": "cy-post-card",
         "event": "bind:comment",
         "handler": "onPostCardDetail",
-        "line": 256,
+        "line": 264,
         "selectorHint": "cy-post-card[bind:comment]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425042,7 +1425278,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:256:bind:detail:onPostCardDetail:23",
+      "id": "subpackageMember/components/cy/profile/index.wxml:264:bind:detail:onPostCardDetail:25",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425087,7 +1425323,7 @@
         "tag": "cy-post-card",
         "event": "bind:detail",
         "handler": "onPostCardDetail",
-        "line": 256,
+        "line": 264,
         "selectorHint": "cy-post-card[bind:detail]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425134,7 +1425370,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:256:bind:like:onPostCardLike:25",
+      "id": "subpackageMember/components/cy/profile/index.wxml:264:bind:like:onPostCardLike:27",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425247,7 +1425483,7 @@
         "tag": "cy-post-card",
         "event": "bind:like",
         "handler": "onPostCardLike",
-        "line": 256,
+        "line": 264,
         "selectorHint": "cy-post-card[bind:like]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425321,7 +1425557,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:258:bind:comment:onClubPostCardDetail:27",
+      "id": "subpackageMember/components/cy/profile/index.wxml:266:bind:comment:onClubPostCardDetail:29",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425366,7 +1425602,7 @@
         "tag": "cy-post-card",
         "event": "bind:comment",
         "handler": "onClubPostCardDetail",
-        "line": 258,
+        "line": 266,
         "selectorHint": "cy-post-card[bind:comment]",
         "visibleCondition": "{{!feedErr}}",
         "disabledCondition": null,
@@ -1425413,7 +1425649,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:258:bind:detail:onClubPostCardDetail:26",
+      "id": "subpackageMember/components/cy/profile/index.wxml:266:bind:detail:onClubPostCardDetail:28",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425458,7 +1425694,7 @@
         "tag": "cy-post-card",
         "event": "bind:detail",
         "handler": "onClubPostCardDetail",
-        "line": 258,
+        "line": 266,
         "selectorHint": "cy-post-card[bind:detail]",
         "visibleCondition": "{{!feedErr}}",
         "disabledCondition": null,
@@ -1425505,7 +1425741,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:267:bindtap:goPointsHistory:28",
+      "id": "subpackageMember/components/cy/profile/index.wxml:275:bindtap:goPointsHistory:30",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425550,7 +1425786,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goPointsHistory",
-        "line": 267,
+        "line": 275,
         "selectorHint": ".pc-gs-main",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425597,7 +1425833,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:274:bindtap:onPointsHelp:29",
+      "id": "subpackageMember/components/cy/profile/index.wxml:282:bindtap:onPointsHelp:31",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425642,7 +1425878,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPointsHelp",
-        "line": 274,
+        "line": 282,
         "selectorHint": ".pc-gs-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1425740,7 +1425976,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:278:bindtap:goGrowthCenter:30",
+      "id": "subpackageMember/components/cy/profile/index.wxml:286:bindtap:goGrowthCenter:32",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1425785,7 +1426021,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goGrowthCenter",
-        "line": 278,
+        "line": 286,
         "selectorHint": ".pc-rank",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1426021,190 +1426257,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/components/cy/profile/index.js:2232"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/profile/index.wxml:303:bindtap:goWall:31",
-      "route": "component:subpackageMember/components/cy/profile/index",
-      "hostRoutes": [
-        "pages/member/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/profile/index.wxml",
-        "js": "subpackageMember/components/cy/profile/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goWall",
-        "line": 303,
-        "selectorHint": ".pc-album-head",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "打开收集册",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageP3/pages/badge-wall/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/profile/index.js:2336"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/profile/index.wxml:308:bindtap:goWall:32",
-      "route": "component:subpackageMember/components/cy/profile/index",
-      "hostRoutes": [
-        "pages/member/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/profile/index.wxml",
-        "js": "subpackageMember/components/cy/profile/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goWall",
-        "line": 308,
-        "selectorHint": ".pc-pile",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "收集册 · 勋章{{medalCount ? '，已点亮 ' + medalCount + ' 枚' : ''}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageP3/pages/badge-wall/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/profile/index.js:2336"
       }
     },
     {
@@ -1426580,7 +1426632,191 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:314:bindtap:goAlbum:33",
+      "id": "subpackageMember/components/cy/profile/index.wxml:311:bindtap:goWall:33",
+      "route": "component:subpackageMember/components/cy/profile/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/profile/index.wxml",
+        "js": "subpackageMember/components/cy/profile/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goWall",
+        "line": 311,
+        "selectorHint": ".pc-album-head",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "打开收集册",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-wall/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/profile/index.js:2336"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/profile/index.wxml:316:bindtap:goWall:34",
+      "route": "component:subpackageMember/components/cy/profile/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/profile/index.wxml",
+        "js": "subpackageMember/components/cy/profile/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goWall",
+        "line": 316,
+        "selectorHint": ".pc-pile",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "收集册 · 勋章{{medalCount ? '，已点亮 ' + medalCount + ' 枚' : ''}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-wall/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/profile/index.js:2336"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/profile/index.wxml:322:bindtap:goAlbum:35",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1426625,7 +1426861,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goAlbum",
-        "line": 314,
+        "line": 322,
         "selectorHint": ".pc-pile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1426672,7 +1426908,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:320:bindtap:goObjectCards:34",
+      "id": "subpackageMember/components/cy/profile/index.wxml:328:bindtap:goObjectCards:36",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1426717,7 +1426953,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goObjectCards",
-        "line": 320,
+        "line": 328,
         "selectorHint": ".pc-pile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1426764,7 +1427000,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:361:bindtap:goFeatured:36",
+      "id": "subpackageMember/components/cy/profile/index.wxml:369:bindtap:goFeatured:38",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1426809,7 +1427045,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goFeatured",
-        "line": 361,
+        "line": 369,
         "selectorHint": ".pc-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1426857,7 +1427093,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:385:bindtap:previewMerchantGallery:37",
+      "id": "subpackageMember/components/cy/profile/index.wxml:393:bindtap:previewMerchantGallery:39",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1426902,7 +1427138,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewMerchantGallery",
-        "line": 385,
+        "line": 393,
         "selectorHint": ".pc-mgimg",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1426956,7 +1427192,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:418:bindtap:goMerchantLocation:38",
+      "id": "subpackageMember/components/cy/profile/index.wxml:426:bindtap:goMerchantLocation:40",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427001,7 +1427237,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMerchantLocation",
-        "line": 418,
+        "line": 426,
         "selectorHint": ".pc-mrow",
         "visibleCondition": "{{subjectMerchant.address}}",
         "disabledCondition": null,
@@ -1427052,98 +1427288,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/components/cy/profile/index.js:2377"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/profile/index.wxml:423:bindtap:goMerchantReviews:39",
-      "route": "component:subpackageMember/components/cy/profile/index",
-      "hostRoutes": [
-        "pages/member/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/profile/index.wxml",
-        "js": "subpackageMember/components/cy/profile/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goMerchantReviews",
-        "line": 423,
-        "selectorHint": ".pc-mrow",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "查看真实评价",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/reviews/index?merchantRowId="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/profile/index.js:2405"
       }
     },
     {
@@ -1427240,7 +1427384,99 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:470:bindtap:goEditIntro:41",
+      "id": "subpackageMember/components/cy/profile/index.wxml:431:bindtap:goMerchantReviews:41",
+      "route": "component:subpackageMember/components/cy/profile/index",
+      "hostRoutes": [
+        "pages/member/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/profile/index.wxml",
+        "js": "subpackageMember/components/cy/profile/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goMerchantReviews",
+        "line": 431,
+        "selectorHint": ".pc-mrow",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查看真实评价",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/reviews/index?merchantRowId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/profile/index.js:2405"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/profile/index.wxml:478:bindtap:goEditIntro:43",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427285,7 +1427521,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEditIntro",
-        "line": 470,
+        "line": 478,
         "selectorHint": ".pc-about-edit",
         "visibleCondition": "{{isSelf}}",
         "disabledCondition": null,
@@ -1427332,7 +1427568,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:482:bindtap:goEditInterests:42",
+      "id": "subpackageMember/components/cy/profile/index.wxml:490:bindtap:goEditInterests:44",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427377,7 +1427613,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEditInterests",
-        "line": 482,
+        "line": 490,
         "selectorHint": ".pc-tag",
         "visibleCondition": "{{categoryList.length === 0}}",
         "disabledCondition": null,
@@ -1427424,7 +1427660,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:489:bindtap:previewWork:43",
+      "id": "subpackageMember/components/cy/profile/index.wxml:497:bindtap:previewWork:45",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427469,7 +1427705,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewWork",
-        "line": 489,
+        "line": 497,
         "selectorHint": ".pc-work-pic",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1427523,7 +1427759,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:504:bindtap:goCoupon:44",
+      "id": "subpackageMember/components/cy/profile/index.wxml:512:bindtap:goCoupon:46",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427568,7 +1427804,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCoupon",
-        "line": 504,
+        "line": 512,
         "selectorHint": ".pc-benefit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1427615,191 +1427851,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:509:bindtap:goPasses:45",
-      "route": "component:subpackageMember/components/cy/profile/index",
-      "hostRoutes": [
-        "pages/member/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/profile/index.wxml",
-        "js": "subpackageMember/components/cy/profile/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goPasses",
-        "line": 509,
-        "selectorHint": ".pc-benefit",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "通行证",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageMember/market/passes/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/profile/index.js:2349"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/profile/index.wxml:514:bindtap:goVideoBounty:46",
-      "route": "component:subpackageMember/components/cy/profile/index",
-      "hostRoutes": [
-        "pages/member/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/profile/index.wxml",
-        "js": "subpackageMember/components/cy/profile/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goVideoBounty",
-        "line": 514,
-        "selectorHint": ".pc-benefit",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "视频悬赏",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageA/pages/video-bounty/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/profile/index.js:2351"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/profile/index.wxml:519:bindtap:goInvite:47",
+      "id": "subpackageMember/components/cy/profile/index.wxml:517:bindtap:goInvite:47",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427844,7 +1427896,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goInvite",
-        "line": 519,
+        "line": 517,
         "selectorHint": ".pc-benefit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1427927,7 +1427979,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:529:bindtap:onBenefitTap:48",
+      "id": "subpackageMember/components/cy/profile/index.wxml:527:bindtap:onBenefitTap:48",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1427972,7 +1428024,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onBenefitTap",
-        "line": 529,
+        "line": 527,
         "selectorHint": ".pc-benefit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1428017,7 +1428069,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:560:bindtap:onCoopInvite:49",
+      "id": "subpackageMember/components/cy/profile/index.wxml:558:bindtap:onCoopInvite:49",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428062,7 +1428114,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCoopInvite",
-        "line": 560,
+        "line": 558,
         "selectorHint": ".pc-coop-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1428106,7 +1428158,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:565:catchtouchmove:blockSceneTouch:50",
+      "id": "subpackageMember/components/cy/profile/index.wxml:563:catchtouchmove:blockSceneTouch:50",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428151,7 +1428203,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 565,
+        "line": 563,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'member-more-menu'}}",
         "disabledCondition": null,
@@ -1428196,7 +1428248,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:566:bind:requestclose:closeMoreMenu:51",
+      "id": "subpackageMember/components/cy/profile/index.wxml:564:bind:requestclose:closeMoreMenu:51",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428241,7 +1428293,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "closeMoreMenu",
-        "line": 566,
+        "line": 564,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1428285,7 +1428337,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:568:bind:tap:goShop:52",
+      "id": "subpackageMember/components/cy/profile/index.wxml:566:bind:tap:goShop:52",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428330,7 +1428382,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "goShop",
-        "line": 568,
+        "line": 566,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": "{{isSelf && isMerchantView}}",
         "disabledCondition": null,
@@ -1428378,7 +1428430,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:569:bind:tap:onShareProfile:53",
+      "id": "subpackageMember/components/cy/profile/index.wxml:567:bind:tap:onShareProfile:53",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428423,7 +1428475,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onShareProfile",
-        "line": 569,
+        "line": 567,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1428467,7 +1428519,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:570:bind:tap:onChangeHeroBg:54",
+      "id": "subpackageMember/components/cy/profile/index.wxml:568:bind:tap:onChangeHeroBg:54",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428515,7 +1428567,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onChangeHeroBg",
-        "line": 570,
+        "line": 568,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": "{{isSelf}}",
         "disabledCondition": null,
@@ -1428610,7 +1428662,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:571:bind:tap:onMoreSetting:55",
+      "id": "subpackageMember/components/cy/profile/index.wxml:569:bind:tap:onMoreSetting:55",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428655,7 +1428707,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onMoreSetting",
-        "line": 571,
+        "line": 569,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": "{{isSelf}}",
         "disabledCondition": null,
@@ -1428703,7 +1428755,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:573:bind:tap:onReportMember:56",
+      "id": "subpackageMember/components/cy/profile/index.wxml:571:bind:tap:onReportMember:56",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428748,7 +1428800,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onReportMember",
-        "line": 573,
+        "line": 571,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": "{{!isSelf && !subjectIsMerchant}}",
         "disabledCondition": null,
@@ -1428792,7 +1428844,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:575:bind:tap:onReportMerchant:57",
+      "id": "subpackageMember/components/cy/profile/index.wxml:573:bind:tap:onReportMerchant:57",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428837,7 +1428889,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onReportMerchant",
-        "line": 575,
+        "line": 573,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": "{{!isSelf && subjectIsMerchant && subjectMerchant.id}}",
         "disabledCondition": null,
@@ -1428881,7 +1428933,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:577:bind:tap:onMerchantCorrection:58",
+      "id": "subpackageMember/components/cy/profile/index.wxml:575:bind:tap:onMerchantCorrection:58",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1428926,7 +1428978,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "onMerchantCorrection",
-        "line": 577,
+        "line": 575,
         "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": "{{!isSelf && subjectIsMerchant && subjectMerchant.id}}",
         "disabledCondition": null,
@@ -1428970,7 +1429022,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:584:bind:close:onReportClose:59",
+      "id": "subpackageMember/components/cy/profile/index.wxml:582:bind:close:onReportClose:59",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429015,7 +1429067,7 @@
         "tag": "cy-report-sheet",
         "event": "bind:close",
         "handler": "onReportClose",
-        "line": 584,
+        "line": 582,
         "selectorHint": "cy-report-sheet[bind:close]",
         "visibleCondition": "{{!isSelf}}",
         "disabledCondition": null,
@@ -1429059,7 +1429111,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:586:bind:close:closeShopShare:60",
+      "id": "subpackageMember/components/cy/profile/index.wxml:584:bind:close:closeShopShare:60",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429104,7 +1429156,7 @@
         "tag": "cy-share-card",
         "event": "bind:close",
         "handler": "closeShopShare",
-        "line": 586,
+        "line": 584,
         "selectorHint": "cy-share-card[bind:close]",
         "visibleCondition": "{{subjectIsMerchant}}",
         "disabledCondition": null,
@@ -1429148,7 +1429200,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:587:bind:close:onCorrectionClose:61",
+      "id": "subpackageMember/components/cy/profile/index.wxml:585:bind:close:onCorrectionClose:61",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429193,7 +1429245,7 @@
         "tag": "cy-merchant-correction-sheet",
         "event": "bind:close",
         "handler": "onCorrectionClose",
-        "line": 587,
+        "line": 585,
         "selectorHint": "cy-merchant-correction-sheet[bind:close]",
         "visibleCondition": "{{!isSelf}}",
         "disabledCondition": null,
@@ -1429237,7 +1429289,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:592:catchtouchmove:blockSceneTouch:62",
+      "id": "subpackageMember/components/cy/profile/index.wxml:590:catchtouchmove:blockSceneTouch:62",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429282,7 +1429334,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 592,
+        "line": 590,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'member-chapter-picker'}}",
         "disabledCondition": null,
@@ -1429327,7 +1429379,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:593:bind:requestclose:onChapterSheetClose:63",
+      "id": "subpackageMember/components/cy/profile/index.wxml:591:bind:requestclose:onChapterSheetClose:63",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429372,7 +1429424,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onChapterSheetClose",
-        "line": 593,
+        "line": 591,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1429416,7 +1429468,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:597:bindtap:onChapterPick:64",
+      "id": "subpackageMember/components/cy/profile/index.wxml:595:bindtap:onChapterPick:64",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429461,7 +1429513,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChapterPick",
-        "line": 597,
+        "line": 595,
         "selectorHint": ".chpick__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1429607,7 +1429659,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:605:catchtouchmove:blockSceneTouch:65",
+      "id": "subpackageMember/components/cy/profile/index.wxml:603:catchtouchmove:blockSceneTouch:65",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429652,7 +1429704,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 605,
+        "line": 603,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'member-station-picker'}}",
         "disabledCondition": null,
@@ -1429697,7 +1429749,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:606:bind:requestclose:onStationSheetClose:66",
+      "id": "subpackageMember/components/cy/profile/index.wxml:604:bind:requestclose:onStationSheetClose:66",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429742,7 +1429794,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onStationSheetClose",
-        "line": 606,
+        "line": 604,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1429786,7 +1429838,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:610:bindtap:onStationPick:67",
+      "id": "subpackageMember/components/cy/profile/index.wxml:608:bindtap:onStationPick:67",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1429831,7 +1429883,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStationPick",
-        "line": 610,
+        "line": 608,
         "selectorHint": ".chpick__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1429977,7 +1430029,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:619:catchtouchmove:blockSceneTouch:68",
+      "id": "subpackageMember/components/cy/profile/index.wxml:617:catchtouchmove:blockSceneTouch:68",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430022,7 +1430074,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 619,
+        "line": 617,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'points-tasks'}}",
         "disabledCondition": null,
@@ -1430067,7 +1430119,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:620:bind:requestclose:onPointsSheetClose:69",
+      "id": "subpackageMember/components/cy/profile/index.wxml:618:bind:requestclose:onPointsSheetClose:69",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430112,7 +1430164,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onPointsSheetClose",
-        "line": 620,
+        "line": 618,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430156,7 +1430208,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:633:bindtap:loadPointsTasks:70",
+      "id": "subpackageMember/components/cy/profile/index.wxml:631:bindtap:loadPointsTasks:70",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430201,7 +1430253,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadPointsTasks",
-        "line": 633,
+        "line": 631,
         "selectorHint": ".pts-loading",
         "visibleCondition": "{{pointsSheet.failed}}",
         "disabledCondition": null,
@@ -1430260,7 +1430312,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:667:catchtouchmove:blockSceneTouch:71",
+      "id": "subpackageMember/components/cy/profile/index.wxml:665:catchtouchmove:blockSceneTouch:71",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430305,7 +1430357,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 667,
+        "line": 665,
         "selectorHint": ".member-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id !== 'qr-coupon' && sceneCurrent.id !== 'share-invite' && sceneCurrent.id !== 'member-more-menu' && sceneCurrent.id !== 'member-chapter-picker' && sceneCurrent.id !== 'member-station-picker' && sceneCurrent.id !== 'points-tasks'}}",
         "disabledCondition": null,
@@ -1430350,7 +1430402,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:668:bind:back:backScene:73",
+      "id": "subpackageMember/components/cy/profile/index.wxml:666:bind:back:backScene:73",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430395,7 +1430447,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 668,
+        "line": 666,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430439,7 +1430491,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:668:bind:requestclose:requestSceneClose:72",
+      "id": "subpackageMember/components/cy/profile/index.wxml:666:bind:requestclose:requestSceneClose:72",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430484,7 +1430536,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 668,
+        "line": 666,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430528,7 +1430580,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:669:bind:back:backScene:75",
+      "id": "subpackageMember/components/cy/profile/index.wxml:667:bind:back:backScene:75",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430573,7 +1430625,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 669,
+        "line": 667,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430617,7 +1430669,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:669:bind:close:closeScene:76",
+      "id": "subpackageMember/components/cy/profile/index.wxml:667:bind:close:closeScene:76",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430662,7 +1430714,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 669,
+        "line": 667,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430706,7 +1430758,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:669:bind:dirtychange:onSceneDirtyChange:77",
+      "id": "subpackageMember/components/cy/profile/index.wxml:667:bind:dirtychange:onSceneDirtyChange:77",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430751,7 +1430803,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:dirtychange",
         "handler": "onSceneDirtyChange",
-        "line": 669,
+        "line": 667,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430795,7 +1430847,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:669:bind:open:openChildScene:74",
+      "id": "subpackageMember/components/cy/profile/index.wxml:667:bind:open:openChildScene:74",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430840,7 +1430892,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 669,
+        "line": 667,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1430923,7 +1430975,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:671:bindtap:submitSceneForm:78",
+      "id": "subpackageMember/components/cy/profile/index.wxml:669:bindtap:submitSceneForm:78",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1430968,7 +1431020,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitSceneForm",
-        "line": 671,
+        "line": 669,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431013,7 +1431065,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:675:catchtouchmove:blockSceneTouch:79",
+      "id": "subpackageMember/components/cy/profile/index.wxml:673:catchtouchmove:blockSceneTouch:79",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431058,7 +1431110,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 675,
+        "line": 673,
         "selectorHint": ".member-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'share-invite'}}",
         "disabledCondition": null,
@@ -1431103,7 +1431155,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:676:bind:back:backScene:81",
+      "id": "subpackageMember/components/cy/profile/index.wxml:674:bind:back:backScene:81",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431148,7 +1431200,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 676,
+        "line": 674,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431192,7 +1431244,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:676:bind:requestclose:requestSceneClose:80",
+      "id": "subpackageMember/components/cy/profile/index.wxml:674:bind:requestclose:requestSceneClose:80",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431237,7 +1431289,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 676,
+        "line": 674,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431281,7 +1431333,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:680:catchtouchmove:blockSceneTouch:82",
+      "id": "subpackageMember/components/cy/profile/index.wxml:678:catchtouchmove:blockSceneTouch:82",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431326,7 +1431378,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 680,
+        "line": 678,
         "selectorHint": ".member-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-coupon'}}",
         "disabledCondition": null,
@@ -1431371,7 +1431423,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:681:bind:back:backScene:84",
+      "id": "subpackageMember/components/cy/profile/index.wxml:679:bind:back:backScene:84",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431416,7 +1431468,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 681,
+        "line": 679,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431460,7 +1431512,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:681:bind:requestclose:requestSceneClose:83",
+      "id": "subpackageMember/components/cy/profile/index.wxml:679:bind:requestclose:requestSceneClose:83",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431505,7 +1431557,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 681,
+        "line": 679,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431549,7 +1431601,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:682:bind:close:backScene:85",
+      "id": "subpackageMember/components/cy/profile/index.wxml:680:bind:close:backScene:85",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431594,7 +1431646,7 @@
         "tag": "cy-scene-qr-coupon",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 682,
+        "line": 680,
         "selectorHint": "cy-scene-qr-coupon[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431638,7 +1431690,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:685:bind:cancel:cancelSceneDiscard:87",
+      "id": "subpackageMember/components/cy/profile/index.wxml:683:bind:cancel:cancelSceneDiscard:87",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431683,7 +1431735,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 685,
+        "line": 683,
         "selectorHint": ".{{isMerchantView",
         "visibleCondition": "{{isSelf}}",
         "disabledCondition": null,
@@ -1431727,7 +1431779,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:685:bind:confirm:confirmSceneDiscard:86",
+      "id": "subpackageMember/components/cy/profile/index.wxml:683:bind:confirm:confirmSceneDiscard:86",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431772,7 +1431824,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 685,
+        "line": 683,
         "selectorHint": ".{{isMerchantView",
         "visibleCondition": "{{isSelf}}",
         "disabledCondition": null,
@@ -1431816,7 +1431868,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:694:bind:close:closeMerchantNpcChat:88",
+      "id": "subpackageMember/components/cy/profile/index.wxml:692:bind:close:closeMerchantNpcChat:88",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431861,7 +1431913,7 @@
         "tag": "cy-npc-chat",
         "event": "bind:close",
         "handler": "closeMerchantNpcChat",
-        "line": 694,
+        "line": 692,
         "selectorHint": "cy-npc-chat[bind:close]",
         "visibleCondition": "{{subjectIsMerchant && subjectMerchant.npc}}",
         "disabledCondition": null,
@@ -1431905,7 +1431957,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:696:bind:close:closeCoopInvite:89",
+      "id": "subpackageMember/components/cy/profile/index.wxml:694:bind:close:closeCoopInvite:89",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1431950,7 +1432002,7 @@
         "tag": "cy-coop-invite-sheet",
         "event": "bind:close",
         "handler": "closeCoopInvite",
-        "line": 696,
+        "line": 694,
         "selectorHint": "#coop-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1431994,7 +1432046,7 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/profile/index.wxml:696:bind:sent:onCoopInviteSent:90",
+      "id": "subpackageMember/components/cy/profile/index.wxml:694:bind:sent:onCoopInviteSent:90",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
         "pages/member/index/index",
@@ -1432039,7 +1432091,7 @@
         "tag": "cy-coop-invite-sheet",
         "event": "bind:sent",
         "handler": "onCoopInviteSent",
-        "line": 696,
+        "line": 694,
         "selectorHint": "#coop-invite",
         "visibleCondition": null,
         "disabledCondition": null,

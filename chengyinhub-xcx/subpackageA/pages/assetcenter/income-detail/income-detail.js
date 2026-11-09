@@ -23,7 +23,7 @@ Page({
   loadRevenue() {
     const seq = (this._revSeq = (this._revSeq || 0) + 1)
     app.sendRequest({
-      url: '/api/marketing/revenue/author/mine', method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/marketing/revenue/author/mine', method: 'GET', hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (seq !== this._revSeq) return
         if (res && res.reasonCode === 'NOT_PARTICIPANT') { this.setData({ rev: { state: 'hidden', rows: [] } }); return }

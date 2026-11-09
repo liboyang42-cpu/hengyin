@@ -22,7 +22,7 @@ Page({
     app.sendRequest({
       url: '/api/marketing/product/gifts/claim', method: 'POST', header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ token: this._token, requestId: this._reqId }),
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (isBizOk(res) && res.data) {
           this._registrationId = res.data.registrationId || null

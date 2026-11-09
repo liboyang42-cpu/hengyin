@@ -56,7 +56,7 @@ function sharePathPromise(app, targetType, targetId, path) {
     app.sendRequest({
       url: '/api/marketing/referral/token', method: 'POST', header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ targetType, targetId: Number(targetId) }),
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       success: (res) => {
         const token = res && (res.code == 200) && res.data && (res.data.token || (typeof res.data === 'string' ? res.data : ''))
         resolve({ path: token ? withRef(path, token) : path })
@@ -73,7 +73,7 @@ function claimAfterOrder(app, registrationId, attempt) {
   app.sendRequest({
     url: '/api/marketing/attribution/claim', method: 'POST', header: { 'Content-Type': 'application/json' },
     data: JSON.stringify({ orderType: 1, orderId: Number(registrationId), token: rec.token }),
-    hideLoading: true, silentError: true, autoErrorToast: false,
+    hideLoading: true, autoErrorToast: false,
     success: (res) => {
       // 成功与所有带 reasonCode 的拒绝都是终态:清掉,不挂到下一单
       if (res && (res.code == 200 || res.reasonCode)) { drop(); return }

@@ -1,5 +1,4 @@
-const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
-const referral = require('../../../utils/commerce/referral.js');
+const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
@@ -195,8 +194,7 @@ Page({
     totalStickyHeight: 0, // 吸顶总高度（状态栏+导航栏+标签栏）
   },
 
-  onLoad(options) {
-    referral.capture(options); // §18 I 落地只存来源凭据
+  onLoad(options) { referral.capture(options); // §18 I 落地只存来源凭据
     const that = this;
     const topicId = Number(options.id);
     const validTopicId = Number.isFinite(topicId) && Number.isInteger(topicId) && topicId > 0;

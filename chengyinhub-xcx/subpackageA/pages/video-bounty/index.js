@@ -9,7 +9,7 @@ const vb = require('../../utils/video-bounty-view.js')
 function get(url, data) {
   return new Promise((resolve) => {
     app.sendRequest({
-      url, method: 'GET', data: data || {}, hideLoading: true, silentError: true, autoErrorToast: false,
+      url, method: 'GET', data: data || {}, hideLoading: true, autoErrorToast: false,
       success: (res) => resolve(isBizOk(res) ? res.data : null),
       fail: () => resolve(null)
     })
@@ -19,7 +19,7 @@ function post(url, body) {
   return new Promise((resolve) => {
     app.sendRequest({
       url, method: 'POST', header: { 'Content-Type': 'application/json' }, data: JSON.stringify(body || {}),
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       success: (res) => resolve(res || {}),
       fail: () => resolve(null)
     })

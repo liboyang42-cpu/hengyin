@@ -36,7 +36,7 @@ Page({
     const seq = (this._seq = (this._seq || 0) + 1)
     this.setData({ state: 'loading' })
     app.sendRequest({
-      url: '/api/marketing/product/' + encodeURIComponent(this._id), method: 'GET', hideLoading: true, silentError: true,
+      url: '/api/marketing/product/' + encodeURIComponent(this._id), method: 'GET', hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (seq !== this._seq) return
         const card = isBizOk(res) ? mv.productCard(res.data) : null
@@ -62,7 +62,7 @@ Page({
     app.sendRequest({
       url: '/api/marketing/product/quote', method: 'POST', header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ productId: Number(this._id), quantity: 1, fulfillmentKind }),
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (seq !== this._quoteSeq) return
         if (isBizOk(res) && res.data) {
@@ -106,7 +106,7 @@ Page({
     this.setData({ buying: true, buyingMode: mode, buyError: '' })
     app.sendRequest({
       url: '/api/marketing/product/order', method: 'POST', header: { 'Content-Type': 'application/json' },
-      data: JSON.stringify(body), hideLoading: true, silentError: true, autoErrorToast: false,
+      data: JSON.stringify(body), hideLoading: true, autoErrorToast: false,
       success: (res) => {
         if (isBizOk(res) && res.data) { this._afterOrder(res.data); return }
         const code = res && res.reasonCode
@@ -137,7 +137,7 @@ Page({
     if (blocked) { this.setData({ buying: false, buyError: mv.reasonText(blocked) }); return }
     app.sendRequest({
       url: '/api/marketing/product/orders/' + encodeURIComponent(order.orderNo) + '/pay', method: 'POST',
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       success: (res) => {
         const p = isBizOk(res) && res.data && res.data.payParams
         if (!p) { this.setData({ buying: false, buyError: mv.reasonText(res && res.reasonCode) }); return }
@@ -150,7 +150,7 @@ Page({
   },
   _verify(orderNo, attempt) {
     app.sendRequest({
-      url: '/api/marketing/product/orders', method: 'GET', data: { limit: 20 }, hideLoading: true, silentError: true,
+      url: '/api/marketing/product/orders', method: 'GET', data: { limit: 20 }, hideLoading: true, autoErrorToast: false,
       success: (res) => {
         const row = isBizOk(res) && Array.isArray(res.data) ? res.data.find((o) => o && o.orderNo === orderNo) : null
         if (row && row.statusLabel === 'PAID') { this._afterOrder(row); return }

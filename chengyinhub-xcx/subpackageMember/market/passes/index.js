@@ -13,7 +13,7 @@ const TABS = [
 function get(url, data) {
   return new Promise((resolve) => {
     app.sendRequest({
-      url, method: 'GET', data: data || {}, hideLoading: true, silentError: true,
+      url, method: 'GET', data: data || {}, hideLoading: true, autoErrorToast: false,
       success: (res) => resolve(isBizOk(res) && Array.isArray(res.data) ? res.data : null),
       fail: () => resolve(null)
     })
@@ -42,7 +42,7 @@ Page({
   // U07-03:付费模板只看服务端能力;微信通道不可用时写原因,可用时本端仍未接安装流程,不出入口
   loadWorkshop() {
     app.sendRequest({
-      url: '/api/workshop/capabilities', method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
+      url: '/api/workshop/capabilities', method: 'GET', hideLoading: true, autoErrorToast: false,
       success: (res) => {
         const cap = isBizOk(res) && res.data && res.data.wechatApp
         this.setData({ workshopReason: cap && cap.available === false ? mv.workshopReasonText(cap.reason) : '' })
