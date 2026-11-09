@@ -1,0 +1,19 @@
+/* 地点待办:入口沿编辑器白卡行;弹层内每个地点一组 键/值 行,危险态红字 */
+.lt-entry { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 96rpx; margin: 0 0 var(--cy-space-3); padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
+.lt-entry__t { flex: 1; font-size: var(--cy-type-body); font-weight: 600; }
+.lt-entry__v { font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
+.lt-entry__v.is-bad { color: var(--cy-color-status-danger-on-interactive); }
+.lt { display: block; }
+.lt-src { display: flex; flex-wrap: wrap; gap: var(--cy-space-1) var(--cy-space-3); padding: 0 0 var(--cy-space-3); font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); border-bottom: 1rpx solid var(--cy-comp-sheet-role-divider); }
+.lt-row { padding: var(--cy-space-3) 0; border-bottom: 1rpx solid var(--cy-comp-sheet-role-divider); }
+.lt-row:last-child { border-bottom: none; }
+.lt-row__hd { display: flex; align-items: center; gap: var(--cy-space-2); margin-bottom: var(--cy-space-2); }
+.lt-row__t { flex: 1; min-width: 0; font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary); }
+.lt-tag { flex: none; padding: 4rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); background: var(--cy-color-bg-surface); }
+.lt-tag--bad { color: var(--cy-color-status-danger-on-interactive); }
+.lt-kv { display: flex; gap: var(--cy-space-3); padding: 6rpx 0; font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); }
+.lt-k { flex: none; width: 128rpx; color: var(--cy-color-text-tertiary); }
+.lt-v { flex: 1; min-width: 0; color: var(--cy-color-text-primary); }
+.lt-v.is-bad { color: var(--cy-color-status-danger-on-interactive); }
+.lt-act { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin-top: var(--cy-space-2); border-radius: var(--cy-radius-pill); border: 1rpx solid var(--cy-color-border-strong); font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.lt-err { display: block; padding-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-color-status-danger-on-interactive); }
