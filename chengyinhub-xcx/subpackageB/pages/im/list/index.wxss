@@ -169,7 +169,7 @@ page { background: var(--cy-bg-page); }
 .invite-strip__head { display: flex; align-items: center; justify-content: space-between; padding-right: var(--cy-page-x); }
 .invite-strip__head .invite-strip__title { flex: 1; min-width: 0; }
 .invite-strip--bare { padding-bottom: 0; }
-.invite-strip--bare .invite-strip__title { padding-bottom: 0; }
+.invite-strip--bare .invite-strip__title, .invite-strip--bare .invite-alert { padding-bottom: 0; }
 .invite-alert { display: flex; align-items: center; gap: var(--cy-space-2); padding-bottom: var(--cy-space-3); }
 .invite-alert__label { font-size: var(--cy-font-label); color: var(--cy-text-body); }
 .invite-alert__sw { transform: scale(0.8); transform-origin: right center; }
