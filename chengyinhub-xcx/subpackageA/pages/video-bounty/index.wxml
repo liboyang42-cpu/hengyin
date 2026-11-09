@@ -25,7 +25,7 @@
           <view class="vb-row" wx:for="{{subs.rows}}" wx:key="id">
             <view class="vb-row__main">
               <text class="vb-row__title">{{item.title}} · {{item.status}}</text>
-              <text class="vb-row__sub vb-row__url">{{item.url}}</text>
+              <text class="vb-row__sub vb-row__url" wx:if="{{item.url}}">{{item.url}}</text>
               <text class="vb-row__sub" wx:if="{{item.window}}">{{item.window}}</text>
               <text class="vb-row__sub" wx:if="{{item.note}}">{{item.note}}</text>
             </view>
