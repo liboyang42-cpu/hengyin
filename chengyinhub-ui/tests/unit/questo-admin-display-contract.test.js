@@ -141,3 +141,22 @@ test('rawBusinessError 只改变调用方显式选择的请求', () => {
   const order = request.indexOf('code === 401');
   assert.ok(order > 0 && order < request.indexOf('rawBusinessError'), '401 仍先走重新登录');
 });
+
+test('U07-05 结算卡片：未知显示 —，确认对账不写成已结算/已打款', () => {
+  const page = read('src/views/business/settlement/index.vue').split('<script>')[0];
+  assert.doesNotMatch(page, /\|\| 0 }}/);
+  assert.match(page, /已对账：\{\{ moneyText\(reconciliation\.settledAmount\) \}\}/);
+  assert.doesNotMatch(page, /已结算：/);
+});
+
+test('§27.7 后台售后按实际交付行发起', () => {
+  const page = read('src/views/business/finance/refund/index.vue');
+  assert.match(page, /label="交付行 ID" prop="sourceId"/);
+  assert.match(page, /<el-option label="报名订单" value="registration" \/>/);
+});
+
+test('U03-04 工作台版本：未公开不补 0', () => {
+  const page = read('src/views/business/topic/workspace.vue');
+  assert.match(page, /'尚未公开'/);
+  assert.match(page, /publishedConfigVersion/);
+});
