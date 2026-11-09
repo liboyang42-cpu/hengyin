@@ -660,8 +660,8 @@
           </view>
           </view>
         </block>
-        <view class="story-tail {{(formData.chapters[storyEditor.chapterIndex].blocks || []).length ? '' : 'is-empty'}}" catchtap="onStoryTailTap" aria-role="button" aria-label="在文末继续写" hover-class="none">
-          <text class="story-tail__placeholder" wx:if="{{!(formData.chapters[storyEditor.chapterIndex].blocks || []).length}}">写下这一章的故事…</text>
+        <view class="story-tail {{formData.chapters[storyEditor.chapterIndex].blocks.length ? '' : 'is-empty'}}" catchtap="onStoryTailTap" aria-role="button" aria-label="在文末继续写" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="story-tail__placeholder" wx:if="{{!formData.chapters[storyEditor.chapterIndex].blocks.length}}">写下这一章的故事…</text>
         </view>
       </view>
       <view class="story-editor__bottom"></view>
