@@ -19,7 +19,7 @@ Screenshots: `shots/<ID>-before.jpg` is from the `origin/master` bundle and `sho
 - I ran all 227 unit tests that touch the changed files (proto-sheet, proto-icons, tokens, sheet, play/roam wxss, tabBar, cy-icon, post-card, square detail). All pass.
 - `node tests/lint/ui-integrity.js`: `UI-GATE-0:PASS`, with no baseline entries added.
 - `node scripts/uiaudit/build-action-ledger.js --write`: PASS, 5751 controls. The drift is line numbers only.
-- `tests/unit/action-ledger.test.js` is slow (over 10 minutes in this container); its result is noted in the PR.
+- `tests/unit/action-ledger.test.js`: 48/48 pass (about 6 minutes in this container). PR CI on e7d87a4: all 20 mini-program unit shards, the static gates, gitleaks and the funds gates are green.
 - Main package: the new SVGs add about 6 KB uncompressed (about 4 KB counted by WeChat).
 
 ## Cross-lane
