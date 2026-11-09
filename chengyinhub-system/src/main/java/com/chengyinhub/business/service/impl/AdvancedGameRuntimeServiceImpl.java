@@ -3886,8 +3886,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     String playMediaUrl(String reference, Long viewerMemberId) {
         if (reference == null || reference.trim().isEmpty()) return "";
         if (mediaReferences == null) return reference.trim().matches("media-asset:[1-9][0-9]{0,18}") ? "" : reference.trim();
-        String shown = mediaReferences.publishedPlayUrl(reference.trim(), viewerMemberId);
-        return shown == null ? "" : shown.trim();
+        try {
+            String shown = mediaReferences.publishedPlayUrl(reference.trim(), viewerMemberId);
+            return shown == null ? "" : shown.trim();
+        } catch (RuntimeException unresolvable) {
+            // 一张图解析不出可访问地址(发布地址未配置/存储事实不可用)只让这张图不显示,不让整局视图失败。
+            return "";
+        }
     }
 
     private Map<String, Object> accusationView(JsonNode config, ObjectNode state,

@@ -81,6 +81,8 @@ class RuntimePlayMediaProjectionTest {
         when(assets.select(11L)).thenReturn(Map.of("id", 11L, "reviewState", "APPROVED", "memberId", 99L));
         when(assets.select(12L)).thenReturn(Map.of("id", 12L, "reviewState", "PENDING", "memberId", MEMBER_ID));
         when(assetService.approvedUrl(11L)).thenReturn(APPROVED_URL);
+        when(assets.select(13L)).thenReturn(Map.of("id", 13L, "reviewState", "APPROVED", "memberId", 99L));
+        when(assetService.approvedUrl(13L)).thenThrow(new com.chengyinhub.common.exception.ServiceException("图片发布地址未配置或无效，请联系管理员"));
         when(assetService.ownerPreview(eq(12L), anyLong())).thenReturn("https://preview.example.test/should-not-leak.png");
         ReflectionTestUtils.setField(media, "mapper", assets);
         ReflectionTestUtils.setField(media, "assets", assetService);
@@ -91,7 +93,7 @@ class RuntimePlayMediaProjectionTest {
             + "\"options\":["
             + "{\"id\":\"o1\",\"label\":\"张医生\",\"correct\":true,\"img\":\"media-asset:11\",\"alt\":\"穿白大褂的人\"},"
             + "{\"id\":\"o2\",\"label\":\"李师傅\",\"img\":\"media-asset:12\",\"alt\":\"待审的图\"},"
-            + "{\"id\":\"o3\",\"label\":\"周老板\"}]},"
+            + "{\"id\":\"o3\",\"label\":\"周老板\",\"img\":\"media-asset:13\",\"alt\":\"地址配不出来\"}]},"
             + "\"accusation\":{\"enabled\":true,\"suspects\":["
             + "{\"id\":\"o1\",\"name\":\"张医生\",\"avatar\":\"media-asset:11\"},"
             + "{\"id\":\"o2\",\"name\":\"李师傅\",\"avatar\":\"media-asset:12\"},"
@@ -116,7 +118,8 @@ class RuntimePlayMediaProjectionTest {
         assertEquals("穿白大褂的人", options.get(0).get("alt"), "alt text is kept");
         assertFalse(options.get(1).containsKey("img"), "pending asset is not shown, not even to its uploader");
         assertFalse(options.get(1).containsKey("alt"));
-        assertFalse(options.get(2).containsKey("img"));
+        assertFalse(options.get(2).containsKey("img"), "an unresolvable image is dropped, the view still renders");
+        assertFalse(options.get(2).containsKey("alt"));
         assertFalse(options.get(0).containsKey("correct"), "answers stay secret");
 
         Map<String, Object> accusation = (Map<String, Object>) view.get("accusation");
