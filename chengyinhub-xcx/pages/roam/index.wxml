@@ -58,7 +58,7 @@
 
     <block wx:elif="{{entrySheet=='place' && entryPlace}}">
       <cy-roam-place-note tags="{{entryPlace.tags}}" bind:note="onEntryPlaceNote" />
-      <view class="entry-place" bindtap="openEntryPlaceLocation" aria-role="button" aria-label="在地图中打开 {{entryPlace.name}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="entry-place">
         <view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view>
         <view class="entry-place__copy"><text>{{entryPlace.catLabel}}</text><text>{{entryPlace.address}}</text></view>
       </view>

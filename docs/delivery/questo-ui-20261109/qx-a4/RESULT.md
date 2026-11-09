@@ -7,7 +7,7 @@
 | ID | 状态 | 改了什么 | 文件 | 怎么验证 | 真机上仍未验证 |
 |---|---|---|---|---|---|
 | V3-26 | fixed | 删掉头像旁边的「城市漫游清单」图标按钮;头部行保留 88rpx 最小高度,标题位置不动 | `pages/roam/index.wxml`、`index.wxss`、`index.js` | rig:`V3-26-before/after.jpg`;`roam-city-catalog.test.js` 断言按钮与处理函数不在 | 无 |
-| V3-35 | fixed | 删除清单组件 `subpackageRoam/components/roam-city-guide` 及入口。目录地点(已上架、type=1、带导入种子标签 `roam:seed:v1:*`、有坐标)由入口地图另读 `/api/roam/pois`(同地图页端点与权限档)画成图钉;点图钉开入口弹层:分类、地址(点开 `wx.openLocation`)、目录里核对过的理由(沿用分包 `roam-place-note`,换卡后迟到回填丢弃)。读失败走请求层默认提示,不并进附近活动错误态 | `utils/roam-entry-map.js`、`pages/roam/index.*`、删 `roam-city-guide/*` | rig:在测试库插两条虚构点位(种子标签指向真实目录条目),`V3-35-after.jpg` 地图两枚点、`V3-35-after-place.jpg` 弹层带目录理由;单测 `roam-entry-map-contract.test.js`(只认目录点、图层开关不影响、点图钉回同一点)、`roam-recovery-flow.test.js` | 原生地图上图钉图标与点击;33 个真实目录地点仍没有核验坐标(导入工具要求高德/腾讯核验),**上线前地图上没有目录图钉**,见 needs owner |
+| V3-35 | fixed | 删除清单组件 `subpackageRoam/components/roam-city-guide` 及入口。目录地点(已上架、type=1、带导入种子标签 `roam:seed:v1:*`、有坐标)由入口地图另读 `/api/roam/pois`(同地图页端点与权限档)画成图钉;点图钉开入口弹层:分类、地址(纯文字;漫游红线 R4 禁止漫游页唤起外部导航)、目录里核对过的理由(沿用分包 `roam-place-note`,换卡后迟到回填丢弃)。读失败走请求层默认提示,不并进附近活动错误态 | `utils/roam-entry-map.js`、`pages/roam/index.*`、删 `roam-city-guide/*` | rig:在测试库插两条虚构点位(种子标签指向真实目录条目),`V3-35-after.jpg` 地图两枚点、`V3-35-after-place.jpg` 弹层带目录理由;单测 `roam-entry-map-contract.test.js`(只认目录点、图层开关不影响、点图钉回同一点)、`roam-recovery-flow.test.js` | 原生地图上图钉图标与点击;33 个真实目录地点仍没有核验坐标(导入工具要求高德/腾讯核验),**上线前地图上没有目录图钉**,见 needs owner |
 | V3-27 | fixed(勋章段 already fixed) | 收集册页本来就有「勋章 / 邮票 / 藏品」三段(album-head),勋章在里面;本次删掉护照上单独的「勋章墙」方卡及其只为方卡服务的静默读取 | `pages/roam/index.js` | rig:`V3-27-before/after.jpg`(护照)、`V3-27-after-album.jpg`(收集册三段)、`V3-27-after-medal.jpg`(勋章段) | 无 |
 | V3-34 | fixed | 收集册三叠小卡:去掉灰色卡底与描边;叠层放进 `preserve-3d` 容器(透视 640rpx,静止俯仰 10° / 侧转 −12°),三层不同 Z 深度与透明度,顶层同图提亮做斜向镜面高光(形状随图,不出方框);按下(hover-class)转正浮起、高光扫过;`prefers-reduced-motion` 时无过渡。邮票 / 藏品两叠后两层用同一张图叠出厚度 | `subpackageMember/components/cy/profile/index.wxml`、`index.wxss` | rig:`V3-34-before/after.jpg`;`press-feedback-resolves-contract` 通过 | 3D 透视与 mask 高光在真机 WebView 的效果、按下动效;rig 不出 mask 高光 |
 | V3-36 | fixed | 漫游记录 / 集邮册方卡、官方活动大卡在没有自己的图时显示实景照片。照片放 `subpackageRoam/assets/photos/*.webp`(14–38 KB),由分包组件 `roam-photo` 经 `componentPlaceholder` 异步引用,主包不增图;原 `images/roam/tile-*.svg` 三张删除 | `subpackageRoam/components/roam-photo/*`、`subpackageRoam/assets/photos/*`、`pages/roam/index.*` | rig:`V3-36-before/after.jpg`;`roam-intro-passport.test.js` | 分包未下载时占位为空(view),首屏可能先空再出图 |
@@ -33,7 +33,7 @@
 
 - 小程序单测:全量 `node --test "tests/unit/**/*.test.js"` 16770 通过。剩下 3 条失败(台账 local 计数、标题间距页数、hover-class 定义)已修复,对应文件单独重跑全绿。`action-ledger.test.js` 48/48 通过。
 - `node chengyinhub-xcx/tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`。
-- 台账已用 `build-action-ledger.js --write` 重建(5725 个控件),路由矩阵已用 `build-route-matrix.js --json` 重建(156 条)。
+- 台账已用 `build-action-ledger.js --write` 重建(5724 个控件),路由矩阵已用 `build-route-matrix.js --json` 重建(156 条)。
 - 主包源码 3142 KB,按 ×0.633 约 1989 KiB,低于 2048。
 - Rig 情况:
   - 后端用 master,在本容器里跑,MySQL/Redis 走 mirror.gcr.io 镜像,因为 Docker Hub 返回 429。

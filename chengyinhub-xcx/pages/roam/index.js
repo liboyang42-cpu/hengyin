@@ -6132,11 +6132,6 @@ Page({
     if (!place || place.tags !== d.tags) return;
     this.setData({ 'entryPlace.reason': d.reason || '' });
   },
-  openEntryPlaceLocation() {
-    const place = this.data.entryPlace;
-    if (!place) return;
-    wx.openLocation({ latitude: place.lat, longitude: place.lng, name: place.name, address: place.address, scale: 17 });
-  },
   onPlaceNote(e) {
     const d = e.detail || {};
     const card = this.data.paceCard || {};
