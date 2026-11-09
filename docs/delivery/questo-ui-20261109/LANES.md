@@ -200,3 +200,95 @@ Fix each one with a test that fails on the old code. Prove each fix over real HT
 10. **Audit `domain_type` length.** qx-b6 found that `business_audit_event.domain_type` overflows (16 chars) for `VideoBountyServiceImpl` and fixed it on its branch. Grep every writer of that table on the base and fix any other over-length domain the same way, so the rule is consistent.
 
 Work on branch `claude/qx-c1-20261109`. Write RESULT.md in the same format as the UI lanes, plus a "contract for UI lanes" section listing exact request and response shapes.
+
+---
+
+## Staging and polish wave (owner, 2026-11-09 evening)
+
+The owner is away and will review everything together on return. They asked to keep optimizing the UI with three references, saved in `refs/` in this folder:
+
+1. **Onboarding** (`ref1-onboarding.jpg`, heysatya_):
+   - A dark first-run pager.
+   - Top bar: round back button, segmented progress pill, Skip.
+   - Hero: one tilted, layered 3D card stack, glassy, with a soft glow.
+   - Title: big, centred, two lines, with a coloured period accent.
+   - Below it: one muted line, a white pill CTA, and a plain text secondary action.
+2. **Gestures** (`ref2-gestures-frames.jpg`, emilkowalski /gestures):
+   - Bottom sheets drag with your finger and dismiss on a downward swipe once velocity or distance passes a threshold.
+   - Dragging up past the top detent rubber-bands: the travel resists and springs back.
+   - A floating mini player (picture-in-picture) is draggable and snaps, with momentum, to the nearest corner, like iOS.
+3. **Motion** (`ref3-*`, Triopixels):
+   - Morph: a pill control becomes a progress state, then the icon pulses, then a success line appears.
+   - A side panel reveals with the content sliding over.
+   - Stacked cards or sheets show depth: the previous layer scales down and dims behind.
+   - The bottom card grows into a full sheet.
+
+Respect the standing rules in BRIEF.md: the existing UI is the baseline, no secondary captions, player dark / merchant light, `prefers-reduced-motion`, and transitions over keyframes. **Do not restyle approved pages wholesale.** Apply each reference only where it says.
+
+### qx-s0: staging integrator (cloud)
+
+Build branch `staging/questo-review-20261110`, a preview build for the owner's review. It is not a merge of any PR, so never merge, close or mark any PR ready.
+
+1. Start from `origin/integrate/questo-ui-20261110`.
+2. Merge, with `--no-ff` and in this order: `claude/qx-c1-20261109` (once its RESULT.md has a STATUS line; poll every 10 minutes for up to 3 hours, then continue without it and say so), then b1, b2, b3, b4, b5, b6, b8, then a2 (global tokens first), a1, a3, a4, a5, a5d, a6, a7. All of these are `claude/qx-<lane>-20261109`.
+3. Resolve conflicts by keeping both lanes' intent: a2's tokens and switches win on colour; play-page logic combines a1 and b1.
+4. After each merge, run the mini-program unit tests touched by that lane, plus `node chengyinhub-xcx/tests/lint/ui-integrity.js`.
+5. At the end:
+   - Rebuild the action ledger.
+   - Run `mvn -q -DskipTests package` and the Java tests of classes touched by lanes.
+   - Run `npm run build:prod` for chengyinhub-ui.
+   - Report the main-package size estimate: about 0.633 × uncompressed main-package source bytes. It must stay under 2048 KiB; move pages to subpackages if needed.
+6. **Rig fixture.** Fix the rig so a ticketed play state is reachable on this base. Today `chains.py sale_close` fails with 「自由探索只开放内容所属俱乐部的场次」 and then 「四店固定补偿产品已停止新开售」. Add a rig-only fixture: a sellable self-run 城市定向 theme with one free ticket, created through normal endpoints where possible. Put it on the rig branch or under `docs/delivery/questo-ui-20261109/staging/rig/`, never in product code.
+7. **Missing screenshots.** Re-shoot every lane item whose RESULT.md says the rig could not reach it. The b1 play core and the album both lack screenshots; for the album, use a phone-sized viewport and accept a headless limitation only after trying.
+8. **Deliverables:**
+   - Push the staging branch.
+   - Write `docs/delivery/questo-ui-20261109/staging/RESULT.md` with the merge log, conflicts and how each was combined, gate results, sizes, and new screenshots under `staging/shots/`, named `<lane>-<ID>-after.jpg`.
+   - Open one draft PR from staging into `integrate/questo-ui-20261110` titled `[REVIEW BUILD] ...`, marked do-not-merge.
+
+### qx-u1: gestures (mini-program, base `origin/staging/questo-review-20261110`, PR into it)
+
+1. **The shared sheet** (`components/cy/*` sheet and the scene-registry sheets, peek/half/full).
+   - Make it follow the finger, using a WXS touch handler for 60 fps.
+   - Dismiss on a downward swipe once velocity > 0.5 px/ms or distance > 30 % of the sheet.
+   - Snap to the nearest detent otherwise.
+   - Rubber-band dragging up past the top detent: resistance is offset × 0.25 with a spring back.
+   - Only the drag handle and header start a drag when the content is scrolled to the top; otherwise the content scrolls.
+   - Reduced motion: no rubber-band; snap instantly.
+   - Unit-test the detent and velocity maths in a pure JS module.
+2. **Floating corner player.** The play page music corner and any other floating corner widget (find them; the 2026-10-29 note mentions a music corner) becomes draggable and snaps with momentum to the nearest of four safe-area corners, avoiding the nav bar and tab bar.
+3. **Swipe-back.** Horizontal swipe-back on full-screen overlays opened as pages-in-page (photo album, story preview) closes them with the same physics.
+
+### qx-u2: first-run and onboarding screens (mini-program, same base)
+
+Apply ref 1 only to these screens, which are new in this wave or are first-run screens. Use player dark and merchant light; on merchant screens, use the same structure in the light palette.
+
+- P1 被邀请落地 (`subpackageJourney/pages/landing`): a hero with a tilted card stack built from the theme cover, a big two-line title, one muted line, a white pill CTA and a text secondary action.
+- P4 mode choice: a horizontal pager of mode cards with the segmented progress pill.
+- P7 战报 hero: a layered result card, with the score in big italic numerals (NRC rule) and the share CTA as a white pill.
+- The merchant 经营优化 first-visit intro (W2-16): a three-step pager with Skip and the building-block logo.
+- Template-to-publish first use, if a first-run intro exists. Search for `firstRun`/`intro` keys; don't invent new intros.
+
+Use only cards and data the screen already has. No fake numbers. The coloured period accent uses the brand accent token.
+
+### qx-u3: motion (mini-program, same base)
+
+- **Morph** (ref 3): adopt it for the success moments that already exist:
+  - seat claim success (P5)
+  - gift claim (P1)
+  - theme adoption done (`/use`)
+  - hint unlocked (UG-05)
+  - publish success (U03-02)
+
+  The button morphs into a progress state and then into a check, with the icon pulse in transitions only. Reuse the page-motion kit (`rise-in`/`count-up`) where it fits.
+- **Stacked sheets with depth:** when a sheet opens on top of another sheet (the in-theme 邀约/招商 stacks, W2-05), the lower one scales to 0.94, moves up 10 px and dims. This is coordinated in the sheet host, not per page.
+- **Card to detail:** the bottom card grows into the full sheet for order card → order detail and theme card → theme detail, only where the destination is already a sheet. Pages keep normal navigation.
+
+### qx-u4: iOS polish (repo liboyang42-cpu/chengyin-ios, base: branch `claude/qx-b7-20261109`, PR into it)
+
+- Port the same three references natively in SwiftUI:
+  - interactive sheets: `presentationDetents`, plus custom rubber-band drag where a custom sheet exists
+  - a PiP-style corner snap for any floating player
+  - the onboarding pager for the new Questo first-run screens
+  - `matchedGeometryEffect` morphs for the same success moments as qx-u3
+- Keep Apple-native components and the light/dark domain rule.
+- Write RESULT.md and open a draft PR.
