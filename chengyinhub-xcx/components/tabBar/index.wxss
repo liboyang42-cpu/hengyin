@@ -63,12 +63,12 @@
   box-sizing: border-box;
 }
 
-/* 未选:图标减淡 */
+/* 未选:图标减淡(2026-11-09 V3-25 业主「不是很清晰」:.45 在玻璃底上糊,提到 .6;选中改由填充形区分,不再只靠明度) */
 .tabbar .list .ul .li .tabbar__icon {
   width: 64rpx;
   height: 64rpx;
   filter: none;
-  opacity: 0.45;
+  opacity: 0.6;
   transition: opacity 0.2s ease;
 }
 
