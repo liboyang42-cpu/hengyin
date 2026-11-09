@@ -33,6 +33,8 @@ public class ExploreCompletionVO {
     public static class Stamp {
         private Long chapterId;
         private String title;
+        /** P-39:按北京时间下发「yyyy-MM-dd HH:mm:ss」,不再是带 T 的 ISO 原文。 */
+        @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
         private Date obtainedAt;
         private boolean collected;
 

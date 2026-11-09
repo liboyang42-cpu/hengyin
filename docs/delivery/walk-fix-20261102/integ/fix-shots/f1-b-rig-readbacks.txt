@@ -1,0 +1,68 @@
+Round 10 lane f1, sub-agent f1-B: rig read-backs (cloud walk rig, not a phone)
+
+Rig: branch claude/cloud-walk-20261101-rig + club harness-patches.diff; up.sh pointed at the f1-b worktree
+(candidate = integ commit 260dfae34, jar built from it). Real jar on MySQL 8.0.45 + Redis 7.4, real
+mini-program code in headless Chrome at 390x844. Rig-only changes (not in product code): up.sh candidate
+path; app.py passes dummy CHENGYIN_OSS_* and APP_MEDIA_PUBLIC_BASE_URL=http://127.0.0.1:8099.
+
+Fixtures (throwaway DB cy_e2e_51 only):
+- settlement_rule activity/topic 3% rows, cms_setting row 1 (platform member 9001), sys_category 4002/4003 type 2
+  (the fresh rig seed has none of these; same fixtures as j1)
+- app_media_asset 1 (member 9002, APPROVED) as the cover, because upload calls WeChat img_sec_check -> 503 in the rig
+- publisher real-name registered for 9002 through the real /api/publisher/identity (fictional test ID number)
+- time shift of activity 9 to "ended 8 days ago" before running the settlement job
+- ums_member 9008 role player -> club (fixture club leaders have role=player, j6 F8) to publish a club activity
+- user_permission(merchant) can_create_event 1 -> 0 -> 1 only for the refusal-on-entry shot
+- user_permission(merchant) was already can_create_event=1, max_events=3: f1-A's
+  migration_20261104_merchant_activity_limit.sql was in the candidate and applied by the rig schema build,
+  so no j1 user_permission fixture was needed.
+payment_status was never written directly.
+
+Item 2: merchant activity with no game, end to end (all real HTTP)
+- POST /api/activity/publish_precheck scope=MERCHANT (9002) -> 200
+- POST /api/activity/publish templateId=0, ticket 单人票 ¥39 x20 -> 200 data=9
+  cms_activity 9: member 9002, template_id 0, status 1, publish_status 1, club_id NULL, topic_id NULL
+  oms_ticket 75: 单人票 39.00 x20
+- POST /api/activity/info (player 9004) -> 200, memberTemplateList null, playNodeCount 0, tickets [75 单人票 39.0]
+- player 9009: consent -> quote payAmount 39.00, refundPercentNow 100 -> create reg 74 (A202611042E6732FE)
+- pay seam pay.py -> real POST /api/registration/callback -> reg 74 payment_status 2, registration_status 2,
+  payable 39.00, transaction RIG-TXN-74; settlement_detail pending: merchant 9002 37.83, platform 1.17
+- POST /api/verify/dyncode/issue -> code; merchant 9002 POST /api/registration/scan_qr_code -> verified:
+  reg 74 verification_status 1, verifier_id 9002, verification_time 2026-11-04 09:42:01 (UTC clock in MySQL)
+- settlement: admin PUT /monitor/job/run job 145 settlementTask.run() ->
+  log 「活动结算成功: activityId=9, 总销售额=39.00, 商户佣金=37.83, 设计者佣金=0, 平台佣金=1.17」
+  cms_activity 9 is_settlement 1; ums_member_balance_detail 39 (9002 +37.83), 40 (9001 +1.17);
+  settlement_detail rows status 1. 37.83 + 1.17 = 39.00.
+- Refusal on entry: with can_create_event=0, opening 发布活动 calls publish_precheck -> 403
+  「当前身份不可创建活动」; page shows the fail sheet and goes back (shot f1-2-04). Before this fix the refusal
+  only came after 发布 on step 3.
+- Draft kept: activity page -> createTemplate -> template-intro?scope=MERCHANT (light) -> 开始创建 -> editor;
+  editor onResultSheetClose() called by eval (the game publish itself was not walked) ->
+  stack back to [merchant/index, publish/activity], draft name/description intact (shots f1-2-06, f1-2-07).
+
+Item 4: staff invite
+- 9002 POST /api/merchant/operators/invite MERCHANT_CHECKIN -> invite 1 PENDING
+- browser, guest opens /pages/merchant/team/index?invite=<token>: 「登录后查看邀请 · 登录」 (no account created);
+  taps 登录 -> /api/login/code (member 990005 created at this explicit tap) -> /api/merchant/access/me ->
+  /api/merchant/operators/invite/preview -> page 「加入经营团队 / 探店日样板咖啡 · 核销员」 -> 接受邀请 ->
+  /api/merchant/operators/invite/accept 200 (sent in player view).
+  merchant_operator 1: merchant 8001, member 990005, MERCHANT_CHECKIN, ACTIVE; invite 1 ACCEPTED by 990005.
+
+Item 6: silent guest accounts
+- ums_member count before guest walks: 9. Guest opens pages/merchant/game-node/index (no id) -> lands on
+  pages/merchant/index with 「登录后查看经营台 · 登录」; network: only /api/config/features. Count after: 9.
+- Guest opens pages/merchant/marketing/index -> 「登录后查看营销 · 登录」, no login request.
+- Guest opens subpackageMember/tixian/tixian -> reLaunch to merchant/index -> 「登录后查看经营台」, no login request.
+- After all guest walks the only walk-guest member is 990005, created by the explicit 登录 tap in the invite walk.
+
+Item 8: checkout
+- player 9004 with one saved participant (测试甲) opens checkout for activity 10: selectedAddress 测试甲,
+  userInfo.realName 测试甲 after both /api/user/info and /api/user/address/list answered; first 付款 went
+  straight to create (no 「参与人信息需要包含姓名」) and the browser wx.requestPayment -> /__rig/pay ->
+  real callback -> order page. (The rig's local timing does not force the losing order of the race; the unit
+  test pins the late-profile case.)
+- pending order reg 76 (player 9009): DB pay_expire_time 2026-11-04 18:18:20; /api/registration/info sends
+  payExpireTime "2026-11-04 18:18:20"; order detail shows 「请在 2026-11-04 18:18 前完成支付」 (shot f1-8-03).
+- club activity 11 (club 7002): merchant 9005 POST /api/registration/quote -> 403 「商家不能报名俱乐部活动」, no price;
+  after consent, POST /api/registration/create -> 403 same message; no cms_registration row for 9005.
+  Player 9004 quote on the same activity -> 「请先加入俱乐部再报名」 (unchanged rule).

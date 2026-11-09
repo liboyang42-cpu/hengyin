@@ -190,6 +190,30 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </choose>
     </select>
 
+    <!-- j6 N1(第十二轮 k1 第 5 项):同会员同场次还能被扣款的订单;建新单前以会员行锁串行后读 -->
+    <select id="selectChargeablePendingOrderId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select min(id) from cms_registration
+        where member_id = #{memberId} and owner_type = #{ownerType} and owner_id = #{ownerId}
+          and registration_status = 1
+          and payable_amount &gt; 0
+          and (payment_status = 1 or (payment_status = 0 and pay_expire_time &gt; now()))
+          <if test="requestId != null and requestId != ''">
+          and (request_id is null or request_id &lt;&gt; #{requestId})
+          </if>
+    </select>
+
+    <!-- j6 N1:这一单之后同会员同场次已付成功的另一笔;有则这一单不再发支付参数 -->
+    <select id="countNewerPaidSiblingOrders" resultType="int" useCache="false" flushCache="true">
+        select count(1) from cms_registration
+        where member_id = #{registration.memberId}
+          and owner_type = #{registration.ownerType} and owner_id = #{registration.ownerId}
+          and id &gt; #{registration.id}
+          and payment_status = 2
+          <if test="registration.parentOrderNo != null and registration.parentOrderNo != ''">
+          and (parent_order_no is null or parent_order_no &lt;&gt; #{registration.parentOrderNo})
+          </if>
+    </select>
+
     <select id="selectCmsRegistrationById" parameterType="Long" resultMap="CmsRegistrationResult">
         <include refid="selectCmsRegistrationVo"/>
         where id = #{id}
@@ -231,29 +255,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and first_successful_scan_at is null
     </update>
 
-    <select id="lockExploreTopicForUpdate" resultType="long">
+    <select id="lockExploreTopicForUpdate" resultType="long" useCache="false" flushCache="true">
         select id from cms_topic where id = #{topicId} and del_flag &lt;&gt; 2 for update
-    </select>
-
-    <!-- ownerType=2 的不同 activity shell 必须统一回溯到源 topic；主题行是并发串行点。 -->
-    <select id="selectLiveExploreTicketIdsForUpdate" resultType="long">
-        select r.id
-        from cms_registration r
-        left join cms_activity a on r.owner_type = 2 and r.owner_id = a.id
-        where r.member_id = #{memberId}
-          and (r.ticket_id is not null or r.purchase_kind = 2
-               or (r.ticket_id is null and r.expires_at is not null))
-          and ((r.owner_type = 1 and r.owner_id = #{topicId})
-               or (r.owner_type = 2 and a.topic_id = #{topicId}))
-          and (
-            (r.registration_status = 2
-             and (r.purchase_kind &lt;&gt; 2 or r.purchase_kind is null
-                  or r.expires_at is null or r.expires_at &gt; now()))
-            or (r.registration_status = 1 and r.payment_status in (0, 1)
-                and (r.pay_expire_time is null or r.pay_expire_time &gt; now()))
-          )
-        order by r.id
-        for update
     </select>
 
     <!--
@@ -298,6 +301,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectCmsRegistrationVo"/>
         where parent_order_no = #{parentOrderNo}
         order by id
+    </select>
+
+    <!-- check-1104 j1 F7:取消确认显示退回金额只对单票单成立(多票单整单退,从单不带现金);一次查完整页。 -->
+    <select id="countByParentOrderNos" resultType="java.util.HashMap">
+        select parent_order_no as parentOrderNo, count(*) as cnt
+        from cms_registration
+        where parent_order_no in
+        <foreach item="no" collection="parentOrderNos" open="(" separator="," close=")">#{no}</foreach>
+        group by parent_order_no
     </select>
 
     <select id="selectByParentOrderNoForUpdate" resultMap="CmsRegistrationResult">
@@ -870,6 +882,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
 
+    <!-- 第十三轮 m6:俱乐部自有自由探索场次结算时补记逐张分账行用;口径同 selectTotalSalesByActivityId(已付未退)。 -->
+    <select id="selectPaidUnrefundedIdsByActivityId" parameterType="Long" resultType="java.lang.Long">
+        SELECT id
+        FROM cms_registration
+        WHERE owner_id = #{activityId}
+          AND owner_type = 2
+          AND payment_status = 2
+          AND registration_status = 2
+        ORDER BY id
+    </select>
+
     <select id="selectTotalSalesByActivityId" parameterType="Long" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(payable_amount), 0)
         FROM cms_registration
@@ -877,6 +900,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           AND owner_type = 2
           AND payment_status = 2
           AND registration_status = 2
+    </select>
+
+    <!-- 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名已置退款态(4/3),不在上面的已付未退合计里;
+         未退回的那部分仍是主办方的收入,结算时按「实付 − 已批准退款」补进来。 -->
+    <select id="selectRetainedSalesAfterPartialRefundByActivityId" parameterType="Long" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(r.payable_amount - ra.refunded), 0)
+        FROM cms_registration r
+        JOIN (
+            SELECT source_id, SUM(refund_amount) AS refunded
+            FROM refund_application
+            WHERE source_type = 'registration' AND status = 1 AND del_flag = 0
+            GROUP BY source_id
+        ) ra ON ra.source_id = r.id
+        WHERE r.owner_id = #{activityId}
+          AND r.owner_type = 2
+          AND r.payment_status = 4
+          AND r.registration_status = 3
+          AND ra.refunded &lt; r.payable_amount
     </select>
 
     <!-- P0-10 弃单关单:过期未支付订单 id(限批,防单轮过大) -->

@@ -132,7 +132,8 @@ class CityNodePendingVisibilityMySqlIT {
                     + "applicant_merchant_id BIGINT, merchant_id BIGINT, template_id BIGINT, node_level INT, "
                     + "tags VARCHAR(255), cover_img VARCHAR(255), sort INT) ENGINE=InnoDB");
             statement.execute("CREATE TABLE mms_merchant (id BIGINT PRIMARY KEY, name VARCHAR(128), "
-                    + "logo VARCHAR(255), address VARCHAR(255), phone VARCHAR(32)) ENGINE=InnoDB");
+                    + "logo VARCHAR(255), address VARCHAR(255), phone VARCHAR(32), status BIGINT DEFAULT 1, "
+                    + "account_status BIGINT DEFAULT 1, del_flag INT DEFAULT 0) ENGINE=InnoDB");
             statement.execute("CREATE TABLE cms_member_template (id BIGINT PRIMARY KEY, title VARCHAR(128), "
                     + "interaction_type INT, validation_method INT, coupon_id BIGINT, question_name VARCHAR(255), "
                     + "question_a VARCHAR(255), question_b VARCHAR(255), question_c VARCHAR(255), "
@@ -140,7 +141,7 @@ class CityNodePendingVisibilityMySqlIT {
             statement.execute("CREATE TABLE roam_poi_reward_log (poi_id BIGINT NOT NULL, member_id BIGINT NOT NULL, "
                     + "coupon_id BIGINT, status INT NOT NULL) ENGINE=InnoDB");
 
-            statement.execute("INSERT INTO mms_merchant VALUES (801,'城瘾咖啡馆','logo.png','某路 1 号','13800000000')");
+            statement.execute("INSERT INTO mms_merchant (id, name, logo, address, phone) VALUES (801,'城瘾咖啡馆','logo.png','某路 1 号','13800000000')");
             statement.execute("INSERT INTO cms_member_template VALUES (901,'拍下钟面',1,5,0,'问题','A','B','C','D')");
             statement.execute("INSERT INTO roam_poi VALUES "
                     // ① 待审投放(未上线,application_type=1)

@@ -1,0 +1,12 @@
+
+──────── 步骤 1:主题 990016 结算:夹具把主题结束时间挪到 8 天前,跑 settlementTask
+   FIXTURE SQL                        UPDATE cms_topic SET end_date = DATE_SUB(NOW(), INTERVAL 8 DAY) WHERE id = 990016
+   [库回读] topic                    ((990016, 7002, 9008, 1, Decimal('0.0300'), 0, datetime.datetime(2026, 10, 26, 3, 35, 4)),)
+   [库回读] 内容槽                      (('CONTENT', 'CLUB', 7002),)
+   [库回读] club 当前主理人               ((7002, 9004),)
+   run settlementTask.run() (145)     {"msg": "操作成功", "code": 200, "_status": 200}
+   job log                            [["0", "分润结算（活动+主题） 总共耗时：36毫秒 jobId=145 jobRunId=d4c63a1e3fcd44dd845611b4ada37454", ""]]
+   [库回读] topic(结算后)               ((1,),)
+   [库回读] coop_settlement          ((1, 'PLATFORM', 'platform', None, Decimal('0.90'), 1, datetime.datetime(2026, 11, 2, 3, 35, 4), Decimal('0.00')), (2, 'INITIATOR_MARGIN', 'initiator', 9004, Decimal('29.09'), 0, datetime.datetime(2026, 11, 2, 3, 35, 4), Decimal('0.00')))
+
+RESULT {"settle_topic": {"job": {"run": {"code": 200, "msg": "操作成功"}, "log": [["0", "分润结算（活动+主题） 总共耗时：36毫秒 jobId=145 jobRunId=d4c63a1e3fcd44dd845611b4ada37454", ""]]}, "topic": [[1]], "coop_settlement": [[1, "PLATFORM", "platform", null, "0.90", 1, "2026-11-02 03:35:04", "0.00"], [2, "INITIATOR_MARGIN", "initiator", 9004, "29.09", 0, "2026-11-02 03:35:04", "0.00"]]}}

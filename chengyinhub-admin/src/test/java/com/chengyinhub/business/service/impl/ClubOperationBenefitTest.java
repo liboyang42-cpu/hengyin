@@ -193,6 +193,53 @@ class ClubOperationBenefitTest {
         order.verify(fixture.registrationMapper).insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class));
     }
 
+    /**
+     * 2026-11-03 集成(ROUND6 指定修):自玩通行证报价(ownerType=1)必须说下单真收的钱。
+     * 旧代码按传进来的主题票价报价(rig:报 39.99,create 收 selfPlayPrice 29.99)。
+     * 这里票价 39.99、自玩价 29.99:报价、积分、签名都要与 createSelfPlayPass 写下的那一单一致,
+     * 退款字段读下单冻结的同一个通行证三档快照。
+     */
+    @Test
+    void selfPlayQuoteReturnsWhatCreateCharges() {
+        Fixture fixture = fixture(2L, true);
+        CmsTopic topic = selfPlayTopic(503L);
+        topic.setSelfPlayPrice(new BigDecimal("29.99"));
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        when(fixture.topicMapper.selectCmsTopicById(503L)).thenReturn(topic);
+        when(fixture.topicMapper.selectCmsTopicByIdForUpdate(503L)).thenReturn(topic);
+        when(fixture.productRoleService.isPlatformOwned(503L)).thenReturn(true);
+        when(fixture.registrationMapper.countActiveSelfPlayPasses(503L)).thenReturn(0);
+        when(fixture.registrationMapper.insertCmsRegistration(org.mockito.ArgumentMatchers.any(CmsRegistration.class)))
+                .thenAnswer(i -> { ((CmsRegistration)i.getArgument(0)).setId(902L); return 1; });
+        OmsTicket themeTicket = new OmsTicket();
+        themeTicket.setId(401L);
+        themeTicket.setOwnerId(503L);
+        themeTicket.setOwnerType(1L);
+        themeTicket.setDelFlag(0);
+        themeTicket.setRemainingInventory(10L);
+        themeTicket.setPrice(new BigDecimal("39.99"));
+        when(fixture.ticketMapper.selectOmsTicketById(401L)).thenReturn(themeTicket);
+
+        RegistrationQuoteResult quote = fixture.service.quoteRegistration(MEMBER_ID, 1, 503L, 401L, null, 1);
+        CmsRegistration pass = fixture.service.createSelfPlayPass(MEMBER_ID, 503L, "张三", "18800000000");
+
+        assertEquals(0, pass.getPayableAmount().compareTo(quote.getPayAmount()),
+                "报价 " + quote.getPayAmount() + " 必须等于下单实收 " + pass.getPayableAmount());
+        assertEquals(0, new BigDecimal("29.99").compareTo(quote.getPayAmount()));
+        assertEquals(Integer.valueOf(0), quote.getPointsUsed(), "自玩通行证下单不抵积分,报价也不抵");
+        // 下单冻结了通行证三档快照(钟 = 主题履约窗开始);报价说的截止点/比例取同一口钟
+        if (pass.getRefundDeadline() != null) {
+            assertEquals(com.chengyinhub.business.util.RefundPolicy.sessionRefundDeadline(pass.getRefundDeadline()),
+                    quote.getRefundDeadline());
+            java.math.BigDecimal ratio = com.chengyinhub.business.util.RefundPolicy
+                    .sessionRefundRatioAt(pass.getRefundDeadline(), new java.util.Date());
+            assertEquals(Integer.valueOf(ratio.multiply(BigDecimal.valueOf(100)).intValue()), quote.getRefundPercentNow());
+            assertEquals(ratio.signum() > 0, quote.getRefundableNow());
+        } else {
+            org.junit.jupiter.api.Assertions.assertNull(quote.getRefundPercentNow(), "下单没冻结快照时报价不另说比例");
+        }
+    }
+
     private CmsTopic selfPlayTopic(Long topicId) {
         CmsTopic topic = new CmsTopic();
         topic.setId(topicId);

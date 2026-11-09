@@ -27,7 +27,7 @@ function reply(request, rows, total = rows.length) {
   if (request.complete) request.complete();
 }
 const topic = id => ({ id, paymentStatus: 2, registrationStatus: 2, cmsTopic: { id: 10, name: '路线' } });
-const activity = id => ({ id, paymentStatus: 2, registrationStatus: 2, cmsActivity: { id: 63, name: '场次' } });
+const activity = id => ({ id, paymentStatus: 2, registrationStatus: 2, cmsActivity: { id: 63, name: '场次', topicId: 10 } });   // 第十二轮 k2:有游戏的场次票(没有游戏的票会直接签入场码,见 k2-no-game-ticket)
 
 test('首show不重复加载；隐藏取消后返回重读两类票与队伍，移除旧票', () => {
   const { page, requests } = load();

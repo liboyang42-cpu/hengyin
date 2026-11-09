@@ -8,6 +8,7 @@ const app = getApp();
 const cyToast = require('../../../utils/toast.js');
 const geo = require('../../../utils/geo.js');
 const loading = require('../../../utils/loading.js');
+const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 服务端在写入前拒绝的那几句(与据点详情 PREWRITE_REJECTIONS 同源):这些回来就是「这次没过」,可以再答 */
@@ -63,11 +64,17 @@ Page({
         }
         this.setData({ step: 'error', errorText: '这个地点还没有配置挑战' });
       },
-      fail: () => { if (!this._gone) this.setData({ step: 'error', errorText: '网络异常，请重试' }); },
+      // Round5 #10:游客读地点 401 不是「网络异常」,给登录入口,登录后重读
+      fail: (res) => {
+        if (this._gone) return;
+        if (isLoginRequired(app, res)) { this.setData({ step: 'login' }); return; }
+        this.setData({ step: 'error', errorText: '网络异常，请重试' });
+      },
       successStatusAbnormal: (res) => { if (!this._gone) this.setData({ step: 'error', errorText: (res && res.msg) || '地点暂时打不开' }); },
     });
   },
   retry() { this._load(); },
+  loginRetry() { retryLogin(this, app, function () { this._load(); }); },
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
@@ -120,7 +127,7 @@ Page({
         const far = geo.haversine(loc.latitude, loc.longitude, Number(n.lat), Number(n.lng)) > Number(n.radiusM || 80) + 30;
         if (far) { end(false, '离这里还有点远，走到地点附近再交'); return; }
         app.sendRequest({
-          url: '/api/city/nodes/' + this._poiId + '/complete', method: 'POST', hideLoading: true, silentError: true,
+          url: '/api/city/nodes/' + this._poiId + '/complete', method: 'POST', write: true, hideLoading: true, silentError: true,
           data: { lat: loc.latitude, lng: loc.longitude, answer: answer || '', photoUrl: this._photoUrl || '', code: '' },
           success: (res) => {
             if (res && res.code == 200 && res.data && typeof res.data.needRedeem === 'boolean') { this._result = res.data; end(true); return; }

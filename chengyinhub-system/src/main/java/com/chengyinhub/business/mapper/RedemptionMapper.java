@@ -19,11 +19,25 @@ public interface RedemptionMapper {
 
     public Redemption selectById(@Param("id") Long id);
 
-    /** 资金域核销记录仅按当前商家归属读取，scan 不在此列表中补行。 */
+    /** 资金域核销记录仅按当前商家归属读取(主题章节核销);商家自有活动的验票另由 selectActivityTicketScansByMerchant 读。 */
     public List<Redemption> selectByMerchant(@Param("merchantId") Long merchantId);
+
+    /**
+     * check-1104 j1 F13:商家自有活动(cms_activity.member_id = 商家 owner)已核销的票,与章节核销同列进
+     * 「核销与退款 / 核销记录」。SQL 层带归属;registrationId 非空时只取这一张(详情)。
+     */
+    public List<com.chengyinhub.business.domain.vo.MerchantActivityTicketScan> selectActivityTicketScansByMerchant(
+            @Param("merchantId") Long merchantId, @Param("registrationId") Long registrationId);
 
     /** 详情同样必须在 SQL 层带商家归属，不能从分页列表中再筛。 */
     public Redemption selectByMerchantAndId(@Param("merchantId") Long merchantId, @Param("id") Long id);
+
+    /**
+     * M-27:本商家核销对应报名的报名姓名(密文,Service 解密)。SQL 层带 r.merchant_id,只读本商家自己的核销;
+     * id 非空时只取这一条(详情)。没有姓名的报名不返行。
+     */
+    public List<com.chengyinhub.business.domain.vo.RedemptionSignupName> selectSignupNamesByMerchant(
+            @Param("merchantId") Long merchantId, @Param("id") Long id);
 
     /**
      * 请求级幂等:按 idempotency_key 找**生效**核销。命中 = 这个请求之前成功过。

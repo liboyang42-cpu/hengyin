@@ -1,0 +1,54 @@
+{
+  "frontend": "a8fb71f466966438a8dc29ada7636c34d67ddad1",
+  "backend": "a2285b3dd558d40357462a87cd43a70b8d538548",
+  "pickerSeamCheck": "PASS",
+  "editingTopicId": "990029",
+  "draft": "mw3cj5z3-14pns1g",
+  "localChapters": [
+    {
+      "name": "第1章咖啡",
+      "category": "咖啡",
+      "recruitEnabled": 1,
+      "termsMode": "PERK"
+    },
+    {
+      "name": "第2章书店",
+      "category": "书店",
+      "recruitEnabled": 1,
+      "termsMode": "PERK"
+    }
+  ],
+  "receipts": [
+    {
+      "method": "POST",
+      "path": "/__api/api/topic/v2/create",
+      "status": 200,
+      "code": 200,
+      "msg": "草稿已保存",
+      "topicId": 990029,
+      "published": false,
+      "reviewState": "DRAFT"
+    },
+    {
+      "method": "POST",
+      "path": "/__api/api/topic/author-saved-detail",
+      "status": 404,
+      "code": 404,
+      "msg": "请求路径不存在"
+    },
+    {
+      "method": "POST",
+      "path": "/__api/api/ai/safety/precheck",
+      "status": 200,
+      "code": 500,
+      "msg": "AI 服务配置缺失,请联系管理员(traceId=2b2f1ccc56a2490bbafd0bfbcc2c08c0)"
+    },
+    {
+      "method": "POST",
+      "path": "/__api/api/topic/author-saved-detail",
+      "status": 404,
+      "code": 404,
+      "msg": "请求路径不存在"
+    }
+  ]
+}

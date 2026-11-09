@@ -10,6 +10,8 @@
 //   - 并发:同一时刻只弹一个窗,其余调用共享同一结果。
 // withLogin(options, action):登录成功后把原动作**恢复执行一次**;取消则什么都不做。
 const modal = require('../modal.js');
+const singlePage = require('../single-page-mode.js');
+const toast = require('../toast.js');
 
 const TITLE = '登录后继续';
 const CANCEL_TEXT = '暂不登录';
@@ -48,6 +50,9 @@ function createRequireLogin(deps) {
   const getAppRef = deps.getApp || function () { try { return getApp(); } catch (e) { return null; } };
   const show = deps.show || function (opts) { return modal.show(opts); };
   const getPages = deps.getPages || function () { return typeof getCurrentPages === 'function' ? getCurrentPages() : null; };
+  // 朋友圈单页模式没有登录能力:不弹「登录后继续」(点了微信登录也必然失败),直接提示去完整小程序。
+  const isSinglePage = deps.isSinglePage || function () { return singlePage.isSinglePageMode(); };
+  const notifySinglePage = deps.notifySinglePage || singlePage.createNotifier(function (text) { toast(text); });
   let pending = null;
 
   function sessionStamp(app) {
@@ -110,6 +115,7 @@ function createRequireLogin(deps) {
     const app = getAppRef();
     if (hasSession(app)) return Promise.resolve(resultFor(app));
     if (!app || typeof app.firstLogin !== 'function') return Promise.resolve({ ok: false });
+    if (isSinglePage()) { notifySinglePage(); return Promise.resolve({ ok: false }); }
     if (pending) return pending.promise;
     const original = sessionStamp(app), attempt = {};
     pending = attempt;

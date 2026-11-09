@@ -5,6 +5,16 @@ import java.util.Date;
 
 /** 商家售后列表内部投影；归属字段只参与 SQL 过滤，不向小程序输出。 */
 public class MerchantAftercareListRow {
+    private String recordType = "REFUND";
+    private Long manualCaseId;
+    private String manualCaseStatus;
+
+    public String getRecordType() { return recordType; }
+    public void setRecordType(String recordType) { this.recordType = recordType; }
+    public Long getManualCaseId() { return manualCaseId; }
+    public void setManualCaseId(Long manualCaseId) { this.manualCaseId = manualCaseId; }
+    public String getManualCaseStatus() { return manualCaseStatus; }
+    public void setManualCaseStatus(String manualCaseStatus) { this.manualCaseStatus = manualCaseStatus; }
     private Long id;
     private String refundNo;
     private String sourceType;

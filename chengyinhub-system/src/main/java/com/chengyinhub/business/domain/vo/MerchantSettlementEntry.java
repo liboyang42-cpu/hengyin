@@ -13,6 +13,10 @@ public class MerchantSettlementEntry {
     private String sourceId;
     private String destination;
     private String signedAmount;
+    private String originalAmount;
+    private String executedAdjustmentAmount;
+    private String payeeType;
+    private String topicName;
     private Integer headCount;
     private Date occurredAt;
     private Date arrivalAt;
@@ -39,6 +43,14 @@ public class MerchantSettlementEntry {
     public void setDestination(String destination) { this.destination = destination; }
     public String getSignedAmount() { return signedAmount; }
     public void setSignedAmount(String signedAmount) { this.signedAmount = signedAmount; }
+    public String getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(String value) { originalAmount = value; }
+    public String getExecutedAdjustmentAmount() { return executedAdjustmentAmount; }
+    public void setExecutedAdjustmentAmount(String value) { executedAdjustmentAmount = value; }
+    public String getPayeeType() { return payeeType; }
+    public void setPayeeType(String value) { payeeType = value; }
+    public String getTopicName() { return topicName; }
+    public void setTopicName(String value) { topicName = value; }
     public Integer getHeadCount() { return headCount; }
     public void setHeadCount(Integer headCount) { this.headCount = headCount; }
     public Date getOccurredAt() { return occurredAt; }

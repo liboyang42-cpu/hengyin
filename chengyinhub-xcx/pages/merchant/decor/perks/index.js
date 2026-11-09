@@ -1,4 +1,3 @@
-const toast = require('../../../../utils/toast.js');
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../../utils/response-shape.js');
@@ -80,6 +79,7 @@ function matchesSavedPerk(row, expected) {
 
 Page({
   data: {
+    fieldErrors: {},
     calendarOpen:false,discardVisible:false,
     statusBarHeight: 20,
     navBarHeight: 44,
@@ -222,14 +222,14 @@ Page({
     if (['name', 'retailValue', 'unitCost', 'quota'].indexOf(key) < 0) return;
     const form = Object.assign({}, this.data.form);
     form[key] = e.detail.value;
-    this.setData({ form: form }, () => this.refreshSaveState());
+    this.setData({ form: form, ['fieldErrors.' + key]: '' }, () => this.refreshSaveState());
   },
   openCalendar(){this.setData({calendarOpen:true});},
   closeCalendar(){this.setData({calendarOpen:false});},
   onDate(e) {
     if (this.data.saving || this.data.refreshing || this.data.saveReadbackPending) return;
     const form = Object.assign({}, this.data.form, { validEnd: e.detail.value });
-    this.setData({ form: form });
+    this.setData({ form: form, 'fieldErrors.validEnd': '' });
   },
 
   refreshSaveState() {
@@ -250,12 +250,17 @@ Page({
       this._loadInFlight = false;
     }
     const form = this.data.form;
-    if (!(form.name || '').trim()) return toast('请填写权益名称');
-    if (!isValidAmount(form.retailValue, false)) return toast('零售价最多8位整数和2位小数');
-    if (form.unitCost !== '' && !isValidAmount(form.unitCost, true)) return toast('成本价最多8位整数和2位小数');
-    if (!Number.isInteger(Number(form.quota)) || Number(form.quota) <= 0) return toast('请填写正整数可接待份数');
+    // 第四轮(业主:输入问题只在字段下方红字说):各栏各自报,不再弹提示。
     // CU-M-79:过期权益模板不得创建(后端同口径重校)。选择器有下限,这里兜住跨天与旧草稿。
-    if (form.validEnd && form.validEnd < this.data.minValidEnd) return toast('有效期至少要到明天');
+    const fieldErrors = {
+      name: (form.name || '').trim() ? '' : '请填写权益名称',
+      retailValue: isValidAmount(form.retailValue, false) ? '' : '零售价最多8位整数和2位小数',
+      unitCost: form.unitCost !== '' && !isValidAmount(form.unitCost, true) ? '成本价最多8位整数和2位小数' : '',
+      quota: !Number.isInteger(Number(form.quota)) || Number(form.quota) <= 0 ? '请填写正整数可接待份数' : '',
+      validEnd: form.validEnd && form.validEnd < this.data.minValidEnd ? '有效期至少要到明天' : '',
+    };
+    this.setData({ fieldErrors });
+    if (Object.keys(fieldErrors).some(function (k) { return fieldErrors[k]; })) return;
     const that = this;
     const epoch = (this._saveEpoch || 0) + 1;
     this._saveEpoch = epoch;

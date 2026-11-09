@@ -1,0 +1,9 @@
+主理人(9008) roster code 200  phoneIncluded True rows 4 phones ['…0005', '…0006', '…0007', '…0008']
+assign EVENT_CHECKIN customerPhoneVisible=False -> 200 操作成功 {"id": 1, "targetMemberId": 9009, "roleCode": "EVENT_CHECKIN", "scopeType": "EVENT", "scopeId": 10, "expiresAt": null, "assignedAt": "2026-11-03T04:13:17.967+08:00", "version": 0, "customerPhoneVisibl
+club_role_assignment read-back ((1, 'EVENT_CHECKIN', 'EVENT', 10, 'ACTIVE', 0),)
+核销员(9009) 开关=否 roster code 200  phoneIncluded False rows 4 phones [None, None, None, None]
+revoke -> 200 角色已撤销
+assign EVENT_CHECKIN customerPhoneVisible=True -> 200 操作成功 {"id": 2, "targetMemberId": 9009, "roleCode": "EVENT_CHECKIN", "scopeType": "EVENT", "scopeId": 10, "expiresAt": null, "assignedAt": "2026-11-03T04:13:18.068+08:00", "version": 0, "customerPhoneVisibl
+club_role_assignment read-back ((1, 'EVENT_CHECKIN', 'EVENT', 10, 'REVOKED', 0), (2, 'EVENT_CHECKIN', 'EVENT', 10, 'ACTIVE', 1))
+核销员(9009) 开关=是 roster code 200  phoneIncluded True rows 4 phones ['…0005', '…0006', '…0007', '…0008']
+assign CLUB_OPERATOR with customerPhoneVisible=true -> 400 只有活动核销员可设置可见客户手机号

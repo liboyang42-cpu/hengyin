@@ -1,0 +1,14 @@
+{
+  "runId": 42018704010,
+  "sourceSha": "59613c315bac97c11266c8bcea3fadf2c35cb67d",
+  "embeddedCommit": "59613c315bac97c11266c8bcea3fadf2c35cb67d",
+  "bytes": 119643027,
+  "sha256": "a43d8b1904c6ff4477a7553ab1dc0a04053a0d6fef92b0f9a006b62d7c4ada92",
+  "attachedChecksum": "PASS",
+  "sourceFile": "PASS",
+  "zipCRC": "PASS",
+  "embeddedCommitCheck": "PASS",
+  "testsExecuted": false,
+  "runtimeUpdated": false,
+  "retentionDays": 1
+}

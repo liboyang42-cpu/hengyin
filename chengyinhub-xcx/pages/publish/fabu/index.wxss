@@ -1134,9 +1134,16 @@ page { background: var(--cy-btn-solid-bg); }
      59fd3d6aa 已经删了,这档留白就成了纯空档:实拍返回钮与主题名之间空出一大截,
      整页像被压扁往下推。删掉那一项,标题紧跟在返回钮下面(稿子 4028:13649 的
      TopBar pb=14 + Heading 就是这个节奏)。 */
-  padding-top: var(--cy-sheet-chrome-top, 0px);
+  /* P-33(2026-11-02):满屏态从胶囊下方开始,而不是用 padding 顶开 —— padding 属于滚动内容,
+     一滚动标题与卡片就钻到状态栏和返回钮底下(票务设置页实拍)。顶端这段留给页面底色与返回钮。 */
+  top: var(--cy-sheet-chrome-top, 0px);
+  padding-top: 0;
   border-radius: 0;
 }
+
+/* P-33 第三轮:sheet 让出胶囊区后,顶端露出的是 .slopes 根的深色底(一条黑带)。
+   满屏态根换成页面底色,状态栏区与页面同色。 */
+.fabu.slopes--full { background: var(--cy-color-bg-page); }
 
 /* 满屏态没有地图可抓,grabber 只是个装饰横条,去掉省一行空间 */
 .slopes-sheet--full .slopes-grabber {
@@ -1348,6 +1355,8 @@ page { background: var(--cy-btn-solid-bg); }
   height: 120rpx;
   box-sizing: border-box;
   margin-bottom: var(--cy-space-2);
+  /* 拖起/放下的抬起感走一段按压时长,不在一帧里跳(系统减动效由 app.wxss 全局压到 0) */
+  transition: transform var(--cy-motion-press) var(--cy-ease-out), box-shadow var(--cy-motion-press) var(--cy-ease-out);
 }
 
 .slopes-nodes-area {
@@ -2848,14 +2857,21 @@ page { background: var(--cy-btn-solid-bg); }
 /* 添加章节:列表最下方,不在右上角。
    稿子(4028:13849)是白底 + 虚线描边的大卡,不是一条透明虚线框 —— 它跟上面几张
    章节卡是同一族(同宽同圆角同底),虚线只表示"这张还不存在"。 */
+.slopes-chapter-create-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-3);
+  margin: var(--cy-space-2) var(--cy-page-x) 0;
+}
+
 .slopes-add-chapter {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 88rpx;
   box-sizing: border-box;
   gap: var(--cy-space-1-5);
-  margin: var(--cy-space-2) var(--cy-page-x) 0;
   padding: var(--cy-space-4) 0;
   border-radius: var(--cy-radius-xl);
   border: 4rpx dashed var(--cy-color-border-strong);
@@ -3841,11 +3857,8 @@ page { background: var(--cy-btn-solid-bg); }
 }
 
 .slopes-submit-error {
-  position: fixed;
-  right: var(--cy-page-x);
-  bottom: calc(var(--cy-tabbar-h) + var(--cy-safe-bottom) + var(--cy-space-3));
-  left: var(--cy-page-x);
-  z-index: 121;
+  display: block;
+  margin: var(--cy-space-3) var(--cy-page-x) 0;
 }
 
 .slopes-tabbar__tabs {
@@ -4838,7 +4851,8 @@ page { background: var(--cy-btn-solid-bg); }
   border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle);
   font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary);
 }
-.ch-pill-row + .ch-pill-row, cy-dropdown + .ch-pill-row, .ch-pill-row + cy-dropdown, cy-dropdown + cy-dropdown { margin-top: var(--cy-space-2); display: block; }
+.ch-pill-row + .ch-pill-row, cy-dropdown + .ch-pill-row { margin-top: var(--cy-space-2); } /* 药丸行本身是 flex,不能被改成 block(否则「至少完成几站」标签和输入框上下叠开) */
+.ch-pill-row + cy-dropdown, cy-dropdown + cy-dropdown { margin-top: var(--cy-space-2); display: block; }
 .ch-pill-row__value { display: flex; align-items: center; gap: var(--cy-space-1); min-width: 0; font-weight: 400; color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ch-pill-row__input { width: 200rpx; text-align: right; font-weight: 400; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
 .ch-pill-btn {
@@ -4879,6 +4893,8 @@ page { background: var(--cy-btn-solid-bg); }
   font-size: var(--cy-type-caption);
   line-height: 1.2;
   white-space: nowrap;
+  /* 自动保存每轮在「保存中 / 已存云端」间切换,底色字色过渡一下,不闪 */
+  transition: background-color var(--cy-motion-fast) var(--cy-ease-out), color var(--cy-motion-fast) var(--cy-ease-out);
 }
 .pd-save-state--saved { background: var(--cy-topic-save-saved-bg); color: var(--cy-topic-save-saved-text); }
 .pd-save-state--unsaved { background: var(--cy-topic-save-unsaved-bg); color: var(--cy-topic-save-unsaved-text); }
@@ -4932,7 +4948,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-lock { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); }
 .sp-fixed { flex: none; font-size: 26rpx; font-weight: 600; color: var(--cy-color-text-secondary); } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
 .sp-look { display: flex; flex-direction: column; gap: 16rpx; }
-.sp-look__pv { display: block; height: 240rpx; border-radius: var(--cy-radius-lg); overflow: hidden; }
+.sp-look__pv { display: block; border-radius: var(--cy-radius-lg); overflow: hidden; }
 .sp-story { border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-elevated); }
 .sp-chrow { display: flex; align-items: center; gap: 24rpx; min-height: 116rpx; padding: 0 24rpx 0 28rpx; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
 .sp-chrow__no { flex: none; width: 52rpx; height: 52rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); font-size: 26rpx; font-weight: 800; } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
@@ -4943,7 +4959,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-end__t { display: block; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
 .sp-end__n { display: block; margin-top: 4rpx; font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); }
 .sp-bottom { height: calc(80rpx + env(safe-area-inset-bottom)); }
-.sp-top { position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: 88rpx; box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; padding-left: 24rpx; padding-right: 204rpx; }
+.sp-top { background: var(--cy-color-bg-page); position: absolute; left: 0; right: 0; top: 0; z-index: 2; height: 88rpx; box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; padding-left: 24rpx; padding-right: 204rpx; }
 .sp-x { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
 .sp-x__c { width: 68rpx; height: 68rpx; border-radius: 50%; background: var(--cy-color-bg-glass); display: flex; align-items: center; justify-content: center; }
 /* 剧情弹窗:与编辑器同一套浅色(浅灰底 + 白色图卡) */
@@ -4978,3 +4994,5 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-card__play { font-size: var(--cy-type-label); font-weight: 600; color: var(--cy-color-text-secondary); }
 .sp-card__route { flex: none; width: 68rpx; height: 68rpx; border-radius: 18rpx; display: flex; align-items: center; justify-content: center; background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
 @media (prefers-reduced-motion: reduce) { .sp-pop__panel, .sp-pop__mask { transition: none; } }
+
+.chapter-media-error { display: block; color: var(--cy-danger); font-size: var(--cy-font-caption); margin-top: var(--cy-space-2); }

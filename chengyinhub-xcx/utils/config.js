@@ -1,6 +1,6 @@
 // 全局配置文件
 const API_BASE_URL = 'https://www.chengyinhub.com/prod-api';
-const TRUSTED_ASSET_HOSTS = ['www.chengyinhub.com', 'chengyin-oss.oss-cn-shanghai.aliyuncs.com'];
+const TRUSTED_ASSET_HOSTS = ['www.chengyinhub.com', 'chengyin-oss.oss-cn-shanghai.aliyuncs.com', 'xianghuioss.oss-cn-shanghai.aliyuncs.com'];
 
 function normalizeApiBaseUrl(value) {
   var url = String(value || '').trim().replace(/\/+$/, '');
@@ -60,6 +60,10 @@ const config = {
   isTrustedAssetUrl: trustedHttpsUrl,
   resolveRuntimeConfig: resolveRuntimeConfig,
   resolveFromWx: resolveFromWx,
+  // 第九轮 m1 第 8 项:首次进漫游的大气层转场视频(m3 制作)。空 = 不播。上传与填写步骤见 docs/发版checklist.md「漫游大气层转场视频」。
+  roamAtmosVideoUrl: '',
+  // 第十一轮 g4(j3 F19):故事手写体(龙藏体 Long Cang,SIL OFL 1.1)放自己的 OSS,不走 fonts.gstatic.com。空 = 系统字体。上传与 CORS 见 docs/发版checklist.md「故事手写体」。
+  storyFontUrl: 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/static/fonts/longcang-v21.ttf',
 };
 
 module.exports = config;

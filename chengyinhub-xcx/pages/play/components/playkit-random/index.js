@@ -92,9 +92,12 @@ Component({
           });
         }
         // 停在下一张还没翻的牌上,不用玩家自己滑过去
-        this._active = Math.min(got.length, total - 1);
+        this._active = Math.max(0, got.length - 1);
       }
-      this.setData({ bg: themeFor(0), wipeOn: false, wipeP: 0, detailOn: false });
+      const card = this._deck[this._active];
+      const detailOn = !cards.length && !!card && card.opened;
+      this.setData({ bg: themeFor(this._active), wipeOn: false, wipeP: 0, detailOn,
+        detail: detailOn ? { title: card.title, body: card.body } : { title: '', body: '' } });
       this._layout();
     },
   },

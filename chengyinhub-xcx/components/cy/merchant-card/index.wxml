@@ -11,11 +11,13 @@
     <view class="photo-card__body">
       <text class="photo-card__name">{{name}}</text>
       <view wx:if="{{availableTime}}" class="photo-card__detail mc__hours"><image class="photo-card__icon" src="/images/cards/clock.svg" /><text>{{availableTime}}</text></view>
-      <view wx:if="{{address}}" class="photo-card__detail"><image class="photo-card__icon" src="/images/cards/pin.svg" /><text>{{address}}</text></view>
+      <view wx:if="{{address && _geo}}" class="photo-card__detail cy-addr-tap" catchtap="onAddress" aria-role="button" aria-label="在地图中打开 {{address}}" hover-class="photo-card--pressed" hover-stay-time="80" hover-stop-propagation="true"><image class="photo-card__icon" src="/images/cards/pin.svg" /><text>{{address}}</text></view>
+      <view wx:elif="{{address}}" class="photo-card__detail"><image class="photo-card__icon" src="/images/cards/pin.svg" /><text>{{address}}</text></view>
       <view class="photo-card__bottom">
         <view wx:if="{{variant !== 'venue' && serviceText}}" class="mc__service" catchtap="onService" aria-role="button" aria-label="查看{{serviceTag}}：{{serviceText}}" hover-class="photo-card--pressed" hover-stop-propagation="true"><image class="mc__reward-icon" src="{{serviceTag === '券' || serviceTag === '优惠券' ? '/images/cards/coupon.svg' : '/images/cards/gift.svg'}}" /><text class="mc__service-text">{{serviceTag ? serviceTag + '  ' : ''}}{{serviceText}}</text></view>
         <text wx:elif="{{variant === 'venue' && _suit}}" class="mc__suit">{{_suit}}</text>
         <view wx:else class="photo-card__fill"></view>
+        <view wx:if="{{nav && _geo}}" class="mc__nav" catchtap="onAddress" aria-role="button" aria-label="导航到{{name}}" hover-class="photo-card--pressed" hover-stay-time="80" hover-stop-propagation="true"><image class="mc__reward-icon" src="/images/cards/pin.svg" /><text>导航</text></view>
         <image class="photo-card__arrow" src="/images/cards/chevron.svg" aria-hidden="true" />
       </view>
     </view>

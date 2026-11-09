@@ -524,3 +524,15 @@ test('相册 X019：已提交后组件显示只读说明，不再提供拍照入
   done.onCta(); done.choosePhoto();
   assert.equal(closed, true); assert.equal(media, null);
 });
+
+test('coin result remains visible until the first explicit story continuation', async () => {
+  const view={sessionId:51,nodeId:29,version:1,status:'RUNNING',present:'inline',readyForBase:true,config:{schemaVersion:1},playKit:{coinFlip:{flipped:true,side:'HEADS',heads:{label:'正面',action:'左走'},tails:{label:'反面',action:'右走'}}}};
+  const {page,game}=setup(view);let ready=0;
+  page._isPlayAccountCurrent=()=>true;page._boundPlayOwner=()=>99;page._playOwner=99;page._sessionKey=()=> 'run';
+  page._storyOpenNode=true;page.data.chapterFull=true;page.data.reducedMotion=true;
+  page.data.playKit={kit:{type:'coinflip',sessionId:51,version:0},readyForBase:false};
+  game.triggerEvent=name=>{if(name==='ready')ready++;};
+  page.onAdvancedSession({detail:view});await new Promise(resolve=>setTimeout(resolve,10));
+  assert.equal(ready,0,'result must not auto-continue before the coin animation settles');
+  assert.equal(page.data.playKit.readyForBase,true);page.continueStoryGame();assert.equal(ready,1,'first explicit tap reaches the existing continuation');
+});

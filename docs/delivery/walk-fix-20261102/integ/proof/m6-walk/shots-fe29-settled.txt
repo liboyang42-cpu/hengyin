@@ -1,0 +1,137 @@
+route ["pages/club/settlement/index"]
+ok   wait 2500
+shot /home/user/hengyin/docs/delivery/walk-fix-20261102/integ/fix-shots/m6-fe29-settled-club-settlement.jpg
+ok   shot "m6-fe29-settled-club-settlement"
+text: 俱乐部结算 | 可提现 | ¥70.32 | 联系平台客服提现 | 各场次结算 | 外滩两店慢逛fe29 | ¥70.32 | 10月21日 | 销售额 ¥72.50 | 平台服务费 3% ¥2.18 | 已入你的账户 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump 1
+route ["pages/club/settlement/index"]
+--- network (10)
+200 211ms POST /__api/api/config/features
+200 161ms POST /__api/api/club/settlement/summary
+200 111ms POST /__api/api/club/access/me
+200 106ms GET /__api/api/club-direct-merchant/club?clubId=990004
+200 106ms GET /__api/api/club-direct-merchant/club?clubId=990004
+200 33ms POST /__api/api/config/features
+200 17ms POST /__api/api/compliance/consents
+200 19ms POST /__api/api/compliance/consents
+200 21ms POST /__api/api/club/settlement/summary
+200 23ms POST /__api/api/wallet/stages
+--- page errors (0)
+--- console errors/warnings (2)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+--- runtime log (1)
+open-type agreePrivacyAuthorization
+route ["subpackageA/pages/assetcenter/earnings/index"]
+ok   wait 2500
+shot /home/user/hengyin/docs/delivery/walk-fix-20261102/integ/fix-shots/m6-fe29-settled-lead-earnings.jpg
+ok   shot "m6-fe29-settled-lead-earnings"
+text: 账户收益 | 账户收益（元） | ¥70.32 | 提现 | 明细 | 分析 | 更多 | 本月收入明细 | 11月 全部 | 活动分润 - 外滩两店慢逛fe29 | 活动分润 | 11月5日 | +70.32 | 我的资产 | 可提现 | ¥70.32 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump 1
+route ["subpackageA/pages/assetcenter/earnings/index"]
+--- network (7)
+200 206ms POST /__api/api/config/features
+200 102ms POST /__api/api/user/info
+200 65ms POST /__api/api/user/balance/list
+200 53ms POST /__api/api/wallet/stages
+200 38ms POST /__api/api/config/features
+200 25ms POST /__api/api/compliance/consents
+200 20ms POST /__api/api/compliance/consents
+--- page errors (0)
+--- console errors/warnings (2)
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+--- runtime log (1)
+open-type agreePrivacyAuthorization
+route ["subpackageA/pages/assetcenter/income-detail/income-detail"]
+ok   wait 2500
+shot /home/user/hengyin/docs/delivery/walk-fix-20261102/integ/fix-shots/m6-fe29-settled-lead-income-detail.jpg
+ok   shot "m6-fe29-settled-lead-income-detail"
+text: 收益明细 | 全部 | 创作收益 | 品牌收益 | 主办分润 | 活 | 活动分润 - 外滩两店慢逛fe29 | 今天 | 收入 | +¥70.32 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump 1
+route ["subpackageA/pages/assetcenter/income-detail/income-detail"]
+--- network (5)
+200 235ms POST /__api/api/config/features
+200 126ms POST /__api/api/user/balance/list
+200 27ms POST /__api/api/config/features
+200 20ms POST /__api/api/compliance/consents
+200 13ms POST /__api/api/compliance/consents
+--- page errors (0)
+--- console errors/warnings (2)
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+--- runtime log (1)
+open-type agreePrivacyAuthorization
+route ["pages/merchant/ledger/index"]
+ok   wait 2500
+shot /home/user/hengyin/docs/delivery/walk-fix-20261102/integ/fix-shots/m6-fe29-settled-merchant9002-redemptions.jpg
+ok   shot "m6-fe29-settled-merchant9002-redemptions"
+text: 核销与退款 | 全部 | 待处理 | 已处理 | 不结现金 | 本月核销 | 3 笔 | 待结算 | ¥0.00 | 已入账 | ¥0.00 | 11 月 05 日 | 外滩两店慢逛fe69 · 第1章 咖啡 | 钱小满 | 20:55 | 权益已履约 · 无现金结算 | 外滩两店慢逛fe29 · 第1章 咖啡 | 孙一禾 | 20:54 | 权益已履约 · 无现金结算 | 外滩两店慢逛fe29 · 第1章 咖啡 | 钱小满 | 20:54 | 权益已履约 · 无现金结算 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump 1
+route ["pages/merchant/ledger/index"]
+--- network (14)
+200 221ms POST /__api/api/config/features
+200 172ms POST /__api/api/merchant/access/me
+200 96ms POST /__api/api/merchant/finance/redemptions
+200 55ms POST /__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20
+200 48ms POST /__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20
+200 54ms POST /__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20
+200 98ms POST /__api/api/config/features
+200 24ms POST /__api/api/compliance/consents
+200 18ms POST /__api/api/compliance/consents
+200 49ms POST /__api/api/merchant/access/me
+200 84ms POST /__api/api/merchant/finance/redemptions
+200 30ms POST /__api/api/merchant/aftercare/list?bucket=PENDING&pageNum=1&pageSize=20
+200 29ms POST /__api/api/merchant/aftercare/list?bucket=PROCESSING&pageNum=1&pageSize=20
+200 35ms POST /__api/api/merchant/aftercare/list?bucket=COMPLETED&pageNum=1&pageSize=20
+--- page errors (0)
+--- console errors/warnings (2)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+--- runtime log (1)
+open-type agreePrivacyAuthorization
+route ["pages/merchant/ledger/index"]
+ok   wait 2500
+shot /home/user/hengyin/docs/delivery/walk-fix-20261102/integ/fix-shots/m6-fe29-settled-merchant9002-finance.jpg
+ok   shot "m6-fe29-settled-merchant9002-finance"
+text: 结算 | 本月个人账户净入账 | ¥0.00 | 个人账户毛额 | ¥0.00 | 已执行调整 | ¥0.00 | 待对公结算 | ¥0.00 | 去我的资产 | 结算到账提醒 | 收入明细 | 还没有已成立的收入明细 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump 1
+route ["pages/merchant/ledger/index"]
+--- network (12)
+200 195ms POST /__api/api/config/features
+200 141ms POST /__api/api/merchant/access/me
+200 61ms POST /__api/api/merchant/finance/overview
+200 47ms POST /__api/api/merchant/finance/settlement-entries
+200 38ms POST /__api/api/merchant/finance/public-transfer-batches
+200 36ms POST /__api/api/config/features
+200 22ms POST /__api/api/compliance/consents
+200 16ms POST /__api/api/compliance/consents
+200 24ms POST /__api/api/merchant/access/me
+200 47ms POST /__api/api/merchant/finance/overview
+200 42ms POST /__api/api/merchant/finance/settlement-entries
+200 45ms POST /__api/api/merchant/finance/public-transfer-batches
+--- page errors (0)
+--- console errors/warnings (2)
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+--- runtime log (1)
+open-type agreePrivacyAuthorization
+route ["subpackageA/pages/assetcenter/income-detail/income-detail"]
+ok   wait 2500
+shot /home/user/hengyin/docs/delivery/walk-fix-20261102/integ/fix-shots/m6-fe29-settled-platform9001-income-detail.jpg
+ok   shot "m6-fe29-settled-platform9001-income-detail"
+text: 收益明细 | 全部 | 创作收益 | 品牌收益 | 主办分润 | 退 | 退款冲销 | 今天 | 支出 | −¥2.07 | 活 | 活动平台分润 - 外滩两店慢逛fe69 | 今天 | 收入 | +¥5.18 | 活 | 活动平台分润 - 外滩两店慢逛fe29 | 今天 | 收入 | +¥2.18 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump 1
+route ["subpackageA/pages/assetcenter/income-detail/income-detail"]
+--- network (5)
+200 222ms POST /__api/api/config/features
+200 121ms POST /__api/api/user/balance/list
+200 30ms POST /__api/api/config/features
+200 19ms POST /__api/api/compliance/consents
+200 12ms POST /__api/api/compliance/consents
+--- page errors (0)
+--- console errors/warnings (2)
+[error] HTTP 404 http://127.0.0.1:8097/favicon.ico
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+--- runtime log (1)
+open-type agreePrivacyAuthorization

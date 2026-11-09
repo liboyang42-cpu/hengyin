@@ -17,7 +17,7 @@
   "sites": [
     {
       "endpoint": "/api/club/dissolve",
-      "file": "components/cy/scene-club-edit/index.js",
+      "file": "pages/club/components/cy/scene-club-edit/index.js",
       "irreversible": true,
       "confirmKey": "club.dissolve",
       "reason": "俱乐部整体消失,成员关系与内容都拿不回来"
@@ -70,8 +70,7 @@
       "endpoint": "/api/club/join-request/reject",
       "file": "pages/club/join-requests/index.js",
       "irreversible": false,
-      "confirmKey": "club.joinRequest.reject",
-      "reason": "对方之后仍可以原样重新提交申请"
+      "reason": "对方之后仍可以原样重新提交申请。2026-11-05 第十二轮 k9(p3 N13):拒绝只走一个弹层(标题指名道姓 + 选填原因 + 确认拒绝),不再先过危险确认层"
     },
     {
       "endpoint": "/api/club/roles/revoke",
@@ -84,8 +83,8 @@
       "endpoint": "/api/team/quit",
       "file": "pages/team/detail/index.js",
       "irreversible": true,
-      "confirmKey": "team.quit",
-      "reason": "要重新被邀请才能回来;是队长时还会触发移交或解散"
+      "confirmKey": "team.quit-leader",
+      "reason": "队长退队会移交队长或解散队伍,交出去回不来;队员退队走 team.quit(可凭原邀请回来,不标不可撤销)"
     },
     {
       "endpoint": "/api/team/kick",

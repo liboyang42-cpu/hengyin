@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.service.support.PointsRuleSwitch;
+
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.regex.Pattern;
@@ -280,8 +282,9 @@ public class UmsMemberServiceImpl implements IUmsMemberService
                 member.setWxOpenId(openid);
                 member.setStatus(1L);
                 member.setDelFlag(0);
-                // 保留原规则：会员余额 50，赠送流水取注册配置。
-                member.setPoint(50L);
+                // 第十二轮 k1 第 3 项:余额与流水同取规则 1(唯一真源,业主定 50);停用的规则 1 发 0 且不写流水。
+                long points = PointsRuleSwitch.activeValue(cmsPointsSettingService.selectCmsPointsSettingById(1L));
+                member.setPoint(points);
                 member.setCreateTime(DateUtils.getNowDate());
                 int rows;
                 try
@@ -300,8 +303,10 @@ public class UmsMemberServiceImpl implements IUmsMemberService
                 {
                     throw new ServiceException("注册失败");
                 }
-                CmsPointsSetting setting = cmsPointsSettingService.selectCmsPointsSettingById(1L);
-                long points = setting == null ? 0L : setting.getValue().intValue();
+                if (points <= 0)
+                {
+                    return member;
+                }
                 UmsMemberPointsDetail detail = new UmsMemberPointsDetail();
                 detail.setMemberId(member.getId());
                 detail.setCurrentPoints(points);

@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.support.CommercialTopicPolicy;
 import com.chengyinhub.business.service.support.MerchantPublishedTopicTransferGate;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalBuilder;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
+import com.chengyinhub.business.service.support.TopicSaleTimeValidator;
 import com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1;
 import com.chengyinhub.common.constant.ProductType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,6 +58,7 @@ public class TopicCommercialReviewServiceImpl implements ITopicCommercialReviewS
             throw new IllegalArgumentException("立项审核目标只允许 RECRUITING 或 PRICING");
         }
         CmsTopic topic = lockedTopic(topicId);
+        TopicSaleTimeValidator.assertRecruitmentSaleWindow(topic);
         TopicLifecycleState state = TopicLifecycleState.fromCode(topic.getLifecycle());
         CommercialTopicPolicy.Evaluation evaluation = commercialTopicPolicy.evaluate(topicId);
         if (!evaluation.isCommercial()) {
@@ -90,6 +92,13 @@ public class TopicCommercialReviewServiceImpl implements ITopicCommercialReviewS
         if (!evaluation.isCommercial()
                 && !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return null;
         transferGate.assertTransferred(topic);
+        if (isCityOrienteering(topic)) {
+            // P-01：canonical15 是自由探索/四店探店日的开售合同(四店、四权益、四必选章)，城市定向结构上
+            // 永远凑不齐 ⇒ 原先付费城市定向卡死在 PRICING。城市定向开售审只冻结开售参数；
+            // finalizeForSale 对城市定向本就不读 canonical15，报名侧收款资格仍由 assertCollectible 独立判定。
+            return auditTaskService.submitCommercialReview(AuditTask.BIZ_TOPIC_SALE_REVIEW, topicId, submitterId,
+                    snapshot("SALE", TopicLifecycleState.SELLING.name(), evaluation, topic, null, null));
+        }
         TopicSaleCanonicalDraft draft = saleSnapshotMapper.selectDraftByTopicIdForUpdate(topicId);
         if (draft == null) throw new IllegalStateException("缺少 canonical15 草稿，拒绝开售提审");
         TopicSaleCanonicalV1 draftCanonical = TopicSaleCanonicalCodec.readDraft(
@@ -112,13 +121,18 @@ public class TopicCommercialReviewServiceImpl implements ITopicCommercialReviewS
         }
         String transferStep = transferGate.pendingTransferStep(topic);
         if (transferStep != null) return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(null, transferStep);
-        if (saleSnapshotMapper.selectDraftByTopicIdForUpdate(topicId) == null) {
+        if (!isCityOrienteering(topic) && saleSnapshotMapper.selectDraftByTopicIdForUpdate(topicId) == null) {
             return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(null,
                     "请在定价工作台保存完整开售参数，保存成功后自动提交开售审核");
         }
         Long taskId = submitSaleReview(topicId, submitterId);
         return new com.chengyinhub.business.domain.vo.TopicSaleReviewProgress(taskId,
                 taskId == null ? "请完成开售确认" : "已提交开售审核，审核通过前尚未开售");
+    }
+
+    /** 只认显式 product_type=1；存量 NULL 仍走严格的 canonical15 路径。 */
+    private static boolean isCityOrienteering(CmsTopic topic) {
+        return Integer.valueOf(ProductType.ORIENTEERING).equals(topic.getProductType());
     }
 
     private CmsTopic lockedTopic(Long topicId) {
@@ -140,9 +154,11 @@ public class TopicCommercialReviewServiceImpl implements ITopicCommercialReviewS
             snapshot.put("projectParameters", commercialTopicPolicy.projectParameters(topic, evaluation));
         } else if ("SALE".equals(phase)) {
             snapshot.put("saleParameters", commercialTopicPolicy.saleParameters(topic, evaluation));
-            snapshot.put("canonicalSchemaVersion", draft.getSchemaVersion());
-            snapshot.put("canonicalParameterVersion", draft.getParameterVersion());
-            snapshot.put("canonical15", canonical);
+            if (draft != null) {
+                snapshot.put("canonicalSchemaVersion", draft.getSchemaVersion());
+                snapshot.put("canonicalParameterVersion", draft.getParameterVersion());
+                snapshot.put("canonical15", canonical);
+            }
         }
         try {
             return objectMapper.writeValueAsString(snapshot);

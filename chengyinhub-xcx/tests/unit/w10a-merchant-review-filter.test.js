@@ -23,6 +23,7 @@ function harness(mode = 'manage') {
       if (name === './reply-recovery') return require('../../pages/merchant/reviews/reply-recovery.js');
       if (name.includes('view-model')) return model;
       if (name.includes('ensure-session')) return require('../../pages/merchant/utils/session/ensure-session.js');
+      if (name.includes('login-reload')) return require('../../utils/session/login-reload.js');
       if (name.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
       if (name.includes('toast')) return {};
       if (name.includes('media-preview')) return { open() {} };

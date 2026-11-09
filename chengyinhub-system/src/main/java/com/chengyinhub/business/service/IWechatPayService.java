@@ -46,6 +46,9 @@ public interface IWechatPayService extends WechatPaymentOperations {
      */
     Map<String, String> createGenericOrder(String outTradeNo, BigDecimal amountYuan, String description, String openid);
 
+    /** Resolve the exact provider attempt through the configured merchant, without querying WeChat. */
+    String resolveBusinessOrderNo(String wxOutTradeNo);
+
     /**
      * 处理微信支付回调
      */

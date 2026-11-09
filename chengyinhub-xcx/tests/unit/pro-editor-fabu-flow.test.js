@@ -678,6 +678,11 @@ test('WXML 提供三起点主动作、待编排区、补内容与两种归章入
 
 
 test('开局先于第一章，复用编辑器且不抢占章节编号，保存后可再次编辑', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
+  assert.match(wxml, /bindtap="openTopicOpening"/)
+  assert.match(wxml, /slopes-chapter-create-actions[\s\S]*?添加章节[\s\S]*?bindtap="openTopicOpening"/)
+  assert.match(wxml, /openingIndex >= 0 \? '编辑序章' : '添加序章'/)
+  assert.match(wxml, /editScope !== 'WHITELIST' \|\| openingIndex >= 0/)
   const page = makePage()
   page.data.formData.productType = 1
   page._createChapterDirect()
@@ -782,23 +787,26 @@ test('没有权限快照时,「完成」顺手重拉一次,让「稍候重试」
   assert.ok(requests.some((r) => r && r.url === '/api/role/info'), '没快照却不重拉:作者重试多少次都一样')
 })
 
-// W-10(2026-09-22 走查):从发布页存下的故事玩法是 status=0 草稿,而「我的模板」按 is_quote 只列已发布
-// —— 绑定一旦丢了(关了弹层、页面被重置),那条草稿再也选不回来,作者只能重配一遍,库里留孤儿。
-// 走查里两次撞上(模板 140、141)。后端 my-list 本来就支持 draft_status=0。
-test('选玩法面板每次打开都重拉「我的故事玩法草稿」,选中后能绑回节点', () => {
+// V3-41:选择器不再展示草稿，已发布且审核通过的本人模板仍可绑定，节点名称规则保留。
+test('选玩法面板不拉取或展示草稿，已发布且审核通过的本人模板仍能绑回节点', () => {
   const page = makePage()
   requests.length = 0
+  page.getTempList()
+  page.data.storyDraftList = [{ id: 140, title: '旧草稿', draftStatus: 0, status: 0 }]
   page.showTemp()
-  const req = requests.find((r) => r && r.url === '/api/template/my-list' && r.data && String(r.data.draft_status) === '0')
-  assert.ok(req, '打开面板没有拉草稿')
-  assert.equal(req.data.is_quote, undefined, '带了 is_quote 就只回已发布，草稿永远拉不到')
-  req.success({ code: 200, data: { rows: [{ id: 141, title: '新生儿登记', validationMethod: 0, advancedConfigJson: '{}' }] } })
-  assert.deepEqual(page.data.storyDraftList.map((t) => t.id), [141])
+  const req = requests.find((r) => r && r.url === '/api/template/my-list' && r.data && String(r.data.draft_status) === '1')
+  assert.ok(req, '我的模板使用已发布列表')
+  assert.equal(req.data.is_quote, 1)
+  assert.equal(requests.some((r) => r && r.url === '/api/template/my-list' && r.data && String(r.data.draft_status) === '0'), false, '打开面板不得拉草稿')
+  assert.deepEqual(page.data.storyDraftList, [], '打开面板清除旧草稿展示')
+  req.success({ code: 200, data: { rows: [{ id: 141, title: '新生儿登记', draftStatus: 1, status: 1, validationMethod: 0, advancedConfigJson: '{}' }] } })
+  assert.deepEqual(page.data.tempList.map((t) => t.id), [141])
+  assert.deepEqual(page.data.storyDraftList, [])
 
-  page.selectTemp({ currentTarget: { dataset: { item: page.data.storyDraftList[0] } } })
+  page.selectTemp({ currentTarget: { dataset: { item: page.data.tempList[0] } } })
   page.confirmTemp()
   assert.equal(page.data.nodesForm.templateId, 141)
-  // 2026-09-23 走查:选回草稿后节点名是空的,点「确定」被「请填写节点名称」挡住 —— 名字就是玩法名
+  // 2026-09-23 走查:选回玩法后节点名是空的,点「确定」被「请填写节点名称」挡住 —— 名字就是玩法名
   assert.equal(page.data.nodesForm.name, '新生儿登记', '选回玩法没带上名字')
   page.setData({ 'nodesForm.name': '作者自己起的名' })
   page.confirmTemp()
@@ -1030,3 +1038,13 @@ test('legacy multiple thoughts can be reduced without silently removing story or
   assert.deepEqual(saved.map(row => row.key), ['old_a']);
   assert.equal(saved[0].desc, '保留文字');
 });
+
+// 失败信息随内容滚动，作者仍可回到章节按钮修正输入。
+test('保存失败提示和原因都在章节滚动容器内，不盖住章节动作', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
+  const css = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxss'), 'utf8')
+  const errorAt = wxml.indexOf('class="slopes-submit-error"')
+  assert.ok(wxml.lastIndexOf('<scroll-view', errorAt) > wxml.lastIndexOf('</scroll-view>', errorAt))
+  assert.ok(wxml.indexOf('submit-error-why', errorAt) < wxml.indexOf('</scroll-view>', errorAt))
+  assert.doesNotMatch(css.match(/\.slopes-submit-error\s*\{([^}]+)\}/)[1], /position:\s*fixed/)
+})

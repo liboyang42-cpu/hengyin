@@ -250,6 +250,17 @@ class ApiPlayProgressIdempotencyTest {
         verify(playerProgressionService, never()).onNodeDone(anyLong());
     }
 
+    @Test void legacyCompassArrivalUsesTheVerifiedCheckCompletionCas() {
+        com.chengyinhub.business.service.ITopicRouteRuntimeService route=mock(com.chengyinhub.business.service.ITopicRouteRuntimeService.class);
+        PlayNodeAccessTestFixtures.setField(controller,"topicRouteRuntimeService",route);
+        when(progressService.insertPlayerNodeProgress(any())).thenThrow(new DuplicateKeyException("uk_progress"));
+        when(route.completeCompassCheckArrival(MEMBER,TOPIC,ACTIVITY,NODE,null,null)).thenReturn(true,false);
+        assertEquals(true,invokeAdvance(MEMBER,node(),ACTIVITY,null).get("firstTime"));
+        assertEquals(false,invokeAdvance(MEMBER,node(),ACTIVITY,null).get("firstTime"));
+        verify(route,times(2)).completeCompassCheckArrival(MEMBER,TOPIC,ACTIVITY,NODE,null,null);
+        verify(shopDayProofService,never()).markGameDone(anyLong(),anyLong(),anyLong(),anyLong());
+    }
+
     /**
      * 正控：同一条路在 mode2 上<b>确实</b>会走到 markShopDayGameDone。
      *

@@ -30,6 +30,9 @@ BEANS = {
     "auditBacklogMonitorTask": "com.chengyinhub.business.task.AuditBacklogMonitorTask",
     "withdrawReconciliationTask": "com.chengyinhub.business.task.WithdrawReconciliationTask",
     "settlementReconciliationTask": "com.chengyinhub.business.task.SettlementReconciliationTask",
+    # ROUND10 f4 第 5 项:migration_20261104_content_safety_jobs_post_deploy.sql 的两个 bean 也必须在新 jar 里。
+    "contentSafetyRecheckTask": "com.chengyinhub.business.task.ContentSafetyRecheckTask",
+    "sensitiveContentRescanTask": "com.chengyinhub.business.task.SensitiveContentRescanTask",
 }
 # group, cron, misfire, concurrent, status; existing operator-owned rows must stay byte-for-byte equal.
 NEW_ROWS = {
@@ -250,6 +253,115 @@ def register_jobs(source, connect, expected_uuid):
         raise PostDeployError("strict_post_sql_failed", result) from None
 
 
+# ── ROUND10 f4 第 5 项:内容安全两条 sys_job(migration_20261104_content_safety_jobs_post_deploy.sql)──
+# 与上面六条分开登记、分开回读:它们不进重启效果场景(那里逐个真跑六个任务),只证明
+# 原文件原样执行、两条前置/读回断言真读游标为 1、新行按文件里的排程注册为暂停、已有任何行不变、重跑不插第二行。
+CONTENT_SAFETY_FILE = ("migration_20261104_content_safety_jobs_post_deploy.sql",
+                       "be344f9cf2e58df2418f4d47fa28bcb38f39910eeea97d13b672b7416b526ea5", 4, 2)
+CONTENT_SAFETY_ROWS = {
+    "contentSafetyRecheckTask.run()": ("DEFAULT", "21 1/5 * * * ?", "3", "1", "1"),
+    "sensitiveContentRescanTask.run()": ("DEFAULT", "33 2/10 * * * ?", "3", "1", "1"),
+}
+CONTENT_SAFETY_READ = READ_ROWS.split(" WHERE ", 1)[0] + (
+    " WHERE CAST(invoke_target AS BINARY) IN (" + ",".join(["CAST(%s AS BINARY)"] * 2)
+    + ") ORDER BY invoke_target,job_id")
+
+
+def read_content_safety_state(connect, expected_uuid=None):
+    connection = connect()
+    try:
+        cursor = connection.cursor()
+        try:
+            server = identity(cursor, expected_uuid)
+            cursor.execute(CONTENT_SAFETY_READ, tuple(CONTENT_SAFETY_ROWS))
+            rows = [list(row) for row in cursor.fetchall()]
+            require(all(len(row) == 13 and row[3] in CONTENT_SAFETY_ROWS for row in rows),
+                    "content_safety_readback_shape")
+            require(len({row[0] for row in rows}) == len(rows) and
+                    len({row[3] for row in rows}) == len(rows), "content_safety_duplicate_target")
+            return {"server_uuid": server, "schema": SCHEMA,
+                    "rows": [[v if isinstance(v, (int, str, type(None))) else str(v) for v in row]
+                             for row in rows]}
+        finally:
+            cursor.close()
+    finally:
+        connection.close()
+
+
+def verify_content_safety_rows(before, after):
+    by_id = {row[0]: row for row in after}
+    require(all(by_id.get(row[0]) == row for row in before), "content_safety_existing_job_changed")
+    by_target = {row[3]: row for row in after}
+    require(len(after) == 2 and set(by_target) == set(CONTENT_SAFETY_ROWS), "content_safety_cardinality_mismatch")
+    existing = {row[3] for row in before}
+    for target, row in by_target.items():
+        if target not in existing:
+            require(tuple(row[i] for i in (2, 4, 5, 6, 7)) == CONTENT_SAFETY_ROWS[target],
+                    "content_safety_schedule_mismatch")
+
+
+def register_content_safety_jobs(source, connect, expected_uuid):
+    """Execute the content-safety POST_DEPLOY file once, statement by statement, with its own assertions."""
+    name, digest, count, assertions = CONTENT_SAFETY_FILE
+    raw = (Path(source) / "chengyinhub-admin" / "sql" / name).read_bytes()
+    require(hashlib.sha256(raw).hexdigest() == digest, "content_safety_sql_fingerprint_mismatch")
+    statements = split_statements(raw.decode("utf-8"))
+    require(len(statements) == count and
+            sum(statement_assertion(sql) == "scalar-true" for sql in statements) == assertions,
+            "content_safety_sql_assertion_contract_mismatch")
+    result = {"status": "FAIL", "schema": SCHEMA, "file": name, "sha256": digest,
+              "statements": 0, "scalars": []}
+    try:
+        before = read_content_safety_state(connect, expected_uuid)
+        result["before"] = before
+        connection = connect()
+        try:
+            cursor = connection.cursor()
+            try:
+                identity(cursor, expected_uuid)
+                for index, statement in enumerate(statements, 1):
+                    sql = executable_statement(statement).strip().rstrip(";")
+                    require(bool(sql), "empty_content_safety_statement")
+                    cursor.execute(sql)
+                    result["statements"] += 1
+                    assertion = statement_assertion(statement)
+                    if assertion:
+                        require(assertion == "scalar-true", "unexpected_content_safety_assertion")
+                        assert_statement_result(cursor, assertion, index)
+                        result["scalars"].append({"index": index, "actual": [1]})
+            finally:
+                cursor.close()
+        finally:
+            connection.close()
+        after = read_content_safety_state(connect, expected_uuid)
+        verify_content_safety_rows(before["rows"], after["rows"])
+        require(result["statements"] == count and
+                result["scalars"] == [{"index": 1, "actual": [1]}, {"index": 4, "actual": [1]}],
+                "content_safety_coverage_incomplete")
+        result.update(status="PASS", after=after, existing_rows_preserved=True)
+        return result
+    except Exception as error:
+        result.update(error_type=type(error).__name__, recovery="UNKNOWN_PARTIAL_KEEP_ORIGINAL_STATE_NO_RETRY")
+        raise PostDeployError("strict_content_safety_sql_failed", result) from None
+
+
+def validate_content_safety_result(result, server_uuid):
+    require(isinstance(result, dict) and result.get("status") == "PASS" and result.get("schema") == SCHEMA and
+            result.get("file") == CONTENT_SAFETY_FILE[0] and result.get("sha256") == CONTENT_SAFETY_FILE[1] and
+            result.get("statements") == CONTENT_SAFETY_FILE[2] and
+            result.get("scalars") == [{"index": 1, "actual": [1]}, {"index": 4, "actual": [1]}] and
+            result.get("existing_rows_preserved") is True, "content_safety_result_incomplete")
+    states = []
+    for label in ("before", "after"):
+        state = result.get(label)
+        require(isinstance(state, dict) and state.get("server_uuid") == server_uuid and
+                state.get("schema") == SCHEMA and isinstance(state.get("rows"), list) and
+                all(isinstance(row, list) and len(row) == 13 and row[3] in CONTENT_SAFETY_ROWS
+                    for row in state["rows"]), "content_safety_readback_incomplete")
+        states.append(state["rows"])
+    verify_content_safety_rows(*states)
+
+
 def fixture_write(connect, expected_uuid, writes, expected_jobs=None):
     """Disposable schema fixtures only; unknown writes are never retried."""
     connection = connect()
@@ -378,7 +490,10 @@ def characterize_commerce_rejection(source, connect, expected_uuid, positive):
 
 # This scenario only owns the disposable chain schema and these six persisted definitions.
 RESTART_MODE = "post_restart"
-ALL_JOBS = READ_ROWS.split(" WHERE ", 1)[0] + " ORDER BY job_id"
+# 重启效果场景只管上面六条(逐个真跑);内容安全两条暂停行另由 register_content_safety_jobs 登记回读,
+# 重启场景末尾另读一次证明它们没被动过(CONTENT_SAFETY_READ),这里不把它们算进「恰好六条」。
+ALL_JOBS = (READ_ROWS.split(" WHERE ", 1)[0] + " WHERE CAST(invoke_target AS BINARY) NOT IN ("
+            + ",".join("CAST('%s' AS BINARY)" % target for target in CONTENT_SAFETY_ROWS) + ") ORDER BY job_id")
 JOB_COLUMNS = ("job_id", "job_name", "job_group", "invoke_target", "cron_expression", "misfire_policy",
                "concurrent", "status", "create_by", "create_time", "remark", "update_by", "update_time")
 FIXTURE_ID = 9932001

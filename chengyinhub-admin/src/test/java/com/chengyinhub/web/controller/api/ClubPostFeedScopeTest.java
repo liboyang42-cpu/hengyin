@@ -292,4 +292,20 @@ class ClubPostFeedScopeTest {
         assertTrue(r.isError(), "全站流也要求登录");
         verify(postSvc, times(1)).selectSiteFeed(any(), any(), anyInt());
     }
+
+    @Test
+    @Timeout(5)
+    void siteScopeAuthorMeReadsOnlyOwnPostsAndIgnoresForeignAuthor() {
+        // 第十轮 f3 j5 H4:author=me 只取本人;任何别的 author 值都按全站流处理,不能借此按作者 id 枚举。
+        Map<String, Object> mine = siteBody(null, null);
+        mine.put("author", "me");
+        controller.postFeed(mine);
+        verify(postSvc).selectSiteFeedByAuthor(ME, null, 21, ME);
+
+        Map<String, Object> foreign = siteBody(null, null);
+        foreign.put("author", "777");
+        controller.postFeed(foreign);
+        verify(postSvc, times(1)).selectSiteFeedByAuthor(any(), any(), anyInt(), any());
+        verify(postSvc).selectSiteFeed(ME, null, 21);
+    }
 }

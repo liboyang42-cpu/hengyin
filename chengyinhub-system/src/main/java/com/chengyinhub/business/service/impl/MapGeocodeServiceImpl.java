@@ -39,6 +39,8 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
 
     private final MapResponseCache cityCache = new MapResponseCache(CITY_CACHE_BYTES, CITY_ENTRY_BYTES,
             TimeUnit.MINUTES.toNanos(5), this::nanoTime);
+    private final MapResponseCache addressCache = new MapResponseCache(CITY_CACHE_BYTES, CITY_ENTRY_BYTES,
+            TimeUnit.MINUTES.toNanos(5), this::nanoTime);
     /** Shared reverse/forward work budget, not a thread pool. Cold duplicates never wait. */
     private final Set<String> inFlight = new HashSet<>();
 
@@ -120,6 +122,26 @@ public class MapGeocodeServiceImpl implements IMapGeocodeService {
         } finally {
             synchronized (inFlight) { inFlight.remove(requestKey); }
         }
+    }
+
+    @Override
+    public double[] locateAddress(String address, String region) {
+        if (StringUtils.isEmpty(address) || StringUtils.isEmpty(address.trim())) {
+            return null;
+        }
+        String cleanRegion = region == null ? "" : region.trim();
+        String cacheKey = cleanRegion.length() + ":" + cleanRegion + address.trim();
+        String hit = addressCache.get(cacheKey);
+        if (hit != null) {
+            int comma = hit.indexOf(',');
+            return new double[]{Double.parseDouble(hit.substring(0, comma)), Double.parseDouble(hit.substring(comma + 1))};
+        }
+        double[] coords = suggestCoords(address, cleanRegion);
+        if (coords != null) {
+            String value = coords[0] + "," + coords[1];
+            if (addressCache.accepts(cacheKey, value)) addressCache.put(cacheKey, value);
+        }
+        return coords;
     }
 
     @Override

@@ -483,12 +483,16 @@ def technical_dependency_policy():
             require(isinstance(edge, list) and len(edge) == 2 and all(n in owners for n in edge) and edge[0] != edge[1])
             require(tuple(edge) not in edges)
             edges.add(tuple(edge))
-        # These four new contracts approve exact binary references, not every
+        # These eight contracts approve exact binary references, not every
         # member/companion within an owner group. Missing limits cannot disable them.
         required_exact = {("G_CASH_CLAIM", "B_VERIFIED_PAYMENT_FACT_DTO"),
                           ("B_PAYMENT_ROUTER", "B_VERIFIED_PAYMENT_FACT_DTO"),
                           ("B_VERIFIED_PAYMENT_FACT_STORE", "B_PAYMENT_ORDER_LOCK"),
-                          ("B_PAYMENT_INTENTS", "B_VERIFIED_PAYMENT_FACT_STORE")}
+                          ("B_PAYMENT_INTENTS", "B_VERIFIED_PAYMENT_FACT_STORE"),
+                          ("B_ORDER_CENTER_API", "B_ORDER_CENTER_QUERY"),
+                          ("B_ORDER_CENTER_QUERY", "B_PAYMENT_FACADE"),
+                          ("B_ORDER_CENTER_QUERY", "C_REGISTRATION_QUERY_APPLICATION"),
+                          ("B_ORDER_CENTER_QUERY", "E_CLM_SHARED_PROOF_PORT")}
         require(isinstance(policy["exact_directions"], list))
         exact = {}
         binary = fqcn + r"(?:\$[A-Za-z0-9_]+)*"

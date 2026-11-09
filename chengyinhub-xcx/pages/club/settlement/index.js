@@ -4,7 +4,7 @@
 const app = getApp()
 // 2026-09-15 起「提现」不再走银行卡表单:平台不打款,一律弹平台客服微信线下处理。
 const withdrawCs = require('../../../utils/withdraw-cs.js')
-const { bizFailureMessage } = require('../../../utils/response-shape.js')
+const { bizFailureMessage } = require('../../../utils/response-shape.js'); const pageMotion = require('../../../utils/page-motion.js')
 
 function identityKey() {
   const gd = app.globalData || {}
@@ -71,9 +71,36 @@ function normalizeSummary(data) {
       executedAdjustmentText, netAmountText, arrivedText, paidText, status })
   }
   if (missing !== unverifiedSettledCount) return null
+  const personal = data.personal === true
+  const sessions = normalizeSessions(data.sessions, personal)
+  if (!sessions) return null
   // 余额三段只给主理人本人(9-17 总控裁定);服务端没明确说是本人一律不显示
   const isOwner = data.isOwner === true
-  return { settledAmountText, settledAmountStatus, unverifiedSettledCount, topics, isOwner }
+  return { settledAmountText, settledAmountStatus, unverifiedSettledCount, topics, sessions, isOwner, personal }
+}
+
+/** F-16:俱乐部场次的活动结算(销售额、平台服务费、到账、入了谁的账户),全部是服务端格式化好的文本。 */
+function normalizeSessions(raw, personal) {
+  if (!Array.isArray(raw)) return null
+  const out = []
+  for (let i = 0; i < raw.length; i += 1) {
+    const row = raw[i] || {}
+    const activityId = positiveId(row.activityId)
+    if (personal) {
+      if (!activityId || ['name', 'dateText', 'netText', 'payeeText'].some(k => !nonEmptyString(row[k]))) return null
+      out.push({ activityId, name: row.name, dateText: row.dateText, netText: row.netText, payeeText: row.payeeText })
+      continue
+    }
+    const texts = ['name', 'dateText', 'grossText', 'feeText', 'netText', 'payeeText'].map(k => nonEmptyString(row[k]))
+    if (!activityId || texts.some(t => !t) || !(row.feeRateText === null || nonEmptyString(row.feeRateText))) return null
+    // 第十二轮 k5:合作商家核销费(没有为 null,不出这一行)
+    if (!(row.merchantFeeText == null || nonEmptyString(row.merchantFeeText))) return null
+    const [name, dateText, grossText, feeText, netText, payeeText] = texts
+    out.push({ activityId, name, dateText, grossText, feeText, netText, payeeText,
+      merchantFeeText: row.merchantFeeText || '',
+      feeLabel: row.feeRateText ? '平台服务费 ' + row.feeRateText : '平台服务费' })
+  }
+  return out
 }
 
 Page({
@@ -83,17 +110,20 @@ Page({
     state: 'loading',
     errorText: '',
     summary: null,
+    clubs: [],
     withdrawing: false,
     // CU-C-92:可提现余额决定提现主按钮能不能用(unknown/positive/zero),
     // 数来自 cy-funds-stages 自己拉的 /api/wallet/stages,本页不重复请求。
-    withdrawState: 'unknown',
+    withdrawState: 'unknown', complaintWaiting: false, settledK: null, // settledK:count.wxs 的进度(null=显示真值)
   },
 
   onLoad(options) {
     this._unloaded = false
     this._hidden = false
+    this._mine = options && options.mine === '1'
+    this._personal = options && options.personal === '1'
     const clubId = positiveId(options && (options.clubId || options.id))
-    if (!clubId) {
+    if (!clubId && !this._mine) {
       this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
@@ -117,7 +147,7 @@ Page({
 
   _clearData() {
     this._dataIdentity = null
-    this.setData({ summary: null, withdrawState: 'unknown' })
+    this.setData({ summary: null, clubs: [], withdrawState: 'unknown' })
   },
   _acceptRead(epoch) {
     if (!Number.isInteger(epoch) || epoch !== this._loadEpoch || this._unloaded || this._hidden) return false
@@ -147,7 +177,7 @@ Page({
     if (this._unloaded || this._hidden) return
     const epoch = this._loadEpoch = (this._loadEpoch || 0) + 1
     this._clearData()
-    if (!positiveId(this._clubId)) {
+    if (!this._mine && !positiveId(this._clubId)) {
       this.setData({ state: 'error', errorText: '缺少俱乐部信息' }); wx.stopPullDownRefresh(); return
     }
     this._loadIdentity = identityKey()
@@ -157,12 +187,22 @@ Page({
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: '/api/club/settlement/summary',
+      url: this._mine ? '/api/club/settlement/mine' : '/api/club/settlement/summary',
       method: 'POST',
-      data: jsonBody({ clubId: this._clubId }),
+      data: jsonBody({ clubId: this._clubId, personal: this._personal }),
       header: jsonHeader(),
       success(res) {
         if (!that._acceptRead(epoch)) return
+        if (that._mine) {
+          const clubs = ok(res) && Array.isArray(res.data) ? res.data : null
+          if (!clubs || clubs.some(row => !positiveId(row.clubId) || !nonEmptyString(row.name))) {
+            that.setData({ state: 'error', errorText: bizFailureMessage(res, '结算数据暂不可用') }); return
+          }
+          that._dataIdentity = that._loadIdentity
+          that._dataClubId = that._loadClubId
+          that.setData({ state: clubs.length ? 'clubs' : 'empty', clubs })
+          return
+        }
         const summary = ok(res) ? normalizeSummary(res.data) : null
         if (!summary) {
           // code=200 但校验失败时 res.msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
@@ -171,7 +211,7 @@ Page({
         }
         that._dataIdentity = that._loadIdentity
         that._dataClubId = that._loadClubId
-        that.setData({ state: summary.topics.length ? 'ready' : 'empty', summary })
+        that.setData({ state: summary.topics.length || summary.sessions.length ? 'ready' : 'empty', summary }); if (summary.topics.length && summary.settledAmountStatus !== 'unverified' && !that._settledCounted) { that._settledCounted = true; pageMotion.countMoney(that, 'settledK') } // CP-15:已入账分润首次落地慢-快-慢,刷新不再重数
       },
       fail() {
         if (!that._acceptRead(epoch)) return
@@ -185,6 +225,13 @@ Page({
     })
   },
 
+  openClubSettlement(e) {
+    if (this._unloaded || this._hidden || this._dataIdentity !== identityKey()) return
+    const id = positiveId(e && e.currentTarget && e.currentTarget.dataset.id)
+    if (!id || !this.data.clubs.some(row => Number(row.clubId) === id)) return
+    wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + id + '&personal=1' })
+  },
+
   goTopicSettlement(e) {
     if (!this._hasCurrentData()) return
     const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.topicId)
@@ -196,7 +243,7 @@ Page({
     // 同一主题可能有多条结算记录,带上本行 id 让明细页按行取,不按 topicId 取第一条
     const rowId = positiveId(e.currentTarget.dataset.id)
     if (!this.data.summary.topics.some(row => row.topicId === topicId && (!rowId || row.id === rowId))) return
-    wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=club&topicId=' + topicId + (rowId ? '&id=' + rowId : '') + '&clubId=' + this._clubId })
+    wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=club&topicId=' + topicId + (rowId ? '&id=' + rowId : '') + '&clubId=' + this._clubId + (this.data.summary.personal ? '&personal=1' : '') })
   },
 
   // CU-C-92:可提现为 0(或余额还没取到)时提现不是可做的动作 —— 禁用主按钮并写明条件;
@@ -204,7 +251,8 @@ Page({
   onStages(e) {
     if (!this._hasCurrentData()) return
     const detail = (e && e.detail) || {}
-    this.setData({ withdrawState: !detail.known ? 'unknown' : (detail.positive ? 'positive' : 'zero') })
+    // 第十一轮 h4 LOW:「客诉期结束后可提现」只在真有钱在客诉期里等着时才说;一分都没有时不写这句。
+    this.setData({ withdrawState: !detail.known ? 'unknown' : (detail.positive ? 'positive' : 'zero'), complaintWaiting: detail.waiting === true })
   },
 
   // 2026-09-15 收款模型定稿 §3:平台不打款。本页不再跳银行卡表单页,也不自己发提现请求,

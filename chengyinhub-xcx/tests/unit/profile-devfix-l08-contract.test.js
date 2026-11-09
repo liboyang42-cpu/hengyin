@@ -28,7 +28,7 @@ test('P-48:订单卡不写票数、不放按钮,只显示主题信息;卡片 500
 })
 
 test('P-49:余额没有就是 0,不再显示「—」', () => {
-  assert.match(WXML, /\{\{money\.amount\(balanceText == null \? 0 : balanceText\)\}\}/)
+  assert.match(WXML, /\{\{money\.amount2\(balanceText == null \? 0 : balanceText\)\}\}/) // 打磨第 3 轮 §4-20:两位小数
   assert.doesNotMatch(WXML, /pc-asset__value--empty/)
 })
 

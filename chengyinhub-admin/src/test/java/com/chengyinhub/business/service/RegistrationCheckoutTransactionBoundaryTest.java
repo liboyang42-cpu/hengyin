@@ -45,6 +45,8 @@ class RegistrationCheckoutTransactionBoundaryTest {
         ReflectionTestUtils.setField(target, "registrationService", registrations);
         ReflectionTestUtils.setField(target, "registrationOrderService", orders);
         ReflectionTestUtils.setField(target, "wechatPayService", gateway);
+        ReflectionTestUtils.setField(target, "registrationOrderCreateGate", mock(IRegistrationOrderCreateGate.class));
+        when(registrations.selectCmsRegistrationById(registrationId)).thenReturn(original());
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.addAdvice(new TransactionInterceptor(transactions, new AnnotationTransactionAttributeSource()));
         checkout = (IRegistrationCheckoutService) proxy.getProxy();

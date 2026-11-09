@@ -11,12 +11,10 @@
       <image class="about-app__logo" src="/images/cy_logo_mark.png" mode="aspectFit" />
       <view class="about-app__name">城瘾</view>
       <view class="about-app__version">版本 {{version}}</view>
-      <view class="about-app__desc">发现城市，也发现新的自己</view>
     </view>
 
     <view class="about-section">
       <view class="about-section__title">我的二维码</view>
-      <view class="about-section__intro">活动现场出示</view>
       <cy-qr-voucher
         embedded="{{true}}"
         surface="host"

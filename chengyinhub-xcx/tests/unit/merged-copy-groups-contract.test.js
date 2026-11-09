@@ -18,15 +18,14 @@ const GROUPS = {
       '适用玩法版本暂未标注；教程用于说明，实际任务、完成条件与奖励以游玩页为准。'],
   ],
   'group-code-copy': [
-    ['pages/club/group-code/index.wxml',
-      '团码仅限本场次；组队邀请码不能核销'],
     ['pages/club/group-code/index.wxml', 'title="活动核验团码"'],
-    ['pages/team/join/index.wxml',
-      '邀请码不能用于签到或核销，入队不代替报名或购票'],
+    // 第十轮 f3 第 5 项(j2 F-24):入队页这句说明按 owner「删说明小字」规则撤掉(旧锁定是被取代的旧决定);
+    // 第十二轮 k3(p3 N11):团码页「团码仅限本场次；组队邀请码不能核销」同按此规则撤掉 —— 码只在选定场次后
+    // 才出现,组队邀请码本身也不会被服务端当团码核销(ApiVerifyGroupCode),语义由页面结构与服务端承担。
   ],
   'topic-comment-scope': [
-    ['pages/topic/index/index.wxml',
-      '未参与也可以评价。已支付或已核销报名后的首条评价可按当前规则获得积分，以实际积分记录为准。'],
+    // 第十轮 f3 第 4 项(j5 L9):评价空卡里那句与下方常驻积分口径行重复,按 owner「删说明小字」撤掉;
+    // 合规口径仍由下面这行常驻并链到积分规则。
     ['pages/topic/index/index.wxml', '评论积分须符合参与及首评条件，以实际积分记录为准'],
   ],
 };

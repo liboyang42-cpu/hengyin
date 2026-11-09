@@ -22,6 +22,8 @@ const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const { buildSquareShare } = require('../utils/square-share.js');
+const GONE_POST_MSG = /^(内容不存在|已删除|审核中|数据不存在|参数不合规|帖文不存在)/;
+
 Page({
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
   /**
@@ -1089,6 +1091,8 @@ Page({
         }
         if (requestId !== that._detailRequestId) return;
         if (res.code != "200") {
+          // 第十二轮 k2(p1 N-4):帖文不存在 / 已删 / 审核中是分享链接的常态,给「链接已失效 · 返回」,不是加载失败
+          if (GONE_POST_MSG.test(String(res.msg || ''))) { that.setData({ detailState: 'gone', detailError: '' }); return; }
           that.setData({
             detailState: 'error',
             detailError: res.msg || '服务暂时无法提供这条动态',
@@ -1188,9 +1192,9 @@ Page({
         result += minutes + '分';
       }
   
-      if(hours==0 && minutes==0){
-        result= '刚刚';
-      }
+      // 第十二轮 k9(j5 N8):「刚刚」本身就是时间,不再接「前」(原来读成「刚刚前」);
+      // 时钟略快的负差也算刚刚
+      if (hours <= 0 && minutes <= 0) return '刚刚';
     }
     return result + '前';
   },

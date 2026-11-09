@@ -1,5 +1,6 @@
 <wxs src="../../utils/wxs/img.wxs" module="img" />
 <view class="theme-dark">
+  <cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -9,13 +10,13 @@
 <cy-page-title title="我的参与" safe-top="{{false}}" />
 <cy-tabs active="{{activeTab}}" bind:change="switchTab" tabs="{{tabs}}" variant="fill" />
 
-<view class="canyubox">
+<view class="canyubox" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
   <cy-skeleton wx:if="{{firstLoading}}" type="list" count="4" />
   <cy-error load-failure fill class="cy-fill-state cy-fade-in" size="lg" wx:elif="{{errorMsg && list.length==0}}" title="参与记录没能打开" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
-  <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{list.length==0}}" icon="/subpackageMember/images/d_yhqon.png" title="{{activeTab === 'all' ? '暂无参与记录' : '当前筛选暂无参与记录'}}" />
+  <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{list.length==0}}" kind="empty" title="{{activeTab === 'all' ? '暂无参与记录' : '当前筛选暂无参与记录'}}" />
   <view class="canyu-refreshing cy-refresh-float" wx:if="{{refreshing}}" aria-role="status" aria-live="polite">正在更新参与记录…</view>
 
-  <view class="canyubox_li" wx:for="{{list}}" wx:key="id" wx:for-item="item" bindtap="goOrder" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="canyubox_li" wx:for="{{list}}" wx:key="id" wx:for-item="item" bindtap="goOrder" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
     <view class="canyubox_li_tgb">
       <view class="canyubox_li_left">
         <image lazy-load="true" src="{{img.first(item.sourceCover) || '/images/route_city_cover.png'}}" mode="aspectFill" />

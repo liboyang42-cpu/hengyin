@@ -1201,7 +1201,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 JsonNode ruleFields = validator.readTree(frozenRules);
                 if (JourneyRules.parse(frozenRules).hasRuntimeState() || ruleFields.path("attributes").size() > 0
                         || ruleFields.path("statLinks").size() > 0 || published.path("themeConfig").isObject()
-                        || JourneyStory.openingChapterId(NodeJourneySnapshot.journeyStory(published.toString())) != null) return true;
+                        || JourneyStory.openingChapterId(NodeJourneySnapshot.journeyStory(published.toString())) != null
+                        || JourneyStory.hasEnding(NodeJourneySnapshot.journeyStory(published.toString()))) return true;
                 for (JsonNode block : published.path("nodeConfigs"))
                     if (blockNeedsJourneyState(block.toString())) return true;
                 return false;
@@ -1210,6 +1211,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         List<CmsTopicNode> liveNodes = probe.liveNodes;
         if (JourneyStory.openingChapterId(scope.topic.getJourneyStoryJson()) != null) return true;
         if (liveNodes.isEmpty()) return false;
+        // P-04:只配了结局(尾声章)的线性主题也要一局权威状态,结局读口才挑得出结局、判得了通关。
+        if (JourneyStory.hasEnding(scope.topic.getJourneyStoryJson())) return true;
         if (scope.topic.getPublishedThemeRuntimeConfigJson() != null) return true;
         if (journeyRules(scope.topic).hasRuntimeState()) return true;
         Map<Long, String> configByTemplate = probe.configs();
@@ -1281,15 +1284,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if("ANSWER".equals(basicCompletionKind(frozen,nodeId))) {
             JsonNode answer=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId));String submitted=answers.path("answer").asText("").trim();
             if(answer.path("validationMethod").asInt()==3)return !answer.path("correctAnswer").asText().trim().isEmpty() && answer.path("correctAnswer").asText().trim().equalsIgnoreCase(submitted);
-            String expected=answer.path("questionAnswer").asText();return !expected.trim().isEmpty() && normalizeBasicAnswer(expected).equalsIgnoreCase(normalizeBasicAnswer(submitted));
+            return com.chengyinhub.business.service.support.BasicTextAnswer.matches(answer.path("questionAnswer").asText(),submitted);
         }
         return AdvancedActionJudgement.verifyObjectiveAnswers(frozen.path("nodeConfigs").path(String.valueOf(nodeId)),answers);
-    }
-
-    private String normalizeBasicAnswer(String value) {
-        String trimmed=value.trim().replaceAll("\\s+", ""); StringBuilder normalized=new StringBuilder();
-        for(char c:trimmed.toCharArray()) {if(c>='！' && c<='～')normalized.append((char)(c-0xFEE0));else if(c=='　')normalized.append(' ');else normalized.append(c);}
-        return normalized.toString();
     }
 
     private String basicCompletionKind(JsonNode frozen,Long nodeId) {
@@ -3249,12 +3246,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteEngine.State actionBefore = eventId == null ? null : readEngineState(session.getStateJson());
         Map<String, Set<JourneyStatLinks.Reason>> reasons = new LinkedHashMap<>();
         if (genericPlayer(session)) {
+            themeEngine.chapterTick(config,state,rules,clock.millis());
             themeEngine.reconcileHeld(config,state,rules);
             JourneyInitialState.clamp(rules,state);
             if (actionBefore != null && reason != null) JourneyStatLinks.apply(rules,actionBefore,state,"MEMBER:"+session.getMemberId(),eventId,reason);
-            int beforeRecovery=JourneyInitialState.numericValue(state,SYS_HP);
-            gameplaySurvival.syncChallenge(validator.readTree(session.getConfigSnapshotJson()),rules,state,clock.millis());
-            if(beforeRecovery!=JourneyInitialState.numericValue(state,SYS_HP)){themeEngine.reconcileHeld(config,state,rules);JourneyInitialState.clamp(rules,state);}
+            // 第十一轮 h5:主题没开体力(检定/相册等通用局)就没有 sys.hp,不读也不做体力恢复。
+            if (rules.hasRuntimeState() && rules.getHp().isEnabled()) {
+                int beforeRecovery=JourneyInitialState.numericValue(state,SYS_HP);
+                gameplaySurvival.syncChallenge(validator.readTree(session.getConfigSnapshotJson()),rules,state,clock.millis());
+                if(beforeRecovery!=JourneyInitialState.numericValue(state,SYS_HP)){themeEngine.reconcileHeld(config,state,rules);JourneyInitialState.clamp(rules,state);}
+            }
             if (state.getThemeRuntime().has("result")) {
                 freezeThemeStory(session,state); session.setStatus(statusOf(state)); session.setCompletedAt(new Date(clock.millis()));
             }
@@ -3310,6 +3311,41 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(session==null || !themeConfig(session).isObject())return null;
         return validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").get(String.valueOf(nodeId));
     }
+    @Override
+    public boolean pendingCompassCheck(Long memberId,Long topicId,Long activityId,Long nodeId) {
+        TopicRouteSession session=currentSession(memberId,topicId,activityId);
+        JsonNode config=legacyCompassCheck(session,nodeId);
+        if(config==null)return false;
+        TopicRouteAction receipt=findCheckAction(session,memberId,nodeId,config.path("check").path("checkId").asText(),JourneyCheckActionId.STEP_SETTLE);
+        return receipt==null || !readReceipt(receipt).isSettled();
+    }
+
+    private JsonNode legacyCompassCheck(TopicRouteSession session,Long nodeId) {
+        if(session==null || genericPlayer(session))return null;
+        TopicRouteEngine.State state=readEngineState(session.getStateJson());
+        if(state.getCompletedNodeIds().contains(nodeId))return null;
+        JsonNode config=validator.readTree(session.getConfigSnapshotJson()).path("nodeConfigs").path(String.valueOf(nodeId));
+        if(config.has("outcomeRules") || !config.path("compass").path("enabled").asBoolean()
+                || !config.path("check").path("enabled").asBoolean())return null;
+        return config;
+    }
+
+    @Override
+    public boolean completeCompassCheckArrival(Long memberId,Long topicId,Long activityId,Long nodeId,
+            Integer puzzleScore,String completionMode) {
+        TopicRouteSession session=currentSession(memberId,topicId,activityId);
+        JsonNode config=legacyCompassCheck(session,nodeId);
+        if(config==null)return false;
+        TopicRouteAction receipt=findCheckAction(session,memberId,nodeId,config.path("check").path("checkId").asText(),JourneyCheckActionId.STEP_SETTLE);
+        if(receipt==null || !readReceipt(receipt).isSettled())return false;
+        // 到达只建 status=0 的事实；前置玩法通过且本局检定已结算后，才由完成链转正。
+        PlayerNodeProgress progress=new PlayerNodeProgress();
+        progress.setMemberId(memberId);progress.setActivityId(session.getActivityId());
+        progress.setTopicId(topicId);progress.setNodeId(nodeId);progress.setPlayInstanceId(session.getPlayInstanceId());
+        progress.setPuzzleScore(puzzleScore);progress.setCompletionMode(completionMode);
+        return progressMapper.markGameplayQuestDone(progress)>0;
+    }
+
     @Override
     public String gameplayInstance(Long memberId,Long topicId,Long activityId,Long nodeId) {
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
@@ -3769,6 +3805,16 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (scoreActive) orientRouteSettlement.beforePersist(session, state);
         if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
         if (scoreActive) orientRouteSettlement.complete(session, state);
+        if ("QUEST_RESOLVE".equals(operation)) {
+            long nodeId = gameplayTasks.quest(config, contentId).path("nodeId").asLong();
+            if (state.getCompletedNodeIds().contains(nodeId)) {
+                PlayerNodeProgress progress = new PlayerNodeProgress();
+                progress.setMemberId(memberId); progress.setTopicId(session.getTopicId());
+                progress.setActivityId(session.getActivityId()); progress.setPlayInstanceId(session.getPlayInstanceId());
+                progress.setNodeId(nodeId);
+                progressMapper.markGameplayQuestDone(progress);
+            }
+        }
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
         JourneyInitialState.redactHidden(rules,result);view.put("settlement",JSON.convertValue(result,new TypeReference<Map<String,Object>>(){}));
         String savedResponse=write(view);

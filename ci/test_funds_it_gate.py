@@ -37,7 +37,7 @@ def all_required_clean(directory):
     (门禁新增一套却没人跑 = fail-closed)。别为了让它绿而去删 EXPECTED 里的条目。
     """
     write_report(directory, "CoopListReadOnlyMybatisIntegrationTest", 5)
-    write_report(directory, "RegistrationFundsMybatisIntegrationTest", 108)
+    write_report(directory, "RegistrationFundsMybatisIntegrationTest", 114)
     write_report(directory, "RegistrationEquityMybatisIntegrationTest", 6)
     write_report(directory, "RefundPayoutMybatisIntegrationTest", 30)
     write_report(directory, "ExploreAllianceMvpRealDbIT", 5)
@@ -64,7 +64,7 @@ def all_required_clean(directory):
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。
     for short, tests in (
         ("CoopDepositRefundMybatisIntegrationTest", 36),
-        ("GrowthMissionProofMybatisIntegrationTest", 25),
+        ("GrowthMissionProofMybatisIntegrationTest", 26),
         ("MerchantIdentityMybatisIntegrationTest", 21),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
         ("StoreVerifyGrowthDeliveryTransactionTest", 4),
@@ -95,8 +95,9 @@ def all_required_clean(directory):
         ("ShareSnapshotRunSessionMybatisIntegrationTest", 5),
         ("PlayerRunSessionOrderingMybatisIntegrationTest", 6),
         ("RoamShareSnapshotConcurrencyMySqlIT", 3),
-        ("ClubEventTransferCancellationMySqlIT", 14),
+        ("ClubEventTransferCancellationMySqlIT", 15),
         ("RefundRetryAndRemainderMySqlIT", 10),
+        ("ClubSessionMerchantFeeMySqlIT", 15),
         ("SignupNoticeAfterCommitPersistenceMySqlIT", 18),
         ("TopicLikeDesiredStateMySqlIT", 3),
         ("MonitorMissingJobsMySqlIT", 3),

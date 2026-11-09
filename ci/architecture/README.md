@@ -100,3 +100,5 @@ RegistrationRedemptionApplication 原端口保留、仅 Redemption→Query 共�
 ## 精确恢复语句写边（独立审阅）
 
 `owners.statement_write_owners` 仅声明 B `WechatVerifiedPaymentFactMapper.xml#insertRecovery/#completeRecovery` 对 `wx_payment_callback_outbox` 的两个原事实恢复写边，绑定原 path#id/module/namespace/kind/table/现有 statement+include 指纹及审阅源SHA。独立可信版本批准后，仅精确命中的语句不再报 NEW_TABLE_WRITER；不授同 namespace 第三条语句或同表其它 namespace 写权，不改变原 scope/cache/业务fact合同检查。限定writer的额外确定写边、原语句指纹漂移在比较base equality之前阻断；candidate自改metadata仍POLICY_CHANGE。原2ec baseline/locking proposal不变。未知动态效果仍须人审，不证明方法调用、事务或经济语义；root持有双CI ref最终接线。
+
+R28 仅登记审阅源 `d6c3e2d0bdb9ca06adab0ba7890d98fbf4b77e0e` 的订单中心 API 与 query 两个 exact Admin 类型，以及 API→query、query→支付门面接口/报名查询/既有会费 Mapper 四条 exact class 引用。原 God 回依赖、API 直接访问上述两个定位 Mapper、反向/新增类型/同 owner 非合同引用仍阻断；不授予业务表写权、私有端口权限或推定传递只读。独立审阅后由 ROOT 单独更新两处固定 verifier SHA，候选不得自批准。未登记存储与方法级效果仍为 UNKNOWN。

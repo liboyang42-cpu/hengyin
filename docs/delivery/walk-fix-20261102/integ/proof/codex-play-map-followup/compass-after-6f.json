@@ -1,0 +1,31 @@
+{
+  "identity": [
+    "cy_e2e_51",
+    "19025e57-d901-11f1-b086-9ae8535e5aec"
+  ],
+  "phase": "after-6f",
+  "progress": [
+    [
+      9004,
+      0,
+      990016,
+      73,
+      1,
+      "default",
+      0,
+      "SKIPPED"
+    ]
+  ],
+  "checks": [
+    [
+      "check:73:check_mw3ebd6s:roll",
+      "CHECK_ROLL",
+      "{\"dc\": 13, \"hp\": 10, \"nat\": null, \"dice\": [15], \"kept\": 15, \"luck\": 3, \"mods\": [], \"text\": null, \"tier\": \"medium\", \"total\": 15, \"nodeId\": \"73\", \"checkId\": \"check_mw3ebd6s\", \"settled\": false, \"success\": true, \"actionId\": \"check:73:check_mw3ebd6s:roll\", \"rerolled\": false, \"advantage\": false, \"breakdown\": {\"dc\": 13, \"die\": 15, \"skill\": null, \"total\": 15, \"natAuto\": true, \"situational\": {\"cap\": 6, \"raw\": 0, \"applied\": 0}}, \"encounter\": {\"beat\": \"investigate\", \"check\": {\"mods\": [], \"tier\": \"medium\", \"skill\": \"观察\", \"checkId\": \"check_mw3ebd6s\", \"present\": \"inline\", \"advantage\": false, \"exhausted\": false, \"disadvantage\": false}, \"runId\": 3, \"locked\": false, \"nodeId\": 73, \"arrived\": true, \"preload\": [], \"missingKeys\": [], \"fallbackPlan\": {\"canSkip\": false, \"message\": null, \"manualVerify\": false}, \"presentation\": {\"npc\": null, \"hook\": null, \"title\": \"罗盘指向与D20·PLAY-M\", \"revisit\": false, \"storyText\": null}, \"stateVersion\": 3, \"allowedActions\": [\"compass\", \"check\"], \"outcomeContract\": {\"outcomes\": [], \"outcomeCodes\": []}}, \"exhausted\": false, \"sessionId\": \"3\", \"disadvantage\": false, \"stateVersion\": 3, \"failCostLabel\": null}"
+    ],
+    [
+      "check:73:check_mw3ebd6s:settle",
+      "CHECK_SETTLE",
+      "{\"dc\": 13, \"hp\": 10, \"nat\": null, \"dice\": [15], \"kept\": 15, \"luck\": 3, \"mods\": [], \"text\": \"你看见了暗门。\", \"tier\": \"medium\", \"total\": 15, \"nodeId\": \"73\", \"checkId\": \"check_mw3ebd6s\", \"settled\": true, \"success\": true, \"actionId\": \"check:73:check_mw3ebd6s:settle\", \"rerolled\": false, \"advantage\": false, \"encounter\": {\"beat\": \"investigate\", \"check\": {\"mods\": [], \"tier\": \"medium\", \"skill\": \"观察\", \"checkId\": \"check_mw3ebd6s\", \"present\": \"inline\", \"advantage\": false, \"exhausted\": false, \"disadvantage\": false}, \"runId\": 3, \"locked\": false, \"nodeId\": 73, \"arrived\": true, \"preload\": [], \"missingKeys\": [], \"fallbackPlan\": {\"canSkip\": false, \"message\": null, \"manualVerify\": false}, \"presentation\": {\"npc\": null, \"hook\": null, \"title\": \"罗盘指向与D20·PLAY-M\", \"revisit\": false, \"storyText\": null}, \"stateVersion\": 4, \"allowedActions\": [\"compass\", \"check\"], \"outcomeContract\": {\"outcomes\": [], \"outcomeCodes\": []}}, \"exhausted\": false, \"sessionId\": \"3\", \"disadvantage\": false, \"stateVersion\": 4, \"failCostLabel\": null}"
+    ]
+  ]
+}

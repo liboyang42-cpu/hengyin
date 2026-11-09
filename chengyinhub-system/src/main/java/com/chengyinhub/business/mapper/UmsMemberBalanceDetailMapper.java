@@ -91,6 +91,10 @@ public interface UmsMemberBalanceDetailMapper
      */
     BigDecimal selectIncomeByEventType(@Param("memberId") Long memberId, @Param("eventType") Long eventType);
 
+    /** 某事件(eventType+eventId)的实际正向入账人,最近入账的在前;只计净入账为正的人。 */
+    java.util.List<Long> selectIncomeMemberIdsByEventTypeAndEventId(@Param("eventType") Long eventType,
+                                                                    @Param("eventId") Long eventId);
+
     /**
      * 按事件类型+事件ID获取累计收益
      * @param memberId 用户ID

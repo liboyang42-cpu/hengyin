@@ -123,7 +123,7 @@ test('城市签:票面全来自服务端_地址/留签人/那句/签号一一映
   assert.equal(kit.leftAt, '2026-08-25 18:30')
   assert.equal(kit.photoUrl, 'https://cdn.chengyinhub.com/u/8/lane.jpg')
   assert.equal(kit.serialLabel, 'NO. 0004', '签号 = 我是这一站第几位，不是日期')
-  assert.equal(kit.textMax, 40)
+  assert.equal(kit.textMax, undefined, 'launch 不采集留言')
   assert.equal(kit.claimed, false)
   assert.equal(kit.revealed, false)
 })
@@ -139,7 +139,7 @@ test('城市签:开场签没人留过_落款和时间为空串_组件自己标�
   assert.ok(!JSON.stringify(kit).includes('猫向导'), '不能再有造出来的角色:' + JSON.stringify(kit))
 })
 
-test('城市签:留过之后带回自己那句_claimed 与 revealed 同真', () => {
+test('城市签:领取后回看签文，不再透传留言字段', () => {
   const kit = pickPlayKit(
     { sessionId: 1, version: 0, playKit: { dailySign: {
       lines: ['上一句'], claimedDate: '2026-08-26', serial: 4, myText: '豆浆七点才开',
@@ -148,8 +148,8 @@ test('城市签:留过之后带回自己那句_claimed 与 revealed 同真', () 
     at(20, 0))
   assert.equal(kit.claimed, true)
   assert.equal(kit.revealed, true)
-  assert.equal(kit.myText, '豆浆七点才开')
-  assert.equal(kit.myPhotoUrl, 'https://cdn.chengyinhub.com/u/7/door.jpg')
+  assert.equal(kit.myText, undefined)
+  assert.equal(kit.myPhotoUrl, undefined)
 })
 
 test('城市签:刮层在留一句之前就刮开_留完回来的视图不再盖回去', () => {

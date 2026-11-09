@@ -8,11 +8,12 @@
         SELECT
         owner_type,
         owner_id,
-        SUM(ticket_price) AS totalTicketPrice,  -- 总票价
-        AVG(ticket_price) AS avgTicketPrice,    -- 平均票价
-        MAX(ticket_price) AS maxTicketPrice,    -- 最高票价
-        MIN(ticket_price) AS minTicketPrice,    -- 最低票价
-        COUNT(*) AS recordCount                 -- 记录总数
+        <!-- 总票价 / 平均 / 最高 / 最低 / 记录总数。SQL 体内不写行注释(Druid wall 拒) -->
+        SUM(ticket_price) AS totalTicketPrice,
+        AVG(ticket_price) AS avgTicketPrice,
+        MAX(ticket_price) AS maxTicketPrice,
+        MIN(ticket_price) AS minTicketPrice,
+        COUNT(*) AS recordCount
         FROM
         cms_registration
         <!-- 动态条件：根据传入的参数过滤 -->

@@ -284,6 +284,8 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
             copy.setTopicId(newTopicId);
             copy.setName(source.getName());
             copy.setDescription(source.getDescription());
+            copy.setVideoUrl(source.getVideoUrl());
+            copy.setVideoPosterUrl(source.getVideoPosterUrl());
             // 章节背景旁白跟着新期走 —— 漏了新期就静默没声音,零报错
             copy.setAudioUrl(source.getAudioUrl());
             // 配色同理:漏了新期就整章掉回默认黑,零报错

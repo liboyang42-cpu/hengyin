@@ -87,8 +87,8 @@ function sources() {
     agreementWxml: read('components/cy/agreement-sheet/index.wxml'),
     privacyJs: read('pages/shezhi/components/privacy-sheet/index.js'),
     privacyWxml: read('pages/shezhi/components/privacy-sheet/index.wxml'),
-    routeWxml: read('components/cy/scene-route-content/index.wxml'),
-    deregisterWxml: read('components/cy/scene-settings-deregister/index.wxml'),
+    routeWxml: read('subpackageMember/components/cy/scene-route-content/index.wxml'),
+    deregisterWxml: read('pages/deregister/components/scene-settings-deregister/index.wxml'),
     info: {
       name: '城瘾玩法',
       js: read('subpackageA/pages/infomation/infomation.js'),

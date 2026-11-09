@@ -17,3 +17,6 @@ button.fbox_but{ width: 686rpx; height: var(--cy-btn-h); background: var(--cy-bt
 .fld-ph { color: var(--cy-color-text-placeholder); }
 
 .req { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 第四轮:字段下方红字(cy-inline-error kind=error) */
+.add_err { margin-top: var(--cy-space-1); }

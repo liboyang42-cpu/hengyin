@@ -88,6 +88,16 @@ public final class TopicContentWriteGuard {
         if (audioUrl != null && audioUrl.length() > 512) {
             throw new IllegalStateException("章节音频地址不能超过 512 字符");
         }
+        if (c.getVideoUrl() != null && !c.getVideoUrl().isBlank()) {
+            if (!Boolean.TRUE.equals(c.getOpening()) && (c.getEnding() == null || c.getEnding().isNull()))
+                throw new IllegalStateException("视频只能放在序章或结局章");
+            if (c.getVideoUrl().length() > 512 || c.getVideoPosterUrl() == null
+                    || c.getVideoPosterUrl().isBlank() || c.getVideoPosterUrl().length() > 512)
+                throw new IllegalStateException("请重新上传视频和封面");
+        }
+        if ((c.getVideoUrl() == null || c.getVideoUrl().isBlank())
+                && c.getVideoPosterUrl() != null && !c.getVideoPosterUrl().isBlank())
+            throw new IllegalStateException("请同时上传视频和封面");
         Integer recruitEnabled = c.getRecruitEnabled();
         ChapterRecruitmentRules.assertRecruitEnabled(recruitEnabled);
         ChapterRecruitmentRules.assertMaxMerchant(c.getMaxMerchant());
@@ -171,10 +181,10 @@ public final class TopicContentWriteGuard {
         com.chengyinhub.business.domain.CmsMemberTemplate tpl =
                 cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
         if (tpl == null || (tpl.getDelFlag() != null && tpl.getDelFlag() == 2)) {
-            throw new RuntimeException("模板不存在或已删除:" + templateId);
+            throw new RuntimeException("所选玩法不存在或已删除，请重新选择");
         }
         if (memberId == null || !memberId.equals(tpl.getMemberId())) {
-            throw new RuntimeException("不能引用他人的模板:" + templateId);
+            throw new RuntimeException("不能引用他人的模板" + titleOf(tpl) + "，请换成自己的玩法");
         }
         boolean privateDraft = allowBundledDraft
                 && Long.valueOf(0L).equals(tpl.getStatus())
@@ -185,10 +195,16 @@ public final class TopicContentWriteGuard {
             return;
         }
         if (tpl.getStatus() == null || tpl.getStatus() != 1L) {
-            throw new RuntimeException("模板尚未通过审核,不能引用:" + templateId);
+            throw new RuntimeException("玩法" + titleOf(tpl) + "还在审核中，审核通过后才能用于发布");
         }
         if (tpl.getDraftStatus() == null || tpl.getDraftStatus() != 1) {
-            throw new RuntimeException("草稿模板不能引用,请先发布:" + templateId);
+            throw new RuntimeException("玩法" + titleOf(tpl) + "还是草稿，请先发布这个玩法");
         }
+    }
+
+    /** P-15：把玩法名放进用户可读原因里(作者认得的是名字，不是模板号)。 */
+    private static String titleOf(com.chengyinhub.business.domain.CmsMemberTemplate tpl) {
+        String title = tpl == null ? null : tpl.getTitle();
+        return title == null || title.trim().isEmpty() ? "" : "「" + title.trim() + "」";
     }
 }

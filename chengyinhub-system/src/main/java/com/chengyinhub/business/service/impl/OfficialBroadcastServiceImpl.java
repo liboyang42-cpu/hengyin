@@ -385,8 +385,11 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         boolean delivered;
         try {
             // This is the WX-only contract. INotifyService fans out and cannot prove WX acceptance.
+            // 第九轮 m2 补充第 7 项:按收件角色落页(挂活动的落活动详情),不再一律落首页
+            OfficialBroadcast bc = intent.getBroadcastId() == null ? null : broadcastMapper.selectOfficialBroadcastById(intent.getBroadcastId());
             delivered = wxSubscribeMsgService.notifyOfficialBroadcast(intent.getMemberId(),
-                    intent.getDeliveryTitle(), intent.getDeliverySub());
+                    intent.getDeliveryTitle(), intent.getDeliverySub(),
+                    WxSubscribeMsgServiceImpl.officialBroadcastPage(intent.getRole(), bc == null ? null : bc.getEventId()));
         } catch (RuntimeException failure) {
             log.warn("[官方通知] 微信结果未知 bc={} delivery={} type={}",
                     intent.getBroadcastId(), intent.getId(), failure.getClass().getSimpleName());

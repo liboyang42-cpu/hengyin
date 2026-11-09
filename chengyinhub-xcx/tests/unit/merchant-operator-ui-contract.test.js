@@ -37,8 +37,10 @@ function mountTeamPage(storage = {}, options = {}) {
     removeStorageSync: key => { delete storage[key]; },
     showToast: options => toasts.push(options.title),
     switchTab: options => switches.push(options.url),
+    reLaunch: options => relaunches.push(options.url),
   };
   const switches = [];
+  const relaunches = [];
   vm.runInNewContext(options.source || read('pages/merchant/team/index.js'), {
     Page: value => { definition = value; },
     getApp: () => app,
@@ -75,7 +77,7 @@ function mountTeamPage(storage = {}, options = {}) {
   const page = Object.assign({}, definition);
   page.data = JSON.parse(JSON.stringify(definition.data));
   page.setData = function setData(patch) { Object.assign(this.data, patch); };
-  return { page, requests, toasts, storage, switches, setMemberId(value) { memberId = value; } };
+  return { page, app, requests, toasts, storage, switches, relaunches, setMemberId(value) { memberId = value; } };
 }
 
 test('商家岗位权限只认服务端白名单，未知或脏访问上下文关闭全部经营入口', () => {
@@ -572,7 +574,13 @@ test('匿名打开邀请链接:静默登录后从短 TTL 内存 handoff 恢复�
   anonymous.page.onLoad({ invite: token });
   anonymous.page.onShow();
   await flush();
-  assert.equal(anonymous.requests[0].url, '/api/merchant/access/me', '匿名打开必须先静默登录再确认身份');
+  // 2026-10-24 owner 规则(app.js:142-144)取代旧「匿名静默登录」:游客落「登录后查看邀请」,点「登录」才登录(j6 F1)。
+  assert.equal(anonymous.page.data.accessState, 'login', '游客打开邀请链接不得静默建号');
+  assert.equal(anonymous.requests.length, 0);
+  anonymous.app.firstLogin = () => { anonymous.setMemberId('member-7'); return Promise.resolve({ ok: true }); };
+  anonymous.page.onTeamLogin();
+  await flush();
+  assert.equal(anonymous.requests[0].url, '/api/merchant/access/me', '点「登录」后再确认身份');
   anonymous.requests[0].success({
     code: 200,
     data: { active: false, applicationState: 'NONE', permissions: [], merchant: null },
@@ -837,9 +845,9 @@ test('邀请有效期认 ISO(带 T、带不带偏移都认),不再显示「—�
 });
 
 
-test('经营团队匿名静默登录失败提供可见重试，未发送私有团队读', async()=>{
- const h=mountTeamPage({}, {memberId:'',sessionResult:{ok:false}});h.page.enterTeam(false);await new Promise(r=>setImmediate(r));
- assert.equal(h.requests.length,0);assert.equal(h.page.data.accessState,'error');assert.equal(h.page.data.accessErrorIsDenied,true);assert.match(h.page.data.accessError,/登录失败/);
+test('经营团队游客不静默登录:落「登录后查看」，未发送私有团队读(j6 F1)', async()=>{
+ let calls=0;const h=mountTeamPage({}, {memberId:'',ensureSession:()=>{calls+=1;return Promise.resolve({ok:true});}});h.page.enterTeam(false);await new Promise(r=>setImmediate(r));
+ assert.equal(h.requests.length,0);assert.equal(calls,0);assert.equal(h.page.data.accessState,'login');
 });
 test('经营团队真实401续期失败仍可见，不伪造成功或产生第二次私有读取',async()=>{
  const h=mountTeamPage({}, {sessionResult:{ok:false}});h.page.loadAccess();h.requests[0].successStatusAbnormal({statusCode:401},401);await new Promise(r=>setImmediate(r));
@@ -872,11 +880,12 @@ for (const method of ['enterTeam', 'recoverSession']) {
   }
 }
 
-test('经营团队重复匿名入口只让最新入口继续，隐藏后重新显示保留新入口', async () => {
+test('经营团队游客登录回来只让最新入口继续，隐藏后重新显示保留新入口', async () => {
   let resolve;
-  const session = new Promise(done => { resolve = done; });
-  const h = mountTeamPage({}, { memberId: '', ensureSession: () => session });
-  h.page.enterTeam(false); h.page.onHide(); h.page.onShow();
+  const login = new Promise(done => { resolve = done; });
+  const h = mountTeamPage({}, { memberId: '' });
+  h.app.firstLogin = () => login;
+  h.page.enterTeam(false); h.page.onTeamLogin(); h.page.onHide(); h.page.onShow();
   h.setMemberId('member-7'); resolve({ ok: true }); await flush();
   assert.equal(h.requests.length, 1);
   assert.equal(h.requests[0].url, '/api/merchant/access/me');
@@ -899,4 +908,57 @@ test('经营团队当前账号前台续期成功继续读取，续期失败仍�
     assert.equal(h.requests.length, ok ? 1 : 0);
     if (!ok) assert.match(h.page.data.accessError, /登录失败/);
   }
+});
+
+test('M-15(第三轮):接受邀请只落权限,不跳页', () => {
+  const ok = mountTeamPage();
+  ok.page._incomingInviteToken = 'safe-incoming-token-1234567890';
+  ok.page.loadAccess = () => {};
+  ok.page.acceptIncomingInvite();
+  ok.requests[0].success({ code: 200, data: { id: 9 } });
+  assert.deepEqual(ok.relaunches, []);
+  assert.equal(ok.page.data.acceptResult, '已加入经营团队');
+
+  const bad = mountTeamPage();
+  bad.page._incomingInviteToken = 'safe-incoming-token-1234567890';
+  bad.page.acceptIncomingInvite();
+  bad.requests[0].success({ code: 409, msg: '邀请已失效' });
+  assert.deepEqual(bad.relaunches, []);
+});
+
+// 第十轮 f1 item 4(j1 F4/F22):受邀人接受前是玩家视角,预览与接受不能被 role-view-filter 吞掉;落地页说清门店与岗位。
+test('玩家视角放行员工邀请预览与接受,其余团队接口照旧不发', () => {
+  const filter = require('../../utils/transport/role-view-filter.js');
+  assert.equal(filter.isMerchantOnlyUrl('/api/merchant/operators/invite/accept'), false);
+  assert.equal(filter.isMerchantOnlyUrl('/api/merchant/operators/invite/preview'), false);
+  ['/api/merchant/operators/list', '/api/merchant/operators/invite', '/api/merchant/operators/invite/revoke',
+    '/api/merchant/operators/invite/accepted', '/api/merchant/operators/role', '/api/merchant/operators/remove',
+    '/api/merchant/operators/roles', '/api/merchant/operators?x=1'].forEach((url) => {
+    assert.equal(filter.isMerchantOnlyUrl(url), true, url);
+  });
+});
+
+test('邀请落地页凭 token 读门店名与岗位,替掉旧说明句;失效就讲失效', () => {
+  const token = 'safe-incoming-token-1234567890';
+  const h = mountTeamPage({}, { memberId: 'member-7' });
+  h.page.onLoad({ invite: token });
+  h.page.loadAccess();
+  h.requests[0].success({ code: 200, data: { active: false, applicationState: 'NONE', permissions: [], merchant: null } });
+  assert.equal(h.page.data.accessState, 'invite');
+  const preview = h.requests.find((r) => r.url === '/api/merchant/operators/invite/preview');
+  assert.ok(preview, '邀请态必须读邀请预览');
+  assert.equal(JSON.parse(preview.data).token, token);
+  preview.success({ code: 200, data: { merchantName: '梧桐里书房', roleCode: 'MERCHANT_CHECKIN', roleName: '核销员' } });
+  assert.equal(JSON.stringify(h.page.data.invitePreview), JSON.stringify({ merchantName: '梧桐里书房', roleName: '核销员' }));
+  const wxml = read('pages/merchant/team/index.wxml');
+  assert.match(wxml, /\{\{invitePreview\.merchantName\}\} · \{\{invitePreview\.roleName\}\}/);
+  assert.doesNotMatch(wxml, /接受后会获得店主分配的固定岗位/);
+
+  const gone = mountTeamPage({}, { memberId: 'member-7' });
+  gone.page.onLoad({ invite: token });
+  gone.page.loadAccess();
+  gone.requests[0].success({ code: 200, data: { active: false, applicationState: 'NONE', permissions: [], merchant: null } });
+  gone.requests.find((r) => r.url === '/api/merchant/operators/invite/preview').success({ code: 409, msg: '邀请无效或已失效' });
+  assert.equal(gone.page.data.invitePreview, null);
+  assert.equal(gone.page.data.acceptResult, '邀请无效或已失效');
 });

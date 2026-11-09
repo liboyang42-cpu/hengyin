@@ -1,0 +1,27 @@
+
+──────── 步骤 1:0. 复位本脚本的夹具(可重跑)
+
+──────── 步骤 2:1. 四家店已核销,没有完成站点 ⇒ 4
+   [库回读] 核销过的店(按章去重)              ((4,),)
+   [库回读] 完成的城市站点(非商家节点、非自由探索)     ((0,),)
+   POST /api/play/growth (13900000009) {"level": 1, "totalCheckins": 0, "totalMileage": 0.0, "streakDays": 0, "checkinPlaces": 4}
+  expect 4 -> 4
+
+──────── 步骤 3:2. 夹具:店里游戏也答完了(商家节点 71 status=1) ⇒ 仍是 4,不重复计
+   [库回读] 节点进度                     ((71, 1), (72, 0), (73, 0), (74, 0))
+   [库回读] 核销过的店(按章去重)              ((4,),)
+   [库回读] 完成的城市站点(非商家节点、非自由探索)     ((0,),)
+   POST /api/play/growth (13900000009) {"level": 1, "totalCheckins": 0, "totalMileage": 0.0, "streakDays": 0, "checkinPlaces": 4}
+  expect 4 -> 4
+
+──────── 步骤 4:3. 夹具:一个城市定向主题的非商家站点完成 ⇒ 5
+   [库回读] 核销过的店(按章去重)              ((4,),)
+   [库回读] 完成的城市站点(非商家节点、非自由探索)     ((1,),)
+   POST /api/play/growth (13900000009) {"level": 1, "totalCheckins": 0, "totalMileage": 0.0, "streakDays": 0, "checkinPlaces": 5}
+  expect 5 -> 5
+
+──────── 步骤 5:4. 没有任何数据的玩家 ⇒ 0
+   POST /api/play/growth (13900000004) {"level": 1, "totalCheckins": 0, "totalMileage": 0, "streakDays": 0, "checkinPlaces": 0}
+  expect 0 -> 0
+
+P22-PROOF: PASS

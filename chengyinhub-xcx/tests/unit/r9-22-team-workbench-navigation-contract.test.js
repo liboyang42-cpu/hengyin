@@ -85,15 +85,21 @@ test('工作台落点真实注册,且 reLaunch 使其成为根页(无错误返�
   assert.equal(navigations[0].method, 'reLaunch', 'reLaunch 清掉经营团队页，工作台成为根页，返回栈不残留半截')
 })
 
-test('未登录不再摆「去登录」整屏闸:静默登录后自动确认身份', async () => {
+// 2026-10-24 owner 规则(app.js:142-144)取代旧「游客静默登录」:游客不在打开页面时建号(j6 F1),
+// 落全站同款「登录后查看 · 登录」(不是旧整屏闸「登录后处理团队邀请 / 去登录」),点了才登录。
+test('游客打开经营团队:不静默建号,落「登录后查看」,不发请求;点「登录」后自动确认身份', async () => {
+  let logins = 0
   const { page, navigations, requests, state } = loadTeamPage({ memberId: '' })
+  const app = global.getApp()
+  global.getApp = () => Object.assign(app, { firstLogin() { logins += 1; state.memberId = 42; return Promise.resolve({ ok: true }) } })
   page.onLoad({})
   page.onShow()
   await new Promise((resolve) => setTimeout(resolve, 0))
 
-  assert.equal(state.memberId, 42, '必须先静默登录再拉身份')
-  assert.equal(requests[0].url, '/api/merchant/access/me')
-  assert.deepEqual(navigations, [], '正常团队账号不得被整屏闸赶去会员中心')
+  assert.equal(state.memberId, '', '游客打开页面不得静默登录')
+  assert.equal(page.data.accessState, 'login')
+  assert.equal(requests.length, 0)
+  assert.deepEqual(navigations, [])
 })
 
 function assertNoTeamGate(wxml) {

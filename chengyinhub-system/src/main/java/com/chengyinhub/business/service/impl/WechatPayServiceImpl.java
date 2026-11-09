@@ -71,6 +71,11 @@ public class WechatPayServiceImpl implements IWechatPayService {
     public Map<String, String> createGenericOrder(String outTradeNo, java.math.BigDecimal amountYuan, String description, String openid){ return gateway.createGenericOrder(outTradeNo, amountYuan, description, openid); }
 
     @Override
+    public String resolveBusinessOrderNo(String wxOutTradeNo) {
+        return gateway.resolveBusinessOrderNo(wxOutTradeNo);
+    }
+
+    @Override
     public String queryRefundStatus(String outRefundNo){ return gateway.queryRefundStatus(outRefundNo); }
 
     @Override

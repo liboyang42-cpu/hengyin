@@ -65,6 +65,9 @@ public class ActivityCancelManualRefundCaseServiceImpl
     @Autowired
     private IActivityCancelManualRefundEvidenceStore evidenceStore;
 
+    @Autowired
+    private com.chengyinhub.business.service.IRefundService refundService;
+
     /** 必须与活动取消共用事务，避免活动已取消但人工退款责任丢失。 */
     @Override
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
@@ -327,8 +330,9 @@ public class ActivityCancelManualRefundCaseServiceImpl
                     mapper.selectByVerifyRequestId(input.requestId), verifierUserId, input);
         }
         ActivityCancelManualRefundCase readback = mapper.selectById(input.caseId);
-        if (changed != 1) return exactVerifyReplayOrConflict(readback, verifierUserId, input);
-        return exactVerifyReplayOrConflict(readback, verifierUserId, input);
+        ActivityCancelManualRefundCaseVO result = exactVerifyReplayOrConflict(readback, verifierUserId, input);
+        if (changed == 1) refundService.recordVerifiedExploreManualRefund(readback);
+        return result;
     }
 
     @Override

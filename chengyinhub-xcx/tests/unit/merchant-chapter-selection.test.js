@@ -1299,3 +1299,17 @@ test('退出供给即使未刷新映射也不能直达供给表单或撤回申�
   assert.equal(dc.opens.length, 0);
   assert.ok(!requestByUrl('/api/merchant/chapter-application/withdraw'));
 });
+
+test('第十轮 f3 p2 F-11:主题锁定后承办快捷格不给「编辑」,生命周期未知时仍给,解锁可编辑时恢复', () => {
+  const page = makePage();
+  Object.assign(page.data, { chapterProject: true, topicId: 42, info: {},
+    myChapterApplications: [{ chapterId: 31, chapterName: '第一章', status: 1 }] });
+  page.refreshMyChapterApplications();
+  assert.ok(page.data.quickActions.some(item => item.key === 'chapterEdit'), '生命周期未读回不下结论');
+  page.data.info = { lifecycle: 3 };
+  page.refreshMyChapterApplications();
+  assert.deepEqual(page.data.quickActions.map(item => item.key), ['scan', 'chapterCheckin', 'customer']);
+  page.data.info = { lifecycle: 7 };
+  page.refreshMyChapterApplications();
+  assert.deepEqual(page.data.quickActions.map(item => item.key), ['scan', 'chapterCheckin', 'customer', 'chapterEdit']);
+});

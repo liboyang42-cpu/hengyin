@@ -1,5 +1,6 @@
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
@@ -7,6 +8,7 @@
   <cy-page-title title="角色与权限" subtitle="{{activitySubtitle}}" safe-top="{{false}}" />
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
+  <cy-empty wx:elif="{{state === 'missing'}}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="goBack" />
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
@@ -24,7 +26,6 @@
         <view class="row">
           <view class="row-text">
             <text class="row-title">{{ownerName || '主理人'}}</text>
-            <text class="row-desc">全部权限，不可撤销</text>
           </view>
           <text class="row-value row-value--primary">主理人</text>
         </view>
@@ -59,6 +60,11 @@
           <text class="row-title">角色</text>
           <text class="row-pick">{{selectedRoleName || '未选择'}}</text><cy-icon class="row-pick-arrow" name="slide-arrow" size="28" />
         </view>
+        <view wx:if="{{selectedRoleCode === 'EVENT_CHECKIN'}}" class="row" bindtap="toggleCustomerPhoneVisible" aria-role="switch"
+          aria-checked="{{customerPhoneVisible}}" aria-label="可见客户手机号" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="row-title">可见客户手机号</text>
+          <text class="row-pick">{{customerPhoneVisible ? '是' : '否'}}</text><cy-icon class="row-pick-arrow" name="slide-arrow" size="28" />
+        </view>
       </view>
       <view class="assign-btn {{(!selectedMemberId || !selectedRoleCode || actingKey) ? 'disabled' : ''}}"
         bindtap="assignRole" aria-role="button"
@@ -68,7 +74,6 @@
       <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
     </view>
 
-    <text class="page-note">撤销后立即生效</text>
   </block>
 </view>
 </view>

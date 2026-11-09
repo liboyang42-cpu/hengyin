@@ -1,0 +1,27 @@
+# 第十一轮 h2 本机演练回读(一次性 MySQL 8.0.46,scratchpad 内启动,用完即删;CI 用 Oracle 8.0.45)
+
+## A. 全链重建:base schema + 台账拓扑序全部迁移(含本迁移),scripts/e2e/build_schema.py --schema cy_e2e_h2rehearsal --drop
+===== 结果 =====
+最终表数: 457   耗时: 12.9s
+基线阶段问题: 0   seed 阶段问题: 0   迁移阶段问题: 0
+数据前置观察: 4（纯 schema 快照不包含业务行，不冒充数据迁移通过）
+  [DATA_ASSERT] 20261101_theme_categories #8  scalar-true readback=0
+        SELECT (SELECT COUNT(*) FROM sys_category WHERE type = 1 AND parent_id = 0 AND status = 1 AND del_flag = 0
+  [DATA_ASSERT] 20261103_settlement_rule_three_percent #1  scalar-true readback=0
+        SELECT (SELECT COUNT(*) FROM settlement_rule
+  [DATA_ASSERT] 20261103_settlement_rule_three_percent #3  scalar-true readback=0
+        SELECT (SELECT COUNT(*) FROM settlement_rule
+  [DATA_ASSERT] 20261030_merchant_game_covers_to_oss #3  scalar-true readback=0
+        SELECT (
+
+## B. 同一库上本迁移第二遍(run_file),所有相关表快照前后对比
+second run ok= True issues= [] unchanged= True
+
+## C. ci/test_review_wording_seeded_text_mysql_integration.py(基线 → 原样执行两份玩法包种子 + predict 任务注册 → 14 条菜单 + 作者改过 / 复制件对照行 → 本迁移两遍)
+test_assertion_fails_closed_when_a_seed_row_still_has_old_text ... ok
+test_renames_platform_seed_rows_only_and_replays_without_change ... ok
+Ran 2 tests ... OK
+
+## D. MerchantCrmFreeExploreRosterMySqlIT
+新 XML:Tests run: 2, Failures: 0, Errors: 0
+负控(MerchantCrmAppMapper.xml 换回 HEAD~ 原版):Tests run: 2, Failures: 1 —— 撤回单店同意后参与商家不该再看到这位买家 ==> expected: <true> but was: <false>

@@ -8,7 +8,7 @@
   <view class="tm-state" wx:if="{{accessState === 'loading'}}">
     <view class="tm-skeleton-card"><cy-skeleton type="list" count="3" /></view>
   </view>
-  <!-- 未登录不再整屏拦:静默登录后自动加载;登录/身份确认失败只留这条内联错误。 -->
+  <cy-empty wx:elif="{{accessState === 'login'}}" kind="no-permission" fill size="lg" title="{{hasIncomingInvite ? '登录后查看邀请' : '登录后查看经营团队'}}" cta="登录" bind:cta="onTeamLogin" />
   <view class="tm-state" wx:elif="{{accessState === 'error'}}">
     <cy-inline-error load-failure="{{!accessErrorIsDenied}}" title="{{accessErrorIsDenied ? '请确认登录或经营权限' : '经营团队加载失败'}}" sub="{{accessError}}" action="重新加载" bind:action="retryAccess" />
   </view>
@@ -17,9 +17,9 @@
     <view class="tm-invite-landing">
       
       <view class="tm-invite-title">加入经营团队</view>
-      <view class="tm-invite-copy">接受后会获得店主分配的固定岗位；每个账号同一时间只能加入一个商家团队。</view>
+      <view class="tm-invite-copy" wx:if="{{invitePreview}}">{{invitePreview.merchantName}} · {{invitePreview.roleName}}</view>
       <cy-btn variant="primary" loading="{{accepting}}" bind:tap="acceptIncomingInvite">接受邀请</cy-btn>
-      <view class="tm-result tm-result--error" wx:if="{{acceptResult}}">{{acceptResult}}</view>
+      <view class="tm-result {{acceptOk ? 'tm-result--ok' : 'tm-result--error'}}" wx:if="{{acceptResult}}">{{acceptResult}}</view>
     </view>
   </view>
 
@@ -44,13 +44,13 @@
       </view>
       <view class="tm-text-action" bindtap="acceptIncomingInvite" aria-role="button" aria-label="接受团队邀请" hover-class="{{accepting ? 'none' : 'cy-pressed'}}" hover-stay-time="80">接受</view>
     </view>
-    <view class="tm-result tm-result--error" wx:if="{{acceptResult}}">{{acceptResult}}</view>
+    <view class="tm-result {{acceptOk ? 'tm-result--ok' : 'tm-result--error'}}" wx:if="{{acceptResult}}">{{acceptResult}}</view>
 
     <block wx:if="{{access.canManageOperators}}">
       <view class="tm-share-card" wx:if="{{createdInvite}}">
         <view class="tm-share-main">
           <text class="tm-share-title">{{createdInvite.roleName}}邀请已创建</text>
-          <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效，请在本页分享</text>
+          <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效</text>
         </view>
         <button wx:if="{{canShareCreatedInvite}}" class="tm-share-btn" open-type="share" aria-label="立即分享团队邀请">立即分享</button>
       </view>
@@ -109,7 +109,6 @@
     <view class="tm-self-card" wx:else>
       <text class="tm-self-title">你的岗位权限</text>
       <text class="tm-self-role">{{access.roleName}}</text>
-      <text class="tm-self-copy">岗位调整或离职由店主操作，立即生效。</text>
       <cy-btn variant="primary" bind:tap="goWorkbench">进入工作台</cy-btn>
     </view>
 

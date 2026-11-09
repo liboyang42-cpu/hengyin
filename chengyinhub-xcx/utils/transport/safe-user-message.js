@@ -29,6 +29,10 @@ function safeUserMessage(input, fallback) {
   if (/Error querying database|SQLSyntaxErrorException|bad SQL grammar|nested exception/i.test(raw)) {
     return '当前数据暂不可用，请稍后重试';
   }
+  // Spring / 配置类的内部报错原文(序列化失败、缺环境变量)不是给玩家看的
+  if (/Could not (?:write|read) JSON|HttpMessage(?:Not|Conv)|\bCHENGYIN_[A-Z_]+\b|配置缺失/.test(raw)) {
+    return '服务开小差了，请稍后重试';
+  }
   if (/class java\.|java\.lang\.|\b[A-Za-z]+Exception\b|cannot be cast to|\bat\s+[\w$]+(?:\.[\w$]+)+(?:\([^)]*\))?/i.test(raw)) {
     return '服务开小差了，请稍后重试';
   }

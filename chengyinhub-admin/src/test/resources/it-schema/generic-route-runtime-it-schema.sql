@@ -231,3 +231,8 @@ ALTER TABLE play_team ADD COLUMN invite_code VARCHAR(32) NULL;
 CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT DEFAULT 0) ENGINE=InnoDB;
 
 CREATE TABLE cms_registration (member_id BIGINT, owner_type INT, owner_id BIGINT, topic_id BIGINT, payment_status INT, registration_status INT) ENGINE=InnoDB;
+
+-- C-10(2026-11-02):复盘到场与本场名册同一事实,读集合签到与签到更正(列取自 base_schema / migration_club_role_event_ops_20260823)。
+CREATE TABLE club_lead_checkin (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, activity_id BIGINT NOT NULL, member_id BIGINT NOT NULL, arrived_at DATETIME NOT NULL, UNIQUE KEY uk_arrive (activity_id, member_id)) ENGINE=InnoDB;
+
+CREATE TABLE club_event_attendance_correction (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, club_id BIGINT NOT NULL, activity_id BIGINT NOT NULL, member_id BIGINT NOT NULL, original_arrived TINYINT(1) NOT NULL, new_arrived TINYINT(1) NOT NULL, original_arrived_at DATETIME NULL, new_arrived_at DATETIME NULL, reason VARCHAR(500) NOT NULL, actor_member_id BIGINT NOT NULL, request_id VARCHAR(64) NOT NULL, version INT NOT NULL, corrected_at DATETIME NOT NULL) ENGINE=InnoDB;

@@ -175,8 +175,8 @@ test('R14 搜索发送keyword，慢到的旧关键词结果与complete均不覆�
 });
 test('R15 邀请下一页失败有原页重试，游标不归零', () => {
   const p = host({ hasMore: true, loading: false, loadMoreError: true }, { _pageNo: 2, load: reset => { assert.equal(reset, false); } });
-  method('components/cy/scene-member-invite-history/index.js', 'loadMore').call(p); assert.equal(p._pageNo, 2);
-  assert.match(read('components/cy/scene-member-invite-history/index.wxml'), /loadMoreError && groups.length && !loading[^>]*bindtap="loadMore"/);
+  method('subpackageA/components/scene-member-invite-history/index.js', 'loadMore').call(p); assert.equal(p._pageNo, 2);
+  assert.match(read('subpackageA/components/scene-member-invite-history/index.wxml'), /loadMoreError && groups.length && !loading[^>]*bindtap="loadMore"/);
 });
 test('R16 旁白关闭暂停实际_audio，R17归一化坐标可以导航', () => {
   let paused = 0, opened;
@@ -185,7 +185,7 @@ test('R16 旁白关闭暂停实际_audio，R17归一化坐标可以导航', () =
   method(play, 'openHeroNav', { wx: { openLocation: value => { opened = value; } }, cyToast() {} }).call(p); assert.equal(opened.longitude, 121.4);
 });
 test('R18 收齐实际分页才显示统计；加载中、失败后切换不伪造零', () => {
-  const requests = [], app = { getUserID: () => 9, sendRequest: value => requests.push(value) }, earningsView = require('../../utils/earnings-view.js');
+  const requests = [], app = { getUserID: () => 9, sendRequest: value => requests.push(value) }, earningsView = require('../../subpackageA/utils/earnings-view.js');
   const p = host({ state: 'loading', mode: 'income' }); const file = 'subpackageA/pages/assetcenter/analysis/index.js';
   const locals = { app, earningsView, asWithdraw: rows => (rows || []).filter(row => row.eventType === 3) };
   for (const name of ['load', '_render', 'switchMode']) p[name] = method(file, name, locals);

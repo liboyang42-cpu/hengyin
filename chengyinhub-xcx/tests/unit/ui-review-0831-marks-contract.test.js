@@ -237,7 +237,7 @@ test('C25 缺参走 info 图标，夹具文案与页面守卫一致', () => {
   assert.doesNotMatch(branch[1], /icon=/, '缺参不能再盖空态位图')
   const js = read('pages/topic/index/index.js')
   assert.match(js, /loadErrorTitle:\s*'无法打开主题'/)
-  assert.match(js, /loadErrorSub:\s*'请返回重新进入'/)
+  assert.match(js, /loadErrorSub:\s*''/)
   const data = FIXTURES().C25.data
   assert.equal(data.missingTopicId, true)
   assert.equal(data.loadErrorTitle, '无法打开主题')

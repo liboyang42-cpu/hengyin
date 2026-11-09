@@ -135,6 +135,42 @@ class ClubCancellationSnapshotEligibilityMyBatisTest {
         }
     }
 
+    /** C-08:open-session 独立场次(无 series/occurrence)取消后,已退款报名者仍收得到这条取消通知。 */
+    @Test
+    void standaloneCancelledSessionRegisteredSnapshotIsEligible() throws Exception {
+        try (SqlSession session = factory.openSession(true);
+             Statement statement = session.getConnection().createStatement()) {
+            statement.execute("create table cms_registration (owner_type int, owner_id bigint, member_id bigint, "
+                    + "payment_status int, registration_status int)");
+            statement.execute("create table cms_topic (id bigint, club_id bigint, member_id bigint)");
+            statement.execute("alter table cms_activity add column topic_id bigint");
+            statement.execute("alter table cms_activity add column member_id bigint");
+            statement.execute("insert into cms_activity (id,club_id,del_flag,cancel_time,publish_status) values (81,21,0,current_timestamp,0)");
+            statement.execute("insert into cms_activity (id,club_id,del_flag,cancel_time,publish_status) values (82,21,0,null,1)");
+            // 退款后的报名:payment_status=4(已退款),普通「已报名」口径不再命中。
+            statement.execute("insert into cms_registration values (2,81,301,4,3)");
+            statement.execute("insert into club_event_notification_campaign values "
+                    + "(201,21,81,'REGISTERED','cancel-r-standalone'),"
+                    + "(202,21,81,'REGISTERED','ordinary-registered'),"
+                    + "(203,21,82,'REGISTERED','cancel-r-not-cancelled')");
+            statement.execute("insert into club_event_notification_delivery "
+                    + "(id,campaign_id,recipient_member_id,channel,status,attempt_count,version,create_time,update_time) values "
+                    + "(2001,201,301,'IN_APP','PENDING',0,0,current_timestamp,current_timestamp),"
+                    + "(2002,202,301,'IN_APP','PENDING',0,0,current_timestamp,current_timestamp),"
+                    + "(2003,203,301,'IN_APP','PENDING',0,0,current_timestamp,current_timestamp)");
+            ClubEventOpsMapper mapper = session.getMapper(ClubEventOpsMapper.class);
+            assertEquals(1, mapper.isEligibleNotificationRecipient(201L, 21L, 81L, "REGISTERED", 301L));
+            assertEquals(0, mapper.isEligibleNotificationRecipient(202L, 21L, 81L, "REGISTERED", 301L),
+                    "普通「已报名」群发仍按当前已付款报名复核");
+            assertEquals(0, mapper.isEligibleNotificationRecipient(203L, 21L, 82L, "REGISTERED", 301L),
+                    "场次没取消时取消快照不放行");
+            // 系列场次:occurrence 仍 ACTIVE 时不放行(只认已取消的那一行)。
+            statement.execute("insert into club_event_occurrence values (61,81,'ACTIVE')");
+            session.clearCache();
+            assertEquals(0, mapper.isEligibleNotificationRecipient(201L, 21L, 81L, "REGISTERED", 301L));
+        }
+    }
+
     private ClubEventCampaign campaign(Long id, String requestId) {
         ClubEventCampaign row = new ClubEventCampaign();
         row.setId(id);

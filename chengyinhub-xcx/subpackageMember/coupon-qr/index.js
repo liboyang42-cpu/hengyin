@@ -69,7 +69,7 @@ Page({
     const historyId = String(this.data.couponHistoryId);
     if (this._sessionOwner !== undefined
         && (this._sessionOwner !== owner || this._sessionHistoryId !== historyId)) {
-      this.setData({ useStatus: 0, useTimeText: '', coupon: {}, notStarted: false });
+      this.setData({ entryState: 'ready', useStatus: 0, useTimeText: '', coupon: {}, notStarted: false });
     }
     this._sessionOwner = owner;
     this._sessionHistoryId = historyId;
@@ -189,6 +189,7 @@ Page({
       data: { couponHistoryId },
       success(res) {
         if (stale()) return;
+        if (res && /无权查看该券/.test(String(res.msg || ''))) { that.onNotMine(); return; }
         if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
         if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
         if (res && (res.code == 200 || res.code == '200') && res.data) {
@@ -200,6 +201,7 @@ Page({
             return;
           }
           const patch = {
+            entryState: 'ready',
             qrcodeUrl: parsed.qr,
             qrState: parsed.status === 0 ? 'ready' : 'loading',
             countdown: parsed.countdown,
@@ -236,12 +238,14 @@ Page({
       // HTTP 非 200(如部署窗口 502):request-client 既不走 success 也不走 fail,必须接这里
       successStatusAbnormal(res) {
         if (stale()) return;
+        if (res && /无权查看该券/.test(String(res.msg || ''))) { that.onNotMine(); return; }
         if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
         if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
         that.onRefreshFail((res && res.msg) || '出码失败');
       },
       fail(err) {
         if (stale()) return;
+        if (err && /无权查看该券/.test(String(err.msg || ''))) { that.onNotMine(); return; }
         // 提供 fail 会替掉 request-client 401 重登失败的默认"登录已过期"toast,此处补回区分
         const expired = err && (err.code == 401 || err.code == 2);
         that.onRefreshFail(expired ? '登录已过期，请重新进入' : '网络异常，请重试');
@@ -256,11 +260,17 @@ Page({
     if (control && typeof control.abort === 'function') this._tokenTask = control;
   },
 
+  onNotMine() {
+    this.clearTimers();
+    this._clearRenderedCredential();
+    this.setData({ entryState: 'notmine', coupon: {}, useTimeText: '', countdown: 0 });
+  },
+
   requireOwner() {
     if (currentOwnerId()) return true;
     this._endSession();
     this._clearRenderedCredential();
-    this.setData({ coupon: {}, useTimeText: '', useStatus: null, notStarted: false, countdown: 0, qrState: 'error', errMsg: '登录状态待确认，请登录后重试' });
+    this.setData({ entryState: 'ready', coupon: {}, useTimeText: '', useStatus: null, notStarted: false, countdown: 0, qrState: 'error', errMsg: '登录状态待确认，请登录后重试' });
     return false;
   },
 
@@ -360,7 +370,8 @@ Page({
         data: { couponHistoryId: that.data.couponHistoryId },
         success(res) {
           if (!stillCurrent()) return;
-          if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
+          if (res && /无权查看该券/.test(String(res.msg || ''))) { that.onNotMine(); return; }
+        if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
         if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
           if (res && (res.code == 200 || res.code == '200') && res.data) {
             const st = credential.couponStatus(res.data.useStatus);
@@ -380,7 +391,8 @@ Page({
         },
         successStatusAbnormal(res) {
           if (!stillCurrent()) return;
-          if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
+          if (res && /无权查看该券/.test(String(res.msg || ''))) { that.onNotMine(); return; }
+        if (res && res.code == 503) { that.onQrServiceDisabled(res.msg); return; }
         if (res && res.code == 410) { that.onCredentialUnavailable(res.msg); return; }
           if (that.data.useStatus == 0 && that.data.qrState !== 'error') {
             that.onPollFail(that.friendlyQrError(res && res.msg, '核销状态暂不可用，请稍后重试'));

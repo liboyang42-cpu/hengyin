@@ -8,7 +8,7 @@ const test = require('node:test')
 const vm = require('node:vm')
 const ROOT = path.resolve(__dirname, '../..')
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
-const FILE = path.join(ROOT, 'components/cy/scene-qr-ticket/index.js')
+const FILE = path.join(ROOT, 'pages/play/components/scene-qr-ticket/index.js')
 
 function mount(props) {
   let definition
@@ -26,20 +26,20 @@ function mount(props) {
 }
 
 test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计时/码串/说明/放大层', () => {
-  const xml = read('components/cy/scene-qr-ticket/index.wxml').replace(/<!--[\s\S]*?-->/g, '')
+  const xml = read('pages/play/components/scene-qr-ticket/index.wxml').replace(/<!--[\s\S]*?-->/g, '')
   const card = xml.slice(xml.indexOf('class="voucher__card"'), xml.indexOf('seat-choice__switch'))
   assert.match(card, /<text wx:if="\{\{title\}\}" class="voucher__title ep1">\{\{title\}\}<\/text>/)
   // 10-29 第三轮:码换成 cy-dot-qr(圆点 + 码心黑色 logo + 彩色波),和票夹背面同一个组件
   assert.match(card, /<cy-dot-qr wx:if="\{\{state === 'ready'\}\}" src="\{\{qr\}\}" size="\{\{360\}\}" \/>/)
   assert.match(card, /<text wx:if="\{\{expiry\}\}" class="voucher__exp">\{\{expiry\}\}<\/text>/)
   assert.doesNotMatch(xml, /Code :|countdown|城瘾活动入场码|出示扫码核销|现在核销|bigqr|长期开放/)
-  const css = read('components/cy/scene-qr-ticket/index.wxss')
+  const css = read('pages/play/components/scene-qr-ticket/index.wxss')
   const wallet = read('subpackageMember/signup/index.wxss')
   for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {'], ['.voucher__exp {', '.wc__exp {']]) {
     const body = (src, sel) => src.slice(src.indexOf(sel) + sel.length, src.indexOf('}', src.indexOf(sel)))
     assert.equal(body(css, mine), body(wallet, theirs), mine + ' 与票夹同值')
   }
-  assert.doesNotMatch(read('components/cy/scene-qr-ticket/index.js'), /有效期剩余|setScreenBrightness/)
+  assert.doesNotMatch(read('pages/play/components/scene-qr-ticket/index.js'), /有效期剩余|setScreenBrightness/)
 })
 
 test('V-02 组件到期行与票夹同一规则', () => {
@@ -81,7 +81,7 @@ test('V-02 玩法页与深链宿主把标题和票有效期交给组件', () => 
   const play = read('pages/play/index.js')
   assert.match(play, /openScene\('qr-ticket', \{ registrationId: regId, title: this\.data\.topicName \|\| '', until: this\._passExpiresAt \|\| '' \}\)/)
   assert.equal((play.match(/_passExpiresAt = d\.expiresAt \|\| ''/g) || []).length, 2)
-  for (const host of ['pages/play/index.wxml', 'components/cy/scene-deep-link/index.wxml']) {
+  for (const host of ['pages/play/index.wxml', 'subpackageMember/components/cy/scene-deep-link/index.wxml']) {
     assert.match(read(host), /<cy-scene-qr-ticket registration-id="\{\{sceneCurrent\.params\.registrationId\}\}" title="\{\{sceneCurrent\.params\.title\}\}" until="\{\{sceneCurrent\.params\.until\}\}"/)
   }
 })

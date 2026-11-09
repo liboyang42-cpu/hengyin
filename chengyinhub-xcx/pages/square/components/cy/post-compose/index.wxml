@@ -53,7 +53,7 @@
               </view>
             </view>
             </view>
-          <view class="cmp-chip" wx:if="{{address}}">
+          <view class="cmp-chip" wx:if="{{address}}" bindtap="onPickLocation" aria-role="button" aria-label="更换地点 {{address}}" hover-class="cy-pressed" hover-stay-time="80">
             <cy-icon name="pin" size="28" />
             <text class="cmp-chip-txt ep1">{{address}}</text>
             <view class="cmp-chip-x" catchtap="onClearLocation" aria-role="button" aria-label="清除已选地点" hover-class="cy-pressed" hover-stay-time="80">

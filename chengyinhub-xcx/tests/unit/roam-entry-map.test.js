@@ -4,7 +4,7 @@ const entryMap = require('../../utils/roam-entry-map.js')
 
 test('活动与队伍同图，活动卡关联对应招募队伍', () => {
   const items = [{ id: 7, kind: 'activity', topicId: 3, name: '预制人生', picUrl: '/cover.jpg', latitude: 31.2, longitude: 121.4 }]
-  const teams = [{ teamId: 8, topicId: 3, title: '新手慢玩队', latitude: 31.21, longitude: 121.41, joinedCount: 2, maxMembers: 4, viewerHasTicket: true, memberAvatars: ['a.png', '', 'b.png'] }]
+  const teams = [{ teamId: 8, topicId: 3, activityId: 7, title: '新手慢玩队', latitude: 31.21, longitude: 121.41, joinedCount: 2, maxMembers: 4, viewerHasTicket: true, memberAvatars: ['a.png', '', 'b.png'] }]
   const view = entryMap.build(items, teams, { activities: true, teams: true, posts: true }, value => value)
   assert.deepEqual(view.markers.map(row => row.id), [72, 84])
   assert.equal(view.cards[0].teams[0].title, '新手慢玩队')
@@ -81,4 +81,19 @@ test('结束活动保留地图位置并提示已结束，不再展示招募队�
     assert.equal(current.teams.length, 1)
   }
   assert.equal(entryMap.activityView({ ...item, kind: 'topic' }, []).ended, false)
+})
+
+// 第十一轮 g2,j4 F6:场次卡只数本场次的队伍(队伍要本场票);主题卡才汇总各场次。
+test('j4 F6: a session card counts only its own teams; the topic card counts all of them', () => {
+  const teams = [
+    { teamId: 1, topicId: 14, activityId: 9, latitude: 31.2, longitude: 121.4, viewerHasTicket: true },
+    { teamId: 2, topicId: 14, activityId: 9, latitude: 31.2, longitude: 121.4 },
+  ]
+  const s9 = entryMap.activityView({ id: 9, kind: 'activity', topicId: 14, productType: 2, name: '场次9' }, teams)
+  const s12 = entryMap.activityView({ id: 12, kind: 'activity', topicId: 14, productType: 2, name: '场次12' }, teams)
+  const topic = entryMap.activityView({ id: 14, kind: 'topic', productType: 2, name: '主题' }, teams)
+  assert.match(s9.meta, /2 支队伍招募/)
+  assert.doesNotMatch(s12.meta, /队伍招募/)
+  assert.equal(s12.registered, false, '别的场次的票不算本场已报名')
+  assert.match(topic.meta, /2 支队伍招募/)
 })

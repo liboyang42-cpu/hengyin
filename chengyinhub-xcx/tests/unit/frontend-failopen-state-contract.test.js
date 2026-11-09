@@ -187,7 +187,7 @@ test('R6 商家承接候选:加载失败保留上下文并提供重试', () => {
 
   const picker = read('pages/topic/components/cy/chapter-target-picker/index.wxml');
   assert.match(picker, /chaptersState === 'loading'[\s\S]*?<cy-error\b[^>]*wx:elif="\{\{chaptersState === 'error'\}\}"[^>]*bind:retry="onRetryChapters"/);
-  assert.match(picker, /chaptersState === 'category-missing'[\s\S]*完善商家品类/);
+  assert.match(picker, /chaptersState === 'category-missing'[\s\S]*选择行业类型/);
   assert.match(picker, /chaptersState === 'ready' && !rows\.length[\s\S]*暂时没有开放的章节/);
 });
 

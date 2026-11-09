@@ -1,0 +1,130 @@
+{
+  "fall": {
+    "at": 1793906866824,
+    "chapter": 130,
+    "full": true,
+    "video": {
+      "show": false
+    },
+    "media": [
+      {
+        "kind": "audio",
+        "id": 17,
+        "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/a91e653bf6c54f258ce86b8011ba7a8e.mp3",
+        "paused": false,
+        "currentTime": 0.25542,
+        "readyState": 4,
+        "volume": 0.25
+      },
+      {
+        "kind": "audio",
+        "id": 19,
+        "src": "https://rig-offline.oss-cn-shanghai.aliyuncs.com/upload/9813ac0046ab4a699e2e0ea4bbb9775a.mp3",
+        "paused": false,
+        "currentTime": 0,
+        "readyState": 0,
+        "volume": 1
+      }
+    ],
+    "elapsedMs": 5000
+  },
+  "late": {
+    "at": 1793906873329,
+    "routes": [
+      "pages/template/index",
+      "pages/topic/index/index",
+      "subpackageMember/orderinfo/orderinfo"
+    ],
+    "media": [],
+    "video": [
+      {
+        "t": 1793906794770,
+        "id": 12,
+        "event": "timeupdate",
+        "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "currentTime": 2,
+        "paused": true,
+        "readyState": 4,
+        "volume": 1,
+        "error": null
+      },
+      {
+        "t": 1793906794770,
+        "id": 12,
+        "event": "pause",
+        "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "currentTime": 2,
+        "paused": true,
+        "readyState": 4,
+        "volume": 1,
+        "error": null
+      },
+      {
+        "t": 1793906794770,
+        "id": 12,
+        "event": "ended",
+        "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "currentTime": 2,
+        "paused": true,
+        "readyState": 4,
+        "volume": 1,
+        "error": null
+      },
+      {
+        "t": 1793906820382,
+        "id": 15,
+        "event": "create",
+        "src": "",
+        "currentTime": 0,
+        "paused": true,
+        "readyState": 0,
+        "volume": 1,
+        "error": null
+      },
+      {
+        "t": 1793906820382,
+        "id": 15,
+        "event": "loadstart",
+        "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "currentTime": 0,
+        "paused": true,
+        "readyState": 0,
+        "volume": 1,
+        "error": null
+      },
+      {
+        "t": 1793906820383,
+        "id": 15,
+        "event": "error",
+        "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "currentTime": 0,
+        "paused": true,
+        "readyState": 0,
+        "volume": 1,
+        "error": 4
+      },
+      {
+        "t": 1793906861811,
+        "id": 18,
+        "event": "create",
+        "src": "",
+        "currentTime": 0,
+        "paused": true,
+        "readyState": 0,
+        "volume": 1,
+        "error": null
+      },
+      {
+        "t": 1793906861812,
+        "id": 18,
+        "event": "loadstart",
+        "src": "/__oss/upload/2a7e4ec0443d4f3aa500630f4bae0168.mp4",
+        "currentTime": 0,
+        "paused": true,
+        "readyState": 0,
+        "volume": 1,
+        "error": null
+      }
+    ]
+  }
+}

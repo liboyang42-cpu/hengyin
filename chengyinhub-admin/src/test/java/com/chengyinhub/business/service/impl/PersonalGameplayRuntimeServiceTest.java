@@ -161,6 +161,30 @@ class PersonalGameplayRuntimeServiceTest {
         assertEquals("本局不存在或无权操作", assertThrows(ServiceException.class, () -> service.gameplayAction(8L, 99L, session.getVersion(), "close", "PLAN_FALLBACK", null, null)).getMessage());
         assertEquals(before, session.getStateJson()); assertEquals(count, receipts.size());
     }
+    @Test void personalChapterEggsTickOnReadAndVerifiedStepSyncOnlyOnce() throws Exception {
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getConfigSnapshotJson());
+        ObjectNode chapter=snapshot.with("themeConfig").putArray("chapters").addObject().put("index",0);
+        chapter.putObject("binding").putArray("nodeIds").add(11).add(12);
+        ArrayNode eggs=chapter.putArray("eggs");
+        for(String trigger:Arrays.asList("TIME","STEPS")) {
+            ObjectNode egg=eggs.addObject().put("id",trigger).put("name",trigger).put("content","找到来信").put("trigger",trigger).put("threshold","TIME".equals(trigger)?1:10);
+            egg.putArray("rewards").addObject().put("itemId","food").put("quantity",1);
+        }
+        session.setConfigSnapshotJson(snapshot.toString());
+        ObjectNode initial=(ObjectNode)stored();
+        initial.with("themeRuntime").with("chapters").putObject("0").put("startedAt",System.currentTimeMillis()-61_000).put("steps",0).put("ended",false);
+        session.setStateJson(initial.toString());
+        service.themeView(7L,10L,0L,99L); service.themeView(7L,10L,0L,99L);
+        assertEquals(1,stored().path("themeRuntime").path("events").size());
+        assertEquals(2,stored().path("themeRuntime").path("inventory").path("food").asInt());
+        service.syncThoughts(7L,10L,0L,Collections.emptyList(),100,10L);
+        assertEquals(1,stored().path("themeRuntime").path("events").size(),"首次读数只建立基线");
+        service.syncThoughts(7L,10L,0L,Collections.emptyList(),110,10L);
+        service.syncThoughts(7L,10L,0L,Collections.emptyList(),110,10L);
+        assertEquals(2,stored().path("themeRuntime").path("events").size());
+        assertEquals(3,stored().path("themeRuntime").path("inventory").path("food").asInt());
+    }
+
     private JsonNode stored() throws Exception {return json.readTree(session.getStateJson());}
     private JsonNode readbackQuest(String key) {
         for(JsonNode row:json.valueToTree(service.themeView(7L,10L,0L,99L)).path("quests"))if(key.equals(row.path("questKey").asText()))return row;

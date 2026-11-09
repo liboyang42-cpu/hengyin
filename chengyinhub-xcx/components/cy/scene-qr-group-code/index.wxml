@@ -1,6 +1,6 @@
 <view class="group-code-body">
   <view wx:if="{{state === 'selecting'}}" class="group-picker">
-    <cy-page-title title="{{pickerTitle}}" subtitle="{{pickerSubtitle}}" safe-top="{{false}}" />
+    <cy-page-title title="{{pickerTitle}}" safe-top="{{false}}" />
     <text class="group-picker__hint">仅限本场次</text>
     <view wx:for="{{options}}" wx:key="id" class="group-picker__item" bindtap="chooseActivity" data-id="{{item.id}}" aria-role="button" aria-label="选择{{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><text>{{item.name}}</text><cy-icon name="arrow-right" size="28" /></view>
   </view>

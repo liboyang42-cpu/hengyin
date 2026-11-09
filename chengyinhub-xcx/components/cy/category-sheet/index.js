@@ -11,7 +11,7 @@ Component({
     // G-2:透传给内层弹层的返回守卫开关;宿主页已有自己的 page-container 覆盖它时传 false
     backGuard: { type: Boolean, value: true },
     show: { type: Boolean, value: false },
-    type: { type: Number, value: 0 },   // 对应 biaoqian 的 type:1=行业类型/2=活动分类/4=玩法类别 等
+    type: { type: null, value: 0 },   // 1=主题类别与路线偏好/2=活动分类/4=玩法类别;字符串 MERCHANT=商家行业(type 1+6,M-16)
     num: { type: Number, value: 0 },    // 最多可选数量,0=不限
     ids: { type: String, value: '' },   // 预选中的分类 id,逗号分隔(对齐旧页 URL 参数形状)
   },

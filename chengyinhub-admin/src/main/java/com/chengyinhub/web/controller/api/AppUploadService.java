@@ -40,7 +40,7 @@ public class AppUploadService
 {
     static final String[] IMAGE_EXTENSIONS = { "jpg", "jpeg", "png", "gif" };
     // glb:显形档 AR 的 3D 模型(2026-09-23);严格校验按 MimeTypeUtils 的 glTF 2.0 文件头放行
-    static final String[] OSS_EXTENSIONS = { "jpg", "jpeg", "png", "gif", "mp3", "m4a", "aac", "wav", "glb" };
+    static final String[] OSS_EXTENSIONS = { "jpg", "jpeg", "png", "gif", "mp3", "m4a", "aac", "wav", "glb", "mp4" };
     private static final int MAX_FILES = 9;
     private static final long MAX_TOTAL_SIZE = FileUploadUtils.DEFAULT_MAX_SIZE;
     private static final String WX_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/stable_token";
@@ -58,6 +58,9 @@ public class AppUploadService
     private RedisCache redisCache;
     @Autowired
     private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
 
     public AppUploadService()
     {
@@ -111,11 +114,13 @@ public class AppUploadService
      */
     JSONObject uploadOss(MultipartFile file, String bizType, Long memberId, Long merchantId, Long refundId)
     {
+        // Round5D:原始字节先比一次(SHA-256 完全相同只认原文件),去元数据重编码后的副本在 verifyContentSecurity 里再比 dHash。
+        verifyNotKnownBadImage(file);
         MultipartFile sanitized = prepareOssUpload(file, bizType);
         verifyContentSecurity(sanitized);
         boolean pendingMedia=!isImageFile(sanitized);
         if(pendingMedia && (memberId==null || memberId<=0 || appMediaAssetService==null))
-            throw new UploadRejectedException("音频和模型需登录后提交审核",null);
+            throw new UploadRejectedException("音频、视频和模型需登录后提交审核",null);
         try
         {
             boolean aftercareEvidence = UploadImagePolicy.MERCHANT_AFTERCARE_EVIDENCE_BIZ_TYPE.equals(bizType);
@@ -278,6 +283,8 @@ public class AppUploadService
         try
         {
             FileUploadUtils.assertAllowedStrict(file, OSS_EXTENSIONS);
+            if ("mp4".equalsIgnoreCase(FileUploadUtils.getExtension(file)))
+                com.chengyinhub.common.utils.file.ChapterVideoPolicy.validate(file);
             UploadImagePolicy.validate(file, bizType);
             return UploadImagePolicy.sanitizeMetadata(file, bizType);
         }
@@ -320,6 +327,7 @@ public class AppUploadService
 
     private void verifyContentSecurity(MultipartFile file)
     {
+        verifyNotKnownBadImage(file);
         if (contentSecurityVerifier != null)
         {
             contentSecurityVerifier.verify(file);
@@ -356,6 +364,30 @@ public class AppUploadService
             throw new UploadRejectedException(message);
         }
         throw new UploadSecurityUnavailableException(message);
+    }
+
+    /**
+     * Round5D:落库前先比对自建的已知违规图片指纹(SHA-256 + dHash),命中即拒,不依赖微信是否可用。
+     * 只能认出已登记图片的副本;新图仍由下方微信 img_sec_check 判断。
+     */
+    private void verifyNotKnownBadImage(MultipartFile file)
+    {
+        if (sensitiveLibrary == null || file == null || !isImageFile(file)) return;
+        byte[] bytes;
+        try
+        {
+            bytes = file.getBytes();
+        }
+        catch (IOException e)
+        {
+            throw new UploadRejectedException("图片读取失败，请重试", e);
+        }
+        String category = sensitiveLibrary.matchImage(bytes);
+        if (category != null)
+        {
+            sensitiveLibrary.recordHit("IMAGE", "UPLOAD", null, category, "BLOCK");
+            throw new UploadRejectedException(com.chengyinhub.business.service.ISensitiveContentLibrary.IMAGE_VIOLATION_MESSAGE);
+        }
     }
 
     String getWxAccessToken(String appId, String secret)

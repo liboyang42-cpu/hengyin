@@ -288,7 +288,7 @@ test('活动详情：取消、选票报名、评价分别读取独立 JS 派生�
   const js = read('subpackageMember/components/cy/scene-play-activity-detail/index.js')
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(wxml, /disabled="\{\{!canCancel\}\}"[^>]*>确认取消并退款<\/cy-btn>/)
-  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>立即报名<\/cy-btn>/)
+  assert.match(wxml, /disabled="\{\{!canConfirmSignup\}\}"[^>]*>\{\{noTicketText \|\| '立即报名'\}\}<\/cy-btn>/)
   assert.match(wxml, /disabled="\{\{!canSubmitComment\}\}"[^>]*>发布评价<\/cy-btn>/)
   assert.match(js, /canCancel:\s*false/)
   assert.match(js, /canConfirmSignup:\s*false/)
@@ -308,7 +308,7 @@ test('主题评价与票种编辑：输入完成前禁用主按钮', () => {
 
 test('账号注销：服务端验证方式加确认或短信才开放危险主操作', () => {
   const js = read('utils/deregister-flow.js')
-  const wxml = read('components/cy/scene-settings-deregister/index.wxml')
+  const wxml = read('pages/deregister/components/scene-settings-deregister/index.wxml')
   assert.match(wxml, /disabled="\{\{!canApply\}\}"[^>]*>\{\{verificationMethod === \'WECHAT\' \? \'微信确认并申请注销\' : \'确认申请注销\'\}\}<\/cy-btn>/)
   assert.match(js, /canApply:\s*false/)
   assert.match(js, /refreshApplyState\s*\(\)[\s\S]*status === 'ELIGIBLE'[\s\S]*confirmed[\s\S]*verificationMethod === 'WECHAT'[\s\S]*verificationMethod === 'SMS'[\s\S]*smscode/)

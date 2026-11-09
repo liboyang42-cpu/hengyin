@@ -56,10 +56,12 @@ public class RegistrationMerchantDTO implements Serializable {
 
     /** 参与开始时间 */
     @Schema(description = "参与开始时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date startDate;
 
     /** 参与结束时间 */
     @Schema(description = "参与结束时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date endDate;
 
     /** 可配合时间08:00-10:00 */

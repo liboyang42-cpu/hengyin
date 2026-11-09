@@ -1,5 +1,6 @@
 <view class="mk-page {{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <!-- 2026-10-28 业主:和设置页同一套(导航栏 + 大标题),去掉标题下的说明小字 -->

@@ -146,3 +146,30 @@ test('主办详情和重试提交可绑定的主题参数，保留加载与失�
   assert.equal(vm.formatRange('2026-09-30 00:00:00', '2026-10-07 18:00:00'), '9月30日 – 10月7日')
   assert.equal(vm.formatRange('invalid', null), '')
 })
+
+// 第十二轮 k9(p3 N19):从没开过局的场次结束后,projection 仍是 NOT_PREPARED,主键原来停在「开始准备」,
+// 点下去什么也做不成。本场 sessionStatus(topic-manage-stats,服务端时钟)已经说它结束/取消时,按已结束渲染。
+test('p3 N19:没开过局的场次过了结束时间/被取消,不再给「开始准备」,按已结束走结算报告', () => {
+  const { vm, navigations } = loadPage();
+  vm._topicId = 88; vm._clubId = 9;
+  vm._manageStats = Object.assign({}, vm._manageStats, { sessionStatus: 'FINISHED' });
+  vm.applyDetail.call(vm, RAW_CONFIRMED);
+  vm.applyProjectionStatus.call(vm, 'NOT_PREPARED');
+  assert.equal(vm.data.statusKey, 'ended');
+  assert.equal(vm.data.statusText, '已结束');
+  assert.equal(vm.data.primary.text, '查看结算报告');
+  vm.onPrimary();
+  assert.match(navigations[0], /^\/pages\/club\/settlement\/index\?clubId=9/);
+
+  // 统计晚于 projection 到达:重放详情时也要落到已结束;取消的写「已取消」
+  const late = loadPage();
+  late.vm._topicId = 88; late.vm._clubId = 9;
+  late.vm.applyDetail.call(late.vm, RAW_CONFIRMED);
+  late.vm.applyProjectionStatus.call(late.vm, 'NOT_PREPARED');
+  assert.equal(late.vm.data.primary.text, '开始准备', '还没结束的场次照旧可以开始准备');
+  late.vm._manageStats = Object.assign({}, late.vm._manageStats, { sessionStatus: 'CANCELLED' });
+  late.vm.applyDetail.call(late.vm, RAW_CONFIRMED);
+  assert.equal(late.vm.data.statusKey, 'ended');
+  assert.equal(late.vm.data.statusText, '已取消');
+  assert.equal(late.vm.data.primary.text, '查看结算报告');
+})

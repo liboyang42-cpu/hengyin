@@ -92,11 +92,21 @@ public final class ChapterRecruitmentRules {
         }
     }
 
+    /** sys_category.type:主题类别 / 玩家路线偏好(商家历史行业也引用这一类,保留可用)。 */
+    public static final long THEME_CATEGORY_TYPE = 1L;
+    /** sys_category.type:商家行业(2026-11-03 业主 M-16:与主题类别分表,只给商家侧读)。 */
+    public static final long MERCHANT_INDUSTRY_TYPE = 6L;
+
+    /** 商家行业可取的 type:新的商家行业 6 + 存量商家 / 章节已引用的 1。 */
+    public static boolean isMerchantCategoryType(Long type) {
+        return Long.valueOf(MERCHANT_INDUSTRY_TYPE).equals(type) || Long.valueOf(THEME_CATEGORY_TYPE).equals(type);
+    }
+
     /** 历史章节读侧和申请入口也只认可当前有效的一级商家品类。 */
     public static boolean isMerchantCategory(Integer categoryId, SysCategory category) {
         return categoryId != null && categoryId > 0
                 && category != null && category.getStatus() != null && category.getStatus() == 1
-                && Long.valueOf(1L).equals(category.getType())
+                && isMerchantCategoryType(category.getType())
                 && Long.valueOf(0L).equals(category.getParentId())
                 && (category.getDelFlag() == null || category.getDelFlag() == 0);
     }

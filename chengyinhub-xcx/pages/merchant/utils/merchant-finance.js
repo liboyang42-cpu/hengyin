@@ -45,11 +45,8 @@ function isMerchantEventsPayload(response) {
     && isRecordList(response.data));
 }
 
-function money(value) {
-  if (value === null || value === undefined || value === '') return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed.toFixed(2) : null;
-}
+// 两位小数数字串(保留负号);显示用 yuan()(utils/money-format.js,负数「−¥」)
+const { fixed2: money, yuan } = require('../../../utils/money-format.js');
 
-module.exports = { normalizeMerchantFinanceRoute, isFinancePagePayload, isFinanceObjectPayload, isMerchantEventsPayload, money };
+module.exports = { normalizeMerchantFinanceRoute, isFinancePagePayload, isFinanceObjectPayload, isMerchantEventsPayload, money, yuan };
 const { isRecordList } = require('../../../utils/response-shape.js');

@@ -1,0 +1,55 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-R2-state | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 N | PLAY-MAP-1105-R2-state · 序章 | 生命值 10 | /10 | 出发 | 序 | 章 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | PLAY-MAP-1105-R2-state · 序章 | 生命值 10 | /10 | 雨停了。老周留下一张字条：去外滩，钟声会告诉你下一步。 | 出发 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 继续探索 | 第 | 1 | 章 | / | 共 | 1 | 章 | 第 | 一 | 章 | 江 | 边 | 1 | 第 | 1 | 章 | 开 | 始 | 了 | 。 | 1 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 N | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 N | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 第 1 站 | 01 选项问答·反馈 | 上海市黄浦区中山东一路1号 | 选项问答·反馈·PLAY-M | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 背包 | 生 | 生命值 | 10 | / 10 | 物品 | 线索 | 任务 | 01 选项问答·反馈 | 尚未到达 | 剩 1 次（本人） | 开始任务 | N | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 7 背包 | 生 | 生命值 | 10 | / 10 | 物品 | 线索 | 任务 | 01 选项问答·反馈 | 可用 | 剩 1 次（本人） | 开始任务 | N | 0m | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 8 背包 | 生 | 生命值 | 10 | / 10 | 物品 | 线索 | 任务 | 01 选项问答·反馈 | 任务进行中不扣费用，结算时才按实际扣除 | 剩 1 次（本人） | 打开任务 | 取消 | N | 0m | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 9 老洋房门口那棵树是什么树？ | A | 梧桐 | B | 银杏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-state-question
+SHOT after-state-wrong
+TEXT[wrong] 任务已取消，未扣除任何费用 | 老洋房门口那棵树是什么树？ | A | 梧桐 | B | 银杏 | 再看看叶子。 | 再想想 | 失败 | 没过，再看看四周。 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+TEXT[retry] 老洋房门口那棵树是什么树？ | A | 梧桐 | B | 银杏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-state-right
+TEXT[settle-row] 背包 | 生 | 生命值 | 10 | / 10 | 物品 | 线索 | 任务 | 待确认结算 | 01 选项问答·反馈 | 凭证已通过，可结算 | 任务进行中不扣费用，结算时才按实际扣除 | 可用 | 剩 1 次（本人） | 已核验 | 结算任务 | 取消 | N | 0m | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-state-settle-row
+TEXT[preview] 奖励预览 | 本次动作的全部奖励；可明确放弃本人或本队的部分新奖励。 | 本人 | 本次没有物品奖励 | 确认装载 | N | 0m | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-state-preview
+TEXT[settled] 背包 | 生 | 生命值 | 10 | / 10 | 物品 | 线索 | 任务 | 本局已结束，仅可领取待领奖励 | 通过 | 01 选项问答·反馈 | 本局已结束 | 剩 0 次（本人） | 开始任务 | N | PLAY-MAP-1105-R2-state · 第一章 江边1 | 生命值 10 | /10 | 1处旧址已全部点亮 | 领取你的城市足迹卡 | 对了，这一站过了。 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT after-state-settled
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990014","nodeId":"71"}
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":1,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_QA","payload":{"optionId":"opt_2"}}
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":1,"expectedVersion":4,"actionId":"theme_17938742869881vskaiqugou","operation":"QUEST_CANCEL","contentId":"node_71"}
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":1,"expectedVersion":5,"actionId":"theme_1793874288289i1uxcbjvs1l","operation":"QUEST_START","contentId":"node_71"}
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990014","nodeId":"71"}
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":2,"version":0,"idempotencyKey":"TEST_ACTION","action":"SUBMIT_QA","payload":{"optionId":"opt_1"}}
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET POST /api/play/theme/gameplay-preview 200 200 操作成功 {"sessionId":1,"expectedVersion":7,"operation":"QUEST_RESOLVE","contentId":"node_71"}
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":1,"expectedVersion":7,"actionId":"theme_1793874307357gua9pvh6kxc","operation":"QUEST_RESOLVE","contentId":"node_71","previewVersion":"aebed81887ae9
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 
+NET GET /api/play/route-state?topicId=990014 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990014 200 200 操作成功 

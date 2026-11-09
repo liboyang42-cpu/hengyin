@@ -149,6 +149,10 @@ test('C-09 真 POI 的 marker id 是数字(70 万段),点针按 id 全等回解'
   page.openScene = (id, params) => opened.push([id, params]);
   page._pois = [{ id: 700009, _roamId: 9, cat: 'landmark', isCityNode: true, state: 'seen' }];
   page.onMarkerTap({ detail: { markerId: 700009 } });
+  // 第九轮 m1 第 3 项:点针先出地点卡(按数字 id 回解到同一节点),点卡片才进原来的节点详情
+  assert.equal(page.data.placeCard && page.data.placeCard.id, 700009, '数字 id 必须回解到对应节点');
+  assert.equal(page.data.placeCard.shareId, '9');
+  page.onPlaceCardOpen();
   assert.deepEqual(opened, [['roam-poi-detail', { poiId: 9 }]], '数字 id 必须能点开对应节点');
 });
 

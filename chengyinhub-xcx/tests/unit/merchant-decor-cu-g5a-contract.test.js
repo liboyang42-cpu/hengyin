@@ -238,7 +238,9 @@ test('CU-M-79 有效期最早到明天(今天到期=一建就过期),明天放�
 
   h.page.save()
   assert.equal(h.requests.length, 0, '今天及更早的有效期不得写入')
-  assert.deepEqual(h.toasts, ['有效期至少要到明天'])
+  // 第四轮业主标准:写在有效期下方红字,不再弹提示
+  assert.deepEqual(h.toasts, [])
+  assert.equal(h.page.data.fieldErrors.validEnd, '有效期至少要到明天')
 
   h.page.data.form = Object.assign({}, h.page.data.form, { validEnd: '2026-09-25' })
   h.page.save()
@@ -253,7 +255,8 @@ test('CU-M-79 有效期最早到明天(今天到期=一建就过期),明天放�
 
 test('CU-M-80 未开放自助开通时，升级权益要有可执行的客服入口而不是只弹一句', () => {
   const wxml = read(DECOR_WXML)
-  const panel = wxml.split('查看可开通的权益')[1].split('</cy-dropdown>')[0]
+  // 第十轮 f3 p2 F-10:行副文案「查看可开通的权益」已删,按行标题定位面板
+  const panel = wxml.split('title="升级权益"')[1].split('</cy-dropdown>')[0]
   assert.match(panel, /<cy-cell open-type="contact"[^>]*title="联系运营开通"/)
 
   const js = read(DECOR_JS)

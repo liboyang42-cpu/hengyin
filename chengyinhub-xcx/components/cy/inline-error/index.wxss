@@ -6,10 +6,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  /* 2026-09-02:窄容器里必须能折行。实拍(创建域「玩家人数/玩法时长」两列格)坐实:
-     列宽约 330rpx,而 图标(40)+ 间距(24)+ 操作键(min-width 144)+ 内边距(48)
-     已经吃掉大半,正文只剩几十 rpx ⇒ 标题被压成**每行一个字**的竖排。
-     不折行的 flex 在窄容器里不是"挤一点",是直接把正文压没。 */
   flex-wrap: wrap;
   gap: var(--cy-space-3);
   min-height: var(--cy-btn-h);
@@ -23,6 +19,8 @@
 .inline-error--network { background: var(--cy-color-status-warning-soft); }
 /* 失败档:动作没成,不重试就没有结果。软红底 + 红 ⚠,与 cy-badge 的 danger 同一套色。 */
 .inline-error--error { background: var(--cy-color-status-danger-soft); }
+.inline-error--field { min-height: 0; padding: 0; background: none; }
+.inline-error--field .inline-error__title { color: var(--cy-color-status-danger); font-size: var(--cy-type-caption); font-weight: 400; }
 
 .inline-error__icon {
   width: var(--cy-space-5);

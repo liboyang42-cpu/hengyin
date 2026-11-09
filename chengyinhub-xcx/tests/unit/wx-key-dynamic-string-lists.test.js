@@ -22,7 +22,7 @@ const FIXED = {
   'pages/play/index.wxml': ['item.lines', 'hero.node.howto', 'shownHints', 'newLifeOS.actions7Days', 'newLifeOS.actions30Days'],
   'pages/play/components/playkit-dailysign/index.wxml': ['lines'],
   'components/cy/theme-records/index.wxml': ['card.exhibits'],
-  'components/cy/scene-settings-deregister/index.wxml': ['blockers'],
+  'pages/deregister/components/scene-settings-deregister/index.wxml': ['blockers'],
 }
 
 function forTags(src) {

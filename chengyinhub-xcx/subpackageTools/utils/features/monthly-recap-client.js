@@ -28,7 +28,7 @@ function createMonthlyRecapClient(options) {
         const items = [];
         const seen = new Set(items.map(item => String(item.id)));
         for (const item of value.items) {
-          if (!item || !/^[1-9]\d*$/.test(String(item.id))) { state = null; return reject(new Error('回顾记录编号不合法')); }
+          if (!item || !(kind === 'routes' ? /^-?[1-9]\d*$/ : /^[1-9]\d*$/).test(String(item.id))) { state = null; return reject(new Error('回顾记录编号不合法')); }
           if (!seen.has(String(item.id))) { items.push(Object.assign({}, item)); seen.add(String(item.id)); }
         }
         state = Object.assign({}, value, { items });

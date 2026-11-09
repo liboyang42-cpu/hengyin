@@ -109,3 +109,20 @@ test('sale gate diagnostics become a readable message', () => {
   }
   assert.equal(safeUserMessage('该场次已开始，停止报名'), '该场次已开始，停止报名')
 })
+
+test('m3:Spring 序列化报错与缺环境变量的原文不给玩家看', () => {
+  const { safeUserMessage } = require('../../utils/transport/safe-user-message.js')
+  assert.equal(safeUserMessage('Could not write JSON: 对象存储配置缺失: CHENGYIN_OSS_BUCKET_NAME', 'x'), '服务开小差了，请稍后重试')
+  assert.equal(safeUserMessage('活动已满员', 'x'), '活动已满员')
+})
+
+test('m3:模板选了扫码参与就存 validationMethod=4(否则发布被服务端拒)', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.js'), 'utf8')
+  // 第十三轮 m7:拍照站开了扫码参与同样存 4(全游戏 bug 8);行为另见 r13-m7-scan-station.test.js
+  assert.match(src, /gameKey === 'qaShot'\) \{ if \(this\.data\.advanced && this\.data\.advanced\.scan && this\.data\.advanced\.scan\.enabled\) formData\.validationMethod = 4;[^\n]*else if \(!\[4, 5\]\.includes\(Number\(formData\.validationMethod\)\)\) formData\.validationMethod = 2;[^\n]*\} else if \(this\.data\.advanced && this\.data\.advanced\.scan && this\.data\.advanced\.scan\.enabled\) formData\.validationMethod = 4;/)
+})
+
+test('m3:发布被服务端拒绝并带了原因时,编辑器先给原因而不是「网络中断」', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/fabu/index.js'), 'utf8')
+  assert.match(src, /\? \(res\.msg \? res\.msg \+ '；回读时仍是草稿/)
+})

@@ -15,6 +15,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    fieldErrors: { fullName: '', mobilePhone: '' },
     // 自定义导航:顶栏高度 = 状态栏 + 导航条,页面自留同高占位,内容不被顶栏压住
     statusBarHeight: (app.globalData || {}).statusBarHeight || 20,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
@@ -26,6 +27,7 @@ Page({
       detailAddress: '', // 详细地址
       isDefault: 0 // 是否默认地址
     },
+    boundPhone: '', // 账号绑定的微信手机号;有就只读、随参与人保存(第十二轮 k8 N12)
     isEdit: false, // 是否是编辑模式
     canSubmit: false,
     saving: false,
@@ -42,6 +44,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    this.loadBoundPhone();
     // 判断是编辑还是新增
     if (options.id) {
       this.setData({
@@ -51,6 +54,23 @@ Page({
       });
       this.getAddressInfo(options.id);
     }
+  },
+
+  // 第十二轮 k8 N12:建单用的是账号绑定的微信手机号(通行证结算读 /api/user/info),
+  // 这里不再让玩家另填一个会被忽略的号;没绑过才保留手填(报名页仍读参与人手机号)。
+  loadBoundPhone: function () {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/user/info', method: 'POST', data: { member_id: app.getUserID && app.getUserID() },
+      success: function (res) {
+        const d = res && res.code == '200' && res.data && typeof res.data === 'object' ? res.data : null;
+        const phone = d ? String(d.phone || d.mobilePhone || '').trim() : '';
+        if (!isValidMobile(phone)) return;
+        that.setData({ boundPhone: phone, 'form.mobilePhone': phone, 'fieldErrors.mobilePhone': '' },
+          () => that.refreshSubmitState());
+      }
+    });
   },
 
   // 栈首页(深链/直达)时 navigateBack 会失败;不兜底就是个点了不动的死箭头。
@@ -85,7 +105,7 @@ Page({
           const address = res.data;
           that.setData({
             'form.fullName': address.fullName,
-            'form.mobilePhone': address.mobilePhone,
+            'form.mobilePhone': that.data.boundPhone || address.mobilePhone,
             'form.province': address.province || '',
             'form.detailAddress': address.detailAddress || '',
             'form.isDefault': address.isDefault || 0,
@@ -129,7 +149,8 @@ Page({
     const value = e.detail.value;
     
     this.setData({
-      [`form.${field}`]: value
+      [`form.${field}`]: value,
+      [`fieldErrors.${field}`]: ''
     }, () => this.refreshSubmitState());
   },
 
@@ -155,9 +176,8 @@ Page({
 
   // 置灰的「保存参与人信息」被点 → 报第一条没交的必填(报名链路的最后一屏,别静默)。
   onSaveDisabledTap: function () {
-    const form = this.data.form;
-    if (!String(form.fullName || '').trim()) toast('请填写姓名');
-    else if (!isValidMobile(String(form.mobilePhone || '').trim())) toast('请填写正确的手机号');
+    // 第四轮(业主):问题写在对应字段下方红字,不再弹提示。
+    this.validateForm(this.data.form);
   },
 
   /**
@@ -244,23 +264,14 @@ Page({
   validateForm: function (form) {
     const fullName = typeof form.fullName === 'string' ? form.fullName : '';
     const mobilePhone = typeof form.mobilePhone === 'string' ? form.mobilePhone : '';
-    if (fullName.trim() === '') {
-      toast('请输入姓名');
-      return false;
-    }
-    
-    if (mobilePhone.trim() === '') {
-      toast('请输入手机号');
-      return false;
-    }
-    
-    // 手机号格式验证
-    if (!isValidMobile(mobilePhone)) {
-      toast('请输入正确的手机号');
-      return false;
-    }
-    
-    return true;
+    // 第四轮(业主:输入问题只在字段下方红字说):两栏各自报,不再弹提示。
+    const fieldErrors = {
+      fullName: fullName.trim() === '' ? '请输入姓名' : '',
+      mobilePhone: mobilePhone.trim() === '' ? '请输入手机号'
+        : (isValidMobile(mobilePhone.trim()) ? '' : '请输入正确的手机号'),
+    };
+    this.setData({ fieldErrors });
+    return !fieldErrors.fullName && !fieldErrors.mobilePhone;
   },
 
   /**

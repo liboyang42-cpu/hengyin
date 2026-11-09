@@ -72,6 +72,29 @@ class ApiMerchantOperatorControllerTest {
         assertEquals(Boolean.FALSE, ((java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG)).get("active"));
     }
 
+    /** 第十轮 f1 item 4(j1 F22):邀请预览只回门店名、岗位码与岗位名,作用域就是 token。 */
+    @Test
+    void invitePreviewReturnsShopAndRoleNameOnly() throws Exception {
+        IMerchantOperatorService service = mock(IMerchantOperatorService.class);
+        java.util.Map<String, Object> preview = new java.util.LinkedHashMap<>();
+        preview.put("merchantName", "梧桐里书房");
+        preview.put("roleCode", MerchantRoleCode.MERCHANT_CHECKIN);
+        when(service.invitePreview(PRINCIPAL, "tok-abcdefghijklmnop")).thenReturn(preview);
+        ApiMerchantOperatorController controller = controller(
+                mock(IMerchantAccessService.class), service, mock(IMmsMerchantService.class));
+        com.chengyinhub.business.domain.dto.MerchantOperatorAcceptRequest request =
+                new com.chengyinhub.business.domain.dto.MerchantOperatorAcceptRequest();
+        request.setToken("tok-abcdefghijklmnop");
+
+        AjaxResult result = controller.invitePreview(request);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals(java.util.Set.of("merchantName", "roleCode", "roleName"), data.keySet());
+        assertEquals("核销员", data.get("roleName"));
+        verify(service).invitePreview(PRINCIPAL, "tok-abcdefghijklmnop");
+    }
+
     @Test
     void inviteEndpointForwardsActorRoleAndIdempotencyKeyWithoutRebuildingToken() {
         IMerchantOperatorService service = mock(IMerchantOperatorService.class);

@@ -9,7 +9,7 @@ const path = require('node:path')
 const { flattenComponentToPage } = require('../helpers/component-as-page.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const MODULE = path.join(ROOT, 'components/cy/scene-asset-income-detail/index.js')
+const MODULE = path.join(ROOT, 'subpackageA/components/scene-asset-income-detail/index.js')
 
 function loadComponent() {
   const sandbox = { requests: [] }
@@ -174,7 +174,7 @@ test('失败页重试保留既有流水，连续失败后加载更多仍重试�
 })
 
 test('wxml 的占位分支确实存在(否则上面的 null 无处落地)', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-asset-income-detail/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageA/components/scene-asset-income-detail/index.wxml'), 'utf8')
   // 符号已经进了 amountText,wxml 不许再自己拼 —— 拼了支出就会变成 +¥-50.00
   assert.match(wxml, /\{\{item\.amountText \|\| '—'\}\}/)
   assert.doesNotMatch(wxml, /'\+¥'\s*\+/, "wxml 不得硬拼 '+¥',方向符号由 formatList 给")
@@ -184,7 +184,22 @@ test('wxml 的占位分支确实存在(否则上面的 null 无处落地)', () =
 })
 
 test('入账绿/出账红两档在 wxss 里真有定义,且走 DS token 不是字面色', () => {
-  const wxss = fs.readFileSync(path.join(ROOT, 'components/cy/scene-asset-income-detail/index.wxss'), 'utf8')
+  const wxss = fs.readFileSync(path.join(ROOT, 'subpackageA/components/scene-asset-income-detail/index.wxss'), 'utf8')
   assert.match(wxss, /\.id-item-amount--in\s*\{[^}]*color:\s*var\(--cy-success\)/)
   assert.match(wxss, /\.id-item-amount--out\s*\{[^}]*color:\s*var\(--cy-danger\)/)
+})
+
+// 第十一轮 h4 LOW:活动分润流水(event_type=3)原来顶着「品」徽标(三元式只分创作 / 其余全算品牌)。
+test('徽标按流水类型:创作「创」、品牌「品」,活动分润等取原因首字,不再一律「品」', () => {
+  const { vm } = loadComponent()
+  const rows = vm.formatList([
+    { eventType: 1, changeType: 1, changeBalance: 1, changeReason: '作品结算' },
+    { eventType: 2, changeType: 1, changeBalance: 1, changeReason: '品牌合作' },
+    { eventType: 3, changeType: 1, changeBalance: 151.32, changeReason: '活动分润 - 人民广场 · 喷泉报时' },
+    { eventType: 6, changeType: 2, changeBalance: -18.92, changeReason: '退款冲销' },
+    { eventType: 9, changeType: 1, changeBalance: 1 },
+  ])
+  assert.deepEqual(rows.map(r => r.badgeText), ['创', '品', '活', '退', '¥'])
+  const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../subpackageA/components/scene-asset-income-detail/index.wxml'), 'utf8')
+  assert.match(wxml, /id-item-badge__txt">\{\{item\.badgeText\}\}</)
 })

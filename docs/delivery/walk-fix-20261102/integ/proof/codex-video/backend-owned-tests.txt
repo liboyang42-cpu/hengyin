@@ -1,0 +1,5 @@
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.372 s -- in com.chengyinhub.common.utils.file.ChapterVideoPolicyTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.067 s -- in com.chengyinhub.business.service.support.ChapterVideoMediaTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  29.247 s

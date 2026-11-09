@@ -1,4 +1,4 @@
-<view class="theme-merchant od-root">
+<view class="{{isMerchantViewer ? 'theme-merchant' : 'theme-dark'}} od-root">
   <view wx:if="{{recoveryShown}}" class="od-card" aria-role="status">
     <text>{{commandRecovery.label}}</text>
     <text>{{commandRecovery.message}}</text>
@@ -16,7 +16,7 @@
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
-  <cy-nav-bar overlay="{{!!e}}" scrolled="{{navScrolled}}" pill="{{!!e && !navScrolled}}" pillDark="{{!!e && !navScrolled}}" tint="{{(!e || navScrolled) ? 'dark' : 'light'}}" />
+  <cy-nav-bar overlay="{{!!e}}" scrolled="{{navScrolled}}" pill="{{!!e && !navScrolled}}" pillDark="{{!!e && !navScrolled}}" tint="{{(!e || navScrolled) && isMerchantViewer ? 'dark' : 'light'}}" />
 
   <view class="od-page" wx:if="{{e}}">
     <text class="od-refresh-state" wx:if="{{loading}}" aria-role="status">正在更新活动详情…</text>
@@ -45,7 +45,7 @@
           <view class="od-fact" wx:if="{{e.signed}}">
             <text class="od-fact-label">我的进度</text>
             <text class="od-fact-value od-fact-value--compact">{{e._progressText}}</text>
-            <text class="od-fact-sub">{{e._isV2 ? '有效任务' : '已完成'}}</text>
+            <text wx:if="{{e._isV2}}" class="od-fact-sub">有效任务</text>
           </view>
           <view class="od-fact">
             <text class="od-fact-label">活动周期</text>
@@ -87,7 +87,8 @@
       </view>
 
       <!-- 集合与联系 / 到场签到(原型 B T-38 / T-39):放在页面内容里,不挂在根节点之外 -->
-      <cy-event-attendance event-id="{{id}}" organizer="{{false}}" />
+      <!-- 第十二轮 k2(p1 N-3):集合与签到只有 V2 赛事有;轻量发布的 V1 不渲染,不再出常驻「加载失败 · 重试」 -->
+      <cy-event-attendance wx:if="{{e._isV2}}" event-id="{{id}}" organizer="{{false}}" />
 
       <view wx:if="{{e._activityCards.length}}" class="od-section od-section--divided">
         <text class="od-heading">活动介绍</text>
@@ -151,25 +152,24 @@
         <text wx:else class="od-note">暂无成绩</text>
       </view>
 
-      <view class="od-section od-section--divided">
+      <!-- F22:只展示后端 rewardJson 里真实配置的奖励。第十二轮 k2(p1 N-3):没有配置就整段不出,不留「未配置奖励」占位。 -->
+      <view wx:if="{{rewards.length}}" class="od-section od-section--divided">
         <text class="od-heading">活动奖励</text>
-        <!-- F22:只展示后端 rewardJson 里真实配置的奖励;没有配置就如实说明,不摆默认承诺。 -->
-        <view wx:if="{{rewards.length}}" class="od-reward-list">
+        <view class="od-reward-list">
           <view wx:for="{{rewards}}" wx:key="*this" class="od-reward-row">
             <text class="od-reward-name">{{item}}</text>
             <cy-icon name="gift" size="30" />
           </view>
         </view>
-        <text wx:else class="od-note">未配置奖励</text>
       </view>
 
       <view wx:if="{{e.collective && e.collective.enabled}}" class="od-section od-section--divided">
         <view class="od-progress-head">
           <view>
-            <text class="od-progress-value">{{e.collective.pct === 0 ? 0 : (e.collective.pct || '--')}}%</text>
+            <text class="od-progress-value">{{e.collective.pct === 0 ? '0%' : (e.collective.pct ? e.collective.pct + '%' : '—')}}</text>
             <text class="od-progress-label">全城已点亮</text>
           </view>
-          <text class="od-progress-count">{{e.collective.current}} / {{e.collective.threshold}}</text>
+          <text class="od-progress-count">{{e.collective.current != null ? e.collective.current : '—'}} / {{e.collective.threshold != null ? e.collective.threshold : '—'}}</text>
         </view>
         <view class="od-progress-track"><view class="od-progress-fill" style="width:{{e.collective.pct || 0}}%"></view></view>
         <!-- F22:集体进度区始终保留;只有真的配置了合法集体券才承诺「达标发放」,否则如实说明不承诺。 -->
@@ -219,7 +219,7 @@
   <view wx:else class="od-loading">
     <cy-state-shell fill size="lg" kind="{{loadErrKind}}"
                     title="{{loadErrTitle}}" sub="{{loadErrSub}}"
-                    primary="{{loadErrAction}}" bind:primary="onLoadErrorAction" auto-back custom-back bind:back="onLoadErrorBack" />
+                    primary="{{loadErrAction}}" bind:primary="onLoadErrorAction" auto-back="{{loadErrKind !== 'missing-param'}}" custom-back bind:back="onLoadErrorBack" />
   </view>
   <cy-share-card show="{{shareCard.show}}" card="{{shareCard.card}}" bind:close="onShareCardClose" />
 </view>

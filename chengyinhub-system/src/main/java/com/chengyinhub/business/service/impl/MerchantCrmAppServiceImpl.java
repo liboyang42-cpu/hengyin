@@ -74,6 +74,8 @@ public class MerchantCrmAppServiceImpl implements IMerchantCrmAppService {
     @Autowired private MerchantCustomerTagMapper merchantCustomerTagMapper;
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private IConsentRecordService consentRecordService;
+    /** 自由探索参与商家:玩家对单店另有授权,联系方式在主题名单里按授权查看。 */
+    private static final String FREE_EXPLORE_SHOP_CONTACT_HINT = "联系方式在主题名单按客户授权查看";
     @Autowired private ComplianceProperties complianceProperties;
     @Autowired private IPlayerRoleService playerRoleService;
 
@@ -96,7 +98,10 @@ public class MerchantCrmAppServiceImpl implements IMerchantCrmAppService {
                 row.setContactHint("需要客户敏感信息权限");
             } else if (!Boolean.TRUE.equals(row.getMerchantResponsibleForContact())) {
                 row.setPhone(null);
-                row.setContactHint("由俱乐部带团，联系请找俱乐部负责人");
+                // 第十二轮 k9(p2 N-17):自由探索的参与店每一行都挂同一句「联系方式在主题名单按客户授权查看」,
+                // 列表不再逐行复述;要联系时揭示接口仍回这句原因。
+                row.setContactHint(Boolean.TRUE.equals(row.getFreeExploreShopContact())
+                        ? null : "由俱乐部带团，联系请找俱乐部负责人");
             } else if (row.getPhone() != null && !hasCurrentDataSharingConsent(row.getMemberId())) {
                 row.setPhone(null);
                 row.setContactHint("客户未授权联系方式共享");
@@ -108,6 +113,14 @@ public class MerchantCrmAppServiceImpl implements IMerchantCrmAppService {
                 // 导出「手机号(脱敏)」同一口径,三处都是服务端脱敏。
                 row.setPhone(PiiCryptoService.maskPhone(row.getPhone()));
             }
+            // 第十二轮 k3(p2 N-6):三位「城瘾用户」在客户列表里分不清。有敏感信息权限、且本店负责联系的客户
+            // 显示报名时填写的姓名(与核销与退款同一个人同一个名字);其余用昵称,默认昵称带最近一次时刻。
+            String signupName = sensitive && Boolean.TRUE.equals(row.getMerchantResponsibleForContact())
+                    ? row.getSignupName() : null;
+            row.setSignupName(null);
+            String nick = "未留姓名".equals(row.getName()) ? null : row.getName();
+            row.setName(com.chengyinhub.business.util.OrganiserPersonName.pick(
+                    signupName, nick, row.getMemberId(), row.getLastTime(), null));
             row.setLastAction(lastAction(row));
             // 角色码翻成中文给分组标题用。认不出的码留 null —— 宁可这一档少一个分组,
             // 也别把 NAVIGATOR 这种内部码直接摆到商家的分组标题上。
@@ -171,6 +184,10 @@ public class MerchantCrmAppServiceImpl implements IMerchantCrmAppService {
             throw new ServiceException("客户不存在或不属于当前商家", 404);
         }
         if (!Boolean.TRUE.equals(row.getMerchantResponsibleForContact())) {
+            if (Boolean.TRUE.equals(row.getFreeExploreShopContact())) {
+                appendContactRevealDeniedAudit(access, principalMemberId, customer, contactPurpose, "free_explore_shop");
+                throw new ServiceException(FREE_EXPLORE_SHOP_CONTACT_HINT, 403);
+            }
             appendContactRevealDeniedAudit(access, principalMemberId, customer, contactPurpose, "club_led");
             throw new ServiceException("由俱乐部带团，联系请找俱乐部负责人", 403);
         }

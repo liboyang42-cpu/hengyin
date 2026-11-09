@@ -1,0 +1,24 @@
+
+──────── 步骤 1:第 2 家 样板书店第2站:玩家扫店码 → 商家扫玩家动态码核销
+   scan_qr_code                       {"msg": "核销成功", "code": 200, "data": {"chapterId": 43, "redemptionId": 6, "chapterName": "第2章 书店"}, "_status": 200}
+   [库回读] 报名单                      ((75, 2, 1, None),)
+   [库回读] 权益                       ((42, 1), (43, 1), (44, 0), (45, 0))
+   list owner_type=2 → exploreProgress {"redeemed": 2, "required": 4, "completed": false, "ended": false, "active": true}
+   我的订单 status=2 含本单                  True
+   我的订单 status=3 含本单                  False
+
+──────── 步骤 1:第 3 家 样板花店第3站:玩家扫店码 → 商家扫玩家动态码核销
+   scan_qr_code                       {"msg": "核销成功", "code": 200, "data": {"chapterId": 44, "redemptionId": 7, "chapterName": "第3章 花店"}, "_status": 200}
+   [库回读] 报名单                      ((75, 2, 1, None),)
+   [库回读] 权益                       ((42, 1), (43, 1), (44, 1), (45, 0))
+   list owner_type=2 → exploreProgress {"redeemed": 3, "required": 4, "completed": false, "ended": false, "active": true}
+   我的订单 status=2 含本单                  True
+   我的订单 status=3 含本单                  False
+
+──────── 步骤 1:第 4 家 样板面包第4站:玩家扫店码 → 商家扫玩家动态码核销
+   scan_qr_code                       {"msg": "核销成功", "code": 200, "data": {"chapterId": 45, "completionEarnedXp": 1200, "redemptionId": 8, "chapterName": "第4章 面包"}, "_status": 200}
+   [库回读] 报名单                      ((75, 2, 1, None),)
+   [库回读] 权益                       ((42, 1), (43, 1), (44, 1), (45, 1))
+   list owner_type=2 → exploreProgress {"redeemed": 4, "required": 4, "completed": true, "ended": false, "active": false}
+   我的订单 status=2 含本单                  False
+   我的订单 status=3 含本单                  True

@@ -151,6 +151,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
     @Transactional(rollbackFor = Exception.class)
     public int insertCmsTopicChapter(CmsTopicChapter cmsTopicChapter)
     {
+        assertVideoEditedWithTheme(cmsTopicChapter);
         assertNotCreatingRevshare(cmsTopicChapter);
         CmsTopic topic = assertTopicMutable(cmsTopicChapter == null ? null : cmsTopicChapter.getTopicId());
         assertRecruitmentConfigForInsert(cmsTopicChapter, topic);
@@ -168,6 +169,64 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
         }
         commercialTopicPolicy.assertNotConvertedToCommercial(topicId, conversionProtected);
         return rows;
+    }
+
+    /**
+     * 零章节自由探索主题:替首个报名商家建章(2026-11-03 业主)。
+     *
+     * <p>不走 {@link #insertCmsTopicChapter} 的后台范围闸(那是运营全局范围,商家没有);
+     * 商家身份与权限由 controller 的 {@code MerchantPermission} 和随后的 apply 把关。
+     * 其余闸与通用建章同一份:内容锁 + 主题行锁、SELLING 冻结、自由探索 + 品类合法、
+     * 内容体量上限、已过审正典失效、已发布免费主题禁转商业。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public CmsTopicChapter openChapterForEmptyTopic(Long topicId, Long merchantMemberId,
+                                                    Integer merchantCategoryId, String chapterName)
+    {
+        if (topicId == null || topicId <= 0) throw new IllegalStateException("缺少主题");
+        contentWriteGuard.lockTopicContent(topicId);
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
+        String blocker = com.chengyinhub.business.support.EmptyTopicChapterPolicy.blocker(
+                topic, merchantMemberId, merchantCategoryId, DateUtils.getNowDate());
+        if (blocker != null) throw new IllegalStateException(blocker);
+        Long existing = cmsTopicChapterMapper.countContentByTopicForUpdate(topicId);
+        if (existing == null || existing != 0L) {
+            // 有章节就按主办方的招商走,不再替它建 —— 也挡住两家并发都以为是第一家
+            throw new IllegalStateException("这条路线已有章节，请刷新后选择章节");
+        }
+        assertRecruitmentAllowed(topic, merchantCategoryId);
+        boolean conversionProtected = conversionProtectedFor(topicId);
+        SysCategory category = sysCategoryService.selectSysCategoryById(merchantCategoryId.longValue());
+        String name = chapterName == null ? "" : chapterName.trim();
+        CmsTopicChapter chapter = new CmsTopicChapter();
+        chapter.setTopicId(topicId);
+        chapter.setName(name.isEmpty() ? "第1章" : (name.length() > 50 ? name.substring(0, 50) : name));
+        chapter.setSortId(1L);
+        chapter.setCategoryId(merchantCategoryId);
+        chapter.setCategory(category == null ? null : category.getCategoryName());
+        chapter.setRecruitEnabled(1);
+        chapter.setTermsMode(TermsMode.PERK);
+        chapter.setMaxMerchant(1);
+        chapter.setRequired(1);
+        chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(null));
+        chapter.setCreateBy(String.valueOf(merchantMemberId));
+        chapter.setCreateTime(DateUtils.getNowDate());
+        assertNotCreatingRevshare(chapter);
+        assertRecruitmentConfigForInsert(chapter, topic);
+        if (cmsTopicChapterMapper.insertCmsTopicChapter(chapter) != 1 || chapter.getId() == null) {
+            throw new IllegalStateException("章节创建失败，请重试");
+        }
+        contentWriteGuard.assertTopicSizeWithinLimits(topicId);
+        invalidateApprovedCanonical(topicId, "chapter-insert-empty-topic");
+        commercialTopicPolicy.assertNotConvertedToCommercial(topicId, conversionProtected);
+        return chapter;
+    }
+
+    private void assertVideoEditedWithTheme(CmsTopicChapter chapter) {
+        if (chapter != null && ((chapter.getVideoUrl() != null && !chapter.getVideoUrl().isBlank())
+                || (chapter.getVideoPosterUrl() != null && !chapter.getVideoPosterUrl().isBlank())))
+            throw new IllegalStateException("请在专业主题编辑器配置章节视频");
     }
 
     /**
@@ -216,6 +275,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
     {
         CmsTopicChapter current = lockAndAssertChapterMutable(
                 cmsTopicChapter == null ? null : cmsTopicChapter.getId());
+        assertVideoEditedWithTheme(cmsTopicChapter);
         assertNotChangingSupplyTerms(cmsTopicChapter, current);
         assertRecruitmentConfigForUpdate(cmsTopicChapter, current);
         // 同 insert:通用编辑也能开招募/换品类,必须走同一道「已发布免费主题禁转商业」写后复核。

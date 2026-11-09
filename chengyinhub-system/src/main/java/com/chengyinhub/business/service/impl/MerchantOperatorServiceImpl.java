@@ -154,7 +154,7 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
         requireCurrentInviter(invite, merchant);
         Date now = new Date();
         if (invite.getExpiresAt() == null || !invite.getExpiresAt().after(now)) throw conflict("邀请已过期");
-        if (principalMemberId.equals(merchant.getMemberId())) throw conflict("商家 Owner 无需接受员工邀请");
+        if (principalMemberId.equals(merchant.getMemberId())) throw conflict("你是店主，无需接受员工邀请");
         UmsMember member = lockActiveMember(principalMemberId);
         requireNoActiveClubIdentity(principalMemberId);
         if (mmsMerchantMapper.countMmsMerchantRowsByMemberIdForUpdate(principalMemberId) > 0) {
@@ -186,6 +186,33 @@ public class MerchantOperatorServiceImpl implements IMerchantOperatorService {
         audit(auditAccess, "MERCHANT_OPERATOR_JOINED", "MERCHANT_OPERATOR", relation.getId(),
                 relation.getId(), null, roleJson(invite.getRoleCode()), null, normalizedRequestId);
         return MerchantOperatorVO.from(relation);
+    }
+
+    /**
+     * j1 F22:邀请落地页要说清是哪家店、什么岗位。只读,作用域就是邀请 token 本身:
+     * token 对不上、已接受/撤销、已过期或商家停用一律「邀请无效或已失效」,不区分原因、不回邀请人与权限清单。
+     */
+    @Override
+    public java.util.Map<String, Object> invitePreview(Long principalMemberId, String rawToken) {
+        if (principalMemberId == null || principalMemberId <= 0 || rawToken == null
+                || rawToken.trim().length() < 16 || rawToken.length() > 256) {
+            throw badRequest("邀请无效或已失效");
+        }
+        MerchantOperatorInvite invite = merchantOperatorInviteMapper.selectByTokenHash(hashToken(rawToken.trim()));
+        if (invite == null || invite.getMerchantId() == null
+                || !MerchantOperatorInvite.STATUS_PENDING.equals(invite.getStatus())
+                || !MerchantRoleCode.isOperatorRole(invite.getRoleCode())
+                || invite.getExpiresAt() == null || !invite.getExpiresAt().after(new Date())) {
+            throw conflict("邀请无效或已失效");
+        }
+        MmsMerchant merchant = mmsMerchantMapper.selectMmsMerchantById(invite.getMerchantId());
+        if (!isActiveMerchant(merchant) || !invite.getMerchantId().equals(merchant.getId())) {
+            throw conflict("邀请无效或已失效");
+        }
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("merchantName", merchant.getName());
+        out.put("roleCode", invite.getRoleCode());
+        return out;
     }
 
     @Override

@@ -26,7 +26,7 @@ function topBanner(couponToast, screen, leadLoadError, lead) {
   return pick(TOP_BANNER, {
     couponToast: !!couponToast,
     leadRetry: !screen && !!leadLoadError,
-    leadbar: !screen && !!lead && !!lead.exists && lead.status == 2
+    leadbar: !screen && !!lead && !!lead.exists && (lead.status == 2 || !!lead.ended)
   });
 }
 

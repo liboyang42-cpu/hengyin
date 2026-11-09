@@ -665,6 +665,10 @@ class RegistrationReadContractMybatisIntegrationTest {
                 "game_command_receipt", "game_task_submission", "game_player_node_outcome"}) {
             exec(migrationDdl("chengyinhub-admin/sql/migration_20260823_game_session_runtime.sql", table));
         }
+        // C-10(2026-11-02):复盘到场与本场名册同一事实,读集合签到与签到更正两张表。
+        exec(baseDdl("club_lead_checkin"));
+        exec(migrationDdl("chengyinhub-admin/sql/migration_club_role_event_ops_20260823.sql",
+                "club_event_attendance_correction"));
     }
 
     private static String baseDdl(String table) throws Exception {

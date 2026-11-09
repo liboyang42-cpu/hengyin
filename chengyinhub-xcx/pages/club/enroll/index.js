@@ -23,6 +23,25 @@ const {
   permissionFailureCode, isPermissionFailure, identityKey,
 } = require('../utils/owner-action-guard.js');
 
+// C-13:后端给分(整数),这里只做 ¥ 格式化,不做任何加减 —— 净额由服务端算,与库逐分一致。
+function yuanText(fen) {
+  const n = Number(fen)
+  if (!Number.isFinite(n)) return '—'
+  const sign = n < 0 ? '-' : ''
+  const abs = Math.abs(Math.round(n))
+  return sign + '¥' + Math.floor(abs / 100) + '.' + String(abs % 100).padStart(2, '0')
+}
+
+function sessionMoneyRows(list) {
+  if (!Array.isArray(list)) return []
+  return list.filter(function (m) { return m && m.activityId != null }).map(function (m) {
+    return {
+      activityId: m.activityId, label: m.label || '', cancelled: m.cancelled === true,
+      paidText: yuanText(m.paidFen), refundedText: yuanText(m.refundedFen), netText: yuanText(m.netFen),
+    }
+  })
+}
+
 Page({
   data: {
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -392,6 +411,10 @@ Page({
             }).length,
           };
         });
+        // 第十二轮 k4(j2 N-03):本团有人报名的票种在,就不再把没人报名的模板票块(「领队场 0 / 20 · 还没有人报名」)
+        // 摆在真实场次名单上面;一个人都没有时照旧全列出来。
+        const anySignup = tickets.some(function (tk) { return tk.signups > 0; });
+        tickets.forEach(function (tk) { tk.hideEmpty = anySignup && !(tk.signups > 0); });
         const summary = tickets.reduce(function (acc, tk) {
           acc.paidCount += tk.paidCount;
           acc.refundableCount += tk.refundableCount;
@@ -404,6 +427,7 @@ Page({
         teams[targetIndex] = Object.assign({}, teams[targetIndex], {
           tickets: tickets,
           summary: summary,
+          sessionMoney: sessionMoneyRows(res.data.sessionMoney),
           _detailState: 'ready',
         });
         // 2026-09-09:退款挪到核销详情页,这里原来那段「未知回执落地后回读本团、
@@ -447,11 +471,6 @@ Page({
     return (this.data.teams || []).findIndex(function (team) {
       return String(team.id) === String(topicId);
     });
-  },
-
-  goUserInfo(e) {
-    const id = e.currentTarget.dataset.id;
-    if (id) wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + id });
   },
 
   // 2026-09-09:退款入口按用户裁决从名册行内挪到了核销详情底部,

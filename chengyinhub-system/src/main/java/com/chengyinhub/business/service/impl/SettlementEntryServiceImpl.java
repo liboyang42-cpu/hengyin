@@ -184,6 +184,28 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int recordClubFreeExploreSessionSettlement(CmsRegistration registration, Long payeeMemberId) {
+        if (registration == null || registration.getId() == null || payeeMemberId == null || payeeMemberId <= 0
+                || !Long.valueOf(2L).equals(registration.getOwnerType())
+                || registration.getPurchaseKind() == null || registration.getPurchaseKind() != PurchaseKind.EXPLORE_PASS) {
+            throw new IllegalStateException("只给俱乐部自有自由探索场次的探索票补记分账行,registrationId="
+                    + (registration == null ? null : registration.getId()));
+        }
+        BigDecimal amount = firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount());
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return 0;
+        }
+        if (registration.getFeePlatformRate() == null) {
+            throw new IllegalStateException("可付款报名缺少冻结平台费率,registrationId=" + registration.getId());
+        }
+        // 与 recordPaidRegistration 的活动口径同源:全局 activity 规则(ownerId=0),平台率取下单冻结的快照。
+        SettlementRule rule = settlementRuleService.getActiveRule(0L, "activity");
+        return insertSplitDetails("registration", registration.getId(), payeeMemberId, null,
+                amount, rule, registration.getFeePlatformRate(), registration);
+    }
+
+    @Override
     @CriticalPath(value = CriticalPathCode.CP_SETTLEMENT_ACCRUAL_FAILED, op = "coupon_verification")
     public int recordCouponVerification(SmsCouponHistory history, SmsCoupon coupon) {
         if (history == null || history.getId() == null || coupon == null) {

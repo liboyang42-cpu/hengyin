@@ -1,0 +1,42 @@
+TEXT[completed] 17处旧址已全部点亮 | 领取你的城市足迹卡 | 保存图片 | 分享 | 11月5日 周四 | PLAY-MAP-1105-legacy-68 | 已通关 | 17 | 点亮坐标 | 继续 | 全 | 部 | 完 | 成 | P | L | A | Y | - | M | A | P | - | 1 | 1 | 0 | 5 | - | l | e | g | a | c | y | - | 6 | 8 | 1 | 7 | 坐 | 标 | 1 | 7 | : | 4 | 4 | 用 | 时 | 3 | 0 | 0 | 解 | 谜 | 分 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990021-completed
+END {"done":17,"total":17,"allDone":true,"showFinish":true,"topicCompleted":false}
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990021 200   
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/journey/ending?topicId=990021&activityId=0 200 500 本主题未配置剧情 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871808431&topicId=990021
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871808431&topicId=990021
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990021
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.239&longitude=121.491
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871808694&topicId=990021
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871810445-8tcb9cse"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871810445-1ui8m8x7"}
+TEXT[completed] 11处旧址已全部点亮 | 领取你的城市足迹卡 | 保存图片 | 分享 | 11月5日 周四 | PLAY-MAP-1105-legacy-69 | 已通关 | 11 | 点亮坐标 | 继续 | 全 | 部 | 完 | 成 | P | L | A | Y | - | M | A | P | - | 1 | 1 | 0 | 5 | - | l | e | g | a | c | y | - | 6 | 9 | 1 | 1 | 坐 | 标 | 0 | 1 | : | 0 | 1 | 用 | 时 | 4 | 0 | 0 | 解 | 谜 | 分 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990022-completed
+END {"done":11,"total":11,"allDone":true,"showFinish":true,"topicCompleted":false}
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990022 200   
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990022 200 500 这一局还没开始 
+NET GET /api/play/journey/ending?topicId=990022&activityId=0 200 500 本主题未配置剧情 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871825345&topicId=990022
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871825346&topicId=990022
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990022
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.239&longitude=121.491
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871825644&topicId=990022
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871827480-jcvsgway"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793871827480-8tyn1qe4"}

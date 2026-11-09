@@ -12,6 +12,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="blocksJson"    column="blocks"    />
         <result property="atmospherePreset" column="atmosphere_preset" />
         <result property="audioUrl" column="audio_url" />
+        <result property="videoUrl" column="video_url" />
+        <result property="videoPosterUrl" column="video_poster_url" />
         <result property="imgArr"    column="img_arr"    />
         <result property="totalTime"    column="total_time"    />
         <result property="totalMileage"    column="total_mileage"    />
@@ -42,7 +44,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 显式列清单（非 select *）：新列不加在这里就查不出来，resultMap 配了也是空值 -->
     <sql id="selectCmsTopicChapterVo">
-        select id, topic_id, name, description, blocks, atmosphere_preset, audio_url, img_arr, total_time, total_mileage, location_count, template_count,sort_id, category, category_id, recruit_enabled, finish_time, perk_min_value, max_merchant, required, terms_mode, circle_candidate_code, circle_role, circle_policy, circle_enabled, max_per_head_fee, allowed_validation_methods, max_node_xp, need_group, create_by, create_time, update_by, update_time from cms_topic_chapter
+        select id, topic_id, name, description, blocks, atmosphere_preset, audio_url, video_url, video_poster_url, img_arr, total_time, total_mileage, location_count, template_count,sort_id, category, category_id, recruit_enabled, finish_time, perk_min_value, max_merchant, required, terms_mode, circle_candidate_code, circle_role, circle_policy, circle_enabled, max_per_head_fee, allowed_validation_methods, max_node_xp, need_group, create_by, create_time, update_by, update_time from cms_topic_chapter
     </sql>
 
     <select id="selectCmsTopicChapterList" parameterType="CmsTopicChapter" resultMap="CmsTopicChapterResult">
@@ -91,6 +93,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="blocksJson != null">blocks,</if>
             <if test="atmospherePreset != null">atmosphere_preset,</if>
             <if test="audioUrl != null">audio_url,</if>
+            <if test="videoUrl != null">video_url,</if>
+            <if test="videoPosterUrl != null">video_poster_url,</if>
             <if test="imgArr != null">img_arr,</if>
             <if test="totalTime != null">total_time,</if>
             <if test="totalMileage != null">total_mileage,</if>
@@ -124,6 +128,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="blocksJson != null">#{blocksJson},</if>
             <if test="atmospherePreset != null">#{atmospherePreset},</if>
             <if test="audioUrl != null">#{audioUrl},</if>
+            <if test="videoUrl != null">#{videoUrl},</if>
+            <if test="videoPosterUrl != null">#{videoPosterUrl},</if>
             <if test="imgArr != null">#{imgArr},</if>
             <if test="totalTime != null">#{totalTime},</if>
             <if test="totalMileage != null">#{totalMileage},</if>
@@ -161,6 +167,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="blocksJson != null">blocks = #{blocksJson},</if>
             <if test="atmospherePreset != null">atmosphere_preset = #{atmospherePreset},</if>
             <if test="audioUrl != null">audio_url = #{audioUrl},</if>
+            <if test="videoUrl != null">video_url = #{videoUrl},</if>
+            <if test="videoPosterUrl != null">video_poster_url = #{videoPosterUrl},</if>
             <if test="imgArr != null">img_arr = #{imgArr},</if>
             <if test="totalTime != null">total_time = #{totalTime},</if>
             <if test="totalMileage != null">total_mileage = #{totalMileage},</if>

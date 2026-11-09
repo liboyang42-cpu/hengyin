@@ -6,11 +6,11 @@
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar custom-back bind:back="goBack" />
   <cy-page-title title="入会申请" safe-top="{{false}}" />
-  <view class="intro">{{introText}}</view>
+  <view class="intro" wx:if="{{introText}}">{{introText}}</view>
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" loading-label="正在加载入会申请" />
   <cy-empty wx:elif="{{state === 'missing-param'}}" fill size="lg" kind="missing-param" title="无法打开入会申请"
-            sub="{{errorText}}" cta="返回俱乐部" bind:cta="goBack" />
+            sub="" cta="返回俱乐部" bind:cta="goBack" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{state === 'business-error'}}" title="入会申请加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="loadRequests" />
 
@@ -23,7 +23,7 @@
     <!-- 稿 P3 30:2 的汇总行(「N 条待审 · 可直接通过或拒绝」)就是上面那条 .intro,
          由 buildIntro 按条数生成 —— 这里不要再摆一条一模一样的。 -->
     <view wx:else class="request-list">
-      <view class="request-card" wx:for="{{requests}}" wx:key="id">
+      <view class="request-card {{item.memberId == leavingMemberId ? 'request-card--leaving' : ''}}" wx:for="{{requests}}" wx:key="id">
         <view class="request-row">
           <cy-avatar class="request-avatar" size="88" src="{{item.avatar || '/images/d_profile.png'}}" />
           <view class="request-main">

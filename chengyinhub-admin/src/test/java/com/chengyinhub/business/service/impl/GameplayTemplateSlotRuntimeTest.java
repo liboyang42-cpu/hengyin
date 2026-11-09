@@ -153,7 +153,7 @@ public class GameplayTemplateSlotRuntimeTest {
         run(topics.get(10L),11L,8,5,"a");run(topics.get(20L),21L,6,8,"b");
         ((ObjectNode)config.path("effects").path(0)).put("value",11);
         template.setAdvancedConfigJson(new AdvancedGameConfigValidator().validateAndNormalize(config.toString()));
-        String invalid=assertThrows(IllegalArgumentException.class,()->runtime.compileTemplateRules(topics.get(10L))).getMessage();
+        String invalid=assertThrows(IllegalArgumentException.class,()->runtime.compileTemplateRules(topics.get(10L))).toString();
         assertTrue(invalid.contains("11") && invalid.contains("energy") && invalid.contains("FLOOR"));
     }
     @Test void originalFullRecoveryIsFreeByDefaultButSharedPolicyMayConsumeOnce() throws Exception {
@@ -233,7 +233,7 @@ public class GameplayTemplateSlotRuntimeTest {
             for (boolean freeze : Arrays.asList(false, true)) {
                 String reason = assertThrows(IllegalArgumentException.class, () -> {
                     if (freeze) runtime.freezePublication(topic, null); else runtime.compileTemplateRules(topic);
-                }).getMessage();
+                }).toString();
                 assertTrue(reason.contains("11") && reason.contains("TEAM/WORLD_SHARED"), reason);
             }
         }
@@ -252,7 +252,7 @@ public class GameplayTemplateSlotRuntimeTest {
     @Test void independentVotePublicationRejectsMissingMaterialBindingWithNodeAndResourceReason() throws Exception {
         saveIndependentVote(voteDeclaration()); CmsTopic topic = topics.get(10L); ObjectNode theme = voteTheme(topic);
         theme.with("templateBindings").with("11").with("items").remove("supply"); topic.setThemeRuntimeConfigJson(theme.toString());
-        String reason = assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null)).getMessage();
+        String reason = assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null)).toString();
         assertTrue(reason.contains("11") && reason.contains("supply"), reason);
     }
     @Test void storyLinkedVotePublishesAndReentryKeepsFrozenOutcomeWithoutLiveBindings() throws Exception {
@@ -278,13 +278,13 @@ public class GameplayTemplateSlotRuntimeTest {
             if ("missing".equals(fault)) binding.with("values").remove("energy");
             if ("identity".equals(fault)) binding.put("templateId", 999L);
             topic.setThemeRuntimeConfigJson(definition.toString());
-            String message = assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null)).getMessage();
+            String message = assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null)).toString();
             assertTrue(message.contains("11") && message.contains("energy"), message);
         }
     }
     @Test void disabledBindingIsCheckedBeforeCompilationErasesIt() {
         CmsTopic topic = topics.get(10L); topic.setJourneyRulesJson("{\"schemaVersion\":1,\"stateEnabled\":true,\"hp\":{\"enabled\":false}}");
-        String message = assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic)).getMessage();
+        String message = assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic)).toString();
         assertTrue(message.contains("11") && message.contains("energy") && message.contains("未启用"), message);
     }
     @Test void literalTemplateStillPublishesAndFreezesWithoutBindings() throws Exception {
@@ -345,7 +345,7 @@ public class GameplayTemplateSlotRuntimeTest {
         unsupported.putObject("estimate").put("enabled", true).put("title", "猜数字").put("answer", 10).put("min", 0).put("max", 20).put("tolerance", 1);
         author.withArray("scenes").addObject().put("id", "two").put("name", "另一场景").putObject("nodeConfigs").set("11", unsupported);
         topic.setThemeRuntimeConfigJson(author.toString());
-        String message = assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null)).getMessage();
+        String message = assertThrows(IllegalArgumentException.class, () -> runtime.freezePublication(topic, null)).toString();
         assertTrue(message.contains("11") && message.contains("estimate") && message.contains("genericSettlement"), message);
     }
     @Test void unsupportedLegacyGameplayWithoutGenericToolsStillPublishesUnchanged() throws Exception {
@@ -359,7 +359,7 @@ public class GameplayTemplateSlotRuntimeTest {
     @Test void extraBindingCannotReferenceAnotherThemesNode() {
         CmsTopic topic = topics.get(10L); ObjectNode author = definition(11L, "sys.hp", "a");
         author.with("templateBindings").set("21", author.path("templateBindings").path("11").deepCopy()); topic.setThemeRuntimeConfigJson(author.toString());
-        String message = assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic)).getMessage();
+        String message = assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic)).toString();
         assertTrue(message.contains("21") && message.contains("不属于本主题"), message);
     }
     @Test void olderPublishedSnapshotWithoutNodeConfigsKeepsItsLiteralTheme() throws Exception {
@@ -392,7 +392,7 @@ public class GameplayTemplateSlotRuntimeTest {
             CmsTopicNode other = nodes.remove(id == 11 ? 12L : 11L);
             ObjectNode single = author.deepCopy(); single.with("templateBindings").remove(String.valueOf(other.getId()));
             topic.setThemeRuntimeConfigJson(single.toString());
-            String error = assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic)).getMessage();
+            String error = assertThrows(IllegalArgumentException.class, () -> runtime.compileTemplateRules(topic)).toString();
             assertTrue(error.contains(String.valueOf(id)) && (error.contains("energy") || error.contains("supply") || error.contains("backup")), error);
             nodes.put(other.getId(), other);
         }

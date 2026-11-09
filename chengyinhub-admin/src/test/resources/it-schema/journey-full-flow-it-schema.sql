@@ -101,6 +101,8 @@ CREATE TABLE `cms_topic_chapter` (
   `blocks` json DEFAULT NULL,
   `atmosphere_preset` varchar(64) DEFAULT NULL,
   `audio_url` varchar(500) DEFAULT NULL,
+  `video_url` varchar(512) DEFAULT NULL,
+  `video_poster_url` varchar(512) DEFAULT NULL,
   `img_arr` varchar(2000) DEFAULT NULL,
   `total_time` bigint DEFAULT NULL,
   `total_mileage` decimal(10,2) DEFAULT NULL,

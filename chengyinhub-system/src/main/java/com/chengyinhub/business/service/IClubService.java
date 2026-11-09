@@ -24,6 +24,12 @@ public interface IClubService
 
     public int insertClub(Club club);
 
+    /**
+     * C-14:只读查名,与创建时的 requireNameFree 同一口径(待审或在营、未删除的俱乐部占名,去掉首尾空格比较)。
+     * ownerToSkip 是本人:本人同名创建按重放处理,不算被占。返回 null 表示可用,否则是给用户看的原因。
+     */
+    public String checkNameForCreate(String name, Long ownerToSkip);
+
     /** 同事务锁 owner 会员行、校验名下俱乐部配额并插入；返回插入后的名下数量。 */
     public int insertClubWithinOwnerQuota(Club club, int maxOwnedClubs);
 
@@ -83,4 +89,13 @@ public interface IClubService
 
     /** 主理人专用：读取即使父对象已软删仍必须处理的资金阻断逐笔明细。 */
     public ClubDissolutionBlockers selectDissolutionBlockers(Long clubId, Long ownerId);
+
+    /**
+     * 业主 2026-11-05:对外展示的主理人名一律是主理人当前账号的昵称,不发布入驻时填的真实姓名
+     * (club.leader_name 留给平台审核后台)。club 为空给 null。
+     */
+    default String ownerDisplayName(Club club)
+    {
+        return club == null ? null : com.chengyinhub.business.util.OrganiserPersonName.ownerName(null);
+    }
 }

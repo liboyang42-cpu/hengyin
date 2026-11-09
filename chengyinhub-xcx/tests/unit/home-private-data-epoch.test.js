@@ -8,6 +8,7 @@ let userId
 let reloginCalls
 let roleUpdates
 let isDev
+let redirects
 
 global.getApp = () => ({
   isDevEnv: () => isDev,
@@ -36,7 +37,7 @@ global.wx = {
   hideTabBar() {},
   setNavigationBarColor() {},
   navigateTo() {},
-  redirectTo() {},
+  redirectTo(options) { redirects.push(options.url) },
   switchTab() {},
   getWindowInfo: () => ({ statusBarHeight: 20, screenHeight: 812, windowHeight: 812, windowWidth: 375 }),
   getSystemInfoSync: () => ({ statusBarHeight: 20, screenHeight: 812, windowHeight: 812, windowWidth: 375 }),
@@ -50,6 +51,7 @@ beforeEach(() => {
   userId = 'member-1'
   reloginCalls = 0
   roleUpdates = []
+  redirects = []
   isDev = false
   pageConfig = null
   delete require.cache[require.resolve(PAGE)]
@@ -62,6 +64,7 @@ function makePage() {
     Object.keys(patch).forEach((key) => { page.data[key] = patch[key] })
     if (callback) callback()
   }
+  global.getCurrentPages = () => [page]
   return page
 }
 
@@ -101,8 +104,9 @@ test('当前账号的角色响应可以更新身份快照', () => {
   page.fetchCityEvent = () => {}
 
   page.onShow()
-  assert.equal(sent.length, 1)
-  sent[0].success({ code: '200', data: { role: 'user', userType: 0 } })
+  const request = sent.find(request => request.url === '/api/user/info')
+  assert.ok(request)
+  request.success({ code: '200', data: { role: 'user', userType: 0 } })
 
   assert.deepEqual(roleUpdates, [{ role: 'user', userType: 0 }])
 })
@@ -112,9 +116,10 @@ test('旧账号的角色响应不能更新新账号身份快照', () => {
   page.fetchCityEvent = () => {}
 
   page.onShow()
-  assert.equal(sent.length, 1)
+  const request = sent.find(request => request.url === '/api/user/info')
+  assert.ok(request)
   userId = 'member-2'
-  sent[0].success({ code: '200', data: { role: 'merchant', userType: 2 } })
+  request.success({ code: '200', data: { role: 'merchant', userType: 2 } })
 
   assert.deepEqual(roleUpdates, [])
 })
@@ -278,3 +283,85 @@ test('首页真实资料回读不按稍后期限再弹，任何账号、任何�
  userId='8';page.getUserData();sent[2].success({code:200,data:{phone:''}});assert.equal(page.data.showPhoneModal,false);
  wx.getStorageSync=()=>'';wx.setStorageSync=()=>{};
 });
+
+const checkinAccess = {
+  active: true,
+  merchant: { id: 8003, name: '本店' },
+  roleCode: 'MERCHANT_CHECKIN',
+  permissions: ['merchant:basic:read', 'merchant:verify', 'merchant:verify:record:read'],
+}
+
+test('M-15:player成员的有效核销权限进入现有工作台，不改成员角色', () => {
+  const page = makePage()
+  page.loadOperatorAccess()
+  assert.equal(sent[0].url, '/api/merchant/access/me')
+  assert.equal(sent[0].method, 'POST')
+  sent[0].success({ code: 200, data: checkinAccess })
+  assert.deepEqual(redirects, ['/pages/merchant/index/index'])
+  assert.equal(page.data._needsRedirect, true)
+  assert.deepEqual(roleUpdates, [])
+})
+
+test('M-15:onShow刷新核销权限，失效和请求失败不沿用旧权限', () => {
+  const page = makePage()
+  page.fetchCityEvent = () => {}
+  page.onShow()
+  const request = sent.find(request => request.url === '/api/merchant/access/me')
+  assert.ok(request)
+  request.success({ code: 200, data: { active: false, applicationState: 'NONE' } })
+  assert.deepEqual(redirects, [])
+  assert.equal(page.data._needsRedirect, false)
+  page.onShow()
+  assert.deepEqual(redirects, [], '未收到有效权限前不跳工作台')
+})
+
+test('M-15:无权限、失效、错误或畸形access不进入工作台', () => {
+  for (const response of [
+    null,
+    undefined,
+    { code: 200, data: { active: false, applicationState: 'NONE' } },
+    { code: 200, data: { ...checkinAccess, permissions: ['merchant:basic:read'] } },
+    { code: 200, data: { ...checkinAccess, merchant: null } },
+    { code: 500, data: checkinAccess },
+  ]) {
+    sent = []
+    const page = makePage()
+    page.loadOperatorAccess()
+    sent[0].success(response)
+    assert.deepEqual(redirects, [])
+  }
+})
+
+test('M-15:换号、隐藏、卸载、离页和上一轮请求的迟到权限不触发跳转', () => {
+  for (const change of [
+    page => { userId = 'member-2' },
+    page => page.onHide(),
+    page => page.onUnload(),
+    page => { global.getCurrentPages = () => [page, {}] },
+    page => page.loadOperatorAccess(),
+  ]) {
+    sent = []
+    userId = 'member-1'
+    const page = makePage()
+    page.loadOperatorAccess()
+    const request = sent[0]
+    change(page)
+    request.success({ code: 200, data: checkinAccess })
+    assert.deepEqual(redirects, [])
+  }
+})
+
+test('M-15:游客和显式玩家调试视角不请求经营入口', () => {
+  const originalRead = wx.getStorageSync
+  try {
+    for (const id of ['', 'member-1']) {
+      sent = []
+      userId = id
+      wx.getStorageSync = key => key === 'debug_user_view' ? 'user' : ''
+      const page = makePage()
+      page.loadOperatorAccess()
+      assert.equal(sent.length, 0)
+      assert.deepEqual(redirects, [])
+    }
+  } finally { wx.getStorageSync = originalRead }
+})

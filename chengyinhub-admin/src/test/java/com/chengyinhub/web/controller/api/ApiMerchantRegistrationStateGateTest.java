@@ -30,6 +30,7 @@ class ApiMerchantRegistrationStateGateTest {
         when(members.lockMemberById(MEMBER)).thenReturn(MEMBER);
         when(merchants.insertMmsMerchant(any())).thenReturn(1);
         ApiMerchantController controller = controller(merchants);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "umsMemberMapper", members);
         ReflectionTestUtils.setField(controller, "merchantOperatorMapper", mock(MerchantOperatorMapper.class));
         MerchantRegistrationDTO request = request();
@@ -103,6 +104,7 @@ class ApiMerchantRegistrationStateGateTest {
         active.setStatus(MerchantOperator.STATUS_ACTIVE);
         when(operators.selectActiveByMemberId(MEMBER)).thenReturn(active);
         ApiMerchantController controller = controller(merchants);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "merchantOperatorMapper", operators);
         ReflectionTestUtils.setField(controller, "umsMemberMapper", members);
         MerchantRegistrationDTO request = request();
@@ -121,9 +123,11 @@ class ApiMerchantRegistrationStateGateTest {
                 return MEMBER;
             }
         };
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "mmsMerchantService", merchants);
         // RUN-52 发布者实名:本用例测的是首次入驻的状态机(待审/不激活),实名闸在这里放行
         // (mock 的 checkRegistered 返回 null = 已登记)。
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(controller, "memberIdentityService",
                 mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         return controller;

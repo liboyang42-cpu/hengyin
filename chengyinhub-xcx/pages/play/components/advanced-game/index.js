@@ -44,7 +44,7 @@ Component({
     }
   },
   lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); this.stopBackgroundMusic(); } },
-  pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
+  pageLifetimes: { hide() { this.stopDrawAudio(); } },
   methods: {
     sessionRequestContext() {
       return { memberId: String(app.getUserID() || ''),
@@ -184,6 +184,9 @@ Component({
         /* 拍物成卡:判过这一次的回包带着刚铸的卡(契约 §10.2「当场看到卡」)。只有那一次动作的回包有,
            回读 /state 没有 —— 页面据此当场揭晓。丢在这一层,那一屏就永远只说「这张过了」。 */
         objectCard: (state && state.objectCard) || null,
+        /* P-10/P-11 第四轮 rig 实测:作者「结果反馈」判完那一次的回包带 outcomeFeedback,丢在这一层的话
+           题屏不知道作者写了话,判定屏下面仍叠兜底句「再想想 / 不对…」。 */
+        outcomeFeedback: (state && state.outcomeFeedback) || null,
       });
     },
     /** 这一步没提交成功:页面据此让拍物成卡那一屏回到取景,别让玩家对着「处理中」干等。 */
@@ -445,25 +448,21 @@ Component({
       this._drawAudio.stop();
       this.setData({ playingDrawId: '' });
     },
-    /* 背景音乐(模板互动工具,2026-10-22):玩这一关时播放,离开 / 收起 / 切后台就停。
-       跟随静音键 —— 它是氛围音,不是玩家主动点开的内容。 */
+    /* 背景音乐(模板互动工具,2026-10-22):玩这一关时播放,离开 / 收起就停。
+       本组件不自己出声,交给页面那一路站点配乐(bind:bgm):同一时刻只有一首配乐,跟随「背景音乐」开关,
+       旁白时压低,来电 / 切后台 / 拍照回来由页面的音频会话暂停与续播。按文件比:签名参数变了不算换曲。 */
     syncBackgroundMusic(music) {
       const src = music && typeof music.audioUrl === 'string' ? music.audioUrl : '';
       if (!src || !this.data.show) { this.stopBackgroundMusic(); return; }
-      if (this._bgm && this._bgmSrc === src) return;
-      this.stopBackgroundMusic();
-      const audio = wx.createInnerAudioContext();
-      audio.obeyMuteSwitch = true;
-      audio.loop = music.loop !== false;
-      audio.src = src;
-      audio.onError(() => this.stopBackgroundMusic());
-      audio.play();
-      this._bgm = audio; this._bgmSrc = src;
+      const file = src.split('?')[0];
+      if (this._bgmSrc === file) return;
+      this._bgmSrc = file;
+      this.triggerEvent('bgm', { music: { audioUrl: src, loop: music.loop !== false } });
     },
     stopBackgroundMusic() {
-      if (!this._bgm) return;
-      try { this._bgm.stop(); this._bgm.destroy(); } catch (e) { /* 已销毁 */ }
-      this._bgm = null; this._bgmSrc = '';
+      if (!this._bgmSrc) return;
+      this._bgmSrc = '';
+      this.triggerEvent('bgm', { music: null });
     },
     destroyDrawAudio() {
       if (!this._drawAudio) return;

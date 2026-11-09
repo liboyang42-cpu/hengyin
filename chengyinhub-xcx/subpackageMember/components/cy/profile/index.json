@@ -2,7 +2,7 @@
   "component": true,
   "usingComponents": {
     "tabBar": "/components/tabBar/index",
-    "roleBadge": "/components/roleBadge/index",
+    "roleBadge": "/subpackageMember/components/roleBadge/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
@@ -14,15 +14,16 @@
     "cy-scene-sheet": "/components/cy/scene-sheet/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-modal": "/components/cy/modal/index",
-    "cy-scene-route-content": "/components/cy/scene-route-content/index",
+    "cy-scene-route-content": "/subpackageMember/components/cy/scene-route-content/index",
     "cy-scene-game-coupon-wallet": "/subpackageMember/components/cy/scene-game-coupon-wallet/index",
     "cy-scene-qr-coupon": "/subpackageMember/components/cy/scene-qr-coupon/index",
     "cy-scene-roam-stamp-album": "/components/cy/scene-roam-stamp-album/index",
-    "cy-scene-share-invite": "/components/cy/scene-share-invite/index",
+    "cy-scene-share-invite": "/subpackageMember/components/cy/scene-share-invite/index",
     "cy-npc-avatar": "/components/cy/npc-avatar/index",
     "cy-npc-chat": "/subpackageMember/components/cy/npc-chat/index",
     "cy-coop-invite-sheet": "/subpackageMember/components/cy/coop-invite-sheet/index",
     "cy-report-sheet": "/subpackageMember/components/cy/report-sheet/index",
-    "cy-merchant-correction-sheet": "/subpackageMember/components/cy/merchant-correction-sheet/index"
+    "cy-merchant-correction-sheet": "/subpackageMember/components/cy/merchant-correction-sheet/index",
+    "cy-share-card": "/components/cy/share-card/index"
   }
 }

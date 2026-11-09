@@ -109,8 +109,9 @@ class MerchantAggregateReadServiceTest {
         verify(invites, org.mockito.Mockito.never()).expirePendingInvites(any());
     }
 
+    /** check-1104 p2 F-2:营销「近 N 天」含今天(与店铺参谋、核销台账同一窗口),跨上海 0 点才前移。 */
     @Test
-    void marketingWindowUsesCompleteShanghaiDaysAndMovesOnlyAtLocalMidnight() {
+    void marketingWindowIncludesTodayInShanghaiAndMovesOnlyAtLocalMidnight() {
         Clock beforeShanghaiMidnight = Clock.fixed(
                 Instant.parse("2026-08-23T15:59:59.999Z"), ZoneOffset.UTC);
         Clock atShanghaiMidnight = Clock.fixed(
@@ -121,14 +122,14 @@ class MerchantAggregateReadServiceTest {
         MerchantAggregateReadServiceImpl.MarketingWindow after =
                 MerchantAggregateReadServiceImpl.resolveMarketingWindow(7, atShanghaiMidnight);
 
-        assertEquals(Instant.parse("2026-08-22T16:00:00Z"), before.getEndExclusive().toInstant(),
-                "上海 23:59 仍只能统计截至昨日的完整自然日");
-        assertEquals(Instant.parse("2026-08-15T16:00:00Z"), before.getCurrentStart().toInstant());
-        assertEquals(Instant.parse("2026-08-08T16:00:00Z"), before.getPreviousStart().toInstant());
-        assertEquals(Instant.parse("2026-08-23T16:00:00Z"), after.getEndExclusive().toInstant(),
+        assertEquals(Instant.parse("2026-08-23T16:00:00Z"), before.getEndExclusive().toInstant(),
+                "上海 8/23 23:59 的窗口截到 8/24 0 点:今天的核销要算进来");
+        assertEquals(Instant.parse("2026-08-16T16:00:00Z"), before.getCurrentStart().toInstant());
+        assertEquals(Instant.parse("2026-08-09T16:00:00Z"), before.getPreviousStart().toInstant());
+        assertEquals(Instant.parse("2026-08-24T16:00:00Z"), after.getEndExclusive().toInstant(),
                 "只有跨过 Asia/Shanghai 00:00 窗口才向前移动一天");
-        assertEquals(Instant.parse("2026-08-16T16:00:00Z"), after.getCurrentStart().toInstant());
-        assertEquals(Instant.parse("2026-08-09T16:00:00Z"), after.getPreviousStart().toInstant());
+        assertEquals(Instant.parse("2026-08-17T16:00:00Z"), after.getCurrentStart().toInstant());
+        assertEquals(Instant.parse("2026-08-10T16:00:00Z"), after.getPreviousStart().toInstant());
     }
 
     @Test
@@ -296,7 +297,7 @@ class MerchantAggregateReadServiceTest {
         assertEquals(30, analytics.get("windowDays"));
         Map<String, Object> window = castMap(analytics.get("window"));
         assertEquals("Asia/Shanghai", window.get("timezone"));
-        assertEquals("COMPLETE_CALENDAR_DAYS", window.get("basis"));
+        assertEquals("DAYS_INCL_TODAY", window.get("basis"));
         List<Map<String, Object>> stages = castList(analytics.get("stages"));
         assertEquals(Arrays.asList("BROWSE", "SIGNUP", "PAYMENT", "VERIFY", "REFUND_APPLY"),
                 Arrays.asList(stages.get(0).get("code"), stages.get(1).get("code"),

@@ -11,7 +11,7 @@
       <text class="{{displayValue ? 'fd__val' : 'fd__ph'}}">{{displayValue || placeholder}}</text>
       <cy-icon name="arrow-right" size="32" class="fd__arrow {{active ? 'fd__arrow--up' : ''}}" />
     </view>
-    <input aria-label="{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}" wx:else class="fd__input" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="fd__ph" maxlength="{{showCount ? -1 : maxlength}}" disabled="{{disabled || readonly}}" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" />
+    <input aria-label="{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}" wx:else class="fd__input" type="{{inputType}}" value="{{value}}" placeholder="{{placeholder}}" placeholder-class="fd__ph" maxlength="{{showCount ? -1 : maxlength}}" disabled="{{disabled || readonly}}" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" />
 
     <cy-icon wx:if="{{variant !== 'select' && success}}" name="check" size="40" class="fd__tail fd__tail--ok" />
     <cy-icon wx:elif="{{variant !== 'select' && readonly}}" name="lock" size="36" class="fd__tail" />

@@ -1,0 +1,38 @@
+== setup: merchant 9002 main industry = 30 书店 (sys_category type=6)
+member_id	category_id	type
+9002	30	6
+
+== A. zero-chapter theme 990020
+recruitment-chapters: {"code": 200, "msg": "操作成功", "chapterCount": 0, "emptyTopicJoinable": true}
+negative: organiser 9003 submits to own theme -> {"code": 403, "msg": "商家身份无效或权限不足"}
+negative: someone else's template 6002 -> {"code": 500, "msg": "玩法模板不存在或不属于你"}
+chapters_after_negatives
+0
+
+submit (no chapterId): {"code": 200, "msg": "操作成功"}
+returned node id=75 chapterId=46 nodeAuditStatus=0
+== DB read-back
+id	topic_id	name	category_id	category	recruit_enabled	terms_mode	max_merchant	required	create_by
+46	990020	探店日样板咖啡	30	书店	1	PERK	1	1	9002
+id	topic_id	chapter_id	merchant_id	status	source	message
+1	990020	46	9002	0	0	想承接
+id	topic_id	chapter_id	merchant_member_id	template_id	name	node_audit_status
+75	990020	46	9002	6001	探店日样板咖啡	0
+
+== organiser 9003 sees it pending (/api/merchant/chapter-node/pending)
+code 200 [(75, '探店日样板咖啡', 0)]
+== second merchant 9005 on the same theme: now 1 chapter exists ->
+{"code": 200, "msg": "操作成功", "chapterCount": 1, "emptyTopicJoinable": false}
+{"code": 500, "msg": "这条路线已有章节，请刷新后选择章节"}
+chapters
+1
+
+== B. chapters exist but none open (990014, recruit_enabled=0 on all 4)
+{"code": 200, "msg": "操作成功", "chapterCount": 4, "emptyTopicJoinable": false}
+data: []
+{"code": 500, "msg": "这条路线已有章节，请刷新后选择章节"}
+chapters
+4
+applications
+0
+

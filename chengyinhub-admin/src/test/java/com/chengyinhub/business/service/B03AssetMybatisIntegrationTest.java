@@ -105,6 +105,7 @@ class B03AssetMybatisIntegrationTest {
         ICmsPointsSettingService settings = mock(ICmsPointsSettingService.class);
         CmsPointsSetting rule = new CmsPointsSetting();
         rule.setValue(new BigDecimal("5"));
+        rule.setStatus(1L);
         when(settings.selectCmsPointsSettingList(any())).thenReturn(Collections.singletonList(rule));
         PointsAwardServiceImpl target = new PointsAwardServiceImpl();
         ReflectionTestUtils.setField(target, "cmsPointsSettingService", settings);
@@ -278,6 +279,7 @@ class B03AssetMybatisIntegrationTest {
 
     private IMerchantPayableService payable(MerchantPayableBatchMapper mapper) {
         MerchantPayableServiceImpl target = new MerchantPayableServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "settlementDetailMapper", org.mockito.Mockito.mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
         ReflectionTestUtils.setField(target, "batchMapper", mapper);
         return proxy(target, IMerchantPayableService.class);
     }

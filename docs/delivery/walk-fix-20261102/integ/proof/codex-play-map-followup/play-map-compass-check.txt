@@ -1,0 +1,49 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-R2-compass-check | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 N | PLAY-MAP-1105-R2-compass-check · 序章 | 生命值 10 | /10 | 出发 | 序 | 章 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | PLAY-MAP-1105-R2-compass-check · 序章 | 生命值 10 | /10 | 雨停了。老周留下一张字条：去外滩，钟声会告诉你下一步。 | 出发 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 继续探索 | 第 | 1 | 章 | / | 共 | 1 | 章 | 第 | 一 | 章 | 江 | 边 | 1 | 第 | 1 | 章 | 开 | 始 | 了 | 。 | 1 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 N | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 N | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 第1章开始了。沿着江边往北走。 | 继续探索 | 第 1 站 | 01 罗盘指向与D20 | 上海市黄浦区中山东一路1号 | 罗盘指向与D20·PLAY-M | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 点开始后转动手机，把红色箭头转到顶上的白线 | 找个能站稳的地方再开始 | 本机成绩：只记探索值与徽章，不发券或积分 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-two-failures
+TEXT[after-skip] 这一站已跳过 | 本机成绩：只记探索值与徽章，不发券或积分 | 继续故事 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-skipped
+TEXT[d20-required] 请先完成本站 D20 检定 | N | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 检定 · 观察 | 简单 | 标准 | 困难 | 按住摇骰，松手掷出 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-d20-required
+TEXT[rolled] N | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 检定 · 观察 | 简单 | 标准 | 困难 | 13 | 1 | 5 | 10 | 15 | 20 | 15 | 达成值 15 · 难度 13 | 过线 2 点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-d20-rolled
+STEP_ERROR tap: no visible element with text "结算"
+SHOT _err-1793874416324
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990016 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990016 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990016 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/orient/scoring/session/3 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/3/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793874386862-tnn0kgst"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793874386862-1ivnzho0"}
+NET POST /api/play/journey/opening/complete 200 200 操作成功 {"topicId":990016,"chapterId":48,"expectedVersion":0}
+NET GET /api/play/nodes?topicId=990016 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990016 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990016 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/orient/scoring/session/3 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/3/leaderboard 200 500 城市定向计分暂未开放 
+NET GET /api/play/encounter?topicId=990016&activityId=0&nodeId=73 200 200 操作成功 
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990016","nodeId":"73"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":4,"version":0,"idempotencyKey":"TEST_ACTION","action":"REPORT_SENSOR_FAILURE","payload":{"game":"compass"}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":4,"version":1,"idempotencyKey":"TEST_ACTION","action":"REPORT_SENSOR_FAILURE","payload":{"game":"compass"}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":4,"version":2,"idempotencyKey":"TEST_ACTION","action":"SKIP_SENSOR_STATION","payload":{"game":"compass"}}
+NET GET /api/play/route-state?topicId=990016 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990016&nodeId=73 200 200 操作成功 
+NET POST /api/play/arrive 200 500 请先完成本站 D20 检定 topicId=990016&nodeId=73&routeActionId=route-mw3ei8ue-09e055n7ta&expectedRouteVersion=2&routeSessionId=3
+NET GET /api/play/encounter?topicId=990016&activityId=0&nodeId=73 200 200 操作成功 
+NET POST /api/play/check/roll 200 200 操作成功 topicId=990016&activityId=0&sessionId=3&nodeId=73&checkId=check_mw3ebd6s

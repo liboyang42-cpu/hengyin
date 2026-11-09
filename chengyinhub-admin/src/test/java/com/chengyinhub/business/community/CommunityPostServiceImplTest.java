@@ -178,6 +178,70 @@ class CommunityPostServiceImplTest {
         verify(mapper, never()).insertRevision(anyLong(), anyLong(), anyInt(), anyString(), anyString(), anyString(), any());
     }
 
+    /** 第十二轮 k2(j5 N1):改已发布的帖文与新发帖同一道机审;过了直接在线,不开人审。 */
+    private CommunityPostRequests.Upsert publishedEdit() {
+        CommunityPost published = draft(7L, 9L, 3);
+        published.setLifecycle("PUBLISHED");
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(published);
+        when(mapper.selectById(7L, 9L)).thenReturn(published);
+        when(mapper.selectActiveGuideline()).thenReturn(Collections.<String, Object>singletonMap("id", 5L));
+        when(mapper.countGuidelineAck(9L, 5L)).thenReturn(1);
+        when(mapper.updateContentCas(any(), eq(3), anyString(), any())).thenReturn(1);
+        when(mapper.selectMediaForSafety(7L)).thenReturn(Collections.emptyList());
+        CommunityPostRequests.Upsert request = validUpsert();
+        request.setExpectedVersion(3);
+        return request;
+    }
+
+    @Test
+    void editingPublishedPostThatPassesMachineCheckStaysLiveWithoutHumanQueue() {
+        CommunityPostRequests.Upsert request = publishedEdit();
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.pass());
+
+        service.edit(9L, 7L, request);
+
+        verify(safetyGate).decide(argThat(r -> r.getText() != null && r.getText().contains(request.getBody())));
+        // 第十二轮 k8:正文只写一次、直接 PUBLISHED,版本只 +1(编辑面板按「期望 + 1」核对)
+        verify(mapper).updateContentCas(any(), eq(3), eq("PUBLISHED"), any());
+        verify(mapper, never()).updateContentCas(any(), anyInt(), eq("CHECKING"), any());
+        verify(mapper, never()).transitionCas(anyLong(), anyString(), anyString(), anyInt(), any(), any(), any(), any(), any(), any());
+        verify(mapper).upsertSearchDocument(eq(7L), eq("VISIBLE"), any());
+        IAuditTaskService audits = (IAuditTaskService) org.springframework.test.util.ReflectionTestUtils
+                .getField(service, "auditTaskService");
+        verify(audits, never()).submitSafetyHold(anyString(), anyLong(), anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void editingPublishedPostWithBlockedContentIsRefusedLikeANewPost() {
+        CommunityPostRequests.Upsert request = publishedEdit();
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.block("WORD"));
+
+        ServiceException error = assertThrows(ServiceException.class, () -> service.edit(9L, 7L, request));
+
+        assertEquals(Integer.valueOf(400), error.getCode());
+        assertEquals("内容未通过安全检查，请修改后重试", error.getMessage());
+        verify(mapper, never()).updateContentCas(any(), anyInt(), anyString(), any());
+        verify(mapper, never()).transitionCas(anyLong(), anyString(), anyString(), anyInt(), any(), any(), any(), any(), any(), any());
+        IAuditTaskService audits = (IAuditTaskService) org.springframework.test.util.ReflectionTestUtils
+                .getField(service, "auditTaskService");
+        verify(audits, never()).submitSafetyHold(anyString(), anyLong(), anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void editingPublishedPostHeldByMachineCheckWaitsWithoutExtraHumanTask() {
+        CommunityPostRequests.Upsert request = publishedEdit();
+        when(safetyGate.decide(any())).thenReturn(SafetyDecision.hold("WECHAT_BUSY", 55L));
+
+        service.edit(9L, 7L, request);
+
+        verify(mapper).updateContentCas(any(), eq(3), eq("CHECKING"), any());
+        verify(mapper, never()).transitionCas(anyLong(), anyString(), anyString(), anyInt(), any(), any(), any(), any(), any(), any());
+        verify(mapper).updateMediaReviewState(eq(7L), eq("HOLD"), any());
+        IAuditTaskService audits = (IAuditTaskService) org.springframework.test.util.ReflectionTestUtils
+                .getField(service, "auditTaskService");
+        verify(audits, never()).submitSafetyHold(anyString(), anyLong(), anyLong(), anyString(), anyString());
+    }
+
     @Test
     void publishRetryReturnsStoredStateWithoutRunningSafetyAgain() {
         CommunityPost published = draft(7L, 9L, 4);

@@ -1,5 +1,6 @@
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <view class="page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
@@ -21,7 +22,8 @@
     <view class="section">
       <text class="section-title">选择受众</text>
       <view class="ds-card">
-        <view wx:for="{{audiences}}" wx:key="value"
+        <!-- 第十轮 f3 第 5 项(p3 F7):不是从具体活动进来时,本场受众三行整行不出,不再挂三遍同一句说明。 -->
+        <block wx:for="{{audiences}}" wx:key="value"><view wx:if="{{!item.hidden}}"
           class="row audience {{audienceType === item.value ? 'audience--active' : ''}} {{item.disabled ? 'row--disabled' : ''}}"
           data-value="{{item.value}}" bindtap="chooseAudience" aria-role="button" aria-pressed="{{audienceType === item.value}}"
           aria-disabled="{{item.disabled}}" hover-class="{{sending || retrying || item.disabled ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
@@ -31,7 +33,7 @@
           </view>
           <text class="row-count" wx:if="{{item.countText}}">{{item.countText}}</text>
           <text class="row-value">{{audienceType === item.value ? '已选' : '选择'}}</text>
-        </view>
+        </view></block>
       </view>
     </view>
 
@@ -40,9 +42,11 @@
       <view class="ds-card ds-card--form">
         <text class="field-label">标题<text class="form-required" aria-hidden="true">*</text></text>
         <input class="field-input" maxlength="80" value="{{title}}" bindinput="onTitleInput" placeholder="例如：周六集合提醒" />
+        <cy-inline-error class="field-err" wx:if="{{titleError}}" kind="field" title="{{titleError}}" />
         <text class="field-label">内容<text class="form-required" aria-hidden="true">*</text></text>
         <textarea class="field-textarea" maxlength="1000" value="{{content}}" bindinput="onContentInput"
           placeholder="写清集合时间、地点与需要准备的物品" />
+        <cy-inline-error class="field-err" wx:if="{{contentError}}" kind="field" title="{{contentError}}" />
       </view>
 
       <!-- 发送前必须先拿到受众预览:Figma 静态稿没画这一步，但它是防止群发空任务/误发的
@@ -107,7 +111,7 @@
       </button>
     </view>
 
-    <button class="send-btn" loading="{{sending}}" disabled="{{sending || previewState !== 'ready'}}" bindtap="send">
+    <button class="send-btn" loading="{{sending}}" disabled="{{sending}}" bindtap="send">
       {{sending ? '正在投递…' : '发送站内通知'}}
     </button>
   </block>

@@ -697,7 +697,7 @@ Page({
         const receipt = res && res.receipt;
         this._saved = Object.assign({}, payload);
         this._portrait = null;
-        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', personality: picked ? picked.key : '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', personality: picked ? picked.key : '', knowledge: payload.knowledge || '', auditStatus: receipt && receipt.review === 'APPROVED' ? 1 : (receipt && receipt.review === 'REJECTED' ? 2 : 0), auditReason: (receipt && receipt.review === 'REJECTED' && receipt.reviewReason) || ''})); // 第十二轮 k9(p2 N-15):状态签跟回执走,机审当场通过就不再写「审核中」
         this._reviewSeq = (this._reviewSeq || 0) + 1;
         this.setData({ reviewText: profileReview.merchantNpcText(receipt) });
         if (!receipt) this._loadReview();
@@ -832,7 +832,7 @@ Page({
       const value = res.data || res;
       voiceJournal.observe(wx, context.member, 'merchant', requestId, value);
       this.setData({ voiceHistory: voiceJournal.load(wx, context.member, 'merchant').records,
-        voiceHistoryResult: '原请求状态：' + value.voiceIntentState });
+        voiceHistoryResult: '原请求状态：' + voiceJournal.stateLabel(value.voiceIntentState) });
 
     }).catch(error => { if (context.current()) this.setData({ voiceError: error.message }); });
   },

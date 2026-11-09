@@ -1,0 +1,50 @@
+{
+  "identity": [
+    [
+      "19025e57-d901-11f1-b086-9ae8535e5aec",
+      "cy_e2e_51"
+    ]
+  ],
+  "shapes": [
+    [
+      990020,
+      "LINEAR",
+      1,
+      1,
+      null,
+      null,
+      null,
+      null,
+      "media-asset:3",
+      2,
+      17,
+      2
+    ],
+    [
+      990021,
+      "LINEAR",
+      1,
+      1,
+      null,
+      null,
+      null,
+      null,
+      "media-asset:3",
+      2,
+      11,
+      2
+    ]
+  ],
+  "progress": [
+    [
+      990020,
+      17,
+      "17"
+    ],
+    [
+      990021,
+      11,
+      "11"
+    ]
+  ]
+}

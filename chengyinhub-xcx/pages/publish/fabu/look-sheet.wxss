@@ -25,6 +25,8 @@
 .look-font--BOLD { font-family: -apple-system, "PingFang SC", sans-serif; font-weight: 900; font-style: italic; } /* ds-ok 粗斜(NRC 式)预览 */
 /* 预览常驻:钉在面板顶部,下面的风格 / 参数 / 配色 / 字体在它底下滚 */
 .look-pin { display: block; position: sticky; top: 0; z-index: 3; padding-bottom: var(--cy-space-2, 16rpx); background: var(--cy-comp-sheet-bg); }
+/* 第十二轮 k8(j3 F18):滚到预览底下的标题原来被切成半截字 —— 预览下沿加一道同底色的渐隐,滑进去的字是淡出而不是被一刀切 */
+.look-pin { box-shadow: 0 28rpx 24rpx -4rpx var(--cy-comp-sheet-bg); }
 /* 主题配色色卡跟着所选风格变:同一档「黄」在纸本里是牛皮纸、在末世里是热浪的焦土(原型 v7 PAL) */
 .look-pal--stardust .atmosphere-swatch--default{ background:#0A0A0A; color:#F2F2F0; } /* ds-ok 原型 v7 PAL */
 .look-pal--stardust .atmosphere-swatch--blue{ background:#0E1A33; color:#F5F8FF; } /* ds-ok 原型 v7 PAL */

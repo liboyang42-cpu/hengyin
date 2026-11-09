@@ -21,8 +21,8 @@ function assertCoordinateArrivalContract(js) {
   const arrive = js.slice(js.indexOf('  arrive(nodeId, via) {'), js.indexOf('  checkin(nodeId, code, source) {'))
   assert.match(
     arrive,
-    /that\.data\.mode === 2\) \{ that\.onShopDayArrived\(nodeId, r\.data\); return; \}/,
-    'mode2 无坐标/手动到店成功后也只能进入到店态，不能直接完成节点',
+    /that\.data\.mode === 2 && !completedReceipt\) \{ that\.onShopDayArrived\(nodeId, r\.data\); return; \}/,
+    'mode2 纯到店回执只能进入到店态；完整游戏结算回执复用 onComplete',
   )
   const guard = arrive.indexOf('that.onShopDayArrived(nodeId')
   const complete = arrive.indexOf('that.onComplete(nodeId')
@@ -45,6 +45,6 @@ test('mutation 负控:删掉 mode2 拦截时契约确实变红', () => {
 
 test('mutation 负控:删掉无坐标到店拦截时契约确实变红', () => {
   const js = read('pages/play/index.js')
-    .replace('if (that.data.mode === 2) { that.onShopDayArrived(nodeId, r.data); return; }', '')
+    .replace('if (that.data.mode === 2 && !completedReceipt) { that.onShopDayArrived(nodeId, r.data); return; }', '')
   assert.throws(() => assertCoordinateArrivalContract(js), assert.AssertionError)
 })

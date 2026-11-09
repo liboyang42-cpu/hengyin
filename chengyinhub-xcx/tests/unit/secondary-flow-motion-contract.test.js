@@ -86,7 +86,7 @@ const CASES = [
     js: 'pages/topic/merchantapply/index.js',
     wxml: 'pages/topic/merchantapply/index.wxml',
     wxss: 'pages/topic/merchantapply/index.wxss',
-    wxmlRules: [/class="ma-card wizard-card cy-rise-in/, /hover-class="ma-row--pressed"/, /hover-class="ma-pgrid-add--pressed"/],
+    wxmlRules: [/class="ma-card wizard-card cy-rise-in/, /<view class="ma-row[^"]*"[^>]*hover-class="cy-pressed"/, /class="ma-pgrid-cell ma-pgrid-add"[^>]*hover-class="cy-pressed"/],
     wxssRules: [
       /\.ma-success\s*\{[^}]*animation:\s*merchant-success-in/s,
       /\.cy-motion-reduced\s+\.ma-row,\s*\.cy-motion-reduced\s+\.ma-pgrid-add\s*\{[^}]*transition:\s*none\s*!important/s,

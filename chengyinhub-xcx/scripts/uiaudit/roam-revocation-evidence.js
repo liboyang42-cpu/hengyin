@@ -217,7 +217,10 @@ function validate(action, branch, receipt, capture) {
       const fg = newCalls.filter(call => call.method === 'startLocationUpdate')
       if (['independent-play-fg-only-restarted', 'independent-play-fg-only-denied'].includes(scenario)) {
         source(play.availabilitySource, 'wx.startLocationUpdateBackground#available')
-        requireFact(play.backgroundApiAvailable === false && play.availabilitySource.value === false
+        source(play.foregroundOnlySource, 'pages/play/index.js#watchLocation')
+        requireFact(typeof play.backgroundApiAvailable === 'boolean'
+          && play.availabilitySource.value === play.backgroundApiAvailable
+          && play.foregroundOnlySource.value === true && play.foregroundOnlySource.keyValue === play.key
           && bg.length === 0 && fg.length === 1
           && fg[0].startedOrder > Math.max(...stops.map(call => call.completedOrder)), '缺实际FG-only能力与时序')
         if (scenario === 'independent-play-fg-only-denied') {

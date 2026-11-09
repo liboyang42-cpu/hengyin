@@ -80,7 +80,7 @@ Component({
       try { this._d20.settle(result.values, result.kept, !this.data.d20Rolling || this.data.reducedMotion); }
       catch (error) { this.onD20CanvasError(); }
     },
-    'show, diceCount': function (show, diceCount) {
+    'show, diceCount, inline, mode': function (show, diceCount) {
       if (!show) { this._offShake(); return; }
       if (this.data.mode === 'd20') { this._offShake(); return; }
       /* 内嵌那套在故事流里,不靠摇手机:边走边看故事时误摇一下就掷,那不是玩法是事故。
@@ -123,8 +123,8 @@ Component({
     detached() { this._d20Mounted = false; this._destroyD20(); this._stop(); this._offShake(); },
   },
   pageLifetimes: {
-    hide() { this._offShake(); this._destroyD20(); },
-    show() { this._mountD20(); },
+    hide() { this._hidden = true; this._offShake(); this._destroyD20(); },
+    show() { this._hidden = false; this._onShake(); this._mountD20(); },
   },
   methods: {
     _destroyD20() {
@@ -172,10 +172,12 @@ Component({
     _sumOf: sumOf,
     _stop() { if (this._timer) { clearTimeout(this._timer); this._timer = null; } },
     _onShake() {
+      if (this._hidden || !this.data.show || this.data.inline || this.data.mode === 'd20') return;
       if (this._shakeOn) return;
       this._shakeOn = true;
-      this._tick = (res) => this._shake(res);
-      wx.startAccelerometer({ interval: 'normal', fail() {} });
+      const tick = (res) => { if (this._tick === tick && this._shakeOn && !this._hidden && this.data.show) this._shake(res); };
+      this._tick = tick;
+      wx.startAccelerometer({ interval: 'game', fail() {} });
       wx.onAccelerometerChange(this._tick);
     },
     _offShake() {

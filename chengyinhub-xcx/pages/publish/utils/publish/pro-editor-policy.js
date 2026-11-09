@@ -155,7 +155,8 @@ function hasCategory(categoryIds) {
  * 「第 2 章第 1 个节点缺地点」才能把用户送到那一行。
  */
 function chapterHasRequiredNodes(formData, chapter) {
-  return !!chapter && (chapter.opening === true || (chapter.nodes || []).length > 0
+  // 结局章不在路线里(通关时按条件挑一章播),和序章一样只放剧情与音频,不要求节点。
+  return !!chapter && (chapter.opening === true || !!chapter.ending || (chapter.nodes || []).length > 0
     || Number(formData.productType) === FREE_EXPLORE && Number(chapter.recruitEnabled) === 1);
 }
 
@@ -176,6 +177,8 @@ function blockingIssuesOf(formData, pendingMaterials, chapterStates, categoryIds
   // 否则用户看到的是「保存失败」而不是「还差什么」。
   if (isFree && !text(formData.recruitDeadline)) {
     issues.push({ key: 'recruitDeadline', message: '自由探索必须设置招募截止时间' });
+  } else if (!isFree && formData.openMerchantPool && !text(formData.recruitDeadline)) {
+    issues.push({ key: 'recruitDeadline', message: '开放商家承接需要设置招商截止日期' });
   }
 
   if (!chapterStates.length) {

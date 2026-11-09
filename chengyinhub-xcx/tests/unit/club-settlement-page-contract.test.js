@@ -44,6 +44,7 @@ const VALID_SUMMARY = {
   topics: [
     { id: 31, topicId: 9001, name: '外滩夜行', amountText: '¥128.00', amountStatus: 'verified', originalAmountText: '¥130.00', executedAdjustmentText: '¥-2.00', netAmountText: '¥128.00', arrivedText: '已入账', paidText: '已打款', status: 'settled' },
   ],
+  sessions: [],
 }
 
 const contextSummary = amount => ({ code: 200, data: { ...VALID_SUMMARY, settledAmountText: amount } })
@@ -267,7 +268,8 @@ test('负控:本页若自己打 /withdraw,合同必须判红', () => {
   assert.ok(!/url:\s*'\/api\/club\/settlement\/withdraw'/.test(code),
     '本页又自己发提现请求了 —— 绕开了 withdrawal-preflight 的四要素校验')
   // 判据不是瞎的:summary 那条只读调用照样认得出来
-  assert.ok(/url:\s*'\/api\/club\/settlement\/summary'/.test(code), '判据认不出同形状的调用')
+  assert.ok(/url:[^\n]*'\/api\/club\/settlement\/summary'/.test(code), '判据认不出同形状的调用')
+  assert.ok(/url:[^\n]*'\/api\/club\/settlement\/withdraw'/.test(code.replace('/api/club/settlement/summary', '/api/club/settlement/withdraw')), '负控必须识别真实调用变为提现')
 })
 
 // CU-C-92(用户裁决 A):可提现为 0 时禁用提现主按钮并写明可提现条件。
@@ -305,7 +307,12 @@ test('CU-C-92:可提现为 0 或余额未取到时禁用提现主按钮并说明
   // wxml 是真正决定按钮可不可点的一侧:禁用与提示文案都必须落在模板上
   const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
   assert.match(wxml, /disabled="\{\{withdrawing \|\| withdrawState !== 'positive'\}\}"/)
-  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero'\}\}"[^>]*>客诉期结束后可提现/)
+  // 第十一轮 h4 LOW:¥0.00 且没有钱在客诉期里时不写「客诉期结束后可提现」;有钱在等才写。
+  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero' && complaintWaiting\}\}"[^>]*>客诉期结束后可提现/)
+  vm.onStages({ detail: { known: true, positive: false } })
+  assert.equal(vm.data.complaintWaiting, false, '可提现 0 且客诉期里也没钱:不承诺客诉期后能提')
+  vm.onStages({ detail: { known: true, positive: false, waiting: true } })
+  assert.equal(vm.data.complaintWaiting, true)
   assert.match(wxml, /<cy-funds-stages[^>]*bind:stages="onStages"/, '余额事件必须真接到页面')
 })
 
@@ -318,4 +325,71 @@ test('CU-C-93:chip 已经说清的状态不再在 meta 行重复一次', () => {
   assert.ok(paidLine, 'paidText 行还在(作废细节仍要说)')
   assert.match(paidLine[0], /wx:if="\{\{item\.status === 'void' \|\| item\.amountStatus !== 'verified'\}\}"/,
     'pending/已入账 两档与 chip 同词，不得再渲染一次')
+})
+
+// F-16(j2 走查):只有场次结算、没有主题分润时,原来落「还没有平台分润记录」,钱从哪来看不到。
+const SESSION = { activityId: 9, name: '人民广场 · 喷泉报时', dateText: '11月4日', grossText: '¥ 156.00',
+  feeText: '¥ 4.68', feeRateText: '3%', netText: '¥ 151.32', payeeText: '已入你的账户' }
+test('F-16 只有场次结算时列出场次、销售额、平台服务费与到账，不落空态', () => {
+  const { vm, requests } = mount()
+  vm.onLoad({ clubId: '21' })
+  requests[0].success({ code: 200, data: { ...VALID_SUMMARY, settledAmountText: '¥0.00', topics: [], sessions: [SESSION] } })
+  assert.equal(vm.data.state, 'ready')
+  const row = vm.data.summary.sessions[0]
+  assert.equal(row.netText, '¥ 151.32'); assert.equal(row.grossText, '¥ 156.00')
+  assert.equal(row.feeLabel, '平台服务费 3%'); assert.equal(row.payeeText, '已入你的账户')
+  const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
+  assert.match(wxml, /wx:for="\{\{summary\.sessions\}\}"/)
+  assert.match(wxml, /<view class="settled-card" wx:if="\{\{summary\.topics\.length\}\}">/, '没有主题分润时不显示「已入账分润 ¥0.00」')
+  // 费率还原不出实际服务费时服务端给 null,只写「平台服务费」
+  requests.length = 0; vm.loadSummary()
+  requests[0].success({ code: 200, data: { ...VALID_SUMMARY, sessions: [{ ...SESSION, feeRateText: null }] } })
+  assert.equal(vm.data.summary.sessions[0].feeLabel, '平台服务费')
+})
+test('F-16 场次行缺字段或 sessions 缺失时整页拒收，不按 0 显示', () => {
+  for (const sessions of [undefined, null, [{ ...SESSION, netText: '' }], [{ ...SESSION, activityId: 0 }], [{ ...SESSION, feeRateText: 3 }]]) {
+    const { vm, requests } = mount()
+    vm.onLoad({ clubId: '21' })
+    requests[0].success({ code: 200, data: { ...VALID_SUMMARY, sessions } })
+    assert.equal(vm.data.state, 'error', JSON.stringify(sessions))
+    assert.equal(vm.data.summary, null)
+  }
+})
+
+
+test('本人历史结算列表从账户收益进入，只导航当前身份真实返回的俱乐部', () => {
+  const h = mount(); h.vm.onLoad({ mine: '1' })
+  assert.equal(h.requests[0].url, '/api/club/settlement/mine')
+  h.requests[0].success({ code: 200, data: [{ clubId: 7, name: '原俱乐部' }] })
+  assert.equal(h.vm.data.state, 'clubs')
+  h.vm.openClubSettlement({ currentTarget: { dataset: { id: 8 } } })
+  assert.equal(h.navigations.length, 0)
+  h.vm.openClubSettlement({ currentTarget: { dataset: { id: 7 } } })
+  assert.equal(h.navigations[0], '/pages/club/settlement/index?clubId=7&personal=1')
+  h.app.globalData.user_id = 999
+  h.vm.openClubSettlement({ currentTarget: { dataset: { id: 7 } } })
+  assert.equal(h.navigations.length, 1)
+  h.vm.onShow(); const fresh = h.requests.at(-1)
+  h.requests[0].success({ code: 200, data: [{ clubId: 9, name: '旧身份' }] })
+  assert.deepEqual(h.vm.data.clubs, [])
+  fresh.success({ code: 200, data: [] }); assert.equal(h.vm.data.state, 'empty')
+})
+
+test('本人视角保留服务端自身金额、客服提现和明细范围，不补全俱乐部账目', () => {
+  const h = mount(); h.vm.onLoad({ clubId: 7, personal: '1' })
+  assert.deepEqual(JSON.parse(h.requests[0].data), { clubId: 7, personal: true })
+  h.requests[0].success({ code: 200, data: { ...VALID_SUMMARY, personal: true, isOwner: false,
+    sessions: [{ activityId: 1, name: '原场次', dateText: '11月5日', netText: '¥30.00', payeeText: '已入你的账户' }] } })
+  assert.equal(h.vm.data.state, 'ready')
+  assert.equal(h.vm.data.summary.personal, true)
+  assert.equal(h.vm.data.summary.sessions[0].grossText, undefined)
+  assert.equal(h.vm.data.summary.sessions[0].netText, '¥30.00')
+  h.vm.goTopicSettlement({ currentTarget: { dataset: { id: 31, topicId: 9001 } } })
+  assert.match(h.navigations[0], /&personal=1$/)
+  const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
+  assert.match(wxml, /kind="login"/)
+  assert.match(wxml, /summary && !summary.personal && clubId/)
+  assert.match(wxml, /summary.isOwner \|\| summary.personal/)
+  const earnings = fs.readFileSync(path.join(root, 'subpackageA/components/scene-asset-earnings/index.js'), 'utf8')
+  assert.match(earnings, /openClubSettlement\(\).*_hasCurrentBalance\(\).*mine=1/)
 })

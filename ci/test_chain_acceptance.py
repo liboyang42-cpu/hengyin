@@ -198,7 +198,9 @@ class SummaryTest(unittest.TestCase):
                      schema=ca.SCHEMA, server_uuid=POST_UUID,
                      process={"pid": 123, "starttime": "456", "command_sha256": "d" * 64,
                               "listener_inodes": ["789"]})
-        result = ca.post.register_jobs(_HERE.parent, PostStorage().connect, POST_UUID)
+        storage = PostStorage()
+        result = ca.post.register_jobs(_HERE.parent, storage.connect, POST_UUID)
+        result["content_safety"] = ca.post.register_content_safety_jobs(_HERE.parent, storage.connect, POST_UUID)
         ca.stage(self.out, "postdeploy", "PASS", stopped_before_sql=True, app_exit_code=-15,
                  proof=proof, result=result)
         ca.run_chains(list(ca.CHAIN_NAMES), self.out, {}, self.out, good_query(), Runner())
@@ -255,6 +257,7 @@ class SummaryTest(unittest.TestCase):
         db = PostStorage()
         fixture = ca.post.prepare_operator_fixture(db.connect, POST_UUID)
         result = ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        result["content_safety"] = ca.post.register_content_safety_jobs(_HERE.parent, db.connect, POST_UUID)
         good = ca.read_receipt(self.out)["stages"]["postdeploy"]
         ca.stage(self.out, "postdeploy", **dict(good, scenario=ca.post.OPERATOR_SCENARIO,
                  operator_fixture=fixture, result=result, unique_migration_count=3))
@@ -740,6 +743,7 @@ class PostStorage:
         self.bad_scalar, self.write_error, self.uuid = None, False, POST_UUID
         self.writes, self.commits, self.rollbacks = [], 0, 0
         self.delete_failure_after, self.extra_after_deletes = None, False
+        self.cs_rows = []
 
     def connect(self):
         model = self
@@ -752,6 +756,16 @@ class PostStorage:
                     self.one = (model.uuid, ca.SCHEMA)
                 elif sql == ca.post.READ_ROWS:
                     self.many = sorted(model.rows, key=lambda row: (row[3], row[0]))
+                elif sql == ca.post.CONTENT_SAFETY_READ:
+                    self.many = copy.deepcopy(sorted(model.cs_rows, key=lambda row: (row[3], row[0])))
+                elif sql.startswith("INSERT INTO sys_job") and any(
+                        "'" + name + "'" in sql for name in ca.post.CONTENT_SAFETY_ROWS):
+                    if model.write_error: raise RuntimeError("PRIVATE_SQL_ERROR")
+                    target = next(name for name in ca.post.CONTENT_SAFETY_ROWS if "'" + name + "'" in sql)
+                    if not any(row[3] == target for row in model.cs_rows):
+                        group, cron, misfire, concurrent, status = ca.post.CONTENT_SAFETY_ROWS[target]
+                        model.cs_rows.append([100 + len(model.cs_rows), "fixture", group, target, cron, misfire,
+                                              concurrent, status, "admin", "2026-11-04", "fixture", None, None])
                 elif sql in (ca.post.ALL_JOBS, ca.post.ALL_JOBS + " FOR UPDATE"):
                     self.many = copy.deepcopy(sorted(model.rows, key=lambda row: row[0]))
                 elif sql.startswith("DELETE FROM sys_job WHERE "):
@@ -802,6 +816,47 @@ class PostStorage:
 
 
 class PostDeployTest(unittest.TestCase):
+    def test_content_safety_jobs_register_paused_from_original_file_and_replay_inserts_nothing(self):
+        db = PostStorage()
+        db.cs_rows.append([7, "运维已启用", "DEFAULT", "sensitiveContentRescanTask.run()", "0 0 4 * * ?",
+                           "3", "1", "0", "ops", "2026-11-05", "operator", "ops", "2026-11-05"])
+        operator_row = copy.deepcopy(db.cs_rows[0])
+        result = ca.post.register_content_safety_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertEqual("PASS", result["status"])
+        self.assertEqual(4, result["statements"])
+        self.assertEqual([{"index": 1, "actual": [1]}, {"index": 4, "actual": [1]}], result["scalars"])
+        rows = {row[3]: row for row in result["after"]["rows"]}
+        self.assertEqual(operator_row, rows["sensitiveContentRescanTask.run()"], "已有行一字不改")
+        recheck = rows["contentSafetyRecheckTask.run()"]
+        self.assertEqual(("DEFAULT", "21 1/5 * * * ?", "3", "1", "1"), tuple(recheck[i] for i in (2, 4, 5, 6, 7)))
+        ca.post.validate_content_safety_result(result, POST_UUID)
+        replay = ca.post.register_content_safety_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertEqual(result["after"], replay["before"])
+        self.assertEqual(replay["before"], replay["after"])
+        self.assertEqual(2, len(db.cs_rows))
+
+    def test_content_safety_result_cannot_pass_tampered_or_incomplete(self):
+        db = PostStorage()
+        result = ca.post.register_content_safety_jobs(_HERE.parent, db.connect, POST_UUID)
+        for mutation in ("status", "scalars", "uuid", "active", "missing"):
+            bad = copy.deepcopy(result)
+            if mutation == "status": bad["status"] = "FAIL"
+            if mutation == "scalars": bad["scalars"] = bad["scalars"][:1]
+            if mutation == "uuid": bad["after"]["server_uuid"] = "00000000-0000-0000-0000-000000000000"
+            if mutation == "active": bad["after"]["rows"][0][7] = "0"
+            if mutation == "missing": bad["after"]["rows"] = bad["after"]["rows"][:1]
+            with self.subTest(mutation=mutation), self.assertRaises(ca.post.PostDeployError):
+                ca.post.validate_content_safety_result(bad, POST_UUID)
+        with self.assertRaises(ca.post.PostDeployError):
+            ca.post.validate_content_safety_result(None, POST_UUID)
+
+    def test_content_safety_fingerprint_change_blocks_before_any_write(self):
+        db = PostStorage()
+        with mock.patch.object(ca.post, "CONTENT_SAFETY_FILE", (ca.post.CONTENT_SAFETY_FILE[0], "0" * 64, 4, 2)):
+            with self.assertRaises(ca.post.PostDeployError):
+                ca.post.register_content_safety_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertEqual([], db.calls)
+
     def existing_scenario(self):
         db = PostStorage()
         fixture = ca.post.prepare_operator_fixture(db.connect, POST_UUID)
@@ -971,10 +1026,11 @@ class PostDeployTest(unittest.TestCase):
                 mock.patch.object(ca, "stop_app", side_effect=stop), \
                 mock.patch.object(ca.post, "prepare_operator_fixture", return_value={"status": "PASS"}) as fixture, \
                 mock.patch.object(ca.post, "characterize_commerce_rejection", return_value={"status": "PASS_EXPECTED_REJECTION"}) as reject, \
-                mock.patch.object(ca.post, "register_jobs", side_effect=register) as sql:
+                mock.patch.object(ca.post, "register_jobs", side_effect=register) as sql, \
+                mock.patch.object(ca.post, "register_content_safety_jobs", return_value={"status": "PASS"}) as content_sql:
             if stop_unknown or observation_failure or stale:
                 with self.assertRaises(ca.GateError): ca.cmd_run(args, {})
-                sql.assert_not_called()
+                sql.assert_not_called(); content_sql.assert_not_called()
                 fixture.assert_not_called(); reject.assert_not_called()
                 failed = ca.read_receipt(out)["stages"]["postdeploy"]
                 self.assertEqual("FAIL", failed["status"])
@@ -984,6 +1040,7 @@ class PostDeployTest(unittest.TestCase):
             else:
                 self.assertEqual(0, ca.cmd_run(args, {}))
                 self.assertEqual(["stop", "sql"], order)
+                content_sql.assert_called_once()
                 self.assertTrue(ca.read_receipt(out)["stages"]["postdeploy"]["stopped_before_sql"])
             if through == "post_deploy":
                 chains.assert_not_called(); login_probe.assert_not_called()
@@ -1118,6 +1175,8 @@ class PostRestartTest(unittest.TestCase):
                 "audit_repeat": effect("auditBacklogMonitorTask.run()", 9), "settlement_rejection": rejection,
                 "final_readback": copy.deepcopy(rejection["after"]), "after_stop_readback": copy.deepcopy(rejection["after"]),
                 "final_jobs": copy.deepcopy(jobs), "after_stop_jobs": copy.deepcopy(jobs),
+                "content_safety_jobs": ca.post.register_content_safety_jobs(
+                    _HERE.parent, PostStorage().connect, POST_UUID)["after"]["rows"],
                 "passive_queues": {"crm_export_tasks": 0, "account_deregistrations": 0},
                 "local_files": {"crm_export_directory": "EMPTY_TASK_OWNED"},
                 "after_stop_local_files": {"crm_export_directory": "EMPTY_TASK_OWNED"}}
@@ -1678,6 +1737,7 @@ class PostRestartTest(unittest.TestCase):
                 with mock.patch.object(ca.post,"prepare_restart_effects",return_value=fixture), \
                      mock.patch.object(ca.post,"restart_clock",side_effect=[self.clock(),self.clock(2),self.clock(20)]), \
                      mock.patch.object(ca.post,"restart_rows",side_effect=query), mock.patch.object(ca.post,"restart_effect_state",side_effect=state), \
+                     mock.patch.object(ca.post,"read_content_safety_state",return_value={"rows": good["content_safety_jobs"]}), \
                      mock.patch.object(ca.post,"restart_log",side_effect=lambda *a: logs.pop(0)), mock.patch.object(ca.post,"fixture_write"), \
                      mock.patch.object(ca.post,"passive_queues",return_value={"crm_export_tasks":0,"account_deregistrations":0}), \
                      mock.patch.object(ca,"start_app",side_effect=start), mock.patch.object(ca,"observe_postdeploy",return_value=proof), \
@@ -1706,6 +1766,10 @@ class PostRestartTest(unittest.TestCase):
             result["proof"] = proof
             ca.stage(original.out, "post_restart", "PASS", result=result)
             self.assertEqual("PASS", ca.summarize(original.out)["verdict"])
+            moved = copy.deepcopy(result)
+            moved["content_safety_jobs"][0][7] = "0"
+            ca.stage(original.out, "post_restart", "PASS", result=moved)
+            self.assertEqual("FAIL", ca.summarize(original.out)["verdict"], "重启期间内容安全暂停行被动过必须判失败")
             result["effects"][0]["after"]["roam"] = [[0, 0, 0]]
             ca.stage(original.out, "post_restart", "PASS", result=result)
             self.assertEqual("FAIL", ca.summarize(original.out)["verdict"])

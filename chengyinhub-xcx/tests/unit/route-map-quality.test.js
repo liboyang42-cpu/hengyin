@@ -14,7 +14,10 @@ function component() {
   const app = { getSession: () => session, sendRequest: request => requests.push(request) };
   vm.runInNewContext(source, {
     Component(value) { definition = value; }, getApp: () => app,
-    require(name) { return name.includes('topic-route-preview') ? preview : () => {}; }
+    require(name) {
+      if (name.includes('map-style')) return require('../../utils/map-style.js');
+      return name.includes('topic-route-preview') ? preview : () => {};
+    }
   });
   const host = { ...definition.methods, data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, done) { Object.assign(this.data, patch); if (done) done(); },

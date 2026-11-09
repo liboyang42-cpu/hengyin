@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
 import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
+import com.chengyinhub.business.service.support.TemplateAdoptionService;
 import com.chengyinhub.business.mapper.AuditTaskMapper;
 
 import com.chengyinhub.business.domain.CmsMemberTemplate;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +60,10 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
      *  留在 controller 就写不出行为测试(与 ICmsTopicService 那条注释同一理由)。 */
     @Autowired
     private ICapabilityGuard capabilityGuard;
+
+    @Autowired
+    @Lazy // Adoption depends on this draft service.
+    private TemplateAdoptionService adoptionService;
 
     @Autowired
     private ICouponRewardAuthorizationService couponRewardAuthorizationService;
@@ -111,7 +117,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         validateSensorFields(request);
         normalizeAdvancedConfig(request, existing, true);
         normalizeAdoptedReward(request, existing);
-        assertCapabilities(request, memberId);
+        assertCapabilities(request, memberId, existing);
 
         // 1. 保存到我的模板表
         CmsMemberTemplate memberTemplate = new CmsMemberTemplate();
@@ -605,7 +611,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
 
     /** 库表未存储的互动语义和奖章沿现有 canonical 关联读取，不猜 library/member ID。 */
     private void copyAdoptedCanonicalFields(CmsTemplateLibrary source, CmsTemplatePublishRequest request) {
-        if (source.getMemberTemplateId() == null) return; // 历史直接入库内容没有个人原单关联。
+        if (source.getMemberTemplateId() == null || Long.valueOf(0L).equals(source.getMemberTemplateId())) return; // 历史直接入库内容以 null/0 表示没有个人原单关联。
         CmsMemberTemplate canonical = memberTemplateService.selectCmsMemberTemplateById(source.getMemberTemplateId());
         if (canonical == null || !source.getMemberTemplateId().equals(canonical.getId())
                 || source.getMemberId() == null || !source.getMemberId().equals(canonical.getMemberId())
@@ -697,8 +703,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         normalizeAdvancedConfig(request, existingDraft, !Boolean.TRUE.equals(request.getAdoptSourceOnly()));
         if (!Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
             normalizeAdoptedReward(request, existingDraft);
+            // 纯采用已从可见在架真源完整复制；能力位只限制作者自行配置，不限制这次复制。
+            assertCapabilities(request, memberId, existingDraft);
         }
-        assertCapabilities(request, memberId);
         if (existingDraft != null && StringUtils.isBlank(request.getMedalStyle())) {
             request.setMedalStyle(existingDraft.getMedalStyle());
         }
@@ -763,10 +770,10 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
      * <p>草稿也拦:草稿的去向就是发布,只在发布拦会让用户把一整套配置做完
      * 才在最后一步被拒,那比一开始就说不能用更糟。
      */
-    private void assertCapabilities(CmsTemplatePublishRequest request, Long memberId) {
+    private void assertCapabilities(CmsTemplatePublishRequest request, Long memberId, CmsMemberTemplate existing) {
         if (request == null) return;
         String mechanicErr = capabilityGuard.checkAdvancedMechanics(memberId, request.getAdvancedConfigJson());
-        if (mechanicErr != null) {
+        if (mechanicErr != null && !reusesAdoptedAdvancedConfig(request, memberId, existing)) {
             throw new IllegalArgumentException(mechanicErr);
         }
         // glow 是默认样式(留空也会被 normalizeMedalStyle 补成 glow),小程序新建/回填一律带着它 ——
@@ -783,6 +790,17 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 throw new IllegalArgumentException(medalErr);
             }
         }
+    }
+
+    private boolean reusesAdoptedAdvancedConfig(CmsTemplatePublishRequest request, Long memberId,
+                                              CmsMemberTemplate existing) {
+        if (existing == null || existing.getId() == null || existing.getId() <= 0
+                || !memberId.equals(existing.getMemberId()) || existing.getOriginalTemplateId() == null
+                || existing.getOriginalTemplateId() <= 0) return false;
+        // 只有成功采用事务写入的不可变基线可信；来源 ID 或客户端复制标记都不是能力授权。
+        String configHash = TemplateAdoptionService.inheritedAdvancedConfigHash(request.getAdvancedConfigJson());
+        return adoptionService.hasCompletedInheritedConfig(memberId, existing.getId(),
+                existing.getOriginalTemplateId(), configHash);
     }
 
     /**

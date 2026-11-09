@@ -93,6 +93,19 @@ public class PlayBasicCommandApplication {
                 originalRun -> checkinOnce(actorMemberId, activityId, code, topicId, routeActionId, expectedRouteVersion, registrationId, nodeId, runtimeInstance, authorityEpoch, originalRun));
     }
 
+    /** 扫到了别处的码：同一主题内直说扫的是哪一家；别的主题的码不报名字。 */
+    private String wrongNodeScanMessage(CmsTopicNode scanned, String intendedNodeId)
+    {
+        CmsTopicNode intended = null;
+        try { intended = cmsTopicNodeService.selectCmsTopicNodeById(Long.valueOf(intendedNodeId)); }
+        catch (NumberFormatException ignored) { intended = null; }
+        boolean sameTopic = intended != null && scanned.getTopicId() != null && scanned.getTopicId().equals(intended.getTopicId());
+        if (sameTopic && StringUtils.isNotBlank(scanned.getName())) {
+            return "这是「" + scanned.getName().trim() + "」的码，不是这一家的";
+        }
+        return "这不是这一家的码";
+    }
+
     public AjaxResult checkin(String activityId, String code, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long registrationId) {
         return error("必须提供原目标节点和运行时身份");
@@ -135,7 +148,7 @@ public class PlayBasicCommandApplication {
             }
             node = nodeList.get(0);
         }
-        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return error("扫码节点与本次意图目标不一致");
+        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return error(wrongNodeScanMessage(node, intendedNodeId));
         // 规则16:普通下架/停用节点停止新发现,旧码/旧链接不得再产生新完成;
         // 已正式完成者的幂等重试仍走原回执(与 photo 同口径,§7-2)
         if (playNodeContext.isDelistedNode(node) && !playNodeContext.hasCompletedNodeFact(memberId, activityId, node)) {
@@ -350,23 +363,25 @@ public class PlayBasicCommandApplication {
         int vm;
         String questionAnswer;
         String correctAnswer;
+        String answerReveal; // P-11:只在答对后的回执里下发,不预置在节点列表里
         if (frozenAnswer != null) {
             vm = frozenAnswer.path("validationMethod").asInt(0);
             if (vm == 0) return error("该节点未配置答题");
             questionAnswer = frozenAnswer.path("questionAnswer").asText(null);
             correctAnswer = frozenAnswer.path("correctAnswer").asText(null);
+            answerReveal = frozenAnswer.path("answerReveal").asText(null);
         } else {
             CmsMemberTemplate liveTpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
             if (liveTpl == null || liveTpl.getValidationMethod() == null) return error("该节点未配置答题");
             vm = liveTpl.getValidationMethod();
             questionAnswer = liveTpl.getQuestionAnswer();
             correctAnswer = liveTpl.getCorrectAnswer();
+            answerReveal = liveTpl.getAnswerReveal();
         }
         String ans = answer == null ? "" : answer.trim();
         boolean ok;
         if (vm == 1) { // 文字验证：去全部空白 + 全角→半角归一后比对(中文 equalsIgnoreCase 无意义但无害)
-            ok = StringUtils.isNotBlank(questionAnswer)
-                    && playNodeContext.normalizeAnswer(questionAnswer).equalsIgnoreCase(playNodeContext.normalizeAnswer(ans));
+            ok = com.chengyinhub.business.service.support.BasicTextAnswer.matches(questionAnswer, ans); // P-02:、/逗号分隔的多个答案命中任一即过
         } else if (vm == 3) { // 选项验证(A/B/C/D)
             ok = StringUtils.isNotBlank(correctAnswer)
                     && correctAnswer.trim().equalsIgnoreCase(ans);
@@ -410,6 +425,8 @@ public class PlayBasicCommandApplication {
                     routeActionId, expectedRouteVersion, null, null, originalRun);
         }
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
+        // P-11:答对之后才把作者的揭示随回执给出,题卡停一拍写「对了」+ 揭示
+        if (StringUtils.isNotBlank(answerReveal)) data.put("answerReveal", answerReveal.trim());
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
     }
@@ -542,7 +559,8 @@ public class PlayBasicCommandApplication {
         if (ctx.error != null) return ctx.error;
         Long actId = ctx.actId;
         int mode = playNodeContext.resolveMode(actId, ctx.topicId);
-        if (mode == PlayMode.FREE_COLLECT) {
+        boolean freeCollectStore = mode == PlayMode.FREE_COLLECT && !playNodeContext.isPureOnlineNode(node);
+        if (mode == PlayMode.FREE_COLLECT && !freeCollectStore) {
             // C1「进店用玩家扫店内静态码，不用 GPS(不准)」：③ 的进店事实只有 /checkin 一条来源。
             //
             // ⚠️ 这里曾经写过到店凭证。删掉的理由不是「GPS 不够准」，而是**它给同一个事实开了第二条来源**：
@@ -557,10 +575,7 @@ public class PlayBasicCommandApplication {
             //   也不存在可被伪造的到店事实 —— queue_joined_at / in_store_load 全挂在商家
             //   节点上,这类节点没有商家。放行语义与 /checkin 的 ③ 分支逐字一致:
             //   只记 shop-day 凭证、不发分、不判通关(③ 的完成经济仍由章节核销承担)。
-            //   有商家或有坐标的节点一字不动,仍只认 /checkin。
-            if (!playNodeContext.isPureOnlineNode(node)) {
-                return error("请扫店内的码");
-            }
+            //   实体店的到店事实仍只认 /checkin；已到店的高级玩法按下面严格 proof 收尾。
             if (playCompletionFacts.isExploreChapterRedeemed(memberId, actId, node.getChapterId())) {
                 return error("该章节已核销，不能补写到店时间");
             }
@@ -574,10 +589,14 @@ public class PlayBasicCommandApplication {
         // 线性解锁校验（仅 mode=1 经典定向；mode=2 自由定向跳过）
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return error(unlockErr);
+        if (freeCollectStore && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
+            return error("请扫店内的码");
+        }
 
         // 验证方式闸：答题(1)/拍照(2)/选项(3)/扫码(4) 类节点必须走对应接口完成，
         // 不能用"到达/到点"绕过任务白拿分+券+勋章+通关(反作弊)。仅 0/null(到点即完成) 或 5(GPS) 放行。
         Integer arriveValidationMethod = null;
+        boolean stationGameProof = false;
         if (node.getTemplateId() != null && node.getTemplateId() > 0L) {
             // R18-FREEZE:完成方式按开局快照判定;老局快照没有该键时回退实时模板
             CmsMemberTemplate vmTpl = playNodeContext.effectiveTemplate(memberId, ctx.topicId, ctx.actId, node, originalRun);
@@ -587,13 +606,20 @@ public class PlayBasicCommandApplication {
                 return error("该站配置异常，暂时无法打卡");
             }
             arriveValidationMethod = vmTpl.getValidationMethod();
-            if (!ValidationMethod.completesOnArrive(vmTpl.getValidationMethod())) {
+            if ((Integer.valueOf(2).equals(arriveValidationMethod) || Integer.valueOf(4).equals(arriveValidationMethod))
+                    && advancedGameRuntimeService != null) {
+                stationGameProof = advancedGameRuntimeService.hasStationGameProof(memberId, actId, ctx.topicId, node.getId());
+            }
+            if (!ValidationMethod.completesOnArrive(vmTpl.getValidationMethod()) && !stationGameProof) {
                 // 白名单判据见 ValidationMethod#completesOnArrive:
                 // 原来这里逐个列"要拒的 vm",新增完成方式会默认从这条路放行,
                 // 等于绕过它自己的判定且零报错。
                 return error("该站需完成对应任务后才能打卡");
             }
         }
+
+        // 到店不等于游戏完成；实体免费收集只接受原局已核验的拍照/扫码玩法 proof。
+        if (freeCollectStore && !stationGameProof) return error("请扫店内的码");
 
         // GPS 围栏：节点有坐标才校验（gcj02，Haversine 50m）；无坐标则按到点即完成放行（前端引导走扫码）。
         // ⚠️ GPS(vm=5)节点是例外:它必须靠站点坐标才能判定"到没到",缺经或缺纬不能退化成
@@ -605,7 +631,11 @@ public class PlayBasicCommandApplication {
         boolean hasNodeCoord = StringUtils.isNotBlank(targetLongitude) && StringUtils.isNotBlank(targetLatitude);
         boolean gpsNode = Integer.valueOf(5).equals(arriveValidationMethod);
         if (gpsNode && !hasNodeCoord) return error("站点未设坐标，暂时无法打卡");
-        if (hasNodeCoord) {
+        // 第十二轮 k2(业主 2026-11-05):这一站的玩法本人已解开 ⇒ 重进即算完成,解开本身就是到站证明,
+        // 不再要现场定位(玩家不用走回去)。只看服务端会话事实;没解开的站仍走下面原围栏与守卫。
+        boolean solvedGame = stationGameProof || advancedGameRuntimeService != null
+                && advancedGameRuntimeService.solvedForArrival(memberId, actId, ctx.topicId, node.getId());
+        if (hasNodeCoord && !solvedGame) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return error("请开启定位");
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置
@@ -656,10 +686,15 @@ public class PlayBasicCommandApplication {
             }
         }
 
-        if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
+        if(!freeCollectStore && (personalArrival || sharedArrival!=null)) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=playTaskPresentation.shopDayProofData(node,proof);
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
             if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
+        if (!freeCollectStore && solvedGame && topicRouteRuntimeService != null
+                && topicRouteRuntimeService.pendingCompassCheck(memberId,ctx.topicId,actId,node.getId())) {
+            shopDayProofService.markArrived(memberId,actId,node);
+            return error("请先完成本站 D20 检定").put("errorCode","CHECK_REQUIRED");
+        }
         // 玩法没过就到达:原闸在完成链里以异常拒绝,小程序收不到明确回执会把到达记成「结果待确认」,
         // 之后玩法做完「我已到达此站」也点不动,只能退出重进(2026-10-30 开发者工具复核)。
         // 这里先按同一闸判一次,拒绝时给出明确的业务回执。
@@ -672,7 +707,8 @@ public class PlayBasicCommandApplication {
         }
         playNodeCompletionApplication.logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
-                RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);
+                freeCollectStore ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL,
+                routeActionId, expectedRouteVersion, null, null, originalRun);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);

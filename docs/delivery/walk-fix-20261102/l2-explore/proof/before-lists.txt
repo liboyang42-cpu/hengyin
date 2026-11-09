@@ -1,0 +1,3 @@
+   list owner_type=2 → exploreProgress null
+   我的订单 status=2 含本单                  False
+   我的订单 status=3 含本单                  True

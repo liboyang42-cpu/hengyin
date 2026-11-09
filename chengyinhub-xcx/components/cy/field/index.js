@@ -17,6 +17,8 @@ Component({
     showCount: { type: Boolean, value: false },
     maxlength: { type: Number, value: 140 },
     active: { type: Boolean, value: false },
+    // 第九轮 m1-9:原生 input 的 type;昵称用 'nickname' 调起微信昵称填写
+    inputType: { type: String, value: 'text' },
   },
   data: { _focused: false, _filled: false },
   observers: {
@@ -35,7 +37,12 @@ Component({
       if (this.data.showCount) this.triggerEvent('overflow', { over: value.length > this.data.maxlength });
     },
     onFocus() { this.setData({ _focused: true }); },
-    onBlur() { this.setData({ _focused: false }); this.triggerEvent('blur'); },
+    onBlur(e) {
+      // 微信昵称是从键盘上方选的,部分基础库只在失焦时带回值,不触发 input
+      const v = e && e.detail && e.detail.value;
+      if (this.data.inputType === 'nickname' && typeof v === 'string' && v !== this.data.value) this.onInput(e);
+      this.setData({ _focused: false }); this.triggerEvent('blur');
+    },
     onClear() {
       if (this.data.disabled || this.data.readonly) return;
       this.setData({ value: '' });

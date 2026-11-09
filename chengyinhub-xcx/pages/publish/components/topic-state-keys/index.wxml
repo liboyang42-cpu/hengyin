@@ -47,7 +47,7 @@
             </view>
           </block>
         </view>
-        <cy-inline-error wx:if="{{formError && errorKind === group.kind}}" title="{{formError}}" />
+        <cy-inline-error wx:if="{{formError && errorKind === group.kind}}" kind="error" title="{{formError}}" />
       </block>
     </block>
 

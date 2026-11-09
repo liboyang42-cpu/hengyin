@@ -1,0 +1,6 @@
+   cancel-refund                      {"msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分", "code": 200, "data": {"registrationId": 82, "scope": "PARENT_ORDER", "cancellationStatus": "CANCELLED", "cashRefundStatus": "DISPATCHING", "cashRefundAmount": 39.99, "pointsUsed": 0, "pointsReturned": 0, "pointsRefundStatus": "NOT_NEEDED"}, "_status": 200}
+   [库回读] refund_application       (('RF82', Decimal('39.99'), 1, 6),)
+   [库回读] cms_registration         ((4, 3),)
+   FIXTURE payout_status -> 1 rows    1
+   [库回读] refund_application       (('RF82', Decimal('39.99'), 1, 1),)
+   [库回读] cms_registration         ((4, 3),)

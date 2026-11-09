@@ -1,0 +1,78 @@
+FLOW 0 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-legacy-69 | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 1 开启定位 | 仅在你主动开始游玩后，持续获取位置，用于显示当前位置和自动判断到点。锁屏或切到后台仍会获取；暂停、结束本次或离开游玩页后停止。未开启时仍可扫码到达。 | 先用扫码 | 开启定位 | N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 继续探索 | 第 | 1 | 章 | / | 共 | 2 | 章 | 合 | 成 | 章 | 节 | 1 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 6 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 2 N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 继续探索 | 第 | 1 | 章 | / | 共 | 2 | 章 | 合 | 成 | 章 | 节 | 1 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 6 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 3 N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 4 N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 继续探索 | 故事 | 合成站 1 | 上海市黄浦区中山东一路1号 | 开始 | 到店后出示核销码给商家扫 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 5 N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 6 N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 故事 | 合成站 2 | 上海市黄浦区中山东一路1号 | 合成站：1873 或选 A | PLAY-MAP-1105-legacy-69-2 | 合成站手记。 | 开始任务 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 7 PLAY-MAP-1105-legacy-69-2 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 当前最高 100 解谜分 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990022-choice-reveal
+FLOW 8 PLAY-MAP-1105-legacy-69-2 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 合成完成反馈。 | 合成揭示：1873 是这题的正确答案。 | 当前最高 100 解谜分 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 9 N | 29m | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 10 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 11 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 12 N | 0m | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 第 3 站 | 合成站 5 | 上海市黄浦区中山东一路1号 | 合成站：1873 或选 A | PLAY-MAP-1105-legacy-69-5 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 13 PLAY-MAP-1105-legacy-69-5 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 当前最高 100 解谜分 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990022-choice-reveal
+FLOW 14 PLAY-MAP-1105-legacy-69-5 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 合成完成反馈。 | 合成揭示：1873 是这题的正确答案。 | 当前最高 100 解谜分 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 15 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 16 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 继续探索 | 第 | 1 | 章 | · | 完 | 成 | 合 | 成 | 章 | 节 | 1 | 6 | / | 6 | 坐 | 标 | 2 | 0 | 0 | 解 | 谜 | 分 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 17 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 继续探索 | 第 | 2 | 章 | / | 共 | 2 | 章 | 合 | 成 | 章 | 节 | 2 | 仅 | 用 | 于 | 存 | 量 | 结 | 构 | 走 | 查 | 的 | 合 | 成 | 内 | 容 | 。 | 5 | 坐 | 标 | 轻点跳过 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 18 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 19 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 继续探索 | 第 5 站 | 合成站 7 | 上海市黄浦区中山东一路1号 | 我已到达此站 | 定位已开启 · 靠近后会自动点亮 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 20 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 21 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 继续探索 | 第 6 站 | 合成站 8 | 上海市黄浦区中山东一路1号 | 合成站：1873 或选 A | PLAY-MAP-1105-legacy-69-8 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 22 PLAY-MAP-1105-legacy-69-8 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 当前最高 100 解谜分 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990022-choice-reveal
+FLOW 23 PLAY-MAP-1105-legacy-69-8 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 合成完成反馈。 | 合成揭示：1873 是这题的正确答案。 | 当前最高 100 解谜分 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 24 N | 29m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 25 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 26 N | 15m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SEAM open existing next-station sheet
+FLOW 27 N | 0m | PLAY-MAP-1105-legacy-69 · 合成章节 2 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 第 9 站 | 合成站 11 | 上海市黄浦区中山东一路1号 | 合成站：1873 或选 A | PLAY-MAP-1105-legacy-69-11 | 合成站手记。 | 开始任务 | 在地图中查看路线 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 28 PLAY-MAP-1105-legacy-69-11 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 当前最高 100 解谜分 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990022-choice-reveal
+FLOW 29 PLAY-MAP-1105-legacy-69-11 | 合成站：1873 或选 A | A | 甲 | B | 乙 | 合成完成反馈。 | 合成揭示：1873 是这题的正确答案。 | 当前最高 100 解谜分 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+FLOW 30 本主题未配置剧情 | N | PLAY-MAP-1105-legacy-69 · 合成章节 1 | 仅用于存量结构走查的合成内容。 | 合成站手记。 | 合成站手记。 | 11处旧址已全部点亮 | 领取你的城市足迹卡 | 11月5日 周四 | PLAY-MAP-1105-legacy-69 | 已通关 | 11 | 点亮坐标 | 01:17 | 0.1 km | 400 | 继续 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT legacy-990022-step30
+STATE {"sheet":{"show":false,"node":{"nodeId":108,"num":11,"sortId":11,"name":"合成站 11","address":"上海市黄浦区中山东一路1号","description":"合成站：1873 或选 A","imgUrl":"","businessTime":"","openStatus":"","lng":121.491,"lat":31.239,"done":false,"doneAt":0,"picUrl":"","arrived":false,"arrivedAt":null,"gameDone":false,"selfReported":false,"hasGame":true,"gameKind":"play","crowded":null,"serviceCapacity":null,"quantityUnavailable":false,"chapterId":60,"hookText":"","merchantId":0,"locked":false,"paused":false,"runtimeStatus":"","unlockAfterNodeId":0,"hasTemplate":true,"hasAdvanced":false,"advancedConfig":null,"vm":3,"question":"合成站：1873 或选 A","options":{"A":"甲","B":"乙","C":null,"D":null},"questionImg":"","questionAudio":"","optionMedia":{},"points":450,"gameTitle":"PLAY-MAP-1105-legacy-69-11","duration":"","difficulty":"","players":"","materials":"","rule":"","story":"合成站手记。","cover":"","cardHook":"","fragmentText":"","hint1":"","hint2":"","reveal":"","hintLocked":false,"hintCost":0,"hintCount":0,"puzzleScoring":true,"puzzleHintLevel":0,"puzzleScoreCap":100,"usedHints":[],"puzzleScore":null,"completionMode":"","feedback":"答案还没咬合,再看看四周……","passText":"合成完成反馈。","photoDesc":"拍摄测试图片","audio":"","audioDur":"","medalName":"","medalImg":"","medalStyle":"glow","couponId":0,"coupon":null,"npc":null,"perk":null,"placeNum":9,"metaLine":"上海市黄浦区中山东一路1号","bizText":"","openText":"","openCol":"","openDot":"","gameLede":"合成站手记。"},"continueText":"前往下一站"},"chapterFull":true,"next":null,"game":{"nodeId":108,"num":11,"vm":3,"title":"PLAY-MAP-1105-legacy-69-11","cover":"","chips":[],"story":"合成站手记。","rule":"","materials":"","qname":"合成站：1873 或选 A","opts":[{"k":"A","v":"甲","img":"","audio":""},{"k":"B","v":"乙","img":"","audio":""}],"qImg":"","qAudio":"","audio":"","audioDur":"","photoDesc":"拍摄测试图片","feedback":"答案还没咬合,再看看四周……","passText":"合成完成反馈。","reveal":"","hint1":"","hint2":"","hintLocked":false,"hintCost":0,"hintCount":0,"puzzleScoring":true,"medalName":"","medalImg":"","couponId":0}}
+AUDIO [{"src":"http://127.0.0.1:18097/__oss/upload/f7c74512777c454d8941ea27ee7b9955.mp3","paused":true,"time":1.227625,"duration":3,"ready":4}]
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] HTTP 404 http://127.0.0.1:18097/__api/profile/upload/2026/11/05/j3street.png","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET GET /api/play/journey/casebook?topicId=990022 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990022 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990022&nodeId=106 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990022&nodeId=106&longitude=121.4908&latitude=31.2388&accuracy=8&routeActionId=route-mw3ctnde-iuj59xnato&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/encounter?topicId=990022&activityId=0&nodeId=106 200 500 这一局还没开始 
+NET GET /api/play/nodes?topicId=990022 200   
+NET GET /api/play/journey/casebook?topicId=990022 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990022 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990022&nodeId=107 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990022&nodeId=107&longitude=121.4909&latitude=31.2389&accuracy=8&routeActionId=route-mw3ctpry-6g0d1c0d0k&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/encounter?topicId=990022&activityId=0&nodeId=107 200 500 这一局还没开始 
+NET GET /api/play/nodes?topicId=990022 200   
+NET GET /api/play/journey/casebook?topicId=990022 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990022 200 200 操作成功 
+NET GET /api/play/encounter?topicId=990022&activityId=0&nodeId=108 200 500 这一局还没开始 
+NET GET /api/play/action-context?topicId=990022&nodeId=108 200 200 操作成功 
+NET POST /api/play/answer 200 200 答对了！ topicId=990022&nodeId=108&answer=A&longitude=121.491&latitude=31.239&accuracy=8&routeActionId=route-mw3ctwdi-upsu1u4762&expectedRouteVersion=0&routeSessionId=0
+NET GET /api/play/nodes?topicId=990022 200   
+NET GET /api/play/journey/casebook?topicId=990022 200 500 这一局还没开始 
+NET GET /api/play/journey/ending?topicId=990022&activityId=0 200 500 本主题未配置剧情 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871597407&topicId=990022
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990022
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.238&longitude=121.49
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871597408&topicId=990022
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/topic/share-code 200 500 微信未返回个人码 id=990022
+NET POST /api/map/reverse-geocode 200 200 操作成功 latitude=31.238&longitude=121.49
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871597624&topicId=990022
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793871597828&topicId=990022

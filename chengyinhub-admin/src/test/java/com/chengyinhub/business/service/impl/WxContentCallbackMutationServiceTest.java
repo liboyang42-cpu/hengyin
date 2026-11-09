@@ -116,9 +116,26 @@ class WxContentCallbackMutationServiceTest
     }
 
     @Test
-    void nodeTemplateIsManuallyReviewedBeforeTargetLockOrMutation()
+    void nodeTemplateLocksTargetAndMutatesInsteadOfDiscardingRisky()
     {
-        assertUnsupportedBusinessTypeIsManuallyReviewed(7);
+        // Round5B-4:据点模板 risky 不再落「人工」后丢弃,与官方活动一样锁行后交给下架 mutation。
+        WxContentCallbackInboxMapper mapper = mock(WxContentCallbackInboxMapper.class);
+        IWxContentCallbackInboxService.Mutation mutation = mock(IWxContentCallbackInboxService.Mutation.class);
+        WxContentCallbackClaim claim = WxContentCallbackClaim.acquired("hash", "owner", 8L);
+        WxContentCallbackInbox row = processingRow(7, 42L, "media-hash");
+        when(mapper.selectOwnedForUpdate("hash", "owner", 8L)).thenReturn(row);
+        when(mapper.lockBusinessTarget(7, 42L)).thenReturn(42L);
+        when(mutation.isCurrent(row)).thenReturn(true);
+        when(mutation.apply(row, true)).thenReturn(true);
+        when(mapper.markDone("hash", "owner", 8L, 1)).thenReturn(1);
+        WxContentCallbackMutationService service = new WxContentCallbackMutationService();
+        ReflectionTestUtils.setField(service, "mapper", mapper);
+
+        assertTrue(service.apply(claim, true, mutation));
+
+        verify(mutation).apply(row, true);
+        verify(mapper, never()).markManualReview(anyString(), anyString(), org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyInt(), anyString());
     }
 
     /** AUDIT-G1-4:官方活动已有下线分支,不再整类转人工 —— 照常锁行后交给 mutation。 */

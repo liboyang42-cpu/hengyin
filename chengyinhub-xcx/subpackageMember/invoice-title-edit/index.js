@@ -29,7 +29,8 @@ Page({
     try { pending = this._workflow.pendingRequest(this.key('title-save')); } catch (error) { pending = { requestId: '' }; }
     this.setData({ titlePending: !!pending, titleRequestId: pending && pending.requestId || '' });
     const id = invoice.exactId(this._options.id);
-    if (!id) { this.setData({ formReady: true }); return; }
+    // R11 p1 F-7:新建抬头也先问一次服务端 —— 发票关着时落「发票功能暂未开放」,不再摆一张能点保存的表
+    if (!id) { this.read('titles', {}, data => this.rows(data, invoice.title), () => this.setData({ formReady: true }), 'loading'); return; }
     this.read('titles', {}, data => this.rows(data, invoice.title), titles => {
       const row = titles.find(item => item.id === id);
       if (!row) throw Error('抬头不存在');

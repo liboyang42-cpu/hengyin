@@ -1,6 +1,6 @@
 const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
 const cyLoading = require('../../utils/loading.js');
-const cyToast = require('../../utils/toast.js');
+const cyToast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const { readPageStyle } = require('../../utils/font-scale.js');
 const { toTimestamp } = require('../../utils/datetime');
 const app = getApp();
@@ -11,14 +11,15 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, parseTopicScene, parseActivityScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
-const { buildActivityShare } = require('../../utils/activity-share.js');
+const { buildActivityShare } = require('../../utils/activity-share.js'); const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const phoneReminder = require('../../utils/phone-reminder.js');
 const identitySync = require('../../utils/identity-sync.js');
+const { normalizeMerchantAccess } = require('../../utils/merchant-access-policy.js');
 const { avatarSrc } = identitySync;
 const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 
@@ -147,15 +148,15 @@ function hideLocationLoading(page, scope) {
   cyLoading.hide();
 }
 
-// 即将上线倒计时格式化:>1天→还剩Nd,<1天→还剩Nh,已过→已开始(红)。不到分秒。
+// 即将上线倒计时:还剩N天 / 还剩N小时 / 已开始(j1 F23 不用英文单位)
 function fmtRemain(startDateStr) {
   if (!startDateStr) return { remainingTime: '', started: false };
   const diff = toTimestamp(String(startDateStr)) - Date.now();
   if (diff <= 0) return { remainingTime: '已开始', started: true };
   const days = Math.floor(diff / 86400000);
-  if (days >= 1) return { remainingTime: `还剩${days}d`, started: false };
+  if (days >= 1) return { remainingTime: `还剩${days}天`, started: false };
   const hours = Math.max(1, Math.floor(diff / 3600000));
-  return { remainingTime: `还剩${hours}h`, started: false };
+  return { remainingTime: `还剩${hours}小时`, started: false };
 }
 
 const RECO_INACTIVE_SCALE = 280 / 306;
@@ -213,6 +214,7 @@ Page({
     // debug_user_view='user' 强制使用普通用户视角（调试用）
     _needsRedirect: isMerchantView(),
     city: '', cityManual: false, manualCityOptions: homeCity.CITY_OPTIONS,
+    cityPicker: false, cityPickerIndex: -1, // Round5 #8:游客点城市走现有选城下拉(不定位、不上传位置)
     isAppReady: false,
     isLoading: true,
     userInfo: {
@@ -225,7 +227,7 @@ Page({
     // 失败时列表停在 [],光判 length 会渲染成「本来就没有」甚至「正在加载」。
     listErr: {},
     // 首次加载和重试都必须立即给反馈；否则网络慢时用户点“重试”看起来完全没生效。
-    listLoading: {},
+    listLoading: {}, listLoaded: {}, // H-03b:listLoaded = 该区已落地过一次;此后刷新不回骨架、不重挂区块,页面高度不跳
 
     // 分页相关数据
     bottomTopicPageNo: 1,
@@ -286,7 +288,7 @@ Page({
     }
     this.setData({ _needsRedirect: false, isAppReady: true });
     this.loadPageData();
-    this.getHomeCityLocation();
+    this.getHomeCityLocation({ gateCoversLocation: event.detail.location === true }); // P-38:隐私闸已一并征得首页城市定位同意,直接进定位,不再弹「首页城市定位」
   },
 
   /**
@@ -343,6 +345,7 @@ Page({
         }
       }
       that.setData({ isAppReady: true });
+      that.loadOperatorAccess();
       that.loadPageData();
       that.getHomeCityLocation();
       that.retryPendingInviter();
@@ -368,11 +371,11 @@ Page({
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }
-    // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
-    const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene);
-    if (activityId) {
+    const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene); // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
+    const shopId = !activityId && (parseShopScene(options && options.scene) || parseShopScene(app.pendingDoorScene)); // 第九轮 m1-9:店铺码 → 商家主页
+    if (activityId || shopId) {
       app.pendingDoorScene = null;
-      const path = '/pages/activity/official-detail/index?id=' + activityId;
+      const path = activityId ? '/pages/activity/official-detail/index?id=' + activityId : '/pages/userinfo/userinfo?userId=' + shopId + '&tab=about';
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }
@@ -498,7 +501,7 @@ Page({
     
     let updated = false;
 
-    // 更新每个活动的倒计时(缩写格式:还剩Nd / 还剩Nh / 已开始)
+    // 更新倒计时
     const updatedList = upcomingList.map(item => {
       if (!item.startDate) return item;
       const r = fmtRemain(item.startDate);
@@ -555,6 +558,7 @@ Page({
 
     // onShow 也要复位旧快照留下的隐藏闸，确保角色切换后页面可见。
     this.setData({ _needsRedirect: false });
+    this.loadOperatorAccess();
 
     // 确认留在首页后,保持深色:状态栏/导航切深色(白字)。离开首页时 onHide 复位浅色。
     applyTheme('dark');
@@ -598,11 +602,35 @@ Page({
     }, 100);
   },
 
+  loadOperatorAccess() {
+    const memberId = normalizeMemberId(app.getUserID());
+    const requestEpoch = capturePrivateRequest(this, memberId);
+    const accessEpoch = this._operatorAccessEpoch = (this._operatorAccessEpoch || 0) + 1;
+    if (!memberId || wx.getStorageSync('debug_user_view') === 'user') return;
+    app.sendRequest({
+      hideLoading: true,
+      url: '/api/merchant/access/me',
+      method: 'POST',
+      success: (res) => {
+        if (this._unloaded || this._homeLocationHidden || accessEpoch !== this._operatorAccessEpoch
+            || !isCurrentPrivateRequest(this, memberId, requestEpoch)
+            || wx.getStorageSync('debug_user_view') === 'user') return;
+        const access = normalizeMerchantAccess(res && res.code == '200' ? res.data : null);
+        const stack = getCurrentPages();
+        if (access.active && access.canVerify && stack[stack.length - 1] === this) {
+          this.setData({ _needsRedirect: true });
+          goMerchantHome();
+        }
+      },
+    });
+  },
+
   /**
    * 页面隐藏时
    */
   onHide() {
     this._homeLocationHidden = true;
+    this._operatorAccessEpoch = (this._operatorAccessEpoch || 0) + 1;
     this._locationEpoch = (this._locationEpoch || 0) + 1;
     if (this._locationLoadingEpoch != null) {
       this._locationLoadingEpoch = null;
@@ -933,9 +961,9 @@ Page({
       };
     }
     
-    return {
+    return { // 第七轮 C 第 3 项:固定卡片图,不让微信截首页(按本人定位排的附近活动与地图)
       title: '城瘾Hub',
-      path: '/pages/index/index',
+      path: '/pages/index/index', imageUrl: ROAM_SHARE_COVER,
       success: function (res) {
         cyToast.success('分享成功');
       }
@@ -1091,7 +1119,7 @@ Page({
     delete that._listControls[listName];
     that.setData({
       ['listLoading.' + listName]: true,
-      ['listErr.' + listName]: false,
+      ['listErr.' + listName]: !!((that.data.listLoaded || {})[listName] && (that.data.listErr || {})[listName]), // H-03b:落地过的区刷新时留着原错误态,等结果再换
     });
 
     // 失败标记:发起新请求时先清掉旧错误并显示 loading；失败/非 200 再进入 error。
@@ -1138,7 +1166,7 @@ Page({
                 list[i]['formattedStartDate'] = `${month}.${day} ${hourMinute}`;
               }
               
-              // 初始化倒计时(缩写格式:还剩Nd / 还剩Nh / 已开始)
+              // 初始化倒计时
               const r = fmtRemain(list[i]['startDate']);
               list[i]['remainingTime'] = r.remainingTime;
               list[i]['started'] = r.started;
@@ -1206,7 +1234,7 @@ Page({
         settled = true;
         if (!isCurrent()) return;
         delete that._listControls[listName];
-        that.setData({ ['listLoading.' + listName]: false });
+        const loaded = Object.assign({}, that.data.listLoaded); loaded[listName] = true; that.setData({ ['listLoading.' + listName]: false, listLoaded: loaded });
       },
     });
     if (!settled && isCurrent() && control && typeof control.abort === 'function') {
@@ -1305,7 +1333,7 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
 //           listLength: isRefresh ? list.length : that.data.bottomTopicList.length
 //         });
       }
-      that.setData({ isBottomLoading: false, bottomTopicFailedPage: 0 });
+      that.setData({ isBottomLoading: false, bottomTopicFailedPage: 0, 'listLoaded.bottomTopicList': true });
     },
     fail: function (res) {
       // A-14-2:网络失败同样落行内重试,不再只弹一次 toast。
@@ -1405,7 +1433,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
           ));
         }
       }
-      that.setData({ isBottomLoading: false, bottomActivityFailedPage: 0 });
+      that.setData({ isBottomLoading: false, bottomActivityFailedPage: 0, 'listLoaded.bottomActivityList': true });
     },
     fail: function (res) {
       // A-14-2:网络失败同样落行内重试,不再只弹一次 toast。
@@ -1479,12 +1507,19 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (this._unloaded || this._homeLocationHidden) return;
     const scope = captureLocationRequest(this);
     scope.userInitiated = !!(opts && opts.userInitiated);
+    scope.gateCoversLocation = !!(opts && opts.gateCoversLocation);
     if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') {
-      if (!this.data.city) this.setData({ city: homeCity.readLastCity() || homeCity.DEFAULT_CITY, cityManual: false });
+      const guestCity = this.data.city || homeCity.readLastCity() || homeCity.DEFAULT_CITY;
+      this.setData({ city: guestCity, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(guestCity) });
       return;
     }
     const that = this;
-    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false });
+    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false, cityPicker: false });
+    // Round5 #7:本机记过「暂不定位」→ 自动流程到此为止(沿用上次城市/默认城市),等用户点城市再问
+    if (!scope.userInitiated && homeCity.readLocationDeclined()) {
+      if (!this.data.city) this.setData({ city: homeCity.DEFAULT_CITY });
+      return;
+    }
     app.sendRequest({
       url: '/api/compliance/consents/latest',
       method: 'POST',
@@ -1512,30 +1547,38 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 
   requestHomeCityConsent(scope) {
     const that = this;
-    if (!isCurrentLocationRequest(this, scope)) return;
+    if (!isCurrentLocationRequest(this, scope) || this.data.privacyGateShow || (app.getUsageConsent && !app.getUsageConsent().granted())) return; // P-38:隐私闸未关不叠定位弹窗,同意后 onPrivacyGateSettled 会重新发起
+    if (scope.gateCoversLocation) { this.recordHomeCityConsent(scope); return; } // P-38:隐私闸已一并同意定位
     modal.show({
       title: '首页城市定位',
       content: '同意使用精确位置并发送给城瘾以确定首页城市，后续自动定位且不用于附近排序吗？',
       confirmText: '同意定位',
       cancelText: '暂不定位',
       success(result) {
-        if (!result.confirm || !isCurrentLocationRequest(that, scope)) return;
-        Promise.resolve().then(() => {
-          if (!isCurrentLocationRequest(that, scope)) return null;
-          return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType: 'AGREE' });
-        }).then(saved => {
-          if (!isCurrentLocationRequest(that, scope)) return;
-          const row = saved && saved.response && saved.response.data;
-          if (!saved || !saved.response || Number(saved.response.code) !== 200
-              || saved.requestId !== (row && row.requestId) || !isHomeCityAgreement(row)) {
-            throw new Error('城市定位同意记录未完成');
-          }
-          scope.consentRequestId = row.requestId;
-          that.executeHomeCityLocation(scope);
-        }).catch(() => {
-          if (isCurrentLocationRequest(that, scope)) cyToast('定位同意记录未保存，请重试');
-        });
+        if (!isCurrentLocationRequest(that, scope)) return;
+        homeCity.saveLocationDeclined(!result.confirm);
+        if (!result.confirm) { if (!that.data.city) that.setData({ city: homeCity.DEFAULT_CITY }); return; }
+        that.recordHomeCityConsent(scope);
       }
+    });
+  },
+
+  recordHomeCityConsent(scope) {
+    const that = this;
+    Promise.resolve().then(() => {
+      if (!isCurrentLocationRequest(that, scope)) return null;
+      return app.recordConsent({ docType: 'privacy_policy', scene: 'home_city_location', eventType: 'AGREE' });
+    }).then(saved => {
+      if (!isCurrentLocationRequest(that, scope)) return;
+      const row = saved && saved.response && saved.response.data;
+      if (!saved || !saved.response || Number(saved.response.code) !== 200
+          || saved.requestId !== (row && row.requestId) || !isHomeCityAgreement(row)) {
+        throw new Error('城市定位同意记录未完成');
+      }
+      scope.consentRequestId = row.requestId;
+      that.executeHomeCityLocation(scope);
+    }).catch(() => {
+      if (isCurrentLocationRequest(that, scope)) cyToast('定位同意记录未保存，请重试');
     });
   },
 
@@ -1592,12 +1635,20 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
     const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
-    if (city) { this.setData({ city: city, cityManual: false }); homeCity.saveLastCity(city); }
+    if (city) { this.setData({ city: city, cityManual: false, cityPickerIndex: idx }); homeCity.saveLastCity(city); }
   },
 
   // V-01:用户主动点城市重新定位，失败时才提示。
   onTapHomeCity() {
     this.getHomeCityLocation({ userInitiated: true });
+  },
+
+  // 第九轮 m1-9:卡上「地点」一点开地图;没有地点照旧进详情(放文件尾:上方 UI 基线按行号锚定)
+  onAddressTap: function (e) {
+    const d = e.currentTarget.dataset;
+    if (d.address) openAddress().openFromEvent(e);
+    else if (d.kind === 'topic') this.goTopic(e);
+    else this.goActivity(e);
   },
 })
 

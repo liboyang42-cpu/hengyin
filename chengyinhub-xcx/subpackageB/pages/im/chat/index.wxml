@@ -36,15 +36,16 @@
 
     <!-- 四态分流:加载中 / 坏链接 / 失败 / 真的没消息。原来只有最后一条,前三种全被说成「还没有消息」。 -->
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="{{4}}" />
-    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" sub="请返回重新进入" />
+    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" cta="返回消息列表" bind:cta="returnToMessageList" />
     <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" cta="返回消息列表" bind:cta="returnToMessageList" />
-    <cy-error load-failure wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
+    <cy-empty wx:elif="{{loadState === 'denied'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="{{loadErrorText || '这个会话无法打开'}}" cta="返回消息列表" bind:cta="returnToMessageList" />
+    <cy-error wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
     <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" />
 
     <block wx:for="{{msgs}}" wx:key="id">
       <!-- M-01:商家系统通知 = 整宽通知卡(图标 · 标题 · 正文 · 时间),不再是窄气泡。
            卡片消息(msgType 3)沿用下面同一张 cy-card(动作按钮只有一份),只换成整宽通知样式。 -->
-      <view wx:if="{{sysNotice && item.msgType != 3}}" class="notice" aria-label="系统通知">
+      <view wx:if="{{sysNotice && item.msgType != 3 && !item.activityNotice}}" class="notice" aria-label="系统通知">
         <view class="notice__icon" aria-hidden="true"><cy-icon name="bell" size="36" /></view>
         <view class="notice__body">
           <view class="notice__top">
@@ -58,7 +59,7 @@
       <block wx:else>
       <!-- 卡片/系统消息仍走居中时间分隔(与改动前一致);普通文字/图片气泡改用贴气泡的行内时间(见下方),
            两处若都渲染会对同一时刻重复显示,故这里限定 msgType==3 -->
-      <view wx:if="{{item.timeDivider && item.msgType == 3 && !sysNotice}}" class="time-div">{{item.timeDivider}}</view>
+      <view wx:if="{{item.timeDivider && (item.msgType == 3 || item.activityNotice) && !sysNotice}}" class="time-div">{{item.timeDivider}}</view>
 
       <!-- 卡片:location/route/signup 是用户或系统可发、有明确发送方 → 遵守左收右发(唯一不可协商的语义);
            generic 仅系统可发,无发送人概念,渲染路径不变(居左无头像) -->
@@ -81,8 +82,8 @@
             </cy-card>
 
             <!-- 路线卡 / 报名卡(同构:都是 {cardType,topicId},都现拉、永远最新) -->
-            <cy-card wx:else class="rcard" interactive="{{true}}" accessibility-label="查看路线或报名详情" hover-class="cy-pressed" hover-stay-time="80" catchtap="onRouteTap" data-topicid="{{item.card.topicId}}">
-              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">发送时：报名成功</view>
+            <cy-card wx:else class="rcard" interactive="{{true}}" accessibility-label="查看路线或报名详情" hover-class="cy-pressed" hover-stay-time="80" catchtap="onRouteTap" data-topicid="{{item.card.topicId}}" data-cardtype="{{item.card.cardType}}">
+              <view wx:if="{{item.card.cardType === 'signup'}}" class="rcard-flag">报名成功</view>
               <block wx:if="{{topicCache[item.card.topicId]}}">
                 <!-- CU-C-121:imgUrl 为空时 <image> 仍按 270rpx 渲染,卡面一半是死黑块。
                      没图就不是"图在加载",给一个说得清的缺图占位。 -->
@@ -100,7 +101,7 @@
               <block wx:elif="{{topicCache[item.card.topicId] === null}}">
                 <view class="rcard-img rcard-img--ph"></view>
                 <view class="rcard-tt">
-                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '活动暂不可用' : '路线暂不可用'}}</view>
+                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '票已放进票夹，点这里查看' : '路线暂不可用'}}</view>
                 </view>
               </block>
               <!-- 加载中(undefined,尚未 fetch 回来):骨架占位,shimmer 本身即为「加载中」语义(DS §5:禁裸文字) -->
@@ -118,7 +119,7 @@
 
       <!-- 通用卡(仅系统可发;渲染路径与改动前一致)。CU-M-124:可点性按卡真有的动作给,
            没有去处、没有结果可查的通知不再报成「查看卡片详情」按钮。 -->
-      <cy-card wx:elif="{{item.msgType == 3}}" class="card {{sysNotice ? 'card--notice' : ''}}" interactive="{{item.cardTarget}}" accessibility-label="{{item.card.title || '查看卡片详情'}}" hover-class="{{item.cardTarget ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="onCardTap" data-msg="{{item.id}}">
+      <cy-card wx:elif="{{item.msgType == 3 || item.activityNotice}}" class="card {{sysNotice ? 'card--notice' : ''}}" interactive="{{item.cardTarget}}" accessibility-label="{{item.card.title || '查看卡片详情'}}" hover-class="{{item.cardTarget ? 'cy-pressed' : 'none'}}" hover-stay-time="80" bindtap="onCardTap" data-msg="{{item.id}}">
         <view class="card-hd">
           <view class="card-icon" aria-hidden="true"><cy-icon name="info" size="36" /></view>
           <view class="card-tt">
@@ -181,7 +182,7 @@
        用户看不到任何原因,视觉上等于"这会话可以发消息"。现在两类原因共用这一行。 -->
   <!-- M-01 补:只读会话(系统通知)底部只留输入栏那一行说明,不再叠一行同义的禁用提示。 -->
   <block wx:if="{{type != 2}}">
-  <view wx:if="{{disabled || loadState !== 'ready'}}" class="disabled-tip" style="bottom: {{inputH}}px;">{{disabled ? disabledText : sendBlockedMap[loadState]}}</view>
+  <view wx:if="{{disabled || (loadState !== 'ready' && sendBlockedMap[loadState])}}" class="disabled-tip" style="bottom: {{inputH}}px;">{{disabled ? disabledText : sendBlockedMap[loadState]}}</view>
   </block>
 
   <!-- 输入栏。「+」仍留在框外(位置/路线等城瘾特有发送项,Airbnb 无对应物,保留原位不臆造新位置);

@@ -9,6 +9,7 @@
 /* 加载结束后内容挂载淡入:定义在 style/fade-in.wxss(隔离组件也要 @import 同一份,见该文件抬头) */
 @import './fade-in.wxss';
 @import './motion-entry.wxss';
+@import './addr-tap.wxss';
 
 /* —— 按钮 —— */
 .cy-btn {
@@ -63,6 +64,8 @@
   border-radius: var(--cy-radius-md);
   padding: var(--cy-space-3);
 }
+/* 打磨第 3 轮 §4-7:封面媒体卡用 2xl(与首页/发现 Feed 卡同档)。先只用于活动列表封面卡。 */
+.cy-card--media { border-radius: var(--cy-radius-2xl); }
 .cy-card--glass {
   background: var(--cy-bg-glass);
   backdrop-filter: blur(24rpx);

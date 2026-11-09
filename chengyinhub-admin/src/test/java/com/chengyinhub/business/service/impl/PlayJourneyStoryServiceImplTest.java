@@ -375,6 +375,9 @@ class PlayJourneyStoryServiceImplTest {
         chapter.setId(88L);
         chapter.setTopicId(TOPIC);
         chapter.setName("窗外");
+        chapter.setAudioUrl("media-asset:50");
+        chapter.setVideoUrl("media-asset:51");
+        chapter.setVideoPosterUrl("media-asset:52");
         chapter.setBlocksJson("[{\"type\":\"text\",\"content\":\"你推开了窗。\"},"
                 + "{\"type\":\"text\",\"content\":\"画家才看得到这一句。\",\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.m_painter\"}}]");
         when(chapterMapper.selectCmsTopicChapterById(88L)).thenReturn(chapter);
@@ -383,12 +386,50 @@ class PlayJourneyStoryServiceImplTest {
 
         Map<?, ?> view = (Map<?, ?>) service.ending(MEMBER, TOPIC).get("chapter");
         assertEquals(88L, view.get("id"));
+        assertEquals("media-asset:50", view.get("audioUrl"));
+        assertEquals("media-asset:51", view.get("videoUrl"));
+        assertEquals("media-asset:52", view.get("videoPosterUrl"));
         String blocks = String.valueOf(view.get("blocks"));
         assertTrue(blocks.contains("你推开了窗。"), blocks);
         assertFalse(blocks.contains("画家才看得到这一句"), "没有这个标签的玩家不下发那一句");
 
         chapter.setTopicId(TOPIC + 1);
         assertEquals(null, service.ending(MEMBER, TOPIC).get("chapter"), "别的主题的章不带");
+    }
+
+    @Test
+    void endingMediaSurvivesFrozenProjectionAndArchivedReopenWithoutReadingLiveChapter() throws Exception {
+        String story = "{\"schemaVersion\":1,\"ending\":{\"endings\":["
+                + "{\"code\":\"done\",\"title\":\"尾声\",\"chapterId\":88,\"fallback\":true}]}}";
+        TopicRouteEngine.State state = new TopicRouteEngine.State();
+        TopicRouteSession session = session(TopicRouteSession.STATUS_COMPLETED, objectMapper.writeValueAsString(state));
+        com.fasterxml.jackson.databind.node.ObjectNode snapshot = objectMapper.createObjectNode();
+        snapshot.put("journeyStory", story);
+        com.fasterxml.jackson.databind.node.ObjectNode chapter = snapshot.putObject("endingChapters").putObject("88");
+        chapter.put("name", "冻结尾声").put("audioUrl", "media-asset:50")
+                .put("videoUrl", "media-asset:51").put("videoPosterUrl", "media-asset:52");
+        chapter.putArray("blocks").addObject().put("type", "text").put("content", "雨停了。");
+        session.setConfigSnapshotJson(snapshot.toString());
+        when(sessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Collections.singletonList(session));
+
+        Map<String, Object> frozen = service.freezeEnding(TOPIC, story, state, session);
+        Map<?, ?> live = (Map<?, ?>) service.ending(MEMBER, TOPIC).get("chapter");
+        assertEquals(frozen.get("chapter"), live, "完成时与重开时读取同一份结局媒体");
+        assertEquals("media-asset:50", live.get("audioUrl"));
+        assertEquals("media-asset:51", live.get("videoUrl"));
+        assertEquals("media-asset:52", live.get("videoPosterUrl"));
+
+        state.getThemeRuntime().putObject("result").put("endingId", "done").put("title", "尾声")
+                .set("story", objectMapper.valueToTree(frozen));
+        session.setStateJson(objectMapper.writeValueAsString(state));
+        chapter.put("videoUrl", "media-asset:99");
+        session.setConfigSnapshotJson(snapshot.toString());
+        Map<?, ?> archivedStory = (Map<?, ?>) service.ending(MEMBER, TOPIC).get("story");
+        Map<?, ?> reopened = (Map<?, ?>) archivedStory.get("chapter");
+        assertEquals("media-asset:50", reopened.get("audioUrl"));
+        assertEquals("media-asset:51", reopened.get("videoUrl"), "重开不读取后来改过的章节");
+        assertEquals("media-asset:52", reopened.get("videoPosterUrl"));
+        org.mockito.Mockito.verify(chapterMapper, org.mockito.Mockito.never()).selectCmsTopicChapterById(88L);
     }
 
     @Test

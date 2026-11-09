@@ -164,7 +164,8 @@ class ApiActivityInfoBrowseContractTest {
         f.controller = spy(new ApiActivityController());
         // release-0917 集成:rule-merchant-0917 给 info 接口加了 @Autowired 营业状态依赖(#10),手工装配须补上;mock 默认 false=营业中。
         ReflectionTestUtils.setField(f.controller, "merchantBusinessStatusService", mock(com.chengyinhub.business.service.IMerchantBusinessStatusService.class));
-        doReturn(0L).when(f.controller).getAppUserId();
+        // Round5 #6:/api/activity/info 对游客开放后 viewer=0 即游客(走公开投影);本契约测的是登录视角,用已登录 viewer。
+        doReturn(9001L).when(f.controller).getAppUserId();
 
         ReflectionTestUtils.setField(f.controller, "cmsActivityService", activityService);
         ReflectionTestUtils.setField(f.controller, "memberTemplateService", memberTemplateService);

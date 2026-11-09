@@ -9,6 +9,7 @@
 //                    且揭示即 0 分,语义和权限都不是「主理人看答案」。
 const app = getApp();
 const { haversine } = require('../../../utils/geo.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 
@@ -72,6 +73,8 @@ function buildChapters(chaptersList) {
         time: text(node.businessTime),
         name: text(node.name),
         address: text(node.address),
+        lat: node.latitude,
+        lng: node.longitude,
         cover: text(node.imgUrl),
         walkText: nodeIndex === 0 ? '' : walkText(nodes[nodeIndex - 1], node),
       });
@@ -234,6 +237,9 @@ Page({
   // (cms_member_template),而模板详情页缺 scope 时默认按公共库(cms_template_library)
   // 查 /api/template/info,两个 id 空间各自自增 ⇒ 隔离库实测两个玩法都进「模版不存在」
   // 弹层再退回。全仓其它个人玩法入口都带 scope=my,这条是唯一漏的。
+  // 第九轮 m1-9:站点地址一点开地图
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   onViewTemplate(e) {
     const templateId = e.currentTarget.dataset.templateId;
     if (!templateId) return;

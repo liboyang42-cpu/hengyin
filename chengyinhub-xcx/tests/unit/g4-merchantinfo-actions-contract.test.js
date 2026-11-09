@@ -217,8 +217,8 @@ test('CU-C-67:客户名单读失败与「一单没卖」是两个态', () => {
   page.openPlayerSheet();
   const req = findRequest('/api/project/players');
   assert.ok(req, '打开客户抽屉还是要读本主题名单');
-  req.success({ code: 500, msg: '无权查看该探店日门店名单' });
-  assert.equal(page.data.playerSheet.errorText, '无权查看该探店日门店名单');
+  req.success({ code: 500, msg: '无权查看该自由探索门店名单' });
+  assert.equal(page.data.playerSheet.errorText, '无权查看该自由探索门店名单');
   assert.equal(page.data.playerSheet.emptyText, '', '失败不得占用零单那句空态文案');
   assert.deepEqual(page.data.playerSheet.summary, {}, '失败时不许摆一排 0(那读起来是没人买票)');
   const hostWxml = stripWxmlComments(read('pages/topic/components/project-host/index.wxml'));
@@ -285,6 +285,8 @@ test('CU-M-59:待审核/已驳回的节点不给「节点NPC」入口,就地说�
   const block = wxml.slice(wxml.indexOf('data-node-id="{{chapterNode.id}}"') - 600);
   assert.match(block, /wx:if="\{\{chapterNode\.auditLabel === '已通过'\}\}"/, '入口要与后端闸同一判据');
   assert.match(wxml, /审核通过后可配置节点内容/, '不给入口就要说什么时候能配');
+  // M-29:待审核的节点已写明「待审核」,不再补这句
+  assert.match(wxml, /wx:elif="\{\{chapterNode\.auditLabel !== '待审核'\}\}"[^>]*>审核通过后可配置节点内容/);
 });
 
 test('CU-M-89:节点介绍缺图不留固定高空白', () => {

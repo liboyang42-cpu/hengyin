@@ -1,5 +1,5 @@
 <!-- 月度回顾:漫游记录月份标题右侧进入。读数与分页沿用归档 monthly-recap(index.js);周柱只由已读完的当月记录算,不补造。 -->
-<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}">
+<view class="tu theme-dark {{reducedMotion ? 'cy-motion-reduced' : ''}}"><cy-access-gate kind="login" />
   <cy-nav-bar plain />
   <cy-page-title title="月度回顾" />
 
@@ -12,7 +12,8 @@
   <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{status === 'error' || status === 'conflict' || status === 'no-permission'}}"><text>{{message || '暂时没读到，请重试'}}</text><view class="tu-retry" bindtap="onRetry" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
   <view class="tu-loading" wx:if="{{busy && !counts}}">正在读取当月记录…</view>
 
-  <block wx:if="{{counts}}">
+  <!-- R11 p1 F-5:三项全是 0 时不摆大号 0,下面「这一类本月没有记录」已经说了 -->
+  <block wx:if="{{counts && (counts.routes || counts.places || counts.stamps)}}">
     <text class="tu-hero">{{counts.routes}}</text>
     <text class="tu-hero__l">次路线完成</text>
     <view class="tu-stats">
@@ -39,7 +40,7 @@
   </block>
 
   <view class="tu-group" wx:if="{{items.length}}">
-    <view class="tu-row cy-rise-in" style="animation-delay: {{index * 60}}ms" wx:for="{{items}}" wx:key="id">
+    <view class="tu-row cy-rise-in" style="animation-delay: {{index < 6 ? index * 60 : 360}}ms" wx:for="{{items}}" wx:key="id">
       <view class="tu-row__body"><text class="tu-row__t">{{item.title}}</text><text class="tu-row__s">{{item.dateText}} · {{kinds[kindIndex]}}</text></view>
     </view>
   </view>

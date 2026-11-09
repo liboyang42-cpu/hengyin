@@ -10,7 +10,7 @@ function mount(options) {
   global.getCurrentPages = () => []
   global.Page = definition => { pageDefinition = definition }
   global.Component = definition => { hostDefinition = definition }
-  for (const file of ['subpackageRoam/poi-detail/index.js', 'components/cy/scene-deep-link/index.js']) {
+  for (const file of ['subpackageRoam/poi-detail/index.js', 'subpackageMember/components/cy/scene-deep-link/index.js']) {
     const absolute = path.join(root, file)
     delete require.cache[require.resolve(absolute)]
     require(absolute)
@@ -43,6 +43,7 @@ test('据点冷启动先接收路由参数再打开根场景，核销子场景�
   assert.equal(host.data.sceneCurrent.id, 'roam-poi-detail')
   assert.equal(host.data.sceneCurrent.params.poiId, '990041')
   assert.equal(page.onShareAppMessage().path, '/subpackageRoam/poi-detail/index?poiId=990041')
+  // 第九轮 m4:单个据点 GET 已对游客放行,朋友圈分享恢复,query 与好友分享同一个 poiId
   assert.equal(page.onShareTimeline().query, 'poiId=990041')
 })
 

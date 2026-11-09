@@ -4,7 +4,7 @@
   <view class="ds__bg" aria-hidden="true"></view>
   <view class="ds__stage" style="{{stagePadTop && !inline ? 'padding-top:' + stagePadTop + 'px;' : ''}}" catchtap="noop">
     <view class="ds__nav">
-      <view class="ds__navbtn" bindtap="onClose"
+      <view wx:if="{{!inline}}" class="ds__navbtn" bindtap="onClose"
             aria-role="button" aria-label="关闭今日城市签" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="back" size="32" />
       </view>
@@ -38,8 +38,8 @@
           <view class="ds__row"><text class="ds__t">今日城市签</text><text class="ds__d">{{dateLabel}}</text></view>
           <view class="ds__hr"></view>
           <view class="ds__od">
-            <view class="ds__od-c"><text class="ds__k">出发</text><text class="ds__addr">{{address}}</text><text class="ds__sm">{{timeLabel}}</text></view>
-            <view class="ds__od-c ds__od-c--r"><text class="ds__k">签号</text><text class="ds__big">{{serialLabel}}</text><text class="ds__sm">你是第几位</text></view>
+            <view class="ds__od-c"><text class="ds__k">出发</text><text wx:if="{{address}}" class="ds__addr cy-addr-tap" catchtap="onAddressTap" aria-role="button" aria-label="在地图中打开 {{address}}" hover-class="cy-pressed" hover-stay-time="80">{{address}}</text><text class="ds__sm">{{timeLabel}}</text></view>
+            <view class="ds__od-c ds__od-c--r" wx:if="{{serialLabel}}"><text class="ds__k">签号</text><text class="ds__big">{{serialLabel}}</text><text class="ds__sm">你是第几位</text></view>
           </view>
           <view class="ds__hr"></view>
           <view class="ds__grid">
@@ -81,38 +81,12 @@
     <view class="ds__hint">
       <text>{{hint}}</text>
       <view class="ds__alt" wx:if="{{printed && !printing && !torn}}" bindtap="onTearTap"
-            aria-role="button" aria-label="直接撕下小票" hover-class="cy-pressed" hover-stay-time="80">撕不下来?点这里</view>
+            aria-role="button" aria-label="直接撕下小票" hover-class="cy-pressed" hover-stay-time="80">撕不下来？点这里</view>
     </view>
 
-    <!-- 留言条:压在小票下半段上的第二张纸,刮开之后从底部滑上来。
-         写的时候是 textarea + 顺手拍一张;留过之后只读回看,按钮变「出发」。
-         adjust-position 关掉、自己按键盘高度抬(fixed 浮层不跟系统的页面上推走) -->
-    <view class="ds__note {{(writing || claimed) ? 'is-on' : ''}}" style="{{noteStyle}}" wx:if="{{torn}}">
-      <view class="ds__note-h">
-        <view class="ds__note-hl">
-          <text class="ds__note-t">{{claimed ? '你留给下一个人的' : '给下一个来这里的人留一句'}}</text>
-          <text class="ds__note-c" wx:if="{{!claimed}}">{{text.length}}/{{textMax}}</text>
-        </view>
-        <!-- 顺手拍一张(可不拍):收成标题行右侧一个小方钮,留言条才压不到上一个人那句 -->
-        <view class="ds__shot" wx:if="{{!claimed}}" bindtap="onShoot"
-              aria-role="button" aria-label="{{shotUrl ? '重拍一张' : '顺手拍一张给下一个人看'}}" hover-class="cy-pressed" hover-stay-time="80">
-          <image wx:if="{{shotUrl}}" class="ds__shot-img" src="{{shotUrl}}" mode="aspectFill" />
-          <cy-icon wx:else name="camera" size="32" />
-        </view>
-      </view>
-      <block wx:if="{{claimed}}">
-        <text class="ds__note-my">{{myText}}</text>
-        <image wx:if="{{myPhotoUrl}}" class="ds__note-img" src="{{myPhotoUrl}}" mode="aspectFill" aria-label="你拍的照片" />
-        <view class="ds__save {{saving ? 'is-off' : ''}}" bindtap="onSave"
-              aria-role="button" aria-label="{{saving ? '签卡生成中，请稍候' : '保存签卡到相册'}}"
-              hover-class="cy-pressed" hover-stay-time="80">{{saving ? '生成中…' : '保存到相册'}}</view>
-      </block>
-      <textarea wx:else class="ds__ta" value="{{text}}" maxlength="{{textMax}}" placeholder="比如：巷口那家豆浆七点才开，别去早了"
-                placeholder-class="ds__ta-ph" adjust-position="{{false}}" fixed="{{true}}"
-                bindinput="onTextInput" bindkeyboardheightchange="onKeyboard" aria-label="给下一个人留一句" />
-      <view class="ds__cta">
-        <cy-btn variant="primary" disabled="{{ctaDisabled}}" bindtap="onAccept">{{cta}}</cy-btn>
-      </view>
+    <view class="ds__cta" wx:if="{{torn && (writing || claimed)}}">
+      <cy-btn wx:if="{{!claimed || !inline}}" variant="primary" disabled="{{ctaDisabled}}" bindtap="onAccept">{{claimed ? '出发' : '收下这张签'}}</cy-btn>
+      <cy-btn wx:if="{{claimed}}" variant="secondary" disabled="{{saving}}" bindtap="onSave">{{saving ? '生成中…' : '保存到相册'}}</cy-btn>
     </view>
   </view>
 

@@ -1,0 +1,39 @@
+TEXT[resume-rolled] N | 0m | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 检定 · 观察 | 简单 | 标准 | 困难 | 13 | 1 | 5 | 10 | 15 | 20 | 15 | 达成值 15 · 难度 13 | 过线 2 点 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-check-resumed
+SETTLE_DOM true
+TEXT[settled] N | 0m | PLAY-MAP-1105-R2-compass-check · 第一章 江边1 | 生命值 10 | /10 | 1 | 5 | 10 | 15 | 20 | 过线了 | 你看见了暗门。 | 生命 10 | 幸运 3 | 继续 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-d20-settled
+TEXT[after-check] N | PLAY-MAP-1105-R2-compass-check · 尾声 | 生命值 10 | /10 | 钟声响了十二下。老周的字条到这里就齐了。 | 继续 | 1处旧址已全部点亮 | 领取你的城市足迹卡 | 11月5日 周四 | PLAY-MAP-1105-R2-compass-check | 已通关 | 1 | 点亮坐标 | 00:27 | 用时 | 0 | 解谜分 | 成就 | 首 | 首达 | 01 罗盘指向与D20 | 继续 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-after-check
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990016 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990016 200 200 操作成功 
+NET GET /api/play/run-session?topicId=990016 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/orient/scoring/session/3 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/3/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793877443342-rw3jywzv"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793877443342-n3beczva"}
+NET GET /api/play/encounter?topicId=990016&activityId=0&nodeId=73 200 200 操作成功 
+NET POST /api/play/check/roll 200 200 操作成功 topicId=990016&activityId=0&sessionId=3&nodeId=73&checkId=check_mw3ebd6s
+NET POST /api/play/check/settle 200 200 操作成功 topicId=990016&activityId=0&sessionId=3&nodeId=73&checkId=check_mw3ebd6s
+NET GET /api/play/route-state?topicId=990016 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/play/action-context?topicId=990016&nodeId=73 200 200 操作成功 
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990016&nodeId=73&longitude=121.49&latitude=31.238&accuracy=8&routeActionId=route-mw3gbsld-nlohrievyw&expectedRouteVersion=4&routeSessionId=3
+NET GET /api/play/nodes?topicId=990016 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990016 200 200 操作成功 
+NET GET /api/play/journey/ending?topicId=990016&activityId=0 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/orient/scoring/session/3 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/3/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793877469912&topicId=990016
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793877469912&topicId=990016
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793877470062&topicId=990016

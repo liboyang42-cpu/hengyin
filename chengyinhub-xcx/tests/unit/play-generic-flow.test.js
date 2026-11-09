@@ -27,7 +27,9 @@ function loadPage() {
 
 test('共享 PROOF_PENDING 不受粗粒度 availableActions 放行，不提供结算写按钮', () => {
   const row = gameplay.actionRows(pending, [])[0];
-  assert.equal(row.enabled, false); assert.match(row.disabledText, /待审核/); assert.notEqual(row.actionText, '完成任务');
+  assert.equal(row.enabled, false); assert.notEqual(row.actionText, '完成任务');
+  // 第十二轮 k7 N3:PROOF_PENDING 只是「本站玩法还没过」,不写「待审核 / 凭证未通过」;主按钮回到原任务
+  assert.equal(row.actionText, '打开任务'); assert.equal(row.disabledText, ''); assert.equal(row.openable, true);
 });
 test('trustedPass 只证明凭证通过，QUEST_RESOLVE 是否可结算仍遵从 enabled', () => {
   const row = gameplay.actionRows(passed, [])[0];
@@ -152,12 +154,12 @@ test('正式结算只显示本次服务端正数 XP，不回退配置 points', (
   assert.equal(notDone.data.nodes[0].done, false); assert.equal(notDone.data.flyScore, false);
 });
 test('有高级配置仍用既有 startGame 高级分支，基础文字与选项保留原题面', async () => {
-  for (const [vm, advanced] of [[1,false],[3,false],[4,false],[3,true]]) {
-    const { page } = loadPage(); page.stopAudio = () => {}; page.data.nodes = [{ nodeId: 41, vm, hasAdvanced: advanced, question: '现场选择', options: { A: '第一项', B: '第二项' } }];
+  for (const [vm, advanced] of [[1,false],[2,false],[3,false],[4,false],[3,true]]) {
+    const { page } = loadPage(); page.stopAudio = () => {}; page.data.photoTaken = true; page.data.nodes = [{ nodeId: 41, vm, hasAdvanced: advanced, question: '现场选择', options: { A: '第一项', B: '第二项' } }];
     page.data.themeBag = backpack.present({ sessionId: 7, version: 9, status: 'ACTIVE', activeQuest: 'q', quests: [{ questKey: 'q', nodeId: 41 }], allowedActions: [{ operation: 'QUEST_CANCEL', contentId: 'q' }] }, []);
     await page.onThemeGameplayAction({ currentTarget: { dataset: { index: 0 } } });
     if (advanced) assert.equal(page.data.advancedPlay.show, true);
-    else { assert.equal(page.data.screen, 'gamePlay'); assert.equal(page.data.game.vm, vm); if (vm === 3) assert.deepEqual(page.data.game.opts.map(o => o.v), ['第一项', '第二项']); }
+    else { assert.equal(page.data.screen, 'gamePlay'); assert.equal(page.data.game.vm, vm); assert.equal(page.data.photoTaken, false); if (vm === 3) assert.deepEqual(page.data.game.opts.map(o => o.v), ['第一项', '第二项']); }
   }
 });
 
@@ -192,4 +194,29 @@ test('凭证状态回读失败不能用旧 trustedPass 解锁未知写入', asyn
   page.refreshThemeBackpack = () => Promise.resolve(true);
   assert.equal(await page._readGenericProof(41, '', 'game'), true); assert.equal(page._gameWriteUnknown, false); assert.equal(page.data.nodes[0].done, false); assert.equal(page.data.flyScore, false);
   page._gameWriteUnknown = true; assert.equal(await page._readGenericProof(null, '', 'game'), false); assert.equal(page._gameWriteUnknown, true);
+});
+
+// The compass skip changes only the sensor step; the existing D20 receipt still owns continuation.
+test('co-located compass resumes arrival only after a settled check in the same run', async () => {
+  for (const [settled, same, expected] of [[false,true,0],[true,false,0],[true,true,1]]) {
+    const {page}=loadPage();let arrivals=0;
+    page._playOwner='7';page._sessionKey=()=>same?'run':'changed';page._isPlayAccountCurrent=()=>true;
+    page._compassCheckResume={owner:'7',sessionKey:'run',nodeId:41};
+    page.data.journeyCheck={show:true,nodeId:41,r5:false,present:'fullscreen',receipt:{settled}};
+    page.arrive=id=>{assert.equal(id,41);arrivals++;};
+    page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrivals,expected);
+  }
+});
+
+test('reopening a co-located compass check restores continuation from the owned encounter', async () => {
+  const {page,app}=loadPage();const node={nodeId:41,done:false,advancedConfig:{compass:{enabled:true}}};
+  page.data.topicId=9;page.data.nodes=[node];page.data.sheet={show:true,node};
+  page._playOwner='7';page._sessionKey=()=> 'run';page._isPlayAccountCurrent=()=>true;page._restoreJourneyCheck=()=>{};
+  app.sendRequest=o=>o.success({code:200,data:{allowedActions:['check'],check:{checkId:'check-41',present:'fullscreen'}}});
+  page._probeJourneyCheck(node);await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(page._compassCheckResume,{nodeId:41,owner:'7',sessionKey:'run'});
+  page.data.journeyCheck.receipt={settled:true};let arrived=0;page.arrive=()=>arrived++;
+  page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrived,1);
+  page._compassCheckResume={nodeId:99,owner:'7',sessionKey:'run'};
+  page.closeJourneyCheck();await new Promise(resolve=>setImmediate(resolve));assert.equal(arrived,1,'another station must not consume the old continuation');
 });

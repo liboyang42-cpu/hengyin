@@ -73,8 +73,17 @@ public class PointsAwardServiceImpl implements IPointsAwardService
         q.setEventType(eventType);
         List<CmsPointsSetting> settings = cmsPointsSettingService.selectCmsPointsSettingList(q);
         int points = 0;
-        if (settings != null && !settings.isEmpty()) {
-            CmsPointsSetting s = settings.get(0);
+        // 停用/删除的规则不发(第十二轮 k1 第 11 项,同 2/3/5/6);取第一条启用的规则
+        CmsPointsSetting s = null;
+        if (settings != null) {
+            for (CmsPointsSetting candidate : settings) {
+                if (com.chengyinhub.business.service.support.PointsRuleSwitch.active(candidate)) {
+                    s = candidate;
+                    break;
+                }
+            }
+        }
+        if (s != null) {
             if (s.getPointsNum() != null) {
                 points = s.getPointsNum();
             } else if (s.getValue() != null) {

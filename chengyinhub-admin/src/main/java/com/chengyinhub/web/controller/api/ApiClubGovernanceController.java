@@ -32,6 +32,7 @@ import java.util.List;
 @RequestMapping("/api/club/governance")
 public class ApiClubGovernanceController extends BaseController {
     @Autowired private ClubGovernanceService clubGovernanceService;
+    @Autowired(required = false) private com.chengyinhub.business.service.IClubCrmAppService clubCrmAppService;
 
     @PostMapping("/list")
     public AjaxResult list(@RequestBody(required = false) ClubGovernanceListRequest request) {
@@ -40,7 +41,9 @@ public class ApiClubGovernanceController extends BaseController {
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
             List<ClubGovernanceBanVO> result = new ArrayList<>();
-            for (ClubGovernanceBan row : clubGovernanceService.list(principal, request.getClubId())) {
+            List<ClubGovernanceBan> rows = clubGovernanceService.list(principal, request.getClubId());
+            applyOrganiserNames(principal, request.getClubId(), rows);
+            for (ClubGovernanceBan row : rows) {
                 result.add(ClubGovernanceBanVO.from(row));
             }
             return success(result);
@@ -140,6 +143,24 @@ public class ApiClubGovernanceController extends BaseController {
             return ok;
         } catch (ServiceException e) {
             return serviceError(e);
+        }
+    }
+
+    /**
+     * 第十二轮 k3(p3 N4):封禁记录与成员治理的选人列表同一个名字(报名姓名 → 昵称),
+     * 不再出现「封禁林一帆,记录却写玩家小城」。报名姓名只给能治理本俱乐部的人(signupNamesForOrganiser 自判)。
+     */
+    void applyOrganiserNames(Long principal, Long clubId, List<ClubGovernanceBan> rows) {
+        if (rows == null || rows.isEmpty()) return;
+        List<Long> ids = new ArrayList<>();
+        for (ClubGovernanceBan row : rows) if (row != null && row.getTargetMemberId() != null) ids.add(row.getTargetMemberId());
+        java.util.Map<Long, String> names = clubCrmAppService == null || ids.isEmpty() ? null
+                : clubCrmAppService.signupNamesForOrganiser(principal, clubId, ids);
+        for (ClubGovernanceBan row : rows) {
+            if (row == null) continue;
+            String name = names == null ? null : names.get(row.getTargetMemberId());
+            row.setTargetNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(
+                    name, row.getTargetNickname(), row.getTargetMemberId()));
         }
     }
 

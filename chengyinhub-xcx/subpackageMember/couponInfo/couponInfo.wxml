@@ -4,6 +4,8 @@
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar custom-back bind:back="onCancel" />
   <cy-page-title title="优惠券设置" />
+  <cy-empty class="coupon-creation-closed" wx:if="{{!couponCreationEnabled}}" title="暂未开放新建优惠券" />
+  <block wx:if="{{couponCreationEnabled}}">
   <view class="wp">
     <view class="form">
 
@@ -41,7 +43,7 @@
         <view class="li">
           <view class="item-tit">投放数<text>*</text></view>
           <view class="item-cont">
-            <input class="davidinp2" type="number" placeholder="请输入投放数量" value="{{formData.publishCount}}"
+            <input class="davidinp2" type="number" placeholder="请输入投放数量" value="{{formData.publishCount || ''}}"
               bindinput="onPublishCountInput" />
             <image lazy-load="true" class="davidyu" src="/subpackageMember/images/d_yhqadd2.png" mode="widthFix" />
           </view>
@@ -106,4 +108,5 @@
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />
+  </block>
 </view>

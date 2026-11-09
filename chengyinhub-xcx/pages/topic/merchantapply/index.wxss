@@ -32,7 +32,6 @@ page { background: var(--cy-bg-page); }
   transition: transform var(--cy-motion-press) var(--cy-ease-out);
 }
 .ma-row:last-child { margin-bottom: 0; }
-.ma-row--pressed { transform: scale(.99); }
 
 .ma-row-tit {
   font-size: var(--cy-font-label);
@@ -140,7 +139,6 @@ page { background: var(--cy-bg-page); }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   transition: transform var(--cy-motion-press) var(--cy-ease-out), background var(--cy-motion-fast) var(--cy-ease-out);
 }
-.ma-pgrid-add--pressed { transform: scale(.97); background: var(--cy-bg-subtle); }
 .ma-pgrid-plus { display: flex; color: var(--cy-text-secondary); }
 .ma-pgrid-txt { margin-top: 6rpx; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 

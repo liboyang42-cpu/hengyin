@@ -148,6 +148,22 @@ public class ApiMerchantOperatorController extends BaseController {
         } catch (ServiceException e) { return serviceError(e); }
     }
 
+    /** j1 F22:受邀人接受前读门店名与岗位;作用域 = 邀请 token(见 invitePreview)。 */
+    @PostMapping("/operators/invite/preview")
+    public AjaxResult invitePreview(@RequestBody(required = false) MerchantOperatorAcceptRequest request) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        try {
+            Map<String, Object> preview = merchantOperatorService.invitePreview(principal,
+                    request == null ? null : request.getToken());
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("merchantName", preview.get("merchantName"));
+            data.put("roleCode", preview.get("roleCode"));
+            data.put("roleName", roleName(String.valueOf(preview.get("roleCode"))));
+            return success(data);
+        } catch (ServiceException e) { return serviceError(e); }
+    }
+
     @PostMapping("/operators/invite/accept")
     public AjaxResult accept(@RequestBody(required = false) MerchantOperatorAcceptRequest request) {
         Long principal = principal();

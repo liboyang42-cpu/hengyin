@@ -157,3 +157,15 @@
   background: #fff; color: #111; font-size: var(--cy-font-body); font-weight: 700;  /* ds-ok 整屏色块上的白色按钮,不随主题翻转 */
 }
 .pv__cta--press { opacity: .85; }
+
+/* 第十二轮 k8 N7:独立弹出的结果反馈(玩家端作者回话、编辑页预览)走玩家端暗底,不再整屏饱和红 / 绿。
+   判定只落在对勾、两个字的颜色上;作者的话用正文色。台面里嵌着的判定屏不受影响。 */
+.pv--closable .pv__fill { background: var(--cy-color-bg-page); }
+.pv--closable .pv__wave--a, .pv--closable.pv--fail .pv__wave--a { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-page) 30rpx, transparent 31rpx); }
+.pv--closable .pv__wave--b, .pv--closable.pv--fail .pv__wave--b { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-page) 22rpx, transparent 23rpx); }
+.pv--closable .pv__bubble { display: none; }
+.pv--closable .pv__tick-short, .pv--closable .pv__tick-long { background: var(--cy-color-status-success); }
+.pv--closable .pv__word { color: var(--cy-color-status-danger); }
+.pv--closable .pv__text { color: var(--cy-color-text-primary); }
+.pv--closable .pv__img { background: var(--cy-color-bg-surface); }
+.pv--closable .pv__cta { background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); }

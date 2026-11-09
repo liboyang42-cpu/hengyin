@@ -114,6 +114,15 @@
            where rd.merchant_id = #{ownerMemberId} and rd.status = 'ACTIVE'
              and rd.create_time &gt;= #{previousStart} and rd.create_time &lt; #{endExclusive}
           union all
+          <!-- check-1104 j1 F13 / p2 F-2:商家自有活动的验票同样是核销,与「核销与退款」同源
+               (RedemptionMapper.selectActivityTicketScansByMerchant)。 -->
+          select 'VERIFY' as event_code, r.verification_time as event_time, null as touchpoint_code
+            from cms_registration r
+            join cms_activity a on a.id = r.owner_id
+           where r.owner_type = 2 and a.member_id = #{ownerMemberId}
+             and r.verification_status = 1
+             and r.verification_time &gt;= #{previousStart} and r.verification_time &lt; #{endExclusive}
+          union all
           select 'REFUND_APPLY' as event_code, f.create_time as event_time, null as touchpoint_code
             from refund_application f
            where f.merchant_id = #{ownerMemberId} and f.del_flag = 0

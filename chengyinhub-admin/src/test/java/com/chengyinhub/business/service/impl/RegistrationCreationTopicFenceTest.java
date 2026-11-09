@@ -20,6 +20,7 @@ class RegistrationCreationTopicFenceTest {
     private CmsActivityMapper activities;
     private CmsTopicMapper topics;
     private IClubWaitlistOrderBridge waitlist;
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper registrations;
     private CmsActivity original;
     private RegistrationRequest request;
     private final IllegalStateException stop = new IllegalStateException("fixture stops at current activity read");
@@ -30,6 +31,8 @@ class RegistrationCreationTopicFenceTest {
         ReflectionTestUtils.setField(service, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", topics);
         ReflectionTestUtils.setField(service, "clubWaitlistOrderBridge", waitlist);
+        registrations = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        ReflectionTestUtils.setField(service, "cmsRegistrationMapper", registrations);
         original = new CmsActivity(); original.setId(5L); original.setTopicId(7L); original.setMemberId(70L);
         when(activities.selectCmsActivityById(5L)).thenReturn(original);
         when(activities.selectCmsActivityByIdForUpdate(5L)).thenThrow(stop);
@@ -39,10 +42,22 @@ class RegistrationCreationTopicFenceTest {
 
     @Test void topicPrecedesWaitlistClaimWhileActivityCurrentLockKeepsTheOriginalPostClaimOrder() {
         assertSame(stop, assertThrows(IllegalStateException.class, () -> service.create(11L, request, "request-1", "a".repeat(64))));
-        var order = inOrder(topics, waitlist, activities);
+        var order = inOrder(topics, registrations, waitlist, activities);
         order.verify(topics).selectCmsTopicByIdForUpdate(7L);
+        // 第十二轮 k1 第 5 项(j6 N1):查「同场次还能扣款的另一笔」在主题锁之后、候补认领之前
+        order.verify(registrations).selectChargeablePendingOrderId(11L, 2, 5L, "request-1");
         order.verify(waitlist).claimForOrder(eq(11L), same(request), any());
         order.verify(activities).selectCmsActivityByIdForUpdate(5L);
+    }
+
+    @Test void chargeablePendingOrderOnSameSessionRefusesBeforeWaitlistClaimOrAnyWrite() {
+        when(registrations.selectChargeablePendingOrderId(11L, 2, 5L, "request-1")).thenReturn(77L);
+        com.chengyinhub.business.service.RegistrationPendingOrderException refused = assertThrows(
+                com.chengyinhub.business.service.RegistrationPendingOrderException.class,
+                () -> service.create(11L, request, "request-1", "a".repeat(64)));
+        assertSame(77L, refused.getRegistrationId());
+        verifyNoInteractions(waitlist);
+        verify(activities, never()).selectCmsActivityByIdForUpdate(5L);
     }
 
     @Test void changedActivityParentAfterClaimRejectsBeforeAnyRegistrationIsCreated() {

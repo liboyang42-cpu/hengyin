@@ -8,7 +8,7 @@ const cyModal = require('../../utils/modal.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const publishIntent = require('../../utils/publish/publish-intent.js');
-const { readPageStyle } = require('../../utils/font-scale.js');
+const { readPageStyle, readFontScale, mapFontSize } = require('../../utils/font-scale.js');
 const motion = require('../../utils/motion.js');
 const config = require('../../utils/config.js');
 const { pickLocation } = require('../../utils/location/location-manager.js');
@@ -40,7 +40,8 @@ const {
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
-const { simplifyTrack, limitTrack } = require('../../utils/roam-track-simplify.js');
+const { simplifyTrack, limitTrack, normalizeTrack } = require('../../utils/roam-track-simplify.js');
+const { createRouteLine } = require('../../utils/my-route-line.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const readSession = require('../../utils/session/login-reload.js');
 const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelope.js');
@@ -70,6 +71,7 @@ const { normName, groupMerchantsByName, stampProgress, doneShopCount, selectNear
 const { npcIconKey, pixelDrawSize, collectNpcIconNeeds, markerAvatar } = require('../../utils/roam-npc-marker.js');
 // CU-M-54:服务端 POI 行 → 本地点位态(已打卡待核销是独立一档,不能读成 passed)
 const { roamPoiLocalState } = require('../../utils/roam-poi-state.js');
+const { presentationForPoi } = require('../../utils/roam-poi-presentation.js');
 const { createRoamSyncStatus, OFFLINE_TEXT: ROAM_SYNC_OFFLINE_TEXT } = require('../../utils/roam-sync-status.js');
 const roamPoiFilter = require('../../utils/roam-poi-filter.js');
 const { MAP_AVATAR_COLORS } = require('../../utils/play-visual-tokens.js');
@@ -79,7 +81,16 @@ const { normalizeRunners } = require('../../utils/roam-runners.js');
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const { currentScene, exitDecision, popScene, pushScene } = require('../../utils/scene-stack.js');
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
-const { MAP_STYLE } = require('../../utils/map-style.js');
+const { playerMapStyle, roam3dFor } = require('../../utils/map-style.js');
+const photoPins = require('./photo-pins.js');
+function stripDistText(from, p) {
+  if (!from || from.lat == null || !p || p.lat == null) return '';
+  const m = distM({ lat: Number(from.lat), lng: Number(from.lng) }, { lat: Number(p.lat), lng: Number(p.lng) });
+  if (!Number.isFinite(m)) return '';
+  return m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' 米' : (m / 1000).toFixed(1) + ' 公里';
+}
+const { placeShareFromEvent } = require('../../utils/place-share.js');
+const PLAYER_MAP_STYLE = playerMapStyle();
 const { getScene } = require('../../utils/scene-registry.js');
 const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
@@ -105,6 +116,8 @@ const STATUS_MARKER_ID = 99997;
    而 demo 点位的数字针正常。编进 70 万段:与商家条目(nodeId/id/9000+i)、上面两个固定值、
    下面其他人的头像(800000+下标)都错开。onMarkerTap 仍按 p.id 全等匹配,不需要反解。 */
 const ROAM_POI_MK_BASE = 700000;
+/* 第九轮 m1 第 5 项:拉远时的密度小圆点。onMarkerTap 先认它,再认 RUNNER_MK_BASE 段。 */
+const DOT_MK_BASE = 960000;
 /* 附近正在漫游的人(原型 otherRunners)。marker id = 基数 + 下标,一次最多 20 个,
    撞不上 POI 的 id(那批来自 nodeId / id / 9000+i / 700000+roamPoiId),也撞不上上面两个固定值。 */
 const RUNNER_MK_BASE = 800000;
@@ -302,14 +315,15 @@ function buildNpcPorts(page) {
 Page({
   data: {
     privacyGateShow: false,
+    cityGuideOpen: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false,
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
-    fmSubkey: MAP_STYLE.subkey,
-    fmLayerStyle: MAP_STYLE.layerStyle,
+    fmSubkey: PLAYER_MAP_STYLE.subkey,
+    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle, map3d: false, // 第九轮 m4:16 级以上 3D 楼块 + 俯仰(utils/map-style.js ROAM_3D,默认关)
     // 起始页(Figma 3956:12602/12809)。modeTitle 是模式名:本页恒为自由漫游,
     // 城市定向/自由探索复用同一版式时只换这三项(标题 / 卡片 / 主行动文案)。
     modeTitle: '自由漫游',
@@ -322,10 +336,10 @@ Page({
     introCardIdx: 0,
     fogOff: false, noFogPolys: [], // P-32:迷雾开关(本机偏好);关时 map-polygons 换成空数组
     introCards: [
-      { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
+      { key: 'start', icon: 'route', title: '开始漫游', sub: '' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
-      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '已加入 · 申请中' },
-    ], introStartLive: '', introTeamsLive: '附近正在组队', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
+      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '' },
+    ], introStartLive: '', introTeamsLive: '', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
     eventOverlay: { show: false, missions: [], points: [], feedback: null },
@@ -338,6 +352,15 @@ Page({
     center: { lat: FALLBACK.lat, lng: FALLBACK.lng },
     mapScale: 15,
     markers: [],
+    explorePins: [],      // 第九轮 m1:照片图钉(free-map customCallout)
+    pinCountLabel: '',    // 第九轮 m1:拉远时的附近真实点数,数少时为空
+    placeCard: null,      // 第九轮 m1:点图钉打开的地点卡
+    cloudOn: false,       // 第九轮 m1:拖动中云层略显形
+    placeCardTop: 150,
+    atmosOn: false,       // 第九轮 m1 第 8 项:首次进漫游转场是否挂载
+    atmosSrc: config.roamAtmosVideoUrl || '',
+    placeCardOrigin: 270,
+    cloudStyle: '',       // 第九轮 m1:云层松手后的漂移位移
     polyline: [],
     sparkCircles: [],
     fogPolys: [],
@@ -347,7 +370,7 @@ Page({
     paused: false,
     roamIdle: false,
     roamPanelExpanded: false,
-    reducedMotion: false,
+    reducedMotion: false, roamPageShown: false, // roamPageShown:地图天气氛围只在本页可见时动画(onShow/onHide)
     openingEmojis: [],
     sceneStack: [],
     sceneCurrent: null,
@@ -530,29 +553,39 @@ Page({
   /* 原型 f-fun(查找附近好玩的)与 f-discover(发现商家)是同一条横滑白卡:
      数据就是地图上那批附近商家,不另拉一份接口 —— 地图上看得见的,卡上就看得见。
      原型的规则是「读数卡让位给横滑条」,所以它在时读数卡不渲染(见 wxml 的 wx:if)。 */
-  openShopStrip() {
-    const rows = (this._pois || [])
-      .filter((p) => p.cat === 'merchant' && p.lat && p.lng)
-      .slice(0, 8)
+  openShopStrip(focus) {
+    // 第十二轮 k7(j4 N1):点商家照片图钉 / 「附近 N 个地点」也开这条;点的那家一定在条里,并停在它那张
+    const shops = (this._pois || []).filter((p) => p.cat === 'merchant' && p.lat && p.lng);
+    const pick = focus && focus.id != null && shops.indexOf(focus) >= 0 ? focus : null;
+    let list = shops.slice(0, 8);
+    if (pick && list.indexOf(pick) < 0) list = list.slice(0, 7).concat(pick);
+    const idx = pick ? list.indexOf(pick) : 0;
+    const rows = list
       .map((p) => ({
         ...(visitorSourceOf(p) || {}),
         id: String(p.regId || p.nodeId || p.name),
+        poiId: String(p.id),   // 第九轮 m1 第 4 项:卡 ⇄ 图钉互认
         name: p.name,
         address: p.desc || '',
-        meta: p.metaLine || '商家 · 探店',
-        // 原型这枚点用颜色区分状态;现码这一层只知道「点亮没点亮」,所以只有两档。
-        dot: p.state === 'fog' ? '#C7C7C7' : '#16A34A',   /* ds-ok 原型 .poicard__dot 未知灰 / 营业绿 */
-        img: p.imgUrl || '',
+        // 第九轮 m2 补充第 1 项:名字、距离、动作就够了,原来那行「合作商家 · 探店 · 距你很近」去掉
+        dist: stripDistText(this._player || this.data.center, p),
+        img: photoPins.pinPhoto(p, MOCK_IMG) || p.imgUrl || '',
         lat: p.lat, lng: p.lng,
       }));
     if (!rows.length) { cyToast('这一片还没有合作商家'); return; }
     this.closeScene();
-    this.setData({ shopStrip: { rows, idx: 0 } });
+    if (this.data.placeCard) this.closePlaceCard();
+    this.setData({ shopStrip: { rows, idx } });
     this._loadShopStripVisitors(rows);
+    this._flyToPin((this._pois || []).find((p) => String(p.id) === rows[idx].poiId));
   },
+  onPinCountTap() { this.openShopStrip(); },
   closeShopStrip() {
     this._shopStripEpoch = (this._shopStripEpoch || 0) + 1;
+    this._pinFocusId = null;
+    this._hold = Date.now();
     this.setData({ shopStrip: { rows: [], idx: 0 } });
+    this._syncMarkers();
   },
   /* BL-70:横滑卡头像堆 + 打卡人数(/api/roam/shop/visitors)。total=0 不展示;
      失败/迟到回包一律不动卡片 —— 头像堆只是附加信息,不能挡「去这儿」。 */
@@ -685,7 +718,10 @@ Page({
     const idx = (e && e.detail && e.detail.current) || 0;
     this.setData({ 'shopStrip.idx': idx });
     const row = this.data.shopStrip.rows[idx];
-    if (row && row.lat && row.lng) this.setData({ center: { lat: row.lat, lng: row.lng } });
+    // 第九轮 m1 第 4 项(m-fly):滑卡 = 地图飞到那一枚并放大它
+    const poi = row && (this._pois || []).find((p) => String(p.id) === row.poiId);
+    if (poi) this._flyToPin(poi);
+    else if (row && row.lat && row.lng) this.setData({ center: { lat: row.lat, lng: row.lng } });
   },
   /* 「去这儿」= 把地图移过去并打开那家的据点半屏,与点地图上的针同一条路。 */
   onShopStripGo(e) {
@@ -693,7 +729,8 @@ Page({
     const row = (this.data.shopStrip.rows || []).find((r) => String(r.id) === String(id));
     if (!row) return;
     this.closeShopStrip();
-    const poi = (this._pois || []).find((p) => String(p.regId || p.nodeId || p.name) === String(id));
+    const poi = (this._pois || []).find((p) => String(p.id) === row.poiId)
+      || (this._pois || []).find((p) => String(p.regId || p.nodeId || p.name) === String(id));
     if (poi && poi._roamId) this.openScene('roam-poi-detail', { poiId: poi._roamId });
     else if (row.lat && row.lng) this.setData({ center: { lat: row.lat, lng: row.lng } });
   },
@@ -918,7 +955,7 @@ Page({
       // 这屏有输入框:提示栈整体让到白框下面,不和它抢同一条位置带(§6.6)
       promptTop = chrome.contentTop + 12 + SEARCH_ROW_H;
       searchTop = chrome.contentTop;
-      this._win = { w: w.windowWidth, h: w.windowHeight, dpr: w.pixelRatio || 2 };
+      this._win = { w: w.windowWidth, h: w.windowHeight, dpr: w.pixelRatio || 2, safeBottom: w.safeArea && w.screenHeight ? Math.max(0, w.screenHeight - w.safeArea.bottom) : 0 };
     } catch (e) { this._win = { w: 375, h: 750, dpr: 2 }; }
     this._introSeenKey = this.buildRoamIntroSeenKey();
     // 2026-08-10 走查 B04：进页不再自动弹玩法说明。玩法说明仍随时可看，
@@ -934,7 +971,7 @@ Page({
     });
     // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
     const lastPoint = lastLocation.load();
-    if (lastPoint) this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude } });
+    if (lastPoint) this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude }, entryLocated: true }); // j4 F5:没有真实定位时入口不按默认坐标算「距你」
     this._entryItems = []; this._entryTeams = []; this._loadEntryMap(this.data.center);
     this._loadIntroPassport();
     this._reveals = [];
@@ -985,6 +1022,8 @@ Page({
     this._cancelShareWork();
     this._stopReal(); this._stopClock();
     this._clearRollTimers();   // 读数滚动的计时器,离页必须掐掉
+    if (this._pinRegionTimer) { clearTimeout(this._pinRegionTimer); this._pinRegionTimer = null; } // 第九轮 m1:图钉重排合并计时
+    if (this._atmosTimer) { clearTimeout(this._atmosTimer); this._atmosTimer = null; }
     this._disposeFogRenderer();
     if (this._npc) this._npc.dispose();   // 停掉气泡定时器 + 之后一切 no-op
     this._flushReveal(); // P2:离开前尽量把未上报格子推上去
@@ -1011,8 +1050,17 @@ Page({
     if (this._roamCacheUnsubscribe) this._roamCacheUnsubscribe();
     this._roamCacheUnsubscribe = null;
   },
+  /* 第九轮 m1 第 8 项:首次进漫游的大气层转场。地址为空(默认)时组件根本不挂、分包也不下载。
+     地图先铺(本页入口地图已在下面渲染),300ms 后才挂视频层;是否已看过、慢网、减弱动态由组件自己判。 */
+  _maybeAtmos() {
+    if (this._atmosTried || !config.roamAtmosVideoUrl || this.data.reducedMotion || this.data.screen !== 'entry-map') return;
+    this._atmosTried = true;
+    this._atmosTimer = setTimeout(() => { this._atmosTimer = null; if (!this._hidden) this.setData({ atmosOn: true }); }, 300);
+  },
+  onAtmosDone() { if (this.data.atmosOn) this.setData({ atmosOn: false }); },
+
   onHide() {
-    this._hidden = true;
+    this._hidden = true; this.setData({ roamPageShown: false });
     this._roamStartGen = (this._roamStartGen || 0) + 1;
     this._roamStartPending = false;
     this._shootAfterStart = false;
@@ -1043,7 +1091,8 @@ Page({
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
-    this.setData({ fontScaleStyle: readPageStyle() });
+    this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
+    if (this._realOn) this._flushTrackLine();
     this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
     // 系统定位权限与位置分享偏好分别回读。
     const app = getApp();
@@ -1075,6 +1124,7 @@ Page({
     const av = getApp().globalData.avatar;
     if (av !== this.data.avatar) this.setData({ avatar: av || '' });
     this._loadIntroPassport(); if (this.data.screen === 'entry-map' && this._entryShownOnce && typeof getApp().sendRequest === 'function') this._loadEntryMap(this.data.center); this._entryShownOnce = true;
+    this._maybeAtmos();
     // 漫游不自动补造路径；定位恢复后由用户再次主动开启。
     if (this._roamBadgePending && !this._recoveryPromise) this.recoverRoam();
     // switchTab 不带 query 参数,official-detail 经 globalData 暂存 eventId,此处消费后即清
@@ -1403,7 +1453,11 @@ Page({
           nameKnown: !!(n.addressName && String(n.addressName).trim()),
           lat, lng,
           desc: n.address || '附近合作商家',
+          address: n.address || '',
           imgUrl,
+          // 第九轮 m1:照片图钉只认真照片;没有 picUrl 就是空,不用占位图冒充
+          photo: n.picUrl ? imgUrl : '',
+          merchantId: n.merchantId || null,
           points: 30,
           icon: '☕',
           catLabel: '商家 · 探店',
@@ -1471,22 +1525,23 @@ Page({
         }
         return;
       }
-      const catMap = {
-        1: { icon: 'poi-landmark', catLabel: '地标', color: BRAND, cat: 'landmark' },
-        2: { icon: 'poi-shop', catLabel: '商家 · 探店', color: '#D9D9D9', cat: 'merchant' },
-      };
-      const roamPois = list.map((n) => {
-        const m = catMap[n.type] || catMap[1];
+      const roamPois = list.filter((n) => normalizeTrack([n]).length).map((n) => {
+        // 展示分类只认 roam:* 保留标签;业务身份仍按 type(1 平台地点 / 2 商家据点),不按名字猜。
+        const m = presentationForPoi(n);
+        const color = m.cat === 'merchant' ? '#D9D9D9' : (m.cat === 'park' ? '#A6A6A6' : BRAND); /* ds-ok 与本页演示点 catMap 的 park / merchant 同色,原生 marker 只吃字面色值 */
         const st = roamPoiLocalState(n);
         const merchantAvatar = n.merchantAvatar || n.avatarUrl || n.avatar || '';
         const npcAvatar = n.npcAvatar || '';
         return {
           id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2 || !!n.templateId, name: n.name,
-          lat: parseFloat(n.lat), lng: parseFloat(n.lng),
+          lat: Number(n.lat), lng: Number(n.lng), address: n.address || '', tags: n.tags || '',
           // 非商户地点的 description 不是审核意义来源，绝不直出；商户说明仍走既有确定性探店信息。
           desc: n.type === 2 ? (n.description || '') : '', points: n.xp || 20,
-          icon: m.icon, catLabel: m.catLabel, color: m.color,
+          icon: m.icon, catLabel: m.catLabel, color,
           imgUrl: MOCK_IMG, state: st, first: !n.found,
+          // 第九轮 m1:据点封面(roam_poi.cover_img)才是照片图钉;没有封面就是深色圆
+          photo: n.coverImg && typeof getApp().getImgUrl === 'function' ? getApp().getImgUrl(n.coverImg) : '',
+          merchantId: n.merchantId || null,
           metaLine: m.catLabel + ' · 距你很近', radiusM: n.radiusM || 80,
           nodeLevel: Number(n.nodeLevel || 1),
           // 商家上传头像优先；没有时才使用门店 NPC 形象。
@@ -1608,10 +1663,11 @@ Page({
        camOpen 取景卡 / topicView / checkinView / runnerView / multiView / shopStrip 横滑卡。
        原来只清了 screen/finish/scene*,新账号进图还看得见上一轮的卡(甚至在 mask 底下堆着)。
        ⚠️ share 走 scene 栈(sceneStack 已清),不在这里另设 show 位 —— 见 scene-sheet-single-host-contract。 */
+    this._placeCardPoi = null; this._pinFocusId = null; this._markerSig = ''; this._searchKey = '';
     this.setData({ screen: 'entry-map', finish: {}, sceneStack: [], sceneCurrent: null,
       entryMarkers: [], entryCards: [], searchPlaces: [], entryLoadError: false,
       entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false,
-      camOpen: false, shopStrip: { rows: [], idx: 0 },
+      camOpen: false, shopStrip: { rows: [], idx: 0 }, placeCard: null, pinCountLabel: '',
       topicView: null, checkinView: null, multiView: null, runnerView: null,
       nearbyBanner: { show: false }, nearbyPois: [], nearbyIdx: 0,
       paceCard: { show: false, title: '', body: '', demo: false },
@@ -2228,6 +2284,32 @@ Page({
         g.fillStyle = '#2F7BF6'; g.fill();                        /* ds-ok 原型 .selfdot 背景 */
       }
       this._icons.player = await save();
+      /* 第九轮 m1 第 2 项:没有照片的地点 = 深色圆 + 小图标(不用占位图冒充照片)。
+         照片图钉的 marker 底图也是它:照片 cover-view 没出来时这里仍有一枚圆。 */
+      g.clearRect(0, 0, S, S);
+      g.beginPath(); g.arc(S / 2, S / 2, 46, 0, 7); g.fillStyle = '#1C1C1E'; g.fill();   /* ds-ok 原型 .mz-card 深底,canvas 拿不到 var() */
+      g.lineWidth = 6; g.strokeStyle = '#FFFFFF'; g.stroke();                            /* ds-ok 与照片图钉白边同值 */
+      g.beginPath(); g.arc(S / 2, S / 2 - 8, 13, Math.PI * 0.85, Math.PI * 2.15);
+      g.lineTo(S / 2, S / 2 + 20); g.closePath(); g.fillStyle = '#FFFFFF'; g.fill();     /* ds-ok 小地点图标 */
+      g.beginPath(); g.arc(S / 2, S / 2 - 8, 5, 0, 7); g.fillStyle = '#1C1C1E'; g.fill(); /* ds-ok 同上 */
+      this._icons['pin-dark'] = await save();
+      /* 第九轮 m1 第 5 项:拉远时的小圆点。原型是蓝点,游玩主路径单色合同不放行彩色 ⇒ 白点 + 柔光 + 深描边,深浅底图都看得见。 */
+      g.clearRect(0, 0, S, S);
+      g.beginPath(); g.arc(S / 2, S / 2, 40, 0, 7); g.fillStyle = 'rgba(255,255,255,.22)'; g.fill(); /* ds-ok 柔光 */
+      g.beginPath(); g.arc(S / 2, S / 2, 24, 0, 7); g.fillStyle = '#F8F8F8'; g.fill();               /* ds-ok 白点 */
+      g.lineWidth = 6; g.strokeStyle = 'rgba(17,17,17,.6)'; g.stroke();                              /* ds-ok 浅色底图上的描边 */
+      this._icons['pin-dot'] = await save();
+      /* 第九轮 m2 补充第 2 项:拉远的热度点(原型 m-zoom):白芯 + 柔光,叠得越多越亮、光晕越大。仍是单色。 */
+      for (let lv = 1; lv <= 3; lv++) {
+        g.clearRect(0, 0, S, S);
+        const glow = g.createRadialGradient(S / 2, S / 2, 4, S / 2, S / 2, S / 2);
+        glow.addColorStop(0, 'rgba(255,255,255,' + (0.42 + lv * 0.16) + ')');   /* ds-ok 热度柔光,canvas 拿不到 var() */
+        glow.addColorStop(0.45, 'rgba(255,255,255,' + (0.1 + lv * 0.08) + ')'); /* ds-ok 同上 */
+        glow.addColorStop(1, 'rgba(255,255,255,0)');                             /* ds-ok 同上 */
+        g.fillStyle = glow; g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, 7); g.fill();
+        g.beginPath(); g.arc(S / 2, S / 2, 9 + lv * 3, 0, 7); g.fillStyle = '#F8F8F8'; g.fill(); /* ds-ok 白芯 */
+        this._icons['pin-heat' + lv] = await save();
+      }
       // 2026-09-09 删:原来这里生成一枚整星 merchant_star,给「雾揭开过的商家(seen)」当整个点位用 ——
       // 于是星星表示「去过了」。星星现在只表示「这家有玩法」(挂在角上,见 hangStar),
       // 「打过卡」改由图钉表示(stickPin)。一枚符号两个意思,看不出区别。
@@ -2420,17 +2502,42 @@ Page({
     this._rollTimers = {};
   },
 
+  /* 第十二轮 k7(j4 N2):地图上被挡住的上下两条(px)。上:搜索栏下沿;
+     下:底部读数卡 / 横滑卡的上沿(.pcard bottom 250rpx + 高 246rpx,外加安全区)。 */
+  _pinSafeArea() {
+    const win = this._win || {};
+    const w = Number(win.w) || 390, h = Number(win.h) || 844;
+    const bottom = Math.round((250 + 246 + 16) * w / 750) + (Number(win.safeBottom) || 0);
+    return { top: Number(this.data.promptTop) || 100, bottom, width: w, height: h };
+  },
+
   _syncMarkers() {
     const mk = [];
+    // 原生气泡不吃 --cy-type-scale:按手机字号同一倍率算出字号(1~1.3,只放大)
+    const calloutFont = mapFontSize(11, readFontScale());
     const mapStates = [];
     const visit = this.data.visit || {};
     const poiFilter = this._poiFilterState();
+    /* 第九轮 m1 第 2/5 项:当前视口与缩放(regionchange end 时由 _refreshPinRegion 记下)。 */
+    const pinScale = this._mapScale || this.data.mapScale;
+    const pinMode = photoPins.densityMode(pinScale);
+    const pinRegion = this._pinRegion || null;
+    const pinCenter = this.data.center || null;
+    const pinCandidates = [];
+    const explorePins = [];
+    const pinSafe = this._pinSafeArea();
     (this._pois || []).forEach((p) => {
       if (p.state === 'fog') return;
       const stateKey = getRoamPoiState(p, visit);
       if (roamPoiFilter.hiddenByFilter(p, poiFilter, stateKey)) return;
       const state = getPlayMapState(stateKey);
       mapStates.push({ nodeId: p.id, state: stateKey });
+      /* 第九轮 m1 第 2/5 项:状态反馈(正在打卡 / 打卡未记录 / 待核销)永远照原样画;
+         其余拉远时只当小圆点,拉近时按视口贴边 / 隐藏。 */
+      const critical = stateKey === 'target' || stateKey === 'checkin-failed' || stateKey === 'redeem-pending';
+      if (!critical && pinMode === 'dots') return;
+      const place = critical ? { kind: 'in', lat: p.lat, lng: p.lng } : photoPins.placeInView(p.lat, p.lng, pinRegion, pinSafe);
+      if (place.kind === 'far') return;
       // 有玩法 = 这个点挂着主题(topicId)。星星只认这一件事,和去没去过无关。
       const hasGame = !!p.topicId;
       const legacyKey = p.cat + '_' + (p.state === 'done' ? 'done' : p.state === 'passed' ? 'passed' : 'base')
@@ -2440,8 +2547,8 @@ Page({
       const size = state.key === 'target' ? 50 : (p.isCityNode ? nodeStyle.size : 34);
       const m = {
         id: p.id,
-        latitude: p.lat,
-        longitude: p.lng,
+        latitude: place.lat,
+        longitude: place.lng,
         width: size,
         height: size,
         anchor: { x: 0.5, y: 0.5 },
@@ -2474,7 +2581,7 @@ Page({
         m.callout = {
           content: p.demo ? '演示点 · 非真实\n' + p.name : p.name,
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#141414CC',
           padding: 6,
@@ -2485,7 +2592,7 @@ Page({
         m.callout = {
           content: '正在打卡',
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC',
           padding: 6,
@@ -2496,7 +2603,7 @@ Page({
         m.callout = {
           content: '打卡未记录',
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC',
           padding: 6,
@@ -2507,7 +2614,7 @@ Page({
         m.callout = {
           content: p.cat === 'merchant' ? '已探店' : '已点亮',
           color: '#FFFFFF',
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC',
           padding: 6,
@@ -2521,8 +2628,62 @@ Page({
           display: 'ALWAYS',
         };
       }
+      if (!critical) {
+        // 照片图钉 / 深色圆:地图上只留参与商铺的店名,其余文字交给底图样式(路名与大地标)。
+        // 演示点仍保留「演示点 · 非真实」气泡 —— 那是安全提示,不是装饰文字。
+        const edge = place.kind === 'edge';
+        const label = !edge && photoPins.isParticipating(p) ? String(p.name || '').slice(0, 10) : '';
+        const photo = photoPins.pinPhoto(p, MOCK_IMG);
+        const focused = this._pinFocusId != null && String(this._pinFocusId) === String(p.id);
+        const nearSize = Number.isFinite(Number(p.distM)) && Number(p.distM) <= 300 ? photoPins.PIN_SIZE_NEAR : photoPins.PIN_SIZE;
+        const size = edge ? photoPins.EDGE_SIZE : (focused ? photoPins.PIN_SIZE_FOCUS : nearSize);
+        if (!p.demo) delete m.callout;
+        if (photo || !m.iconPath || (!npcKey && !p.isCityNode)) {
+          // 有照片 = 照片盖在深色圆上;没照片、也没有店铺形象 / 据点等级图 = 深色圆 + 小图标
+          if (this._icons && this._icons['pin-dark']) m.iconPath = this._icons['pin-dark'];
+          m.width = size; m.height = size;
+        } else if (edge) { m.width = photoPins.EDGE_SIZE; m.height = photoPins.EDGE_SIZE; }
+        m.zIndex = focused ? 30 : (edge ? 4 : m.zIndex);
+        // 第九轮 m2 补充第 2 项:所有非状态图钉(照片、形象、据点图、深色圆)一起参加避让
+        pinCandidates.push({ m, pin: (photo || label) ? { id: m.id, img: photo, label, size, done: stateKey === 'completed' } : null,
+          lat: place.lat, lng: place.lng, size: Math.max(size, Number(m.width) || 0), label, photo: !!photo, focused, demo: !!p.demo,
+          participating: photoPins.isParticipating(p),
+          d: pinCenter ? Math.abs(place.lat - pinCenter.lat) + Math.abs(place.lng - pinCenter.lng) : 0 });
+      }
       mk.push(m);
     });
+    // 第九轮 m2 补充第 2 项:相关度高的先放(选中 > 参与商铺 > 有照片 > 离中心近),和已放下的任何一枚重叠的降成小圆点,
+    // 拉近后自然放出来。一屏最多 MAX_PHOTO_PINS 枚照片 / 标签(cover-view 有数量上限,也压住 setData 体积)。
+    const layoutRegion = pinRegion || photoPins.fallbackRegion(pinCenter, pinScale, this._fogScreenSize);
+    const placedPins = photoPins.layoutPins(pinCandidates, layoutRegion, this._fogScreenSize,
+      this._player && this.data.mapReady ? [{ lat: this._player.lat, lng: this._player.lng, size: 48 }] : []);
+    let photoSlots = photoPins.MAX_PHOTO_PINS;
+    pinCandidates.forEach((c) => {
+      const placed = placedPins.indexOf(c) >= 0;
+      if (placed && c.pin && photoSlots > 0) {
+        photoSlots -= 1;
+        c.m.customCallout = { display: 'ALWAYS', anchorX: 0, anchorY: c.pin.img ? c.pin.size : 4 };
+        explorePins.push(c.pin);
+        return;
+      }
+      if (placed) return;
+      if (this._icons && this._icons['pin-dot']) c.m.iconPath = this._icons['pin-dot'];
+      c.m.width = photoPins.DEMOTED_SIZE; c.m.height = photoPins.DEMOTED_SIZE;
+      c.m.zIndex = 2;
+      if (!c.demo) delete c.m.callout;
+    });
+    if (pinMode === 'dots') {
+      // 拉远:真实点位按屏幕格合并成小圆点(雾里的点也算 —— 迷雾层盖在地图上面,点不会被剧透)
+      const dots = photoPins.bucketDots((this._pois || []).filter((p) => !p.demo), pinRegion, this._fogScreenSize);
+      // 第九轮 m2 补充第 3 项:热度——位置仍是真实点位的平均;叠得多的点更大、更亮
+      dots.forEach((d, i) => {
+        const heat = photoPins.heatLevel(d.count);
+        const icon = this._icons && (this._icons['pin-heat' + heat.level] || this._icons['pin-dot']);
+        if (!icon) return;
+        mk.push({ id: DOT_MK_BASE + i, latitude: d.lat, longitude: d.lng, width: heat.size, height: heat.size,
+          anchor: { x: 0.5, y: 0.5 }, iconPath: icon, zIndex: 2 + heat.level });
+      });
+    }
     const goalStateKey = this.data.goal && this.data.goal.stateKey;
     if (goalStateKey === 'location-off' || goalStateKey === 'offline') {
       const state = getPlayMapState(goalStateKey);
@@ -2560,7 +2721,7 @@ Page({
         callout: {
           content: r.nickname,
           color: '#FFFFFF', /* ds-ok 与本页其它 marker callout 同一套(地图气泡不吃 wxss token) */
-          fontSize: 11,
+          fontSize: calloutFont,
           borderRadius: 10,
           bgColor: '#000000CC', /* ds-ok 同上,与「已探店 / 正在打卡」两个气泡一字不差 */
           padding: 6,
@@ -2587,7 +2748,14 @@ Page({
     const summary = buildMapA11yLabel(mapStates, null);
     const goalLabel = this.data.goal && this.data.goal.readerLabel;
     // 候选跟着点位一起刷:雾揭开一片、来了新商家,搜索里立刻能搜到
-    this.setData({ markers: mk, roamMapA11y: goalLabel ? summary + '。' + goalLabel : summary, searchPlaces: this._searchPlaces() });
+    const roamMapA11y = goalLabel ? summary + '。' + goalLabel : summary;
+    const pinCountLabel = pinMode === 'dots' ? photoPins.nearbyCountLabel((this._pois || []).filter((p) => !p.demo).length) : '';
+    // 第九轮 m1 第 2 项:同一份 markers 不重发(防图层闪烁与 setData 洪水);a11y / 搜索候选照常更新
+    const sig = photoPins.markerSignature(mk, explorePins);
+    if (sig !== this._markerSig) { this._markerSig = sig; this.setData({ markers: mk, explorePins }); }
+    if (roamMapA11y !== this.data.roamMapA11y || pinCountLabel !== this.data.pinCountLabel) this.setData({ roamMapA11y, pinCountLabel });
+    const searchKey = (this._pois || []).map((x) => x.id + (x.lat ? '' : '?')).join(',');
+    if (searchKey !== this._searchKey) { this._searchKey = searchKey; this.setData({ searchPlaces: this._searchPlaces() }); }
     // 形象图标按需补齐:只有真生成出新图标才重刷一次。_genNpcIcons 自己会判「没活干就早退」,
     // 这里不要再判一遍 —— 那会让每次 _syncMarkers 把 POI 白走两遍。
     // 失败的 URL 进黑名单不再重试,所以需求集会收敛到空,不存在「生成→重刷→再生成」的来回。
@@ -2772,7 +2940,7 @@ Page({
         : Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null);
       Promise.resolve(asked).then((ok) => {
         this._roamStartPending = false;
-        if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
+        if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this._loadEntryMap(this.data.center); this.goStart(); return; } // j4 F13:登录后入口的「附近活动」一并按新身份重读
         if (ok === false) return; // 用户选「暂不登录」:不报错,留在游客浏览态
         this.setData({ introError: '登录失败，请重试', locErr: false });
       });
@@ -2817,7 +2985,7 @@ Page({
           if (stale()) { abandon(); return; }
           this._roamStartPending = false;
           lastLocation.save(r);
-          this.setData({ introError: '', locErr: false });
+          this.setData({ introError: '', locErr: false, entryLocated: true });
           this._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
         },
         fail: () => {
@@ -3691,17 +3859,14 @@ Page({
     return changed;
   },
 
+  _myRouteLine() {
+    if (!this._routeLine) this._routeLine = createRouteLine();
+    return this._routeLine;
+  },
+
   _flushTrackLine() {
     if (!this._track || !this._track.length) return;
-    this.setData({
-      polyline: [{
-        points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
-        color: '#FFFFFF',
-        width: 3,
-        borderColor: '#FFFFFF66',
-        borderWidth: 1,
-      }],
-    });
+    this.setData({ polyline: this._myRouteLine().lines(this._track) });
   },
 
   _enterWalkZoom() {
@@ -3726,6 +3891,61 @@ Page({
     this._animateZoom(this.data.mapScale, target, 650, p);
   },
 
+  /* 第九轮 m1 第 2/5/6 项:松手(或程序移动)后按新视口重排图钉:近出屏的贴边、远的隐藏、
+     拉远换小圆点。微信只在开始和松手时通知,所以贴边图钉在松手那一刻归位,不逐帧跟手。
+     定位每 500ms 改一次中心也会派发 end:合并到 250ms 一次,markers 内容不变就不 setData。 */
+  _schedulePinRegion(detail, byGesture) {
+    if (this.data.screen !== 'map' && this.data.screen !== 'arrive') return;
+    this._pinRegionDetail = detail || null;
+    if (byGesture) this._cloudPending = true;
+    if (this._pinRegionTimer) return;
+    this._pinRegionTimer = setTimeout(() => {
+      this._pinRegionTimer = null;
+      const d = this._pinRegionDetail || {};
+      const gesture = !!this._cloudPending;
+      this._cloudPending = false;
+      const apply = (region) => {
+        const prev = this._pinRegion;
+        this._pinRegion = region && region.southwest ? region : null;
+        if (gesture) this._cloudDragEnd(prev, this._pinRegion);
+        this._syncMarkers();
+      };
+      if (d.region && d.region.southwest) { apply(d.region); return; }
+      const fallback = () => fallbackRegion(this.data.center, this._halfViewM(this._mapScale || this.data.mapScale),
+        this._fogScreenSize || { width: 390, height: 844 });
+      try {
+        if (this._mapCtx && typeof this._mapCtx.getRegion === 'function') {
+          this._mapCtx.getRegion({ success: apply, fail: () => apply(fallback()) });
+          return;
+        }
+      } catch (e) { /* 走兜底视口 */ }
+      apply(fallback());
+    }, 250);
+  },
+
+  /* 第九轮 m1 第 6 项(m-drag):一层很薄的云,比地图慢。只有开始 / 松手两个时刻可用:
+     按下时云层略微显形,松手后朝地图移动方向漂过去「地图位移 × 0.35」,缓出 0.9s。
+     不跟手、不逐帧 setData;减弱动态时整层不出现。 */
+  _cloudDragBegin() {
+    if (this.data.reducedMotion || this.data.screen !== 'map') return;
+    if (!this.data.cloudOn) this.setData({ cloudOn: true });
+  },
+  _cloudDragEnd(prev, next) {
+    if (this.data.reducedMotion) { if (this.data.cloudOn) this.setData({ cloudOn: false }); return; }
+    const a = photoPins.regionBox(prev), b = photoPins.regionBox(next);
+    const size = this._fogScreenSize || { width: 390, height: 844 };
+    let dx = 0, dy = 0;
+    if (a && b) {
+      dx = -((b.w + b.wd / 2) - (a.w + a.wd / 2)) / a.wd * size.width;
+      dy = ((b.s + b.h / 2) - (a.s + a.h / 2)) / a.h * size.height;
+    }
+    const clamp = (v) => Math.max(-160, Math.min(160, v));
+    const x = clamp((this._cloudX || 0) * 0.6 + dx * 0.35);
+    const y = clamp((this._cloudY || 0) * 0.6 + dy * 0.35);
+    this._cloudX = x; this._cloudY = y;
+    this.setData({ cloudOn: false, cloudStyle: 'transform:translate3d(' + Math.round(x) + 'px,' + Math.round(y) + 'px,0)' });
+  },
+
   onRegionChange(e) {
     if (this.data.screen === 'entry-map' && this._entryShownOnce) { this._onEntryRegionChange(e); return; } const detail = (e && e.detail) || {};
     const phase = detail.phase || detail.type || (e && e.type);
@@ -3737,7 +3957,7 @@ Page({
     if (this._zoomLock && this._fogMode === 'screen') {
       // 但 _mapScale 必须照常跟上:漏了它,动画收尾后的第一次 end 会拿旧 scale 比出
       // scaleChanged=true,把刚刚省下来的那次全黑原样加回去。
-      if (detail.scale != null) this._mapScale = detail.scale;
+      if (detail.scale != null) { this._mapScale = detail.scale; if (roam3dFor(detail.scale) !== this.data.map3d) this.setData({ map3d: roam3dFor(detail.scale) }); }
       return;
     }
     if (phase === 'begin') {
@@ -3751,12 +3971,14 @@ Page({
       if (byGesture) {
         this._hold = Date.now() + 60000;
         if (this._fogMode === 'screen') this._cancelScreenFogRender();
+        this._cloudDragBegin();
       }
       return;
     }
     if (phase !== 'end') return;
+    this._schedulePinRegion(detail, byGesture);
     const scaleChanged = detail.scale != null && detail.scale !== this._mapScale;
-    if (detail.scale != null) this._mapScale = detail.scale;
+    if (detail.scale != null) { this._mapScale = detail.scale; if (roam3dFor(detail.scale) !== this.data.map3d) this.setData({ map3d: roam3dFor(detail.scale) }); }
     if (byGesture) this._hold = Date.now();
     if (this._fogMode === 'screen') {
       // 程序移动(回中跳远、程序缩放)仍按「旧帧还能不能顶着用」判;手势松手只重画、不遮。
@@ -3994,15 +4216,7 @@ Page({
     }
     if (!this._lineTimer || now - this._lineTimer >= LINE_MS) {
       this._lineTimer = now;
-      if (this._track.length > 1) {
-        patch.polyline = [{
-          points: this._track.map((q) => ({ latitude: q.lat, longitude: q.lng })),
-          color: '#FFFFFF',
-          width: 3,
-          borderColor: '#FFFFFF66',
-          borderWidth: 1,
-        }];
-      }
+      if (this._track.length > 1 && !this._hidden) patch.polyline = this._myRouteLine().lines(this._track);
     }
 
     if (Object.keys(patch).length) this.setData(patch);
@@ -4168,6 +4382,12 @@ Page({
 
   onMarkerTap(e) {
     if (e.detail.markerId === PLAYER_MK || e.detail.markerId === STATUS_MARKER_ID) return;
+    // 第九轮 m1 第 5 项:拉远时点一个小圆点 = 放大到那一片(照片图钉在近处才出现)
+    if (e.detail.markerId >= DOT_MK_BASE && e.detail.markerId < DOT_MK_BASE + 100000) {
+      const dot = (this.data.markers || []).find((m) => m.id === e.detail.markerId);
+      if (dot && dot.id >= DOT_MK_BASE) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
+      return;
+    }
     // 别人的头像:id 是 RUNNER_MK_BASE + 下标,按下标回本地那一批取人
     if (e.detail.markerId >= RUNNER_MK_BASE) {
       const row = (this._runners || [])[e.detail.markerId - RUNNER_MK_BASE];
@@ -4176,6 +4396,72 @@ Page({
     }
     const poi = (this._pois || []).find((p) => p.id === e.detail.markerId);
     if (!poi || poi.state === 'done') return;
+    // 第九轮 m1 第 4 项:横滑卡开着时,点图钉 = 滑到它那张卡
+    const rows = (this.data.shopStrip && this.data.shopStrip.rows) || [];
+    if (rows.length) {
+      const idx = rows.findIndex((r) => r.poiId === String(poi.id));
+      if (idx >= 0) { this.setData({ 'shopStrip.idx': idx }); this._flyToPin(poi); return; }
+    }
+    // 第九轮 m1 第 3 项:先出地点卡(照片 / 地址 / 评分 / 距离 / 导航 / 分享);点卡片本身才进原来的详情。
+    // 探店进行中、或这一站是打卡状态反馈时,照原路直接进详情,不插一张卡。
+    const stateKey = getRoamPoiState(poi, this.data.visit || {});
+    const critical = stateKey === 'target' || stateKey === 'checkin-failed' || stateKey === 'redeem-pending';
+    // 第十二轮 k7(j4 N1):报名商家的图钉开横滑卡并停在这家(卡上距离点开地图、「去这儿」进详情)
+    if (!critical && !(this.data.visit && this.data.visit.active) && poi.cat === 'merchant' && poi.lat && poi.lng) { this.openShopStrip(poi); return; }
+    if (!critical && !(this.data.visit && this.data.visit.active)) { this._openPlaceCard(poi); return; }
+    this._openPlaceDetail(poi);
+  },
+
+  /* 地图飞到这一枚并把它放大。moveToLocation 有原生缓动;减弱动态时直接改中心。 */
+  _flyToPin(poi) {
+    if (!poi || poi.lat == null || poi.lng == null) return;
+    this._hold = Date.now() + 60000;
+    this._pinFocusId = poi.id;
+    let moved = false;
+    if (!this.data.reducedMotion && this._mapCtx && typeof this._mapCtx.moveToLocation === 'function') {
+      try { this._mapCtx.moveToLocation({ latitude: poi.lat, longitude: poi.lng }); moved = true; } catch (e) { moved = false; }
+    }
+    if (!moved) this.setData({ center: { lat: poi.lat, lng: poi.lng } });
+    this._syncMarkers();
+  },
+
+  _placeCardFor(poi) {
+    const me = this._player;
+    const d = me && me.lat != null ? distM(me, poi) : (Number.isFinite(Number(poi.distM)) ? Number(poi.distM) : null);
+    const distText = d == null ? '' : (d < 1000 ? Math.max(1, Math.round(d)) + ' 米' : (d / 1000).toFixed(1) + ' 公里');
+    // 只有据点(城市节点)有深链落地页与评分;普通地标(type 1)读节点接口是 410,不给分享、不读评分
+    const shareKind = poi._roamId && poi.isCityNode && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
+    return {
+      id: poi.id, name: poi.name || '地点', address: poi.address || '',
+      photo: photoPins.pinPhoto(poi, MOCK_IMG), distText, lat: poi.lat, lng: poi.lng,
+      shareKind, shareId: shareKind === 'poi' ? String(poi._roamId) : (shareKind === 'merchant' ? String(poi.merchantId) : ''),
+    };
+  },
+
+  _openPlaceCard(poi) {
+    const size = this._fogScreenSize || { width: 390, height: 844 };
+    const top = (this.data.searchTop || 96) + 56;
+    this._placeCardPoi = poi;
+    this._flyToPin(poi);
+    this.setData({ placeCard: this._placeCardFor(poi), placeCardTop: top, placeCardOrigin: Math.max(40, Math.round(size.height / 2 - top)) });
+  },
+
+  closePlaceCard() {
+    this._placeCardPoi = null;
+    this._pinFocusId = null;
+    this._hold = Date.now();
+    this.setData({ placeCard: null });
+    this._syncMarkers();
+  },
+
+  /* 点卡片本身 = 原来点图钉的那条路(据点详情 / 主题半屏 / 商家浮卡 / 地标卡),一行没改。 */
+  onPlaceCardOpen() {
+    const poi = this._placeCardPoi;
+    this.closePlaceCard();
+    if (poi) this._openPlaceDetail(poi);
+  },
+
+  _openPlaceDetail(poi) {
     // 商户据点(漫游 type=2)→ 进商家主页任务卡完成互动领券
     if (poi.isCityNode && poi._roamId) {
       this.openScene('roam-poi-detail', { poiId: poi._roamId });
@@ -4216,10 +4502,16 @@ Page({
       show: true,
       title: poi.name || '地点',
       body: poi.desc || '',
+      address: poi.address || '',
+      lat: poi.lat, lng: poi.lng,   // 第九轮 m1 第 9 项:地址可点开地图
+      // 推荐理由与资料来源由分包里的目录按种子标签查,主包只透传 tags
+      tags: poi.tags || '',
       demo: !!poi.demo,
       poiId: poi.id,
       // 只有服务端 roam 非商户 POI 需要这条到点校验；商家仍走既有确定性探店链路。
       canDiscover: !!(poi._roamId && poi.cat !== 'merchant' && !poi.demo),
+      // R11 g1(j4 F11):这个点本人已经确认过(服务端回执落地后 poi.state='done'),再打开也是完成态
+      confirmed: poi.state === 'done' || !!(this._foundRoamPois && poi._roamId && this._foundRoamPois[poi._roamId]),
       meaning: '',
       checkinErr: '',
       checkinRetryable: true,
@@ -5168,7 +5460,7 @@ Page({
           if (httpFail(res) || netFail(res)) {
             rememberUnknown();
             settleIntent('unknown');
-            return fail('发布响应异常，帖子可能已经发出，请到广场确认，暂不要重复发布');
+            return fail('发布响应异常，帖文可能已经发出，请到广场确认，暂不要重复发布');
           }
           state.settled = true;
           if (res && (res.code == '200' || res.code == 200)) {
@@ -5755,6 +6047,8 @@ Page({
   },
   onShareAppMessage(event) {
     const activityShare = activityShareFromEvent(event);
+    const placeShare = placeShareFromEvent(event);
+    if (placeShare) return placeShare;
     return activityShare || require('../../utils/roam-menu-share.js').roamMenuShare(); // 不给 imageUrl 微信会截地图(实时位置)当封面
   },
 
@@ -5780,7 +6074,7 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = [];
-    this.setData({ introTeamsLive: '附近正在组队', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
   },
   loginForEntryRead() {
     if (this.data.entryReadAccess === 'denied') return;
@@ -5793,7 +6087,7 @@ Page({
     const seq = (this._entrySeq = (this._entrySeq || 0) + 1);
     if (this._entryReadOwner !== owner) this._clearEntryRead();
     this._entryReadOwner = owner;
-    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; }
+    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; } if (!this.data.entryLocated) { this._loadEntryAnyCity(seq, owner); return; }
     this._entryErrors = { activities: false, teams: false };
     this.setData({ entryLoadError: false, entryReadAccess: '', entryLoading: !(this.data.entryCards.length || this.data.entryFarCards.length) }); // R-01:还没有卡片时先出卡片形状的占位,读完(有卡 / 兜底读完 / 失败)才可能出「附近暂无活动」
     const settle = (layer, failed) => {
@@ -5836,7 +6130,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
@@ -5847,6 +6141,15 @@ Page({
   },
   openEntryRoamSheet() { this._showEntrySheet('roam'); },
   openEntryLayers() { this._showEntrySheet('layers'); },
+  openCityGuide() { this.setData({ cityGuideOpen: true }); },
+  closeCityGuide() { this.setData({ cityGuideOpen: false }); },
+  // 分包目录查到的理由与来源;只认当前这张卡的 tags,换卡后迟到的回填丢弃
+  onPlaceNote(e) {
+    const d = e.detail || {};
+    const card = this.data.paceCard || {};
+    if (!card.show || card.tags !== d.tags) return;
+    this.setData({ 'paceCard.reason': d.reason || '', 'paceCard.sources': d.sources || '' });
+  },
   closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
   toggleEntryLayer(e) {
@@ -5995,5 +6298,34 @@ Page({
           cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
       });
     });
-  }
+  },
+
+  /* 第十一轮 g2,j4 F5:没有真实定位时不拿默认城市坐标去读「附近」—— 那会给任何城市的人算出离人民广场的「距你」、
+     把那里的队伍打在入口地图上。改读不分城市的公开主题(卡上不写距离),「附近活动」头上只留一行「开启定位」。 */
+  _loadEntryAnyCity(seq, owner) {
+    const app = getApp(), img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
+    this._entryItems = []; this._entryTeams = []; this._entryErrors = { activities: false, teams: false };
+    this.setData({ entryLoadError: false, entryReadAccess: '', entryMarkers: [], entryCards: [], introTeamsLive: '', entryLoading: !this.data.entryFarCards.length });
+    req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { auth: false }).then((r2) => {
+      if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
+      if (!(apiOk(r2) && r2.data && isRecordList(r2.data.rows))) { this.setData({ entryLoading: false, entryLoadError: true }); return; }
+      this.setData({ entryLoading: false, entryFarCards: r2.data.rows.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
+        cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
+    });
+  },
+  enableEntryLocation() {
+    if (this._entryLocating) return;
+    this._entryLocating = true;
+    wx.getLocation({ type: 'gcj02',
+      success: (r) => {
+        if (this._unloaded || !lastLocation.save(r)) return;
+        this.setData({ center: { lat: r.latitude, lng: r.longitude }, entryLocated: true, entryFarCards: [] });
+        this._loadEntryMap(this.data.center);
+      },
+      fail: () => { if (!this._unloaded) wx.openSetting({ fail() {} }); },
+      complete: () => { this._entryLocating = false; } });
+  },
+
+  /* 第九轮 m1 第 9 项:地点卡与商家横滑卡上的地址,点一下用微信地图打开(全站同一个 utils/open-address.js) */
+  onAddrTap(e) { require('../../utils/open-address.js').openFromEvent(e); },
 });

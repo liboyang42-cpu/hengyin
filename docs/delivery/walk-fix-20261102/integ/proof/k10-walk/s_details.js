@@ -1,0 +1,10 @@
+let ins = await h.inputs(); await h.typeAt(ins.findIndex(x=>x.ph==="未命名主题"),"磁带雨夜");
+await h.tap("主题详情"); await h.tap("编辑",{exact:true}); await sleep(400);
+ins = await h.inputs(); await h.typeAt(ins.findIndex(x=>x.ph==="填写主题描述"),"雨夜里找回一盘旧磁带");
+await h.tap("选择类别"); await h.tap("解谜冒险"); await h.tap("保存",{exact:true});
+await h.tap("上传 3:4"); await sleep(900); await h.tap("选取",{exact:true}); await sleep(2500);
+await h.sc(500);
+ins = await h.inputs(); await h.typeAt(ins.findIndex(x=>x.ph==="写下这个主题的故事…"),"十一点后的旧城，雨一直下。你在一家关门的唱片店门口捡到一张便条：磁带被拆成了三段，藏在三条街里。戴上耳机，跟着声音走。");
+await h.sc(-3000); await sleep(300);
+await w.page.mouse.click(340,212); await sleep(1200);
+return (await h.say()).slice(0,300);

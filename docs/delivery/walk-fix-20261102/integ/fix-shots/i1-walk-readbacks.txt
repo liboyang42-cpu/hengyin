@@ -1,0 +1,188 @@
+i1 walk read-backs (cloud rig, throwaway DB cy_e2e_51 on 127.0.0.1:3316; app jar from candidate 831f40b1 = same Java as 904c4a66; browser bundle rebuilt from 904c4a66). 2026-11-05.
+No tokens/secrets: HTTP excerpts are request/response bodies only (auth headers never logged).
+
+== Fixtures (labelled) ==
+- Themes authored through real /api/template/draft + /api/topic/v2/create by club lead e2e-openid-9003 (club 7001), configs from the editor's own defaultConfig/applyToConfig/validate/serialize (j3 gencfg.js; gencfg2.js adds author outcomeRules via outcome-after.apply):
+    990015 i1传感跳过夜游: self-play pass, 4 stations 弹球(node 75) 安静挑战(76) 喊一嗓子(77) 计步挑战(78), validationMethod 0, no journeyRules
+    990019 i1通用局状态夜游: self-play pass, 选项问答(85, 成功反馈「对了，钟楼就在江边。」/失败反馈「再看看，换个方向想想。」) + 输入挑战(86), validationMethod 5 (GPS), journeyRules {stateEnabled:true, hp init 10 max 10}
+- Approval: real admin /business/audit/review (TOPIC_PROJECT_REVIEW + TOPIC).
+- FIXTURE (SQL): cms_topic 990015/990019 lifecycle=3, status=1, user_status=1, check_status=1, selling_started_at set, fee_platform_rate=0.0300 (sale review not run; same as j3/h5).
+- FIXTURE (files): two PNGs copied into the rig upload dir as /profile/upload/2026/11/04/j3cat.png, j3street.png.
+- Passes: real /api/compliance/consents + /api/registration/quote + /create, paid via rig pay seam (real /api/registration/callback): reg 75 (9004 -> 990015), reg 76 (9009 -> 990019), payment_status 2.
+- HARNESS: rig wx.onAccelerometerChange delivers nothing (ballShake watchdog fires = real 'no reading'); wx.getWeRunData fails 'auth deny' (rig default); mic denial by in-page stub: RecorderManager.start -> onError {errMsg:'operateRecorder:fail auth deny'}, getSetting scope.record=false.
+
+== SQL read-backs ==
+-- topics (FIXTURE lifecycle/fee)
+SQL> SELECT id,name,lifecycle,self_play,fee_platform_rate,journey_rules_json FROM cms_topic WHERE id IN (990015,990019)
+id | name | lifecycle | self_play | fee_platform_rate | journey_rules_json
+990015 | i1传感跳过夜游 | 3 | 1 | 0.0300 | 
+990019 | i1通用局状态夜游 | 3 | 1 | 0.0300 | {"hp": {"max": 10, "init": 10, "enabled": true}, "luck": {"max": 3, "init": 3, "enabled": false}, "tiers": {"easy": {"dc": 10, "damage": 1}, "hard": {"dc": 16, "damage": 3}, "medium": {"dc": 13, "damage": 2}}, "modCap": 6, "recovery": {"exhaustRestHp": 5, "stageRestHpFloor": 6, "stationEndIfHurt": 2, "stageRestLuckFloor": 1}, "checkEnabled": false, "stateEnabled": true, "schemaVersion": 1, "fumbleExtraDamage": 1}
+
+-- passes
+SQL> SELECT id,member_id,owner_type,owner_id,payable_amount,payment_status FROM cms_registration WHERE id IN (75,76)
+id | member_id | owner_type | owner_id | payable_amount | payment_status
+75 | 9004 | 1 | 990015 | 9.90 | 2
+76 | 9009 | 1 | 990019 | 9.90 | 2
+
+-- item 1: player_node_progress 990015 (member 9004)
+SQL> SELECT id,member_id,activity_id,node_id,status,puzzle_score,completion_mode,play_instance_id FROM player_node_progress WHERE topic_id=990015 ORDER BY id
+id | member_id | activity_id | node_id | status | puzzle_score | completion_mode | play_instance_id
+6 | 9004 | 0 | 75 | 1 | 0 | SKIPPED | default
+7 | 9004 | 0 | 76 | 1 | 0 | SKIPPED | default
+8 | 9004 | 0 | 77 | 1 | 0 | SKIPPED | default
+9 | 9004 | 0 | 78 | 1 | 0 | SKIPPED | default
+
+-- item 1: game_runtime_session 990015
+SQL> SELECT id,activity_id,node_id,owner_id,status,score,completed_units, JSON_EXTRACT(state_json,'$.ballShake.skipped') bs_sk, JSON_EXTRACT(state_json,'$.quietHold.skipped') qh_sk, JSON_EXTRACT(state_json,'$.shout.skipped') sh_sk, JSON_EXTRACT(state_json,'$.steps.skipped') st_sk FROM game_runtime_session WHERE topic_id=990015 ORDER BY id
+id | activity_id | node_id | owner_id | status | score | completed_units | bs_sk | qh_sk | sh_sk | st_sk
+1 | 0 | 75 | 9004 | 1 | 0 | 0 | true |  |  | 
+2 | 0 | 76 | 9004 | 1 | 0 | 0 |  | true |  | 
+3 | 0 | 77 | 9004 | 1 | 0 | 0 |  |  | true | 
+4 | 0 | 78 | 9004 | 1 | 0 | 0 |  |  |  | true
+
+-- item 1: session 1 ballShake state (no attempt ids)
+SQL> SELECT JSON_REMOVE(JSON_EXTRACT(state_json,'$.ballShake'), '$.attempt') FROM game_runtime_session WHERE id=1
+JSON_REMOVE(JSON_EXTRACT(state_json,'$.ballShake'), '$.attempt')
+{"done": true, "skipVia": "SOLO", "skipped": true, "attempts": 0, "skippedBy": 9004, "soloNoLead": true, "failedReads": {"9004": 2}, "startedAtMs": 1793839860702}
+
+-- item 1: session 2 quietHold state (no attempt ids)
+SQL> SELECT JSON_EXTRACT(state_json,'$.quietHold') FROM game_runtime_session WHERE id=2
+JSON_EXTRACT(state_json,'$.quietHold')
+{"done": true, "skipVia": "SOLO", "skipped": true, "skippedBy": 9004, "soloNoLead": true, "failedReads": {"9004": 2}}
+
+-- item 1: session 3 shout state (no attempt ids)
+SQL> SELECT JSON_EXTRACT(state_json,'$.shout') FROM game_runtime_session WHERE id=3
+JSON_EXTRACT(state_json,'$.shout')
+{"done": true, "skipVia": "SOLO", "skipped": true, "skippedBy": 9004, "soloNoLead": true, "failedReads": {"9004": 2}}
+
+-- item 1: session 4 steps state (no attempt ids)
+SQL> SELECT JSON_EXTRACT(state_json,'$.steps') FROM game_runtime_session WHERE id=4
+JSON_EXTRACT(state_json,'$.steps')
+{"done": true, "skipVia": "SOLO", "skipped": true, "skippedBy": 9004, "soloNoLead": true, "failedReads": {"9004": 2}}
+
+-- item 2/3: game_runtime_session 990019 (one row per quest attempt, new play_instance_id each time)
+SQL> SELECT id,node_id,owner_id,status,score,play_instance_id,version,JSON_EXTRACT(state_json,'$.gameplayDecision.outcome') outcome,create_time FROM game_runtime_session WHERE topic_id=990019 ORDER BY id
+id | node_id | owner_id | status | score | play_instance_id | version | outcome | create_time
+5 | 85 | 9009 | 2 | 0 | quest:23e84e8ffc90586d92f96753baed3922 | 1 | "FAIL" | 2026-11-05 09:02:53.138000
+6 | 85 | 9009 | 2 | 0 | quest:57ee591d2788fd885ceac1b1c1bf4fca | 1 | "FAIL" | 2026-11-05 09:07:11.319000
+7 | 85 | 9009 | 2 | 0 | quest:e5b4319ab730009d7f207af27524c048 | 1 | "FAIL" | 2026-11-05 09:09:39.892000
+8 | 85 | 9009 | 1 | 0 | quest:f05e34c37b601ae473d7c71e071d4635 | 1 | "PASS" | 2026-11-05 09:11:21.120000
+
+-- item 2/3: topic_route_session 2 now (after final QUEST_RESOLVE)
+SQL> SELECT id,member_id,topic_id,version,current_node_id,JSON_EXTRACT(state_json,'$.themeRuntime.gameplay.activeQuest') activeQuest,JSON_EXTRACT(state_json,'$.nodeStates') nodeStates,JSON_EXTRACT(state_json,'$.variables') vars FROM topic_route_session WHERE id=2
+id | member_id | topic_id | version | current_node_id | activeQuest | nodeStates | vars
+2 | 9009 | 990019 | 15 | 86 |  | {"85": "COMPLETED", "86": "PLAYABLE"} | {"sys.hp": 10, "sys.actions": 0, "sys.passed.85": 1}
+
+-- item 2/3: quest journal
+SQL> SELECT JSON_EXTRACT(state_json,'$.themeRuntime.journal') FROM topic_route_session WHERE id=2
+JSON_EXTRACT(state_json,'$.themeRuntime.journal')
+[{"action": "QUEST_START", "eventId": "gameplay:theme_17938405729480f20xb7vm6f", "questKey": "node_85"}, {"action": "QUEST_CANCEL", "eventId": "gameplay:theme_1793840770538f0a7q5k9wbn", "questKey": "node_85"}, {"action": "QUEST_START", "eventId": "gameplay:theme_1793840831123uwyv12mpcq", "questKey": "node_85"}, {"action": "QUEST_CANCEL", "eventId": "gameplay:theme_1793840925260chfh5s98s6k", "questKey": "node_85"}, {"action": "QUEST_START", "eventId": "gameplay:theme_1793840979708jdphuo0rsg", "questKey": "node_85"}, {"action": "QUEST_CANCEL", "eventId": "gameplay:theme_1793841007805vmvdvcql2vg", "questKey": "node_85"}, {"action": "QUEST_START", "eventId": "gameplay:theme_1793841013723lhob4xwvv4", "questKey": "node_85"}, {"action": "QUEST_RESOLVE", "eventId": "gameplay:theme_1793841258648qeiyd0qcx7n", "questKey": "node_85"}]
+
+-- item 2/3: player_node_progress 990019
+SQL> SELECT id,member_id,node_id,status,puzzle_score,completion_mode,play_instance_id FROM player_node_progress WHERE topic_id=990019
+id | member_id | node_id | status | puzzle_score | completion_mode | play_instance_id
+10 | 9009 | 85 | 0 |  |  | default
+
+== Captured during the walk (topic_route_session 2, activeQuest) ==
+after card 开始任务 QUEST_START (item 2):   version 3, activeQuest "node_85"; game_runtime_session 5 created (quest:23e8...)
+after wrong answer (FAIL):                  version 4, activeQuest "node_85"; session 5 status 2, gameplayDecision.outcome FAIL
+after 取消 QUEST_CANCEL (item 3):            version 5, activeQuest NULL, keys [actIndex, arrivals, arrivalFacts, awaitingUnlock] (activeQuest + activeQuestReceiptId removed)
+after card 开始任务 again:                   QUEST_START ok, NEW game_runtime_session 6 (quest:57ee...), answered wrong again -> FAIL
+取消 from the in-game 背包 (h5's path):        QUEST_CANCEL 200, activeQuest NULL, row back to 开始任务
+背包 开始任务 -> 打开原任务 -> answer 江西岸:    NEW session 8 (quest:f05e...) status 1 PASS; 结算任务 -> QUEST_RESOLVE ok, activeQuest NULL, nodeStates 85 COMPLETED
+
+== Key HTTP (request -> response excerpt) ==
+-- run-skip1.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990015","nodeId":"75"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":1,"version":4,"idempotencyKey":"adv-1-v4-182222d7","action":"SKIP_SENSOR_STATION","payload":{"game":"ballShake"}}
+-- run-quiet1.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990015","nodeId":"76"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":2,"version":0,"idempotencyKey":"adv-2-v0-0968ec51","action":"REPORT_SENSOR_FAILURE","payload":{"game":"quietHold","denied":true}}
+-- run-quiet2.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990015","nodeId":"76"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":2,"version":1,"idempotencyKey":"adv-2-v1-d7014f23","action":"SKIP_SENSOR_STATION","payload":{"game":"quietHold"}}
+NET POST /api/play/advanced/action 200 400 这一站已经跳过了 {"sessionId":2,"version":2,"idempotencyKey":"adv-2-v2-a229b96e","action":"START_CHALLENGE","payload":{"game":"quietHold"}}
+-- run-shout.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990015","nodeId":"77"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":3,"version":0,"idempotencyKey":"adv-3-v0-5d2e6bd9","action":"REPORT_SENSOR_FAILURE","payload":{"game":"shout","denied":true}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":3,"version":1,"idempotencyKey":"adv-3-v1-2ede036f","action":"SKIP_SENSOR_STATION","payload":{"game":"shout"}}
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990015&nodeId=77&longitude=121.4908&latitude=31.2386&accuracy=8&routeActionId=route-mw2u63tp-nufet5xx3j&expectedRouteVersion=3&routeSessionId=1
+-- run-walk.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990015","nodeId":"78"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":4,"version":0,"idempotencyKey":"adv-4-v0-73b7fe2f","action":"REPORT_SENSOR_FAILURE","payload":{"game":"steps","denied":true}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":4,"version":1,"idempotencyKey":"adv-4-v1-6a860cd5","action":"SKIP_SENSOR_STATION","payload":{"game":"steps"}}
+NET POST /api/play/arrive 200 200 已到达，打卡成功 topicId=990015&nodeId=78&longitude=121.4912&latitude=31.2389&accuracy=8&routeActionId=route-mw2u8k1k-6ndveub33l&expectedRouteVersion=4&routeSessionId=1
+-- run-gen3.txt
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":2,"actionId":"theme_17938405729480f20xb7vm6f","operation":"QUEST_START","contentId":"node_85"}
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990019","nodeId":"85"}
+-- run-gen4.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990019","nodeId":"85"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":5,"version":0,"idempotencyKey":"adv-5-v0-7e1339a6","action":"SUBMIT_QA","payload":{"optionId":"opt_2"}}
+-- run-gen6.txt
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":4,"actionId":"theme_1793840770538f0a7q5k9wbn","operation":"QUEST_CANCEL","contentId":"node_85"}
+-- run-gen7.txt
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":5,"actionId":"theme_1793840831123uwyv12mpcq","operation":"QUEST_START","contentId":"node_85"}
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990019","nodeId":"85"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":6,"version":0,"idempotencyKey":"adv-6-v0-7e1339a6","action":"SUBMIT_QA","payload":{"optionId":"opt_2"}}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":6,"version":1,"idempotencyKey":"adv-6-v1-e6fa2f0f","action":"SUBMIT_QA","payload":{"optionId":"opt_1"}}
+-- run-gen8.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990019","nodeId":"85"}
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":7,"actionId":"theme_1793840925260chfh5s98s6k","operation":"QUEST_CANCEL","contentId":"node_85"}
+-- run-gen9.txt
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":8,"actionId":"theme_1793840979708jdphuo0rsg","operation":"QUEST_START","contentId":"node_85"}
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990019","nodeId":"85"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":7,"version":0,"idempotencyKey":"adv-7-v0-7e1339a6","action":"SUBMIT_QA","payload":{"optionId":"opt_2"}}
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":10,"actionId":"theme_1793841007805vmvdvcql2vg","operation":"QUEST_CANCEL","contentId":"node_85"}
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":11,"actionId":"theme_1793841013723lhob4xwvv4","operation":"QUEST_START","contentId":"node_85"}
+-- run-gen10.txt
+NET POST /api/play/advanced/start 200 200 操作成功 {"activityId":"0","topicId":"990019","nodeId":"85"}
+NET POST /api/play/advanced/action 200 200 操作成功 {"sessionId":8,"version":0,"idempotencyKey":"adv-8-v0-e6fa2f0f","action":"SUBMIT_QA","payload":{"optionId":"opt_1"}}
+-- run-gen13.txt
+NET POST /api/play/theme/gameplay-preview 200 200 操作成功 {"sessionId":2,"expectedVersion":14,"operation":"QUEST_RESOLVE","contentId":"node_85"}
+NET POST /api/play/theme/gameplay-action 200 200 操作成功 {"sessionId":2,"expectedVersion":14,"actionId":"theme_1793841258648qeiyd0qcx7n","operation":"QUEST_RESOLVE","contentId":"node_85","previewVersion":"3e78ef8faca0
+
+== Response excerpts: playKit view (server) ==
+-- run-skip1.txt
+"ballShake":{"goal":30,"timed":false,"xp":0,"started":true,"submitted":false,"passed":false,"awarded":false,"attempts":0,"skipped":false,"failedReads":2,"canSkip":true,"evidence":"SELF_REPORTED","rewardCeiling":"XP_BADGE_ONLY"}
+"ballShake":{"goal":30,"timed":false,"xp":0,"started":true,"submitted":false,"passed":false,"awarded":false,"attempts":0,"skipped":true,"failedReads":2,"canSkip":false,"evidence":"SELF_REPORTED","rewardCeiling":"XP_BADGE_ONLY"}
+"action":"SKIP_SENSOR_STATION","payload":{"game":"ballShake"}} RES {"msg":"操作成功","code":200
+-- run-quiet1.txt
+"quietHold":{"seconds":15,"xp":0,"started":false,"submitted":false,"passed":false,"awarded":false,"skipped":false,"failedReads":2,"canSkip":true,"evidence":"SELF_REPORTED","rewardCeiling":"XP_BADGE_ONLY"}
+"action":"REPORT_SENSOR_FAILURE","payload":{"game":"quietHold","denied":true}} RES {"msg":"操作成功","code":200
+-- run-quiet2.txt
+"quietHold":{"seconds":15,"xp":0,"started":false,"submitted":false,"passed":false,"awarded":false,"skipped":true,"failedReads":2,"canSkip":false,"evidence":"SELF_REPORTED","rewardCeiling":"XP_BADGE_ONLY"}
+"action":"SKIP_SENSOR_STATION","payload":{"game":"quietHold"}} RES {"msg":"操作成功","code":200
+"action":"START_CHALLENGE","payload":{"game":"quietHold"}} RES {"msg":"这一站已经跳过了","code":400
+-- run-shout.txt
+-- run-walk.txt
+"steps":{"goal":6000,"xp":0,"todaySteps":0,"reached":false,"skipped":false,"failedReads":2,"canSkip":true}
+"steps":{"goal":6000,"xp":0,"todaySteps":0,"reached":false,"skipped":true,"failedReads":2,"canSkip":false}
+"action":"REPORT_SENSOR_FAILURE","payload":{"game":"steps","denied":true}} RES {"msg":"操作成功","code":200
+"action":"SKIP_SENSOR_STATION","payload":{"game":"steps"}} RES {"msg":"操作成功","code":200
+-- quiet station after skip: START_CHALLENGE (client 开始 still tappable after skip) -> {"msg":"这一站已经跳过了","code":400}; screen switches to sheet 「这一站已经跳过了 · 点击重新读取 / 进行中 / 继续基础任务」 (i1-05c)
+
+== Response excerpts: generic theme ==
+POST /api/play/advanced/start {"activityId":"0","topicId":"990019","nodeId":"85"}
+   -> 200 操作成功 {"sessionId": 5, "status": "FAILED", "canRetry": false, "version": 1, "outcomeFeedback": {"outcome": "FAIL", "reply": "再看看，换个方向想想。", "images": []}, "readyForBase": false, "playKit.qa": {"attempts": 1, "finished": false, "passed": false, "lastCorrect": false, "lastOptionId": "opt_2"}}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":4,"actionId":"theme_1793840770538f0a7q5k9wbn","operation":"QUEST_CANCEL","contentId":"node_85"}
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 5, "activeQuest": null, "journalTail": [{"action": "QUEST_CANCEL", "questKey": "node_85", "eventId": "gameplay:theme_1793840770538f0a7q5k9wbn"}]}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":5,"actionId":"theme_1793840831123uwyv12mpcq","operation":"QUEST_START","contentId":"node_85"}
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 6, "activeQuest": "node_85", "journalTail": [{"action": "QUEST_START", "questKey": "node_85", "eventId": "gameplay:theme_1793840831123uwyv12mpcq"}]}
+POST /api/play/advanced/action {"sessionId":6,"version":0,"idempotencyKey":"adv-6-v0-7e1339a6","action":"SUBMIT_QA","payload":{"optionId":"opt_2"}}
+   -> 200 操作成功 {"sessionId": 6, "status": "FAILED", "canRetry": false, "version": 1, "outcomeFeedback": {"outcome": "FAIL", "reply": "再看看，换个方向想想。", "images": []}, "readyForBase": false, "playKit.qa": {"attempts": 1, "finished": false, "passed": false, "lastCorrect": false, "lastOptionId": "opt_2"}}
+POST /api/play/advanced/action {"sessionId":6,"version":1,"idempotencyKey":"adv-6-v1-e6fa2f0f","action":"SUBMIT_QA","payload":{"optionId":"opt_1"}}
+   -> 200 操作成功 {"sessionId": 6, "status": "FAILED", "canRetry": false, "version": 1, "outcomeFeedback": {"outcome": "FAIL", "reply": "再看看，换个方向想想。", "images": []}, "readyForBase": false, "playKit.qa": {"attempts": 1, "finished": false, "passed": false, "lastCorrect": false, "lastOptionId": "opt_2"}}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":7,"actionId":"theme_1793840925260chfh5s98s6k","operation":"QUEST_CANCEL","contentId":"node_85"}
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 8, "activeQuest": null, "journalTail": [{"action": "QUEST_CANCEL", "questKey": "node_85", "eventId": "gameplay:theme_1793840925260chfh5s98s6k"}]}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":8,"actionId":"theme_1793840979708jdphuo0rsg","operation":"QUEST_START","contentId":"node_85"}
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 9, "activeQuest": "node_85", "journalTail": [{"action": "QUEST_START", "questKey": "node_85", "eventId": "gameplay:theme_1793840979708jdphuo0rsg"}]}
+POST /api/play/advanced/action {"sessionId":7,"version":0,"idempotencyKey":"adv-7-v0-7e1339a6","action":"SUBMIT_QA","payload":{"optionId":"opt_2"}}
+   -> 200 操作成功 {"sessionId": 7, "status": "FAILED", "canRetry": false, "version": 1, "outcomeFeedback": {"outcome": "FAIL", "reply": "再看看，换个方向想想。", "images": []}, "readyForBase": false, "playKit.qa": {"attempts": 1, "finished": false, "passed": false, "lastCorrect": false, "lastOptionId": "opt_2"}}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":10,"actionId":"theme_1793841007805vmvdvcql2vg","operation":"QUEST_CANCEL","contentId":"node_85"}
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 11, "activeQuest": null, "journalTail": [{"action": "QUEST_CANCEL", "questKey": "node_85", "eventId": "gameplay:theme_1793841007805vmvdvcql2vg"}]}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":11,"actionId":"theme_1793841013723lhob4xwvv4","operation":"QUEST_START","contentId":"node_85"}
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 12, "activeQuest": "node_85", "journalTail": [{"action": "QUEST_START", "questKey": "node_85", "eventId": "gameplay:theme_1793841013723lhob4xwvv4"}]}
+POST /api/play/advanced/action {"sessionId":8,"version":0,"idempotencyKey":"adv-8-v0-e6fa2f0f","action":"SUBMIT_QA","payload":{"optionId":"opt_1"}}
+   -> 200 操作成功 {"sessionId": 8, "status": "COMPLETED", "canRetry": false, "version": 1, "outcomeFeedback": {"outcome": "PASS", "reply": "对了，钟楼就在江边。", "images": []}, "readyForBase": true, "playKit.qa": {"attempts": 1, "finished": true, "passed": true, "lastCorrect": true, "lastOptionId": "opt_1"}}
+POST /api/play/theme/gameplay-action {"sessionId":2,"expectedVersion":14,"actionId":"theme_1793841258648qeiyd0qcx7n","operation":"QUEST_RESOLVE","contentId":"node_85","previewVersion":"3e78ef8faca0da922dcc179e6420df278231cf773b914193380f
+   -> 200 操作成功 {"sessionId": 2, "status": "ACTIVE", "version": 15, "activeQuest": null, "journalTail": [{"action": "QUEST_RESOLVE", "questKey": "node_85", "eventId": "gameplay:theme_1793841258648qeiyd0qcx7n"}]}

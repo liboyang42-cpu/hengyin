@@ -61,7 +61,7 @@ test('★达人页要能派生 variant,而且必须复用同一份判据', () =>
 })
 
 test('★入会审批保留开关与后端权限判据，移除说明小字', () => {
-  const wxml = read('components/cy/scene-club-edit/index.wxml')
+  const wxml = read('pages/club/components/cy/scene-club-edit/index.wxml')
   assert.doesNotMatch(wxml, /只有主理人可通过或拒绝申请/,
     'canApproveMembers 放行主理人 / role=1 管理员 / 被委派 club:member:approve 三种人')
   assert.match(wxml, /入会需要审批/)

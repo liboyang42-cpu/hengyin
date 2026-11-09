@@ -29,15 +29,26 @@ test('join persists exact target and invitation; failed read on reentry does not
   next.requests.at(-1).fail({}); next.page.cancelCommand();
   assert.equal(next.requests.at(-1).data, original.data);
   next.requests.at(-1).success(receipt(original, 'CANCELLED'));
-  assert.equal(next.page.data.commandRecovery.state, 'CANCELLED');
+  // 第十一轮 g2(j4 F1):终止成功是确定结果,共享层静默归档,不再留卡等确认。
+  assert.equal(next.page.data.commandRecovery.state, '');
+  assert.equal(next.page.data.commandRecovery.outcome.state, 'CANCELLED');
+  assert.equal(next.page.data.recoveryShown, false);
 });
 test('join terminal triggers fresh membership read, never assumes current membership from old receipt', async () => {
   const h = boot('team/join'); invite(h); await h.page.join(); const command = h.requests.at(-1);
   command.success(receipt(command, 'APPLIED')); assert.equal(h.requests.at(-1).url, '/api/team/info');
   assert.equal(h.page.data.joined, false);
   h.requests.at(-1).success({ code: 200, data: { team: { id: '9007199254740993' }, joined: false } });
-  assert.equal(h.page.data.joined, false); assert.equal(h.page.data.commandRecovery.state, 'APPLIED');
-  await h.page.join(); assert.equal(h.requests.filter(r => r.url === '/api/team/command').length, 1);
+  // 加入与否只听重读结果;回执已静默归档(第十一轮 g2,j4 F1),不留卡。
+  assert.equal(h.page.data.joined, false); assert.equal(h.page.data.commandRecovery.state, '');
+  assert.equal(h.page.data.commandRecovery.outcome.state, 'APPLIED'); assert.equal(h.page.data.recoveryShown, false);
+});
+test('join REJECTED shows the backend reason above the button, disables it, and leaves no card', async () => {
+  const h = boot('team/join'); invite(h); await h.page.join(); const command = h.requests.at(-1);
+  command.success({ code: 200, data: { requestId: JSON.parse(command.data).requestId, state: 'REJECTED', message: '暂时无法加入该队伍' } });
+  assert.equal(h.page.data.recoveryShown, false);
+  assert.equal(h.page.data.joinError, '暂时无法加入该队伍');
+  await h.page.join(); assert.equal(h.requests.filter(r => r.url === '/api/team/command').length, 1, '被拒后按钮不再重复提交');
 });
 test('join pending request and late callback cannot cross accounts', async () => {
   const h = boot('team/join'); invite(h); await h.page.join(); const command = h.requests.at(-1);

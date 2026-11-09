@@ -138,11 +138,16 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
     @BeforeEach
     void resetSchema() throws Exception {
         execute("DROP TABLE IF EXISTS cms_activity", "DROP TABLE IF EXISTS cms_topic", "DROP TABLE IF EXISTS cms_registration",
+                "DROP TABLE IF EXISTS topic_sale_snapshot",
+                "DROP TABLE IF EXISTS topic_edition_finalization",
                 "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_balance_detail",
                 "DROP TABLE IF EXISTS settlement_detail", "DROP TABLE IF EXISTS coop_complaint",
                 "DROP TABLE IF EXISTS cms_activity_settlement_hold", "DROP TABLE IF EXISTS ums_member_settlement_debt",
-                "DROP TABLE IF EXISTS merchant_clawback_application");
+                "DROP TABLE IF EXISTS merchant_clawback_application", "DROP TABLE IF EXISTS refund_application");
         execute(
+                "CREATE TABLE topic_sale_snapshot (topic_id BIGINT PRIMARY KEY, schema_version VARCHAR(64), canonical_json LONGTEXT) ENGINE=InnoDB",
+                // 第十三轮 m6:结算任务读四店期级 FINAL 是否已做(生产表见 migration_20260816_tandianri_batch3_funds_club_compensation.sql)
+                "CREATE TABLE topic_edition_finalization (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT NOT NULL UNIQUE) ENGINE=InnoDB",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT, name VARCHAR(100), description VARCHAR(255), img_url VARCHAR(255), img_arr VARCHAR(255),"
                         + "category_ids VARCHAR(255), address_name VARCHAR(255), longitude VARCHAR(64), latitude VARCHAR(64), address VARCHAR(255), status INT, publish_status INT,"
                         + "cancel_time DATETIME, cancel_reason VARCHAR(255), reason VARCHAR(255), del_flag INT, start_date DATETIME, end_date DATETIME, template_id BIGINT,"
@@ -180,6 +185,9 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                         + "create_time DATETIME(3), update_time DATETIME(3)) ENGINE=InnoDB",
                 "CREATE TABLE coop_complaint (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT, registration_id BIGINT, reporter_member_id BIGINT,"
                         + "status INT, del_flag INT) ENGINE=InnoDB",
+                // 2026-11-02 退款档位:结算读「部分退款后主办方保留的实付」要回读 refund_application。
+                "CREATE TABLE refund_application (id BIGINT PRIMARY KEY AUTO_INCREMENT, source_type VARCHAR(32), source_id BIGINT,"
+                        + "paid_amount DECIMAL(12,2), refund_amount DECIMAL(12,2), status INT, del_flag INT DEFAULT 0) ENGINE=InnoDB",
                 "INSERT INTO ums_member(id,status,del_flag,balance) VALUES (" + HOST + ",1,0,0.00),(" + PLATFORM + ",1,0,0.00)");
         // 新表直接跑迁移文件本体:IT 与生产 DDL 同源,不在测试里另抄一份。
         try (Connection connection = dataSource.getConnection()) {
@@ -288,6 +296,19 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
 
         assertMoney("0.00", balance(HOST));
         assertEquals(2, scalarInt("SELECT status FROM cms_activity_settlement_hold WHERE registration_id=8205"));
+
+        // 2026-11-02 退款档位(真 SQL,并入本例以保持资金 IT 计数):全额退的单不补;集合前 24 小时内
+        // 只退了一半的单(60 退 30,置 4/3),未退回的 30 归主办方。基数 = 100 + 30 = 130,按 90% 入账 117.00。
+        seedActivity(8107L, 15);
+        seedRegistration(8207L, 8107L, "100.00");
+        seedRegistration(8208L, 8107L, "60.00");
+        seedRegistration(8209L, 8107L, "40.00");
+        execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id IN (8208,8209)",
+                "INSERT INTO refund_application(source_type,source_id,paid_amount,refund_amount,status,del_flag)"
+                        + " VALUES ('registration',8208,60.00,30.00,1,0),('registration',8209,40.00,40.00,1,0)");
+        activityService.executeActivitySettlement();
+
+        assertMoney("117.00", balance(HOST));
     }
 
     /** ④ 客诉期后退款冲销扣不够的 30 元记欠款:下一笔结算 90 先抵 30,余额只进 60;逾期未清不许发布新活动。 */

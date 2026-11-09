@@ -5,7 +5,7 @@ const path = require('node:path')
 const { flattenComponentToPage } = require('../helpers/component-as-page.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const MODULE = path.join(ROOT, 'components/cy/scene-member-withdraw-history/index.js')
+const MODULE = path.join(ROOT, 'subpackageMember/components/cy/scene-member-withdraw-history/index.js')
 
 function loadComponent() {
   const sandbox = { requests: [] }
@@ -68,7 +68,7 @@ test('提现状态只认数值 0/1/2；其他值必须显示状态待确认', ()
 })
 
 test('wxml 只渲染投影后的状态文案，不再用宽松等号把 true/字符串冒充合法状态', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-member-withdraw-history/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-member-withdraw-history/index.wxml'), 'utf8')
   assert.match(wxml, /item\.statusText/)
   assert.match(wxml, /txjl-st--\{\{item\.statusVariant\}\}/)
   assert.doesNotMatch(wxml, /item\.status\s*==/)
@@ -76,7 +76,7 @@ test('wxml 只渲染投影后的状态文案，不再用宽松等号把 true/字
 
 test('negative control: Number(value) 和宽松状态判断会被门禁判红', () => {
   const js = fs.readFileSync(MODULE, 'utf8')
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-member-withdraw-history/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-member-withdraw-history/index.wxml'), 'utf8')
   assert.doesNotMatch(js, /const amount = Number\(value\)/)
   assert.doesNotMatch(wxml, /status\s*==/)
 })

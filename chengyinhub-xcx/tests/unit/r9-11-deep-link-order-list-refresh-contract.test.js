@@ -10,7 +10,7 @@ const path = require('node:path')
 const ROOT = path.resolve(__dirname, '../..')
 
 test('R9-11:深链壳里订单列表与详情互斥挂载,或列表必须监听 orderchanged', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-deep-link/index.wxml'), 'utf8')
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-deep-link/index.wxml'), 'utf8')
   const branchOf = id => {
     const line = wxml.split('\n').find(l => l.includes(`sceneCurrent.id === '${id}'`))
     assert.ok(line, `深链壳缺 ${id} 分支`)

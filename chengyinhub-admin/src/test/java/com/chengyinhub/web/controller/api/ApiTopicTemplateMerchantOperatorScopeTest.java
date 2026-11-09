@@ -103,12 +103,12 @@ class ApiTopicTemplateMerchantOperatorScopeTest {
         topic.setMemberId(OWNER);
         topic.setStatus(1);
         when(topicService.selectCmsTopicById(88L)).thenReturn(topic);
-        when(topicService.saveAsTemplate(88L, OWNER, 1)).thenReturn(1);
+        when(topicService.saveAsTemplate(88L, OWNER)).thenReturn(188L);
 
         AjaxResult result = controller.saveAs("88", "MERCHANT");
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(topicService).saveAsTemplate(88L, OWNER, 1);
+        verify(topicService).saveAsTemplate(88L, OWNER);
     }
 
     @Test
@@ -118,12 +118,12 @@ class ApiTopicTemplateMerchantOperatorScopeTest {
         topic.setMemberId(PRINCIPAL);
         topic.setStatus(1);
         when(topicService.selectCmsTopicById(89L)).thenReturn(topic);
-        when(topicService.saveAsTemplate(89L, PRINCIPAL, 1)).thenReturn(1);
+        when(topicService.saveAsTemplate(89L, PRINCIPAL)).thenReturn(189L);
 
         AjaxResult result = controller.saveAs("89", null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(merchantAccessService, never()).require(anyLong(), anyString());
-        verify(topicService).saveAsTemplate(89L, PRINCIPAL, 1);
+        verify(topicService).saveAsTemplate(89L, PRINCIPAL);
     }
 }

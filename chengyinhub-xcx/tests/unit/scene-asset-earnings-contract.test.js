@@ -10,7 +10,7 @@ const path = require('node:path')
 const vm = require('../helpers/ui-sandbox-vm.js') // 沙箱里装真 utils/toast.js·loading.js
 
 const ROOT = path.resolve(__dirname, '../..')
-const DIR = path.join(ROOT, 'components/cy/scene-asset-earnings')
+const DIR = path.join(ROOT, 'subpackageA/components/scene-asset-earnings')
 const read = (f) => fs.readFileSync(path.join(DIR, f), 'utf8')
 
 /** 把组件 js 跑起来,拿到 Component() 的定义对象 */
@@ -38,7 +38,7 @@ function loadComponent(source) {
       }
       if (p.includes('session/login-reload')) return require(path.join(ROOT, 'utils/session/login-reload.js'))
       // 2026-10-28 G-9:本月收入 / 我的资产的纯聚合模块,给真件
-      if (p.includes('earnings-view')) return require(path.join(ROOT, 'utils/earnings-view.js'))
+      if (p.includes('earnings-view')) return require(path.join(ROOT, 'subpackageA/utils/earnings-view.js'))
       if (p.includes('funds-stages/view-model')) return require(path.join(ROOT, 'components/cy/funds-stages/view-model.js'))
       // 2026-11-02 PM-05:金额落地改走共用件 page-motion.countMoney(只写进度 key,真值不动)。
       // 这里给一个记录调用的替身:减动效直接不动;否则把进度置 0 并登记停表句柄,与真件的停表口径一致。

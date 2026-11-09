@@ -66,6 +66,9 @@ public class ApiRoamController extends BaseController {
     static final String SHOP_STREAK_CODE = "ROAM_SHOP_STREAK";
 
     @Autowired
+    private com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
+
+    @Autowired
     private RoamMapper roamMapper;
     @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
     @Autowired
@@ -947,6 +950,10 @@ public class ApiRoamController extends BaseController {
         // ③ 非参与:通用点亮,首次到点发探索值(每点终身一次)
         String poiName = (name != null && !name.trim().isEmpty())
                 ? (name.length() > 120 ? name.substring(0, 120) : name) : "未知地点";
+        // Round5B-6:地点名是客户端上报的文字,机审不通过(含审不了)就不落库,用默认名;点亮本身不受影响。
+        if (!"未知地点".equals(poiName) && submissionSafety.textVerdict(memberId, poiName) != null) {
+            poiName = "未知地点";
+        }
         boolean firstVisit;
         if (visitedPoiIdentity != null && visitedPoiIdentity.enabled()) {
             // O-02:身份 = 地标 id 或首访锚点,同一点不同精度只算一次(见 VisitedPoiIdentityResolver)

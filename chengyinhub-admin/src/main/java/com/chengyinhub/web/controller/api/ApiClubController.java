@@ -115,6 +115,8 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private com.chengyinhub.business.mapper.UmsMemberFollowMapper umsMemberFollowMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.ClubCrmMapper clubCrmMapper;
 
     /** F0098:帖子引用「我的游玩记录」的写入资格与读取可见性。 */
     @Autowired
@@ -125,6 +127,9 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private IClubLeaderService clubLeaderService;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IClubCrmAppService clubCrmAppService;
 
     @Autowired
     private IClubMemberService clubMemberService;
@@ -192,6 +197,9 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private IAuditTaskService auditTaskService;
+
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IProjectHomeReadService projectHomeReadService;
 
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
@@ -419,10 +427,10 @@ public class ApiClubController extends BaseController {
             // CU-C-98:小程序建团入口的 payload 里没有 leaderName ⇒ club.leader_name 一直是 NULL,
             // 详情页「主理人」只能显示占位符 —— 而主理人档案里本来就有名字。
             // 不写库,只在读出时兜底(与 level/tags 同一处),与同一屏的成员名单(合成 owner 行)口径一致。
-            if (StringUtils.isEmpty(club.getLeaderName())) {
-                club.setLeaderName(leader.getLeaderName());
-            }
         }
+        // 业主 2026-11-05:主理人名一律用昵称,不发布 club.leader_name / 主理人档案里的真实姓名
+        // (替换 CU-C-98 的档案名兜底;只改出参,不写库)。
+        club.setLeaderName(clubService.ownerDisplayName(club));
     }
 
     private void attachTopicCounts(List<Club> clubs) {
@@ -489,6 +497,22 @@ public class ApiClubController extends BaseController {
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (StringUtils.isEmpty(body.getName())) return error("请填写俱乐部名称");
         return createClubForMember(memberId, body, null);
+    }
+
+    /**
+     * C-14:创建页离开名称输入框时先查一次名(只读,不占名)。与创建同一口径;
+     * 创建时仍会再查,并由 uk_club_holding_name 兜底。
+     */
+    @Operation(summary = "创建俱乐部前查名(只读)")
+    @PostMapping("/name-check")
+    public AjaxResult nameCheck(@RequestBody(required = false) Club body) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        String reason = clubService.checkNameForCreate(body == null ? null : body.getName(), memberId);
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("available", reason == null);
+        data.put("reason", reason == null ? "" : reason);
+        return AjaxResult.success(data);
     }
 
     @Operation(summary = "我的俱乐部申请状态")
@@ -680,16 +704,21 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部成员列表")
     @PostMapping("/members")
+    // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见、公开加入的俱乐部名单,走 guestMemberRows 投影。
+    @Anonymous
     public AjaxResult members(@RequestBody ClubMember body) {
         if (body.getClubId() == null) return error("缺少俱乐部ID");
-        Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        Long memberId = viewerOrGuest();
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
-        boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
-        boolean isMember = clubMemberService.selectByClubAndMember(body.getClubId(), memberId) != null;
-        if (!isOwner && !isMember && !canBrowsePublicRoster(club, memberId)) {
-            return error(isPublicJoinClub(club) ? "仅俱乐部成员可查看成员名单" : "通过审核后可看成员名单");
+        if (memberId == null) {
+            if (!guestCanBrowseRoster(club)) return error(guestCanViewClub(club) ? "通过审核后可看成员名单" : "这个俱乐部只对成员开放");
+        } else {
+            boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
+            boolean isMember = clubMemberService.selectByClubAndMember(body.getClubId(), memberId) != null;
+            if (!isOwner && !isMember && !canBrowsePublicRoster(club, memberId)) {
+                return error(isPublicJoinClub(club) ? "仅俱乐部成员可查看成员名单" : "通过审核后可看成员名单");
+            }
         }
         ClubMember q = new ClubMember();
         q.setClubId(body.getClubId());
@@ -726,7 +755,127 @@ public class ApiClubController extends BaseController {
                 list.add(0, owner);
             }
         }
+        if (memberId == null) return AjaxResult.success(guestMemberRows(list));
+        applyOrganiserNames(club, memberId, list);
         return AjaxResult.success(list);
+    }
+
+    /** 已登录会员 id;未登录(游客)回 null。 */
+    private Long viewerOrGuest() {
+        try {
+            Long id = currentMemberId();
+            return id != null && id > 0L ? id : null;
+        } catch (Exception notLoggedIn) {
+            return null;
+        }
+    }
+
+    /** 第十二轮 k2:游客只看在营业(status=1)且对外可见的俱乐部。 */
+    private boolean guestCanViewClub(Club club) {
+        return club != null && club.getStatus() != null && club.getStatus() == 1L && canViewClub(club);
+    }
+
+    /** 游客看名单 / 贡献榜:与已登录非成员同一条口径(公开加入的团),只是没有本人封禁可查。 */
+    private boolean guestCanBrowseRoster(Club club) {
+        return guestCanViewClub(club) && isPublicJoinClub(club);
+    }
+
+    static String guestJoinTime(java.util.Date t) {
+        if (t == null) return null;
+        java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        f.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
+        return f.format(t);
+    }
+
+    /** 游客名单投影:不带会员 id、入会留言、审核信息、手机号。 */
+    static List<Map<String, Object>> guestMemberRows(List<ClubMember> list) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        if (list == null) return rows;
+        for (ClubMember cm : list) {
+            if (cm == null) continue;
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("nickname", cm.getNickname());
+            row.put("avatar", cm.getAvatar());
+            row.put("role", cm.getRole());
+            row.put("isOwner", Boolean.TRUE.equals(cm.getIsOwner()));
+            row.put("levelId", cm.getLevelId());
+            // 第十二轮 k7(走查 k2 游客俱乐部页):Map 里的 Date 会按 ISO 序列化成「2026-11-05T14:41:17.000+08:00」原样上屏;
+            // 与登录成员名单(ClubMember.joinTime 的 @JsonFormat)同一格式。
+            row.put("joinTime", guestJoinTime(cm.getJoinTime()));
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    /** 游客贡献榜投影:去掉会员 id,其余成绩列原样。 */
+    static List<Map<String, Object>> guestBoardRows(List<Map<String, Object>> board) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        if (board == null) return rows;
+        for (Map<String, Object> source : board) {
+            if (source == null) continue;
+            Map<String, Object> row = new java.util.LinkedHashMap<>(source);
+            row.remove("memberId");
+            row.remove("member_id");
+            row.remove("phone");
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    /** 游客帖文投影:去掉作者 / 转发人会员 id 与按查看者算的标记。 */
+    static void guestPostProjection(List<ClubPost> posts, List<ClubPostRepostItemVO> reposts) {
+        if (posts != null) for (ClubPost p : posts) {
+            if (p == null) continue;
+            p.setAuthorMemberId(null);
+            p.setIsLiked(null);
+            p.setViewerReposted(null);
+            p.setIsFollowTheUser(null);
+            p.setViewerCanManage(null);
+        }
+        if (reposts != null) for (ClubPostRepostItemVO r : reposts) if (r != null) r.setReposterMemberId(null);
+    }
+
+    /** 自由探索主题已确认终价:定价页锁价时写下的主题级「有人带」票(sub_type=guided)已带价。 */
+    private boolean freeExplorePriceConfirmed(Long topicId) {
+        if (topicId == null || omsTicketService == null) return false;
+        OmsTicket q = new OmsTicket();
+        q.setOwnerType(1L);
+        q.setOwnerId(topicId);
+        q.setSubType("guided");
+        List<OmsTicket> rows = omsTicketService.selectOmsTicketList(q);
+        if (rows == null) return false;
+        for (OmsTicket row : rows) {
+            if (row != null && row.getPrice() != null && !Integer.valueOf(2).equals(row.getDelFlag())) return true;
+        }
+        return false;
+    }
+
+    /**
+     * j2 F-08:主理人/管理员在成员名单、角色分配、转让主理人、入会申请里看到的 nickname 换成能分清人的名字 ——
+     * 主理人本人用昵称(业主 2026-11-05),其余成员用本俱乐部报名时填写的姓名(C-05 同口径),
+     * 都没有就用昵称,默认昵称「城瘾用户」带上加入 / 申请时刻(第十二轮 k3,不再给「成员#id」)。
+     * 普通成员看到的名单不变,不经过这里。
+     */
+    void applyOrganiserNames(Club club, Long viewerMemberId, List<ClubMember> list) {
+        if (club == null || list == null || list.isEmpty() || clubCrmAppService == null
+                || !clubMemberService.canGovernClub(club, viewerMemberId)) return;
+        List<Long> ids = new ArrayList<>();
+        for (ClubMember cm : list) if (cm != null && cm.getMemberId() != null) ids.add(cm.getMemberId());
+        java.util.Map<Long, String> signupNames = clubCrmAppService.signupNamesForOrganiser(viewerMemberId, club.getId(), ids);
+        for (ClubMember cm : list) {
+            if (cm == null || cm.getMemberId() == null) continue;
+            // 业主 2026-11-05:主理人在所有地方都用昵称(不用主理人档案里的真实姓名,也不用报名姓名),
+            // 与俱乐部头部「昵称 · 主理人」一致。
+            if (Boolean.TRUE.equals(cm.getIsOwner())) {
+                cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.ownerName(cm.getNickname()));
+                continue;
+            }
+            String name = signupNames == null ? null : signupNames.get(cm.getMemberId());
+            // 待审申请行本身就有「申请于 …」一行,不在名字里重复时刻(确认弹窗由页面带上申请时刻)。
+            boolean pendingRequest = Integer.valueOf(0).equals(cm.getStatus());
+            cm.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(name, cm.getNickname(),
+                    cm.getMemberId(), pendingRequest ? null : cm.getJoinTime(), pendingRequest ? null : "加入"));
+        }
     }
 
     @Operation(summary = "移除俱乐部成员(创建者)")
@@ -964,7 +1113,10 @@ public class ApiClubController extends BaseController {
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getClubId() == null) return error("缺少俱乐部ID");
         try {
-            return AjaxResult.success(clubMemberService.selectPendingJoinRequests(body.getClubId(), memberId));
+            List<ClubMember> pending = clubMemberService.selectPendingJoinRequests(body.getClubId(), memberId);
+            // 第十二轮 k3(p3 N4):入会申请与成员名单同一套名字(报名姓名 → 昵称 → 「城瘾用户 · 时刻 申请」)。
+            applyOrganiserNames(clubService.selectClubById(body.getClubId()), memberId, pending);
+            return AjaxResult.success(pending);
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -1354,11 +1506,14 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部办的经典定向团")
     @PostMapping("/topics")
+    // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见的俱乐部主题;已上架主题才出(publicTopicListWhere)。
+    @Anonymous
     public AjaxResult topics(@RequestBody Club body) {
         if (body.getId() == null) return error("缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (viewerOrGuest() == null && !guestCanViewClub(club)) return error("这个俱乐部只对成员开放");
         CmsTopic probe = new CmsTopic();
         probe.setClubId(body.getId());
         // 这个端点不要求登录(游客也能看俱乐部主页),拿不到人就当非成员 —— fail-closed。
@@ -1373,6 +1528,39 @@ public class ApiClubController extends BaseController {
         // 富化每团已报名人数(已支付报名)
         for (CmsTopic t : topics) {
             t.setGameModuleEnabled(gameSessionRuntimeService.isGameSessionEnabled(t));
+            // 第十轮 f2 walk:这是公开读侧,原样下发会把已发布路线图里的各站答案(nodeAnswers.questionAnswer)
+            // 和玩法配置交给任何能看俱乐部的人。答案只走 /topic-node-answer 的闸;列表卡用不到这几项。
+            t.setPublishedRouteGraphJson(null);
+            t.setRouteGraphJson(null);
+            t.setGameModuleConfigJson(null);
+            t.setJourneyRulesJson(null);
+            t.setJourneyStoryJson(null);
+            t.setCompleteRuleJson(null);
+            // 第十轮 f2 walk:定价中分两段 —— 还没确认终价 / 已确认、开售审核在等平台。最新一条开售审核待审(或升级)
+            // 才算后者;驳回后回到「确认终价」。只查 lifecycle 2 的主题。
+            if (Integer.valueOf(2).equals(t.getLifecycle()) && auditTaskService != null) {
+                com.chengyinhub.business.domain.AuditTask saleQuery = new com.chengyinhub.business.domain.AuditTask();
+                saleQuery.setBizType(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC_SALE_REVIEW);
+                saleQuery.setBizId(t.getId());
+                List<com.chengyinhub.business.domain.AuditTask> sale = auditTaskService.selectAuditTaskList(saleQuery);
+                Integer latest = sale == null || sale.isEmpty() || sale.get(0) == null ? null : sale.get(0).getStatus();
+                boolean waiting = com.chengyinhub.business.domain.AuditTask.STATUS_PENDING.equals(latest)
+                        || com.chengyinhub.business.domain.AuditTask.STATUS_ESCALATED.equals(latest);
+                // 第十二轮 k4(j2 N-05):自由探索锁价后不自动提审(运营先存 canonical15 草稿再提交,ApiPricingController),
+                // 没有审核单也已经在等平台 —— 锁价时插的「有人带」票(sub_type=guided,带价)就是终价已确认的事实。
+                // 一旦有过审核单就只看最新那条(驳回后回到「确认终价」)。
+                if (!waiting && latest == null
+                        && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(t.getProductType())) {
+                    waiting = freeExplorePriceConfirmed(t.getId());
+                }
+                t.setSaleReviewPending(waiting);
+            }
+            // 第十二轮 k4(j2 N-01):招募 / 定价中的主题,已中标却没合作单的站名只给发布者本人 —— 他才看得到「现在要做 · 发邀约」。
+            if (projectHomeReadService != null && viewerId != null && viewerId.equals(t.getMemberId())
+                    && (Integer.valueOf(1).equals(t.getLifecycle()) || Integer.valueOf(2).equals(t.getLifecycle()))) {
+                List<String> missing = projectHomeReadService.uncontractedStationNames(t);
+                if (missing != null && !missing.isEmpty()) t.setUncontractedStations(missing);
+            }
             CmsRegistration rq = new CmsRegistration();
             rq.setOwnerType(1L);
             rq.setOwnerId(t.getId());
@@ -1386,6 +1574,20 @@ public class ApiClubController extends BaseController {
             sessionProbe.setDelFlag(0);
             List<CmsActivity> sessions = cmsActivityService.selectCmsActivityList(sessionProbe);
             if (sessions != null) {
+                // C-19:活动卡原来用主题自己的开始日期判「已开始」,场次还没开就显示已开始。
+                // 改用本俱乐部真实场次:进行中的那场优先,否则最近一场未开始的;都没有就不给,前端照旧。
+                Date nowAt = new Date();
+                Date running = null;
+                Date upcoming = null;
+                for (CmsActivity session : sessions) {
+                    if (session == null || session.getStartDate() == null || session.getCancelTime() != null) continue;
+                    Date start = session.getStartDate();
+                    boolean ended = session.getEndDate() != null && !session.getEndDate().after(nowAt);
+                    if (ended) continue;
+                    if (!start.after(nowAt)) { if (running == null || start.after(running)) running = start; }
+                    else if (upcoming == null || start.before(upcoming)) upcoming = start;
+                }
+                t.setNextSessionStart(running != null ? running : upcoming);
                 for (CmsActivity session : sessions) {
                     if (session == null || session.getId() == null) continue;
                     CmsRegistration sessionRq = new CmsRegistration();
@@ -1404,7 +1606,35 @@ public class ApiClubController extends BaseController {
                 if (PlayMode.isLinear(tk.getMode())) { t.setTeamStatus(tk.getTeamStatus()); break; }
             }
         }
+        publicTopicAudit(topics);
+        if (viewerId == null || viewerId <= 0L) guestTopicProjection(topics);
         return AjaxResult.success(topics);
+    }
+
+    /**
+     * 第十二轮 k7(走查 k2 游客俱乐部页):RuoYi 审计列 createBy / updateBy 存的是登录名(手机号),
+     * 俱乐部主题列表对任何查看者都不带出(页面不读这两列;主题公开列表本来就不出)。
+     */
+    static void publicTopicAudit(List<CmsTopic> topics) {
+        if (topics == null) return;
+        for (CmsTopic t : topics) {
+            if (t == null) continue;
+            t.setCreateBy(null);
+            t.setUpdateBy(null);
+        }
+    }
+
+    /** 第十二轮 k2:游客主题投影:不带作者会员 id 与按查看者算的标记。 */
+    static void guestTopicProjection(List<CmsTopic> topics) {
+        if (topics == null) return;
+        for (CmsTopic t : topics) {
+            if (t == null) continue;
+            t.setMemberId(null);
+            t.setViewerMemberId(null);
+            t.setIsLike(null);
+            t.setIsLikeMemberId(null);
+            t.setIsFollowTheUser(null);
+        }
     }
 
     @Operation(summary = "主理人查询可开团的生效合作主题")
@@ -1597,7 +1827,8 @@ public class ApiClubController extends BaseController {
             ViewRegistration rq = new ViewRegistration();
             rq.setTicketId(tk.getId());
             rq.setRegistrationStatus(2); // 已支付
-            List<ViewRegistration> registrations = viewRegistrationService.selectRegistrationSummaries(rq);
+            // 第十二轮 k4(j2 N-03):公开摘要不带姓名与报名时刻,名册取专用摘要,否则姓名永远回落「城瘾用户」
+            List<ViewRegistration> registrations = viewRegistrationService.selectRosterSummaries(rq);
             List<ClubRegistrationRosterVO.Registration> safeRegistrations = new ArrayList<>();
             if (registrations != null) {
                 for (ViewRegistration registration : registrations) {
@@ -1605,11 +1836,21 @@ public class ApiClubController extends BaseController {
                     safe.setId(registration.getId());
                     safe.setMemberId(registration.getMemberId());
                     safe.setAvatar(registration.getAvatar());
-                    safe.setNickname(registration.getNickname());
+                    // 第十二轮 k3(p3 N4):名册只给能治理本俱乐部的人,用报名时填写的姓名(C-05 同口径),
+                    // 没填才回落昵称;默认昵称带报名时刻,不再出现三个一样的「城瘾用户」。
+                    safe.setNickname(com.chengyinhub.business.util.OrganiserPersonName.pick(
+                            com.chengyinhub.business.util.OrganiserPersonName.decryptSignupName(registration.getRealName()),
+                            registration.getNickname(), registration.getMemberId(), registration.getCreateTime(), "报名"));
                     safe.setPaymentStatus(registration.getPaymentStatus());
                     safe.setVerificationStatus(registration.getVerificationStatus());
                     safeRegistrations.add(safe);
                 }
+            }
+            // 第十二轮 k3(p3 N5):主题票(owner_type=1)只是开场时复制的母版,不是一场。已经开过场、
+            // 母版上又没人报名时,不再在名册里冒出一行「领队场 0 / 20 · 还没有人报名」。
+            if (Long.valueOf(1L).equals(tk.getOwnerType()) && safeRegistrations.isEmpty()
+                    && sessions != null && !sessions.isEmpty()) {
+                continue;
             }
             ClubRegistrationRosterVO.Ticket safeTicket = new ClubRegistrationRosterVO.Ticket();
             safeTicket.setId(tk.getId());
@@ -1627,6 +1868,36 @@ public class ApiClubController extends BaseController {
         // canRefund 是权限声明不是摆设:清退退款 owner-only,管理员回包写 true 就是假按钮。
         roster.setCanRefund(club.getMemberId() != null && club.getMemberId().equals(memberId));
         roster.setOmsTicketList(safeTickets);
+        // C-13:每场的实收/已退/净额(分),金额与库逐分对账。金额只给主理人(与清退退款同一判据),管理员为 null。
+        if (roster.isCanRefund() && clubCrmMapper != null && sessions != null && !sessions.isEmpty()) {
+            List<Long> activityIds = new ArrayList<>();
+            for (CmsActivity session : sessions) if (session != null && session.getId() != null) activityIds.add(session.getId());
+            Map<Long, Map<String, Object>> moneyById = new HashMap<>();
+            List<Map<String, Object>> moneyRows = activityIds.isEmpty() ? null : clubCrmMapper.selectSessionMoney(clubId, activityIds);
+            if (moneyRows != null) {
+                for (Map<String, Object> row : moneyRows) {
+                    Long id = badgeLong(row.get("activityId"));
+                    if (id != null) moneyById.put(id, row);
+                }
+            }
+            List<ClubRegistrationRosterVO.SessionMoney> money = new ArrayList<>();
+            for (CmsActivity session : sessions) {
+                if (session == null || session.getId() == null) continue;
+                Map<String, Object> row = moneyById.get(session.getId());
+                if (row == null) continue;   // 没人付过钱的场次不出一行 ¥0
+                ClubRegistrationRosterVO.SessionMoney item = new ClubRegistrationRosterVO.SessionMoney();
+                item.setActivityId(session.getId());
+                item.setLabel(sessionLabels.get(String.valueOf(session.getId())));
+                item.setCancelled(session.getCancelTime() != null);
+                long paid = row.get("paidFen") instanceof Number ? ((Number) row.get("paidFen")).longValue() : 0L;
+                long refunded = row.get("refundedFen") instanceof Number ? ((Number) row.get("refundedFen")).longValue() : 0L;
+                item.setPaidFen(paid);
+                item.setRefundedFen(refunded);
+                item.setNetFen(paid - refunded);
+                money.add(item);
+            }
+            roster.setSessionMoney(money);
+        }
         return AjaxResult.success(roster);
     }
 
@@ -1651,11 +1922,15 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部动态列表(公开)")
     @PostMapping("/post/list")
+    // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见的俱乐部帖文,走 guestPostProjection。不开评论与任何写。
+    @Anonymous
     public AjaxResult postList(@RequestBody ClubPost body) {
         if (body.getClubId() == null) return error("缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        boolean guest = viewerOrGuest() == null;
+        if (guest && !guestCanViewClub(club)) return error("这个俱乐部只对成员开放");
         // P0-82:按页取,不再整俱乐部全量拉。首页=置顶帖+最新 limit 条;翻页带 beforeId(上一页最后一条非置顶帖)。
         // 回包仍是数组,老客户端不传 limit 时按上限取首页。
         int limit = body.getLimit() == null ? POST_PAGE_MAX : Math.max(1, Math.min(POST_PAGE_MAX, body.getLimit()));
@@ -1687,6 +1962,7 @@ public class ApiClubController extends BaseController {
             markViewerReposted(all, memberId);
             markViewerFollows(all, memberId);
         } catch (Exception ignore) { /* 未登录不标 isLiked / viewerReposted / isFollowTheUser */ }
+        if (guest) guestPostProjection(all, reposts);
         List<Object> items = new ArrayList<>(pinned);
         items.addAll(mergeByTime(rest, reposts));
         return AjaxResult.success(items);
@@ -1880,7 +2156,10 @@ public class ApiClubController extends BaseController {
             if (body.get("beforeId") != null) {
                 try { beforeId = Long.parseLong(String.valueOf(body.get("beforeId")).trim()); } catch (Exception ignored) { }
             }
-            List<ClubPost> page = clubPostService.selectSiteFeed(memberId, beforeId, limit + 1);
+            // 第十轮 f3 j5 H4:author=me 只取本人帖文(我的主页 → 帖文)。只认 "me",不收任意作者 id。
+            List<ClubPost> page = "me".equals(String.valueOf(body.get("author")))
+                    ? clubPostService.selectSiteFeedByAuthor(memberId, beforeId, limit + 1, memberId)
+                    : clubPostService.selectSiteFeed(memberId, beforeId, limit + 1);
             boolean hasMore = page.size() > limit;
             List<ClubPost> rows = hasMore ? new ArrayList<>(page.subList(0, limit)) : page;
             decorateFeedRows(rows, memberId);
@@ -2345,20 +2624,52 @@ public class ApiClubController extends BaseController {
      */
     @Operation(summary = "俱乐部本团贡献榜")
     @PostMapping("/leaderboard")
+    // 第十二轮 k2(业主 2026-11-05):游客与已登录非成员同一口径可看,走 guestBoardRows 投影。
+    @Anonymous
     public AjaxResult leaderboard(@RequestBody Map<String, Object> body) {
         Long clubId = badgeLong(body.get("id"));
         if (clubId == null) return error("缺少俱乐部ID");
-        Long viewerId;
-        try { viewerId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        Long viewerId = viewerOrGuest();
         Club leaderboardClub = clubService.selectClubById(clubId);
         if (leaderboardClub == null) return error("俱乐部不存在");
+        if (viewerId == null) {
+            if (!guestCanBrowseRoster(leaderboardClub)) return error(guestCanViewClub(leaderboardClub) ? "通过审核后可看贡献榜" : "这个俱乐部只对成员开放");
+            Object guestSort = body.get("sortBy");
+            return AjaxResult.success(guestBoardRows(clubMemberService.selectClubLeaderboard(clubId, guestSort == null ? null : guestSort.toString())));
+        }
         boolean boardOwner = OwnershipUtils.isOwner(leaderboardClub.getMemberId(), viewerId);
         boolean boardMember = clubMemberService.selectByClubAndMember(clubId, viewerId) != null;
         if (!boardOwner && !boardMember && !canBrowsePublicRoster(leaderboardClub, viewerId)) {
             return error(isPublicJoinClub(leaderboardClub) ? "加入俱乐部后才能看贡献榜" : "通过审核后可看贡献榜");
         }
         Object sortBy = body.get("sortBy");
-        return AjaxResult.success(
-                clubMemberService.selectClubLeaderboard(clubId, sortBy == null ? null : sortBy.toString()));
+        List<Map<String, Object>> board =
+                clubMemberService.selectClubLeaderboard(clubId, sortBy == null ? null : sortBy.toString());
+        applyOrganiserNamesToBoard(leaderboardClub, viewerId, board);
+        return AjaxResult.success(board);
+    }
+
+    /**
+     * 第十一轮 h4 L4:贡献榜与成员名单同一条隐私口径(j2 F-08)——能治理本俱乐部的人看报名姓名 /
+     * 主理人档案名,默认昵称改「成员#id」;普通成员看到的仍是各人自己的昵称,不经过这里。
+     */
+    void applyOrganiserNamesToBoard(Club club, Long viewerId, List<Map<String, Object>> board) {
+        if (board == null || board.isEmpty()) return;
+        List<ClubMember> view = new ArrayList<>();
+        for (Map<String, Object> row : board) {
+            Long id = row == null ? null : badgeLong(row.get("memberId"));
+            if (id == null) continue;
+            ClubMember cm = new ClubMember();
+            cm.setMemberId(id);
+            cm.setNickname(row.get("nickname") == null ? null : String.valueOf(row.get("nickname")));
+            cm.setIsOwner(club != null && id.equals(club.getMemberId()));
+            view.add(cm);
+        }
+        applyOrganiserNames(club, viewerId, view);
+        int i = 0;
+        for (Map<String, Object> row : board) {
+            if (row == null || badgeLong(row.get("memberId")) == null) continue;
+            row.put("nickname", view.get(i++).getNickname());
+        }
     }
 }

@@ -39,6 +39,7 @@ class ApiCreatorCenterControllerTest {
         metricMapper = mock(CreatorMetricDailyMapper.class);
         incomeMapper = mock(CreatorIncomeDetailMapper.class);
         service = new CreatorCenterServiceImpl();
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class));
         ReflectionTestUtils.setField(service, "creatorProfileMapper", profileMapper);
         ReflectionTestUtils.setField(service, "creatorMetricDailyMapper", metricMapper);
         ReflectionTestUtils.setField(service, "creatorIncomeDetailMapper", incomeMapper);
@@ -66,6 +67,23 @@ class ApiCreatorCenterControllerTest {
 
         assertEquals(1, accepted);
         verify(profileMapper).insertCreatorProfile(any(CreatorProfile.class));
+    }
+
+    /** Round5B-6:创作者申请头像是外链 → 媒体闸拒绝,不建档。 */
+    @Test
+    void applyWithExternalAvatarIsRefusedBeforeInsert() {
+        com.chengyinhub.business.service.support.UgcSubmissionSafety safety =
+                org.mockito.Mockito.mock(com.chengyinhub.business.service.support.UgcSubmissionSafety.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "submissionSafety", safety);
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("媒体来源未经审核，请重新上传", 422))
+                .when(safety).requireOwnImages(1001L, "https://evil.example.com/a.jpg");
+        CreatorProfileApplyDTO request = new CreatorProfileApplyDTO();
+        request.setCreatorName("城市记录者");
+        request.setAvatarUrl("https://evil.example.com/a.jpg");
+
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.apply(1001L, request));
+        verify(profileMapper, never()).insertCreatorProfile(any(CreatorProfile.class));
     }
 
     @Test

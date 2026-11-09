@@ -1,5 +1,8 @@
 package com.chengyinhub.web.service.play;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,7 +27,17 @@ import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.util.PlayNarrativeSupport;
+import com.chengyinhub.business.util.ChapterBlockReadSupport;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.business.domain.GameRuntimeSession;
+import com.chengyinhub.business.domain.TopicRouteAction;
+import com.chengyinhub.business.mapper.GameRuntimeSessionMapper;
+import com.chengyinhub.business.mapper.PlayJourneyReadMapper;
+import com.chengyinhub.business.mapper.TopicRouteSessionMapper;
+import com.chengyinhub.business.service.support.NodeJourneySnapshot;
+import com.chengyinhub.business.service.support.TopicRouteEngine;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.stereotype.Service;
 import static com.chengyinhub.common.core.domain.AjaxResult.error;
@@ -51,6 +64,319 @@ public class PlayHistoryQueryApplication {
     private ITopicRouteRuntimeService topicRouteRuntimeService;
     @Autowired
     private PlayCompletionFacts playCompletionFacts;
+    @Autowired
+    private TopicRouteSessionMapper historySessionMapper;
+    @Autowired
+    private PlayJourneyReadMapper historyReadMapper;
+    @Autowired
+    private GameRuntimeSessionMapper historyGameMapper;
+
+    /** Original-run reading only: never call a runtime view that may sync/start/settle the run. */
+    public AjaxResult history(Long memberId, Long activityId, Long topicId, Long routeSessionId)
+    {
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (activityId == null || activityId < 0 || topicId == null || topicId <= 0
+                || routeSessionId == null || routeSessionId <= 0) return error("必须提供原游玩会话");
+        TopicRouteSession session = historySessionMapper.selectAccessibleById(routeSessionId, memberId);
+        if (session == null || !routeSessionId.equals(session.getId()) || !memberId.equals(session.getMemberId())
+                || !activityId.equals(session.getActivityId()) || !topicId.equals(session.getTopicId()))
+            return error("本局不存在或无权查看");
+        com.chengyinhub.business.domain.CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        if (topic == null || playCompletionFacts.topicHistoryBlocked(topic)) return error("历史内容不可用");
+        ObjectMapper json = new ObjectMapper();
+        final JsonNode snapshot;
+        final TopicRouteEngine.State state;
+        try {
+            snapshot = json.readTree(session.getConfigSnapshotJson());
+            state = json.readValue(session.getStateJson(), TopicRouteEngine.State.class);
+            if (snapshot == null || !snapshot.isObject() || state == null || state.getCompletedNodeIds() == null
+                    || state.getTags() == null || state.getVariables() == null) return error("本局历史快照不可用");
+            NodeJourneySnapshot.requireContentSnapshot(snapshot);
+        } catch (Exception invalid) { return error("本局历史快照不可用"); }
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("routeSessionId", session.getId().toString());
+        data.put("activityId", activityId.toString()); data.put("topicId", topicId.toString());
+        data.put("configVersion", session.getConfigVersion() == null ? null : session.getConfigVersion().toString());
+        data.put("readOnly", true);
+        List<Map<String, Object>> chapters = new ArrayList<>();
+        Map<Long, Map<String, Object>> nodes = new LinkedHashMap<>();
+        // Old snapshots cannot establish original prose; current author edits are never a history fallback.
+        data.put("narrativeAvailable", snapshot.path("thoughtChapters").isArray());
+        for (Long nodeId : state.getCompletedNodeIds()) {
+            if (nodeId == null || nodeId <= 0 || playCompletionFacts.historyReadableNode(nodeId, topic) == null) continue;
+            JsonNode answer;
+            try { answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId); }
+            catch (IllegalStateException invalid) { continue; }
+            if (!NodeJourneySnapshot.hasContent(answer)) continue;
+            JsonNode original = answer.path("nodePresentation");
+            if (original.path("id").asLong() != nodeId || original.path("topicId").asLong() != topicId) continue;
+            Map<String, Object> node = new LinkedHashMap<>();
+            node.put("nodeId", nodeId.toString()); node.put("done", true); node.put("history", true);
+            copyHistoryText(node, original, "name", "description", "imgUrl", "fragmentText");
+            if (original.path("chapterId").isIntegralNumber()) node.put("chapterId", original.path("chapterId").asText());
+            copyHistoryText(node, answer.path("templatePresentation"), "storyText", "storyImg");
+            node.put("results", new ArrayList<Map<String, Object>>());
+            nodes.put(nodeId, node);
+        }
+        Set<Long> seenChapters = new HashSet<>();
+        JsonNode frozenChapters = snapshot.path("thoughtChapters");
+        if (frozenChapters.isArray()) for (JsonNode chapter : frozenChapters) {
+            JsonNode id = chapter.path("chapterId");
+            if (!id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0
+                    || !seenChapters.add(id.asLong()) || !chapter.path("blocks").isArray()) continue;
+            boolean opening = chapter.path("opening").asBoolean(false);
+            if ((opening || chapter.path("requiresOpening").asBoolean(false))
+                    && !state.getTags().contains("sys.opening.done")) continue;
+            boolean pathCompleted = historyPathCompleted(snapshot, chapter, state, nodes.keySet(), json);
+            if (!pathCompleted && (!historyIdsCompleted(chapter.path("nodeIds"), nodes.keySet())
+                    || !historyIdsCompleted(chapter.path("requiredBefore"), nodes.keySet()))) continue;
+            // Empty optional chapters have no completion receipt; do not manufacture completion from allDone.
+            if (chapter.path("nodeIds").isEmpty() && !opening) continue;
+            JsonNode readableBlocks = chapter.path("blocks");
+            if (pathCompleted) {
+                // The saved path ended this chapter; the ordinary player projection still stops at any unearned node.
+                List<Object> frozenBlocks = json.convertValue(readableBlocks, new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() {});
+                readableBlocks = json.valueToTree(ChapterBlockReadSupport.projectForPlayer(frozenBlocks, nodes.keySet(), state.getTags()));
+            }
+            List<Map<String, Object>> blocks = historyBlocks(readableBlocks, state, nodes.keySet(), pathCompleted);
+            if (blocks == null) continue;
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("chapterId", id.asText()); row.put("complete", true); row.put("blocks", blocks);
+            chapters.add(row);
+        }
+        List<TopicRouteAction> actions = historyReadMapper.selectActionsBySession(routeSessionId);
+        Map<Long, Set<String>> taskInstances = new HashMap<>();
+        if (actions != null) for (TopicRouteAction action : actions) {
+            if (action == null || !routeSessionId.equals(action.getSessionId())
+                    || !memberId.equals(action.getMemberId())) continue;
+            JsonNode receipt;
+            try { receipt = json.readTree(action.getResponseJson()); }
+            catch (Exception invalid) { receipt = json.createObjectNode(); }
+            if (receipt == null) receipt = json.createObjectNode();
+            Long nodeId = action.getNodeId();
+            String code = action.getOutcomeCode();
+            if ("QUEST_START".equals(code) || "OPERATION_START".equals(code) || "QUEST_RESOLVE".equals(code)) {
+                // Gameplay actions save node_id=0 and a theme view with a nested settlement, not scalar facts.
+                if (receipt.path("sessionId").asLong() != routeSessionId
+                        || receipt.path("activityId").asLong(-1) != activityId
+                        || receipt.path("topicId").asLong() != topicId
+                        || !"PLAYER".equals(receipt.path("runtimeScope").asText())) continue;
+                JsonNode settlement = receipt.path("settlement");
+                boolean quest = !"OPERATION_START".equals(code);
+                String key = settlement.path("QUEST_RESOLVE".equals(code) ? "questKey"
+                        : quest ? "activeQuest" : "activeOperation").asText();
+                nodeId = historyTaskNode(snapshot, key, quest);
+                if (nodeId == null || !nodes.containsKey(nodeId)) continue;
+                if (!"QUEST_RESOLVE".equals(code)) {
+                    if (quest ? !key.equals(receipt.path("activeQuest").asText())
+                            : !key.equals(receipt.path("activeOperation").path("operationKey").asText())
+                              || receipt.path("activeOperation").path("nodeId").asLong() != nodeId) continue;
+                    if (action.getActionId() == null || action.getActionId().isEmpty()) continue;
+                    taskInstances.computeIfAbsent(nodeId, ignored -> new HashSet<>())
+                            .add(historyTaskInstance(routeSessionId, action.getActionId(), quest));
+                    continue;
+                }
+                receipt = settlement;
+            }
+            if (!nodes.containsKey(nodeId)) continue;
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("kind", "routeReceipt"); result.put("receiptId", action.getReceiptId());
+            result.put("outcomeCode", code); result.put("at", action.getCreateTime());
+            if (java.util.Arrays.asList("PASSED", "OUTCOME", "CHECK_SETTLE", "TASK_FACT", "OPERATION_FACT", "QUEST_RESOLVE").contains(code))
+                copyHistoryScalars(result, receipt, json, "passed", "outcome", "success", "total", "kept", "settled", "used", "actions");
+            historyResults(nodes.get(nodeId)).add(result);
+        }
+        List<GameRuntimeSession> games = historyGameMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId);
+        if (games != null) for (GameRuntimeSession game : games) {
+            if (game == null || !Integer.valueOf(GameRuntimeSession.OWNER_PLAYER).equals(game.getOwnerType())
+                    || !memberId.equals(game.getOwnerId()) || !activityId.equals(game.getActivityId())
+                    || !topicId.equals(game.getTopicId()) || !nodes.containsKey(game.getNodeId())
+                    || !historyGameLinked(session, game, taskInstances, json)
+                    || !Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(game.getStatus())) continue;
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("kind", "completedGame");
+            result.put("gameSessionId", game.getId() == null ? null : game.getId().toString());
+            result.put("score", game.getScore()); result.put("completedUnits", game.getCompletedUnits());
+            result.put("completedAt", game.getCompletedAt());
+            historyGameOutcomes(result, game, json);
+            historyResults(nodes.get(game.getNodeId())).add(result);
+        }
+        data.put("chapters", chapters); data.put("nodes", new ArrayList<>(nodes.values()));
+        return AjaxResult.success(data);
+    }
+
+    private static Long historyTaskNode(JsonNode snapshot, String key, boolean quest)
+    {
+        if (key.isEmpty()) return null;
+        Long found = null;
+        for (JsonNode task : snapshot.path("themeConfig").path("gameplayRuntime").path(quest ? "quests" : "facilities")) {
+            if (!key.equals(task.path(quest ? "questKey" : "facilityKey").asText())) continue;
+            JsonNode id = task.path(quest ? "nodeId" : "operationNodeId");
+            if (found != null || !id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0) return null;
+            found = id.asLong();
+        }
+        return found;
+    }
+
+    private static String historyTaskInstance(Long sessionId, String actionId, boolean quest)
+    {
+        try {
+            // Same exact saved session/action identity as TopicRouteRuntimeServiceImpl.gameplayInstance.
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest((sessionId + ":" + actionId).getBytes(StandardCharsets.UTF_8));
+            return (quest ? "quest:" : "operation:") + java.util.HexFormat.of().formatHex(hash, 0, 16);
+        } catch (NoSuchAlgorithmException impossible) { throw new IllegalStateException("任务摘要算法不可用", impossible); }
+    }
+
+    private static boolean historyGameLinked(TopicRouteSession session, GameRuntimeSession game,
+            Map<Long, Set<String>> tasks, ObjectMapper json)
+    {
+        if (game.getPlayInstanceId() == null) return false;
+        if (session.getPlayInstanceId() != null && session.getPlayInstanceId().equals(game.getPlayInstanceId())) return true;
+        if (tasks.getOrDefault(game.getNodeId(), java.util.Collections.emptySet()).contains(game.getPlayInstanceId())) return true;
+        try {
+            JsonNode saved = json.readTree(game.getStateJson());
+            return saved != null && saved.path("originalRouteSessionId").isIntegralNumber()
+                    && saved.path("originalRouteSessionId").asLong() == session.getId()
+                    && saved.path("zeroChallengeInstance").isTextual()
+                    && !saved.path("zeroChallengeInstance").asText().isEmpty()
+                    && game.getPlayInstanceId().equals("challenge:" + saved.path("zeroChallengeInstance").asText());
+        } catch (Exception invalid) { return false; }
+    }
+
+    private static void copyHistoryScalars(Map<String, Object> out, JsonNode source, ObjectMapper json, String... keys)
+    {
+        for (String key : keys) {
+            JsonNode value = source.path(key);
+            if (value.isBoolean() || value.isNumber()) out.put(key, json.convertValue(value, Object.class));
+        }
+    }
+
+    private static void historyGameOutcomes(Map<String, Object> out, GameRuntimeSession game, ObjectMapper json)
+    {
+        try {
+            JsonNode saved = json.readTree(game.getStateJson());
+            if (saved == null) return;
+            Map<String, Object> outcomes = new LinkedHashMap<>();
+            String outcome = saved.path("gameplayDecision").path("outcome").asText();
+            if ("PASS".equals(outcome) || "FAIL".equals(outcome)) outcomes.put("outcome", outcome);
+            JsonNode coin = saved.path("coinFlip");
+            if (coin.path("flipped").asBoolean() && java.util.Arrays.asList("HEADS", "TAILS").contains(coin.path("side").asText()))
+                outcomes.put("coinSide", coin.path("side").asText());
+            JsonNode dice = saved.path("diceRoll");
+            if (dice.path("rolled").asBoolean()) {
+                Map<String, Object> roll = new LinkedHashMap<>();
+                copyHistoryScalars(roll, dice, json, "sum", "kept", "total", "success");
+                List<Integer> pips = new ArrayList<>();
+                if (dice.path("pips").isArray() && dice.path("pips").size() <= 2)
+                    for (JsonNode pip : dice.path("pips")) {
+                        if (!pip.isIntegralNumber() || pip.asInt() < 1 || pip.asInt() > 20) { pips.clear(); break; }
+                        pips.add(pip.asInt());
+                    }
+                if (!pips.isEmpty()) roll.put("pips", pips);
+                outcomes.put("diceRoll", roll);
+            }
+            if (saved.path("draws").isArray()) {
+                List<Map<String, Object>> draws = new ArrayList<>();
+                for (JsonNode draw : saved.path("draws")) {
+                    Map<String, Object> row = new LinkedHashMap<>(); copyHistoryText(row, draw, "id", "label", "content");
+                    if (!row.isEmpty()) draws.add(row);
+                }
+                outcomes.put("draws", draws);
+            }
+            if (!outcomes.isEmpty()) out.put("outcomes", outcomes);
+        } catch (Exception invalid) { /* Corrupt optional outcome data cannot authorize or reveal a different run. */ }
+    }
+
+    private static boolean historyPathCompleted(JsonNode snapshot, JsonNode chapter, TopicRouteEngine.State state,
+            Set<Long> readable, ObjectMapper json)
+    {
+        Set<Long> ids = new HashSet<>();
+        if (!chapter.path("nodeIds").isArray()) return false;
+        for (JsonNode id : chapter.path("nodeIds")) {
+            if (!id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0) return false;
+            ids.add(id.asLong());
+        }
+        if (java.util.Collections.disjoint(ids, readable)) return false;
+        for (JsonNode binding : snapshot.path("themeConfig").path("chapters")) {
+            JsonNode frozen = binding.path("binding");
+            JsonNode index = binding.path("index");
+            if (frozen.path("chapterId").asLong() == chapter.path("chapterId").asLong()
+                    && frozen.path("nodeIds").equals(chapter.path("nodeIds")) && index.isIntegralNumber()
+                    && state.getThemeRuntime().path("chapters").path(index.asText()).path("ended").asBoolean()) return true;
+        }
+        if (!"BRANCH_GRAPH".equals(snapshot.path("routeMode").asText())) return false;
+        // The persisted production decision log proves departure/terminal, never the whole-run allDone flag.
+        if (state.getDecisionLog() == null) return false;
+        for (Map<String, Object> decision : state.getDecisionLog()) {
+            JsonNode saved = json.valueToTree(decision);
+            JsonNode from = saved.path("fromNodeId"), to = saved.path("toNodeId");
+            if (!from.isIntegralNumber() || !ids.contains(from.asLong()) || !readable.contains(from.asLong())) continue;
+            if ("TERMINAL".equals(saved.path("reason").asText())) {
+                for (JsonNode terminal : snapshot.path("terminalNodeIds")) if (terminal.isIntegralNumber() && terminal.asLong() == from.asLong()) return true;
+            } else if (to.isIntegralNumber() && !ids.contains(to.asLong())) {
+                for (String field : new String[]{"edges", "fallbacks"}) for (JsonNode edge : snapshot.path(field))
+                    if (edge.path("fromNodeId").asLong() == from.asLong() && edge.path("toNodeId").asLong() == to.asLong()
+                            && ("fallbacks".equals(field) || edge.path("id").asText().equals(saved.path("edgeId").asText()))) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean historyIdsCompleted(JsonNode ids, Set<Long> completed)
+    {
+        if (!ids.isArray()) return false;
+        for (JsonNode id : ids) if (!id.isIntegralNumber() || !id.canConvertToLong()
+                || id.asLong() <= 0 || !completed.contains(id.asLong())) return false;
+        return true;
+    }
+
+    private static List<Map<String, Object>> historyBlocks(JsonNode blocks, TopicRouteEngine.State state, Set<Long> completed, boolean pathCompleted)
+    {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (JsonNode block : blocks) {
+            String type = block.path("type").asText();
+            if ("node".equals(type)) {
+                JsonNode id = block.path("nodeId");
+                if (!id.isIntegralNumber() || !id.canConvertToLong()) return null;
+                if (!completed.contains(id.asLong())) {
+                    if (pathCompleted) break;
+                    return null;
+                }
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("type", "node"); row.put("nodeId", id.asText()); out.add(row);
+                continue;
+            }
+            // Beat text can be a secret answer, unselected outcome or undelivered item; no replay proof is stored here.
+            if (block.hasNonNull("beat")) continue;
+            if (block.hasNonNull("when") && (!"HAS_TAG".equals(block.path("when").path("op").asText())
+                    || !state.getTags().contains(block.path("when").path("value").asText()))) continue;
+            if ("thought".equals(type) && !state.getVariables().containsKey("thought." + block.path("thoughtKey").asText())
+                    && !state.getTags().contains("thought." + block.path("thoughtKey").asText() + ".done")) continue;
+            if (!java.util.Arrays.asList("text", "image", "audio", "voice", "thought", "dream", "divider").contains(type)) continue;
+            Map<String, Object> row = new LinkedHashMap<>(); row.put("type", type);
+            copyHistoryText(row, block, "key", "content", "url", "altText", "who", "thoughtKey", "title");
+            if ("dream".equals(type) && block.path("images").isArray()) {
+                List<Map<String, Object>> images = new ArrayList<>();
+                for (JsonNode image : block.path("images")) {
+                    Map<String, Object> item = new LinkedHashMap<>(); copyHistoryText(item, image, "url", "line"); images.add(item);
+                }
+                row.put("images", images);
+            }
+            out.add(row);
+        }
+        return out;
+    }
+
+    private static void copyHistoryText(Map<String, Object> target, JsonNode source, String... keys)
+    {
+        for (String key : keys) if (source.path(key).isTextual()) target.put(key, source.path(key).asText());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> historyResults(Map<String, Object> node)
+    {
+        return (List<Map<String, Object>>) node.get("results");
+    }
 
     public AjaxResult ending(Long actorMemberId, Long activityId, Long topicId)
     {

@@ -9,7 +9,7 @@ const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { getScene } = require('../../../utils/scene-registry.js');
-const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+const { isLoginRequired, retryLogin, memberId } = require('../../../utils/session/login-reload.js');
 // 城瘾 · 俱乐部详情页(方案B:俱乐部=经典定向带团组织)
 // 俱乐部信息 + TA 办的经典定向团(/api/club/topics)+ 成员;团卡片点进主题报名页复用现有报名/扫码。
 const { toTimestamp, chinaParts } = require('../../../utils/datetime');
@@ -21,6 +21,7 @@ function aiDraftStorageKey() {
 }
 const mockData = require('../utils/mockData.js');
 const { aiPlanToDraft } = require('../utils/aiPlanToDraft.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const { buildGroupCodeIssuePayload, listGroupCodeActivities } = require('../../../utils/group-code-session.js');
 const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const ticketSource = require('../../../utils/ticket-source.js');
@@ -58,6 +59,19 @@ const OWNER_STAGE_COPY = {
   // CU-C-89:这个阶段是**俱乐部级**的(任意一个项目被承接就算到),没有单一「该项目」,
   // 入口也只能打开全团场次清单 —— 文案不能再按单项目口吻写,否则多项目的主理人认错待办对象。
   executionAccepted: { label: '活动运营', hint: '已承接项目，可查看全部项目的场次运营' },
+  // C-16(2026-11-02):「现在要做」优先说眼下真正卡着的事 —— 有合作邀约待确认、主题审核中;
+  // 城市定向主题没有商家站点也能开场,不再一律让人去邀请商家。
+  coopInvite: { label: '查看合作邀约', hint: '' },
+  // 第十一轮 h4 LOW:不再承诺过审就能开场(商业主题过审后还要招商、定价、开售),提示行留空。
+  review: { label: '主题审核中', hint: '' },
+  run: { label: '开一场', hint: '' },   // 第十二轮 k3(p3 N11):不再挂说明行
+  // 第十轮 f2 第 1 项(j2 F-05 / F-14):开了商家承接的主题先招商、再定价、开售后才开一场;提示行写主题名。
+  recruit: { label: '去招商', hint: '' },
+  price: { label: '确认终价', hint: '' },
+  // 第十轮 f2 walk:终价已提交、开售审核在等平台 —— 不再叫主理人再去确认终价。
+  saleReview: { label: '开售审核中', hint: '' },
+  // 第十二轮 k4(j2 N-01):已中标的站还没有合作单(带条款邀约没发或没被接受),开售会被拦 —— 提示行写站名。
+  contract: { label: '发邀约', hint: '' },
   loading: { label: '读取管理进度…', hint: '正在确认项目与邀请状态' },
   error: { label: '重试管理进度', hint: '暂时无法确认当前阶段' },
   // 管理员没有经营阶段:邀商家/发布主题/开一场都是主理人的事。
@@ -69,7 +83,7 @@ const OWNER_STAGE_COPY = {
 const LEAD_STAGE_STATIONS = ['发布主题', '邀请商家', '等待商家回应', '商家已接受'];
 const LEAD_STAGE_INDEX = { publish: 0, invite: 1, pending: 2, accepted: 3 };
 const PUBLIC_TABS = [
-  { key: 'posts', label: '帖子' },
+  { key: 'posts', label: '帖文' },
   { key: 'events', label: '活动' },
   { key: 'overview', label: '概览' },
 ];
@@ -289,10 +303,12 @@ function eventTimeText(raw) {
 
 // 2026-10-27 P-14 owner:标签只写时间 +「已开始 / 未开始」(拼成 decorateTopicCard 的 tagText)。
 // 色沿用稿:未开始 = warning、已开始 = success、已结束 = tertiary(已结束不在活动 tab 出现)。
-// ⚠️ 只用本页真拿得到的字段判:ended(后端 endDate 比出来的)+ startDate。
+// ⚠️ 只用本页真拿得到的字段判:ended + 本俱乐部场次时间(无场次时用主题日期)。
 function topicStatusOf(t) {
   if (t.ended) return { statusText: '已结束', statusTone: 'muted' };
-  const start = t.startDate ? toTimestamp(String(t.startDate)) : 0;
+  // C-19:有本俱乐部真实场次时按场次判,不再拿主题日期范围的起点说「已开始」。
+  const raw = t.nextSessionStart || t.startDate;
+  const start = raw ? toTimestamp(String(raw)) : 0;
   if (start && start <= Date.now()) return { statusText: '已开始', statusTone: 'live' };
   return { statusText: '未开始', statusTone: 'open' };
 }
@@ -308,7 +324,7 @@ function topicStatOf(value, unit) {
 
 function decorateTopicCard(t) {
   const status = topicStatusOf(t);
-  const timeText = eventTimeText(t.startDate) || t.dateText || '';
+  const timeText = eventTimeText(t.nextSessionStart || t.startDate) || t.dateText || '';
   return Object.assign({}, t, status, {
     timeText: timeText,
     // P-14:封面上的标签 = 开始时间 + 已开始/未开始
@@ -359,7 +375,7 @@ function buildMemberStrip(members, total) {
     memberId: m.memberId,
     avatar: m.avatar || '/images/d_profile.png',
     name: m.nickname || '城瘾玩家',
-    role: m.isOwner ? '群主' : (Number(m.role) === 1 ? '管理员' : ''),
+    role: m.isOwner ? '主理人' : (Number(m.role) === 1 ? '管理员' : ''),
     roleTone: m.isOwner ? 'owner' : 'admin',
   }));
   const rest = (Number(total) || list.length) - strip.length;
@@ -467,7 +483,7 @@ function enrichClub(club) {
   club.levelText = levelTextOf(club.level);
   // 稿 N1b 47:2 / N3 20:137 写的是「42 名成员」,不是光秃秃一个数字
   club.memberCountText = formatMemberCount(club.memberCount);
-  club.clubTypeText = club.clubType || club.city || '城市探索';
+  club.clubTypeText = club.clubType || '城市探索'; // j5 L1:类型格不拿城市顶替
   club.joinPolicyText = Number(club.joinPolicy) === 1 ? '需审核' : '公开';
   // 拍板 2026-10-22:元信息两行 —— 第一行「类型 · N 名成员」,第二行入会方式。
   club.metaLine = club.clubTypeText + ' · ' + club.memberCountText;
@@ -511,6 +527,8 @@ function isDemoClubId(id) {
 
 Page({
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  // 第九轮 m1-9:路线节点地址一点开地图
+  onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
   data: {
     // 稿 40:3 末行「★ 减少动态效果兜底」的接线端。index.wxss 里 .cy-motion-reduced 的
@@ -543,7 +561,7 @@ Page({
     canSeeMembers: false,
     // 成员名单/贡献榜的可见位:成员 + 公开加入团的访客(拍板 2026-10-22)。发帖/评论/举报仍看 canSeeMembers。
     canSeeRoster: false,
-    joinHidden: false,   // 2026-10-22 owner:往下滑时收起底部「加入俱乐部」
+    joinHidden: false, joinFloatW: 0,   // 2026-10-22 owner:往下滑时收起底部「加入俱乐部」;joinFloatW=悬浮钮实宽,贡献榜行据此让出分数位
     joinFx: '',          // 加入按钮动效:'' | 'busy'(请求中)| 'done'(变绿 + 打勾)
     welcomeShow: false,  // 加入后「在这个俱乐部你可以做什么」弹层
     welcomeItems: [],
@@ -603,6 +621,7 @@ Page({
     inviteFeedbackState: 'idle',
     sentInvites: [],
     ownerStage: 'loading',
+    ownerCanOpenSession: false,
     ownerPrimaryLabel: OWNER_STAGE_COPY.loading.label,
     ownerStageHint: OWNER_STAGE_COPY.loading.hint,
     // 带队进度时间线:「现在要做」只说下一步,这条说的是「我走到哪一站了」。
@@ -759,7 +778,8 @@ Page({
     }
     // owner 入口(承接原 club/index 管理台):无 id → 解析我拥有的俱乐部
     if (opt && opt.owner) { this._ownerEntry = true; this.resolveOwnerEntry(); return; }
-    this.setData({ detailLoaded: true, notFound: true }); cyToast('缺少俱乐部');
+    // j6 F3:无 id 的旧链接给原因,不留空白(返回走常驻导航栏返回)
+    this.setData({ detailLoaded: true, clubGoneText: '链接已失效' });
   },
 
   // 首展由 onLoad 负责，避免双请求；从发布/邀请/主办视图返回后重拉阶段真源。
@@ -775,6 +795,8 @@ Page({
     if (myAvatar !== this.data.myAvatar) this.setData({ myAvatar });
     const myNickname = (app.getNickname && app.getNickname()) || '';
     if (myNickname !== this.data.myNickname) this.setData({ myNickname });
+    const me = (app.getUserID && app.getUserID()) || null;   // j6 N2:别处登录 / 退出后回来,登录态以 app 为准
+    if (String(me || '') !== String(this.data.myMemberId || '')) this.setData({ myMemberId: me });
     if (!this._hasShown) { this._hasShown = true; return; }
     if (this.data.clubId && this.data.club) {
       if (this.canGovern() || this.data.canUseManageTab) this.loadAll();
@@ -825,7 +847,7 @@ Page({
   // 登录引导「登录」:重登成功后按原入口重读(有 clubId 读详情,owner 入口重新解析)
   onLoginRetry() {
     retryLogin(this, app, function () {
-      this.setData({ loginRequired: false, notFound: false, detailLoaded: false });
+      this.setData({ loginRequired: false, notFound: false, detailLoaded: false, myMemberId: memberId(app) });
       if (this.data.clubId) this.loadAll();
       else if (this._ownerEntry) this.resolveOwnerEntry();
     });
@@ -1436,6 +1458,7 @@ Page({
     }
     this._hasAcceptedExecutionProject = false;
     let stage = 'loading';
+    let receivedPending = 0;
     if (this.data.topicState === 'error') {
       stage = 'error';
     } else if (this.data.topicState === 'ready') {
@@ -1453,20 +1476,70 @@ Page({
       const pending = (this.data.sentInvites || []).some(function (item) {
         return topicIds.has(String(item.topicId)) && Number(item.status) === 0;
       });
-      if (!topicIds.size) stage = 'publish';
+      // 审核中的主题不在公开列表里,只在 /api/project/my 的 state=pending 行里。
+      const reviewing = this.data.ownerProjectState === 'ready' && (this.data.projectRows || []).some(function (item) {
+        return item.bizType === 'topic' && item.state === 'pending';
+      });
+      // 已上架主题全是城市定向(productType 1):不需要商家也能开场。
+      const allOrienteering = (this._topics || []).every(function (item) {
+        return Number(item.productType == null ? item.mode : item.productType) === 1;
+      });
+      // 生命周期:1 招募中 → 去招商;2 定价中 → 确认终价;7 立项待审 → 审核中;3/4 或非商业主题才能开一场。
+      const lifecycleOf = function (item) {
+        return item && item.lifecycle != null && item.lifecycle !== '' ? Number(item.lifecycle) : null;
+      };
+      const topics = this._topics || [];
+      const recruitingTopic = topics.find(function (item) { return lifecycleOf(item) === 1; });
+      // 还没确认终价的优先;都在等开售审核时再说「开售审核中」。
+      const pricingTopic = topics.find(function (item) { return lifecycleOf(item) === 2 && item.saleReviewPending !== true; })
+        || topics.find(function (item) { return lifecycleOf(item) === 2; });
+      const projectReviewing = topics.some(function (item) { return lifecycleOf(item) === 7; });
+      const sellable = topics.some(function (item) {
+        const lc = lifecycleOf(item);
+        return lc === null || lc === 0 || lc === 3 || lc === 4;
+      });
+      this._stageTopic = null;
+      this._canOpenSession = sellable;
+      if (!topicIds.size) stage = reviewing ? 'review' : 'publish';
       else if (acceptedExecution || (this.data.ownerProjectState === 'ready' && accepted)) stage = 'accepted';
       else if (this.data.ownerProjectState === 'error') stage = 'error';
       else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'error') stage = 'error';
-      else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'ready') stage = pending ? 'pending' : 'invite';
+      else if (this.data.ownerProjectState === 'ready' && this.data.inviteFeedbackState === 'ready') {
+        stage = pending ? 'pending' : (reviewing ? 'review' : (allOrienteering ? 'run' : 'invite'));
+      }
+      // 本俱乐部主题的生命周期优先:招募中 → 去招商,定价中 → 确认终价(商家接受、邀约待回应都还在招商这一步里)。
+      // 执行俱乐部(接了别人的项目)不走这条。
+      if (!acceptedExecution && ['run', 'invite', 'review', 'pending', 'accepted'].indexOf(stage) >= 0) {
+        if (recruitingTopic) { stage = 'recruit'; this._stageTopic = recruitingTopic; }
+        else if (pricingTopic) { stage = pricingTopic.saleReviewPending === true ? 'saleReview' : 'price'; this._stageTopic = pricingTopic; }
+        else if (stage === 'run' && !sellable && projectReviewing) stage = 'review';
+        // 第十二轮 k4(j2 N-09):本俱乐部的主题已开售、商家也已接受,眼下的事是开一场,不是「管理项目」
+        else if (stage === 'accepted' && topics.some(function (item) { const lc = lifecycleOf(item); return lc === 3 || lc === 4; })) stage = 'run';
+        const holdTopic = topics.find(function (item) {
+          const lc = lifecycleOf(item);
+          return (lc === 1 || lc === 2) && Array.isArray(item.uncontractedStations) && item.uncontractedStations.length > 0;
+        });
+        if (holdTopic && ['recruit', 'price', 'saleReview'].indexOf(stage) >= 0) { stage = 'contract'; this._stageTopic = holdTopic; }
+      }
+      receivedPending = (this.data.messages || []).filter(function (item) {
+        return Number(item.status) === 0 && item.toType === 'club' && String(item.toId) === String(clubId);
+      }).length;
+      if (receivedPending > 0 && ['publish', 'review', 'invite', 'run', 'pending'].indexOf(stage) >= 0) stage = 'coopInvite';
     }
-    const copy = stage === 'accepted' && this._hasAcceptedExecutionProject
+    let copy = stage === 'accepted' && this._hasAcceptedExecutionProject
       ? OWNER_STAGE_COPY.executionAccepted : OWNER_STAGE_COPY[stage];
+    if (stage === 'coopInvite') copy = { label: copy.label, hint: '有 ' + receivedPending + ' 条合作邀约待确认' };
+    if ((stage === 'recruit' || stage === 'price' || stage === 'saleReview') && this._stageTopic) copy = { label: copy.label, hint: this._stageTopic.name || '' };
+    if (stage === 'contract' && this._stageTopic) {
+      copy = { label: copy.label, hint: this._stageTopic.uncontractedStations.join('、') + ' 还没有合作单，不能开售' };
+    }
     const timeline = this._hasAcceptedExecutionProject
       ? { nodes: [], summary: '' } : this.buildLeadTimeline(stage);
     this.setData({
       ownerStage: stage,
       ownerPrimaryLabel: copy.label,
       ownerStageHint: copy.hint,
+      ownerCanOpenSession: stage !== 'run' && this._canOpenSession !== false,
       leadTimelineNodes: timeline.nodes,
       leadTimelineSummary: timeline.summary,
     });
@@ -1513,6 +1586,22 @@ Page({
     if (this.data.ownerStage === 'publish') { this.onCreateTeam(); return; }
     const stage = this.data.ownerStage;
     if (stage === 'accepted' && this._hasAcceptedExecutionProject) { this.goEventOps(); return; }
+    if (stage === 'run') { this.goEventOps(); return; }
+    if ((stage === 'recruit' || stage === 'price' || stage === 'contract') && this._stageTopic && this._stageTopic.id) {
+      const url = stage !== 'price'
+        ? '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._stageTopic.id + '&scope=CLUB&open=merchant'
+        : '/pages/topic/pricing/index?topicId=' + this._stageTopic.id + '&club=1';
+      if (this._navigating) return; this._navigating = true;
+      wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
+      return;
+    }
+    if (stage === 'review' || stage === 'saleReview') { this.setData({ activeTab: 'manage', openCommentPost: null }); return; }
+    if (stage === 'coopInvite') {
+      this.setData({ activeTab: 'manage', openCommentPost: null, openManageSection: 'received' }, function () {
+        wx.pageScrollTo({ selector: '#manage-received-section', duration: 250, offsetTop: 24 });
+      });
+      return;
+    }
     const afterSwitch = function () {
       if (stage === 'invite') {
         wx.pageScrollTo({ selector: '#manage-merchants-section', duration: 250, offsetTop: 24 });
@@ -1778,7 +1867,7 @@ Page({
         if (epoch !== that._postsEpoch) return;
         // E-09(2026-09-16):失败原来是 rows=[] → 渲染成「还没有帖子」(把「不知道」说成「没有」)。
         if (res.code != '200' || !Array.isArray(res.data)) {
-          that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子加载失败') });
+          that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖文加载失败') });
           return;
         }
         const posts = clubPostRepost.mapClubFeedRows(res.data, function (p) {
@@ -1786,7 +1875,7 @@ Page({
         });
         pageMotion.enter(that, 'pmPosts', { once: true }); that._postsHasMore = unpinnedClubPosts(res.data).length >= limit; that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
-      fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络异常，帖子加载失败' }); },
+      fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络异常，帖文加载失败' }); },
     });
   },
 
@@ -1803,7 +1892,7 @@ Page({
       success(res) {
         if (epoch !== that._postsEpoch) return;
         that._postsMoreEpoch = null;
-        if (res.code != '200' || !Array.isArray(res.data)) { cyToast(bizFailureMessage(res, '更早的帖子没能加载出来')); return; }
+        if (res.code != '200' || !Array.isArray(res.data)) { cyToast(bizFailureMessage(res, '更早的帖文没能加载出来')); return; }
         const seen = {};
         (that.data.posts || []).forEach(function (p) { seen[p.feedKey || String(p.id)] = true; });
         const rows = res.data.filter(function (p) { return p && (p.itemType === 'repost' || unpinnedClubPosts([p]).length); });
@@ -1816,7 +1905,7 @@ Page({
       fail() {
         if (epoch !== that._postsEpoch) return;
         that._postsMoreEpoch = null;
-        cyToast('更早的帖子没能加载出来');
+        cyToast('更早的帖文没能加载出来');
       },
     });
   },
@@ -1897,7 +1986,8 @@ Page({
   onEditPost(e) {
     const post = this.findPost(e.currentTarget.dataset.id);
     if (!post) return;
-    const isAuthor = String(post.authorMemberId) === String(this.data.myMemberId);
+    // 第十二轮 k7(走查 k2 游客俱乐部页):游客投影里作者 id 与自己的 id 都是空,空 == 空不算本人
+    const isAuthor = !!this.data.myMemberId && post.authorMemberId != null && String(post.authorMemberId) === String(this.data.myMemberId);
     if (!isAuthor && !(this.data.canModerateContent && Number(post.type) === 2)) return;
     this._postEditOrigin = post.content || '';
     this.setData({
@@ -2112,7 +2202,7 @@ Page({
         if (!isCurrent()) return;
         const club = enrichClub((res.code == '200' && res.data) || null);
         const canSee = !!(club && (club.isOwner || club.isJoined));
-        const canSeeRoster = canSeeClubRoster(club);
+        const canSeeRoster = canSeeClubRoster(club);   // 第十二轮 k2:游客与已登录非成员同一口径(服务端回公开投影)
         const legacyCanGovern = that.canGovern(club);
         const sameClub = !!club && that.data.club && String(that.data.club.id) === String(club.id);
         const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);
@@ -2123,6 +2213,7 @@ Page({
         if (requestedTab) that._requestedTab = '';
         if (!canSeeRoster) that._memberRequestSeq = (that._memberRequestSeq || 0) + 1;
         that.setData({
+          myMemberId: memberId(app) || null,   // j6 N2:写前登录回到本页后,自我识别(榜单「我」、帖文作者)跟上登录态
           club: club,
           canSeeMembers: canSee,
           canSeeRoster: canSeeRoster,
@@ -2140,7 +2231,7 @@ Page({
           membersExpanded: canSeeRoster ? that.data.membersExpanded : false,
         });
         // 2026-10-22 owner:审核团通过后第一次进来,补弹「在这里你可以做什么」(已看过不弹)
-        if (!that.data.joinFx) that.maybeWelcome(club);
+        if (!that.data.joinFx) that.maybeWelcome(club); that._measureJoinFloat();
         that.applyClubOwnerBadge();  // CU-C-108:club 到了,把早到的帖子徽标补上
         if (canSeeRoster) that.loadMembers();
         if (canSee) {
@@ -2206,7 +2297,8 @@ Page({
           const end = t.endDate ? toTimestamp(String(t.endDate)) : 0;
           return decorateTopicCard(Object.assign({}, t, {
             dateText: dateOf(t.startDate),
-            ended: end > 0 && end < now,
+            // nextSessionStart 只含服务端筛出的未结束、未取消场次,优先于主题日期范围。
+            ended: !t.nextSessionStart && end > 0 && end < now,
           }));
         });
         that._topics = list;
@@ -2267,7 +2359,8 @@ Page({
           return;
         }
         // V-15:成员头像是后端 http 签名链接 / 相对路径时真机拒载,入列前过 getImgUrl
-        const members = res.data.map((m) => (m && m.avatar && app.getImgUrl ? Object.assign({}, m, { avatar: app.getImgUrl(m.avatar) }) : m));
+        const members = res.data.map((m) => (m && m.avatar && app.getImgUrl ? Object.assign({}, m, { avatar: app.getImgUrl(m.avatar) }) : m))
+          .map((m, i) => (m && m.id == null && m.memberId == null ? Object.assign({}, m, { id: 'guest-' + i }) : m));   // 游客投影没有行 id,给 wx:key 一个本页序号
         that.setData({ members: members, membersState: 'ready', memberStrip: buildMemberStrip(members, that.data.club && that.data.club.memberCount) });
         if (that._leaderboardRows) that.setData({ leaderboard: that.composeLeaderboard() });
       },
@@ -2422,7 +2515,8 @@ Page({
   //    现在两个入口都摆明,点哪个去哪个。
   goMemberProfile(e) {
     const memberId = e.currentTarget.dataset.memberId;
-    if (!memberId) return;
+    // 游客的名单 / 榜单是公开投影,不带会员 id:点人先登录,登录后回到本页
+    if (!memberId) { if (!this.data.myMemberId) this.onLoginRetry(); return; }
     const that = this;
     const goPublic = () => { if (that._navigating) return; that._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId, complete: () => { that._navigating = false; } }); };
     if (!this.canReadCustomerProfile()) { goPublic(); return; }
@@ -2523,17 +2617,18 @@ Page({
     const c = club || {};
     const items = [];
     items.push(Number(c.memberPostAllowed) === 0
-      ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '在「帖子」看主理人和成员发的内容，可以点亮、评论' }
-      : { key: 'posts', icon: 'comment', title: '发帖和大家聊', sub: '在「帖子」发动态、带上你的漫游成绩，大家都能点亮和评论' });
+      ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '' }
+      : { key: 'posts', icon: 'comment', title: '发帖文和大家聊', sub: '' });
+    // 第十轮 f3 第 5 项(j2 F-24):每条的说明行撤掉,只留标题;副行只放本团真实设置(成员优先、成员价)和商家不能报名这条规则。
     if (this.data.isMerchantViewer) {
-      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '可以浏览俱乐部活动，在活动卡上邀约承接；商家身份不能报名' });
+      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '商家身份不能报名' });
     } else {
       const perks = [];
       if (Number(c.prioritySignupEnabled) === 1) perks.push('成员优先报名');
       if (Number(c.memberDiscountPrice) > 0) perks.push('成员价 ¥' + Number(c.memberDiscountPrice));
-      items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: '在「活动」报名最近的局' + (perks.length ? '，' + perks.join('、') : '') });
+      items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: perks.join('、') });
     }
-    items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '在「概览」看成员和本周贡献榜，参加活动就会攒贡献分' });
+    items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '' });
     return items;
   },
   openWelcome(club) {
@@ -2544,6 +2639,11 @@ Page({
   },
   // 审核团:通过后第一次进来补弹一次;公开团在加入那一下已经弹过并记过。
   maybeWelcome(club) {
+    // 第十轮 f3 第 4 项(j2 F-23):主理人看过自己的团就算「见过」,转让后变回成员也不再弹「欢迎加入」。
+    if (club && club.isOwner && club.id) {
+      try { wx.setStorageSync(this.welcomeSeenKey(club.id), 1); } catch (e) { /* 存不下不影响使用 */ }
+      return;
+    }
     if (!club || !club.isJoined || club.isOwner || this.data.welcomeShow) return;
     let seen = false;
     try { seen = !!wx.getStorageSync(this.welcomeSeenKey(club.id)); } catch (e) { seen = true; }
@@ -2727,7 +2827,7 @@ Page({
     const cid = (this.data.club && this.data.club.id) || this.data.clubId;
     this.openChoiceSheet(
       '发布主题',
-      '选定后会先进入连续选点，随时取消即可回到编辑器继续填写',
+      '',
       [
         { key: '1', label: '城市定向 · 顺序探索' },
         { key: '2', label: '自由探索 · 全点开放' },
@@ -2858,7 +2958,7 @@ Page({
       && (this.canGovern() || this.data.canManageActivities));
     const url = canManage
       ? '/pages/club/topic-detail/index?topicId=' + id + this.clubIdQuery()
-      : '/pages/topic/index/index?id=' + id;
+      : '/pages/topic/index/index?id=' + id + '&via=session';
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } });
   },
 
@@ -3235,6 +3335,8 @@ Page({
   onToggleComments(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
     if (this.data.openCommentPost === id) { this.setData({ openCommentPost: null, comments: [], commentsLoaded: false, commentsError: '' }); return; }
+    // 游客不开评论(服务端 401):先走登录,不再把游客的 401 显示成「网络异常」
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onToggleComments(e), { owner: this, target: () => [this.data.clubId, id] })) return;
     this.setData({ openCommentPost: id, comments: [], commentsLoaded: false, commentsError: '', commentText: '' });
     this.loadComments(id);
   },
@@ -3375,11 +3477,15 @@ Page({
     const cid = this.data.clubId;
     const postId = event && event.target && event.target.dataset
       ? event.target.dataset.postId : null;
+    // 第七轮 C 第 3 项:卡片图用俱乐部封面(无封面取 Logo),不让微信截屏。
+    const clubCover = (club && (club.cover || club.logo)) || '';
     if (postId && cid) {
-      return {
+      const postShare = {
         title: (club && club.name ? club.name + ' · ' : '') + '俱乐部帖文',
         path: '/pages/club/detail/index?id=' + cid + '&postId=' + postId,
       };
+      if (clubCover) postShare.imageUrl = clubCover;
+      return postShare;
     }
     const topicId = event && event.target && event.target.dataset
       ? event.target.dataset.topicId : null;
@@ -3405,10 +3511,22 @@ Page({
         });
       }
     }
-    return {
+    const clubShare = {
       title: (club && club.name) || '城瘾俱乐部',
       path: cid ? ('/pages/club/detail/index?id=' + cid) : '/pages/talent/list/index',
     };
+    if (clubCover) clubShare.imageUrl = clubCover;
+    return clubShare;
+  },
+
+  // 第七轮 C 第 1 项:朋友圈。只发俱乐部主页本身(不带帖子/带票参数);单页模式下游客读 /api/club/detail(匿名放行),
+  // 入会等写动作由登录闸提示去完整小程序。封面取俱乐部封面,没有再取 Logo。
+  onShareTimeline() {
+    const club = this.data.club || {};
+    const timeline = { title: club.name || '城瘾俱乐部', query: this.data.clubId ? 'id=' + this.data.clubId : '' };
+    const cover = club.cover || club.logo || '';
+    if (cover) timeline.imageUrl = cover;
+    return timeline;
   },
 
   // 分享钮在整行 bindtap 之上,catchtap 只为阻断冒泡(否则点分享会顺带跳进管理页)。
@@ -3696,5 +3814,15 @@ Page({
     else if (top - last > 6) hidden = true;
     else if (last - top > 6) hidden = false;
     if (hidden !== this.data.joinHidden) this.setData({ joinHidden: hidden });
+  },
+
+  // 2026-11-02 r2:悬浮「加入」固定在右下,首屏正好压在贡献榜第一行的分数上。量一次钮宽,
+  // 贡献榜行右侧让出「钮宽 + 8px」,分数落在钮左边;钮本身的位置、样式与收起逻辑都不动。
+  _measureJoinFloat() {
+    if (typeof wx === 'undefined' || !wx.createSelectorQuery) return;
+    wx.createSelectorQuery().in(this).select('.join-float__btn').boundingClientRect((rect) => {
+      const w = rect && rect.width ? Math.ceil(rect.width) : 0;
+      if (w !== this.data.joinFloatW) this.setData({ joinFloatW: w });
+    }).exec();
   },
 });

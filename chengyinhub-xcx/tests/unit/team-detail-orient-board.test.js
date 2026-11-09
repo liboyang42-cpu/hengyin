@@ -9,12 +9,13 @@ const { platform, receipt } = require('./helpers/team-event-platform');
 const clone = v => JSON.parse(JSON.stringify(v));
 const teamId = '9007199254740993';
 const ownerId = '9223372036854775807';
+// 第十一轮 g2(j4 F4):队长打开招募中的队伍会读入队申请;本文件不测这条读取,夹具直接答空列表,不占请求序号。
 function mount() {
   let definition, user = '71', token = 'token-a';
   const requests = [], writes = [];
   const app = { globalData: {}, getUserID: () => user, getAuthorization: () => token,
     getRequestErrorMessage: (res, fallback) => res && res.msg || fallback,
-    sendRequest: r => { requests.push(r); return { abort() {} }; } };
+    sendRequest: r => { if (r.url === '/api/team/applications') { r.success({ code: 200, data: [] }); return { abort() {} }; } requests.push(r); return { abort() {} }; } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Page: d => { definition = d; }, getApp: () => app,
     wx: platform(), console,
     require: id => id.includes('toast') ? () => {} : createRequire(file)(id) });

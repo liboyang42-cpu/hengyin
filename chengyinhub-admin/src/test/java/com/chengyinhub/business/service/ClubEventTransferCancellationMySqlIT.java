@@ -64,6 +64,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -85,7 +86,7 @@ import static org.mockito.Mockito.when;
  * 结束 DROP 并从 {@code information_schema} 回读 0。退款网关/通知不外发，只保留调用计数。
  */
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
-class ClubEventTransferCancellationMySqlIT {
+public class ClubEventTransferCancellationMySqlIT {
 
     private static final String SUITE = "p1002_cancel";
     private static final long OLD_OWNER = 1101L;
@@ -201,6 +202,162 @@ class ClubEventTransferCancellationMySqlIT {
         refuseDoneWrite.set(false);
         seed();
         wireServices();
+    }
+
+    @Test
+    void cancelledMemberNoticeNaturallyFiresThroughIsolatedQuartzAndRealIm() throws Exception {
+        assertEquals(database, jdbc.queryForObject("select database()", String.class));
+        try (Connection connection = open()) {
+            ItSchema.applyMigrations(connection, "sql/migration_im.sql",
+                    "sql/migration_im_send_idempotency_20260913.sql",
+                    "sql/migration_20261012_im_media_visibility.sql");
+        }
+        // Reuse the canonical ban table only; the rest of governance is outside this dispatch test.
+        String governance = java.nio.file.Files.readString(java.nio.file.Paths.get(
+                "sql/migration_club_role_governance_20260823.sql"));
+        int banStart = governance.indexOf("CREATE TABLE IF NOT EXISTS club_governance_ban (");
+        assertTrue(banStart >= 0);
+        jdbc.execute(governance.substring(banStart, governance.indexOf(";\n", banStart) + 1));
+
+        com.chengyinhub.business.service.impl.ImServiceImpl imTarget =
+                new com.chengyinhub.business.service.impl.ImServiceImpl();
+        ReflectionTestUtils.setField(imTarget, "conversationMapper", sql.getMapper(
+                com.chengyinhub.business.mapper.ImConversationMapper.class));
+        ReflectionTestUtils.setField(imTarget, "memberMapper", sql.getMapper(
+                com.chengyinhub.business.mapper.ImConversationMemberMapper.class));
+        ReflectionTestUtils.setField(imTarget, "messageMapper", sql.getMapper(
+                com.chengyinhub.business.mapper.ImMessageMapper.class));
+        IImService im = transactionalProxy(imTarget, IImService.class);
+        Object cancellationTarget = ((org.springframework.aop.framework.Advised) group)
+                .getTargetSource().getTarget();
+        ReflectionTestUtils.setField(cancellationTarget, "imService", im);
+        eventOps.cancelActivityByOwnerWithClubWrapUp(OLD_OWNER, ACTIVITY, REASON);
+
+        JdbcTemplate readback = new JdbcTemplate(new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                url, mysql.user(), mysql.password()));
+        assertEquals(database, readback.queryForObject("select database()", String.class));
+        Long campaign = readback.queryForObject("select id from club_event_notification_campaign "
+                + "where activity_id=? and audience_type='REGISTERED'", Long.class, ACTIVITY);
+        Long delivery = readback.queryForObject("select id from club_event_notification_delivery "
+                + "where campaign_id=? and recipient_member_id=3101", Long.class, campaign);
+        String messageScope = "sender_id=0 and receiver_id=3101 and msg_type=1 and json_valid(extra_json) "
+                + "and json_unquote(json_extract(extra_json,'$.type'))='CLUB_CAMPAIGN' "
+                + "and json_unquote(json_extract(extra_json,'$.campaignId'))=? "
+                + "and json_unquote(json_extract(extra_json,'$.clubId'))=? "
+                + "and json_unquote(json_extract(extra_json,'$.activityId'))=?";
+        Integer queuedCampaigns = readback.queryForObject("select count(*) "
+                + "from club_event_notification_campaign where activity_id=?", Integer.class, ACTIVITY);
+        assertEquals("PENDING", readback.queryForObject(
+                "select status from club_event_notification_delivery where id=?", String.class, delivery));
+        assertEquals(0L, readback.queryForObject(
+                "select count(*) from im_message where " + messageScope,
+                Long.class, campaign.toString(), String.valueOf(CLUB), String.valueOf(ACTIVITY)));
+        String due = readback.queryForObject("select cast(next_attempt_at as char) "
+                + "from club_event_notification_outbox where delivery_id=?", String.class, delivery);
+        String dbNow = readback.queryForObject("select cast(current_timestamp(3) as char)", String.class);
+
+        ClubEventOpsMapper notifications = sql.getMapper(ClubEventOpsMapper.class);
+        IClubEventNotificationTransactionService transactions = transactionalProxy(
+                new com.chengyinhub.business.service.impl.ClubEventNotificationTransactionService(
+                        notifications, im, access, sql.getMapper(ClubMapper.class)),
+                IClubEventNotificationTransactionService.class);
+        IClubEventNotificationService dispatcher = org.mockito.Mockito.spy(
+                new com.chengyinhub.business.service.impl.ClubEventNotificationServiceImpl(
+                        access, notifications, transactions));
+        List<Integer> dispatchReturns = new java.util.concurrent.CopyOnWriteArrayList<>();
+        AtomicReference<Throwable> asynchronousFailure = new AtomicReference<>();
+        org.mockito.Mockito.doAnswer(call -> {
+            try {
+                Integer result = (Integer) call.callRealMethod();
+                dispatchReturns.add(result);
+                return result;
+            } catch (Throwable failure) {
+                asynchronousFailure.compareAndSet(null, failure);
+                throw failure;
+            }
+        }).when(dispatcher).retryDue();
+        com.chengyinhub.business.task.ClubEventOpsTask task =
+                new com.chengyinhub.business.task.ClubEventOpsTask(mock(IClubWaitlistService.class), dispatcher);
+        java.util.Properties properties = new java.util.Properties();
+        properties.setProperty("org.quartz.scheduler.instanceName", "r23-c08-" + java.util.UUID.randomUUID());
+        properties.setProperty("org.quartz.scheduler.skipUpdateCheck", "true");
+        properties.setProperty("org.quartz.threadPool.threadCount", "1");
+        properties.setProperty("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
+        org.quartz.Scheduler scheduler = new org.quartz.impl.StdSchedulerFactory(properties).getScheduler();
+        CountDownLatch fired = new CountDownLatch(3);
+        List<long[]> fireTimes = new java.util.concurrent.CopyOnWriteArrayList<>();
+        long notBefore = System.currentTimeMillis() + 1500L;
+        try {
+            org.quartz.JobDetail job = org.quartz.JobBuilder.newJob(NaturalNoticeJob.class)
+                    .withIdentity("cancel-notice").build();
+            job.getJobDataMap().put("task", task);
+            job.getJobDataMap().put("fired", fired);
+            job.getJobDataMap().put("fireTimes", fireTimes);
+            job.getJobDataMap().put("asynchronousFailure", asynchronousFailure);
+            System.out.println("CYV-C08 TIMER_INPUT schema=" + database + " jvmZone="
+                    + java.time.ZoneId.systemDefault() + " beforeDbNow=" + dbNow + " initialDue=" + due
+                    + " notBefore=" + notBefore + " campaigns=" + queuedCampaigns);
+            scheduler.scheduleJob(job, org.quartz.TriggerBuilder.newTrigger()
+                    .startAt(new java.util.Date(notBefore)).withSchedule(org.quartz.SimpleScheduleBuilder
+                            .simpleSchedule().withIntervalInMilliseconds(500L).withRepeatCount(2)).build());
+            assertEquals(1, scheduler.getJobKeys(org.quartz.impl.matchers.GroupMatcher.anyJobGroup()).size());
+            scheduler.start();
+            assertTrue(fired.await(20, TimeUnit.SECONDS), "isolated Quartz must naturally fire all three times");
+            assertNull(asynchronousFailure.get(), "a firing is not proof of a successful dispatcher return");
+            assertEquals(Arrays.asList(queuedCampaigns, 0, 0), dispatchReturns,
+                    "every real dispatcher invocation must return normally; terminal retries must be empty");
+            assertEquals(3, fireTimes.size());
+            for (long[] fire : fireTimes) {
+                assertTrue(fire[0] >= notBefore && fire[1] >= fire[0], "timer cannot fire before scheduled time");
+            }
+            assertEquals("SENT", readback.queryForObject(
+                    "select status from club_event_notification_delivery where id=?", String.class, delivery));
+            assertEquals(1, readback.queryForObject(
+                    "select attempt_count from club_event_notification_delivery where id=?", Integer.class, delivery));
+            assertEquals(1, readback.queryForObject(
+                    "select version from club_event_notification_delivery where id=?", Integer.class, delivery));
+            Long message = readback.queryForObject("select message_id from club_event_notification_delivery "
+                    + "where id=?", Long.class, delivery);
+            assertNotNull(message);
+            assertTrue(message > 0);
+            assertEquals(1L, readback.queryForObject("select count(*) from im_message where id=? and "
+                    + messageScope + " and content like ?", Long.class, message, campaign.toString(),
+                    String.valueOf(CLUB), String.valueOf(ACTIVITY), "%" + REASON + "%"));
+            assertEquals(1L, readback.queryForObject("select count(*) from im_message "
+                    + "where " + messageScope, Long.class, campaign.toString(),
+                    String.valueOf(CLUB), String.valueOf(ACTIVITY)));
+            assertEquals("COMPLETED", readback.queryForObject("select status from club_event_notification_outbox "
+                    + "where delivery_id=?", String.class, delivery));
+            assertEquals("COMPLETED", readback.queryForObject("select status from club_event_notification_campaign "
+                    + "where id=?", String.class, campaign));
+            assertEquals(0L, readback.queryForObject("select count(*) from club_event_notification_campaign "
+                    + "where activity_id=?", Long.class, OTHER_ACTIVITY));
+            System.out.println("CYV-C08 NATURAL_MYSQL schema=" + database + " jvmZone="
+                    + java.time.ZoneId.systemDefault() + " beforeDbNow=" + dbNow + " initialDue=" + due
+                    + " campaign=" + campaign + " delivery=" + delivery + " message=" + message
+                    + " fires=" + fireTimes.stream().map(java.util.Arrays::toString).toList());
+        } finally {
+            scheduler.shutdown(true);
+            assertTrue(scheduler.isShutdown(), "scheduler must stop before the scratch database is dropped");
+        }
+    }
+
+    public static class NaturalNoticeJob implements org.quartz.Job {
+        @Override
+        @SuppressWarnings("unchecked")
+        public void execute(org.quartz.JobExecutionContext context) {
+            org.quartz.JobDataMap data = context.getMergedJobDataMap();
+            ((List<long[]>) data.get("fireTimes")).add(new long[] {
+                    context.getScheduledFireTime().getTime(), context.getFireTime().getTime() });
+            try {
+                ((com.chengyinhub.business.task.ClubEventOpsTask) data.get("task")).run();
+            } catch (RuntimeException | Error failure) {
+                ((AtomicReference<Throwable>) data.get("asynchronousFailure")).compareAndSet(null, failure);
+                throw failure;
+            } finally {
+                ((CountDownLatch) data.get("fired")).countDown();
+            }
+        }
     }
 
     @Test
@@ -768,7 +925,8 @@ class ClubEventTransferCancellationMySqlIT {
                 "cyv-p1002", new SpringManagedTransactionFactory(), dataSource));
         configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String mapper : Arrays.asList("ClubEventOpsMapper", "ClubMapper",
-                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper","CmsTopicChapterMapper","CmsTopicNodeMapper","SettlementDetailMapper")) {
+                "CmsActivityMapper", "CmsTopicMapper", "CmsRegistrationMapper", "OmsTicketMapper","CmsTopicChapterMapper","CmsTopicNodeMapper","SettlementDetailMapper",
+                "ImConversationMapper", "ImConversationMemberMapper", "ImMessageMapper")) {
             String path = "mapper/business/" + mapper + ".xml";
             try (InputStream input = ClubEventTransferCancellationMySqlIT.class
                     .getClassLoader().getResourceAsStream(path)) {
@@ -861,6 +1019,11 @@ class ClubEventTransferCancellationMySqlIT {
 
         @Override
         public ClubAccessContext resolve(Long principalMemberId, Long clubId, Long activityId) {
+            return context(principalMemberId, clubId, activityId, false);
+        }
+
+        @Override
+        public ClubAccessContext resolveReadOnly(Long principalMemberId, Long clubId, Long activityId) {
             return context(principalMemberId, clubId, activityId, false);
         }
 

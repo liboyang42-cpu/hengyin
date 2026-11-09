@@ -13,6 +13,14 @@ import com.chengyinhub.common.core.domain.BaseEntity;
 public class CoopPerk extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
+    /** M-01:商家常备权益表单不采集核销规则;城瘾所有权益都是到店扫玩家核销码兑现,缺省按此冻结。 */
+    public static final String DEFAULT_REDEEM_RULE = "到店出示核销码，店员扫码核销";
+
+    /** 空白核销规则落为默认规则;商家填写过的规则原样保留。 */
+    public static String redeemRuleOrDefault(String redeemRule) {
+        return redeemRule == null || redeemRule.trim().isEmpty() ? DEFAULT_REDEEM_RULE : redeemRule;
+    }
+
     private Long id;
     /** 所属邀约；章节开放招商生成的独立快照为空 */
     private Long inviteId;

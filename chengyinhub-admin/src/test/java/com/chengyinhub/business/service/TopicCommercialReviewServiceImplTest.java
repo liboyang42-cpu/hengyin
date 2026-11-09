@@ -74,6 +74,48 @@ class TopicCommercialReviewServiceImplTest {
     }
 
     @Test
+    void determinedNoSaleWindowIsRejectedBeforeAnyProjectSubmissionWrite() {
+        CmsTopic topic = topic(TopicLifecycleState.DRAFT);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        topic.setMerchantStatus(1);
+        topic.setSaleEndAt(java.util.Date.from(java.time.Instant.parse("2099-01-03T00:00:00Z")));
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        for (long offset : new long[] {0, 1}) {
+            topic.setRecruitDeadline(new java.util.Date(topic.getSaleEndAt().getTime() + offset));
+            for (TopicLifecycleState target : new TopicLifecycleState[] {
+                    TopicLifecycleState.RECRUITING, TopicLifecycleState.PRICING}) {
+                com.chengyinhub.common.exception.ServiceException failure = assertThrows(
+                        com.chengyinhub.common.exception.ServiceException.class,
+                        () -> service.submitProjectReview(9L, 3L, target));
+                assertTrue(failure.getMessage().contains("招商截止日期必须早于售票截止时间"));
+            }
+        }
+        verify(topicMapper, org.mockito.Mockito.times(4)).selectCmsTopicByIdForUpdate(9L);
+        org.mockito.Mockito.verifyNoMoreInteractions(topicMapper);
+        org.mockito.Mockito.verifyNoInteractions(auditTaskService, lifecycleService);
+    }
+
+    @Test
+    void futureRecruitmentCanSubmitBeforePricesAndSkusAreComplete() {
+        CmsTopic topic = topic(TopicLifecycleState.DRAFT);
+        topic.setStartDate(java.util.Date.from(java.time.Instant.parse("2099-01-01T00:00:00Z")));
+        topic.setRecruitDeadline(java.util.Date.from(java.time.Instant.parse("2099-01-02T00:00:00Z")));
+        topic.setSaleEndAt(java.util.Date.from(java.time.Instant.parse("2099-01-03T00:00:00Z")));
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        CommercialTopicPolicy.Evaluation evaluation = CommercialTopicPolicy.Evaluation.freeExplore();
+        when(policy.evaluate(9L)).thenReturn(evaluation);
+        when(policy.projectParameters(same(topic), same(evaluation)))
+                .thenReturn(java.util.Collections.<String, Object>singletonMap("topicId", 9L));
+        when(lifecycleService.transition(9L, TopicLifecycleState.DRAFT, TopicLifecycleState.PENDING_REVIEW))
+                .thenReturn(true);
+        when(auditTaskService.submitCommercialReview(eq(AuditTask.BIZ_TOPIC_PROJECT_REVIEW), eq(9L), eq(3L),
+                contains("RECRUITING"))).thenReturn(74L);
+
+        assertEquals(74L, service.submitProjectReview(9L, 3L, TopicLifecycleState.RECRUITING));
+        verify(lifecycleService).transition(9L, TopicLifecycleState.DRAFT, TopicLifecycleState.PENDING_REVIEW);
+    }
+
+    @Test
     void pureUgcTakesRequestedDraftExitWithoutCreatingAuditTask() {
         when(policy.evaluate(9L)).thenReturn(CommercialTopicPolicy.Evaluation.ugc());
         when(lifecycleService.transition(9L, TopicLifecycleState.DRAFT, TopicLifecycleState.PRICING)).thenReturn(true);
@@ -179,6 +221,39 @@ class TopicCommercialReviewServiceImplTest {
         assertTrue(error.getMessage().contains("缺少 canonical15 草稿"));
         verify(auditTaskService, never()).submitCommercialReview(eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L),
                 eq(3L), org.mockito.ArgumentMatchers.anyString());
+    }
+
+    /** P-01：付费城市定向不需要四店 canonical15 草稿也能提交开售审；快照里不带 canonical15。 */
+    @Test
+    void cityOrienteeringSaleReviewDoesNotNeedFourStoreCanonicalDraft() {
+        CmsTopic topic = topic(TopicLifecycleState.PRICING);
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.ORIENTEERING);
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        when(policy.evaluate(9L)).thenReturn(CommercialTopicPolicy.Evaluation.commercial("paidTicket", 11L));
+        when(auditTaskService.submitCommercialReview(eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L), eq(3L),
+                org.mockito.ArgumentMatchers.anyString())).thenReturn(72L);
+
+        assertEquals(72L, service.submitSaleReview(9L, 3L));
+        com.chengyinhub.business.domain.vo.TopicSaleReviewProgress auto = service.submitSaleReviewIfReady(9L, 3L);
+        assertEquals(72L, auto.getTaskId());
+
+        verify(transferGate, org.mockito.Mockito.times(2)).assertTransferred(topic);
+        verify(saleSnapshotMapper, never()).selectDraftByTopicIdForUpdate(9L);
+        verify(canonicalBuilder, never()).rebuild(eq(topic), org.mockito.ArgumentMatchers.any());
+        org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(auditTaskService, org.mockito.Mockito.times(2)).submitCommercialReview(
+                eq(AuditTask.BIZ_TOPIC_SALE_REVIEW), eq(9L), eq(3L), snapshot.capture());
+        assertTrue(snapshot.getValue().contains("saleParameters"));
+        assertTrue(!snapshot.getValue().contains("canonical15"));
+    }
+
+    /** 产品类型未定(存量 NULL)不得因此绕开 canonical15。 */
+    @Test
+    void unknownProductTypeStillRequiresCanonicalDraft() {
+        CmsTopic topic = topic(TopicLifecycleState.PRICING);
+        when(topicMapper.selectCmsTopicByIdForUpdate(9L)).thenReturn(topic);
+        when(policy.evaluate(9L)).thenReturn(CommercialTopicPolicy.Evaluation.commercial("paidTicket", 11L));
+        assertThrows(IllegalStateException.class, () -> service.submitSaleReview(9L, 3L));
     }
 
     private static CmsTopic topic(TopicLifecycleState state) {

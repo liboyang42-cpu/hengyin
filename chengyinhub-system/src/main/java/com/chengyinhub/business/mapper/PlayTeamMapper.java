@@ -36,6 +36,8 @@ public interface PlayTeamMapper {
                             @Param("ownerId") Long ownerId);
     int hasCurrentNpcRegistration(@Param("memberId") Long memberId, @Param("topicId") Long topicId);
     List<PlayTeam> selectMyTeams(Long memberId);
+    /** 第九轮 m2:同场路线。给定成员里仍在这一场(已付费、报名有效)的人,带他所在的本场队伍(没有队伍为 null)。 */
+    List<Map<String, Object>> selectTrailParticipants(@Param("activityId") Long activityId, @Param("memberIds") java.util.Collection<Long> memberIds);
     List<Long> selectExpiredTeamIds(@Param("now") Date now, @Param("limit") int limit);
     int endExpiredTeam(@Param("teamId") Long teamId, @Param("now") Date now);
     PlayTeamMember selectMemberRow(@Param("teamId") Long teamId, @Param("memberId") Long memberId);

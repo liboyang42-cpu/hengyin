@@ -1,0 +1,12 @@
+{
+  "run": 42006455345,
+  "source_sha": "da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f",
+  "sha256": "f4c1fe89441cf2cba7feb03addf3774c17aed23fe6bff17e6d5d1a02c681f429",
+  "bytes": 119642548,
+  "source_file": "PASS",
+  "embedded_git_commit": "PASS",
+  "jar_zip_crc": "PASS",
+  "checksum": "PASS",
+  "runtime_restarted": false,
+  "java_tests_executed": false
+}

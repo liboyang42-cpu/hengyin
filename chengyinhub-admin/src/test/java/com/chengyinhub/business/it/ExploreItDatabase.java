@@ -38,6 +38,8 @@ final class ExploreItDatabase {
             "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
             "sql/migration_20260930_registration_first_successful_scan.sql",
             "sql/migration_club_direct_merchant_receivable_20261004.sql",
+            // 9307c39df 起 CmsTopicChapterMapper 读 video_url / video_poster_url(第十三轮 m6 资金闸复跑时补)。
+            "sql/migration_20261105_chapter_video.sql",
     };
 
     private final MysqlIntegrationTestConfig config;

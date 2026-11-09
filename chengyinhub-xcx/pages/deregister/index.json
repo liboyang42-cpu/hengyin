@@ -4,7 +4,7 @@
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-sheet": "/components/cy/sheet/index",
-    "cy-scene-settings-deregister": "/components/cy/scene-settings-deregister/index",
+    "cy-scene-settings-deregister": "/pages/deregister/components/scene-settings-deregister/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index"

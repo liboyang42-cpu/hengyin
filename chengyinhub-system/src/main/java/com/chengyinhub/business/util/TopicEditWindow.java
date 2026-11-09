@@ -79,7 +79,7 @@ public final class TopicEditWindow {
         }
         Date start = topic.getStartDate();
         if (start != null && !start.after(now)) {
-            throw new IllegalStateException("主题已开始，不能再编辑；要改内容请先下架后重发");
+            throw new IllegalStateException("主题已开始，内容已锁定；如需调整，请新建未来档期主题");
         }
         return Scope.WHITELIST;
     }

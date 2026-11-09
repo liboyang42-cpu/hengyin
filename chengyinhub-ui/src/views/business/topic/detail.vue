@@ -840,7 +840,7 @@
       </div>
     </el-dialog>
 
-    <el-dialog title="探店日俱乐部资金动作" :visible.sync="clubFundsDialogVisible" width="640px" append-to-body>
+    <el-dialog title="自由探索俱乐部资金动作" :visible.sync="clubFundsDialogVisible" width="640px" append-to-body>
       <el-descriptions :column="1" border>
         <el-descriptions-item label="当前对公收款人">
           <span v-if="payeeView">{{ payeeView.legalName }} / {{ payeeView.verifyStatus }} / v{{ payeeView.version }}</span>
@@ -1240,7 +1240,7 @@ export default {
         .then(res => { this.fundsSnapshot = res.data; this.$modal.msgSuccess('资金快照已重算') })
     },
     repairPurchaseKind() {
-      return this.$modal.confirm('只会把本期已支付且 purchase_kind 为空的探店日订单修复为探索票，是否继续？')
+      return this.$modal.confirm('只会把本期已支付且 purchase_kind 为空的自由探索订单修复为探索票，是否继续？')
         .then(() => repairTopicPurchaseKind(this.topicDetail.id))
         .then(res => this.$modal.msgSuccess(`已修复 ${res.data || 0} 条，请重新计算`))
     },

@@ -59,6 +59,9 @@ public class ApiProjectController extends BaseController {
     private ICmsTopicService cmsTopicService;
 
     @Autowired
+    private com.chengyinhub.business.mapper.CmsTopicMapper cmsTopicMapper;
+
+    @Autowired
     private ICmsActivityService cmsActivityService;
 
     @Autowired
@@ -107,10 +110,19 @@ public class ApiProjectController extends BaseController {
             Long scopedMemberId = memberId;
             String scope = scopeOf(body);
             MmsMerchant merchant = mmsMerchantService.selectMmsMerchantByMemberId(memberId);
-            if (MerchantOperationScope.isMerchant(scope)
-                    || (merchant != null && !MerchantOperationScope.isClub(scope))) {
+            if (MerchantOperationScope.isMerchant(scope)) {
                 scopedMemberId = merchantAccessService.require(
                         memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+            } else if (merchant != null && !MerchantOperationScope.isClub(scope)) {
+                // 第十三轮 m1 P5:个人入口(没带 MERCHANT)下,商家身份可用就照旧按商家;商家身份不可用
+                // (例如账号角色不是商家)时与主题编辑器同口径回到本人 —— 只读本人自己的项目,不扩大范围。
+                // 原来直接 403,作者在个人入口发布完跳过来就是「当前账号无权查看」。
+                try {
+                    scopedMemberId = merchantAccessService.require(
+                            memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+                } catch (ServiceException merchantUnavailable) {
+                    scopedMemberId = memberId;
+                }
             }
             return AjaxResult.success(projectHomeReadService.getProjectHome(scopedMemberId, topicId));
         } catch (ServiceException e) {
@@ -228,6 +240,7 @@ public class ApiProjectController extends BaseController {
         topicQuery.setMemberId(memberId);
         topicQuery.setDelFlag(0);
         topicQuery.setActiveClubOnly(true);
+        // 模板副本也要返回，前端按 isTemplate 分到「模板」，不能在查询时丢掉。
         List<CmsTopic> topics = cmsTopicService.selectCmsTopicList(topicQuery);
         Map<Long, java.util.Set<String>> acceptedTypes = new HashMap<>();
         if (topics != null && !topics.isEmpty()) {
@@ -258,18 +271,23 @@ public class ApiProjectController extends BaseController {
             }
         }
         if (topics != null) {
+            java.util.Set<Long> templateIds = new java.util.HashSet<>(cmsTopicMapper.selectTemplateTopicIdsByMemberId(memberId));
             Map<Long, Integer> signupCounts = cmsActivityService.countSignedUpRegistrationsByTopicIds(
                     topics.stream().map(CmsTopic::getId).filter(java.util.Objects::nonNull)
                             .collect(java.util.stream.Collectors.toList()));
             for (CmsTopic t : topics) {
                 t.setSignupCount(signupCounts.getOrDefault(t.getId(), 0));
-                all.add(mapTopic(t, draftSet, acceptedChapterTopics, acceptedTypes));
+                Map<String, Object> item = mapTopic(t, draftSet, acceptedChapterTopics, acceptedTypes);
+                item.put("isTemplate", templateIds.contains(t.getId()));
+                all.add(item);
             }
         }
 
         // 2) 我发布的活动
         CmsActivity actQuery = new CmsActivity();
         actQuery.setMemberId(memberId);
+        // 第十二轮 k6(j1 N3):删除场次后不再留在我的项目和商家首页「全部 N」;与营销「活动」同口径。
+        actQuery.setDelFlag(0);
         actQuery.setActiveClubOnly(true);
         List<CmsActivity> acts = cmsActivityService.selectCmsActivityList(actQuery);
         if (acts != null) {
@@ -452,7 +470,9 @@ public class ApiProjectController extends BaseController {
         m.put("id", a.getId());
         m.put("bizType", "activity");
         m.put("projectType", "club_activity");
-        m.put("projectTypeText", projectTypeText("club_activity"));
+        // check-1104 j1 F14:projectType 键沿用(「我的项目」活动 tab 与营销「管理活动」按它过滤),
+        // 但商家/个人自己发的活动不是俱乐部活动,标签只对挂俱乐部的场次写「俱乐部活动」。
+        m.put("projectTypeText", a.getClubId() != null ? projectTypeText("club_activity") : "活动");
         m.put("title", a.getName());
         m.put("cover", a.getImgUrl());
         int publishStatus = a.getPublishStatus() == null ? 0 : a.getPublishStatus().intValue();
@@ -492,6 +512,9 @@ public class ApiProjectController extends BaseController {
         // 活动这边两个字段都有:addressName 是地点名,address 是详细地址,优先给地点名
         m.put("addressName", a.getAddressName() != null && !a.getAddressName().isEmpty()
                 ? a.getAddressName() : a.getAddress());
+        // 第九轮 m1-9:卡上地址点开地图,活动本来就存了选点坐标(GCJ-02),照原值带出
+        m.put("latitude", a.getLatitude());
+        m.put("longitude", a.getLongitude());
         m.put("createTime", a.getCreateTime());
         return m;
     }

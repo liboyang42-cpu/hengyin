@@ -79,7 +79,7 @@ import com.chengyinhub.common.utils.OwnershipUtils;
 @Tag(name = "创意广场")
 @RequestMapping("/api/creativesquare")
 public class ApiCreativeSquareController extends BaseController {
-    @Value("${community.post.legacy-writes-enabled:true}")
+    @Value("${community.post.legacy-writes-enabled:false}")
     private boolean legacyCommunityWritesEnabled;
 
     private AjaxResult legacyWriteDisabled() {

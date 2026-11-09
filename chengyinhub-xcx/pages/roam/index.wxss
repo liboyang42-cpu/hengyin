@@ -58,7 +58,7 @@ page{ background:var(--cy-color-bg-page); }
 /* ===================== 漫游入口 · 真实地图浏览态 ===================== */
 /* ds-ok 以下尺寸与渐变来自已确认 HTML；卡片共用同一首卡边距。 */
 .entry-peek{ position:relative; z-index:3; flex:none; height:366rpx; box-sizing:border-box; padding:31rpx 0 38rpx; background:linear-gradient(180deg,transparent 0%,rgba(17,17,17,.45) 55%,var(--roam-home-bg) 100%); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.entry-peek__head{ padding:0 var(--roam-card-inset) 23rpx; color:var(--cy-color-text-primary); font-size:29rpx; line-height:36rpx; font-weight:700; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-peek__head{ padding:0 var(--roam-card-inset) 23rpx; color:var(--cy-color-text-primary); font-size:calc(29rpx * var(--cy-type-scale, 1)); line-height:36rpx; font-weight:700; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .entry-peek__cards{ width:100%; height:242rpx; white-space:nowrap; }
 .entry-peek__track{ display:inline-flex; padding:0 var(--roam-card-inset); gap:23rpx; }
 .entry-peek__state{ height:242rpx; margin:0 var(--roam-card-inset); border-radius:27rpx; background:linear-gradient(180deg,var(--cy-color-play-elevated),var(--roam-home-bg)); color:var(--cy-color-text-primary); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
@@ -67,9 +67,10 @@ page{ background:var(--cy-color-bg-page); }
 .entry-card__cover{ position:absolute; inset:0; width:100%; height:100%; background:var(--cy-color-play-elevated); }
 .entry-card__shade{ position:absolute; inset:0; background:linear-gradient(180deg,transparent,var(--roam-home-bg)); }
 .entry-card__copy{ position:absolute; left:27rpx; right:27rpx; bottom:23rpx; display:flex; flex-direction:column; color:var(--cy-color-text-primary); }
-.entry-card__tag{ margin-bottom:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:19rpx; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.entry-card__title{ font-size:27rpx; line-height:1.25; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.entry-card__meta{ margin-top:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:19rpx; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-card__tag{ margin-bottom:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:calc(19rpx * var(--cy-type-scale, 1)); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+.entry-card__title{ font-size:calc(27rpx * var(--cy-type-scale, 1)); line-height:1.25; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+/* 第十二轮 k7(j4 F14):附近活动卡、读数卡的字跟手机字号走(业主要求);读数大数字按 DS 不参与缩放 */
+.entry-card__meta{ margin-top:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:calc(19rpx * var(--cy-type-scale, 1)); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 
 .entry-sheet__mask{ background:rgba(0,0,0,.62); } /* ds-ok Figma 20:4 地图退后遮罩实测 */
 .entry-sheet{ background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur));
@@ -137,6 +138,7 @@ page{ background:var(--cy-color-bg-page); }
 .intro-head{ flex:none; display:flex; align-items:center; padding-left:35rpx; }
 .intro-ava{ display:block; width:77rpx; height:77rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-bg-elevated); }
 .intro-ava-hit{ position:relative; width:77rpx; height:77rpx; flex:none; }
+.intro-guide-hit{ margin-left:12rpx; width:88rpx; height:88rpx; flex:none; display:flex; align-items:center; justify-content:center; color:var(--cy-color-text-primary); }
 .intro-ava-hit::after{ content:''; position:absolute; left:50%; top:50%; width:88rpx; height:88rpx; transform:translate(-50%, -50%); }
 .intro-top{ position:relative; z-index:3; flex:none; margin-top:39rpx; height:108rpx; padding:0 46rpx; box-sizing:border-box; }
 .intro-title{ font-size:54rpx; font-weight:700; line-height:65rpx; color:var(--cy-color-text-primary); letter-spacing:-2rpx; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
@@ -171,6 +173,15 @@ page{ background:var(--cy-color-bg-page); }
 .fogscreen-guard{ position:absolute; inset:0; z-index:5; background:var(--cy-color-play-page); pointer-events:none; }
 .fogscreen{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; opacity:0; }
 .fogscreen--ready{ opacity:1; }
+/* 第九轮 m1 第 6 项(m-drag):薄云层,比地图慢一拍。两团柔边径向渐变,不用 filter(省 GPU),不吃手势。
+   松手后由 JS 给一个位移,缓出漂过去;按下时略显形。深浅底图上都只是一层极淡的白。 */
+.roam-clouds{ position:absolute; inset:-120rpx; z-index:4; pointer-events:none; opacity:.55;
+  transition:transform .9s cubic-bezier(.2,.7,.2,1), opacity .4s ease-out; }
+.roam-clouds.is-on{ opacity:.85; }
+.roam-cloud{ position:absolute; width:1040rpx; height:600rpx; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(230,232,240,.2), rgba(230,232,240,0)); } /* ds-ok 原型 .mz-drift 云色,装饰层无 token */
+.roam-cloud--a{ left:-120rpx; top:240rpx; }
+.roam-cloud--b{ left:300rpx; top:1100rpx; opacity:.7; }
 .vignette{ position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(120% 80% at 50% 42%,rgba(0,0,0,0) 52%,rgba(0,0,0,.3) 100%); /* ds-ok 四角压暗晕影:token 层无渐变表达,纯装饰不承载文字 */
   z-index:4; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -222,6 +233,9 @@ page{ background:var(--cy-color-bg-page); }
 /* 读数芯片:靠左成行,不撑满,右侧留白给地图 */
 .roam-hud-chips{ align-self:flex-start; margin:0 var(--cy-space-3-5); }
 .roam-topstack > view{ pointer-events:auto; }
+/* 第九轮 m1 第 5 项(m-zoom):拉远时的附近点数胶囊,居中压在搜索框下 */
+.roam-topstack > .pin-count{ align-self:center; pointer-events:auto; min-height:88rpx; box-sizing:border-box; display:flex; align-items:center; padding:12rpx 28rpx; border-radius:var(--cy-radius-pill);
+  background:var(--cy-color-play-surface); color:var(--cy-color-text-primary); font-size:var(--cy-type-label); font-weight:700; }
 
 /* 底图加载异常提示条(看门狗超时才出现,点击重试) */
 /* ★ 浮动提示条逐条照原型 .bar 抄:底 #101418 · 1px 描边 · 满圆角 ·
@@ -267,14 +281,16 @@ page{ background:var(--cy-color-bg-page); }
  *   .x 28px 圆 rgba(0,0,0,.06) #6B7280 · .act 高 36 内边距 16 圆角满 #111/#fff 13px 700
  *
  * 做法:槽的根节点加一个 topcard 类,内部沿用各自既有的类名,
- * 由下面这组映射统一换皮 —— 这样 WXML 每个槽只多一个类,结构一行没动。 */
-.topcard{ position:relative; background:#FFFFFF; color:#111111; border-radius:35rpx; /* ds-ok 原型 .topcard */
+ * 由下面这组映射统一换皮 —— 这样 WXML 每个槽只多一个类,结构一行没动。
+ * R11 g1(j4 F11,业主 2026-11-04):玩家地图上一律深色,与旁边的地点卡(roam-place-card)同一底色与字色 token;
+ * 版式、字号、圆角照原型不变,只换颜色。 */
+.topcard{ position:relative; background:var(--cy-color-play-surface-solid, #1C1C1E); color:var(--cy-color-text-primary); border-radius:35rpx; /* ds-ok 原型 .topcard */
   padding:31rpx 31rpx 27rpx; box-shadow:0 23rpx 62rpx rgba(0,0,0,.5); } /* ds-ok 原型 16/16/14 · 0 12px 32px */
 /* 标题 .t */
 .topcard .event-overlay__title,
 .topcard .pc-title,
 .topcard .zc-title,
-.topcard .roam-prompt-line{ font-size:31rpx; font-weight:800; color:#111111; } /* ds-ok 原型 .t 16px 800 */
+.topcard .roam-prompt-line{ font-size:31rpx; font-weight:800; color:var(--cy-color-text-primary); } /* ds-ok 原型 .t 16px 800 */
 /* 正文 .s */
 .topcard .event-overlay__hint,
 .topcard .event-overlay__risk,
@@ -282,28 +298,30 @@ page{ background:var(--cy-color-bg-page); }
 .topcard .pc-hint,
 .topcard .pc-demo,
 .topcard .zc-name,
-.topcard .roam-prompt-label{ font-size:23rpx; color:#5B6472; margin-top:10rpx; } /* ds-ok 原型 .s 12px / 上 5px */
+.topcard .roam-prompt-label{ font-size:23rpx; color:var(--cy-color-text-secondary); margin-top:10rpx; } /* ds-ok 原型 .s 12px / 上 5px */
 /* 眉标 .k */
 .topcard .event-overlay__k,
-.topcard .zc-tag{ font-size:19rpx; font-weight:800; letter-spacing:1rpx; color:#6B7280; text-transform:none; } /* ds-ok 原型 .k 10px 800 .6px */
+.topcard .zc-tag{ font-size:19rpx; font-weight:800; letter-spacing:1rpx; color:var(--cy-color-text-tertiary); text-transform:none; } /* ds-ok 原型 .k 10px 800 .6px */
 /* 关闭 .x —— 白卡上同样纯字形无底,只借浅色前景 */
 .topcard .event-overlay__close-glyph,
-.topcard .pc-close__glyph{ color:#6B7280; } /* ds-ok 原型 .x 28px 前景 */
+.topcard .pc-close__glyph{ color:var(--cy-color-text-secondary); } /* ds-ok 原型 .x 28px 前景 */
 .topcard .zc-close,
-.topcard .roam-prompt-close{ color:#6B7280; } /* ds-ok 原型 .x 前景 */
+.topcard .roam-prompt-close{ color:var(--cy-color-text-secondary); } /* ds-ok 原型 .x 前景 */
 /* 主动作 .act */
 .topcard .pc-action,
 .topcard .event-task__btn{ min-height:69rpx; margin-top:23rpx; padding:0 31rpx; border-radius:var(--cy-radius-pill);
-  background:#111111; color:#FFFFFF; font-size:25rpx; font-weight:700; } /* ds-ok 原型 .act 36/16/13px 700 */
-/* 白面上的其余文字一律换成白底可读的两档灰,不再读夜端 token */
+  background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg); font-size:25rpx; font-weight:700; } /* ds-ok 原型 .act 36/16/13px 700 */
+/* R11 g1(j4 F11):确认到点之后的完成态 —— 同一颗按钮的位置,次级底色,不可点 */
+.topcard .pc-action--done{ background:var(--cy-color-action-secondary-bg); color:var(--cy-color-text-secondary); }
+/* 其余文字读夜端字色 token(R11 g1 起顶部卡与地点卡同为深色) */
 .topcard .pc-meaning-label,
 .topcard .event-task__sub,
 .topcard .event-task__auto,
-.topcard .zc-demo-state{ color:#6B7280; } /* ds-ok 原型白卡次要文字 */
+.topcard .zc-demo-state{ color:var(--cy-color-text-tertiary); } /* ds-ok 原型白卡次要文字 */
 .topcard .pc-meaning-text,
-.topcard .event-task__title{ color:#111111; } /* ds-ok 原型白卡正文 */
-.topcard .pc-info{ color:#6B7280; } /* ds-ok 白面上的信息图标 */
-.topcard .pc-meaning{ border-top-color:rgba(0,0,0,.08); } /* ds-ok 白卡分隔线 */
+.topcard .event-task__title{ color:var(--cy-color-text-primary); } /* ds-ok 原型白卡正文 */
+.topcard .pc-info{ color:var(--cy-color-text-tertiary); } /* ds-ok 白面上的信息图标 */
+.topcard .pc-meaning{ border-top-color:var(--cy-color-border-subtle); } /* ds-ok 白卡分隔线 */
 /* 卡自己的底色被上面的白覆盖 —— 内层那几张深色卡不再自带底 */
 .topcard .pace-card,
 .topcard .zc-card,
@@ -634,7 +652,7 @@ page{ background:var(--cy-color-bg-page); }
 .pcard__head{ box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; }
 .pcard__head--goal{ gap:var(--cy-space-2); }
 .pcard__goal-copy{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--cy-space-1); }
-.pcard__title{ font-size:25rpx; font-weight:700; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 原型 .dcard .hd 13px 700 */
+.pcard__title{ font-size:calc(25rpx * var(--cy-type-scale, 1)); font-weight:700; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 原型 .dcard .hd 13px 700 */
 .pcard__rules{ flex:none; width:var(--cy-btn-h); height:var(--cy-btn-h); display:flex; align-items:center; justify-content:center; }
 .pcard__expand{ flex:none; width:54rpx; height:54rpx; margin:-12rpx -15rpx -12rpx 0;
   display:flex; align-items:center; justify-content:center; color:#7A8496; border-radius:15rpx; } /* ds-ok 原型 .ex 28px #7A8496 */
@@ -657,7 +675,7 @@ page{ background:var(--cy-color-bg-page); }
 .pstat__v{ font-size:62rpx; font-weight:800; line-height:1; letter-spacing:-2rpx; color:#FFFFFF; /* ds-ok 原型 .dcard .v 32px 800 -1px */
   font-variant-numeric:tabular-nums;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
-.pstat__l{ margin-top:13rpx; font-size:21rpx; color:#6A7282; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; } /* ds-ok 原型 .l 11px/上 7px */
+.pstat__l{ margin-top:13rpx; font-size:calc(21rpx * var(--cy-type-scale, 1)); color:#6A7282; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; } /* ds-ok 原型 .l 11px/上 7px */
 
 /* ⚠️ 2026-09-11 用户实拍指出「下面整体的位置也需要更低」。根因:这一档原来给
    --cy-tabbar-h(104rpx + 安全区)让位,可是**地图屏根本没有 tabBar** ——
@@ -848,8 +866,20 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 
 /* 原型 f-fun / f-discover:读数卡让位给这条横滑白卡(规则同到店打卡)。
    位置与读数卡同一档 —— 它就是顶掉读数卡的那一层。 */
-.pois{ bottom:calc(250rpx + env(safe-area-inset-bottom)); } /* ds-ok 与读数卡同一档:原型说「读数卡让位给横滑条」 */
-.pois__dots{ bottom:calc(250rpx + 265rpx + 15rpx + env(safe-area-inset-bottom)); } /* ds-ok 卡高 138px + 8px 缝 */
+.pois{ bottom:calc(250rpx + env(safe-area-inset-bottom)); }
+/* 第九轮 m2 补充第 1 项:漫游横滑卡照原型 m-fly 改深色(玩家侧),只剩名字、距离、动作 */
+.pois .poi{ background:var(--cy-color-play-surface-solid); box-shadow:0 24rpx 40rpx rgba(0,0,0,.45); border:1rpx solid rgba(255,255,255,.08); } /* ds-ok 深色卡压深色地图的投影与描边 */
+.pois .poi__name{ color:var(--cy-color-text-primary); font-size:var(--cy-type-card-title); }
+.pois .poi__dist{ margin-top:12rpx; font-size:var(--cy-type-label); color:var(--cy-color-text-secondary); }
+.pois .poi__go{ background:var(--cy-color-text-primary); color:var(--cy-color-play-surface-solid); }
+.pois .poi__face{ border-color:var(--cy-color-play-surface-solid); }
+.pois .poi__more{ color:var(--cy-color-text-secondary); }
+/* 只剩名字、距离、动作:卡高 265 → 200rpx,不留空的下半截;计数点跟着下移 */
+.pois{ height:200rpx; }
+.pois .poi{ height:200rpx; padding:24rpx 27rpx; }
+.pois .poi__main{ width:auto; flex:1; }
+.pois .poi__im{ flex:none; width:152rpx; height:152rpx; border-radius:var(--cy-radius-md); }
+.pois__dots{ bottom:calc(250rpx + 200rpx + 15rpx + env(safe-area-inset-bottom)); } /* ds-ok 卡高 200rpx + 8px 缝 */
 
 /* ══ 多人 · 谁点亮了哪块(原型 f-multi 的 topcard + terrlist)══ 1px = 1.923rpx。 */
 .pc-copy{ flex:1; min-width:0; }
@@ -941,3 +971,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .rsh-ch-btn { width: 152rpx !important; min-width: 0; margin: 0; padding: 0; line-height: normal; background: transparent; border-radius: 0; } /* 原生 button 默认宽度会把第一格撑宽 */
 .rsh-ch-btn::after { border: 0; }
 .rsh-ci { width: 128rpx; height: 128rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .14); } /* ds-ok P-8 渠道圆钮 64px */
+
+/* 第十一轮 g2,j4 F5:没有真实定位时「附近活动」右侧一行「开启定位」;点区 88rpx */
+.entry-peek__head { display: flex; align-items: center; justify-content: space-between; }
+.entry-peek__locate { min-height: 88rpx; margin: -26rpx 0; display: flex; align-items: center; color: var(--cy-color-play-accent); font-size: var(--cy-type-label); font-weight: 600; } /* ds-ok 点区 88rpx,负边距让行高不撑开定稿的 entry-peek 高度 */

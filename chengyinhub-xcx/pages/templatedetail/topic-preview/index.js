@@ -5,14 +5,10 @@ const art = require('../shelf/art.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
 const app = getApp();
+// p3 F3:服务端明确拒绝(模板不存在)时「重试」永远不会成功,改给返回。
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 // 同一张封面在每张卡上取不同局部:[水平%, 垂直%, 放大倍数]
 const CROP = [[50, 50, 1], [18, 40, 1.7], [82, 35, 1.8], [30, 75, 1.9], [70, 70, 1.7], [45, 20, 2], [60, 55, 2.2], [25, 25, 1.9]];
-const STEPS = {
-  mid: ['读档案', '做任务，拿证据', '解锁下一关'],
-  last: ['汇总证据', '三选一结局', '领取勋章'],
-  free: ['随时开始', '任选一个轻动作', '玩满 3 次通关'],
-  life: ['答几道小题', '拿到备用答案']
-};
 const FAN_X = [0, 62, 108, 140];
 const FAN_R = [0, 6, 11, 15];
 
@@ -27,13 +23,12 @@ function fmtSec(sec) {
 
 function buildDeck(info) {
   const games = Array.isArray(info.games) ? info.games : [];
-  const orienteering = Number(info.productType) === 1;
   const total = fmtSec(info.totalTime);
-  const cards = games.map(function (g, i) {
-    const steps = orienteering ? (i === games.length - 1 ? STEPS.last : STEPS.mid)
-      : (games.length <= 1 ? STEPS.free : STEPS.life);
+  // 第十二轮 k3(p3 N3):卡背原来按产品类型写死「读档案 · 做任务，拿证据」「三选一结局 · 领取勋章」,
+  // 不是这份模板的数据。卡背只留玩法名与时长,不再替作者许诺流程。
+  const cards = games.map(function (g) {
     const minutes = Number(g.duration || 0);
-    return { title: g.title || '', steps: steps, foot: minutes ? minutes + ' 分钟' : total };
+    return { title: g.title || '', steps: [], foot: minutes ? minutes + ' 分钟' : total };
   });
   const list = cards.map(function (c) { return c.title; });
   const cover = { cover: true, title: info.name || '', steps: list.length > 5 ? list.slice(0, 5).concat('…') : list, foot: total };
@@ -42,12 +37,17 @@ function buildDeck(info) {
 
 function buildChecks(info, gameCount) {
   const dur = fmtSec(info.totalTime);
+  // 第十二轮 k3(p3 N3):清单只写模板里真有的东西(章节数、节点数、时长、具名勋章),
+  // 不再写死「3 关剧情，每关一个玩法」「最后一关三选一结局」「随时开始，可以跨天」。
+  const chapterList = Array.isArray(info.chapters) ? info.chapters : [];
   if (Number(info.productType) === 1) {
-    return [gameCount + ' 关剧情，每关一个玩法', '最后一关三选一结局', dur ? '约 ' + dur : '',
+    const nodes = chapterList.reduce(function (n, c) { return n + (Number(c && c.nodeCount) || 0); }, 0);
+    const shape = [chapterList.length ? chapterList.length + ' 章节' : '', nodes ? nodes + ' 节点' : ''].filter(Boolean).join(' · ');
+    return [shape, dur ? '约 ' + dur : '',
       info.finishMedalName ? '勋章「' + info.finishMedalName + '」' : ''].filter(Boolean);
   }
-  if (gameCount <= 1) return ['1 个玩法，一个人就能玩', '随时开始，可以跨天', dur ? '约 ' + dur : ''].filter(Boolean);
-  const chapters = (Array.isArray(info.chapters) ? info.chapters : [])
+  if (gameCount <= 1) return [gameCount ? '1 个玩法' : '', dur ? '约 ' + dur : ''].filter(Boolean);
+  const chapters = chapterList
     .map(function (c) { return String(c.name || '').split(' ')[0]; }).filter(Boolean);
   return [chapters.length ? chapters.join(' / ') : '', gameCount + ' 个小玩法', dur ? '首局约 ' + dur : ''].filter(Boolean);
 }
@@ -56,6 +56,7 @@ Page({
   data: {
     loading: true,
     errorMsg: '',
+    errorRefused: false,
     name: '',
     cover: '',
     glow: 'hsla(270,45%,34%,.85)',
@@ -94,10 +95,12 @@ Page({
     if (this._settleTimer) clearTimeout(this._settleTimer);
   },
 
+  goBack() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/template/index' }) }); },
+
   load() {
     const that = this;
     const seq = this._seq = (this._seq || 0) + 1;
-    this.setData({ loading: true, errorMsg: '' });
+    this.setData({ loading: true, errorMsg: '', errorRefused: false });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -108,7 +111,7 @@ Page({
         if (seq !== that._seq) return;
         const info = res && res.code == '200' ? res.data : null;
         if (!info || typeof info !== 'object') {
-          that.setData({ loading: false, errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
+          that.setData({ loading: false, errorRefused: Boolean(refusalOf(res)), errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
           return;
         }
         const a = art.topicArt(info.name);

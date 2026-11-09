@@ -1,0 +1,194 @@
+[
+  {
+    "shape": "68",
+    "topicId": 990020,
+    "chapters": [
+      52,
+      53
+    ],
+    "stations": [
+      {
+        "nodeId": 74,
+        "templateId": 6010,
+        "vm": 0,
+        "noCoordinates": true
+      },
+      {
+        "nodeId": 75,
+        "templateId": 6011,
+        "vm": 1,
+        "noCoordinates": true
+      },
+      {
+        "nodeId": 76,
+        "templateId": 6012,
+        "vm": 2,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 77,
+        "templateId": 6013,
+        "vm": 5,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 78,
+        "templateId": 6014,
+        "vm": 8,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 79,
+        "templateId": 6015,
+        "vm": 10,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 80,
+        "templateId": 6016,
+        "vm": 0,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 81,
+        "templateId": 6017,
+        "vm": 1,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 82,
+        "templateId": 6018,
+        "vm": 2,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 83,
+        "templateId": 6019,
+        "vm": 5,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 84,
+        "templateId": 6020,
+        "vm": 8,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 85,
+        "templateId": 6021,
+        "vm": 10,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 86,
+        "templateId": 6022,
+        "vm": 0,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 87,
+        "templateId": 6023,
+        "vm": 1,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 88,
+        "templateId": 6024,
+        "vm": 2,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 89,
+        "templateId": 6025,
+        "vm": 5,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 90,
+        "templateId": 6026,
+        "vm": 8,
+        "noCoordinates": false
+      }
+    ],
+    "noCoordinateAssumption": "indices 1,2 pending owner methods; first 0, second 1 or3",
+    "audioAsset": 3
+  },
+  {
+    "shape": "69",
+    "topicId": 990021,
+    "chapters": [
+      54,
+      55
+    ],
+    "stations": [
+      {
+        "nodeId": 91,
+        "templateId": 6027,
+        "vm": 0,
+        "noCoordinates": true
+      },
+      {
+        "nodeId": 92,
+        "templateId": 6028,
+        "vm": 3,
+        "noCoordinates": true
+      },
+      {
+        "nodeId": 93,
+        "templateId": 6029,
+        "vm": 5,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 94,
+        "templateId": 6030,
+        "vm": 0,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 95,
+        "templateId": 6031,
+        "vm": 3,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 96,
+        "templateId": 6032,
+        "vm": 5,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 97,
+        "templateId": 6033,
+        "vm": 0,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 98,
+        "templateId": 6034,
+        "vm": 3,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 99,
+        "templateId": 6035,
+        "vm": 5,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 100,
+        "templateId": 6036,
+        "vm": 0,
+        "noCoordinates": false
+      },
+      {
+        "nodeId": 101,
+        "templateId": 6037,
+        "vm": 3,
+        "noCoordinates": false
+      }
+    ],
+    "noCoordinateAssumption": "indices 1,2 pending owner methods; first 0, second 1 or3",
+    "audioAsset": 3
+  }
+]

@@ -653,6 +653,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py",
             "ci/test_community_legacy_owner_mysql_integration.py",
             "ci/test_community_legacy_comment_like_counts_mysql_integration.py",
+            "ci/test_review_wording_seeded_text_mysql_integration.py",
             "ci/test_migration_runner_ci_contract.py",
             "ci/funds-mysql-it-gate.sh",
         )
@@ -671,6 +672,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
             "ci/test_merchant_offer_withdrawal_columns_mysql_integration.py",
             "ci/test_community_legacy_owner_mysql_integration.py",
             "ci/test_community_legacy_comment_like_counts_mysql_integration.py",
+            "ci/test_review_wording_seeded_text_mysql_integration.py",
             "ci/test_migration_*.py",
             "scripts/e2e/**",
             "sql/base_schema_20260818.sql",
@@ -737,7 +739,9 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         )
         self.assertIn("ci.test_community_legacy_owner_mysql_integration.CommunityLegacyOwnerMysqlIntegrationTest", gate)
         self.assertIn("ci.test_community_legacy_comment_like_counts_mysql_integration.CommunityLegacyCommentLikesMysqlIntegrationTest", gate)
+        self.assertIn("ci.test_review_wording_seeded_text_mysql_integration.ReviewWordingSeededTextMysqlIntegrationTest", gate)
         self.assertIn('"$atomic_ran" -lt 78', gate)
+        self.assertIn('"$atomic_ran" -lt 80', gate)
         self.assertIn('"$atomic_ran" -lt 41', gate)
         self.assertIn("bash ci/funds-mysql-it-gate.sh atomic-migration", workflow)
         self.assertIn("CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1", workflow)
@@ -832,12 +836,16 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(test_methods), 7)
 
-    def test_atomic_gate_accepts_seventy_eight_unskipped_tests_and_rejects_skips(self):
+    def test_atomic_gate_accepts_eighty_unskipped_tests_and_rejects_skips(self):
+        # 第十一轮 h2:种子文字改名演练入闸,下限 78 → 80;79 条(少跑一条)必须红。
         result = self.run_atomic_gate_with_unittest_result(
-            "Ran 78 tests in 0.001s\n\nOK\n", 0)
+            "Ran 80 tests in 0.001s\n\nOK\n", 0)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-        self.assertIn("实际执行 78 条", result.stdout + result.stderr)
+        self.assertIn("实际执行 80 条", result.stdout + result.stderr)
+        short = self.run_atomic_gate_with_unittest_result("Ran 79 tests in 0.001s\n\nOK\n", 0)
+        self.assertNotEqual(0, short.returncode)
+        self.assertIn("应至少80条", short.stdout + short.stderr)
         for count, skips in ((41, 41), (78, 1), (78, 78)):
             with self.subTest(count=count, skipped=skips):
                 skipped = self.run_atomic_gate_with_unittest_result(

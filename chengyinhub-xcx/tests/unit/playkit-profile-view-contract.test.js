@@ -138,15 +138,19 @@ test('★photoCheck 是两步,不在 ACTION_OF 里 —— 放进去会被当成�
   assert.equal(serverAction('photocheck', 'submit'), '')
 })
 
-test('photoCheck:过了或兜底放行(flagged)都算完;还在重拍不算', () => {
+test('photoCheck:过了或兜底放行(passed)才算完;降级留痕(flagged)与还在重拍不算', () => {
   const pick = (seg) => pickPlayKit({
     sessionId: 1, version: 1,
     playKit: { photoCheck: Object.assign({ title: 't' }, seg), note: { title: 'n' } },
   }, at(12, 0)).type
   assert.equal(pick({ tries: 2, passed: false, flagged: false }), 'photocheck', '还在重拍就得接着弹')
   assert.equal(pick({ tries: 2, passed: true }), 'note', '过了就让位')
-  assert.equal(pick({ tries: 3, passed: false, flagged: true, fallback: 'pass' }), 'note',
-    '次数用尽保底放过(flagged)也算完，不然这一段永远走不掉')
+  /* R11 g1 F3:只认服务端 passed。服务端次数用尽保底放过时 passed 与 flagged 同时为真;
+     只有 flagged 没有 passed = 降级后还要重拍(服务端 mechanicsReady 不认),客户端不能抢先算完。 */
+  assert.equal(pick({ tries: 3, passed: true, flagged: true, fallback: 'pass' }), 'note',
+    '次数用尽保底放过(passed+flagged)算完')
+  assert.equal(pick({ tries: 1, passed: false, flagged: true, degraded: true }), 'photocheck',
+    '降级留痕但服务端没放行:接着拍,不与服务端矛盾')
 })
 
 // ===== check(契约 §2.3 已作废:master 上的 R14 检定走 JOURNEY_SEGMENTS,不在 playKit 里)=====

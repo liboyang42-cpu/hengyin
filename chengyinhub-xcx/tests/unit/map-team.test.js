@@ -64,10 +64,11 @@ test('未知 viewerStatus 按最保守的 NONE 处理(不给队长能力)', () =
 
 test('卡片文案:标题兜底、副标题、成员行、名字胶囊', () => {
   const v = T.decorateTeam(Object.assign({}, base, { title: null }));
-  assert.equal(v.name, '玩家队伍');
+  assert.equal(v.name, '小周的队伍', '第十二轮 k7(j4 F15):没起名的队按队长昵称区分');
+  assert.equal(T.decorateTeam(Object.assign({}, base, { title: null, leaderName: '' })).name, '玩家队伍');
   assert.equal(v.sub, '城市定向 · 外滩源集合 · 距你 600 m');
   assert.equal(v.membersLine, '队长 小周 · 已组 3 人 · 还差 1 人满员');
-  assert.equal(v.plate, '玩家队伍 · 3/4');
+  assert.equal(v.plate, '小周的队伍 · 3/4');
   assert.equal(T.decorateTeam(Object.assign({}, base, { viewerStatus: 'PENDING' })).plate, '外滩夜行 · 申请中');
   assert.equal(T.decorateTeam(Object.assign({}, base, { viewerStatus: 'LEADER', pendingCount: 2 })).plate, '我的队伍 · 2 人申请');
   assert.equal(T.decorateTeam(Object.assign({}, base, { productType: 2, coordSource: 'TOPIC_NODE', distance: 1500 })).sub, '自由探索 · 外滩源附近 · 距你 1.5 km');

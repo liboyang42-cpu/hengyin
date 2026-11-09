@@ -5,6 +5,7 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-state-shell": "/components/cy/state-shell/index",
+    "cy-empty": "/components/cy/empty/index",
     "cy-tabs": "/components/cy/tabs/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",

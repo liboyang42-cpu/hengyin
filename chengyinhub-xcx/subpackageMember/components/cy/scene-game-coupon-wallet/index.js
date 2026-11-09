@@ -4,6 +4,7 @@ const app = getApp()
 const credential = require('../../../utils/coupon-credential.js')
 const { isRecordList } = require('../../../../utils/response-shape.js'); const pageMotion = require('../../../../utils/page-motion.js')
 const datetime = require('../../../../utils/datetime.js')
+function openAddress() { return require('../../../../utils/open-address.js') }
 const { isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../../utils/session/login-reload.js')
 
 function authorization() {
@@ -63,6 +64,10 @@ function decorate(item) {
     _canView: status === 0,
     _isUsable: status === 0 && started,
     _dateText: dateLine,
+    // 第九轮 m1-9:发券门店(后端只投影公开门店);有坐标给「导航」,只有地址走缓存的地址解析
+    _shopName: source.shopName || '',
+    _shopAddress: source.shopAddress || '',
+    _shopNav: !!(Number(source.shopLat) && Number(source.shopLng)),
   }
 }
 
@@ -162,6 +167,11 @@ Component({
       const item = event.currentTarget.dataset.item
       if (!item || item._canView !== true || !item._id) return
       this.triggerEvent('open', { id: 'qr-coupon', params: { couponHistoryId: item._id, name: item._name } })
+    },
+    openShop(event) {
+      const item = event.currentTarget.dataset.item
+      if (!item || !item._shopAddress) return
+      openAddress().openAddress({ lat: item.shopLat, lng: item.shopLng, name: item._shopName, address: item._shopAddress }, { geocode: true })
     },
     close() { this.triggerEvent('close') },
     retry() {

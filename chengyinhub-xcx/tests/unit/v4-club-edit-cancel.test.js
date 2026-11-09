@@ -27,7 +27,7 @@ function mount(options) {
   global.Component = (d) => { compDef = d }
   const localDrafts = {}
   global.wx = { getStorageSync: key => localDrafts[key], setStorageSync: (key, value) => { localDrafts[key] = value }, removeStorageSync: key => { delete localDrafts[key] }, navigateBack(o) { backs.push(o || {}) }, switchTab() {}, showToast() {}, navigateTo() {} }
-  for (const file of ['pages/club/edit/index.js', 'components/cy/scene-club-edit/index.js']) {
+  for (const file of ['pages/club/edit/index.js', 'pages/club/components/cy/scene-club-edit/index.js']) {
     const abs = path.join(ROOT, file)
     delete require.cache[require.resolve(abs)]
     require(abs)

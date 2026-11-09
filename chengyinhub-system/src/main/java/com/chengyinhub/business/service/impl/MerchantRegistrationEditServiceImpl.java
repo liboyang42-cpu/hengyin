@@ -20,11 +20,14 @@ public class MerchantRegistrationEditServiceImpl implements IMerchantRegistratio
 
     private final ICmsRegistrationMerchantService registrationMerchantService;
     private final ICmsTopicService topicService;
+    private final com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety;
 
     public MerchantRegistrationEditServiceImpl(ICmsRegistrationMerchantService registrationMerchantService,
-                                               ICmsTopicService topicService) {
+                                               ICmsTopicService topicService,
+                                               com.chengyinhub.business.service.support.UgcSubmissionSafety submissionSafety) {
         this.registrationMerchantService = registrationMerchantService;
         this.topicService = topicService;
+        this.submissionSafety = submissionSafety;
     }
 
     @Override
@@ -64,6 +67,10 @@ public class MerchantRegistrationEditServiceImpl implements IMerchantRegistratio
         if (!pending && !rejected) {
             throw new RuntimeException("该报名已通过审核,内容不能再修改");
         }
+
+        // Round5B-6:据点报名的图片只收本站登记媒体,接待说明/地址名称过文本机审(违规或审不了都拒)。
+        submissionSafety.requireOwnImages(memberId, param.getPicUrl());
+        submissionSafety.requireText(memberId, false, param.getActivityDesc(), param.getAddressName(), param.getAddress());
 
         CmsRegistrationMerchant patch = new CmsRegistrationMerchant();
         patch.setId(registrationId);

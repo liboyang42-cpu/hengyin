@@ -154,6 +154,55 @@ class MerchantCrmProfileNamespaceMyBatisTest {
         }
     }
 
+    // 第十二轮 k9(p2 N-16):向主办方退了自由探索票,参与的店没收过这笔钱,不标「异常 · 发生退款」;
+    // 活动已结束仍没核销的报名不再算「待核销」。主办方自己的名册照旧记退款。
+    @Test
+    void refundTagOnlyAtPayeeShopAndEndedUnredeemedSignupIsNotPending() throws Exception {
+        try (SqlSession session = factory().openSession(false)) {
+            createSchema(session);
+            try (Statement statement = session.getConnection().createStatement()) {
+                statement.execute("insert into ums_member(id,nickname,phone,del_flag) values "
+                        + "(61,'退票玩家','13900000061',0),(62,'没来的玩家','13900000062',0),"
+                        + "(63,'待来的玩家','13900000063',0)");
+                // 自由探索主题 81 由主办 90 发布,88 是审核通过的参与店
+                statement.execute("insert into cms_topic(id,member_id,club_id,product_type,del_flag) values "
+                        + "(81,90,0,2,0)");
+                statement.execute("insert into cms_registration_merchant values (1,81,88,1,0)");
+                statement.execute("insert into cms_activity(id,topic_id,member_id,del_flag,end_date) values "
+                        + "(32,81,90,0,dateadd('day',3,current_timestamp)),"
+                        + "(33,null,88,0,dateadd('day',-1,current_timestamp)),"
+                        + "(34,null,88,0,dateadd('day',3,current_timestamp))");
+                statement.execute("insert into cms_registration values "
+                        + "(501,61,'13900000061',4,null,69.00,69.00,null,current_timestamp,2,32),"
+                        + "(502,62,'13900000062',2,null,20.00,20.00,null,current_timestamp,2,33),"
+                        + "(503,63,'13900000063',2,null,20.00,20.00,null,current_timestamp,2,34)");
+            }
+            MerchantCrmAppMapper mapper = session.getMapper(MerchantCrmAppMapper.class);
+
+            List<MerchantCrmCustomerRowVO> shopRows = mapper.selectOwnedCustomerPage(88L, query(77L, null), 0, 20);
+            assertEquals(3, shopRows.size());
+            assertEquals(Integer.valueOf(0), rowFor(shopRows, 61L).getRefundedCount(),
+                    "参与店没收过这张票的钱,退款不记在它名下");
+            assertFalse("abnormal".equals(rowFor(shopRows, 61L).getTier()));
+            assertEquals(Integer.valueOf(0), rowFor(shopRows, 62L).getPendingCount(),
+                    "活动已结束还没核销,不再是待核销");
+            assertFalse("pending".equals(rowFor(shopRows, 62L).getTier()));
+            assertEquals("pending", rowFor(shopRows, 63L).getTier(), "活动未结束的未核销报名仍是待核销");
+            assertEquals(0, mapper.selectOwnedCustomerPage(88L, query(77L, "abnormal"), 0, 20).size());
+            assertEquals(1, mapper.selectOwnedCustomerPage(88L, query(77L, "pending"), 0, 20).size());
+            MerchantCrmSegmentCountsVO counts = mapper.selectOwnedSegmentCounts(88L, query(77L, null));
+            assertEquals(Long.valueOf(0), counts.getAbnormal());
+            assertEquals(Long.valueOf(1), counts.getPending());
+            assertEquals(Integer.valueOf(0), mapper.selectOwnedCustomerSummary(88L, 61L).getRefundedCount());
+            assertEquals(Integer.valueOf(0), mapper.selectOwnedCustomerSummary(88L, 62L).getPendingCount());
+
+            List<MerchantCrmCustomerRowVO> hostRows = mapper.selectOwnedCustomerPage(90L, query(78L, null), 0, 20);
+            assertEquals("abnormal", rowFor(hostRows, 61L).getTier(), "收款的主办方仍看到这笔退款");
+            assertEquals(Integer.valueOf(1), mapper.selectOwnedCustomerSummary(90L, 61L).getRefundedCount());
+            session.rollback();
+        }
+    }
+
     @Test
     void encryptedCustomerPhoneIsDecodedBeforeListAndExportProjection() throws Exception {
         com.chengyinhub.business.security.PiiCryptoService previous =
@@ -348,6 +397,8 @@ class MerchantCrmProfileNamespaceMyBatisTest {
     private void createSchema(SqlSession session) throws Exception {
         try (Statement statement = session.getConnection().createStatement()) {
             statement.execute("drop all objects");
+            statement.execute("create alias UTC_TIMESTAMP as $$ java.time.LocalDateTime utcTimestamp() {"
+                    + " return java.time.LocalDateTime.now(java.time.ZoneOffset.UTC); } $$");
             statement.execute("create table merchant_customer_profile("
                     + "id bigint auto_increment primary key, merchant_id bigint not null, "
                     + "merchant_scope_version int not null, member_id bigint not null, member_nickname varchar(100), "
@@ -362,15 +413,17 @@ class MerchantCrmProfileNamespaceMyBatisTest {
             statement.execute("create table cms_registration(id bigint primary key, member_id bigint not null, "
                     + "phone varchar(32), payment_status int not null, verification_status int, "
                     + "payable_amount decimal(18,2), total_amount decimal(18,2), verification_time timestamp, "
-                    + "create_time timestamp not null, owner_type int not null, owner_id bigint not null)");
+                    + "create_time timestamp not null, owner_type int not null, owner_id bigint not null, real_name varchar(128) invisible)");
             statement.execute("create table cms_topic(id bigint primary key, member_id bigint not null, "
-                    + "club_id bigint, product_type int, del_flag int not null)");
+                    + "club_id bigint, product_type int, del_flag int not null, end_date date)");
             statement.execute("create table cms_registration_merchant(id bigint primary key, topic_id bigint not null, "
                     + "member_id bigint not null, audit_status int not null, del_flag int not null)");
+            statement.execute("create table merchant_chapter_application(id bigint primary key, topic_id bigint not null, "
+                    + "chapter_id bigint, merchant_id bigint not null, status int not null, del_flag int not null)");
             statement.execute("create table coop_invite(id bigint primary key, topic_id bigint not null, "
                     + "to_type varchar(32), status int, del_flag int not null)");
             statement.execute("create table cms_activity(id bigint primary key, topic_id bigint, "
-                    + "member_id bigint not null, del_flag int not null)");
+                    + "member_id bigint not null, del_flag int not null, end_date timestamp invisible)");
             statement.execute("create table merchant_customer_note(id bigint primary key, merchant_id bigint not null, "
                     + "merchant_scope_version int not null, member_id bigint not null, content varchar(500), "
                     + "hidden int not null, create_time timestamp)");
@@ -383,6 +436,10 @@ class MerchantCrmProfileNamespaceMyBatisTest {
                     + "member_id bigint not null, status int not null)");
             statement.execute("create table player_activity_role(id bigint primary key, activity_id bigint not null, "
                     + "member_id bigint not null, role_code varchar(32))");
+            // 第十一轮 h2:名册对自由探索参与商家读单店同意(merchant_onsite_data_sharing)的最新一条。
+            statement.execute("create table consent_record(id bigint primary key auto_increment, member_id bigint not null, "
+                    + "doc_type varchar(64), doc_version varchar(32), scene varchar(64), scope_type varchar(32), "
+                    + "scope_id bigint, event_type varchar(16), occurred_at timestamp, request_id varchar(64))");
         }
     }
 

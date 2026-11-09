@@ -1,5 +1,6 @@
 /* 骨架屏→内容淡切:isolated 组件收不到全局 components.wxss,@import 同一份定义 */
 @import '../../../../style/fade-in.wxss';
+@import '../../../../style/addr-tap.wxss';
 /* H09 订单卡样式沿用 subpackageMember/order/order.wxss 的 D04 范式(§11.1 认定它已达标),
    只去掉页面级 chrome:.order-page 整页 flex 容器、.order-tabs-wrap 吸顶、
    .order-state/.order-error*(错误态已换成共享 cy-error)。
@@ -8,7 +9,7 @@
 .moh { width: 100%; min-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
 /* chip 的左右边距由 scene-sheet 正文的 --cy-comp-sheet-body-pad-x(16px)提供,
    这里**不能**再补 --cy-page-x(也是 16px)—— 那就是双份缩进。 */
-.order-tabs-wrap { flex: none; padding: 0 0 var(--cy-space-3); }
+.order-tabs-wrap { flex: none; padding: 0 0 var(--cy-space-4); } /* 筛选到第一张卡 space-4,与我的参与/积分明细同一节奏 */
 .moh-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
 /* 卡片原来靠 --cy-page-x 撑页面左右边距;弹窗正文已有自己的内距,这里左右归零免双份缩进,
    卡间距 --cy-space-5 与页面版保持一致。 */

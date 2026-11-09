@@ -104,7 +104,7 @@ class CoopSettlementGroupBasisTest {
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
         PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, coopGroupVerifyMapper, coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "coopGroupVerifyMapper", coopGroupVerifyMapper);
-        ReflectionTestUtils.setField(svc, "pricingService", new PricingServiceImpl());
+        ReflectionTestUtils.setField(svc, "pricingService", com.chengyinhub.business.service.PricingTestRules.withTopicRule(new PricingServiceImpl()));
         ReflectionTestUtils.setField(svc, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(svc, "umsMemberBalanceDetailService", mock(IUmsMemberBalanceDetailService.class));
         ReflectionTestUtils.setField(svc, "clubService", clubService);

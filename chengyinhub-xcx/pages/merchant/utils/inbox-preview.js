@@ -98,7 +98,9 @@ function inviteItem(it, now) {
 }
 
 function eventItem(e, index, now) {
-  const ts = eventTimestamp(e.time, now);
+  // 站点待接受邀请的 time 是场次开始时刻(多在将来):按「现在」排序,时间原样显示,别被折成去年
+  const pendingStation = e.type === 'stationInvite';
+  const ts = pendingStation ? (now == null ? Date.now() : now) : eventTimestamp(e.time, now);
   return {
     key: 'event-' + index,
     kind: 'event',
@@ -106,8 +108,10 @@ function eventItem(e, index, now) {
     title: e.label || '经营动态',
     sub: e.content || '',
     ts: ts,
-    time: isNaN(ts) ? String(e.time || '') : fmtTime(ts, now),
+    time: pendingStation || isNaN(ts) ? String(e.time || '') : fmtTime(ts, now),
     type: e.type || '',
+    // 第十二轮 k4(j2 N-02):站点待接受邀请直达本站页
+    gameActivityId: e.type === 'stationInvite' && Number(e.gameActivityId) > 0 ? Number(e.gameActivityId) : 0,
     unread: true,
     readId: 'event@' + (e.type || '') + '@' + String(e.time || '') + '@' + String(e.content || ''),
   };

@@ -27,8 +27,14 @@
     <include refid="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateVo"/>
     where id=#{id} for update
   </select>
+  <select id="countCompletedInheritedConfig" resultType="java.lang.Integer">
+    select count(*) from template_adoption_receipt
+    where owner_member_id=#{owner} and draft_id=#{draftId} and source_id=#{sourceId}
+      and status='COMPLETED' and inherited_advanced_config_hash=#{configHash}
+  </select>
   <update id="finish">
-    update template_adoption_receipt set status=#{status}, draft_id=#{draftId}, reason=#{reason}, draft_version=#{draftVersion}
+    update template_adoption_receipt set status=#{status}, draft_id=#{draftId}, reason=#{reason}, draft_version=#{draftVersion},
+      inherited_advanced_config_hash=#{inheritedConfigHash}
     where actor_member_id=#{actor} and request_id=#{requestId} and status='PENDING'
   </update>
 </mapper>

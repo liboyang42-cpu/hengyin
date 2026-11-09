@@ -1,3 +1,6 @@
+@import '../../../../../style/addr-tap.wxss';
+/* isolated 组件内全局 .cy-pressed 进不来,本地一份 */
+.cy-pressed { opacity: .88; }
 .cnf-shell {
   --cy-sheet-heading-size: var(--cy-type-sheet-title);
 }
@@ -16,6 +19,8 @@
 .cnf-row { display: flex; gap: var(--cy-space-2); }
 .cnf-half { flex: 1; min-width: 0; }
 .cnf-note { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); line-height: 1.5; margin-bottom: var(--cy-space-4); }
+/* 权益门槛挂在「常备权益」字段下,不另起说明块 */
+.cnf-note--field { margin: var(--cy-space-2) 0 0; }
 
 .cnf-offer {
   border-bottom: var(--cy-comp-sheet-border-width) solid var(--cy-color-border-subtle);

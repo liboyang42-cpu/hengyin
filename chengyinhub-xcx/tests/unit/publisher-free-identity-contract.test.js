@@ -203,8 +203,8 @@ test('自玩票上送不把未填写的价格悄悄改成0', () => {
 })
 
 test('场景主理人副本同样不采集实名，商家仍保留采集和失败阻断', () => {
-  const source = read('components/cy/scene-route-content/index.js')
-  const wxml = read('components/cy/scene-route-content/index.wxml')
+  const source = read('subpackageMember/components/cy/scene-route-content/index.js')
+  const wxml = read('subpackageMember/components/cy/scene-route-content/index.wxml')
   const clubForm = /if \(sceneId === 'club-apply'\) return \{([^\n]*)\}/.exec(source)[1]
   assert.doesNotMatch(clubForm, /realName|idCard|consented/)
   assert.match(source, /if \(sceneId === 'merchant-apply' && !this\.data\.identityRegistered\)/)

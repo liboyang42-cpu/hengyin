@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -59,6 +60,8 @@ class ApiProjectAcceptStatusTest {
         controller = spy(new ApiProjectController());
         doReturn(ME).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "cmsTopicService", cmsTopicService);
+        ReflectionTestUtils.setField(controller, "cmsTopicMapper",
+                mock(com.chengyinhub.business.mapper.CmsTopicMapper.class));
         ReflectionTestUtils.setField(controller, "cmsActivityService", actService);
         ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantService", regService);
         ReflectionTestUtils.setField(controller, "coopInviteService", coopInviteService);
@@ -114,6 +117,17 @@ class ApiProjectAcceptStatusTest {
             if (topicId.equals(m.get("id")) && "topic".equals(m.get("bizType"))) return m;
         }
         throw new AssertionError("row not found: " + topicId);
+    }
+
+    @Test
+    void my_topic_list_leaves_template_copies_to_the_template_tab() {
+        // 查询保留副本，isTemplate 投影由前端把它放进「模板」页签。
+        when(cmsTopicService.selectCmsTopicList(any(CmsTopic.class)))
+                .thenReturn(Collections.singletonList(myTopic(1L, null, 1, 0)));
+        row(1L);
+        org.mockito.ArgumentCaptor<CmsTopic> query = org.mockito.ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicService).selectCmsTopicList(query.capture());
+        assertNotEquals(Boolean.TRUE, query.getValue().getExcludeTemplates());
     }
 
     @Test

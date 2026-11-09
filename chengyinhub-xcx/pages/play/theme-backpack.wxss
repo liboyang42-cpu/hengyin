@@ -30,6 +30,10 @@
 .tb-value-max{display:inline}
 .tb-chevron{color:var(--cy-comp-sheet-player-muted);font-size:var(--cy-type-section-title)}
 .tb-section{display:block;font-size:var(--cy-type-body);font-weight:600;margin:var(--cy-space-5) 0 var(--cy-space-3)}
+/* 第十三轮 m1 P4:本局结束的说明与「通过」结果卡之间留出间距,结果卡自带内边距,不再压在说明那一行上 */
+.tb-ended{margin-bottom:var(--cy-space-3)}
+.tb-outcome{padding:var(--cy-space-4)}
+.tb-outcome .tb-heading{margin-bottom:0}
 .tb-heading{display:block;font-size:var(--cy-type-section-title);font-weight:600;margin-bottom:var(--cy-space-2);overflow-wrap:anywhere}
 .tb-pills{display:flex;flex-wrap:wrap;gap:var(--cy-space-2);margin:var(--cy-space-5) 0 var(--cy-space-4)}
 .tb-pill,.tb-button{display:flex;align-items:center;justify-content:center;border-radius:var(--cy-radius-pill);min-height:var(--cy-btn-h);padding:0 var(--cy-space-4);font-size:var(--cy-type-label);box-sizing:border-box;overflow-wrap:anywhere;text-align:center}

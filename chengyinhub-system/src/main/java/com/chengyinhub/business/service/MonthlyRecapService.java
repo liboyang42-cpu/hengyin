@@ -25,7 +25,7 @@ public class MonthlyRecapService {
         YearMonth month=month(rawMonth);
         if (month.isAfter(YearMonth.from(Instant.ofEpochMilli(now()).atZone(ZoneId.of("Asia/Shanghai"))))) throw new ServiceException("未来月份暂无探索记录");
         if (!Arrays.asList("routes","places","stamps").contains(kind)) throw new ServiceException("记录类型不合法");
-        if (beforeId!=null && beforeId<=0) throw new ServiceException("分页编号不合法");
+        if (beforeId!=null && (beforeId==0 || beforeId<0 && !"routes".equals(kind))) throw new ServiceException("分页编号不合法");
         int limit=requestedLimit==null?20:requestedLimit;
         if (limit<1 || limit>50) throw new ServiceException("每页应为1至50条");
         String start=month.atDay(1)+" 00:00:00", end=month.plusMonths(1).atDay(1)+" 00:00:00";
@@ -37,7 +37,7 @@ public class MonthlyRecapService {
         result.put("month",rawMonth); result.put("kind",kind); result.put("timeZone","Asia/Shanghai");
         result.put("generatedAtMs",now()); result.put("counts",counts); result.put("items",items);
         result.put("hasMore",more); result.put("nextBeforeId",more?String.valueOf(items.get(limit-1).get("id")):null);
-        result.put("coverage","RECORDED_COMPLETED_ROUTE_SESSIONS_AND_COMPLETED_ROAM_POI_AND_OWN_STAMPS");
+        result.put("coverage","RECORDED_COMPLETED_ROUTES_AND_FIRST_THEME_COMPLETIONS_AND_COMPLETED_ROAM_POI_AND_OWN_STAMPS");
         return result;
     }
 }

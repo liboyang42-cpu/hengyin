@@ -9,7 +9,7 @@
 </wxs>
 <wxs src="../../../utils/time-format.wxs" module="tf" />
 <wxs src="../utils/wxs/chapter-title.wxs" module="chapterTitle" />
-<view class="fabu slopes theme-topic-editor">
+<view class="fabu slopes theme-topic-editor {{editorPage === 1 && viewMode === 'map' ? '' : 'slopes--full'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -400,9 +400,12 @@
 
         <!-- 添加章节放在列表最下方(参考 Trip Way 的 + Create Activity),
              不在右上角 —— 空态卡里那句「点击添加章节」原先指向的按钮在别处。 -->
-        <view class="slopes-add-chapter" wx:if="{{formData.chapters.length || pendingMaterials.length}}" bindtap="onTapAddChapter" aria-role="button" aria-label="添加章节" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="slopes-chapter-create-actions" wx:if="{{formData.chapters.length || pendingMaterials.length}}">
+        <view class="slopes-add-chapter" bindtap="onTapAddChapter" aria-role="button" aria-label="添加章节" hover-class="cy-pressed" hover-stay-time="80">
           <view class="slopes-add-chapter__ico"><cy-icon name="plus" size="28" /></view>
           <text class="slopes-add-chapter__txt">添加章节</text>
+        </view>
+        <view class="node-pill" wx:if="{{formData.productType === 1 && (editScope !== 'WHITELIST' || openingIndex >= 0)}}" bindtap="openTopicOpening" aria-role="button" aria-label="{{openingIndex >= 0 ? '编辑序章' : '添加序章'}}" hover-class="cy-pressed" hover-stay-time="80">{{openingIndex >= 0 ? '编辑序章' : '添加序章'}}</view>
         </view>
       </view>
     </block>
@@ -411,6 +414,22 @@
 
     <include src="./step3.wxml" />
 
+  <view class="slopes-submit-error" wx:if="{{submitError}}">
+  <cy-inline-error wx:if="{{submitErrorNeedsEdit}}" kind="network"
+    title="这次还没有保存" sub="{{submitError}}" action="去修改" bind:action="editRejectedContent" />
+  <cy-inline-error wx:else kind="network"
+    title="这次还没有保存" sub="{{submitError}}" action="重试" bind:action="submitForm" />
+  <!-- 稿 S16:错误那一句之外还有一条可展开的「为什么会这样」。一句结果只说了"失败了",
+       人下一步该动哪儿仍然不知道;展开里写的是**能照着做的那一步**。 -->
+  <view class="submit-error-why" wx:if="{{submitError}}">
+    <view class="submit-error-why__toggle" bindtap="toggleSubmitErrorWhy"
+          aria-role="button" aria-label="为什么会这样" hover-class="cy-pressed" hover-stay-time="80">
+      <text>为什么会这样</text>
+      <cy-icon name="{{submitErrorWhy ? 'collapse' : 'expand'}}" size="24" />
+    </view>
+    <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">{{submitErrorNeedsEdit ? '修改后重试' : '草稿已存本机，可稍后重试'}}</text>
+  </view>
+  </view>
     <view class="slopes-sheet-bottom"></view>
   </scroll-view>
 
@@ -683,23 +702,14 @@
     </view>
   </view>
 
-  <view class="pending-undo" wx:if="{{pendingUndo.show}}">
+  <view class="pending-undo cy-rise-in" wx:if="{{pendingUndo.show}}">
     <text>{{pendingUndo.text}}</text>
     <text class="pending-undo__action" bindtap="undoPendingRemoval" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
   </view>
 
-  <cy-inline-error class="slopes-submit-error" wx:if="{{submitError}}" kind="network"
-    title="这次还没有保存" sub="{{submitError}}" action="重试" bind:action="submitForm" />
-  <!-- 稿 S16:错误那一句之外还有一条可展开的「为什么会这样」。一句结果只说了"失败了",
-       人下一步该动哪儿仍然不知道;展开里写的是**能照着做的那一步**。 -->
-  <view class="submit-error-why" wx:if="{{submitError}}">
-    <view class="submit-error-why__toggle" bindtap="toggleSubmitErrorWhy"
-          aria-role="button" aria-label="为什么会这样" hover-class="cy-pressed" hover-stay-time="80">
-      <text>为什么会这样</text>
-      <cy-icon name="{{submitErrorWhy ? 'collapse' : 'expand'}}" size="24" />
-    </view>
-    <text class="submit-error-why__body" wx:if="{{submitErrorWhy}}">草稿已存本机，可稍后重试</text>
-  </view>
+
+
+
 
   <!-- 底部导航条(Figma 4028:13649):左侧两个 tab 切「内容 / 地图」,右侧一颗药丸是主动作。
        取代原来的「顶部进度条 + 下一步/上一步」—— 三个控件干同一件事(换页),留一个就够。
@@ -972,6 +982,7 @@
             <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{storyDraftList}}" wx:key="id" data-item="{{item}}" data-source="mine" aria-role="button" aria-label="选用{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="item">
                 <image wx:if="{{item.imgUrl}}" lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
+                <view wx:else class="temp-rail__pic"></view>
                 <view class="item-txt"><view class="tit ep1">{{item.title}}</view><text wx:if="{{draftSupportReasons[item.id]}}" class="node-card__value">{{draftSupportReasons[item.id]}}（通用结算）</text></view>
               </view>
             </view>
@@ -1079,7 +1090,7 @@
              版式与位置照 Figma J3(5221:19016):紧跟章节名称(稿中「本章阶段」的位置),粗体小标题 + 同行灰字说明,下面整宽灰药丸。
              完成要求 = 一个「全部完成」开关,默认开;关掉才填至少完成几站。 -->
         <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text><text class="ch-sec__desc">关闭后可设最少完成节点数</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">完成要求</text></view>
           <view class="ch-pill-row">
             <text>全部完成</text>
             <cy-switch checked="{{runtimeChapterRules.completionType !== 'ANY_N'}}" bindchange="onChapterCompleteAll" accessibility-label="全部完成" />
@@ -1092,11 +1103,10 @@
             <cy-dropdown topic-editor range="{{runtimeOverflowOptions}}" range-key="label" value="{{-1}}" bind:change="onChapterOverflowPick">
               <view class="ch-pill-row"><text>超出后补做一站</text><view class="ch-pill-row__value"><text>{{runtimeOverflowLabel}}</text><cy-icon name="chevron-right" size="24" /></view></view>
             </cy-dropdown>
-            <text class="ch-sec__note">补做一个节点占一份额度，与额外节点共用</text>
           </block>
         </view>
         <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text><text class="ch-sec__desc">本章结束时消耗物品，不够时扣数值</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">章末配给</text></view>
           <view class="ch-pill-row">
             <text>{{runtimeChapterRation.enabled ? '已开启' : '不消耗物品'}}</text>
             <cy-switch checked="{{runtimeChapterRation.enabled}}" disabled="{{!!runtimeChapterRation.reason && !runtimeChapterRation.enabled}}" bindchange="onChapterRationToggle" accessibility-label="章末配给" />
@@ -1122,7 +1132,7 @@
         <!-- 章末数值消耗(通用,不分主题):本章结束时扣的生命/幸运/自定义数值。运行端在章末照此扣除,
              所以存量非零消耗必须在这里看得见、改得了;停用的数值标出来,不静默删。 -->
         <view class="ch-sec" wx:if="{{runtimeChapterCostRows.length || runtimeChapterCostOptions.length}}">
-          <view class="ch-sec__head"><text class="ch-sec__title">章末消耗</text><text class="ch-sec__desc">本章结束时扣除的数值</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">章末消耗</text></view>
           <view class="ch-pill-row" wx:for="{{runtimeChapterCostRows}}" wx:for-item="cost" wx:for-index="ci" wx:key="key">
             <text>{{cost.label}}{{cost.inactive ? '（数值未启用）' : ''}}</text>
             <view class="ch-pill-row__value">
@@ -1135,7 +1145,7 @@
           </cy-dropdown>
         </view>
         <view class="ch-sec">
-          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text><text class="ch-sec__desc">同组节点只能完成其中一个</text></view>
+          <view class="ch-sec__head"><text class="ch-sec__title">互斥选项</text></view>
           <view class="ch-group" wx:for="{{runtimeChapterRules.groups}}" wx:for-item="group" wx:for-index="gi" wx:key="*this">
             <view class="ch-group__head"><text>第{{gi + 1}}组</text><text class="ch-group__del" data-index="{{gi}}" bindtap="removeChapterExclusiveGroup" aria-role="button" aria-label="移除第{{gi + 1}}组" hover-class="cy-pressed" hover-stay-time="80">移除</text></view>
             <view class="node-chips">
@@ -1143,7 +1153,6 @@
             </view>
           </view>
           <view class="ch-pill-btn" bindtap="addChapterExclusiveGroup" aria-role="button" aria-label="添加互斥组" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" /><text>添加互斥组</text></view>
-          <text class="ch-sec__note" wx:if="{{!runtimeChapterRules.nodes.length}}">先保存草稿，再选择本章节点。</text>
         </view>
         <!-- 2026-09-04 拍板:音频从故事流的可重复块升成【章节的一个属性】,一章最多一段。
              它是这一章的背景旁白 —— 玩家进入本章时自动播放,所以它没有"插在第几段"这回事,
@@ -1168,6 +1177,13 @@
             <view class="chapter-audio__del" bindtap="clearChapterAudio"
                   aria-role="button" aria-label="移除章节音频" hover-class="cy-pressed" hover-stay-time="80">移除</view>
           </view>
+        </view>
+
+        <view class="chapter-audio" wx:if="{{chapterForm.opening || chapterForm.ending}}">
+          <view class="chapter-audio__head"><text>{{chapterForm.opening ? '开场视频' : '结尾视频'}}</text></view>
+          <view class="chapter-audio__empty" bindtap="uploadChapterVideo" aria-role="button" aria-label="上传章节视频" hover-class="cy-pressed"><cy-icon name="plus" size="28" /><text>{{chapterForm.videoUrl ? '更换视频' : '添加视频'}}</text></view>
+          <view wx:if="{{chapterForm.videoUrl}}" class="chapter-audio__del" bindtap="clearChapterVideo" aria-role="button" aria-label="移除章节视频" hover-class="cy-pressed">移除</view>
+          <cy-inline-error wx:if="{{chapterVideoError}}" class="chapter-media-error" kind="field" title="{{chapterVideoError}}" />
         </view>
 
         <view class="chapter-atmosphere" wx:if="{{formData.productType === 1 && !lookView.themed}}"> <!-- 设了主题配色就统一用它,章节里不再单设 -->
@@ -1265,7 +1281,8 @@
              ⚠️ 此前这一段没有任何 wx:if:玩家和商家也看得到整套控件,开了要到发布时才被后端拒。 -->
         <!-- 2026-10-31 业主批准 P-6/P-9:商家主办的自由探索也逐站招商(权益 / 引流两档,后端开放招商 V1 不看主理人身份),
              否则预览里打开「商家承接」后补品类时会跳到一个看不到的区块。 -->
-        <view class="chapter-recruit" wx:if="{{merchantPoolEditable || (operationScope === 'MERCHANT' && formData.productType === 2)}}">
+        <!-- 城市定向只开放主题级招商；保留旧误选的关闭入口。 -->
+        <view class="chapter-recruit" wx:if="{{(merchantPoolEditable || operationScope === 'MERCHANT') && (formData.productType === 2 || chapterForm.recruitEnabled)}}">
           <view class="chapter-recruit__head">
             <text>商家承接</text>
           </view>
@@ -1352,7 +1369,7 @@
   <!-- P-9(2026-10-31 业主批准):主页面浅色,与专业主题编辑器同一套;封面 / 标题 / 详情 / 票务 / 主题设置 /
        发布后的合作 / 画面风格 / 剧情都在主页面上,每一行点了回到编辑器里那一项。只有「看剧情」用弹窗(也是浅色)。
        挡住发布的问题列在封面下面,写清在哪里,「去修改」直接定位;票务行 / 章节行同步标红。 -->
-  <view class="sp" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
+  <view class="sp" style="padding-top: {{statusBarHeight + navBarHeight}}px; box-sizing: border-box;" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
     <scroll-view class="sp-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="sp-hero">
         <image wx:if="{{publishCheck.preview.cover}}" class="sp-hero__img" src="{{publishCheck.preview.cover}}" mode="aspectFill" />
@@ -1413,7 +1430,7 @@
 
         <view class="sp-sec">画面风格</view>
         <view class="sp-look" data-target="look" bindtap="onPreviewEdit" aria-role="button" aria-label="画面风格，去修改" hover-class="cy-pressed" hover-stay-time="80">
-          <cy-look-preview class="sp-look__pv" embedded="{{true}}" show="{{publishCheck.show && !storyPop.show}}" look="{{publishCheck.preview.look}}" />
+          <cy-look-preview class="sp-look__pv" embedded="{{true}}" show="{{publishCheck.show && !storyPop.show}}" look="{{publishCheck.preview.look}}" content="{{publishCheck.preview.lookSample}}" />
           <view class="sp-group">
             <view class="sp-row" wx:for="{{publishCheck.preview.lookRows}}" wx:key="k">
               <text class="sp-row__k">{{item.k}}</text><text class="sp-row__v">{{item.v}}</text><cy-icon name="chevron-right" size="24" />
@@ -1438,7 +1455,7 @@
         <view class="sp-bottom"></view>
       </view>
     </scroll-view>
-    <view class="sp-top" style="padding-top: {{statusBarHeight}}px;">
+    <view class="sp-top" style="height: {{navBarHeight}}px; padding-top: {{statusBarHeight}}px;">
       <view class="sp-x" bindtap="closePublishCheck" aria-role="button" aria-label="退出预览，回到配置" hover-class="cy-pressed" hover-stay-time="80"><view class="sp-x__c"><cy-icon name="close" size="32" /></view></view>
       <cy-btn class="sp-done" variant="primary" size="sm" loading="{{submitting}}" disabled="{{!!publishCheck.blocking.length}}" aria-disabled="{{!!publishCheck.blocking.length}}"
               bind:disabledtap="onPublishCheckDisabledTap" bindtap="confirmPublishCheck">完成</cy-btn>
@@ -1689,7 +1706,7 @@
         <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">下降时一起扣{{runtimeHpLabel}}</text></view><cy-switch checked="{{valueEditor.links.length > 0}}" bindchange="onValueLinkSwitch" /></view>
       </view>
       <view class="node-card node-card--danger" wx:if="{{valueEditor.index >= 0 && !valueEditor.definitionReadOnly}}" bindtap="removeValue" aria-role="button" aria-label="删除数值" hover-class="cy-pressed">删除数值</view>
-      <cy-inline-error wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
+      <cy-inline-error kind="error" wx:if="{{valueEditor.error}}" title="{{valueEditor.error}}" />
     </view>
   </cy-sheet>
 
@@ -1740,7 +1757,7 @@
     <text class="ic-label">数值</text>
     <view class="node-card">
       <attribute-binding-editor wx:if="{{initialStateEditor.show}}" rules="{{formData.journeyRules}}" snapshot="{{attributeRegistrySnapshot}}" topic-id="{{editingTopicId}}" config-version="{{formData.configVersion}}" read-only="{{editScope === 'WHITELIST'}}" bind:confirm="onAttributeBindingConfirm" bind:manage="manageAttributeDefinitions" bind:refresh="loadAttributeRegistry" />
-      <cy-inline-error wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
+      <cy-inline-error kind="error" wx:if="{{attributeRegistryError}}" title="{{attributeRegistryError}}" />
     </view>
     <view class="node-card" wx:if="{{initialStateEditor.rules.hp.enabled}}">
       <view class="story-initial__row"><text class="node-card__title">{{runtimeHpInitialLabel}}</text><cy-switch checked="{{true}}" disabled="{{editScope === 'WHITELIST'}}" data-field="hp.enabled" bind:change="onInitialStateField" accessibility-label="启用{{runtimeHpInitialLabel}}" /></view>
@@ -1757,7 +1774,7 @@
     <view class="node-card" wx:for="{{initialStateEditor.values}}" wx:key="key">
       <view class="story-initial__row"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.min}} 至 {{item.max}}</text></view>
       <view class="story-initial__row"><text>开局{{item.label}}</text><cy-stepper label="开局{{item.label}}" value="{{item.initial}}" min="{{item.min}}" max="{{item.max}}" data-index="{{item.index}}" data-field="attribute.initial" bind:change="onInitialStateField" disabled="{{editScope === 'WHITELIST' || !!initialStateEditor.rules.attributeBinding}}" /></view>
-      <cy-inline-error wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
+      <cy-inline-error kind="error" wx:if="{{item.invalidInitial}}" title="开局值超出当前范围，请修改后完成" />
     </view>
     <view class="story-initial__choices" wx:if="{{editScope !== 'WHITELIST'}}">
       <text class="story-initial__heading">添加初始状态</text>
@@ -1768,7 +1785,7 @@
         </view>
       </view>
     </view>
-    <cy-inline-error wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
+    <cy-inline-error kind="error" wx:if="{{initialStateEditor.error}}" title="{{initialStateEditor.error}}" />
   </view>
 </cy-sheet>
 
@@ -1796,7 +1813,7 @@
         </view>
       </block>
     </view>
-    <cy-inline-error wx:if="{{carryPicker.error}}" title="{{carryPicker.error}}" />
+    <cy-inline-error kind="error" wx:if="{{carryPicker.error}}" title="{{carryPicker.error}}" />
     <text wx:if="{{carryPicker.state === 'error'}}" class="ic-note ic-note--error" bindtap="retryCarryPicker" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">没有读取成功，请再试一次。</text>
     <block wx:for="{{carryPicker.groups}}" wx:key="kind" wx:for-item="group">
       <text class="ic-label">{{group.label}}</text>

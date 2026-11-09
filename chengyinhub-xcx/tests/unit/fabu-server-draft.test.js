@@ -6,7 +6,7 @@ const payload = { name: '寒冬', publishMode: 'pro', productType: 1, chapters: 
 const detail = (extra) => Object.assign({ isDraft: true,
   chapters: [{ id: 101, topicId: 501, cmsTopicNodeList: [{ id: 11, chapterId: 101, topicId: 501, name: '甲' }, { id: 12, chapterId: 101, topicId: 501, name: '乙' }] }] }, extra,
   { topic: Object.assign({ id: 501, status: 0, name: '寒冬' }, extra && extra.topic) });
-// 真实 author-edit-detail 恒带 topic.configVersion(cms_topic.config_version NOT NULL DEFAULT 1);
+// 真实 author-saved-detail 恒带 topic.configVersion(cms_topic.config_version NOT NULL DEFAULT 1);
 // 页面发布未知后的回读按保存时的版本核对，页面级发布恢复夹具必须带上它。
 const versioned = (extra) => detail(Object.assign({}, extra, { topic: Object.assign({ configVersion: 3 }, extra && extra.topic) }));
 
@@ -37,6 +37,195 @@ test('封面回读只忽略本站同一对象的完整OSS签名，保留对象�
   assert.match(readbackIssue(sent, detail({ topic: { imgUrl: after, imgArr: after } }), true), /多图封面/);
   assert.match(readbackIssue(Object.assign({}, payload, { imgUrl: 'https://external.example/p.png?Signature=one' }),
     detail({ topic: { imgUrl: 'https://external.example/p.png?Signature=two' } }), true), /主封面/);
+});
+
+test('不同配置的OSS桶也可刷新同一对象签名，但桶和对象不能改变', () => {
+  const asset = 'https://author-media.oss-cn-beijing.aliyuncs.com/upload/' + 'c'.repeat(32) + '.png';
+  const before = asset + '?Expires=100&OSSAccessKeyId=old&Signature=one';
+  const after = asset + '?Signature=two&Expires=200&OSSAccessKeyId=new';
+  const sent = Object.assign({}, payload, { imgUrl: before });
+  assert.equal(readbackIssue(sent, detail({ topic: { imgUrl: after } }), true), '');
+  for (const changed of [after.replace('author-media.', 'other-media.'), after.replace('oss-cn-beijing', 'oss-cn-shanghai'), after + '&versionId=2']) {
+    assert.match(readbackIssue(sent, detail({ topic: { imgUrl: changed } }), true), /主封面/);
+  }
+});
+
+test('相册回读接受同对象重签，图片、配文、顺序和节点引用变化仍拒绝', () => {
+  const asset = 'https://author-media.oss-cn-beijing.aliyuncs.com/upload/' + 'c'.repeat(32) + '.png';
+  const signed = asset + '?Expires=100&OSSAccessKeyId=old&Signature=one';
+  const refreshed = asset + '?Signature=two&Expires=200&OSSAccessKeyId=new';
+  const blocks = [
+    { type: 'dream', key: 'lid29', title: '相册', images: [
+      { url: signed, line: '城市观察1' }, { url: signed.replace('c'.repeat(32), 'd'.repeat(32)), line: '城市观察2' },
+    ] },
+    { type: 'node', key: 'node1', nodeIndex: 0 },
+  ];
+  const sent = { ...payload, chapters: [{ ...payload.chapters[0], blocks }] };
+  const back = () => {
+    const result = detail();
+    result.chapters[0].blocks = structuredClone(blocks);
+    result.chapters[0].blocks[0].images[0].url = refreshed;
+    result.chapters[0].blocks[0].images[1].url = refreshed.replace('c'.repeat(32), 'd'.repeat(32));
+    result.chapters[0].blocks[1] = { type: 'node', key: 'node1', nodeId: 11 };
+    return result;
+  };
+  assert.equal(readbackIssue(sent, back(), true), '');
+  for (const changed of [
+    refreshed.replace('c'.repeat(32), 'a'.repeat(32)), refreshed.replace('author-media.', 'other-media.'),
+    refreshed.replace('oss-cn-beijing', 'oss-cn-shanghai'), refreshed + '&versionId=2',
+    refreshed + '&Signature=duplicate', refreshed.replace('&Expires=200', ''),
+    refreshed.replace('two', '%ZZ'), refreshed + '#fragment',
+  ]) {
+    const result = back(); result.chapters[0].blocks[0].images[0].url = changed;
+    assert.match(readbackIssue(sent, result, true), /剧情块/);
+  }
+  for (const change of [
+    b => { b[0].images[0].line = '配文已改'; }, b => { b[0].title = '其他相册'; },
+    b => { b[0].images.reverse(); }, b => { b[0].images.pop(); },
+    b => { b[0].key = 'other'; }, b => { b[1].nodeId = 12; },
+  ]) {
+    const result = back(); change(result.chapters[0].blocks);
+    assert.match(readbackIssue(sent, result, true), /剧情块/);
+  }
+});
+
+test('进行方式自动生成真实任务后回读按成员核对，重建编号不误报，缺站跨章额外站仍拦下', () => {
+  const sent = Object.assign({}, payload, {
+    chapters: [{ id: 10, nodes: [{ id: 101, name: '甲' }, { id: 102, name: '乙' }] }, { id: 20, nodes: [{ id: 201, name: '丙' }] }],
+    themeRuntimeConfig: JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER' } }),
+  });
+  const back = () => detail({
+    chapters: [{ id: 30, topicId: 501, cmsTopicNodeList: [{ id: 901, chapterId: 30, topicId: 501, name: '甲' }, { id: 902, chapterId: 30, topicId: 501, name: '乙' }] },
+      { id: 40, topicId: 501, cmsTopicNodeList: [{ id: 903, chapterId: 40, topicId: 501, name: '丙' }] }],
+    themeRuntimeConfig: { gameplayRuntime: { runtimeScope: 'PLAYER', quests: [
+      { nodeId: 901, actKey: 'chapter_30' }, { nodeId: 902, actKey: 'chapter_30' }, { nodeId: 903, actKey: 'chapter_40' },
+    ] } },
+  });
+  assert.equal(readbackIssue(sent, back(), true), '');
+  const compiled = Object.assign({}, sent, { themeRuntimeConfig: JSON.stringify({ gameplayRuntime: { runtimeScope: 'PLAYER', quests: [
+    { nodeId: 101, actKey: 'chapter_10' }, { nodeId: 102, actKey: 'chapter_10' }, { nodeId: 201, actKey: 'chapter_20' },
+  ] } }) });
+  assert.equal(readbackIssue(compiled, back(), true), '');
+  for (const change of [q => q.pop(), q => q.push({ nodeId: 999, actKey: 'chapter_30' }),
+    q => { q[1].actKey = 'chapter_40'; }, q => { q[1].actKey = 'chapter_99'; }]) {
+    const altered = back(); change(altered.themeRuntimeConfig.gameplayRuntime.quests);
+    assert.match(readbackIssue(sent, altered, true), /节点与章节/);
+  }
+});
+
+test('未选进行方式先保存互斥章节，接受编译器默认个人任务但仍核对完整成员和显式模式', () => {
+  const sent = { name: '双路', chapters: [{ name: '街角', nodes: [{ id: 10, name: '左' }, { id: 11, name: '右' }] }],
+    themeRuntimeConfig: { chapters: [{ index: 0, exclusiveGroups: [[10, 11]] }] } };
+  const back = () => ({ isDraft: true, topic: { id: 501, status: 0, name: '双路' },
+    chapters: [{ id: 20, topicId: 501, name: '街角', cmsTopicNodeList: [
+      { id: 30, chapterId: 20, topicId: 501, name: '左' }, { id: 31, chapterId: 20, topicId: 501, name: '右' }] }],
+    themeRuntimeConfig: { chapters: [{ index: 0, exclusiveGroups: [[30, 31]] }],
+      gameplayRuntime: { runtimeScope: 'PLAYER', quests: [{ nodeId: 30, actKey: 'chapter_20' }, { nodeId: 31, actKey: 'chapter_20' }] } } });
+  assert.equal(readbackIssue(sent, back(), true), '');
+  for (const mutate of [g => g.quests.pop(), g => { g.quests[1].nodeId = 99; },
+    g => { g.quests[1].actKey = 'chapter_99'; }, g => { g.runtimeScope = 'TEAM'; }]) {
+    const changed = back(); mutate(changed.themeRuntimeConfig.gameplayRuntime);
+    assert.notEqual(readbackIssue(sent, changed, true), '');
+  }
+  for (const runtimeScope of ['TEAM', '', null]) {
+    const explicit = structuredClone(sent); explicit.themeRuntimeConfig.gameplayRuntime = { runtimeScope };
+    assert.notEqual(readbackIssue(explicit, back(), true), '');
+  }
+});
+
+function arrivalFixture() {
+  const game = { runtimeScope: 'TEAM', worldMode: 'TEAM_INDEPENDENT', quests: [
+    { nodeId: 101, actKey: 'chapter_10', locationKey: 'node_102', guideKey: 'guide_101', approvedFallbackNodeIds: [102, 201] },
+    { nodeId: 102, actKey: 'chapter_10', locationKey: 'shared_square' },
+    { nodeId: 201, actKey: 'chapter_20', locationKey: 'shared_square' },
+  ] };
+  const sent = { name: '到达回读', chapters: [
+    { id: 10, nodes: [{ id: 101, name: '甲', templateId: '31' }, { id: 102, name: '乙' }] },
+    { id: 20, nodes: [{ id: 201, name: '丙' }] },
+  ], themeRuntimeConfig: { gameplayRuntime: game } };
+  const back = { isDraft: true, topic: { id: 501, status: 0, name: sent.name }, chapters: [
+    { id: 30, topicId: 501, cmsTopicNodeList: [
+      { id: 901, topicId: 501, chapterId: 30, name: '甲', templateId: '31' },
+      { id: 902, topicId: 501, chapterId: 30, name: '乙' }] },
+    { id: 40, topicId: 501, cmsTopicNodeList: [{ id: 903, topicId: 501, chapterId: 40, name: '丙' }] },
+  ], themeRuntimeConfig: { gameplayRuntime: structuredClone(game) } };
+  back.themeRuntimeConfig.gameplayRuntime.quests.forEach((quest, index) => {
+    quest.nodeId = [901, 902, 903][index]; quest.actKey = index < 2 ? 'chapter_30' : 'chapter_40';
+  });
+  back.themeRuntimeConfig.gameplayRuntime.quests[0].approvedFallbackNodeIds = [902, 903];
+  return { sent, back };
+}
+
+for (const [field, changed] of [['locationKey', 'another_square'], ['guideKey', 'another_guide'], ['approvedFallbackNodeIds', [901, 903]]]) {
+  test('到达回读拒绝作者明确设置的 ' + field + ' 丢失或改变', () => {
+    for (const value of [undefined, null, changed]) {
+      const { sent, back } = arrivalFixture();
+      const quest = back.themeRuntimeConfig.gameplayRuntime.quests[0];
+      if (value === undefined) delete quest[field]; else quest[field] = value;
+      assert.match(readbackIssue(sent, back, true), /到达/);
+    }
+  });
+}
+
+test('到达回读接受章节节点换号及备用点重排，地点和引导键按后端合同原样保留', () => {
+  const { sent, back } = arrivalFixture();
+  back.themeRuntimeConfig.gameplayRuntime.quests.reverse();
+  back.themeRuntimeConfig.gameplayRuntime.quests[2].approvedFallbackNodeIds.reverse();
+  assert.equal(readbackIssue(sent, back, true), '');
+  const stale = structuredClone(back);
+  stale.themeRuntimeConfig.gameplayRuntime.quests[2].approvedFallbackNodeIds = [102, 201];
+  assert.match(readbackIssue(sent, stale, true), /到达/);
+  sent.themeRuntimeConfig = JSON.stringify(sent.themeRuntimeConfig);
+  back.topic.themeRuntimeConfigJson = JSON.stringify(back.themeRuntimeConfig);
+  delete back.themeRuntimeConfig;
+  assert.equal(readbackIssue(sent, back, true), '');
+  for (const [field, key] of [['locationKey', 'node_902'], ['guideKey', 'guide_901']]) {
+    const altered = structuredClone(back), cfg = JSON.parse(altered.topic.themeRuntimeConfigJson);
+    cfg.gameplayRuntime.quests[2][field] = key;
+    altered.topic.themeRuntimeConfigJson = JSON.stringify(cfg);
+    assert.match(readbackIssue(sent, altered, true), /到达/);
+  }
+});
+
+test('到达回读兼容未编写任务的服务端编译和空备用点缺省，不要求服务端生成字段逐字相同', () => {
+  const { sent, back } = arrivalFixture();
+  delete sent.themeRuntimeConfig.gameplayRuntime.quests;
+  back.themeRuntimeConfig.gameplayRuntime.quests.forEach(q => {
+    q.locationKey = 'node_' + q.nodeId; delete q.guideKey; delete q.approvedFallbackNodeIds;
+  });
+  assert.equal(readbackIssue(sent, back, true), '');
+  sent.themeRuntimeConfig.gameplayRuntime.quests = [{ nodeId: 101, actKey: 'chapter_10' },
+    { nodeId: 102, actKey: 'chapter_10', approvedFallbackNodeIds: [] }, { nodeId: 201, actKey: 'chapter_20' }];
+  back.themeRuntimeConfig.gameplayRuntime.quests[0].approvedFallbackNodeIds = [];
+  assert.equal(readbackIssue(sent, back, true), '');
+});
+
+test('到达回读继续拒绝模式、模板、归属和任务成员漂移', () => {
+  for (const mutate of [
+    d => { d.themeRuntimeConfig.gameplayRuntime.worldMode = 'WORLD_SHARED'; },
+    d => { d.chapters[0].cmsTopicNodeList[0].templateId = '32'; },
+    d => { d.chapters[0].cmsTopicNodeList[0].chapterId = 999; },
+    d => { d.themeRuntimeConfig.gameplayRuntime.quests.pop(); },
+  ]) {
+    const { sent, back } = arrivalFixture(); mutate(back);
+    assert.notEqual(readbackIssue(sent, back, true), '');
+  }
+});
+
+test('到达配置丢失不确认保存或继续发布，未知发布恢复仍保留本机差异', () => {
+  for (const field of ['locationKey', 'guideKey', 'approvedFallbackNodeIds']) {
+    const { sent, back } = arrivalFixture(); delete back.themeRuntimeConfig.gameplayRuntime.quests[0][field];
+    let success = 0, published = 0, failure, recovered, saves = 0;
+    const deps = { save: (p, cb) => { saves++; cb({ ok: true, data: 501 }); },
+      readback: (id, cb) => cb({ ok: true, data: back }), publish: () => { published++; } };
+    createServerDraftSaver(deps).saveAndPublish(sent, { onSuccess: () => success++, onFail: r => { failure = r; } });
+    assert.equal(success, 0); assert.equal(published, 0); assert.equal(saves, 1);
+    assert.equal(failure.stage, 'readback'); assert.match(failure.msg, /到达/);
+    back.isDraft = false; back.topic.status = 1;
+    createServerDraftSaver({ ...deps, pendingPublish: () => 501 }).saveAndPublish(sent, { onSuccess: r => { recovered = r; } });
+    assert.equal(recovered.published.recovered, true); assert.equal(recovered.localChanges, true);
+    assert.equal(published, 0); assert.equal(saves, 1);
+  }
 });
 
 test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发一次；失败可重试；存不进去就不发布', () => {
@@ -123,7 +312,7 @@ test('编辑页：首次保存草稿走 create，回读后才清本机恢复稿�
   sent[0].success({ code: 200, data: { topicId: 501, reviewState: 'DRAFT' } });
   assert.equal(page.data.editingTopicId, '501');
   assert.equal(removed.filter(k => k.startsWith('pro_editor')).length, 0, '只拿到 200 不清本机稿');
-  assert.equal(sent[1].url, '/api/topic/author-edit-detail'); assert.equal(sent[1].data.id, 501);
+  assert.equal(sent[1].url, '/api/topic/author-saved-detail'); assert.equal(sent[1].data.id, 501);
   sent[1].success({ code: 200, data: detail() });
   assert.equal(page.applied.length, 1, '刷新版本换进编辑器');
   assert.ok(removed.some(k => k.includes('u-1')) && removed.some(k => k.includes('501')), '刷新确认后清掉本机恢复稿');
@@ -137,7 +326,7 @@ test('编辑页：首次保存草稿走 create，回读后才清本机恢复稿�
   assert.equal(page.data.resultSheet.kind, 'fail'); assert.equal(page.data.resultSheet.meta, '草稿仍在本机');
   assert.equal(removed.filter(k => k.startsWith('pro_editor')).length, 0);
   page.saveServerDraft();
-  assert.equal(sent[3].url, '/api/topic/author-edit-detail', '未知更新只核对原主题，不重复写');
+  assert.equal(sent[3].url, '/api/topic/author-saved-detail', '未知更新只核对原主题，不重复写');
   sent[3].success({ code: 200, data: detail() });
   assert.equal(page._serverDraftAttempt, null);
 
@@ -226,6 +415,7 @@ test('回读核对：服务端合法换号通过；章节合并/顺序、玩法�
   assert.match(readbackIssue(richSent, richBack((d, c) => { delete c.chapters[1].extraNodes; }), true), /章节规则/);
   assert.match(readbackIssue(richSent, richBack((d, c) => { c.chapters[1].extraNodes[0].slot = 'other'; }), true), /章节规则/);
   assert.match(readbackIssue(richSent, richBack((d, c) => { c.chapters[0].exclusiveGroups = [[901, 903]]; }), true), /章节规则/);
+  assert.match(readbackIssue(richSent, richBack((d, c) => { c.gameplayRuntime.quests[0].actKey = 'another_act'; }), true), /节点与章节/);
   // 整段运行配置为空
   assert.match(readbackIssue(richSent, richBack(d => { d.themeRuntimeConfig = {}; }), true), /章节规则|资源对应|物品/);
   // 配给与初始状态
@@ -309,7 +499,7 @@ test('编辑页：首次建草稿带稳定意图键，丢回包后重试沿用�
   assert.equal(JSON.parse(sent[1].data).requestId, first, '内容改了也沿用同一键');
   sent[1].success({ code: 200, data: { topicId: 501, recovered: true } });
   assert.equal(page.data.editingTopicId, '501');
-  assert.equal(sent[2].url, '/api/topic/author-edit-detail', '找回后先核对原内容与版本');
+  assert.equal(sent[2].url, '/api/topic/author-saved-detail', '找回后先核对原内容与版本');
   assert.equal(sent[2].data.id, 501);
   assert.ok(!Object.keys(stored).some(k => k.startsWith('square_publish_intent_v1:') && !k.endsWith(':previous') && stored[k] && stored[k].status !== 'success'), '意图已结算');
 });
@@ -335,7 +525,7 @@ test('服务端草稿发布前落盘 UNKNOWN；丢回包后重进只查原主题
   next.page._applyDraftEnvelope(saved.envelope);
   next.page._doSubmit();
   assert.equal(next.sent.length, 1);
-  assert.equal(next.sent[0].url, '/api/topic/author-edit-detail');
+  assert.equal(next.sent[0].url, '/api/topic/author-saved-detail');
   assert.equal(next.sent[0].data.id, 501);
   next.sent[0].success({ code: 200, data: versioned({ isDraft: false, topic: { name: '寒冬', status: 1 } }) });
   assert.equal(next.sent.length, 1, '已发布主题不再写草稿或重复发布');
@@ -408,7 +598,7 @@ test('UNKNOWN后改写本机稿，回读确认原版本已发布时不丢后续�
   t.page.data.formData.name = '后续修改';
   t.page._buildSubmitPayload = () => Object.assign({}, payload, { name: '后续修改' });
   t.page._doSubmit();
-  assert.equal(t.sent[4].url, '/api/topic/author-edit-detail');
+  assert.equal(t.sent[4].url, '/api/topic/author-saved-detail');
   t.sent[4].success({ code: 200, data: versioned({ isDraft: false, topic: { name: '寒冬', status: 1 } }) });
   assert.equal(t.sent.length, 5, '只读原主题、不重复发布后续修改');
   const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
@@ -427,7 +617,7 @@ test('发布200但仍DRAFT、UNKNOWN回读空或异主题不得当成成功', ()
     Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
     t.page._doSubmit(); t.sent[0].success({ code: 200, data: 501 }); t.sent[1].success({ code: 200, data: detail() });
     t.sent[2].success({ code: 200, data: { published: false, reviewState: 'DRAFT' } });
-    assert.equal(t.sent[3].url, '/api/topic/author-edit-detail', '未确认的200仍刷新');
+    assert.equal(t.sent[3].url, '/api/topic/author-saved-detail', '未确认的200仍刷新');
     t.sent[3].success({ code: 200, data: wrong });
     assert.equal(t.page.data.editIsDraft, true);
     assert.equal(t.page.data.resultSheet.title, '发布结果待确认');
@@ -487,7 +677,7 @@ test('缺失或异主题发布回执先按原号回读，确认前不清稿且�
     t.sent[1].success({ code: 200, data: versioned() });
     t.sent[2].success({ code: 200, data: receipt });
     assert.equal(t.sent.length, 4, '未绑定原topicId的回执不得直接结算');
-    assert.equal(t.sent[3].url, '/api/topic/author-edit-detail');
+    assert.equal(t.sent[3].url, '/api/topic/author-saved-detail');
     assert.equal(t.sent[3].data.id, 501);
     const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
     assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.publishAttempt.status, 'UNKNOWN');
@@ -764,7 +954,7 @@ test('W8：发布UNKNOWN回读仍草稿后重进保留原主题与本机内容�
   next.page.data.editingTopicId = '501'; next.page.data.editIsDraft = true; next.page.data.editLoaded = true;
   next.page._publishAttempt = envelope.publishAttempt;
   next.page._publishServerDraft(payload);
-  assert.equal(next.sent[0].url, '/api/topic/author-edit-detail');
+  assert.equal(next.sent[0].url, '/api/topic/author-saved-detail');
   next.sent[0].success({ code: 200, data: detail() });
   assert.equal(next.sent.length, 1); assert.equal(next.page._publishAttempt.status, 'UNKNOWN');
 });
@@ -787,7 +977,7 @@ test('W8：UNKNOWN创建冻结原请求号和输入，后续编辑与重进不�
   next.page.saveServerDraft();
   assert.deepEqual(JSON.parse(next.sent[0].data), original);
   next.sent[0].success({ code: 200, data: { topicId: 501, recovered: true } });
-  assert.equal(next.sent[1].url, '/api/topic/author-edit-detail', '先核原保存，不能直接更新新内容');
+  assert.equal(next.sent[1].url, '/api/topic/author-saved-detail', '先核原保存，不能直接更新新内容');
 });
 
 test('W8：UNKNOWN更新重试只读原主题，负向回读不得解除；正向确认后保留新编辑', () => {
@@ -796,10 +986,10 @@ test('W8：UNKNOWN更新重试只读原主题，负向回读不得解除；正�
   t.page._buildSubmitPayload = () => ({ name: t.page.data.formData.name, configVersion: 2, chapters: [] });
   t.page.saveServerDraft(); t.sent[0].fail({});
   t.page.data.formData.name = '新修改'; t.page._persistDraftEnvelope();
-  t.page.saveServerDraft(); assert.equal(t.sent[1].url, '/api/topic/author-edit-detail');
+  t.page.saveServerDraft(); assert.equal(t.sent[1].url, '/api/topic/author-saved-detail');
   t.sent[1].success({ code: 200, data: { ...detail({ topic: { configVersion: 2 } }), chapters: [] } });
   assert.equal(t.page._serverDraftAttempt.status, 'UNKNOWN');
-  t.page.saveServerDraft(); assert.equal(t.sent[2].url, '/api/topic/author-edit-detail');
+  t.page.saveServerDraft(); assert.equal(t.sent[2].url, '/api/topic/author-saved-detail');
   t.sent[2].success({ code: 200, data: { ...detail({ topic: { configVersion: 3 } }), chapters: [] } });
   assert.equal(t.page._serverDraftAttempt, null);
   assert.equal(t.page.data.formData.name, '新修改');
@@ -868,7 +1058,7 @@ test('W8：后来编辑不合法不应阻止读取原UNKNOWN保存', () => {
   t.page.data.formData.name = '';
   t.page._buildSubmitPayload = () => { throw Error('不应重新校验后来编辑'); };
   t.page.saveServerDraft();
-  assert.equal(t.sent[1].url, '/api/topic/author-edit-detail');
+  assert.equal(t.sent[1].url, '/api/topic/author-saved-detail');
   assert.equal(t.sent.length, 2);
   assert.equal(t.page.data.formData.name, '');
 });
@@ -881,4 +1071,15 @@ test('N5：保存在途新增未完成规则表单，正向回读也不能清掉
  assert.equal(t.page.applied.length,0);
  assert.equal(t.page.data.themeSaveState,'local');
  assert.ok(Object.values(t.stored).some(v=>v && v.editorMeta && v.editorMeta.routeRuleDrafts.a));
+});
+
+test('内容安全拒绝的修改动作保留草稿，不重新提交原文', () => {
+  const { page, sent } = loadPage();
+  let closed = 0, submitted = 0;
+  page.closePublishCheck = () => closed++;
+  page.submitForm = () => submitted++;
+  page.data.submitError = '内容未通过安全检查，请修改后重试';
+  page.editRejectedContent();
+  assert.equal(closed, 1); assert.equal(submitted, 0); assert.equal(sent.length, 0);
+  assert.equal(page.data.formData.name, '寒冬');
 });

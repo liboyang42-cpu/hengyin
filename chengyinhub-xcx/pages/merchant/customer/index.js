@@ -35,7 +35,7 @@ const SEGMENTS = [
 
 const TIER_TEXT = {
   pending: '待核销',
-  abnormal: '异常',
+  abnormal: '有退款',
   dormant: '沉睡',
   repeat: '复购',
   new: '新客',
@@ -202,7 +202,7 @@ Page({
           this._activeQueryKey = '';
           this._renderedQueryKey = '';
           this._clearScopedData('', true);
-          this.setData({ loading: false, noPermission: true });
+          this.setData({ loading: false, noPermission: true, notMerchant: !access.active });
           return;
         }
         this.setData({

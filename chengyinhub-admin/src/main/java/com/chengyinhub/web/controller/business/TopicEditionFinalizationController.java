@@ -79,7 +79,7 @@ public class TopicEditionFinalizationController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:editionfinal:execute')")
-    @Log(title = "探店日期级FINAL结算", businessType = BusinessType.INSERT)
+    @Log(title = "自由探索期级FINAL结算", businessType = BusinessType.INSERT)
     @PostMapping("/{topicId}")
     public AjaxResult finalizeEdition(@PathVariable Long topicId) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");

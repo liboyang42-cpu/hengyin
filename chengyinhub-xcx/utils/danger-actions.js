@@ -103,19 +103,6 @@ const DANGER_ACTIONS = {
     done: { title: '已提交不同意意见', text: '' },
   },
 
-  'club.joinRequest.reject': {
-    // 可逆:拒绝后对方可以重新提交申请。
-    irreversible: false,
-    title: '拒绝「{name}」的入会申请?',
-    consequences: [
-      { icon: 'bell', text: '对方会收到未通过通知;下一步可选填原因一并告知' },
-      { icon: 'clock', text: '对方之后仍可以重新提交申请' },
-    ],
-    confirmText: '拒绝申请',
-    alt: { text: '先放着不处理', hint: '申请会留在列表里,想清楚再决定' },
-    done: { title: '已拒绝申请', text: '' },
-  },
-
   // ===== 小队 =====
   // ===== 线索与物品(主题状态键 / 主题物品) =====
   'topic.stateKey.delete': {
@@ -181,26 +168,26 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '活动已恢复', text: '已按平台最新记录刷新。' },
   },
+  // 第十二轮 k7(j4 N8):队伍确认框统一全角标点；解散框去掉与第一条后果重复的副标题
   'team.disband': {
     irreversible: true,
-    title: '解散这支队伍?',
-    content: '队伍解散后群聊关闭,队员各自回到未组队状态。',
+    title: '解散这支队伍？',
     consequences: [
-      { icon: 'mtab-customers', text: '全部队员会被移出队伍,队伍群聊同时关闭' },
-      { icon: 'coupon', text: '不会触发任何退款;队员各自的票仍然有效,需要自己去核销' },
-      { icon: 'warning', text: '此操作不可撤销,队伍与聊天记录无法恢复' },
+      { icon: 'mtab-customers', text: '全部队员会被移出队伍，队伍群聊同时关闭' },
+      { icon: 'coupon', text: '不会触发任何退款；队员各自的票仍然有效，需要自己去核销' },
+      { icon: 'warning', text: '此操作不可撤销，队伍与聊天记录无法恢复' },
     ],
     confirmText: '解散队伍',
-    alt: { text: '改为退出队伍', hint: '队长会移交给最早加入的队员,队伍留着' },
+    alt: { text: '改为退出队伍', hint: '队长会移交给最早加入的队员，队伍留着' },
     done: { title: '队伍已解散', text: '队员已收到通知。' },
   },
   'team.kick': {
     irreversible: true,
-    title: '把「{name}」移出队伍?',
+    title: '把「{name}」移出队伍？',
     consequences: [
-      { icon: 'bell', text: '对方会收到站内通知,并失去队伍群聊入口' },
-      { icon: 'coupon', text: '移出不同步退票,对方的票仍然有效' },
-      { icon: 'warning', text: '此操作不可撤销;被移出的人不能用邀请码回来,也不能再次申请加入' },
+      { icon: 'bell', text: '对方会收到站内通知，并失去队伍群聊入口' },
+      { icon: 'coupon', text: '移出不同步退票，对方的票仍然有效' },
+      { icon: 'warning', text: '此操作不可撤销；被移出的人不能用邀请码回来，也不能再次申请加入' },
     ],
     confirmText: '移出队员',
     alt: null,
@@ -209,27 +196,40 @@ const DANGER_ACTIONS = {
   // 2026-10-15:地图队长卡「拒绝」申请。被拒后对方不能再申请这支队伍(服务端 REJECTED 终态),回不来
   'team.reject': {
     irreversible: true,
-    title: '拒绝「{name}」的申请?',
+    title: '拒绝「{name}」的申请？',
     consequences: [
       { icon: 'bell', text: '对方会在「我的队伍」里看到「未通过」' },
-      { icon: 'warning', text: '此操作不可撤销;对方不能再申请加入这支队伍' },
+      { icon: 'warning', text: '此操作不可撤销；对方不能再申请加入这支队伍' },
     ],
     confirmText: '拒绝申请',
     alt: null,
     done: { title: '已拒绝', text: '这条申请已处理。' },
   },
+  // 第十一轮 g2,j4 F9:队员退队可以凭原邀请链接回来(走查 T8),不再写「此操作不可撤销」;
+  // 只给队长看移交 / 解散那一条 —— 队长身份交出去就回不来,这才是不可撤销的部分。
   'team.quit': {
-    irreversible: true,
-    title: '退出这支队伍?',
-    content: '退队不会同步退票,你的票仍然有效。',
+    irreversible: false,
+    title: '退出这支队伍？',
+    content: '退队不会同步退票，你的票仍然有效。',
     consequences: [
       { icon: 'logout', text: '你会失去队伍群聊入口' },
-      { icon: 'mtab-customers', text: '你是队长的话,队长会移交给最早加入的队员;只剩你一人时队伍直接解散' },
-      { icon: 'warning', text: '此操作不可撤销,需要重新被邀请才能回到这支队伍' },
     ],
     confirmText: '退出队伍',
     alt: null,
-    done: { title: '已退出队伍', text: '你的票仍然有效,可以自己去核销。' },
+    done: { title: '已退出队伍', text: '你的票仍然有效，可以自己去核销。' },
+  },
+  'team.quit-leader': {
+    irreversible: true,
+    title: '退出并移交队长？',
+    content: '退队不会同步退票，你的票仍然有效。',
+    consequences: [
+      { icon: 'logout', text: '你会失去队伍群聊入口' },
+      { icon: 'mtab-customers', text: '队长会移交给最早加入的队员；只剩你一人时队伍直接解散' },
+      { icon: 'warning', text: '此操作不可撤销' },
+    ],
+    confirmText: '退出队伍',
+    alt: null,
+    done: { title: '已退出队伍', text: '你的票仍然有效，可以自己去核销。' },
   },
 
   // ===== 帖文草稿 =====
@@ -357,9 +357,8 @@ const DANGER_ACTIONS = {
     title: '移除团队成员「{name}」?',
     content: '移除后对方的商家权限立即失效。',
     consequences: [
-      { icon: 'lock', text: '对方立即失去这个店铺的全部经营权限' },
-      { icon: 'finance', text: '已经产生的经营记录与流水保留,不会被删掉' },
-      { icon: 'warning', text: '此操作不可撤销;要恢复只能重新邀请一次' },
+      { icon: 'finance', text: '已经产生的经营记录与流水保留，不会被删掉' },
+      { icon: 'warning', text: '此操作不可撤销；要恢复只能重新邀请一次' },
     ],
     confirmText: '移除成员',
     alt: null,
@@ -461,11 +460,10 @@ const DANGER_ACTIONS = {
   'club.enroll.refund': {
     irreversible: true,
     title: '取消「{name}」的报名?',
-    content: '取消对方的报名资格，符合规则的退款按原支付记录处理。',
+    // 第十二轮 k3(p3 N7):原来四行说明里没有金额,主理人看不出要退多少。改为一行带金额的事实。
+    content: '',
     consequences: [
-      { icon: 'finance', text: '现金退款、积分返还以实际支付记录和查询结果为准' },
-      { icon: 'mtab-customers', text: '对方从本团名册移出,群码失效' },
-      { icon: 'warning', text: '此操作不可撤销,清退后需要对方重新报名' },
+      { icon: 'finance', text: '原路退还 {amount}，对方从本团名册移出。此操作不可撤销。' },
     ],
     confirmText: '退款并清退',
     alt: null,
@@ -536,8 +534,7 @@ const DANGER_ACTIONS = {
     title: '取消报名?',
     content: '取消后报名资格失效，现金退款和积分返还按本单实际支付记录处理。{deadline}。',
     consequences: [
-      { icon: 'finance', text: '本单如有现金退款或积分返还，进度以订单查询结果为准' },
-      { icon: 'calendar', text: '名额释放,错过后需要重新报名' },
+      { icon: 'calendar', text: '名额释放，错过后需要重新报名' },
       { icon: 'warning', text: '此操作不可撤销，取消后这张票作废' },
     ],
     confirmText: '取消并退款',
@@ -561,8 +558,8 @@ const DANGER_ACTIONS = {
     title: '取消这个待支付订单?',
     content: '',
     consequences: [
-      { icon: 'close', text: '订单关闭,不再保留名额' },
-      { icon: 'warning', text: '此操作不可撤销,需要时请重新下单' },
+      { icon: 'close', text: '订单关闭，不再保留名额' },
+      { icon: 'warning', text: '此操作不可撤销，需要时请重新下单' },
     ],
     confirmText: '取消订单',
     alt: null,

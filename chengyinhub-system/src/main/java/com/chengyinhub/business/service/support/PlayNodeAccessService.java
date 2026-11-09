@@ -172,6 +172,9 @@ public class PlayNodeAccessService {
         if (isDelistedNode(node) && hasCompletedNodeFact(memberId, actId, node)) return null;
         if (resolveMode(actId, topicId) == PlayMode.LINEAR_ORIENTEERING) {
             if (topicRouteRuntimeService != null) {
+                // F-13:缺上一站接待是确定拒绝,先只读预检给出原因,不让 canPlay 抛出后变成「结果待确认」。
+                String reception = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.routeReceptionError(actId, node.getId());
+                if (reception != null) return reception;
                 // 业务异常交由统一异常处理返回，不能吞掉已将事务标为回滚的异常。
                 return topicRouteRuntimeService.canPlay(memberId, topicId, actId, node.getId(), routeActionId)
                         ? null : "该地点尚未解锁";
@@ -304,16 +307,19 @@ public class PlayNodeAccessService {
         try {
             String routeStatus = gameSessionRuntimeService == null ? null
                     : gameSessionRuntimeService.routeSessionStatus(actId);
+            // 自由探索不带队:开场时间由 activityTimeError 把关,不等队长集合或开局,也不按章节放行。
+            if (node != null && resolveMode(actId, node.getTopicId()) == com.chengyinhub.common.constant.PlayMode.FREE_COLLECT) {
+                return "FINISHED".equals(routeStatus) || "CANCELLED".equals(routeStatus) ? "本场已结束" : null;
+            }
             if (routeStatus != null) {
-                return "RUNNING".equals(routeStatus) ? null : "本场带队尚未开局或已结束";
+                if (!"RUNNING".equals(routeStatus)) return "本场带队尚未开局或已结束";
+                return node == null ? null : gameSessionRuntimeService.routeChapterGateError(actId, node.getId());
             }
             com.chengyinhub.business.domain.ClubLeadState st = clubLeadMapper.selectByActivity(actId);
             if (st == null || st.getStatus() == null || st.getStatus() == 3) return null;
             if (st.getStatus() == 1) return "队伍集合中,等队长开始行程";
             if (node == null || node.getChapterId() == null || st.getCurrentChapterId() == null) return null;
             if (node.getChapterId().equals(st.getCurrentChapterId())) return null;
-            // 自由探索「节点全开 · 随时开玩」:队长只管集合与开局,不按章节放行;商家核销本就不受此闸。
-            if (resolveMode(actId, node.getTopicId()) == com.chengyinhub.common.constant.PlayMode.FREE_COLLECT) return null;
             CmsTopicChapter cur = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
             CmsTopicChapter mine = cmsTopicChapterService.selectCmsTopicChapterById(node.getChapterId());
             if (cur == null || mine == null || cur.getSortId() == null || mine.getSortId() == null) return null;

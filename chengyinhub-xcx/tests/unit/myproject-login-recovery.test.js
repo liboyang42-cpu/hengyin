@@ -192,3 +192,17 @@ test('a login started before hide and return cannot reload the returning page', 
   assert.equal(h.requests.filter(req => req.url === '/api/project/my').length, 1);
   assert.equal(h.requests.filter(req => req.url === '/api/template/my-list').length, 1);
 });
+
+
+test('template copies clear with project permission loss and logout', () => {
+  const h = mount('7', 'token');
+  h.page.loadProjects();
+  h.last('/api/project/my').success({ code: 200, data: { rows: [{ id: 52, bizType: 'topic', isTemplate: true }], total: 1 } });
+  assert.equal(h.page.data.topicTemplates.length, 1);
+  h.page.loadProjects();
+  h.last('/api/project/my').success({ code: 403 });
+  assert.equal(h.page.data.topicTemplates.length, 0);
+  h.page.data.topicTemplates = [{ id: 52 }];
+  h.page.resetPrivateState(true);
+  assert.equal(h.page.data.topicTemplates.length, 0);
+});

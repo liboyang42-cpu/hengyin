@@ -2,6 +2,8 @@
 Component({
   properties: {
     flat: { type: Boolean, value: false },
+    /* 封面媒体卡:圆角取 --cy-radius-2xl(打磨第 3 轮 §4-7) */
+    media: { type: Boolean, value: false },
     interactive: { type: Boolean, value: false },
     accessibilityLabel: { type: String, value: '' },
     /* 2026-08-28:10 个调用点(publish/fabu、talent/list、im/chat)都写了

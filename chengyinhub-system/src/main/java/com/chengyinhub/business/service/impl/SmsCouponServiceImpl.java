@@ -147,6 +147,12 @@ public class SmsCouponServiceImpl implements ISmsCouponService
     }
 
     @Override
+    public int releaseHeldCoupon(Long id) {
+        if (id == null || id <= 0) return 0;
+        return smsCouponMapper.releaseHeldCoupon(id);
+    }
+
+    @Override
     public int stopIssuingCoupon(Long id, Long ownerMemberId) {
         if (id == null || id <= 0 || ownerMemberId == null || ownerMemberId <= 0) {
             return 0;

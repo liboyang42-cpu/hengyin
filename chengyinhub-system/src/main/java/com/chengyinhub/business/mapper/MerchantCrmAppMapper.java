@@ -60,9 +60,6 @@ public interface MerchantCrmAppMapper {
 
     long countOwnedRegistrationCustomers(@Param("ownerMemberId") Long ownerMemberId);
 
-    int countFreeExploreTopicPublishedBy(@Param("ownerMemberId") Long ownerMemberId,
-                                         @Param("topicId") Long topicId);
-
     long countActiveCustomerProfiles(@Param("merchantId") Long merchantId);
     MerchantCrmCustomerSummary selectOwnedCustomerSummary(
             @Param("ownerMemberId") Long ownerMemberId,

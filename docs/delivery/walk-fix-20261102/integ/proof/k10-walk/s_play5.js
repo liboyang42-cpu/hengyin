@@ -1,0 +1,10 @@
+const A = async () => { const a = await h.audio(); return { st: a.state.map(s => [s.id, s.src.slice(0, 8), s.paused ? 'paused' : 'PLAY', s.volume, s.t]), log: a.log.map(l => [l.id, l.ev, l.at, l.v, (l.src || '').slice(0, 8)].filter(x => x != null && x !== '')) }; };
+const clr = () => w.page.evaluate(() => { window.MPWEB.audioLog.length = 0; });
+const out = {};
+await clr();
+await h.setAt((await h.inputs()).findIndex(x => /作答/.test(x.ph)), "17");
+await h.tap("提交", { exact: true }); await sleep(3500);
+await w.shot("k10-r10-answer"); out.t0 = (await h.say()).slice(-200);
+await h.tap("继续故事").catch(() => {}); await sleep(4500);
+await w.shot("k10-r11-after"); out.t1 = (await h.say()).slice(-300); out.a1 = await A(); await clr();
+return out;

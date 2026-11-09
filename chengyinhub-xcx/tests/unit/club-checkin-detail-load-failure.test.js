@@ -23,6 +23,7 @@ function mount() {
       }
       if (request === '../../../utils/toast.js') return { success() {}, error() {} }
       if (request === '../../../utils/modal.js') return { show() {} }
+      if (request === '../utils/club-phone-call.js') return require('../../pages/club/utils/club-phone-call.js')
       throw new Error('unexpected require: ' + request)
     },
     wx: { navigateBack() {}, switchTab() {}, stopPullDownRefresh() {} },

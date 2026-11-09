@@ -50,6 +50,12 @@ public class ViewRegistrationServiceImpl implements IViewRegistrationService
         return viewRegistrationMapper.selectRegistrationSummaries(viewRegistration);
     }
 
+    @Override
+    public List<ViewRegistration> selectRosterSummaries(ViewRegistration viewRegistration)
+    {
+        return viewRegistrationMapper.selectRosterSummaries(viewRegistration);
+    }
+
     /**
      * 新增VIEW
      * 

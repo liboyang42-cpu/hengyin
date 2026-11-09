@@ -1954,6 +1954,7 @@ button::after {
 .topic .hero-type { padding-left: 8rpx; font-size: 25rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .topic .hero-type--city { color: #5AA9FF; } /* ds-ok: v13 城市定向蓝 */
 .topic .hero-type--free { color: #7CF0A0; } /* ds-ok: v13 自由探索绿 */
+.topic .hero-type--held { color: var(--cy-color-status-warning); white-space: nowrap; flex-shrink: 0; } /* 第十二轮 k9(j5 N10):「审核中」不折成两行 */
 .topic .dt .bm-closed { margin-top: 19rpx; font-size: 23rpx; color: #FFC46B; } /* ds-ok */
 .topic-transfer-entry { padding: 23rpx 31rpx 0; background: #000; } /* ds-ok */
 .topic .topic-beta { background: #000; } /* ds-ok */
@@ -2125,7 +2126,7 @@ button::after {
 .bseg__ic { width: 50rpx; height: 50rpx; }
 .bseg__t { font-size: 25rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .bseg__s { font-size: 21rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; transition: transform .4s cubic-bezier(.34,1.32,.64,1); } /* ds-ok */
+.bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; transition: transform .4s var(--cy-ease-out); } /* ds-ok;打磨第 3 轮 §4-10:购买半屏下划线不回弹,时长保留 v13 */
 .bchips { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 27rpx; }
 .bchip { height: 62rpx; padding: 0 23rpx; border-radius: 31rpx; display: flex; align-items: center; font-size: 25rpx; background: #2C2C2E; } /* ds-ok */
 .bsheet__note { display: block; margin-top: 19rpx; font-size: 21rpx; color: #8E8E93; } /* ds-ok */

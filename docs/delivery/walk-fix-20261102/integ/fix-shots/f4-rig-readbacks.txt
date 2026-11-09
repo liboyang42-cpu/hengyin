@@ -1,0 +1,16 @@
+# Round 10 f4 rig read-backs, candidate 6bec105dd, cy_e2e_51 (throwaway rig DB, chains.py player data)
+id	member_id	owner_type	owner_id	payment_status	verification_status	purchase_kind
+74	9009	2	13	2	1	3
+id	member_id	product_type
+990014	9003	2
+id	member_id	topic_id
+13	9008	990014
+merchant_id	status	del_flag
+9007	0	0
+9002	1	0
+9005	1	0
+9006	1	0
+actor_member_id	action	reason
+9003	CRM_CONTACT_REVEAL_DENIED	purpose=-;deny=permission
+9002	CRM_CONTACT_REVEAL_DENIED	purpose=call;deny=free_explore_shop
+# HTTP: 9002 POST /api/merchant/crm/customers/9009/contact -> 403 联系方式在主题名单按客户授权查看; list -> 1 row phone=null; 9007 (application set to status 0 for this check) list -> 0 rows

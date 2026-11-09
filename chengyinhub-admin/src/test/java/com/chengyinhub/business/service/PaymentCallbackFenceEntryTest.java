@@ -197,6 +197,31 @@ class PaymentCallbackFenceEntryTest
     }
 
     @Test
+    void historicalPaidExploreSuccessReplayNeverReentersNewPurchaseSnapshotGate() {
+        registration.setPurchaseKind(3); registration.setPaymentStatus(2); registration.setRegistrationStatus(2);
+        var snapshots = mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class);
+        ReflectionTestUtils.setField(service, "topicSaleSnapshotMapper", snapshots);
+        var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT,
+                "mch-fence", "wx-fence", "A-ORIGINAL", "A-ORIGINAL", "A-ORIGINAL", "TX-ORIGINAL",
+                "TX-ORIGINAL", "JSAPI", "CNY", 100, 100, java.time.Instant.parse("2026-10-24T00:00:00Z"), null, "SUCCESS");
+        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(1L, fact.factHash());
+        var reader = mock(com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.class);
+        when(reader.requireVerified(reference)).thenReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference, fact));
+        ReflectionTestUtils.setField(service, "verifiedPaymentFacts", reader);
+        payload.put("trade_state", "SUCCESS"); payload.put("total", "100");
+        payload.put("verified_fact_id", "1"); payload.put("verified_fact_hash", reference.hash());
+        payload.put("mchid", fact.mchid()); payload.put("appid", fact.appid());
+        payload.put("trade_type", fact.tradeType()); payload.put("currency", fact.currency());
+        when(inbox.processVerified(eq("PAY:TX-ORIGINAL:SUCCESS"), eq(reference), any())).thenReturn(true);
+        assertEquals("SUCCESS", service.handleWechatPayCallback(payload));
+        assertEquals("SUCCESS", service.handleWechatPayCallback(payload));
+        verifyNoInteractions(snapshots);
+        verify(registrations, never()).selectCmsRegistrationByIdForUpdate(anyLong());
+    }
+
+    @Test
     void successWithDifferentAmountIsRejectedBeforeEnteringInbox()
     {
         payload.put("trade_state", "SUCCESS");

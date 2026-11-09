@@ -2,7 +2,7 @@ const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { normalizeRelationHome } = require('../utils/merchant-aggregate.js');
-const { ensureSession } = require('../utils/session/ensure-session.js');
+const { ensureSession } = require('../utils/session/ensure-session.js'); const { retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
 // CU-M-61:品类名取法与发现页共用一份(utils/category-icon.js),两页不再各写一套。
 const { firstCategoryName } = require('../../../utils/category-icon.js');
 // 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
@@ -84,14 +84,14 @@ Page({
     error: '',
     clubError: '',
     // 2026-10-22 owner:合作 tab 看帖子,商家不看其他商家;帖子在前并为默认
-    tabs: [{ key: 'feed', label: '帖子' }, { key: 'club', label: '俱乐部' }],
+    tabs: [{ key: 'feed', label: '帖文' }, { key: 'club', label: '俱乐部' }],
     activeTab: 'feed',
     clubs: [],
     feed: [],
     feedState: 'idle',   // idle | loading | ready | empty | error | stale-error
     feedSlow: false,     // 加载超过 400ms 才显示骨架,避免闪屏
     feedError: '',
-    feedEmptyTitle: '还没有帖子',
+    feedEmptyTitle: '还没有帖文',
     feedEmptySub: '',
     // 从项目详情「找俱乐部」进来时带着主题:一路带到俱乐部主页,
     // 在那儿发起合作时主题已经定了,不用再选一遍
@@ -119,21 +119,21 @@ Page({
   // 入口:未登录先静默登录,成功自动加载;失败只留页内错误态(重试走 loadRelationHome)。
   enterRelation(authRetryUsed) {
     this._authRetryUsed = authRetryUsed === true;
-    if (app.getUserID()) {
+    if (app.getUserID()) { if (this.data.guestLogin) this.setData({ guestLogin: false });
       if (this.data.activeTab === 'feed') this.loadFeed();
       this.loadRelationHome();
       return;
     }
-    this.setData({ pageState: 'loading', error: '' });
-    const that = this;
-    ensureSession(app).then(function (ok) {
-      if (that._destroyed) return;
-      if (!ok || !app.getUserID()) {
-        that.setData({ pageState: 'error', error: '登录失败，请重试', clubs: [] });
-        return;
-      }
-      that.enterRelation(that._authRetryUsed);
+    this.setData({ // owner 2026-10-24(app.js:142-144):游客不在打开页面时静默建号(j6 F1),点「登录」才登录
+      guestLogin: true,
+      pageState: 'idle',
+      error: '',
+      clubs: [],
     });
+    waitForInitialSession(this, app, function () { this.enterRelation(false); });
+  },
+  onGuestLogin() {
+    retryLogin(this, app, function () { this.enterRelation(false); });
   },
 
   // 页内错误态上的「重新加载」:用户主动重试要重置自动重登次数,再走一遍入口链路。
@@ -151,7 +151,7 @@ Page({
     }
     this._authRetryUsed = true;
     const that = this;
-    ensureSession(app).then(function (ok) {
+    ensureSession(app, true).then(function (ok) {
       if (that._destroyed) return;
       if (!ok) {
         that.setData({ pageState: 'error', error: '登录失败，请重试', clubs: [] });
@@ -258,7 +258,7 @@ Page({
       that.setData({
         feedState: hasSnapshot ? 'stale-error' : 'error',
         feedSlow: false,
-        feedError: app.getRequestErrorMessage(res, '帖子加载失败，请重试'),
+        feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试'),
       });
     }
     app.sendRequest({
@@ -291,10 +291,10 @@ Page({
           feedState: rows.length ? 'ready' : 'empty',
           feedSlow: false,
           feedError: '',
-          feedEmptyTitle: noClub ? '这里还没有帖子' : '还没有帖子',
+          feedEmptyTitle: noClub ? '这里还没有帖文' : '还没有帖文',
           feedEmptySub: noClub
-            ? '帖子来自你合作过的俱乐部，谈成合作后即可看到'
-            : '你合作过的俱乐部还没有人发布帖子',
+            ? '帖文来自你合作过的俱乐部，谈成合作后即可看到'
+            : '你合作过的俱乐部还没有人发布帖文',
         });
       },
       fail,

@@ -73,6 +73,8 @@ const APP_WRITE_HELPERS = new Set(['recordConsent', 'chooseImage', 'chooseDocume
 const EXPLICIT_WRITE_APIS = new Set([
   '/api/template/draft', '/api/template/adopt-draft', '/api/game/session/command', '/api/im/block',
   '/api/im/unblock', '/api/im/read',
+  // ApiTemplateController 提交广场审核：锁定本人模板后写投影与审核任务，不能当 POST 查询。
+  '/api/template/{param}/market-submit',
   '/api/merchant/aftercare/respond',
   '/api/merchant/crm/customers/{param}/notes',
   '/api/merchant/crm/customers/{param}/notes/hide',
@@ -293,6 +295,19 @@ function withdrawSubmitVariant(handler) {
 }
 
 const ACTION_VARIANTS = new Map([
+  // 单条真实列表记录且菜单已展开，确保两臂谓词与被点的同一行绑定。
+  ['subpackageMember/mytemplate/mytemplate.js:templateStatus', [
+    { id: 'market-submit', url: '/api/template/{param}/market-submit', canSubmit: true },
+    { id: 'library-status', url: '/api/template/updateLibraryStatus', canSubmit: false },
+  ].map(({ id, url, canSubmit }) => ({
+    id, handler: 'templateStatus',
+    predicate: { 'list.length': 1, 'list.0.drop': true, loading: false, loadingMore: false,
+      'list.0._canSubmitMarket': canSubmit, 'list.0._canToggleMarket': !canSubmit },
+    apis: [url, '/api/template/my-list'], writeApis: [url],
+    requiredRequests: [{ urlTemplate: url, method: 'POST', kind: 'write' }],
+    requiredRequestOutcomes: Object.fromEntries(
+      ['success', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'].map(branch => [branch, [branch]])),
+  }))],
   // 清本机失败不联网；成功后只作废本人分享，不发布或读取快照。重复确认会再次幂等作废。
   ['pages/roam/index.js:confirmClearRoamLocal', [{
     id: null, handler: 'confirmClearRoamLocal',
@@ -335,13 +350,13 @@ const ACTION_VARIANTS = new Map([
     },
   }]],
   // 身份失效会清除金额，但这三个场景入口仍须验成功与拒绝分支。
-  ['components/cy/scene-asset-earnings/index.js:openWithdraw', [
+  ['subpackageA/components/scene-asset-earnings/index.js:openWithdraw', [
     { id: null, handler: 'openWithdraw', requiredBranches: ['success', 'error'] },
   ]],
-  ['components/cy/scene-asset-earnings/index.js:openWithdrawHistory', [
+  ['subpackageA/components/scene-asset-earnings/index.js:openWithdrawHistory', [
     { id: null, handler: 'openWithdrawHistory', requiredBranches: ['success', 'error'] },
   ]],
-  ['components/cy/scene-asset-earnings/index.js:openInvite', [
+  ['subpackageA/components/scene-asset-earnings/index.js:openInvite', [
     { id: null, handler: 'openInvite', requiredBranches: ['success', 'error'] },
   ]],
   ...['closePlayerOperations', 'openPlayerOperation', 'closePlayerOperation', 'choosePlayerOperationTarget', 'inputPlayerOperationTime', 'inputPlayerOperationReason', 'cancelPlayerExit'].map(handler => [`pages/play/index.js:${handler}`, [{ id: 'player-operation-local', handler, apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]]),
@@ -368,6 +383,8 @@ const ACTION_VARIANTS = new Map([
     apis: ['/api/game/session/shared/export'], writeApis: [], effectClasses: ['read', 'state'], externalCapabilities: [] }]],
   ['pages/club/topic-detail/index.js:closeGenericOps', [{ id: 'ops-close', handler: 'closeGenericOps', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/club/topic-detail/index.js:inputGenericOps', [{ id: 'ops-fields', handler: 'inputGenericOps', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
+  // 历史章节关闭只调用 finishChapterVideo(null, false)，不会恢复旁白；真实闭包负控在 action-ledger.test.js。
+  ['pages/play/index.js:openStackOrChaptersFromTools', [{ id: null, handler: 'openStackOrChaptersFromTools', effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/play/index.js:openThemePlan', [{ id: 'plan-local-state', handler: 'openThemePlan', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/play/index.js:closeThemePlan', [{ id: 'plan-local-state', handler: 'closeThemePlan', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
   ['pages/play/index.js:editThemePlanFunding', [{ id: 'plan-local-state', handler: 'editThemePlanFunding', apis: [], writeApis: [], effectClasses: ['state'], externalCapabilities: [] }]],
@@ -634,7 +651,7 @@ const ACTION_VARIANTS = new Map([
       apis: ['/api/club/join-request/reject'],
     },
   ]],
-  ['components/cy/scene-route-content/index.js:submitForm', [
+  ['subpackageMember/components/cy/scene-route-content/index.js:submitForm', [
     // 2026-09-15 收款模型定稿 §3:平台不打款,member-withdraw 不再建提现单,只弹平台客服微信(纯 state)。
     { id: 'member-withdraw', handler: 'submitForm', predicate: { sceneId: 'member-withdraw' }, predicateScope: 'component', apis: [], effectClasses: ['state'] },
     { id: 'settings-profile', handler: 'submitForm', predicate: { sceneId: 'settings-profile' }, predicateScope: 'component', apis: ['/api/user/update'] },
@@ -777,7 +794,7 @@ const ACTION_VARIANTS = new Map([
     { id: 'update-draft', handler: 'saveServerDraft', predicate: { editingTopicId: { $not: '' } }, apis: ['/api/topic/v2/update'] },
   ]],
   // W8 赛事联络/签到组件:主办侧(organizer)走 EVENT 原命令，参赛侧走 SIGNUP 原命令；终止未执行请求只发本侧一条 cancel。
-  ['components/cy/event-attendance/index.js:cancelCommand', [
+  ['pages/activity/components/event-attendance/index.js:cancelCommand', [
     { id: 'organizer', handler: 'cancelCommand', predicate: { organizer: true }, predicateScope: 'component', apis: ['/api/official/command/cancel'] },
     { id: 'participant', handler: 'cancelCommand', predicate: { organizer: { $not: true } }, predicateScope: 'component', apis: ['/api/official/signup-command/cancel'] },
   ]],
@@ -1709,9 +1726,9 @@ function requireBindings(src, dir) {
 // This shared controller exposes an object of methods, not flat module functions. Follow only
 // the component's explicit methods.X.call(this, ...) delegates; never add the entire 16KB flow.
 function deregisterDelegates(jsFile, slices) {
-  if (rel(jsFile) !== 'components/cy/scene-settings-deregister/index.js') return
+  if (rel(jsFile) !== 'pages/deregister/components/scene-settings-deregister/index.js') return
   const component = fs.readFileSync(jsFile, 'utf8')
-  if (!/const\s*\{\s*initialData,\s*methods\s*\}\s*=\s*require\(['"]\.\.\/\.\.\/\.\.\/utils\/deregister-flow\.js['"]\)/.test(component))
+  if (!/const\s*\{\s*initialData,\s*methods\s*\}\s*=\s*require\(['"]\.\.\/\.\.\/\.\.\/\.\.\/utils\/deregister-flow\.js['"]\)/.test(component))
     throw new Error('注销组件共享 owner 导入不再符合已证明合同')
   const file = path.join(ROOT, 'utils/deregister-flow.js'), source = fs.readFileSync(file, 'utf8')
   const ast = parseJavaScript(source)
@@ -1900,6 +1917,51 @@ function loadRoles() {
 // (实测台账里有 3 条这样的:map-pin.png / d_smapicon.png / icon_map6.png)
 const ASSET_PATH = /\.(?:png|jpe?g|gif|svg|webp|ico|mp3|wav|m4a|mp4|json|wxss|wxml|wxs)$/i;
 
+function conditionalUrlContracts(source) {
+  const code = maskNonCodeSafely(source)
+  const contracts = [], offsets = new Set()
+  const values = node => node.type === 'ConditionalExpression'
+    ? values(node.consequent).concat(values(node.alternate))
+    : node.type === 'Literal' && typeof node.value === 'string' ? [node.value]
+      : node.type === 'TemplateLiteral' && node.quasis.every(part => typeof part.value.cooked === 'string')
+        ? [node.quasis.map((part, index) => part.value.cooked + (index < node.expressions.length ? '{param}' : '')).join('')] : []
+  for (const match of code.matchAll(/\burl\s*:/g)) {
+    if (/^\s*['"`]/.test(source.slice(match.index + match[0].length))) continue
+    let open = match.index, depth = 0
+    while (--open >= 0) {
+      if (code[open] === '}') depth++
+      else if (code[open] === '{') {
+        if (depth === 0) break
+        depth--
+      }
+    }
+    if (open < 0) continue
+    const close = matchBrace(code, open)
+    if (close < 0) continue
+    let request
+    try { request = parseJavaScript('(' + source.slice(open, close + 1) + ')').body[0].expression } catch (error) {
+      if (error.name === 'SyntaxError') continue
+      throw error
+    }
+    if (request.type !== 'ObjectExpression') continue
+    const properties = name => request.properties.filter(property => property.type === 'Property'
+      && !property.computed && (property.key.name || property.key.value) === name)
+    const urls = properties('url'), methods = properties('method')
+    if (urls.length !== 1 || urls[0].value.type !== 'ConditionalExpression') continue
+    offsets.add(match.index)
+    if (methods.length > 1 || request.properties.some(property => property.type !== 'Property' || property.computed)) continue
+    const method = methods.length === 0 ? 'GET'
+      : methods[0].value.type === 'Literal' && typeof methods[0].value.value === 'string'
+        ? methods[0].value.value.toUpperCase() : null
+    if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].includes(method)) continue
+    // 只取请求值的静态分支，不把条件、payload 或相邻请求的 URL/method 当作本次合同。
+    for (const value of values(urls[0].value).filter(value => value.startsWith('/api/'))) {
+      contracts.push({ url: value.split(/[?#]/)[0], method, auth: 'authenticated', source: 'conditional-url' })
+    }
+  }
+  return { contracts, offsets }
+}
+
 function extractTargets(source) {
   // shortcut: 仅识别此白名单音频拼接；新增资源构造时扩展解析和正负控，真实导航仍保留。
   source = source.replace(/(function bundledMerchantGameAudioPath\(path\)\s*\{[\s\S]*?if \(typeof path !== 'string' \|\| !path\.startsWith\('\/audio\/merchant-games\/'\)\) return '';\s*)const relocated = '\/pages\/play' \+ path;(\s*return merchantGameAssetSet\.has\(relocated\) \? relocated : '';\s*\})/g,
@@ -1909,6 +1971,7 @@ function extractTargets(source) {
     .filter((route) => !ASSET_PATH.test(route))
   const apis = [...source.matchAll(/["'](\/api\/[^"'?#\s]+)[^"']*["']/g)].map((m) => m[1])
   const apiContracts = []
+  const conditional = conditionalUrlContracts(source)
   for (const match of source.matchAll(/\b(?:this\.)?([A-Za-z_$][\w$]*(?:Post|Put|Patch|Delete|Get)[A-Za-z_$\d]*)\s*\(\s*["'](\/api\/[^"']+)["']/g)) {
     const helper = match[1]
     const method = /Post/i.test(helper) ? 'POST' : /Put/i.test(helper) ? 'PUT'
@@ -1916,6 +1979,7 @@ function extractTargets(source) {
     apiContracts.push({ url: match[2], method, auth: 'authenticated', source: 'named-helper' })
   }
   for (const match of source.matchAll(/\burl\s*:\s*([^,\n}]+)/g)) {
+    if (conditional.offsets.has(match.index)) continue
     const expression = match[1]
     const parts = [...expression.matchAll(/["']([^"']*)["']/g)].map((item) => item[1])
     if (!parts.length || !parts[0].startsWith('/api/')) continue
@@ -1951,7 +2015,7 @@ function extractTargets(source) {
   return {
     routes: [...new Set(routes)].sort(),
     apis: [...new Set(apis)].sort(),
-    apiContracts,
+    apiContracts: apiContracts.concat(conditional.contracts),
   }
 }
 
@@ -2296,7 +2360,7 @@ function voiceConfirmedRequestPlan(relative, handler, contracts) {
 }
 
 function deregisterRequestPlan(relative, handler, contracts) {
-  if (relative !== 'components/cy/scene-settings-deregister/index.js' || handler !== 'apply') return null
+  if (relative !== 'pages/deregister/components/scene-settings-deregister/index.js' || handler !== 'apply') return null
   const consent = { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }
   const apply = { urlTemplate: '/api/user/deregister/apply', method: 'POST', kind: 'write' }
   const status = { urlTemplate: '/api/user/deregister/status', method: 'GET', kind: 'read' }
@@ -2357,7 +2421,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
     }
   }
   const fileSource = fs.readFileSync(jsFile, 'utf8')
-  if (rel(jsFile) === 'components/cy/scene-settings-deregister/index.js') {
+  if (rel(jsFile) === 'pages/deregister/components/scene-settings-deregister/index.js') {
     const code = maskNonCodeSafely(source)
     for (const call of source.matchAll(/\bsendUiStateRequest\(app,\s*['"](\/api\/[^'"]+)['"],\s*\{/g)) {
       if (!code.slice(call.index).startsWith('sendUiStateRequest')) continue
@@ -2456,7 +2520,7 @@ function extractHandlerTargets(source, jsFile, handlerName, attrs, appHelperBodi
         return
       }
       if (dependency === 'utils/deregister-flow.js'
-          && rel(scanFile) === 'components/cy/scene-settings-deregister/index.js'
+          && rel(scanFile) === 'pages/deregister/components/scene-settings-deregister/index.js'
           && !/\bmethods\b/.test(maskNonCodeSafely(expandedSource))) {
         // handlerSlices already proved and expanded the exact method plus its local helper closure.
         // Re-adding the module here would turn initialData() into all three unrelated write commands.

@@ -30,6 +30,16 @@ public interface IAdvancedGameRuntimeService {
     /** 完成节点门禁，并返回终点声明的稳定 outcomeCode；无分支玩法时返回 null。 */
     String completeGate(Long memberId, Long activityId, Long topicId, Long nodeId);
 
+    /** 本人这一站的玩法已过(与会话视图 readyForBase 同一判定)。只读;为 true 时到站收尾不再要现场定位证明。 */
+    default boolean solvedForArrival(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
+    /** 当前局的拍照/扫码玩法本身已有可信证明，可替代旧拍照/扫码收尾。 */
+    default boolean hasStationGameProof(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
     /**
      * C1 可信边界(选项 A):本节点当前局的完成是否只由设备自报成绩、拍照兜底放行或静态节点码撑着。
      * 为 true 时节点奖励只许探索值与徽章(不发积分、券、掉落)。只读,按 memberId 取本人局。
@@ -49,6 +59,31 @@ public interface IAdvancedGameRuntimeService {
             if (nodeId != null && rewardCappedToXpBadge(memberId, activityId, topicId, nodeId)) return true;
         }
         return false;
+    }
+
+    /**
+     * P-23:本人这一站的传感器段是不是被跳过的(读不出数,0 分走完)。完成链据此把进度记成
+     * completionMode=SKIPPED、解谜分 0。只读。
+     */
+    default boolean sensorStationSkipped(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
+    /**
+     * P-23 带领场队长现场放行:给 memberId 在 nodeId 这一站的传感器段记一笔放行。
+     * 放行不等于完成 —— 仍由成员本人在读取失败够次数后点「跳过这一站」走同一条跳过完成口。
+     * 调用方须先确认 leaderMemberId 是本场当前队长、memberId 是本场成员。
+     */
+    default void releaseSensorStation(Long leaderMemberId, Long memberId, Long activityId, Long topicId, Long nodeId) {
+        throw new UnsupportedOperationException("不支持现场放行");
+    }
+
+    /**
+     * P-23:本场这些成员里,谁卡在传感器站上(读取失败够次数、未完成、未被放行)。
+     * 返回 memberId → nodeId。给队长的队伍进度用,只读。
+     */
+    default Map<Long, Long> pendingSensorSkips(Long activityId, Long topicId, Collection<Long> memberIds) {
+        return java.util.Collections.emptyMap();
     }
 
 }

@@ -43,7 +43,7 @@
               </view>
               <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
             </view>
-            <block wx:if="{{formData.productType === 2}}">
+            <block wx:if="{{formData.productType === 2 || formData.openMerchantPool}}">
               <view class="node-card__hr"></view>
               <cy-date-field presentation="dropdown" mode="date" value="{{formData.recruitDeadline}}" start="{{dateList[0].date}}" bind:change="onRecruitDeadlineChange">
                 <view class="node-card__row" id="fieldRecruitDeadline">
@@ -76,7 +76,7 @@
                      这句话描述的是【主题的属性】,不是读者的身份,所以对谁都是同一个名字。 -->
                 <text class="node-card__title">开放给商家承接</text>
               </view>
-              <cy-switch checked="{{formData.openMerchantPool}}" bindchange="onMerchantPoolChange" />
+              <cy-switch checked="{{formData.openMerchantPool}}" disabled="{{editScope === 'WHITELIST'}}" bindchange="onMerchantPoolChange" />
             </view>
             <!-- ⚠️ merchantPoolEditable 在【权限快照还没拉到】时是 true(fail-open,见
                  index.js#_syncMerchantPoolEligibility:判不出资格不擅自压值,否则会静默关掉
@@ -109,7 +109,7 @@
               <view class="node-card__main">
                 <text class="node-card__title">邀请俱乐部带队</text>
               </view>
-              <cy-switch checked="{{formData.openClubPool}}" bindchange="onClubPoolChange" />
+              <cy-switch checked="{{formData.openClubPool}}" disabled="{{editScope === 'WHITELIST'}}" bindchange="onClubPoolChange" />
             </view>
           </view>
 

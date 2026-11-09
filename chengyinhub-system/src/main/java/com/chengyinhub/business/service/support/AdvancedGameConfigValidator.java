@@ -466,6 +466,28 @@ public class AdvancedGameConfigValidator {
         }
     }
 
+    /**
+     * R11 g1 F2:作为一站玩法开不了局的配置 —— {@link #hasEnabledMechanic} 不认它,玩家到站只看到
+     * 「该模板未配置高级玩法」,线性路线断在这一站。两种:
+     * 只启用相册(album)却没有 outcomeRules;只启用 D20 三档难度(check)却没有 outcomeRules,
+     * 且主题没开检定(主题开了检定时 check 走旅程检定 Encounter,不靠 outcomeRules)。
+     * 可玩返回 null,否则返回给作者看的原因。主题发布检查调用。
+     */
+    public String outcomeRulesMissingReason(String rawJson, boolean journeyCheckEnabled) {
+        String normalized = validateAndNormalize(rawJson);
+        if (normalized == null) return null;
+        final JsonNode root;
+        try {
+            root = objectMapper.readTree(normalized);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("高级玩法配置不是合法 JSON");
+        }
+        if (root.has("outcomeRules") || hasEnabledMechanic(normalized)) return null;
+        if (enabled(root.get("album"))) return "相册请配置完成之后";
+        if (enabled(root.get("check")) && !journeyCheckEnabled) return "D20 三档难度请配置通过和没通过之后";
+        return null;
+    }
+
     public boolean hasEnabledMechanic(String rawJson) {
         String normalized = validateAndNormalize(rawJson);
         if (normalized == null) return false;
@@ -531,10 +553,10 @@ public class AdvancedGameConfigValidator {
 
     private void validateRandom(JsonNode random) {
         if (!enabled(random)) return;
-        requireObject(random, "盲盒配置格式不正确");
+        requireObject(random, "随机卡配置格式不正确");
         JsonNode items = random.get("items");
         if (!(items instanceof ArrayNode) || items.size() < 1 || items.size() > 50) {
-            throw new IllegalArgumentException("盲盒须配置 1 至 50 个物品");
+            throw new IllegalArgumentException("随机卡须配置 1 至 50 张卡片");
         }
         // 卡池名(原型「这副卡叫什么」):可以不填,填了就限长;它会下发给玩家那一屏
         optionalText(random, "deckName", 20, "卡池名称最多 20 个字");
@@ -543,16 +565,16 @@ public class AdvancedGameConfigValidator {
         if (drawCount > items.size()) throw new IllegalArgumentException("抽取数量不能超过物品数量");
         Set<String> ids = new HashSet<>();
         for (JsonNode item : items) {
-            requireObject(item, "盲盒物品格式不正确");
-            String id = requiredId(item, "id", "盲盒物品 ID 不能为空");
-            if (!ids.add(id)) throw new IllegalArgumentException("盲盒物品 ID 不能重复");
-            requiredText(item, "label", 40, "盲盒物品名称不能为空", "盲盒物品名称最多 40 个字");
+            requireObject(item, "卡片格式不正确");
+            String id = requiredId(item, "id", "卡片 ID 不能为空");
+            if (!ids.add(id)) throw new IllegalArgumentException("卡片 ID 不能重复");
+            requiredText(item, "label", 40, "卡片名称不能为空", "卡片名称最多 40 个字");
             int weight = item.path("weight").asInt(0);
             if (weight < 1 || weight > 100000) {
-                throw new IllegalArgumentException("盲盒权重须为 1 至 100000");
+                throw new IllegalArgumentException("卡片权重须为 1 至 100000");
             }
-            optionalText(item, "content", 500, "盲盒内容最多 500 个字");
-            optionalMediaUrl(item, "audioUrl", 500, "盲盒音频地址最多 500 个字", "盲盒音频地址格式不正确");
+            optionalText(item, "content", 500, "卡片内容最多 500 个字");
+            optionalMediaUrl(item, "audioUrl", 500, "卡片音频地址最多 500 个字", "卡片音频地址格式不正确");
         }
     }
 
@@ -1130,27 +1152,27 @@ public class AdvancedGameConfigValidator {
 
     private void validatePredict(JsonNode predict) {
         if (!enabled(predict)) return;
-        requireObject(predict, "竞猜配置格式不正确");
-        requiredText(predict, "question", 120, "竞猜问题不能为空", "竞猜问题不能超过 120 字");
-        optionalText(predict, "hint", 60, "竞猜说明不能超过 60 字");
+        requireObject(predict, "预测配置格式不正确");
+        requiredText(predict, "question", 120, "预测问题不能为空", "预测问题不能超过 120 字");
+        optionalText(predict, "hint", 60, "预测说明不能超过 60 字");
 
         JsonNode options = predict.get("options");
         if (options == null || !options.isArray()
                 || options.size() < MIN_PREDICT_OPTIONS || options.size() > MAX_PREDICT_OPTIONS) {
             throw new IllegalArgumentException(
-                    "竞猜选项须为 " + MIN_PREDICT_OPTIONS + " 至 " + MAX_PREDICT_OPTIONS + " 个");
+                    "预测选项须为 " + MIN_PREDICT_OPTIONS + " 至 " + MAX_PREDICT_OPTIONS + " 个");
         }
         Set<String> keys = new HashSet<>();
         for (JsonNode option : options) {
-            requireObject(option, "竞猜选项格式不正确");
-            String key = requiredId(option, "key", "竞猜选项 key 不能为空");
-            if (!keys.add(key)) throw new IllegalArgumentException("竞猜选项 key 不能重复");
-            requiredText(option, "label", 32, "竞猜选项文案不能为空", "竞猜选项文案不能超过 32 字");
+            requireObject(option, "预测选项格式不正确");
+            String key = requiredId(option, "key", "预测选项 key 不能为空");
+            if (!keys.add(key)) throw new IllegalArgumentException("预测选项 key 不能重复");
+            requiredText(option, "label", 32, "预测选项文案不能为空", "预测选项文案不能超过 32 字");
         }
 
         int closeAtHour = predict.path("closeAtHour").asInt(-1);
         if (closeAtHour < 0 || closeAtHour > 23) {
-            throw new IllegalArgumentException("竞猜截止时间须为 0 到 23 点之间的整点");
+            throw new IllegalArgumentException("预测截止时间须为 0 到 23 点之间的整点");
         }
         /* 揭晓时间(原型「什么时候揭晓」)。存相对天数不存绝对时间戳 ——
            模板会被复制、跨天复用,存死时间等于副本第二天全部过期。
@@ -1159,17 +1181,17 @@ public class AdvancedGameConfigValidator {
            做成必填的话,所有老模板一提交就报一句它们读不懂的错。 */
         int revealDays = predict.path("revealDays").asInt(DEFAULT_PREDICT_REVEAL_DAYS);
         if (revealDays < 0 || revealDays > 30) {
-            throw new IllegalArgumentException("竞猜揭晓天数须为 0 至 30 天,0 表示当天");
+            throw new IllegalArgumentException("预测揭晓天数须为 0 至 30 天,0 表示当天");
         }
         int revealHour = predict.path("revealHour").asInt(DEFAULT_PREDICT_REVEAL_HOUR);
         if (revealHour < 0 || revealHour > 23) {
-            throw new IllegalArgumentException("竞猜揭晓时间须为 0 到 23 点之间的整点");
+            throw new IllegalArgumentException("预测揭晓时间须为 0 到 23 点之间的整点");
         }
         // 当天揭晓的话必须晚于收注截止:先公布答案再收注,那就不是猜了
         if (revealDays == 0 && revealHour < closeAtHour) {
             throw new IllegalArgumentException("当天揭晓的话,揭晓时间要晚于收注截止时间");
         }
-        validateXp(predict, "竞猜");
+        validateXp(predict, "预测");
     }
 
     /**
@@ -2468,6 +2490,10 @@ public class AdvancedGameConfigValidator {
             throw new IllegalArgumentException("罗盘保持时长须为 1 至 10 秒");
         }
         optionalText(cfg, "hint", 60, "罗盘提示语不能超过 60 字");
+        // P-23:作者可勾「允许跳过」,默认关;读取失败两次后玩家才能 0 分跳过
+        if (cfg.has("allowSkip") && !cfg.get("allowSkip").isBoolean()) {
+            throw new IllegalArgumentException("罗盘「允许跳过」须为是或否");
+        }
         validateXp(cfg, "罗盘指向");
     }
 

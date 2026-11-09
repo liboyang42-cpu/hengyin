@@ -49,13 +49,14 @@ function walk(node, visit) {
 // This does not classify any other file as unused.
 function violations(file, source) {
   const problems = [];
-  function reference(value) {
+  function reference(value, asyncComponent) {
     const resolved = local(file, value);
     if (!resolved) return;
     const candidates = [resolved, resolved + '.js', resolved + '.json', resolved + '/index.js', resolved + '/index.json'];
     if (candidates.some(candidate => oldFiles.has(candidate))) problems.push('retired path: ' + resolved);
     const target = candidates.find(candidate => newFiles.has(candidate));
-    if (target && owner(file) !== owner(target)) problems.push('cross-package leaf: ' + target);
+    // 组件经 componentPlaceholder 走分包异步化是微信允许的跨包引用;同步 require / import 仍一律判红。
+    if (target && owner(file) !== owner(target) && !asyncComponent) problems.push('cross-package leaf: ' + target);
     if (newFiles.has(file) && !candidates.some(candidate => fs.existsSync(path.join(ROOT, candidate)))) {
       problems.push('missing dependency: ' + resolved);
     }
@@ -82,7 +83,7 @@ function violations(file, source) {
   if (/\.(js|wxs)$/.test(file)) javascript(source);
   if (file.endsWith('.json')) {
     const json = JSON.parse(source);
-    Object.values(json.usingComponents || {}).forEach(reference);
+    Object.entries(json.usingComponents || {}).forEach(([name, value]) => reference(value, !!(json.componentPlaceholder || {})[name]));
     Object.values(json.componentGenerics || {}).forEach(value => { if (value.default) reference(value.default); });
   }
   if (file.endsWith('.wxml')) {
@@ -109,7 +110,7 @@ function violations(file, source) {
 }
 
 test('reviewed leaves remain inside existing subpackages and keep their original source files out of main', () => {
-  assert.equal(moves.length, 33);
+  assert.equal(moves.length, 161)  // 2026-11-03 第七轮主包瘦身:+128 个文件(单分包组件 / 工具 / 图片与 13 个 scene 组件);
   for (const moved of moves) {
     assert.equal(owner(moved.from), 'MAIN', moved.from);
     assert.notEqual(owner(moved.to), 'MAIN', moved.to);
@@ -134,8 +135,11 @@ test('negative controls reject stale modules, stale WXS, dynamic image paths and
     ['subpackageTools/style/tool-ui.wxss', '@import "/style/retired.wxss";'],
     ['pages/test.json', '{"usingComponents":{"invite":"/subpackageMember/components/cy/coop-invite-sheet/index"}}'],
     ['subpackageMember/components/cy/profile/index.json', '{"usingComponents":{"invite":"/components/cy/coop-invite-sheet/index"}}'],
+    ['pages/shezhi/shezhi.json', '{"usingComponents":{"route":"/subpackageMember/components/cy/scene-route-content/index"}}'],
+    ['pages/square/components/route-map/index.js', "require('../../../../pages/club/utils/club-phone-call.js')"],
   ];
   for (const [file, source] of cases) assert.ok(violations(file, source).length, source);
   assert.deepEqual(violations('subpackageTools/monthly-recap/index.js', "require('../utils/features/monthly-recap-client')"), []);
   assert.deepEqual(violations('pages/test.js', "const src = 'https://example.invalid/images/icon_set.png'"), []);
+  assert.deepEqual(violations('pages/shezhi/shezhi.json', '{"usingComponents":{"route":"/subpackageMember/components/cy/scene-route-content/index"},"componentPlaceholder":{"route":"view"}}'), []);
 });

@@ -1,9 +1,10 @@
 // 简单页只生成草稿；发布仍只在 fabu。持久身份来自专属 journal，不保存原输入。
 const app = getApp();
 const { memberId, retryLogin, waitForInitialSession } = require('../../../utils/session/login-reload.js');
-const journal = require('../../../utils/ai-theme-draft-journal.js');
+const journal = require('../utils/ai-theme-draft-journal.js');
 const modal = require('../../../utils/modal.js');
 const { pickLocation, hasCoords } = require('../../../utils/location/location-manager.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const STATES = ['PREPARED', 'PROCESSING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'];
@@ -511,6 +512,8 @@ Page({
       if (this._recoveryNext) labels.push('更多记录');
       if (before !== null) labels.push('返回最新记录');
       if (items.length || before !== null) this._showAiHistory(labels);
+      // p3 F11:没有任何记录时原来什么都不发生,看起来像按钮坏了。
+      else if (retainedOkay && this._recoveryEmpty) require('../../../utils/toast.js')('还没有起草记录');
     };
     ctx.transport = app.sendRequest({ url: '/api/ai/theme/draft/recovery', method: 'GET', data: before === null ? {} : { beforeId: before },
       header: { 'Content-Type': 'application/json' }, hideLoading: true, autoErrorToast: false,
@@ -694,11 +697,16 @@ Page({
   confirmAiNodePoi(e) {
     if (!this._ensureAiSession()) return;
     if (this._aiResultMode !== 1 && this._aiResultMode !== 2) {
+      // 第九轮 m1-9:只能查看草稿时,已确认的地点点开地图看
+      const viewed = this.data.aiPlanNodes[Number(e.currentTarget.dataset.index)];
+      if (viewed && viewed.confirmed && openAddress().coords(viewed)) { openAddress().openAddress(viewed); return; }
       this.setData({ aiError: '原起草的路线模式未能确认，当前只能查看草稿。' }); return;
     }
     const index = Number(e.currentTarget.dataset.index), ctx = this._capture('poi', this._aiPending), planEpoch = this._planEpoch;
     if (!ctx || !Number.isSafeInteger(index) || !this.data.aiPlanNodes[index]) return;
+    const pickedNode = this.data.aiPlanNodes[index];
     pickLocation({
+      latitude: pickedNode.confirmed ? pickedNode.latitude : '', longitude: pickedNode.confirmed ? pickedNode.longitude : '',
       onPick: (poi) => {
         if (!this._current(ctx) || planEpoch !== this._planEpoch || this._aiProtocolBlocked) return;
         if (!hasCoords(poi)) { this.setData({ aiError: '请选择一个有坐标的具体地点。' }); return; }

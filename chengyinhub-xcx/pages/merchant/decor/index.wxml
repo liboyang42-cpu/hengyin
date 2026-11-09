@@ -103,13 +103,13 @@
           </view>
         </view>
         <view class="dc-card">
-          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="门店信息" value="名称 · 地址 · 营业时间" required="{{false}}" bind:tap="goSection" data-view="basic" />
-          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="品牌介绍" value="故事 · 特色" required="{{false}}" bind:tap="goSection" data-view="brand" />
+          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="门店信息" required="{{false}}" bind:tap="goSection" data-view="basic" />
+          <cy-cell wx:if="{{merchantAccess.canWriteProfile}}" arrow-icon="chevron-right" title="品牌介绍" required="{{false}}" bind:tap="goSection" data-view="brand" />
           <cy-cell arrow-icon="chevron-right" title="门店相册" value="{{gallery.length || 0}} 张照片" required="{{false}}" bind:tap="goGallery" hairline="{{false}}" />
         </view>
         <view class="dc-card">
-          <cy-cell arrow-icon="chevron-right" title="AI 店铺角色" value="形象 · 语音" required="{{false}}" bind:tap="goAiNpc" />
-          <cy-cell arrow-icon="chevron-right" title="合作经营" value="承接 · 主推 · 权益" required="{{false}}" bind:tap="goSection" data-view="coop" hairline="{{false}}" />
+          <cy-cell arrow-icon="chevron-right" title="AI 店铺角色" required="{{false}}" bind:tap="goAiNpc" />
+          <cy-cell arrow-icon="chevron-right" title="合作经营" required="{{false}}" bind:tap="goSection" data-view="coop" hairline="{{false}}" />
         </view>
         <!-- M-31(2026-10-27):入驻审核通过(经营身份 active)后不再展示「入驻资料」——执照不用再看,
              品牌形象图与门店相册是一回事(注册时的照片并入门店相册,数据迁移在后端)。 -->
@@ -186,10 +186,7 @@
         </view>
       </block>
       <block wx:elif="{{view === 'coop'}}">
-        <view class="dc-identity">
-          <view class="dc-coop-icon"><cy-icon name="discover-shop" size="54" /></view>
-          <text class="dc-name">让合作发生在店里</text>
-        </view>
+        <!-- p2 F-10(第十轮 f3):删去「让合作发生在店里」头图与图标,页名由导航栏「合作经营」承担;各行无值只留箭头 -->
         <view class="dc-card dc-inset">
           <!-- M-30(m700):承接摘要(如「免费承接」)与下面「合作诉求」同一行式,标题左、摘要右对齐 -->
           <view class="dc-heading" bindtap="goCoopSetting" aria-role="button" hover-class="cy-pressed">
@@ -199,7 +196,7 @@
           <view class="dc-inner-row">
             <cy-cell arrow-icon="chevron-right"
               title="合作诉求" hairline="{{false}}"
-              value="{{m.demand || '填写合作诉求'}}"
+              value="{{m.demand || ''}}"
               required="{{false}}"
               bind:tap="goCoopSetting"
             />
@@ -219,7 +216,7 @@
             <cy-cell arrow-icon="chevron-right"
               bubble-tap
               title="招牌主推"
-              value="{{featuredName || (m.featuredId ? '已选择主推' : '选 1 个活动置顶')}}"
+              value="{{featuredName || (m.featuredId ? '已选择主推' : '')}}"
               required="{{false}}"
             />
             <view slot="panel" class="dc-menu">
@@ -263,7 +260,6 @@
                /api/merchant/reviews/manage 要 MARKETING_READ。 -->
           <cy-cell wx:if="{{merchantAccess.canReadMarketing}}" arrow-icon="chevron-right"
             title="口碑"
-            value="查看并回复顾客评价"
             required="{{false}}"
             bind:tap="goReviews"
           />
@@ -276,7 +272,7 @@
           <!-- 2026-11-02 M-20:衍生权益与常备权益同类,并进同一张卡紧跟其后(原来单独占末尾一张卡) -->
           <cy-cell arrow-icon="chevron-right"
             title="衍生权益"
-            value="{{m.derivativeBenefits || '添加衍生权益'}}"
+            value="{{m.derivativeBenefits || ''}}"
             required="{{false}}"
             bind:tap="openDerivatives"
             hairline="{{false}}"
@@ -284,7 +280,7 @@
         </view>
         <view class="dc-card">
           <cy-dropdown portal="{{false}}" custom-panel below gap="4" panel-height="260">
-            <cy-cell arrow-icon="chevron-right" bubble-tap title="升级权益" value="查看可开通的权益" required="{{false}}" />
+            <cy-cell arrow-icon="chevron-right" bubble-tap title="升级权益" required="{{false}}" />
             <view slot="panel" class="dc-menu">
               <text wx:if="{{checkoutState === 'verifying'}}" class="dc-muted">正在确认支付结果…</text>
               <text wx:if="{{checkoutState === 'unknown'}}" class="dc-muted">
@@ -336,7 +332,6 @@
           </cy-dropdown>
           <cy-cell arrow-icon="chevron-right"
             title="成为城市节点"
-            value="挂互动玩法"
             required="{{false}}"
             bind:tap="goCityNode"
             hairline="{{false}}"
@@ -473,7 +468,8 @@
     items="{{chipSheet.options}}"
     value="{{chipSheet.value}}"
     max="{{chipSheet.kind === 'category' ? 5 : 0}}"
-    hint="{{saveError ? saveError : (chipSheet.kind === 'category' ? '可多选，最多 5 个，第一个作为主行业' : '可多选')}}"
+    primary-first="{{chipSheet.kind === 'category'}}"
+    hint="{{saveError}}"
     hint-error="{{!!saveError}}"
     loading="{{chipSheet.loading}}"
     error="{{chipSheet.error}}"

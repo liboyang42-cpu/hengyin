@@ -7,7 +7,8 @@
   <view wx:if="{{ loading }}" class="tp-state"><cy-skeleton type="detail" count="1" loading-label="正在加载主题模板" /></view>
   <view wx:elif="{{ errorMsg }}" class="tp-state">
     <text class="tp-state__t">{{ errorMsg }}</text>
-    <view class="tp-state__btn" bindtap="load" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view>
+    <view wx:if="{{ errorRefused }}" class="tp-state__btn" bindtap="goBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80">返回</view>
+    <view wx:else class="tp-state__btn" bindtap="load" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view>
   </view>
   <block wx:else>
     <!-- 扇形卡堆：左右滑切换，点最前面那张翻面 -->

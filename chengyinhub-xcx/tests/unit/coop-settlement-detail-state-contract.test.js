@@ -513,7 +513,7 @@ test('当前服务器明确拒绝权限时不保留旧金额，网络失败仍�
 
 test('俱乐部真实业务500拒绝口径与请先登录也清除旧金额', () => {
   const java = fs.readFileSync(path.join(ROOT,'../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java'),'utf8')
-  for (const msg of ['仅主理人与联席主理人可查看分润','请先登录']) {
+  for (const msg of ['没有本人的历史结算记录','请先登录']) {
     assert.ok(java.includes('return error("'+msg+'")'),'负控使用实际后端拒绝文案')
     const e = loadPage(); e.page.onLoad({source:'club',id:'31',clubId:'9'})
     e.requests[0].success({code:200,data:{topics:[clubRow()]}})
@@ -561,4 +561,39 @@ test('真实请求封装同账号重登后旧code2仍拒绝时清除旧金额', 
   assert.equal(e.page.data.detail,null)
   assert.equal(e.page.data.loadState,'error')
   assert.equal(e.requests.length,3,'旧鉴权失败不能无限重登')
+})
+
+
+test('本人历史分润明细保持收款人视角，服务端撤销访问后清掉旧金额', () => {
+  const e = loadPage(); e.page.onLoad({ source: 'club', id: '31', clubId: '9', personal: '1' })
+  assert.deepEqual(JSON.parse(e.requests[0].data), { clubId: 9, personal: true })
+  e.requests[0].success({ code: 200, data: { topics: [clubRow()] } })
+  assert.equal(e.page.data.loadState, 'ready')
+  e.page.load(); e.requests[1].success({ code: 500, msg: '没有本人的历史结算记录' })
+  assert.equal(e.page.data.detail, null)
+  assert.equal(e.page.data.loadState, 'error')
+})
+
+test('商家合作详情保留原额，只显示已执行调整后的净额', () => {
+  const detail = buildMerchantSettlementDetail(merchantRow({
+    amount: 40, originalAmount: 40, executedAdjustmentAmount: -10, netAmount: 30,
+  }))
+  assert.equal(detail.amount, '¥30.00')
+  assert.equal(detail.lines.find(row => row.key === 'original').value, '¥40.00')
+  assert.equal(detail.lines.find(row => row.key === 'adjustment').value, '−¥10.00')
+  assert.equal(detail.lines.find(row => row.key === 'income').value, '¥30.00')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: 40 })).amount, '¥40.00')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: null })).amount, '—')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: -2 })).amount, '−¥2.00')
+})
+
+test('俱乐部同主题的保底与分成详情沿真实行类型显示，不猜未知类型', () => {
+  for (const [lineType, label] of [['INITIATOR_GUARANTEE', '主办保底'], ['INITIATOR_MARGIN', '主办分成']]) {
+    const detail = buildClubSettlementDetail(clubRow({ lineType }))
+    assert.equal(detail.lines.find(row => row.key === 'lineType').value, label)
+    assert.equal(detail.amount, '¥ 128.00')
+  }
+  for (const lineType of ['UNKNOWN', '__proto__', 'constructor', null]) {
+    assert.equal(buildClubSettlementDetail(clubRow({ lineType })).lines.some(row => row.key === 'lineType'), false)
+  }
 })

@@ -7,7 +7,7 @@
 //   · settle 回执才有 text / failCostLabel —— 结算后才出文案。
 // ★ 失败也推进:结算后照常可以退出,这一屏不拦节点完成(产品口径)。
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
-const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
+const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const { createD20Renderer } = require('../../utils/d20-renderer.js');
 
@@ -29,7 +29,7 @@ function trackPct(n) { return Math.max(0, Math.min(100, (Number(n) - 1) / 19 * 1
 function marginText(receipt) {
   if (!receipt || receipt.detailsHidden || receipt.total == null || receipt.dc == null) return '';
   const diff = Number(receipt.total) - Number(receipt.dc);
-  return diff >= 0 ? '过线 ' + diff + ' 点' : '差 ' + (-diff) + ' 点';
+  return diff > 0 ? '过线 ' + diff + ' 点' : diff === 0 ? '正好过线' : '差 ' + (-diff) + ' 点';   // 第十二轮 k8:点数正好等于难度读「正好过线」,不写「过线 0 点」
 }
 function natTag(receipt) {
   if (!receipt) return '';

@@ -1,6 +1,7 @@
 'use strict';
 // 2026-11-02 page-polish T1:恢复卡只在「本页刚发出的请求在途」时隐藏。
-// 失败/未知、重进页面读到存档、APPLIED 回执、从卡上查询原请求时都必须照常显示 —— 这张卡是防重复提交的围栏。
+// 失败/未知、重进页面读到存档、从卡上查询原请求时都必须照常显示 —— 这张卡是防重复提交的围栏。
+// (第十轮 j2 F-11:入队页的 APPLIED 是确定结果,不再出卡,见第一条。)
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -21,7 +22,9 @@ function boot(kind, wx = platform()) {
 }
 function invite(h) { h.requests[0].success({ code: 200, data: { team: { id: '9007199254740993', status: 0 }, joined: false } }); }
 
-test('normal join: no recovery card while the fresh command is in flight; the receipt card shows after APPLIED', async () => {
+// 第十轮 f2 j2 F-11:原断言「APPLIED 回执卡留到点确认结果」编码的是旧决定 —— 成功入队后页面上挂着
+// 「接受邀请入队原请求已执行原请求号：…」。入队已执行是确定结果,页面重读队伍显示已加入,回执直接归档、不出卡。
+test('normal join: no recovery card while the fresh command is in flight; APPLIED shows no card and archives the receipt', async () => {
   const h = boot('team/join'); invite(h);
   assert.equal(h.page.data.recoveryShown, false);
   await h.page.join(); const command = h.requests.at(-1);
@@ -30,8 +33,11 @@ test('normal join: no recovery card while the fresh command is in flight; the re
   assert.equal(h.page.data.joining, true, 'button keeps its own busy label');
   assert.equal(h.page.data.recoveryShown, false);
   command.success(receipt(command, 'APPLIED'));
-  assert.equal(h.page.data.commandRecovery.state, 'APPLIED');
-  assert.equal(h.page.data.recoveryShown, true, 'APPLIED receipt stays until 确认结果');
+  assert.equal(h.page.data.recoveryShown, false, '成功入队不挂原请求号卡');
+  await Promise.resolve();
+  assert.equal(h.page.data.commandRecovery.state, '', 'APPLIED 回执已归档');
+  assert.equal(h.page.data.recoveryShown, false);
+  assert.ok(h.requests.some(r => r.url !== '/api/team/command'), '页面重读队伍');
 });
 
 test('fresh join whose reply fails shows the UNKNOWN card at once', async () => {

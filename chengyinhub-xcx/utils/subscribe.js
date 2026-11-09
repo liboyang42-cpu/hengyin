@@ -4,7 +4,8 @@
 //   signupSuccess  报名成功通知
 //   activityStart  活动开始提醒
 //   refund         退款到账通知
-//   refundRejected 退款被拒通知
+//   refundRejected 退款被拒通知 —— 后端没有对应模板配置和发送点(无 tplRefundRejected),
+//                  不申请授权:用户点了同意也永远收不到(2026-11-03 第七轮 C 第 6 项)。
 // 后端在对应业务节点用 WxSubscribeMsgService 下发。
 //
 // 注:teamFormed(成团成功通知)已随成团下线(2026-07-15)移除 —— 后端 notifyTeamFormed 已删、

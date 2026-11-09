@@ -42,24 +42,36 @@ public class ClubAccessServiceImpl implements IClubAccessService {
 
     @Override
     public ClubAccessContext resolve(Long principalMemberId, Long clubId, Long activityId) {
-        return resolve(principalMemberId, clubId, activityId, false);
+        return resolve(principalMemberId, clubId, activityId, false, false);
+    }
+
+    @Override
+    public ClubAccessContext resolveReadOnly(Long principalMemberId, Long clubId, Long activityId) {
+        return resolve(principalMemberId, clubId, activityId, false, true);
     }
 
     @Override
     public ClubAccessContext resolveWithEventAccesses(Long principalMemberId, Long clubId) {
-        return resolve(principalMemberId, clubId, null, true);
+        return resolve(principalMemberId, clubId, null, true, false);
     }
 
     private ClubAccessContext resolve(Long principalMemberId, Long clubId, Long activityId,
-                                      boolean includeEventAccesses) {
+                                      boolean includeEventAccesses, boolean readOnly) {
         if (!positive(principalMemberId) || !positive(clubId) || (activityId != null && !positive(activityId))) {
             throw forbidden();
         }
         Club club = clubMapper.selectClubById(clubId);
         if (!isActiveClub(club, clubId)) throw forbidden();
         if (activityId != null) requireOwnedActivity(activityId, clubId);
-        Long lockedPrincipal = umsMemberMapper.lockActiveMemberById(principalMemberId);
-        if (!principalMemberId.equals(lockedPrincipal)) throw forbidden();
+        if (readOnly) {
+            com.chengyinhub.business.domain.UmsMember principal = umsMemberMapper.selectRolePermissionSubject(principalMemberId);
+            if (principal == null || !principalMemberId.equals(principal.getId())
+                    || !Long.valueOf(1L).equals(principal.getStatus())
+                    || !Integer.valueOf(0).equals(principal.getDelFlag())) throw forbidden();
+        } else {
+            Long lockedPrincipal = umsMemberMapper.lockActiveMemberById(principalMemberId);
+            if (!principalMemberId.equals(lockedPrincipal)) throw forbidden();
+        }
         if (principalMemberId.equals(club.getMemberId())) {
             com.chengyinhub.business.domain.UmsMember owner = umsMemberMapper.selectRolePermissionSubject(principalMemberId);
             if (owner == null || !com.chengyinhub.business.service.IRoleService.ROLE_CLUB.equals(owner.getRole())) throw forbidden();
@@ -78,15 +90,21 @@ public class ClubAccessServiceImpl implements IClubAccessService {
         }
         List<ClubRoleAssignment> rows = clubRoleAssignmentMapper.selectActiveForAccess(
                 clubId, principalMemberId, activityId, now);
+        Set<String> extras = new LinkedHashSet<>();
         if (rows != null) for (ClubRoleAssignment row : rows) {
             String roleCode = validateAssignment(row, clubId, principalMemberId, activityId, now);
             if (roleCode != null) roles.add(roleCode);
+            // 2026-11-02 用户:活动核销员的「可见客户手机号」是逐条委派上的开关,只在本场作用域生效。
+            if (ClubRoleCode.EVENT_CHECKIN.equals(roleCode)
+                    && Integer.valueOf(1).equals(row.getCustomerPhoneVisible())) {
+                extras.add(ClubPermission.CUSTOMER_PHONE_READ);
+            }
         }
         List<ClubEventAccess> eventAccesses = includeEventAccesses
                 ? resolveEventAccesses(clubId, principalMemberId, now)
                 : Collections.<ClubEventAccess>emptyList();
         return new ClubAccessContext(principalMemberId, clubId, club.getMemberId(), activityId,
-                roles, eventAccesses);
+                roles, eventAccesses, extras);
     }
 
     private List<ClubEventAccess> resolveEventAccesses(Long clubId, Long memberId, Date now) {

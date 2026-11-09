@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-icon": "/components/cy/icon/index",
+    "cy-dropdown": "/components/cy/dropdown/index"
+  },
+  "styleIsolation": "isolated"
+}

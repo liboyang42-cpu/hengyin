@@ -44,6 +44,10 @@ public class ClubCustomerVO {
         private String lastTopicName;
         private String remark;
         private String phoneText;
+        /** 2026-11-02:完整号码且可拨打(服务端按 CUSTOMER_PHONE_READ 判)。 */
+        private boolean phoneCallable;
+        public boolean isPhoneCallable() { return phoneCallable; }
+        public void setPhoneCallable(boolean phoneCallable) { this.phoneCallable = phoneCallable; }
 
         public Long getMemberId() { return memberId; }
         public void setMemberId(Long memberId) { this.memberId = memberId; }
@@ -91,6 +95,10 @@ public class ClubCustomerVO {
         private String displayName;
         private String avatar;
         private String phoneText;
+        /** 2026-11-02:完整号码且可拨打(服务端按 CUSTOMER_PHONE_READ 判)。 */
+        private boolean phoneCallable;
+        public boolean isPhoneCallable() { return phoneCallable; }
+        public void setPhoneCallable(boolean phoneCallable) { this.phoneCallable = phoneCallable; }
         private Date lastInteractionTime;
         private Integer arrivedCount;
         private Integer pendingCount;
@@ -176,6 +184,10 @@ public class ClubCustomerVO {
         private String avatar;
         private String orderNo;
         private String phoneText;
+        /** 2026-11-02:完整号码且可拨打(服务端按 CUSTOMER_PHONE_READ 判)。 */
+        private boolean phoneCallable;
+        public boolean isPhoneCallable() { return phoneCallable; }
+        public void setPhoneCallable(boolean phoneCallable) { this.phoneCallable = phoneCallable; }
         private String statusCode;
         private String statusText;
         private String timeText;
@@ -213,7 +225,11 @@ public class ClubCustomerVO {
         private BigDecimal paidAmount;
         private Date lastInteractionTime;
         private String lastTopicName;
+        /** 本俱乐部范围内最近一张报名的姓名密文;只在 Service 里解密,不进任何出参。 */
+        private String participantName;
 
+        public String getParticipantName() { return participantName; }
+        public void setParticipantName(String participantName) { this.participantName = participantName; }
         public Long getMemberId() { return memberId; }
         public void setMemberId(Long memberId) { this.memberId = memberId; }
         public String getDisplayName() { return displayName; }
@@ -311,6 +327,10 @@ public class ClubCustomerVO {
         private String avatar;
         /** ★ 已按岗位权限裁过:没权限时这里是替代说明而不是号码,前端原样显示。 */
         private String phoneText;
+        /** 2026-11-02:完整号码且可拨打(服务端按 CUSTOMER_PHONE_READ 判)。 */
+        private boolean phoneCallable;
+        public boolean isPhoneCallable() { return phoneCallable; }
+        public void setPhoneCallable(boolean phoneCallable) { this.phoneCallable = phoneCallable; }
         private boolean phoneVisible;
         private String sessionTimeText;
         private String statusCode;      // PENDING | CONTACTED | VERIFIED | REVIEWED | REFUNDED
@@ -380,6 +400,10 @@ public class ClubCustomerVO {
 
     /** 核销详情的原始行,整形前的样子。 */
     public static class RawCheckinRow {
+        /** 场次(cms_activity.id);主题级报名为 null。只用于本场号码权限判定,不下发。 */
+        private Long sessionId;
+        public Long getSessionId() { return sessionId; }
+        public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
         private Long registrationId;
         private String participantName;
         private Integer registrationStatus;

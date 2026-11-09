@@ -1,7 +1,7 @@
 const modal = require('../../../utils/modal.js'); const pageMotion = require('../../../utils/page-motion.js');
 const cyToast = require('../../../utils/toast.js');
 const { activityStatusMeta, activityStatusText } = require('../../../utils/activity-status');
-const officialChannel = require('../../../utils/merchant-official-channel.js');
+const officialChannel = require('../../../utils/merchant-official-channel.js'); const { ROAM_SHARE_COVER } = require('../../../utils/roam-menu-share.js');
 const app = getApp();
 const { memberId, isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 
@@ -353,5 +353,11 @@ Page({
   },
   goInbox() {
     wx.navigateTo({ url: '/pages/activity/official-inbox/index' });
+  },
+
+  // 第七轮 C 第 4 项:公开活动列表可转发。落点是列表默认页签(公开读 /api/official/events),不带「我的」页签;
+  // 卡片图固定用仓内插画,不让微信截到当前页签(可能正停在「我的活动」)。
+  onShareAppMessage() {
+    return { title: '城瘾 · 官方活动', path: '/pages/activity/list/index', imageUrl: ROAM_SHARE_COVER };
   },
 });

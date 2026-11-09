@@ -52,7 +52,7 @@ import com.chengyinhub.common.enums.LimitType;
 @RequestMapping("/api/comment")
 public class ApiCommentController extends BaseController {
 
-    @Value("${community.post.legacy-writes-enabled:true}")
+    @Value("${community.post.legacy-writes-enabled:false}")
     private boolean legacyCommunityWritesEnabled;
 
     private AjaxResult legacySquareWriteDisabled() {
@@ -93,6 +93,10 @@ public class ApiCommentController extends BaseController {
 
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
+
+    /** Round5B-1:评论图只收本站登记过、本人上传或已审核通过的媒体,落库为 media-asset 引用,读侧按审核事实出图。 */
+    @Autowired
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferenceGuard;
 
 
     @Operation(summary = "添加评论")
@@ -141,7 +145,12 @@ public class ApiCommentController extends BaseController {
             umsComment.setReplyId(Convert.toLong(reply_id, 0L));
         }
         if (StringUtils.isNotEmpty(img_arr)) {
-            umsComment.setImgArr(img_arr);
+            try {
+                img_arr = mediaReferenceGuard.requireAttachments(member_id, img_arr, false);
+            } catch (com.chengyinhub.common.exception.ServiceException invalidMedia) {
+                return error(invalidMedia.getMessage());
+            }
+            umsComment.setImgArr(StringUtils.isEmpty(img_arr) ? null : img_arr);
         }
         UmsMember member = umsMemberService.selectUmsMemberById(member_id);
         String openid = member == null ? null : member.getWxOpenId();

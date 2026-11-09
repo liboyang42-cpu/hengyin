@@ -99,6 +99,10 @@ public class ApiClubLeadController extends BaseController {
     private ICmsRegistrationScanService registrationScanService;
     @Autowired
     private IGrowthService growthService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedGameRuntimeService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.PlayNodeAccessService playNodeAccessService;
 
     private Long uid() {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
@@ -140,6 +144,13 @@ public class ApiClubLeadController extends BaseController {
             st.setCurrentChapterId(null);
         }
         return st;
+    }
+
+    private boolean isFreeCollect(Long activityId) {
+        if (playNodeAccessService == null) return false;
+        CmsActivity act = cmsActivityService.selectCmsActivityById(activityId);
+        return act != null && playNodeAccessService.resolveMode(activityId, act.getTopicId())
+                == com.chengyinhub.common.constant.PlayMode.FREE_COLLECT;
     }
 
     /** 口径已抽到 ClubEventLeadResolver;这里只保留调用点,避免两处实现分叉。 */
@@ -392,19 +403,36 @@ public class ApiClubLeadController extends BaseController {
         }
         data.put("exists", true);
         data.put("status", st.getStatus());
+        // 自由探索不带队:到开场时间直接进,玩家端不显示集合屏(服务端闸见 PlayNodeAccessService.leadGateError)。
+        data.put("freeEntry", isFreeCollect(activityId));
         data.put("leaderMemberId", st.getLeaderMemberId());
         data.put("isLeader", memberId.equals(st.getLeaderMemberId()));
         data.put("currentChapterId", st.getCurrentChapterId());
+        // C-04:导演运行时接管的路线局,章节在俱乐部工作台放行;本入口的放行会被拒,播放页据此不再给出该项。
+        String directorStatus = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.routeSessionStatus(activityId);
+        data.put("directorRun", directorStatus != null);
+        // C-12:带队人结束本场后,玩家播放页据此显示「本场已结束」与自己的完成数,不再让人提交后才撞上拒绝。
+        data.put("sessionEnded", Integer.valueOf(3).equals(st.getStatus()) || "FINISHED".equals(directorStatus));
+        /* R11 g1(j3 F4):导演运行时接管的路线局,章节放行写在 game_session.current_chapter_id,
+           旧带队状态行不再更新 —— 玩家端「等队长放行」屏读的是这里的 status=2 与 currentChapterId,
+           照旧读旧行就永远等不到闸,玩家读完锁着的一章、走到站上才被服务端拒。进行中的路线局以运行时为准。 */
+        Long currentChapterId = st.getCurrentChapterId();
+        if (gameSessionRuntimeService != null && "RUNNING".equals(directorStatus)) {
+            data.put("status", 2);
+            Long directorChapter = gameSessionRuntimeService.routeCurrentChapterId(activityId);
+            if (directorChapter != null) currentChapterId = directorChapter;
+            data.put("currentChapterId", currentChapterId);
+        }
         List<CmsTopicChapter> ordered = chaptersOf(activityId);
         Long nextChapterId = null;
-        if (st.getCurrentChapterId() == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();
+        if (currentChapterId == null && !ordered.isEmpty()) nextChapterId = ordered.get(0).getId();
         for (int i = 0; i + 1 < ordered.size(); i++) {
-            if (ordered.get(i).getId().equals(st.getCurrentChapterId())) nextChapterId = ordered.get(i + 1).getId();
+            if (ordered.get(i).getId().equals(currentChapterId)) nextChapterId = ordered.get(i + 1).getId();
         }
         data.put("nextChapterId", nextChapterId);
         // 当前章节名
-        if (st.getCurrentChapterId() != null) {
-            CmsTopicChapter c = cmsTopicChapterService.selectCmsTopicChapterById(st.getCurrentChapterId());
+        if (currentChapterId != null) {
+            CmsTopicChapter c = cmsTopicChapterService.selectCmsTopicChapterById(currentChapterId);
             data.put("chapterName", c != null ? c.getName() : "");
         }
         data.put("broadcast", st.getBroadcastText());
@@ -414,16 +442,19 @@ public class ApiClubLeadController extends BaseController {
         List<ClubLeadCheckin> checkins = clubLeadMapper.selectCheckins(activityId);
         Set<Long> arrivedIds = new HashSet<>();
         for (ClubLeadCheckin c : checkins) arrivedIds.add(c.getMemberId());
-        // 复用名册的最新更正事实；原始签到仍保留用于调证。
+        // C-10:到场人数与本场名册同一个事实 —— 名册的「已到场」= 集合签到 / 已核销 / 已有节点进度,
+        // 有更正时以最新更正为准。原来这里只认签到+更正,玩家头部、名册、复盘三处数字对不上。
         for (Map<String, Object> row : clubEventOpsMapper.selectPaidRoster(activityId)) {
+            Object memberObj = row.get("memberId");
+            if (!(memberObj instanceof Number)) continue;
+            Long rosterMemberId = ((Number) memberObj).longValue();
             Object corrected = row.get("correctedArrived");
-            if (corrected == null) continue;
-            Long correctedMemberId = ((Number) row.get("memberId")).longValue();
-            if (Boolean.TRUE.equals(corrected)
-                    || corrected instanceof Number && ((Number) corrected).intValue() == 1) {
-                arrivedIds.add(correctedMemberId);
+            Object effective = corrected != null ? corrected : row.get("baseArrived");
+            if (Boolean.TRUE.equals(effective)
+                    || effective instanceof Number && ((Number) effective).intValue() == 1) {
+                arrivedIds.add(rosterMemberId);
             } else {
-                arrivedIds.remove(correctedMemberId);
+                arrivedIds.remove(rosterMemberId);
             }
         }
         Set<Long> memberIds = new HashSet<>(arrivedIds);
@@ -433,11 +464,18 @@ public class ApiClubLeadController extends BaseController {
         regProbe.setRegistrationStatus(2);
         List<CmsRegistration> regs = cmsRegistrationService.selectCmsRegistrationList(regProbe);
         Set<Long> paidIds = new HashSet<>();
-        if (regs != null) for (CmsRegistration r : regs) if (r.getMemberId() != null) paidIds.add(r.getMemberId());
+        if (regs != null) for (CmsRegistration r : regs) {
+            if (r.getMemberId() != null && Integer.valueOf(2).equals(r.getPaymentStatus())) paidIds.add(r.getMemberId());
+        }
         memberIds.addAll(paidIds);
         memberIds.add(st.getLeaderMemberId());
-        data.put("arrived", arrivedIds.size());
-        data.put("total", memberIds.size());
+        // 第十一轮 h4 L3(j2 F-18):头部「到场 x/N 人」的 N 是已付款未退的玩家人数,x 是其中到场的人。
+        // 以前 N 把不买票的带队主理人也算进去(4 人付款显示 /5),x 也会数到主理人自己的签到。
+        // 名单(members)照旧带上队长,只是不进这两个数。
+        Set<Long> arrivedPaid = new HashSet<>(arrivedIds);
+        arrivedPaid.retainAll(paidIds);
+        data.put("arrived", arrivedPaid.size());
+        data.put("total", paidIds.size());
         data.put("meArrived", arrivedIds.contains(memberId));
 
         // 成员完成数(player_node_progress 按 activityId 聚合)
@@ -468,7 +506,51 @@ public class ApiClubLeadController extends BaseController {
             members.add(m);
         }
         data.put("members", members);
+        // P-23:只给队长看谁卡在传感器站上(读取失败两次、没完成、还没放行),队长可现场放行
+        if (memberId.equals(st.getLeaderMemberId()) && advancedGameRuntimeService != null) {
+            CmsActivity act = cmsActivityService.selectCmsActivityById(activityId);
+            List<Map<String, Object>> skipRequests = new ArrayList<>();
+            if (act != null && act.getTopicId() != null) {
+                Map<Long, String> names = new HashMap<>();
+                for (Map<String, Object> m : members) names.put((Long) m.get("memberId"), (String) m.get("nickname"));
+                Set<Long> players = new HashSet<>(paidIds);
+                players.remove(st.getLeaderMemberId());
+                for (Map.Entry<Long, Long> stuck : advancedGameRuntimeService.pendingSensorSkips(activityId, act.getTopicId(), players).entrySet()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("memberId", stuck.getKey());
+                    row.put("nickname", names.getOrDefault(stuck.getKey(), ""));
+                    row.put("nodeId", stuck.getValue());
+                    skipRequests.add(row);
+                }
+            }
+            data.put("skipRequests", skipRequests);
+        }
         return success(data);
+    }
+
+    @Operation(summary = "队长现场放行成员卡住的传感器站(P-23;放行后由成员本人点跳过)")
+    @PostMapping("/release-station")
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult releaseStation(Long activityId, Long memberId, Long nodeId) {
+        Long leaderId = uid();
+        if (leaderId <= 0) return error("请先登录");
+        if (activityId == null || activityId <= 0 || memberId == null || memberId <= 0 || nodeId == null || nodeId <= 0) {
+            return error("参数有误");
+        }
+        if (advancedGameRuntimeService == null) return error("暂不支持现场放行");
+        CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
+        if (activity == null || activity.getClubId() == null || activity.getClubId() <= 0) return error("该场次不是带领场");
+        if (!leaderId.equals(resolveLeaderMemberId(activity))) return error("只有本场队长可以放行");
+        ClubLeadState st = ensureState(activityId);
+        if (st == null) return error("该场次不是带领场");
+        if (!Integer.valueOf(2).equals(st.getStatus())) return error("仅行进中的场次可放行");
+        if (memberId.equals(leaderId) || !canAccessLeadActivity(activityId, memberId, null)) return error("该成员不在本场");
+        try {
+            advancedGameRuntimeService.releaseSensorStation(leaderId, memberId, activityId, activity.getTopicId(), nodeId);
+        } catch (com.chengyinhub.common.exception.ServiceException | IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        return AjaxResult.success("已放行，成员可以跳过这一站");
     }
 
     /** 队伍实时数据只向本场领队或已完成支付的本场报名者开放。 */

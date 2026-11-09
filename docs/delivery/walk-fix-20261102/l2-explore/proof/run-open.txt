@@ -1,0 +1,12 @@
+
+──────── 步骤 1:夹具:主题完成规则写成编辑器格式 {"nodeCompletion":{"mode":"ALL"}}
+   [库回读] 规则                       ((990014, 2, '{"nodeCompletion": {"mode": "ALL"}}'),)
+   open-session                       {"msg": "开团成功", "code": 200, "data": {"activityId": 14}, "_status": 200}
+   9004 入会                            {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 69.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "b0f596f4da06aca5301b7034
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 75, "registrationNo": "A20261102DFDD0F28", "payableAmount": 69.0, "expireTime": "2026-11-02T16:58:11.3
+   callback                           status=204
+   [库回读] 报名单                      ((75, 2, 0, 3),)
+   [库回读] 权益                       ((42, 0), (43, 0), (44, 0), (45, 0))
+
+ACTIVITY_ID=14 REGISTRATION_ID=75

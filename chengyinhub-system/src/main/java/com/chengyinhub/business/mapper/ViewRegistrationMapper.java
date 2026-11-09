@@ -30,6 +30,9 @@ public interface ViewRegistrationMapper
     /** 查询报名展示字段，不读取或解密个人隐私与核销凭证。 */
     public List<ViewRegistration> selectRegistrationSummaries(ViewRegistration viewRegistration);
 
+    /** 第十二轮 k4(j2 N-03):俱乐部报名名册专用摘要,带报名姓名(密文)与报名时刻;只给已判过治理权限的调用方。 */
+    public List<ViewRegistration> selectRosterSummaries(ViewRegistration viewRegistration);
+
     /**
      * 新增VIEW
      * 

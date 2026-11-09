@@ -7,6 +7,8 @@ const cyToast = require('../../../utils/toast.js');
 
 const app = getApp();
 const TABS = [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }];
+// p3 F3:服务端明确拒绝(不存在 / 不是你的)要讲原因并给返回;网络与系统繁忙仍按加载失败留白。
+function refusalOf(res) { var c = Number(res && res.code), m = String(res && res.msg || ''); return c && c !== 200 && c !== 401 && c !== 2 && m && m !== '系统繁忙，请稍后重试' ? m : ''; }
 
 function fmtSec(sec) {
   const m = Math.round(Number(sec || 0) / 60);
@@ -66,6 +68,7 @@ Page({
     loading: true,
     loadError: false,
     loadErrorMsg: '',
+    refusal: '',
     statusBarHeight: (getApp().globalData || {}).statusBarHeight || 20,
     navBarHeight: (getApp().globalData || {}).navBarHeight || 44,
     light: false,
@@ -105,7 +108,8 @@ Page({
   load() {
     const that = this;
     const seq = this._seq = (this._seq || 0) + 1;
-    this.setData({ loading: true, loadError: false, loadErrorMsg: '' });
+    if (!this._id) { this.setData({ loading: false, loadError: true, refusal: '链接已失效' }); return; }
+    this.setData({ loading: true, loadError: false, loadErrorMsg: '', refusal: '' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -116,7 +120,7 @@ Page({
         if (seq !== that._seq) return;
         const info = res && res.code == '200' ? res.data : null;
         if (!info || typeof info !== 'object') {
-          that.setData({ loading: false, loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
+          that.setData({ loading: false, loadError: true, refusal: refusalOf(res), loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
           return;
         }
         const a = art.topicArt(info.name);
@@ -156,6 +160,8 @@ Page({
 
   onRetry() { this.load(); },
 
+  goBack() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/template/index' }) }); },
+
   switchTab(e) {
     const key = e && e.detail && e.detail.key;
     if (key === 'details' || key === 'capabilities') this.setData({ activeTab: key });
@@ -175,6 +181,8 @@ Page({
     if (this._using) { cyToast('正在配置，请稍候'); return; }
     if (!this._id) return;
     const that = this;
+    // 第十二轮 k9(p3 N6):本页已经复制出一份草稿,从编辑器回来再点「应用」就回到那一份,不再每点一次多一份草稿
+    if (this._copiedId) { this._openCopiedDraft(this._copiedId); return; }
     this._using = true;
     app.sendRequest({
       url: '/api/template/topic-template/use',
@@ -185,9 +193,8 @@ Page({
         if (that._unloaded) return; // 复制回包晚于离开本页:不再把用户拉去编辑器
         const copiedId = res && res.code == '200' && res.data && res.data.topicId;
         if (!copiedId) { cyToast((res && res.msg) || '使用模板失败'); return; }
-        const qs = ['id=' + copiedId];
-        if (that._scope) qs.push('scope=' + that._scope);
-        wx.navigateTo({ url: '/pages/publish/fabu/index?' + qs.join('&') });
+        that._copiedId = copiedId;
+        that._openCopiedDraft(copiedId);
       },
       fail() {
         that._using = false;
@@ -195,6 +202,12 @@ Page({
         cyToast('网络错误，请重试');
       }
     });
+  },
+
+  _openCopiedDraft(copiedId) {
+    const qs = ['id=' + copiedId];
+    if (this._scope) qs.push('scope=' + this._scope);
+    wx.navigateTo({ url: '/pages/publish/fabu/index?' + qs.join('&') });
   },
 
   onShareAppMessage() {

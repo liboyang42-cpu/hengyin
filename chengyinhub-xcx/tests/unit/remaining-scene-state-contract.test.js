@@ -230,7 +230,7 @@ test('团码选场切换路线后忽略旧路线响应，并给失败态真实�
 })
 
 test('入场码缺少真实过期时间时保持错误态，不虚构五分钟有效期', () => {
-  const relativePath = 'components/cy/scene-qr-ticket/index.js'
+  const relativePath = 'pages/play/components/scene-qr-ticket/index.js'
   const harness = mount(relativePath)
   harness.instance.data.registrationId = 'registration-1'
   harness.instance.load()
@@ -240,12 +240,12 @@ test('入场码缺少真实过期时间时保持错误态，不虚构五分钟�
   assert.equal(harness.instance.data.state, 'error')
   assert.match(harness.instance.data.errorText, /有效期/)
 
-  const wxml = read('components/cy/scene-qr-ticket/index.wxml')
+  const wxml = read('pages/play/components/scene-qr-ticket/index.wxml')
   assert.doesNotMatch(wxml, /5 分钟内有效/)
 })
 
 test('漫游发现页忽略旧搜索响应，刷新失败保留已有商家且未知营业状态不冒充营业中', () => {
-  const relativePath = 'components/cy/scene-roam-discover/index.js'
+  const relativePath = 'pages/play/components/scene-roam-discover/index.js'
   const harness = mount(relativePath)
   harness.instance.data.list = [{ id: 7, name: '已有商家', status: 'open' }]
 
@@ -265,7 +265,7 @@ test('漫游发现页忽略旧搜索响应，刷新失败保留已有商家且�
   assert.equal(harness.instance.data.state, 'stale')
   assert.equal(harness.instance.data.list[0].name, '新结果')
 
-  const wxml = read('components/cy/scene-roam-discover/index.wxml')
+  const wxml = read('pages/play/components/scene-roam-discover/index.wxml')
   assert.match(wxml, /state === 'stale'/)
   assert.match(wxml, /status="\{\{item\.status\}\}"/)
 })
@@ -639,7 +639,7 @@ test('活动评价提交单飞，失败后保留评分文案与正文内重试�
 })
 
 test('通用场景列表拒绝畸形 rows，不能把协议错误渲染成空白 ready', () => {
-  const relativePath = 'components/cy/scene-route-content/index.js'
+  const relativePath = 'subpackageMember/components/cy/scene-route-content/index.js'
   const harness = mount(relativePath)
   harness.instance.data.sceneId = 'settings-likes'
   harness.instance.loadScene()
@@ -649,7 +649,7 @@ test('通用场景列表拒绝畸形 rows，不能把协议错误渲染成空白
 })
 
 test('商家入驻场景只把显式 NONE 当首次申请，403 与异常仍保持错误态', () => {
-  const relativePath = 'components/cy/scene-route-content/index.js'
+  const relativePath = 'subpackageMember/components/cy/scene-route-content/index.js'
   const empty = mount(relativePath)
   empty.instance.data.sceneId = 'merchant-apply'
   empty.instance.loadScene()
@@ -681,7 +681,7 @@ test('商家入驻场景只把显式 NONE 当首次申请，403 与异常仍保�
 })
 
 test('通用场景表单失败时保留内容、内联错误与重试能力', () => {
-  const relativePath = 'components/cy/scene-route-content/index.js'
+  const relativePath = 'subpackageMember/components/cy/scene-route-content/index.js'
   const harness = mount(relativePath)
   Object.assign(harness.instance.data, {
     sceneId: 'settings-feedback',
@@ -697,7 +697,7 @@ test('通用场景表单失败时保留内容、内联错误与重试能力', ()
   assert.match(harness.instance.data.submitError, /暂时无法提交反馈/)
   assert.equal(harness.instance.data.form.reason, '保留这段问题描述')
 
-  const wxml = read('components/cy/scene-route-content/index.wxml')
+  const wxml = read('subpackageMember/components/cy/scene-route-content/index.wxml')
   assert.match(wxml, /submitError/)
   assert.match(wxml, /提交中/)
   assert.match(wxml, /bind:retry="submitForm"/)
@@ -711,7 +711,7 @@ test('设置页不再挂声音与触感占位入口', () => {
 })
 
 test('账户收益拒绝负余额，并忽略晚到的旧刷新结果', () => {
-  const relativePath = 'components/cy/scene-asset-earnings/index.js'
+  const relativePath = 'subpackageA/components/scene-asset-earnings/index.js'
   const negative = mount(relativePath, { globalData: { userInfo: { balance: -1 } } })
   negative.instance.load(false)
   assert.equal(negative.requests.length, 1)

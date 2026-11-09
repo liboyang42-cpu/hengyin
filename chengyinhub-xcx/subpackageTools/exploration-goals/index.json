@@ -8,6 +8,7 @@
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-icon": "/components/cy/icon/index",
-    "cy-date-field": "/components/cy/date-field/index"
+    "cy-date-field": "/components/cy/date-field/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
   }
 }

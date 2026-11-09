@@ -13,6 +13,16 @@ from scripts.e2e.chain_sale_close import (
 
 
 class ChainSaleCloseSessionPlanTest(unittest.TestCase):
+    def test_sessions_open_before_the_sale_review(self):
+        # 第十一轮 i1:自由探索的开售审核要先有场次票(SALE_TICKET_PROJECTION_MISSING),
+        # 后端只在 PRICING + 自由探索 + 生效合作单时放行开一场 ⇒ 开团在开售提审之前。
+        import inspect
+        from scripts.e2e import chain_sale_close
+        source = inspect.getsource(chain_sale_close.main)
+        self.assertNotIn("/api/club/open-session", source)
+        self.assertLess(source.index("open_sessions(tid, etok)"), source.index("sale-submit"))
+        self.assertIn("/api/club/open-session", inspect.getsource(chain_sale_close.open_sessions))
+
     def test_key_bound_e2e_payee_is_reset_only_after_decrypt_failure(self):
         rows = ((1, PAYEE_LICENSE_OBJECT_KEY, PAYEE_LICENSE_HASH),)
         deletes = []

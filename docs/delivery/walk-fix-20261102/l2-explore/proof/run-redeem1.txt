@@ -1,0 +1,9 @@
+
+──────── 步骤 1:第 1 家 样板咖啡第1站:玩家扫店码 → 商家扫玩家动态码核销
+   checkin                            {"msg": "必须提供动作标识、期望版本和原运行时身份", "code": 500, "_status": 200}
+   scan_qr_code                       {"msg": "核销成功", "code": 200, "data": {"chapterId": 42, "redemptionId": 5, "chapterName": "第1章 咖啡"}, "_status": 200}
+   [库回读] 报名单                      ((75, 2, 1, None),)
+   [库回读] 权益                       ((42, 1), (43, 0), (44, 0), (45, 0))
+   list owner_type=2 → exploreProgress {"redeemed": 1, "required": 4, "completed": false, "ended": false, "active": true}
+   我的订单 status=2 含本单                  True
+   我的订单 status=3 含本单                  False

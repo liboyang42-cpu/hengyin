@@ -52,6 +52,19 @@ def main():
     scan(args.gitleaks, 'other/source-inventory.json', '\n'.join(known), 1)
     changed = known[0].replace(digest, credential)
     scan(args.gitleaks, INVENTORY, changed, 1)
+    for walk_path, line_number, action in (
+        ('docs/delivery/walk-fix-20261102/integ/fix-shots/i1-walk-readbacks.txt', 100, 'REPORT_SENSOR_FAILURE'),
+        ('docs/delivery/walk-fix-20261102/l1-play/RIG-NOTES.md', 64, 'SUBMIT_QA'),
+    ):
+        walk_line = (ROOT / walk_path).read_text().splitlines()[line_number - 1]
+        request = json.loads(walk_line[walk_line.index('{'):])
+        if request['action'] != action:
+            raise AssertionError('historical rig request changed')
+        scan(args.gitleaks, walk_path, walk_line + '\n', 0)
+        scan(args.gitleaks, walk_path, walk_line.replace(request['idempotencyKey'], credential), 1)
+        scan(args.gitleaks, walk_path, walk_line + ' api_key=' + credential, 1)
+        scan(args.gitleaks, 'other/walk-readbacks.txt', walk_line, 1)
+        scan(args.gitleaks, walk_path, json.dumps({'api_key': request['idempotencyKey']}), 1)
     # Existing OR exceptions must retain their original behavior.
     scan(args.gitleaks, 'ordinary/config.json', json.dumps({'api_key': 'PUB_KEY_ID_' + credential}), 0)
     legacy_paths = (
@@ -66,7 +79,7 @@ def main():
         scan(args.gitleaks, path, json.dumps({'api_key': credential}), 0)
     if (ROOT / INVENTORY).read_bytes() != original:
         raise AssertionError('historical inventory changed')
-    print(json.dumps({'scanner': '8.24.3', 'cases': 12, 'pass': True,
+    print(json.dumps({'scanner': '8.24.3', 'cases': 22, 'pass': True,
                       'inventory_sha256': hashlib.sha256(original).hexdigest()}))
 
 

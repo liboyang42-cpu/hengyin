@@ -1,6 +1,7 @@
 // 城瘾 · 发起协作邀请(type0 主题发布者→商家 / type1 商家→俱乐部)
 // 类型1 商家→俱乐部:邀俱乐部成员来参加我的经典定向主题
 // 自审核握手:发起即 status=0,受邀方在 coop/list 接受。后端 /api/coop/invite
+const priceInput = require('../../../utils/price-input.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
@@ -395,8 +396,9 @@ Page({
 
   onFeeInput(e) {
     if (this._submitting) return;
-    const value = Number(e.detail.value);
-    this.setData({ fixedFee: Number.isFinite(value) && value > 0 ? value : null });
+    // j1 N2 同病:打字时保留字符串,小数点不被抹掉;提交前的判据仍按数值 > 0
+    const typed = priceInput.typingPrice(e.detail.value);
+    this.setData({ fixedFee: typed === '' ? null : typed });
   },
 
   _recoverReadSession(value, epoch, key) {
@@ -978,7 +980,7 @@ Page({
     };
     if (data.operationScope) payload.scope = data.operationScope;
     if (inviteType === 1 && this.data.originApplyId) payload.originApplyId = this.data.originApplyId;
-    if (shareMode === 2) payload.fixedFee = data.fixedFee;
+    if (shareMode === 2) payload.fixedFee = Number(data.fixedFee);
     if (inviteType === 0 && data.supplyStationRequired) {
       const target = data.selected.find(row => String(row.toId) === String(toId));
       payload.supplyStationId = parseInviteId(target && target.supplyStationId);

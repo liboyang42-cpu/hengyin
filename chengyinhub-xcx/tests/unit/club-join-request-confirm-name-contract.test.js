@@ -86,38 +86,39 @@ test('拿不到该行昵称时退回中性称呼，不显示 memberId 或少一�
 
 test('待审为 0 时顶部状态条不再重复空态的「暂无待审申请」', () => {
   const empty = openWithRequests([])
-  assert.equal(empty.page.data.introText, '可直接通过或拒绝',
-    '中央空态已经写着「暂无待审申请」,顶部条只留动作口径(CU-C-133:数谁能处理的名单会漏掉被委派成员)')
+  // 第十轮 f3 第 5 项(p3 F7):动作口径那句属说明小字,按 owner 新规则撤掉;0 条时顶部条不出。
+  assert.equal(empty.page.data.introText, '',
+    '中央空态已经写着「暂无待审申请」,顶部条不再重复')
   assert.doesNotMatch(empty.page.data.introText, /暂无待审申请/)
 
   const busy = openWithRequests(TWO_APPLICANTS)
-  assert.equal(busy.page.data.introText, '2 条待审 · 可直接通过或拒绝')
+  assert.equal(busy.page.data.introText, '2 条待审')
 
   // 空态那一句本身要留着 —— 这次是去重叠,不是把提示删掉
   assert.match(read('pages/club/join-requests/index.wxml'), /title="暂无待审申请"/)
 })
 
-test('F-L3-09:拒绝确认后可选填原因，原因随拒绝请求发送；不填则不带该字段', () => {
+test('F-L3-09 / p3 N13:拒绝只有一个弹层(指名道姓 + 选填原因 + 确认拒绝),原因随拒绝请求发送；不填则不带该字段', () => {
   const withReason = openWithRequests(TWO_APPLICANTS)
   withReason.page.reject({ currentTarget: { dataset: { memberId: 901 } } })
-  withReason.modals[0].success({ confirm: true, cancel: false, content: '' })
-  assert.equal(withReason.modals.length, 2, '危险确认之后才问原因')
-  assert.equal(withReason.modals[1].editable, true)
+  assert.equal(withReason.modals.length, 1, '拒绝不再先过一层危险确认')
+  assert.equal(withReason.modals[0].title, '拒绝「小林」的入会申请?')
+  assert.equal(withReason.modals[0].editable, true)
+  assert.equal(withReason.modals[0].confirmText, '确认拒绝')
+  assert.ok(!withReason.modals[0].content, '弹层不再带说明行')
   assert.equal(withReason.requests.length, 1, '原因弹层确认前不得发出拒绝')
-  assert.equal(withReason.modals[1].validate('长'.repeat(501)), '拒绝原因不能超过500字')
-  withReason.modals[1].success({ confirm: true, cancel: false, content: '  本期名额已满  ' })
+  assert.equal(withReason.modals[0].validate('长'.repeat(501)), '拒绝原因不能超过500字')
+  withReason.modals[0].success({ confirm: true, cancel: false, content: '  本期名额已满  ' })
   assert.equal(withReason.requests[1].url, '/api/club/join-request/reject')
   assert.deepEqual(JSON.parse(withReason.requests[1].data), { clubId: 9, memberId: 901, reviewReason: '本期名额已满' })
 
   const blank = openWithRequests(TWO_APPLICANTS)
   blank.page.reject({ currentTarget: { dataset: { memberId: 902 } } })
-  blank.modals[0].success({ confirm: true, cancel: false, content: '' })
-  blank.modals[1].success({ confirm: true, cancel: false, content: '   ' })
+  blank.modals[0].success({ confirm: true, cancel: false, content: '   ' })
   assert.deepEqual(JSON.parse(blank.requests[1].data), { clubId: 9, memberId: 902 })
 
   const cancelled = openWithRequests(TWO_APPLICANTS)
   cancelled.page.reject({ currentTarget: { dataset: { memberId: 902 } } })
-  cancelled.modals[0].success({ confirm: true, cancel: false, content: '' })
-  cancelled.modals[1].success({ confirm: false, cancel: true, content: '' })
+  cancelled.modals[0].success({ confirm: false, cancel: true, content: '' })
   assert.equal(cancelled.requests.length, 1, '原因弹层取消 = 不拒绝')
 })

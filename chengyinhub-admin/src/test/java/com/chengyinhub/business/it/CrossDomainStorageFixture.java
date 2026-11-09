@@ -138,7 +138,10 @@ final class CrossDomainStorageFixture implements AutoCloseable {
                 assertTrue(from >= 0 && to > from); setup.execute(text.substring(from, to));
             }
         }
-        P0AcceptanceSchema.migrations(ddl, "migration_20261023_d_official_broadcast_delivery.sql", "migration_im.sql",
+        // migration_20261028_official_broadcast_protocol_union.sql: the official delivery path reads the full
+        // OfficialBroadcastMapper row (request identity columns) for the landing page; same order as OfficialBroadcastDeliveryMySqlIT.
+        P0AcceptanceSchema.migrations(ddl, "migration_20261023_d_official_broadcast_delivery.sql",
+                "migration_20261028_official_broadcast_protocol_union.sql", "migration_im.sql",
                 "migration_im_send_idempotency_20260913.sql", "migration_20261012_im_media_visibility.sql");
         setup.execute("CREATE TABLE wp14_probe(original_id VARCHAR(32) PRIMARY KEY,attempts INT NOT NULL DEFAULT 0,effects INT NOT NULL DEFAULT 0) ENGINE=InnoDB");
         setup.execute("CREATE TABLE wp14_probe_receipt(original_id VARCHAR(32) PRIMARY KEY) ENGINE=InnoDB");

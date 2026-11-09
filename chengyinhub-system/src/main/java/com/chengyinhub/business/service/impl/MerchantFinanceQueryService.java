@@ -11,12 +11,15 @@ import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.Redemption;
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.domain.vo.MerchantFinancePage;
+import com.chengyinhub.business.domain.vo.ClubSettlementSummaryRow;
 import com.chengyinhub.business.domain.vo.MerchantRedemptionSummary;
 import com.chengyinhub.business.domain.vo.MerchantRedemptionView;
 import com.chengyinhub.business.domain.vo.MerchantSettlementEntry;
 import com.chengyinhub.business.domain.vo.MerchantSettlementOverview;
 import com.chengyinhub.business.domain.vo.PublicTransferBatch;
 import com.chengyinhub.business.domain.vo.PublicTransferBatchDetail;
+import com.chengyinhub.business.domain.vo.RedemptionSignupName;
+import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.CoopSettlementMapper;
@@ -59,20 +62,16 @@ public class MerchantFinanceQueryService {
     @Autowired private CmsTopicMapper topicMapper;
     @Autowired private CmsTopicChapterMapper chapterMapper;
     @Autowired private IMmsMerchantService merchantService;
+    @Autowired private PiiCryptoService piiCryptoService;
+    /** 第十二轮 k5:俱乐部场次结算付给本商家的核销费(按场次一行)。 */
+    @Autowired(required = false) private com.chengyinhub.business.mapper.SettlementDetailMapper sessionFeeMapper;
+    /** 个人账户「待结算」与资产页同源(/api/wallet/stages),见 personalPending。 */
+    @Autowired(required = false) private MemberFundsStageService fundsStageService;
 
     public MerchantSettlementOverview overview(Long memberId) {
-        List<UmsMemberBalanceDetail> balanceRows = personalBalanceRows(memberId);
-        Map<Long, CoopSettlement> paidCoop = paidCoopById(memberId);
-        Date[] month = shanghaiMonth(new Date());
-        BigDecimal gross = BigDecimal.ZERO;
-        BigDecimal adjustments = BigDecimal.ZERO;
-        for (UmsMemberBalanceDetail row : balanceRows) {
-            if (row.getCreateTime() == null || row.getChangeBalance() == null || !within(row.getCreateTime(), month)) continue;
-            if (row.getEventType() != null && row.getEventType().longValue() == 5L
-                    && !paidCoop.containsKey(row.getEventId())) continue;
-            if (row.getChangeBalance().signum() > 0) gross = gross.add(row.getChangeBalance());
-            if (row.getChangeBalance().signum() < 0) adjustments = adjustments.add(row.getChangeBalance());
-        }
+        BigDecimal[] personal = personalThisMonth(memberId);
+        BigDecimal gross = personal[0];
+        BigDecimal adjustments = personal[1];
         Map<String, BigDecimal> netByPeriod = new HashMap<String, BigDecimal>();
         for (MerchantPayable payable : safeList(payableMapper.selectByMerchant(memberId))) {
             if (payable == null || payable.getAmount() == null || payable.getCreateTime() == null) continue;
@@ -106,6 +105,154 @@ public class MerchantFinanceQueryService {
         return result;
     }
 
+    static final String RECORD_ACTIVITY_TICKET = "activity_ticket";
+    static final String RECORD_SESSION_FEE = "session_fee";
+
+    /**
+     * 第十二轮 k5:俱乐部场次结算时付给本商家的核销费,按场次合并成一行(商家对一场只扫一次团码)。
+     * 金额 = 已入账核销费 + 之后退款冲回(负数);全部冲回时显示「已调整」,部分冲回仍是已入个人账户。
+     */
+    private List<MerchantRedemptionView> sessionFeeViews(Long memberId, Long activityId, Long topicId, String storeName) {
+        List<MerchantRedemptionView> out = new ArrayList<MerchantRedemptionView>();
+        if (sessionFeeMapper == null || memberId == null) return out;
+        Map<Long, List<com.chengyinhub.business.domain.vo.MerchantSessionFeeLine>> byActivity =
+                new java.util.LinkedHashMap<Long, List<com.chengyinhub.business.domain.vo.MerchantSessionFeeLine>>();
+        for (com.chengyinhub.business.domain.vo.MerchantSessionFeeLine line
+                : safeList(sessionFeeMapper.selectSessionFeeLinesByMerchant(memberId, activityId))) {
+            if (line == null || line.getActivityId() == null || line.getFeeAmount() == null) continue;
+            if (topicId != null && !topicId.equals(line.getTopicId())) continue;
+            List<com.chengyinhub.business.domain.vo.MerchantSessionFeeLine> items = byActivity.get(line.getActivityId());
+            if (items == null) { items = new ArrayList<com.chengyinhub.business.domain.vo.MerchantSessionFeeLine>(); byActivity.put(line.getActivityId(), items); }
+            items.add(line);
+        }
+        for (Map.Entry<Long, List<com.chengyinhub.business.domain.vo.MerchantSessionFeeLine>> e : byActivity.entrySet()) {
+            BigDecimal fee = BigDecimal.ZERO;
+            BigDecimal clawback = BigDecimal.ZERO;
+            BigDecimal unit = null;
+            boolean sameUnit = true;
+            Date occurredAt = null;
+            com.chengyinhub.business.domain.vo.MerchantSessionFeeLine first = e.getValue().get(0);
+            for (com.chengyinhub.business.domain.vo.MerchantSessionFeeLine line : e.getValue()) {
+                fee = fee.add(line.getFeeAmount());
+                if (line.getClawbackAmount() != null) clawback = clawback.add(line.getClawbackAmount());
+                if (unit == null) unit = line.getUnitFee();
+                else if (line.getUnitFee() == null || unit.compareTo(line.getUnitFee()) != 0) sameUnit = false;
+                if (line.getOccurredAt() != null && (occurredAt == null || line.getOccurredAt().after(occurredAt))) occurredAt = line.getOccurredAt();
+            }
+            MerchantRedemptionView row = new MerchantRedemptionView();
+            row.setRecordKey(RECORD_SESSION_FEE + ":" + e.getKey());
+            row.setRecordType(RECORD_SESSION_FEE);
+            row.setRecordId(String.valueOf(e.getKey()));
+            row.setOccurredAt(occurredAt);
+            row.setFulfillmentState("ACTIVE");
+            row.setStoreName(storeName);
+            row.setTopicName(first.getActivityTitle());
+            row.setChapterName(first.getTicketName());
+            row.setSettlementRoute("COOP_ORDER");
+            row.setDestination("PERSONAL_ACCOUNT"); // 场次结算直接入商家余额,不是平台对公打款
+            BigDecimal net = fee.add(clawback);
+            row.setSettlementAmount(money(net));
+            row.setRefundState(clawback.signum() == 0 ? null : "REFUNDED");
+            row.setSettlementState(net.signum() == 0 ? "ADJUSTED" : "SETTLED");
+            if (sameUnit && unit != null && unit.signum() > 0) {
+                row.setUnitFee(money(unit));
+                BigDecimal[] heads = fee.divideAndRemainder(unit);
+                if (heads[1].signum() == 0) row.setHeadCount(heads[0].intValue());
+            }
+            row.setDisplayState(MerchantFinanceStateResolver.resolve(row.getFulfillmentState(), row.getSettlementState()));
+            out.add(row);
+        }
+        return out;
+    }
+
+    /** 本月个人账户 [到账收入, 已执行调整(负数)];「结算」概览与「核销与退款」汇总共用同一份。 */
+    private BigDecimal[] personalThisMonth(Long memberId) {
+        List<UmsMemberBalanceDetail> balanceRows = personalBalanceRows(memberId);
+        Map<Long, CoopSettlement> paidCoop = paidCoopById(memberId);
+        Date[] month = shanghaiMonth(new Date());
+        BigDecimal gross = BigDecimal.ZERO;
+        BigDecimal adjustments = BigDecimal.ZERO;
+        for (UmsMemberBalanceDetail row : balanceRows) {
+            if (row.getCreateTime() == null || row.getChangeBalance() == null || !within(row.getCreateTime(), month)) continue;
+            if (row.getEventType() != null && row.getEventType().longValue() == 5L
+                    && !paidCoop.containsKey(row.getEventId())) continue;
+            if (row.getChangeBalance().signum() > 0) gross = gross.add(row.getChangeBalance());
+            if (row.getChangeBalance().signum() < 0) adjustments = adjustments.add(row.getChangeBalance());
+        }
+        return new BigDecimal[]{gross, adjustments};
+    }
+
+    /**
+     * 个人账户还没到账的钱,与资产页「待结算」同一真源(MemberFundsStageService:未结束活动 + 客诉期,
+     * 含 50% 退款后留给主办方的那部分,金额按结算同一公式估算)。审不出金额时返回 null,不给确定的 0。
+     */
+    private BigDecimal personalPending(Long memberId) {
+        if (fundsStageService == null || memberId == null) return null;
+        Map<String, Object> stages;
+        try {
+            stages = fundsStageService.stages(memberId, new Date());
+        } catch (com.chengyinhub.common.exception.ServiceException unknownAccount) {
+            return null; // 账户查不到:待结算未知,汇总条不出,不给确定的 0
+        }
+        if (stages == null || !Boolean.TRUE.equals(stages.get("amountsKnown"))) return null;
+        BigDecimal pending = stages.get("pendingSettlement") instanceof BigDecimal
+                ? (BigDecimal) stages.get("pendingSettlement") : BigDecimal.ZERO;
+        Object period = stages.get("complaintPeriod");
+        if (period instanceof List) for (Object item : (List<?>) period) {
+            Object amount = item instanceof Map ? ((Map<?, ?>) item).get("amount") : null;
+            if (amount instanceof BigDecimal) pending = pending.add((BigDecimal) amount);
+        }
+        return pending;
+    }
+
+    /**
+     * check-1104 j1 F13 / F12:全店「核销与退款」汇总的待结算 / 已入账要与资产页、结算概览同源。
+     * 个人账户部分(活动分润、coop 分润)直接取账户口径,章节计酬(对公)仍按核销行累加。
+     */
+    private void addPersonalAccount(MerchantRedemptionSummary summary, Long memberId) {
+        BigDecimal pending = personalPending(memberId);
+        BigDecimal rowsPending = parseAmount(summary.getPendingAmount());
+        summary.setPendingAmount(pending == null || rowsPending == null ? null : money(rowsPending.add(pending)));
+        BigDecimal[] personal = personalThisMonth(memberId);
+        BigDecimal rowsArrived = parseAmount(summary.getArrivedAmount());
+        summary.setArrivedAmount(rowsArrived == null ? null : money(rowsArrived.add(personal[0]).add(personal[1])));
+    }
+
+    private MerchantRedemptionView toActivityTicketView(com.chengyinhub.business.domain.vo.MerchantActivityTicketScan scan,
+                                                        String storeName) {
+        if (scan == null || scan.getRegistrationId() == null) return null;
+        MerchantRedemptionView row = new MerchantRedemptionView();
+        row.setRecordKey(RECORD_ACTIVITY_TICKET + ":" + scan.getRegistrationId());
+        row.setRecordType(RECORD_ACTIVITY_TICKET);
+        row.setRecordId(String.valueOf(scan.getRegistrationId()));
+        row.setOccurredAt(scan.getVerifiedAt());
+        row.setFulfillmentState("ACTIVE");
+        row.setStoreName(storeName);
+        row.setRefundState(null);
+        row.setTopicName(scan.getActivityTitle());
+        row.setChapterName(scan.getTicketName());
+        if (!blank(scan.getRealName()) && piiCryptoService != null) {
+            String name = piiCryptoService.decrypt(scan.getRealName());
+            if (!blank(name)) row.setCustomerDisplayName(name.trim());
+        }
+        row.setSettlementRoute("ACTIVITY");
+        // 第十二轮 k6(j1 N4):活动票由 settleActivity 结进商家 App 内余额(可提现),不是平台打款。
+        row.setDestination("PERSONAL_ACCOUNT");
+        if (scan.getSettlementAmount() == null) {
+            // 支付时没落商家账本(老单/免费票):金额未成立,显示「待定」,不伪造 0。
+            row.setSettlementState("PENDING");
+        } else if (scan.getSettlementAmount().signum() == 0) {
+            row.setSettlementAmount(money(scan.getSettlementAmount()));
+            row.setSettlementState("NOT_APPLICABLE");
+            row.setNoCashReason("免费票 · 无现金结算");
+        } else {
+            row.setSettlementAmount(money(scan.getSettlementAmount()));
+            row.setSettlementState(Integer.valueOf(1).equals(scan.getSettlementStatus()) ? "SETTLED" : "PENDING");
+        }
+        row.setDisplayState(MerchantFinanceStateResolver.resolve(row.getFulfillmentState(), row.getSettlementState()));
+        return row;
+    }
+
     public MerchantFinancePage<MerchantRedemptionView> redemptions(Long memberId, String filter, int pageNum, int pageSize) {
         return redemptions(memberId, filter, pageNum, pageSize, null);
     }
@@ -130,11 +277,27 @@ public class MerchantFinanceQueryService {
         List<MerchantRedemptionView> all = new ArrayList<MerchantRedemptionView>();
         // 汇总条按【筛选前】的全集算:它回答「我这个月接待了多少」,切筛选 chip 时不该跟着变。
         List<MerchantRedemptionView> unfiltered = new ArrayList<MerchantRedemptionView>();
+        Map<Long, String> signupNames = signupNames(memberId, null);
         for (Redemption redemption : safeList(redemptionMapper.selectByMerchant(memberId))) {
             if (topicId != null && (redemption == null || !topicId.equals(redemption.getTopicId()))) continue;
             MerchantRedemptionView row = toRedemptionView(redemption, byRedemption.get(redemption == null ? null : redemption.getId()),
                     batches, merchant == null ? null : merchant.getName());
             if (row == null) continue;
+            row.setCustomerDisplayName(signupNames.get(redemption.getId()));
+            unfiltered.add(row);
+            if (matchesRedemptionFilter(row, filter)) all.add(row);
+        }
+        // check-1104 j1 F13:商家自有活动的验票同列(原先只有章节核销,活动验票后这里恒为 0)。
+        for (com.chengyinhub.business.domain.vo.MerchantActivityTicketScan scan
+                : safeList(redemptionMapper.selectActivityTicketScansByMerchant(memberId, null))) {
+            if (topicId != null && (scan == null || !topicId.equals(scan.getTopicId()))) continue;
+            MerchantRedemptionView row = toActivityTicketView(scan, merchant == null ? null : merchant.getName());
+            if (row == null) continue;
+            unfiltered.add(row);
+            if (matchesRedemptionFilter(row, filter)) all.add(row);
+        }
+        // 第十二轮 k5:俱乐部场次按核销付费的核销费(场次结算后才成立)。
+        for (MerchantRedemptionView row : sessionFeeViews(memberId, null, topicId, merchant == null ? null : merchant.getName())) {
             unfiltered.add(row);
             if (matchesRedemptionFilter(row, filter)) all.add(row);
         }
@@ -146,7 +309,9 @@ public class MerchantFinanceQueryService {
             }
         });
         MerchantFinancePage<MerchantRedemptionView> page = new MerchantFinancePage<MerchantRedemptionView>();
-        page.setSummary(summarizeThisMonth(unfiltered));
+        MerchantRedemptionSummary summary = summarizeThisMonth(unfiltered, topicId == null);
+        if (topicId == null) addPersonalAccount(summary, memberId);
+        page.setSummary(summary);
         page.setTotal(all.size()); page.setPageNum(safePageNum); page.setPageSize(safePageSize);
         int from = Math.min((safePageNum - 1) * safePageSize, all.size());
         page.setRows(new ArrayList<MerchantRedemptionView>(all.subList(from, Math.min(from + safePageSize, all.size()))));
@@ -154,6 +319,22 @@ public class MerchantFinanceQueryService {
     }
 
     public MerchantRedemptionView redemptionDetail(Long memberId, String recordType, String recordId) {
+        if (RECORD_SESSION_FEE.equals(recordType)) {
+            Long activityId = parseId(recordId);
+            if (memberId == null || activityId == null) return null;
+            MmsMerchant merchant = merchantService == null ? null : merchantService.selectMmsMerchantByMemberId(memberId);
+            List<MerchantRedemptionView> rows = sessionFeeViews(memberId, activityId, null, merchant == null ? null : merchant.getName());
+            return rows.isEmpty() ? null : rows.get(0);
+        }
+        if (RECORD_ACTIVITY_TICKET.equals(recordType)) {
+            Long registrationId = parseId(recordId);
+            if (memberId == null || registrationId == null) return null;
+            List<com.chengyinhub.business.domain.vo.MerchantActivityTicketScan> scans =
+                    safeList(redemptionMapper.selectActivityTicketScansByMerchant(memberId, registrationId));
+            if (scans.isEmpty()) return null;
+            MmsMerchant merchant = merchantService == null ? null : merchantService.selectMmsMerchantByMemberId(memberId);
+            return toActivityTicketView(scans.get(0), merchant == null ? null : merchant.getName());
+        }
         if (!"redemption".equals(recordType) || blank(recordId)) return null;
         Long redemptionId = parseId(recordId);
         if (redemptionId == null) return null;
@@ -164,7 +345,24 @@ public class MerchantFinanceQueryService {
             if (payable != null && redemptionId.equals(payable.getRedemptionId())) facts.add(payable);
         }
         MmsMerchant merchant = merchantService == null ? null : merchantService.selectMmsMerchantByMemberId(memberId);
-        return toRedemptionView(redemption, facts, batchesByPeriod(memberId), merchant == null ? null : merchant.getName());
+        MerchantRedemptionView row = toRedemptionView(redemption, facts, batchesByPeriod(memberId), merchant == null ? null : merchant.getName());
+        if (row != null) row.setCustomerDisplayName(signupNames(memberId, redemptionId).get(redemptionId));
+        return row;
+    }
+
+    /**
+     * M-27(2026-11-03 业主):核销对应报名的报名姓名,服务端解密(同 C-05 ClubCrmAppServiceImpl)。
+     * SQL 已按本商家归属收窄;为空就不放进来,页面那一格不出,不写占位。姓名不写日志。
+     */
+    private Map<Long, String> signupNames(Long memberId, Long redemptionId) {
+        Map<Long, String> out = new HashMap<Long, String>();
+        if (memberId == null || redemptionMapper == null) return out;
+        for (RedemptionSignupName raw : safeList(redemptionMapper.selectSignupNamesByMerchant(memberId, redemptionId))) {
+            if (raw == null || raw.getRedemptionId() == null || blank(raw.getRealName())) continue;
+            String name = piiCryptoService == null ? null : piiCryptoService.decrypt(raw.getRealName());
+            if (!blank(name)) out.put(raw.getRedemptionId(), name.trim());
+        }
+        return out;
     }
 
     public MerchantFinancePage<PublicTransferBatch> publicTransferBatches(Long memberId, int pageNum, int pageSize) {
@@ -216,7 +414,7 @@ public class MerchantFinanceQueryService {
         Map<String, MerchantPayableBatch> batches = batchesByPeriod(memberId);
         List<MerchantSettlementEntry> all = new ArrayList<MerchantSettlementEntry>();
         addPayables(all, safeList(payableMapper.selectByMerchant(memberId)), batches);
-        addCoopSettlements(all, safeList(coopSettlementMapper.selectByMerchant(memberId)));
+        addCoopSettlements(all, safeList(coopSettlementMapper.selectSummaryByMerchant(memberId)), memberId);
         addExecutedClawbacks(all, safeList(clawbackMapper.selectByMerchantMemberId(memberId)), batches);
         addPersonalArrivals(all, memberId);
         filterBySource(all, source);
@@ -262,13 +460,21 @@ public class MerchantFinanceQueryService {
         }
     }
 
-    private void addCoopSettlements(List<MerchantSettlementEntry> target, List<CoopSettlement> settlements) {
-        for (CoopSettlement settlement : settlements) {
-            if (settlement == null || settlement.getId() == null || settlement.getAmount() == null) continue;
-            if (settlement.getAmount().compareTo(BigDecimal.ZERO) == 0) continue;
+    private void addCoopSettlements(List<MerchantSettlementEntry> target, List<ClubSettlementSummaryRow> settlements, Long memberId) {
+        for (ClubSettlementSummaryRow settlement : settlements) {
+            if (settlement == null || settlement.getId() == null || settlement.getAmount() == null
+                    || memberId == null || !memberId.equals(settlement.getMerchantId())) continue;
+            BigDecimal net = settlement.getNetAmount();
+            if (settlement.getAmount().signum() == 0 && net != null && net.signum() == 0) continue;
             MerchantSettlementEntry entry = base("coop:" + settlement.getId(), "COOP_ORDER", "EARNING", "COOP_SHARE",
-                    String.valueOf(settlement.getId()), "PERSONAL_ACCOUNT", settlement.getAmount(), settlement.getCreateTime(),
+                    String.valueOf(settlement.getId()), "PERSONAL_ACCOUNT", net, settlement.getCreateTime(),
                     settlement.getPayoutTime(), "coop_settlement", settlement.getId());
+            if (net == null) entry.setSignedAmount(null);
+            entry.setOriginalAmount(money(settlement.getOriginalAmount()));
+            entry.setExecutedAdjustmentAmount(settlement.getExecutedAdjustmentAmount() == null
+                    ? null : money(settlement.getExecutedAdjustmentAmount()));
+            entry.setPayeeType(settlement.getPayeeType());
+            entry.setTopicName(settlement.getTopicName());
             entry.setHeadCount(settlement.getVerifiedHeads());
             Map<String, Object> group = new HashMap<String, Object>();
             group.put("type", "GROUP");
@@ -306,12 +512,14 @@ public class MerchantFinanceQueryService {
         query.setMemberId(memberId);
         for (UmsMemberBalanceDetail detail : safeList(balanceDetailMapper.selectUmsMemberBalanceDetailList(query))) {
             if (detail == null || detail.getId() == null || detail.getChangeBalance() == null || detail.getEventType() == null) continue;
-            // 5 是已落库的 coop payout；活动收入仅认既有 eventType=2，避免把提现/邀请等奖励混入商家收入。
-            if (detail.getEventType().longValue() != 5L && detail.getEventType().longValue() != 2L) continue;
+            if (!isPersonalEarningRow(detail)) continue;
             BigDecimal signed = detail.getChangeBalance();
             MerchantSettlementEntry entry = base("balance:" + detail.getId(), "REGISTRATION_SPLIT",
                     signed.signum() < 0 ? "CLAWBACK" : "EARNING",
-                    detail.getEventType().longValue() == 5L ? "COOP_SHARE" : "ACTIVITY_SHARE",
+                    detail.getEventType().longValue() == 6L ? "REFUND_CLAWBACK"
+                            : detail.getEventType().longValue() == 5L
+                            || detail.getEventType().longValue() == com.chengyinhub.business.service.support.ClubSessionMerchantFee.EVENT_TYPE_SESSION_MERCHANT_FEE
+                            ? "COOP_SHARE" : "ACTIVITY_SHARE",
                     String.valueOf(detail.getEventId()), "PERSONAL_ACCOUNT", signed, detail.getCreateTime(),
                     detail.getCreateTime(), "balance_detail", detail.getId());
             entry.setClaimRef(singleClaimRef());
@@ -459,10 +667,31 @@ public class MerchantFinanceQueryService {
         query.setMemberId(memberId);
         List<UmsMemberBalanceDetail> result = new ArrayList<UmsMemberBalanceDetail>();
         for (UmsMemberBalanceDetail row : safeList(balanceDetailMapper.selectUmsMemberBalanceDetailList(query))) {
-            if (row == null || row.getEventType() == null) continue;
-            if (row.getEventType().longValue() == 5L || row.getEventType().longValue() == 2L) result.add(row);
+            if (isPersonalEarningRow(row)) result.add(row);
         }
         return result;
+    }
+
+    /**
+     * 商家个人账户的经营收入流水:5 = 已落库 coop payout,2 = 既有活动分润口径,
+     * 3 + 收入(change_type=1) = 活动结算给商户的分润(CmsActivityServiceImpl.settleActivity 写 eventType=3)。
+     * eventType=3 同时是提现申请(change_type=2 支出),必须靠收入方向区分,不能把提现算成收入。
+     * check-1104 j1 F13:原先漏掉 3,活动结算后「本月个人账户净入账」恒为 0,与资产页 ¥94.58 对不上。
+     */
+    static boolean isPersonalEarningRow(UmsMemberBalanceDetail row) {
+        if (row == null || row.getEventType() == null) return false;
+        long type = row.getEventType().longValue();
+        if (type == 5L || type == 2L) return true;
+        // 第十二轮 k5:95 = 俱乐部场次结算付的合作商家核销费(只有收入方向)。
+        if (type == com.chengyinhub.business.service.support.ClubSessionMerchantFee.EVENT_TYPE_SESSION_MERCHANT_FEE) {
+            return row.getChangeType() != null && row.getChangeType().longValue() == 1L;
+        }
+        // 第十二轮 k5:6 + 支出 = 结算后退款按比例从本账户扣回(RefundServiceImpl.debitReceiverBalance「退款冲销」)。
+        // 不列它,财务里「已入账」就比余额多出被扣回的那部分。
+        if (type == 6L) {
+            return row.getChangeType() != null && row.getChangeType().longValue() == 2L;
+        }
+        return type == 3L && row.getChangeType() != null && row.getChangeType().longValue() == 1L;
     }
 
     private Map<Long, CoopSettlement> paidCoopById(Long memberId) {
@@ -480,7 +709,7 @@ public class MerchantFinanceQueryService {
      * 与 overview 同一套口径)。⚠️ 这份聚合必须在服务端算:前端只拿得到当前页 rows,
      * 对它求和分页后必错,而且错得静默。
      */
-    private static MerchantRedemptionSummary summarizeThisMonth(List<MerchantRedemptionView> rows) {
+    private static MerchantRedemptionSummary summarizeThisMonth(List<MerchantRedemptionView> rows, boolean personalFromAccount) {
         Date[] month = shanghaiMonth(new Date());
         int count = 0;
         BigDecimal pending = BigDecimal.ZERO;
@@ -488,6 +717,9 @@ public class MerchantFinanceQueryService {
         for (MerchantRedemptionView row : rows) {
             if (row == null || !within(row.getOccurredAt(), month)) continue;
             count++;
+            // 全店汇总里活动验票的钱走个人账户口径(addPersonalAccount),这里只计笔数,避免同一笔钱算两遍。
+            if (personalFromAccount && (RECORD_ACTIVITY_TICKET.equals(row.getRecordType())
+                    || RECORD_SESSION_FEE.equals(row.getRecordType()))) continue;
             // settlementAmount 是两位小数字符串:null=金额尚未成立、0=已确认不产生现金,两者都不进金额合计。
             BigDecimal amount = parseAmount(row.getSettlementAmount());
             if (amount == null) continue;

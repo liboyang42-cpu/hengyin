@@ -1,0 +1,22 @@
+TEXT[completed-after-check] 1处旧址已全部点亮 | 领取你的城市足迹卡 | 11月5日 周四 | PLAY-MAP-1105-R2-compass-check | 已通关 | 1 | 点亮坐标 | 0 | 解谜分 | 成就 | 首 | 首达 | 01 罗盘指向与D20 | 继续 | 全 | 部 | 完 | 成 | P | L | A | Y | - | M | A | P | - | 1 | 1 | 0 | 5 | - | R | 2 | - | c | o | m | p | a | s | s | - | c | h | e | c | k | 1 | 坐 | 标 | 0 | 解 | 谜 | 分 | 继续 | 保存通关卡 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+SHOT compass-after-check-stable
+END {"allDone":true,"done":1,"total":1}
+AUDIO []
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990016 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990016 200 200 操作成功 
+NET GET /api/play/journey/ending?topicId=990016&activityId=0 200 200 操作成功 
+NET GET /api/play/theme/state?topicId=990016 200 200 操作成功 
+NET GET /api/orient/scoring/session/3 200 500 城市定向计分暂未开放 
+NET GET /api/orient/scoring/session/3/leaderboard 200 500 城市定向计分暂未开放 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793877721822&topicId=990016
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793877721822&topicId=990016
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793877723972-dd6b7yf5"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793877723972-3mhojmbm"}
+NET POST /api/play/my-completed 200 200 操作成功 
+NET POST /api/play/run-session/clear 200 200 操作成功 savedAt=1793877744904&topicId=990016

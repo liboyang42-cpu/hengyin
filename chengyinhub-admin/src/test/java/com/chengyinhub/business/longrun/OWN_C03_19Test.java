@@ -86,7 +86,13 @@ class OWN_C03_19Test {
     }
     @Test void crossOwnerFullCopyKeepsExistingRewardBoundary() {
         assertEquals(COPY, copy(84L, 2));
-        assertNoCompletionRuleWrite();
+        ArgumentCaptor<CmsTopic> inserted = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topics).insertCmsTopic(inserted.capture());
+        assertNull(inserted.getValue().getCompleteRuleJson());
+        ArgumentCaptor<CmsTopic> patch = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(topics).updateCmsTopic(patch.capture());
+        assertEquals(COPY, patch.getValue().getId());
+        assertEquals("{\"nodeCompletion\":{\"mode\":\"AT_LEAST\",\"requiredCount\":1}}", patch.getValue().getCompleteRuleJson());
     }
     @Test void basicCopyDoesNotCopyOldNodeThresholds() {
         assertEquals(COPY, copy(42L, 1));

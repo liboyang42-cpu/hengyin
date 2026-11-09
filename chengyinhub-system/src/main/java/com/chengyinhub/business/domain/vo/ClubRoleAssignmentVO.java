@@ -14,6 +14,7 @@ public final class ClubRoleAssignmentVO {
     private final Date expiresAt;
     private final Date assignedAt;
     private final Integer version;
+    private final boolean customerPhoneVisible;
 
     private ClubRoleAssignmentVO(ClubRoleAssignment row) {
         this.id = row.getId();
@@ -24,6 +25,7 @@ public final class ClubRoleAssignmentVO {
         this.expiresAt = row.getExpiresAt();
         this.assignedAt = row.getAssignedAt();
         this.version = row.getVersion();
+        this.customerPhoneVisible = Integer.valueOf(1).equals(row.getCustomerPhoneVisible());
     }
 
     public static ClubRoleAssignmentVO from(ClubRoleAssignment row) {
@@ -38,4 +40,5 @@ public final class ClubRoleAssignmentVO {
     public Date getExpiresAt() { return expiresAt; }
     public Date getAssignedAt() { return assignedAt; }
     public Integer getVersion() { return version; }
+    public boolean isCustomerPhoneVisible() { return customerPhoneVisible; }
 }

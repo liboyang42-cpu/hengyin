@@ -915,7 +915,7 @@ test('序章:顶栏眉标与标题同名时不出,开场门不把序数标签再
   page.showChapterGate()
   assert.equal(page.data.chapterGate.subtitle, '', '开场门眉标已是「第 1 章 / 共 1 章」,副标题再印「第一章」')
 
-  const gate = read('components/cy/chapter-gate/index.wxml')
+  const gate = read('pages/publish/components/chapter-gate/index.wxml')
   assert.match(gate, /class="gate__meta" wx:if="\{\{number !== 0 \|\| title !== '序章'\}\}"/, '序章标题下又印一个「序章」眉标')
 })
 
@@ -1465,7 +1465,9 @@ test('试玩:读完最后一章先播兜底那章;卡上点另一个结局就读
   assert.equal(page.data.previewEnding.idx, 0, '卡回到刚读的那一个')
 })
 
-test('无坐标的高级玩法收尾不依赖剧情块引用，地点与GPS玩法仍要求定位', async () => {
+// 第十二轮 k2(业主 2026-11-05「解开的站重进即算完成,玩家不用走回去」):玩法已过的站,有坐标 / GPS 站也直接收尾;
+// 没解开的站照旧先要定位(服务端 /api/play/arrive 同口径,见 ApiPlayGpsGeofenceValidationTest)。
+test('高级玩法已过的站收尾不依赖剧情块引用、不再要定位;没解开的地点与GPS站仍要求定位', async () => {
   const node = { nodeId: 223, vm: 0, lat: 0, lng: 0, hasAdvanced: true }
   const page = makePage({ blocks: [{ type: 'node', nodeId: 222, locationRequired: false }] }, [node])
   page.data.gpsOk = false
@@ -1481,8 +1483,14 @@ test('无坐标的高级玩法收尾不依赖剧情块引用，地点与GPS玩�
     page.data.sheet.node = target
     page.onArriveTap()
   }
+  assert.equal(located, 0)
+  assert.deepEqual(arrived, [223, 223, 223], '解开的站直接收尾')
+  for (const target of [Object.assign({}, node, { nodeId: 224, lat: 31.2, lng: 121.4 }), Object.assign({}, node, { nodeId: 225, vm: 5 })]) {
+    page.data.sheet.node = target
+    page.onArriveTap()
+  }
   assert.equal(located, 2)
-  assert.deepEqual(arrived, [223], '不能放行真实地点或GPS任务')
+  assert.deepEqual(arrived, [223, 223, 223], '没解开的真实地点或GPS任务仍先要定位')
 })
 
 test('正文打开时切到下一章，标题与正文一起更新，同章重建不重铺', () => {

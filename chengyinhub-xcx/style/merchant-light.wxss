@@ -27,6 +27,7 @@ page {
   --cy-color-bg-raised:         #E6E6E6;   /* 2026-09-01 日间对应档:比 surface-subtle 再深一级 */
   --cy-color-bg-interactive:    #FFFFFF;   /* 日间控件底=白卡,与手册 Merchant/Topic editor 模式一致 */
   --cy-color-bg-glass:          rgba(255,255,255,.88);
+  --cy-comp-btn-ghost-bg:       var(--cy-bg-subtle);   /* 镜像 tokens.wxss .theme-merchant(打磨第 3 轮 §4-14) */
 
   --cy-color-text-primary:      #000000;   /* 2026-08-07 用户拍板:商家版黑=纯黑 */
   --cy-color-text-secondary:    #404040;              /* 2026-07-31 去墨蓝(镜像真源):原 #334155 */

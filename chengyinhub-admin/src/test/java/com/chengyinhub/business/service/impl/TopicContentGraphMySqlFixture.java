@@ -46,7 +46,8 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     static final long TOPIC = 100L, OWNER = 42L;
     static final List<String> TABLES = List.of("cms_topic", "cms_topic_chapter", "cms_topic_node",
-            "cms_member_template", "npc_profile", "cms_collaborators", "product_role", "merchant_chapter_offer", "theme_state_key");
+            "cms_member_template", "npc_profile", "cms_collaborators", "product_role", "merchant_chapter_offer", "theme_state_key",
+            "orient_task_alternative", "orient_task_attempt", "orient_task_completion");
     final String ownerMode = System.getProperty("chengyin.wp10.graph.owner",
             System.getenv().getOrDefault("CHENGYIN_WP10_GRAPH_OWNER", "extracted"));
     final MysqlIntegrationTestConfig mysql = MysqlIntegrationTestConfig.fromEnvironment(
@@ -65,6 +66,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
     CmsTopicNodeMapper nodes;
     CmsMemberTemplateMapper templateMapper;
     CmsCollaboratorsMapper collaborators;
+    OrientSwitches orientSwitches;
     IProductRoleService roles;
     CmsTopicServiceImpl facade;
     ICmsTopicService service;
@@ -94,7 +96,19 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         db = new JdbcTemplate(data);
         new ResourceDatabasePopulator(new ClassPathResource("it-schema/cms-topic-it-schema.sql"),
                 new ClassPathResource("it-schema/wp10-content-graph-scratch.sql")).execute(data);
-        for (String file : List.of("migration_theme_state_key_20260916.sql", "migration_20261022_theme_state_key_attribute_def.sql")) {
+        db.execute("alter table cms_topic_chapter add column video_url varchar(512) null, "
+                + "add column video_poster_url varchar(512) null");
+        Path orientMigration = Paths.get("sql", "migration_orient_geo_ar_team_20261022.sql");
+        if (!Files.exists(orientMigration)) orientMigration = Paths.get("chengyinhub-admin").resolve(orientMigration);
+        String orientSql = Files.readString(orientMigration);
+        // Use the unchanged production DDL for the three tested tables, without operational feature switches.
+        new ResourceDatabasePopulator(new org.springframework.core.io.ByteArrayResource(orientSql.substring(
+                orientSql.indexOf("CREATE TABLE IF NOT EXISTS orient_task_alternative"), orientSql.indexOf("-- 5)"))
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8))).execute(data);
+        // migration_20261029_topic_cancellation_receipt.sql: CmsTopicMapper.casUserStatus advances cms_topic.cancellation_epoch.
+        for (String file : List.of("migration_theme_state_key_20260916.sql", "migration_20261022_theme_state_key_attribute_def.sql",
+                "migration_20261026_theme_attribute_registry_version.sql", // ThemeStateKeyService.lockRegistry
+                "migration_20261029_topic_cancellation_receipt.sql")) {
             Path path = Paths.get("sql", file);
             if (!Files.exists(path)) path = Paths.get("chengyinhub-admin", "sql", file);
             new ResourceDatabasePopulator(new org.springframework.core.io.FileSystemResource(path.toFile())).execute(data);
@@ -109,7 +123,8 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"),
                 new ClassPathResource("mapper/business/CmsCollaboratorsMapper.xml"),
                 new ClassPathResource("mapper/business/ProductRoleMapper.xml"),
-                new ClassPathResource("mapper/business/ThemeStateKeyMapper.xml"));
+                new ClassPathResource("mapper/business/ThemeStateKeyMapper.xml"),
+                new ClassPathResource("mapper/business/OrientMapper.xml"));
         sql = new SqlSessionTemplate(factory.getObject());
         topics = sql.getMapper(CmsTopicMapper.class);
         chapters = sql.getMapper(CmsTopicChapterMapper.class);
@@ -134,6 +149,10 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
                 new Class<?>[]{Object.class, java.util.function.Function.class}, facade,
                 (java.util.function.Function<Field, Object>) publicationField -> boundary(publicationField.getType(), publicationField.getName()));
         set("cmsTopicMapper", topics); set("cmsTopicChapterMapper", chapters); set("cmsTopicNodeMapper", nodes);
+        set("orientMapper", sql.getMapper(OrientMapper.class));
+        orientSwitches = mock(OrientSwitches.class);
+        when(orientSwitches.altTaskOn()).thenReturn(false);
+        set("orientSwitches", orientSwitches);
         set("cmsMemberTemplateMapper", templateMapper); set("cmsCollaboratorsMapper", collaborators);
         ThemeStateKeyService keyService = new ThemeStateKeyService(sql.getMapper(ThemeStateKeyMapper.class));
         ProxyFactory keyProxy = new ProxyFactory(keyService); keyProxy.setProxyTargetClass(true);
@@ -333,7 +352,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
     void protectedRowsUnchanged() {
         Map<String,List<Map<String,Object>>> now=snapshot();
         for(String table:TABLES)for(Map<String,Object> old:before.get(table)) {
-            boolean protectedRow=table.equals("cms_member_template")||table.equals("npc_profile")||table.equals("merchant_chapter_offer")
+            boolean protectedRow=table.startsWith("orient_task_")||table.equals("cms_member_template")||table.equals("npc_profile")||table.equals("merchant_chapter_offer")
                     || table.equals("cms_topic")&&number(old.get("id"))==101L
                     || old.get("topic_id")!=null&&number(old.get("topic_id"))==101L
                     || table.equals("cms_collaborators")&&number(old.get("data_id"))==101L;

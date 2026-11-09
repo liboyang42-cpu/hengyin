@@ -7,6 +7,8 @@ const { sendUiStateRequest } = require('./ui-state-request.js');
 // 券类型单一真源:picker index 从 1 起(0=请选择),上送时 -1 换成后端 couponType
 // 0 礼品券 / 1 9折券 / 2 8折券 / 3 体验卡。独立新建页、发布流 sheet、商家券列表共用。
 const COUPON_TYPE_LABELS = ['请选择', '礼品券', '9折券', '8折券', '体验卡'];
+// 上线暂关新建,待金额/价值字段完善后恢复;既有券的选择、使用与核销不受影响。
+const CREATION_ENABLED = false;
 
 function createDefaultFormData() {
   return {
@@ -56,6 +58,10 @@ function toSubmitPayload(formData) {
 
 // submitCoupon:校验 + 提交 + 埋点一起做,调用方只用管 UI 态(loading/toast/关闭)
 function submitCoupon(app, formData, { scope, onSuccess, onError, onComplete } = {}) {
+  if (!module.exports.CREATION_ENABLED) {
+    onError && onError('暂不开放新建优惠券');
+    return;
+  }
   const check = validate(formData);
   if (!check.ok) {
     onError && onError(check.message);
@@ -118,6 +124,7 @@ function formatDisplayTime(selectedDate, hour, minute) {
 }
 
 module.exports = {
+  CREATION_ENABLED,
   COUPON_TYPE_LABELS,
   createDefaultFormData,
   isDirty,

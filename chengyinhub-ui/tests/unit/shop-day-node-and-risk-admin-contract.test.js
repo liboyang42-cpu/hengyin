@@ -287,8 +287,8 @@ test('核销异常复核后台页面接在真实端点上，并显式说明只�
   assert.match(reviewPageSource, /@click="handle\(row, 2\)"/)
   // 处置前必须确认,并把「不动资金」写在确认文案里
   assert.match(reviewPageSource, /\$modal\.confirm\([\s\S]*不退款[\s\S]*资金动作/)
-  // 探店日不按核销率入队这件事要用业务语言说清楚,否则运营会以为风控坏了
-  assert.match(reviewPageSource, /探店日/)
+  // 自由探索(旧名探店日)不按核销率入队这件事要用业务语言说清楚,否则运营会以为风控坏了
+  assert.match(reviewPageSource, /自由探索只按「连扫过密」入队/)
   assert.match(reviewPageSource, /只按「连扫过密」入队/)
   // 空率不得显示成 0%
   assert.match(reviewPageSource, /return '未记录'/)

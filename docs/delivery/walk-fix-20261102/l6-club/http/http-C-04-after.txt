@@ -1,0 +1,8 @@
+director status RUNNING currentChapterId 42 availableActions ['SET_LEADERBOARD_VISIBILITY', 'BROADCAST', 'FINISH', 'CLUB_STATION_PAUSE', 'CLUB_STATION_RESUME', 'UNLOCK_CHAPTER']
+chapterOptions [{"chapterId": 43, "title": "第二章 苏州河上的信使", "unlocked": false, "unlockable": true, "waitingTeams": 0}]
+topic chapters ((42, '第一章 迟到的电报', 1), (43, '第二章 苏州河上的信使', 2))
+POST /api/club/lead/unlock-chapter (old play-page entry) -> {"msg": "请使用本场导演的章节命令", "code": 500, "_status": 200}
+player chapter-2 node probe (before release) -> {"msg": "本章还没开启,等队长放行", "code": 500, "_status": 200}
+director UNLOCK_CHAPTER -> {"msg": "操作成功", "code": 200, "data": {"receiptId": 3, "activityId": 10, "requestId": "l6-unlock-1793609859010", "action": "UNLOCK_CHAPTER", "outcome": "APPLIED", "reasonCode": null, "revision": 2, "replayed": false, "result": {"chapterId": 43, "chapterTitle": "第二章 苏州河上的信使", "reason": "全队到齐"}}, "_status": 200}
+game_session read-back ((1, 'RUNNING', 43, 2),)
+player chapter-2 node probe (after release) -> {"msg": "该地点尚未解锁", "code": 500, "_status": 200}

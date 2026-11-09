@@ -81,7 +81,7 @@ class ApiClubRoleControllerTest {
         assigned.setStatus(ClubRoleAssignment.STATUS_ACTIVE);
         assigned.setVersion(0);
         when(service.assign(PRINCIPAL, CLUB, 902L, ClubRoleCode.EVENT_LEAD,
-                EVENT, null, "req-event")).thenReturn(assigned);
+                EVENT, null, "req-event", false)).thenReturn(assigned);
         ApiClubRoleController controller = controller(
                 mock(IClubAccessService.class), service, mock(IClubService.class));
         ClubRoleAssignRequest request = new ClubRoleAssignRequest();
@@ -95,7 +95,7 @@ class ApiClubRoleControllerTest {
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(service).assign(PRINCIPAL, CLUB, 902L, ClubRoleCode.EVENT_LEAD,
-                EVENT, null, "req-event");
+                EVENT, null, "req-event", false);
     }
 
     @Test

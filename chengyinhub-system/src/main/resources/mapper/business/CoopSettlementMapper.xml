@@ -183,10 +183,14 @@
 
     <!-- 分润展示唯一口径:净额 = 原额 + 已执行调整;已入账以实付流水为准。俱乐部汇总与发起人分润页(clubFinance)共用。 -->
     <sql id="summarySelectFrom">
-        select s.id, s.topic_id, s.payee_type, s.amount, s.status, s.payable_time, s.settle_time, s.payout_time,
+        select s.id, s.topic_id, s.payee_type, s.line_type, s.amount, s.status, s.payable_time, s.settle_time, s.payout_time,
                case when a.settlement_id is null then 0 else a.executed_amount end as executed_adjustment_amount,
                paid.change_balance as actual_paid_amount, paid.create_time as actual_payout_time,
                t.name as topic_name
+        <include refid="summaryFrom"/>
+    </sql>
+
+    <sql id="summaryFrom">
         from coop_settlement s
         left join cms_topic t on t.id = s.topic_id
         left join (
@@ -199,10 +203,113 @@
          and paid.member_id = s.merchant_id and paid.change_type = 1 and paid.del_flag = 0
     </sql>
 
+    <select id="selectSummaryByMerchant" resultMap="ClubSummaryResult">
+        select s.*,
+               case when a.settlement_id is null then 0 else a.executed_amount end as executed_adjustment_amount,
+               paid.change_balance as actual_paid_amount, paid.create_time as actual_payout_time,
+               t.name as topic_name
+        <include refid="summaryFrom"/>
+        where s.del_flag = 0 and s.merchant_id = #{merchantId}
+        order by s.create_time desc, s.id desc
+    </select>
+
     <select id="selectSummaryByBeneficiary" resultMap="ClubSummaryResult">
         <include refid="summarySelectFrom"/>
         where s.del_flag = 0 and s.beneficiary_role = #{role} and s.beneficiary_id = #{beneficiaryId}
         order by s.create_time desc, s.id desc
+    </select>
+
+    <!-- F-16:俱乐部场次的钱不走 coop_settlement,由 settleActivity 直接入收款人余额(event_type=3)与
+         平台账户(event_type=7),event_id=活动 id,change_type=1 收入;提现申请也用 3 但 change_type=2,不混入。
+         按场次聚合:客诉结案补结会给同一场再记一笔。
+         第十二轮 k5:合作商家的场次核销费(event_type=95,从主理人份额里付)单列 merchant_fee_amount,
+         销售额 = 到账 + 平台服务费 + 商家核销费;结算后退款冲回的商家那份(receiver_type=coop_merchant)同样减去。 -->
+    <resultMap id="ClubSessionSettlementResult" type="com.chengyinhub.business.domain.vo.ClubSessionSettlementRow">
+        <result property="activityId" column="activity_id"/>
+        <result property="activityName" column="activity_name"/>
+        <result property="startDate" column="start_date"/>
+        <result property="netAmount" column="net_amount"/>
+        <result property="platformAmount" column="platform_amount"/>
+        <result property="merchantFeeAmount" column="merchant_fee_amount"/>
+        <result property="payeeMinMemberId" column="payee_min_member_id"/>
+        <result property="payeeMaxMemberId" column="payee_max_member_id"/>
+        <result property="settledAt" column="settled_at"/>
+    </resultMap>
+
+    <!-- 第十一轮 h4 L7:结算后再退款,RefundServiceImpl 按比例写负数冲销明细(settlement_detail source_type=refund,
+         status=1,含扣不动记欠款的部分)。场次行的到账与服务费都要减去本场报名的冲销,与「已收 − 已退」一致。
+         只认已结算(status=1)的冲销;结算前退款已在 settleActivity 的销售额里扣掉,不会产生冲销行。 -->
+    <sql id="clubSessionRefundAdjustmentFrom">
+        from settlement_detail adj
+        join refund_application ra on ra.id = adj.source_id and ra.source_type = 'registration'
+        join cms_registration rr on rr.id = ra.source_id
+        where adj.source_type = 'refund' and adj.status = 1
+          and rr.owner_type = 2 and rr.owner_id = a.id
+    </sql>
+
+    <select id="selectClubSessionSettlements" resultMap="ClubSessionSettlementResult">
+        select a.id as activity_id, a.name as activity_name, a.start_date,
+               sum(pay.change_balance)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'merchant') as net_amount,
+               (select coalesce(sum(fee.change_balance), 0) from ums_member_balance_detail fee
+                 where fee.event_type = 7 and fee.change_type = 1 and fee.del_flag = 0 and fee.event_id = a.id)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'platform') as platform_amount,
+               (select coalesce(sum(mf.change_balance), 0) from ums_member_balance_detail mf
+                 where mf.event_type = 95 and mf.change_type = 1 and mf.del_flag = 0 and mf.event_id = a.id)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'coop_merchant') as merchant_fee_amount,
+               min(pay.member_id) as payee_min_member_id, max(pay.member_id) as payee_max_member_id,
+               max(pay.create_time) as settled_at
+        from cms_activity a
+        join ums_member_balance_detail pay on pay.event_id = a.id and pay.event_type = 3
+             and pay.change_type = 1 and pay.del_flag = 0
+        where a.club_id = #{clubId}
+        group by a.id, a.name, a.start_date
+        order by max(pay.create_time) desc, a.id desc
+    </select>
+
+    <select id="selectPersonalClubSummary" resultMap="ClubSummaryResult">
+        <include refid="summarySelectFrom"/>
+        where s.del_flag = 0 and s.merchant_id = #{memberId}
+          and ((s.beneficiary_role = 'CLUB' and s.beneficiary_id = #{clubId})
+            or (s.beneficiary_role is null and t.club_id = #{clubId}
+                and s.payee_type = 'initiator' and s.line_type in ('INITIATOR_MARGIN', 'INITIATOR_GUARANTEE')))
+        order by s.create_time desc, s.id desc
+    </select>
+
+    <!-- 本人视角不返回整场销售额、其他收款人、平台或合作商家账目。 -->
+    <select id="selectPersonalClubSessions" resultMap="ClubSessionSettlementResult">
+        select a.id as activity_id, a.name as activity_name, a.start_date,
+               sum(pay.change_balance)
+                 + (select coalesce(sum(adj.settlement_amount), 0) <include refid="clubSessionRefundAdjustmentFrom"/>
+                     and adj.receiver_type = 'merchant' and adj.receiver_id = #{memberId}) as net_amount,
+               min(pay.member_id) as payee_min_member_id, max(pay.member_id) as payee_max_member_id
+        from cms_activity a
+        join ums_member_balance_detail pay on pay.event_id = a.id and pay.event_type = 3
+             and pay.change_type = 1 and pay.del_flag = 0 and pay.member_id = #{memberId}
+        where a.club_id = #{clubId}
+        group by a.id, a.name, a.start_date
+        order by max(pay.create_time) desc, a.id desc
+    </select>
+
+    <select id="selectPersonalSettlementClubs" resultType="java.util.LinkedHashMap">
+        select distinct c.id as "clubId", c.name as "name"
+        from club c
+        join (
+            select beneficiary_id as club_id from coop_settlement
+            where del_flag = 0 and beneficiary_role = 'CLUB' and merchant_id = #{memberId}
+            union
+            select t.club_id from coop_settlement s join cms_topic t on t.id = s.topic_id
+            where s.del_flag = 0 and s.merchant_id = #{memberId} and s.beneficiary_role is null
+              and s.payee_type = 'initiator' and s.line_type in ('INITIATOR_MARGIN', 'INITIATOR_GUARANTEE')
+            union
+            select a.club_id from cms_activity a
+            join ums_member_balance_detail pay on pay.event_id = a.id and pay.event_type = 3
+                 and pay.change_type = 1 and pay.del_flag = 0 and pay.member_id = #{memberId}
+        ) earned on earned.club_id = c.id
+        order by c.id desc
     </select>
 
     <select id="selectSummaryByTopicId" resultMap="ClubSummaryResult">

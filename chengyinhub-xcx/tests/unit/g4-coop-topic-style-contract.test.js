@@ -43,8 +43,8 @@ function assertG4Contract(overrides = {}) {
   assert.match(cardWxml, /class="mc__tags"[\s\S]{0,180}class="mc__tag"/)
   assert.doesNotMatch(rule(cardWxss, '.mc__tag'), /--cy-brand/)
 
-  const financeWxss = source('components/cy/scene-merchant-profit/index.wxss')
-  const financeWxml = source('components/cy/scene-merchant-profit/index.wxml')
+  const financeWxss = source('subpackageA/components/scene-merchant-profit/index.wxss')
+  const financeWxml = source('subpackageA/components/scene-merchant-profit/index.wxml')
   assert.match(rule(financeWxss, '.stat-grid'), /--cy-color-border-subtle:\s*transparent/)
   assert.match(rule(financeWxss, '.stat-grid'), /--cy-radius-md:\s*var\(--cy-radius-lg\)/)
   assert.doesNotMatch(rule(financeWxss, '.fc-list'), /(^|;)\s*border\s*:/)
@@ -52,7 +52,7 @@ function assertG4Contract(overrides = {}) {
   assert.doesNotMatch(rule(financeWxss, '.fc-card'), /border-bottom\s*:/)
   assert.doesNotMatch(rule(financeWxss, '.fc-bottom'), /background\s*:/,
     '结算状态行不再嵌套灰底卡，只靠文字与徽章分层')
-  assert.match(financeWxml, /class="fc-arrived-date"[^>]*>\{\{item\.statusText\}\}/)
+  assert.match(financeWxml, /class="fc-arrived-date" wx:if="\{\{item\.settled\}\}">\{\{item\.statusText\}\}/) // M-14:未结算时徽章已说状态,不再重复一行
   assert.match(financeWxml, /class="fc-meta[^>]*>\{\{item\.merchantStatus\s*\|\|/)
   assert.match(financeWxml, /class="fc-settled-badge"/)
 

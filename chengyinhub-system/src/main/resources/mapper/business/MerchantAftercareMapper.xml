@@ -32,6 +32,9 @@
 
     <resultMap id="ListRowResult" type="com.chengyinhub.business.domain.MerchantAftercareListRow">
         <id property="id" column="id"/>
+        <id property="manualCaseId" column="manual_case_id"/>
+        <result property="recordType" column="record_type"/>
+        <result property="manualCaseStatus" column="manual_case_status"/>
         <result property="refundNo" column="refund_no"/>
         <result property="sourceType" column="source_type"/>
         <result property="sourceId" column="source_id"/>
@@ -169,24 +172,116 @@
     </sql>
 
     <select id="selectOwnedRefundList" resultMap="ListRowResult">
+        <if test="bucket == 'PROCESSING' or bucket == 'COMPLETED'">select r.* from (</if>
         select r.id, r.refund_no, r.source_type, r.source_id, r.refund_amount,
                r.status, r.reason, r.payout_status, r.create_time,
                coalesce(opinion.decision, 'PENDING') as merchant_opinion,
-               <include refid="refundDisplayColumns"/>
+               <include refid="refundDisplayColumns"/>,
+               'REFUND' as record_type, null as manual_case_id, null as manual_case_status
         from refund_application r
         <include refid="latestMerchantOpinionJoin"/>
         where <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
         <include refid="aftercareBucketFilter"/>
+        <if test="bucket == 'PROCESSING' or bucket == 'COMPLETED'">
+            union all
+            select <include refid="manualCaseDisplayColumns"/>
+            from activity_cancel_manual_refund_case c
+            where <include refid="exactMerchantManualCaseScope"/>
+            <include refid="manualCaseBucketFilter"/>
+        ) r
+        </if>
         order by r.create_time desc, r.id desc
+        <if test="bucket == 'PROCESSING' or bucket == 'COMPLETED'">, r.manual_case_id desc</if>
         limit #{offset}, #{limit}
     </select>
 
     <select id="countOwnedRefundList" resultType="java.lang.Long">
         select count(1)
+        <if test="bucket == 'PROCESSING' or bucket == 'COMPLETED'">
+            + (select count(1) from activity_cancel_manual_refund_case c
+               where <include refid="exactMerchantManualCaseScope"/>
+               <include refid="manualCaseBucketFilter"/>)
+        </if>
         from refund_application r
         <include refid="latestMerchantOpinionJoin"/>
         where <include refid="exactMerchantRefundScope"/> and r.del_flag = 0
         <include refid="aftercareBucketFilter"/>
+    </select>
+
+    <!-- 工单快照只冻结章节，不含商家。归属只能取同一冻结已履约章的核销事件，不能取当前 live offer 或工单主理人。 -->
+    <sql id="exactMerchantManualCaseScope">
+        c.case_type = 'PARTIAL_CHAPTERS'
+        and c.status in ('PENDING_ASSESSMENT', 'MANUAL_REFUND_REQUIRED', 'MANUAL_REFUND_RECORDED',
+                         'MANUAL_REFUND_EVIDENCE_VERIFIED', 'NO_REFUND')
+        and exists (select 1 from mms_merchant store
+                    where store.id = #{merchantId} and store.member_id = #{ownerMemberId}
+                      and store.status = 1 and store.account_status = 1 and store.del_flag = 0)
+        and not exists (select 1 from mms_merchant sibling
+                        where sibling.member_id = #{ownerMemberId} and sibling.id &lt;&gt; #{merchantId}
+                          and sibling.status = 1 and sibling.account_status = 1 and sibling.del_flag = 0)
+        and exists (
+            select 1 from redemption fulfilled
+            inner join cms_registration reg on reg.id = fulfilled.registration_id
+            where fulfilled.merchant_id = #{ownerMemberId} and fulfilled.status = 'ACTIVE'
+              and (reg.id = c.payer_registration_id
+                   or (reg.parent_order_no is not null and reg.parent_order_no &lt;&gt; ''
+                       and reg.parent_order_no = c.parent_order_no))
+              and ((c.topic_id is not null and reg.owner_type = 1 and reg.owner_id = c.topic_id
+                    and fulfilled.topic_id = c.topic_id)
+                   or (c.activity_id is not null and reg.owner_type = 2 and reg.owner_id = c.activity_id
+                       and fulfilled.topic_id = (select a.topic_id from cms_activity a where a.id = c.activity_id)))
+              and json_type(case when json_valid(c.chapter_snapshot_json)
+                                 then c.chapter_snapshot_json else '[]' end) = 'ARRAY'
+              and json_contains(case when json_valid(c.chapter_snapshot_json)
+                                     then c.chapter_snapshot_json else '[]' end,
+                    concat('{"registrationId":', fulfilled.registration_id,
+                           ',"chapterId":', fulfilled.chapter_id, ',"status":1}')) = 1
+        )
+    </sql>
+
+    <sql id="manualCaseDisplayColumns">
+        null as id, null as refund_no, 'manual_case' as source_type, null as source_id,
+        null as refund_amount, null as status, null as reason, null as payout_status,
+        c.create_time, 'NOT_REQUIRED' as merchant_opinion,
+        case when c.activity_id is not null then (select a.name from cms_activity a where a.id = c.activity_id)
+             else (select t.name from cms_topic t where t.id = c.topic_id) end as activity_title,
+        null as customer_nickname, null as platform_takeover_at,
+        'MANUAL_CASE' as record_type, c.id as manual_case_id, c.status as manual_case_status
+    </sql>
+
+    <sql id="manualCaseBucketFilter">
+        <choose>
+            <when test="bucket == 'PROCESSING'">
+                and c.status in ('PENDING_ASSESSMENT', 'MANUAL_REFUND_REQUIRED', 'MANUAL_REFUND_RECORDED')
+            </when>
+            <when test="bucket == 'COMPLETED'">
+                and c.status in ('MANUAL_REFUND_EVIDENCE_VERIFIED', 'NO_REFUND')
+            </when>
+            <otherwise>and 1 = 0</otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectOwnedManualCaseDisplay" resultMap="ListRowResult">
+        select <include refid="manualCaseDisplayColumns"/>
+        from activity_cancel_manual_refund_case c
+        where c.id = #{manualCaseId} and <include refid="exactMerchantManualCaseScope"/>
+        limit 1
+    </select>
+
+    <!-- 第十二轮 k6(j1 N4 / p2 N-3):台账退款行显示「这单商家还剩多少」,不再把玩家拿回的钱当成从商家扣走。
+         只认已同意(status = 1)的退款、报名属于本 owner 自己发布的活动;已退金额按该报名全部已同意退款合计。 -->
+    <select id="selectOwnedActivityRefundShareFacts" resultType="com.chengyinhub.business.domain.MerchantRefundShareFacts">
+        select reg.id as registrationId, a.id as activityId, a.topic_id as topicId,
+               reg.payable_amount as payableAmount, reg.verification_status as verificationStatus,
+               (select coalesce(sum(x.refund_amount), 0) from refund_application x
+                 where x.source_type = 'registration' and x.source_id = reg.id
+                   and x.status = 1 and x.del_flag = 0) as refundedAmount
+        from refund_application r
+        inner join cms_registration reg on reg.id = r.source_id and reg.owner_type = 2
+        inner join cms_activity a on a.id = reg.owner_id and a.member_id = #{ownerMemberId}
+        where r.id = #{refundId} and <include refid="exactMerchantRefundScope"/>
+          and r.source_type = 'registration' and r.status = 1 and r.del_flag = 0
+        limit 1
     </select>
 
     <select id="selectResponses" resultMap="ResponseResult">

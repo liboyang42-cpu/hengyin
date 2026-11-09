@@ -40,7 +40,7 @@ public class TopicEditionFundsController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:topic:edit')")
-    @Log(title = "探店日期级成本录入", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索期级成本录入", businessType = BusinessType.UPDATE)
     @PutMapping("/{topicId}/cost")
     public AjaxResult saveCost(@PathVariable Long topicId, @RequestBody TopicEditionCost cost) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");
@@ -48,7 +48,7 @@ public class TopicEditionFundsController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:topic:edit')")
-    @Log(title = "探店日期级资金快照重算", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索期级资金快照重算", businessType = BusinessType.UPDATE)
     @PostMapping("/{topicId}/recompute")
     public AjaxResult recompute(@PathVariable Long topicId, @RequestBody Map<String, Object> body) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");
@@ -58,7 +58,7 @@ public class TopicEditionFundsController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:topic:edit')")
-    @Log(title = "探店日未知购票类型修复", businessType = BusinessType.UPDATE)
+    @Log(title = "自由探索未知购票类型修复", businessType = BusinessType.UPDATE)
     @PostMapping("/{topicId}/repair-purchase-kind")
     public AjaxResult repairPurchaseKind(@PathVariable Long topicId) {
         if (!scopeAuthorizer.canEditTopic(topicId)) return error("主题不存在或当前账号无修改范围");

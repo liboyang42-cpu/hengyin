@@ -1,5 +1,6 @@
 const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const roleGuard = require('../../../utils/roleGuard.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -98,6 +99,7 @@ Page({
     emptyTit: TYPE_EMPTY.topic.tit,
     emptySub: TYPE_EMPTY.topic.sub,
     // 模板 tab(/api/template/my-list,原 mytemplate 列表)
+    topicTemplates: [],
     tplList: [],
     tplLoaded: false,
     tplLoading: false,
@@ -191,7 +193,7 @@ Page({
     this._all = [];
     this.setData({ authRequired: !!authRequired, list: [], loaded: false, loading: false,
       projectState: 'loading', projectErrorMsg: '', projectAccessDenied: false,
-      capped: false, hasRowOps: false, tplList: [], tplLoaded: false, tplLoading: false,
+      capped: false, hasRowOps: false, topicTemplates: [], tplList: [], tplLoaded: false, tplLoading: false,
       tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false,
       auditSheet: { show: false, loading: false, error: '', title: '', bizType: '', bizId: '',
         rows: [], appealText: '', canAppeal: false } });
@@ -222,7 +224,7 @@ Page({
     if (kind === 'project') {
       if (denied) {
         this._all = [];
-        this.setData({ list: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
+        this.setData({ list: [], topicTemplates: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
       }
       this.setData({ loading: false, projectAccessDenied: denied,
         projectState: this.data.loaded ? 'ready' : 'error',
@@ -311,14 +313,20 @@ Page({
         if (!current(res) || that._seq !== seq) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(decorate);
-          that._all = rows;
-          that.setData({
-            loaded: true,
-            projectState: 'ready',
-            projectErrorMsg: '',
-            capped: (res.data.total || 0) > rows.length
-          });
-          that.applyView();
+          const show = function (joined) {
+            that._all = rows.concat(joined);
+            that.setData({ topicTemplates: rows.filter(p => p.isTemplate === true) });
+            that.setData({
+              loaded: true,
+              projectState: 'ready',
+              projectErrorMsg: '',
+              capped: (res.data.total || 0) > rows.length
+            });
+            that.applyView();
+          };
+          // p2 F-3:商家态把工作台「全部 N」里的承接项目一并列出(与工作台同两个来源、同口径)
+          if (that.data.operationScope !== 'MERCHANT') { show([]); return; }
+          that.loadJoinProjects(current, seq, show);
         } else { that.readFailure('project', res); }
       },
       fail(res, statusCode) {
@@ -331,12 +339,40 @@ Page({
     });
   },
 
+  loadJoinProjects(current, seq, done) {
+    const that = this;
+    const got = {};
+    let failed = false;
+    const finish = function (key, value, res, statusCode) {
+      if (!current(res, statusCode) || that._seq !== seq || failed) return;
+      if (value === null) { failed = true; that.readFailure('project', res, statusCode); return; }
+      got[key] = value;
+      if (!got.legacy || !got.chapter) return;
+      done(joinProjects(got.legacy, got.chapter).items.map(decorateJoin));
+    };
+    const rowsOk = function (res, rows) { return res && res.code == '200' && isRecordList(rows) ? rows : null; };
+    app.sendRequest({
+      hideLoading: true, silentError: true, method: 'POST',
+      url: '/api/registration/merchant/list', data: { status: '0' },
+      success(res) { finish('legacy', rowsOk(res, res && res.data && res.data.rows ? res.data.rows : res && res.data), res); },
+      fail(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); },
+      successStatusAbnormal(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); }
+    });
+    app.sendRequest({
+      hideLoading: true, silentError: true, method: 'POST',
+      url: '/api/merchant/chapter-application/mine', data: {},
+      success(res) { finish('chapter', rowsOk(res, res && res.data), res); },
+      fail(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); },
+      successStatusAbnormal(res, statusCode) { if (current(res, statusCode)) that.readFailure('project', res, statusCode); }
+    });
+  },
+
   applyView() {
     const tab = this.data.typeTab;
     if (tab === 'template') return;
     const all = this._all || [];
 
-    let rows = all.filter(function (p) { return p.bizType === (tab === 'activity' ? 'activity' : 'topic'); });
+    let rows = all.filter(function (p) { return p.isTemplate !== true && p.bizType === (tab === 'activity' ? 'activity' : 'topic'); });
 
     // 待处理置顶:未通过 > 草稿 > 审核中 > 其余保持接口倒序(sort 稳定)
     rows = rows.slice().sort(function (a, b) { return rankOf(a) - rankOf(b); });
@@ -355,9 +391,19 @@ Page({
   },
 
   // ===== 项目卡交互(沿旧版) =====
+  // 第九轮 m1-9:卡上地址点开地图(活动有选点坐标,主题只有文字走缓存的地址解析)
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;
     if (!item || this._navigating) return; // 跳转中不响应连点
+    if (item.isTemplate === true) {
+      this._navigating = true;
+      wx.navigateTo({ url: '/pages/templatedetail/topic-detail/index?id=' + item.id
+        + (this.data.operationScope ? '&scope=MERCHANT' : ''),
+        complete: () => { this._navigating = false; } });
+      return;
+    }
     // 草稿 / 未通过(编辑重发)→ 进专业编辑器继续编辑
     if (item.bizType === 'topic' && (item.state === 'draft' || item.state === 'rejected')) {
       this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
@@ -378,7 +424,7 @@ Page({
     }
     // 这个列表就是「我发布的」,所以主题一律进项目主页(主办视图)——
     // 原来跳的 topic/index 是玩家买票页,发布者在那儿看不到谁来接、卖了多少。
-    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?' + (item._pendingChapterInvite ? 'id=' : 'topicId=') + item.id
       + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
@@ -389,6 +435,7 @@ Page({
     if (!item) return;
     if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
       && !item._canAudit && !item._canSaveAsTemplate) return;
+    const opsSeq = this._opsSeq = (this._opsSeq || 0) + 1;
     this.setData({
       opsSheet: {
         show: true,
@@ -399,11 +446,32 @@ Page({
         canToggle: !!item._canToggle,
         canDelete: !!item._canDelete,
         canViewApplies: !!item._canViewApplies,
-        canEdit: !!item._canEdit,
+        canEdit: item.bizType !== 'topic' && !!item._canEdit,
         canCancel: !!item._canCancel, canAudit: !!item._canAudit, state: item.state,
         canSaveAsTemplate: !!item._canSaveAsTemplate,
         toggleLabel: item._toggleLabel || '下架',
       }
+    });
+    if (item.bizType !== 'topic' || !item._canEdit) return;
+    // 主题资格复用主页的服务端编辑窗口，下架不代表窗口重开。
+    const current = currentRead(this);
+    const active = () => current() && this._opsSeq === opsSeq && this.data.opsSheet.show;
+    const failed = res => {
+      if (active()) toast(app.getRequestErrorMessage(res, '编辑资格加载失败，请重试'));
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/project/home', method: 'POST',
+      data: JSON.stringify({ topicId: item.id, scope: this.data.operationScope }),
+      header: { 'Content-Type': 'application/json' },
+      success: res => {
+        if (!active()) return;
+        if (!res || res.code != '200') { failed(res); return; }
+        const d = res.data;
+        this.setData({ 'opsSheet.canEdit': !!(d && d.role === 'host' && d.host && d.host.canEdit === true) });
+      },
+      fail: failed,
+      successStatusAbnormal: failed
     });
   },
 
@@ -429,8 +497,7 @@ Page({
   },
 
   // BL-120 另存为模板:POST /api/template/topic-template/save-as(id, scope)。
-  // 后端把本主题置 is_template=1(不复制),只认本人(商家 scope 认店主)且审核通过的主题,
-  // 其余按后端文案如实提示;回包无 topicId,成功后回读列表。
+  // 后端另建模板副本;原主题保留,成功后回读列表。
   saveAsTemplate(e) {
     const ds = e.currentTarget.dataset;
     const id = ds.id;
@@ -1054,6 +1121,16 @@ function rankOf(p) {
   return PENDING_RANK[p.state] != null ? PENDING_RANK[p.state] : 9;
 }
 
+// p2 F-3 承接卡只读:编辑/上下架/删除/取消都不归承接商家,点卡进项目页
+function decorateJoin(p) {
+  return Object.assign(decorate(p), {
+    _canToggle: false, _canDelete: false, _canEdit: false, _canCancel: false, _canAudit: false,
+    _canSaveAsTemplate: false, _canViewApplies: false, _roleText: p._pendingChapterInvite ? '受邀' : '承办',
+    // 承接卡没有报名/浏览数(不归承接方统计),底行写关系,不印「0 报名 · 0 浏览」
+    _showAccept: true, acceptStatusText: p._pendingChapterInvite ? '待接受邀请' : '我承接的'
+  });
+}
+
 function decorate(p) {
   const stateClass = {
     draft: 'st-draft', pending: 'st-pending', notStarted: 'st-notstarted',
@@ -1129,3 +1206,4 @@ function decorate(p) {
 // FOLLOWUP-A-2 的依赖放在文件尾:上方 U1 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
 // 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
 const auditTimeline = require('../../utils/audit-timeline.js');
+const { joinProjects } = require('../../utils/merchant-join-projects.js');

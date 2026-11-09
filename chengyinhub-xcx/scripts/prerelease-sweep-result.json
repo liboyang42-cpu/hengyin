@@ -608,7 +608,7 @@
     {
       "page": "/pages/member/index/index",
       "kind": "console.warn",
-      "text": "[Component] property \"role\" of \"components/roleBadge/index\" received type-uncompatible value: expected <String> but get null value. Use empty string instead."
+      "text": "[Component] property \"role\" of \"subpackageMember/components/roleBadge/index\" received type-uncompatible value: expected <String> but get null value. Use empty string instead."
     },
     {
       "page": "/pages/activity/baoming/baoming",

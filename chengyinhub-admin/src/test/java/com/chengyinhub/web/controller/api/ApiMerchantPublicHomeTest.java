@@ -349,4 +349,36 @@ class ApiMerchantPublicHomeTest {
         MmsMerchant merchant = visibleMerchant();
         assertNull(data(controller(merchant).publicHome(body("id", MERCHANT_ID))).getFeatured());
     }
+
+    /** 第九轮 m1-9:店铺小程序码只给公开商家出,scene = sh.<会员ID>;未登录、未公开都不出码。 */
+    @Test
+    void shareCodeIssuesShopSceneOnlyForPublicMerchants() {
+        ApiMerchantController controller = org.mockito.Mockito.spy(controller(visibleMerchant()));
+        com.chengyinhub.business.service.IPlayerWxacodeService codes =
+                mock(com.chengyinhub.business.service.IPlayerWxacodeService.class);
+        ReflectionTestUtils.setField(controller, "playerWxacodeService", codes);
+        when(codes.getOrCreateScene("sh." + MEMBER_ID)).thenReturn("https://example.invalid/sh.png");
+        org.mockito.Mockito.doReturn(7L).when(controller).getAppUserId();
+
+        AjaxResult ok = controller.shareCode(String.valueOf(MEMBER_ID));
+        assertEquals(200, ok.get(AjaxResult.CODE_TAG));
+        assertEquals("https://example.invalid/sh.png", ((Map<?, ?>) ok.get(AjaxResult.DATA_TAG)).get("qrcodeUrl"));
+
+        assertEquals(500, controller.shareCode("0").get(AjaxResult.CODE_TAG));
+        assertEquals(500, controller.shareCode("999").get(AjaxResult.CODE_TAG), "查不到的商家不出码");
+        verify(codes, never()).getOrCreateScene("sh.999");
+
+        MmsMerchant pending = visibleMerchant();
+        pending.setStatus(0L);
+        ApiMerchantController hidden = org.mockito.Mockito.spy(controller(pending));
+        ReflectionTestUtils.setField(hidden, "playerWxacodeService", codes);
+        org.mockito.Mockito.doReturn(7L).when(hidden).getAppUserId();
+        assertEquals(500, hidden.shareCode(String.valueOf(MEMBER_ID)).get(AjaxResult.CODE_TAG), "未公开商家不出码");
+
+        ApiMerchantController guest = org.mockito.Mockito.spy(controller(visibleMerchant()));
+        ReflectionTestUtils.setField(guest, "playerWxacodeService", codes);
+        org.mockito.Mockito.doThrow(new RuntimeException("no token")).when(guest).getAppUserId();
+        assertEquals(500, guest.shareCode(String.valueOf(MEMBER_ID)).get(AjaxResult.CODE_TAG), "未登录不出码");
+        verify(codes, org.mockito.Mockito.times(1)).getOrCreateScene("sh." + MEMBER_ID);
+    }
 }

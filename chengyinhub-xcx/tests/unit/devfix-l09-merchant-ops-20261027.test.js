@@ -134,10 +134,10 @@ test('M-04:客户管理半屏 = Threads 式分组菜单(文字 + 右侧图标),�
 });
 
 // ---------- M-07 ----------
-test('M-07:商家优惠券页主按钮「发布优惠券」加载中即在位,空态有提示', () => {
+test('上线暂关创建券,保留列表空态且不再引导发券', () => {
   const wxml = read('subpackageMember/coupon/coupon.wxml');
-  assert.match(wxml, /<cy-footer-bar wx:if="\{\{loadState !== 'error' && !tpShow\}\}">\s*<cy-btn variant="primary" bindtap="GoAdd">发布优惠券<\/cy-btn>/);
-  assert.match(wxml, /title="还没有优惠券" sub="[^"]+"/);
+  assert.doesNotMatch(wxml, /bindtap="GoAdd"|发布优惠券|发一张到店券/);
+  assert.match(wxml, /title="还没有优惠券"/);
 });
 
 // ---------- M-26 ----------

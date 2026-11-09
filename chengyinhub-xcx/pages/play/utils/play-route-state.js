@@ -126,7 +126,12 @@ function findNode(nodes, nodeId) {
 function resolveNextRouteNode(nodes, routeStateInput) {
   const routeState = normalizeRouteState(routeStateInput)
   const rows = Array.isArray(nodes) ? nodes : []
-  if (routeState.routeMode !== ROUTE_MODE_BRANCH) {
+  const linear = routeState.routeMode !== ROUTE_MODE_BRANCH
+  if (linear && routeState.status && routeState.status !== 'ACTIVE') return null
+  // 本局冻结顺序可能与节点 sortId 不同；已有权威游标时不能重新排序选章。
+  const hasProjection = routeState.sessionId || routeState.currentNodeId != null
+    || routeState.recommendedNodeId != null || Object.keys(routeState.nodeStates).length > 0
+  if (linear && !hasProjection) {
     return rows.filter((node) => node && !node.done)
       .slice()
       .sort((left, right) => (Number(left.sortId) || 0) - (Number(right.sortId) || 0))[0] || null
@@ -135,7 +140,7 @@ function resolveNextRouteNode(nodes, routeStateInput) {
   for (let i = 0; i < candidateIds.length; i++) {
     const node = findNode(rows, candidateIds[i])
     if (node && !node.done && node.routeNodeState !== 'COMPLETED'
-        && nodeRouteState(routeState, node.nodeId) === 'PLAYABLE') return node
+        && routeState.nodeStates[String(node.nodeId)] === 'PLAYABLE') return node
   }
   return null
 }

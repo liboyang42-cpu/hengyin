@@ -21,6 +21,7 @@ const KEYS = ['A', 'B', 'C', 'D'];
    而人还有下一次机会。 */
 const HEAD_OK = '答对了';
 const HEAD_NO = '再想想';
+const HEAD_SHOT = '拍好了';   // 第十二轮 k7 F16:拍照打卡没有对错,交了照片不说「答对了」
 /* 打字题答错的固定说法(原型写死这一句)。服务端给了话就用服务端的 */
 const RETRY_TEXT = '不对。把它清掉，再试一次。';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
@@ -76,6 +77,7 @@ Component({
        服务端只在「商家开了答错亮答案 + 次数用完」时才给(见 AdvancedGameRuntimeServiceImpl
        的 submitQa),给了就意味着可以亮。此前 answerIndex 在这个文件里被读、
        却从来没有人写过 —— 恒 undefined,于是「亮出正确答案」一次也没亮过。 */
+    answerText: { type: String, value: '' },
     answerId: { type: String, value: '' },
     /* 多选揭晓:服务端在同样的条件下给 answerIds(全部正确选项)。与 answerId 一样,给了才亮。 */
     answerIds: { type: Array, value: [] },
@@ -94,6 +96,9 @@ Component({
     /* 多选的判后反馈:所选项的 fb 用空格拼起来的那段文字(服务端 lastFeedback)。
        服务端不写 fb 时是空串,那时回执条只给整体结果。 */
     feedbackText: { type: String, value: '' },
+    /* P-10 第三轮:作者在模板「结果反馈」里给这次结果写了话('PASS' / 'FAIL',服务端判完才给)。
+       作者的话由结算判定屏(cy-play-verdict)摆出来;这一屏答错时只描红清空,不再叠自己的兜底句。 */
+    authoredOutcome: { type: String, value: '' },
   },
   data: {
     /* ⚠️ 派生数据必须换个键名。写回被 observer 监听的那个属性(options)
@@ -101,6 +106,7 @@ Component({
        直接断连,就是这么来的,而且控制台一条错都没有。 */
     optionList: [],
     typed: '',
+    typeWrong: false,
     hasImage: false,
     playing: false,
     feedback: '',
@@ -114,6 +120,22 @@ Component({
     ctaDisabled: false,
   },
   observers: {
+    /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
+       次数涨了且仍没过 = 刚答错:清掉输入框、描红、写一句;首次挂载(_seenTypeAttempts 未定)不算。 */
+    attempts: function (value) {
+      const now = Number(value) || 0;
+      const seen = this._seenTypeAttempts;
+      this._seenTypeAttempts = now;
+      if (seen == null || now <= seen) return;
+      if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
+      this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
+    },
+    /* P-10 第四轮 rig 实测:作者的结果反馈(authoredOutcome)可能比 attempts 晚一拍落到组件上 ——
+       先到的 attempts 已写了兜底句,这里补清;判定屏摆作者的话,题屏只留描红。 */
+    authoredOutcome: function (value) {
+      if (value !== 'FAIL' || this.data.mode !== 'type' || this.data.feedback !== RETRY_TEXT) return;
+      this.setData({ feedback: '' });
+    },
     failureSeq: function (value) {
       if (!value || this.data.finished || this.data.passed || this.data.judge !== false) return;
       this.setData({ submitted: false, ctaDisabled: !this.data.optionList.some(o => o.state === 'is-on') });
@@ -147,11 +169,15 @@ Component({
       this.setData({
         optionList: opts,
         hasImage: !!this.data.imageUrl,
-        typed: '', feedback: (passed || finished || this.data.attempts > 0) ? (this.data.feedbackText || '') : '',
+        /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
+           没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
+        typed: '', feedback: (passed || finished || this.data.attempts > 0)
+          ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 && this.data.authoredOutcome !== 'FAIL' ? RETRY_TEXT : '')) : '',
+        typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackImages || []).slice() : [],
         submitted: false,
-        fbHead: passed ? HEAD_OK : HEAD_NO, playing: false, intro: !passed && !finished,
+        fbHead: passed ? (mode === 'shot' ? HEAD_SHOT : HEAD_OK) : HEAD_NO, playing: false, intro: !passed && !finished,
         burning: fresh ? false : !!this.data.burning,
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
@@ -198,7 +224,7 @@ Component({
     _cappedTries: cappedTries,
 
     onRun() { this.triggerEvent('run'); },
-    onInput(e) { this.setData({ typed: e.detail.value }); },
+    onInput(e) { this.setData({ typed: e.detail.value, typeWrong: false }); },   // P-10:下一次输入即清掉描红
     onToggleAudio() {
       this.setData({ playing: !this.data.playing });
       this.triggerEvent('audio', { playing: this.data.playing });
@@ -295,7 +321,7 @@ Component({
           });
         }
         this.setData({
-          feedback: d.feedback || '', fbHead: HEAD_OK,
+          feedback: d.feedback || '', fbHead: this.data.mode === 'shot' ? HEAD_SHOT : HEAD_OK,
           ctaLabel: '继续', ctaDisabled: true,
         });
         if (stage) stage.win(d.feedback || '');
@@ -313,6 +339,7 @@ Component({
       this.setData({
         // 答错清空输入框:留着错答案,人得先自己删一遍才能再试
         typed: '',
+        typeWrong: this.data.mode === 'type',
         feedback: d.feedback || (this.data.mode === 'type' ? RETRY_TEXT : ''),
         fbHead: HEAD_NO,
         optionList: pick ? this.data.optionList.map((o, i) => {

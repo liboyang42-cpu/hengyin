@@ -13,11 +13,11 @@ function method(source, signature) {
 }
 function fallbackContract(source) {
   for (const signature of ['public AjaxResult scanDynamicCode(Actor actorContext, String code)', 'public AjaxResult scanGroupMemberTicket(Actor actorContext, String code, Long activityId)']) {
-    assert.match(method(source, signature), /if \(!result.valid\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return AjaxResult.error\(result.reason/, signature);
+    assert.match(method(source, signature), /if \(!result.valid\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return (?:AjaxResult\.error|notRedeemed)\(result.reason/, signature);
   }
   const scan = method(source, 'public AjaxResult scanQrCode(Actor actorContext, String type, String code, Long activityId)');
   assert.match(scan, /if \(ctx.error != null\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return ctx.error;/);
-  assert.match(scan, /if \(tooEarly != null\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return tooEarly;/);
+  assert.match(scan, /if \(tooEarly != null\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return (?:tooEarly|notRedeemed\(tooEarly\));/);
   assert.match(scan, /catch \(ServiceException e\) \{\s*AjaxResult original = replayOriginalSeat\([\s\S]*?if \(original != null\) return original;\s*return new AjaxResult\(e.getCode\(\) == null \? com\.chengyinhub\.common\.constant\.HttpStatus\.ERROR : e.getCode\(\), e.getMessage\(\)\)/);
 }
 // Java execution belongs to controlled CI. These checks prove source wiring only, not HTTP/SQL authorization.

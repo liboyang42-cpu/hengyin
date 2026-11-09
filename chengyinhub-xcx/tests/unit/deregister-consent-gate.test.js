@@ -1,7 +1,7 @@
 const { test, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
 
-const COMPONENT = '../../components/cy/scene-settings-deregister/index.js'
+const COMPONENT = '../../pages/deregister/components/scene-settings-deregister/index.js'
 const FLOW = '../../utils/deregister-flow.js'
 let componentConfig
 let requests

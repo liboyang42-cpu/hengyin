@@ -1,0 +1,19 @@
+{
+  "identity": {
+    "source_sha": "d0cd6eec9b72f0db0c06be3f374f4cc3b76d9a19",
+    "bundle_sha256": "7b79f2926aad86ea99074e3a5bfacf616680d1f52655fd4d1adab8f3500ba21f",
+    "appjson_sha256": "09d8b1eb87a07b51770bcfafaf14acf846923f3ad4d5c45c5ad5f79fbec9b15a",
+    "backend_source_sha": "1c60516771a6e2d50290ab44134005bdfe96c109",
+    "backend_source_unchanged": true
+  },
+  "playerId": 990015,
+  "registrationId": 91,
+  "runId": 9,
+  "liveFeedbackQueued": true,
+  "liveVideoVisible": true,
+  "archivedVideoVisible": true,
+  "completedEndingVideo": true,
+  "completedEndingNarration": true,
+  "archivedEndingNarrationCompleted": true,
+  "archivedFinish": true
+}

@@ -1,3 +1,4 @@
+<wxs src="../../../../../utils/wxs/display-label.wxs" module="dl" />
 <!-- 节点 NPC 长表单复用全屏面板，正文滚动，保存操作固定在底部。 -->
 <cy-sheet show="{{show}}" variant="full" nav-title="节点NPC" footer="{{true}}" closable="{{!saving}}" maskClosable="{{!saving}}" bind:close="onSheetClose">
   <view class="nnf-subtitle">{{nodeName || '当前节点'}}</view>
@@ -56,7 +57,7 @@
         <cy-btn variant="secondary" bindtap="confirmNewVoiceRequest" disabled="{{voiceBusy}}">确认后另起独立请求</cy-btn>
       </view>
       <view wx:for="{{voiceHistory}}" wx:key="requestId">
-        <text>原声音请求 · {{item.state}}</text>
+        <text>原声音请求 · {{dl.voice(item.state)}}</text>
         <cy-btn variant="ghost" data-request="{{item.requestId}}" bindtap="readVoiceHistory">查看原结果</cy-btn>
       </view>
       <text wx:if="{{voiceHistoryResult}}">{{voiceHistoryResult}}</text>

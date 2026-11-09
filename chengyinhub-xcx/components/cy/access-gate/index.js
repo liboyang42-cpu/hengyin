@@ -2,11 +2,10 @@ const app = getApp();
 const { recoverReadSession } = require('../../../utils/session/login-reload.js');
 const { decideMerchantGate, decideClubGate } = require('../../../utils/access-gate.js');
 
-// 页面级守卫:放一个标签进页面,读 access/me,没权限就整屏盖住,弹零按钮 fail 半屏讲原因,2s 自动出去。
-// 页面自己的请求照常发(后端本来就拦),这里只负责别让用户对着一屏 toast 干瞪眼。
+// 页面级守卫:读 access/me,没权限就整屏盖住,弹 fail 半屏讲原因,2s 自动出去;state 事件报给页面。
 Component({
   properties: {
-    kind: { type: String, value: 'merchant' },   // merchant | club
+    kind: { type: String, value: 'merchant' },   // merchant | club | login
     need: { type: String, value: '' },           // merchant: canXxx 字段名;club: club:xxx 权限串
     clubId: { type: null, value: '' },
     activityId: { type: null, value: '' },
@@ -22,7 +21,7 @@ Component({
       this._page = pages[pages.length - 1];
       const g = app.globalData || {};
       this.setData({ top: (g.statusBarHeight || 0) + (g.navBarHeight || 0) });
-      if (this.data.kind === 'merchant') this.check();
+      if (this.data.kind !== 'club') this.check();
     },
   },
   pageLifetimes: {
@@ -32,11 +31,12 @@ Component({
   methods: {
     check() {
       const kind = this.data.kind;
-      if (kind === 'club' && !this.data.clubId && !this.data.activityId) return;   // 还没拿到范围,等 observer
       const owner = String(app.getUserID && app.getUserID() || '');
       const epoch = (this._epoch || 0) + 1;
       this._epoch = epoch;
-      if (!owner || owner === '0') { this.setData({ state: 'login', reason: '登录后才能确认当前账号的查看权限', _sheet: false }); return; }
+      if (!owner || owner === '0') { this.setData({ state: 'login', reason: '', _sheet: false }); return; }
+      if (kind === 'login') { this.setData({ state: 'allow' }); return; }
+      if (kind === 'club' && !this.data.clubId && !this.data.activityId) return;   // 还没拿到范围,等 observer
       const that = this;
       const settle = (decision) => {
         if (that._detached || epoch !== that._epoch || owner !== String(app.getUserID && app.getUserID() || '')) return;
@@ -47,6 +47,7 @@ Component({
           reason: denied || decision.state === 'login' ? decision.reason : '',
           _sheet: false,
         }, () => { if (denied) that.setData({ _sheet: true }); });
+        that.triggerEvent('state', { state: that.data.state });
       };
       // 两条分支各自写死 /api 字面量:UI-GATE-0 的 U1 要能枚举出请求路径,变量拼的核不了。
       // 不传 silentError:request-client 的静默分支都是「没挂 fail 才弹」,本组件 fail 与
@@ -98,7 +99,12 @@ Component({
         : typeof app.firstLogin === 'function' ? app.firstLogin() : null;
       Promise.resolve(login).then(result => {
         this._loginPending = false;
-        if (!this._detached && app.getUserID && app.getUserID() && !(result && result.ok === false)) this.check();
+        if (this._detached || !(app.getUserID && app.getUserID()) || (result && result.ok === false)) return;
+        const page = this._page || {};
+        const opts = page.options || {};
+        const query = Object.keys(opts).map(k => k + '=' + encodeURIComponent(opts[k])).join('&');
+        if (page.route) wx.redirectTo({ url: '/' + page.route + (query ? '?' + query : ''), fail: () => this.check() });
+        else this.check();
       }).catch(() => { this._loginPending = false; });
     },
     onExit() {

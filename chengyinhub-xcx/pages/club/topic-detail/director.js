@@ -15,6 +15,14 @@ const { chinaParts } = require('../../../utils/datetime.js');
 'use strict'
 
 const { createClubGameDirectorAdapter, genericOpsActions, genericOpsFields, genericOpsPayload } = require('../utils/club-game-director-adapter.js')
+// Round5 #4:通用玩法运行状态只出中文,不显示 RUNNING / ONLINE 等后端代码
+const GENERIC_OPS_STATUS = { RUNNING: '进行中', PAUSED: '已暂停', INTERRUPTED: '已中断', CANCELLED: '已取消' }
+const GENERIC_OPS_AUTHORITY = { ONLINE: '线上判定', MANUAL: '人工接管' }
+function genericOpsStatusText(run) {
+  const r = run || {}
+  return (GENERIC_OPS_STATUS[r.operationStatus] || '状态待确认') + ' · ' + (GENERIC_OPS_AUTHORITY[r.authorityMode] || '判定方式待确认')
+    + (r.authorityEpoch == null ? '' : ' · 权威 ' + r.authorityEpoch)
+}
 let requestSequence = 0
 
 function genericOpsForm(action, draft, control) {
@@ -31,7 +39,7 @@ function readinessText(readiness) {
   const ready = numeric(readiness && readiness.readyStations)
   const required = numeric(readiness && readiness.requiredStations)
   if (ready === null || required === null) return '—'
-  return ready + '/' + required + ' 站 READY'
+  return ready + '/' + required + ' 站就绪'
 }
 
 function statusText(status) {
@@ -47,12 +55,24 @@ function statusText(status) {
   return labels[String(status || '').toUpperCase()] || '状态待确认'
 }
 
-function stationView(station) {
+// C-09 第三轮:准备总览的节点行直接喂收编行列表,要 {id,title,subtitle,value};状态码不外露。
+const STATION_STATUS_TEXT = { INVITED: '已邀请', ACCEPTED: '已接受', READY: '就绪', ACTIVE: '进行中', PAUSED: '已暂停', CLOSED: '已关闭' }
+
+function stationView(station, index) {
   const item = station || {}
+  const nameText = item.name || item.stationName || item.nodeName || '未命名节点'
+  const status = String(item.status || '').toUpperCase()
+  const statusText = STATION_STATUS_TEXT[status] || '待确认'
+  const issueText = item.issue || item.blockedReason || item.pauseReason || item.exception || ''
   return Object.assign({}, item, {
-    nameText: item.name || item.stationName || item.nodeName || '未命名节点',
-    statusText: item.status || 'UNKNOWN',
-    issueText: item.issue || item.blockedReason || item.pauseReason || item.exception || '',
+    nameText: nameText,
+    statusText: statusText,
+    issueText: issueText,
+    id: item.stationId != null ? item.stationId : (item.nodeId != null ? item.nodeId : 's' + (index || 0)),
+    title: nameText,
+    subtitle: issueText,
+    value: statusText,
+    valueTone: status === 'READY' || status === 'ACTIVE' ? 'success' : (status === 'PAUSED' ? 'warning' : 'default'),
   })
 }
 
@@ -80,7 +100,8 @@ function teamView(team) {
     ? recentEvent.occurredAt.trim() : ''
   return Object.assign({}, item, {
     nameText: item.name || item.teamName || '未命名队伍',
-    statusText: item.status || 'UNKNOWN',
+    // C-26:队伍状态用中文,不露枚举。
+    statusText: ({ PREPARING: '未出发', RUNNING: '进行中', COMPLETED: '已完成', BLOCKED: '受阻', PAUSED: '暂停', ERROR: '异常' })[status] || '待确认',
     progressText: completed !== null && total !== null ? completed + '/' + total + ' 节点' : '—',
     issueText: item.blockedReason || item.issue || '',
     isAbnormal: status === 'BLOCKED' || status === 'PAUSED' || status === 'ERROR'
@@ -109,7 +130,7 @@ function roleView(role) {
   const labels = { CONFIRMED: '已确认', PENDING: '待确认', REJECTED: '未接受' }
   labels.ASSIGNED = '待确认'
   return Object.assign({}, item, {
-    memberNameText: item.memberName || item.name || (item.memberId == null ? '成员更新中' : '成员 #' + item.memberId),
+    memberNameText: item.memberName || item.name || (item.memberId == null ? '成员更新中' : '城瘾用户'),
     roleNameText: item.roleName || item.roleLabel || item.roleCode || '角色待分配',
     confirmationStatus: status,
     confirmationText: !item.roleCode ? '待分配' : (labels[status] || '确认状态更新中'),
@@ -142,7 +163,7 @@ function roleMemberRows(roles, selectedTeamId, selectedMemberId) {
 function broadcastView(broadcast) {
   const item = broadcast || {}
   const targetType = String(item.targetType || item.scope || '').toUpperCase()
-  const targetLabels = { ALL: '全部玩家', TEAM: '定向队伍', ROLE: '定向角色' }
+  const targetLabels = { ALL: '全部玩家', TEAM: '定向队伍', ROLE: '定向角色', MEMBERS: '指定玩家' }
   const status = String(item.receiptStatus || item.status || '').toUpperCase()
   const statusLabels = {
     CONFIRMED: '已确认送达',
@@ -175,7 +196,8 @@ function broadcastTargets(targetType, teams, roleOptions) {
 }
 
 function roleRecipientCount(roleCode, roles) {
-  const rows = roles || []
+  // 没组队的付款玩家(teamId 为空)不会有角色,不参与角色人数计算
+  const rows = (roles || []).filter(function (item) { return item && item.teamId != null })
   if (rows.length === 0) return null
   const completeAggregates = rows.every(function (item) {
     return !!item.roleCode && numeric(item.memberCount) !== null
@@ -203,28 +225,52 @@ function broadcastRecipientCount(targetType, selectedTarget, teams, roles) {
   return rows.reduce(function (sum, item) { return sum + item.memberCount }, 0)
 }
 
-// 2026-11-01 业主定稿(审阅页 65gFrW…):弹层顶部横滑头像。俱乐部广播接口只认全部 / 一队 / 一个角色,
-// 所以头像只展示这次会发给谁,选人靠队伍 / 角色行;名单来自导演台 roles,没下发就不出这一排。
-function broadcastAudienceRows(targetType, selectedTarget, roles) {
-  if (!selectedTarget) return []
+// 2026-11-01 业主定稿(审阅页 65gFrW…):弹层顶部横滑头像,点头像单个加减,点队伍 / 角色行整组加减。
+// 名单来自导演台 roles,一人一行。名单和队伍人数对不上(没下发全)时不给按人选,退回整组发,不拿半份名单冒充全部。
+function broadcastRoster(roles) {
   const seen = {}
   return (Array.isArray(roles) ? roles : []).filter(function (item) {
     if (!item || item.memberId == null || seen[item.memberId]) return false
-    if (targetType === 'TEAM' && String(item.teamId) !== String(selectedTarget.id)) return false
-    if (targetType === 'ROLE' && item.roleCode !== selectedTarget.id) return false
     seen[item.memberId] = true
     return true
   }).map(function (item) {
     const name = item.memberNameText || ''
-    return { id: String(item.memberId), name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
+    // 第十一轮 h4 L3:没组队的付款玩家也在名单里,teamId 为空串(不属于任何一队)
+    return { id: String(item.memberId), teamId: item.teamId == null ? '' : String(item.teamId), roleCode: item.roleCode || '', name: name, initial: name.slice(0, 1) || '?', sub: item.roleNameText || '' }
   })
 }
 
-function broadcastCountText(targetType, recipientCount, teams) {
-  if (recipientCount === null) return ''
-  if (targetType === 'TEAM') return recipientCount + ' 人 · 1 队'
-  if (targetType === 'ALL') return recipientCount + ' 人 · ' + (teams || []).length + ' 队'
-  return recipientCount + ' 人'
+function broadcastRosterComplete(roster, teams) {
+  const rows = teams || []
+  if (!roster.length || !rows.length || rows.some(function (item) { return numeric(item.memberCount) === null })) return false
+  return rows.reduce(function (sum, item) { return sum + item.memberCount }, 0) === roster.length
+}
+
+function broadcastGroupIds(targetType, target, roster) {
+  return roster.filter(function (member) {
+    if (targetType === 'TEAM') return member.teamId === String(target.id)
+    if (targetType === 'ROLE') return member.roleCode === target.id
+    return true
+  }).map(function (member) { return member.id })
+}
+
+function sameIds(a, b) {
+  return a.length === b.length && a.every(function (id) { return b.indexOf(id) >= 0 })
+}
+
+// 选中的人恰好是全部 / 一队 / 一个角色时仍按原范围发(服务端按范围取人);否则才按人发。
+function broadcastPayloadTarget(picked, roster, targetType, options) {
+  if (sameIds(picked, roster.map(function (member) { return member.id }))) return { targetType: 'ALL' }
+  const hit = (options || []).find(function (item) { return targetType !== 'ALL' && sameIds(picked, broadcastGroupIds(targetType, item, roster)) })
+  if (hit && targetType === 'TEAM') return { targetType: 'TEAM', targetId: hit.id }
+  if (hit && targetType === 'ROLE') return { targetType: 'ROLE', roleCode: hit.id }
+  return { targetType: 'MEMBERS', memberIds: picked.map(Number) }
+}
+
+function broadcastTeamCount(picked, roster) {
+  const teams = {}
+  roster.forEach(function (member) { if (picked.indexOf(member.id) >= 0 && member.teamId) teams[member.teamId] = true })
+  return Object.keys(teams).length
 }
 
 function recapMetricView(metric) {
@@ -232,7 +278,25 @@ function recapMetricView(metric) {
   const label = item.label || item.name || item.key || ''
   const value = item.value
   if (!label || value == null) return null
-  return { label: label, valueText: String(value), unit: item.unit || '' }
+  return { key: item.key || '', label: label, valueText: String(value), unit: item.unit || '' }
+}
+
+// C-11 第三轮(Figma D9 289:523):漏斗前三个数做大块,其余进「完成情况」行。
+function recapCompletionRow(metric, index) {
+  return { id: metric.key || ('m' + index), title: metric.label, value: metric.valueText + (metric.unit ? ' ' + metric.unit : '') }
+}
+
+// C-11:复盘「节点完成」行。服务端给的是原始计数对象,行组件要 {id,title,subtitle}。
+function recapStationRow(station) {
+  const item = station || {}
+  const id = normalizedPositiveId(item.nodeId)
+  if (!id || !item.nodeName) return null
+  const parts = []
+  if (item.arrivedPlayers != null) parts.push('到达 ' + item.arrivedPlayers + ' 人')
+  if (item.normalCompletedCount != null) parts.push('完成 ' + item.normalCompletedCount)
+  if (Number(item.fallbackCompletedCount) > 0) parts.push('兜底 ' + item.fallbackCompletedCount)
+  if (Number(item.rejectedCount) > 0) parts.push('打回 ' + item.rejectedCount)
+  return { id: id, title: item.nodeName, subtitle: parts.join(' · ') }
 }
 
 function normalizedPositiveId(value) {
@@ -299,6 +363,10 @@ const BROADCAST_REJECTED_TEXT = {
 function rejectedActionText(action, result) {
   const code = String((result && result.reasonCode) || '').toUpperCase()
   if (action === 'BROADCAST' && BROADCAST_REJECTED_TEXT[code]) return BROADCAST_REJECTED_TEXT[code]
+  // 第十轮 f2(j2 F-07):开始活动被服务端拒(如「当前不在活动服务时段」)要说出原因,不能只剩一句笼统的未生效。
+  const reason = result && typeof result.reason === 'string' ? result.reason.trim()
+    : (result && typeof result.message === 'string' ? result.message.trim() : '')
+  if (action === 'START' && reason) return reason
   return null
 }
 
@@ -490,11 +558,14 @@ const DIRECTOR_DATA = {
     sessionStatusText: '状态待确认',
     revision: null,
     chapterOptions: [],
+    unlockButtonText: '手动解锁章节',
     chapterOptionLabels: [],
     readiness: { requiredStations: null, readyStations: null, teamsReady: null, canStart: false },
     readinessText: '—',
     canPrepare: false,
     blockers: [],
+    startFailText: '',
+    merchantHoldBlocked: false,
     incidentRows: [],
     incidentSelectedKey: '',
     incidentModes: [],
@@ -540,6 +611,9 @@ const DIRECTOR_DATA = {
     canToggleLeaderboard: false,
     recap: null,
     recapMetrics: [],
+    recapTiles: [],
+    recapCompletionRows: [],
+    recapStationRows: [],
     canExportRecap: false,
     exportState: 'idle',
     canFinish: false,
@@ -744,6 +818,9 @@ const DIRECTOR_METHODS = {
     const leaderboard = projection.leaderboard || null
     const leaderboardVisibleKnown = !!leaderboard && typeof leaderboard.visible === 'boolean'
     const recap = projection.recap || null
+    const recapMetrics = recap && Array.isArray(recap.metrics)
+      ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
+      : []
     this._genericControl = projection.genericControl || null
     this._roleOptions = roleOptions
     this._takeoverTargetOptions = []
@@ -753,8 +830,15 @@ const DIRECTOR_METHODS = {
         && (projection.currentChapterId == null || String(item.chapterId) !== String(projection.currentChapterId))
     }).map(function (item) {
       // 5-04(D4):行组件按 id 找行、回传 {id};缺 id 的章节行点哪一行都落回第 0 项。
-      return { id: item.chapterId, chapterId: item.chapterId, title: item.title || '章节 #' + item.chapterId }
+      const title = item.title || '章节 #' + item.chapterId
+      // C-04:路线局只给相邻下一章,并带上已完成本章、在等放行的队伍数。
+      const waiting = numeric(item.waitingTeams)
+      return { id: item.chapterId, chapterId: item.chapterId, title: title, waitingTeams: waiting,
+        subtitle: waiting === null ? '' : (waiting > 0 ? waiting + ' 队已完成本章，在等放行' : '还没有队伍完成本章') }
     })
+    const unlockText = chapterOptions.length === 1
+      ? '放行「' + chapterOptions[0].title + '」' + (chapterOptions[0].waitingTeams > 0 ? ' · ' + chapterOptions[0].waitingTeams + ' 队在等' : '')
+      : '手动解锁章节'
     // 宿主页(index.js)提供 applyProjectionStatus:场次状态 → 页面六态。director 与宿主是同一个 Page 作用域。
     // 契约测试用裸 host 装载 director,没有这个方法;真页面(index.js)一定有
     if (typeof this.applyProjectionStatus === 'function') this.applyProjectionStatus(projection.status)
@@ -766,14 +850,21 @@ const DIRECTOR_METHODS = {
       authorityEpoch: projection.authorityEpoch == null ? null : projection.authorityEpoch,
       genericOpsKnown: !!this._genericControl,
       genericOpsActions: this._genericControl ? genericOpsActions(this._genericControl) : [],
-      genericOpsStatus: this._genericControl ? this._genericControl.run.operationStatus + ' · ' + this._genericControl.run.authorityMode + ' · 权威 ' + this._genericControl.run.authorityEpoch : '',
+      genericOpsStatus: this._genericControl ? genericOpsStatusText(this._genericControl.run) : '',
       genericOpsTeams: this._genericControl ? this._genericControl.teams.map(team => '队伍 ' + team.teamId + (team.exited ? '（已退出）' : '')).join(' · ') : '',
       chapterOptions: chapterOptions,
+      unlockButtonText: unlockText,
       chapterOptionLabels: chapterOptions.map(function (item) { return item.title }),
       readiness: readiness,
       readinessText: readinessText(readiness),
       canPrepare: hasAction(availableActions, 'PREPARE'),
       blockers: Array.isArray(readiness.blockers) ? readiness.blockers : [],
+      blockerText: Array.isArray(readiness.blockers) && readiness.blockers.length && projection.status !== 'RUNNING'
+        ? '还不能开始：' + readiness.blockers.filter(Boolean).join('；') : '',
+      // 第十轮 f2 第 5 项:卡在商家(待商家接受 / 没有合作单)时,主理人能直接去联系那家商家。
+      merchantHoldBlocked: projection.status !== 'RUNNING' && Array.isArray(readiness.blockers)
+        && readiness.blockers.some(function (item) { return /待商家接受|合作单/.test(String(item || '')) }),
+      startFailText: projection.status === 'RUNNING' ? '' : this.data.startFailText,
       // D8 现场事件:全部由已有投影推出,不新造事实。
       // 站点暂停 / 待核验积压来自 stations,待核验与已驳回的提交来自 submissions。
       incidentRows: incidentRowList(projection.stations, projection.submissions),
@@ -797,8 +888,11 @@ const DIRECTOR_METHODS = {
       leaderboardVisibleKnown: leaderboardVisibleKnown,
       canToggleLeaderboard: leaderboardVisibleKnown && hasAction(availableActions, 'SET_LEADERBOARD_VISIBILITY'),
       recap: recap,
-      recapMetrics: recap && Array.isArray(recap.metrics)
-        ? recap.metrics.map(recapMetricView).filter(function (item) { return !!item })
+      recapMetrics: recapMetrics,
+      recapTiles: recapMetrics.slice(0, 3),
+      recapCompletionRows: recapMetrics.slice(3).map(recapCompletionRow),
+      recapStationRows: recap && Array.isArray(recap.stations)
+        ? recap.stations.map(recapStationRow).filter(function (item) { return !!item })
         : [],
       canExportRecap: !!(recap && recap.exportAvailable === true),
       canFinish: hasAction(availableActions, 'FINISH'),
@@ -1130,12 +1224,6 @@ const DIRECTOR_METHODS = {
     this._broadcastTargetOptions = targets
     this.setData({
       // 5-04:行组件要 {id,title} 并回传 {id};原来喂的是 teamView 原始行 → 空白且点不中
-      broadcastTargetRows: targets.map(function (item, index) {
-        return { id: item.id, title: item.label, subtitle: numeric(item.memberCount) === null ? '' : item.memberCount + ' 人', on: index === 0 }
-      }),
-      broadcastAudience: broadcastAudienceRows(normalized, selected, this.data.roles),
-      broadcastCountText: broadcastCountText(normalized, recipientCount, this.data.teams),
-      broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0 && !!selected,
       broadcastPreviewText: targetLabel + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: {
@@ -1144,6 +1232,52 @@ const DIRECTOR_METHODS = {
         content: (this.data.broadcastDraft && this.data.broadcastDraft.content) || '',
       },
     })
+    const roster = broadcastRoster(this.data.roles)
+    this._broadcastRoster = broadcastRosterComplete(roster, this.data.teams) ? roster : []
+    this._broadcastPicked = selected && this._broadcastRoster.length ? broadcastGroupIds(normalized, selected, this._broadcastRoster) : []
+    this._refreshBroadcastPicks(selected, recipientCount)
+  },
+
+  // 头像、行上的「已选 / 选择」、人数、发送按钮都从这一份选中名单算,不分两处存。
+  _refreshBroadcastPicks(selected, recipientCount) {
+    const roster = this._broadcastRoster || []
+    const picked = this._broadcastPicked || []
+    const targetType = this.data.broadcastDraft.targetType
+    const options = this._broadcastTargetOptions || []
+    if (!roster.length) {
+      // 名单不全:整组单选,人数只信服务端给的成员数
+      const teamText = targetType === 'TEAM' ? ' · 1 队' : (targetType === 'ALL' ? ' · ' + (this.data.teams || []).length + ' 队' : '')
+      this.setData({
+        broadcastAudience: [],
+        broadcastTargetRows: options.map(function (item) {
+          return { id: item.id, title: item.label, subtitle: numeric(item.memberCount) === null ? '' : item.memberCount + ' 人', on: item === selected }
+        }),
+        broadcastCountText: recipientCount === null || recipientCount === undefined ? '' : recipientCount + ' 人' + teamText,
+        broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
+      })
+      return
+    }
+    const teamCount = broadcastTeamCount(picked, roster)
+    this.setData({
+      broadcastAudience: roster.map(function (member) { return Object.assign({}, member, { picked: picked.indexOf(member.id) >= 0 }) }),
+      broadcastTargetRows: options.map(function (item) {
+        const ids = broadcastGroupIds(targetType, item, roster)
+        return { id: item.id, title: item.label, subtitle: ids.length + ' 人', on: ids.length > 0 && ids.every(function (id) { return picked.indexOf(id) >= 0 }) }
+      }),
+      broadcastCountText: picked.length + ' 人' + (teamCount ? ' · ' + teamCount + ' 队' : ''),
+      broadcastSendText: picked.length ? '发送给 ' + picked.length + ' 人' : '先选收件人',
+      broadcastPreviewReady: picked.length > 0,
+      broadcastPreviewText: picked.length + ' 人',
+    })
+  },
+
+  onBroadcastPersonToggle(e) {
+    if (this.data.writeLocked) return
+    const id = String((e && e.detail && e.detail.id) == null ? '' : e.detail.id)
+    if (!id || !(this._broadcastRoster || []).some(function (member) { return member.id === id })) return
+    const picked = this._broadcastPicked || []
+    this._broadcastPicked = picked.indexOf(id) >= 0 ? picked.filter(function (item) { return item !== id }) : picked.concat(id)
+    this._refreshBroadcastPicks()
   },
 
   openBroadcast() {
@@ -1178,14 +1312,21 @@ const DIRECTOR_METHODS = {
     const targetType = this.data.broadcastDraft.targetType
     const recipientCount = broadcastRecipientCount(targetType, selected, this.data.teams, this.data.roles)
     this.setData({
-      broadcastTargetRows: this.data.broadcastTargetRows.map(function (item, rowIndex) { return Object.assign({}, item, { on: rowIndex === index }) }),
-      broadcastAudience: broadcastAudienceRows(targetType, selected, this.data.roles),
-      broadcastCountText: broadcastCountText(targetType, recipientCount, this.data.teams),
-      broadcastSendText: recipientCount ? '发送给 ' + recipientCount + ' 人' : '发送',
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0,
       broadcastPreviewText: selected.label + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: Object.assign({}, this.data.broadcastDraft, { targetIndex: index }),
     })
+    const roster = this._broadcastRoster || []
+    if (roster.length) {
+      // 点一行把这一组选上或取消,其他组不动(稿:可以同时选两队)
+      const ids = broadcastGroupIds(targetType, selected, roster)
+      const current = this._broadcastPicked || []
+      const allOn = ids.length > 0 && ids.every(function (id) { return current.indexOf(id) >= 0 })
+      this._broadcastPicked = allOn
+        ? current.filter(function (id) { return ids.indexOf(id) < 0 })
+        : current.concat(ids.filter(function (id) { return current.indexOf(id) < 0 }))
+    }
+    this._refreshBroadcastPicks(selected, recipientCount)
   },
 
   onBroadcastContentInput(e) {
@@ -1209,6 +1350,11 @@ const DIRECTOR_METHODS = {
     const payload = { targetType: draft.targetType, content: content }
     if (draft.targetType === 'TEAM') payload.targetId = selected.id
     if (draft.targetType === 'ROLE') payload.roleCode = selected.id
+    if ((this._broadcastRoster || []).length) {
+      delete payload.targetId
+      delete payload.roleCode
+      Object.assign(payload, broadcastPayloadTarget(this._broadcastPicked || [], this._broadcastRoster, draft.targetType, this._broadcastTargetOptions))
+    }
     this.setData({ broadcastSheetVisible: false })
     this.executeAction('BROADCAST', payload)
   },
@@ -1245,12 +1391,15 @@ const DIRECTOR_METHODS = {
     if (this.data.writeLocked) return
     const reason = String(this.data.unlockReason || '').trim()
     const selected = this.data.chapterOptions[this.data.unlockChapterIndex]
-    if (!this.data.canUnlockChapter || !selected || !reason) {
-      toast('请填写手动解锁原因')
+    // C-04(2026-11-02 用户):放行原因选填,填了才带上
+    if (!this.data.canUnlockChapter || !selected) {
+      toast('请选择要放行的章节')
       return
     }
     this.setData({ unlockSheetVisible: false })
-    this.executeAction('UNLOCK_CHAPTER', { chapterId: selected.chapterId, reason: reason })
+    const payload = { chapterId: selected.chapterId }
+    if (reason) payload.reason = reason
+    this.executeAction('UNLOCK_CHAPTER', payload)
   },
 
   onToggleLeaderboard() {
@@ -1313,7 +1462,9 @@ const DIRECTOR_METHODS = {
   onStartSession() {
     if (this.data.writeLocked) return
     if (!this.data.readiness || !this.data.readiness.canStart) {
-      toast('准备未完成，暂时不能开局')
+      // C-09:服务端已给出卡点(如「尚无有效报名队伍」),直接说出来;只有带队人能看到导演台。
+      const blockers = Array.isArray(this.data.blockers) ? this.data.blockers.filter(Boolean) : []
+      toast(blockers.length ? '还不能开始：' + blockers.join('；') : '准备未完成，暂时不能开局')
       return
     }
     const that = this
@@ -1322,6 +1473,18 @@ const DIRECTOR_METHODS = {
       content: '开局后玩家将按当前角色和节点状态进入活动。',
       confirmText: '开始活动',
       success(result) { if (result.confirm) that.executeAction('START', {}) },
+    })
+  },
+
+  goStationMerchants() {
+    const topicId = this._topicId
+    if (!topicId) return
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({
+      url: '/pages/coop/list/index?tab=sent&topicId=' + topicId
+        + (this.data.topic && this.data.topic.name ? '&topicName=' + encodeURIComponent(this.data.topic.name) : ''),
+      complete: () => { this._navigating = false },
     })
   },
 
@@ -1334,7 +1497,7 @@ const DIRECTOR_METHODS = {
     const that = this
     showDirectorModal(this, {
       title: '进入准备',
-      content: '进入后将开始收集节点和队伍 READY 状态。',
+      content: '进入后将开始收集节点和队伍的就绪状态。',
       confirmText: '开始准备',
       success(result) { if (result.confirm) that.executeAction('PREPARE', {}) },
     })
@@ -1418,7 +1581,9 @@ const DIRECTOR_METHODS = {
         that.setData({ writeState: 'idle', writeMessage: '', writeLocked: false, canRetryUnknownWrite: false })
         // CU-C-76:后端把驳回原因放在 reasonCode 里(如 GAME_BROADCAST_NO_RECIPIENT),
         // 以前这里不分原因统一一句「操作未生效」,把可执行的下一步抹掉了。
-        toast(rejectedActionText(command.action, result.raw) || '操作未生效，请刷新后重试')
+        const rejectedText = rejectedActionText(command.action, result.raw)
+        if (command.action === 'START') that.setData({ startFailText: rejectedText ? '没能开始：' + rejectedText : '没能开始，请刷新后重试' })
+        toast(rejectedText || '操作未生效，请刷新后重试')
         // F-L3-01:驳回(含 GAME_STATE_CONFLICT)说明本地投影已落后，自动重读，下一次操作带新 revision
         that.loadProjection()
         return

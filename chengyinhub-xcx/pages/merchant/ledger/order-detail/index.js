@@ -1,6 +1,8 @@
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js'); const pageMotion = require('../../../../utils/page-motion.js');
-const { isFinanceObjectPayload, money } = require('../../utils/merchant-finance.js');
+const { isFinanceObjectPayload, money, yuan } = require('../../utils/merchant-finance.js');
+
+const RECORD_TYPES = ['redemption', 'activity_ticket', 'session_fee'];
 
 Page({
   data: {
@@ -14,7 +16,9 @@ Page({
     errorText: '',
   },
   onLoad(options) {
-    const recordType = options && options.recordType === 'redemption' ? 'redemption' : '';
+    // 第十二轮 k6(p2 N-1):商家自有活动的验票行(activity_ticket)同样打开详情,不再落到「缺少核销记录信息」。
+    // 第十二轮 k5:俱乐部场次核销费(session_fee,按场次一行)也有详情。
+    const recordType = options && RECORD_TYPES.indexOf(options.recordType) >= 0 ? options.recordType : '';
     const recordId = options && options.recordId ? String(options.recordId) : '';
     this.setData({
       recordType,
@@ -81,15 +85,16 @@ Page({
         const detail = Object.assign({}, res.data, {
           canReadFinance,
           amountText,
-          amountDisplay: amountText == null ? null : `¥${amountText}`,
+          amountDisplay: amountText == null ? null : yuan(amountText),
           title: [res.data.topicName, res.data.chapterName].filter(Boolean).join(' · ') || '核销记录',
           stateText: canReadFinance ? stateText(res.data) : fulfillmentStateText(res.data.fulfillmentState),
           stateVariant: canReadFinance
             ? stateVariant(res.data.displayState)
             : (res.data.fulfillmentState === 'ACTIVE' ? 'success' : 'neutral'),
           refundText: refundText(res.data.refundState),
-          amountFallback: canReadFinance
-            ? (res.data.displayState === 'NO_CASH_SETTLEMENT' ? '—' : '待定') : '',
+          // p2 F-7:零现金记录不画「我的收入」与占位杠,由状态签说「无现金结算」
+          noCash: canReadFinance && res.data.displayState === 'NO_CASH_SETTLEMENT',
+          amountFallback: canReadFinance && res.data.displayState !== 'NO_CASH_SETTLEMENT' ? '待定' : '',
           occurredAtText: res.data.occurredAt ? String(res.data.occurredAt).slice(0, 16).replace('T', ' ') : '',
           accrualRuleText: canReadFinance ? accrualRuleText(res.data) : '',
           timeline: canReadFinance ? buildTimeline(res.data) : [],
@@ -189,7 +194,7 @@ function accrualRuleText(detail) {
     && detail.headCount !== ''
     && Number.isFinite(Number(detail.headCount));
   if (unitFee == null || !hasHeadCount) return '';
-  return `¥${unitFee}/人 × ${detail.headCount}`;
+  return `${yuan(unitFee)}/人 × ${detail.headCount}`;
 }
 
 /**
@@ -221,7 +226,7 @@ function stateText(detail) {
     console.warn('资金域零现金记录缺少 noCashReason');
     return '本次不产生现金结算';
   }
-  return { PENDING_SETTLEMENT: '随主题结算发放至个人账户', SETTLED: detail.settlementRoute === 'CHAPTER_OFFER' ? '平台已打款' : '已入个人账户', ADJUSTMENT_PENDING: '调整中', ADJUSTED: '已调整', REVERSED_BEFORE_SETTLEMENT: '核销已撤销', LEDGER_ERROR: '结算数据对不上，请联系客服' }[detail.displayState] || '状态待确认';
+  return { PENDING_SETTLEMENT: detail.settlementRoute === 'ACTIVITY' ? '待结算' : '随主题结算发放至个人账户', SETTLED: detail.settlementRoute === 'CHAPTER_OFFER' ? '平台已打款' : '已入个人账户', ADJUSTMENT_PENDING: '调整中', ADJUSTED: '已调整', REVERSED_BEFORE_SETTLEMENT: '核销已撤销', LEDGER_ERROR: '结算数据对不上，请联系客服' }[detail.displayState] || '状态待确认';
 }
 function refundText(state) { return { REVIEWING: '审核中', REJECTED: '已驳回', REFUNDING: '退款中', REFUNDED: '已退款' }[state] || ''; }
 /**

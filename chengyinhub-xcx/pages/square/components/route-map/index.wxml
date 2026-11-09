@@ -1,6 +1,7 @@
 <view class="rm-wrap" wx:if="{{routeReady}}" style="height:{{height}};">
   <map
     id="rmMap"
+    subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
     class="rm-map"
     latitude="{{mapLatitude}}"
     longitude="{{mapLongitude}}"

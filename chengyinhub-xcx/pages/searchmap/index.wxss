@@ -1,5 +1,6 @@
 @charset "UTF-8";
 @import '../../style/picker-wheel.wxss';
+@import '../../style/merchant-light-scope.wxss';
 /* L2 Browse · Map + List(迁移矩阵 §5.1 / 模板库 §4.4)
    本页读 ① 真值层 --cy-color-* / --cy-type-*(DS §10.1:迁移页面禁旧名 alias 与硬编码)。
    筛选与结果弹层已收编为 cy-sheet,原 .screen / .pop-cont / .pop-baoming 私有弹层删除。 */

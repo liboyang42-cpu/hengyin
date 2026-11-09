@@ -1,0 +1,34 @@
+route ["pages/publish/fabu/index"]
+ok   tap "创建章节"
+ok   tap "退出"
+ok   tap "添加序章"
+ok   tap "下一步"
+ok   tap "添加视频"
+ok   wait 4000
+shot /private/tmp/codex-video-proof/valid-video-shared-backend.jpg
+ok   shot "valid-video-shared-backend"
+text: * | 已存本机 | 主题详情 | 还有 4 项未填 | * | 模式 | 城市定向 | 切换 | 票务 | 票务设置 | 还有 5 项未填 | * | 章节 | 第1章 序章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 第1章 | 缺剧情 | 0 节点 | 编辑故事流 | 编辑章节 | 退出 | 第1章 · 故事流 | 完成 | 下一步 | 文字说明 | 未命名地点 | 完成 | 退出 | 编辑章节 | 完成 | 章节名称 | * | 完成要求 | 关闭后可设最少完成节点数 | 全部完成 | 章末配给 | 本章结束时消耗物品，不够时扣数值 | 不消耗物品 | 请先选择进行方式 | 互斥选项 | 同组节点只能完成其中一个 | 添加互斥组 | 先保存草稿，再选择本章节点。 | 章节音频 | 添加音频 | 开场视频 | 添加视频 | 不支持的文件类型或文件过大 | 章节配色 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ok   dump true
+route ["pages/publish/fabu/index"]
+--- network (13)
+200 232ms POST /__api/api/config/features
+200 554ms GET /__api/api/play/theme/support-matrix
+200 556ms POST /__api/api/role/info
+200 557ms POST /__api/api/user/info
+200 560ms POST /__api/api/club/my
+200 566ms POST /__api/api/template/my-list
+200 427ms POST /__api/api/template/list
+200 646ms POST /__api/api/publisher/identity/status
+200 291ms POST /__api/api/config/features
+200 233ms POST /__api/api/compliance/consents
+200 257ms POST /__api/api/compliance/consents
+200 0ms UPLOAD /__api/api/common/uploadOSS
+400 0ms UPLOAD /__api/api/common/uploadOSS
+--- page errors (0)
+--- console errors/warnings (4)
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] HTTP 404 http://127.0.0.1:18108/favicon.ico
+[error] HTTP 400 http://127.0.0.1:18108/__api/api/common/uploadOSS
+[error] Failed to load resource: the server responded with a status of 400 (Bad Request)
+--- runtime log (1)
+open-type agreePrivacyAuthorization

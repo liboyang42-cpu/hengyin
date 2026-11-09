@@ -6,7 +6,7 @@
     <cy-tabs class="sh-tabs" variant="icon" tabs="{{ tabItems }}" active="{{ tab }}" bind:change="switchTab" />
     <view class="sh-search" bindtap="goSearch" aria-role="button" aria-label="搜索主题与玩法模板" hover-class="cy-pressed" hover-stay-time="80">
       <view class="sh-search__pill">
-        <image class="sh-search__ic" src="/images/icon_search.svg" mode="aspectFit" />
+        <image class="sh-search__ic" src="/pages/templatedetail/images/icon_search.svg" mode="aspectFit" />
         <text class="sh-search__ph">搜索主题与玩法模板</text>
       </view>
     </view>

@@ -366,3 +366,45 @@ test('settlement notice: immediate owner change without onShow and missing ident
   assert.equal(h.subscriptions.length, requests);
   assert.equal(h.page.data.settleAlertsState, 'unknown');
 });
+
+test('合作分润列表显示净额和原额调整，只用实际返回行的合法ID开详情', () => {
+  let page; let memberId = '7'; const urls = [];
+  const finance = require('../../pages/merchant/utils/merchant-finance.js');
+  require('node:vm').runInNewContext(read('pages/merchant/ledger/index.js'), {
+    Page(value) { page = value; }, getApp: () => ({ globalData: {}, getUserID: () => memberId }),
+    require: id => id.includes('merchant-finance') ? finance : {},
+    wx: { navigateTo(o) { urls.push(o.url); } },
+  });
+  page.data.merchantAccess.canReadFinance = true; page._scopeMemberId = '7';
+  const row = page.entryRow({ source: 'COOP_SHARE', settlementRoute: 'COOP_ORDER', refKind: 'coop_settlement', refId: '31',
+    signedAmount: '30.00', originalAmount: '40.00', executedAdjustmentAmount: '-10.00', displayState: 'PENDING_SETTLEMENT' });
+  assert.equal(row.amountDisplay, '+¥30.00');
+  assert.equal(row.stateText, '待入账');
+  assert.equal(page.entryRow({ source: 'REDEMPTION_FEE', settlementRoute: 'COOP_ORDER', displayState: 'PENDING_SETTLEMENT' }).stateText, '待主题结算');
+  assert.match(row.coopBreakdown, /原始应结 ¥40.00.*已执行调整 −¥10.00/);
+  page.data.entries = [row];
+  page.goCoopSettlements();
+  assert.equal(urls.pop(), '/pages/merchant/ledger/index?view=settlement&source=coop');
+  const tap = id => page.goSettlementDetail({ currentTarget: { dataset: { id } } });
+  tap('31'); assert.equal(urls.pop(), '/pages/coop/settlement-detail/index?source=ledger&id=31');
+  for (const id of ['32', '0', '31&source=finance']) tap(id);
+  for (const source of ['OTHER', 'REFUND']) assert.equal(page.entryRow({ source, refKind: 'coop_settlement', refId: '31' }).coopDetailId, '');
+  memberId = '8'; tap('31'); page.goCoopSettlements(); assert.equal(urls.length, 0);
+  assert.match(read('pages/merchant/ledger/index.wxml'), /bindtap="goSettlementDetail" data-id="\{\{item.coopDetailId\}\}"/);
+});
+
+test('财务核销列表只合并合法REFUND，手工工单及未知类型不生成空退款路由', () => {
+  let page; const observed = [];
+  require('node:vm').runInNewContext(read('pages/merchant/ledger/index.js'), {
+    Page(value) { page = value; }, getApp: () => ({ globalData: {}, getUserID: () => '7' }),
+    require: id => id.includes('view-model') ? { shapeAftercareListPage: data => data } : {}, wx: {},
+  });
+  page._scopeMemberId = '7'; page._redemptionEpoch = 1;
+  page.request = (url, body, done) => done({ code: 200, data: { items: url.includes('bucket=PENDING') ? [
+    { recordType: 'REFUND', refundId: 31 }, { recordType: 'MANUAL_CASE', manualCaseId: 5, refundId: null },
+    { recordType: 'UNKNOWN', refundId: 32 }, { recordType: 'REFUND', refundId: 0 },
+  ] : [] } });
+  page.refundRow = item => item; page._applyRedemptionView = () => observed.push(...page._refundRows);
+  page._loadRefundRows('7', 1, true);
+  assert.equal(observed.length, 1); assert.equal(observed[0].refundId, 31);
+});

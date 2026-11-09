@@ -1,5 +1,5 @@
 <cy-play-stage id="cy-play-stage" skin="guess" show="{{show}}" back-label="退出"
-               limit-seconds="{{limitSeconds}}" tries="{{maxTries}}"
+               limit-seconds="{{limitSeconds}}" tries="{{maxTries}}" used="{{attempts}}"
                bind:back="onClose" bind:verdict="onVerdict">
   <view class="g-col pp {{reducedMotion ? 'pp--reduced' : ''}}">
     <view class="pp__q pe pe--blur" style="--pe-d:.05s">{{title}}</view>

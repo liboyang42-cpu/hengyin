@@ -1,6 +1,7 @@
 'use strict';
 // L21 · 改动清单 B9 退款被拒订阅:utils/subscribe.js 定义了 refundRejected 却没人申请。
-// 报名时已占满 3 个模板(baoming.js),所以改在「确认退款」这一下申请 ['refund','refundRejected']。
+// 报名时已占满 3 个模板(baoming.js),所以改在「确认退款」这一下申请退款订阅。
+// 2026-11-03 第七轮 C 第 6 项:后端从不发送「退款被拒」(无 tplRefundRejected),只申请 ['refund']。
 // 微信订阅规则:只能在用户点击链里同步发起 —— 这里断言在确认回调的同步段内、退款请求之前申请;
 // 不点确认 / 零元单(没钱可退)/ 未付单的普通取消一律不弹。
 const { test } = require('node:test');
@@ -67,12 +68,12 @@ const FREE = { paymentStatus: 2, totalAmount: 0, payableAmount: 0, isFreeOrder: 
 const UNPAID = { paymentStatus: 0, totalAmount: 30, payableAmount: 30 };
 
 for (const [label, file, handler] of entries) {
-  test(`B9 ${label}:已付单确认退款 → 先申请 refund+refundRejected,再发退款请求`, () => {
+  test(`B9 ${label}:已付单确认退款 → 先申请 refund(不含后端不发的 refundRejected),再发退款请求`, () => {
     const h = mount(file, PAID);
     h.tap(handler);
     assert.deepEqual(h.log, [], '点开确认框不申请');
     h.answer(true);
-    assert.deepEqual(h.log, [['subscribe', ['refund', 'refundRejected']], ['request', '/api/registration/cancel-refund']]);
+    assert.deepEqual(h.log, [['subscribe', ['refund']], ['request', '/api/registration/cancel-refund']]);
   });
 
   test(`B9 ${label}:点「再想想」不申请也不发`, () => {
@@ -98,9 +99,20 @@ for (const [label, file, handler] of entries) {
   });
 }
 
-test('B9 refundRejected 模板已配置,且全仓只在这三处确认退款时申请(不在页面加载等非点击时机)', () => {
-  const subscribe = require('../../utils/subscribe.js');
-  assert.equal(subscribe.resolveTemplateIds(['refund', 'refundRejected']).length, 2);
+test('退款订阅只在这三处确认退款时申请,且全仓源码不再申请后端不发送的 refundRejected', () => {
   const users = entries.map(([, file]) => fs.readFileSync(path.join(root, file), 'utf8'));
-  users.forEach((src) => assert.equal((src.match(/\.request\(\['refund', 'refundRejected'\]\)/g) || []).length, 1));
+  users.forEach((src) => assert.equal((src.match(/\.request\(\['refund'\]\)/g) || []).length, 1));
+  const javaRoot = path.resolve(root, '..');
+  const impl = fs.readFileSync(path.join(javaRoot, 'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxSubscribeMsgServiceImpl.java'), 'utf8');
+  assert.doesNotMatch(impl, /RefundReject/i, '后端若新增退款被拒模板,再恢复申请');
+  const offenders = [];
+  (function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (['node_modules', 'tests', 'scripts', 'docs', 'miniprogram_npm', '.git'].includes(entry.name)) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.js') && /request\([^)]*refundRejected/.test(fs.readFileSync(full, 'utf8'))) offenders.push(full);
+    }
+  })(root);
+  assert.deepEqual(offenders, []);
 });

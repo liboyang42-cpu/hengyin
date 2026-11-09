@@ -220,15 +220,16 @@ class ApiClubLifecycleTest {
     }
 
     /**
-     * CU-C-98:小程序建团入口的 payload 里没有 leaderName ⇒ club.leader_name 为 NULL,
-     * 俱乐部详情的「主理人」一格只剩占位符 —— 而主理人档案里本来就有名字。
-     * 读出口兜底(与 level/tags 同一处),自己填过的名字不被覆盖。
+     * CU-C-98 → 业主 2026-11-05:主理人一格不再是空的占位符,但也不再是主理人档案 / 入驻时填的真实姓名,
+     * 一律是主理人的昵称(IClubService.ownerDisplayName),真实姓名不公开。
      */
     @Test
-    void leaderName_fallsBackToTheLeaderProfileWhenTheClubRowHasNone() {
+    void leaderName_isTheOwnersNicknameNotTheLeaderProfileName() {
         Club stored = activeClub();   // memberId = 9L,leader_name 没设过
+        stored.setLeaderName("入驻实名");
         when(clubService.selectClubList(org.mockito.ArgumentMatchers.any(Club.class)))
                 .thenReturn(new java.util.ArrayList<>(java.util.Arrays.asList(stored)));
+        when(clubService.ownerDisplayName(stored)).thenReturn("夜跑阿舟");
 
         com.chengyinhub.business.service.IClubLeaderService leaderService =
                 mock(com.chengyinhub.business.service.IClubLeaderService.class);
@@ -239,15 +240,13 @@ class ApiClubLifecycleTest {
         ReflectionTestUtils.setField(controller, "clubLeaderService", leaderService);
 
         List<?> rows = (List<?>) controller.list(new Club()).get("data");
-        assertEquals("执行俱乐部主理人",
+        assertEquals("夜跑阿舟",
                 ((com.chengyinhub.business.domain.vo.PublicClubVO) rows.get(0)).getLeaderName(),
-                "档案里有名字却显示占位符,用户会以为这个俱乐部没有负责人");
+                "主理人名是昵称,不是档案实名或入驻实名");
 
-        // 自己填过的名字以 club 行为准,不被档案反向覆盖
-        stored.setLeaderName("自己写的名字");
-        rows = (List<?>) controller.list(new Club()).get("data");
-        assertEquals("自己写的名字",
-                ((com.chengyinhub.business.domain.vo.PublicClubVO) rows.get(0)).getLeaderName());
+        // 读出口只改出参:库里的 leader_name(平台审核用)不被写回
+        org.mockito.Mockito.verify(clubService, org.mockito.Mockito.never())
+                .updateClub(org.mockito.ArgumentMatchers.any(Club.class));
     }
 
     @Test

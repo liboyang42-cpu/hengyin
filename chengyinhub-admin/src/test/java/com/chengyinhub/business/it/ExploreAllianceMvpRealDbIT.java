@@ -260,7 +260,7 @@ class ExploreAllianceMvpRealDbIT {
             ps.setString(2, com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.SCHEMA_VERSION);
             ps.setLong(3, 1L);
             ps.setString(4, com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.writeDraft(
-                    TopicSaleCanonicalTestFixture.canonical()));
+                    TopicSaleCanonicalTestFixture.ordinaryCanonical()));
             ps.setLong(5, PUBLISHER);
             ps.executeUpdate();
         }
@@ -315,13 +315,13 @@ class ExploreAllianceMvpRealDbIT {
         TopicSaleCanonicalBuilder canonicalBuilder = mock(TopicSaleCanonicalBuilder.class);
         when(canonicalBuilder.rebuild(org.mockito.ArgumentMatchers.any(CmsTopic.class),
                 org.mockito.ArgumentMatchers.any(com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.class)))
-                .thenReturn(TopicSaleCanonicalTestFixture.canonical());
+                .thenReturn(TopicSaleCanonicalTestFixture.ordinaryCanonical());
         ReflectionTestUtils.setField(result, "canonicalBuilder", canonicalBuilder);
         ApprovedSaleCanonicalSource approvedSource = mock(ApprovedSaleCanonicalSource.class);
         when(approvedSource.read(org.mockito.ArgumentMatchers.eq(TOPIC), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new ApprovedSaleCanonical(770001L,
                 com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.SCHEMA_VERSION, 1L,
-                TopicSaleCanonicalTestFixture.canonical()));
+                TopicSaleCanonicalTestFixture.ordinaryCanonical()));
         ReflectionTestUtils.setField(result, "approvedCanonicalSource", approvedSource);
         return result;
     }
@@ -423,7 +423,7 @@ class ExploreAllianceMvpRealDbIT {
             seed(s, BigDecimal.ZERO, null, CHAPTER_COUNT - 1);
             IllegalStateException ex = assertThrows(IllegalStateException.class,
                     () -> service(s).finalizeForSale(TOPIC));
-            assertTrue(ex.getMessage().contains("缺有效 SUPPLY 供给"),
+            assertTrue(ex.getMessage().contains("还没有商家承接成功，不能开售"),
                     "应因必选章缺供给被拒,实际:" + ex.getMessage());
             assertEquals(Integer.valueOf(2), lifecycleOf(s), "被拒后必须仍停在 PRICING");
         }

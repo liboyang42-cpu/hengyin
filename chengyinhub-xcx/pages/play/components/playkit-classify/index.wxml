@@ -14,7 +14,6 @@
         <text class="cf__card-n">{{placed + 1}} / {{total}}</text>
         <text class="cf__card-t">{{item.label}}</text>
       </view>
-      <view class="cf__done" wx:if="{{!stack.length}}">都放好了，看看下面对不对</view>
       <view class="cf__ghost {{ghost.go ? 'is-go' : ''}}" wx:if="{{ghost}}" style="{{ghost.go ? 'transform:translate(' + ghost.dx + 'rpx, 420rpx) scale(.4)' : ''}}" aria-hidden="true">{{ghost.label}}</view>
     </view>
 
@@ -39,7 +38,7 @@
     </view>
   </view>
 
-  <view class="g-btn {{placed >= total && total > 0 ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
+  <view wx:if="{{!passed}}" class="g-btn {{placed >= total && total > 0 ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
         aria-role="button" aria-label="提交分好的结果" hover-class="g-btn--press" hover-stay-time="80">
     分好了
   </view>

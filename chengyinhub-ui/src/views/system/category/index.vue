@@ -21,6 +21,7 @@
           <el-option label="个人偏好" value="3" />
           <el-option label="模版" value="4" />
           <el-option label="品牌偏好" value="5" />
+          <el-option label="商家行业" value="6" />
         </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="status">
@@ -149,6 +150,7 @@
             <el-option label="个人偏好" value="3" />
             <el-option label="模版" value="4" />
             <el-option label="品牌偏好" value="5" />
+          <el-option label="商家行业" value="6" />
           </el-select>
         </el-form-item>
         <el-form-item label="分类名称" prop="categoryName">
@@ -275,6 +277,7 @@ export default {
         case 3: return '个人偏好';
         case 4: return '模版';
         case 5: return '品牌偏好';
+        case 6: return '商家行业';
         default: return '未知';
       }
     },

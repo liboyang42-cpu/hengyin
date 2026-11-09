@@ -8,14 +8,20 @@ const SCENE = 'subpackageMember/components/scene-member-participation-detail/ind
 const SHELL = 'subpackageMember/mycanyuinfo/mycanyuinfo';
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const clone = value => JSON.parse(JSON.stringify(value));
-const topic = extra => ({ id: '81', memberId: '71', ownerType: 1, ownerId: '901', cmsTopic: { id: '901' }, ...extra });
-const activity = extra => topic({ ownerType: 2, ownerId: '88', cmsTopic: null, cmsActivity: { id: '88', topicId: '901' }, ...extra });
+// R11 p1 F-7:定向成绩只给城市定向(productType 1),夹具按城市定向写;角色卡入口先探一次本人角色卡
+const topic = extra => ({ id: '81', memberId: '71', ownerType: 1, ownerId: '901', cmsTopic: { id: '901', productType: 1 }, ...extra });
+const activity = extra => topic({ ownerType: 2, ownerId: '88', cmsTopic: null, cmsActivity: { id: '88', topicId: '901', productType: 1 }, ...extra });
+const CARD = { topicId: '901', created: true, running: false, attributes: [] };
 
-function mount(shell = false) {
+function mount(shell = false, opts = {}) {
   let componentDef, pageDef, user = '71', token = 'token-a', closeHook;
-  const requests = [], events = [], writes = [];
-  const app = { globalData: {}, getUserID: () => user, getAuthorization: () => token,
-    sendRequest: options => { requests.push(options); return { abort() {} }; } };
+  const requests = [], events = [], writes = [], probes = [];
+  const card = Object.prototype.hasOwnProperty.call(opts, 'card') ? opts.card : CARD;
+  const app = { globalData: { features: { freeExploreBundle: opts.bundle !== false } }, getUserID: () => user, getAuthorization: () => token,
+    sendRequest: options => {
+      // 角色卡探针单独记账并按夹具立即回包,registration 读取的计数语义不变
+      if (options.url === '/api/play/character') { probes.push(options); options.success({ code: 200, data: card && { ...card, topicId: options.data.topicId } }); return { abort() {} }; }
+      requests.push(options); return { abort() {} }; } };
   function load(rel) {
     const filename = path.join(ROOT, rel + '.js');
     vm.runInNewContext(read(rel + '.js'), {
@@ -44,7 +50,7 @@ function mount(shell = false) {
     load(SHELL);
     page = Object.assign({}, pageDef, { data: clone(pageDef.data), setData(patch) { Object.assign(this.data, patch); } });
   }
-  return { component, requests, events, writes,
+  return { component, requests, events, writes, probes,
     boot(id = '81') {
       component.data.recordId = shell ? '' : id;
       componentDef.lifetimes.attached.call(component);
@@ -220,4 +226,22 @@ test('integration registers delivered routes and keeps the engineering desk off 
   assert.equal(merchant.usingComponents['cy-merchant-desk'], undefined);
   assert.doesNotMatch(read('pages/merchant/index/index.wxml'), /<cy-merchant-desk\b/);
   assert.equal(fs.existsSync(path.join(ROOT, 'pages/merchant/components/desk')), false);
+});
+
+test('R11 p1 F-7:功能关着或主题没有这类数据时不摆入口', () => {
+  // 主题没有角色属性、也没建过卡 ⇒ 不摆「我的角色卡」
+  let h = mount(false, { card: { topicId: '901', created: false, running: false, attributes: [] } });
+  h.boot(); h.respond(topic());
+  assert.equal(h.probes.length, 1);
+  assert.equal(h.component.data.characterEntry, false);
+  assert.equal(h.component.data.scoreEntry, true);
+  // 自由探索主题 ⇒ 不摆「定向成绩」
+  h = mount(); h.boot(); h.respond(topic({ cmsTopic: { id: '901', productType: 2 } }));
+  assert.equal(h.component.data.scoreEntry, false);
+  // 套票功能关 ⇒ 不摆「自由探索权益」
+  h = mount(false, { bundle: false }); h.boot(); h.respond(topic({ purchaseKind: 3 }));
+  assert.equal(h.component.data.bundleRegistrationId, '');
+  const wxml = read(SCENE + '.wxml');
+  assert.match(wxml, /wx:if="\{\{resultTopicId && characterEntry\}\}"[^>]*bindtap="goCharacter"/);
+  assert.match(wxml, /wx:if="\{\{resultTopicId && scoreEntry\}\}"[^>]*bindtap="goScore"/);
 });

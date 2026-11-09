@@ -8,7 +8,7 @@
     </view>
   </view>
   <cy-empty wx:elif="{{state !== 'ready'}}" kind="{{state}}" title="{{stateTitle || '计分加载中'}}"
-    cta="{{state === 'loading' ? '' : '重新读取'}}" bind:cta="retry" fill size="lg" />
+    cta="{{state === 'loading' ? '' : (state === 'missing-param' ? '返回' : '重新读取')}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
     <view class="score-card">
       <text class="score-title">本局计分 · {{score.phase}}</text>

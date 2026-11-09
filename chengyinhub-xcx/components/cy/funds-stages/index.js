@@ -41,7 +41,7 @@ Component({
     emitStages(stages) {
       const withdrawable = stages ? Number(stages.withdrawable) : NaN;
       const known = !!stages && stages.amountsKnown && Number.isFinite(withdrawable);
-      this.triggerEvent('stages', { known: known, positive: known && withdrawable > 0 });
+      this.triggerEvent('stages', { known: known, positive: known && withdrawable > 0, waiting: known && stages.complaintPeriod.length > 0 });
     },
     _acceptRead(epoch) {
       if (epoch !== this._loadEpoch || this._detached || this._hidden) return false;

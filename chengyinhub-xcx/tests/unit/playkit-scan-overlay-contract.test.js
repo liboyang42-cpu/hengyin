@@ -35,6 +35,7 @@ function load(arg) {
   const events = [];
   let definition = null;
 
+  global.getApp = () => ({ getUserID: () => 9 });
   global.Behavior = (o) => o;
   global.Component = (config) => { definition = config; };
   global.wx = {

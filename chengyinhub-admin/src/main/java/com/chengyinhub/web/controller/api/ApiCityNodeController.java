@@ -3,6 +3,7 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.MemberCollectible;
+import com.chengyinhub.business.domain.vo.CityNodeGuestProjection;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.MemberCollectibleMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
@@ -93,6 +94,8 @@ public class ApiCityNodeController extends BaseController {
         vo.setNeedRedeem(pendingCoupon != null);
         if (pendingCoupon != null) vo.setCouponId(pendingCoupon);
         markUserState(Collections.singletonList(vo));
+        // 第九轮 m4:分享来的据点游客可读(SecurityConfig 精确放行 GET 数字 id),只回公开字段,不记任何状态。
+        if (memberId <= 0) CityNodeGuestProjection.apply(vo);
         return success(vo);
     }
 

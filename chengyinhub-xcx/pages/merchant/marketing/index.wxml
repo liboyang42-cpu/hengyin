@@ -8,7 +8,8 @@
          nav-page-title-spacing-contract 锁着它 —— 这一页单独走自绘会成孤例。 -->
   <cy-nav-bar title="营销" back="{{false}}" />
 
-  <view class="body" style="{{pmPage === 1 ? '--pm-k:1;' : (pmPage === 2 ? '--pm-k-d:.32s;--pm-k-s:1;' : '')}}">
+  <cy-empty wx:if="{{guestLogin}}" kind="no-permission" fill size="lg" title="登录后查看营销" cta="登录" bind:cta="onGuestLogin" />
+  <view wx:else class="body" style="{{pmPage === 1 ? '--pm-k:1;' : (pmPage === 2 ? '--pm-k-d:.32s;--pm-k-s:1;' : '')}}">
     <!-- 未登录不再整屏拦:静默登录(见 index.js 的 enterMarketing),登录/身份确认失败
          只在页内挂一条内联错误 + 重试。岗位没有营销权限也从整屏态改成页内说明。 -->
     <cy-inline-error load-failure class="m-inline-error" wx:if="{{entryError}}" kind="data"
@@ -56,7 +57,7 @@
     <!-- 工具入口。前两个是真工具,后两个是发布快捷方式 —— 都是现有路由,不新开页。 -->
     <view class="tiles">
       <view class="tile" wx:for="{{entries}}" wx:key="action" bindtap="go" data-action="{{item.action}}"
-            hover-class="tile--tap" hover-stay-time="80"
+            hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="{{item.title}}">
         <cy-icon class="tile-ico" name="{{item.icon}}" size="44" />
         <text class="tile-label">{{item.title}}</text>
@@ -70,7 +71,7 @@
       <!-- 箭头走 cy-icon 真图标(字符 › 撞 global-real-icon 契约);
            可点元素必须带按压反馈(press-feedback-coverage 契约)。 -->
       <view class="sec-link" wx:if="{{marketingLoaded}}" bindtap="goManage"
-            hover-class="sec-link--tap" hover-stay-time="80"
+            hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="管理我发布的内容">
         <text class="sec-link-txt">管理</text>
         <cy-icon class="sec-link-ico" name="arrow-right" size="24" />
@@ -80,7 +81,7 @@
          没权限的人看到「发布第一个主题」点进去必被拒,那是个假入口。
          ⚠️ 未确认(unknown)绝不能落到这里:那会把「还没读到」画成「你什么都没有」。 -->
     <cy-empty wx:if="{{marketingLoaded && marketingDataState === 'empty'}}" kind="empty"
-              title="还没有营销数据"
+              title="还没有主题和活动"
               cta="{{merchantAccess.canManageProjects ? '发布第一个主题' : ''}}"
               bind:cta="startFirstContent" />
     <view class="mk-hold mk-hold--mine" wx:elif="{{funnelLoading && !marketingLoaded}}">
@@ -89,7 +90,7 @@
     <view class="mine" wx:else>
       <view class="mine-tile" wx:for="{{myContent}}" wx:key="key"
             bindtap="goMyContent" data-key="{{item.key}}" data-count="{{item.count}}"
-            hover-class="mine-tap" hover-stay-time="80"
+            hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="{{item.ariaLabel}}">
         <text class="mine-num">{{cnt.f(item.countText, mkK)}}</text>
         <text class="mine-label">{{item.title}}</text>
@@ -113,7 +114,7 @@
          拆成两个各自绑定 go 的可点元素会撞 ui-placeholder-cleanup 的
          「优惠券入口只能有一处」(它按 wxml 里的裸字符串计数,注释也算)。 -->
     <view class="deck-slot" wx:else bindtap="go" data-action="coupon"
-          hover-class="deck-tap" hover-stay-time="80"
+          hover-class="cy-pressed" hover-stay-time="80"
           aria-role="button" aria-label="{{couponCard ? couponCard.ariaLabel : '还没有优惠券，去发一张'}}">
       <view class="deck deck--g{{deckGhosts}}" wx:if="{{couponCard}}">
         <view class="deck-ghost deck-ghost--2" wx:if="{{deckGhosts > 1}}" aria-hidden="true"></view>
@@ -124,7 +125,7 @@
           <text class="deck-sub">{{couponCard.sub}}</text>
         </view>
       </view>
-      <cy-empty wx:else title="还没有优惠券" sub="发一张到店券，把看过的人带进门" />
+      <cy-empty wx:else title="还没有优惠券" />
     </view>
 
     <!-- 商家合作的唯一入口:商机与定向邀约都在合作中心处理。
@@ -133,7 +134,7 @@
     <view class="sec-head">
       <text class="sec-title">合作机会</text>
     </view>
-    <view class="coop" bindtap="goCoopCenter" hover-class="coop--tap" hover-stay-time="80"
+    <view class="coop" bindtap="goCoopCenter" hover-class="cy-pressed" hover-stay-time="80"
           aria-role="button" aria-label="进入合作中心">
       <image class="coop-img" src="/pages/merchant/images/merchant_coop_banner.jpg" mode="aspectFill" />
       <view class="coop-scrim" aria-hidden="true"></view>

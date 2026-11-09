@@ -52,6 +52,48 @@ import static org.mockito.Mockito.when;
  */
 class CmsActivityAdminReviewGateTest {
 
+    @Test
+    void boundNestedGameTextIsCheckedBeforeAdminCreateOrPartialUpdate() {
+        com.chengyinhub.business.service.ICmsMemberTemplateService templates =
+                mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class);
+        com.chengyinhub.business.domain.CmsMemberTemplate game = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        game.setId(55L);
+        game.setAdvancedConfigJson("{\"futureGame\":{\"unknown\":[\"违禁文案\"]}}");
+        when(templates.selectCmsMemberTemplateById(55L)).thenReturn(game);
+        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templates);
+        CmsActivity created = new CmsActivity();
+        created.setName("正常活动"); created.setMemberId(OWNER); created.setTemplateId(55L);
+        assertEquals(500, controller.add(created).get(AjaxResult.CODE_TAG));
+        CmsActivity current = new CmsActivity();
+        current.setId(EXISTING_ID); current.setMemberId(OWNER); current.setTemplateId(55L);
+        when(mapper.selectCmsActivityById(EXISTING_ID)).thenReturn(current);
+        CmsActivity patch = new CmsActivity();
+        patch.setId(EXISTING_ID); patch.setDescription("只改活动文字");
+        assertEquals(500, controller.edit(patch).get(AjaxResult.CODE_TAG));
+        verify(mapper, never()).insertCmsActivity(any());
+        verify(mapper, never()).updateCmsActivity(any());
+    }
+
+    @Test
+    void heldBoundGameCreatesPendingAndUpdatesWithoutWritingPublicState() {
+        com.chengyinhub.business.service.ICmsMemberTemplateService templates =
+                mock(com.chengyinhub.business.service.ICmsMemberTemplateService.class);
+        com.chengyinhub.business.domain.CmsMemberTemplate game = new com.chengyinhub.business.domain.CmsMemberTemplate();
+        game.setId(55L); game.setAdvancedConfigJson("{\"futureField\":\"正常文案\"}");
+        when(templates.selectCmsMemberTemplateById(55L)).thenReturn(game);
+        ReflectionTestUtils.setField(controller, "cmsMemberTemplateService", templates);
+        when(config.selectConfigByKey(ActivityReviewPolicy.CONFIG_PRE_REVIEW_ALL)).thenReturn("true");
+        CmsActivity created = body("正常活动", "1"); created.setTemplateId(55L);
+        assertEquals(200, controller.add(created).get(AjaxResult.CODE_TAG));
+        assertEquals(0L, insertedRow().getStatus());
+        assertEquals(0L, insertedRow().getPublishStatus());
+        CmsActivity current = existing(1L); current.setTemplateId(55L);
+        when(mapper.selectCmsActivityById(EXISTING_ID)).thenReturn(current);
+        assertEquals(200, controller.edit(editPatch("更新正常活动")).get(AjaxResult.CODE_TAG));
+        assertNeverWrotePublic();
+        verify(auditTaskService).submit(eq(AuditTask.BIZ_ACTIVITY), eq(NEW_ID), eq(OWNER), eq("user_publish"), anyString());
+    }
+
     private static final long NEW_ID = 777L;
     private static final long EXISTING_ID = 500L;
     private static final long OWNER = 42L;

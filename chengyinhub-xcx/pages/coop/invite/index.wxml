@@ -18,7 +18,7 @@
     <view class="inline-retry" bindtap="checkUnknownInvites" aria-role="button" aria-label="查看已发出邀请" hover-class="cy-pressed" hover-stay-time="80">查看已发出邀请</view>
   </view>
 
-  <view class="send-receipt">
+  <view class="send-receipt" wx:if="{{unknownTargets.length || receiptLoading || receiptError || receiptRows.length}}">
     <view class="inline-retry" bindtap="discoverOriginalInvites" aria-role="button" aria-label="查找当前账号原邀请请求" hover-class="cy-pressed" hover-stay-time="80">{{receiptLoading ? '查询中…' : '查找原邀请请求（含其他设备）'}}</view>
     <view wx:for="{{selected}}" wx:key="toId" class="inline-retry" data-toid="{{item.toId}}" bindtap="queryOriginalInvite" aria-role="button" aria-label="查询所选对象的原邀请请求" hover-class="cy-pressed" hover-stay-time="80">查询 {{item.name}} 的本机原请求</view>
     <cy-empty wx:if="{{receiptError}}" kind="error" title="原请求仍待确认" sub="{{receiptError}}" />
@@ -51,7 +51,7 @@
   </view>
 
   <view class="card">
-    <view class="card-tit">② 合作条款<text class="card-tit-n">对方接受并成单后锁定</text></view>
+    <view class="card-tit">② 合作条款</view>
     <view class="terms-options">
       <view class="terms-option {{shareMode === 0 ? 'on' : ''}}" bindtap="switchShareMode" data-mode="0" aria-role="radio" aria-checked="{{shareMode === 0}}" aria-label="引流合作，不产生现金结算" hover-class="cy-pressed" hover-stay-time="80">
         <text>引流合作（不产生现金结算）</text>
@@ -148,7 +148,7 @@
         <view class="target-action target-action--locked">已锁定</view>
       </view>
       <view class="iv-terms"><view><text class="iv-terms-label">拟议条款 · 对方接受并成单后锁定</text><text class="iv-terms-value">{{inviteModal.termsText}}</text></view><cy-icon name="check" size="28" /></view>
-      <view wx:if="{{supplyStationRequired}}" class="iv-terms" wx:for="{{selected}}" wx:key="toId"><view><text class="iv-terms-label">{{item.name}} · 接受后冻结</text><text class="iv-terms-value">核销据点：{{item.supplyStationName}} · #{{item.supplyStationId}}</text></view></view>
+      <view wx:if="{{supplyStationRequired}}" class="iv-terms" wx:for="{{selected}}" wx:key="toId"><view><text class="iv-terms-label">{{item.name}} · 接受后冻结</text><text class="iv-terms-value">核销据点：{{item.supplyStationName}}</text></view></view>
       <view class="iv-hero"><text class="iv-type">协作邀请</text><text class="iv-topic">{{topicName ? ('关联主题 · ' + topicName) : '整主题合作邀请'}}</text></view>
       <view class="iv-copy">对方会在「收到的」中确认本次协作。</view>
       <view class="iv-message"><text class="iv-message-title">邀请语</text><textarea class="iv-message-input" value="{{message}}" bindinput="onMessageInput" placeholder="写下想对对方说的话" placeholder-class="iv-message-placeholder" maxlength="100" /></view>

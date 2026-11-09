@@ -1,0 +1,6 @@
+## guest POST /api/team/info by invite code
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":false,"members":[{"role":1,"memberName":"玩家小城","memberAvatar":""},{"role":0,"memberName":"玩家二号","memberAvatar":""}],"team":{"id":1,"title":null,"status":0,"joinMode":2,"joinedCount":2,"maxMembers":3}}}
+## member 9009 (joined)
+{"msg":"操作成功","code":200,"data":{"leader":false,"joined":true,"members":[{"memberId":9004,"role":1,"memberName":"玩家小城","memberAvatar":""},{"memberId":9009,"role":0,"memberName":"玩家二号","memberAvatar":""}],"team":{"createBy":null,"createTime":"2026-11-04 19:02:36","updateBy":null,"updateTime":"2026-11-04 19:03:45","remark":null,"id":1,"ownerType":2,"ownerId":9,"leaderMemberId":9004,"inviteCode":"<invite-code>","title":null,"joinMode":2,"maxMembers":3,"joinedCount":2,"status":0,"expireTime":"2026-11-14T10:00:00.000+08:00"}}}
+## guest wrong code
+{"msg":"邀请已失效","code":500,"errorCode":"TEAM_INFO_REFUSED"}

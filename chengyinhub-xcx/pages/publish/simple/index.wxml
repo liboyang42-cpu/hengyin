@@ -20,13 +20,14 @@
       </view>
 
       <block wx:if="{{!aiPlan}}">
-        <view class="simple-ai__prompt-label">你喜欢什么</view>
+        <!-- 第十轮 f3 第 5 项(p3 F7):「你喜欢什么」撤掉,气泡自己写上字(原来只有图标,看不出是什么)。 -->
         <view class="simple-ai__bubbles">
           <view class="simple-ai__bubble {{item.on ? 'is-on' : ''}}" wx:for="{{interests}}" wx:key="key"
                 style="left: {{item.x || 0}}%; top: {{item.y || 0}}rpx; --b: {{item.size || 132}}rpx; animation-delay: {{index * 60}}ms;"
                 data-key="{{item.key}}" bindtap="toggleInterest" aria-role="checkbox" aria-checked="{{item.on}}" aria-label="{{item.label}}"
                 hover-class="cy-pressed" hover-stay-time="80">
             <cy-icon name="{{item.icon}}" size="{{item.on ? 44 : 40}}" />
+            <text class="simple-ai__bubble-t">{{item.label}}</text>
           </view>
         </view>
         <view class="simple-ai__picked" wx:if="{{interestText}}">

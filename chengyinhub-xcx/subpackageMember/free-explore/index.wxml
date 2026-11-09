@@ -1,4 +1,4 @@
-<view class="theme-dark bundle-page">
+<view class="theme-dark bundle-page"><cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -8,7 +8,7 @@
   <view class="bundle-content">
     <cy-inline-error wx:if="{{error}}" kind="error" title="{{error}}" />
     <text wx:if="{{notice}}" class="bundle-note">{{notice}}</text>
-    <cy-btn variant="secondary" loading="{{loading}}" bindtap="reload">刷新权益与预约结果</cy-btn>
+    <cy-btn wx:if="{{!featureOff}}" variant="secondary" loading="{{loading}}" bindtap="reload">刷新权益与预约结果</cy-btn>
     <cy-card wx:if="{{swapPending}}">
       <text class="bundle-title">换店结果待确认</text>
       <text class="bundle-note">原目标 {{swapPending.targetOfferId}}，刷新历史不会重复提交。</text>

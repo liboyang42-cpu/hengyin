@@ -92,7 +92,8 @@ test('提示走 cy-inline-error 且组件真的注册了它(漏注册等于渲�
   const tag = wxml.match(/<cy-inline-error[\s\S]*?\/>/)
   assert.ok(tag, '越界提示必须用站内联反馈组件，不能自造一行字')
   assert.match(tag[0], /wx:if="\{\{_overTitle\}\}"/)
-  assert.match(tag[0], /kind="data"/, '选长了不是动作失败，不能穿红色失败衣')
+  // 2026-11-03 第四轮业主标准:用户输入的问题一律红色(kind=error)写在字段下方,不再用蓝色提示框。
+  assert.match(tag[0], /kind="error"/, '选长了是输入问题,按业主标准用红色')
   // #1103 下沉后组件住在 pages/topic,注册路径改回指主包 components/cy/inline-error
   assert.ok(String(json.usingComponents['cy-inline-error']).endsWith('/components/cy/inline-error/index'))
   assert.ok(fs.existsSync(path.join(ROOT, 'components/cy/inline-error/index.js')))

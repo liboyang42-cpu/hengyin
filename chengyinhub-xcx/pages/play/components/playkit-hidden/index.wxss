@@ -1,7 +1,7 @@
 @import "/pages/play/style/play-surface.wxss";
 
 /* cy-playkit-hidden · 找东西(原型真源:模板编辑页 v2 · playkit hidden) */
-.hd { color: var(--ink); }
+.hd { color: var(--ink); height: var(--pk-card-h, auto); }
 .hd__q {
   font-size: var(--cy-type-sheet-title);
   font-weight: 800;

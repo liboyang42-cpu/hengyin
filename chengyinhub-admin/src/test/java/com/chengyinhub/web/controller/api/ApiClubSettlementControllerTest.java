@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -97,6 +98,7 @@ class ApiClubSettlementControllerTest {
     @Test
     void summaryTopicRowsCarryTopicIdSoFinanceDetailLinkResolves() {
         ClubSettlementSummaryRow row = new ClubSettlementSummaryRow();
+        row.setLineType("INITIATOR_GUARANTEE");
         row.setId(31L);
         row.setTopicId(9001L);
         row.setAmount(new BigDecimal("130.00"));
@@ -115,6 +117,7 @@ class ApiClubSettlementControllerTest {
         assertEquals(9001L, topics.get(0).get("topicId"),
                 "结算行必须带 topicId —— 明细页按它匹配 /api/coop/finance 的主题行");
         assertEquals(31L, topics.get(0).get("id"), "结算行 id 原样保留");
+        assertEquals("INITIATOR_GUARANTEE", topics.get(0).get("lineType"));
     }
 
     /** CU-C-40:卡片上的主题名来自 cms_topic(summarySelectFrom 左连一次带出),不是展示层拼编号。 */
@@ -217,13 +220,15 @@ class ApiClubSettlementControllerTest {
     @Test
     void withdrawUsesTheSameVerifiedPaidTotalAsSummary() {
         ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
-        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB)))
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER))
                 .thenReturn(Arrays.asList(settledRow(1L, "100.00", "98.00"), settledRow(2L, "50.00", "50.00")));
 
-        AjaxResult summary = controller.summary(clubBody());
+        Map<String, Object> personal = clubBody();
+        personal.put("personal", true);
+        AjaxResult summary = controller.summary(personal);
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) summary.get(AjaxResult.DATA_TAG);
-        assertEquals("¥ 148.00", data.get("settledAmountText"));
+        assertEquals("¥148.00", data.get("settledAmountText"));
 
         AjaxResult result = controller.withdraw(clubBody());
 
@@ -235,7 +240,7 @@ class ApiClubSettlementControllerTest {
     @Test
     void withdrawFailsClosedWhenAnySettledRowIsUnverified() {
         ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
-        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB)))
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER))
                 .thenReturn(Arrays.asList(settledRow(1L, "100.00", "100.00"), settledRow(2L, "50.00", null)));
 
         AjaxResult result = controller.withdraw(clubBody());
@@ -248,7 +253,7 @@ class ApiClubSettlementControllerTest {
     @Test
     void withdrawFailsClosedWhenSettlementDataUnavailable() {
         ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
-        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB))).thenReturn(null);
+        when(coopSettlementMapper.selectPersonalClubSummary(CLUB, OWNER)).thenReturn(null);
 
         AjaxResult result = controller.withdraw(clubBody());
 
@@ -269,5 +274,14 @@ class ApiClubSettlementControllerTest {
     private static Object isOwnerOf(AjaxResult result) {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         return ((Map<String, Object>) result.get(AjaxResult.DATA_TAG)).get("isOwner");
+    }
+
+    /** F-16:平台费率由入账金额反推,只有能还原出实际服务费时才写比例。 */
+    @Test
+    void feeRateIsOnlyShownWhenItReproducesTheRecordedFee() {
+        assertEquals("3%", ApiClubSettlementController.feeRate(new java.math.BigDecimal("19.90"), new java.math.BigDecimal("0.60")));
+        assertEquals("3%", ApiClubSettlementController.feeRate(new java.math.BigDecimal("97.50"), new java.math.BigDecimal("2.93")));
+        assertNull(ApiClubSettlementController.feeRate(new java.math.BigDecimal("100.00"), new java.math.BigDecimal("3.33")));
+        assertNull(ApiClubSettlementController.feeRate(java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO));
     }
 }

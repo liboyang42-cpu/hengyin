@@ -93,7 +93,9 @@ const INTENTIONAL_COLORED_VALUES = new Map([
   // 2026-09-09 漫游四模式裁决:主题描边按玩法分色(城市定向绿 #4ADE80 / 自由探索蓝 #5A90D6;2026-10-22 业主对调为 城市定向蓝 / 自由探索绿),
   //   星星只表示「这家有玩法」并改金黄 #F5B301(原奶油 #E2C489 压在深色地图上发灰)。
   //   三个值都只在这张色板上存在,复制到地图/HUD 的普通表面仍由本门禁判红。
-  ['utils/play-visual-tokens.js', new Set(['#4FD3D0', '#E7A84B', '#E85F4F', '#D77BB4', '#FFF0CF', '#F45B75', '#4ADE80', '#5A90D6', '#F5B301'])],
+  // 2026-11-03 第九轮同场队伍路线(业主批准「每队一种颜色」,原型 m-team):补原型三色 #3DE08A / #FF7A45 / #5AA9FF,
+  //   只在 TEAM_ROUTE_COLORS 这张表上,复制到别的表面仍判红。
+  ['utils/play-visual-tokens.js', new Set(['#4FD3D0', '#E7A84B', '#E85F4F', '#D77BB4', '#FFF0CF', '#F45B75', '#4ADE80', '#5A90D6', '#F5B301', '#3DE08A', '#FF7A45', '#5AA9FF'])],
   // 漫游历史/详情的小金六边形勋章(2026-08-06 用户验收):金 #D4AF37 是勋章语义色,非品牌紫
   ['subpackageRoam/history/index.wxss', new Set(['#D4AF37'])],
   ['subpackageRoam/session/index.wxss', new Set(['#D4AF37'])],

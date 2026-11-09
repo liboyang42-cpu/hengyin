@@ -2,12 +2,15 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
+  <cy-access-gate kind="login" />
   <cy-nav-bar />
   <view class="cu-hero">
     <view class="cu-hero-title">客户</view>
     <text class="cu-hero-sub" wx:if="{{!error && customerSummaryText}}">{{customerSummaryText}}</text>
   </view>
 
+  <!-- p2 F-9:无客户权限时不再露出筛选 / 管理 / 搜索 -->
+  <block wx:if="{{!noPermission}}">
   <view class="cu-segs">
     <!-- 2026-10-30 P-5 M-03:有筛选条件时「筛选」变实心并带条件数 -->
     <view class="cu-seg {{segment !== 'all' || sourceType || sourceStart || sourceEnd || tagId ? 'cu-seg--filtered' : ''}}" bindtap="toggleFilters" aria-role="button" aria-label="筛选客户" hover-class="cy-pressed" hover-stay-time="80">
@@ -21,6 +24,7 @@
   <view class="cu-search">
     <cy-search value="{{keyword}}" placeholder="搜索" bind:input="onKeywordInput" bind:confirm="onKeywordConfirm" />
   </view>
+  </block>
 
 
 
@@ -29,7 +33,7 @@
       <button hover-class="cy-pressed" hover-stay-time="80" class="cu-inline-button" bindtap="toggleSelectMode">取消批量</button>
       <input class="cu-batch-input" value="{{batchTagName}}" maxlength="16" placeholder="输入标签名称" bindinput="onBatchTagInput" />
       <button hover-class="cy-pressed" hover-stay-time="80" class="cu-inline-button cu-inline-button--primary" loading="{{batchSubmitting}}" bindtap="submitBatchTag">添加</button>
-      <cy-inline-error class="cu-batch-error" wx:if="{{batchError}}" kind="data"
+      <cy-inline-error class="cu-batch-error" wx:if="{{batchError}}" kind="error"
         title="标签未添加" sub="{{batchError}}" />
     </view>
     <view class="cu-export" wx:if="{{exportState !== 'idle'}}">
@@ -48,7 +52,7 @@
     </view>
 
   <cy-empty class="cy-fade-in cu-state-clear" wx:if="{{noPermission}}" kind="no-permission" fill="{{true}}" size="lg"
-            title="当前岗位没有客户查看权限" sub="请联系店主开通" />
+            title="{{notMerchant ? '当前账号不能查看客户' : '当前岗位没有客户查看权限'}}" sub="{{notMerchant ? '' : '请联系店主开通'}}" />
   <cy-skeleton wx:elif="{{loading && !rows.length}}" type="card" count="{{4}}" />
   <!-- auto-back 只认首屏:换分群 / 换标签 / 换关键词都会清空 rows 再拉一次,
        那一次失败若也自动退页,分群与群发草稿会跟着页面一起没(审查C A1)。 -->

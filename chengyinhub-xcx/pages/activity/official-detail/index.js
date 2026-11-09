@@ -5,6 +5,7 @@ const { toTimestamp, chinaParts } = require('../../../utils/datetime');
 const { activityStatusText } = require('../../../utils/activity-status');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const policy = require('../../../utils/identity/identity-policy.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
@@ -138,6 +139,7 @@ function parseContentCards(contentJson) {
 Page({
   data: {
     shareCard: { show: false, card: {} }, // 2026-10-31 P-8:通用分享层
+    isMerchantViewer: false,
     id: 0,
     e: null,
     boundTopicError: '',
@@ -162,12 +164,27 @@ Page({
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
+  // 第十一轮 i1(p1 F-9,业主规则:玩家深色、商家浅色):与「我发布的」同一口径,按身份选主题
+  syncViewerTheme() {
+    let isMerchantViewer = false;   // 读不到身份按玩家(深色),与 C 端默认一致
+    try {
+      isMerchantViewer = policy.isMerchantView({
+        role: app.getUserRole(),
+        userType: app.getUserType(),
+        debugView: wx.getStorageSync('debug_user_view'),
+      });
+    } catch (e) { isMerchantViewer = false; }
+    if (isMerchantViewer !== this.data.isMerchantViewer) this.setData({ isMerchantViewer });
+    if (isMerchantViewer) merchantTheme.merchantPageShow();
+    else merchantTheme.merchantPageRestore();
+  },
+
   onLoad(q) {
     this._hidden = false;
     this._disposed = false;
     this._reader = reader(app);
     this.setData({ id: exactId(q && q.id) });
-    merchantTheme.merchantPageShow();
+    this.syncViewerTheme();
     this._openRecovery();
     this.fetch();
   },
@@ -176,7 +193,7 @@ Page({
     this._navigating = false;
     const refresh = this._hidden || this._reader && !sameReader(app, this._reader);
     this._hidden = false;
-    merchantTheme.merchantPageShow();
+    this.syncViewerTheme();
     if (refresh) { this._openRecovery(); this.fetch(); }
   },
 
@@ -248,7 +265,7 @@ Page({
     if (!id) {
       this.data.loadErrActionType = 'back';
       this.setData({ loading: false, e: null, organizerEntry: false,
-        loadErrKind: 'data', loadErrTitle: '活动参数无效', loadErrSub: '',
+        loadErrKind: 'missing-param', loadErrTitle: '链接已失效', loadErrSub: '',
         loadErrAction: '返回活动列表' });
       return;
     }
@@ -276,9 +293,10 @@ Page({
             || String((res && res.msg) || '').trim() === '活动不存在';
           if (contentUnavailable) {
             this.data.loadErrActionType = 'back';
+            // R11 p1 F-6:活动没了是确定事实,画「链接已失效 · 返回活动列表」;'data' 档按业主规则是空白遮罩
             this.setData({
               e: null,
-              loadErrKind: 'data',
+              loadErrKind: 'missing-param', // p3 F3 / j6:内容没了是终态,讲原因并返回;不是加载失败留白
               loadErrTitle: '活动内容不可用',
               loadErrSub: '',
               loadErrAction: '返回活动列表'
@@ -633,5 +651,13 @@ Page({
       path: '/pages/activity/official-detail/index?id=' + encodeURIComponent(this.data.id),
       imageUrl: e.coverImg || '',
     };
+  },
+
+  // 第七轮 C 第 1 项:朋友圈。单页模式下游客读 GET /api/official/events/{id}(匿名放行),报名等写动作提示去完整小程序。
+  onShareTimeline() {
+    const share = this.onShareAppMessage();
+    const timeline = { title: share.title, query: 'id=' + encodeURIComponent(this.data.id) };
+    if (share.imageUrl) timeline.imageUrl = share.imageUrl;
+    return timeline;
   },
 });

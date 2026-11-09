@@ -322,3 +322,22 @@ test('候补卡只渲染状态允许的动作，稳定状态不会显示无效�
   assert.match(wxml, /\{\{waitlistStatusDetail\}\}/)
   assert.doesNotMatch(wxml, /<cy-btn(?![^>]*wx:if)[^>]*bindtap="joinWaitlist"/)
 })
+
+// C-24(2026-11-02 walk-fix):系列认领窗口最长 1440 分钟;24 小时内仍有效的 OFFERED 不得显示成「候补名额已过期」。
+test('认领窗口超过 2 小时但仍在 24 小时内的 OFFERED 保持可认领', () => {
+  const vm = page()
+  status(vm, { id: 62, state: 'OFFERED', eligibilityState: 'ELIGIBLE', waitlistJoinAllowed: true,
+    offerToken: 'raw-token', offerExpiresAt: new Date(Date.now() + 23 * 3600_000).toISOString() })
+  assert.equal(vm.data.waitlistState, 'OFFERED')
+  assert.equal(vm.data.waitlistOfferId, 62)
+  vm.onUnload()
+  const late = page()
+  status(late, { id: 63, state: 'OFFERED', eligibilityState: 'ELIGIBLE', waitlistJoinAllowed: true,
+    offerToken: 'raw-token', offerExpiresAt: new Date(Date.now() + 25 * 3600_000).toISOString() })
+  assert.equal(late.data.waitlistState, 'EXPIRED', '超过后端上限仍 fail-closed')
+})
+
+test('从未候补的人看到「加入候补」，退出或过期后才说「重新加入候补」', () => {
+  const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/activity/baoming/baoming.wxml'), 'utf8')
+  assert.match(wxml, /bindtap="joinWaitlist">\{\{waitlistState === 'CANCELLED' \|\| waitlistState === 'EXPIRED' \? '重新加入候补' : '加入候补'\}\}<\/cy-btn>/)
+})

@@ -34,6 +34,8 @@ function splitPointsRules(list) {
   const spend = [];
   list.forEach((row) => {
     if (Number(row.status) !== 1) return; // 只列启用中的规则
+    // 已删除(delFlag≠0)的规则后端支付回调不再发分(ROUND11 h3),这里也不再当作可得积分展示
+    if (row.delFlag !== null && row.delFlag !== undefined && Number(row.delFlag) !== 0) return;
     const value = pointValue(row.value);
     const item = {
       id: row.id,

@@ -140,11 +140,55 @@ class PlayTeamServiceImplTest {
         team.setInviteCode("secure-invite");
         when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
 
+        when(teamMapper.selectActiveMembers(TEAM_ID)).thenReturn(Arrays.asList(member(LEADER_ID, 1)));
+
         Map<String, Object> result = service.info(null, "secure-invite", 0L);
 
-        assertEquals(team, result.get("team"));
+        assertInvitePreviewOnly(result);
         assertEquals(false, result.get("joined"));
         verify(teamMapper).selectActiveMembers(TEAM_ID);
+    }
+
+    // 第十一轮 g2,j4 F10:另一场次的玩家拿到转发的邀请码,和游客看到的一样少。
+    @Test
+    void infoByInviteCodeForOtherSessionPlayerReturnsPreviewOnly() {
+        PlayTeam team = recruitingTeam();
+        team.setInviteCode("secure-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
+        when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(null);
+        when(teamMapper.selectActiveMembers(TEAM_ID)).thenReturn(Arrays.asList(member(LEADER_ID, 1)));
+
+        Map<String, Object> result = service.info(null, "secure-invite", MEMBER_ID);
+
+        assertInvitePreviewOnly(result);
+        assertEquals(false, result.get("joined"));
+        assertEquals(false, result.get("leader"));
+    }
+
+    @Test
+    void infoByInviteCodeForMemberKeepsFullTeam() {
+        PlayTeam team = recruitingTeam();
+        team.setInviteCode("secure-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
+        when(teamMapper.selectActiveMember(TEAM_ID, LEADER_ID)).thenReturn(member(LEADER_ID, 1));
+        when(teamMapper.selectActiveMembers(TEAM_ID)).thenReturn(Arrays.asList(member(LEADER_ID, 1)));
+
+        Map<String, Object> result = service.info(null, "secure-invite", LEADER_ID);
+
+        assertEquals(team, result.get("team"));
+        assertEquals(true, result.get("joined"));
+        List<Map<String, Object>> visible = (List<Map<String, Object>>) result.get("members");
+        assertEquals(LEADER_ID, visible.get(0).get("memberId"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertInvitePreviewOnly(Map<String, Object> result) {
+        Map<String, Object> team = (Map<String, Object>) result.get("team");
+        assertEquals(new HashSet<>(Arrays.asList("id", "title", "status", "joinMode", "joinedCount", "maxMembers")), team.keySet());
+        List<Map<String, Object>> visible = (List<Map<String, Object>>) result.get("members");
+        for (Map<String, Object> row : visible) {
+            assertEquals(new HashSet<>(Arrays.asList("role", "memberName", "memberAvatar")), row.keySet());
+        }
     }
 
     @Test
@@ -171,7 +215,7 @@ class PlayTeamServiceImplTest {
 
         Map<String, Object> result = service.info(null, "started-invite", 0L);
 
-        assertEquals(team, result.get("team"));
+        assertInvitePreviewOnly(result);
         verify(teamMapper).selectActiveMembers(TEAM_ID);
     }
 
@@ -416,6 +460,27 @@ class PlayTeamServiceImplTest {
         verify(teamMapper, never()).insertPlayTeamMember(any());
         verify(teamMapper, never()).reactivateMember(any(), any());
         verify(imService, never()).getOrCreateTeamGroup(any(), any());
+    }
+
+    // 第十一轮 g2(j4 F1):被移出的人凭旧链接再来,拒绝理由是「暂时无法加入该队伍」,不是「你已在队伍中」。
+    @Test
+    void join_removedMemberWithOldLinkGetsNeutralRefusalNotAlreadyInTeam() {
+        PlayTeam team = recruitingTeam();
+        team.setInviteCode("secure-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("secure-invite")).thenReturn(team);
+        when(blockMapper.existsBetween(LEADER_ID, MEMBER_ID)).thenReturn(0);
+        when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, team.getOwnerId())).thenReturn(1);
+        when(teamMapper.reserveSlot(TEAM_ID)).thenReturn(1);
+        when(teamMapper.insertPlayTeamMember(any())).thenThrow(new org.springframework.dao.DuplicateKeyException("dup"));
+        when(teamMapper.reactivateMember(TEAM_ID, MEMBER_ID)).thenReturn(0);
+        when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(null);
+
+        IllegalStateException removed = assertThrows(IllegalStateException.class, () -> service.join("secure-invite", MEMBER_ID));
+        assertEquals("暂时无法加入该队伍", removed.getMessage());
+
+        when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(member(MEMBER_ID, 0));
+        IllegalStateException active = assertThrows(IllegalStateException.class, () -> service.join("secure-invite", MEMBER_ID));
+        assertEquals("你已在队伍中", active.getMessage());
     }
 
     @Test

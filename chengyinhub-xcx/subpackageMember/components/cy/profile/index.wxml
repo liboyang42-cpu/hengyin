@@ -47,7 +47,7 @@
             <image wx:if="{{_avatarSrc}}" class="pc-avatar" src="{{img.one(_avatarSrc)}}" mode="aspectFill" />
             <view wx:else class="pc-avatar pc-avatar--initial">{{_avatarInitial}}</view>
           </view>
-          <view class="pc-avatar-edit" wx:if="{{isSelf}}"><image class="pc-avatar-edit-ico" src="/images/icon_pen.svg" mode="aspectFit" /></view>
+          <view class="pc-avatar-edit" wx:if="{{isSelf}}"><image class="pc-avatar-edit-ico" src="/subpackageMember/images/icon_pen.svg" mode="aspectFit" /></view>
           <view class="pc-avatar-dot"></view>
         </view>
         <view class="pc-gamer-main">
@@ -65,7 +65,7 @@
             <image class="pc-lv-badge" wx:if="{{userInfo.levelId==3}}" src="/subpackageMember/images/group3.png" mode="widthFix" />
             <image class="pc-lv-badge" wx:if="{{userInfo.levelId==4}}" src="/subpackageMember/images/group4.png" mode="widthFix" />
             <image class="pc-lv-badge" wx:if="{{userInfo.levelId==5}}" src="/subpackageMember/images/group5.png" mode="widthFix" />
-            <text>Lv.{{growthLevel}} 城市探索者</text>
+            <text wx:if="{{growthLevel > 0}}">Lv.{{growthLevel}} 城市探索者</text>
           </view>
           <view class="pc-gamer-meta">
             <text class="pc-gamer-slogan" wx:if="{{subjectIsMerchant && subjectMerchant.slogan}}">{{subjectMerchant.slogan}}</text>
@@ -120,6 +120,7 @@
         </view>
         <!-- UI-12:公开视角也要有「···」更多(分享主页/屏蔽)。
              M-16(2026-10-27):本人商家视角「核销」右边的「···」删除 —— 店铺资料/分享/设置在别处都有,重复。 -->
+        <view class="pc-more" wx:if="{{!isSelf && !viewingOwn && subjectIsMerchant && subjectMerchant}}" bindtap="openShopShare" hover-class="pc-btn-press" aria-role="button" aria-label="分享店铺"><cy-icon name="share" size="32" /></view>
         <view class="pc-more" wx:if="{{!isSelf && !viewingOwn}}" bindtap="openMoreMenu" hover-class="pc-btn-press" aria-role="button" aria-label="打开更多操作"><cy-icon name="more" size="32" /></view>
       </view>
 
@@ -179,7 +180,6 @@
         </block>
 
         <!-- C7:唯一管理入口(原「我的模板」section 并入我的项目页的模板 tab);角标=未通过+审核中 -->
-        <block wx:if="{{projectPreviewList.length || projectErr}}">
         <view class="pc-sec-head" aria-label="{{projectErr ? (projectAuthError ? '项目登录状态失效，请重新进入' : '项目加载失败，请下拉刷新重试') : ''}}">
           <view class="pc-sec-left">
             <text class="pc-sec-tit {{isMerchantView ? 'pc-sec-tit--flush' : ''}} pc-sec-tit--sm">我的项目</text>
@@ -187,6 +187,7 @@
           </view>
           <view class="pc-sec-link" bindtap="goProject" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="管理全部项目"><text>管理全部</text><cy-icon name="arrow-right" size="26" /></view>
         </view>
+        <block wx:if="{{projectPreviewList.length || projectErr}}">
         <cy-error load-failure wx:if="{{projectErr}}"
           title="{{projectAuthError ? '登录未成功' : '项目加载失败'}}"
           sub="{{projectAuthError ? '请重新进入小程序' : ''}}"
@@ -220,7 +221,7 @@
               aria-role="button" aria-label="我的资产，账户余额{{balanceText || 0}}元">
           <view class="pc-asset__main">
             <text class="pc-asset__label">账户余额</text>
-            <text class="pc-asset__value">{{money.amount(balanceText == null ? 0 : balanceText)}}</text>
+            <text class="pc-asset__value">{{money.amount2(balanceText == null ? 0 : balanceText)}}</text>
           </view>
           <cy-icon class="pc-asset__arrow" name="arrow-right" size="32" />
         </view>
@@ -235,7 +236,7 @@
                    bind:tap="goClubWorkbench" />
         </view>
         <view class="pc-team-entry" wx:if="{{merchantAccess.active}}">
-          <cy-cell icon="/images/icon_qa_person.svg"
+          <cy-cell icon="/subpackageMember/images/icon_qa_person.svg"
                    title="经营团队"
                    description=""
                    value="{{merchantTeamEntryValue}}"
@@ -248,11 +249,13 @@
       <block wx:if="{{activeTab === 'posts'}}">
         <view class="pc-feed">
           <cy-error class="pc-feed-state" load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '帖文加载失败'}}" sub="{{feedAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadFeed" />
-          <cy-empty class="pc-feed-state" wx:elif="{{nodata}}" title="还没有帖文" sub="{{isSelf ? '你还没有发布过帖文' : 'TA 还没有发布帖文'}}" />
+          <cy-empty class="pc-feed-state" wx:elif="{{nodata && !clubPostList.length}}" title="还没有帖文" />
           <!-- 帖文第三轮(业主定稿 P-1,V-16):我的帖文和发现、俱乐部详情用同一张帖文卡,不再是自己那套 pc-post -->
           <cy-post-card wx:for="{{list}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
             interactive-actions show-share accessibility-label="查看帖文"
             bind:detail="onPostCardDetail" bind:comment="onPostCardDetail" bind:like="onPostCardLike" />
+          <cy-post-card wx:if="{{!feedErr}}" wx:for="{{clubPostList}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantView}}"
+            accessibility-label="查看帖文" bind:detail="onClubPostCardDetail" bind:comment="onClubPostCardDetail" />
         </view>
       </block>
 
@@ -284,8 +287,9 @@
             </view>
             <view class="pc-rank-sep"></view>
             <view class="pc-rank-right">
-              <text class="pc-rank-k">累计探索</text>
-              <text class="pc-rank-v">{{exploreStat.shops || 0}}家店 · {{exploreStat.km || '0.0'}}km</text>
+              <text class="pc-rank-k">累计打卡</text>
+              <!-- P-22(2026-11-02 业主):里程还没有真实来源,先不出 km -->
+              <text class="pc-rank-v">{{exploreStat.places || 0}} 处</text>
               <text class="pc-rank-exp">本周 +{{exploreStat.weekExp}} EXP</text>
             </view>
           </view>
@@ -332,15 +336,15 @@
         </block>
         <view wx:else class="pc-public-achievements">
           <view class="pc-public-stat">
-            <text class="pc-public-stat-n">{{num.n(userInfo.topicNum) === '—' && num.n(userInfo.activityNum) === '—' ? '—' : (userInfo.topicNum || 0) + (userInfo.activityNum || 0)}}</text>
+            <text class="pc-public-stat-n">{{(userInfo.topicNum || 0) + (userInfo.activityNum || 0)}}</text>
             <text class="pc-public-stat-l">发布内容</text>
           </view>
           <view class="pc-public-stat">
-            <text class="pc-public-stat-n">{{num.n(userInfo.likeNum)}}</text>
+            <text class="pc-public-stat-n">{{userInfo.likeNum || 0}}</text>
             <text class="pc-public-stat-l">获赞</text>
           </view>
           <view class="pc-public-stat">
-            <text class="pc-public-stat-n">{{num.n(userInfo.fansNum)}}</text>
+            <text class="pc-public-stat-n">{{userInfo.fansNum || 0}}</text>
             <text class="pc-public-stat-l">粉丝</text>
           </view>
         </view>
@@ -569,6 +573,7 @@
 
 <cy-report-sheet wx:if="{{!isSelf}}" show="{{reportShow}}" target-type="{{reportTargetType}}" target-id="{{reportTargetId}}" title="{{reportTitle}}" bind:close="onReportClose" />
 <!-- 挂在 .pc-page 外,照 cy-coop-invite-sheet 包一层主题,商家日间页才取得到 theme-merchant token。 -->
+<cy-share-card wx:if="{{subjectIsMerchant}}" show="{{shopShareShow}}" card="{{shopShareCard}}" bind:close="closeShopShare" />
 <view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-merchant-correction-sheet wx:if="{{!isSelf}}" show="{{correctionShow}}" merchant-id="{{correctionMerchantId}}" bind:close="onCorrectionClose" /></view>
 
 <!-- [P0-2] ③ 选章核销:一商家在同一路线承接多章是常态 ⇒ 交集≥2 时由他自己选,

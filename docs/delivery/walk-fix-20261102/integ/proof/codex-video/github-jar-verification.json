@@ -1,0 +1,14 @@
+{
+  "firstJar": {
+    "sourceSha": "da9b30f1dd770ce0c4cc55b278e9d08e1ad99a7f",
+    "run": 42006455345,
+    "sha256": "f4c1fe89441cf2cba7feb03addf3774c17aed23fe6bff17e6d5d1a02c681f429"
+  },
+  "secondJar": {
+    "sourceSha": "ce84d219dc7c49f03acdff7aef967c836b82142d",
+    "run": 42014102646,
+    "sha256": "284f4bb6369804ee1ce5fa2efdbd65afacdebb6dcd7fc48d95c7fdc8de09da95",
+    "runtimeFileHashMatches": true
+  },
+  "verification": "Each digest matched the downloaded checksum; SOURCE_SHA matched embedded git.commit.id. Only the owned test application was restarted. No deployment or production change."
+}

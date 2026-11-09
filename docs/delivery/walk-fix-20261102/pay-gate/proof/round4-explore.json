@@ -1,0 +1,206 @@
+{
+ "E1b_more_than_24h": {
+  "registrationId": 75,
+  "quote": {
+   "payAmount": 69.0,
+   "refundableNow": true,
+   "refundPercentNow": 100,
+   "refundDeadline": "2026-11-05T13:22:13.000+08:00"
+  },
+  "callback": 204,
+  "frozen": [
+   [
+    75,
+    2,
+    3,
+    "69.00",
+    0,
+    "START_24H_100_50_0",
+    1,
+    "2026-11-06 13:22:13",
+    2,
+    2
+   ]
+  ],
+  "view": {
+   "refundInfo": {
+    "refundable": true,
+    "reason": "可全额退款,原路退回(预计1-3个工作日)",
+    "deadline": "2026-11-05T13:22:13.000+08:00",
+    "manualReview": false,
+    "ratio": 1
+   },
+   "refundDeadlineDisplay": "可免费取消至 11月5日 13:22"
+  },
+  "cancel": {
+   "response": {
+    "code": 200,
+    "msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分",
+    "data": {
+     "registrationId": 75,
+     "scope": "REGISTRATION",
+     "cancellationStatus": "CANCELLED",
+     "cashRefundStatus": "DISPATCHING",
+     "cashRefundAmount": 69.0,
+     "pointsUsed": 0,
+     "pointsReturned": 0,
+     "pointsRefundStatus": "NOT_NEEDED"
+    }
+   },
+   "registration": [
+    [
+     4,
+     3,
+     "69.00",
+     0
+    ]
+   ],
+   "refund_application": [
+    [
+     "RF75",
+     "69.00",
+     "69.00",
+     1,
+     6,
+     "用户申请退款"
+    ]
+   ]
+  }
+ },
+ "E2_within_24h": {
+  "registrationId": 76,
+  "quote": {
+   "payAmount": 69.0,
+   "refundableNow": true,
+   "refundPercentNow": 50,
+   "refundDeadline": "2026-11-02T18:22:15.000+08:00"
+  },
+  "callback": 204,
+  "frozen": [
+   [
+    76,
+    2,
+    3,
+    "69.00",
+    0,
+    "START_24H_100_50_0",
+    1,
+    "2026-11-03 18:22:15",
+    2,
+    2
+   ]
+  ],
+  "view": {
+   "refundInfo": {
+    "refundable": true,
+    "reason": "开始前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)",
+    "deadline": "2026-11-03T18:22:15.000+08:00",
+    "manualReview": false,
+    "ratio": 0.5
+   },
+   "refundDeadlineDisplay": "开始前 24 小时内取消,退实付的 50%,原路退回(预计1-3个工作日)"
+  },
+  "cancel": {
+   "response": {
+    "code": 200,
+    "msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分",
+    "data": {
+     "registrationId": 76,
+     "scope": "REGISTRATION",
+     "cancellationStatus": "CANCELLED",
+     "cashRefundStatus": "DISPATCHING",
+     "cashRefundAmount": 34.5,
+     "pointsUsed": 0,
+     "pointsReturned": 0,
+     "pointsRefundStatus": "NOT_NEEDED"
+    }
+   },
+   "registration": [
+    [
+     4,
+     3,
+     "69.00",
+     0
+    ]
+   ],
+   "refund_application": [
+    [
+     "RF76",
+     "34.50",
+     "69.00",
+     1,
+     6,
+     "用户申请退款(集合前24小时内,退50%)"
+    ]
+   ]
+  }
+ },
+ "E3_legacy_explore_end_after_start": {
+  "registrationId": 77,
+  "quote": {
+   "payAmount": 69.0,
+   "refundableNow": true,
+   "refundPercentNow": 50,
+   "refundDeadline": "2026-11-02T18:22:18.000+08:00"
+  },
+  "callback": 204,
+  "frozen": [
+   [
+    77,
+    2,
+    3,
+    "69.00",
+    0,
+    "START_24H_100_50_0",
+    1,
+    "2026-11-03 18:22:18",
+    2,
+    2
+   ]
+  ],
+  "view": {
+   "refundInfo": {
+    "refundable": true,
+    "reason": "可全额退款,原路退回(预计1-3个工作日)",
+    "deadline": "2026-11-13T23:59:59.000+08:00",
+    "manualReview": false,
+    "ratio": 1
+   },
+   "refundDeadlineDisplay": "可免费取消至 11月13日 23:59"
+  },
+  "cancel": {
+   "response": {
+    "code": 200,
+    "msg": "报名已取消，现金退款正在派发，尚未确认到账，本单未使用积分",
+    "data": {
+     "registrationId": 77,
+     "scope": "REGISTRATION",
+     "cancellationStatus": "CANCELLED",
+     "cashRefundStatus": "DISPATCHING",
+     "cashRefundAmount": 69.0,
+     "pointsUsed": 0,
+     "pointsReturned": 0,
+     "pointsRefundStatus": "NOT_NEEDED"
+    }
+   },
+   "registration": [
+    [
+     4,
+     3,
+     "69.00",
+     0
+    ]
+   ],
+   "refund_application": [
+    [
+     "RF77",
+     "69.00",
+     "69.00",
+     1,
+     6,
+     "用户申请退款"
+    ]
+   ]
+  }
+ }
+}

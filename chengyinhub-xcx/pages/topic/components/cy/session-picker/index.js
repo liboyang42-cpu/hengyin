@@ -12,6 +12,7 @@
 // 多日 → 先选日期再选票种(稿 11);只有一个场次 → 跳过选日期,顶部直接写明是哪天(稿 11a)。
 const app = getApp();
 const { ticketWindowText } = require('../../../../../utils/ticket-window.js');
+const { refundRuleText } = require('../../../utils/refund-rule.js');
 
 const { chinaParts } = require('../../../../../utils/datetime.js');
 
@@ -32,8 +33,40 @@ function dateChip(activity) {
   return { week: WEEKDAY[d.getDay()], day: (d.getMonth() + 1) + '.' + d.getDate() };
 }
 
+function epochOf(value) {
+  const p = chinaParts(value);
+  return p ? Date.UTC(p.year, p.month - 1, p.day, p.hours, p.minutes) : null;
+}
+
+/**
+ * P-18:发布时按主题档期自动建的那条活动(从 0 点起、跨好几天)不是一场真的场次。
+ * 跨度超过一天的都按「档期」看待:有真场次时不出现在选场次里;只剩它一条时写「随时可玩 · 至 M.D」。
+ */
+function isWindow(activity) {
+  const start = epochOf(activity && activity.startDate);
+  const end = epochOf(activity && activity.endDate);
+  return start != null && end != null && end - start > 24 * 3600 * 1000;
+}
+
+/** P-18/P-30:只给真场次;按开始时间排;没有真场次时才保留档期那一条。 */
+function sessionRows(activities) {
+  const list = (activities || []).filter((a) => a && a.id);
+  const real = list.filter((a) => !isWindow(a));
+  const rows = real.length ? real : list;
+  return rows.slice().sort((a, b) => {
+    const ea = epochOf(a.startDate);
+    const eb = epochOf(b.startDate);
+    if (ea == null || eb == null) return ea == null ? (eb == null ? 0 : 1) : -1;
+    return ea - eb;
+  });
+}
+
 /** 稿 11a 顶部那行「2025年12月13日(周六)· 19:30 集合」——缺哪半截就少写哪半截 */
 function singleDayText(activity) {
+  if (isWindow(activity)) {
+    const end = toDate(activity.endDate);
+    return '随时可玩 · 至 ' + (end.getMonth() + 1) + '.' + end.getDate();
+  }
   const d = toDate(activity && activity.startDate);
   if (!d) return String((activity && activity.name) || '');
   const pad = (n) => (n < 10 ? '0' + n : '' + n);
@@ -59,6 +92,7 @@ Component({
     tickets: [],
     ticketsState: 'idle',   // idle | loading | ready | error | empty | gate
     ticketsError: '',
+    ticketsGateText: '',
     // M1-3 门卡:后端对非俱乐部成员返回 {gate:true, clubId, message}。
     // 这一档不是「票种没读出来」,重试再多次也读不出来 —— 唯一出口是去加入俱乐部。
     gateClubId: 0,
@@ -73,19 +107,20 @@ Component({
         this._ticketRequestId = (this._ticketRequestId || 0) + 1;
         return;
       }
-      const rows = (activities || []).filter((a) => a && a.id).map((a) => ({
+      const sessions = sessionRows(activities);
+      const rows = sessions.map((a) => ({
         id: a.id,
         name: String(a.name || ''),
         week: dateChip(a).week,
         day: dateChip(a).day,
         whenText: singleDayText(a),
-        detailText: [chinaParts(a.startDate) ? String(chinaParts(a.startDate).hours).padStart(2, '0') + ':' + String(chinaParts(a.startDate).minutes).padStart(2, '0') : '', String(a.name || '')].filter(Boolean).join(' · '),
+        detailText: [chinaParts(a.startDate) ? String(chinaParts(a.startDate).hours).padStart(2, '0') + ':' + String(chinaParts(a.startDate).minutes).padStart(2, '0') : '', String(a.name || ''), String(a.clubName || '').trim()].filter(Boolean).join(' · '),
       }));
       const single = rows.length === 1;
       this.setData({
         days: rows,
         singleDay: single,
-        singleDayText: single ? singleDayText((activities || [])[0]) : '',
+        singleDayText: single ? singleDayText(sessions[0]) : '',
       });
       // 单场次不用选日期,直接进第二步
       const selectedExists = rows.some((row) => row.id === this.data.pickedActivityId);
@@ -133,7 +168,9 @@ Component({
             that.setData({
               tickets: [],
               ticketsState: 'gate',
-              ticketsError: d.message || '来自俱乐部的活动，加入后查看',
+              // 门卡是「只对俱乐部成员开放」的说明,不是读取错误:单独字段,不进错误文案
+              ticketsGateText: d.message || '来自俱乐部的活动，加入后查看',
+              ticketsError: '',
               gateClubId: Number(d.clubId) || 0,
               pickedTicketId: 0,
               totalText: '',
@@ -167,8 +204,8 @@ Component({
               selfGuided: t.selfGuided === true,
               signupDeadline: t.signupDeadline,
               windowText: ticketWindowText(t),
-              // 说明与余量都是「有就写、没有就不写」,不兜底成占位
-              rule: String(t.refundRule || '').trim(),
+              // 退改显示平台三档,不显示票上存的 refund_rule 原文(业主 2026-11-03);余量「有就写、没有就不写」
+              rule: refundRuleText(t),
               remaining: t.remainingInventory == null ? null : Number(t.remainingInventory),
             })),
             ticketsState: rows.length ? 'ready' : 'empty',
@@ -202,8 +239,8 @@ Component({
       const id = Number(e.currentTarget.dataset.id) || 0;
       const ticket = this.data.tickets.filter((t) => t.id === id)[0];
       if (!ticket) return;
-      // 售罄的不给选:让人选中再到结算页被拦是白走一趟
-      if (ticket.remaining === 0 || ticketWindowText(ticket)) return;
+      // 售罄票仍需进入原结算页，由服务端读取候补资格。
+      if (ticketWindowText(ticket)) return;
       this.setData({
         pickedTicketId: id,
         totalText: ticket.price == null ? '' : ('¥' + ticket.price),
@@ -216,7 +253,7 @@ Component({
       const { pickedActivityId, pickedTicketId } = this.data;
       if (!pickedActivityId || !pickedTicketId) return;
       const ticket = this.data.tickets.find((t) => t.id === pickedTicketId);
-      if (!ticket || ticket.remaining === 0 || ticketWindowText(ticket)) {
+      if (!ticket || ticketWindowText(ticket)) {
         this.pickActivity(pickedActivityId);
         return;
       }
@@ -224,3 +261,6 @@ Component({
     },
   },
 });
+
+// 单测入口(组件运行时不读)
+if (typeof module !== 'undefined') module.exports = { isWindow, sessionRows, singleDayText };

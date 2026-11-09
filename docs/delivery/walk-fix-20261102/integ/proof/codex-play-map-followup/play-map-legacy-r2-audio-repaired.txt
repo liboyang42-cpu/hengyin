@@ -1,0 +1,17 @@
+TEXT[fresh-before-start] 输入地址 | 城瘾 · 城市定向 | PLAY-MAP-1105-R2-legacy-69 | 一个人的外滩夜游。 | 开始游戏 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+BGM_DATA {"url":"TEST_OSS_ASSET","on":true,"ctx":true,"preview":false,"screen":""}
+AUDIO_START [{"src":"http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3","paused":false,"time":2.567917,"ready":4}]
+AUDIO_LATER [{"src":"http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3","paused":false,"time":1.082312,"ready":4}]
+SHOT legacy-R2-fresh-audio
+AUDIO [{"src":"http://127.0.0.1:18097/__oss/upload/9d288989bb144e5ca525f3a3b6e3f5a6.mp3","paused":false,"time":1.13093,"duration":3,"ready":4}]
+ROUTE ["pages/play/index"]
+ERRORS []
+CONSOLE_ERR ["[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/nodes?topicId=990021 200   
+NET POST /api/config/features 200 200 操作成功 
+NET GET /api/play/journey/casebook?topicId=990021 200 500 这一局还没开始 
+NET GET /api/play/run-session?topicId=990021 200 200 操作成功 
+NET POST /api/config/features 200 200 操作成功 
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"privacy_policy","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793876346258-ew8tn5pn"}
+NET POST /api/compliance/consents 200 200 操作成功 {"docType":"user_service_agreement","scene":"app_launch","eventType":"AGREE","requestId":"consent-1793876346258-usvvk7y8"}

@@ -36,7 +36,8 @@
 .cdbs__strip { white-space: nowrap; }
 .cdbs__strip-in { display: inline-flex; gap: 28rpx; padding: 12rpx 8rpx; }
 .cdbs__p { flex: none; width: 128rpx; display: inline-flex; flex-direction: column; align-items: center; gap: 8rpx; }
-.cdbs__av { position: relative; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); font-size: var(--cy-font-subtitle); font-weight: 700; box-shadow: 0 0 0 4rpx var(--cy-color-bg-surface), 0 0 0 8rpx var(--cy-btn-solid-bg); }
+.cdbs__av { position: relative; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); font-size: var(--cy-font-subtitle); font-weight: 700; }
+.cdbs__p--on .cdbs__av { box-shadow: 0 0 0 4rpx var(--cy-color-bg-surface), 0 0 0 8rpx var(--cy-btn-solid-bg); }
 .cdbs__tick { position: absolute; right: -8rpx; bottom: -8rpx; width: 44rpx; height: 44rpx; box-sizing: border-box; border-radius: var(--cy-radius-pill); border: 4rpx solid var(--cy-color-bg-surface); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); display: flex; align-items: center; justify-content: center; }
 .cdbs__tick::after { content: ""; width: 10rpx; height: 20rpx; margin-top: -4rpx; border: solid currentColor; border-width: 0 4rpx 4rpx 0; transform: rotate(45deg); }
 .cdbs__pn { max-width: 128rpx; color: var(--cy-color-text-primary); font-size: var(--cy-font-label); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

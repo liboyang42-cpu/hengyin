@@ -649,6 +649,14 @@ function finiteApiAnalysis(source, backendRoutes) {
       .sort((a, b) => a.callee.property.start - b.callee.property.start)[0];
   }
   return {
+    failureCallback(offset, name) {
+      const call = requestCall(offset), binding = call && lookup(scopes.get(call), name);
+      const fn = binding && binding.init;
+      return binding && binding.kind === 'const' && binding.id.type === 'Identifier'
+        && binding.writes.length === 0 && fn?.type === 'ArrowFunctionExpression'
+        && !fn.async && fn.end < call.start && fn.params.length <= 1
+        && fn.params.every(param => param.type === 'Identifier') ? fn : null;
+    },
     requestFinite(offset) {
       const call = requestCall(offset);
       const url = call && call.arguments.length === 1 && urlValue(call.arguments[0]);
@@ -1081,41 +1089,72 @@ function hasVisibleU5Feedback(file, source, candidate, seen = new Set()) {
   return false;
 }
 
-// Resolve only a local const, zero-argument expression arrow used as fail.
-// Look in the current open lexical block, never an unrelated function.
-function referencedFailBody(source, masked, requestStart, failSource) {
+// shortcut: simple const arrow bodies only; nested/deferred callback feedback remains unproved.
+function referencedFailBody(source, requestStart, failSource, analysis) {
   const reference = /^\s*fail\s*:\s*([A-Za-z_$][\w$]*)\s*$/.exec(failSource);
   if (!reference) return failSource;
-  const blocks = [];
-  for (let i = 0; i < requestStart; i += 1) {
-    if (masked[i] === '{') blocks.push(i);
-    else if (masked[i] === '}') blocks.pop();
+  const name = reference[1], fn = analysis().failureCallback(requestStart, name);
+  if (!fn || fn.params.some(param => /^(?:(?:cy)?[tT]oast|wx|app)$/.test(param.name))) return failSource;
+  const body = source.slice(fn.body.start, fn.body.end), code = maskNonCode(body);
+  if (/\b(?:const|let|var|function|class)\b|=>/.test(code)
+    || new RegExp('\\b' + name + '\\s*\\(').test(code)) return failSource;
+  return body;
+}
+
+// Only direct Page {...module.methods} imports can lend their WXML to a shared method.
+function u5MethodOwners(jsFiles) {
+  const owners = new Map();
+  for (const file of jsFiles) {
+    if (!fs.existsSync(file.replace(/\.js$/, '.wxml'))) continue;
+    const source = fs.readFileSync(file, 'utf8'), targets = resolveSpreadRequireTargets(source);
+    if (!targets.length) continue;
+    const ast = parseJavaScript(source);
+    const declarations = ast.body.filter(node => node.type === 'VariableDeclaration' && node.kind === 'const')
+      .flatMap(node => node.declarations);
+    for (const statement of ast.body) {
+      const call = statement.type === 'ExpressionStatement' && statement.expression;
+      if (call?.type !== 'CallExpression' || call.callee.name !== 'Page'
+        || call.arguments.length !== 1 || call.arguments[0].type !== 'ObjectExpression') continue;
+      for (const property of call.arguments[0].properties) {
+        const member = property.type === 'SpreadElement' && property.argument;
+        if (member?.type !== 'MemberExpression' || member.computed || member.property.name !== 'methods'
+          || member.object.type !== 'Identifier') continue;
+        const declaration = declarations.find(item => item.id.name === member.object.name), init = declaration?.init;
+        if (init?.type !== 'CallExpression' || init.callee.name !== 'require' || init.arguments.length !== 1
+          || !targets.includes(init.arguments[0].value)) continue;
+        let target = path.resolve(path.dirname(file), init.arguments[0].value);
+        if (!fs.existsSync(target) && fs.existsSync(target + '.js')) target += '.js';
+        if (!fs.existsSync(target)) continue;
+        const moduleAst = parseJavaScript(fs.readFileSync(target, 'utf8'));
+        const exports = moduleAst.body.filter(node => node.type === 'ExpressionStatement')
+          .map(node => node.expression).filter(node => node.type === 'AssignmentExpression'
+            && node.left.type === 'MemberExpression' && !node.left.computed
+            && node.left.object.name === 'module' && node.left.property.name === 'exports');
+        const exported = exports.length === 1 && exports[0].right.type === 'ObjectExpression'
+          && exports[0].right.properties.find(node => !node.computed && node.key?.name === 'methods');
+        const methods = moduleAst.body.filter(node => node.type === 'VariableDeclaration' && node.kind === 'const')
+          .flatMap(node => node.declarations).find(node => node.id.name === exported?.value?.name)?.init;
+        if (methods?.type !== 'ObjectExpression') continue;
+        const entries = extractOwnHandlerEntries(file).filter(entry => entry.file === target
+          && methods.start < entry.start && entry.end < methods.end);
+        if (!owners.has(target)) owners.set(target, []);
+        owners.get(target).push({ file, entries });
+      }
+    }
   }
-  const start = (blocks[blocks.length - 1] ?? -1) + 1;
-  const name = reference[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const prefix = masked.slice(start, requestStart);
-  const declaration = new RegExp('\\bconst\\s+' + name + '\\s*=\\s*\\(\\s*\\)\\s*=>\\s*([^;{}\\n]+);', 'g');
-  const definitions = [...prefix.matchAll(declaration)];
-  if (definitions.length !== 1) return failSource;
-  const definition = definitions[0];
-  let depth = 0;
-  for (const token of prefix.slice(0, definition.index)) {
-    if (token === '{') depth += 1;
-    else if (token === '}') depth -= 1;
-  }
-  if (depth !== 0) return failSource;
-  const offset = start + definition.index + definition[0].indexOf(definition[1]);
-  return source.slice(offset, offset + definition[1].length);
+  return owners;
 }
 
 function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
   const violations = [];
   const callsites = [];
   const autoSafe = [];
+  let methodOwners;
   for (const file of jsFiles) {
     const source = fs.readFileSync(file, 'utf8');
     const masked = maskNonCode(source);
     const requestOffsets = [...masked.matchAll(requestTransportRegex(source, masked))].map(match => match.index);
+    let failureAnalysis;
     const re = /\bsilentError\s*:\s*true\b/g;
     let match;
     while ((match = re.exec(masked))) {
@@ -1130,8 +1169,17 @@ function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
         ? objectProperties(sameRequest, sameRequestMasked, 0, sameRequest.length - 1)
         : { properties: [] };
       const failProperty = properties.find((property) => property.name === 'fail');
-      const failSource = referencedFailBody(source, masked, requestStart, failProperty ? failProperty.raw : '');
-      const visibleFallback = hasVisibleU5Feedback(file, source, failSource);
+      const failSource = referencedFailBody(source, requestStart, failProperty ? failProperty.raw : '',
+        () => (failureAnalysis ||= finiteApiAnalysis(source, new Set())));
+      let feedbackFiles = [file];
+      if (!fs.existsSync(file.replace(/\.js$/, '.wxml')) && /\bsetData\s*\(/.test(maskNonCode(failSource))) {
+        methodOwners ||= u5MethodOwners(jsFiles);
+        const owners = (methodOwners.get(file) || []).filter(owner => owner.entries
+          .some(entry => entry.start <= requestStart && entry.end > requestStart));
+        feedbackFiles = owners.map(owner => owner.file);
+      }
+      const visibleFallback = feedbackFiles.length > 0
+        && feedbackFiles.every(owner => hasVisibleU5Feedback(owner, source, failSource));
       if (visibleFallback) {
         autoSafe.push({ key, detail: 'fail 回调内存在 toast/tips 或 WXML 已消费的错误/空态 setData' });
         continue;

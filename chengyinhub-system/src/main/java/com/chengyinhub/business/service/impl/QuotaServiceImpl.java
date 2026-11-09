@@ -70,7 +70,8 @@ public class QuotaServiceImpl implements IQuotaService
             {
                 return "当前身份不可创建活动";
             }
-            int used = cmsActivityService.selectCmsActivityNumByMemberId(memberId);
+            // 同时存在口径:已结束、已取消的活动不占名额(商家与俱乐部同一条规则,2026-11-04 拍板)
+            int used = cmsActivityService.selectActivityQuotaUsedByMemberId(memberId);
             if (perm.getMaxEvents() != null && used >= perm.getMaxEvents())
             {
                 return "已达到当前身份活动数量上限（" + perm.getMaxEvents() + "）";
@@ -163,7 +164,7 @@ public class QuotaServiceImpl implements IQuotaService
         String err = lockAndCheckThemeOnline(memberId, excludeTopicId);
         if (err != null)
         {
-            throw new ServiceException(err);
+            throw new ServiceException(err, com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST);
         }
         // ③ 同事务内写库,提交后方释放锁
         return writeAction.get();

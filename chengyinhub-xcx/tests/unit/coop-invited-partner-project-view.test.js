@@ -116,11 +116,13 @@ test('受邀方落承接视图:role=join、没有报名行也不去查一条不�
 });
 
 // 走查 v2 R15(业主 2026-10-30):承办方不给「俱乐部」格,受邀方只剩真能用的扫码
-test('受邀方的关系入口只给真能用的一格:扫码', () => {
+test('受邀方不给关系入口格:唯一能用的扫码就是底栏「扫码核销」', () => {
   const page = openAsInvitedPartner(coopOnlyHome());
 
-  assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan'],
-    '「客户」走 /api/project/players、「更多」抽屉里每行都挂报名行 —— 受邀方点了必被拒;俱乐部是主办的事');
+  // 第十二轮 k9(p2 N-17):原来快捷格只剩一颗「扫码」,与底栏「扫码核销」同屏重复;
+  // 「客户」「更多」点了必被拒、俱乐部是主办的事,所以快捷格整排不出。
+  assert.deepEqual(page.data.quickActions.map((a) => a.key), [],
+    '「客户」走 /api/project/players、「更多」抽屉里每行都挂报名行 —— 受邀方点了必被拒;扫码已在底栏');
 
   // 俱乐部抽屉的数据在 project-home 那一次就带回来了,不该再拉一次接口
   assert.equal(page.data.clubSheet.items.length, 1);
@@ -140,13 +142,14 @@ test('负控:有报名行的承接方仍走原来那条完整链路,不落到受
     '有报名行就要回到既有的承接详情链路，数字与玩法才有来源');
 });
 
-test('负控:后端没认这层关系时(接口拒)照旧是整页失败态,不渲染半屏假承接', () => {
+test('负控:后端没认这层关系时(接口拒)是整页「链接已失效 · 返回上一页」,不渲染半屏假承接', () => {
   const page = makePage();
   page.onLoad({ topicId: '990030', scope: 'MERCHANT' });
   requests.find((r) => r.url === '/api/project/home')
     .success({ code: 500, msg: '你既不是该主题的发布者,也没有承接记录' });
 
-  assert.equal(page.data.loadFailed, true);
+  // 第十二轮 k9(p2 N-9):原来落 loadFailed(空白占位),店长拿错链接只看到一页空白
+  assert.equal(page.data.missingParam, true);
   assert.equal(page.data.coopPartner, null);
 });
 
@@ -228,4 +231,39 @@ test('换号返回主办页立即清理旧私产并按当前身份回读',()=>{
  assert.equal(Object.keys(p.data.hostPlayers).length,0);
  assert.equal(requests.length,before+1);
  assert.equal(requests.at(-1).url,'/api/project/home');
+});
+
+test('同会话返回项目只刷新一次，已接受邀约替换旧候选状态并收起发邀约入口',()=>{
+ const p=makePage();p.onLoad({topicId:'990035',scope:'CLUB'});
+ const homes=()=>requests.filter(r=>r.url==='/api/project/home');
+ const old=homes()[0];p.onShow();assert.equal(homes().length,1,'首屏不重复读取');
+ const home=inviteState=>({role:'host',topic:{id:990035,productType:1},host:{merchants:[{
+  registrationId:14,memberId:9002,auditStatus:1,status:1,name:'咖啡店',inviteState,
+ }]}});
+ old.success({code:200,data:home('none')});
+ const wxml=fs.readFileSync(path.resolve(__dirname,'../../pages/topic/components/project-host/index.wxml'),'utf8');
+ const condition=wxml.match(/wx:if="\{\{([^}]+)\}\}"[^>]+data-act="sendTermsInviteRow"/)[1];
+ const canSend=new Function('item','return ('+condition+')');
+ assert.equal(p.data.hostMerchants[0].statusText,'未发邀约');assert.equal(canSend(p.data.hostMerchants[0]),true);
+ p.onHide();p.onShow();assert.equal(homes().length,2,'同身份同会话返回必须重读');
+ assert.equal(JSON.parse(homes()[1].data).scope,'CLUB','保留操作域');
+ homes()[1].success({code:200,data:home('accepted')});
+ assert.equal(p.data.hostMerchants[0].statusText,'已中标');assert.equal(canSend(p.data.hostMerchants[0]),false);
+ old.success({code:200,data:home('none')});
+ assert.equal(p.data.hostMerchants[0].inviteState,'accepted','旧回包不能覆盖返回后的刷新');
+ p.onShow();assert.equal(homes().length,2,'没有再次隐藏就不重复刷新');
+});
+
+for(const recovery of ['ordinary','read-session','owner'])test('返回刷新与既有'+recovery+'恢复和抽屉返回标记合并一次',()=>{
+ const p=makePage();p.onLoad({topicId:'990035',scope:'CLUB'});
+ p.setData({role:'host','clubSheet.show':true,'merchantSheet.show':true});
+ let clubs=0,merchants=0;p.loadClubCandidates=()=>clubs++;p.loadRegApplies=()=>merchants++;
+ p.onHide();p._clubSheetReturn=true;
+ if(recovery==='read-session')p._readSessionChanged=true;
+ if(recovery==='owner')actor=2;
+ p.onShow();
+ assert.equal(requests.filter(r=>r.url==='/api/project/home').length,2,'返回只增加一次主页读');
+ assert.equal(p._clubSheetReturn,false);
+ assert.equal(clubs,recovery==='owner'?0:1);assert.equal(merchants,recovery==='owner'?0:1);
+ p.onShow();assert.equal(requests.filter(r=>r.url==='/api/project/home').length,2,'标记已消费');
 });

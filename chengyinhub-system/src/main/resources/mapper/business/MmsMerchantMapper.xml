@@ -349,6 +349,7 @@
             <if test="merchant.name != null">name = #{merchant.name},</if>
             <if test="merchant.wechat != null">wechat = #{merchant.wechat},</if>
             <if test="merchant.categoryId != null">category_id = #{merchant.categoryId},</if>
+            <if test="merchant.categoryIds != null">category_ids = #{merchant.categoryIds},</if>
             <if test="merchant.description != null">description = #{merchant.description},</if>
             <if test="merchant.derivatives != null">derivatives = #{merchant.derivatives},</if>
             <if test="merchant.derivativeBenefits != null">derivative_benefits = #{merchant.derivativeBenefits},</if>

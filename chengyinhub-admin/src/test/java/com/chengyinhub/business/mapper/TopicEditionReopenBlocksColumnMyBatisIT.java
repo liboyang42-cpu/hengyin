@@ -49,7 +49,7 @@ class TopicEditionReopenBlocksColumnMyBatisIT {
     /** 列形状取自生产快照 base_schema_20260818.sql 的 cms_topic_chapter（只保留本链路读写的列）。 */
     private static final String[] FIXTURE_DDL = {
             "DROP TABLE IF EXISTS cms_topic_chapter",
-            "CREATE TABLE cms_topic_chapter (id BIGINT PRIMARY KEY, topic_id BIGINT, name VARCHAR(100),"
+            "CREATE TABLE cms_topic_chapter (id BIGINT PRIMARY KEY, topic_id BIGINT, name VARCHAR(100), video_url VARCHAR(512), video_poster_url VARCHAR(512),"
                     + " description TEXT, blocks LONGTEXT, img_arr TEXT, total_time BIGINT, total_mileage DECIMAL(10,2),"
                     + " location_count BIGINT, template_count BIGINT, sort_id BIGINT, category VARCHAR(64),"
                     + " category_id INT, recruit_enabled TINYINT, perk_min_value DECIMAL(10,2), max_merchant INT,"

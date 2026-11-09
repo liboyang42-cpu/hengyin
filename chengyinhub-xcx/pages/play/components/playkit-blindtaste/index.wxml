@@ -21,7 +21,7 @@
         <text class="bt__cup-k">{{item.key}}</text>
       </view>
     </view>
-    <view class="bt__hint" wx:if="{{stage < 2}}">{{stage === 0 ? '店员会把小样摆在你面前' : '按住按钮就闭眼，松手就是睁眼'}}</view>
+    <view class="bt__hint" wx:if="{{stage === 1}}">{{stage === 0 ? '' : '按住按钮就闭眼，松手就是睁眼'}}</view>
 
     <!-- 睁眼作答:细线行,点一条就是作答(不可撤销,所以选中后锁住) -->
     <view class="bt__opts {{opened ? 'is-open' : ''}}" wx:if="{{stage === 2}}">

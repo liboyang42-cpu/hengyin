@@ -1,11 +1,19 @@
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
+function openAddress() { return require('../../../utils/open-address.js') }
 const app = getApp();
 const analytics = require('../../../utils/analytics.js');
 const subscribe = require('../../../utils/subscribe.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
+// j6 N1:服务端拒绝第二笔/取代旧单时带回要去的那笔订单 id(errorCode + data.registrationId)
+const PENDING_ORDER_REDIRECT = '__pending_order_redirect__';
+function pendingOrderRedirectId(res) {
+  if (!res || (res.errorCode !== 'PENDING_ORDER_EXISTS' && res.errorCode !== 'ORDER_SUPERSEDED')) return null;
+  const id = res.data && res.data.registrationId;
+  return id ? id : null;
+}
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { ticketWindowPassed, sortBySessionStart } = require('../../../utils/ticket-window.js');
@@ -73,12 +81,15 @@ function formatOfferDeadline(value) {
     + pad(date.getHours()) + ':' + pad(date.getMinutes());
 }
 
+const OFFER_WINDOW_MAX_MS = 1441 * 60_000;
+
 function offerDeadlineIsFuture(value, now) {
   const date = parseOfferDeadline(value);
   if (!date) return false;
   const delay = date.getTime() - (now == null ? Date.now() : now);
-  // 后端策略上限为 120 分钟；异常超长时间同样 fail-closed，不能扩张付款窗口。
-  return delay > 0 && delay <= 121 * 60_000;
+  // C-24(2026-11-02):候补认领窗口由系列配置,后端上限 1440 分钟(ClubEventOpsServiceImpl /
+  // club_event_series CHECK);原先按 120 分钟判,把 24 小时内仍有效的 OFFERED 当成已过期。超出上限仍 fail-closed。
+  return delay > 0 && delay <= OFFER_WINDOW_MAX_MS;
 }
 
 // CU-C-32(9-25 裁决):换票弹层是「场次选择器」,同日多场要能区分 —— 有开始时间就带上「MM-DD HH:mm」。
@@ -204,7 +215,7 @@ Page({
     everLoaded: false,
     loadErrorMsg: '',
     gateClubId: 0,
-    skeletonItems: [1, 2, 3],
+    skeletonItems: [1, 2], // 加载中两张卡:第三张会被底栏占位切掉一半(p08-baoming-loading)
     ticketList: [],
     selectedTicket: null,
     signupState: 'loading',
@@ -255,9 +266,13 @@ Page({
       consentName: '', consentChecked: false, consentState: 'idle', consentError: '' },
     // 向活动主办方提供报名信息(姓名/手机号)的单独同意(PIPL 单独同意)
     hostShareChecked: false,
+    // 第五轮 D:参与人信息一栏的输入问题(红字写在该栏下方)
+    participantError: '',
     // 结算关键前置态同时落在 data，供 UI/自动化回读；私有字段只保留兼容。
     hostShareConsentReady: false,
     quoteReady: false,
+    // P-05:服务端报价拒绝的原因(如该主题暂不支持在线支付);非空即这场现在不能报名
+    quoteRefusal: '',
     orderInfo: null,
     isPaying: false,
     paymentReady: false,
@@ -276,6 +291,9 @@ Page({
    * 生命周期函数--监听页面加载
    */
   /** U-168:置灰判断用的「现在」—— 按服务器时刻校准过的手机时钟。 */
+  // 第九轮 m1-9:活动地址一点开地图(有选点坐标直接开,只有文字走缓存的地址解析)
+  onAddressTap(e) { openAddress().openFromEvent(e); },
+
   clockNow() {
     return Date.now() + (this._serverClockOffset || 0);
   },
@@ -338,6 +356,9 @@ Page({
             editPhone: res.data.phone || res.data.mobilePhone || '',
             editRealName: res.data.name || res.data.realName || res.data.fullName || ''
           });
+          // j6 F5 / r1 F3:参与人列表与资料并发,参与人先回包时资料会把已选参与人的姓名/手机冲掉,
+          // 付款就误报「参与人信息需要包含姓名」。已选了参与人就以参与人为准。
+          if (that.data.selectedAddress) that.updateUserInfoFromAddress(that.data.selectedAddress);
         } else {
           // 如果获取失败，使用默认信息
           that.setData({
@@ -506,8 +527,17 @@ Page({
     };
     
     that.setData({
-      userInfo: newUserInfo
+      userInfo: newUserInfo,
+      participantError: ''   // 第五轮 D:换了参与人,字段下方的红字随之清掉
     });
+  },
+
+  // 第五轮 D:参与人信息是本页第一栏,滚回顶部即可看到它下方的红字。
+  showParticipantError(message) {
+    this.setData({ participantError: message });
+    if (typeof wx !== 'undefined' && typeof wx.pageScrollTo === 'function') {
+      wx.pageScrollTo({ scrollTop: 0, duration: 200 });
+    }
   },
 
   /**
@@ -948,7 +978,7 @@ Page({
       this.expireWaitlistOfferInView();
       return;
     }
-    if (delay > 121 * 60_000) {
+    if (delay > OFFER_WINDOW_MAX_MS) {
       this.expireWaitlistOfferInView();
       return;
     }
@@ -1089,7 +1119,7 @@ Page({
     that._quoteRetried = false;
     that._nonRefundableConfirmed = false;
     that._quoteRefundableNow = null;
-    that.setData({ quoteReady: false });
+    that.setData({ quoteReady: false, quoteRefusal: '' });
     app.sendRequest({
       url: '/api/registration/quote',
       method: 'POST',
@@ -1113,14 +1143,21 @@ Page({
           const refundableNow = res.data.refundableNow === true || res.data.refundableNow === false
             ? res.data.refundableNow : null;
           that._quoteRefundableNow = refundableNow;
+          // 2026-11-02 退款档位:集合前 24 小时内下单,取消只退 50%,下单前同样要确认。
+          that._quoteRefundPercentNow = Number.isFinite(Number(res.data.refundPercentNow))
+            && res.data.refundPercentNow !== null ? Number(res.data.refundPercentNow) : null;
           that.setData({
             quoteReady: !!that._quoteSign,
+            quoteRefusal: '',
             totalAmount: parseFloat(pay.toFixed(2)),
             discountAmount: parseFloat(pd.toFixed(2)),
             usedPoints: res.data.pointsUsed || 0,
             clubMemberDiscountAmount: parseFloat(clubDiscount.toFixed(2)),
             clubPrioritySignupEnabled: res.data.prioritySignupEnabled === true,
             isClubMember: res.data.clubMember === true,
+            // 第十二轮 k6(p1 N-1):服务端说这单不能抵积分(自由探索、可抵 0)就收起整行;没下发(旧 jar)保持原样。
+            pointsUsable: res.data.pointsUsable === false ? false
+              : (res.data.pointsUsable === true ? true : that.data.pointsUsable),
             paymentReady: pay <= 0 ? true : that.data.paymentReady
           }, () => that.refreshPaymentState());
           that._quoteRefundableNow = refundableNow;
@@ -1134,7 +1171,10 @@ Page({
           if (pay > 0) that.checkPaymentReadiness();
         } else if (res && res.msg) {
           // F-W1-05:报价被拒(如主题尚未开售)要说出真实原因,不能停在「重新检查支付服务」。
-          that.setData({ submitError: String(res.msg) });
+          // P-05:报价拒绝是这场当前不能报名的真实原因,记下来并关掉付款按钮,
+          // 否则点付款会带着空签名建单,只换来一句「缺少报价签名」。
+          that.setData({ submitError: String(res.msg), quoteRefusal: String(res.msg) },
+            () => that.refreshPaymentState());
           if (Number(that.data.totalAmount || 0) > 0 && !that.data.paymentReadinessChecking) {
             that.checkPaymentReadiness();
           }
@@ -1290,6 +1330,7 @@ Page({
     const signupClosed = (ticketSignupClosed(data.selectedTicket, now) || ticketWindowPassed(data.selectedTicket, now))
       && !activeOffer;
     const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed
+      && !data.quoteRefusal
       && data.hostShareChecked && !!data.selectedAddress
       && !data.merchantClosed
       && waitlistAllowsCheckout
@@ -1351,6 +1392,13 @@ Page({
               return;
             }
             cyLoading.hide();
+            // j6 N1:这一场已有一笔还能被扣款的单 —— 服务端不建第二笔,把玩家带去那一笔
+            const pendingOrderId = pendingOrderRedirectId(res);
+            if (pendingOrderId) {
+              that.setData({ isPaying: false }, () => that.refreshPaymentState());
+              cb({ ok: false, msg: PENDING_ORDER_REDIRECT, registrationId: pendingOrderId, text: res.msg });
+              return;
+            }
             if (res.code == 409 || res.code == '409') {
               that.setData({ isPaying: false }, () => that.refreshPaymentState());
               app.tips('价格已更新，请重新确认');
@@ -1393,6 +1441,12 @@ Page({
                     cyLoading.hide();
                     if (payRes && payRes.code == '200' && hasCompletePaymentParams(payRes.data)) {
                       cb({ ok: true, data: payRes.data });
+                      return;
+                    }
+                    const supersededId = pendingOrderRedirectId(payRes);
+                    if (supersededId) {
+                      that.setData({ isPaying: false }, () => that.refreshPaymentState());
+                      cb({ ok: false, msg: PENDING_ORDER_REDIRECT, registrationId: supersededId, text: payRes.msg });
                       return;
                     }
                     that.setData({ isPaying: false }, () => that.refreshPaymentState());
@@ -1468,6 +1522,12 @@ Page({
       return;
     }
 
+    if (that.data.quoteRefusal) {
+      that.setData({ submitError: that.data.quoteRefusal });
+      app.tips(that.data.quoteRefusal);
+      return;
+    }
+
     if (that.data.waitlistState === 'OFFERED'
       && !offerDeadlineIsFuture(that._waitlistOfferExpiresAt, that.clockNow())) {
       that.expireWaitlistOfferInView();
@@ -1525,8 +1585,10 @@ Page({
       return;
     }
 
+    // 第五轮 D(业主):参与人信息的问题写在该栏下方红字并滚回该栏,不再弹提示;
+    // 拦截与随后打开选择弹层/新增页都和原来一样。
     if (!that.data.selectedAddress) {
-      app.tips('请选择参与人信息');
+      that.showParticipantError('请选择参与人信息');
       that.checkAndShowAddressPopup();
       return;
     }
@@ -1538,20 +1600,20 @@ Page({
 
     // 验证用户信息（从参与人信息获取）
     if (!that.data.userInfo.realName) {
-      app.tips('参与人信息需要包含姓名');
+      that.showParticipantError('参与人信息需要包含姓名');
       that.checkAndShowAddressPopup();
       return;
     }
 
     if (!that.data.userInfo.phone) {
-      app.tips('参与人信息需要包含手机号');
+      that.showParticipantError('参与人信息需要包含手机号');
       that.checkAndShowAddressPopup();
       return;
     }
 
     // 验证手机号格式
     if (!isValidMobile(that.data.userInfo.phone)) {
-      app.tips('参与人信息中的手机号码格式不正确');
+      that.showParticipantError('参与人信息中的手机号码格式不正确');
       that.checkAndShowAddressPopup();
       return;
     }
@@ -1563,7 +1625,25 @@ Page({
       && that._quoteRefundableNow === false && !that._nonRefundableConfirmed) {
       modal.show({
         title: '本单不可退',
-        content: '该场次已过「集合前 24 小时」退款截止时间，支付后不可退款。确认继续下单？',
+        content: '该场次已开始，支付后不可退款。确认继续下单？',
+        confirmText: '继续下单',
+        cancelText: '再想想',
+        success: function (res) {
+          if (res && res.confirm) {
+            that._nonRefundableConfirmed = true;
+            that.handlePayment();
+          }
+        }
+      });
+      return;
+    }
+
+    if (Number(that.data.totalAmount || 0) > 0
+      && that._quoteRefundPercentNow === 50 && !that._nonRefundableConfirmed) {
+      modal.show({
+        title: '取消只退 50%',
+        content: (that.data.selectedTicket && Number(that.data.selectedTicket.mode) === 2
+          ? '该场次已进入开始前 24 小时' : '该场次已进入集合前 24 小时') + '，支付后取消只退实付的 50%。确认继续下单？',
         confirmText: '继续下单',
         cancelText: '再想想',
         success: function (res) {
@@ -1659,9 +1739,19 @@ Page({
             that._quoteSign = res.data.quoteSign || '';
             that._quoteRefundableNow = res.data.refundableNow === true || res.data.refundableNow === false
               ? res.data.refundableNow : null;
+            that._quoteRefundPercentNow = Number.isFinite(Number(res.data.refundPercentNow))
+              && res.data.refundPercentNow !== null ? Number(res.data.refundPercentNow) : null;
             that.setData({
               quoteReady: !!that._quoteSign
             });
+          } else if (res && res.msg) {
+            // P-05:补报价被拒就停在这里说真实原因,不带空签名去建单。
+            const refusal = String(res.msg);
+            that.setData({ isPaying: false, submitError: refusal, quoteRefusal: refusal }, function () {
+              that.refreshPaymentState();
+              cyLoading.hide();
+            });
+            return;
           }
           resumePayment();
         },
@@ -1687,6 +1777,10 @@ Page({
 
     var submitted = that._workflow.submit(payload, {
       onOrderFail: function (res) {
+        if (res && res.msg === PENDING_ORDER_REDIRECT) {
+          that.openOrderForPendingConflict(res.registrationId, res.text);
+          return;
+        }
         // 拍板 #21 / fix-be-0917:旧幂等键不可用(单已过期/已取消)时先自动换新键重建一次
         // (玩家无感,不发提示);重建后仍失败才退回可见提示,防止在死循环里反复建单。
         if (res && res.msg === ORDER_REBUILD_REQUIRED) {
@@ -1769,7 +1863,8 @@ Page({
           () => that.refreshPaymentState());
         cyLoading.hide();
         app.tips('您已取消支付');
-        that.cancelPendingOrder();
+        // j6 N1:取消没落库(比如微信结果还在确认)就带玩家去那笔订单看清现状,不再无声退回详情页
+        that.cancelPendingOrder({ openOrderWhenStuck: true });
       },
       onPayFail: function (res) {
         const message = (res && res.errMsg) || '支付失败，请重试';
@@ -1883,20 +1978,49 @@ Page({
     const ids = (info.registrationIds && info.registrationIds.length)
       ? info.registrationIds
       : (info.registrationId ? [info.registrationId] : []);
+    const leave = !(options && options.stayOnPage);
+    const openWhenStuck = !!(options && options.openOrderWhenStuck);
+    let waiting = ids.length;
+    let stuckId = null;
+    const settle = function () {
+      waiting -= 1;
+      if (waiting > 0 || !leave || that._destroyed) return;
+      if (openWhenStuck && stuckId) {
+        wx.redirectTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + stuckId + '&from=signup' });
+        return;
+      }
+      app.goBack();
+    };
+    if (!ids.length) {
+      if (leave) app.goBack();
+      return;
+    }
     ids.forEach(function (rid) {
       app.sendRequest({
         url: '/api/registration/cancel',
         data: { id: rid },
         method: 'POST',
         hideLoading: true,
-        successStatusAbnormal: function () {},
+        successStatusAbnormal: function () { stuckId = stuckId || rid; settle(); },
         // 只有取消真的落库了才换幂等键:撤单成功后再用旧 requestId 重试会重放这张已取消的单
         // (/api/registration/pay 对非待支付单必拒);撤单失败则保留旧键重放原单,由 /pay 兜底继续支付。
-        success: function () { that._reqId = null; },
-        fail: function () {}
+        success: function (res) {
+          if (res && (res.code == 200 || res.code == '200')) that._reqId = null;
+          else stuckId = stuckId || rid;
+          settle();
+        },
+        fail: function () { stuckId = stuckId || rid; settle(); }
       });
     });
-    if (!(options && options.stayOnPage)) app.goBack();
+  },
+
+  /** j6 N1:同一场已有一笔待支付的单 —— 说一句,再带去那笔订单(在那里继续支付或取消)。 */
+  openOrderForPendingConflict(registrationId, text) {
+    cyLoading.hide();
+    this.setData({ isPaying: false, submitError: '' }, () => this.refreshPaymentState());
+    if (text) app.tips(text);
+    if (this._destroyed || !registrationId) return;
+    wx.redirectTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + registrationId + '&from=signup' });
   },
 
   /**

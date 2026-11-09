@@ -40,10 +40,16 @@ Page({
   onLoad(options) {
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     const refundId = positiveId(options && options.refundId);
+    const manualCaseId = positiveId(options && options.manualCaseId);
+    const recordType = options && options.recordType || 'REFUND';
     this._merchantAccess = inactiveAccess();
     this._refundId = refundId;
-    // 详情只能从列表带真实 refundId 进入;缺参不再给「输入 ID 查询」表单,直接回列表。
-    if (refundId == null) {
+    this._manualCaseId = manualCaseId;
+    this._recordType = recordType;
+    // 两类资源各用自己的 ID；旧 refundId 链接仍有效，混用或未知类型回列表。
+    if ((recordType === 'MANUAL_CASE' && (manualCaseId == null || refundId != null))
+        || (recordType === 'REFUND' && (refundId == null || manualCaseId != null))
+        || !['REFUND', 'MANUAL_CASE'].includes(recordType)) {
       wx.redirectTo({ url: '/pages/merchant/aftercare/index' });
       return;
     }
@@ -89,13 +95,17 @@ Page({
   },
 
   loadDetail() {
+    const isManualCase = this._recordType === 'MANUAL_CASE';
     const refundId = positiveId(this._refundId);
-    if (refundId == null || !this._merchantAccess.canReadAftercare) return;
+    const manualCaseId = positiveId(this._manualCaseId);
+    if ((isManualCase ? manualCaseId == null : refundId == null) || !this._merchantAccess.canReadAftercare) return;
     this.setData({ pageState: 'loading', errorMessage: '' });
     app.sendRequest({
       hideLoading: true,
       silentError: true,
-      url: `/api/merchant/aftercare/detail?refundId=${encodeURIComponent(refundId)}`,
+      url: isManualCase
+        ? `/api/merchant/aftercare/manual-case-detail?manualCaseId=${encodeURIComponent(manualCaseId)}`
+        : `/api/merchant/aftercare/detail?refundId=${encodeURIComponent(refundId)}`,
       method: 'POST',
       success: (res) => {
         if (!isSuccessObject(res)) {
@@ -103,7 +113,9 @@ Page({
           return;
         }
         const detail = shapeAftercareDetail(res.data);
-        if (!detail || detail.refundId !== refundId) {
+        if (!detail || (isManualCase
+          ? detail.recordType !== 'MANUAL_CASE' || detail.manualCaseId !== manualCaseId
+          : detail.recordType !== 'REFUND' || detail.refundId !== refundId)) {
           this.setData({
             detail: null,
             canRespond: false,
@@ -116,13 +128,13 @@ Page({
         const allowedDecisionMap = decisionMap(detail.allowedDecisions);
         this.setData({
           // 金额未知时不把「金额待确认」放成黑色大字,大字回到页名,金额行在状态卡里弱色显示
-          pageTitle: detail.hasRefundAmount ? detail.refundAmountText : '退款售后',
+          pageTitle: isManualCase ? '人工退款工单' : (detail.hasRefundAmount ? detail.refundAmountText : '退款售后'),
           pageSubtitle: detail.headSubtitle,
           detail,
           canRespond: this._merchantAccess.canRespondAftercare === true
             && detail.canRespond === true && detail.allowedDecisions.length > 0,
           allowedDecisionMap,
-          respondBlockedText: this._merchantAccess.canRespondAftercare !== true
+          respondBlockedText: isManualCase ? '由平台处理，商家可查看进度。' : this._merchantAccess.canRespondAftercare !== true
             || (detail.processing === 'WAITING_PLATFORM_REVIEW' && detail.allowedDecisions.length === 0)
             ? '当前岗位只有查看权限，请联系店主调整权限。'
             : '平台审核已结束，不能再追加商家意见。',
@@ -177,7 +189,7 @@ Page({
   },
 
   chooseEvidence() {
-    if (this.data.submitting) return;
+    if (this._recordType === 'MANUAL_CASE' || this.data.submitting) return;
     app.chooseImage((uploads) => {
       const item = Array.isArray(uploads) && uploads.length === 1 ? uploads[0] : null;
       const key = item && typeof item.fileName === 'string' ? item.fileName.trim() : '';
@@ -213,7 +225,7 @@ Page({
   },
 
   retry() {
-    if (this._merchantAccess.canReadAftercare && this._refundId != null) this.loadDetail();
+    if (this._merchantAccess.canReadAftercare && (this._refundId != null || this._manualCaseId != null)) this.loadDetail();
     else this.loadAccess();
   },
 

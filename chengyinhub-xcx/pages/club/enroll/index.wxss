@@ -71,3 +71,11 @@ cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .reg-checkin--done { color: var(--cy-color-status-success); }
 .reg-checkin--pending { color: var(--cy-color-status-warning); }
 .reg-checkin--unknown { color: var(--cy-text-secondary); }
+
+/* C-13 每场票款:沿用票种行的分隔线与字号 */
+.money { padding: 8rpx 0 16rpx; border-bottom: 2rpx solid var(--cy-border-card); }
+.money-row { padding: 16rpx 0; }
+.money-label { font-size: var(--cy-font-body); font-weight: 500; color: var(--cy-color-text-primary); }
+.money-tag { margin-left: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
+.money-nums { display: flex; flex-wrap: wrap; gap: 8rpx 24rpx; margin-top: 8rpx; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
+.money-net { color: var(--cy-color-text-primary); font-weight: 600; }

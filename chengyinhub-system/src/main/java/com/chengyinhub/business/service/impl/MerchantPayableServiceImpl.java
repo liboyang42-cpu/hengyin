@@ -68,6 +68,9 @@ public class MerchantPayableServiceImpl implements IMerchantPayableService {
     @Autowired
     private ClubDirectMerchantReceivableService clubDirectReceivableService;
 
+    @Autowired
+    private com.chengyinhub.business.mapper.SettlementDetailMapper settlementDetailMapper;
+
     static String accrualKey(Long redemptionId) {
         return "accrual:" + redemptionId;
     }
@@ -104,6 +107,9 @@ public class MerchantPayableServiceImpl implements IMerchantPayableService {
             throw new IllegalStateException("应付计提失败:供给档位非法 offerId=" + offer.getId()
                     + " termsMode=" + offer.getTermsMode());
         }
+
+        // 普通俱乐部探索票在场次结算付店铺费；核销只留参与事实，不能另生线下应收。
+        if (settlementDetailMapper.countInAppExploreRedemption(redemptionId) > 0) return;
 
         if (offer.getPayerClubId() != null) {
             clubDirectReceivableService.accrue(r, offer);
