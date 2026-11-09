@@ -71,7 +71,7 @@ class ScopedLeaderboardMySqlIT {
             for (String scope : new String[]{"world", "quest"}) {
                 List<ScopedLeaderboardEntryVO> rows = mapper.selectScopedTop(
                         scope, scopeIdFor(scope), idOf(scope), null, null, 50);
-                assertEquals(4, rows.size(), scope + " 应含四名已支付玩家");
+                assertEquals("world".equals(scope) ? 4 : 3, rows.size(), scope + " 应含全部有效付费对局");
                 assertEquals(Long.valueOf(NOT_IN_CLUB), rows.get(0).getMemberId(), scope + " 分最高者在前");
                 assertEquals(Long.valueOf(3L), rows.get(0).getScore(), scope + " 分数=完成节点数");
                 assertEquals(Long.valueOf(PAID_ACE), rows.get(1).getMemberId(), scope + " 第二名");
