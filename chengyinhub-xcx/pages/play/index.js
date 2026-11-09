@@ -149,7 +149,7 @@ const PLAY_STORY_CARD = Object.freeze({
 // S9 暗色底图配置已抽到 utils/map-style.js(roam 页共用同一份,避免只改一页导致半暗半亮)。
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { playerMapStyle, configured: mapStyleConfigured } = require('../../utils/map-style.js');
-const MAP_DARK = playerMapStyle();
+const MAP_DARK = playerMapStyle(); const kitCard = require('./utils/story-kit-card.js'); /* V3-10/53/11/15 入口卡整屏 + 延伸任务半屏 */
 const storyScene = require('./utils/story-scene.js'); const themeLook = require('./utils/theme-look.js'); const lookFx = require('./utils/look-fx.js'); /* 主题画面风格:风格层粒子 + 转场 + 故事字体 */
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
@@ -414,7 +414,7 @@ const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const chapterVideo = require('./chapter-video.js');
 Page({
-  ...chapterVideo.methods,
+  ...chapterVideo.methods, ...kitCard.methods(),
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
     const header = { 'content-type': 'application/x-www-form-urlencoded' };
@@ -446,7 +446,7 @@ Page({
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data,
+    ...orientLifecycle.data, ...playTopbar.data, ...kitCard.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -546,7 +546,7 @@ Page({
     nodes: [], total: 0, merchantCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0, canContinueGames: false,
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
-    fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
+    fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, radarMap: { subkey: MAP_DARK.subkey, layerStyle: MAP_DARK.layerStyle } /* V3-13/14 左上雷达固定用漫游同一套深色底图 */, fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
     sheet: { show: false, node: null, continueText: '前往下一站' },
     advancedPlay: { show: false, node: null },
@@ -3878,7 +3878,7 @@ Page({
     if (inlineKit && !kitPlaced && !this._playKitNodeId) items.push({ kind: 'kit', mood: curMood });
     // 存量章节没有块流:检定仍可内嵌;完整块流只在其所属的未完成节点处铺。
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
-    if (!items.length) push('这一章还没有写下的内容。');
+    this._pushStoryTasks(items, nodes, blocks, readOnly, curMood);   // V3-15:故事流只放故事 —— 不再塞「这一章还没有写下的内容」,延伸任务收进一行入口
     if (!readOnly && claims.length) this._claimThoughts(claims);
     audioSession.keepAwake('chapterFull', true);
     this.setData({
@@ -7566,7 +7566,7 @@ Page({
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
-    this.setData({ playKit: { show: !inline, kit, readyForBase: ready } });
+    this.setData({ playKit: kitCard.playKitState(this.data.playKit, kit, inline, ready) });   // V3-10/53/11:要整屏的玩法在流里只放入口卡
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {
@@ -7583,7 +7583,7 @@ Page({
       this.openChapterFull();
       // 先清空再设:入口卡用的就是同一个 id,同值 setData 不会让 scroll-view 再对准一次,
       // 内嵌玩法的题干会停在入口卡当时的位置、被顶到顶栏底下(2026-09-23 整本试玩)。
-      const anchor = 'chapter-game-' + this._playKitNodeId;
+      const anchor = 'chapter-kit-' + this._playKitNodeId;   // V3-10/53:块内锚点,让出顶栏与渐隐
       const aim = () => {
         if (!current()) return;
         this.setData({ chapterGameAnchor: '' }, () => { if (current()) this.setData({ chapterGameAnchor: anchor }); });
@@ -7666,7 +7666,7 @@ Page({
     if (game && this.data.playKit.readyForBase) game.continueBase();
   },
   closePlayKit() {
-    this._stopPlayKitAudio();
+    if (this._collapseKitCard()) return; this._stopPlayKitAudio();   // V3-10/53/11:入口卡点开的整屏只收回到卡
     if (this._storyOpenNode) {   // 玩家主动退出故事里的玩法:重进不再自动打开
       this._storyOpenNode = false;
       storyResume.patch(this._runSessionScope(), { openNodeId: '' });

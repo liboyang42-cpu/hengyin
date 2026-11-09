@@ -12,7 +12,7 @@
 <wxs src="../../utils/wxs/hud-slots.wxs" module="hud" />
 <wxs src="./utils/wxs/ring.wxs" module="ring" />
 <!-- 文档二 L5 p-bag:背包属性行按类型画星级 / 小条(theme-backpack.wxml 用;include 不带 wxs,声明放宿主) -->
-<wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } module.exports = { stars: stars, pct: pct };</wxs>
+<wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function slots(used, cap) { var a = []; for (var i = 0; i < cap && i < 24; i++) a.push(i < used); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } module.exports = { stars: stars, slots: slots, pct: pct };</wxs>
 <wxs src="../../utils/wxs/list-key.wxs" module="lk" />
 <wxs src="../../utils/wxs/display-label.wxs" module="dl" />
 
@@ -99,7 +99,7 @@
         <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !advancedPlay.show && screen !== 'gamePlay' && fmStyleReady}}"
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
                   center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" rotate="{{navHeading}}"
-                  subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
+                  subkey="{{radarMap.subkey}}" layer-style="{{radarMap.layerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
                   trail-polyline="{{fmTrail}}" team-pins="{{fmTeamPins}}" accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
         <view class="radar__me"></view>
         <view class="radar__n" style="transform:rotate({{-navHeading}}deg)"><text style="transform:rotate({{navHeading}}deg)">N</text></view>
@@ -227,17 +227,25 @@
               aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="chfull__fsentry-title">{{item.text}}</view>
         </view>
-        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)));--pk-es-reel-h:860rpx;--pk-es-q-display:none">
-          <cy-playkit kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
+        <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="--pk-es-reel-h:860rpx;--pk-es-q-display:none">
+          <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
+          <view wx:if="{{playKit.card}}" class="chfull__fsentry" bindtap="expandPlayKit" aria-role="button" aria-label="打开{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="chfull__fsentry-title">{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}</view>
+            <view class="chfull__fsentry-go">打开</view>
+          </view>
+          <cy-playkit wx:else kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
           <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
                 aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
         </view>
-        <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit" style="padding-top:max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3)))">
+        <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit">
+          <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
           <cy-playkit-journey-check show="{{journeyCheck.show}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
             skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
             advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
             receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}" bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
         </view>
+        <!-- V3-15:延伸任务不写进正文,流末尾一行入口,点开半屏(utils/story-kit-card.js) -->
+        <view wx:elif="{{item.kind === 'tasks'}}" class="chfull__tasks" bindtap="openStoryTasks" aria-role="button" aria-label="延伸任务，{{item.count}} 个" hover-class="cy-pressed" hover-stay-time="80"><text class="chfull__tasks-t">延伸任务</text><text class="chfull__tasks-n">{{item.count}}</text><cy-icon name="chevron-right" size="28" /></view>
         <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
       </view>
       <view class="chfull__end" wx:if="{{(chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done}}">
@@ -1059,11 +1067,11 @@
       <view class="sheet-note" wx:else>到店后出示核销码给商家扫<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
     </block>
 
-    <!-- P0 导航逃生门:跳微信内置地图看真实路怎么走(风格化地图给不了街道) -->
-    <view class="sheet-nav" wx:if="{{!sheet.node.done && sheet.node.lat && !isPreview && !isMock}}" bindtap="sheetNav" hover-class="cy-pressed" hover-stay-time="80">
+    <!-- P0 导航逃生门:跳微信内置地图看真实路怎么走。V3-06(2026-11-06 业主):城市定向底部不要「在地图中查看路线」,
+         路线走故事流左上角的地图;自由探索站内没有地图,保留导航这一行。 -->
+    <view class="sheet-nav" wx:if="{{mode==2 && !sheet.node.done && sheet.node.lat && !isPreview && !isMock}}" bindtap="sheetNav" hover-class="cy-pressed" hover-stay-time="80">
       <cy-icon name="route" size="28" />
-      <!-- mode2 站内已没有地图,「在地图中查看」会被读成站内地图;它跳的是系统地图,直说 -->
-      <text>{{mode==2 ? '导航去这里(打开地图 App)' : '在地图中查看路线'}}</text>
+      <text>导航去这里(打开地图 App)</text>
     </view>
     <!-- 核销码只在到店这一步出现(底栏已撤):核销是商家扫玩家的码,所以是「出示」不是「去扫」 -->
     <view class="sheet-nav sheet-nav--verify" wx:if="{{mode==2 && regId && !isPreview && !isMock}}"

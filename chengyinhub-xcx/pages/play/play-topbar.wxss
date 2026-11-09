@@ -16,7 +16,7 @@
 .radar__rim-tip{ position:absolute; left:50%; top:6rpx; margin-left:-10rpx; width:0; height:0;
   border-left:10rpx solid transparent; border-right:10rpx solid transparent; border-bottom:18rpx solid var(--cy-color-play-accent); }
 .radar__fold{ position:absolute; z-index:5; left:calc(var(--cy-page-x) + 220rpx);
-  width:52rpx; height:52rpx; border-radius:50%; display:flex; align-items:center; justify-content:center; transform:rotate(-90deg);
+  width:52rpx; height:52rpx; border-radius:50%; display:flex; align-items:center; justify-content:center; transform:rotate(90deg); /* V3-13/14 展开时箭头朝上 = 收起 */
   background:var(--cy-color-bg-elevated); color:var(--cy-color-text-secondary); }
 /* 地图档时正文让位:顶部留白跟着雷达加高 */
 .chfull.is-navmap .chfull__pad{ height:560rpx; }
@@ -29,3 +29,8 @@
 .ptb__r--ally{ color:var(--cy-color-play-accent); }
 /* 收起钮看着 52rpx,热区用透明 ::after 撑到 88rpx(cy-info-pop 同法) */
 .radar__fold::after{ content:""; position:absolute; left:-18rpx; top:-18rpx; right:-18rpx; bottom:-18rpx; }
+/* V3-15 故事流末尾的延伸任务入口:一行,不是正文 */
+.chfull__tasks{ display:flex; align-items:center; gap:var(--cy-space-2); min-height:88rpx; margin:0 var(--cy-page-x); padding:0 var(--cy-space-4);
+  border-radius:var(--cy-radius-pill); background:var(--cy-comp-sheet-player-surface); font-size:var(--cy-type-body); line-height:1.4; color:var(--cy-color-text-primary); }
+.chfull__tasks-t{ flex:1; min-width:0; text-align:left; }
+.chfull__tasks-n{ color:var(--cy-color-text-tertiary); font-variant-numeric:tabular-nums; }

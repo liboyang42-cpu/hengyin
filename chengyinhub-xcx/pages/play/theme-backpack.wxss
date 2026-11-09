@@ -60,9 +60,19 @@
 .tb-check{display:flex;align-items:center;justify-content:center;position:absolute;right:0;bottom:0;width:var(--cy-space-4);height:var(--cy-space-4);border-radius:var(--cy-radius-pill);background:var(--cy-comp-sheet-player-text);color:var(--cy-comp-sheet-player-page);font-size:var(--cy-type-label);text-align:center}
 .tb-number{width:var(--cy-space-8);flex:none;min-height:var(--cy-btn-h);border-radius:var(--cy-radius-sm);background:var(--cy-comp-sheet-player-elevated);text-align:center;color:var(--cy-comp-sheet-player-text);font-size:var(--cy-type-body)}
 .tb-warning{color:var(--cy-color-status-warning)}
-.tb-clue image{width:100%;border-radius:var(--cy-radius-md);margin-top:var(--cy-space-3)}
+.tb-clue image{display:block;width:calc(100% + var(--cy-space-4) * 2);margin:var(--cy-space-3) calc(var(--cy-space-4) * -1) 0}
+.tb-clue image:last-child{margin-bottom:calc(var(--cy-space-4) * -1)}
+/* V3-21:物品图直接放,不再垫一块灰底(透明底的物品图会露出灰方块) */
+image.tb-avatar{background:transparent}
 .tb-clue-copy{display:block;margin-top:var(--cy-space-3);font-size:var(--cy-type-body);line-height:1.8;color:var(--cy-comp-sheet-player-text-secondary)}
 
 .tb-plan-lines{padding:0 var(--cy-space-4) var(--cy-space-4);overflow-wrap:anywhere}
 .tb-status{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cy-space-2);margin-top:var(--cy-space-2);color:var(--cy-comp-sheet-player-muted);font-size:var(--cy-type-label)}
 .tb-pass{display:flex;align-items:center;gap:var(--cy-space-1);padding:var(--cy-space-1) var(--cy-space-2);border-radius:var(--cy-radius-pill);background:var(--cy-comp-sheet-player-elevated);color:var(--cy-comp-sheet-player-text-secondary)}
+/* V3-16:装载一格一块(原型 v103-slots,业主「上面有格」);没有物品时下面是同一张底的空态 */
+.tb-slots{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:var(--cy-space-2);margin:var(--cy-space-3) 0 var(--cy-space-1)}
+.tb-slot{height:0;padding-bottom:100%;border-radius:var(--cy-radius-sm);background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 3rpx rgba(255,255,255,.16)} /* ds-ok 原型 v103-slots 空格淡框 */
+.tb-slot.is-on{background:var(--cy-comp-sheet-player-text);box-shadow:none}
+.tb-slot.is-full{background:var(--cy-color-status-warning)}
+.tb-items-empty{display:flex;flex-direction:column;align-items:center;gap:var(--cy-space-3);padding:var(--cy-space-8) 0}
+.tb-items-empty__ico{width:96rpx;height:96rpx;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--cy-comp-sheet-player-page);color:var(--cy-comp-sheet-player-muted)}

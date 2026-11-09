@@ -32,3 +32,11 @@
     <view class="tb-empty" wx:else>这个主题没有站点奖励</view>
   </view>
 </cy-sheet>
+<!-- V3-15:本章延伸任务(utils/story-kit-card.js),一行一站,点开地点卡 -->
+<cy-sheet show="{{storyTasks.show}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" bind:close="closeStoryTasks">
+  <view class="tb-sheet ptb">
+    <view class="tb-close" bindtap="closeStoryTasks" aria-role="button" aria-label="关闭延伸任务" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <text class="tb-title">延伸任务</text>
+    <view class="tb-group"><view class="tb-row" wx:for="{{storyTasks.rows}}" wx:key="nodeId" data-nodeid="{{item.nodeId}}" bindtap="openStoryTask" aria-role="button" aria-label="打开{{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><view class="tb-copy"><text class="tb-name">{{item.name}}</text></view><cy-icon class="tb-chevron" name="chevron-right" size="32" /></view></view>
+  </view>
+</cy-sheet>
