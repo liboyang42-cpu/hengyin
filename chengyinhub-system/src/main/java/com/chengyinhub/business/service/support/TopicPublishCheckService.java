@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -31,15 +33,15 @@ import java.util.Set;
 public class TopicPublishCheckService {
     private static final com.fasterxml.jackson.databind.ObjectMapper PREVIEW_JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
-    public static final String CODE_TOPIC_BUNDLE_INVALID = "TOPIC_BUNDLE_INVALID";
-    public static final String CODE_STATE_KEY_UNREGISTERED = "STATE_KEY_UNREGISTERED";
+    public static final String CODE_TOPIC_BUNDLE_INVALID = PublicationProblem.CODE_TOPIC_BUNDLE_INVALID;
+    public static final String CODE_STATE_KEY_UNREGISTERED = PublicationProblem.CODE_STATE_KEY_UNREGISTERED;
     /** 键注册了但类型不对(目前只有尾声 relationKey 会走这条:类型必须是 relation)。 */
-    public static final String CODE_STATE_KEY_TYPE_INVALID = "STATE_KEY_TYPE_INVALID";
-    public static final String CODE_BLOCK_CONFIG_INVALID = "BLOCK_CONFIG_INVALID";
-    public static final String CODE_JOURNEY_RULES_INVALID = "JOURNEY_RULES_INVALID";
-    public static final String CODE_JOURNEY_STORY_INVALID = "JOURNEY_STORY_INVALID";
+    public static final String CODE_STATE_KEY_TYPE_INVALID = PublicationProblem.CODE_STATE_KEY_TYPE_INVALID;
+    public static final String CODE_BLOCK_CONFIG_INVALID = PublicationProblem.CODE_BLOCK_CONFIG_INVALID;
+    public static final String CODE_JOURNEY_RULES_INVALID = PublicationProblem.CODE_JOURNEY_RULES_INVALID;
+    public static final String CODE_JOURNEY_STORY_INVALID = PublicationProblem.CODE_JOURNEY_STORY_INVALID;
     /** R22-SEC S14:章节故事流 blocks 解析失败(与节点块同样是发布期会拦的错)。 */
-    public static final String CODE_CHAPTER_BLOCKS_INVALID = "CHAPTER_BLOCKS_INVALID";
+    public static final String CODE_CHAPTER_BLOCKS_INVALID = PublicationProblem.CODE_CHAPTER_BLOCKS_INVALID;
     public static final String CODE_LINEAR_JOURNEY_SESSION = "LINEAR_JOURNEY_SESSION";
 
     private final CmsTopicNodeMapper cmsTopicNodeMapper;
@@ -151,9 +153,13 @@ public class TopicPublishCheckService {
             issues.addAll(topicAiPrecheckService.check(topic, nodes));
         }
         appendPublicationRuleIssues(topic, issues);
-        if (mediaPublicationGuard != null) for (String asset : mediaPublicationGuard.missingTopicLicenses(topic))
-            issues.add(PublishCheckIssue.warn(AppMediaProvenance.LICENSE_MISSING, null,
-                    "素材来源或授权声明待确认：" + asset).at("mediaAsset", AppMediaProvenance.LICENSE_MISSING));
+        if (mediaPublicationGuard != null) for (String asset : mediaPublicationGuard.missingTopicLicenses(topic)) {
+            PublicationProblem problem = mediaPublicationGuard.publicationLicenseProblem(asset);
+            PublishCheckIssue issue = problem != null && PublishCheckIssue.LEVEL_ERROR.equals(problem.getLevel())
+                    ? PublishCheckIssue.error(problem.getCode(), problem.getNodeId(), problem.getMessage() + "：" + asset)
+                    : PublishCheckIssue.warn(AppMediaProvenance.LICENSE_MISSING, null, "素材来源或授权声明待确认：" + asset);
+            issues.add(issue.at("mediaAsset", AppMediaProvenance.LICENSE_MISSING));
+        }
         return locate(topic.getId(), issues, nodes);
     }
 
@@ -170,12 +176,19 @@ public class TopicPublishCheckService {
         if (publicationContentGuard == null) {
             return;
         }
-        for (TopicPublicationContentGuard.PublicationProblem problem
+        for (PublicationProblem problem
                 : publicationContentGuard.collectPublicationProblems(topic)) {
-            if (TopicPublicationContentGuard.PublicationProblem.CODE_STATE_KEY_UNREGISTERED.equals(problem.getCode())) {
+            if (PublicationProblem.CODE_STATE_KEY_UNREGISTERED.equals(problem.getCode())
+                    || CODE_STATE_KEY_TYPE_INVALID.equals(problem.getCode())
+                    || issues.stream().anyMatch(existing -> existing.getCode().equals(problem.getCode())
+                        && java.util.Objects.equals(existing.getNodeId(), problem.getNodeId())
+                        && (CODE_BLOCK_CONFIG_INVALID.equals(problem.getCode())
+                            || CODE_CHAPTER_BLOCKS_INVALID.equals(problem.getCode())
+                            || CODE_JOURNEY_RULES_INVALID.equals(problem.getCode())
+                            || CODE_JOURNEY_STORY_INVALID.equals(problem.getCode())))) {
                 continue;
             }
-            PublishCheckIssue issue = TopicPublicationContentGuard.PublicationProblem.LEVEL_WARN
+            PublishCheckIssue issue = PublicationProblem.LEVEL_WARN
                     .equals(problem.getLevel())
                     ? PublishCheckIssue.warn(problem.getCode(), problem.getNodeId(), problem.getMessage())
                     : PublishCheckIssue.error(problem.getCode(), problem.getNodeId(), problem.getMessage());

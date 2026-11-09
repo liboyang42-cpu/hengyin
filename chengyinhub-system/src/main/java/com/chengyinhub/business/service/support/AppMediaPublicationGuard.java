@@ -72,6 +72,10 @@ public class AppMediaPublicationGuard {
         }
     }
 
+    public com.chengyinhub.business.domain.vo.PublicationProblem publicationLicenseProblem(String reference) {
+        return references.publicationProblem(reference);
+    }
+
     public Set<String> missingTopicLicenses(CmsTopic topic) {
         Set<String> missing = new java.util.LinkedHashSet<>();
         collectMissingLicenses(topic, missing, "imgUrl", "imgArr", "audioUrl", "finishMedalImg",

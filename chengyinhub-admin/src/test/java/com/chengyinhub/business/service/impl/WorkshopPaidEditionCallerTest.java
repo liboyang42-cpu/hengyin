@@ -45,7 +45,8 @@ class WorkshopPaidEditionCallerTest {
     List<Map<String,Object>> products;
 
     @BeforeEach void setup() {
-        service=new WorkshopService(mapper,drafts,pay,mock(WechatVerifiedPaymentFactService.class),transactions);
+        service=new WorkshopService(mapper,drafts,pay,
+                new WorkshopWechatPaymentOrderAdapter(mapper,mock(WechatVerifiedPaymentFactService.class),transactions),transactions);
         ReflectionTestUtils.setField(service,"versionReview",review);
         ReflectionTestUtils.setField(service,"appleSignedData",signed);
         ReflectionTestUtils.setField(service,"appleProperties",config);

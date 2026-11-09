@@ -320,6 +320,21 @@ class SupportedStackServiceCyclesTest
                 Object target = AopTestUtils.getUltimateTargetObject(context.getBean(service));
                 assertThat(Mockito.mockingDetails(target).isMock()).as(service.getName()).isFalse();
             }
+            Object workshop = context.getBean(com.chengyinhub.business.service.impl.WorkshopService.class);
+            Object workshopOrders = context.getBean(com.chengyinhub.business.service.impl.WorkshopWechatPaymentOrderAdapter.class);
+            Object workshopTarget = AopTestUtils.getUltimateTargetObject(workshop);
+            Object workshopOrderTarget = AopTestUtils.getUltimateTargetObject(workshopOrders);
+            assertThat(Mockito.mockingDetails(workshopTarget).isMock()).isFalse();
+            assertThat(Mockito.mockingDetails(workshopOrderTarget).isMock()).isFalse();
+            assertThat(ReflectionTestUtils.getField(workshopTarget, "paymentOrders")).isSameAs(workshopOrders);
+            Object router = AopTestUtils.getUltimateTargetObject(context.getBean(WechatPaymentCallbackRouter.class));
+            assertThat(ReflectionTestUtils.getField(router, "workshop")).isSameAs(workshopOrders);
+            assertThat(ReflectionTestUtils.getField(workshopOrderTarget, "mapper"))
+                    .isSameAs(context.getBean(com.chengyinhub.business.mapper.WorkshopMapper.class));
+            assertThat(ReflectionTestUtils.getField(workshopOrderTarget, "verified"))
+                    .isSameAs(context.getBean(WechatVerifiedPaymentFactService.class));
+            TransactionTemplate workshopTransaction = (TransactionTemplate) ReflectionTestUtils.getField(workshopOrderTarget, "tx");
+            assertThat(workshopTransaction.getTransactionManager()).isSameAs(context.getBean(PlatformTransactionManager.class));
             Object facts = context.getBean(WechatVerifiedPaymentFactService.class);
             Object reader = AopTestUtils.getUltimateTargetObject(facts);
             assertThat(AopUtils.isAopProxy(facts)).isTrue();
@@ -633,7 +648,9 @@ class SupportedStackServiceCyclesTest
         if (assembly.contains(WechatPayServiceImpl.class))
         {
             assembly.addAll(List.of(WechatPaymentSdkGateway.class, WechatPaymentIntentStore.class,
-                    JdbcWechatPaymentOrderOwner.class, WechatPaymentCallbackRouter.class));
+                    JdbcWechatPaymentOrderOwner.class, WechatPaymentCallbackRouter.class,
+                    com.chengyinhub.business.service.impl.WorkshopService.class,
+                    com.chengyinhub.business.service.impl.WorkshopWechatPaymentOrderAdapter.class));
         }
         if (assembly.contains(WechatPaymentSdkGateway.class) || assembly.contains(CmsRegistrationServiceImpl.class)
                 || assembly.contains(RefundServiceImpl.class) || assembly.contains(CoopInviteServiceImpl.class)

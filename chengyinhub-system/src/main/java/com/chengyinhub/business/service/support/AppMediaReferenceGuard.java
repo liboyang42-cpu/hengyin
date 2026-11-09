@@ -193,6 +193,11 @@ public class AppMediaReferenceGuard {
         if(registered(row))AppMediaProvenance.requirePublication(row);
     }
 
+    public com.chengyinhub.business.domain.vo.PublicationProblem publicationProblem(String reference) {
+        Map<String, Object> row = reference == null ? null : resolve(reference);
+        return registered(row) ? AppMediaProvenance.publicationProblem(row) : null;
+    }
+
     public String missingLicenseReference(String reference) {
         Map<String,Object> row=reference==null?null:resolve(reference);
         return registered(row) && AppMediaProvenance.missing(row) ? "media-asset:"+row.get("id") : null;

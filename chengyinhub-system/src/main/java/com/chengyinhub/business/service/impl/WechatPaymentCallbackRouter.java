@@ -29,7 +29,7 @@ public class WechatPaymentCallbackRouter {
     private final WechatRefundCallbackOwner depositRefund;
     private final WechatRefundCallbackOwner registrationRefund;
 
-    private final WorkshopService workshop;
+    private final WorkshopWechatPaymentOrderAdapter workshop;
 
     public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
             ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
@@ -40,7 +40,7 @@ public class WechatPaymentCallbackRouter {
     @Autowired
     public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
             ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
-            IMarketingProductPurchaseService marketingProducts, WorkshopService workshop) {
+            IMarketingProductPurchaseService marketingProducts, WorkshopWechatPaymentOrderAdapter workshop) {
         this.workshop = workshop;
         // Reserve CLM even when malformed/unknown: it must never fall through to registration.
         owners = List.of(

@@ -182,6 +182,56 @@ class TopicPublishCheckRuleProjectionTest {
         verify(media).missingTopicLicenses(any(CmsTopic.class));
     }
 
+    @Test
+    void formalRuleFailureCarriesTheSameCodeAndFieldAsRepeatedPrechecks() {
+        stubTemplate("{\"schemaVersion\":1,\"requires\":[{\"op\":\"NODE_COMPLETED\",\"nodeId\":9999}]}");
+        List<PublishCheckIssue> firstCheck = service.check(topic());
+        List<PublishCheckIssue> secondCheck = service.check(topic());
+        TopicPublicationContentGuard guard = (TopicPublicationContentGuard) ReflectionTestUtils.getField(service, "publicationContentGuard");
+        var failure = org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> guard.assertBlockSysVarReferences(topic()));
+        var formal = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure).getIssues().get(0);
+        for (List<PublishCheckIssue> checked : java.util.List.of(firstCheck, secondCheck)) {
+            PublishCheckIssue preview = first(checked, formal.getCode());
+            assertEquals(preview.getNodeId(), formal.getNodeId());
+            assertEquals(preview.getField(), formal.getField());
+        }
+        assertReadOnly(nodeMapper, "CmsTopicNodeMapper");
+        assertReadOnly(templateMapper, "CmsMemberTemplateMapper");
+        assertReadOnly(chapterMapper, "CmsTopicChapterMapper");
+        assertReadOnly(ticketMapper, "OmsTicketMapper");
+        assertReadOnly(keyMapper, "ThemeStateKeyMapper");
+    }
+
+    @Test
+    void registeredMediaUsesTheSameDeclarationLevelAndLocationAsFormalPublication() {
+        var rows = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        var row = new java.util.HashMap<String,Object>(java.util.Map.of("id",7L,"memberId",7L,"ownerType","APP", "reviewState","APPROVED", "sourceType","unknown"));
+        org.mockito.Mockito.when(rows.select(7L)).thenReturn(row);
+        AppMediaReferenceGuard references = new AppMediaReferenceGuard();
+        ReflectionTestUtils.setField(references,"mapper",rows);
+        AppMediaPublicationGuard media = new AppMediaPublicationGuard();
+        ReflectionTestUtils.setField(media,"references",references);
+        ReflectionTestUtils.setField(media,"nodes",nodeMapper);
+        ReflectionTestUtils.setField(media,"chapters",chapterMapper);
+        ReflectionTestUtils.setField(media,"templates",templateMapper);
+        ReflectionTestUtils.setField(service,"mediaPublicationGuard",media);
+        CmsTopic topic = topic(); topic.setImgUrl("media-asset:7");
+        var preview = first(service.check(topic),AppMediaProvenance.LICENSE_MISSING);
+        var failure = org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> media.requireMedia(7L,"media-asset:7",true));
+        var formal = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure).getIssues().get(0);
+        assertEquals(preview.getCode(),formal.getCode());
+        assertEquals(preview.getLevel(),formal.getLevel());
+        assertEquals("error",preview.getLevel());
+        assertEquals(preview.getNodeId(),formal.getNodeId());
+        assertEquals(preview.getField(),formal.getField());
+        row.remove("sourceType");
+        assertEquals("warn",first(service.check(topic),AppMediaProvenance.LICENSE_MISSING).getLevel());
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> media.requireMedia(7L,"media-asset:7",true));
+        assertReadOnly(rows,"AppMediaAssetMapper");
+    }
+
     private void stubTemplate(String advancedConfigJson) {
         CmsMemberTemplate template = new CmsMemberTemplate();
         template.setId(TEMPLATE_ID);

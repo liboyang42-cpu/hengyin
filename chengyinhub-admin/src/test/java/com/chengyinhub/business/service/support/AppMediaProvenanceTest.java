@@ -50,6 +50,28 @@ class AppMediaProvenanceTest {
         assertEquals(Map.of("id",7L),legacy);
     }
 
+    @Test void publicationIssueUsesTheOriginalHardGateAndNeverCopiesPrivateMetadata() throws Exception {
+        Map<String,Object> row = new HashMap<>(Map.of("id",7L,"sourceType","unknown", "licenseNote","private agreement", "memberId",9L,"objectKey","private object"));
+        Map<String,Object> before = new HashMap<>(row);
+        var preview = AppMediaProvenance.publicationProblem(row);
+        assertEquals("error", preview.getLevel());
+        ServiceException failure = assertThrows(ServiceException.class, () -> AppMediaProvenance.requirePublication(row));
+        assertEquals(422, failure.getCode());
+        assertEquals("ASSET_LICENSE_MISSING：请补充素材来源和授权声明后再公开", failure.getMessage());
+        var issue = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure).getIssues().get(0);
+        assertEquals(preview.getCode(), issue.getCode());
+        assertEquals(preview.getLevel(), issue.getLevel());
+        assertEquals(preview.getNodeId(), issue.getNodeId());
+        assertEquals(preview.getField(), issue.getField());
+        String encoded = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(failure.getData());
+        assertFalse(encoded.contains("private")); assertFalse(encoded.contains("licenseNote"));
+        assertFalse(encoded.contains("memberId")); assertFalse(encoded.contains("objectKey"));
+        assertEquals(before, row);
+        row.remove("sourceType");
+        assertEquals("warn", AppMediaProvenance.publicationProblem(row).getLevel());
+        assertDoesNotThrow(() -> AppMediaProvenance.requirePublication(row));
+    }
+
     @Test void publicProjectionNeverContainsPrivateDeclarationOrStorageFields() {
         Map<String,Object> row=new HashMap<>(Map.of("sourceType","ai-generated","licenseNote","private agreement",
                 "attribution","Test author","aiModel","private model","objectKey","private key","memberId",9L));

@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.support;
 
 import java.util.*;
+import com.chengyinhub.business.exception.TopicPublicationContentException;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.domain.dto.NodeDTO;
@@ -196,113 +197,33 @@ public class TopicPublicationContentGuard {
         if (message.length() > 110) {
             message = message.substring(0, 110) + "…";
         }
-        throw new IllegalStateException(message);
+        throw new TopicPublicationContentException(message, problems);
     }
 
-    /**
-     * 一条可定位的发布问题:{code, message, nodeId?, field?}。
-     *
-     * <p>field 是作者配置里的 JSON 路径(如 {@code nodes[nodeId=12].template.advancedConfigJson}),
-     * message 去掉发布闸支持用的 {@code [topicId=.., path=..]} 尾巴,给作者直接看。
-     * 这里只是一条数据,不是第二套判据:code 与 message 都直接来自发布闸自己的异常。
-     */
-    public static final class PublicationProblem {
-
-        public static final String LEVEL_ERROR = "error";
-        public static final String LEVEL_WARN = "warn";
-
-        public static final String CODE_TOPIC_NAME_REQUIRED = "TOPIC_NAME_REQUIRED";
-        public static final String CODE_AI_SIMPLE_LOCATION_INVALID = "AI_SIMPLE_LOCATION_INVALID";
-        public static final String CODE_RECRUIT_DEADLINE_REQUIRED = "RECRUIT_DEADLINE_REQUIRED";
-        public static final String CODE_TICKET_INVALID = "TICKET_INVALID";
-        public static final String CODE_SIZE_LIMIT_EXCEEDED = "SIZE_LIMIT_EXCEEDED";
-        public static final String CODE_STATE_KEY_UNREGISTERED = "STATE_KEY_UNREGISTERED";
-        public static final String CODE_THOUGHT_REF_UNRESOLVED = "THOUGHT_REF_UNRESOLVED";
-        public static final String CODE_JOURNEY_STORY_INVALID = "JOURNEY_STORY_INVALID";
-        public static final String CODE_THEME_RUNTIME_REF_INVALID = "THEME_RUNTIME_REF_INVALID";
-        public static final String CODE_NARRATIVE_NPC_INVALID = "NARRATIVE_NPC_INVALID";
-        public static final String CODE_BLOCK_SYS_VAR_INVALID = "BLOCK_SYS_VAR_INVALID";
-        /** 冻结预演失败:路线图结构 / 模板规则编译 / 冻结快照 / 玩法运行期校验任一处不通过。 */
-        public static final String CODE_FREEZE_INVALID = "FREEZE_INVALID";
-        /** 冻结预演未能跑完(warn,**明确表示未检查**,不是通过)。 */
-        public static final String CODE_FREEZE_PREVIEW_INCOMPLETE = "FREEZE_PREVIEW_INCOMPLETE";
-        public static final String CODE_ROUTE_MODE_INVALID = "ROUTE_MODE_INVALID";
-        public static final String CODE_LOCATION_BINDING_INVALID = "LOCATION_BINDING_INVALID";
-
-        private final String level;
-        private final String code;
-        private final Long nodeId;
-        private final String field;
-        private final String message;
-
+    /** Compatibility name for callers compiled against the original guard diagnostics. */
+    public static final class PublicationProblem extends com.chengyinhub.business.domain.vo.PublicationProblem {
         private PublicationProblem(String level, String code, Long nodeId, String field, String message) {
-            this.level = level;
-            this.code = code;
-            this.nodeId = nodeId;
-            this.field = field;
-            this.message = message;
+            super(level, code, nodeId, field, message);
         }
 
-        static PublicationProblem at(String code, Long nodeId, String field, String message) {
+        public static PublicationProblem at(String code, Long nodeId, String field, String message) {
             return new PublicationProblem(LEVEL_ERROR, code, nodeId, field, message);
         }
 
-        static PublicationProblem warn(String code, Long nodeId, String field, String message) {
+        public static PublicationProblem warn(String code, Long nodeId, String field, String message) {
             return new PublicationProblem(LEVEL_WARN, code, nodeId, field, message);
         }
 
-        /** 把发布闸抛出的异常收敛成一条问题:尾部定位尾巴拆到 field,nodeId 从字段路径里认。 */
-        static PublicationProblem from(String code, String fallbackField, RuntimeException failure) {
-            String raw = failure.getMessage() == null || failure.getMessage().trim().isEmpty()
-                    ? fallbackField + " 未通过发布校验" : failure.getMessage();
-            // 路径本身含方括号(nodes[nodeId=301].template[templateId=900].advancedConfigJson),
-            // 正则 [^\]]+ 会在第一个 ']' 截断,nodeId 就永远解析不出来。按标记位置切,不按字符类贪心。
-            String field = null;
-            String cleaned = raw;
-            int cursor = cleaned.indexOf(LOCATION_MARK);
-            while (cursor >= 0) {
-                int pathStart = cleaned.indexOf(PATH_MARK, cursor + LOCATION_MARK.length());
-                if (pathStart <= 0) break;
-                // 路径自身带方括号(nodes[nodeId=301].template[templateId=401].advancedConfigJson),
-                // 而且定位尾巴常被拼进 List.toString(),后面会再跟一个 ']'。
-                // 因此「尾巴结束」只能按括号配对判定:深度回到 0 的那个 ']' 才是尾巴的收尾。
-                int depth = 0;
-                int closing = -1;
-                for (int i = pathStart + PATH_MARK.length(); i < cleaned.length(); i++) {
-                    char c = cleaned.charAt(i);
-                    if (c == '[') depth++;
-                    else if (c == ']') {
-                        if (depth == 0) { closing = i; break; }
-                        depth--;
-                    }
-                }
-                if (closing < 0) break;
-                if (field == null) field = cleaned.substring(pathStart + PATH_MARK.length(), closing);
-                cleaned = cleaned.substring(0, cursor) + cleaned.substring(closing + 1);
-                cursor = cleaned.indexOf(LOCATION_MARK);
-            }
-            if (field == null) field = fallbackField;
-            Long nodeId = null;
-            java.util.regex.Matcher node = NODE_PATH.matcher(field);
-            if (node.find()) {
-                try { nodeId = Long.valueOf(node.group(1)); } catch (RuntimeException ignore) { nodeId = null; }
-            }
-            String message = cleaned.trim().isEmpty() ? fallbackField + " 未通过发布校验" : cleaned.trim();
-            return new PublicationProblem(LEVEL_ERROR, code, nodeId, field, message);
+        public static PublicationProblem from(String code, String field, RuntimeException failure) {
+            return copyOf(com.chengyinhub.business.domain.vo.PublicationProblem.from(code, field, failure));
         }
 
-        public String getLevel() { return level; }
-        public String getCode() { return code; }
-        public Long getNodeId() { return nodeId; }
-        public String getField() { return field; }
-        public String getMessage() { return message; }
+        private static PublicationProblem copyOf(com.chengyinhub.business.domain.vo.PublicationProblem problem) {
+            return new PublicationProblem(problem.getLevel(), problem.getCode(), problem.getNodeId(),
+                    problem.getField(), problem.getMessage());
+        }
     }
 
-    /** 定位尾巴的两个标记:{@code "[topicId=<id>, path=<field>]"};按标记切,避免路径里的 ']' 截断。 */
-    private static final String LOCATION_MARK = "[topicId=";
-    private static final String PATH_MARK = ", path=";
-    private static final java.util.regex.Pattern NODE_PATH =
-            java.util.regex.Pattern.compile("nodes\\[nodeId=(\\d+)\\]");
 
     /**
      * 发布前试检查的收集器:按真实发布的顺序,逐条调用同一批既有 assert,把异常收成问题列出来。
@@ -371,7 +292,9 @@ public class TopicPublicationContentGuard {
                         null, "routeGraphJson", incompleteMessage(failure)));
                 return;
             }
-            problems.add(PublicationProblem.from(PublicationProblem.CODE_FREEZE_INVALID, "routeGraphJson", failure));
+            TopicPublicationContentException.Issues data = TopicPublicationContentException.dataOf(failure);
+            if (data == null) problems.add(PublicationProblem.from(PublicationProblem.CODE_FREEZE_INVALID, "routeGraphJson", failure));
+            else for (var problem : data.getIssues()) problems.add(PublicationProblem.copyOf(problem));
         }
     }
 
@@ -389,11 +312,18 @@ public class TopicPublicationContentGuard {
                 + "发布时仍会完整校验";
     }
 
+    private static ServiceException contentFailure(String code, String field, ServiceException failure) {
+        return TopicPublicationContentException.withIssues(failure,
+                Collections.singletonList(PublicationProblem.from(code, field, failure)));
+    }
+
     private static void collect(List<PublicationProblem> problems, String code, String field, Runnable check) {
         try {
             check.run();
         } catch (RuntimeException failure) {
-            problems.add(PublicationProblem.from(code, field, failure));
+            TopicPublicationContentException.Issues data = TopicPublicationContentException.dataOf(failure);
+            if (data == null) problems.add(PublicationProblem.from(code, field, failure));
+            else for (var problem : data.getIssues()) problems.add(PublicationProblem.copyOf(problem));
         }
     }
 
@@ -581,8 +511,8 @@ public class TopicPublicationContentGuard {
                 // 与本类其它发布闸一致:发布被拦是 IllegalStateException。
                 // 混用 ServiceException 会让调用方按业务异常处理(不同 HTTP/日志口径),
                 // 同一道闸不该有两种异常类型。
-                throw new IllegalStateException("主题发布失败:" + problem.getMessage()
-                        + publicationLocation(topic, problem.getField()));
+                throw new TopicPublicationContentException("主题发布失败:" + problem.getMessage()
+                        + publicationLocation(topic, problem.getField()), Collections.singletonList(problem));
             }
         }
     }
@@ -628,7 +558,8 @@ public class TopicPublicationContentGuard {
         }
         for (String key : refs) {
             if (!defined.contains(key)) {
-                throw new ServiceException("故事里用到的念头「" + key + "」还没在思维阁里定义,玩家永远得不到它");
+                throw contentFailure(PublicationProblem.CODE_THOUGHT_REF_UNRESOLVED, "journeyRulesJson.thoughts",
+                        new ServiceException("故事里用到的念头「" + key + "」还没在思维阁里定义,玩家永远得不到它"));
             }
         }
     }
@@ -716,12 +647,13 @@ public class TopicPublicationContentGuard {
         Set<String> storyKeys = new LinkedHashSet<String>();
         Set<String> chapterKeys = new LinkedHashSet<String>();
         String exhaustTag;
+        TopicStateKeyRefService.RefCollection refs = null;
         if (topicStateKeyRefService == null) {
             // 收集服务未注入(手工 new 的单测):数值规则的力竭标记按本类口径兜底核对;
             // 节点块引用只在收集服务里,这一支没有,行为与旧单测一致。
             exhaustTag = journeyRulesExhaustTag(topic);
         } else {
-            TopicStateKeyRefService.RefCollection refs = preview ? topicStateKeyRefService.collect(topic)
+            refs = preview ? topicStateKeyRefService.collect(topic)
                     : topicStateKeyRefService.collectForPublication(topic);
             assertStateKeyReferencesParsed(topic, refs);
             for (Map.Entry<Long, Set<String>> entry : refs.getRefsByNode().entrySet()) {
@@ -768,20 +700,27 @@ public class TopicPublicationContentGuard {
             }
         }
         List<String> missing = new ArrayList<String>();
+        List<PublicationProblem> problems = new ArrayList<PublicationProblem>();
         for (Map.Entry<String, Set<String>> entry : refNodeNames.entrySet()) {
             if (!registered.contains(entry.getKey())) {
                 missing.add(entry.getKey() + "(节点:" + String.join(",", entry.getValue()) + ")");
+                problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, entry.getKey(), refs,
+                        "状态键未注册:" + entry.getKey()));
             }
         }
         // R2-B10:主题数值规则的力竭标记与玩法块引用同一道闸 —— 它会被检定链路写进本局 state_json,
         // 没注册就是往一个主题没声明过的键上写。
         if (exhaustTag != null && !registered.contains(exhaustTag)) {
             missing.add(exhaustTag + "(来源:主题数值规则)");
+            problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, exhaustTag, refs,
+                    "状态键未注册:" + exhaustTag));
         }
         // R8:主题剧情配置(journey_story_json)的 when 条件同样只能引用已注册的键。
         for (String storyKey : storyKeys) {
             if (!registered.contains(storyKey) && !thoughtDoneTags.contains(storyKey)) {
                 missing.add(storyKey + "(来源:主题剧情配置)");
+                problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, storyKey, refs,
+                        "状态键未注册:" + storyKey));
             }
         }
         // R19:叙事搬进章节故事流后,beat 块上的 when(brief carry / outcome fact / revisit change)
@@ -789,6 +728,8 @@ public class TopicPublicationContentGuard {
         for (String chapterKey : chapterKeys) {
             if (!registered.contains(chapterKey) && !thoughtDoneTags.contains(chapterKey)) {
                 missing.add(chapterKey + "(来源:章节故事流)");
+                problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, chapterKey, refs,
+                        "状态键未注册:" + chapterKey));
             }
         }
         // R8-STORY:剧情配置的 cond 与 optionalClues 引用同一注册表(收集服务已收过的键不重复报)
@@ -796,6 +737,8 @@ public class TopicPublicationContentGuard {
             if (!registered.contains(entry.getKey()) && !storyKeys.contains(entry.getKey())
                     && !thoughtDoneTags.contains(entry.getKey())) {
                 missing.add(entry.getKey() + "(来源:" + entry.getValue() + ")");
+                problems.add(stateKeyProblem(PublicationProblem.CODE_STATE_KEY_UNREGISTERED, entry.getKey(), refs,
+                        "状态键未注册:" + entry.getKey()));
             }
         }
         // R11-C:尾声的 relationKey 已注册还不够,类型必须就是 relation(关系值来源口径)。
@@ -805,10 +748,13 @@ public class TopicPublicationContentGuard {
             }
             if (!ThemeStateKey.TYPE_RELATION.equals(registeredTypes.get(relationKey))) {
                 missing.add(relationKey + "(来源:主题剧情配置尾声,键类型必须是 relation)");
+                problems.add(PublicationProblem.at(PublicationProblem.CODE_STATE_KEY_TYPE_INVALID, null,
+                        "stateKeys", "状态键类型不对:" + relationKey + "(来源:主题剧情配置尾声,键类型必须是 relation)"));
             }
         }
         if (!missing.isEmpty()) {
-            throw new ServiceException("主题发布失败:以下状态键未注册 → " + missing);
+            throw TopicPublicationContentException.withIssues(
+                    new ServiceException("主题发布失败:以下状态键未注册 → " + missing), problems);
         }
     }
 
@@ -836,6 +782,17 @@ public class TopicPublicationContentGuard {
         }
     }
 
+    private static PublicationProblem stateKeyProblem(String code, String key,
+            TopicStateKeyRefService.RefCollection refs, String message) {
+        Long nodeId = null;
+        if (refs != null) {
+            for (Map.Entry<Long, Set<String>> entry : refs.getRefsByNode().entrySet()) {
+                if (entry.getValue().contains(key)) { nodeId = entry.getKey(); break; }
+            }
+        }
+        return PublicationProblem.at(code, nodeId, "stateKeys", message);
+    }
+
     private void assertStateKeyReferencesParsed(CmsTopic topic, TopicStateKeyRefService.RefCollection refs) {
         if (refs == null) throw new IllegalStateException("发布状态键引用读取未知");
         if (refs.getParseErrors().isEmpty()) return;
@@ -845,8 +802,21 @@ public class TopicPublicationContentGuard {
                 : TopicStateKeyRefService.KIND_JOURNEY_RULES.equals(error.getKind()) ? "journeyRulesJson"
                 : TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(error.getKind()) ? "journeyStoryJson"
                 : "chapters.blocksJson";
-        throw new ServiceException(TopicStateKeyRefService.parseErrorMessage(error)
-                + publicationLocation(topic, path));
+        List<PublicationProblem> problems = new ArrayList<PublicationProblem>();
+        for (TopicStateKeyRefService.ParseError parse : refs.getParseErrors()) {
+            String code = parse.getNodeId() != null ? PublicationProblem.CODE_BLOCK_CONFIG_INVALID
+                    : TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(parse.getKind()) ? PublicationProblem.CODE_JOURNEY_STORY_INVALID
+                    : TopicStateKeyRefService.KIND_CHAPTER_BLOCKS.equals(parse.getKind()) ? PublicationProblem.CODE_CHAPTER_BLOCKS_INVALID
+                    : PublicationProblem.CODE_JOURNEY_RULES_INVALID;
+            String field = parse.getNodeId() != null ? "nodes[nodeId=" + parse.getNodeId() + "].template.advancedConfigJson"
+                    : TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(parse.getKind()) ? "journeyStoryJson"
+                    : TopicStateKeyRefService.KIND_CHAPTER_BLOCKS.equals(parse.getKind()) ? "chapters[].blocksJson"
+                    : "journeyRulesJson";
+            problems.add(PublicationProblem.at(code, parse.getNodeId(), field,
+                    TopicStateKeyRefService.parseErrorMessage(parse)));
+        }
+        throw TopicPublicationContentException.withIssues(new ServiceException(
+                TopicStateKeyRefService.parseErrorMessage(error) + publicationLocation(topic, path)), problems);
     }
 
     private void requirePublicationWriteTransaction(CmsTopic topic) {
@@ -994,7 +964,9 @@ public class TopicPublicationContentGuard {
             }
         }
         if (!missing.isEmpty()) {
-            throw new ServiceException("主题发布失败:节点叙事的 npcId 不属于本主题可用 NPC → " + missing);
+            throw contentFailure(PublicationProblem.CODE_NARRATIVE_NPC_INVALID,
+                    "nodes[].template.advancedConfigJson.enter/outcome.npcId",
+                    new ServiceException("主题发布失败:节点叙事的 npcId 不属于本主题可用 NPC → " + missing));
         }
     }
 
@@ -1057,7 +1029,8 @@ public class TopicPublicationContentGuard {
                 }
                 message.append("块配置的 NODE_COMPLETED 引用无效 → ").append(foreignCompleted);
             }
-            throw new ServiceException(message.toString());
+            throw contentFailure(PublicationProblem.CODE_BLOCK_SYS_VAR_INVALID,
+                    "nodes[].template.advancedConfigJson", new ServiceException(message.toString()));
         }
     }
 
@@ -1167,19 +1140,19 @@ public class TopicPublicationContentGuard {
                 JsonNode chapter = config.path("chapters").get(index);
                 String path = "themeRuntimeConfigJson.chapters[" + index + "]";
                 if (chapter.path("index").asInt() >= chapterRows.size())
-                    throw new IllegalArgumentException("背包配置引用未知章节" + publicationLocation(topic, path + ".index"));
+                    throw located(topic, path + ".index", new IllegalArgumentException("背包配置引用未知章节"));
                 if (chapter.path("hpCost").asInt() > 0 && (!valuesEnabled || !rules.getHp().isEnabled()))
-                    throw new IllegalArgumentException("请先开启生命值" + publicationLocation(topic, path + ".hpCost"));
+                    throw located(topic, path + ".hpCost", new IllegalArgumentException("请先开启生命值"));
                 if (chapter.path("luckCost").asInt() > 0 && (!valuesEnabled || !rules.getLuck().isEnabled()))
-                    throw new IllegalArgumentException("请先开启幸运值" + publicationLocation(topic, path + ".luckCost"));
+                    throw located(topic, path + ".luckCost", new IllegalArgumentException("请先开启幸运值"));
             }
         }
         for (int index = 0; index < config.path("items").size(); index++) {
             JsonNode item = config.path("items").get(index);
             if ("ITEM".equals(item.path("kind").asText()) && item.has("stat")
                     && (!valuesEnabled || ("HP".equals(item.path("stat").asText()) ? !rules.getHp().isEnabled() : !rules.getLuck().isEnabled())))
-                throw new IllegalArgumentException("物品对应的生命值或幸运值尚未开启"
-                        + publicationLocation(topic, "themeRuntimeConfigJson.items[" + index + "].stat"));
+                throw located(topic, "themeRuntimeConfigJson.items[" + index + "].stat",
+                        new IllegalArgumentException("物品对应的生命值或幸运值尚未开启"));
         }
     }
 
@@ -1191,13 +1164,19 @@ public class TopicPublicationContentGuard {
             return content;
         }
         catch (java.io.IOException invalid) {
-            throw new IllegalArgumentException((path.startsWith("nodes[") ? "节点条件无法读取" : "主题条件无法读取")
-                    + publicationLocation(topic, path), invalid);
+            throw located(topic, path, new IllegalArgumentException(
+                    path.startsWith("nodes[") ? "节点条件无法读取" : "主题条件无法读取", invalid));
         } catch (IllegalArgumentException invalid) { throw located(topic, path, invalid); }
     }
 
     private IllegalArgumentException located(CmsTopic topic, String path, IllegalArgumentException invalid) {
-        return new IllegalArgumentException(invalid.getMessage() + publicationLocation(topic, path), invalid);
+        return located(topic, path, invalid, PublicationProblem.CODE_THEME_RUNTIME_REF_INVALID);
+    }
+
+    private IllegalArgumentException located(CmsTopic topic, String path, IllegalArgumentException invalid, String code) {
+        String message = invalid.getMessage() + publicationLocation(topic, path);
+        return new TopicPublicationContentException.InvalidArgument(message, invalid,
+                Collections.singletonList(PublicationProblem.from(code, path, new IllegalArgumentException(message))));
     }
 
     private String publicationLocation(CmsTopic topic, String path) {
@@ -1280,7 +1259,9 @@ public class TopicPublicationContentGuard {
             ServiceException invalid = new ServiceException("主题的剧情配置引用无效,主题发布失败:" + e.getMessage()
                     + publicationLocation(topic, fieldPath));
             invalid.initCause(e);
-            throw invalid;
+            throw contentFailure(fieldPath.startsWith("themeRuntimeConfigJson")
+                    ? PublicationProblem.CODE_THEME_RUNTIME_REF_INVALID : PublicationProblem.CODE_JOURNEY_STORY_INVALID,
+                    fieldPath, invalid);
         }
     }
 
@@ -1405,7 +1386,9 @@ public class TopicPublicationContentGuard {
             normalized = topicRouteConfigValidator.validateAndNormalize(
                     topic.getRouteGraphJson(), nodeIds, outcomes);
             topicRoutePublishGate.assertPublishable(normalized);
-        } catch (IllegalArgumentException invalid) { throw located(topic, "routeGraphJson", invalid); }
+        } catch (IllegalArgumentException invalid) {
+            throw located(topic, "routeGraphJson", invalid, PublicationProblem.CODE_FREEZE_INVALID);
+        }
         return normalized;
     }
 
@@ -1426,19 +1409,28 @@ public class TopicPublicationContentGuard {
     public void assertAiSimpleNodeLocations(List<ChapterDTO> chapters, boolean requireConfirmed) {
         List<NodeDTO> nodes = extractAllNodes(chapters);
         if (requireConfirmed && nodes.isEmpty()) {
-            throw new IllegalArgumentException("简单 AI 主题至少需要一个已确认地点");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_AI_SIMPLE_LOCATION_INVALID,
+                    "chapters[].nodes[].latitude/longitude", new IllegalArgumentException("简单 AI 主题至少需要一个已确认地点"));
         }
         for (int i = 0; i < nodes.size(); i++) {
             NodeDTO node = nodes.get(i);
             if (node == null) {
-                if (requireConfirmed) throw new IllegalArgumentException("第" + (i + 1) + "个地点无效");
+                if (requireConfirmed) throw TopicPublicationContentException.invalid(
+                        PublicationProblem.CODE_AI_SIMPLE_LOCATION_INVALID, "chapters[].nodes[].latitude/longitude",
+                        new IllegalArgumentException("第" + (i + 1) + "个地点无效"));
                 continue;
             }
             if (!requireConfirmed && StringUtils.isBlank(node.getLatitude()) && StringUtils.isBlank(node.getLongitude())) {
                 continue; // 草稿:这个地点的坐标还没确认,允许空着
             }
-            validateCoordinate(node.getLatitude(), -90d, 90d, "纬度", i);
-            validateCoordinate(node.getLongitude(), -180d, 180d, "经度", i);
+            try {
+                validateCoordinate(node.getLatitude(), -90d, 90d, "纬度", i);
+                validateCoordinate(node.getLongitude(), -180d, 180d, "经度", i);
+            } catch (IllegalArgumentException invalid) {
+                if (!requireConfirmed) throw invalid;
+                throw TopicPublicationContentException.invalid(PublicationProblem.CODE_AI_SIMPLE_LOCATION_INVALID,
+                        "chapters[].nodes[].latitude/longitude", invalid);
+            }
         }
     }
 

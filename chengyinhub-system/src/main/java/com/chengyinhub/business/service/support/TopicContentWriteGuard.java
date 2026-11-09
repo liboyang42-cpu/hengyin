@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
@@ -58,7 +61,9 @@ public final class TopicContentWriteGuard {
             throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
         }
         String violation = TopicSizeLimits.violation(Math.toIntExact(chapterCount), Math.toIntExact(nodeCount));
-        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
+        if (violation != null) throw new TopicPublicationContentException("发布前请先调整:" + violation,
+                java.util.List.of(PublicationProblem.at(PublicationProblem.CODE_SIZE_LIMIT_EXCEEDED, null,
+                        "chapters[].nodes[]", "发布前请先调整:" + violation)));
     }
 
 
@@ -71,7 +76,9 @@ public final class TopicContentWriteGuard {
             throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
         }
         String violation = TopicSizeLimits.violation(Math.toIntExact(chapters), Math.toIntExact(nodes));
-        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
+        if (violation != null) throw new TopicPublicationContentException("发布前请先调整:" + violation,
+                java.util.List.of(PublicationProblem.at(PublicationProblem.CODE_SIZE_LIMIT_EXCEEDED, null,
+                        "chapters[].nodes[]", "发布前请先调整:" + violation)));
     }
 
     /** blocks 已物化后，旧客户端不得再用 description + nodes 覆盖它。 */
@@ -152,7 +159,8 @@ public final class TopicContentWriteGuard {
     public void assertBranchGraphOnlyForOrienteering(String routeMode, Integer productType) {
         if ("BRANCH_GRAPH".equalsIgnoreCase(StringUtils.trim(routeMode))
                 && !Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) {
-            throw new IllegalArgumentException("BRANCH_GRAPH 仅支持城市定向主题");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_ROUTE_MODE_INVALID,
+                    "routeMode", new IllegalArgumentException("BRANCH_GRAPH 仅支持城市定向主题"));
         }
     }
 

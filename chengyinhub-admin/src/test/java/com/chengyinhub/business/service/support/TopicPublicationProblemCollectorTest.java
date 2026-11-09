@@ -100,6 +100,11 @@ class TopicPublicationProblemCollectorTest {
                 () -> guard.assertPublishReady(topic));
         assertTrue(thrown.getMessage().contains(readiness.getMessage()), thrown.getMessage());
         assertTrue(thrown.getMessage().startsWith("发布前请先补全:"), thrown.getMessage());
+        var formal = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(thrown);
+        assertNotNull(formal);
+        assertEquals(readiness.getCode(), formal.getIssues().get(0).getCode());
+        assertEquals(readiness.getNodeId(), formal.getIssues().get(0).getNodeId());
+        assertEquals(readiness.getField(), formal.getIssues().get(0).getField());
     }
 
     /** 预检一次列全:名称缺失与坏数值规则同时出现时两条都在。 */
@@ -113,7 +118,7 @@ class TopicPublicationProblemCollectorTest {
 
         assertTrue(preview.stream().anyMatch(p -> PublicationProblem.CODE_TOPIC_NAME_REQUIRED.equals(p.getCode())),
                 preview.toString());
-        assertTrue(preview.stream().anyMatch(p -> PublicationProblem.CODE_STATE_KEY_UNREGISTERED.equals(p.getCode())),
+        assertTrue(preview.stream().anyMatch(p -> TopicPublishCheckService.CODE_JOURNEY_RULES_INVALID.equals(p.getCode())),
                 preview.toString());
     }
 
@@ -307,6 +312,53 @@ class TopicPublicationProblemCollectorTest {
                     .setCurrentTransactionReadOnly(false);
         }
     }
+    @Test
+    void formalReadinessKeepsEveryIssueAlongsideTheLegacySummary() {
+        CmsTopic topic = topic();
+        topic.setName("");
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        var failure = assertThrows(com.chengyinhub.business.exception.TopicPublicationContentException.class,
+                () -> guard.assertPublishReady(topic));
+        assertEquals(2, failure.getData().getIssues().size());
+        assertEquals(java.util.Set.of(PublicationProblem.CODE_TOPIC_NAME_REQUIRED,
+                        PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED),
+                failure.getData().getIssues().stream().map(problem -> problem.getCode()).collect(Collectors.toSet()));
+        assertTrue(failure.getMessage().startsWith("发布前请先补全:"));
+    }
+
+    @Test
+    void formalStateKeyTypeErrorDoesNotBecomeAnUnregisteredKeyError() {
+        CmsTopic topic = topic();
+        topic.setJourneyStoryJson("{\"schemaVersion\":1,\"ending\":{\"endings\":[{\"code\":\"b\",\"title\":\"B\",\"fallback\":true}],\"epilogues\":[{\"npcId\":7,\"relationKey\":\"relation.arong\",\"ally\":\"友\",\"neutral\":\"中\",\"guarded\":\"敌\"}]}}");
+        com.chengyinhub.business.domain.ThemeStateKey row = new com.chengyinhub.business.domain.ThemeStateKey();
+        row.setId(8L); row.setTopicId(TOPIC_ID); row.setStateKey("relation.arong"); row.setKeyType("flag");
+        org.mockito.Mockito.when(keyMapper.selectByTopicId(TOPIC_ID)).thenReturn(Collections.singletonList(row));
+        var failure = assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> guard.assertStateKeysRegistered(topic));
+        var data = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure);
+        assertNotNull(data);
+        assertEquals(1, data.getIssues().size());
+        assertEquals(TopicPublishCheckService.CODE_STATE_KEY_TYPE_INVALID, data.getIssues().get(0).getCode());
+        assertEquals("stateKeys", data.getIssues().get(0).getField());
+    }
+
+    @Test
+    void longSummaryDoesNotTruncateTheStructuredIssueList() {
+        CmsTopic topic = topic();
+        com.chengyinhub.business.domain.OmsTicket first = new com.chengyinhub.business.domain.OmsTicket();
+        first.setId(801L); first.setName("票种".repeat(70)); first.setPrice(new java.math.BigDecimal("-1"));
+        com.chengyinhub.business.domain.OmsTicket second = new com.chengyinhub.business.domain.OmsTicket();
+        second.setId(802L); second.setName("第二票种"); second.setPrice(new java.math.BigDecimal("-1"));
+        org.mockito.Mockito.when(ticketMapper.selectOmsTicketList(any())).thenReturn(java.util.List.of(first, second));
+        var failure = assertThrows(com.chengyinhub.business.exception.TopicPublicationContentException.class,
+                () -> guard.assertPublishReady(topic));
+        assertEquals(111, failure.getMessage().length());
+        assertEquals(2, failure.getData().getIssues().size());
+        assertEquals(java.util.Set.of("tickets[id=801]", "tickets[id=802]"), failure.getData().getIssues().stream()
+                .map(problem -> problem.getField()).collect(Collectors.toSet()));
+        assertTrue(failure.getData().getIssues().stream().allMatch(issue -> PublicationProblem.CODE_TICKET_INVALID.equals(issue.getCode())));
+    }
+
     private static PublicationProblem only(List<PublicationProblem> problems, String code) {
         List<PublicationProblem> matched = problems.stream()
                 .filter(problem -> code.equals(problem.getCode())).collect(Collectors.toList());

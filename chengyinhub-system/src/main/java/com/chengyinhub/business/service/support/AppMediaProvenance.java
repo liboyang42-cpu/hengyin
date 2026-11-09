@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.common.exception.ServiceException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -50,10 +53,20 @@ public final class AppMediaProvenance {
                 || !(note instanceof String text) || text.isBlank();
     }
 
+    public static PublicationProblem publicationProblem(Map<String, Object> row) {
+        if (!missing(row)) return null;
+        return row.get("sourceType") != null
+                ? PublicationProblem.at(LICENSE_MISSING, null, "mediaAsset", "请补充素材来源和授权声明后再公开")
+                : PublicationProblem.warn(LICENSE_MISSING, null, "mediaAsset", "素材来源或授权声明待确认");
+    }
+
     public static void requirePublication(Map<String, Object> row) {
         // Null is an untouched pre-declaration receipt; preserve its existing publication contract.
-        if (row.get("sourceType") != null && missing(row))
-            throw new ServiceException(LICENSE_MISSING + "：请补充素材来源和授权声明后再公开", 422);
+        PublicationProblem problem = publicationProblem(row);
+        if (problem != null && PublicationProblem.LEVEL_ERROR.equals(problem.getLevel()))
+            throw TopicPublicationContentException.withIssues(
+                    new ServiceException(LICENSE_MISSING + "：请补充素材来源和授权声明后再公开", 422),
+                    java.util.List.of(problem));
     }
 
     public static Map<String, Object> ownerView(Map<String, Object> row) {

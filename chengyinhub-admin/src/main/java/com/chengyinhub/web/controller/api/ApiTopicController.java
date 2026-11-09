@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -562,7 +564,7 @@ public class ApiTopicController extends BaseController {
                 AjaxResult attributeError = authorAttributeError(e);
                 if (attributeError != null) return attributeError;
                 logger.warn("主题发布被业务闸拒绝: memberId={}, reason={}", memberId, e.getMessage());
-                return businessRefusal(e, UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
+                return publicationError(e, businessRefusal(e, UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG)));
             }
             // 建题已提交:立刻把意图键落成主题号 —— 之后的送检/同步即便抛错也不能释放它,否则重试会再建一份
             if (draftRequestKey != null) {
@@ -626,11 +628,13 @@ public class ApiTopicController extends BaseController {
             // 俱乐部带队」「在架额度已满」压成通用句 = 真人在后台点一次失败一次,只能找人翻服务器日志。
             // ⚠️ 通用兜底不动:技术异常(Jackson 解析失败 / NPE / SQL)仍只给下面那句稳定文案。
             logger.warn("主题发布被业务闸拒绝: memberId={}, topicId={}, reason={}", memberId, topicId, e.getMessage());
-            return AjaxResult.error(UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
+            return publicationError(e, AjaxResult.error(UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG)));
         } catch (Exception e) {
             releaseDraftRequest(draftRequestKey);
             logger.warn("主题发布失败: memberId={}, topicId={}, chapterId=未生成或未知", memberId, topicId, e);
-            return AjaxResult.error(TOPIC_CREATE_GENERIC_MSG);
+            return e instanceof RuntimeException
+                    ? publicationError((RuntimeException) e, AjaxResult.error(TOPIC_CREATE_GENERIC_MSG))
+                    : AjaxResult.error(TOPIC_CREATE_GENERIC_MSG);
         }
     }
 
@@ -787,12 +791,12 @@ public class ApiTopicController extends BaseController {
             AjaxResult attributeError = authorAttributeError(e);
             if (attributeError != null) return attributeError;
             logger.warn("主题保存被业务闸拒绝: topicId={}, reason={}", dto.getId(), e.getMessage());
-            return businessRefusal(e, e.getMessage());
+            return publicationError(e, businessRefusal(e, e.getMessage()));
         } catch (RuntimeException e) {
             AjaxResult attributeError = authorAttributeError(e);
             if (attributeError != null) return attributeError;
             logger.warn("主题保存失败: topicId={}, chapterId=未生成或未知", dto.getId(), e);
-            return error(e.getMessage());
+            return publicationError(e, error(e.getMessage()));
         }
         if (textVerdict.isFlagged()) {
             flagForSpotCheck(topicId, memberId, textVerdict.getFlagReason(), dto.getName());
@@ -1485,6 +1489,12 @@ public class ApiTopicController extends BaseController {
         return AjaxResult.error(code != null && code >= 400 && code < 500 ? code : HttpStatus.BAD_REQUEST, message);
     }
 
+    private AjaxResult publicationError(RuntimeException failure, AjaxResult legacy) {
+        TopicPublicationContentException.Issues data = TopicPublicationContentException.dataOf(failure);
+        if (data != null) legacy.put(AjaxResult.DATA_TAG, data);
+        return legacy;
+    }
+
     private AjaxResult authorAttributeError(RuntimeException error) {
         if (!(error instanceof ServiceException)) return null;
         ServiceException service = (ServiceException) error;
@@ -1513,6 +1523,9 @@ public class ApiTopicController extends BaseController {
     public AjaxResult publishDraft(String id, String scope, Long configVersion, String registryVersion,
                                    String publishRequestId, String expectedContentSha256) {
         try { return publishDraftBound(id, scope, configVersion, registryVersion, publishRequestId, expectedContentSha256); }
+        catch (TopicPublicationContentException | TopicPublicationContentException.InvalidArgument error) {
+            return publicationError(error, AjaxResult.error(UserSafeMessage.of(error.getMessage())));
+        }
         catch (ServiceException error) {
             AjaxResult attributeError = authorAttributeError(error);
             if (attributeError != null) return attributeError;

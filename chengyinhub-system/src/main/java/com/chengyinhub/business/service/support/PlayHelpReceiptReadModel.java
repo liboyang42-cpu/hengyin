@@ -90,7 +90,7 @@ public class PlayHelpReceiptReadModel {
             // 事实行必须属于本人且是帮助事实；被别的身份占用时按"没有这条"处理，不冒充已解锁。
             if (fact.getMemberId() == null || fact.getMemberId() != memberId) continue;
             if (fact.getAttemptType() == null
-                    || fact.getAttemptType() != PlayHelpCostApplication.ATTEMPT_TYPE_HELP) continue;
+                    || fact.getAttemptType() != PlayAttemptLog.ATTEMPT_TYPE_PUZZLE_HINT) continue;
             JsonNode row = parse(fact.getResultJson());
             boolean free = row == null || !row.has("free") || row.path("free").asBoolean(true);
             int charged = row == null ? 0 : Math.max(0, row.path("chargedPoints").asInt(0));

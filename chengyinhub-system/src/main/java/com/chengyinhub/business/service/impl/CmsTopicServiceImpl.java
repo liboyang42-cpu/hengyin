@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.util.ChapterAtmospherePreset;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -2432,7 +2435,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:名称非空是草稿也保留的最小身份(不属完整度)——「还没想好叫什么」不构成存不下草稿的理由,
         // 但「一条没有名字的主题」在作者的项目列表里连自己都认不出来。
         if (dto == null || StringUtils.isBlank(dto.getName())) {
-            throw new IllegalArgumentException("主题名称不能为空");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_TOPIC_NAME_REQUIRED,
+                    "name", new IllegalArgumentException("主题名称不能为空"));
         }
         assertCollaboratorIdShape(dto.getCollaboratorIds());
         // R19-DRAFT2:完整度校验按草稿/发布分流,先在这里定型,后面所有闸都用同一个判据
@@ -2572,8 +2576,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 草稿可以先空着 —— 原来这条把「刚起个名字的自由探索草稿」直接堵死,存不下服务端 id。
         if (!saveDraft && ProductType.FREE_EXPLORE == (productType == null ? -1 : productType)
                 && dto.getRecruitDeadline() == null) {
-            throw new RuntimeException("自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
-                    + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)");
+            throw new TopicPublicationContentException.InvalidContent(
+                    "自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
+                            + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)",
+                    Collections.singletonList(PublicationProblem.at(PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED,
+                            null, "recruitDeadline", "自由探索主题缺少招募截止时间")));
         }
         // 先只保存招募截止；生命周期保持 DRAFT。章节/票尚未落库前无法客观判断 H4 三条商业事实，
         // 因此绝不能在这里直接写 lifecycle=1 绕过立项审。
@@ -2751,7 +2758,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:名称非空是草稿也保留的最小身份。字段缺席(null)=不改原值(mapper 的动态
         // update 会跳过该列),但显式送一个空串 = 要把名字清掉 —— 那条不许(项目列表里会认不出来)。
         if (dto.getName() != null && dto.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("主题名称不能为空");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_TOPIC_NAME_REQUIRED,
+                    "name", new IllegalArgumentException("主题名称不能为空"));
         }
         if (!chapterFlowV2) {
             ChapterFlowCompiler.assertNoBlockPayload(dto.getChapters(),
@@ -3008,8 +3016,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:与 createTopicInternal 同一道闸同一分流 —— 招募截止属完整度,草稿可空。
         if (!draft && ProductType.FREE_EXPLORE == (productType == null ? -1 : productType)
                 && dto.getRecruitDeadline() == null) {
-            throw new RuntimeException("自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
-                    + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)");
+            throw new TopicPublicationContentException.InvalidContent(
+                    "自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
+                            + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)",
+                    Collections.singletonList(PublicationProblem.at(PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED,
+                            null, "recruitDeadline", "自由探索主题缺少招募截止时间")));
         }
         if (dto.getRecruitDeadline() != null) {
             patch.setRecruitDeadline(dto.getRecruitDeadline());
@@ -3801,7 +3812,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 OmsTicketWriteValidator.validatePrice(ticket.getPrice());
                 OmsTicketWriteValidator.validateTotalInventory(ticket.getTotalInventory());
             } else {
-                OmsTicketWriteValidator.validateNewTicket(ticket);
+                try {
+                    OmsTicketWriteValidator.validateNewTicket(ticket);
+                } catch (ServiceException invalid) {
+                    throw TopicPublicationContentException.withIssues(invalid, Collections.singletonList(
+                            PublicationProblem.from(PublicationProblem.CODE_TICKET_INVALID,
+                                    ticketDTO.getId() == null ? "tickets[]" : "tickets[id=" + ticketDTO.getId() + "]", invalid)));
+                }
                 // 开售前定价(2026-10-31 业主 Q7):只有自由探索恒走招商→锁价,票价可留空,
                 // 由 confirmPrice 写回;其余主题发布即开卖,空价不能落库(也不能当免费)。
                 if (ticket.getPrice() == null

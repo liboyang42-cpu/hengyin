@@ -295,6 +295,23 @@ class ApiTopicStateKeyControllerTest {
         verify(topicPublicationService).publicationStatus(owned);
     }
 
+    @Test
+    void publishCheckRejectsAnonymousAndUnauthorizedMerchantWithoutIssueReads() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(CALLER));
+        doReturn(0L).when(controller).getAppUserId();
+        AjaxResult anonymous = controller.publishCheck(TOPIC_ID, null);
+        assertEquals("请先登录", anonymous.get("msg"));
+        assertTrue(!anonymous.containsKey("data"));
+        doReturn(CALLER).when(controller).getAppUserId();
+        var merchant = mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
+        ReflectionTestUtils.setField(controller, "merchantAccessService", merchant);
+        when(merchant.require(eq(CALLER), any())).thenThrow(new ServiceException("无商家项目管理权限", 403));
+        AjaxResult denied = controller.publishCheck(TOPIC_ID, "MERCHANT");
+        assertEquals("无商家项目管理权限", denied.get("msg"));
+        assertTrue(!denied.containsKey("data"));
+        verify(checkService, never()).check(any());
+    }
+
     private static CmsTopic topic(Long ownerMemberId) {
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC_ID);

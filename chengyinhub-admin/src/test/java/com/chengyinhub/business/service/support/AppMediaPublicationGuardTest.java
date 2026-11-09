@@ -93,6 +93,7 @@ class AppMediaPublicationGuardTest {
             assertEquals(OFFICIAL_COVER, template.getImgUrl());
             assertEquals(LEGACY_STORY, template.getStoryImg());
             assertTrue(template.getAdvancedConfigJson().contains(LEGACY_STORY));
+            assertNull(guard.publicationLicenseProblem(LEGACY_STORY));
         }
     }
     @Test void inheritanceCoversOnlyTheSourcesImagesAndNeverRegisteredMediaOrAWithdrawnSource() {
@@ -231,6 +232,31 @@ class AppMediaPublicationGuardTest {
         assertDoesNotThrow(()->guard.requireTopic(9L,topic,true));
         assertEquals(java.util.Set.of("media-asset:7"),guard.missingTopicLicenses(topic));
     }
+    @Test void declarationDiagnosticsDoNotReplacePermissionOrReviewFailures() {
+        var row = new java.util.HashMap<String,Object>(java.util.Map.of("id",7L,"memberId",9L,"ownerType","APP", "reviewState","HOLD", "sourceType","unknown"));
+        when(assets.select(7L)).thenReturn(row);
+        ServiceException foreign = assertThrows(ServiceException.class, () -> guard.requireMedia(10L,"media-asset:7",true));
+        assertEquals(403, foreign.getCode());
+        assertNull(com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(foreign));
+        ServiceException held = assertThrows(ServiceException.class, () -> guard.requireMedia(9L,"media-asset:7",true));
+        assertEquals(422, held.getCode());
+        assertNull(com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(held));
+        assertEquals("media-asset:7",guard.requireMedia(9L,"media-asset:7",false));
+        row.put("reviewState","APPROVED");
+        var preview = guard.publicationLicenseProblem("media-asset:7");
+        ServiceException publication = assertThrows(ServiceException.class, () -> guard.requireMedia(9L,"media-asset:7",true));
+        var formal = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(publication).getIssues().get(0);
+        assertEquals(preview.getCode(), formal.getCode());
+        assertEquals(preview.getLevel(), formal.getLevel());
+        assertEquals(preview.getNodeId(), formal.getNodeId());
+        assertEquals(preview.getField(), formal.getField());
+        row.remove("sourceType");
+        assertEquals("warn",guard.publicationLicenseProblem("media-asset:7").getLevel());
+        assertEquals("media-asset:7",guard.requireMedia(9L,"media-asset:7",true));
+        for (var invocation : mockingDetails(assets).getInvocations())
+            assertTrue(invocation.getMethod().getName().startsWith("select"));
+    }
+
     private static String quote(String text) {
         try { return new ObjectMapper().writeValueAsString(text); } catch (Exception e) { throw new IllegalStateException(e); }
     }

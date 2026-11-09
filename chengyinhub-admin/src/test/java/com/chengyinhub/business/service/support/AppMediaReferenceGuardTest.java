@@ -185,6 +185,8 @@ class AppMediaReferenceGuardTest {
         when(assets.systemImageUrl(key)).thenReturn("https://public/profile/upload/2024/05/01/banner_20240501120000A001.png");
         for (String reference : new String[]{key, "https://www.chengyinhub.com/prod-api" + key}) {
             assertEquals(key, guard.requireAttachment(11L, reference, true));
+            assertNull(guard.publicationProblem(reference));
+            assertDoesNotThrow(() -> guard.requirePublicationDeclaration(reference));
             assertEquals("https://public/profile/upload/2024/05/01/banner_20240501120000A001.png",
                     guard.visibleUrl(reference, null));
         }
@@ -258,6 +260,23 @@ class AppMediaReferenceGuardTest {
                 () -> guard.requireAttachments(11L, "[\"https://foreign.invalid/raw.jpg\"]", true));
         assertThrows(ServiceException.class, () -> guard.requireAttachments(11L, "[{\"url\":1}]", true));
         assertThrows(ServiceException.class, () -> guard.requireAttachments(11L, "[\"media-asset:7\"", true));
+    }
+
+    @Test void publicationProjectionKeepsLegacyWarningsAndPropagatesUnknownInfrastructure() {
+        var row = new java.util.HashMap<String,Object>(Map.of("id",7L,"memberId",11L,"ownerType","APP","reviewState","APPROVED"));
+        when(mapper.select(7L)).thenReturn(row);
+        assertEquals("warn", guard.publicationProblem("media-asset:7").getLevel());
+        assertDoesNotThrow(() -> guard.requirePublicationDeclaration("media-asset:7"));
+        row.put("sourceType", "unknown");
+        assertEquals("error", guard.publicationProblem("media-asset:7").getLevel());
+        ServiceException failure = assertThrows(ServiceException.class, () -> guard.requirePublicationDeclaration("media-asset:7"));
+        assertEquals(AppMediaProvenance.LICENSE_MISSING,
+                com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure).getIssues().get(0).getCode());
+        IllegalStateException unavailable = new IllegalStateException("媒体读取不可用");
+        when(mapper.select(7L)).thenThrow(unavailable);
+        assertSame(unavailable, assertThrows(IllegalStateException.class, () -> guard.publicationProblem("media-asset:7")));
+        for (var invocation : mockingDetails(mapper).getInvocations())
+            assertTrue(invocation.getMethod().getName().startsWith("select"));
     }
 
     @Test void attributionUsesRealApprovedReceiptAndNeverReturnsPrivateLicenceOrModel() {

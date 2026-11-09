@@ -53,7 +53,9 @@ class WorkshopPurchaseMyBatisIT {
         ReflectionTestUtils.setField(drafts,"capabilityGuard",mock(ICapabilityGuard.class));
         ReflectionTestUtils.setField(drafts,"mediaPublicationGuard",mock(com.chengyinhub.business.service.support.AppMediaPublicationGuard.class));
         var pay=mock(IWechatPayService.class);var facts=mock(WechatVerifiedPaymentFactService.class);
-        var service=new WorkshopService(mapper,drafts,pay,facts,new DataSourceTransactionManager(ds));
+        var transactions=new DataSourceTransactionManager(ds);
+        var paymentOrders=new WorkshopWechatPaymentOrderAdapter(mapper,facts,transactions);
+        var service=new WorkshopService(mapper,drafts,pay,paymentOrders,transactions);
         ReflectionTestUtils.setField(service,"appEnabled",true);when(pay.isAppReady()).thenReturn(true);
         String originalConfig="{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"PICK\",\"title\":\"frozen question\",\"options\":[{\"id\":\"a\",\"label\":\"old right\",\"correct\":true,\"fb\":\"old feedback\"},{\"id\":\"b\",\"label\":\"wrong\",\"correct\":false}]}}";
         jdbc.update("update cms_member_template set advanced_config_json=?,validation_method=1 where id=80",originalConfig);
@@ -87,7 +89,7 @@ class WorkshopPurchaseMyBatisIT {
         when(facts.requireConsumablePayment(reference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,paid));
         when(facts.requireVerified(reference)).thenReturn(new WechatVerifiedPaymentFactService.Stored(reference,paid));
         Map<String,String> observation=Map.of("out_trade_no",no,"trade_state","SUCCESS","verified_fact_id","3","verified_fact_hash",reference.hash());
-        var router=new WechatPaymentCallbackRouter(null,null,null,null,null,null,service);
+        var router=new WechatPaymentCallbackRouter(null,null,null,null,null,null,paymentOrders);
         assertEquals("SUCCESS",router.payment(observation).result());assertEquals("SUCCESS",router.payment(observation).result());
         var targets=service.targets(7,no,null);Map<?,?> target=(Map<?,?>)((List<?>)targets.get("items")).get(0);
         var json=new ObjectMapper();
@@ -196,7 +198,8 @@ class WorkshopPurchaseMyBatisIT {
                 new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"),new ClassPathResource("mapper/business/WorkshopMapper.xml"));
         var sessions=new SqlSessionTemplate(Objects.requireNonNull(factory.getObject()));var mapper=sessions.getMapper(WorkshopMapper.class);
         var manager=new DataSourceTransactionManager(ds);var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
-        var service=new WorkshopService(mapper,mock(ITemplatePublishService.class),mock(IWechatPayService.class),mock(WechatVerifiedPaymentFactService.class),manager);
+        var service=new WorkshopService(mapper,mock(ITemplatePublishService.class),mock(IWechatPayService.class),
+                new WorkshopWechatPaymentOrderAdapter(mapper,mock(WechatVerifiedPaymentFactService.class),manager),manager);
         var review=new com.chengyinhub.business.service.support.WorkshopVersionReview(mapper);
         var audit=mock(IAuditTaskService.class);when(audit.submit(anyString(),anyLong(),eq(99L),eq("auto_gate"),anyString())).thenReturn(500L);
         ReflectionTestUtils.setField(review,"audits",audit);ReflectionTestUtils.setField(review,"drafts",mock(ITemplatePublishService.class));ReflectionTestUtils.setField(service,"versionReview",review);

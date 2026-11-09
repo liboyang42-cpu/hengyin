@@ -38,17 +38,19 @@ class WorkshopProductionCallerTest {
     private CmsMemberTemplate target;
 
     @BeforeEach void setup() throws Exception {
-        service=new WorkshopService(mapper,drafts,payments,verified,new AbstractPlatformTransactionManager() {
+        var transactions=new AbstractPlatformTransactionManager() {
             @Override protected Object doGetTransaction(){return new Object();}
             @Override protected void doBegin(Object tx,TransactionDefinition definition){}
             @Override protected void doCommit(DefaultTransactionStatus status){}
             @Override protected void doRollback(DefaultTransactionStatus status){}
-        });
+        };
+        var paymentOrders=new WorkshopWechatPaymentOrderAdapter(mapper,verified,transactions);
+        service=new WorkshopService(mapper,drafts,payments,paymentOrders,transactions);
         api=new ApiWorkshopController(service) {
             @Override public Long getAppUserId(){return 7L;}
             @Override public String getAppUserName(){return "buyer";}
         };
-        router=new WechatPaymentCallbackRouter(null,null,null,null,null,null,service);
+        router=new WechatPaymentCallbackRouter(null,null,null,null,null,null,paymentOrders);
         order.put("id",91L); order.put("order_no",NO); order.put("buyer_id",7L); order.put("version_id",VERSION);
         order.put("amount_fen",123L); order.put("provider","WECHAT_APP"); order.put("state","PENDING"); order.put("license_status","UNPAID");
         when(mapper.lockOrder(NO)).thenReturn(order);

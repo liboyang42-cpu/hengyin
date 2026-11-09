@@ -190,6 +190,7 @@ class TopicPublicationFreezePreviewReadOnlyTest {
     @Test
     void collectorKeepsTheWholePreviewReadOnly() {
         List<PublicationProblem> problems = guard.collectPublicationProblems(topic);
+        guard.collectPublicationProblems(topic);
 
         assertFalse(problems.stream().anyMatch(p -> PublicationProblem.CODE_FREEZE_INVALID.equals(p.getCode())),
                 problems.toString());
