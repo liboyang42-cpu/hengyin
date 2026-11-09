@@ -33,8 +33,8 @@
     "cy-proto-cam": "/components/cy/proto-cam/index",
     "cy-back-guard": "/components/cy/back-guard/index",
     "cy-share-card": "/components/cy/share-card/index",
-    "cy-roam-city-guide": "/subpackageRoam/components/roam-city-guide/index",
     "cy-roam-place-note": "/subpackageRoam/components/roam-place-note/index",
+    "cy-roam-photo": "/subpackageRoam/components/roam-photo/index",
     "cy-map-weather": "/subpackageRoam/components/map-weather/index",
     "cy-roam-place-card": "/subpackageRoam/components/roam-place-card/index",
     "cy-roam-atmos-entry": "/subpackageRoam/components/roam-atmos-entry/index"
@@ -44,8 +44,8 @@
     "cy-scene-qr-coupon": "view",
     "cy-scene-game-coupon-wallet": "view",
     "cy-scene-roam-poi-detail": "view",
-    "cy-roam-city-guide": "view",
     "cy-roam-place-note": "view",
+    "cy-roam-photo": "view",
     "cy-map-weather": "view",
     "cy-roam-place-card": "view",
     "cy-roam-atmos-entry": "view"

@@ -560,7 +560,6 @@ const RAW = [
   //   瞬时态,截图对不上,由各自的纯算法单测覆盖。
   // 2026-10-15 漫游上线新增 6 条路由:我的队伍 + 漫游护照 5 个工具页(fixture 用页面真实 data 字段)
   ['F96', 'F96-my-teams-approved.png', '/subpackageRoam/my-teams/index', 'player', 'normal', { loading: false, mineError: false, tab: 'mine', stats: [{ k: '已通过', v: 1 }, { k: '审核中', v: 0 }, { k: '带队', v: 0 }, { k: '未通过', v: 0 }], groups: [{ key: 'ok', title: '已通过', rows: [{ key: 'j1', teamId: 1, name: '一起出发的玩家队伍', avatars: [{ k: 0, src: '/images/d_profile.png' }, { k: 1, src: '/images/d_profile.png' }], members: '已组 2/4', sub: '10/20 10:00 开始', badge: '已通过', tone: 'ok', action: { text: '进入队伍', kind: 'primary', act: 'enter' } }] }] }, undefined, { selector: '.mt-card', min: 1 }, 'setData', 'P1', '', '我的队伍:Memoji 头像叠层 + 已通过分组。'],
-  ['F97', 'F97-capsule-list.png', '/subpackageTools/capsule/index', 'player', 'normal', { status: 'ready', busy: false, composing: false, items: [{ id: '1', state: 'LOCKED', createdText: '2026-10-15', unlockText: '2026-11-14', daysLeft: 30 }, { id: '2', state: 'OPEN', createdText: '2025-10-14', unlockText: '2026-10-14', daysLeft: 0 }] }, undefined, { selector: '.cp-card', min: 2 }, 'setData', 'P1', '', '时光胶囊:封存中倒计时卡 + 已到开启日卡。'],
   ['F98', 'F98-monthly-recap.png', '/subpackageTools/monthly-recap/index', 'player', 'normal', { monthLabel: '2026 年 10 月', isCurrentMonth: true, counts: { routes: 5, places: 4, stamps: 2 }, kindIndex: 0 }, undefined, { selector: '.mr-month', min: 1 }, 'setData', 'P1', '', '月度回顾:月份切换、三项读数。'],
   ['F99', 'F99-exploration-goals.png', '/subpackageTools/exploration-goals/index', 'player', 'normal', { busy: false, creating: false, rows: [{ id: '1', metric: 'DISTINCT_ROUTES', target: 5, progress: 2, state: 'ACTIVE', stateText: '进行中', metricText: '不同路线数', unit: '条路线', badge: 'tu-badge--wait', progressText: '2 / ', pct: 40, startDate: '2026-10-15', endDateExclusive: '2026-11-01' }] }, undefined, { selector: '.gl-row', min: 1 }, 'setData', 'P1', '', '探索目标:进行中目标卡与进度条。'],
   ['F100', 'F100-anniversary.png', '/subpackageTools/anniversary/index', 'player', 'normal', { busy: false, dateLabel: '10.15', rows: [{ id: '1', topicId: '1', title: '外滩夜行', yearsAgo: 1, completedText: '2025-10-15 14:00' }] }, undefined, { selector: '.an-card', min: 1 }, 'setData', 'P1', '', '那年今日:往年同日完成记录卡。'],
@@ -668,11 +667,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
 // 2026-10-29 走查 l2-roam V-08 第二轮删除「动态」二级页 pages/square/list:A05–A09 五行退场,total 353→348、P0 140→139、P1 203→199、actionable 329→324(P0 131→130、P1 196→192)、A 53→48、setData 186→183、identity+setData 116→115、real-data 44→43;blocked 与已验 fixture 不变。
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
+// 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 const STATS = {
-  "total": 350,
+  "total": 349,
   "byPriority": {
     "P0": 139,
-    "P1": 201,
+    "P1": 200,
     "P2": 10
   },
   "blockedByPriority": {
@@ -682,9 +682,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 194,
+    "P1": 193,
     "P2": 2,
-    "total": 326
+    "total": 325
   },
   "blocked": 24,
   "domains": {
@@ -693,10 +693,10 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 96
+    "F": 95
   },
   "control": {
-    "setData": 184,
+    "setData": 183,
     "identity+setData": 115,
     "real-data": 44,
     "real-device": 7

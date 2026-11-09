@@ -195,6 +195,8 @@ const MATRIX = [
   // 2026-10-28 p74:附近 3km 为空时 20km 兜底,同端点同权限档
   ['pages/roam/index.js', "req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-11-09 V3-35:入口地图目录地点图钉,同 /api/roam/pois 权限档
+  ['pages/roam/index.js', "req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }", 'required', 'member', 'global-read+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/roam/badge/shop-streak'", 'required', 'member', 'global-authenticated-read'],
   ['pages/merchant/customer/index.js', 'loadSavedSegments() {', 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
   ['pages/shezhi/components/marketing-consent/index.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
@@ -459,7 +461,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // qx-b1:提示阶梯 GET /api/play/help 与 /api/play/help/receipt 两处(本人原局,已入 MATRIX),46 → 48。
   // 2026-11-09 qx-b8 U08-01:完成页本局战报 GET /api/play/player-journey/report 一处(本人本局,已入 MATRIX),46 → 47。
   // 2026-11-10 staging 合流:qx-b1 +2 与 qx-b8 +1 叠加,46 → 49。
-  assert.equal(wrapperCount, 49, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-09 V3-35:漫游入口地图把目录地点画成图钉,另读一次 /api/roam/pois(与地图页同端点同权限档),46 → 47。
+  // 2026-11-10 staging 合流:再叠加 qx-a4 +1,49 → 50。
+  assert.equal(wrapperCount, 50, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

@@ -295,7 +295,6 @@
       "root": "subpackageTools",
       "name": "subpackageTools",
       "pages": [
-        "capsule/index",
         "monthly-recap/index",
         "exploration-goals/index",
         "anniversary/index",

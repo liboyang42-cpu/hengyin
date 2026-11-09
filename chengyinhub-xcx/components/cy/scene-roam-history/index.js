@@ -3,6 +3,7 @@
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
 const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
+const { routeGeo } = require('../../../utils/roam-route-geo.js')
 const { createReader, merge } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -178,6 +179,8 @@ Component({
           dateCard: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]} · ${['凌晨', '上午', '下午', '晚上'][Math.floor(date.getHours() / 6)]}` : '日期不可用',
           monthText: validDate ? `${date.getFullYear()}年${date.getMonth() + 1}月` : '',
           route: routeView(session && session.track, session && session.pois),
+          // V3-40:有轨迹坐标就画真实底图,没有才用上面的示意图
+          geo: routeGeo(session && session.track, session && session.pois),
           cover: typeof firstPhoto === 'string' ? firstPhoto : ((firstPhoto && firstPhoto.path) || ''),
           stamps: photos.length,
           medals: [session && session.medal, session && session.shopMedalName].filter(Boolean),

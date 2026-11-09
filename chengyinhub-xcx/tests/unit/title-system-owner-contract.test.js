@@ -48,7 +48,6 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageRoam/my-teams/index',
   'subpackageRoam/official-routes/index', 'subpackageRoam/official-route/index',   // 2026-10-19 移植共享基线 366b846f 官方线路列表/详情
   'subpackageTools/anniversary/index',
-  'subpackageTools/capsule/index',
   'subpackageTools/exploration-export/index',
   'subpackageTools/exploration-goals/index',
   'subpackageTools/monthly-recap/index',
@@ -157,7 +156,6 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageRoam/my-teams/index',
   'subpackageRoam/official-routes/index', 'subpackageRoam/official-route/index',   // 2026-10-19 移植共享基线 366b846f 官方线路列表/详情
   'subpackageTools/anniversary/index',
-  'subpackageTools/capsule/index',
   'subpackageTools/exploration-export/index',
   'subpackageTools/exploration-goals/index',
   'subpackageTools/monthly-recap/index',
@@ -348,9 +346,11 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-31 dw29 发布集成:两边叠加(topic-detail +1、square/list −1)⇒ 157;custom 156。
   // 2026-11-09 qx-b5 +4(均 custom 导航):通行证列表/详情/礼品领取、视频悬赏 ⇒ 161;custom 160。
   // 2026-11-09 qx-b8 +2:公开目录 catalog/index 与落地详情 catalog/detail(custom 导航 + cy-nav-bar 标题,不挂 cy-page-title)⇒ 159;custom 158。
-  assert.equal(rows.length, 168, '注册页面盘点数量发生漂移,需重新核对标题规范')
   // 2026-11-10 staging 合流:qx-b4/b5/b8 等各线新页叠加,合并树实测 168;custom 167。
-  assert.equal(rows.filter((row) => row.custom).length, 167)
+  // 2026-11-09 V3-42 −1:时光胶囊 subpackageTools/capsule 先删(custom 导航)⇒ 156;custom 155。
+  // 2026-11-10 staging 合流:再叠加 qx-a4 −1(时光胶囊)⇒ 167;custom 166。
+  assert.equal(rows.length, 167, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 166)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

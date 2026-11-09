@@ -52,8 +52,10 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   /* 2026-11-09 qx-b5 +4:通行证列表/详情/礼品领取、视频悬赏(均在既有分包) ⇒ 157+4 = 161。 */
   // 2026-11-09 qx-b8 §20.1 / UI-P3:+2 公开目录与落地详情 pages/topic/catalog/{index,detail} ⇒ 159(build-route-matrix.js --json 重建)。
   // 2026-11-10 staging 合流:各线新页叠加,build-route-matrix.js --json 重建实测 168。
-  assert.equal(current.routes.length, 168)
-  assert.equal(matrix.counts.routes, 168)
+  // 2026-11-09 V3-42:时光胶囊页先删 ⇒ 156(build-route-matrix.js --json 重建)。
+  // 2026-11-10 staging 合流:再叠加 qx-a4 −1(时光胶囊)⇒ 167。
+  assert.equal(current.routes.length, 167)
+  assert.equal(matrix.counts.routes, 167)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)
@@ -84,9 +86,10 @@ test('route-matrix 少一页或角色被改写必须判为过期', () => {
   assert.equal(inventoryMatchesCurrent(wrongRole), false)
 })
 
-test('已有identity page factory的五个工具路由都必须标记需登录，公开页仍公开', () => {
+test('已有identity page factory的四个工具路由都必须标记需登录，公开页仍公开', () => {
   const current = build()
-  const tools = ['capsule', 'monthly-recap', 'exploration-goals', 'anniversary', 'exploration-export']
+  // 2026-11-09 V3-42:时光胶囊页先删,只剩四个工具路由
+  const tools = ['monthly-recap', 'exploration-goals', 'anniversary', 'exploration-export']
   for (const name of tools) {
     const pagePath = 'subpackageTools/' + name + '/index'
     assert.equal(current.routes.find(route => route.pagePath === pagePath).needsLogin, true, pagePath)

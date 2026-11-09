@@ -313,22 +313,29 @@
             <cy-icon class="pc-album-arrow" name="arrow-right" size="32" />
           </view>
           <view class="pc-album-row">
-            <view class="pc-pile" bindtap="goWall" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="收集册 · 勋章{{medalCount ? '，已点亮 ' + medalCount + ' 枚' : ''}}">
-              <view class="pc-pile-c pc-pile-c--0"><image class="pc-pile-img" src="{{medals[2].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
-              <view class="pc-pile-c pc-pile-c--1"><image class="pc-pile-img" src="{{medals[1].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
-              <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="{{medals[0].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
+            <!-- 2026-11-09 V3-34:三叠小卡做成真 3D(透视 + 叠层 Z 深度 + 高光),不再垫灰色卡底;按下时卡堆转正并浮起,松手回到静止角度 -->
+            <view class="pc-pile" bindtap="goWall" hover-class="pc-pile--press" hover-stay-time="80" aria-role="button" aria-label="收集册 · 勋章{{medalCount ? '，已点亮 ' + medalCount + ' 枚' : ''}}">
+              <view class="pc-pile-3d">
+                <view class="pc-pile-c pc-pile-c--0"><image class="pc-pile-img" src="{{medals[2].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
+                <view class="pc-pile-c pc-pile-c--1"><image class="pc-pile-img" src="{{medals[1].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /></view>
+                <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="{{medals[0].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" /><image class="pc-pile-img pc-pile-sheen" src="{{medals[0].medalImg || '/subpackageMember/images/album/medal.png'}}" mode="aspectFit" aria-hidden="true" /></view>
+              </view>
               <view class="pc-pile-t"><text>勋章</text><text class="pc-pile-n" wx:if="{{medalCount}}">{{medalCount}}</text></view>
             </view>
-            <view class="pc-pile" bindtap="goAlbum" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="收集册 · 邮票">
-              <view class="pc-pile-c pc-pile-c--0"></view>
-              <view class="pc-pile-c pc-pile-c--1"></view>
-              <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="/subpackageMember/images/album/stamp.png" mode="aspectFit" /></view>
+            <view class="pc-pile" bindtap="goAlbum" hover-class="pc-pile--press" hover-stay-time="80" aria-role="button" aria-label="收集册 · 邮票">
+              <view class="pc-pile-3d">
+                <view class="pc-pile-c pc-pile-c--0"><image class="pc-pile-img" src="/subpackageMember/images/album/stamp.png" mode="aspectFit" /></view>
+                <view class="pc-pile-c pc-pile-c--1"><image class="pc-pile-img" src="/subpackageMember/images/album/stamp.png" mode="aspectFit" /></view>
+                <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="/subpackageMember/images/album/stamp.png" mode="aspectFit" /><image class="pc-pile-img pc-pile-sheen" src="/subpackageMember/images/album/stamp.png" mode="aspectFit" aria-hidden="true" /></view>
+              </view>
               <view class="pc-pile-t"><text>邮票</text></view>
             </view>
-            <view class="pc-pile" bindtap="goObjectCards" hover-class="pc-tap" hover-stay-time="80" aria-role="button" aria-label="收集册 · 藏品">
-              <view class="pc-pile-c pc-pile-c--0"></view>
-              <view class="pc-pile-c pc-pile-c--1"></view>
-              <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="/subpackageMember/images/album/object.png" mode="aspectFit" /></view>
+            <view class="pc-pile" bindtap="goObjectCards" hover-class="pc-pile--press" hover-stay-time="80" aria-role="button" aria-label="收集册 · 藏品">
+              <view class="pc-pile-3d">
+                <view class="pc-pile-c pc-pile-c--0"><image class="pc-pile-img" src="/subpackageMember/images/album/object.png" mode="aspectFit" /></view>
+                <view class="pc-pile-c pc-pile-c--1"><image class="pc-pile-img" src="/subpackageMember/images/album/object.png" mode="aspectFit" /></view>
+                <view class="pc-pile-c pc-pile-c--2"><image class="pc-pile-img" src="/subpackageMember/images/album/object.png" mode="aspectFit" /><image class="pc-pile-img pc-pile-sheen" src="/subpackageMember/images/album/object.png" mode="aspectFit" aria-hidden="true" /></view>
+              </view>
               <view class="pc-pile-t"><text>藏品</text></view>
             </view>
           </view>
