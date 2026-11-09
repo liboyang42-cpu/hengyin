@@ -349,7 +349,8 @@
                姓名 + 身份证号 + 单独同意,字段与同意文案照原样;已登记的人整节不见 —— 接口只回真假,值不下发也不回显。 -->
           <block wx:if="{{identityRequired && !identityRegistered}}">
             <view class="pd-sec-hd"><view class="pd-section-title">发布者实名</view><view class="req-left" wx:if="{{ticketMissing.identity}}" data-anchor="fieldIdentity" bindtap="onReqLeftTap" aria-role="button" aria-label="发布者实名还有 {{ticketMissing.identity || 0}} 项未填，去填写" hover-class="cy-pressed" hover-stay-time="80"><text class="req-left__star">*</text> 还有 {{ticketMissing.identity || 0}} 项未填</view></view>
-            <view class="pc-identity" id="fieldIdentity">
+            <!-- V3-29(2026-11-09 业主「发布者实名UI优化 需要对齐」):与上面「自玩票」同一张白卡,左边线跟区块标题对齐 -->
+            <view class="pc-identity node-card" id="fieldIdentity">
               <cy-field label="真实姓名" required placeholder="与身份证一致"
                         value="{{identityRealName}}" maxlength="{{20}}"
                         data-field="identityRealName" bindinput="onIdentityFieldInput" />

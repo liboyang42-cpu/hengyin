@@ -5,7 +5,7 @@
   <cy-modal-host id="cy-modal-host" />
 
   <!-- ====== PAGE HEADER(画板05 2026-08-20:头像+铃铛;玩家态无标题,商家态 2026-08-25 补居中标题;胶囊避让沿用 safeTop) ====== -->
-  <view class="topbar" style="height: {{ safeTop }}px;">
+  <view class="topbar {{ topbarSolid ? 'topbar--solid' : '' }}" style="height: {{ safeTop }}px;">
     <view style="height: {{ statusBarHeight }}px;"></view>
     <view class="titBar" style="height: {{ titBarHeight }}px; padding-right: {{ headerRightInset }}px;">
       <!-- 2026-09-19 用户拍板:模板页左上角头像商家态与玩家态都撤掉(入口各有他路:商家底栏「我的」/玩家 member tab) -->

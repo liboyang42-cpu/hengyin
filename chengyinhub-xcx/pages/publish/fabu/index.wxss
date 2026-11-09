@@ -869,6 +869,7 @@ page{background: var(--cy-bg-card);}
  * 字段直接走 cy-field:空态白底 + 灰描边、填写后 #EFEFEF + 深描边,是创建域(浅色)既有口径,
  * 这里不再自造一套表单皮肤。报错用 cy-inline-error 软红整块,不给输入框描红边。 */
 .pc-identity { display: flex; flex-direction: column; gap: var(--cy-space-3); }
+.pc-identity.node-card { margin-bottom: 0; }
 .pc-identity__consent { margin-top: var(--cy-space-1); }
 .pc-identity__foot {
   font-size: var(--cy-font-label);
@@ -2330,6 +2331,9 @@ page { background: var(--cy-btn-solid-bg); }
 .theme-topic-editor .slopes-sheet {
   border-top: 1rpx solid var(--cy-color-border-subtle);
 }
+/* V3-45(2026-11-09 业主「上面有一条线 看起来不对」):满屏态 sheet 与页面同底色、从返回钮下方开始,
+   这条顶边线只剩一道多余的横线。地图态(浮在地图上)保留。 */
+.theme-topic-editor .slopes-sheet--full { border-top: 0; }
 
 .theme-topic-editor .slopes-grabber {
   background: var(--cy-color-border-strong);
@@ -4555,10 +4559,37 @@ page { background: var(--cy-btn-solid-bg); }
   background: var(--cy-color-bg-surface-subtle);
 }
 
-/* 选中态用描边,不用换底色:卡上本来就有图,换底色在深浅不一的图下面根本看不出来 */
-.temp-rail__li.is-on .temp-rail__pic {
-  box-shadow: 0 0 0 4rpx var(--cy-color-text-primary);
+/* 选中态用描边,不用换底色:卡上本来就有图,换底色在深浅不一的图下面根本看不出来。
+   V3-50(2026-11-09 业主「选中的描边样式也不对」):外扩描边会被横滑轨裁掉一边(首张卡左缘缺一截)。
+   改成套件的选中样式 —— 盖在图上的内描边(--cy-color-selection)+ 右上角选中标记(同 .mode-opt__mark.is-on)。 */
+.temp-rail__li .item { position: relative; }
+.temp-rail__sel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: 210rpx;
+  height: 210rpx;
+  box-sizing: border-box;
+  border-radius: var(--cy-radius-xl);
+  box-shadow: inset 0 0 0 4rpx var(--cy-color-selection);
+  pointer-events: none;
 }
+.temp-rail__mark {
+  position: absolute;
+  top: var(--cy-space-2);
+  right: var(--cy-space-2);
+  background: var(--cy-color-selection);
+  border-color: var(--cy-color-bg-surface);
+}
+
+/* V3-47:「自己建一个」卡 —— 与其他模板卡同尺寸同圆角,图是发布菜单同一套 3D「互动」图 */
+.temp-rail__pic--create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.temp-rail__create-img { width: 128rpx; height: 128rpx; }
 
 .temp-rail__li .item-txt { padding-top: var(--cy-space-1); }
 
@@ -4913,7 +4944,8 @@ page { background: var(--cy-btn-solid-bg); }
 .pd-sec-hd { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cy-space-2); }
 .req-left { flex: none; display: inline-flex; align-items: center; min-height: 88rpx; padding-right: 8rpx; color: var(--cy-color-action-danger-bg); font-size: var(--cy-font-label); }
 .req-left__star { font-weight: 700; }
-.pd-entry-card__sub.is-missing, .pd-modecard__action.is-missing { color: var(--cy-color-action-danger-bg); }
+/* V3-45:主题详情与票务两处「还有 N 项未填」同一套字号/颜色/间距,不带箭头 */
+.pd-entry-card__sub.pd-missing, .pd-modecard__action.pd-missing { display: block; margin-top: 0; padding-top: var(--cy-space-1); font-size: var(--cy-font-caption); line-height: 1.4; color: var(--cy-color-action-danger-bg); }
 .sp { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: var(--cy-z-sheet); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
 .sp-scroll { height: 100%; }
 .sp-hero { position: relative; height: 800rpx; overflow: hidden; }

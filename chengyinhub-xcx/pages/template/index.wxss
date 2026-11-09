@@ -39,6 +39,10 @@ page { background: var(--cy-color-bg-page) !important; }
   width: 100%; position: fixed; left: 0; top: 0; z-index: 22;
   background: var(--cy-color-bg-page);
 }
+/* V3-43(2026-11-09 业主「顶部是黑色的 看起来没有全屏覆盖」):玩家态货架的封面光晕要铺到状态栏和导航栏底下。
+   未滚动时顶栏透明;一滚动(topbarSolid)才恢复页面底色,免得内容从铃铛后面透出来。商家浅色态不变。 */
+.tpl-page.theme-dark .topbar { transition: background-color var(--cy-motion-standard) var(--cy-ease-standard); }
+.tpl-page.theme-dark .topbar:not(.topbar--solid) { background: transparent; }
 .titBar {
   display: flex; align-items: center; justify-content: center;
   padding: 0 var(--cy-page-x);

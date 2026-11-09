@@ -33,6 +33,7 @@ Page({
     menuButtonInfo: getApp().globalData.menuButtonInfo,
     smButtonOffset: -40,
     tabBarRaised: true,
+    topbarSolid: false,
 
     // 胶囊安全区：胶囊底部 + 额外间距，整体页面从此线开始
     capsuleBottom: 0,
@@ -179,6 +180,9 @@ Page({
   onPageScroll(e) {
     // _lastScrollTop/_scrollStopTimer 不进 data:wxml 从不读,逐帧 setData 是白付的跨线序列化(2026-09-19 性能批3)
     const currentScrollTop = e.scrollTop || 0;
+    // V3-43:顶栏只在离开顶部后才铺底色;只在越界时 setData,不逐帧写。
+    const topbarSolid = currentScrollTop > 4;
+    if (topbarSolid !== !!this.data.topbarSolid) this.setData({ topbarSolid: topbarSolid });
     const isScrollingDown = currentScrollTop > (this._lastScrollTop || 0);
 
     if (this._scrollStopTimer) {
