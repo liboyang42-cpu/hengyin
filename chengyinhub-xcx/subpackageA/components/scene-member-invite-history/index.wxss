@@ -64,10 +64,10 @@
 .ir-stack-i:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 260ms); }
 .ir-stack-i:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 320ms); }
 .ir-stack-i:nth-child(5) { transition-delay: calc(var(--pm-i-s, 0) * 380ms); }
+.ir-group { transition-delay: calc(var(--pm-i-s, 0) * 300ms); }
 .ir-group:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 90ms); }
 .ir-group:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 160ms); }
 .ir-group:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 230ms); }
-.ir-group:nth-child(n+5) { transition-delay: calc(var(--pm-i-s, 0) * 300ms); }
 @media (prefers-reduced-motion: reduce) {
   .ir-summary, .ir-group, .ir-stack-i { filter: none; translate: none; transition: none; }
 }
