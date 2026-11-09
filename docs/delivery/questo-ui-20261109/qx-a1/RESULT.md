@@ -34,8 +34,9 @@ Branch `claude/qx-a1-20261109`, base `origin/master` @ `2bb811437`. Draft PR int
   - `playkit-present-inline-contract`: `cy-playkit wx:else` after the card branch.
   - `playkit-story-vars-dream-path-contract`: no system sentence.
   - `round9-m4-map-look`: the radar uses the roam dark style.
-- `node --test` on all 381 unit files that touch `pages/play`, `scene-qr-ticket`, `theme-backpack` or `publish/temp` styles: all pass after the updates. The first run had 11 failures, all fixed: 3 were the stale action ledger and 8 were the pinned contracts above.
-- `node scripts/uiaudit/build-action-ledger.js --write`: the ledger was rebuilt.
+  - `action-ledger`: control-count pins.
+- `node --test` on all 381 unit files that touch `pages/play`, `scene-qr-ticket`, `theme-backpack` or `publish/temp` styles: all pass after the updates. The first run had 11 failures: 8 were the pinned contracts above and 3 were action-ledger count pins, now updated.
+- `node scripts/uiaudit/build-action-ledger.js --write`: the ledger was rebuilt. `action-ledger.test.js` pins control counts and two control ids; each pin was updated with the rebuilt counts and a comment: tap +4 −1 (the QR back button), one more event contract, and the ids shifted by 8 lines. It now passes 48/48.
 - `node tests/lint/ui-integrity.js`: `UI-GATE-0:PASS`.
 - **Main package:** +1 small util (`story-kit-card.js`, about 3.6 KB) plus a few CSS lines on the play page. No new assets.
 
