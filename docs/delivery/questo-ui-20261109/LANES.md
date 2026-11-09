@@ -292,3 +292,20 @@ Use only cards and data the screen already has. No fake numbers. The coloured pe
   - `matchedGeometryEffect` morphs for the same success moments as qx-u3
 - Keep Apple-native components and the light/dark domain rule.
 - Write RESULT.md and open a draft PR.
+
+### qx-c2: docs, deployment list and storage verification (base `origin/integrate/questo-ui-20261110`, PR into it)
+
+1. **UI checklist.** Update `docs/questo-teardown/UI优化施工清单.md`:
+   - Fill in the empty §25.2 and §25.3: the client-contract sync, i.e. what the mini shard fixes and the C00 auth-contract change were.
+   - Correct the four wrong paths listed in BRIEF.md.
+   - Add §28, "2026-11-09 实施波次": for each UI task ID, the lane, PR, status (fixed / partial / needs owner) and the evidence path. Read every `docs/delivery/questo-ui-20261109/qx-*/RESULT.md` on the lane branches.
+   - Add the vision 3 walkthrough status table from LANES.md and the qx-a* RESULTs.
+   - Keep the document's existing conventions. Do not rewrite history sections.
+2. **Backend results.** Update `docs/questo-teardown/后端优化执行结果.md` with a new top section: the merge of master into #731, the CI fixes, the owner-approved architecture registration PR, the qx-c1 backend gaps, and the current CI run IDs and results. Read them with `gh run list`.
+3. **Deployment list.** Add `docs/questo-teardown/部署清单_20261110.md`:
+   - Every new `sql/migration_*` on `integrate/questo-ui-20261110` (and on `claude/qx-c1-20261109`) that is not on production's release set. Use `ci/` release-manifest tooling to compute it; the release pack is stale (pack 88 vs 117/127), so recompute rather than trusting it.
+   - Their dependency order, rollback notes, any data assertions needing production rows, the new scheduled tasks (registered paused), and the feature switches that must stay off (`cash-enabled`, `apple-iap.enabled`, `workshop.wechat-app-enabled`, channel providers).
+   - The menu/permission rows granted to no role.
+   - This is a document for the owner to execute. Never run anything against production.
+4. **Storage verification.** Trigger the manual real-storage workflow (`Real Storage IT (manual)`, via `gh workflow run` with the selected-classes input the workflow defines) for every MySQL IT class added or changed on `integrate/questo-ui-20261110` since 147754ba, plus the qx-c1 classes once that branch exists. Collect the XML counts. Record pass/fail per class in the results doc. Fix genuine failures on a branch `claude/qx-c2-fixes-20261109` with a PR into the integrate branch; never weaken assertions.
+5. Finish with RESULT.md under `docs/delivery/questo-ui-20261109/qx-c2/` and a draft PR.
