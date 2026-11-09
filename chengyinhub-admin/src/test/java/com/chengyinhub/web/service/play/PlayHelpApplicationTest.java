@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -204,6 +205,7 @@ class PlayHelpApplicationTest {
 
         assertFalse(view.enabled());
         assertTrue(view.layers().isEmpty());
+        assertNull(view.remainingFreeUses(), "无阶梯不出整局计数器");
     }
 
     @Test
@@ -220,6 +222,7 @@ class PlayHelpApplicationTest {
         assertEquals(0, view.layers().get(0).costPoints(), "已解锁层重看不扣");
         assertFalse(view.layers().get(1).unlocked());
         assertEquals(30, view.layers().get(1).costPoints());
+        assertEquals(Integer.valueOf(0), view.remainingFreeUses(), "有阶梯而未声明 N:整局默认 0 次,是额度账本给出的真实 0");
     }
 
     @Test

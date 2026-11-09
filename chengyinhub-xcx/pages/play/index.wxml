@@ -5,6 +5,7 @@
   <include src="theme-player-ops.wxml" />
   <include src="play-overlays.wxml" />
   <include src="play-topbar.wxml" />
+  <include src="play-help.wxml" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <wxs src="../../utils/wxs/img.wxs" module="img" />
@@ -1226,8 +1227,9 @@
       <view class="gp2__reveal" wx:if="{{revealed}}">{{game.reveal}}</view>
       <view class="gp2__scorecap" wx:if="{{game.puzzleScoring}}">当前最高 {{puzzleScoreCap}} 解谜分</view>
       <view class="gp2__ctl" wx:if="{{!gRight}}">
-        <text class="gp2__ctl-a" wx:if="{{canHint}}" bindtap="useHint" hover-class="cy-pressed" hover-stay-time="80">看提示（{{hintLabel}}）</text>
-        <text class="gp2__ctl-b" wx:if="{{canReveal}}" bindtap="revealAnswer" hover-class="cy-pressed" hover-stay-time="80">实在解不出，揭示答案</text>
+        <text class="gp2__ctl-a" wx:if="{{helpPanel.enabled}}" bindtap="openHelpPanel" aria-role="button" aria-label="提示" hover-class="cy-pressed" hover-stay-time="80">提示</text>
+        <text class="gp2__ctl-a" wx:elif="{{canHint}}" bindtap="useHint" hover-class="cy-pressed" hover-stay-time="80">看提示（{{hintLabel}}）</text>
+        <text class="gp2__ctl-b" wx:if="{{canReveal && !helpPanel.enabled}}" bindtap="revealAnswer" hover-class="cy-pressed" hover-stay-time="80">实在解不出，揭示答案</text>
       </view>
     </view>
     <view style="height:200rpx"></view>

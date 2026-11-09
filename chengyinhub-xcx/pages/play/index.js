@@ -27,6 +27,7 @@ const gameSessionClient = require('../../utils/game-session-client.js');
 const orientLifecycle = require('./utils/orient-lifecycle.js');
 const arrivalGuardView = require('./utils/arrival-guard-view.js');
 const arrivalReading = require('./utils/arrival-reading.js');
+const playHelpPanel = require('./utils/play-help-panel.js');
 const guardAppeal = require('./utils/guard-appeal.js');
 const playBoardView = require('./utils/play-board-view.js');
 const { id: precisePlayId } = require('../../utils/orient-score-view.js');
@@ -438,6 +439,23 @@ Page({
     this.setData({ 'r5Verdict.show': false }, () => { if (ending) ending(); });
   },
   ...themeBackpack.methods(req),
+  // UG-05..09 提示阶梯:非基础写入,走普通请求;JSON 体由服务端 @RequestBody 读取。
+  ...playHelpPanel.methods((url, method, data) => {
+    const json = { 'content-type': 'application/json' };
+    switch (url) {
+      case '/api/play/help': return req('/api/play/help', 'GET', data, undefined, true);
+      case '/api/play/help/receipt': return req('/api/play/help/receipt', 'GET', data, undefined, true);
+      case '/api/play/help/use': return req('/api/play/help/use', 'POST', data, json, true);
+      case '/api/play/help/skip': return req('/api/play/help/skip', 'POST', data, json, true);
+    }
+    throw new Error('Unknown play help endpoint');
+  }),
+  /** UG-08:跳过已由服务端结算(0 分 + 辅助完成)。不放庆祝、不走 onComplete,收起任务页后重读服务端进度。 */
+  onHelpSkipped(nodeId) {
+    if (String((this.data.game || {}).nodeId) !== String(nodeId)) return;
+    this.setData({ screen: '', 'helpPanel.show': false });
+    this.loadData();
+  },
   ...themeRecords.methods(req, true),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   ...themeTrade.methods(req),
@@ -447,7 +465,7 @@ Page({
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data,
+    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -6392,7 +6410,7 @@ Page({
       hintLabel: node.hintLocked ? (node.hintCost + '积分')
         : node.puzzleScoring ? puzzleHintLabel((node.usedHints || []).length, node.hintCount)   // P-25:下一条是第几条 + 点之前就写代价
         : (((node.usedHints || []).length || 1) + '/' + (node.hintCount || ((node.hint1 ? 1 : 0) + (node.hint2 ? 1 : 0)) || 1))
-    }, () => { if (node.vm === 6) this.loadPreference(node); this._autoStationVoice(node); });
+    }, () => { if (node.vm === 6) this.loadPreference(node); this._autoStationVoice(node); if (!node.done) this.loadHelpLadder(); });
   },
   async onAdvancedReady(e) {
     if (!this._isPlayAccountCurrent()) return;

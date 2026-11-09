@@ -15,5 +15,14 @@ public record PlayHelpViewVO(
         long runId,
         long nodeId,
         boolean enabled,
-        List<LevelView> layers) {
+        List<LevelView> layers,
+        Integer remainingFreeUses) {
+
+    /**
+     * {@code remainingFreeUses}:整局共享免费次数的剩余值(UG-06「本局剩余免费 N 次」),只读投影。
+     * 旧局没有整局 N(逐层 freeQuota 老口径)时为 {@code null} —— 端上不显示计数器,不把未知当 0。
+     */
+    public PlayHelpViewVO(long runId, long nodeId, boolean enabled, List<LevelView> layers) {
+        this(runId, nodeId, enabled, layers, null);
+    }
 }

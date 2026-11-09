@@ -159,6 +159,9 @@ class PlayHelpFrozenNodeConfigTest {
         PlayHelpViewVO exhausted = application.view(MEMBER, String.valueOf(RUN), String.valueOf(NODE));
         assertFalse(exhausted.layers().get(0).free());
         assertEquals(30, exhausted.layers().get(2).costPoints());
+        // UG-06:整局剩余免费次数作为一个计数器下发,用尽是真实的 0。
+        assertEquals(Integer.valueOf(2), view.remainingFreeUses());
+        assertEquals(Integer.valueOf(0), exhausted.remainingFreeUses());
 
         // 层级面只有代价/状态，提示正文只能从 /use 拿。
         assertFalse(view.toString().contains(HINT_TEXT), "view 不得携带提示正文");
