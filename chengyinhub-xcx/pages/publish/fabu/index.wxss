@@ -3696,6 +3696,7 @@ page { background: var(--cy-btn-solid-bg); }
 }
 .story-toolbar.is-docked {
   position: fixed; left: 0; right: 0; z-index: 6;
+  background: var(--cy-color-bg-surface);
   border-bottom: 0;
   border-top: 2rpx solid var(--cy-color-border-subtle);
 }
@@ -3710,7 +3711,7 @@ page { background: var(--cy-btn-solid-bg); }
   font-size: var(--cy-font-label);
   white-space: nowrap;
 }
-.story-toolbar__rule { width: 28rpx; height: 3rpx; border-radius: 2rpx; background: currentColor; }
+.story-toolbar__rule { width: 28rpx; height: 3rpx; border-radius: var(--cy-radius-pill); background: currentColor; }
 
 @media (prefers-reduced-motion: reduce) {
   .story-article .story-block { transition: none; }
