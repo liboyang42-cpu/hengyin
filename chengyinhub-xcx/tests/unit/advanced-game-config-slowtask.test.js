@@ -36,7 +36,9 @@ function serverSections() {
   while ((m = re.exec(code))) found.add(m[1])
   // requires / effects 是根级条件与效果块(多参数校验),不是玩法段;旧单参正则只是碰巧没匹配到它们。
   // clues 是「线索」工具的名称表(2026-10-11)，同样不是玩法段。
-  for (const rootBlock of ['requires', 'effects', 'clues']) found.delete(rootBlock)
+  // hintLadder 是 BE-16 根层提示阶梯数组(与根层标量 hintFreeUsesPerRun 同级,没有 enabled),同样不是玩法段;
+  // parse 的未知段透传原样读写。
+  for (const rootBlock of ['requires', 'effects', 'clues', 'hintLadder']) found.delete(rootBlock)
   return found
 }
 

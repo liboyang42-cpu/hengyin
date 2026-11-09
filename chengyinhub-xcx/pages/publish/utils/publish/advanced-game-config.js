@@ -77,6 +77,7 @@ const PRESENT_VALUES = ['inline', 'fullscreen'];
 //   blindTaste 等,改由各 kit 的内嵌档在原位渲染(不再走 position:fixed 的半屏),见 pages/play/components/playkit-*。
 const PRESENT_INLINE_DEFAULT = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile', 'note', 'check', 'quietHold',
   'estimate', 'diyName', 'typeIn', 'dailySign', 'slowTask', 'musicCorner', 'timeWindow', 'diceRoll',
+  'hangman',
   'reaction', 'ballShake', 'countdown', 'stopwatch', 'coinFlip', 'hiddenObject', 'scan', 'steps',
   'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album'];
 /** 保留导出名给旧调用方;现在是空表。 */

@@ -96,7 +96,7 @@ class ThemeCategoryConfigMappingTest {
                 """);
         IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
                 () -> GameplaySupportMatrix.validateNode(theme("PLAYER"), NODE_ID, "图中找物", config, 0));
-        assertTrue(refusal.getMessage().contains("完成证明"), refusal.getMessage());
+        assertTrue(refusal.toString().contains("完成证明"), refusal.toString());
         // 存稿也不放宽：这不是「还没填完」，而是这类玩法本来就不产生通用结算证明。
         assertThrows(IllegalArgumentException.class,
                 () -> GameplaySupportMatrix.validateNode(theme("PLAYER"), NODE_ID, "图中找物", config, 0, true));
@@ -152,7 +152,7 @@ class ThemeCategoryConfigMappingTest {
                 """);
         IllegalArgumentException refusal = assertThrows(IllegalArgumentException.class,
                 () -> GameplaySupportMatrix.validateNode(theme("PLAYER"), NODE_ID, "结案", block, 0));
-        assertTrue(refusal.getMessage().contains("免费重答"), refusal.getMessage());
+        assertTrue(refusal.toString().contains("免费重答"), refusal.toString());
     }
 
     /**
