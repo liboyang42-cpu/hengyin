@@ -19,6 +19,7 @@ Component({
     ok: { type: Boolean, value: false },      // 自动检查通过:绿色勾
     disabled: { type: Boolean, value: false },
     tappable: { type: Boolean, value: true },
+    clip: { type: Boolean, value: false },    // 值很长(地址):值单行省略,名称不被挤成竖排(V3-48)
   },
   methods: {
     onTap() { if (!this.data.disabled && this.data.tappable) this.triggerEvent('press'); },

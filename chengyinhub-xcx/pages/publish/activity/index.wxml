@@ -199,8 +199,9 @@
       <view>
         <cy-btn variant="secondary" style="width:268rpx;margin:20rpx auto 0 auto" bindtap="addTicket"><cy-icon name="plus" size="28" /> 添加票单</cy-btn>
       </view>
-      <view wx:if="{{identityRequired}}" class="li">
-        <view class="item-tit">发布者实名</view>
+      <!-- V3-29:「发布者实名」是一节的标题,不是一个字段名 —— 加粗、与上面的票单拉开一档,下面两格与其他字段同一左边线 -->
+      <view wx:if="{{identityRequired}}" class="li li--group">
+        <view class="item-tit item-tit--group">发布者实名</view>
         <block wx:if="{{!identityRegistered}}">
           <view class="li">
             <view class="item-tit">真实姓名<text>*</text></view>

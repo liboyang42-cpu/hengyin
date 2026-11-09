@@ -431,10 +431,8 @@ Page({
     attributeRegistrySnapshot: null,
     attributeRegistryError: '',
     initialStateOptions: storyInitialState.OPTIONS,
-    supportNodeChallenge: false, supportNodeSettled: false,
-    supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', nodeSupportReason: '', storySupportReasons: {},
+    supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', nodeSupportReason: '',
     publicSupportReasons: {}, draftSupportReasons: {}, mineSupportReasons: {},
-    storyGameOptions: ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].map(key => nodeGameCatalog.findGame(key)),
     // 表单数据
     // 结局编辑器(2026-09-22 接线)。list 是 story-ending.parse 出来的界面形状,
     // 保存时由同一个 serialize 转回服务端形状 —— 校验口径与 JourneyStoryValidator 一致,不另写一套。
@@ -8534,10 +8532,6 @@ Page({
   },
   _refreshSupportMatrix() {
     const matrix = this.data.supportMatrix, ctx = this._nodeSupportContext();
-    const options = matrix ? nodeGameCatalog.ALL.filter(item =>
-      !ctx.settled && !ctx.challenge || ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].includes(item.key)
-      || matrix.types.some(row => row.key === item.key && (ctx.challenge
-        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof || row.r5CompletionProof && !supportMatrix.choice(matrix, item.key, {}, ctx)))) : this.data.storyGameOptions;   // 第十三轮 m1:任务站也列出选中就会带上结果规则的玩法
     const reasons = list => {
       const out = {};
       (list || []).forEach(item => {
@@ -8546,12 +8540,7 @@ Page({
       });
       return out;
     };
-    const story = {};
-    (options || []).forEach(item => {
-      story[item.key] = supportMatrix.choice(matrix, item.key, {}, ctx);
-    });
-    this.setData({ supportNodeChallenge: ctx.challenge, supportNodeSettled: ctx.settled, storyGameOptions: options, storySupportReasons: story,
-      publicSupportReasons: reasons(this.data.publicTempList), draftSupportReasons: reasons(this.data.storyDraftList),
+    this.setData({ publicSupportReasons: reasons(this.data.publicTempList), draftSupportReasons: reasons(this.data.storyDraftList),
       mineSupportReasons: reasons(this.data.tempList), nodeSupportReason: this._templateSupportReason(this.data.nodesForm.templateInfo) });
   },
   _supportPublishIssues() {

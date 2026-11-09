@@ -111,7 +111,7 @@
       <view class="pd-entry-card__row">
         <view class="pd-entry-card__main">
           <text class="pd-entry-card__title">主题详情</text>
-          <text class="pd-entry-card__sub {{topicDetailMissing ? 'is-missing' : ''}}"><text wx:if="{{topicDetailMissing}}" class="req-left__star">* </text>{{topicDetailSummary}}</text>
+          <text class="pd-entry-card__sub {{topicDetailMissing ? 'pd-missing' : ''}}"><text wx:if="{{topicDetailMissing}}" class="req-left__star">* </text>{{topicDetailSummary}}</text>
         </view>
         <view class="pd-row-chevron"><cy-icon name="chevron-right" size="32" /></view>
       </view>
@@ -145,7 +145,9 @@
         <text class="pd-modecard__eyebrow">票务</text>
         <text class="pd-modecard__name">票务设置</text>
         <!-- P-4(V-25):票务有必填没填时,「编辑」换成红色「* 还有 N 项未填」;点卡照旧进票务页 -->
-        <view class="pd-modecard__action {{ticketMissing.total ? 'is-missing' : ''}}"><text wx:if="{{ticketMissing.total}}"><text class="req-left__star">*</text> 还有 {{ticketMissing.total || 0}} 项未填</text><text wx:else>编辑</text><cy-icon name="chevron-right" size="24" /></view>
+        <!-- V3-45(2026-11-09):未填提示与「主题详情」同一行样式(pd-missing),后面不带箭头 -->
+        <view wx:if="{{ticketMissing.total}}" class="pd-modecard__action pd-missing"><text class="req-left__star">* </text>还有 {{ticketMissing.total || 0}} 项未填</view>
+        <view wx:else class="pd-modecard__action"><text>编辑</text><cy-icon name="chevron-right" size="24" /></view>
       </view>
     </view>
 
@@ -844,7 +846,7 @@
         <cy-list-row title="名称" tappable="{{false}}">
           <input class="node-grp__input" value="{{nodesForm.name}}" bindinput="onNodeNameInput" placeholder="{{nodesForm._storyGame ? '给这个玩法起个名字' : '给这个节点起个名字'}}" placeholder-class="node-sheet__name-ph" maxlength="40" aria-label="名称" />
         </cy-list-row>
-        <cy-list-row wx:if="{{!nodesForm._storyGame}}" class="node-place-row" title="地点" value="{{nodesForm.address || '选择节点'}}" chevron hr bind:press="choosePoiForNode" />
+        <cy-list-row wx:if="{{!nodesForm._storyGame}}" class="node-place-row" title="地点" value="{{nodesForm.address || '选择节点'}}" clip chevron hr bind:press="choosePoiForNode" />
       </cy-list-group>
 
       <!-- 配置模板。开关关 = 纯到达打卡:原先只有一个「配置玩法(可稍后补)」按钮,
@@ -942,13 +944,8 @@
          补上公共玩法库(/api/template/homeData 的精选/热门/最新,和创意广场同一个数据源),
          两段分开列,免得分不清"这是我的"还是"平台的"。 -->
     <view class="pop-cont pop-cont-games" wx:elif="{{nodeSheetView==='games'}}">
-      <view class="temp-seg"><text class="temp-seg__tit">新建故事玩法</text></view>
-      <view class="story-game-row" wx:for="{{storyGameOptions}}" wx:key="key">
-        <cy-icon name="{{item.icon}}" size="36" />
-        <view class="story-game-row__title"><text>{{item.label}}</text><text wx:if="{{storySupportReasons[item.key]}}" class="node-card__value">{{storySupportReasons[item.key]}}（通用结算）</text></view>
-        <view class="story-game-row__action" data-key="{{item.key}}" data-preview="1" bindtap="onCreateGame" aria-role="button" aria-label="预览{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
-        <view wx:if="{{!supportNodeChallenge && !supportNodeSettled || !storySupportReasons[item.key]}}" class="story-game-row__action" data-key="{{item.key}}" bindtap="onCreateGame" aria-role="button" aria-label="配置{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">配置</view>
-      </view>
+      <!-- V3-46(2026-11-09 业主「只能选择公共玩法库和自己的 不然就去自己配置」):撤掉「新建故事玩法」清单;
+           从零配置只走「我的模板」第一张「自己建一个」。 -->
       <cy-inline-error wx:if="{{templateAdoptionError}}" kind="error" title="{{templateAdoptionError}}" action="查看我的玩法" bind:action="inspectAdoptedTemplates" />
       <view class="temp-seg">
         <text class="temp-seg__tit">公共玩法库</text>
@@ -960,6 +957,7 @@
         <view class="temp-rail__ul">
           <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'public' ? 'is-on' : ''}}" wx:for="{{publicTempList}}" wx:key="id" data-item="{{item}}" data-source="public" hover-class="cy-pressed" hover-stay-time="80">
             <view class="item">
+              <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'public'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
               <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
               <view class="item-txt">
                 <view class="tit ep1">{{item.title}}</view><text wx:if="{{publicSupportReasons[item.id]}}" class="node-card__value">{{publicSupportReasons[item.id]}}（通用结算）</text>
@@ -983,6 +981,7 @@
           <view class="temp-rail__ul">
             <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{storyDraftList}}" wx:key="id" data-item="{{item}}" data-source="mine" aria-role="button" aria-label="选用{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="item">
+                <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
                 <image wx:if="{{item.imgUrl}}" lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
                 <view wx:else class="temp-rail__pic"></view>
                 <view class="item-txt"><view class="tit ep1">{{item.title}}</view><text wx:if="{{draftSupportReasons[item.id]}}" class="node-card__value">{{draftSupportReasons[item.id]}}（通用结算）</text></view>
@@ -993,12 +992,19 @@
       </block>
       <view class="temp-seg">
         <text class="temp-seg__tit">我的模板</text>
-        <text class="temp-seg__sub" wx:if="{{!tempList.length}}">暂无自建玩法</text>
       </view>
-      <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{tempList.length}}">
+      <!-- V3-47:「自己建一个」是「我的模板」第一张卡,与其他卡同一套样式 -->
+      <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}">
         <view class="temp-rail__ul">
+          <view class="temp-rail__li temp-rail__li--create" bindtap="onCreateGame" aria-role="button" aria-label="自己建一个" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="item">
+              <view class="temp-rail__pic temp-rail__pic--create"><image class="temp-rail__create-img" src="/images/publish-quick/interaction.png" mode="aspectFit" /></view>
+              <view class="item-txt"><view class="tit ep1">自己建一个</view></view>
+            </view>
+          </view>
           <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" data-source="mine" hover-class="cy-pressed" hover-stay-time="80">
             <view class="item">
+              <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
               <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
               <view class="item-txt">
                 <view class="tit ep1">{{item.title}}</view><text wx:if="{{mineSupportReasons[item.id]}}" class="node-card__value">{{mineSupportReasons[item.id]}}（通用结算）</text>
@@ -1012,7 +1018,7 @@
         </view>
       </scroll-view>
 
-      <cy-btn variant="primary" style="display:block;width:100%;margin:24rpx 0 0" bindtap="onCreateGame">自己建一个玩法</cy-btn>
+      <cy-btn variant="primary" style="display:block;width:100%;margin:24rpx 0 0" bindtap="confirmTemp">确定</cy-btn>
     </view>
   </view>
   </cy-sheet>
