@@ -104,7 +104,7 @@ Page({
   _goTarget() {
     const t = this._target || {};
     if (!view.isId(t.id)) return;
-    wx.navigateTo({ url: t.type === 2 ? '/pages/activity/detail/index?id=' + t.id : '/pages/templatedetail/topic-detail/index?id=' + t.id });
+    wx.navigateTo({ url: t.type === 2 ? '/pages/activity/detail/index?id=' + t.id : '/pages/topic/index/index?id=' + t.id });
   },
 
   _claimSeat() {

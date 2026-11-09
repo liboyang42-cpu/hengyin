@@ -40,7 +40,6 @@ page { background: var(--cy-bg-page); }
 .jn-photo { flex: none; width: 200rpx; height: 200rpx; border-radius: var(--cy-radius-md); overflow: hidden; background: var(--cy-color-bg-elevated); }
 .jn-photo image { width: 100%; height: 100%; }
 .jn-sheet { padding: 0 6rpx 24rpx; }
-.jn-tabs { margin: 0 0 24rpx; }
 .jn-note { padding: 20rpx 31rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .jn-photos-scroll { margin-bottom: 24rpx; }
 .jn-av--lg { width: 128rpx; height: 128rpx; font-size: var(--cy-type-section-title); }
@@ -49,3 +48,6 @@ page { background: var(--cy-bg-page); }
 .jn-footer--stack .jn-err { text-align: center; }
 .jn-sec--first { margin-top: 24rpx; }
 .jn-danger-text { color: var(--cy-color-status-danger); min-height: 88rpx; line-height: 88rpx; padding: 0 8rpx; }
+.jn-tabbar { display: flex; align-items: center; gap: 16rpx; margin: 0 0 24rpx; }
+.jn-tabbar__scope { flex: 1; min-width: 0; }
+.jn-tabbar__period { flex: none; }

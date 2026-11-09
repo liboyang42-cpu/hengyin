@@ -60,8 +60,10 @@
 
   <cy-sheet show="{{rankOpen}}" title="榜单" fixed="half" handle bind:close="closeRank">
     <view class="jn-sheet">
-      <cy-tabs class="jn-tabs" variant="chip" tabs="{{rankTabs}}" active="{{rankScope}}" bind:change="onRankScope" />
-      <cy-tabs wx:if="{{rankScope !== 'team'}}" class="jn-tabs" variant="chip" tabs="{{[{key:'all',label:'累计'},{key:'week',label:'本周'}]}}" active="{{rankPeriod}}" bind:change="onRankPeriod" />
+      <view class="jn-tabbar">
+        <view class="jn-tabbar__scope"><cy-tabs variant="chip" tabs="{{rankTabs}}" active="{{rankScope}}" bind:change="onRankScope" /></view>
+        <view class="jn-tabbar__period" wx:if="{{rankScope !== 'team'}}"><cy-tabs variant="chip" tabs="{{[{key:'all',label:'累计'},{key:'week',label:'本周'}]}}" active="{{rankPeriod}}" bind:change="onRankPeriod" /></view>
+      </view>
       <cy-skeleton wx:if="{{rankState === 'loading'}}" type="list" count="3" />
       <cy-empty wx:elif="{{rankState === 'error'}}" kind="data" title="{{rankError}}" cta="重试" bind:cta="loadRank" size="sm" />
       <cy-empty wx:elif="{{rankState === 'empty'}}" kind="empty" title="{{rankScope === 'team' ? '队内还没有名次' : '这张榜还没有人上榜'}}" size="sm" />

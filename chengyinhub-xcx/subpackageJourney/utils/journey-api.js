@@ -3,10 +3,14 @@
 /* 玩家闭环读写入口：只包一层 Promise，不改原请求客户端的登录、重试与错误处理。
  * 写请求的 requestId 由调用方生成并保留；超时只查原状态，不换号重发。 */
 
+// 这些后端 POST 都是 @RequestBody JSON；请求客户端对 POST 默认表单编码，必须显式带 JSON 头。
+const JSON_HEADER = { 'content-type': 'application/json' };
+
 function call(app, url, method, data, silent) {
   return new Promise(resolve => {
     app.sendRequest({
-      url, method, data, hideLoading: true, silentError: silent !== false, autoErrorToast: false,
+      url, method, data, header: method === 'POST' ? JSON_HEADER : undefined,
+      hideLoading: true, silentError: silent !== false, autoErrorToast: false,
       success: body => resolve(Object.assign({ httpStatus: 200 }, body || {})),
       successStatusAbnormal: (body, status) => resolve(Object.assign({}, body || {}, { httpStatus: status, code: (body && body.code) || status })),
       fail: (body, status) => resolve(status

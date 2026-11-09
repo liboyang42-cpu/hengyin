@@ -142,7 +142,7 @@ Page({
     const title = (this._topicName ? this._topicName + ' · ' : '') + (report.shareTitle || '一起来玩');
     const targetType = report.activityId ? 2 : 1;
     const targetId = report.activityId || report.topicId;
-    const fallback = '/pages/templatedetail/topic-detail/index?id=' + report.topicId;
+    const fallback = '/pages/topic/index/index?id=' + report.topicId;
     return {
       title,
       path: fallback,
