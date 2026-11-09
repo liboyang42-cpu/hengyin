@@ -1,4 +1,5 @@
 const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js');
+const referral = require('../../../utils/commerce/referral.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
@@ -195,6 +196,7 @@ Page({
   },
 
   onLoad(options) {
+    referral.capture(options); // §18 I 落地只存来源凭据
     const that = this;
     const topicId = Number(options.id);
     const validTopicId = Number.isFinite(topicId) && Number.isInteger(topicId) && topicId > 0;
@@ -2378,10 +2380,14 @@ Page({
        卡片图同样从这一屏的封面取:走 utils/topic-share 与俱乐部「带票分享」共用一份口径,
        取不到封面就不传 imageUrl(微信自己的默认卡片图),不拿占位图冒充。 */
     const info = this.data.info || {};
-    return buildTopicShare({
+    const share = buildTopicShare({
       topicId: this.data.id,
       name: info.name,
       cover: resolveTopicCover(info, (path) => app.getImgUrl(path)),
+    });
+    // §18 I:异步换推广来源凭据拼进 ref;失败静默降级为普通分享
+    return Object.assign({}, share, {
+      promise: referral.sharePathPromise(app, 1, this.data.id, share.path).then((r) => Object.assign({}, share, r)),
     });
   },
 

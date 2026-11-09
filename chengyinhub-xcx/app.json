@@ -38,7 +38,8 @@
         "pages/infomationdetail/infomationdetail",
         "pages/assetcenter/income-detail/income-detail",
         "pages/assetcenter/earnings/index",
-        "pages/assetcenter/analysis/index"
+        "pages/assetcenter/analysis/index",
+        "pages/video-bounty/index"
       ]
     },
     {

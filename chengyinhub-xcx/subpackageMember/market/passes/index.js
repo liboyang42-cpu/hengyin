@@ -30,12 +30,24 @@ Page({
     products: [],
     orders: [],
     giftsBought: [],
-    giftsReceived: []
+    giftsReceived: [],
+    workshopReason: ''
   },
   onLoad(options) {
     const tab = options && TABS.some((t) => t.key === options.tab) ? options.tab : 'shop'
     this.setData({ tab })
     this.load()
+    this.loadWorkshop()
+  },
+  // U07-03:付费模板只看服务端能力;微信通道不可用时写原因,可用时本端仍未接安装流程,不出入口
+  loadWorkshop() {
+    app.sendRequest({
+      url: '/api/workshop/capabilities', method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
+      success: (res) => {
+        const cap = isBizOk(res) && res.data && res.data.wechatApp
+        this.setData({ workshopReason: cap && cap.available === false ? mv.workshopReasonText(cap.reason) : '' })
+      }
+    })
   },
   onShow() { if (this._loaded) this.load(true) },
   onPullDownRefresh() { this.load(true) },

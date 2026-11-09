@@ -222,7 +222,17 @@ function claimReasonText(code) {
   return CLAIM_REASON_TEXT[code] || '礼品当前不可领取';
 }
 
+// U07-03 已购工坊:只显示不可用原因,不画安装/购买入口
+const WORKSHOP_REASON_TEXT = {
+  CHANNEL_NOT_CONFIGURED: '暂不可购买',
+  SERVER_VERIFICATION_UNAVAILABLE: '暂不可购买'
+};
+function workshopReasonText(code) {
+  return WORKSHOP_REASON_TEXT[code] || '暂不可购买';
+}
+
 module.exports = {
+  workshopReasonText,
   KIND_TEXT, PAY_MODE, FULFILLMENT, ROUTE,
   validityText, priceText, productCard, purchaseView, orderRequest,
   orderStateText, orderRow, giftRow, reasonText, claimReasonText

@@ -2347,6 +2347,8 @@ Component({
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
   // §17.1/P6 通行证与礼品记录(qx-b5)
   goPasses: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/market/passes/index', complete: () => { this._navigating = false; } }); },
+  // §18 A/B 视频悬赏作者端(qx-b5)
+  goVideoBounty: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/video-bounty/index', complete: () => { this._navigating = false; } }); },
   goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
   // 帖文第三轮:帖文卡的点正文 / 点评论进详情,点赞走原来的 creativesquare 点赞(type=1);数据下标来自卡片事件
   onPostCardDetail: function (e) {

@@ -26,6 +26,17 @@
           </view>
         </view>
       </block>
+      <!-- §20.2 兑换码 / U07-03 已购模板:渠道未开通,入口保留但只写不可用原因,不可点 -->
+      <view class="mk-group mk-gated" wx:if="{{tab === 'shop' && state === 'ready'}}">
+        <view class="mk-row" aria-disabled="true">
+          <view class="mk-row__main"><text class="mk-row__title">兑换码</text></view>
+          <text class="mk-row__sub">暂不可兑换</text>
+        </view>
+        <view class="mk-row" wx:if="{{workshopReason}}" aria-disabled="true">
+          <view class="mk-row__main"><text class="mk-row__title">付费模板</text></view>
+          <text class="mk-row__sub">{{workshopReason}}</text>
+        </view>
+      </view>
       <block wx:elif="{{tab === 'orders'}}">
         <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!orders.length}}" kind="empty" title="还没有通行证订单" />
         <view class="mk-group" wx:if="{{orders.length}}">

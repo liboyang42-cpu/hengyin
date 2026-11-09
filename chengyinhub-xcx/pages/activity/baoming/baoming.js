@@ -27,6 +27,7 @@ const ticketSource = require('../../../utils/ticket-source.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const quoteView = require('../../../utils/commerce/quote-view.js');
 const { hostReservationView } = require('../../../utils/commerce/host-reservation.js');
+const referral = require('../../../utils/commerce/referral.js');
 
 // 成功弹窗:停留时长 + 退场动画时长。后者必须和 wxss 里 --cy-motion-slow(350ms) 一致,
 // 短了会在动画没播完时就销毁节点(又变成凭空消失),长了会白白多停一截。
@@ -1497,6 +1498,7 @@ Page({
                 waitlistRegistrationId: waitlistOfferId ? registrationId : that.data.waitlistRegistrationId
               });
               that._regId = registrationId;
+              referral.claimAfterOrder(app, registrationId); // §18 I 旁路归因,失败不上屏
               // 重放命中已有订单时后端有意不下发 payParams(RegistrationCheckoutServiceImpl:107)。
               // 旧代码直接把这些单判成「支付参数不完整」→ onPayFail → 取消订单 → 同一 requestId
               // 再点又重放这张已取消的单,形成死循环。这里照主题自玩页的先例补一次取参数。

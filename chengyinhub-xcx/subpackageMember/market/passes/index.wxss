@@ -18,3 +18,4 @@ page { background: var(--cy-color-bg-page); }
 .mk-row__title { font-size: var(--cy-type-body); }
 .mk-row__sub { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
 .mk-row__amt { font-size: var(--cy-type-body); font-weight: 700; font-variant-numeric: tabular-nums; }
+.mk-gated { margin-top: var(--cy-space-2); }
