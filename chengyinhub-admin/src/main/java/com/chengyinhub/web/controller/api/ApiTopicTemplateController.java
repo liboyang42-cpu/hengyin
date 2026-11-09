@@ -41,6 +41,12 @@ public class ApiTopicTemplateController extends BaseController {
     @Autowired
     private ICmsTopicService cmsTopicService;
 
+    /** qx-c1 #8：/use 带 requestId 时走既有作者写回执（同号同内容重放原结果，同号异内容 409）。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.AuthorWriteReceiptService authorWriteReceipts;
+
+    static final String USE_RECEIPT_OPERATION = "TOPIC_TEMPLATE_USE";
+
     @Autowired
     private ICapabilityService capabilityService;
 
@@ -173,7 +179,7 @@ public class ApiTopicTemplateController extends BaseController {
     @Operation(summary = "使用主题模板(复制生成我的草稿)")
     @PostMapping("/use")
     public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode,
-                          String sourceContentRevisionId) {
+                          String sourceContentRevisionId, String requestId) {
         Long principalMemberId;
         try {
             principalMemberId = getAppUserId();
@@ -187,9 +193,11 @@ public class ApiTopicTemplateController extends BaseController {
         if (tid < 1) {
             return error("缺少模板ID");
         }
-        Integer isTemplate = cmsTopicService.selectTopicIsTemplate(tid);
-        if (isTemplate == null || isTemplate != 1) {
-            return error("该主题不是可用模板");
+        if (requestId == null || requestId.isBlank()) {
+            Integer isTemplate = cmsTopicService.selectTopicIsTemplate(tid);
+            if (isTemplate == null || isTemplate != 1) {
+                return error("该主题不是可用模板");
+            }
         }
         Long memberId = principalMemberId;
         try {
@@ -200,7 +208,41 @@ public class ApiTopicTemplateController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         }
-        return useTemplateForMember(tid, memberId, bindingIntent, targetCityCode, sourceContentRevisionId);
+        if (requestId == null || requestId.isBlank()) {
+            return useTemplateForMember(tid, memberId, bindingIntent, targetCityCode, sourceContentRevisionId);
+        }
+        if (authorWriteReceipts == null) {
+            return error("请求暂不可用");
+        }
+        Map<String, Object> input = new java.util.TreeMap<>();
+        input.put("id", tid);
+        input.put("scope", MerchantOperationScope.isMerchant(scope) ? "MERCHANT" : "PERSONAL");
+        input.put("memberId", memberId);
+        input.put("bindingIntent", blankToNull(bindingIntent));
+        input.put("targetCityCode", blankToNull(targetCityCode));
+        input.put("sourceContentRevisionId", blankToNull(sourceContentRevisionId));
+        Long scopedMemberId = memberId;
+        try {
+            // 模板可用性在回执内判定：原请求成功后模板再下架，同号重放仍返回原结果；首次被拒则回执回滚、不占号。
+            return authorWriteReceipts.execute(principalMemberId, USE_RECEIPT_OPERATION, requestId.trim(), input, () -> {
+                Integer isTemplate = cmsTopicService.selectTopicIsTemplate(tid);
+                if (isTemplate == null || isTemplate != 1) {
+                    return error("该主题不是可用模板");
+                }
+                return useTemplateForMember(tid, scopedMemberId, bindingIntent, targetCityCode, sourceContentRevisionId);
+            });
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode,
+                          String sourceContentRevisionId) {
+        return use(id, scope, bindingIntent, targetCityCode, sourceContentRevisionId, null);
     }
 
     public AjaxResult use(String id, String scope, String bindingIntent, String targetCityCode) {
