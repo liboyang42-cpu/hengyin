@@ -47,7 +47,7 @@ public class ApiMarketingRevenueController extends BaseController {
         List<MarketingRevenueAllocation> rows = allocationService.listByAuthor(memberId);
         List<Map<String, Object>> views = new ArrayList<>(rows.size());
         for (MarketingRevenueAllocation row : rows) {
-            views.add(project(row, allocationService.linesOf(row.getId())));
+            views.add(project(row, allocationService.linesOf(row.getId()), memberId));
         }
         return success(views);
     }
@@ -64,7 +64,7 @@ public class ApiMarketingRevenueController extends BaseController {
         if (!involves(row, lines, memberId)) {
             throw MarketingRevenueException.forbidden("NOT_PARTICIPANT", "该订单的收入分配与当前账号无关");
         }
-        return success(project(row, lines));
+        return success(project(row, lines, memberId));
     }
 
     @ExceptionHandler(MarketingRevenueException.class)
@@ -103,7 +103,7 @@ public class ApiMarketingRevenueController extends BaseController {
      * 状态用数字码 + 稳定文本，客户端按码分支。
      */
     private Map<String, Object> project(MarketingRevenueAllocation row,
-                                        List<MarketingRevenueAllocationLine> lines) {
+                                        List<MarketingRevenueAllocationLine> lines, long memberId) {
         Map<String, Object> view = new LinkedHashMap<>();
         view.put("allocationId", row.getId());
         view.put("orderType", row.getOrderType());
@@ -118,7 +118,9 @@ public class ApiMarketingRevenueController extends BaseController {
         view.put("ruleVersion", row.getRuleVersion());
         List<Map<String, Object>> mine = new ArrayList<>();
         for (MarketingRevenueAllocationLine line : lines) {
-            if (MarketingRevenueAllocationLine.ROLE_PLATFORM.equals(line.getLineRole())) {
+            if (MarketingRevenueAllocationLine.ROLE_PLATFORM.equals(line.getLineRole())
+                    || line.getRecipientMemberId() == null
+                    || line.getRecipientMemberId().longValue() != memberId) {
                 continue;
             }
             Map<String, Object> item = new LinkedHashMap<>();

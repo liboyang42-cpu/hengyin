@@ -110,6 +110,43 @@ class ApiMarketingRevenueControllerTest {
     }
 
     @Test
+    void myAuthorAllocationsExcludesOtherRecipientsAndUnattributedLines() {
+        doReturn(MEMBER).when(controller).getAppUserId();
+        when(service.listByAuthor(MEMBER)).thenReturn(List.of(allocation(88L, MEMBER, 9999L)));
+        when(service.linesOf(88L)).thenReturn(List.of(
+                line(MarketingRevenueAllocationLine.ROLE_AUTHOR, MEMBER, 4670L),
+                line(MarketingRevenueAllocationLine.ROLE_REFERRER, 9999L, 90000L),
+                line(MarketingRevenueAllocationLine.ROLE_AUTHOR, null, 1234L),
+                line(MarketingRevenueAllocationLine.ROLE_PLATFORM, MEMBER, 2802L)));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) controller.myAuthorAllocations().get("data");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> lines = (List<Map<String, Object>>) rows.get(0).get("lines");
+        assertEquals(1, lines.size(), "其他收款人和未知收款人不能冒充本人收入");
+        assertEquals(MarketingRevenueAllocationLine.ROLE_AUTHOR, lines.get(0).get("role"));
+        assertEquals(4670L, lines.get(0).get("amountFen"));
+    }
+
+    @Test
+    void sharerOrderSeesOnlyTheSharersOwnAllocationLine() {
+        doReturn(MEMBER).when(controller).getAppUserId();
+        when(service.getByOrder(1, 555L)).thenReturn(allocation(88L, 9999L, MEMBER));
+        when(service.linesOf(88L)).thenReturn(List.of(
+                line(MarketingRevenueAllocationLine.ROLE_AUTHOR, 9999L, 4670L),
+                line(MarketingRevenueAllocationLine.ROLE_REFERRER, MEMBER, 1868L),
+                line(MarketingRevenueAllocationLine.ROLE_PLATFORM, null, 2802L)));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> view = (Map<String, Object>) controller.orderAllocation(1, 555L).get("data");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> lines = (List<Map<String, Object>>) view.get("lines");
+        assertEquals(1, lines.size());
+        assertEquals(MarketingRevenueAllocationLine.ROLE_REFERRER, lines.get(0).get("role"));
+        assertEquals(1868L, lines.get(0).get("amountFen"));
+    }
+
+    @Test
     void missingAllocationReturnsEmptyDataNotAnError() {
         doReturn(MEMBER).when(controller).getAppUserId();
         when(service.getByOrder(1, 999L)).thenReturn(null);
