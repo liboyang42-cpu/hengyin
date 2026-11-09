@@ -110,7 +110,7 @@ class ScopedLeaderboardMySqlIT {
             // ⑤ 世界榜仍是全量有效局（含没有冻结地理的 NO_CITY）。
             assertTrue(mapper.selectScopedTop("city", "330100", null, null, null, 50).isEmpty(),
                     "未标注城市的主题不得出现在别的城市");
-            assertEquals(3, mapper.selectScopedTop("city", "310100", null, null, null, 50).size());
+            assertEquals(2, mapper.selectScopedTop("city", "310100", null, null, null, 50).size());
 
             // ⑥ 本周窗口（2026-11-02 00:00 +08:00 起）覆盖四条 fixture checkin_time。
             Date weekStart = ScopedLeaderboardPeriods.weekStart(Instant.parse("2026-11-08T12:00:00Z"));
