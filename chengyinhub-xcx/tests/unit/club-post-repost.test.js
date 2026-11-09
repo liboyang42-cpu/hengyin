@@ -165,7 +165,8 @@ test('接入:俱乐部详情 / 俱乐部 tab 能转发,商家合作页只显示�
   const relation = read('pages/merchant/relation/index.wxml')
   assert.match(relation, /<cy-post-card[^>]*wx:key="feedKey"/)
   assert.doesNotMatch(relation, /show-repost/)
-  assert.match(read('pages/merchant/relation/index.js'), /clubPostRepost\.mapClubFeedRows\(rows,/)
+  // 走查 v2 W2-17:商家「发现」与玩家发现页同一条全站流(只出原帖),映射同一份 discover-feed
+  assert.match(read('pages/merchant/relation/index.js'), /res\.data\.rows\.map\(discoverFeed\.normalizeClubPost\)/)
 })
 
 test('俱乐部详情分页:转发条目不算页深也不进游标(它的 id 是原帖的)', () => {

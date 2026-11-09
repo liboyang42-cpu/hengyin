@@ -6,9 +6,9 @@ const { ensureSession } = require('../utils/session/ensure-session.js'); const {
 // CU-M-61:品类名取法与发现页共用一份(utils/category-icon.js),两页不再各写一套。
 const { firstCategoryName } = require('../../../utils/category-icon.js');
 // 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
-const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
-const { decodeDisplayText } = require('../../../utils/display-text.js');
-const clubPostRepost = require('../../../utils/club-post-repost.js');
+const discoverFeed = require('../../../utils/discover-feed.js');
+const postFeedActions = require('../../../utils/post-feed-actions.js'); const toast = require('../../../utils/toast.js');
+const FEED_PAGE_SIZE = 20;
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 
 function textOrDash(value, fallback) {
@@ -92,7 +92,7 @@ Page({
     feedSlow: false,     // 加载超过 400ms 才显示骨架,避免闪屏
     feedError: '',
     feedEmptyTitle: '还没有帖文',
-    feedEmptySub: '',
+    // W2-17:全站流空态只写标题,不再有「合作过的俱乐部」副行
     // 从项目详情「找俱乐部」进来时带着主题:一路带到俱乐部主页,
     // 在那儿发起合作时主题已经定了,不用再选一遍
     topicId: '',
@@ -235,12 +235,12 @@ Page({
     });
   },
 
-  // 帖子流:范围由后端 /api/club/post/feed 按身份判死(商家看谈成过的俱乐部)。
-  // 回到本页(如从俱乐部返回)不重拉也不换 tab;有旧内容时刷新失败保留旧内容。
-  loadFeed() {
+  // 走查 v2 W2-17(业主):「合作」改「发现」,帖文看全站 —— 与玩家发现页同一条 scope=all 全站流,商家可点赞、评论。
+  // 回到本页(如从俱乐部返回)不重拉也不换 tab;有旧内容时刷新失败保留旧内容。loadMore 时 beforeId 取上一页最后一条。
+  loadFeed(loadMore) {
     if (this._destroyed || this._feedLoading) return;
-    const that = this;
-    const hasSnapshot = ['ready', 'empty', 'stale-error'].indexOf(this.data.feedState) >= 0;
+    const that = this, more = loadMore === true;
+    const hasSnapshot = more || ['ready', 'empty', 'stale-error'].indexOf(this.data.feedState) >= 0;
     const requestId = (this._feedRequestId || 0) + 1;
     this._feedRequestId = requestId;
     this._feedLoading = true;
@@ -255,50 +255,39 @@ Page({
     function fail(res) {
       if (!isCurrent()) return;
       finish();
-      that.setData({
-        feedState: hasSnapshot ? 'stale-error' : 'error',
-        feedSlow: false,
-        feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试'),
-      });
+      if (more) return;   // 翻页失败不出错误文案,游标不动,下次触底重试(与玩家发现页同口径)
+      that.setData({ feedState: hasSnapshot ? 'stale-error' : 'error', feedSlow: false,
+        feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试') });
     }
+    const body = { scope: 'all', limit: FEED_PAGE_SIZE };
+    if (more && this._feedCursor) body.beforeId = this._feedCursor;
     app.sendRequest({
       hideLoading: true, silentError: true,
       url: '/api/club/post/feed', method: 'POST',
-      data: JSON.stringify({ limit: 20 }),
+      data: JSON.stringify(body),
       header: { 'Content-Type': 'application/json' },
       success(res) {
         if (!isCurrent()) return;
         if (!res || (res.code != 200 && res.code != '200') || !isRecord(res.data) || !isRecordList(res.data.rows)
-            || typeof res.data.clubCount !== 'number' || !Number.isFinite(res.data.clubCount)
-            || res.data.clubCount < 0) return fail(res);
-        const rows = res.data.rows;
-        const noClub = res.data.clubCount === 0;
+            || typeof res.data.hasMore !== 'boolean') return fail(res);
+        const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
         finish();
-        that.setData({
-          // dw29 L8:转发条目摊平成「原帖 + repostBy」,映射与俱乐部页同一份
-          feed: clubPostRepost.mapClubFeedRows(rows, function (p) {
-            const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
-            return Object.assign({}, p, {
-              memberNickname: p.nickname,
-              memberAvatar: p.avatar,
-              contents: decodeDisplayText(p.content),
-              picList: String(p.images || '').split(/[;,]/).filter(Boolean).slice(0, 3),
-              formattedCreateTime: String(p.createTime || '').slice(5, 16),
-              isCompletionShare: isCompletedShare(ref),
-              hasPlayCover: hasFeedPlayCover(ref),
-            });
-          }),
-          feedState: rows.length ? 'ready' : 'empty',
-          feedSlow: false,
-          feedError: '',
-          feedEmptyTitle: noClub ? '这里还没有帖文' : '还没有帖文',
-          feedEmptySub: noClub
-            ? '帖文来自你合作过的俱乐部，谈成合作后即可看到'
-            : '你合作过的俱乐部还没有人发布帖文',
-        });
+        that._feedHasMore = res.data.hasMore;
+        if (rows.length) that._feedCursor = rows[rows.length - 1].id;
+        const feed = more ? that.data.feed.concat(rows) : rows;
+        that.setData({ feed: feed, feedState: feed.length ? 'ready' : 'empty', feedSlow: false, feedError: '' });
       },
       fail,
     });
+  },
+
+  onReachBottom() {
+    if (this.data.activeTab === 'feed' && this._feedHasMore) this.loadFeed(true);
+  },
+
+  // 点赞与玩家发现页同一套(utils/post-feed-actions):先改卡面,失败回滚并原样显示后端提示
+  onLikePost(e) {
+    postFeedActions.toggleLike({ page: this, listKey: 'feed', index: e.detail && e.detail.index, app: app, toast: toast, apply: (next) => this.setData({ feed: next }) });
   },
 
   onPostTap(e) {
