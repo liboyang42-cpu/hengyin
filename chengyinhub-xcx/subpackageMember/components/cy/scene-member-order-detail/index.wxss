@@ -529,3 +529,8 @@
 .hero-text { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (40ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (40ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 .sec-title { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (100ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (100ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 .ocard { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (120ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (120ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+
+/* U07-04 退款进度:沿用 .ocard/.orow;只给阶段一个语义色,不新起卡片样式 */
+.settle-stage--pending { color: var(--cy-color-status-warning); }
+.settle-stage--done { color: var(--cy-color-text-primary); }
+.settle-stage--muted { color: var(--cy-color-text-secondary); }

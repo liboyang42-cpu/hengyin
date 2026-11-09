@@ -1,0 +1,17 @@
+<!-- §17.2 领取礼品:领取只把原权益指向本人,不新建订单;失败按原因分别说,不显示他人订单 -->
+<view class="theme-dark gf"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="gf__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar title="领取礼品" plain custom-back bind:back="goBack" />
+    <cy-empty wx:if="{{state === 'ready'}}" fill size="lg" kind="empty" title="好友送你一份通行证" />
+    <cy-empty wx:elif="{{state === 'claimed'}}" fill size="lg" kind="success" title="已领取" />
+    <cy-empty wx:elif="{{state === 'failed'}}" fill size="lg" kind="error" title="{{reason}}" />
+    <view class="gf__bar" wx:if="{{state === 'ready' || state === 'claimed' || state === 'unknown'}}">
+      <view class="gf__note" wx:if="{{state === 'unknown'}}">结果待确认，再点一次查询原结果</view>
+      <cy-btn wx:if="{{state !== 'claimed'}}" variant="primary" loading="{{claiming}}" disabled="{{claiming}}" bindtap="claim">领取</cy-btn>
+      <cy-btn wx:else variant="primary" bindtap="goOrder">查看</cy-btn>
+    </view>
+  </view>
+</view>

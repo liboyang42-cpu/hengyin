@@ -1,0 +1,45 @@
+<!-- §17.1/§17.3/§17.4/P6 通行证详情:内容、期限、受益人只读服务端;购买按钮只在报价给出可用支付方式时出现 -->
+<view class="theme-dark mp"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="mp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" />
+    <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="{{errorTitle}}" retry="重试" bind:retry="load" />
+    <block wx:else>
+      <cy-page-title title="{{card.name}}" safe-top="{{false}}" />
+      <view class="mp__body">
+        <view class="mp-group">
+          <view class="mp-row" wx:if="{{card.kind}}"><text class="mp-row__k">类型</text><text class="mp-row__v">{{card.kind}}</text></view>
+          <view class="mp-row" wx:if="{{card.city}}"><text class="mp-row__k">城市</text><text class="mp-row__v">{{card.city}}</text></view>
+          <view class="mp-row" wx:if="{{card.validity}}"><text class="mp-row__k">有效期</text><text class="mp-row__v">{{card.validity}}</text></view>
+          <view class="mp-row" wx:if="{{card.seats}}"><text class="mp-row__k">包含人数</text><text class="mp-row__v">{{card.seats}}</text></view>
+          <view class="mp-row" wx:if="{{forGift || !card.seats}}"><text class="mp-row__k">使用人</text><text class="mp-row__v">{{forGift ? '领取礼品的好友' : '你本人'}}</text></view>
+          <view class="mp-row" wx:if="{{card.price}}"><text class="mp-row__k">价格</text><text class="mp-row__v mp-row__v--strong">{{card.price}}</text></view>
+        </view>
+        <text class="mp-sec" wx:if="{{card.topics.length}}">可游玩作品</text>
+        <view class="mp-group" wx:if="{{card.topics.length}}">
+          <view class="mp-row" wx:for="{{card.topics}}" wx:key="*this"><text class="mp-row__k mp-row__k--main">{{item}}</text></view>
+        </view>
+        <cy-tabs wx:if="{{card.giftAllowed}}" class="mp-for" variant="chip" tabs="{{forTabs}}" active="{{forGift ? 'gift' : 'self'}}" bind:change="onFor" />
+      </view>
+      <view class="mp-bar">
+        <cy-inline-error wx:if="{{buyError}}" kind="data" title="{{buyError}}" />
+        <view class="mp-bar__reason" wx:if="{{buy.reason && buy.state !== 'buyable'}}">{{buy.reason}}</view>
+        <view class="mp-bar__note" wx:elif="{{buy.reason}}">{{buy.reason}}</view>
+        <cy-btn wx:if="{{buy.state === 'checkout'}}" variant="primary" bindtap="goCheckout">去报名</cy-btn>
+        <block wx:if="{{buy.state === 'buyable'}}">
+          <cy-btn wx:for="{{buy.payModes}}" wx:key="mode" variant="{{index === 0 ? 'primary' : 'secondary'}}"
+                  loading="{{buying && buyingMode === item.mode}}" disabled="{{buying}}"
+                  data-mode="{{item.mode}}" bindtap="onBuy">{{item.label}}</cy-btn>
+        </block>
+      </view>
+    </block>
+  </view>
+  <!-- 礼品领取码只在购买成功回包里出现一次:发给好友后由对方领取 -->
+  <cy-sheet show="{{giftSheet}}" title="礼品已买好" footer bind:close="closeGiftSheet">
+    <view class="mp-gift">领取前你和好友都不能游玩</view>
+    <button slot="footer" class="mp-share" open-type="share" aria-label="发给好友">发给好友</button>
+  </cy-sheet>
+</view>

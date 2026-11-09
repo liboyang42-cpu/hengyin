@@ -25,6 +25,9 @@ const { isValidMobile } = require('../../../utils/form-state.js');
 const indexFormat = require('../../../utils/index/index-format.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
+const quoteView = require('../utils/quote-view.js');
+const { hostReservationView } = require('../utils/host-reservation.js');
+const referral = require('../../../utils/commerce/referral.js');
 
 // 成功弹窗:停留时长 + 退场动画时长。后者必须和 wxss 里 --cy-motion-slow(350ms) 一致,
 // 短了会在动画没播完时就销毁节点(又变成凭空消失),长了会白白多停一截。
@@ -119,7 +122,9 @@ function waitlistCanJoin(data) {
 }
 
 const WAITLIST_STATES = Object.freeze([
-  'NONE', 'WAITING', 'OFFERED', 'CLAIMED', 'CONVERTED', 'CANCELLED', 'EXPIRED'
+  'NONE', 'WAITING', 'OFFERED', 'CLAIMED', 'CONVERTED', 'CANCELLED', 'EXPIRED',
+  // §27.6 主持预约系列:申请中/未接受
+  'REQUESTED', 'REJECTED'
 ]);
 const WAITLIST_ELIGIBILITIES = Object.freeze([
   'NO_SERIES', 'WAITLIST_CLOSED', 'NOT_MEMBER', 'ALREADY_REGISTERED', 'ELIGIBLE', 'BLOCKED'
@@ -132,7 +137,9 @@ function normalizeWaitlistStatus(value) {
   if (!WAITLIST_STATES.includes(state) || !WAITLIST_ELIGIBILITIES.includes(eligibility)
       || typeof value.waitlistJoinAllowed !== 'boolean') return null;
   const joinAllowed = value.waitlistJoinAllowed === true;
-  if (joinAllowed !== (eligibility === 'ELIGIBLE')) return null;
+  // 只能在 ELIGIBLE 时允许加入;ELIGIBLE 但不允许加入是服务端的合法形态
+  // (需先预约主持的系列、已关闭系列里仍在队列的条目),不能当作读取失败。
+  if (joinAllowed && eligibility !== 'ELIGIBLE') return null;
   if (state !== 'NONE' && (!Number.isInteger(Number(value.id)) || Number(value.id) <= 0)) return null;
   if ((state === 'CLAIMED' || state === 'CONVERTED')
       && (!Number.isInteger(Number(value.registrationId)) || Number(value.registrationId) <= 0)) return null;
@@ -273,6 +280,11 @@ Page({
     quoteReady: false,
     // P-05:服务端报价拒绝的原因(如该主题暂不支持在线支付);非空即这场现在不能报名
     quoteRefusal: '',
+    // U07-01 交付说明 / §17.6 报价分项 / §17.5 促销目录:全部只取服务端回包
+    deliveryRows: [],
+    hostResv: { show: false, required: false, text: '', canRequest: false, canCancel: false, awaitingPayment: false },
+    mkt: { show: false, listAmount: null, adjustments: [], coveredByPass: false, rewardCoupon: null },
+    promoCatalog: { show: false, offers: [], promotions: [], tiers: [] },
     orderInfo: null,
     isPaying: false,
     paymentReady: false,
@@ -330,6 +342,7 @@ Page({
     that.getUserInfo();
     // 获取场次详情
     that.getActivityInfo();
+    that.loadPromotionCatalog();
 
     // 获取参与人信息列表
     that.getAddressList();
@@ -949,7 +962,8 @@ Page({
           waitlistOfferId: offerId,
           waitlistOfferToken: offerToken,
           waitlistRegistrationId: entry && entry.registrationId || null,
-          waitlistExpiresText: activeOffer ? formatOfferDeadline(entry.offerExpiresAt) : ''
+          waitlistExpiresText: activeOffer ? formatOfferDeadline(entry.offerExpiresAt) : '',
+          hostResv: hostReservationView(entry, that.data.ticketSoldOut)
         }, function () {
           that.refreshPaymentState();
           that.scheduleWaitlistOfferExpiry();
@@ -1037,6 +1051,31 @@ Page({
     });
   },
 
+  /** §27.6 请求主持:不传身份,不当作已持位;结果以重新读取的 reservationState 为准 */
+  requestHost() {
+    const that = this;
+    const ticket = that.data.selectedTicket;
+    if (that.data.waitlistLoading || !ticket || !ticket.id) return;
+    that.setData({ waitlistLoading: true });
+    app.sendRequest({
+      url: '/api/club/event-ops/host/request',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      hideLoading: true,
+      autoErrorToast: false,
+      data: JSON.stringify({ activityId: that.data.activityId, ticketId: ticket.id }),
+      success(res) {
+        that.setData({ waitlistLoading: false });
+        if (!res || (res.code != 200 && res.code != '200')) toast((res && res.msg) || '主持预约暂不可用');
+        that.loadWaitlistStatus();
+      },
+      fail() {
+        that.setData({ waitlistLoading: false });
+        that.loadWaitlistStatus();
+      }
+    });
+  },
+
   cancelWaitlist() {
     const that = this;
     const ticket = that.data.selectedTicket;
@@ -1101,6 +1140,39 @@ Page({
   },
 
   /**
+   * 报价回包里与下单绑定的事实:quoteSign / marketingSign 只存实例属性(不展示),
+   * 交付说明、优惠分项进视图。签名换了且还没建出订单 ⇒ 作废旧动作号(§17.6)。
+   */
+  _applyQuoteFacts(data) {
+    const sign = (data && data.quoteSign) || '';
+    if (quoteView.shouldRotateRequestId(this._reqIdQuoteSign, sign, !!this._regId)) this._reqId = null;
+    this._quoteSign = sign;
+    this._marketingSign = (data && data.marketingSign) || null;
+    const delivery = quoteView.deliveryRows(data && data.delivery);
+    this.setData({ deliveryRows: delivery.rows, mkt: quoteView.marketingView(data) });
+  },
+
+  /** §17.5:本场促销目录(组合包/限时/人数阶梯)。读取失败或全空 ⇒ 整块不渲染。 */
+  loadPromotionCatalog() {
+    const that = this;
+    const activityId = that.data.activityId;
+    if (!activityId || !app.sendRequest) return;
+    app.sendRequest({
+      url: '/api/marketing/promotions/catalog',
+      method: 'GET',
+      data: { ownerType: 2, ownerId: activityId },
+      success: function (res) {
+        if (String(that.data.activityId) !== String(activityId)) return;
+        const ok = res && (res.code == 200 || res.code == '200') && res.data;
+        that.setData({ promoCatalog: ok ? quoteView.catalogView(res.data) : quoteView.catalogView(null) });
+      },
+      fail: function () {
+        that.setData({ promoCatalog: quoteView.catalogView(null) });
+      }
+    });
+  },
+
+  /**
    * 服务端报价(M0-1):用后端 /api/registration/quote 覆盖本地估算,保证「展示金额 = 微信实付」。
    * 返回的 quoteSign 存 that._quoteSign,下单时回传;后端重算不一致返回 409。
    */
@@ -1137,7 +1209,7 @@ Page({
           const pay = Number(res.data.payAmount || 0);
           const pd = Number(res.data.pointsDeductYuan || 0);
           const clubDiscount = Number(res.data.memberDiscountYuan || 0);
-          that._quoteSign = res.data.quoteSign || '';
+          that._applyQuoteFacts(res.data);
           // 1-22 附注(拍板 2026-09-19 第6条):下单前退款性由后端唯一场次钟判定,null=旧 jar 未下发,
           // 前端零动作 —— 不许在这里自己按 startDate 减 24h 造第二口钟。
           const refundableNow = res.data.refundableNow === true || res.data.refundableNow === false
@@ -1158,7 +1230,9 @@ Page({
             // 第十二轮 k6(p1 N-1):服务端说这单不能抵积分(自由探索、可抵 0)就收起整行;没下发(旧 jar)保持原样。
             pointsUsable: res.data.pointsUsable === false ? false
               : (res.data.pointsUsable === true ? true : that.data.pointsUsable),
-            paymentReady: pay <= 0 ? true : that.data.paymentReady
+            // U07-02:应付 > 0 而服务端说 JSAPI 通道未就绪 ⇒ 与支付就绪检查同一结论,不开放付款
+            paymentReady: pay <= 0 ? true
+              : (quoteView.paymentChannelState(res.data) === 'unavailable' ? false : that.data.paymentReady)
           }, () => that.refreshPaymentState());
           that._quoteRefundableNow = refundableNow;
           // D2:探店日等票种服务端关闭积分抵扣 —— 用户开了开关而权威报价回 0,
@@ -1168,7 +1242,7 @@ Page({
             that.setData({ useDiscount: false, pointsUsable: false });
             toast(noPoints ? '暂无可用积分' : '该票不支持积分抵扣');   // T32:0 积分用户的真实原因是没积分
           }
-          if (pay > 0) that.checkPaymentReadiness();
+          if (pay > 0 && quoteView.paymentChannelState(res.data) !== 'unavailable') that.checkPaymentReadiness();
         } else if (res && res.msg) {
           // F-W1-05:报价被拒(如主题尚未开售)要说出真实原因,不能停在「重新检查支付服务」。
           // P-05:报价拒绝是这场当前不能报名的真实原因,记下来并关掉付款按钮,
@@ -1329,7 +1403,9 @@ Page({
     // CU-C-32:履约窗(场次)已过与「报名已截止」同归这条闸 —— 两者都意味着这一场不能报。
     const signupClosed = (ticketSignupClosed(data.selectedTicket, now) || ticketWindowPassed(data.selectedTicket, now))
       && !activeOffer;
-    const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed
+    // §27.6:需预约主持的场次,只有主持接受后拿到服务端名额才能下单
+    const hostBlocked = !!(data.hostResv && data.hostResv.required) && !activeOffer;
+    const canPay = data.pageState === 'ready' && !!data.selectedTicket && !signupClosed && !hostBlocked
       && !data.quoteRefusal
       && data.hostShareChecked && !!data.selectedAddress
       && !data.merchantClosed
@@ -1357,7 +1433,7 @@ Page({
     const verifyRegistrationPayment = createRegistrationPaymentVerifier(app);
     that._workflow = createCheckoutWorkflow({
       createOrder: function (payload, cb) {
-        const { activityId, selectedTicket, useDiscount, userInfo, quoteSign, requestId,
+        const { activityId, selectedTicket, useDiscount, userInfo, quoteSign, marketingSign, requestId,
           waitlistOfferId, waitlistOfferToken } = payload;
         var data = {
           ownerType: 2,
@@ -1368,6 +1444,8 @@ Page({
           email: userInfo.email || '',
           isUsePoint: useDiscount ? 1 : 0,
           quoteSign: quoteSign || '',
+          // §17.6:促销报价指纹原样回传;促销生效而不带它,后端一律 409
+          marketingSign: marketingSign || null,
           requestId: requestId,
           waitlistOfferId: waitlistOfferId || null,
           waitlistOfferToken: waitlistOfferToken || null
@@ -1400,10 +1478,12 @@ Page({
               return;
             }
             if (res.code == 409 || res.code == '409') {
+              // §17.6:两种 409 分开提示,都重新报价;报价签名变化后由 _applyQuoteFacts 换新动作号
+              const conflict = quoteView.classifyCreateConflict(res) || 'price';
               that.setData({ isPaying: false }, () => that.refreshPaymentState());
-              app.tips('价格已更新，请重新确认');
+              app.tips(quoteView.CONFLICT_TEXT[conflict]);
               that.refreshQuote();
-              cb({ ok: false, msg: 'price_changed' });
+              cb({ ok: false, msg: 'price_changed', conflict: conflict });
               return;
             }
             const registrationId = res && res.data
@@ -1418,6 +1498,7 @@ Page({
                 waitlistRegistrationId: waitlistOfferId ? registrationId : that.data.waitlistRegistrationId
               });
               that._regId = registrationId;
+              referral.claimAfterOrder(app, registrationId); // §18 I 旁路归因,失败不上屏
               // 重放命中已有订单时后端有意不下发 payParams(RegistrationCheckoutServiceImpl:107)。
               // 旧代码直接把这些单判成「支付参数不完整」→ onPayFail → 取消订单 → 同一 requestId
               // 再点又重放这张已取消的单,形成死循环。这里照主题自玩页的先例补一次取参数。
@@ -1736,7 +1817,7 @@ Page({
         }),
         success: function (res) {
           if (res && (res.code == 200 || res.code == '200') && res.data) {
-            that._quoteSign = res.data.quoteSign || '';
+            that._applyQuoteFacts(res.data);
             that._quoteRefundableNow = res.data.refundableNow === true || res.data.refundableNow === false
               ? res.data.refundableNow : null;
             that._quoteRefundPercentNow = Number.isFinite(Number(res.data.refundPercentNow))
@@ -1762,7 +1843,10 @@ Page({
     that._quoteRetried = false;
 
     // BE-03 幂等键
-    if (!that._reqId) that._reqId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    if (!that._reqId) {
+      that._reqId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+      that._reqIdQuoteSign = that._quoteSign || '';
+    }
 
     const payload = {
       activityId: that.data.activityId,
@@ -1770,6 +1854,7 @@ Page({
       useDiscount: that.data.useDiscount,
       userInfo: that.data.userInfo,
       quoteSign: that._quoteSign || '',
+      marketingSign: that._marketingSign || null,
       requestId: that._reqId,
       waitlistOfferId: that.data.waitlistOfferId || null,
       waitlistOfferToken: that.data.waitlistOfferToken || null
@@ -1791,7 +1876,8 @@ Page({
           res = { msg: that._rebuildFallbackMessage || ORDER_EXPIRED_USER_MESSAGE };
         }
         const priceChanged = res && res.msg === 'price_changed';
-        const message = priceChanged ? '价格已更新，请重新确认' : ((res && res.msg) || '报名失败，请重试');
+        const message = priceChanged ? quoteView.CONFLICT_TEXT[res.conflict || 'price']
+          : ((res && res.msg) || '报名失败，请重试');
         that.setData({ submitError: message });
         if (!priceChanged) {
           app.tips(message);

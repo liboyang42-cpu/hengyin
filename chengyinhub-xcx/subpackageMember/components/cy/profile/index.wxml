@@ -209,6 +209,10 @@
         </scroll-view>
         </block>
 
+        <!-- qx-b5 §18 A/B:视频悬赏是创作者作品的推广投稿,跟在「我的项目」之后 -->
+        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
+          <cy-cell title="视频悬赏" description="" hairline="{{false}}" bind:tap="goVideoBounty" />
+        </view>
         <!-- 我的资产(2026-08-08 用户定):与「我的订单」「我的项目」并列的第三段。
              资金相关全部收进这里,详情走账户收益页(余额/收益明细/分润/提现/提现记录都在那)。
              余额直接读 userInfo.balance,零新增请求;整段在 isSelf 分支内,别人主页看不到。 -->
@@ -228,6 +232,10 @@
 
         <!-- 商家 Owner 与员工共用的经营身份入口。放在资产之后：资产回答“钱在哪里”，
              团队回答“谁能经营”；权限与主题只认 access/me，不拿全局 role/userType 猜。 -->
+        <!-- qx-b5 §17.1/§17.2/P6:通行证与礼品是本人购买记录,归在我的资产之下(P-53 不进「探索与更多」) -->
+        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
+          <cy-cell title="通行证与礼品" description="" hairline="{{false}}" bind:tap="goPasses" />
+        </view>
         <view class="pc-team-entry" wx:if="{{isClubLeader}}">
           <cy-cell icon="/images/icon_tab_workbench.svg"
                    title="俱乐部工作台"

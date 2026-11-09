@@ -32,7 +32,7 @@ test('订单详情接线:取消确认用这份文案,支付明细出「退款」
   const wxml = fs.readFileSync(path.join(DETAIL, 'index.wxml'), 'utf8');
   assert.match(js, /dangerParams: \{ deadline: refundAmount\.cancelConfirmDeadline\(info\) \}/);
   assert.match(js, /info\.refundAmountShown = refundAmount\.refundedAmount\(info\)/);
-  assert.match(wxml, /wx:if="\{\{info\.refundAmountShown\}\}"[\s\S]*?退款[\s\S]*?money\.amount2?\(info\.refundAmountShown\)/);
+  assert.match(wxml, /wx:if="\{\{info\.refundAmountShown && !info\.settleView\.show\}\}"[\s\S]*?退款[\s\S]*?money\.amount2?\(info\.refundAmountShown\)/);
 });
 
 test('订单列表与参与详情的取消确认同样写明退回金额(第十轮 f1 F7 补全)', () => {
