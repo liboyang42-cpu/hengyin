@@ -1294,7 +1294,7 @@
       "id": "undeclared-is-unconfirmed-not-unsupported",
       "platform": "miniprogram",
       "clientVersion": "1.0.0",
-      "supportedCapabilities": "",
+      "supportedCapabilities": null,
       "expect": {
        "declared": false,
        "supported": null,
@@ -1303,6 +1303,22 @@
       }
      },
      {
+      "id": "explicit-empty-declaration-supports-no-required-capabilities",
+      "platform": "ios",
+      "clientVersion": "1.0.0",
+      "supportedCapabilities": "",
+      "expect": {
+        "declared": true,
+        "supported": false,
+        "source": "DECLARED",
+        "missingKeys": [
+          "answer.text", "chapter.blocks", "chapter.blocks.image", "chapter.blocks.story",
+          "game.hangman", "game.qa", "media.image", "route.branch", "sensor.compass",
+          "station.list", "theme.runtime"
+        ]
+      }
+    },
+    {
       "id": "malformed-declaration-is-unconfirmed",
       "platform": "ios",
       "clientVersion": "1.0.0",

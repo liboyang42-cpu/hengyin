@@ -37,7 +37,7 @@ class ClubEventOpsMapperContractTest {
         assertTrue(xml.contains("o.occurrence_at &gt;= #{now}"));
         assertTrue(xml.contains("ifnull(a.is_settlement, 0) &lt;&gt; 0"));
         assertTrue(xml.contains("r.owner_type = 2 and r.owner_id = #{activityId}"));
-        assertTrue(xml.contains("w.activity_id = #{activityId} and w.state in ('WAITING','OFFERED','CLAIMED')"));
+        assertTrue(xml.contains("w.activity_id = #{activityId} and w.state in ('REQUESTED','WAITING','OFFERED','CLAIMED')"));
         assertTrue(xml.contains("status = 'CANCELLED'"));
     }
 

@@ -37,6 +37,7 @@ class MarketingCashOriginalRefundMySqlIT {
     private DataSourceTransactionManager manager;
     private TransactionTemplate tx;
     private MarketingProductOrderMapper orders;
+    private CmsTopicMapper topics;
     private CmsRegistrationMapper registrations;
     private RefundApplicationMapper refundRows;
     private CmsRegistrationPaymentFactMapper ordinaryReceipts;
@@ -62,6 +63,7 @@ class MarketingCashOriginalRefundMySqlIT {
         P0AcceptanceSchema.baseTables(db,"cms_topic","cms_activity","cms_registration","refund_application","player_node_progress");
         // Existing current-topic projection, confined to this class's UUID scratch schema.
         db.execute("ALTER TABLE cms_topic ADD COLUMN beta_flag TINYINT NOT NULL DEFAULT 0,"
+                + " ADD COLUMN city_code VARCHAR(32), ADD COLUMN content_contract_json JSON,"
                 + " ADD COLUMN circle_theme_code VARCHAR(24), ADD COLUMN source_template_topic_id BIGINT,"
                 + " ADD COLUMN complete_rule_json JSON, ADD COLUMN route_mode VARCHAR(20) DEFAULT 'LINEAR',"
                 + " ADD COLUMN route_graph_json JSON, ADD COLUMN config_version BIGINT DEFAULT 1,"
@@ -89,7 +91,7 @@ class MarketingCashOriginalRefundMySqlIT {
         registrations = sql.getMapper(CmsRegistrationMapper.class);
         refundRows = sql.getMapper(RefundApplicationMapper.class);
         ordinaryReceipts = sql.getMapper(CmsRegistrationPaymentFactMapper.class);
-        var topics = sql.getMapper(CmsTopicMapper.class);
+        topics = sql.getMapper(CmsTopicMapper.class);
         var activities = sql.getMapper(CmsActivityMapper.class);
         var products = sql.getMapper(MarketingProductMapper.class);
         var gifts = sql.getMapper(GiftEntitlementMapper.class);
@@ -148,6 +150,9 @@ class MarketingCashOriginalRefundMySqlIT {
         db.update("INSERT INTO cms_topic(id,member_id,name,self_play_price,fee_platform_rate,start_date,end_date)"
                 + " VALUES(41,7,'one',40,0.1,DATE_ADD(NOW(),INTERVAL 1 DAY),DATE_ADD(NOW(),INTERVAL 2 DAY)),"
                 + "(42,7,'two',60,0.1,DATE_ADD(NOW(),INTERVAL 1 DAY),DATE_ADD(NOW(),INTERVAL 2 DAY))");
+        // Read through the purchase mapper so an incomplete scratch projection cannot masquerade as a missing price.
+        assertEquals(money(4000), topics.selectCmsTopicById(41L).getSelfPlayPrice());
+        assertEquals(money(6000), topics.selectCmsTopicById(42L).getSelfPlayPrice());
         db.update("INSERT INTO marketing_product(id,product_code,product_name,product_kind,purchase_kind,cash_price,"
                 + "validity_kind,seat_count,gift_allowed,status,terms_version,revision,create_time,update_time)"
                 + " VALUES(1,'cash-chain','bundle',2,2,100,0,1,1,1,'test-v1',1,NOW(),NOW())");
@@ -162,6 +167,8 @@ class MarketingCashOriginalRefundMySqlIT {
         boolean gift = test.getTestMethod().orElseThrow().getName().startsWith("gift");
         if (gift) { order.setFulfillmentKind(2); order.setGiftRecipientMemberId(9L); }
         assertEquals(1,orders.insert(order));
+        assertEquals(MarketingProductOrder.STATUS_PENDING_CASH,orders.selectByOrderNo(ORDER).getStatus());
+        assertEquals(0,count("cms_registration"));
         db.update("INSERT INTO wx_pay_order_intent(mchid,out_trade_no,business_out_trade_no,biz_type,biz_id,attempt_no,appid,trade_type,"
                 + "currency,total_fen,payer_openid,request_description,notify_url,request_hash)"
                 + " VALUES('merchant','WX-CASH-10',?,'MARKETING',?,1,'appid','JSAPI','CNY',10000,'fixture','fixture','https://example.invalid',?)",
@@ -180,7 +187,21 @@ class MarketingCashOriginalRefundMySqlIT {
         assertNotNull(rows); assertEquals(2,rows.size());
         first = rows.stream().filter(r -> Long.valueOf(41).equals(r.getTopicId())).findFirst().orElseThrow().getId();
         second = rows.stream().filter(r -> Long.valueOf(42).equals(r.getTopicId())).findFirst().orElseThrow().getId();
-        assertEquals(paymentRef.id(),orders.selectByOrderNo(ORDER).getPaymentFactId().longValue());
+        var paid = orders.selectByOrderNo(ORDER);
+        assertEquals(paymentRef.id(),paid.getPaymentFactId().longValue());
+        assertEquals(MarketingProductOrder.STATUS_PAID,paid.getStatus());
+        assertEquals(MarketingProductOrder.GRANT_DONE,paid.getFulfillmentState());
+        var frozen = orders.selectFrozenLines(ORDER);
+        assertEquals(2,frozen.size());
+        for (var line : frozen) {
+            BigDecimal expected = Long.valueOf(41).equals(line.getTopicId()) ? money(4000) : money(6000);
+            assertEquals(expected,line.getListAmount());
+            assertEquals(expected,line.getPayableAmount());
+        }
+        assertEquals(money(10000),frozen.stream().map(MarketingProductOrderLine::getPayableAmount)
+                .reduce(BigDecimal.ZERO,BigDecimal::add));
+        assertEquals(money(10000),rows.stream().map(CmsRegistration::getPayableAmount)
+                .reduce(BigDecimal.ZERO,BigDecimal::add));
         assertEquals(0,count("cms_registration_payment_fact"));
     }
 

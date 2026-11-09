@@ -264,7 +264,7 @@
     </select>
 
     <!-- OFFERED 过期即使系列随后关闭也必须先锁同一 series 并归还 hold。 -->
-    <select id="selectSeriesByActivityAnyStatusForUpdate" resultMap="seriesResult">
+    <select id="selectSeriesByActivityAnyStatusForUpdate" resultMap="seriesResult" useCache="false" flushCache="true">
         select s.id, s.club_id, s.topic_id, s.recurrence_type, s.timezone,
                s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.host_reservation_required, s.offer_minutes,
                s.status, s.version, s.created_by_member_id, s.request_id, s.request_fingerprint,
@@ -321,7 +321,7 @@
     </select>
 
     <!-- 仅供新 OFFERED 准入；不收窄取消/过期释放共用的 policy 查询。 -->
-    <select id="selectPromotableActivityForUpdate" resultType="java.lang.Long">
+    <select id="selectPromotableActivityForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
         select id from cms_activity
         where id = #{activityId} and club_id = #{clubId}
           and status = 1 and publish_status = 1 and del_flag = 0

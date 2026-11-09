@@ -45,7 +45,9 @@ class GameplayReskinMySqlIT {
                     ddl.execute(platform.substring(offset, end));
                 }
             }
-            ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
+            ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql",
+                    "sql/migration_20261026_theme_attribute_registry_version.sql", "sql/migration_preset_draft_source_20261108.sql",
+                    "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
                     "sql/migration_club_direct_merchant_receivable_20261004.sql",
                     "sql/migration_20261012_app_media_asset.sql",
                     "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql",

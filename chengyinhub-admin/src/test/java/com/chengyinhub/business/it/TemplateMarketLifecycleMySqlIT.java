@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
 /** 真实 MySQL + Mapper + Spring 事务：作者修改、审核、撤回不能相互覆盖。 */
 class TemplateMarketLifecycleMySqlIT {
     private static PooledDataSource source;
+    private static boolean scratchCreated;
     private static SqlSessionTemplate sql;
     private static DataSourceTransactionManager transactions;
     private JdbcTemplate jdbc;
@@ -48,7 +49,11 @@ class TemplateMarketLifecycleMySqlIT {
 
     @BeforeAll
     static void database() throws Exception {
-        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url("template_market"),
+        assertEquals("127.0.0.1", MybatisItDatabase.host());
+        assertTrue(MybatisItDatabase.databaseName("template_market").matches("chengyin_mybatis_template_market[A-Za-z0-9_]*"));
+        String scratchUrl = MybatisItDatabase.url("template_market");
+        scratchCreated = true;
+        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", scratchUrl,
                 MybatisItDatabase.user(), MybatisItDatabase.password());
         Configuration config = new Configuration();
         for (Class<?> type : new Class<?>[]{CmsMemberTemplate.class, CmsTemplateLibrary.class,
@@ -90,7 +95,38 @@ class TemplateMarketLifecycleMySqlIT {
     }
 
     @AfterAll
-    static void close() { if (source != null) source.forceCloseAll(); }
+    static void close() throws Exception {
+        try {
+            if (source != null) source.forceCloseAll();
+        } finally {
+            if (scratchCreated) {
+                String database = MybatisItDatabase.databaseName("template_market");
+                if (!"127.0.0.1".equals(MybatisItDatabase.host())
+                        || !database.matches("chengyin_mybatis_template_market[A-Za-z0-9_]*")) {
+                    throw new IllegalStateException("Refusing cleanup outside owned loopback scratch");
+                }
+                String adminUrl = "jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port()
+                        + "/?useSSL=false&allowPublicKeyRetrieval=true";
+                try (Connection admin = java.sql.DriverManager.getConnection(
+                        adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+                     java.sql.Statement statement = admin.createStatement()) {
+                    statement.execute("DROP DATABASE `" + database + "`");
+                }
+                try (Connection readback = java.sql.DriverManager.getConnection(
+                        adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+                     java.sql.PreparedStatement check = readback.prepareStatement(
+                             "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                    check.setString(1, database);
+                    try (java.sql.ResultSet row = check.executeQuery()) {
+                        assertTrue(row.next());
+                        assertEquals(0, row.getInt(1), "owned scratch must be absent");
+                        assertFalse(row.next());
+                    }
+                }
+                scratchCreated = false;
+            }
+        }
+    }
 
     @BeforeEach
     void services() {

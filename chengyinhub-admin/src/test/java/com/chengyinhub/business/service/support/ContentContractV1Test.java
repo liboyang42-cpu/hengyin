@@ -424,7 +424,7 @@ class ContentContractV1Test {
                         ContentCapabilityRequirements.Declaration.parse(
                                 row.path("platform").asText(),
                                 row.path("clientVersion").asText(),
-                                row.path("supportedCapabilities").asText());
+                                row.path("supportedCapabilities").asText(null));
                 JsonNode view = ContentCapabilityRequirements.compatibility(snapshot, declaration);
                 JsonNode expected = row.path("expect");
                 assertEquals(expected.path("declared").asBoolean(), view.path("declared").asBoolean(), label);

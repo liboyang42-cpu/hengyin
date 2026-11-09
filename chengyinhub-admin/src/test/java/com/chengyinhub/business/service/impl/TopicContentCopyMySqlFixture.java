@@ -76,6 +76,9 @@ final class TopicContentCopyMySqlFixture implements AutoCloseable {
         db = new JdbcTemplate(source);
         new ResourceDatabasePopulator(new ClassPathResource("it-schema/cms-topic-it-schema.sql"),
                 new ClassPathResource("it-schema/wp10-content-copy-scratch.sql")).execute(source);
+        Path preset = Paths.get("sql", "migration_preset_draft_source_20261108.sql");
+        if (!Files.exists(preset)) preset = Paths.get("chengyinhub-admin").resolve(preset);
+        new ResourceDatabasePopulator(new org.springframework.core.io.FileSystemResource(preset.toFile())).execute(source);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
