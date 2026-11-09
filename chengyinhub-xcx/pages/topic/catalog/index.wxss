@@ -1,0 +1,27 @@
+@charset "UTF-8";
+/* 结构与卡片照抄 pages/search2/result/index.wxss(深色玩家域主题大卡),筛选沿用全局 .cy-chip */
+page { display: flex; flex-direction: column; min-height: 100vh; }
+.catalog { display: flex; flex-direction: column; flex: 1; }
+.catalog-nav-spacer { flex: none; }
+.catalog-cities { display: block; margin: var(--cy-space-2) var(--cy-page-x) 0; }
+.catalog-chips { width: 100%; white-space: nowrap; }
+.catalog-chips__row { display: inline-flex; gap: var(--cy-space-2); padding: 0 var(--cy-page-x); }
+/* 药丸 64rpx,外包一层到 88rpx 触控高度 */
+.catalog-chip { min-height: 88rpx; display: flex; align-items: center; }
+.catalog .main { padding: 0 var(--cy-page-x); display: flex; flex-direction: column; flex: 1; }
+.fill-slot { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+.catalog-list { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); padding-bottom: var(--cy-space-8); }
+.catalog-more { min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+.catalog-more--act { color: var(--cy-color-text-secondary); }
+
+.result-card__tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1); margin-top: var(--cy-space-2); }
+.result-card__tag { flex: none; padding: 2rpx var(--cy-space-2); /* ds-ok: 2rpx 同 search2 药丸标签像素微调 */ border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-type-micro); }
+.topic-result-card { overflow: hidden; border: 1rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); }
+.topic-result-card__media { position: relative; height: 360rpx; overflow: hidden; background: var(--cy-color-bg-surface-subtle); }
+.topic-result-card__cover { width: 100%; height: 100%; }
+.topic-result-card__fallback { display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); }
+.topic-result-card__shade { position: absolute; inset: 0; background: var(--cy-comp-cover-scrim); }
+.topic-result-card__kind { position: absolute; left: var(--cy-space-3); bottom: var(--cy-space-3); min-height: 48rpx; display: flex; align-items: center; padding: 0 var(--cy-space-2); border-radius: var(--cy-radius-pill); background: rgba(20,20,20,.72); color: #FFFFFF; font-size: var(--cy-type-micro); } /* ds-ok: 封面照片语境,同订单卡固定白字 */
+.topic-result-card__body { padding: var(--cy-space-3); }
+.topic-result-card__title { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); line-height: var(--cy-leading-tight); font-weight: 700; }
+.topic-result-card__detail { margin-top: var(--cy-space-1); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }

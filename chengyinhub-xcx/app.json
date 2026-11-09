@@ -105,7 +105,9 @@
         "merchantinfo/merchantinfo",
         "merchantapply/index",
         "pricing/index",
-        "pricing/partner/index"
+        "pricing/partner/index",
+        "catalog/index",
+        "catalog/detail"
       ]
     },
     {
