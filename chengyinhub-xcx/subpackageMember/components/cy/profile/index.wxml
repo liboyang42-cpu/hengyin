@@ -151,10 +151,6 @@
 
       <!-- ===== TAB · 项目 ===== -->
       <block wx:if="{{isSelf && activeTab === 'projects'}}">
-        <!-- qx-b5 §18 A/B:视频悬赏是创作者作品的推广投稿,挂在「项目」页签 -->
-        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
-          <cy-cell title="视频悬赏" description="" hairline="{{false}}" bind:tap="goVideoBounty" />
-        </view>
         <!-- M-25(2026-10-27):商家不报名游玩,没有订单也没有票夹 —— 商家视角整段不出,改看下面的项目段(承接进度)。
              P-47 / M-14:右侧只留箭头,不写「查看详情」。 -->
         <block wx:if="{{!isMerchantView && (orderPreviewList.length || orderErr)}}">
@@ -213,6 +209,10 @@
         </scroll-view>
         </block>
 
+        <!-- qx-b5 §18 A/B:视频悬赏是创作者作品的推广投稿,跟在「我的项目」之后 -->
+        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
+          <cy-cell title="视频悬赏" description="" hairline="{{false}}" bind:tap="goVideoBounty" />
+        </view>
         <!-- 我的资产(2026-08-08 用户定):与「我的订单」「我的项目」并列的第三段。
              资金相关全部收进这里,详情走账户收益页(余额/收益明细/分润/提现/提现记录都在那)。
              余额直接读 userInfo.balance,零新增请求;整段在 isSelf 分支内,别人主页看不到。 -->
