@@ -162,3 +162,41 @@ U03-04, UG-12, U07-05, U08-03, U08-04 with §27.4 `repeatSignupV1`, §27.7 per-i
 ### qx-b8: post-game and catalog
 
 U08-01/02/05 and §20.1 public catalog, plus P3 theme collection landing. Hide counts and ratings unless the server provides them. Show no 到货提醒 success.
+
+---
+
+## C lane: backend gaps found by the UI lanes (base `origin/integrate/questo-ui-20261110`, PR into it)
+
+### qx-c1 backend gaps
+
+Fix each one with a test that fails on the old code. Prove each fix over real HTTP in the rig with a MySQL read-back. Never weaken permission, ownership, answer secrecy or money rules. Don't add UI (the lanes own UI), except where a field must be passed through.
+
+1. **`WorkshopMapper.xml` `lockLicenseForDraft` uses `... FOR UPDATE OF o`, which the app's Druid wall rejects.** This blocks theme `/use` adoption for themes with node templates on the real stack (found by qx-b4).
+   - Rewrite the query so it keeps exactly the same rows locked: lock the license row explicitly, for example lock it first by primary key in its own `FOR UPDATE` select, then read the joined data.
+   - Add the case to the real-stack test, since unit tests miss the wall.
+   - Grep every mapper for other `FOR UPDATE OF` / `BINARY a = BINARY b` uses the wall rejects.
+2. **Collation mismatch.** `GiftEntitlementMapper` joins `cms_registration.parent_order_no` (utf8mb4_general_ci) to `marketing_product_order.order_no` (created without COLLATE, so MySQL 8 defaults it to utf8mb4_0900_ai_ci), which fails with `Illegal mix of collations` (found by qx-b3).
+   - Fix with a new migration that aligns the marketing table's string columns to the schema's collation. Check every table created by the Questo migrations for the same omission.
+   - Never edit existing migrations. Add a migration-gate test.
+3. **`QaOptionMediaSupport`.** The runtime session view passes option `img` and suspect `avatar` as raw `media-asset:{id}` references, so the client can't show them (qx-b2).
+   - Project them to the same signed or public URL form other play media use, only for published and approved assets.
+   - Keep the alt text.
+4. **UG-12 admin read-only projection** (qx-b6).
+   - For one topic or run, show: the hint ladder config summary (layer count, costs, `hintFreeUsesPerRun`), and the per-run help, skip and net-score lines with receipt numbers.
+   - Never return answers, aliases or hint text bodies.
+   - Put it behind a new `business:...:query` permission plus a menu row in a new migration, granted to no role.
+5. **§23.1 author write paths** (qx-b2).
+   - **(a) `contentContract.placeCountryCode`:** two uppercase ISO letters or empty, never defaulted, owner-checked. Write it through the existing topic location contract save.
+   - **(b) `arrivalPolicy` and `arrivalReading` in `scenes[].nodeConfigs[nodeId]`:** these currently collide with the node template-override semantics (client `theme-ownership.effectiveTemplate`, server `GameplayTemplateRules`). Store them so they never change template-override behaviour: either a dedicated sub-key that both rules ignore, or a sibling map keyed by nodeId.
+   - Save and publish validation must accept them and freeze them into the run snapshot. Document the final shape in RESULT.md so qx-b2's UI can wire it.
+6. **A player/author video-bounty campaign list endpoint** (qx-b5). List only campaigns that are active and visible to the caller, with the fields the §18 A UI needs.
+7. **A post-game feedback write endpoint** (qx-b8, U08-02). Reuse the existing feedback or report table if there is one.
+   - Owner and participant checked.
+   - Idempotent by requestId.
+   - Rate limited like other user writes.
+   - Goes through the content-safety check.
+8. **`/api/template/topic-template/use` idempotency** (qx-b4). Accept an optional `requestId`. The same id plus the same payload returns the original result; the same id with a different payload is rejected. This follows the existing action-receipt pattern.
+9. **Preset missing-fields error.** When the error is longer than 120 characters, it is masked to 「系统繁忙」 by `UserSafeMessage`. Return the structured `requiredFields` list (as the other publication problems do) instead of a long message; do not raise the global mask limit.
+10. **Audit `domain_type` length.** qx-b6 found that `business_audit_event.domain_type` overflows (16 chars) for `VideoBountyServiceImpl` and fixed it on its branch. Grep every writer of that table on the base and fix any other over-length domain the same way, so the rule is consistent.
+
+Work on branch `claude/qx-c1-20261109`. Write RESULT.md in the same format as the UI lanes, plus a "contract for UI lanes" section listing exact request and response shapes.
