@@ -314,8 +314,7 @@ class AdvancedGameHelpWiringTest {
 
     /**
      * 提前指认是用户已授权的玩法:{@code allowed=true} 必须能保存(且必须有作者写的 recordAs),
-     * 保存闸不替运行期否掉它。运行期缺「本局尚未走完」的事实 → early 恒 false,是**已登记的缺口**,
-     * 由运行时接线补,而不是在这里把配置拒掉掩盖它。
+     * 保存闸不替运行期否掉它；运行期由既有节点与本局进度判定 early，本例只验证保存形状。
      */
     @Test
     void earlyAccuseIsAuthorableAndOnlyItsShapeIsGated() throws Exception {

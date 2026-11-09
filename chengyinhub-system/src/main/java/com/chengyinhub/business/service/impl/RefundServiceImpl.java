@@ -139,6 +139,7 @@ public class RefundServiceImpl implements IRefundService {
     @Autowired
     private AlarmService alarmService;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+    @Autowired private com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport marketingCashRefunds;
 
     /** P1:退款回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
     @Autowired
@@ -566,6 +567,21 @@ public class RefundServiceImpl implements IRefundService {
 
     private boolean matchesRefundFacts(RefundApplication refund, CmsRegistration registration,
                                        Map<String, String> facts) {
+        if (marketingCashRefunds != null && registration != null) {
+            try {
+                var original = marketingCashRefunds.find(registration.getId());
+                if (original.isPresent()) {
+                    var paid = original.get().payment().facts();
+                    return Integer.valueOf(1).equals(refund.getStatus())
+                            && paid.businessOutTradeNo().equals(facts.get("outTradeNo"))
+                            && paid.transactionId().equals(facts.get("transactionId"))
+                            && "CNY".equals(facts.get("currency"))
+                            && refund.getRefundNo().equals(facts.get("outRefundNo"))
+                            && refund.getRefundAmount().movePointRight(2).longValueExact() == Long.parseLong(facts.get("refund"))
+                            && paid.totalFen() == Long.parseLong(facts.get("total"));
+                }
+            } catch (RuntimeException invalidOriginal) { return false; }
+        }
         if (registration == null || StringUtils.isBlank(registration.getRegistrationNo())
                 || !registration.getRegistrationNo().equals(facts.get("outTradeNo"))
                 || !"CNY".equals(facts.get("currency"))) {
@@ -708,6 +724,10 @@ public class RefundServiceImpl implements IRefundService {
             return;   // 入参合同由 saveRefund 统一拒
         }
         CmsRegistration payer = lockRefundRegistration(refund.getSourceId());
+        if (marketingCashRefunds != null && marketingCashRefunds.find(refund.getSourceId()).isPresent()) {
+            // Marketing lines own frozen portions; the ordinary payer-total/same-topic adapter does not apply.
+            return;
+        }
         if (payer == null || StringUtils.isEmpty(payer.getParentOrderNo())
                 || payer.getPayableAmount() == null || payer.getPayableAmount().signum() <= 0) {
             return;
@@ -781,6 +801,10 @@ public class RefundServiceImpl implements IRefundService {
                 if (paid == null || paid.signum() < 0) throw new IllegalStateException("报名实付快照缺失，请人工核实");
                 assertRemainingRefundCash(refund, paid, history, false);
             }
+            if (marketingCashRefunds != null && registration != null) {
+                var original = marketingCashRefunds.find(registration.getId());
+                if (original.isPresent()) marketingCashRefunds.requireRefund(original.get(), refund, false);
+            }
             ensureRefundable(registration);
             // FX-04:人工批准的单(含 A1-1 之前建、created_by 为空的旧后台单),建单到审批之间同单别的票
             // 可能被退/被核销 ⇒ 批准(真打款)前按同一口径再核一次。
@@ -843,6 +867,10 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     private CmsRegistration lockRefundRegistration(Long registrationId) {
+        if (marketingCashRefunds != null) {
+            var original = marketingCashRefunds.find(registrationId);
+            if (original.isPresent()) return original.get().registration();
+        }
         CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         return observed == null ? null : RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
                 cmsActivityMapper, cmsTopicMapper).registration();
@@ -880,6 +908,13 @@ public class RefundServiceImpl implements IRefundService {
         // 多票首单的「同单还剩多少」另由 ensureWithinOrderCash(OrderRefundCash.remaining)在后台建单/批准时封顶。
         refund.setPaidAmount(firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount()));
         refund.setMerchantId(resolveRegistrationMerchantId(registration));
+        if (marketingCashRefunds != null) {
+            var original = marketingCashRefunds.find(registration.getId());
+            if (original.isPresent()) {
+                refund.setPaidAmount(BigDecimal.valueOf(original.get().lineFen(), 2));
+                marketingCashRefunds.requireRefund(original.get(), refund, false);
+            }
+        }
         List<RefundApplication> history = registrationRefundHistory(registration.getId());
         BigDecimal approved = approvedRefundCash(history, null);
         BigDecimal paid = refund.getPaidAmount();
@@ -1369,6 +1404,13 @@ public class RefundServiceImpl implements IRefundService {
 
     private boolean matchesVerifiedRefundOriginal(WechatVerifiedPaymentFact fact, RefundApplication refund,
                                                   CmsRegistration registration) {
+        if (marketingCashRefunds != null && registration != null) {
+            var original = marketingCashRefunds.find(registration.getId());
+            if (original.isPresent()) {
+                marketingCashRefunds.requireRefund(original.get(), refund, true);
+                return marketingCashRefunds.matches(original.get(), refund, fact);
+            }
+        }
         if (registration == null || !fact.businessOutTradeNo().equals(registration.getRegistrationNo())
                 || !fact.transactionId().equals(registration.getTransactionId())
                 || !fact.merchantEventNo().equals(refund.getRefundNo())

@@ -10,6 +10,7 @@
         <result property="defaultLeadMemberId" column="default_lead_member_id"/>
         <result property="defaultCapacity" column="default_capacity"/>
         <result property="waitlistEnabled" column="waitlist_enabled"/>
+        <result property="hostReservationRequired" column="host_reservation_required"/>
         <result property="offerMinutes" column="offer_minutes"/>
         <result property="status" column="status"/>
         <result property="version" column="version"/>
@@ -60,7 +61,7 @@
 
     <sql id="seriesColumns">
         id, club_id, topic_id, recurrence_type, timezone, default_lead_member_id, default_capacity,
-        waitlist_enabled, offer_minutes, status, version, created_by_member_id,
+        waitlist_enabled, host_reservation_required, offer_minutes, status, version, created_by_member_id,
         request_id, request_fingerprint, create_by, create_time, update_by, update_time
     </sql>
     <sql id="waitlistColumns">
@@ -146,11 +147,11 @@
             parameterType="com.chengyinhub.business.domain.ClubEventSeries">
         insert into club_event_series
           (club_id, topic_id, recurrence_type, timezone, default_lead_member_id, default_capacity,
-           waitlist_enabled, offer_minutes, status, version, created_by_member_id,
+           waitlist_enabled, host_reservation_required, offer_minutes, status, version, created_by_member_id,
            request_id, request_fingerprint, create_by, create_time, update_by, update_time)
         values
           (#{clubId}, #{topicId}, #{recurrenceType}, #{timezone}, #{defaultLeadMemberId}, #{defaultCapacity},
-           #{waitlistEnabled}, #{offerMinutes}, #{status}, #{version}, #{createdByMemberId},
+           #{waitlistEnabled}, #{hostReservationRequired}, #{offerMinutes}, #{status}, #{version}, #{createdByMemberId},
            #{requestId}, #{requestFingerprint}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
     </insert>
 
@@ -201,7 +202,7 @@
           where r.owner_type = 2 and r.owner_id = #{activityId}
         ) or exists (
           select 1 from club_event_waitlist w
-          where w.activity_id = #{activityId} and w.state in ('WAITING','OFFERED','CLAIMED')
+          where w.activity_id = #{activityId} and w.state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
         ) then 1 else 0 end
     </select>
 
@@ -241,7 +242,7 @@
 
     <sql id="seriesPolicyByActivity">
         select s.id, s.club_id, s.topic_id, s.recurrence_type, s.timezone,
-               s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.offer_minutes,
+               s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.host_reservation_required, s.offer_minutes,
                s.status, s.version, s.created_by_member_id, s.request_id, s.request_fingerprint,
                s.create_by, s.create_time, s.update_by, s.update_time
         from club_event_series s
@@ -265,7 +266,7 @@
     <!-- OFFERED 过期即使系列随后关闭也必须先锁同一 series 并归还 hold。 -->
     <select id="selectSeriesByActivityAnyStatusForUpdate" resultMap="seriesResult">
         select s.id, s.club_id, s.topic_id, s.recurrence_type, s.timezone,
-               s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.offer_minutes,
+               s.default_lead_member_id, s.default_capacity, s.waitlist_enabled, s.host_reservation_required, s.offer_minutes,
                s.status, s.version, s.created_by_member_id, s.request_id, s.request_fingerprint,
                s.create_by, s.create_time, s.update_by, s.update_time
         from club_event_series s
@@ -328,6 +329,15 @@
         for update
     </select>
 
+
+    <select id="selectHostBookableActivityForUpdate" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select id from cms_activity
+        where id = #{activityId} and club_id = #{clubId}
+          and status = 1 and publish_status = 1 and del_flag = 0
+          and start_date &gt; #{now} and end_date &gt; #{now}
+        for update
+    </select>
+
     <!-- 所有可能触发晋级的路径先锁 club，统一正常报名的 club -> ticket 锁序。 -->
     <select id="selectClubOwnerForUpdate" resultType="java.lang.Long">
         select member_id from club
@@ -353,7 +363,7 @@
         select <include refid="waitlistColumns"/>
         from club_event_waitlist
         where member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
-          and state in ('WAITING','OFFERED','CLAIMED')
+          and state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
         limit 1
     </select>
 
@@ -369,7 +379,7 @@
         select <include refid="waitlistColumns"/>
         from club_event_waitlist
         where member_id = #{memberId} and activity_id = #{activityId} and ticket_id = #{ticketId}
-          and state in ('WAITING','OFFERED','CLAIMED')
+          and state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
         limit 1 for update
     </select>
 
@@ -384,7 +394,7 @@
         select <include refid="waitlistColumns"/>
         from club_event_waitlist
         where club_id = #{clubId} and activity_id = #{activityId}
-          and state in ('WAITING','OFFERED','CLAIMED')
+          and state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
         order by ticket_id asc, id asc
         for update
     </select>
@@ -400,9 +410,9 @@
     <insert id="insertWaitlist" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.chengyinhub.business.domain.ClubWaitlistEntry">
         insert into club_event_waitlist
-          (club_id, activity_id, ticket_id, member_id, state, joined_at, version)
+          (club_id, activity_id, ticket_id, member_id, state, joined_at, offer_expires_at, version)
         values
-          (#{clubId}, #{activityId}, #{ticketId}, #{memberId}, #{state}, #{joinedAt}, #{version})
+          (#{clubId}, #{activityId}, #{ticketId}, #{memberId}, #{state}, #{joinedAt}, #{offerExpiresAt}, #{version})
     </insert>
 
     <select id="selectFirstWaitingForUpdate" resultMap="waitlistResult">
@@ -419,6 +429,51 @@
             offer_token_hash = #{tokenHash}, version = version + 1
         where id = #{id} and state = 'WAITING' and version = #{expectedVersion}
     </update>
+
+
+    <update id="offerHostRequestCas">
+        update club_event_waitlist
+        set state = 'OFFERED', offered_at = #{entry.offeredAt}, offer_expires_at = #{entry.offerExpiresAt},
+            offer_token_hash = #{entry.offerTokenHash}, version = version + 1
+        where id = #{entry.id} and club_id = #{entry.clubId} and activity_id = #{entry.activityId}
+          and ticket_id = #{entry.ticketId} and member_id = #{entry.memberId}
+          and state = 'REQUESTED' and version = #{entry.version} and offer_expires_at &gt; #{now}
+    </update>
+
+    <update id="rejectHostRequestCas">
+        update club_event_waitlist
+        set state = 'REJECTED', version = version + 1
+        where id = #{entry.id} and club_id = #{entry.clubId} and activity_id = #{entry.activityId}
+          and ticket_id = #{entry.ticketId} and member_id = #{entry.memberId}
+          and state = #{entry.state} and state in ('REQUESTED','OFFERED') and version = #{entry.version}
+    </update>
+
+
+    <select id="selectHostReservationOrderState" resultType="java.util.LinkedHashMap">
+        select payment_status as paymentStatus, registration_status as registrationStatus,
+          exists(select 1 from wx_payment_callback_outbox q
+            where q.biz_type = 1 and q.biz_id = r.id and q.money_affecting = 0 and q.state = 4) as reviewRequired
+        from cms_registration r where r.id = #{registrationId}
+    </select>
+
+    <select id="hostPaymentNeedsRecovery" resultType="boolean">
+        select exists (
+            select 1 from cms_registration r
+            inner join club_event_occurrence o on o.activity_id = r.owner_id
+            inner join club_event_series s on s.id = o.series_id and s.host_reservation_required = 1
+            inner join cms_activity a on a.id = r.owner_id and a.club_id = s.club_id
+            left join club_event_waitlist w on w.registration_id = r.id
+              and w.activity_id = a.id and w.club_id = s.club_id
+              and w.member_id = r.member_id and w.ticket_id = r.ticket_id
+            where r.id = #{registrationId} and r.owner_type = 2
+              and not (r.payment_status = 2 and r.registration_status = 2)
+              and (w.id is null or w.state != 'CLAIMED' or w.offer_expires_at is null
+                or w.offer_expires_at &lt;= #{paidAt} or r.pay_expire_time is null
+                or r.pay_expire_time &lt;= #{paidAt}
+                or o.status != 'ACTIVE' or a.status != 1 or a.publish_status != 1 or a.del_flag != 0
+                or a.start_date is null or a.start_date &lt;= #{now})
+        )
+    </select>
 
     <select id="selectWaitlistByIdForUpdate" resultMap="waitlistResult">
         select <include refid="waitlistColumns"/>
@@ -471,6 +526,7 @@
                 inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
                 inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
                   and s.status in ('ACTIVE', 'CLOSED') and s.waitlist_enabled = 1
+                  and coalesce(s.host_reservation_required, 0) = 0
                 inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
                   and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
                 inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
@@ -489,7 +545,7 @@
                 <if test="kind != 0">inner join cms_registration r on r.id = w.registration_id</if>
                 where w.id &gt; #{afterId} and w.id &lt;= #{maxId}
                 <choose>
-                    <when test="kind == 0">and w.state = 'OFFERED' and w.offer_expires_at &lt;= #{now}</when>
+                    <when test="kind == 0">and w.state in ('REQUESTED','OFFERED') and w.offer_expires_at &lt;= #{now}</when>
                     <when test="kind == 1">and w.state = 'CLAIMED' and r.payment_status = 2 and r.registration_status = 2</when>
                     <when test="kind == 2">and w.state = 'CLAIMED' and (r.registration_status in (3, 4) or r.payment_status in (3, 4))</when>
                     <otherwise>and 1 = 0</otherwise>
@@ -501,14 +557,14 @@
 
     <select id="selectExpiredOfferedIds" resultType="long">
         select id from club_event_waitlist
-        where state = 'OFFERED' and offer_expires_at &lt;= #{now}
+        where state in ('REQUESTED','OFFERED') and offer_expires_at &lt;= #{now}
         order by offer_expires_at asc, id asc limit #{limit}
     </select>
 
     <update id="expireOfferedCas">
         update club_event_waitlist
         set state = 'EXPIRED', version = version + 1
-        where id = #{id} and state = 'OFFERED' and version = #{expectedVersion}
+        where id = #{id} and state in ('REQUESTED','OFFERED') and version = #{expectedVersion}
           and offer_expires_at &lt;= #{now}
     </update>
 
@@ -544,6 +600,7 @@
         inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
         inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
           and s.status in ('ACTIVE', 'CLOSED') and s.waitlist_enabled = 1
+                  and coalesce(s.host_reservation_required, 0) = 0
         inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
           and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
         inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
@@ -601,7 +658,7 @@
                w.offer_expires_at as offerExpiresAt
         from club_event_waitlist w
         left join ums_member m on m.id = w.member_id and m.del_flag = 0
-        where w.activity_id = #{activityId} and w.state in ('WAITING','OFFERED','CLAIMED')
+        where w.activity_id = #{activityId} and w.state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
         order by w.joined_at asc, w.id asc
     </select>
 
@@ -762,7 +819,7 @@
         from club_event_waitlist w
         inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id and a.del_flag = 0
         where w.club_id = #{clubId} and w.activity_id = #{activityId}
-          and w.state in ('WAITING','OFFERED','CLAIMED')
+          and w.state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
         order by w.member_id asc
     </select>
 
@@ -942,7 +999,7 @@
                     and nc.request_id not like 'cancel-r-%' and nc.request_id not like 'cancel-w-%'
                   where w.club_id = #{clubId} and w.activity_id = #{activityId}
                     and w.member_id = #{recipientMemberId}
-                    and w.state in ('WAITING','OFFERED','CLAIMED')
+                    and w.state in ('REQUESTED','WAITING','OFFERED','CLAIMED')
                     and (c.member_id = #{recipientMemberId} or exists (
                       select 1 from club_member cm
                       where cm.club_id = w.club_id and cm.member_id = #{recipientMemberId}

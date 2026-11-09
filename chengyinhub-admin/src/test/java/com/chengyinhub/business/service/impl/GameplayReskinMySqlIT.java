@@ -48,7 +48,7 @@ class GameplayReskinMySqlIT {
             ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
                     "sql/migration_club_direct_merchant_receivable_20261004.sql",
                     "sql/migration_20261012_app_media_asset.sql",
-                    "sql/migration_20261012_app_media_asset_namespaces.sql",
+                    "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql",
                     "sql/migration_audit_level_20261020.sql");
         }
         Configuration configuration=new Configuration();configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");

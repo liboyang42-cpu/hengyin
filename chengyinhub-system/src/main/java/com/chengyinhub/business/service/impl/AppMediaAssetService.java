@@ -15,6 +15,10 @@ import java.util.Map;
 public class AppMediaAssetService {
     @org.springframework.beans.factory.annotation.Value("${app.media.public-base-url:${APP_MEDIA_PUBLIC_BASE_URL:}}")
     private String publicBaseUrl;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IWxContentSecurityService textSecurity;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IUmsMemberService members;
     private final AppMediaAssetMapper mapper;
     private final ObjectProvider<IAuditTaskService> audits;
     public AppMediaAssetService(AppMediaAssetMapper mapper,ObjectProvider<IAuditTaskService> audits) {
@@ -97,6 +101,23 @@ public class AppMediaAssetService {
         return result;
     }
     public Map<String,Object> status(Long id,Long memberId) {return publicStatus(owned(mapper.select(id),memberId));}
+
+    @Transactional
+    public Map<String,Object> saveProvenance(Long id, Long memberId, Map<String,Object> declaration) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        Map<String,Object> row=owned(mapper.selectForUpdate(id),memberId);
+        Map<String,Object> values=com.chengyinhub.business.service.support.AppMediaProvenance.normalize(declaration);
+        String attribution=(String)values.get("attribution");
+        if(attribution!=null) {
+            String risk=com.chengyinhub.business.service.IWxContentSecurityService.checkTextAsMember(textSecurity,members,memberId,attribution);
+            if(risk!=null)throw new ServiceException(risk,422);
+        }
+        values.put("id",id);values.put("memberId",memberId);
+        if(mapper.updateProvenance(values)!=1)throw new ServiceException("素材来源声明保存失败",422);
+        row.putAll(values);
+        return publicStatus(row);
+    }
+
     public String ownerPreview(Long id,Long memberId) {
         Map<String,Object> row=owned(mapper.select(id),memberId);
         return FileOssUploadUtils.generateShortLivedPresignedUrl(String.valueOf(row.get("objectKey")),300);
@@ -163,6 +184,12 @@ public class AppMediaAssetService {
     }
     private static Map<String,Object> publicStatus(Map<String,Object> row) {
         Map<String,Object> result=new LinkedHashMap<>();result.put("assetId",row.get("id"));result.put("reviewState",row.get("reviewState"));
-        result.put("reviewReason",row.get("reviewReason"));result.put("mediaType",row.get("mediaType"));return result;
+        result.put("reviewReason",row.get("reviewReason"));result.put("mediaType",row.get("mediaType"));
+        result.put("mediaAsset",com.chengyinhub.business.service.support.AppMediaProvenance.ownerView(row));
+        result.put("issues",com.chengyinhub.business.service.support.AppMediaProvenance.missing(row)
+                ? java.util.List.of(Map.of("code",com.chengyinhub.business.service.support.AppMediaProvenance.LICENSE_MISSING,
+                    "level","warn","message","素材来源或授权声明待确认"))
+                : java.util.List.of());
+        return result;
     }
 }

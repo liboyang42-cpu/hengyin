@@ -929,6 +929,7 @@ public class MarketingProductFulfillmentServiceImpl implements IMarketingProduct
         row.setPaymentStatus(2);
         row.setRegistrationStatus(2);
         row.setPaymentTime(new Date());
+        row.setPayExpireTime(row.getPaymentTime());
         // 平台费率是结算依据:缺失就拒单,绝不按 0 兜底(0 = 平台不分账,M5 会错账)。
         if (topic.getFeePlatformRate() == null) {
             throw new IllegalStateException("主题缺少平台费率快照,拒绝落单 topicId=" + topic.getId());

@@ -30,6 +30,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,6 +76,10 @@ class MarketingProductFulfillmentServiceImplTest {
                 line(TOPIC_A, "60.00", "40.00"), line(TOPIC_B, "40.00", "20.00")));
 
         assertEquals(2, inserted.size());
+        for (CmsRegistration row : inserted) {
+            assertNotNull(row.getPayExpireTime());
+            assertEquals(row.getPaymentTime(), row.getPayExpireTime(), "已付交付行保留付款时点，不改变有效期政策");
+        }
         assertEquals(0, new BigDecimal("40.00").compareTo(inserted.get(0).getPayableAmount()));
         assertEquals(0, new BigDecimal("20.00").compareTo(inserted.get(1).getPayableAmount()),
                 "非首行必须保留真实分摊,不能清零");

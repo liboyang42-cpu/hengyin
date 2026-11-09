@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-/** Real MySQL DATETIME(0), offer/claim/expiry CAS and ticket inventory; synthetic membership/policy only. */
+/** Real MySQL offer/claim/expiry and inventory; host cases also read real series/member scope, with an authorization double. */
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 class ClubWaitlistTokenMybatisIntegrationTest {
     private MysqlIntegrationTestConfig mysql;
@@ -57,6 +57,8 @@ class ClubWaitlistTokenMybatisIntegrationTest {
     private IClubWaitlistOrderBridge orderBridge;
     private ClubWaitlistTokenCodec codec;
     private long epoch;
+    private boolean useRealHostPolicy;
+    private ClubWaitlistServiceImpl target;
 
     @BeforeEach
     void setup() throws Exception {
@@ -110,6 +112,10 @@ class ClubWaitlistTokenMybatisIntegrationTest {
                 + "COMMENT '支持随时退款 0否1是(发布页填写;仅落库回显,退款规则未接)' AFTER refund_rule, "
                 + "ADD COLUMN sync_with_theme TINYINT(1) NULL "
                 + "COMMENT '售票时间与主题日期同步 0否1是(发布页填写;仅落库回显,同步逻辑未接)' AFTER refund_supported");
+        try (java.sql.Connection connection = ds.getConnection()) {
+            com.chengyinhub.business.it.ItSchema.applyMigrations(connection,
+                    "sql/migration_club_host_reservation_20261109.sql");
+        }
         assertEquals("datetime", jdbc.queryForObject("SELECT column_type FROM information_schema.columns"
                 + " WHERE table_schema=DATABASE() AND table_name='club_event_waitlist' AND column_name='offer_expires_at'", String.class));
         System.out.println("WAITLIST_TOKEN_MYSQL=" + version + " SCRATCH=" + mysql.databaseName());
@@ -132,11 +138,11 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         policy.setStatus(ClubEventSeries.STATUS_ACTIVE);
         ClubEventOpsMapper mapper = mock(ClubEventOpsMapper.class, invocation -> {
             String name = invocation.getMethod().getName();
-            if (name.startsWith("selectSeries")) return policy;
-            if (name.equals("isActiveParticipant")) return 1;
-            if (name.equals("countActiveRegistration")) return 0;
-            if (name.equals("selectClubOwnerForUpdate")) return 999L;
-            if (name.equals("selectActiveClubMemberForUpdate")) return 9L;
+            if (!useRealHostPolicy && name.startsWith("selectSeries")) return policy;
+            if (!useRealHostPolicy && name.equals("isActiveParticipant")) return 1;
+            if (!useRealHostPolicy && name.equals("countActiveRegistration")) return 0;
+            if (!useRealHostPolicy && name.equals("selectClubOwnerForUpdate")) return 999L;
+            if (!useRealHostPolicy && name.equals("selectActiveClubMemberForUpdate")) return 9L;
             try {
                 return invocation.getMethod().invoke(realMapper, invocation.getArguments());
             } catch (InvocationTargetException cause) {
@@ -145,7 +151,7 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         });
         DataSourceTransactionManager tx = new DataSourceTransactionManager(ds);
         codec = new ClubWaitlistTokenCodec("waitlist-token-scratch-secret");
-        ClubWaitlistServiceImpl target = new ClubWaitlistServiceImpl(mapper, ticketMapper,
+        target = new ClubWaitlistServiceImpl(mapper, ticketMapper,
                 mock(IClubParticipationGuard.class), codec, tx);
         ProxyFactory proxy = new ProxyFactory(target);
         proxy.addAdvice(new TransactionInterceptor(tx, new AnnotationTransactionAttributeSource()));
@@ -262,6 +268,112 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         assertEquals(1, jdbc.queryForObject("SELECT version FROM club_event_waitlist WHERE id=61", Integer.class));
     }
 
+    private void hostFixture() throws Exception {
+        useRealHostPolicy = true;
+        jdbc.execute(tableDdl("../sql/base_schema_20260818.sql", "CREATE TABLE `cms_registration` ("));
+        jdbc.update("UPDATE club_event_waitlist SET state='CANCELLED' WHERE id=61");
+        jdbc.update("INSERT INTO club_member(id,club_id,member_id,role,status,del_flag) VALUES(2,7,10,0,1,0)");
+        jdbc.update("INSERT INTO club_event_series(id,club_id,topic_id,recurrence_type,timezone,default_lead_member_id,"
+                + "waitlist_enabled,host_reservation_required,offer_minutes,status,version,created_by_member_id,"
+                + "request_id,request_fingerprint,create_time) VALUES(11,7,1,'ONCE','Asia/Shanghai',999,0,1,5,"
+                + "'ACTIVE',0,999,'host-test',?,NOW())", String.join("", java.util.Collections.nCopies(64, "a")));
+        jdbc.update("INSERT INTO club_event_occurrence(series_id,activity_id,occurrence_at,default_lead_member_id,"
+                + "status,version,create_time) VALUES(11,20,?,999,'ACTIVE',0,NOW())",
+                new Timestamp(epoch + 172_800_000L));
+        var access = mock(com.chengyinhub.business.access.club.IClubAccessService.class);
+        var context = new com.chengyinhub.business.access.club.ClubAccessContext(999L, 7L, 999L, 20L,
+                java.util.Collections.singleton(com.chengyinhub.business.access.club.ClubRoleCode.EVENT_LEAD));
+        org.mockito.Mockito.when(access.require(999L, 7L, 20L,
+                com.chengyinhub.business.access.club.ClubPermission.EVENT_OPERATE)).thenReturn(context);
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "hostAccessService", access);
+        assertTrue(realMapper.selectSeriesPolicyByActivity(20L).getHostReservationRequired());
+    }
+
+    @Test
+    void twoDifferentPlayersCompeteForTheLastHostSeatInRealStorage() throws Exception {
+        hostFixture();
+        ClubWaitlistEntry first = service.requestHost(9L, 20L, 97L);
+        ClubWaitlistEntry second = service.requestHost(10L, 20L, 97L);
+        assertNotEquals(first.getId(), second.getId());
+        assertEquals(1, stock(), "requests do not consume seats");
+        java.util.concurrent.atomic.AtomicInteger ordinal = new java.util.concurrent.atomic.AtomicInteger();
+        assertEquals(1, race(() -> {
+            Long entryId = ordinal.getAndIncrement() == 0 ? first.getId() : second.getId();
+            try {
+                service.decideHost(999L, 20L, 97L, entryId, true);
+                return true;
+            } catch (ServiceException noSeat) {
+                assertEquals("场次名额已满", noSeat.getMessage());
+                return false;
+            }
+        }));
+        assertEquals(0, stock());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM club_event_waitlist WHERE state='OFFERED'", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM club_event_waitlist WHERE state='REQUESTED'", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM club_event_notification_campaign", Integer.class));
+    }
+
+    @Test
+    void hostRequestExpiryAndAcceptedRejectionConserveRealInventory() throws Exception {
+        hostFixture();
+        ClubWaitlistEntry request = service.requestHost(9L, 20L, 97L);
+        assertEquals(1, race(() -> service.expireOffered(request.getId(),
+                new Date(request.getOfferExpiresAt().getTime() + 1000))));
+        assertEquals(1, stock(), "unaccepted request never owned inventory");
+        ClubWaitlistEntry next = service.requestHost(10L, 20L, 97L);
+        service.decideHost(999L, 20L, 97L, next.getId(), true);
+        service.decideHost(999L, 20L, 97L, next.getId(), true);
+        assertEquals(0, stock());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM club_event_notification_campaign WHERE title='主持已接受预约'", Integer.class));
+        service.decideHost(999L, 20L, 97L, next.getId(), false);
+        service.decideHost(999L, 20L, 97L, next.getId(), false);
+        assertEquals(1, stock());
+        assertEquals("REJECTED", realMapper.selectWaitlistById(next.getId()).getState());
+    }
+
+    @Test
+    void acceptedHostOfferExpiresOnceAndExpiredTokenCannotQuoteOrClaim() throws Exception {
+        hostFixture();
+        ClubWaitlistEntry request = service.requestHost(9L, 20L, 97L);
+        service.decideHost(999L, 20L, 97L, request.getId(), true);
+        ClubWaitlistEntry offered = service.myStatus(9L, 20L, 97L);
+        RegistrationRequest checkout = request(offered.getId(), offered.getOfferToken());
+        Date expired = new Date(offered.getOfferExpiresAt().getTime());
+        assertEquals(1, race(() -> service.expireOffered(offered.getId(), expired)));
+        assertEquals(1, stock());
+        assertThrows(ServiceException.class, () -> orderBridge.validateForQuote(9L, checkout, expired));
+        assertThrows(ServiceException.class, () -> orderBridge.claimForOrder(9L, checkout, expired));
+        assertEquals("EXPIRED", realMapper.selectWaitlistById(offered.getId()).getState());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM cms_registration", Integer.class));
+    }
+
+    @Test
+    void lateHostPaymentRequiresOriginalRecoveryButTimelyDelayedCallbackAndOrdinaryTicketsDoNot() throws Exception {
+        hostFixture();
+        ClubWaitlistEntry requested = service.requestHost(9L, 20L, 97L);
+        assertThrows(ServiceException.class, () -> orderBridge.requireHostAcceptance(20L, null));
+        service.decideHost(999L, 20L, 97L, requested.getId(), true);
+        ClubWaitlistEntry offered = service.myStatus(9L, 20L, 97L);
+        var claim = orderBridge.claimForOrder(9L, request(offered.getId(), offered.getOfferToken()), new Date());
+        jdbc.update("INSERT INTO cms_registration(id,registration_no,owner_type,owner_id,ticket_id,ticket_price,member_id,"
+                + "original_amount,total_amount,payable_amount,payment_status,registration_status,pay_expire_time)"
+                + " VALUES(701,'HOST-701',2,20,97,10,9,10,10,10,1,1,?)",
+                new Timestamp(offered.getOfferExpiresAt().getTime()));
+        orderBridge.bindRegistration(claim, 701L);
+        Date timely = new Date(offered.getOfferedAt().getTime() + 1000);
+        Date late = new Date(offered.getOfferExpiresAt().getTime() + 1000);
+        assertFalse(realMapper.hostPaymentNeedsRecovery(701L, late, timely),
+                "callback arrival delay alone must not discard on-time payment with retained supply");
+        assertTrue(realMapper.hostPaymentNeedsRecovery(701L, late, late));
+        assertEquals(0, stock(), "recovery assessment does not restore or re-deduct inventory");
+        assertEquals("CLAIMED", realMapper.selectWaitlistById(offered.getId()).getState());
+        jdbc.update("UPDATE cms_registration SET payment_status=2,registration_status=2 WHERE id=701");
+        assertFalse(realMapper.hostPaymentNeedsRecovery(701L, late, late), "confirmed replay stays idempotent");
+        jdbc.update("UPDATE cms_registration SET payment_status=1,registration_status=1 WHERE id=701");
+        jdbc.update("UPDATE club_event_series SET host_reservation_required=0 WHERE id=11");
+        assertFalse(realMapper.hostPaymentNeedsRecovery(701L, late, late), "ordinary legacy ticket keeps its original admission");
+    }
+
     @Test
     void expiryAtStoredBoundaryReleasesInventoryOnlyOnceUnderConcurrency() throws Exception {
         assertTrue(service.promoteNext(20L, 97L, new Date(epoch + 123)));
@@ -338,6 +450,12 @@ class ClubWaitlistTokenMybatisIntegrationTest {
         request.setTicketId(97L);
         request.setWaitlistOfferId(61L);
         request.setWaitlistOfferToken(token);
+        return request;
+    }
+
+    private RegistrationRequest request(Long offerId, String token) {
+        RegistrationRequest request = request(token);
+        request.setWaitlistOfferId(offerId);
         return request;
     }
 

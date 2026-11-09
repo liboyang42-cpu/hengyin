@@ -1071,5 +1071,21 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         self.assertIn("COALESCE(NULLIF(#{requestId}, ''), SHA2(CONCAT_WS", mapper)
 
 
+    def test_host_reservation_replacement_keeps_the_previous_health_contract(self):
+        from ci.sql_splitter import executable_statement, split_statements
+        audit = self.load_entry(REPO / "ci" / "audit_migrations_applied.py")
+        mapping = audit.read_supersessions()
+        replacement = "migration_club_host_reservation_20261109.sql"
+        previous = "migration_club_waitlist_offer_window_20260911.sql"
+        self.assertEqual(replacement, mapping["migration_club_role_event_ops_20260823.sql"])
+        self.assertEqual(replacement, mapping[previous])
+        sql_root = REPO / "chengyinhub-admin" / "sql"
+        prior = split_statements((sql_root / previous).read_text(encoding="utf-8"))[-1]
+        inherited = executable_statement(prior).replace("= 18", "= 19")
+        current = split_statements((sql_root / replacement).read_text(encoding="utf-8"))
+        self.assertIn(inherited, [executable_statement(item) for item in current])
+        self.assertEqual("scalar-true", __import__("ci.run_migration", fromlist=["statement_assertion"]).statement_assertion(current[-1]))
+
+
 if __name__ == "__main__":
     unittest.main()

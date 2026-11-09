@@ -15,6 +15,7 @@ public class ClubEventSeries extends BaseEntity {
     private Long defaultLeadMemberId;
     private Integer defaultCapacity;
     private Boolean waitlistEnabled;
+    private Boolean hostReservationRequired;
     private Integer offerMinutes;
     private String status;
     private Integer version;
@@ -38,6 +39,9 @@ public class ClubEventSeries extends BaseEntity {
     public void setDefaultCapacity(Integer defaultCapacity) { this.defaultCapacity = defaultCapacity; }
     public Boolean getWaitlistEnabled() { return waitlistEnabled; }
     public void setWaitlistEnabled(Boolean waitlistEnabled) { this.waitlistEnabled = waitlistEnabled; }
+
+    public Boolean getHostReservationRequired() { return hostReservationRequired; }
+    public void setHostReservationRequired(Boolean value) { this.hostReservationRequired = value; }
     public Integer getOfferMinutes() { return offerMinutes; }
     public void setOfferMinutes(Integer offerMinutes) { this.offerMinutes = offerMinutes; }
     public String getStatus() { return status; }

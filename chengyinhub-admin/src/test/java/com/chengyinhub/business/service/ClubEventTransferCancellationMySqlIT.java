@@ -155,6 +155,7 @@ class ClubEventTransferCancellationMySqlIT {
                 url, mysql.user(), mysql.password())) {
             ItSchema.apply(connection, "it-schema/run41-prod-ddl.sql");
             ItSchema.applyMigrations(connection, "sql/migration_club_role_event_ops_20260823.sql",
+                    "sql/migration_club_host_reservation_20261109.sql",
                     "sql/migration_20260930_registration_first_successful_scan.sql",
                     "sql/migration_20261029_activity_cancellation_receipt.sql",
                     "sql/migration_20261029_topic_cancellation_receipt.sql");

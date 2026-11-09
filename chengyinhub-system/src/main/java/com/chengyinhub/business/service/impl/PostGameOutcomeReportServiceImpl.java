@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -262,8 +264,79 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
         RoamRevisitReportVO roamRevisit = roamRevisitReportService == null ? null
                 : roamRevisitReportService.generate(cohortDate, RoamRevisitReportVO.Metric.ROAM_REVISIT, windowDays);
 
+        Date computedAt = new Date(clock.millis());
         return new PostGameOutcomeReportVO(cohortDate.toString(), windowDays, mature,
-                cohortStart, windowEnd, new Date(clock.millis()), watermarks, cohort, metrics, roamRevisit);
+                cohortStart, windowEnd, computedAt, watermarks, cohort, metrics, roamRevisit,
+                windowDays == 30 ? repeatSignupV1(byMember, cohortStart, cohortEnd, computedAt.toInstant()) : null);
+    }
+
+    private static PostGameOutcomeReportVO.RepeatSignupV1 repeatSignupV1(
+            Map<Long, List<RegistrationCohortFact>> byMember, Date cohortStart, Date cohortEnd, Instant now) {
+        PostGameOutcomeReportVO.RepeatSignupCohort paid =
+                repeatSignupCohort(byMember, cohortStart, cohortEnd, now, true);
+        PostGameOutcomeReportVO.RepeatSignupCohort all =
+                repeatSignupCohort(byMember, cohortStart, cohortEnd, now, false);
+        boolean available = paid != null && all != null;
+        return new PostGameOutcomeReportVO.RepeatSignupV1(
+                "repeat_signup_v1", 30,
+                "首个有效报名 payment_time 为锚；第二笔时间 > 首笔且 < 首笔+30*24h；同时间不推断先后；"
+                        + "逐人到窗末成熟，仅成熟会员计分子/比例，未成熟不算未复报",
+                "member_id 报名账户去重；parent_order_no 区分独立订单，同单多席不重复；"
+                        + "不推断代购实际参加人；现金/免费沿用 payable_amount 优先、total_amount 兜底、均空为0",
+                "READ_ONLY_SQL：当前支付/报名状态与原到账退款事实重算，部分退/待审未到账不作全退；"
+                        + "迟到仅按 create_time >= 个人窗末诊断；共享本响应 computedAt/sourceWatermarks，"
+                        + "当前时刻之后支付不计，不可历史回放，与旧 V2 不可混比",
+                available, available ? null : "相关首报名cohort或30日观察窗内有效事实缺少 parent_order_no，独立订单身份未知",
+                available ? paid : null, available ? all : null);
+    }
+
+    private static PostGameOutcomeReportVO.RepeatSignupCohort repeatSignupCohort(
+            Map<Long, List<RegistrationCohortFact>> byMember, Date cohortStart, Date cohortEnd,
+            Instant now, boolean paidOnly) {
+        long eligible = 0, mature = 0, retained = 0;
+        long partial = 0, pending = 0, partialRetained = 0, pendingRetained = 0, late = 0;
+        for (List<RegistrationCohortFact> rows : byMember.values()) {
+            List<RegistrationCohortFact> valid = rows.stream()
+                    .filter(row -> !row.getPaymentTime().toInstant().isAfter(now)
+                            && isValidlyPaid(row) && !isFullyRefunded(row)
+                            && (!paidOnly || !isFree(row)))
+                    .toList();
+            if (valid.isEmpty()) continue;
+            RegistrationCohortFact first = valid.get(0);
+            if (first.getPaymentTime().before(cohortStart) || !first.getPaymentTime().before(cohortEnd)) continue;
+            if (first.getParentOrderNo() == null || first.getParentOrderNo().isBlank()) return null;
+            Instant end = first.getPaymentTime().toInstant().plus(Duration.ofDays(30));
+            boolean memberMature = !now.isBefore(end);
+            eligible++;
+            if (memberMature) mature++;
+            if (isPartiallyRefunded(first)) partial++;
+            if (hasPendingRefund(first)) pending++;
+            boolean repeated = false, repeatedPartial = false, repeatedPending = false;
+            for (RegistrationCohortFact row : valid) {
+                Instant payment = row.getPaymentTime().toInstant();
+                if (!payment.isBefore(end)) continue;
+                if (row.getCreateTime() != null && !row.getCreateTime().toInstant().isBefore(end)) late++;
+                // 同时刻即使订单号不同，也无法证明这是首单之后的再次报名。
+                if (!row.getPaymentTime().after(first.getPaymentTime())) continue;
+                String order = row.getParentOrderNo();
+                if (order == null || order.isBlank()) return null;
+                if (order.equals(first.getParentOrderNo())) continue;
+                repeated = true;
+                repeatedPartial |= isPartiallyRefunded(row);
+                repeatedPending |= hasPendingRefund(row);
+            }
+            if (memberMature && repeated) {
+                retained++;
+                if (repeatedPartial) partialRetained++;
+                if (repeatedPending) pendingRetained++;
+            }
+        }
+        return new PostGameOutcomeReportVO.RepeatSignupCohort(
+                paidOnly ? "全历史首个现金实付>0且有效未全退报名；第二笔同样须现金实付>0且有效未全退"
+                        : "全历史首个有效未全退报名(含免费)；第二笔可付费或免费；与paid独立选首单和分母",
+                eligible, mature, eligible - mature,
+                mature > 0 ? Long.valueOf(retained) : null, CohortTally.rate(true, retained, mature),
+                partial, pending, partialRetained, pendingRetained, late);
     }
 
     private static void validate(LocalDate cohortDate, int windowDays) {

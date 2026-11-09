@@ -60,6 +60,9 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
     private RegistrationPaymentConsumptionReadService paymentConsumption;
 
     @Autowired
+    private com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport marketingCashRefunds;
+
+    @Autowired
     private PlatformTransactionManager payoutTransactions;
 
     private record DispatchClaim(RefundApplication refund, boolean queryOnly) { }
@@ -142,15 +145,24 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
                     "报名单不存在(sourceId=" + refund.getSourceId() + "),无法原路退款,待人工");
             return;
         }
-        BigDecimal paidCash = registration.getWechatPaymentAmount();
-        if (paidCash == null || paidCash.compareTo(BigDecimal.ZERO) <= 0) {
-            // 退款单要退现金,报名却没有现金实付 —— 数据自相矛盾(纯积分单本不该建现金退款单,
-            // refundOne 只在 hasCash 时建)。同样不静默,转人工判断。
-            if (claim.queryOnly()) retainUnknownDispatch(refundId, leaseToken, "原现金实付缺失，保留原退款查证");
-            else refundService.markPayoutResult(refundId, leaseToken, false,
-                    "报名无现金实付(wechat_payment_amount=" + paidCash + ")却存在现金退款单,待人工核对");
+        final RefundApplication claimedRefund = refund;
+        OriginalPayment receipt;
+        try {
+            receipt = payoutTransaction().execute(tx -> findOriginalPayment(registration, claimedRefund));
+        } catch (RuntimeException invalidOriginal) {
+            retainUnknownDispatch(refundId, leaseToken, "原付款/冻结退款额度不符，保留原号待核对");
             return;
         }
+        if (receipt == null) {
+            if (registration.getWechatPaymentAmount() == null || registration.getWechatPaymentAmount().signum() <= 0) {
+                if (claim.queryOnly()) retainUnknownDispatch(refundId, leaseToken, "原现金实付缺失，保留原退款查证");
+                else refundService.markPayoutResult(refundId, leaseToken, false, "报名无现金实付却存在现金退款单，待人工核对");
+                return;
+            }
+            retainUnknownDispatch(refundId, leaseToken, "原付款消费事实缺失或不符，禁止猜测退款来源");
+            return;
+        }
+        BigDecimal paidCash = receipt.providerTotal();
 
         String expectedRefundNo = refund.getRefundNo();
         if (claim.queryOnly() && StringUtils.isBlank(expectedRefundNo)) {
@@ -166,18 +178,6 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
         if (!ensureRefundNoOrEscalate(refundId, leaseToken, expectedRefundNo)) {
             return;
         }
-        // The consumption receipt is immutable. Read it in its own short domain transaction,
-        // after the claim transaction has released refund locks; never suspend held locks for SDK/fact work.
-        final Long registrationId = refund.getSourceId();
-        RegistrationPaymentFactReceipt receipt = payoutTransaction().execute(tx ->
-                paymentConsumption.findConsumedPayment(registrationId).orElse(null));
-        if (receipt == null || !registrationId.equals(receipt.registrationId())
-                || !registration.getId().equals(receipt.registrationId())
-                || !registration.getRegistrationNo().equals(receipt.registrationNo())
-                || !receipt.transactionId().equals(registration.getTransactionId())) {
-            retainUnknownDispatch(refundId, leaseToken, "原付款消费事实缺失或不符，禁止猜测退款来源");
-            return;
-        }
         if (claim.queryOnly()) {
             recoverOriginalRefund(refundId, leaseToken, receipt, expectedRefundNo, refundAmount, paidCash);
             return;
@@ -187,7 +187,7 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
         try {
             // ⚠️ total_amount 传原订单实付额,不是本次退款额 —— 部分退时两者不等,传错会被微信按
             // 「退款额 > 订单额」拒掉。全额退时二者恰好相等,所以这个错只有部分退才暴露。
-            requestResult = wechatPayService.submitRefund(receipt.reference(), registration.getRegistrationNo(), expectedRefundNo,
+            requestResult = wechatPayService.submitRefund(receipt.reference(), receipt.businessNo(), expectedRefundNo,
                     refundAmount, paidCash, refund.getReason());
         } catch (RestoreDispatchGuard.Blocked paused) {
             throw paused;
@@ -215,21 +215,53 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
     /** No claim, number allocation, submission or synthetic failure during restore. */
     private void observeOriginalDuringRestore(RefundApplication refund) {
         if (StringUtils.isBlank(refund.getRefundNo()) || refund.getSourceId() == null) return;
-        RegistrationPaymentFactReceipt receipt = payoutTransaction().execute(tx ->
-                paymentConsumption.findConsumedPayment(refund.getSourceId()).orElse(null));
-        if (receipt == null || !refund.getSourceId().equals(receipt.registrationId())) return;
-        java.util.Map<String, String> facts = wechatPayService.queryRefundFacts(receipt.reference(), refund.getRefundNo());
-        // The original verifier and inbox registration still run. RefundService pauses the economic
-        // mutation after registration, so a valid SUCCESS is retained without a false DONE.
+        OriginalPayment original = payoutTransaction().execute(tx -> {
+            if (marketingCashRefunds != null) {
+                var marketing = marketingCashRefunds.find(refund.getSourceId());
+                if (marketing.isPresent()) {
+                    marketingCashRefunds.requireRefund(marketing.get(), refund, true);
+                    return new OriginalPayment(marketing.get().payment().reference(), marketing.get().businessNo(),
+                            marketing.get().payment().facts().transactionId(), marketing.get().providerTotal());
+                }
+            }
+            RegistrationPaymentFactReceipt receipt = paymentConsumption.findConsumedPayment(refund.getSourceId()).orElse(null);
+            return receipt == null || !refund.getSourceId().equals(receipt.registrationId()) ? null
+                    : new OriginalPayment(receipt.reference(), receipt.registrationNo(), receipt.transactionId(), null);
+        });
+        if (original == null) return;
+        java.util.Map<String, String> facts = wechatPayService.queryRefundFacts(original.reference(), refund.getRefundNo());
         if (facts != null) refundService.handleRefundNotify(facts);
     }
 
-    private void recoverOriginalRefund(Long refundId, String leaseToken, RegistrationPaymentFactReceipt receipt,
+    private record OriginalPayment(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference,
+            String businessNo, String transactionId, BigDecimal providerTotal) { }
+
+    private OriginalPayment findOriginalPayment(CmsRegistration registration, RefundApplication refund) {
+        if (marketingCashRefunds != null) {
+            var original = marketingCashRefunds.find(registration.getId());
+            if (original.isPresent()) {
+                marketingCashRefunds.requireRefund(original.get(), refund, true);
+                return new OriginalPayment(original.get().payment().reference(), original.get().businessNo(),
+                        original.get().payment().facts().transactionId(), original.get().providerTotal());
+            }
+        }
+        if (registration.getWechatPaymentAmount() == null || registration.getWechatPaymentAmount().signum() <= 0)
+            return null;
+        RegistrationPaymentFactReceipt receipt = paymentConsumption.findConsumedPayment(registration.getId()).orElse(null);
+        if (receipt == null || !registration.getId().equals(receipt.registrationId())
+                || !java.util.Objects.equals(registration.getRegistrationNo(), receipt.registrationNo())
+                || !java.util.Objects.equals(registration.getTransactionId(), receipt.transactionId()))
+            return null;
+        return new OriginalPayment(receipt.reference(), receipt.registrationNo(), receipt.transactionId(),
+                registration.getWechatPaymentAmount());
+    }
+
+    private void recoverOriginalRefund(Long refundId, String leaseToken, OriginalPayment receipt,
             String refundNo, BigDecimal refundAmount, BigDecimal paidCash) {
         try {
             java.util.Map<String,String> facts = wechatPayService.queryRefundFacts(receipt.reference(), refundNo);
             boolean same = facts != null && refundNo.equals(facts.get("outRefundNo"))
-                    && receipt.registrationNo().equals(facts.get("outTradeNo"))
+                    && receipt.businessNo().equals(facts.get("outTradeNo"))
                     && receipt.transactionId().equals(facts.get("transactionId"))
                     && "CNY".equals(facts.get("currency"))
                     && refundAmount.movePointRight(2).longValueExact() == Long.parseLong(facts.get("refund"))

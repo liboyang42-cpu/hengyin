@@ -49,6 +49,22 @@ public final class PostGameOutcomeReportVO {
                          BigDecimal retentionRate, BigDecimal freeRetentionRate) {
     }
 
+    /** repeat_signup_v1 独立口径；仅 30 日请求提供，旧 V2 cohort 与结果项不变。 */
+    public record RepeatSignupV1(String definitionVersion, int windowDays,
+                                 String timeBasis, String identityBasis, String recomputeBasis,
+                                 boolean available, String unknownReason,
+                                 RepeatSignupCohort paid, RepeatSignupCohort all) {
+    }
+
+    /** 分子/比例只使用 matureMembers；零成熟分母为 null，未成熟会员不算未复报。 */
+    public record RepeatSignupCohort(String eligibilityBasis,
+                                     long eligibleMembers, long matureMembers, long notMatureMembers,
+                                     Long retainedMembers, BigDecimal retentionRate,
+                                     long partialRefundMembers, long pendingRefundMembers,
+                                     long partialRefundRetained, long pendingRefundRetained,
+                                     long lateFactCount) {
+    }
+
     /**
      * 口径版本；数值随口径变化递增，便于判断两次结果是否可比。
      *
@@ -81,11 +97,22 @@ public final class PostGameOutcomeReportVO {
     private final Cohort cohort;
     private final Map<String, MetricCount> metrics;
     private final RoamRevisitReportVO roamRevisit;
+    private final RepeatSignupV1 repeatSignupV1;
 
     public PostGameOutcomeReportVO(String cohortDate, int windowDays, boolean mature,
                                    Date windowStart, Date windowEnd, Date computedAt,
                                    Map<String, Date> sourceWatermarks, Cohort cohort,
                                    Map<String, MetricCount> metrics, RoamRevisitReportVO roamRevisit) {
+        this(cohortDate, windowDays, mature, windowStart, windowEnd, computedAt,
+                sourceWatermarks, cohort, metrics, roamRevisit, null);
+    }
+
+    public PostGameOutcomeReportVO(String cohortDate, int windowDays, boolean mature,
+                                   Date windowStart, Date windowEnd, Date computedAt,
+                                   Map<String, Date> sourceWatermarks, Cohort cohort,
+                                   Map<String, MetricCount> metrics, RoamRevisitReportVO roamRevisit,
+                                   RepeatSignupV1 repeatSignupV1) {
+        this.repeatSignupV1 = repeatSignupV1;
         this.cohortDate = cohortDate;
         this.windowDays = windowDays;
         this.mature = mature;
@@ -118,6 +145,8 @@ public final class PostGameOutcomeReportVO {
     public Cohort getCohort() { return cohort; }
     public Map<String, MetricCount> getMetrics() { return metrics; }
     public RoamRevisitReportVO getRoamRevisit() { return roamRevisit; }
+
+    public RepeatSignupV1 getRepeatSignupV1() { return repeatSignupV1; }
     public String getBasisVersion() { return BASIS_VERSION; }
     public String getDeduplication() { return DEDUPLICATION; }
     public String getIdentityBasis() { return IDENTITY_BASIS; }

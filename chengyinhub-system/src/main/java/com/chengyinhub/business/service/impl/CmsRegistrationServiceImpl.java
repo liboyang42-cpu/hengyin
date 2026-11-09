@@ -531,6 +531,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         assertExploreAccountTicketAvailable(sellerTopic, memberId);
         List<Club> lockedOwningClubs = lockActiveOwningClubs(registrationActivity, sellerTopic);
         revalidateWaitlistParticipant(waitlistClaim, memberId, lockedOwningClubs);
+        if (Integer.valueOf(2).equals(ownerType) && clubWaitlistOrderBridge != null) {
+            clubWaitlistOrderBridge.requireHostAcceptance(ownerId, waitlistClaim);
+        }
         // 3. 验证票种是否存在、属于当前活动且库存充足
         if (waitlistClaim != null && (qty != 1 || !Integer.valueOf(2).equals(ownerType)
                 || !memberId.equals(waitlistClaim.getMemberId()) || !ownerId.equals(waitlistClaim.getActivityId())
@@ -1095,6 +1098,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private RegistrationQuoteResult quoteRegistrationInternal(Long memberId, Integer ownerType, Long ownerId,
             Long ticketId, List<RegistrationTicketItem> tickets, Integer isUsePoint,
             ClubWaitlistClaim inventoryHold, String offerCode) {
+        if (Integer.valueOf(2).equals(ownerType) && clubWaitlistOrderBridge != null) {
+            clubWaitlistOrderBridge.requireHostAcceptance(ownerId, inventoryHold);
+        }
         // 主题级报名已下线，仅活动层报价（与 create 一致）
         CmsActivity activity = null;
         if (ownerType != null && ownerType == 2) {
@@ -4141,6 +4147,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             return registrationPaymentCallbackFailure(outTradeNo,
                     "closed_registration_original_payment_recovery_required");
+        }
+        if (clubWaitlistOrderBridge != null && clubWaitlistOrderBridge.hostPaymentNeedsRecovery(
+                registration.getId(), new Date(), Date.from(verified.successAt()))) {
+            verifiedPaymentFacts.deferHostReservationPayment(consumed.reference(), registration.getId());
+            return registrationPaymentCallbackFailure(outTradeNo, "host_reservation_payment_recovery_required");
         }
         // Shared by cancellation preflight and consumption, under the original topic/activity/order locks.
         verifiedPaymentFacts.requireConsumablePayment(consumed.reference());

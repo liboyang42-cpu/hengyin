@@ -172,6 +172,33 @@ public class ApiClubEventOpsController extends BaseController {
         }
     }
 
+    @PostMapping("/host/request")
+    public AjaxResult requestHost(@RequestBody(required = false) ClubWaitlistRequest request) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少预约参数");
+        try {
+            return success(waitlistService.requestHost(principal, request.getActivityId(), request.getTicketId()));
+        } catch (ServiceException e) {
+            return serviceError(e);
+        }
+    }
+
+    @PostMapping("/host/decide")
+    public AjaxResult decideHost(@RequestBody(required = false) ClubWaitlistRequest request) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        if (request == null || request.getAccept() == null) {
+            return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少预约决定");
+        }
+        try {
+            return success(waitlistService.decideHost(principal, request.getActivityId(), request.getTicketId(),
+                    request.getEntryId(), request.getAccept()));
+        } catch (ServiceException e) {
+            return serviceError(e);
+        }
+    }
+
     @PostMapping("/waitlist/status")
     public AjaxResult waitlistStatus(@RequestBody(required = false) ClubWaitlistRequest request) {
         Long principal = principal();

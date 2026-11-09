@@ -308,6 +308,7 @@ class SupportedStackServiceCyclesTest
                     CoopSettlementOriginalLedger.class, CoopClosedPaymentRecovery.class,
                     WxPaymentCallbackOutboxServiceImpl.class, SettlementDebtLedger.class,
                     RegistrationPaymentConsumptionReadService.class,
+                    com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport.class,
                     CommittedBusinessNotice.class, CommittedOfficialNoticeService.class,
                     CommittedOfficialNoticeTask.class, ChapterApplicationInviteNotice.class,
                     WxSubscribeMsgServiceImpl.class, ImServiceImpl.class, NotifyServiceImpl.class,
@@ -394,6 +395,10 @@ class SupportedStackServiceCyclesTest
             // Ae6's actual new edges must resolve eagerly to the same managed evidence bean.
             assertThat(ReflectionTestUtils.getField(registration, "verifiedPaymentFacts")).isSameAs(facts);
             assertThat(ReflectionTestUtils.getField(refund, "verifiedPaymentFacts")).isSameAs(facts);
+            Object marketingOriginal = context.getBean(com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport.class);
+            assertThat(ReflectionTestUtils.getField(refund, "marketingCashRefunds")).isSameAs(marketingOriginal);
+            assertThat(ReflectionTestUtils.getField(AopTestUtils.<Object>getUltimateTargetObject(marketingOriginal), "facts"))
+                    .isSameAs(facts);
             assertThat(ReflectionTestUtils.getField(refund, "coopSettlementClaimService"))
                     .isSameAs(context.getBean(CoopSettlementClaimServiceImpl.class));
             assertThat(ReflectionTestUtils.getField(registration, "systemNotificationIntents"))
@@ -645,6 +650,10 @@ class SupportedStackServiceCyclesTest
                     CmsRegistrationServiceImpl.class, SettlementDebtLedger.class,
                     WechatVerifiedPaymentFactService.class, RegistrationPaymentConsumptionReadService.class,
                     CoopClosedPaymentRecovery.class, WxPaymentCallbackOutboxServiceImpl.class));
+        }
+        if (assembly.contains(RefundServiceImpl.class) || assembly.contains(com.chengyinhub.business.service.impl.RefundPayoutServiceImpl.class))
+        {
+            assembly.add(com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport.class);
         }
         if (assembly.contains(MerchantChapterApplicationServiceImpl.class) || assembly.contains(ChapterApplicationInviteNotice.class))
         {

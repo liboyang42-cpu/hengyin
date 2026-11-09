@@ -78,6 +78,132 @@ class ClubWaitlistServiceImplTest {
         when(mapper.insertOutbox(anyLong(), any(Date.class))).thenReturn(1);
     }
 
+    private ClubEventSeries hostPolicy() {
+        ClubEventSeries policy = policy(false);
+        policy.setHostReservationRequired(true);
+        when(mapper.selectHostBookableActivityForUpdate(eq(ACTIVITY), eq(CLUB), any(Date.class))).thenReturn(ACTIVITY);
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(policy);
+        when(mapper.selectSeriesPolicyByActivity(ACTIVITY)).thenReturn(policy);
+        when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(policy);
+        when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1));
+        return policy;
+    }
+
+    private void authorizeHost(Long actor, Long scopedActivity) {
+        var accessService = mock(com.chengyinhub.business.access.club.IClubAccessService.class);
+        var access = mock(com.chengyinhub.business.access.club.ClubAccessContext.class);
+        when(access.getPrincipalMemberId()).thenReturn(actor);
+        when(access.getClubId()).thenReturn(CLUB);
+        when(access.getActivityId()).thenReturn(scopedActivity);
+        when(access.hasPermission(com.chengyinhub.business.access.club.ClubPermission.EVENT_OPERATE)).thenReturn(true);
+        when(accessService.require(actor, CLUB, ACTIVITY,
+                com.chengyinhub.business.access.club.ClubPermission.EVENT_OPERATE)).thenReturn(access);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "hostAccessService", accessService);
+    }
+
+    @Test
+    void hostRequestHasNoInventoryHoldAndReplaysTheSameActiveRequest() {
+        hostPolicy();
+        when(mapper.insertWaitlist(any())).thenAnswer(invocation -> {
+            invocation.getArgument(0, ClubWaitlistEntry.class).setId(61L);
+            return 1;
+        });
+        ClubWaitlistEntry requested = service.requestHost(MEMBER, ACTIVITY, TICKET);
+        assertEquals(ClubWaitlistEntry.REQUESTED, requested.getState());
+        assertNotNull(requested.getOfferExpiresAt());
+        verify(ticketMapper, never()).deductInventory(anyLong(), anyLong());
+        when(mapper.selectActiveWaitlistForUpdate(MEMBER, ACTIVITY, TICKET)).thenReturn(requested);
+        when(mapper.selectWaitlistById(61L)).thenReturn(requested);
+        assertEquals(61L, service.requestHost(MEMBER, ACTIVITY, TICKET).getId());
+        verify(mapper, times(1)).insertWaitlist(any());
+        assertThrows(ServiceException.class, () -> service.requireHostAcceptance(ACTIVITY, null));
+        assertEquals(false, service.promoteNext(ACTIVITY, TICKET, new Date()));
+    }
+
+    @Test
+    void hostAcceptanceHoldsExactlyOneOriginalTicketAndRequiresExactHostScope() {
+        hostPolicy();
+        authorizeHost(999L, ACTIVITY);
+        ClubWaitlistEntry request = entry(61L, ClubWaitlistEntry.REQUESTED, 0, new Date(System.currentTimeMillis() + 60_000));
+        when(mapper.selectWaitlistByIdForUpdate(61L)).thenReturn(request);
+        when(mapper.offerHostRequestCas(eq(request), any(Date.class))).thenReturn(1);
+        when(ticketMapper.deductInventory(TICKET, 1L)).thenReturn(1);
+        assertEquals(ClubWaitlistEntry.OFFERED, service.decideHost(999L, ACTIVITY, TICKET, 61L, true).getState());
+        assertEquals(null, request.getOfferToken(), "host must never receive the player's payment token");
+        service.decideHost(999L, ACTIVITY, TICKET, 61L, true);
+        verify(ticketMapper, times(1)).deductInventory(TICKET, 1L);
+        InOrder order = inOrder(mapper, ticketMapper);
+        order.verify(mapper).selectClubOwnerForUpdate(CLUB);
+        order.verify(ticketMapper).selectOmsTicketByIdForUpdate(TICKET);
+        authorizeHost(999L, ACTIVITY + 1);
+        assertThrows(ServiceException.class, () -> service.decideHost(999L, ACTIVITY, TICKET, 61L, true));
+        verify(ticketMapper, times(1)).deductInventory(TICKET, 1L);
+    }
+
+    @Test
+    void requestedTimeoutDoesNotCreateInventoryAndAcceptedRejectionReleasesOnlyOnce() {
+        hostPolicy();
+        authorizeHost(999L, ACTIVITY);
+        ClubWaitlistEntry request = entry(61L, ClubWaitlistEntry.REQUESTED, 0, new Date(System.currentTimeMillis() - 1));
+        when(mapper.selectWaitlistById(61L)).thenReturn(request);
+        when(mapper.selectWaitlistByIdForUpdate(61L)).thenReturn(request);
+        when(mapper.expireOfferedCas(eq(61L), eq(0), any(Date.class))).thenReturn(1);
+        assertTrue(service.expireOffered(61L, new Date()));
+        verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
+
+        ClubWaitlistEntry offered = entry(62L, ClubWaitlistEntry.OFFERED, 1, new Date(System.currentTimeMillis() + 60_000));
+        when(mapper.selectWaitlistByIdForUpdate(62L)).thenReturn(offered);
+        when(mapper.rejectHostRequestCas(offered)).thenReturn(1);
+        when(ticketMapper.restoreInventory(TICKET, 1L)).thenReturn(1);
+        assertEquals(ClubWaitlistEntry.REJECTED, service.decideHost(999L, ACTIVITY, TICKET, 62L, false).getState());
+        service.decideHost(999L, ACTIVITY, TICKET, 62L, false);
+        verify(ticketMapper, times(1)).restoreInventory(TICKET, 1L);
+    }
+
+    @Test
+    void ordinarySeriesDoesNotRequireHostAndExpiredHostOfferCannotQuote() {
+        service.requireHostAcceptance(ACTIVITY, null);
+        hostPolicy();
+        ClubWaitlistEntry offer = entry(61L, ClubWaitlistEntry.OFFERED, 0, new Date(System.currentTimeMillis() - 1));
+        offer.setOfferedAt(new Date(System.currentTimeMillis() - 60_000));
+        offer.setOfferTokenHash(tokenCodec.hash(tokenCodec.token(offer)));
+        when(mapper.selectWaitlistById(61L)).thenReturn(offer);
+        RegistrationRequest request = request(61L, tokenCodec.token(offer), ACTIVITY, TICKET);
+        assertThrows(ServiceException.class, () -> service.validateForQuote(MEMBER, request, new Date()));
+        verify(mapper, never()).claimOfferCas(anyLong(), anyInt(), anyLong(), anyLong(), anyLong(), any(Date.class));
+    }
+
+    @Test
+    void hostStatusUsesTheOriginalOrderAndNeverCallsAManualPaymentConfirmed() {
+        hostPolicy();
+        ClubWaitlistEntry row = entry(61L, ClubWaitlistEntry.CLAIMED, 1, new Date(System.currentTimeMillis() + 60_000));
+        row.setRegistrationId(701L);
+        when(mapper.selectLatestWaitlist(MEMBER, ACTIVITY, TICKET)).thenReturn(row);
+        when(mapper.countActiveRegistration(MEMBER, ACTIVITY, TICKET)).thenReturn(1);
+        when(mapper.selectHostReservationOrderState(701L)).thenReturn(
+                Map.of("paymentStatus", 1, "registrationStatus", 1, "reviewRequired", 1));
+        assertEquals("PAYMENT_REVIEW_REQUIRED", service.myStatus(MEMBER, ACTIVITY, TICKET).getReservationState());
+        when(mapper.selectHostReservationOrderState(701L)).thenReturn(
+                Map.of("paymentStatus", 2, "registrationStatus", 2, "reviewRequired", 0));
+        assertEquals("CONFIRMED", service.myStatus(MEMBER, ACTIVITY, TICKET).getReservationState());
+        when(mapper.selectHostReservationOrderState(701L)).thenReturn(
+                Map.of("paymentStatus", 4, "registrationStatus", 3, "reviewRequired", 0));
+        assertEquals("CANCELLED", service.myStatus(MEMBER, ACTIVITY, TICKET).getReservationState());
+    }
+
+    @Test
+    void hostCannotAcceptAnExpiredRequestOrAStartedOccurrence() {
+        hostPolicy();
+        authorizeHost(999L, ACTIVITY);
+        ClubWaitlistEntry expired = entry(61L, ClubWaitlistEntry.REQUESTED, 0, new Date(System.currentTimeMillis() - 1000));
+        when(mapper.selectWaitlistByIdForUpdate(61L)).thenReturn(expired);
+        assertThrows(ServiceException.class, () -> service.decideHost(999L, ACTIVITY, TICKET, 61L, true));
+        expired.setOfferExpiresAt(new Date(System.currentTimeMillis() + 60_000));
+        when(mapper.selectHostBookableActivityForUpdate(eq(ACTIVITY), eq(CLUB), any(Date.class))).thenReturn(null);
+        assertThrows(ServiceException.class, () -> service.decideHost(999L, ACTIVITY, TICKET, 61L, true));
+        verify(ticketMapper, never()).deductInventory(anyLong(), anyLong());
+    }
+
     private java.util.List<Map<String, Object>> maintenanceTarget(long scanId, long targetId) {
         Map<String, Object> row = new HashMap<>(); row.put("scanId", scanId); row.put("targetId", targetId);
         return Collections.singletonList(row);

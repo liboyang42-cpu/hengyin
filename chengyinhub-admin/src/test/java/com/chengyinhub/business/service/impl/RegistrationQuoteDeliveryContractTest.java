@@ -122,6 +122,18 @@ class RegistrationQuoteDeliveryContractTest {
         assertEquals(Boolean.TRUE, delivery.getAmountFromServer());
     }
 
+    @Test
+    void ordinaryQuoteCannotBypassTheServerSideHostAcceptanceGate() {
+        CmsRegistrationServiceImpl service = service();
+        var bridge = org.mockito.Mockito.mock(com.chengyinhub.business.service.IClubWaitlistOrderBridge.class);
+        org.mockito.Mockito.doThrow(new com.chengyinhub.common.exception.ServiceException("请先申请主持预约"))
+                .when(bridge).requireHostAcceptance(ACTIVITY_ID, null);
+        ReflectionTestUtils.setField(service, "clubWaitlistOrderBridge", bridge);
+        org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.quoteRegistration(MEMBER_ID, 2, ACTIVITY_ID, TICKET_ID, null, 0));
+        org.mockito.Mockito.verify(ticketMapper, org.mockito.Mockito.never()).selectOmsTicketById(TICKET_ID);
+    }
+
     /** 摘要不参与签名：换票名/退款规则原文不得让已发出的报价失效。 */
     @Test
     void deliveryFieldsDoNotChangeQuoteSign() {

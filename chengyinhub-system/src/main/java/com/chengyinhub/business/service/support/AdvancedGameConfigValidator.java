@@ -1294,12 +1294,9 @@ public class AdvancedGameConfigValidator {
      *
      * <p><b>「提前指认」不在保存期拒绝</b>:{@code earlyAccuse.allowed} 是用户已授权的玩法,
      * {@code AccusationTemplateSupport.validate} 已保证 {@code allowed=true} 时作者写明 {@code recordAs}。
-     * 保存闸不能因为运行期缺「本局尚未走完」的事实来源就去否定作者的合法配置 ——
-     * 那等于把已授权玩法挡在门外,还会掩盖真实缺口。
-     *
-     * <p>⚠️ <b>已知缺口(如实登记,不冒充完成)</b>:运行期目前没有「本局尚未走完」的既有服务端事实,
-     * 因此 {@code early} 恒为 false;把该事实接进 {@code AccusationOutcomePolicy.judge} 的
-     * {@code clueGateSatisfied} 是运行时 owner 的接线工作,不是本闸的判断。
+     * 保存闸只查配置形状；运行期由既有主题节点与本局完成进度判定是否提前，
+     * 并将 {@code AccusationOutcomePolicy.judge} 的结论写入原动作回执。
+     * 进度不可判定时运行期拒绝落账，不由保存闸猜测进度。
      */
     private void validateAccusation(JsonNode root) {
         AccusationTemplateSupport.validate(root);

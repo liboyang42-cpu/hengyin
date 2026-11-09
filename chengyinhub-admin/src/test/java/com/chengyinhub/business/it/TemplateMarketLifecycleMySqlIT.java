@@ -75,7 +75,7 @@ class TemplateMarketLifecycleMySqlIT {
             connection.createStatement().execute(menu.group());
             ItSchema.applyMigrations(connection, "sql/migration_p3_platform_foundation.sql",
                     "sql/migration_audit_open_task_guard_20260721.sql", "sql/migration_business_audit_event_20260823.sql",
-                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql");
+                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql");
             String governance = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_approval_governance_20260828.sql")), java.nio.charset.StandardCharsets.UTF_8);
             java.util.regex.Matcher alter = java.util.regex.Pattern.compile("(?is)ALTER TABLE (?:audit_record|business_audit_event)\\s+.*?;").matcher(governance);
             int applied = 0;

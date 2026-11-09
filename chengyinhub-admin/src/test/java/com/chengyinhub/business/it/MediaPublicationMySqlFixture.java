@@ -37,6 +37,9 @@ final class MediaPublicationMySqlFixture {
         AppMediaAssetMapper mapper = sql.getMapper(AppMediaAssetMapper.class);
         int inserted = approved ? mapper.insertApprovedImage(asset) : mapper.insert(asset);
         org.junit.jupiter.api.Assertions.assertEquals(1, inserted);
+        asset.put("sourceType", "original");
+        asset.put("licenseNote", "仅测试夹具：原创素材声明");
+        org.junit.jupiter.api.Assertions.assertEquals(1, mapper.updateProvenance(asset));
         return "media-asset:" + asset.get("id");
     }
 }

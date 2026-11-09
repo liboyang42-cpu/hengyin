@@ -75,7 +75,7 @@ class E01_16Test {
                 + "member_id bigint,payment_status int,registration_status int)");
         jdbc.execute("create table club_event_series(id bigint primary key,club_id bigint,topic_id bigint,"
                 + "recurrence_type varchar(32),timezone varchar(64),default_lead_member_id bigint,default_capacity int,"
-                + "waitlist_enabled int,offer_minutes int,status varchar(16),version int,created_by_member_id bigint,"
+                + "waitlist_enabled int,host_reservation_required int default 0,offer_minutes int,status varchar(16),version int,created_by_member_id bigint,"
                 + "request_id varchar(64),request_fingerprint varchar(64),create_by varchar(64),create_time timestamp,"
                 + "update_by varchar(64),update_time timestamp)");
         jdbc.execute("create table club_event_occurrence(id bigint primary key,series_id bigint,activity_id bigint,"

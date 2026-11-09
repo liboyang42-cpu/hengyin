@@ -449,6 +449,214 @@ class PostGameOutcomeReportServiceImplTest {
         assertNotNull(report.getSourceWatermarks().get("cms_registration.payment_time"));
     }
 
+    @Test
+    void repeatSignupV1CountsSameDayIndependentOrderWithoutChangingLegacyV2() {
+        stubHistory(List.of(
+                paid(30L, 301L, "FIRST", "50.00", at("2026-10-01T09:00:00")),
+                paid(30L, 302L, "SECOND", "50.00", at("2026-10-01T10:00:00"))));
+
+        PostGameOutcomeReportVO report = matureService().generate(COHORT, 30);
+
+        assertEquals("POST_GAME_OUTCOME_V2_20261108", report.getBasisVersion());
+        assertEquals(Long.valueOf(0), report.getCohort().retainedMembers());
+        assertEquals(0L, report.getMetrics().get(PostGameOutcomeReportServiceImpl.SECOND_REGISTRATION).members());
+        PostGameOutcomeReportVO.RepeatSignupV1 repeat = report.getRepeatSignupV1();
+        assertEquals("repeat_signup_v1", repeat.definitionVersion());
+        assertEquals(30, repeat.windowDays());
+        assertTrue(repeat.available());
+        assertEquals(1, repeat.paid().eligibleMembers());
+        assertEquals(Long.valueOf(1), repeat.paid().retainedMembers());
+        assertEquals(Long.valueOf(1), repeat.all().retainedMembers());
+        assertTrue(repeat.identityBasis().contains("member_id"));
+        assertTrue(repeat.recomputeBasis().contains("sourceWatermarks"));
+        assertNull(matureService().generate(COHORT, 7).getRepeatSignupV1());
+        assertNull(matureService().generate(COHORT, 90).getRepeatSignupV1());
+    }
+
+    @Test
+    void repeatSignupV1CollapsesSeatsAndDoesNotInferOrderAtEqualPaymentTime() {
+        stubHistory(List.of(
+                paidSeat(31L, 311L, "SEATS", "50.00", at("2026-10-01T09:00:00"), 3),
+                paidSeat(31L, 312L, "SEATS", "50.00", at("2026-10-01T10:00:00"), 3),
+                paidSeat(31L, 313L, "SEATS", "50.00", at("2026-10-02T09:00:00"), 3),
+                paid(32L, 321L, "SAME-TIME-A", "50.00", at("2026-10-01T09:00:00")),
+                paid(32L, 322L, "SAME-TIME-B", "50.00", at("2026-10-01T09:00:00"))));
+
+        PostGameOutcomeReportVO.RepeatSignupV1 repeat = matureService().generate(COHORT, 30).getRepeatSignupV1();
+
+        assertEquals(2, repeat.paid().eligibleMembers());
+        assertEquals(Long.valueOf(0), repeat.paid().retainedMembers());
+        assertEquals(Long.valueOf(0), repeat.all().retainedMembers());
+    }
+
+    @Test
+    void repeatSignupV1UsesActualThirtyDaysFromPaymentAndExclusiveEnd() {
+        stubHistory(List.of(
+                paid(33L, 331L, "BEFORE-A", "50.00", at("2026-10-01T09:00:00")),
+                paid(33L, 332L, "BEFORE-B", "50.00", at("2026-10-31T08:59:59.999")),
+                paid(34L, 341L, "EXACT-A", "50.00", at("2026-10-01T09:00:00")),
+                paid(34L, 342L, "EXACT-B", "50.00", at("2026-10-31T09:00:00")),
+                paid(35L, 351L, "AFTER-A", "50.00", at("2026-10-01T09:00:00")),
+                paid(35L, 352L, "AFTER-B", "50.00", at("2026-10-31T23:59:59"))));
+
+        PostGameOutcomeReportVO report = matureService().generate(COHORT, 30);
+
+        assertEquals(Long.valueOf(3), report.getCohort().retainedMembers(), "legacy 次日起算口径保留");
+        assertEquals(3, report.getRepeatSignupV1().paid().matureMembers());
+        assertEquals(Long.valueOf(1), report.getRepeatSignupV1().paid().retainedMembers());
+        assertEquals(new BigDecimal("0.3333"), report.getRepeatSignupV1().paid().retentionRate());
+    }
+
+    @Test
+    void repeatSignupV1SkipsInvalidFirstOrdersAndPreservesRefundFacts() {
+        RegistrationCohortFact refunded = paid(36L, 361L, "FULL", "50.00", at("2026-09-20T09:00:00"));
+        refunded.setSettledRefundAmount(new BigDecimal("50.00"));
+        refunded.setHasSettledRefund(true);
+        RegistrationCohortFact cancelled = paid(36L, 362L, "CANCEL", "50.00", at("2026-09-21T09:00:00"));
+        cancelled.setRegistrationStatus(3);
+        RegistrationCohortFact expired = paid(36L, 363L, "EXPIRE", "50.00", at("2026-09-22T09:00:00"));
+        expired.setRegistrationStatus(4);
+        RegistrationCohortFact first = paid(36L, 364L, "VALID-A", "50.00", at("2026-10-01T09:00:00"));
+        first.setHasSettledRefund(true);
+        first.setSettledRefundAmount(new BigDecimal("5.00"));
+        first.setPendingRefundCount(1);
+        RegistrationCohortFact second = paid(36L, 365L, "VALID-B", "50.00", at("2026-10-01T10:00:00"));
+        second.setHasSettledRefund(true);
+        second.setSettledRefundAmount(new BigDecimal("10.00"));
+        second.setPendingRefundCount(1);
+        stubHistory(List.of(refunded, cancelled, expired, first, second));
+
+        PostGameOutcomeReportVO.RepeatSignupCohort paid =
+                matureService().generate(COHORT, 30).getRepeatSignupV1().paid();
+
+        assertEquals(1, paid.eligibleMembers());
+        assertEquals(Long.valueOf(1), paid.retainedMembers());
+        assertEquals(1, paid.partialRefundMembers());
+        assertEquals(1, paid.pendingRefundMembers());
+        assertEquals(1, paid.partialRefundRetained());
+        assertEquals(1, paid.pendingRefundRetained());
+        assertEquals(new BigDecimal("50.00"), refunded.getSettledRefundAmount());
+        assertEquals(Integer.valueOf(2), refunded.getPaymentStatus(), "读取不改原退款/支付事实");
+    }
+
+    @Test
+    void repeatSignupV1ExcludesRefundedSecondOrderButPendingRefundRemainsValid() {
+        RegistrationCohortFact second = paid(37L, 372L, "FULL-SECOND", "50.00", at("2026-10-01T10:00:00"));
+        second.setPaymentStatus(4);
+        RegistrationCohortFact pending = paid(38L, 382L, "PENDING-SECOND", "50.00", at("2026-10-01T10:00:00"));
+        pending.setPendingRefundCount(1);
+        stubHistory(List.of(
+                paid(37L, 371L, "FULL-FIRST", "50.00", at("2026-10-01T09:00:00")), second,
+                paid(38L, 381L, "PENDING-FIRST", "50.00", at("2026-10-01T09:00:00")), pending));
+
+        PostGameOutcomeReportVO.RepeatSignupCohort paid =
+                matureService().generate(COHORT, 30).getRepeatSignupV1().paid();
+
+        assertEquals(2, paid.eligibleMembers());
+        assertEquals(Long.valueOf(1), paid.retainedMembers());
+        assertEquals(1, paid.pendingRefundRetained());
+    }
+
+    @Test
+    void repeatSignupV1KeepsPaidAndAllSignupCohortsSeparateIncludingFreeOrders() {
+        stubHistory(List.of(
+                paid(39L, 391L, "CASH-A", "50.00", at("2026-10-01T09:00:00")),
+                paid(39L, 392L, "FREE-B", "0.00", at("2026-10-01T10:00:00")),
+                paid(40L, 401L, "FREE-FIRST", "0.00", at("2026-10-01T09:00:00")),
+                paid(40L, 402L, "CASH-FIRST", "50.00", at("2026-10-01T10:00:00")),
+                paid(40L, 403L, "CASH-SECOND", "50.00", at("2026-10-02T10:00:00"))));
+
+        PostGameOutcomeReportVO.RepeatSignupV1 repeat = matureService().generate(COHORT, 30).getRepeatSignupV1();
+
+        assertEquals(2, repeat.paid().eligibleMembers());
+        assertEquals(Long.valueOf(1), repeat.paid().retainedMembers());
+        assertEquals(2, repeat.all().eligibleMembers());
+        assertEquals(Long.valueOf(2), repeat.all().retainedMembers());
+    }
+
+    @Test
+    void repeatSignupV1MaturesEachMemberAtTheirOwnThirtyDayBoundary() {
+        stubHistory(List.of(
+                paid(41L, 411L, "EARLY-A", "50.00", at("2026-10-01T09:00:00")),
+                paid(41L, 412L, "EARLY-B", "50.00", at("2026-10-01T10:00:00")),
+                paid(42L, 421L, "LATE-A", "50.00", at("2026-10-01T11:00:00")),
+                paid(42L, 422L, "LATE-B", "50.00", at("2026-10-01T12:00:00"))));
+        PostGameOutcomeReportServiceImpl boundaryService = new PostGameOutcomeReportServiceImpl(mapper, null,
+                Clock.fixed(at("2026-10-31T09:00:00").toInstant(), ZONE));
+
+        PostGameOutcomeReportVO report = boundaryService.generate(COHORT, 30);
+
+        assertFalse(report.isMature(), "legacy 仍等待次日起算的整日窗");
+        assertEquals(2, report.getRepeatSignupV1().paid().eligibleMembers());
+        assertEquals(1, report.getRepeatSignupV1().paid().matureMembers());
+        assertEquals(1, report.getRepeatSignupV1().paid().notMatureMembers());
+        assertEquals(Long.valueOf(1), report.getRepeatSignupV1().paid().retainedMembers());
+        assertEquals(new BigDecimal("1.0000"), report.getRepeatSignupV1().paid().retentionRate());
+        PostGameOutcomeReportVO.RepeatSignupCohort immature =
+                immatureService().generate(COHORT, 30).getRepeatSignupV1().paid();
+        assertEquals(0, immature.matureMembers());
+        assertEquals(2, immature.notMatureMembers());
+        assertNull(immature.retainedMembers());
+        assertNull(immature.retentionRate());
+    }
+
+    @Test
+    void repeatSignupV1IgnoresFutureFirstPaymentAndMarksLateFactsForRecompute() {
+        RegistrationCohortFact late = paid(43L, 432L, "LATE-B", "50.00", at("2026-10-01T10:00:00"));
+        late.setCreateTime(at("2026-11-10T09:00:00"));
+        stubHistory(List.of(
+                paid(43L, 431L, "LATE-A", "50.00", at("2026-10-01T09:00:00")), late,
+                paid(44L, 441L, "FUTURE", "50.00", at("2026-10-01T12:00:00"))));
+        Map<String, Object> watermark = new HashMap<>();
+        watermark.put("sourceName", "cms_registration.payment_time");
+        watermark.put("watermarkAt", at("2026-11-10T09:00:00"));
+        when(mapper.selectSourceWatermarks()).thenReturn(List.of(watermark));
+        PostGameOutcomeReportServiceImpl sameDayService = new PostGameOutcomeReportServiceImpl(mapper, null,
+                Clock.fixed(at("2026-10-01T11:00:00").toInstant(), ZONE));
+
+        assertEquals(1, sameDayService.generate(COHORT, 30).getRepeatSignupV1().paid().eligibleMembers());
+        PostGameOutcomeReportVO report = matureService().generate(COHORT, 30);
+        assertEquals(1, report.getRepeatSignupV1().paid().lateFactCount());
+        assertEquals(at("2026-11-10T09:00:00"),
+                report.getSourceWatermarks().get("cms_registration.payment_time"));
+    }
+
+    @Test
+    void repeatSignupV1MissingRelevantOrderIdentityIsUnknownWithoutBreakingLegacy() {
+        stubHistory(List.of(
+                paid(45L, 451L, "KNOWN", "50.00", at("2026-10-01T09:00:00")),
+                paid(45L, 452L, null, "50.00", at("2026-10-02T09:00:00"))));
+
+        PostGameOutcomeReportVO report = matureService().generate(COHORT, 30);
+
+        assertEquals(Long.valueOf(1), report.getCohort().retainedMembers(), "legacy fallback 保留");
+        assertFalse(report.getRepeatSignupV1().available());
+        assertNotNull(report.getRepeatSignupV1().unknownReason());
+        assertNull(report.getRepeatSignupV1().paid());
+        assertNull(report.getRepeatSignupV1().all());
+
+        stubHistory(List.of(paid(45L, 451L, "", "50.00", at("2026-10-01T09:00:00"))));
+        assertFalse(matureService().generate(COHORT, 30).getRepeatSignupV1().available());
+    }
+
+    @Test
+    void repeatSignupV1UnrelatedMissingOrderIdentityDoesNotPoisonCurrentCohort() {
+        RegistrationCohortFact invalid = paid(47L, 471L, null, "50.00", at("2026-09-20T09:00:00"));
+        invalid.setRegistrationStatus(3);
+        stubHistory(List.of(
+                paid(46L, 461L, null, "50.00", at("2026-09-20T09:00:00")),
+                paid(46L, 462L, "OLD-COHORT", "50.00", at("2026-10-01T09:00:00")), invalid,
+                paid(47L, 472L, "FIRST-VALID", "50.00", at("2026-10-01T09:00:00")),
+                paid(47L, 473L, null, "50.00", at("2026-10-31T09:00:00")),
+                paid(47L, 474L, null, "50.00", at("2026-11-01T09:00:00"))));
+
+        PostGameOutcomeReportVO.RepeatSignupV1 repeat = matureService().generate(COHORT, 30).getRepeatSignupV1();
+
+        assertTrue(repeat.available());
+        assertEquals(1, repeat.paid().eligibleMembers(), "更早的有效首单仍归原cohort，首个无效单可跳过");
+        assertEquals(Long.valueOf(0), repeat.paid().retainedMembers());
+    }
+
     private void stubHistory(List<RegistrationCohortFact> facts) {
         List<Long> members = new ArrayList<>();
         for (RegistrationCohortFact fact : facts) {

@@ -231,17 +231,6 @@ public class MarketingProductPurchaseServiceImpl implements IMarketingProductPur
         }
         MarketingProductOrder order = orderMapper.selectByOrderNoForUpdate(orderNo.trim());
         if (order == null) throw MarketingProductException.notFound("ORDER_NOT_FOUND", "订单不存在");
-        if (Integer.valueOf(MarketingProductOrder.STATUS_PAID).equals(order.getStatus())
-                || Integer.valueOf(MarketingProductOrder.STATUS_REFUNDED).equals(order.getStatus())) {
-            if (Integer.valueOf(MarketingProductOrder.PAYMENT_FACT_WECHAT).equals(order.getPaymentFactType())
-                    && order.getPaymentFactId() != null && order.getPaymentFactId() == factId) {
-                return orderView(order);
-            }
-            throw MarketingProductException.conflict("PAYMENT_ALREADY_SETTLED", "订单已用另一支付事实结算");
-        }
-        if (!Integer.valueOf(MarketingProductOrder.STATUS_PENDING_CASH).equals(order.getStatus())) {
-            throw MarketingProductException.conflict("ORDER_NOT_PAYABLE", "订单当前不可支付");
-        }
         WechatVerifiedPaymentFactService.Stored stored;
         try {
             stored = verifiedFacts.requireVerified(new WechatVerifiedPaymentFact.Reference(factId, factHash));
@@ -263,6 +252,15 @@ public class MarketingProductPurchaseServiceImpl implements IMarketingProductPur
         long expectedFen = order.getTotalCashAmount().movePointRight(2).longValueExact();
         if (facts.totalFen() != expectedFen || facts.amountFen() != expectedFen) {
             throw MarketingProductException.conflict("PAYMENT_FACT_AMOUNT_MISMATCH", "支付金额与订单不符");
+        }
+        if (Integer.valueOf(MarketingProductOrder.STATUS_PAID).equals(order.getStatus())
+                || Integer.valueOf(MarketingProductOrder.STATUS_REFUNDED).equals(order.getStatus())) {
+            if (Integer.valueOf(MarketingProductOrder.PAYMENT_FACT_WECHAT).equals(order.getPaymentFactType())
+                    && order.getPaymentFactId() != null && order.getPaymentFactId() == factId) return orderView(order);
+            throw MarketingProductException.conflict("PAYMENT_ALREADY_SETTLED", "订单已用另一支付事实结算");
+        }
+        if (!Integer.valueOf(MarketingProductOrder.STATUS_PENDING_CASH).equals(order.getStatus())) {
+            throw MarketingProductException.conflict("ORDER_NOT_PAYABLE", "订单当前不可支付");
         }
         Date now = new Date();
         if (orderMapper.markCashPaid(order.getId(), factId, now, now) != 1) {
@@ -294,6 +292,9 @@ public class MarketingProductPurchaseServiceImpl implements IMarketingProductPur
             return false;
         }
         if (paidAmountFen.longValue() != expectedFen) return false;
+        WechatVerifiedPaymentFactService.Stored original = verifiedFacts.requireVerified(reference);
+        if (!java.util.Objects.equals(transactionId, original.facts().transactionId())
+                || !orderNo.trim().equals(original.facts().businessOutTradeNo())) return false;
         // 异常必须向上抛：同事务回滚，原回调不 ACK 成功，由微信重投/原 inbox 保留失败态。
         // 这里吞掉异常会让已写入的半成品随外层事务提交（self-invocation 不新开事务）。
         settleVerifiedCashPayment(orderNo.trim(), reference.id(), reference.hash());

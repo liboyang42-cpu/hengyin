@@ -259,4 +259,18 @@ class AppMediaReferenceGuardTest {
         assertThrows(ServiceException.class, () -> guard.requireAttachments(11L, "[{\"url\":1}]", true));
         assertThrows(ServiceException.class, () -> guard.requireAttachments(11L, "[\"media-asset:7\"", true));
     }
+
+    @Test void attributionUsesRealApprovedReceiptAndNeverReturnsPrivateLicenceOrModel() {
+        Map<String,Object> row=new java.util.HashMap<>(Map.of("id",7L,"memberId",11L,"ownerType","APP",
+                "objectKey",KEY,"reviewState","APPROVED","sourceType","ai-generated",
+                "licenseNote","private agreement","attribution","Test credit","aiModel","private model"));
+        when(mapper.select(7L)).thenReturn(row);when(mapper.selectByObjectKey(KEY)).thenReturn(row);
+        Map<String,Object> safe=guard.publicAttribution("media-asset:7");
+        assertEquals(Map.of("sourceType","ai-generated","attribution","Test credit","aiGenerated",true,"sourcePendingConfirmation",false),safe);
+        assertEquals(safe,guard.publicAttribution("https://ignored.invalid/"+KEY+"?temporary-signature=test"));
+        row.put("reviewState","HOLD");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->guard.publicAttribution("media-asset:7"));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->guard.publicAttribution("https://outside.invalid/image.jpg"));
+        verifyNoInteractions(assets);
+    }
 }

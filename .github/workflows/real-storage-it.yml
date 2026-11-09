@@ -186,6 +186,8 @@ jobs:
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
       B_PAYMENT_INTENT_DDL_APPROVED: ${{ (matrix.simple == 'WechatPaymentIntentMySqlIT' || matrix.simple == 'RegistrationCallbackIntentMySqlIT' || matrix.simple == 'CoopDepositSettlementAttemptMySqlIT' || matrix.simple == 'CashWithdrawFundEvidenceMySqlIT' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'FundsProcessRecoveryMySqlIT') && '1' || '' }}
+      CHENGYIN_B_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'MarketingCashOriginalRefundMySqlIT' && '1' || '' }}
+      CHENGYIN_A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: ${{ matrix.simple == 'MarketingCashOriginalRefundMySqlIT' && '1' || '' }}
       B_FUNDS_PROCESS_RECOVERY_APPROVED: ${{ matrix.simple == 'FundsProcessRecoveryMySqlIT' && '1' || '' }}
       WP04_TOPIC_CASH_DDL_APPROVED: ${{ matrix.simple == 'Wp04TopicCashFenceMySqlIT' && '1' || '' }}
       B_PAYMENT_FACT_DDL_APPROVED: ${{ (matrix.simple == 'OmsOrderCommerceGuardMySqlIT' || matrix.simple == 'ClmCommercePaymentProofMySqlIT' || matrix.simple == 'WechatVerifiedPaymentFactMySqlIT' || matrix.simple == 'RegistrationTopicFenceMySqlIT' || matrix.simple == 'RefundNotificationMybatisIntegrationTest' || matrix.simple == 'RefundRetryAndRemainderMySqlIT' || matrix.simple == 'RegistrationFundsMybatisIntegrationTest' || matrix.simple == 'RefundPayoutMybatisIntegrationTest' || matrix.simple == 'CrossDomainFaultIsolationMySqlIT' || matrix.simple == 'RestoreMoneyDispatchMySqlIT') && '1' || '' }}

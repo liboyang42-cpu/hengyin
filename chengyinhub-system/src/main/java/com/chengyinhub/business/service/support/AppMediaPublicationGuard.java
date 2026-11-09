@@ -72,6 +72,51 @@ public class AppMediaPublicationGuard {
         }
     }
 
+    public Set<String> missingTopicLicenses(CmsTopic topic) {
+        Set<String> missing = new java.util.LinkedHashSet<>();
+        collectMissingLicenses(topic, missing, "imgUrl", "imgArr", "audioUrl", "finishMedalImg",
+                "gameModuleConfigJson", "themeRuntimeConfigJson", "publishedThemeRuntimeConfigJson", "journeyStoryJson");
+        CmsTopicChapter chapterQuery = new CmsTopicChapter(); chapterQuery.setTopicId(topic.getId());
+        java.util.List<CmsTopicChapter> chapterRows = chapters.selectCmsTopicChapterList(chapterQuery);
+        if (chapterRows != null) for (CmsTopicChapter row : chapterRows)
+            collectMissingLicenses(row, missing, "audioUrl", "imgArr", "blocksJson");
+        CmsTopicNode nodeQuery = new CmsTopicNode(); nodeQuery.setTopicId(topic.getId());
+        java.util.List<CmsTopicNode> nodeRows = nodes.selectCmsTopicNodeList(nodeQuery);
+        if (nodeRows != null) for (CmsTopicNode row : nodeRows) {
+            collectMissingLicenses(row, missing, "imgUrl");
+            if (row.getTemplateId() != null && row.getTemplateId() > 0)
+                collectMissingLicenses(templates.selectCmsMemberTemplateById(row.getTemplateId()), missing, TEMPLATE_MEDIA_FIELDS);
+        }
+        return missing;
+    }
+
+    private void collectMissingLicenses(Object bean, Set<String> missing, String... fields) {
+        if (bean == null) return;
+        BeanWrapper properties = new BeanWrapperImpl(bean);
+        for (String field : fields) {
+            if (!properties.isReadableProperty(field)) continue;
+            Object raw = properties.getPropertyValue(field);
+            if (!(raw instanceof String text) || text.isBlank()) continue;
+            Set<String> values = new HashSet<>();
+            collectReferences(text.trim(), values);
+            if (AppMediaSchema.MULTI_MEDIA_FIELDS.contains(field) && !text.trim().startsWith("["))
+                java.util.Collections.addAll(values, text.split("[;,]"));
+            for (String value : values) {
+                String reference = references.missingLicenseReference(value);
+                if (reference != null) missing.add(reference);
+            }
+        }
+    }
+
+    private void requirePublicationReferences(String value) {
+        if (value == null || value.isBlank()) return;
+        if (value.trim().startsWith("[")) {
+            try {
+                for (JsonNode item : json.readTree(value)) references.requirePublicationDeclaration(item.asText());
+            } catch (IOException invalid) { throw new ServiceException("媒体配置格式不正确", 422); }
+        } else for (String item : value.split("[;,]")) references.requirePublicationDeclaration(item.trim());
+    }
+
     /**
      * 业主口径(2026-10-29 V-11/V-13):公开模板自带的图片(封面与玩法素材)谁采用谁就能直接用。
      * 采用稿(originalTemplateId)沿用来源库模板里原样存在的引用;已登记媒体仍走原审核事实与归属校验。
@@ -117,6 +162,7 @@ public class AppMediaPublicationGuard {
             else if (AppMediaSchema.MULTI_MEDIA_FIELDS.contains(field))
                 safe = inheritedAsIs(value, inherited) ? value : references.requireAttachments(actor(owner), value, publish);
             else safe = requireMedia(owner, value, publish, inherited);
+            if (publish && AppMediaSchema.MULTI_MEDIA_FIELDS.contains(field)) requirePublicationReferences(safe);
             properties.setPropertyValue(field, safe);
         }
     }
@@ -132,7 +178,9 @@ public class AppMediaPublicationGuard {
         if (com.chengyinhub.business.support.NpcAvatar.isPreset(reference)) return reference;
         if ((reference.startsWith("/images/") || reference.startsWith("/assets/"))
                 && !reference.contains("..") && !reference.contains("%")) return reference;
-        return references.requireAttachment(actor(owner), reference, publish);
+        String safe = references.requireAttachment(actor(owner), reference, publish);
+        if (publish) references.requirePublicationDeclaration(safe);
+        return safe;
     }
 
     private boolean inheritedAsIs(String reference, Set<String> inherited) {

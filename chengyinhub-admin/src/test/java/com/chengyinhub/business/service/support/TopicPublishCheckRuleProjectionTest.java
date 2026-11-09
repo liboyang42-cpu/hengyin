@@ -27,6 +27,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 /**
  * 发布前试检查的规则投影:真实发布闸会拦的每一类问题,预检都要提前列出,并且能定位到章节/块/字段。
@@ -168,6 +169,17 @@ class TopicPublishCheckRuleProjectionTest {
         assertReadOnly(chapterMapper, "CmsTopicChapterMapper");
         assertReadOnly(ticketMapper, "OmsTicketMapper");
         assertReadOnly(keyMapper, "ThemeStateKeyMapper");
+    }
+
+    @Test void missingAssetDeclarationIsASaveWarningFromTheOriginalMediaOwner() {
+        AppMediaPublicationGuard media=mock(AppMediaPublicationGuard.class);
+        when(media.missingTopicLicenses(any(CmsTopic.class))).thenReturn(java.util.Set.of("media-asset:7"));
+        ReflectionTestUtils.setField(service,"mediaPublicationGuard",media);
+        TopicPublishCheckService.PublishCheckIssue issue=service.check(topic()).stream()
+                .filter(row->AppMediaProvenance.LICENSE_MISSING.equals(row.getCode())).findFirst().orElseThrow();
+        assertEquals("warn",issue.getLevel());assertEquals("mediaAsset",issue.getField());
+        assertTrue(issue.getMessage().contains("media-asset:7"));
+        verify(media).missingTopicLicenses(any(CmsTopic.class));
     }
 
     private void stubTemplate(String advancedConfigJson) {

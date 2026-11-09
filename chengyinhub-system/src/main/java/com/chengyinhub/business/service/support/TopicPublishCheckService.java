@@ -88,6 +88,9 @@ public class TopicPublishCheckService {
         this.topicAiPrecheckService = topicAiPrecheckService;
     }
 
+    @Autowired
+    private AppMediaPublicationGuard mediaPublicationGuard;
+
     /** 试检查:error = 发布会被拦,warn = 不拦但有话要说。主题为空返回空列表。 */
     public List<PublishCheckIssue> check(CmsTopic topic) {
         List<PublishCheckIssue> issues = new ArrayList<PublishCheckIssue>();
@@ -148,6 +151,9 @@ public class TopicPublishCheckService {
             issues.addAll(topicAiPrecheckService.check(topic, nodes));
         }
         appendPublicationRuleIssues(topic, issues);
+        if (mediaPublicationGuard != null) for (String asset : mediaPublicationGuard.missingTopicLicenses(topic))
+            issues.add(PublishCheckIssue.warn(AppMediaProvenance.LICENSE_MISSING, null,
+                    "素材来源或授权声明待确认：" + asset).at("mediaAsset", AppMediaProvenance.LICENSE_MISSING));
         return locate(topic.getId(), issues, nodes);
     }
 

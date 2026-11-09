@@ -34,8 +34,7 @@
   ],
   "notImplemented": [
     "全案总时钟（原文明确不立项）",
-    "自由证据组合推理引擎",
-    "提前指认（earlyAccuse.allowed=true）：缺『本局尚未走完』的既有服务端事实"
+    "自由证据组合推理引擎"
   ],
   "reuse": "计时仅用既有 timer（节点级，timeoutResult=FAILED，不设全案总时钟）；指认最终一题复用既有 qa PICK，对错真源只有 qa.options[].correct，accusation 不另存正确项；结案呈现用 G0 新增的 accusation 段（CT-07 配置映射）",
   "mediaSpec": [
@@ -78,7 +77,7 @@
   ],
   "placeholderFields": [
     "timer.durationSeconds = 900：节点级计时时长，原文未给数值，须作者按现场节奏改写",
-    "accusation.earlyAccuse.allowed = false：提前结案缺少可核的本局事实来源，G0 在保存/发布期拒绝开启；productStatus 保持待产品裁定"
+    "accusation.earlyAccuse.allowed = false：本映射样本未开启提前指认；作者可开启并填写 recordAs，运行期按既有节点与本局完成进度判定并落回执；完整案件与三端实跑仍待验证"
   ],
   "productStatus": "MAPPING_READY_NOT_A_PRODUCT",
   "chaptersForced": false,

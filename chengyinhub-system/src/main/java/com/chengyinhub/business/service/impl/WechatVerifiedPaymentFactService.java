@@ -22,6 +22,7 @@ public class WechatVerifiedPaymentFactService {
     @Autowired private org.springframework.transaction.PlatformTransactionManager factWriteTransactions;
     @Autowired private WechatPaymentOrderOwner factBusinessOwner;
     @Autowired private org.springframework.jdbc.core.JdbcTemplate factIntentJdbc;
+    @Autowired private com.chengyinhub.business.mapper.ClubEventOpsMapper hostReservations;
     public record Stored(Reference reference, WechatVerifiedPaymentFact facts) { }
     public record RecoveryTicket(long id, long businessId, Stored original, int state, String reason) { }
     private record WriteResult(Reference reference, ConflictException rejected) { }
@@ -108,6 +109,24 @@ public class WechatVerifiedPaymentFactService {
         if (actual==null || number(actual,"biz_id")!=businessId || number(actual,"biz_type")!=1
                 || number(actual,"money_affecting")!=0 || (number(actual,"state")!=4 && number(actual,"state")!=2))
             throw new IllegalStateException("成功冲突恢复队列持久回读不一致");
+    }
+
+    /** 主持供给冲突只入原待处置队列；独立提交，不能随回调 FAIL 的业务事务回滚。 */
+    public void deferHostReservationPayment(Reference reference, long registrationId) {
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(factWriteTransactions);
+        transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        transaction.executeWithoutResult(status -> {
+            Stored stored = requireVerified(reference);
+            if (stored.facts().kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || registrationId <= 0
+                    || !Boolean.TRUE.equals(factIntentJdbc.queryForObject(
+                        "SELECT EXISTS(SELECT 1 FROM cms_registration WHERE id=? AND registration_no=?)",
+                        Boolean.class, registrationId, stored.facts().businessOutTradeNo()))
+                    || !hostReservations.hostPaymentNeedsRecovery(registrationId, new java.util.Date(),
+                        java.util.Date.from(stored.facts().successAt()))) {
+                throw new IllegalStateException("主持预约待处置必须绑定原可信付款和真实预约");
+            }
+            enqueueRecovery(stored, registrationId, "HOST_RESERVATION_FULFILLMENT_REVIEW");
+        });
     }
 
     /** Durable manual handoff, not a current provider status and never authority to refund/reopen capacity. */

@@ -41,7 +41,7 @@ class TemplateAdoptionRoundTripMySqlIT {
         try (Connection c = source.getConnection()) {
             ItSchema.apply(c, "it-schema/journey-full-flow-it-schema.sql");
             ItSchema.applyMigrations(c, "sql/migration_20261012_app_media_asset.sql",
-                    "sql/migration_20261012_app_media_asset_namespaces.sql");
+                    "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql");
         }
         db = new JdbcTemplate(source);
         db.execute("CREATE TABLE cms_template_library LIKE cms_member_template");

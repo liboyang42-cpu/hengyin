@@ -28,6 +28,7 @@ public class WxPaymentCallbackMutationService
     @Autowired private CmsActivityMapper activityMapper;
     @Autowired private CmsTopicMapper topicMapper;
     @Autowired private RefundApplicationMapper refundMapper;
+    @Autowired private com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport marketingCashRefunds;
 
     @Transactional
     public boolean apply(WxPaymentCallbackClaim claim, IWxPaymentCallbackInboxService.Mutation mutation)
@@ -76,9 +77,12 @@ public class WxPaymentCallbackMutationService
             RefundApplication observed = refundMapper.selectRefundApplicationById(row.getBizId());
             if (observed == null || !"registration".equals(observed.getSourceType()) || observed.getSourceId() == null)
                 throw new PaymentCallbackTransactionException(ERROR_TARGET_MISSING);
-            CmsRegistration registration = RegistrationTopicFence.lock(
-                    registrationMapper.selectCmsRegistrationById(observed.getSourceId()),
-                    registrationMapper, activityMapper, topicMapper).registration();
+            var marketing = marketingCashRefunds == null
+                    ? java.util.Optional.<com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport.Original>empty()
+                    : marketingCashRefunds.find(observed.getSourceId());
+            CmsRegistration registration = marketing.isPresent() ? marketing.get().registration()
+                    : RegistrationTopicFence.lock(registrationMapper.selectCmsRegistrationById(observed.getSourceId()),
+                            registrationMapper, activityMapper, topicMapper).registration();
             RefundApplication current = refundMapper.selectRegistrationHistoryForUpdate(registration.getId()).stream()
                     .filter(candidate -> observed.getId().equals(candidate.getId())).findFirst()
                     .orElseThrow(() -> new PaymentCallbackTransactionException(ERROR_TARGET_MISSING));

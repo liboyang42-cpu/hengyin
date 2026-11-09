@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261109_app_media_provenance": ["20261012_app_media_asset", "20261012_app_media_asset_namespaces"],
+    "club_host_reservation_20261109": ["club_role_event_ops_20260823", "club_waitlist_offer_window_20260911"],
     "z_channel_voucher_snapshot_20261109": ["marketing_z_channel_voucher_20261108"],
     "z_workshop_purchase_20261109": [],
     "z_workshop_apple_iap_20261109": [],
