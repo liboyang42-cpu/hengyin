@@ -1051898,7 +1051898,7 @@
       }
     },
     {
-      "id": "pages/merchant/relation/index.wxml:36:bind:like:onLikePost:5",
+      "id": "pages/merchant/relation/index.wxml:36:bind:like:onLikePost:5:variant:club-post",
       "route": "pages/merchant/relation/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1051907,8 +1051907,22 @@
         "wxml": "pages/merchant/relation/index.wxml",
         "js": "pages/merchant/relation/index.js"
       },
-      "variant": null,
-      "requiredRequests": null,
+      "variant": {
+        "id": "club-post",
+        "predicate": {
+          "postSource": "club"
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/club/post/like",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
       "requiredRequestsByBranch": null,
       "requiredRequestOutcomes": null,
       "requiredAuthorityLinks": null,
@@ -1051949,12 +1051963,10 @@
       "targets": {
         "routes": [],
         "apis": [
-          "/api/club/post/like",
-          "/api/creativesquare/like"
+          "/api/club/post/like"
         ],
         "primaryApis": [
-          "/api/club/post/like",
-          "/api/creativesquare/like"
+          "/api/club/post/like"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
@@ -1051963,17 +1051975,10 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          },
-          {
-            "url": "/api/creativesquare/like",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/club/post/like",
-          "/api/creativesquare/like"
+          "/api/club/post/like"
         ]
       },
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
