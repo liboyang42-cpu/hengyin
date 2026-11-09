@@ -19,7 +19,7 @@
 
 ## 验证
 
-- `node --test`：`qx-a6-merchant-grow-intro`（4）、`merchant-relation-state-contract`、`merchant-aggregate-pages`、`ui-empty-cta-contract`、`final-review-fixes-contract`、`club-post-repost`、`action-ledger`（控件计数 5751 → 5755：tap +1，事件合同 +3），以及所有引用 relation / ai-npc 的单测。
+- `node --test`：涉及改动文件的 123 个单测文件共 1702 条全部通过，其中包括 `qx-a6-merchant-grow-intro`（4）、`r10-club-edit-single-denial`（守卫事件形状）、`merchant-relation-state-contract`、`merchant-aggregate-pages`、`ui-empty-cta-contract`、`final-review-fixes-contract`、`club-post-repost`、`action-ledger`（控件计数 5751 → 5755：tap +1，事件合同 +3），以及所有引用 relation / ai-npc 的单测。
 - `node chengyinhub-xcx/scripts/uiaudit/build-action-ledger.js --write`：重建了台账，PASS。
 - `node chengyinhub-xcx/tests/lint/ui-integrity.js`：`UI-GATE-0:PASS`，没有新增 baseline。`relation/index.js:265` 原有那条登记的行号保持不变。
 - 没有动后端，也没有新增 migration。
@@ -29,6 +29,7 @@
 - `components/tabBar/index.js`：只把商家 relation 一行的 text「合作」改成「发现」。
 - `components/cy/access-gate/index.js`：第 50 行 `state` 事件多带一个 `access`（放行时才有），其他调用方不受影响。
 - `scripts/uiaudit/action-ledger.json`：重建。
+- `scripts/uiaudit/build-action-ledger.js`：给 `pages/merchant/relation/index.js:onLikePost` 登记了一个 `club-post` variant（和玩家发现页同一种写法）。商家发现只读俱乐部帖文，点赞只会打 `/api/club/post/like`。
 
 ## 跨 lane
 
