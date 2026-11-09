@@ -67,17 +67,23 @@ test('关闭后到达的旧能力请求不能覆盖新一轮菜单', () => {
 });
 
 for (const mode of [1, 2]) {
-  test(`类型 ${mode} 在快速配置和专业手动中均保留 mode`, () => {
+  test(`V3-44 类型 ${mode} 直接进入专业编辑并保留 mode,不再挂快速配置`, () => {
     const urls = [];
     const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
     sheet.data.variant = 'quick'; sheet.data.pub = { permission: {} };
     sheet.chooseTopicMode({ currentTarget: { dataset: { mode } } });
-    assert.equal(sheet.data.level, 'topicAbility');
-    sheet.chooseSimple(); sheet.choosePro();
-    assert.deepEqual(urls, [`/pages/publish/simple/index?mode=${mode}`, `/pages/publish/fabu/index?mode=${mode}`]);
-    sheet.backToCards(); assert.equal(sheet.data.level, 'cards');
+    assert.equal(sheet.data.level, 'cards');
+    assert.deepEqual(urls, [`/pages/publish/fabu/index?mode=${mode}`]);
+    assert.equal(sheet.chooseSimple, undefined);
   });
 }
+
+test('V3-44 发布菜单不再出现快速配置入口', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, '../../components/cy/publish-sheet/index.wxml'), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+  assert.doesNotMatch(wxml, /快速配置|chooseSimple|publish\/simple/);
+  const js = fs.readFileSync(path.join(__dirname, '../../components/cy/publish-sheet/index.js'), 'utf8').replace(/\/\/.*$|\/\*[\s\S]*?\*\//gm, '');
+  assert.doesNotMatch(js, /publish\/simple/);
+});
 
 test('模版保留现有介绍入口；信息未就绪时不会进入发布流程', () => {
   const urls = [];
@@ -93,7 +99,7 @@ test('现有主题发布禁用权限仍会阻止跳转', () => {
   const urls = [];
   const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
   sheet.data.pub = { permission: { canSimplePublish: false, canProPublish: false } };
-  sheet.chooseSimple(); sheet.choosePro(); assert.equal(urls.length, 0);
+  sheet.choosePro(); sheet.chooseTopicMode({ currentTarget: { dataset: { mode: 1 } } }); assert.equal(urls.length, 0);
 });
 
 test('L09 先跳转后收菜单:成功后才 close,失败时菜单保持打开', () => {

@@ -4,10 +4,9 @@ const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
 const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 
-/* G-2(2026-10-27):物理返回先退到首屏卡片,首屏再按 = 底部「返回」关闭菜单。 */
+/* G-2(2026-10-27):物理返回 = 底部「返回」关闭菜单(V3-44 起只有一级卡片)。 */
 function onNativeBack(vm) {
-  if (vm.data.level && vm.data.level !== 'cards') vm.backToCards();
-  else vm.onClose();
+  vm.onClose();
 }
 
 Component(withNativeBackGuard({
@@ -54,21 +53,12 @@ Component(withNativeBackGuard({
     onClose() { this.triggerEvent('close'); },
     onMask() { this.triggerEvent('close'); },
     noop() {},
-    backToCards() { this.setData({ level: 'cards' }); },
     chooseTopicMode(e) {
       if (!this.data.pub) return toast('发布信息尚未就绪，请稍后重试');
       const mode = Number(e.currentTarget.dataset.mode) === 2 ? 2 : 1;
-      this.setData({
-        selectedMode: mode,
-        level: 'topicAbility'
-      });
-    },
-    chooseSimple() {
-      const perm = (this.data.pub && this.data.pub.permission) || {};
-      if (perm.canSimplePublish === false) {
-        return toast('当前身份不可发布主题');
-      }
-      this._closeAndGo('/pages/publish/simple/index?mode=' + this.data.selectedMode + this._scopeSuffix());
+      // V3-44:不再有「快速配置 / 专业手动」二级,选完类型直接进专业编辑。
+      this.setData({ selectedMode: mode });
+      this.choosePro();
     },
     choosePro() {
       const pub = this.data.pub || {};
