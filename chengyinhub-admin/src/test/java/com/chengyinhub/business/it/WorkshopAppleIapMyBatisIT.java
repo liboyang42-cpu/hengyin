@@ -33,6 +33,28 @@ class WorkshopAppleIapMyBatisIT {
     WorkshopAppleIapService service;
     FixtureOrders orders;
 
+@org.junit.jupiter.api.AfterAll
+    static void dropScratchDatabases() throws Exception {
+        for (String suite : java.util.List.of("workshop_apple_iap")) {
+            String database = MybatisItDatabase.databaseName(suite);
+            assertTrue(database.matches("chengyin_mybatis_[a-z0-9_]+"));
+            String url = "jdbc:mysql://" + MybatisItDatabase.host() + ":" + MybatisItDatabase.port()
+                    + "/?useSSL=false&allowPublicKeyRetrieval=true";
+            try (var connection = java.sql.DriverManager.getConnection(url, MybatisItDatabase.user(), MybatisItDatabase.password());
+                 var statement = connection.createStatement()) {
+                statement.execute("DROP DATABASE IF EXISTS `" + database + "`");
+            }
+            try (var connection = java.sql.DriverManager.getConnection(url, MybatisItDatabase.user(), MybatisItDatabase.password());
+                 var query = connection.prepareStatement("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                query.setString(1, database);
+                try (var rows = query.executeQuery()) {
+                    assertTrue(rows.next());
+                    assertEquals(0, rows.getInt(1), "Only the owned scratch schema must be removed");
+                }
+            }
+        }
+    }
+
     @BeforeAll static void schema() throws Exception {
         ds=new DriverManagerDataSource(MybatisItDatabase.url("workshop_apple_iap"),MybatisItDatabase.user(),MybatisItDatabase.password());
         jdbc=new JdbcTemplate(ds);

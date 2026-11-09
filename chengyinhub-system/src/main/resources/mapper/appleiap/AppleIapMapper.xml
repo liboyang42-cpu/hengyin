@@ -5,7 +5,7 @@
         INSERT INTO workshop_apple_original(original_id,identity_hash) VALUES(#{id},#{identity})
         ON DUPLICATE KEY UPDATE identity_hash=COALESCE(identity_hash,VALUES(identity_hash))
     </insert>
-    <select id="lockOriginal" resultType="map">
+    <select id="lockOriginal" useCache="false" flushCache="true" resultType="map">
         SELECT original_id,identity_hash,order_reference,revoked,revoked_at FROM workshop_apple_original WHERE original_id=#{id} FOR UPDATE
     </select>
     <update id="bindOriginal">
@@ -23,14 +23,14 @@
         INSERT INTO workshop_apple_transaction(transaction_id,original_id,fact_hash) VALUES(#{id},#{original},#{hash})
         ON DUPLICATE KEY UPDATE transaction_id=transaction_id
     </insert>
-    <select id="lockTransaction" resultType="map">
+    <select id="lockTransaction" useCache="false" flushCache="true" resultType="map">
         SELECT transaction_id,original_id,fact_hash FROM workshop_apple_transaction WHERE transaction_id=#{id} FOR UPDATE
     </select>
     <insert id="insertNotification">
         INSERT INTO workshop_apple_notification(notification_uuid,payload_hash,signed_payload,state)
         VALUES(#{uuid},#{hash},#{payload},'PENDING') ON DUPLICATE KEY UPDATE notification_uuid=notification_uuid
     </insert>
-    <select id="lockNotification" resultType="map">
+    <select id="lockNotification" useCache="false" flushCache="true" resultType="map">
         SELECT notification_uuid,payload_hash,signed_payload,state FROM workshop_apple_notification
         WHERE notification_uuid=#{uuid} FOR UPDATE
     </select>

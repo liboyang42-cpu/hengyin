@@ -5,15 +5,15 @@
     select (select count(*) from cms_template_library where member_template_id=#{id})
       +(select count(*) from cms_topic_node where template_id=#{id})
   </select>
-  <select id="paidSource" resultType="long">
+  <select id="paidSource" useCache="false" flushCache="true" resultType="long">
     select id from workshop_version where source_canonical_id=#{id} and source_kind='PRIVATE_TEMPLATE' for update
   </select>
-  <select id="lockVersionById" resultType="java.util.HashMap">select * from workshop_version where id=#{id} for update</select>
+  <select id="lockVersionById" useCache="false" flushCache="true" resultType="java.util.HashMap">select * from workshop_version where id=#{id} for update</select>
   <select id="shelf" resultType="java.util.HashMap">
     select * from workshop_version where source_kind='PRIVATE_TEMPLATE' and review_state='APPROVED' and id &lt; #{before}
     order by id desc limit 51
   </select>
-  <select id="appleProducts" resultType="java.util.HashMap">
+  <select id="appleProducts" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select bundle_id,environment,product_id,price_milliunits,currency from workshop_apple_product
     where version_id=#{versionId} and enabled=1 order by bundle_id,environment,product_id for update
   </select>
@@ -31,7 +31,7 @@
     update workshop_version set review_state='WITHDRAWN'
     where version_id=#{versionId} and seller_id=#{owner} and review_state in ('DRAFT','PENDING','APPROVED','REJECTED')
   </update>
-  <select id="lockBoundAppleOrder" resultType="java.util.HashMap">
+  <select id="lockBoundAppleOrder" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select * from workshop_order where provider='APPLE_IAP' and apple_bundle_id=#{bundle}
       and apple_environment=#{environment} and apple_original_transaction_id=#{originalId} for update
   </select>
@@ -42,7 +42,7 @@
     where order_no=#{orderNo} and buyer_id=#{owner} and provider='APPLE_IAP'
       and apple_original_transaction_id=#{originalId} and paid_at is not null
   </update>
-  <select id="lockAppleOrder" resultType="java.util.HashMap">
+  <select id="lockAppleOrder" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select * from workshop_order where provider='APPLE_IAP'
       and (app_account_token=#{token} or apple_original_transaction_id=#{originalId}) for update
   </select>
@@ -62,10 +62,10 @@
     where order_no=#{orderNo} and buyer_id=#{owner} and provider='APPLE_IAP'
   </update>
   <select id="sourceCanonicalId" resultType="long">select member_template_id from cms_template_library where id=#{id}</select>
-  <select id="lockSource" resultMap="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.CmsTemplateLibraryResult">
+  <select id="lockSource" useCache="false" flushCache="true" resultMap="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.CmsTemplateLibraryResult">
     <include refid="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.selectCmsTemplateLibraryVo"/> where id=#{id} for update
   </select>
-  <select id="lockDraft" resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult">
+  <select id="lockDraft" useCache="false" flushCache="true" resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult">
     <include refid="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateVo"/> where id=#{id} for update
   </select>
   <select id="targets" resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult">
@@ -80,8 +80,8 @@
       #{contentHash},#{contentJson},#{termsHash},#{termsJson},#{priceFen},'PRIVATE_TEMPLATE','DRAFT')
     on duplicate key update version_id=version_id
   </insert>
-  <select id="version" resultType="java.util.HashMap">select * from workshop_version where version_id=#{versionId} for update</select>
-  <select id="versionRequest" resultType="java.util.HashMap">
+  <select id="version" useCache="false" flushCache="true" resultType="java.util.HashMap">select * from workshop_version where version_id=#{versionId} for update</select>
+  <select id="versionRequest" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select * from workshop_version where seller_id=#{owner} and request_id=#{requestId} for update
   </select>
   <insert id="reserveOrder">
@@ -91,8 +91,8 @@
       #{reviewHash},#{currency},#{amountMilliunits},#{accountToken},#{bundleId},#{environment},#{productId})
     on duplicate key update order_no=order_no
   </insert>
-  <select id="lockOrder" resultType="java.util.HashMap">select * from workshop_order where order_no=#{orderNo} for update</select>
-  <select id="lockLicenseForDraft" resultType="java.util.HashMap">
+  <select id="lockOrder" useCache="false" flushCache="true" resultType="java.util.HashMap">select * from workshop_order where order_no=#{orderNo} for update</select>
+  <select id="lockLicenseForDraft" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select o.*,coalesce(i.buyer_id,l.buyer_id) as installation_owner,cast(m.member_id as signed) as draft_owner,
       coalesce(i.command_json,l.command_json) as installation_command
     from cms_member_template m
@@ -108,7 +108,7 @@
   <select id="topicReferences" resultType="java.util.HashMap">
     select distinct template_id,merchant_member_id from cms_topic_node where topic_id=#{topicId} and template_id>0 order by template_id
   </select>
-  <select id="orderRequest" resultType="java.util.HashMap">
+  <select id="orderRequest" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select * from workshop_order where buyer_id=#{owner} and request_id=#{requestId} for update
   </select>
   <select id="licenses" resultType="java.util.HashMap">
@@ -140,7 +140,7 @@
     values(#{owner},#{requestId},#{orderNo},#{commandHash},#{commandJson})
     on duplicate key update request_id=request_id
   </insert>
-  <select id="install" resultType="java.util.HashMap">
+  <select id="install" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select * from workshop_install where buyer_id=#{owner} and request_id=#{requestId} for update
   </select>
   <update id="finishInstall">

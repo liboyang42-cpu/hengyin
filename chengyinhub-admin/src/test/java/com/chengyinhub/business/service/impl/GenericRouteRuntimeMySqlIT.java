@@ -29,6 +29,7 @@ import static org.mockito.Mockito.*;
 
 class GenericRouteRuntimeMySqlIT {
     private static PooledDataSource ds;
+    private static String ownedDatabase;
     private static GameSessionRuntimeMapper mapper;
     private static GameSessionRuntimeServiceImpl target;
     private static IGameSessionRuntimeService runtime;
@@ -39,7 +40,9 @@ class GenericRouteRuntimeMySqlIT {
         assertEquals("127.0.0.1", MybatisItDatabase.host());
         int port = Integer.parseInt(MybatisItDatabase.port()); assertTrue(port > 0 && port <= 65535);
         assertTrue(MybatisItDatabase.databaseName("generic_route_worker_b").matches("chengyin_mybatis_generic_route_worker_b[a-zA-Z0-9_]*"));
-        ds = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url("generic_route_worker_b"), MybatisItDatabase.user(), MybatisItDatabase.password());
+        String databaseUrl = MybatisItDatabase.url("generic_route_worker_b");
+        ownedDatabase = MybatisItDatabase.databaseName("generic_route_worker_b");
+        ds = new PooledDataSource("com.mysql.cj.jdbc.Driver", databaseUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
         try (Connection c=ds.getConnection()) { ItSchema.apply(c,"it-schema/generic-route-runtime-it-schema.sql"); exec(c,"CREATE TABLE IF NOT EXISTS ums_member (id BIGINT PRIMARY KEY,nickname VARCHAR(255),avatar VARCHAR(1024))"); }
         Configuration config = new Configuration(); config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         for (String name:Arrays.asList("GameSessionRuntimeMapper","PlayTeamMapper","PlayHelpRunQuotaMapper")) {
@@ -70,6 +73,28 @@ class GenericRouteRuntimeMySqlIT {
         access = mock(IClubAccessService.class); ReflectionTestUtils.setField(target,"clubAccessService",access);
         ProxyFactory proxy=new ProxyFactory(target);proxy.setInterfaces(IGameSessionRuntimeService.class);
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(ds),new AnnotationTransactionAttributeSource()));runtime=(IGameSessionRuntimeService)proxy.getProxy();
+    }
+
+    @AfterAll static void closeOwnedDatabase() throws Exception {
+        try {if(ds!=null)ds.forceCloseAll();}
+        finally {
+            if(ownedDatabase!=null) {
+                assertEquals("127.0.0.1",MybatisItDatabase.host());
+                assertTrue(ownedDatabase.matches("chengyin_mybatis_generic_route_worker_b[a-zA-Z0-9_]*"));
+                String adminUrl="jdbc:mysql://127.0.0.1:"+MybatisItDatabase.port()+"/?useSSL=false&allowPublicKeyRetrieval=true";
+                try(Connection admin=DriverManager.getConnection(adminUrl,MybatisItDatabase.user(),MybatisItDatabase.password());
+                    Statement statement=admin.createStatement()) {
+                    statement.execute("DROP DATABASE `"+ownedDatabase+"`");
+                }
+                try(Connection check=DriverManager.getConnection(adminUrl,MybatisItDatabase.user(),MybatisItDatabase.password());
+                    PreparedStatement statement=check.prepareStatement("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                    statement.setString(1,ownedDatabase);
+                    try(ResultSet row=statement.executeQuery()) {
+                        assertTrue(row.next());assertEquals(0,row.getInt(1),"owned scratch must be absent");assertFalse(row.next());
+                    }
+                }
+            }
+        }
     }
     @BeforeEach void seed() throws Exception {
         ReflectionTestUtils.setField(target,"runtimeMapper",mapper);
@@ -281,14 +306,24 @@ class GenericRouteRuntimeMySqlIT {
         try(Connection c=ds.getConnection();PreparedStatement st=c.prepareStatement("UPDATE game_session SET module_config_snapshot_json=? WHERE id=50")) {
             st.setString(1,frozen.toString());st.executeUpdate();
         }
+        try(Connection c=ds.getConnection()) {
+            exec(c,"UPDATE game_station_run SET source_type='HOST_NODE' WHERE game_session_id=50 AND node_id=11");
+        }
         for(long actor:new long[]{7,9}) {
+            GameCommandReceiptView arrival=player(actor,"ARRIVAL_ISSUE",payload().put("questKey","q1"));
+            staff("ARRIVAL_CONFIRM",payload().put("teamId",actor==7?90:99).put("questKey","q1")
+                    .put("nonce",(String)arrival.getResult().get("nonce")));
             player(actor,"QUEST_START",payload().put("questKey","q1"));
             runtime.cooperativePuzzleHelp(actor,70L,50L,11L,instance(actor,11),1,"VIEW",null,null,"game.teamCooperation@1");
         }
         player(7,"OPERATION_START",payload().put("operationKind","FACILITY").put("operationKey","shelter"));
         runtime.recordSharedBasicArrival(7L,80L,70L,11L,"real-payer-answer","ANSWER",instance(7,11),1);
         ObjectNode use=payload().put("facilityKey","shelter");use.putArray("participants").add(90).add(99);
-        assertThrows(GameSessionException.class,()->player(7,"FACILITY_USE",use));
+        JsonNode beforePayer=state(50,90),beforeParticipant=state(50,99),beforeWorld=worldState();
+        int beforeReceipts=receipts(),beforeRevision=mapper.selectSessionByActivity(70L).getRevision();
+        assertEquals("GAME_RESOURCE_RESERVED",assertThrows(GameSessionException.class,()->player(7,"FACILITY_USE",use)).getErrorCode());
+        assertEquals(beforePayer,state(50,90));assertEquals(beforeParticipant,state(50,99));assertEquals(beforeWorld,worldState());
+        assertEquals(beforeReceipts,receipts());assertEquals(beforeRevision,mapper.selectSessionByActivity(70L).getRevision());
         assertEquals(0,state(50,90).path("completedNodeIds").size());
         runtime.recordSharedBasicArrival(9L,80L,70L,11L,"real-participant-answer","ANSWER",instance(9,11),1);
         assertEquals(0,state(50,99).path("completedNodeIds").size());
@@ -352,7 +387,7 @@ class GenericRouteRuntimeMySqlIT {
                     catch(java.lang.reflect.InvocationTargetException cause){throw cause.getCause();}
                 });
         ReflectionTestUtils.setField(target,"runtimeMapper",failing);
-        try {assertThrows(IllegalStateException.class,()->cooperativeHelp(8,original,"USE",1,"same-retry"));}
+        try {assertEquals("forced owner failure",assertThrows(IllegalStateException.class,()->cooperativeHelp(8,original,"USE",1,"same-retry")).getMessage());}
         finally {ReflectionTestUtils.setField(target,"runtimeMapper",mapper);}
         assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM it_cooperative_charge",Integer.class));
         assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM play_help_run_quota",Integer.class));
@@ -375,14 +410,20 @@ class GenericRouteRuntimeMySqlIT {
                 });
         ReflectionTestUtils.setField(target,"runtimeMapper",observing);
         try(Connection blocker=ds.getConnection()) {
+            assertTrue(blocker.getAutoCommit(), "lock fixture must borrow a clean connection");
             blocker.setAutoCommit(false);
-            try(PreparedStatement lock=blocker.prepareStatement("SELECT id FROM play_team WHERE id=90 FOR UPDATE")) {lock.executeQuery().close();}
-            Future<Map<String,Object>> attempt=pool.submit(()->cooperativeHelp(8,original,"USE",1,"departing"));
-            assertTrue(selectedTeam.await(15,TimeUnit.SECONDS));
-            exec(blocker,"UPDATE play_team_member SET status=0 WHERE team_id=90 AND member_id=8");
-            blocker.commit();
-            ExecutionException denied=assertThrows(ExecutionException.class,()->attempt.get(15,TimeUnit.SECONDS));
-            assertInstanceOf(GameSessionException.class,denied.getCause());
+            try {
+                try(PreparedStatement lock=blocker.prepareStatement("SELECT id FROM play_team WHERE id=90 FOR UPDATE")) {lock.executeQuery().close();}
+                Future<Map<String,Object>> attempt=pool.submit(()->cooperativeHelp(8,original,"USE",1,"departing"));
+                assertTrue(selectedTeam.await(15,TimeUnit.SECONDS));
+                exec(blocker,"UPDATE play_team_member SET status=0 WHERE team_id=90 AND member_id=8");
+                blocker.commit();
+                ExecutionException denied=assertThrows(ExecutionException.class,()->attempt.get(15,TimeUnit.SECONDS));
+                assertInstanceOf(GameSessionException.class,denied.getCause());
+            } finally {
+                // PooledDataSource retains JDBC settings when a manual connection is returned.
+                try {blocker.rollback();} finally {blocker.setAutoCommit(true);}
+            }
         } finally {pool.shutdownNow();ReflectionTestUtils.setField(target,"runtimeMapper",mapper);}
         assertEquals(0,new org.springframework.jdbc.core.JdbcTemplate(ds).queryForObject("SELECT COUNT(*) FROM it_cooperative_charge",Integer.class));
     }
@@ -460,9 +501,11 @@ class GenericRouteRuntimeMySqlIT {
         player(7,"QUEST_RESOLVE",payload().put("questKey","q1").put("choiceKey","supply"));assertEquals(6,JSON.readTree(mapper.selectStoryState(50L,"TEAM",90L).getVariablesJson()).path("variables").path("sys.hp").asInt());
         assertEquals(10,JSON.readTree(mapper.selectStoryState(50L,"TEAM",99L).getVariablesJson()).path("variables").path("sys.hp").asInt());
     }
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings={"EPOCH","OTHER_RUN","CANCELLED","ENDED"})
-    void r5PredictOriginalSharedPlayThroughCannotChargeAfterItIsClosed(String mode) throws Exception {
+    @Test void r5PredictRejectsChangedEpoch() throws Exception { r5PredictOriginalSharedPlayThroughCannotChargeAfterItIsClosed("EPOCH"); }
+    @Test void r5PredictRejectsOtherRun() throws Exception { r5PredictOriginalSharedPlayThroughCannotChargeAfterItIsClosed("OTHER_RUN"); }
+    @Test void r5PredictRejectsCancelledRun() throws Exception { r5PredictOriginalSharedPlayThroughCannotChargeAfterItIsClosed("CANCELLED"); }
+    @Test void r5PredictRejectsEndedRun() throws Exception { r5PredictOriginalSharedPlayThroughCannotChargeAfterItIsClosed("ENDED"); }
+    private void r5PredictOriginalSharedPlayThroughCannotChargeAfterItIsClosed(String mode) throws Exception {
         CmsActivityMapper original=(CmsActivityMapper)ReflectionTestUtils.getField(target,"activityMapper");try {
         sharedWorld(2);if("CANCELLED".equals(mode)){CmsActivityMapper activities=mock(CmsActivityMapper.class);ReflectionTestUtils.setField(target,"activityMapper",activities);CmsActivity activity=new CmsActivity();activity.setId(70L);activity.setTopicId(80L);activity.setStatus(1L);activity.setDelFlag(0);activity.setCancelTime(new java.util.Date());when(activities.selectCmsActivityById(70L)).thenReturn(activity);}
         if("ENDED".equals(mode)){ObjectNode owner=state(50,90).deepCopy();owner.with("themeRuntime").putObject("result").put("success",false);writeOwner("TEAM",90,owner);}
@@ -644,9 +687,10 @@ class GenericRouteRuntimeMySqlIT {
         saveReadbackFixture(frozen);
     }
 
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings = {"MAJORITY", "UNANIMOUS", "MAJORITY_ACCEPTANCE"})
-    void staffFallbackRequiresTheFinishedFinalRoundAndPersistsOneReceipt(String policy) throws Exception {
+    @Test void staffFallbackMajorityRequiresFinishedRound() throws Exception { staffFallbackRequiresTheFinishedFinalRoundAndPersistsOneReceipt("MAJORITY"); }
+    @Test void staffFallbackUnanimousRequiresFinishedRound() throws Exception { staffFallbackRequiresTheFinishedFinalRoundAndPersistsOneReceipt("UNANIMOUS"); }
+    @Test void staffFallbackAcceptanceRequiresFinishedRound() throws Exception { staffFallbackRequiresTheFinishedFinalRoundAndPersistsOneReceipt("MAJORITY_ACCEPTANCE"); }
+    private void staffFallbackRequiresTheFinishedFinalRoundAndPersistsOneReceipt(String policy) throws Exception {
         enableFallback(policy);
         assertThrows(GameSessionException.class, () -> staff("PLAN_FALLBACK", payload().put("reason", "尚未投票")));
         player(7, "PLAN_PROPOSE", payload().put("proposalKey", "ending").put("endingKey", "bridge"));
@@ -998,9 +1042,11 @@ class GenericRouteRuntimeMySqlIT {
         player(7,"OPERATION_START",start);assertThrows(GameSessionException.class,()->player(7,"FACILITY_USE",payload().put("facilityKey","shelter")));runtime.recordSharedBasicArrival(7L,80L,70L,11L,"facility-scan-2","SCAN",instance(7,11),1);player(7,"FACILITY_USE",payload().put("facilityKey","shelter"));assertEquals(0,state(50,90).path("themeRuntime").path("inventory").path("tool").asInt());assertEquals(2,worldState().path("facilities").path("shelter_once").path("count").asInt());
     }
 
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings={"OWNER","WORLD","MISSING","BROKE"})
-    void r5PlanRealTeamsRequireTheirOwnPassAndCommitAllCostsOnce(String mode) throws Exception {
+    @Test void r5PlanOwnerScopeRequiresOwnPass() throws Exception { r5PlanRealTeamsRequireTheirOwnPassAndCommitAllCostsOnce("OWNER"); }
+    @Test void r5PlanWorldScopeRequiresOwnPass() throws Exception { r5PlanRealTeamsRequireTheirOwnPassAndCommitAllCostsOnce("WORLD"); }
+    @Test void r5PlanMissingPassRejectsAtomically() throws Exception { r5PlanRealTeamsRequireTheirOwnPassAndCommitAllCostsOnce("MISSING"); }
+    @Test void r5PlanBrokeTeamRejectsAtomically() throws Exception { r5PlanRealTeamsRequireTheirOwnPassAndCommitAllCostsOnce("BROKE"); }
+    private void r5PlanRealTeamsRequireTheirOwnPassAndCommitAllCostsOnce(String mode) throws Exception {
         sharedWorld(2);ObjectNode frozen=JSON.readTree(mapper.selectSessionByActivity(70L).getModuleConfigSnapshotJson()).deepCopy();ObjectNode game=(ObjectNode)frozen.path("themeConfig").path("gameplayRuntime");((ObjectNode)game.path("plans").path(0)).put("terminal",false).put("endingKey","tpl_vote_12_1");((ArrayNode)game.path("plans")).remove(1);game.putObject("templateTools").putArray("nodes").addObject().put("nodeId",12).put("votePolicy","MAJORITY_ACCEPTANCE").putArray("planKeys").add("tpl_vote_12_1");
         ObjectNode block=frozen.with("nodeConfigs").putObject("12");block.putObject("qa").put("enabled",true).put("mode","TYPE").put("title","title").put("answerText","correct");block.putObject("interactionRules").put("scope","WORLD".equals(mode)?"WORLD":"OWNER").put("targetScope","OWNER").put("limit",1);ObjectNode outcomes=block.putObject("outcomeRules").put("version",1);ObjectNode after=outcomes.putObject("pass");outcomes.putObject("fail");after.putArray("costs").addObject().put("statKey","sys.hp").put("amount",3);after.putArray("effects").addObject().put("var","sys.hp").put("op","INC").put("value",1);
         try(Connection c=ds.getConnection();PreparedStatement st=c.prepareStatement("UPDATE game_session SET module_config_snapshot_json=? WHERE id=50")){st.setString(1,frozen.toString());st.executeUpdate();}
