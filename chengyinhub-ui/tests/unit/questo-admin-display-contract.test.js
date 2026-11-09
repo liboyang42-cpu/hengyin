@@ -137,7 +137,7 @@ test('营销分配页只调用只读端点', () => {
 
 test('rawBusinessError 只改变调用方显式选择的请求', () => {
   const request = read('src/utils/request.js');
-  assert.match(request, /res\.config && res\.config\.rawBusinessError/);
+  assert.match(request, /code !== 200 && res\.config && res\.config\.rawBusinessError/);
   const order = request.indexOf('code === 401');
   assert.ok(order > 0 && order < request.indexOf('rawBusinessError'), '401 仍先走重新登录');
 });

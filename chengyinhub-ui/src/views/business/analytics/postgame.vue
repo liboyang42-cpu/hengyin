@@ -31,15 +31,15 @@
         <h3>有效复报 · {{ v1.definitionVersion }}</h3>
         <p v-if="v1.available === false" class="qa-error">{{ v1.unknownReason || '暂不可用' }}</p>
         <el-table v-else :data="v1Rows" size="small">
-          <el-table-column label="口径" prop="label" width="120" />
-          <el-table-column label="定义" prop="basis" min-width="200" show-overflow-tooltip />
-          <el-table-column label="首报名会员" prop="eligible" width="100" />
-          <el-table-column label="成熟（分母）" prop="mature" width="110" />
-          <el-table-column label="未成熟" prop="notMature" width="90" />
-          <el-table-column label="再次报名（分子）" prop="retained" width="130" />
-          <el-table-column label="比例" prop="rate" width="150" />
-          <el-table-column label="部分退 / 待审退" prop="refunds" width="130" />
-          <el-table-column label="迟到事实" prop="late" width="90" />
+          <el-table-column label="口径" prop="label" width="90" />
+          <el-table-column label="定义" prop="basis" min-width="140" show-overflow-tooltip />
+          <el-table-column label="首报名会员" prop="eligible" width="96" />
+          <el-table-column label="成熟（分母）" prop="mature" width="104" />
+          <el-table-column label="未成熟" prop="notMature" width="72" />
+          <el-table-column label="再次报名（分子）" prop="retained" width="126" />
+          <el-table-column label="比例" prop="rate" width="140" />
+          <el-table-column label="部分退 / 待审退" prop="refunds" width="120" />
+          <el-table-column label="迟到事实" prop="late" width="80" />
         </el-table>
         <dl class="qa-facts qa-facts--small">
           <div><dt>时间基准</dt><dd>{{ v1.timeBasis || '—' }}</dd></div>
@@ -71,7 +71,9 @@
       <section class="qa-section">
         <h3>结果项</h3>
         <el-table :data="metricRows" size="small" empty-text="没有结果项">
-          <el-table-column label="结果" prop="metricCode" min-width="200" />
+          <el-table-column label="结果" min-width="200">
+            <template slot-scope="s">{{ metricLabel(s.row.metricCode) }}</template>
+          </el-table-column>
           <el-table-column label="会员" width="90">
             <template slot-scope="s">{{ countText(s.row.members) }}</template>
           </el-table-column>
@@ -103,6 +105,16 @@
 <script>
 import { getPostGameOutcome } from '@/api/business/analytics'
 import { businessError, countText, repeatSignupRateText, v2RetentionText } from '@/utils/questo-admin'
+
+const METRIC_TEXT = {
+  OFFICIAL_COMPLETION: '正式完局',
+  REWARD_ISSUANCE: '奖励发放',
+  PRIVATE_PHOTO: '私人照片',
+  PUBLIC_SHARE: '公开分享',
+  RECOMMENDATION_CLICK: '推荐点击',
+  SECOND_VALID_REGISTRATION: '二次有效报名',
+  CLIENT_OBSERVED_EVENT: '客户端观测事件'
+}
 
 function today() {
   const d = new Date()
@@ -160,6 +172,7 @@ export default {
   },
   methods: {
     countText,
+    metricLabel(code) { return Object.prototype.hasOwnProperty.call(METRIC_TEXT, code) ? METRIC_TEXT[code] : code },
     timeText(value) { return value ? this.parseTime(value, '{y}-{m}-{d} {h}:{i}') : '—' },
     load() {
       const seq = ++this.requestSeq

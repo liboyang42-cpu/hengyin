@@ -94,23 +94,23 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="投稿" width="90">
+          <el-table-column label="投稿" width="70">
             <template slot-scope="s">#{{ s.row.id }}</template>
           </el-table-column>
-          <el-table-column label="平台 / 链接" min-width="220">
+          <el-table-column label="平台 / 链接" min-width="170">
             <template slot-scope="s">
-              <div class="qa-stack"><span>{{ platformLabel(s.row.platform) }}</span><small class="qa-ellipsis">{{ s.row.sourceUrl }}</small></div>
+              <div class="qa-stack"><span>{{ platformLabel(s.row.platform) }}</span><small class="qa-ellipsis">{{ s.row.sourceUrl || s.row.canonicalVideoKey }}</small></div>
             </template>
           </el-table-column>
-          <el-table-column label="主题 / 作者" width="130">
+          <el-table-column label="主题 / 作者" width="120">
             <template slot-scope="s">
               <div class="qa-stack"><span>主题 #{{ s.row.topicId }}</span><small>作者 #{{ s.row.memberId }}</small></div>
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="90">
+          <el-table-column label="状态" width="80">
             <template slot-scope="s">{{ submissionStatusLabel(s.row.status) }}</template>
           </el-table-column>
-          <el-table-column label="原视频组" min-width="150">
+          <el-table-column label="原视频组" min-width="140">
             <template slot-scope="s">
               <div class="qa-stack">
                 <span>{{ groupVerifyLabel(s.row) }}</span>
@@ -118,10 +118,10 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="提交时间" width="160">
+          <el-table-column label="提交时间" width="140">
             <template slot-scope="s">{{ timeText(s.row.submittedAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="250" fixed="right">
+          <el-table-column label="操作" min-width="230">
             <template slot-scope="s">
               <el-button v-if="canReviewSubmission(s.row.status)" v-hasPermi="['business:videobounty:review']" type="text" @click="openReview(s.row)">审核</el-button>
               <template v-if="s.row.status === 2">
@@ -170,8 +170,8 @@
           <el-table-column label="状态" width="160">
             <template slot-scope="s">{{ accrualPayoutLabel(s.row.payoutState) }}</template>
           </el-table-column>
-          <el-table-column label="窗口" min-width="200">
-            <template slot-scope="s">{{ timeText(s.row.windowStart) }} – {{ timeText(s.row.windowEnd) }}</template>
+          <el-table-column label="窗口" min-width="190">
+            <template slot-scope="s">{{ dateText(s.row.windowStart) }} – {{ dateText(s.row.windowEnd) }}</template>
           </el-table-column>
         </el-table>
         <div class="qa-pager">
@@ -362,6 +362,7 @@ export default {
     countText, moneyText, campaignStatusLabel, submissionStatusLabel, canReviewSubmission, canRevokeSubmission,
     groupVerifyLabel, accrualBlockedByGroup, accrualPayoutLabel, platformLabel,
     timeText(value) { return value ? this.parseTime(value, '{y}-{m}-{d} {h}:{i}') : '—' },
+    dateText(value) { return value ? this.parseTime(value, '{y}-{m}-{d}') : '—' },
     load() {
       if (this.tab === 'campaigns') this.loadCampaigns()
       if (this.tab === 'submissions') this.loadSubmissions()
