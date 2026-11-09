@@ -163,11 +163,27 @@ Page({
           deliveryRows: adoption.deliveryRows(info.contentDelivery)
         });
         that._delivery = info.contentDelivery || null;
+        that._loadCredits(seq, nodeImgs);
       },
       fail(res) {
         if (seq !== that._seq) return;
         that.setData({ loading: false, loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
       }
+    });
+  },
+
+  // U02-05:节点图署名 / AI 标识 / 来源待确认,逐张只读;最多前 8 张,换页或重载后迟到回包丢弃
+  _loadCredits(seq, imgs) {
+    (imgs || []).slice(0, 8).forEach((g, i) => {
+      app.sendRequest({
+        hideLoading: true, silentError: true, autoErrorToast: false,
+        url: '/api/media/asset/attribution', method: 'GET', data: { reference: g.img },
+        success: res => {
+          if (seq !== this._seq || !res || String(res.code) !== '200') return;
+          const credit = adoption.creditText(res.data);
+          if (credit && this.data.gallery[i] && this.data.gallery[i].img === g.img) this.setData({ ['gallery[' + i + '].credit']: credit });
+        }
+      });
     });
   },
 

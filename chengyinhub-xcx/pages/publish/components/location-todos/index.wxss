@@ -1,5 +1,5 @@
 /* 地点待办:入口沿编辑器白卡行;弹层内每个地点一组 键/值 行,危险态红字 */
-.lt-entry { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 96rpx; margin: 0 0 var(--cy-space-3); padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
+.lt-entry { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 96rpx; margin: 0 var(--cy-page-x) var(--cy-space-3); padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
 .lt-entry__t { flex: 1; font-size: var(--cy-type-body); font-weight: 600; }
 .lt-entry__v { font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
 .lt-entry__v.is-bad { color: var(--cy-color-status-danger-on-interactive); }

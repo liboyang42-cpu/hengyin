@@ -112,3 +112,15 @@ function useResult(res) {
 }
 
 module.exports = { deliveryRows, revisionIdOf, sourceCityOf: SOURCE_CITY_OF, usePayload, useResult, PENDING };
+
+// U02-05 / §27.5:玩家只读 GET /api/media/asset/attribution 的 sourceType/attribution/aiGenerated/sourcePendingConfirmation。
+// 只显示署名、AI 标识、来源待确认;不显示许可备注、模型、时间或存储 key。读失败 / 未审核(422)不画。
+function creditText(data) {
+  if (!data || typeof data !== 'object') return '';
+  const parts = [];
+  if (data.attribution && String(data.attribution).trim()) parts.push(String(data.attribution).trim().slice(0, 40));
+  if (data.aiGenerated === true) parts.push('AI 生成');
+  if (data.sourcePendingConfirmation === true) parts.push('来源待确认');
+  return parts.join(' · ');
+}
+module.exports.creditText = creditText;

@@ -97,6 +97,7 @@
               <view class="xb-node-foot">
                 <text class="xb-node-name">{{ item.name || '节点 ' + (index + 1) }}</text>
                 <text class="xb-node-desc ep1" wx:if="{{ item.teaser }}">{{ item.teaser }}</text>
+                <text class="td-credit ep1" wx:if="{{ item.credit }}">{{ item.credit }}</text>
               </view>
             </view>
           </view>

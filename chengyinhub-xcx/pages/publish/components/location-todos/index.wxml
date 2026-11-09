@@ -5,6 +5,8 @@
   <text class="lt-entry__v {{view.blockingCount ? 'is-bad' : ''}}">{{summary || view.rows.length + ' 个地点'}}</text>
   <cy-icon name="chevron-right" size="24" />
 </view>
+<!-- root-portal 把弹层挂到页面根:编辑器底栏 z-index 在页面根层,组件内的 fixed 弹层会被它压住 -->
+<root-portal enable="{{true}}" wx:if="{{view}}">
 <cy-sheet show="{{open}}" title="地点待办" fixed="full" handle bind:close="closeSheet" bind:requestclose="closeSheet">
   <view class="lt">
     <view class="lt-src" wx:if="{{view.source}}">
@@ -28,3 +30,4 @@
   </view>
 </cy-sheet>
 <cy-option-sheet show="{{pickShow}}" title="选择节点" items="{{pickItems}}" immediate bind:select="onPicked" bind:cancel="closePick" />
+</root-portal>

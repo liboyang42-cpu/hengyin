@@ -40,3 +40,4 @@
 .ad-row.is-on .ad-dot::after { content: ''; width: var(--cy-space-1-5); height: var(--cy-space-1-5); border-radius: var(--cy-radius-pill); background: var(--cy-color-text-inverse); }
 .ad-rebind { padding: var(--cy-space-3) 0 0; font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
 .ad-err { display: block; padding: var(--cy-space-2) 0 0; font-size: var(--cy-font-label); color: var(--cy-color-status-danger-on-interactive); }
+.td-credit { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }

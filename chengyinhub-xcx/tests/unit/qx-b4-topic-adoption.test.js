@@ -54,3 +54,11 @@ test('/use 回包读对象 data.topicId,只有 level=error 计为挡发布', () 
   assert.equal(a.useResult({ code: 200, data: 901 }).ok, false); // 标量不是合同
   assert.equal(a.useResult({ code: 500, msg: '目标城市与来源相同，请使用同城复用' }).message, '目标城市与来源相同，请使用同城复用');
 });
+
+test('素材署名只显示署名 / AI 生成 / 来源待确认,不带私有许可信息', () => {
+  assert.equal(a.creditText({ sourceType: 'licensed', attribution: '摄影 张三 CC BY 4.0', aiGenerated: false, sourcePendingConfirmation: false }), '摄影 张三 CC BY 4.0');
+  assert.equal(a.creditText({ sourceType: 'ai-generated', attribution: null, aiGenerated: true }), 'AI 生成');
+  assert.equal(a.creditText({ sourceType: 'unknown', sourcePendingConfirmation: true }), '来源待确认');
+  assert.equal(a.creditText({ sourceType: 'original', licenseNote: '私有备注', aiModel: 'x' }), '');
+  assert.equal(a.creditText(null), '');
+});
