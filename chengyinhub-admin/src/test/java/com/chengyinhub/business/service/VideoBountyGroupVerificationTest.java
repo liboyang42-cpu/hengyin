@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -138,6 +139,11 @@ class VideoBountyGroupVerificationTest {
         assertEquals(7L, audit.getValue().getActorMemberId().longValue());
         assertEquals("两平台同一条原视频", audit.getValue().getReason());
         assertEquals(SUBMISSION_ID, audit.getValue().getDomainId().longValue());
+        // business_audit_event: domain_type VARCHAR(16) / target_type VARCHAR(32)；超长会让每次核验 500。
+        assertEquals("VIDEO_BOUNTY", audit.getValue().getDomainType());
+        assertTrue(audit.getValue().getDomainType().length() <= 16);
+        assertTrue(audit.getValue().getTargetType().length() <= 32);
+        assertTrue(audit.getValue().getAction().length() <= 64);
     }
 
     @Test

@@ -216,6 +216,13 @@ public class ContentLandingMetadataServiceImpl implements IContentLandingMetadat
     }
 
     @Override
+    public ContentLandingMetadataVO reviewDetail(Long topicId) {
+        CmsTopic topic = requirePublicTopic(topicId);
+        return toVO(metadataMapper.selectByTopicId(topic.getId()),
+                metadataMapper.selectTranslationsByTopicId(topic.getId()));
+    }
+
+    @Override
     public String reviewDigest(Long topicId, String locale) {
         CmsTopic topic = requirePublicTopic(topicId);
         String normalized = PublicContentCatalogLocale.normalize(locale);

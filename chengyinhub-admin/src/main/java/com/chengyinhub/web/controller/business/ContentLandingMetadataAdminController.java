@@ -51,6 +51,13 @@ public class ContentLandingMetadataAdminController extends BaseController {
     }
 
     @PreAuthorize(PERM_REVIEW)
+    @Operation(summary = "审校台读取译文正文与版本(只读)")
+    @GetMapping("/translation/detail")
+    public AjaxResult translationDetail(Long topicId) {
+        return success(landingService.reviewDetail(topicId));
+    }
+
+    @PreAuthorize(PERM_REVIEW)
     @Operation(summary = "取待审译文的内容摘要(审校台渲染前调用)")
     @GetMapping("/translation/digest")
     public AjaxResult translationDigest(Long topicId, String locale) {
