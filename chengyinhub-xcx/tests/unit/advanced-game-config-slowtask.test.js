@@ -36,7 +36,9 @@ function serverSections() {
   while ((m = re.exec(code))) found.add(m[1])
   // requires / effects 是根级条件与效果块(多参数校验),不是玩法段;旧单参正则只是碰巧没匹配到它们。
   // clues 是「线索」工具的名称表(2026-10-11)，同样不是玩法段。
-  for (const rootBlock of ['requires', 'effects', 'clues']) found.delete(rootBlock)
+  // hintLadder 是 BE-16 根层提示阶梯数组(与根层标量 hintFreeUsesPerRun 同级,没有 enabled),同样不是玩法段;
+  // parse 的未知段透传原样读写。
+  for (const rootBlock of ['requires', 'effects', 'clues', 'hintLadder']) found.delete(rootBlock)
   return found
 }
 
@@ -63,8 +65,7 @@ function serverSlowTaskFields() {
 const NOT_YET_WIRED_SERVER_SECTIONS = ['sort', 'match', 'classify', 'compare', 'roleViews']
 // 根层的互动工具段:不是玩法段(没有 enabled,有这一段就算开着),编辑页在「互动工具」里单独配,
 // 靠 parse 的未知段透传原样读写。2026-10-22 背景音乐。
-// G-PACK 提示阶梯:根层 hintLadder(与 hintFreeUsesPerRun 同级),作者配置挂「结果反馈」下方,由 UG-11 接线。
-const ROOT_TOOL_SECTIONS = ['backgroundMusic', 'hintLadder']
+const ROOT_TOOL_SECTIONS = ['backgroundMusic']
 
 test('★后端 Validator 的段名单与本地 SECTIONS 一一对上 —— 少一段,那玩法在本页读不出来也存不回去,而且不报错', () => {
   const server = serverSections()
