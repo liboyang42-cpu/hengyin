@@ -1,0 +1,30 @@
+<view class="theme-dark jn">
+  <cy-nav-bar plain />
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
+  <block wx:else>
+    <view class="jn-head">
+      <view class="jn-av jn-av--lg" wx:if="{{inviter}}"><image wx:if="{{inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" /><text wx:else>{{inviter.initial}}</text></view>
+      <text class="jn-eyebrow jn-gap" wx:if="{{inviter}}">{{inviter.name}}</text>
+      <text class="jn-title">{{headline}}</text>
+      <text class="jn-pill" wx:if="{{title}}">{{title}}</text>
+    </view>
+
+    <view class="jn-sec" wx:if="{{modes.length}}">
+      <view class="jn-group" wx:for="{{modes}}" wx:key="key" wx:for-item="mode">
+        <view class="jn-row"><view class="jn-row__t"><text class="jn-row__b">{{mode.title}}</text><text class="jn-row__s" wx:if="{{mode.reason}}">{{mode.reason}}</text></view></view>
+        <view class="jn-row" wx:for="{{mode.rows}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v">{{item.v}}</text></view>
+      </view>
+    </view>
+
+    <view class="jn-sec" wx:if="{{facts.length}}">
+      <view class="jn-group">
+        <view class="jn-row" wx:for="{{facts}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v is-strong">{{item.v}}</text></view>
+      </view>
+    </view>
+
+    <view class="jn-footer jn-footer--stack">
+      <cy-btn wx:if="{{primary}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
+      <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
+    </view>
+  </block>
+</view>

@@ -317,6 +317,16 @@
       ]
     },
     {
+      "root": "subpackageJourney",
+      "name": "subpackageJourney",
+      "pages": [
+        "pages/report/index",
+        "pages/landing/index",
+        "pages/seats/index",
+        "pages/promo/index"
+      ]
+    },
+    {
       "root": "pages/team",
       "name": "subpackageTeam",
       "pages": [

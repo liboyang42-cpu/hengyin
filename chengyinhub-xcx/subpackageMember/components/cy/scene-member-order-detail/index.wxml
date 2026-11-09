@@ -185,6 +185,16 @@
     </view>
     </block>
 
+    <!-- qx-b3 P5:已付多人票的同行席位;数量与状态都在席位页读服务端 -->
+    <block wx:if="{{info.paymentStatus == 2 && info.registrationStatus == 2 && info.orderNum > 1}}">
+    <view class="ocard">
+      <view class="orow" bindtap="goSeats" aria-role="button" aria-label="同行席位" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="orow-k">同行席位</text>
+        <text class="orow-v orow-v--link">{{info.orderNum}} 人票</text>
+      </view>
+    </view>
+    </block>
+
     <!-- 10-28 原型 C 新增「发票」段:开票状态一行 + 去处一行;退款核对中 / 暂不可申请只留状态行。 -->
     <block wx:if="{{invoiceRow.show}}">
     <view class="sec-title">发票</view>

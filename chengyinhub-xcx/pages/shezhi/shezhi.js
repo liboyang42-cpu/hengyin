@@ -173,6 +173,10 @@ Page({
     }
   },
 
+  // qx-b3 P2:玩家推广中心(只读本人归因与分配明细)
+  goPromo() {
+    wx.navigateTo({ url: '/subpackageJourney/pages/promo/index' });
+  },
   goMylike() {
     wx.navigateTo({ url: '/pages/mylike/mylike' });
   },
