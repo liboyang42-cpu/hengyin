@@ -16,13 +16,11 @@ Page({
     chips: [],
     selected: {},
     cards: [],
-    total: null,
     loading: true,
     loadingMore: false,
     hasMore: false,
     error: '',
-    moreError: '',
-    everLoaded: false
+    moreError: ''
   },
 
   onLoad(options) {
@@ -39,13 +37,14 @@ Page({
 
   onReachBottom() { this.loadMore() },
 
-  post(url, data) {
+  // 读失败都落到页面可见状态(error / moreError);筛选项读失败只是不出选择器
+  post(url, data, onFail) {
     return new Promise((resolve) => {
       app.sendRequest({
-        url, method: 'POST', data, hideLoading: true, silentError: true,
+        url, method: 'POST', data, hideLoading: true,
         success: (res) => resolve(res || {}),
         successStatusAbnormal: (res) => resolve(Object.assign({ httpFail: true }, res || {})),
-        fail: () => resolve({ code: 'fail', netFail: true })
+        fail: () => { onFail({ error: '网络异常，请重试' }); resolve({ code: 'fail', netFail: true, handled: true }) }
       })
     })
   },
@@ -53,7 +52,7 @@ Page({
   // 城市与筛选项只影响选择器;读不到就不出选择器,列表照常
   loadMeta() {
     const seq = this._metaSeq = (this._metaSeq || 0) + 1
-    this.post('/api/public-catalog/filters', {}).then((res) => {
+    this.post('/api/public-catalog/filters', {}, () => { if (seq === this._metaSeq) this.setData({ cityTabs: [], chips: [] }) }).then((res) => {
       if (seq !== this._metaSeq || res.code != 200 || !res.data) return
       const cities = catalog.cityOptions(res.data.cities)
       const cityTabs = cities.length ? [{ key: ALL, label: '全部' }].concat(cities.map((c) => ({ key: c.key, label: c.label }))) : []
@@ -71,15 +70,17 @@ Page({
     const seq = this._listSeq = (this._listSeq || 0) + 1
     this._pageNum = 1
     this.setData({ loading: true, error: '', moreError: '', hasMore: false })
-    this.post('/api/public-catalog/list', catalog.buildQuery(this.data.selected, { pageNum: 1, pageSize: PAGE_SIZE })).then((res) => {
-      if (seq !== this._listSeq) return
+    this.post('/api/public-catalog/list', catalog.buildQuery(this.data.selected, { pageNum: 1, pageSize: PAGE_SIZE }),
+      (patch) => { if (seq === this._listSeq) this.setData({ loading: false, error: patch.error }) }).then((res) => {
+      if (seq !== this._listSeq) { if (typeof done === 'function') done(); return }
+      if (res.handled) { if (typeof done === 'function') done(); return }
       const page = catalog.readPage(res)
       if (!page) {
         this.setData({ loading: false, error: res.netFail ? '网络异常，请重试' : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '目录加载失败')) || '目录加载失败') })
       } else {
         const cards = catalog.cardList(page.rows)
         this.setData({
-          loading: false, everLoaded: true, cards, total: page.total,
+          loading: false, cards,
           hasMore: page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE
         })
       }
@@ -92,15 +93,16 @@ Page({
     const seq = this._listSeq
     const next = (this._pageNum || 1) + 1
     this.setData({ loadingMore: true, moreError: '' })
-    this.post('/api/public-catalog/list', catalog.buildQuery(this.data.selected, { pageNum: next, pageSize: PAGE_SIZE })).then((res) => {
-      if (seq !== this._listSeq) return
+    this.post('/api/public-catalog/list', catalog.buildQuery(this.data.selected, { pageNum: next, pageSize: PAGE_SIZE }),
+      () => { if (seq === this._listSeq) this.setData({ loadingMore: false, moreError: '加载更多失败' }) }).then((res) => {
+      if (seq !== this._listSeq || res.handled) return
       const page = catalog.readPage(res)
       if (!page) { this.setData({ loadingMore: false, moreError: '加载更多失败' }); return }
       this._pageNum = next
       const seen = {}
       this.data.cards.forEach((c) => { seen[c.id] = true })
       const cards = this.data.cards.concat(catalog.cardList(page.rows).filter((c) => !seen[c.id]))
-      this.setData({ loadingMore: false, cards, total: page.total,
+      this.setData({ loadingMore: false, cards,
         hasMore: page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE })
     })
   },

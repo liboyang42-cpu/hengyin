@@ -95,3 +95,23 @@ test('页面:匿名只读目录接口;无到货提醒、无本地报价;主按�
   assert.ok(topic.pages.includes('catalog/index') && topic.pages.includes('catalog/detail'), '新页在分包内')
   assert.ok(!app.pages.some((p) => p.includes('catalog')), '不进主包')
 })
+
+test('U08-05 下架/未公开/读取失败时收起分享,只有公开作品可分享', () => {
+  const calls = []
+  let def
+  const prev = { Page: global.Page, getApp: global.getApp, wx: global.wx }
+  global.Page = (d) => { def = d }
+  global.getApp = () => ({ globalData: {}, sendRequest() {} })
+  global.wx = { showShareMenu: () => calls.push('show'), hideShareMenu: () => calls.push('hide') }
+  try {
+    delete require.cache[require.resolve('../../pages/topic/catalog/detail.js')]
+    require('../../pages/topic/catalog/detail.js')
+    const page = Object.assign({}, def, { data: Object.assign({}, def.data), setData(p) { Object.assign(this.data, p) } })
+    page._seq = 1
+    page.settle(1, { code: 404 })
+    assert.equal(page.data.state, 'gone')
+    page.settle(1, { code: 200, data: { id: '1', name: '外滩夜行' } })
+    assert.equal(page.data.state, 'ok')
+    assert.deepEqual(calls, ['hide', 'show'])
+  } finally { Object.assign(global, prev) }
+})

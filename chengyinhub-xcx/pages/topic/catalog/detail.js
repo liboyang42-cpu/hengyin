@@ -15,7 +15,7 @@ Page({
 
   onLoad(options) {
     this._id = /^\d{1,19}$/.test(String(options.id || '')) ? String(options.id) : ''
-    if (!this._id) { this.setData({ state: 'gone' }); return }
+    if (!this._id) { this.shareable(false); this.setData({ state: 'gone' }); return }
     this.load()
   },
 
@@ -34,9 +34,16 @@ Page({
     if (seq !== this._seq) return
     const state = catalog.detailState(res)
     const view = state === 'ok' ? catalog.detailView(res.data) : null
+    // U08-05:只有公开可见的作品给分享入口;下架/未公开/读不到时收起分享,不留指向空页的链接
+    this.shareable(state === 'ok' && !!view)
     if (state === 'ok' && view) { this.setData({ state: 'ok', view }); return }
     if (state === 'gone') { this.setData({ state: 'gone', view: null }); return }
     this.setData({ state: 'error', view: null, error: res.netFail ? '网络异常，请重试' : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '作品加载失败')) || '作品加载失败') })
+  },
+
+  shareable(on) {
+    const fn = on ? wx.showShareMenu : wx.hideShareMenu
+    if (typeof fn === 'function') fn({ withShareTicket: false, menus: ['shareAppMessage'], fail: () => {} })
   },
 
   openTopic() {
