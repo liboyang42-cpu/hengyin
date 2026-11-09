@@ -223,7 +223,7 @@ EXPECTED = {
     "CoopComplaintCloseMybatisIntegrationTest": 8,
     # 2026-10-22 店铺参谋改版 +1 条(主卡 7/30/90 天走势、页头店名/头像、v3 缓存走真库真 XML),5 → 6。
     "RegistrationReadContractMybatisIntegrationTest": 6,
-    "ClubWaitlistTokenMybatisIntegrationTest": 7,
+    "ClubWaitlistTokenMybatisIntegrationTest": 11,
     "CmsMemberTemplateAudioPatchMybatisIntegrationTest": 9,
     "CmsTemplateLibraryAudioPatchMybatisIntegrationTest": 9,
     # 2026-10-20 AUDIT-G2-5:模板市场 use_num 按会员首次采用计数(同人重复/删了再建不涨、他人首次 +1)。
