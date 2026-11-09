@@ -3,9 +3,9 @@
   <cy-page-title title="邀请与收益" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
-    <view class="jn-sec jn-sec--first">
+    <view class="jn-sec jn-sec--first" wx:if="{{promo.hasAllocations || promo.held}}">
       <view class="jn-group">
-        <view class="jn-row" wx:for="{{promo.buckets}}" wx:key="key">
+        <view class="jn-row" wx:for="{{promo.buckets}}" wx:key="key" wx:if="{{promo.hasAllocations}}">
           <view class="jn-row__t"><text class="jn-row__b">{{item.label}}</text><text class="jn-row__s" wx:if="{{item.count}}">{{item.count}}</text></view>
           <text class="jn-row__v is-strong">{{item.amount}}</text>
         </view>
@@ -29,6 +29,6 @@
         </view>
       </view>
     </view>
-    <cy-empty wx:if="{{!promo.hasRecords && !promo.links.length}}" kind="empty" title="暂无可核实记录" size="sm" />
+    <cy-empty wx:if="{{!promo.hasRecords}}" kind="empty" title="暂无可核实记录" size="sm" />
   </block>
 </view>

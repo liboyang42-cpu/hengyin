@@ -146,7 +146,12 @@ test('P2 推广中心：金额未知不补 0；多币种不合计；无提现通
   assert.ok(!a.buckets.some(b => /到账|可提现/.test(b.label)));
   assert.equal(a.canPayout, false);
   assert.equal(a.held, '2 笔待核算');
-  assert.equal(v.affiliateView({ allocations: {}, payout: { available: true, endpoint: '/x' } }).hasRecords, false);
+  const none = v.affiliateView({ allocations: { pending: { allocationCount: 0, netAmount: 0 } }, payout: { available: true, endpoint: '/x' },
+    credentials: [{ targetType: 1, targetId: 3, targetTitle: 'T', statusText: 'active', active: true }] });
+  assert.equal(none.hasRecords, false);
+  assert.equal(none.hasAllocations, false);
+  assert.equal(none.canPayout, true);
+  assert.equal(none.links[0].status, '有效');
 });
 
 test('页面与入口：分包注册、战报只读入口、席位释放按钮不存在', () => {

@@ -353,7 +353,7 @@ function affiliateView(data) {
   const links = list(data.credentials).filter(record).map(c => ({
     key: String(c.targetType) + ':' + String(c.targetId) + ':' + String(c.issuedAt || ''),
     title: c.targetTitle || '主题',
-    status: c.statusText || (c.active ? '有效' : '已失效'),
+    status: c.active === true ? '有效' : '已失效',
     active: c.active === true,
     expires: c.expiresAt ? dateText(c.expiresAt) + ' 到期' : ''
   }));
@@ -361,6 +361,7 @@ function affiliateView(data) {
   const payout = record(data.payout) ? data.payout : {};
   return {
     buckets,
+    hasAllocations: any,
     hasRecords: any || campaigns.length > 0,
     campaigns,
     links,
