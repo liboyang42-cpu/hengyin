@@ -18,6 +18,8 @@ const GROUPS = [
       { key: 'qaText', icon: 'edit', label: '文字问答', sub: '出一道题，玩家打字作答', section: 'qa', mode: 'TYPE', validationMethod: 0 },
       { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个', section: 'qa', mode: 'PICK', validationMethod: 0 },
       { key: 'qaShot', icon: 'camera', label: '拍照打卡', sub: '给一句提示词，玩家拍一张交上来', section: 'qa', mode: 'SHOT', validationMethod: 2 },
+      /* UG-01 逐字猜词:按槽位补空白格或整词作答;答案、别名、预填格只在服务端,判定 SUBMIT_HANGMAN。 */
+      { key: 'hangman', icon: 'edit', label: '逐字猜词', sub: '按格子补出缺的字', section: 'hangman', validationMethod: 0 },
       { key: 'branch', icon: 'switch-chapter', label: '分支剧情', sub: '界面和问答一样，只是选项决定下一段', section: 'branch', validationMethod: 0 },
     ],
   },
@@ -103,6 +105,7 @@ const form = (key, label, gameKey) => ({ key, label, gameKey });
 const BASE_GAMES = [
   { key: 'choice', label: '选项问答', category: '问答', icon: 'check', forms: [form('text', '文字选项', 'qaPick'), form('image', '图片选项', 'pricePair'), form('taste', '闭眼盲品', 'blindTaste'), form('reveal', '到期揭晓', 'predict')] },
   { key: 'text', label: '文字问答', category: '问答', icon: 'edit', gameKey: 'qaText' },
+  { key: 'hangman', label: '逐字猜词', category: '问答', icon: 'edit', gameKey: 'hangman' },
   { key: 'photo', label: '拍照', category: '问答', icon: 'camera', forms: [form('checkin', '拍照打卡', 'qaShot'), form('review', '拍照审核', 'photoCheck'), form('card', '拍物成卡', 'objectCard')] },
   { key: 'random', label: '随机结果', category: '互动', icon: 'gift', forms: [form('coin', '抛硬币', 'coin'), form('dice', '掷骰子', 'dice'), form('cards', '翻卡', 'random')] },
   { key: 'check', label: 'D20', category: '挑战', icon: 'star', forms: [form('tier', '三档难度', 'check'), form('d20', 'D20 加值', 'd20')] },
@@ -251,6 +254,7 @@ const DEMO = {
   dice: { kicker: '掷到几就做第几件事', faces: ['和店员说句今天的天气', '换个位置坐', '点一杯没喝过的', '拍一张门口', '把杯子摆正', '写一句留言'] },
   d20: { kicker: '观察暗门', successText: '你发现了门后的线索', failText: '暂时没有发现，沿街继续寻找' },
   scan: { reply: '欢迎来到这家店，今天的手冲是耶加雪菲。' },
+  hangman: { answer: 'ENDLESS', format: ['E', '_', '_', '_', '_', '_', 'S'] },
 };
 
 /**
@@ -267,6 +271,8 @@ function applyToConfig(advanced, key, options) {
   if (!game || !advanced || typeof advanced !== 'object') return null;
   const next = JSON.parse(JSON.stringify(advanced));
   if (key === 'scan') { next.scan = Object.assign({}, next.scan, { enabled: true }); return next; }
+  // 不在默认配置里的段(逐字猜词)选中时先建一个空段,再按下面同一条规则开/关
+  if (game.section && !next[game.section]) next[game.section] = {};
   GAME_SECTIONS.forEach((name) => {
     if (!next[name] || typeof next[name] !== 'object') return;
     if (name === 'branch' && game.section !== 'branch' && next.outcomeRules?.version === 1) return;

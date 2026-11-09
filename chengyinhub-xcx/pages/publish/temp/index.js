@@ -33,7 +33,7 @@ const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const templateTools = require('../utils/publish/template-tools.js');
-const r5Editor = require('./r5-editor.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
+const r5Editor = require('./r5-editor.js'); const questoAuthor = require('./questo-author.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
 const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -200,7 +200,7 @@ function noPreviewTip(section) {
 }
 
 Page({
-  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods,
+  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods, ...questoAuthor.methods,
   MODULE_DEFS: MODULE_DEFS,
 
   _supportMatrix: null,
@@ -374,7 +374,7 @@ Page({
 
     // 通用底部选择器
     pickerSheet: { open: false, key: '', title: '', options: [] },
-    qaAnswerError: '',
+    qaAnswerError: '', qzHintTypes: questoAuthor.HINT_TYPES, qzClueModes: questoAuthor.CLUE_MODES, ...questoAuthor.view(advancedGameConfig.defaultConfig()), // Questo 新玩法作者配置(questo-author.js)
     segmentOn: {}, segmentAddOptions: [], clueContent: {},
 
     // 校验滚动(scroll-view 内)
@@ -1540,7 +1540,7 @@ Page({
       this._refreshSupportMatrix();
       this._refreshOutcomeContract();
       this._syncCheckDerived();   // 开关玩法段 / 改次数都会改变「能放宽什么」
-      this._syncQaAnswerError();
+      this._syncQaAnswerError(); this._syncQuesto();
       this._syncSegments();
       this._syncClueContent();
       this.refreshPreviewState();
@@ -3160,10 +3160,10 @@ Page({
     }
 
     const advancedOpts = this._advancedValidateOpts();
-    const advancedError = advancedGameConfig.validate(this.data.advanced, advancedOpts);
+    const advancedModel = questoAuthor.beforeSave(this.data.advanced), advancedError = advancedGameConfig.validate(advancedModel, advancedOpts); // Questo 新键存盘前收口(人物与选项对齐、空可选键不写)
     formData.advancedConfigJson = advancedError
-      ? JSON.stringify(this.data.advanced)
-      : advancedGameConfig.serializeChanges(this.data.advanced, formData.advancedConfigJson, advancedOpts);
+      ? JSON.stringify(advancedModel)
+      : advancedGameConfig.serializeChanges(advancedModel, formData.advancedConfigJson, advancedOpts);
 
     const clearFields = templateAuthorFields.clearFields(this._loadedAuthorFields, formData);
     if (clearFields.length) formData.clearFields = clearFields;
@@ -3184,7 +3184,7 @@ Page({
     // 标题(草稿也校验)
     if (!f.title || !f.title.trim()) errors.title = '请填写玩法标题';
     const advancedError = advancedGameConfig.validate(this.data.advanced, this._advancedValidateOpts());
-    if (advancedError) errors.advanced = advancedError;
+    if (advancedError) errors.advanced = advancedError; else if (questoAuthor.hasErrors(this.data.advanced)) errors.advanced = questoAuthor.hasErrors(this.data.advanced);
     const outcome = this._refreshOutcomeContract();
     if (outcome.errors.length) errors.advanced = outcome.errors[0].message;
     if (draft) return errors;

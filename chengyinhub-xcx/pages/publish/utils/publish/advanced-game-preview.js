@@ -21,7 +21,7 @@ const advancedGameConfig = require('./advanced-game-config.js');
 
 const PREVIEW_PRIORITY = [
   'profile', 'photoCheck', 'note', 'typeIn',
-  'qa', 'branch', 'estimate', 'pricePair',
+  'qa', 'hangman', 'branch', 'estimate', 'pricePair',
   /* R3 排序 / 连线 / 分类:与猜图同档的「要玩家动手」—— 预览先演它们 */
   'sort', 'match', 'classify',
   'hiddenObject', 'predict',
@@ -255,7 +255,8 @@ const BUILDERS = {
     imageUrl: orBlank(c.imageUrl),
     audioUrl: orBlank(c.audioUrl),
     // id 照带(不是秘密):试玩判定按 id 认选项;correct 与反馈仍不带
-    options: (Array.isArray(c.options) ? c.options : []).map((o) => ({ id: orBlank(o.id), t: orBlank(o.label) })),
+    options: (Array.isArray(c.options) ? c.options : []).map((o) => Object.assign({ id: orBlank(o.id), t: orBlank(o.label) },
+      /^(https:\/\/|\/[^/])/.test(orBlank(o.img)) ? { img: orBlank(o.img), alt: orBlank(o.alt) } : {})),
     // 多选标记照配置带过去:预览要演的就是「勾多个再提交」那一屏
     multi: !!c.multi,
     shotLead: orBlank(c.lead) || orBlank(c.title),
@@ -263,6 +264,18 @@ const BUILDERS = {
     limitSeconds: 0,
     maxTries: num(c.maxTries, 0),
   }),
+  /* UG-01 逐字猜词:作者自己的预填格照演(本地预览,不经下发通道);待补格空着。 */
+  hangman: (c) => {
+    const answer = Array.from(String(c.answer || ''));
+    if (!answer.length) return null;
+    const format = Array.isArray(c.format) && c.format.length === answer.length ? c.format : [];
+    const slots = answer.map((ch, i) => {
+      if (!/[\p{L}\p{Nd}]/u.test(ch)) return { i, kind: 'SEPARATOR', ch };
+      const given = typeof format[i] === 'string' && format[i] !== '' && format[i] !== '_';
+      return given ? { i, kind: 'PREFILLED', ch } : { i, kind: 'BLANK', ch: '' };
+    });
+    return { type: 'hangman', title: '', slots, solved: false, display: '' };
+  },
   /* 扫码:预览直接演「扫完之后」那一屏 —— 商家要核的就是那句回复长什么样。
      真链路里回复要扫完才下发,预览没有下发通道,不冲突。 */
   scan: (c) => ({
@@ -381,6 +394,7 @@ function buildSinglePreviewKit(config, opts) {
     const kit = BUILDERS[key](seg);
     if (!kit) continue;
     if (key === 'album') kit.title = txt(o.title) || '相册';
+    if (key === 'qa') questoPreview(kit, config);
     kit.present = advancedGameConfig.explicitPresent(config) || advancedGameConfig.defaultPresent(key);
     /* 通用的限时 / 次数是**另一段**(timer),不是各玩法自己的 ——
        原型里这两个开关只给真的会执行的玩法,所以由调用方按玩法决定要不要带。 */
@@ -389,6 +403,27 @@ function buildSinglePreviewKit(config, opts) {
     return kit;
   }
   return null;
+}
+
+/* UG-10 / UG-03 试玩按玩家侧同一规则演:倒序由服务端给好的串在这里本地倒一次,镜像交给组件翻转;
+   配了指认的单选题演人物卡页(结论与正确人物不在预览里)。 */
+function questoPreview(kit, config) {
+  const mode = config.clueTransform && config.clueTransform.mode;
+  if (mode === 'REVERSE') kit.title = Array.from(kit.title || '').reverse().join('');
+  if (mode === 'MIRROR') kit.clueMode = 'MIRROR';
+  const acc = config.accusation;
+  if (!(acc && acc.enabled && kit.mode === 'pick')) return;
+  const byId = {};
+  (acc.suspects || []).forEach((sp) => { if (sp && sp.id) byId[sp.id] = sp; });
+  Object.assign(kit, {
+    type: 'accusation', boardImg: /^(https:\/\/|\/[^/])/.test(txt(acc.corkboardImage)) ? txt(acc.corkboardImage) : '', boardAlt: '', intro: [],
+    suspects: kit.options.map((op) => {
+      const sp = byId[op.id] || {};
+      return { id: op.id, name: op.t, identity: txt(sp.identity), avatar: /^(https:\/\/|\/[^/])/.test(txt(sp.avatar)) ? txt(sp.avatar) : '',
+        testimony: (sp.testimony || []).filter((t) => t && txt(t.text)).map((t) => ({ key: t.key, text: txt(t.text) })) };
+    }),
+    outcome: '', outcomeLabel: '', pending: false, wrongAttempt: false, retryNote: '', screen: [],
+  });
 }
 
 /** 这份配置有没有开任何一个高级玩法。预览要据此决定演哪一套。 */

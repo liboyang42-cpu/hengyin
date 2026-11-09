@@ -268,6 +268,7 @@ function loadPatchedView(patch) {
   fs.copyFileSync(path.join(path.dirname(viewAbs), 'playkit-steps.js'), path.join(viewDir, 'playkit-steps.js'))
   fs.copyFileSync(path.join(path.dirname(viewAbs), 'playkit-r5-segments.js'), path.join(viewDir, 'playkit-r5-segments.js'))
   fs.copyFileSync(path.join(path.dirname(viewAbs), 'sensor-contract.js'), path.join(viewDir, 'sensor-contract.js'))
+  fs.copyFileSync(path.join(path.dirname(viewAbs), 'playkit-questo.js'), path.join(viewDir, 'playkit-questo.js'))
   fs.copyFileSync(path.join(ROOT, 'utils/object-card.js'), path.join(dir, 'utils/object-card.js'))
   fs.copyFileSync(path.join(ROOT, 'utils/object-card-reveal.js'), path.join(dir, 'utils/object-card-reveal.js'))
   const target = path.join(viewDir, 'playkit-view.js')
