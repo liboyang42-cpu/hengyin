@@ -99,6 +99,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-09-19 +1:批复1-a=2 partner 页复活(cy-nav-bar 出标题,无 cy-page-title)。
   'pages/topic/pricing/partner/index',
+  'pages/topic/catalog/detail',
+  'pages/topic/catalog/index',
   'pages/topic/pricing/index',
   'pages/play/circle/index',
   'pages/merchant/apply/index', 'pages/merchant/ledger/index', 'pages/merchant/ledger/order-detail/index', 'pages/merchant/ledger/batch-detail/index', 'pages/merchant/profile/index',
@@ -125,6 +127,11 @@ const EXPECTED_NAV_ROUTES = [
   // 2026-11-09 qx-b5:通行证列表/详情、视频悬赏为 cy-nav-bar plain + cy-page-title 标准二级页;礼品领取用导航栏标题
   'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
   'subpackageMember/market/gift/index', 'subpackageA/pages/video-bounty/index',
+  'pages/publish/preset/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/landing/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/report/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
@@ -200,6 +207,9 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   /* 2026-09-22 Phase 0 物品卡实验室页:普通玩家二级页,左对齐大标题「立体藏品卡」由 cy-page-title 出。 */
   /* 2026-09-22 Phase 3 藏品册页:普通玩家二级页,左对齐大标题「藏品册」由 cy-page-title 出。 */
   // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
+  'pages/publish/preset/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
 ]
 
 // 2026-09-03 入职流重做:apply 与 create 统一成 cy-nav-bar + cy-h1 的向导形态,
@@ -337,8 +347,10 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-29 −1:「动态」二级页 pages/square/list 删除(custom 导航)⇒ 157 → 156;custom 156 → 155。
   // 2026-10-31 dw29 发布集成:两边叠加(topic-detail +1、square/list −1)⇒ 157;custom 156。
   // 2026-11-09 qx-b5 +4(均 custom 导航):通行证列表/详情/礼品领取、视频悬赏 ⇒ 161;custom 160。
-  assert.equal(rows.length, 161, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 160)
+  // 2026-11-09 qx-b8 +2:公开目录 catalog/index 与落地详情 catalog/detail(custom 导航 + cy-nav-bar 标题,不挂 cy-page-title)⇒ 159;custom 158。
+  assert.equal(rows.length, 168, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  // 2026-11-10 staging 合流:qx-b4/b5/b8 等各线新页叠加,合并树实测 168;custom 167。
+  assert.equal(rows.filter((row) => row.custom).length, 167)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

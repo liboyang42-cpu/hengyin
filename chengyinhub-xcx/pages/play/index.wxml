@@ -1306,7 +1306,7 @@
   <view class="finsheet__head">
     <view class="finsheet__eyebrow" wx:if="{{finishDateLabel}}">{{finishDateLabel}}{{!(allDone || topicCompleted) && topicName ? ' · ' + topicName : ''}}</view>
     <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
-    <view class="finsheet__result {{allDone || topicCompleted ? 'is-win' : ''}}">{{allDone || topicCompleted ? '已通关' : (finishChapterDone ? '本章完成' : '已结束')}}</view>
+    <view class="finsheet__result {{finishResult.win ? 'is-win' : ''}}" wx:if="{{finishResult.label}}">{{finishResult.label}}</view>
   </view>
   <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
   <view class="finsheet__grid" wx:if="{{mode!=2}}">

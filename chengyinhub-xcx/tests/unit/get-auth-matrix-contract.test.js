@@ -283,6 +283,9 @@ const MATRIX = [
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/backpack'", 'required', 'member', 'current-session'],
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取。只认登录本人,服务端再核这一场已付费、作者没关(ApiPlayTeamController /trail/state)。
   ['pages/play/index.js', "req('/api/team/trail/state', 'GET'", 'required', 'member', 'current-session'],
+  // 2026-11-09 qx-b8 U08-01:完成页结果词读本局战报。ApiPlayerJourneyController /report 只取登录会员,
+  //   PlayerRunReportApplication 按本人报名/路线会话校验 runId 归属(非本人局 403「无权查看该局」),只读不建局不发奖。
+  ['pages/play/index.js', "req('/api/play/player-journey/report', 'GET'", 'required', 'member', 'current-session'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -440,7 +443,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-03 第九轮 m-rain:漫游地图天气氛围一处匿名 GET /api/map/weather(已入 MATRIX),110 → 111。
   // 2026-11-04 第九轮 m-card:漫游地点卡读节点评分一处 GET /api/city/nodes/{id}(与据点详情同一接口,已入 MATRIX),111 → 112。
   // 2026-11-04 第十一轮 g3 p1 F-7:参与详情探一次本人角色卡(同 GET /api/play/character,本人账号、只读),只在主题真有角色属性时摆入口,112 → 113。
-  assert.equal(directCount, 113, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-10 staging 合流(qx-b1..b8):各线已入 MATRIX 的直接 GET 合计,合并树实测 113 → 122。
+  assert.equal(directCount, 122, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -453,7 +457,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
   // R29C:原会话历史 GET /api/play/history 一处，按登录会员与原会话归属只读，45 → 46。
   // qx-b1:提示阶梯 GET /api/play/help 与 /api/play/help/receipt 两处(本人原局,已入 MATRIX),46 → 48。
-  assert.equal(wrapperCount, 48, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-09 qx-b8 U08-01:完成页本局战报 GET /api/play/player-journey/report 一处(本人本局,已入 MATRIX),46 → 47。
+  // 2026-11-10 staging 合流:qx-b1 +2 与 qx-b8 +1 叠加,46 → 49。
+  assert.equal(wrapperCount, 49, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

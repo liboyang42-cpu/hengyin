@@ -1,0 +1,16 @@
+{
+  "usingComponents": {
+    "cy-empty": "/components/cy/empty/index",
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-error": "/components/cy/error/index",
+    "cy-inline-error": "/components/cy/inline-error/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-tabs": "/components/cy/tabs/index"
+  },
+  "navigationBarTitleText": "城市目录",
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "light"
+}

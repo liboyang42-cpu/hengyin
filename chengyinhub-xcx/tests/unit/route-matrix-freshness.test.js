@@ -50,8 +50,10 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-10-29 R2 l2-roam:「动态」二级页 pages/square/list 删除(业主:帖文流只剩发现 / 俱乐部详情 / 我的),157 → 156(build-route-matrix.js --json 重建)。
   // 2026-10-31 dw29 发布集成:V-24 主题模板详情 topic-detail +1 叠加 square/list 删除 ⇒ 157(build-route-matrix.js --json 重建)。
   /* 2026-11-09 qx-b5 +4:通行证列表/详情/礼品领取、视频悬赏(均在既有分包) ⇒ 157+4 = 161。 */
-  assert.equal(current.routes.length, 161)
-  assert.equal(matrix.counts.routes, 161)
+  // 2026-11-09 qx-b8 §20.1 / UI-P3:+2 公开目录与落地详情 pages/topic/catalog/{index,detail} ⇒ 159(build-route-matrix.js --json 重建)。
+  // 2026-11-10 staging 合流:各线新页叠加,build-route-matrix.js --json 重建实测 168。
+  assert.equal(current.routes.length, 168)
+  assert.equal(matrix.counts.routes, 168)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)

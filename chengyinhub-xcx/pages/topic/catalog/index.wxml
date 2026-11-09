@@ -1,0 +1,42 @@
+<view class="theme-dark">
+<view class="catalog">
+  <cy-nav-bar title="{{title}}" />
+  <view class="catalog-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+  <cy-tabs wx:if="{{cityTabs.length}}" class="catalog-cities" tabs="{{cityTabs}}" active="{{activeCity}}" variant="chip" bind:change="onCity" />
+  <scroll-view wx:if="{{chips.length}}" class="catalog-chips" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="catalog-chips__row">
+      <view wx:for="{{chips}}" wx:key="key" class="catalog-chip" data-key="{{item.key}}" bindtap="onChip"
+        aria-role="button" aria-label="{{item.label}}" aria-selected="{{selected[item.field] === item.value}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cy-chip {{selected[item.field] === item.value ? 'cy-chip--on' : ''}}">{{item.label}}</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="main">
+    <view wx:if="{{loading && !cards.length}}"><cy-skeleton type="feed-card" count="3" /></view>
+    <cy-error load-failure class="fill-slot" wx:elif="{{error && !cards.length}}" fill="{{true}}" size="lg" title="目录没有加载出来" sub="{{error}}" bind:retry="reload" />
+    <cy-empty class="fill-slot" wx:elif="{{!loading && !error && !cards.length}}" fill="{{true}}" size="lg" kind="empty" title="暂时没有公开作品" sub="" />
+    <cy-inline-error wx:if="{{error && cards.length}}" title="{{error}}" action="重试" bind:action="reload" />
+    <view class="catalog-list" wx:if="{{cards.length}}">
+      <view wx:for="{{cards}}" wx:key="id" class="topic-result-card" data-id="{{item.id}}" bindtap="openCard"
+        aria-role="button" aria-label="查看作品：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="topic-result-card__media">
+          <image wx:if="{{item.cover}}" class="topic-result-card__cover" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
+          <view wx:else class="topic-result-card__cover topic-result-card__fallback"><cy-icon name="route" size="52" /></view>
+          <view class="topic-result-card__shade"></view>
+          <view class="topic-result-card__kind" wx:if="{{item.kind}}">{{item.kind}}</view>
+        </view>
+        <view class="topic-result-card__body">
+          <view class="topic-result-card__title">{{item.title}}</view>
+          <view class="topic-result-card__detail ep1" wx:if="{{item.meta}}">{{item.meta}}</view>
+          <view class="result-card__tags" wx:if="{{item.tags.length}}">
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="result-card__tag">{{tag}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="catalog-more" wx:if="{{loadingMore}}">加载中…</view>
+      <view class="catalog-more catalog-more--act" wx:elif="{{moreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{moreError}} · 重试</view>
+    </view>
+  </view>
+</view>
+</view>
