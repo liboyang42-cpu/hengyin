@@ -23,33 +23,32 @@
 /* padding-top = tab 与下方第一张卡的间距 */
 /* R1-C04:.order-loading / .order-skel-* 已由 <cy-skeleton> 取代,定义随之移除 */
 /* 玩家弹窗卡片统一消费 scene-roam-history 的共享变量。 */
-.orderbox_li{overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-bg-card)); padding: var(--cy-scene-card-pad-y, var(--cy-space-3)) var(--cy-scene-card-pad-x, var(--cy-space-3)); margin: 0 0 var(--cy-scene-card-gap, var(--cy-space-5)); box-shadow: var(--cy-scene-card-shadow, var(--cy-shadow-card)); border: 2rpx solid var(--cy-scene-card-border, var(--cy-border-card));}
-.orderbox_li_top{ margin: 0 0 var(--cy-space-3) 0; overflow: hidden;height: var(--cy-space-7); line-height: 80rpx; font-size: var(--cy-font-label); border-bottom: 2rpx solid var(--cy-border-card); padding-top: var(--cy-legacy-10);}
-.orderbox_li_top_left{float: left; color: var(--cy-text-secondary); font-weight: 500;}
-.orderbox_li_top_left .moh-no{ margin-left:16rpx;}
-.orderbox_li_top_right{ float: right; font-size: var(--cy-font-label);}
-.orderbox_li_top_right .moh-state{display: block; height: 48rpx; line-height: 48rpx; border-radius: var(--cy-radius-md); padding: 0 16rpx; font-weight: bold; margin-top: 16rpx;}
+.orderbox_li{overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-bg-card)); padding: var(--cy-space-4) var(--cy-space-4) 0; margin: 0 0 var(--cy-space-3); box-shadow: var(--cy-scene-card-shadow, var(--cy-shadow-card)); border: 2rpx solid var(--cy-scene-card-border, var(--cy-border-card));}
 /* gap = 缩略图与右侧文字块的横向间距 */
-.orderbox_li_con{overflow: hidden; margin: 0 0 var(--cy-space-4) 0; display: flex; justify-content: space-between; gap: var(--cy-space-3);}
-.orderbox_li_con_tu{ width: 256rpx; height: 180rpx; flex-shrink: 0; overflow: hidden; border-radius: var(--cy-radius-sm);}
+/* V3-22:封面与文字列顶边对齐;卡距 space-3、卡内统一 space-4 边距,底行与上面同一条左边 */
+.orderbox_li_con{overflow: hidden; margin: 0 0 var(--cy-space-3) 0; display: flex; align-items: flex-start; gap: var(--cy-space-3);}
+.orderbox_li_con_tu{ width: 176rpx; height: 176rpx; flex-shrink: 0; overflow: hidden; border-radius: var(--cy-radius-md); background: var(--cy-bg-subtle);}
 .orderbox_li_con_tu .moh-cover{ width: 100%; height: 100%; vertical-align: top;}
 /* 行间距不再用统一 gap:用户要求「标题→日期」和「日期→地点」两档不同,
    改由各行自己的 margin-top 承担(首行 order-mode-line 不带,天然贴顶)。 */
-.orderbox_li_con_info{overflow: hidden; flex: 1; display: flex; flex-direction: column; justify-content: center;}
+.orderbox_li_con_info{overflow: hidden; flex: 1; min-width: 0; display: flex; flex-direction: column;}
+/* 类别 tag 左、状态词右,同一行 */
+.moh-head{display: flex; align-items: center; gap: var(--cy-space-2); min-height: 40rpx;}
+.moh-head .moh-state{margin-left: auto; flex: none; font-size: var(--cy-font-caption); font-weight: 600; white-space: nowrap;}
 .order-mode-line{display:flex; align-items:center; gap:var(--cy-legacy-10); min-width:0;}
 .order-mode-tag{flex:none; height:34rpx; line-height:34rpx; padding:0 var(--cy-space-1-5); border-radius: var(--cy-radius-pill); background:var(--cy-bg-subtle); color:var(--cy-info); font-size:var(--cy-font-caption); font-weight:800;}
 .order-mode-tag.green{background:var(--cy-bg-subtle); color:var(--cy-success);}
 .order-mode-copy{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cy-text-secondary); font-size:var(--cy-font-caption);}
 /* 标题 → 日期 = space-2 */
-.orderbox_li_con_info_time{ font-size: var(--cy-font-label); color: var(--cy-text-body); margin-top: var(--cy-space-2);}
+.orderbox_li_con_info_time{ font-size: var(--cy-font-label); color: var(--cy-text-secondary); margin-top: var(--cy-space-1-5);}
 .orderbox_li_con_info_time .moh-ico{ width: 24rpx; height: 24rpx; vertical-align: top;margin: var(--cy-legacy-4) var(--cy-legacy-6) 0 0;}
-.orderbox_li_con_info_name{ font-size: var(--cy-font-title); color: var(--cy-text-title); font-weight: bold; margin-top: var(--cy-space-1-5);}
+.orderbox_li_con_info_name{ font-size: var(--cy-font-title); color: var(--cy-text-title); font-weight: bold; margin-top: var(--cy-space-2);}
 /* 日期 → 地点 = space-1-5 */
-.orderbox_li_con_info_txt{font-size: var(--cy-font-label); color: var(--cy-text-body); margin-top: var(--cy-space-1-5);}
+.orderbox_li_con_info_txt{font-size: var(--cy-font-label); color: var(--cy-text-secondary); margin-top: var(--cy-space-1);}
 .orderbox_li_con_info_txt .moh-ico{ width: 24rpx; height: 24rpx; vertical-align: top; margin: var(--cy-legacy-4) var(--cy-legacy-6) 0 0;}
 /* 原 float 布局下"实付款"文字与 88rpx 高的按钮各自居中基准不同,按钮视觉上偏高;
    改 flex + align-items:center 让两侧共用同一条居中基线。 */
-.orderbox_li_bot{ margin: 0; overflow: hidden; border-top: 2rpx solid var(--cy-border-card); padding: var(--cy-space-3) 0; display: flex; align-items: center; justify-content: space-between;}
+.orderbox_li_bot{ margin: 0; overflow: hidden; border-top: 2rpx solid var(--cy-border-card); padding: var(--cy-space-1) 0; display: flex; align-items: center; justify-content: space-between;}
 .orderbox_li_bot_left{ color: var(--cy-text-body); font-size: var(--cy-font-label); display: flex; align-items: baseline; }
 .orderbox_li_bot_left .moh-amount{color: var(--cy-price); font-weight: bold;font-size: var(--cy-font-body); margin-right: var(--cy-legacy-4);}
 .orderbox_li_bot_left .moh-amount{color: var(--cy-price); font-weight: bold;font-size: var(--cy-font-display);}
@@ -73,13 +72,14 @@
    现与 .orderbut2 同源,只保留类名以免动 WXML 条件分支。 */
 .orderbut-play{background:var(--cy-btn-solid-bg); color:var(--cy-btn-solid-fg); box-shadow:none;}
 .orderbut-play .orderbut__visual{background:var(--cy-btn-solid-bg); color:var(--cy-btn-solid-fg);}
-.moh-state.order-state-pending_payment{color: var(--cy-danger); background: var(--cy-bg-page);}
-.moh-state.order-state-not_started{color: var(--cy-info); background: var(--cy-bg-page);}
-.moh-state.order-state-in_progress{color: var(--cy-success); background: var(--cy-bg-page);}
-.moh-state.order-state-completed{color: var(--cy-text-body); background: var(--cy-bg-page);}
-.moh-state.order-state-refunding{color: var(--cy-gold); background: var(--cy-bg-page);}
-.moh-state.order-state-refunded{color: var(--cy-success); background: var(--cy-bg-page);}
-.moh-state.order-state-non_refundable{color: var(--cy-text-secondary); background: var(--cy-bg-page);}
+/* 状态词只用颜色区分,不再套底色药丸 */
+.moh-state.order-state-pending_payment{color: var(--cy-danger);}
+.moh-state.order-state-not_started{color: var(--cy-info);}
+.moh-state.order-state-in_progress{color: var(--cy-success);}
+.moh-state.order-state-completed{color: var(--cy-text-body);}
+.moh-state.order-state-refunding{color: var(--cy-gold);}
+.moh-state.order-state-refunded{color: var(--cy-success);}
+.moh-state.order-state-non_refundable{color: var(--cy-text-secondary);}
 
 /* 订单卡整张可点,原来点下去没有任何即时反馈 */
 .orderbox_li--press { opacity: 0.82; }
