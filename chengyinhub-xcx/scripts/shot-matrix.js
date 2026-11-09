@@ -665,11 +665,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
 // 2026-10-29 走查 l2-roam V-08 第二轮删除「动态」二级页 pages/square/list:A05–A09 五行退场,total 353→348、P0 140→139、P1 203→199、actionable 329→324(P0 131→130、P1 196→192)、A 53→48、setData 186→183、identity+setData 116→115、real-data 44→43;blocked 与已验 fixture 不变。
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
+// 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 const STATS = {
-  "total": 350,
+  "total": 349,
   "byPriority": {
     "P0": 139,
-    "P1": 201,
+    "P1": 200,
     "P2": 10
   },
   "blockedByPriority": {
@@ -679,9 +680,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 194,
+    "P1": 193,
     "P2": 2,
-    "total": 326
+    "total": 325
   },
   "blocked": 24,
   "domains": {
@@ -690,10 +691,10 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 96
+    "F": 95
   },
   "control": {
-    "setData": 184,
+    "setData": 183,
     "identity+setData": 115,
     "real-data": 44,
     "real-device": 7
