@@ -1,0 +1,52 @@
+@import "/pages/play/style/play-surface.wxss";
+
+/* cy-playkit-accusation · 指认结案(UG-03/04)。问答暗版皮肤;人物卡沿用排序行卡的软底与描边选中。 */
+.ac { color: var(--ink); text-align: left; align-items: stretch; }
+.ac__q { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; }
+.ac__board { width: 100%; height: 320rpx; margin-top: var(--cy-space-4); border-radius: var(--cy-radius-md); }
+.ac__text { margin-top: var(--cy-space-3); font-size: var(--cy-type-body); line-height: 1.75; color: var(--sub); }
+.ac__grid { display: flex; flex-wrap: wrap; gap: 20rpx; margin-top: var(--cy-space-5); }
+.ac__card {
+  width: calc(50% - 10rpx);
+  min-height: 88rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+  border-radius: 32rpx;                    /* ds-ok 与排序行卡 .so__row 同源 */
+  background: var(--soft);
+  transition: box-shadow .2s ease;
+}
+.ac__card.is-pick { box-shadow: inset 0 0 0 4rpx var(--ink); }
+.ac__avatar { width: 100%; height: 260rpx; border-radius: var(--cy-radius-md); background: var(--bg); }
+.ac__avatar--empty { display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-sheet-title); font-weight: 800; color: var(--sub); }
+.ac__name { margin-top: 16rpx; font-size: var(--cy-type-body); font-weight: 800; }
+.ac__id { margin-top: 4rpx; font-size: var(--cy-type-label); color: var(--sub); }
+.ac__press { opacity: .88; }
+.ac__file { margin-top: var(--cy-space-4); padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--soft); }
+.ac__file-row { padding: 12rpx 0; font-size: var(--cy-type-body); line-height: 1.6; }
+.ac__fb { margin-top: var(--cy-space-4); padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-radius-md);
+  background: var(--cy-color-status-danger-soft); color: var(--accent); font-size: var(--cy-type-body); font-weight: 700; }
+.ac__tag { align-self: flex-start; padding: 10rpx 24rpx; border-radius: var(--cy-radius-pill); background: var(--soft);
+  font-size: var(--cy-type-label); font-weight: 800; color: var(--ink); }
+.ac__tag--FAILED { color: var(--accent); }
+.ac__bar {
+  position: var(--pk-btn-pos, absolute);
+  left: var(--pk-btn-x, var(--cy-page-x));
+  right: var(--pk-btn-x, var(--cy-page-x));
+  bottom: var(--pk-btn-bottom, calc(env(safe-area-inset-bottom) + 60rpx));
+  margin-top: var(--pk-btn-mt, 0);
+  z-index: 5;
+  display: flex;
+  gap: 20rpx;
+}
+.ac__bar--hide { display: none; }
+.ac__btn { flex: 1; height: 104rpx; line-height: 104rpx; text-align: center; border-radius: var(--cy-radius-pill);
+  background: var(--ink); color: var(--bg); font-size: var(--cy-type-body); font-weight: 800; }
+.ac__btn--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2rpx var(--sub); }
+.ac__btn--off { background: transparent; color: var(--sub); box-shadow: inset 0 0 0 2rpx currentColor; }
+.ac--reduced .ac__card { transition: none; }
+/* 整屏档:人物多、档案长时本列自己滚,底部两枚按钮不压住证词 */
+.ac--full { overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom) + 200rpx); }
+/* 整屏列是定高 flex 列:子块不许被压扁(线索板图、人物卡在内容多时保持原尺寸,由本列滚动) */
+.ac__q, .ac__board, .ac__text, .ac__grid, .ac__file, .ac__fb, .ac__tag { flex-shrink: 0; }
+/* 整屏档底栏铺满整宽并压一层底色:列表滚到下面时不透出证词 */
+.ac__bar--full { left: 0; right: 0; bottom: 0; padding: 24rpx 40rpx calc(env(safe-area-inset-bottom) + 60rpx); background: var(--bg); }

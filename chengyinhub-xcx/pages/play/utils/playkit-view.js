@@ -16,11 +16,12 @@ const { stepsA11yLabel } = require('./playkit-steps.js');
 const { toCard } = require('../../../utils/object-card.js');
 const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
 const sensorContract = require('./sensor-contract.js');
+const questo = require('./playkit-questo.js');
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
      branch 又排在这批的最前 —— 它是一整段剧情,中途插一屏别的会把叙事打断。 */
-  'qa', 'branch', 'predict', 'random', 'estimate', 'pricePair',
+  'qa', 'hangman', 'branch', 'predict', 'random', 'estimate', 'pricePair',
   /* R3 排序 / 连线 / 分类:节点的主玩法,没做完不该先弹别的。 */
   'sort', 'match', 'classify',
   /* R16 时间轴对照:服务端早就能判(SUBMIT_COMPARE),玩家端一直没有这一屏 ——
@@ -47,6 +48,8 @@ const KIT_PRIORITY = [
 /** 服务端段名 → 组件 type(cy-playkit 分发器认的那套) */
 const TYPE_OF = {
   qa: 'qa',
+  /* UG-01 逐字猜词:槽位形状 + 本局已补字符来自服务端 publicProjection,答案/别名/format 永不下发。 */
+  hangman: 'hangman',
   scan: 'scan',
   branch: 'branch',
   estimate: 'estimate',
@@ -190,6 +193,8 @@ function segmentComplete(name, seg) {
   if (name === 'random') return ((seg.drawn || []).length >= (seg.drawCount || 0));
   // 问答:答完就算(答错次数用完也算完),与猜数字同一条口径
   if (name === 'qa') return !!seg.finished;
+  // 逐字猜词:只认服务端 solved;答错可一直补(次数归共用题级配置,本段不另计)
+  if (name === 'hangman') return seg.solved === true;
   // 扫码:扫了就是完了,这一屏没有第二个动作
   if (name === 'scan') return !!seg.scanned;
   // 猜数字看的是「答过了」不是「答对了」:猜不中就卡住,玩家会退出而不是重猜
@@ -546,6 +551,15 @@ function pickPlayKit(view, now) {
   /* 限时条:这五屏都把 limitSeconds 透传给 cy-play-stage 画条、跑表、到点判负。
      只给绑了它的那几屏 —— 别的屏拿到也没用,反而会让「谁在用限时」看不清。 */
   const limitSeconds = limitSecondsOf(view, now);
+    /* UG-03/04 指认结案:配了 accusation 的选项题换成人物卡指认页;提交仍是原 SUBMIT_QA 的 optionId。 */
+    if (name === 'qa' && seg.mode === 'PICK' && view.accusation && view.accusation.enabled === true) {
+      const accusation = Object.assign(base, { type: 'accusation' },
+        view.nodeId != null ? { nodeId: view.nodeId } : {}, questo.accusationKit(view, seg));
+      // 服务端已给结论时由指认页自己摆结局段(正常/提前/失败),不再叠通用「本次玩法未通过」
+      if (accusation.outcome) accusation.terminal = false;
+      return accusation;
+    }
+    if (name === 'hangman') return Object.assign(base, questo.hangmanKit(seg));
     if (name === 'qa') {
       const MODE = { TYPE: 'type', PICK: 'pick', SHOT: 'shot' };
       return Object.assign(base, {
@@ -557,7 +571,10 @@ function pickPlayKit(view, now) {
         imageUrl: seg.imageUrl || '',
         audioUrl: seg.audioUrl || '',
         // 选项文案要给,**哪个是对的不给** —— 判定回来之后才知道
-        options: (seg.options || []).map((o) => ({ id: o.id, t: o.label || '' })),
+        /* UG-02:选项图只在服务端给了可显示地址时出现;没给或是 media-asset 引用就只显示文字 */
+        options: questo.qaOptions(seg.options),
+        /* UG-10:只有 MIRROR 要呈现层翻转题面文字;REVERSE 的倒序串服务端已给好,原样渲染 */
+        clueMode: questo.clueMode(view),
         // 多选标记:老单选配置服务端不给这个字段,缺省按单选渲染(单选行为一字不变)
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,
@@ -1023,6 +1040,10 @@ const ACTION_OF = {
   /* 问答三种模式共一个动作,靠 payload 区分:打字给 input、选项给 optionId、拍照给 imageUrl。
      扫码那条带的是**码**:进店只认扫码,GPS 可以伪造,所以服务端要真比对一次。 */
   'qa:submit': 'SUBMIT_QA',
+  /* UG-03 指认:确认后交的就是原选项题的 optionId,判定与机会仍走原 QA。 */
+  'accusation:submit': 'SUBMIT_QA',
+  /* UG-01 逐字猜词:payload 是 {slots} 或 {input},判定在 HangmanGameplay。 */
+  'hangman:submit': 'SUBMIT_HANGMAN',
   'scan:scanned': 'SUBMIT_SCAN',
   /* 《预制人生》四个新段。⚠️ photoCheck 不在这张表里(与 qa:shoot 同理):
      拍照是先传图拿地址、再只带地址提交的两步,页面里单独处理(_submitKitPhoto)。
@@ -1107,6 +1128,8 @@ function serverPayload(type, action, detail) {
       // 服务端多选只认 optionIds,发 optionId 过去会被当单选读,且不报错。
       if (d.optionIds) return { optionIds: d.optionIds };
       return d.optionId ? { optionId: d.optionId } : { input: d.input };
+    case 'accusation:submit': return { optionId: d.optionId };
+    case 'hangman:submit': return d.slots ? { slots: d.slots } : { input: d.input };
     case 'scan:scanned': return { code: d.code };
     /* 《预制人生》四个新段:字段名逐条对契约 §2。
        typeIn 的 elapsedMs 是客户端按设备时钟量出来的,服务端会用开表时间复核。 */

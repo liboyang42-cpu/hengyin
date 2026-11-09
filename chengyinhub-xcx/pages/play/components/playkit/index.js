@@ -26,6 +26,8 @@ const KIT_TYPES = [
      它的 shoot 也走 onShoot;profile 多一个头像上传动作。
      ⚠️ §2.3 的 check 段已作废 —— master 上的 R14 检定走 JOURNEY_SEGMENTS,不在这份分发器里。 */
   'profile', 'photocheck', 'note', 'typein',
+  /* Questo 新玩法(施工清单 UG-01 / UG-03):逐字猜词与指认结案,判定都在服务端 */
+  'hangman', 'accusation',
 ];
 
 const LIGHT_KITS = ['estimate', 'countdown', 'stopwatch', 'diceroll', 'bingo'];

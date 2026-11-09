@@ -1,0 +1,37 @@
+<!-- UG-01 逐字猜词:槽位行 + 逐格补字 + 整词作答,二选一提交。判定只在服务端。 -->
+<cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
+  <view class="g-col hm {{reducedMotion ? 'hm--reduced' : ''}}">
+    <view class="hm__q" wx:if="{{title}}">{{title}}</view>
+
+    <scroll-view class="hm__track" scroll-x enhanced show-scrollbar="{{false}}" scroll-into-view="{{activeAnchor}}">
+      <view class="hm__row">
+        <block wx:for="{{cells}}" wx:key="i">
+          <view wx:if="{{item.kind === 'SEPARATOR'}}" class="hm__sep" aria-hidden="true">{{item.ch === ' ' ? '' : item.ch}}</view>
+          <view wx:else id="hm-{{item.i}}"
+                class="hm__cell {{item.kind === 'PREFILLED' ? 'is-given' : ''}} {{active === item.i ? 'is-active' : ''}} {{solved ? 'is-ok' : ''}}"
+                data-i="{{item.i}}" data-kind="{{item.kind}}" bindtap="onPickCell"
+                aria-role="{{item.kind === 'PREFILLED' || solved ? 'text' : 'button'}}"
+                aria-label="第 {{item.i + 1}} 格{{item.ch ? '：' + item.ch : '：空'}}"
+                hover-class="{{item.kind === 'PREFILLED' || solved ? '' : 'hm__press'}}" hover-stay-time="80">{{item.ch || ''}}</view>
+        </block>
+      </view>
+    </scroll-view>
+
+    <block wx:if="{{!solved}}">
+      <input wx:if="{{active >= 0}}" class="hm__cellin" focus="{{active >= 0}}" value="" maxlength="4"
+             placeholder="第 {{active + 1}} 格" placeholder-class="hm__ph" bindinput="onCellInput" confirm-type="next"
+             aria-label="填写第 {{active + 1}} 格" />
+      <input class="hm__word {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{word}}" bindinput="onWordInput" confirm-type="done"
+             placeholder="整词作答" placeholder-class="hm__ph" bindconfirm="onSubmit" aria-label="整词作答" />
+    </block>
+
+    <view class="hm__fb {{solved ? 'is-ok' : 'is-no'}}" wx:if="{{solved || verdict === 'no'}}" aria-live="polite">
+      {{solved ? display : '还不对，改一改再交'}}
+    </view>
+  </view>
+
+  <view wx:if="{{solved && !inline}}" class="g-btn" bindtap="onClose"
+        aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">继续</view>
+  <view wx:elif="{{!solved}}" class="g-btn {{canSubmit ? '' : 'g-btn--disabled'}}" bindtap="onSubmit"
+        aria-role="button" aria-label="提交" aria-disabled="{{!canSubmit}}" hover-class="g-btn--press" hover-stay-time="80">提交</view>
+</cy-play-stage>

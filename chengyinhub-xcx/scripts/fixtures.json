@@ -2266,14 +2266,37 @@
      "title": "外滩夜行",
      "route": {
       "segs": [
-       { "i": 1, "x": 120, "y": 220, "len": 180, "deg": -20 },
-       { "i": 2, "x": 290, "y": 160, "len": 160, "deg": 15 }
+       {
+        "i": 1,
+        "x": 120,
+        "y": 220,
+        "len": 180,
+        "deg": -20
+       },
+       {
+        "i": 2,
+        "x": 290,
+        "y": 160,
+        "len": 160,
+        "deg": 15
+       }
       ],
       "dots": [
-       { "i": 0, "x": 290, "y": 160, "tone": 0 }
+       {
+        "i": 0,
+        "x": 290,
+        "y": 160,
+        "tone": 0
+       }
       ],
-      "start": { "x": 120, "y": 220 },
-      "end": { "x": 444, "y": 200 },
+      "start": {
+       "x": 120,
+       "y": 220
+      },
+      "end": {
+       "x": 444,
+       "y": 200
+      },
       "single": false
      },
      "distanceText": "6.8",
@@ -17088,6 +17111,99 @@
     "tries": 0,
     "attempts": 0,
     "passed": false
+   }
+  },
+  "target": "cy-playkit",
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F103": {
+  "data": {
+   "show": true,
+   "kit": {
+    "type": "hangman",
+    "title": "",
+    "slots": [
+     {
+      "i": 0,
+      "kind": "PREFILLED",
+      "ch": "E"
+     },
+     {
+      "i": 1,
+      "kind": "BLANK",
+      "ch": ""
+     },
+     {
+      "i": 2,
+      "kind": "BLANK",
+      "ch": ""
+     },
+     {
+      "i": 3,
+      "kind": "BLANK",
+      "ch": ""
+     },
+     {
+      "i": 4,
+      "kind": "BLANK",
+      "ch": ""
+     },
+     {
+      "i": 5,
+      "kind": "BLANK",
+      "ch": ""
+     },
+     {
+      "i": 6,
+      "kind": "PREFILLED",
+      "ch": "S"
+     }
+    ],
+    "solved": false,
+    "display": ""
+   }
+  },
+  "target": "cy-playkit",
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F104": {
+  "data": {
+   "show": true,
+   "kit": {
+    "type": "accusation",
+    "title": "谁拿走了钟楼的钥匙?",
+    "boardImg": "",
+    "boardAlt": "",
+    "intro": [],
+    "suspects": [
+     {
+      "id": "A",
+      "name": "古董店老板",
+      "identity": "钟楼对面",
+      "avatar": "",
+      "testimony": [
+       {
+        "key": "clue.a",
+        "text": "那晚十点我在店里盘点。"
+       }
+      ]
+     },
+     {
+      "id": "B",
+      "name": "守夜人",
+      "identity": "钟楼值班",
+      "avatar": "",
+      "testimony": []
+     }
+    ],
+    "outcome": "",
+    "outcomeLabel": "",
+    "pending": false,
+    "wrongAttempt": false,
+    "retryNote": "",
+    "screen": []
    }
   },
   "target": "cy-playkit",

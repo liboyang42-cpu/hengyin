@@ -417,7 +417,7 @@ test('负控:采集函数读的是真分发器,读空了就不许放行', () => 
    PK_TAB.steps = '[data-kit="walk"]'),而 TYPE_OF 指向旧的 Figma 版 'steps',
    于是玩家看到的从来不是原型那一屏,而门禁全绿。所以段↔屏要逐条钉死。 */
 const SCREEN_OF = {
-  qa: 'qa', branch: 'branch', estimate: 'estimate', pricePair: 'pricepair',
+  qa: 'qa', hangman: 'hangman', branch: 'branch', estimate: 'estimate', pricePair: 'pricepair',
   sort: 'sort', match: 'match', classify: 'classify',
   hiddenObject: 'hidden', predict: 'predict', random: 'random', blindTaste: 'blindtaste', dailySign: 'dailysign',
   steps: 'walk',
@@ -460,6 +460,8 @@ test('★分发器里不许有「谁也到不了」的分支 —— 组件白建
   const typeOf = view.slice(view.indexOf('const TYPE_OF'),
     view.indexOf('};', view.indexOf('const TYPE_OF')))
   const producible = new Set([...typeOf.matchAll(/: '([a-z]+)'/g)].map((m) => m[1]))
+  // 不按段名映射、而由 pickPlayKit 里显式改写 type 的屏(UG-03 指认:配了 accusation 的选项题)
+  for (const m of view.matchAll(/\{ type: '([a-z]+)' \}/g)) producible.add(m[1])
   assert.ok(producible.size > 15, '没读出 TYPE_OF 就别放行')
 
   // 展示型相册由模板预览生成；故事里的正式内容走 dream 块，不开运行时会话。
