@@ -233,13 +233,24 @@
 .ni-stage { position: relative; width: 100%; height: 360rpx; }
 .ni-glow { position: absolute; left: 50%; top: 50%; width: 360rpx; height: 360rpx; margin: -180rpx 0 0 -180rpx; border-radius: 50%; transition: background 0.5s; }
 .ni-glow--0 { background: radial-gradient(circle, rgba(165, 166, 232, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 光晕按定稿原型 */
-.ni-glow--1 { background: radial-gradient(circle, rgba(242, 196, 107, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
-.ni-glow--2 { background: radial-gradient(circle, rgba(127, 209, 166, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
-.ni-glow--3 { background: radial-gradient(circle, rgba(240, 138, 160, 0.45), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
-.ni-o { position: absolute; left: 50%; top: 50%; width: 240rpx; height: 240rpx; margin: -120rpx 0 0 -150rpx; opacity: 0; transform: scale(0.4) rotate(-20deg); transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.45, 1), opacity 0.3s; }
-.ni-o--sm { width: 128rpx; height: 128rpx; margin: -150rpx 0 0 40rpx; }
-.ni-o--on { opacity: 1; transform: scale(1) rotate(-6deg); }
-.ni-o--sm.ni-o--on { transform: scale(1) rotate(10deg); }
+/* W2-16:六块积木叠在同一个 logo 框里,按步换 transform(数值 = 原型 176px 的 px ×2 rpx);第 3、4 步归位 */
+.ni-logo { position: absolute; left: 50%; top: 50%; width: 352rpx; height: 352rpx; margin: -176rpx 0 0 -176rpx; }
+.ni-lp { position: absolute; left: 0; top: 0; width: 352rpx; height: 352rpx; transition: transform 0.55s cubic-bezier(0.3, 1.3, 0.45, 1); }
+.ni-stage--s0 .ni-lp--l { transform: translate(-52rpx, 28rpx) rotate(-24deg); }
+.ni-stage--s0 .ni-lp--t { transform: translate(44rpx, -60rpx) rotate(16deg); }
+.ni-stage--s0 .ni-lp--b { transform: translate(56rpx, 60rpx) rotate(-14deg); }
+.ni-stage--s0 .ni-lp--i1 { transform: translate(36rpx, -92rpx) rotate(38deg); }
+.ni-stage--s0 .ni-lp--i2 { transform: translate(-76rpx, -60rpx) rotate(-30deg); }
+.ni-stage--s0 .ni-lp--i3 { transform: translate(80rpx, -12rpx) rotate(26deg); }
+.ni-stage--s1 .ni-lp--l { transform: translate(-20rpx, 8rpx) rotate(-8deg); }
+.ni-stage--s1 .ni-lp--t { transform: translate(16rpx, -24rpx) rotate(6deg); }
+.ni-stage--s1 .ni-lp--b { transform: translate(20rpx, 24rpx) rotate(-5deg); }
+.ni-stage--s1 .ni-lp--i1 { transform: translate(12rpx, -32rpx) rotate(12deg); }
+.ni-stage--s1 .ni-lp--i2 { transform: translate(-28rpx, -16rpx) rotate(-10deg); }
+.ni-stage--s1 .ni-lp--i3 { transform: translate(28rpx, 4rpx) rotate(8deg); }
+.ni-hi { position: absolute; right: 24rpx; top: 36rpx; min-width: 88rpx; height: 56rpx; padding: 0 20rpx; border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 700; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.2); transform-origin: left bottom; transition: transform 0.4s cubic-bezier(0.3, 1.5, 0.45, 1), opacity 0.25s; }
+.ni-stage--s3 .ni-hi { opacity: 1; transform: scale(1); }
+@media (prefers-reduced-motion: reduce) { .ni-lp, .ni-hi { transition: none; } }
 .ni-t { margin-top: var(--cy-space-3); font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-text-title); text-align: center; }
 .ni-s { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); text-align: center; line-height: 1.5; }
 .ni-dots { display: flex; gap: 12rpx; margin: var(--cy-space-5) 0; }

@@ -113,16 +113,16 @@
       </block>
     </view>
   </scroll-view>
-  <!-- 走查 v2 R12:第一次进入的四步介绍。每步两个 AI 角色相关的 3D 物件(店铺分身 + 星光 → 挥手 + 对话 → 菜单 + 闹钟 → 名牌 + 性格面具),
-       翻页时旧物件缩走、新物件弹出,底下光晕换色。✕ 和「知道了」都算看过,之后不再弹。 -->
+  <!-- 走查 v2 R12 / W2-16:第一次进入的四步介绍。图是城瘾 logo —— 六块积木:散开 → 靠拢 → 拼成 logo → logo 说「嗨」。
+       ✕ 和「知道了」都算看过,之后不再弹。 -->
   <cy-sheet show="{{introVisible}}" inset bind:close="dismissIntro">
     <view class="ni">
-      <view class="ni-stage">
-        <view class="ni-glow ni-glow--{{introStep}}"></view>
-        <block wx:for="{{introSteps}}" wx:key="key">
-          <image class="ni-o {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.a}}.png" mode="aspectFit" />
-          <image class="ni-o ni-o--sm {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.b}}.png" mode="aspectFit" />
-        </block>
+      <view class="ni-stage ni-stage--s{{introStep}}" aria-hidden="true">
+        <view class="ni-glow ni-glow--0"></view>
+        <view class="ni-logo">
+          <image class="ni-lp ni-lp--{{item}}" wx:for="{{logoBlocks}}" wx:key="*this" src="/pages/merchant/images/logo-blocks/{{item}}.png" mode="aspectFit" />
+          <view class="ni-hi"><text>嗨</text></view>
+        </view>
       </view>
       <text class="ni-t">{{introSteps[introStep].t}}</text>
       <text class="ni-s">{{introSteps[introStep].s}}</text>

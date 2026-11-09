@@ -10,7 +10,7 @@ const MERCHANT_LIST = [
   { key: "workbench", pagePath: "/pages/merchant/index/index",           text: "工作台", iconPath: "/images/icon_tab_workbench.svg", selectedIconPath: "/images/icon_tab_workbench_on.svg" },
   { key: "marketing", pagePath: "/pages/merchant/marketing/index",       text: "营销",   iconPath: "/images/icon_tab_marketing.svg", selectedIconPath: "/images/icon_tab_marketing_on.svg" },
   { key: "template",  pagePath: "/pages/template/index?mode=merchant",   text: "模板",   iconPath: "/images/icon_tab_template.svg", selectedIconPath: "/images/icon_tab_template_on.svg" },
-  { key: "relation",  pagePath: "/pages/merchant/relation/index",        text: "合作",   iconPath: "/images/icon_tab_relation.svg", selectedIconPath: "/images/icon_tab_relation_on.svg" },
+  { key: "relation",  pagePath: "/pages/merchant/relation/index",        text: "发现",   iconPath: "/images/icon_tab_relation.svg", selectedIconPath: "/images/icon_tab_relation_on.svg" },
   { key: "mine",      pagePath: "/pages/member/index/index?mode=merchant", text: "我的",  iconPath: "/images/icon_tab_mine.svg", selectedIconPath: "/images/icon_tab_mine_on.svg" }
 ];
 
