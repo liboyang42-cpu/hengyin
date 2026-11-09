@@ -66,3 +66,18 @@
 .tb-plan-lines{padding:0 var(--cy-space-4) var(--cy-space-4);overflow-wrap:anywhere}
 .tb-status{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cy-space-2);margin-top:var(--cy-space-2);color:var(--cy-comp-sheet-player-muted);font-size:var(--cy-type-label)}
 .tb-pass{display:flex;align-items:center;gap:var(--cy-space-1);padding:var(--cy-space-1) var(--cy-space-2);border-radius:var(--cy-radius-pill);background:var(--cy-comp-sheet-player-elevated);color:var(--cy-comp-sheet-player-text-secondary)}
+
+/* qx-b4 §26.1 合作局共享帮助:行沿用 tb-row 的字号与按钮;跳过确认的确认键用危险色 */
+.ch-hd { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cy-space-2); padding: var(--cy-space-2) 0 var(--cy-space-3); }
+.ch-title { font-size: var(--cy-font-subtitle); font-weight: 800; color: var(--cy-comp-sheet-role-text); }
+.ch-free { font-size: var(--cy-font-label); color: var(--cy-comp-sheet-role-text-secondary); }
+.ch-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); min-height: 96rpx; border-top: 1rpx solid var(--cy-comp-sheet-role-divider); }
+.ch-name { flex: 1; min-width: 0; font-size: var(--cy-font-body); color: var(--cy-comp-sheet-role-text); }
+.ch-name.is-off { color: var(--cy-comp-sheet-role-muted); }
+.ch-content { display: flex; flex-direction: column; gap: var(--cy-space-1); margin: 0 0 var(--cy-space-3); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-comp-sheet-role-surface); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); color: var(--cy-comp-sheet-role-text); }
+.ch-charge { font-size: var(--cy-font-caption); color: var(--cy-comp-sheet-role-text-secondary); }
+.ch-confirm { display: flex; flex-direction: column; gap: var(--cy-space-2); padding: var(--cy-space-3) 0; border-top: 1rpx solid var(--cy-comp-sheet-role-divider); font-size: var(--cy-font-body); color: var(--cy-comp-sheet-role-text); }
+.ch-actions { display: flex; justify-content: flex-end; gap: var(--cy-space-2); }
+.ch-danger { background: var(--cy-danger); color: var(--cy-text-inverse); }
+.ch-err { display: block; padding-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-danger); }
+.ch-empty { padding: var(--cy-space-4) 0; text-align: center; font-size: var(--cy-font-label); color: var(--cy-comp-sheet-role-text-secondary); }

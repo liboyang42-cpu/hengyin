@@ -4,6 +4,7 @@ const gameplay = require('./theme-gameplay.js');
 const rewards = require('./theme-rewards.js');
 const trade = require('./theme-trade.js');
 const plans = require('./theme-plans.js');
+const coop = require('./coop-help.js');
 const titles = { WAIT: '休息恢复', CHALLENGE: '归零挑战', STEPS: '步行恢复', BLOCK_HP_COST: '暂停消耗任务', BLOCK_PAID: '暂停付费任务', THEME_FAIL: '本局结束' };
 
 function presentZeroHp(view) {
@@ -342,6 +343,8 @@ function methods(req) {
       const choices = {};
       for (const key of ['choiceKey', 'costOption', 'discardRewards']) if (input[key] !== undefined) choices[key] = input[key];
       if (participant.participants) choices.participants = participant.participants;
+      // §26.1:合作局答对待确认的 QUEST_RESOLVE 带原题 runtimeInstance 与 answerRevision(没有真实答对版本就不带)
+      if (team && input.operation === 'QUEST_RESOLVE') Object.assign(choices, coop.resolveFields(view.cooperation, input.contentId));
       const command = team ? { activityId: view.activityId, action: input.operation, payload: {
         [input.operation === 'FACILITY_USE' ? 'facilityKey' : 'questKey']: input.contentId, ...choices } }
         : { sessionId: view.sessionId, expectedVersion: view.version, operation: input.operation, contentId: input.contentId, ...choices };
@@ -466,6 +469,7 @@ function methods(req) {
         if (participant.participants) selections.participants = participant.participants;
       }
       if (team) Object.assign(payload, selections);
+      if (team && input.operation === 'QUEST_RESOLVE' && !this._gameplayPending) Object.assign(payload, coop.resolveFields(view.cooperation, input.contentId));
       const command = this._gameplayPending ? this._gameplayPending.command : team
         ? { activityId: view.activityId, requestId: 'pg-theme-' + Date.now() + '-' + Math.random().toString(36).slice(2), expectedRevision: input.expectedRevision === undefined ? view.revision : input.expectedRevision,
           action: input.operation, payload, authorityEpoch: input.authorityEpoch === undefined ? view.authorityEpoch : input.authorityEpoch }

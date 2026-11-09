@@ -405,6 +405,7 @@ function buildMockPlayData(kind) {
 }
 
 const themeBackpack = require('./utils/theme-backpack.js');
+const coopHelp = require('./utils/coop-help-methods.js'); // qx-b4 §26.1 合作局共享帮助
 const r5PlayerRuntime = require('./utils/r5-player-runtime.js');
 const themeRecords = require('../../utils/theme-records.js');
 const themeTrade = require('./utils/theme-trade.js');
@@ -437,6 +438,7 @@ Page({
     this.setData({ 'r5Verdict.show': false }, () => { if (ending) ending(); });
   },
   ...themeBackpack.methods(req),
+  ...coopHelp.methods(req),
   ...themeRecords.methods(req, true),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
   ...themeTrade.methods(req),
@@ -452,6 +454,7 @@ Page({
     communityPostWrite: false,
     ...r5PlayerRuntime.data,
     ...themeBackpack.data,
+    ...coopHelp.data,
     ...themeRecords.data,
     ...playerOps.data,
     ...playOverlays.data,
