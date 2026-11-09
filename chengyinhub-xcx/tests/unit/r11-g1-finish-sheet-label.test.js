@@ -6,9 +6,13 @@ const path = require('node:path')
 const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/index.wxml'), 'utf8')
 const js = fs.readFileSync(path.resolve(__dirname, '../../pages/play/index.js'), 'utf8')
 
-test('结果标签:通关 / 本章真完成 / 其余一律「已结束」', () => {
-  assert.ok(wxml.includes("{{allDone || topicCompleted ? '已通关' : (finishChapterDone ? '本章完成' : '已结束')}}"))
+test('结果标签:通关 / 本章真完成 / 其余一律「已结束」(qx-b8 U08-01 起由服务端战报定通关)', () => {
+  assert.ok(wxml.includes('{{finishResult.label}}'))
   assert.ok(!/: '本章完成'\}\}/.test(wxml), '不许再无条件写「本章完成」')
+  const { resolveFinishResult } = require('../../pages/play/utils/finish-result.js')
+  assert.equal(resolveFinishResult(null, { allDone: false, chapterDone: true }, 'ok').label, '本章完成')
+  assert.equal(resolveFinishResult(null, { allDone: false, chapterDone: false }, 'ok').label, '已结束')
+  assert.equal(resolveFinishResult({ completionKind: 'LEGITIMATE_COMPLETION' }, {}, 'ok').label, '已通关')
 })
 
 test('点亮坐标为 0 时整格不渲染', () => {
