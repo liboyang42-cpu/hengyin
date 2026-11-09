@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261109_play_help_audit_permission": [],
     "20261109_play_run_feedback": [],
     "zz_questo_collation_align_20261109": ["20261108_play_help_run_quota", "20261108_registration_seat_invitation", "20261108_topic_content_revision", "marketing_attribution_20261108", "marketing_extra_seat_20261108", "marketing_product_20261108", "marketing_promotion_20261108", "marketing_redemption_constraint_name_20261108", "marketing_revenue_allocation_20261108", "marketing_z_channel_voucher_20261108", "public_content_catalog_20261108", "public_content_catalog_index_shape_20261109", "video_bounty_group_verification_20261108", "video_bounty_host_tip_20261108", "z_channel_voucher_snapshot_20261109", "z_marketing_revenue_channel_reverse_kind_20261108", "z_marketing_revenue_channel_reverse_kind_index_shape_20261109", "z_workshop_apple_iap_20261109", "z_workshop_paid_review_20261109"],
     "20261109_app_media_provenance": ["20261012_app_media_asset", "20261012_app_media_asset_namespaces"],
