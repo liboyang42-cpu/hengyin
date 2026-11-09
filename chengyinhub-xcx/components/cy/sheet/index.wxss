@@ -92,7 +92,7 @@
   width: var(--cy-comp-sheet-handle-w, 64rpx);
   height: var(--cy-comp-sheet-handle-h, 8rpx);
   border-radius: var(--cy-radius-pill);
-  background: var(--cy-comp-sheet-handle-bg, var(--cy-border-line));
+  background: var(--cy-comp-sheet-handle-bg, var(--cy-color-sheet-handle));
   margin: var(--cy-comp-sheet-handle-mt, 16rpx) auto var(--cy-comp-sheet-handle-mb, 8rpx);
 }
 /* 2026-09-01:抓手热区。横条本身只有 8rpx 高,直接当热区拖不住。

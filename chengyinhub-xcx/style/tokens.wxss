@@ -141,7 +141,7 @@ page {
   /* —— 描边 —— */
   --cy-color-border-subtle:     rgba(255,255,255,.08);
   --cy-color-border-strong:     rgba(255,255,255,.16);
-  --cy-color-sheet-handle: #5A5A5A;          /* 2026-09-15 抓手实色(稿 356-5220),.16 白压在 #141416 上只有 #353535 看不清 */
+  --cy-color-sheet-handle: #6E6E73;          /* 2026-11-09 V3-18 随弹层抬灰提亮一档(原 #5A5A5A 在 #1C1C1E 上只有 1.6:1);#141416 那条历史见 git */
   --cy-color-result-fail-badge: #F94D5C;          /* 2026-09-15 失败徽章稿色(356-5220 实取);图形非文字,白 i 对它 3.4:1 过 3:1 */
 
   /* —— 交互态 / 遮罩(T4,2026-07-14) —— */
@@ -670,7 +670,11 @@ page {
   /* 弹窗玻璃底的深端钉死值:不能引用 --cy-color-bg-glass(theme-light/merchant 会把它覆成白玻璃,
    * 变量继承穿透组件样式隔离,白页弹窗会变白底白字) */
   /* 2026-09-03 Brand Handbook 410-121 §③ 去蓝紫(参 Revolut 纯中性灰):30 → 28 */
-  --cy-comp-sheet-player-glass: rgba(28, 28, 28, .82);
+  /* 2026-11-09 V3-18 业主:「统一修改纯黑色弹窗 改成稍微透明的灰色？看看revolut怎么做的」——
+   * Revolut 暗色弹层 = 抬升一档的中性灰(#1C1C1E)、几乎不透(≈94%)+ 背景模糊,压在暗页上仍读得出是一层面。
+   * .82 叠在 .56 遮罩后的黑页上实际只有 #171717 上下,看起来就是黑;.94 才让灰真正浮出来。
+   * 玩家域所有弹层(cy-sheet / cy-scene-sheet / 原型半屏 .psheet / 游玩页各抽屉)都读这一个值。 */
+  --cy-comp-sheet-player-glass: rgba(28, 28, 30, .94);
   /* 弹窗角色档(2026-08-07 用户拍板:弹窗双规范——玩家页=深玻璃,商家页=白)。
    * 基础=玩家值;.theme-light/.theme-merchant 块整组切白(就地求值快照,须整组重声明)。 */
   --cy-comp-sheet-role-glass: var(--cy-comp-sheet-player-glass);
@@ -1482,7 +1486,7 @@ page.theme-dark,
   --cy-comp-cell-fill-bg: var(--cy-color-bg-surface-subtle);
   --cy-text-title: var(--cy-color-text-primary);
   --cy-color-border-strong: rgba(255,255,255,.16);
-  --cy-color-sheet-handle: #5A5A5A;
+  --cy-color-sheet-handle: #6E6E73;
   --cy-color-result-fail-badge: #F94D5C;
   --cy-color-state-pressed: rgba(255,255,255,.10);
   --cy-color-overlay: rgba(0,0,0,.56);

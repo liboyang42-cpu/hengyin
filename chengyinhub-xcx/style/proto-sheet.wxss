@@ -17,7 +17,7 @@
   opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
 .pdim.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .psheet{ position:fixed; left:0; right:0; bottom:0; z-index:70; box-sizing:border-box;
-  background:#000; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet #000 / 28px */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* 2026-11-09 V3-18 纯黑 → 弹层抬升灰(token);圆角原型 28px */
   padding:0 var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); /* ds-ok 原型 padding:0 24px 22px */
   /* ⚠️ 原型 .sheet 自己没有 max-height —— 它靠每屏 s.style.top 定高,内容多就长。
      这里必须分两档,不能一刀 70vh:注册表里 roam-share / roam-task-list / roam-poi-detail /
@@ -53,7 +53,7 @@
    ⚠️ 不改分档天花板,也不动原型半屏自己的 60/70 基数。 */
 .pdim--confirm{ z-index:var(--cy-z-sheet); }
 .psheet--confirm{ z-index:calc(var(--cy-z-sheet) + 1); }
-.psheet__grab{ width:77rpx; height:8rpx; border-radius:4rpx; margin:19rpx auto 0; background:rgba(255,255,255,.22); } /* ds-ok 原型 .grab 40×4 / radius 2 / 上 10px */
+.psheet__grab{ width:77rpx; height:8rpx; border-radius:4rpx; margin:19rpx auto 0; background:var(--cy-color-sheet-handle); } /* ds-ok 原型 .grab 40×4 / radius 2 / 上 10px;V3-18 抓手随弹层提亮 */
 /* 抓杆有几处是可点的(点它收起半屏),而它本身只有 4px 高 —— 视觉照原型不动,
    命中区用透明 ::after 撑到 44px(cy-info-pop 同款写法,a11y 门禁认这一种)。 */
 .psheet__grab{ position:relative; }
