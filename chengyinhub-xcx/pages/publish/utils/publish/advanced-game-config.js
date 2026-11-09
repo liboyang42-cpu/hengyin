@@ -75,10 +75,11 @@ const PRESENT_VALUES = ['inline', 'fullscreen'];
 // 2026-10-30 业主裁决「所有玩法都内嵌」:与服务端 AdvancedGameConfigValidator.PRESENT_SECTIONS 同口径。
 //   任何玩法段默认内嵌,作者仍可显式选整屏;不再有「只能全屏」。原来因 cy-sheet 外壳撤出内嵌的
 //   blindTaste 等,改由各 kit 的内嵌档在原位渲染(不再走 position:fixed 的半屏),见 pages/play/components/playkit-*。
+// hangman(G1 逐字猜词):服务端 PRESENT_SECTIONS 已登记,默认呈现跟服务端一致;玩家端渲染器由 qx-b2 接。
 const PRESENT_INLINE_DEFAULT = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile', 'note', 'check', 'quietHold',
   'estimate', 'diyName', 'typeIn', 'dailySign', 'slowTask', 'musicCorner', 'timeWindow', 'diceRoll',
   'reaction', 'ballShake', 'countdown', 'stopwatch', 'coinFlip', 'hiddenObject', 'scan', 'steps',
-  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album'];
+  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album', 'hangman'];
 /** 保留导出名给旧调用方;现在是空表。 */
 const PRESENT_FULLSCREEN_ONLY = [];
 const PRESENT_LOCK_REASON = '';

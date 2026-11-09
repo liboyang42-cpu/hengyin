@@ -22,7 +22,7 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 const ALL_SECTIONS = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile', 'note', 'check', 'quietHold',
   'estimate', 'diyName', 'typeIn', 'dailySign', 'slowTask', 'musicCorner', 'timeWindow', 'diceRoll',
   'reaction', 'ballShake', 'countdown', 'stopwatch', 'coinFlip', 'hiddenObject', 'scan', 'steps',
-  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album']
+  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album', 'hangman']
 const DICE = 'diceRoll'
 
 test('★默认表:每个玩法段默认内嵌,没有任何段被锁在整屏', () => {
