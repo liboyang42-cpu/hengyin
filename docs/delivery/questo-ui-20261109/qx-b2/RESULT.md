@@ -39,7 +39,8 @@ Branch `claude/qx-b2-20261109` from `origin/integrate/questo-ui-20261110` (449fb
 
 - `node --test tests/unit/questo-b2-player.test.js tests/unit/questo-b2-author.test.js` → 23 pass.
 - Updated contract tests: `playkit-view-contract` (hangman screen, accusation producible), `playkit-photocheck-frame-contract` (copies the new helper), `advanced-game-config-slowtask` (hintLadder root section), `screenshot-fixture-completeness` via `scripts/shot-matrix.js` F103/F104.
-- Full unit suite: see PR body (compared against a clean base worktree).
+- Full unit suite (`node --test "tests/unit/**/*.test.js"`, 16 7xx tests): base worktree 449fb80d has 5 failures; this branch has 3, all pre-existing on base (`get-auth-matrix-contract` 5176/5177/5178, unrelated GET-guard contracts). Two base failures are fixed here because they were this lane's gaps: server sections `hintLadder`/`hangman` not registered client-side (344) and `hangman` missing from the inline-present table (10516).
+- Contract counts updated for the new controls/types only: action ledger (+54 controls), catalog sizes (BASE_GAMES 24, ALL 34), present table, `scripts/fixtures.json` F103/F104 inserted (not regenerated; regeneration would churn 98 unrelated fixtures).
 - `node tests/lint/ui-integrity.js` → `UI-GATE-0:PASS`; action ledger rebuilt with `build-action-ledger.js --write` (shared file, new controls only from this lane).
 
 ## Cross-lane
