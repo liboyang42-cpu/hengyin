@@ -65,11 +65,12 @@ function toggleGiven(section, index) {
   return cells.some((c, i) => !c.sep && format[i] !== BLANK) ? format : [];
 }
 
-function hangmanError(section) {
+/** live=true 是编辑中的就地提示:只报形状冲突,「还没填」等保存时再报(新建时不先给一片红字)。 */
+function hangmanError(section, live) {
   const s = section || {};
   if (!s.enabled) return '';
   const answer = String(s.answer || '');
-  if (!answer.trim()) return '请填写答案';
+  if (!answer.trim()) return live ? '' : '请填写答案';
   const cps = chars(answer);
   if (cps.length > MAX_HANGMAN_CHARS) return '答案最多 ' + MAX_HANGMAN_CHARS + ' 个字';
   if (!cps.some(comparable)) return '答案至少要有一个可补的字母或数字';
@@ -110,21 +111,21 @@ function syncSuspects(accusation, options) {
   });
 }
 
-function accusationError(advanced) {
+function accusationError(advanced, live) {
   const acc = advanced && advanced.accusation;
   if (!acc || !acc.enabled) return '';
   const qa = advanced.qa || {};
   if (qa.mode !== 'PICK' || qa.multi) return '指认只能用在单选的选项问答上';
-  const suspects = acc.suspects || [];
-  if (suspects.some((s) => !s.avatar)) return '每个人物都要有头像';
-  if (suspects.some((s) => (s.testimony || []).some((t) => !String(t.key || '').trim() || !String(t.text || '').trim()))) return '证词要同时写线索和内容';
-  if (!String(acc.winScreen || '').trim()) return '请写指认正确的结局';
-  if (!String(acc.loseScreen || '').trim()) return '请写指认错误的结局';
+  const suspects = syncSuspects(acc, qa.options);
+  if (!live && suspects.some((s) => !s.avatar)) return '每个人物都要有头像';
+  if (!live && suspects.some((s) => (s.testimony || []).some((t) => !String(t.key || '').trim() || !String(t.text || '').trim()))) return '证词要同时写线索和内容';
+  if (!live && !String(acc.winScreen || '').trim()) return '请写指认正确的结局';
+  if (!live && !String(acc.loseScreen || '').trim()) return '请写指认错误的结局';
   if (acc.earlyAccuse && acc.earlyAccuse.allowed && !String(acc.earlyAccuse.recordAs || '').trim()) return '允许提前指认时要写结束记录名';
   return '';
 }
 
-function hintErrors(advanced) {
+function hintErrors(advanced, live) {
   const out = { quota: '', levels: {} };
   const ladder = advanced && advanced.hintLadder;
   if (!Array.isArray(ladder)) return out;
@@ -137,8 +138,8 @@ function hintErrors(advanced) {
     const payload = row && row.payload;
     const points = row && row.cost && row.cost.points;
     let msg = '';
-    if (type === 'TEXT' && !String(payload || '').trim()) msg = '请填写提示文字';
-    else if (type === 'IMAGE' && !String(payload || '').trim()) msg = '请上传提示图片';
+    if (!live && type === 'TEXT' && !String(payload || '').trim()) msg = '请填写提示文字';
+    else if (!live && type === 'IMAGE' && !String(payload || '').trim()) msg = '请上传提示图片';
     else if (type === 'LETTER' && payload != null && payload !== '' && !(Number.isInteger(Number(payload)) && Number(payload) >= 1)) msg = '位置须为 1 起的整数';
     if (!msg && points != null && points !== '' && !(Number.isInteger(Number(points)) && Number(points) >= 0)) msg = '积分须为非负整数';
     if (msg) out.levels[i] = msg;
@@ -193,18 +194,19 @@ function beforeSave(advanced) {
   return next;
 }
 
-/** 编辑页要的派生数据(一次算齐,WXML 只读)。 */
-function view(advanced) {
+/** 编辑页要的派生数据(一次算齐,WXML 只读)。submitted=false 时只给形状冲突类提示。 */
+function view(advanced, submitted) {
   const a = advanced || {};
-  const hint = hintErrors(a);
+  const live = !submitted;
+  const hint = hintErrors(a, live);
   return {
     qzHangmanCells: hangmanCells(a.hangman),
-    qzHangmanError: hangmanError(a.hangman),
+    qzHangmanError: hangmanError(a.hangman, live),
     qzOptionErrors: optionMediaErrors(a.qa),
     qzClueIndex: Math.max(0, CLUE_MODES.findIndex((m) => m.value === ((a.clueTransform && a.clueTransform.mode) || 'STANDARD'))),
     qzAccusationOn: !!(a.accusation && a.accusation.enabled),
     qzSuspects: a.accusation && a.accusation.enabled ? syncSuspects(a.accusation, a.qa && a.qa.options) : [],
-    qzAccusationError: accusationError(a),
+    qzAccusationError: accusationError(a, live),
     qzHintOn: Array.isArray(a.hintLadder),
     qzHintRows: (a.hintLadder || []).map((row, i) => ({ i, type: row.type, typeIndex: Math.max(0, HINT_TYPES.findIndex((t) => t.value === row.type)),
       payload: row.payload == null ? '' : row.payload, points: row.cost && row.cost.points != null ? row.cost.points : '', error: hint.levels[i] || '' })),
@@ -214,14 +216,20 @@ function view(advanced) {
 }
 
 function hasErrors(advanced) {
-  const v = view(advanced);
+  const v = view(advanced, true);
   return v.qzHangmanError || Object.values(v.qzOptionErrors)[0] || v.qzAccusationError
     || v.qzHintQuotaError || (v.qzHintRows.find((r) => r.error) || {}).error || v.qzAliasError || '';
 }
 
 const methods = {
+  /** 保存/发布前调用:之后就地提示连「还没填」一起报,并返回第一条错误。 */
+  _qzSaveError() {
+    this._qzSubmitted = true;
+    this._syncQuesto();
+    return hasErrors(this.data.advanced);
+  },
   _syncQuesto() {
-    const next = view(this.data.advanced);
+    const next = view(this.data.advanced, !!this._qzSubmitted);
     const patch = {};
     Object.keys(next).forEach((key) => { if (JSON.stringify(next[key]) !== JSON.stringify(this.data[key])) patch[key] = next[key]; });
     if (Object.keys(patch).length) this.setData(patch);
@@ -280,7 +288,7 @@ const methods = {
     const on = !!e.detail.value;
     this._qzAdvanced((a) => {
       if (!on) { if (a.accusation) a.accusation.enabled = false; return; }
-      const acc = Object.assign({ winScreen: '', loseScreen: '', earlyAccuse: { allowed: false } }, a.accusation, { enabled: true });
+      const acc = Object.assign({ earlyAccuse: { allowed: false } }, a.accusation, { enabled: true });
       acc.suspects = syncSuspects(acc, (a.qa || {}).options);
       a.accusation = acc;
     });

@@ -3282,7 +3282,7 @@ Page({
 
   validateForm: function (formData, draft) {
     if (this.data.editorLoading || this.data.loadError) return false;
-    const errors = this._collectValidationErrors(draft);
+    const errors = this._collectValidationErrors(draft); this._qzSaveError(); // 保存后就地提示连「还没填」一起报
     this._refreshSupportMatrix();
     if (this.data.supportError) errors.advanced = this.data.supportError;
     if (this.data.supportMatrixLoading && (supportMatrix.generic(this.data.advanced) || supportMatrix.effectOnly(this.data.advanced)

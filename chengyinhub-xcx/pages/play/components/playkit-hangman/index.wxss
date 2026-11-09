@@ -51,3 +51,4 @@
 .hm__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 成功色软底,与排序同源 */
 .hm__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
 .hm--reduced .hm__cell { transition: none; }
+.hm > view, .hm > input, .hm > scroll-view { flex-shrink: 0; }

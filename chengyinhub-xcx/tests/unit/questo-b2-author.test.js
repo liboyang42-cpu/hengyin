@@ -35,7 +35,10 @@ test('UG-01 格子:默认全部待补;点格切换预填;分隔符锁定;改答�
   assert.deepEqual(author.reshapeFormat('X-B C', ['A', '-', '_', ' ', '_']), [], '对不上就回到全部待补(不写 format)')
 })
 
-test('UG-01 就地校验挡服务端必拒的形状', () => {
+test('UG-01 就地校验挡服务端必拒的形状;编辑中不先报「还没填」', () => {
+  assert.equal(author.hangmanError({ enabled: true }, true), '')
+  assert.equal(author.view({ hangman: { enabled: true } }).qzHangmanError, '')
+  assert.equal(author.view({ hangman: { enabled: true } }, true).qzHangmanError, '请填写答案')
   assert.equal(author.hangmanError({ enabled: true, answer: '' }), '请填写答案')
   assert.equal(author.hangmanError({ enabled: true, answer: '--' }), '答案至少要有一个可补的字母或数字')
   assert.equal(author.hangmanError({ enabled: true, answer: 'AB', format: ['A', 'B'] }), '至少留一格给玩家补')
@@ -120,7 +123,7 @@ test('编辑页接线:混入方法、存盘前收口、校验阻断', () => {
   const js = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
   assert.ok(/\.\.\.questoAuthor\.methods/.test(js))
   assert.ok(/questoAuthor\.beforeSave\(this\.data\.advanced\)/.test(js))
-  assert.ok(/questoAuthor\.hasErrors\(this\.data\.advanced\)/.test(js))
+  assert.ok(/this\._qzSaveError\(\)/.test(js))
 })
 
 test('试玩:逐字猜词演作者配置的格子,指认题演人物卡', () => {

@@ -464,7 +464,7 @@
       <textarea class="cg-cfg-textarea" value="{{advanced.accusation.winScreen}}" placeholder="玩家指认正确后看到的结局" data-field="winScreen" bindinput="qzAccusationText" />
       <view class="cg-cfg-label">指认错误的结局 <text class="req" aria-hidden="true">*</text></view>
       <textarea class="cg-cfg-textarea" value="{{advanced.accusation.loseScreen}}" placeholder="机会用完仍指认错误时看到的结局" data-field="loseScreen" bindinput="qzAccusationText" />
-      <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">允许提前指认</view></view><cy-switch checked="{{advanced.accusation.earlyAccuse.allowed}}" bindchange="qzEarlyToggle" accessibility-label="允许提前指认" /></view>
+      <view class="cg-rw-line cg-qz-early"><view class="cg-rw-meta"><view class="cg-rw-name">允许提前指认</view></view><cy-switch checked="{{advanced.accusation.earlyAccuse.allowed}}" bindchange="qzEarlyToggle" accessibility-label="允许提前指认" /></view>
       <input wx:if="{{advanced.accusation.earlyAccuse.allowed}}" class="cg-cfg-input" value="{{advanced.accusation.earlyAccuse.recordAs}}" placeholder="提前结案的记录名" bindinput="qzEarlyRecord" />
       <view class="cg-qz-err" wx:if="{{qzAccusationError}}">{{qzAccusationError}}</view>
     </block>

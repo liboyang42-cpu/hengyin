@@ -44,3 +44,9 @@
 .ac__btn--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2rpx var(--sub); }
 .ac__btn--off { background: transparent; color: var(--sub); box-shadow: inset 0 0 0 2rpx currentColor; }
 .ac--reduced .ac__card { transition: none; }
+/* 整屏档:人物多、档案长时本列自己滚,底部两枚按钮不压住证词 */
+.ac--full { overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom) + 200rpx); }
+/* 整屏列是定高 flex 列:子块不许被压扁(线索板图、人物卡在内容多时保持原尺寸,由本列滚动) */
+.ac > view, .ac > image { flex-shrink: 0; }
+/* 整屏档底栏铺满整宽并压一层底色:列表滚到下面时不透出证词 */
+.ac__bar--full { left: 0; right: 0; bottom: 0; padding: 24rpx 40rpx calc(env(safe-area-inset-bottom) + 60rpx); background: var(--bg); }

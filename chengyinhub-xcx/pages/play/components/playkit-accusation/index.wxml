@@ -1,6 +1,6 @@
 <!-- UG-03/04 指认结案:人物卡 → 看档案 → 选中 → 确认指认(二次确认)。结论只读服务端 accusation.result。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
-  <view class="g-col ac {{reducedMotion ? 'ac--reduced' : ''}}">
+  <view class="g-col ac {{inline ? '' : 'ac--full'}} {{reducedMotion ? 'ac--reduced' : ''}}">
     <block wx:if="{{outcome && outcome !== 'WRONG'}}">
       <view class="ac__tag ac__tag--{{outcome}}" aria-live="polite">{{outcomeLabel}}</view>
       <block wx:for="{{screen}}" wx:key="index">
@@ -38,7 +38,7 @@
 
   <view wx:if="{{outcome && outcome !== 'WRONG' && !inline}}" class="g-btn" bindtap="onClose"
         aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">继续</view>
-  <view wx:elif="{{!outcome || outcome === 'WRONG'}}" class="ac__bar {{pending ? 'ac__bar--hide' : ''}}">
+  <view wx:elif="{{!outcome || outcome === 'WRONG'}}" class="ac__bar {{inline ? '' : 'ac__bar--full'}} {{pending ? 'ac__bar--hide' : ''}}">
     <view class="ac__btn ac__btn--ghost" bindtap="onReset" aria-role="button" aria-label="再想想" hover-class="g-btn--press" hover-stay-time="80">再想想</view>
     <view class="ac__btn {{selected ? '' : 'ac__btn--off'}}" bindtap="onConfirm" aria-role="button" aria-label="确认指认" aria-disabled="{{!selected}}" hover-class="g-btn--press" hover-stay-time="80">确认指认</view>
   </view>
