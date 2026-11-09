@@ -94,6 +94,9 @@ service.interceptors.response.use(res => {
       })
     }
       return Promise.reject('无效的会话，或者会话已过期，请重新登录。')
+    } else if (res.config && res.config.rawBusinessError) {
+      // 调用方按服务端 reasonCode 分支并就地显示原文；不弹全局提示。
+      return Promise.reject(res.data)
     } else if (code === 500) {
       Message({ message: msg, type: 'error' })
       return Promise.reject(new Error(msg))

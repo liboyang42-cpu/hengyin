@@ -888,6 +888,8 @@ public class TopicWorkspaceServiceImpl implements ITopicWorkspaceService {
         result.setCheckStatus(topic.getCheckStatus());
         result.setUserStatus(topic.getUserStatus());
         result.setReason(topic.getReason());
+        result.setConfigVersion(topic.getConfigVersion());
+        result.setPublishedConfigVersion(topic.getPublishedConfigVersion());
         return result;
     }
 
