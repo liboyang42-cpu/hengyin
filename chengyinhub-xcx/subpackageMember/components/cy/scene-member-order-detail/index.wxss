@@ -424,6 +424,9 @@
   padding: 0 var(--cy-space-4);
   border-radius: var(--cy-radius-xl);   /* 稿 r18 = 36rpx;xl(40)最近,lg(32)比稿方 2px */
   background: var(--cy-color-bg-surface);
+  /* V3-02:卡后面直接接 cy-card(权益/报名与客服)时原来零间距连成一块;补同 .order-card 的卡距。
+     后面接 .sec-title 时与它的 margin-top 折叠,原间距不变。 */
+  margin-bottom: var(--cy-scene-card-gap, var(--cy-space-3));
 }
 .orow {
   display: flex;
