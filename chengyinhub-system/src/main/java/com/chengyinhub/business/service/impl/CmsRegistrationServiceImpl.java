@@ -560,6 +560,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 4. 获取用户信息并验证
         UmsMember member = validateAndGetMember(memberId);
         Long userPoint = member.getPoint() != null ? member.getPoint() : 0; // 用户积分
+        int usePoint = isUsePoint != null && isUsePoint == 1 ? 1 : 0;
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, registrationActivity);
         if (waitlistClaim == null) assertClubReservationAvailable(clubBenefit, ticket, qty);
 
@@ -576,11 +577,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                         Collections.singletonList(
                                 new MarketingPromotionRequest.Line(ticketId, qty, ticketPrice)),
                         offerCode, listTotal, memberTotal, userPoint,
-                        (isUsePoint != null && isUsePoint == 1) ? 1 : 0, new Date())
+                        usePoint, new Date())
                 : null;
         PriceCalc calc = priced != null
                 ? priced.calc
-                : computePrice(ticketPrice, clubBenefit.effectivePrice(ticketPrice), qty, userPoint, isUsePoint);
+                : computePrice(ticketPrice, clubBenefit.effectivePrice(ticketPrice), qty, userPoint, usePoint);
         // original_amount = 票面(促销前);total_amount = 票面(会员价后,语义不因促销改变);
         // discount_amount = 会员价折扣 + 促销减免。payable 才是最终应收。
         BigDecimal originalAmount = priced != null ? priced.listAmount : calc.originalAmount;
