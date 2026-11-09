@@ -267,7 +267,7 @@ const BUILDERS = {
   /* UG-01 逐字猜词:作者自己的预填格照演(本地预览,不经下发通道);待补格空着。 */
   hangman: (c) => {
     const answer = Array.from(String(c.answer || ''));
-    if (!answer.length) return null;
+    // 还没填答案:演一排空格(范例屏),别让试玩一片空白
     const format = Array.isArray(c.format) && c.format.length === answer.length ? c.format : [];
     const slots = answer.map((ch, i) => {
       if (!/[\p{L}\p{Nd}]/u.test(ch)) return { i, kind: 'SEPARATOR', ch };

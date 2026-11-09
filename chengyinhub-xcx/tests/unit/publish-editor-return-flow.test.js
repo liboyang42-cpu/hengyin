@@ -26,6 +26,7 @@ function loadPage(relativePath, wx, transform = source => source) {
       if (request.includes('advanced-game-config')) return { defaultConfig: () => ({}) }
       if (request.includes('node-game-catalog')) return require('../../pages/publish/utils/publish/node-game-catalog.js')
       if (request.includes('template-tools')) return require('../../pages/publish/utils/publish/template-tools.js')
+      if (request.includes('questo-author')) return require('../../pages/publish/temp/questo-author.js')
       if (request.includes('response-shape')) return { isRecordList: Array.isArray }
       if (request.includes('safe-user-message')) return { safeUserMessage: () => '' }
       if (request.includes('merchant-access-policy')) return require('../../utils/merchant-access-policy.js')

@@ -271,8 +271,6 @@ function applyToConfig(advanced, key, options) {
   if (!game || !advanced || typeof advanced !== 'object') return null;
   const next = JSON.parse(JSON.stringify(advanced));
   if (key === 'scan') { next.scan = Object.assign({}, next.scan, { enabled: true }); return next; }
-  // 不在默认配置里的段(逐字猜词)选中时先建一个空段,再按下面同一条规则开/关
-  if (game.section && !next[game.section]) next[game.section] = {};
   GAME_SECTIONS.forEach((name) => {
     if (!next[name] || typeof next[name] !== 'object') return;
     if (name === 'branch' && game.section !== 'branch' && next.outcomeRules?.version === 1) return;

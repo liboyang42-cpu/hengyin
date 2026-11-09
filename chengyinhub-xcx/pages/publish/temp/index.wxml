@@ -402,7 +402,7 @@
         <view class="cg-adv-del" data-path="qa.options" data-index="{{qi}}" bindtap="removeAdvancedRow" aria-role="button" aria-label="删除选项 {{qi + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
       </view>
       <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
-      <view class="cg-qmedia cg-qa-imgs">
+      <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
         <view class="cg-qmedia-slot" wx:if="{{item.img}}">
           <image class="cg-qmedia-img" src="{{item.img}}" mode="aspectFill" />
           <view class="cg-qmedia-x" data-index="{{qi}}" catchtap="qzOptionImgDel" aria-role="button" aria-label="删除选项 {{qi + 1}} 的图" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-qmedia-x__glyph"><cy-icon name="close-sm" size="24" /></view></view>
@@ -442,7 +442,7 @@
       <view class="cg-qz-tag">待运行验证</view>
       <view class="cg-adv-repeat" wx:for="{{qzSuspects}}" wx:key="id" wx:for-item="sp" wx:for-index="si">
         <view class="cg-adv-repeat-head"><text>{{sp.name || ('选项 ' + (si + 1))}}</text></view>
-        <view class="cg-qmedia cg-qa-imgs">
+        <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
           <view class="cg-qmedia-slot" wx:if="{{sp.avatar}}" data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="更换{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qmedia-img" src="{{sp.avatar}}" mode="aspectFill" /></view>
           <view class="cg-qmedia-add" wx:else data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="上传{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">头像</text></view>
         </view>
@@ -455,7 +455,7 @@
         <view class="cg-adv-add" data-index="{{si}}" bindtap="qzTestimonyAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加证词</view>
       </view>
       <view class="cg-cfg-label">线索板</view>
-      <view class="cg-qmedia cg-qa-imgs">
+      <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
         <view class="cg-qmedia-slot" wx:if="{{advanced.accusation.corkboardImage}}"><image class="cg-qmedia-img" src="{{advanced.accusation.corkboardImage}}" mode="aspectFill" />
           <view class="cg-qmedia-x" catchtap="qzBoardDel" aria-role="button" aria-label="删除线索板" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-qmedia-x__glyph"><cy-icon name="close-sm" size="24" /></view></view></view>
         <view class="cg-qmedia-add" wx:else bindtap="qzBoardImg" aria-role="button" aria-label="上传线索板" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">线索板</text></view>
@@ -1289,7 +1289,7 @@
           </view>
           <textarea wx:if="{{item.type === 'TEXT' || item.type === 'ANSWER'}}" class="cg-cfg-textarea" value="{{item.payload}}" maxlength="500" placeholder="{{item.type === 'TEXT' ? '提示文字' : '揭晓时的文字(可不填)'}}" data-index="{{index}}" bindinput="qzHintPayload" />
           <input wx:elif="{{item.type === 'LETTER'}}" class="cg-cfg-input" type="number" value="{{item.payload}}" placeholder="揭示第几个字(不填为第 1 个)" data-index="{{index}}" bindinput="qzHintPayload" />
-          <view wx:elif="{{item.type === 'IMAGE'}}" class="cg-qmedia cg-qa-imgs">
+          <view wx:elif="{{item.type === 'IMAGE'}}" class="cg-qmedia cg-qmedia--one cg-qa-imgs">
             <view class="cg-qmedia-slot" wx:if="{{item.payload}}" data-index="{{index}}" bindtap="qzHintImg" aria-role="button" aria-label="更换第 {{index + 1}} 层提示图片" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qmedia-img" src="{{item.payload}}" mode="aspectFill" /></view>
             <view class="cg-qmedia-add" wx:else data-index="{{index}}" bindtap="qzHintImg" aria-role="button" aria-label="上传第 {{index + 1}} 层提示图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">提示图</text></view>
           </view>

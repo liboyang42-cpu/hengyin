@@ -19,7 +19,7 @@ test('R5选择器仅基础玩法，附加规则三项可编辑且多人只读', 
   };
   page._setFormState = page.setData;
   const items = catalog.PICKER_GROUPS.flatMap(group => group.items);
-  assert.equal(new Set(items.map(item => item.key)).size, 23);
+  assert.equal(new Set(items.map(item => item.key)).size, 24);
   assert.equal(catalog.ALL.length, 33);
   page.data.advanced = catalog.applyToConfig(config.defaultConfig(), 'qaText');
   page.data.gameKey = 'qaText'; page.data.timerAvailable = true;

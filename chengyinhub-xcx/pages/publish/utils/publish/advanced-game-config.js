@@ -13,7 +13,8 @@ const KIT_SECTIONS = ['timeWindow', 'blindTaste', 'silentOrder', 'diyName',
 // 还不存在,只能下注即通关、次日商家结算,所以它是纯附加段。
 /* ★ qa / scan 2026-09-10 并入:此前它们走节点的 validationMethod 老链路,
    跟其余玩法不在同一套配置里,新做的那几屏在生产根本到不了。用户拍板放到同一个通道。 */
-const PLAY_SECTIONS = ['estimate', 'pricePair', 'hiddenObject', 'predict', 'qa', 'scan'];
+// hangman:UG-01 逐字猜词(服务端 HangmanGameplay;答案/别名/format 只在作者配置与服务端)
+const PLAY_SECTIONS = ['estimate', 'pricePair', 'hiddenObject', 'predict', 'qa', 'scan', 'hangman'];
 /* 决定类与挑战类(原型「模板编辑页 v2」+ 现场感契约的罗盘指向)。它们与上面几组平级,
    但有一点不同:**秘密不在配置里** —— 硬币朝哪面、骰子几点、每轮等多久,
    都是运行时由服务端现生成的,所以整段可下发。
@@ -77,6 +78,7 @@ const PRESENT_VALUES = ['inline', 'fullscreen'];
 //   blindTaste 等,改由各 kit 的内嵌档在原位渲染(不再走 position:fixed 的半屏),见 pages/play/components/playkit-*。
 const PRESENT_INLINE_DEFAULT = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile', 'note', 'check', 'quietHold',
   'estimate', 'diyName', 'typeIn', 'dailySign', 'slowTask', 'musicCorner', 'timeWindow', 'diceRoll',
+  'hangman',
   'reaction', 'ballShake', 'countdown', 'stopwatch', 'coinFlip', 'hiddenObject', 'scan', 'steps',
   'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album'];
 /** 保留导出名给旧调用方;现在是空表。 */
@@ -505,6 +507,7 @@ function defaultConfig() {
     /* 问答三种模式共一段,靠 mode 分:TYPE 打字 / PICK 选项 / SHOT 拍照。
        三段的话同一处改动要改三遍,而它们的题面、附件、次数、奖励是同一套。
        ★ answerText 与 options[].correct 是秘密,服务端不投影。 */
+    hangman: { enabled: false },
     qa: {
       enabled: false, mode: 'TYPE', title: '', lead: '', imageUrl: '', audioUrl: '',
       // shotNote:拍照打卡的补充说明,提示词底下那行小字(原型 qaShot 的第二个字段)
