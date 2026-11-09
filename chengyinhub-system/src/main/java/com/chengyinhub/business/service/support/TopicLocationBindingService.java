@@ -100,6 +100,49 @@ public class TopicLocationBindingService {
         return view(readBack);
     }
 
+    /**
+     * qx-c1 #5(a) §23.1:作者填写的地点国家 {@code contentContract.placeCountryCode}。
+     * 与地点绑定同一写口(owner+编辑窗口+父行 fence+SQL owner 条件+回读);ISO 3166-1 alpha-2,
+     * 空串 = 清除(回到未填写);从不默认、不从定位推断。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> setPlaceCountry(Long topicId, String placeCountryCode, Long ownerMemberId,
+                                               Long principalMemberId) {
+        if (topicId == null || topicId <= 0L) throw new ServiceException("缺少主题ID", 400);
+        String code;
+        String raw = placeCountryCode == null ? "" : placeCountryCode.trim();
+        if (!raw.isEmpty() && !raw.matches("[A-Z]{2}")) {
+            throw new ServiceException("国家码须为两位大写字母（ISO 3166-1），或留空", 400);
+        }
+        try {
+            code = TopicLocationContract.isoCountry(placeCountryCode, TopicLocationContract.KEY_PLACE_COUNTRY_CODE);
+        } catch (IllegalArgumentException invalid) {
+            throw new ServiceException("国家码须为两位大写字母（ISO 3166-1），或留空", 400);
+        }
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        requireOwnedEditable(topic, ownerMemberId);
+        if (contentWriteGuard == null) {
+            throw new IllegalStateException("地点合同缺少内容写闸装配，拒绝无锁写入");
+        }
+        contentWriteGuard.lockTopicContent(topicId);
+        topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        requireOwnedEditable(topic, ownerMemberId);
+        ObjectNode contract = StringUtils.isBlank(topic.getContentContractJson())
+                ? TopicLocationContract.empty() : TopicLocationContract.parse(topic.getContentContractJson());
+        if (code == null) contract.remove(TopicLocationContract.KEY_PLACE_COUNTRY_CODE);
+        else contract.put(TopicLocationContract.KEY_PLACE_COUNTRY_CODE, code);
+        String updated = contract.toString();
+        int rows = cmsTopicMapper.updateTopicLocationContract(topicId, ownerMemberId, updated,
+                "place-country:" + principalMemberId, DateUtils.getNowDate());
+        if (rows != 1) throw new ServiceException("主题不存在或无权修改该主题的地点合同", 403);
+        CmsTopic readBack = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (readBack == null || !TopicLocationContract.same(updated, readBack.getContentContractJson())
+                || !java.util.Objects.equals(code, TopicLocationContract.placeCountryCode(readBack.getContentContractJson()))) {
+            throw new IllegalStateException("地点合同回读不一致");
+        }
+        return view(readBack);
+    }
+
     @Transactional(readOnly = true)
     public Map<String, Object> status(Long topicId, Long ownerMemberId) {
         if (topicId == null || topicId <= 0L) throw new ServiceException("缺少主题ID", 400);
@@ -121,6 +164,7 @@ public class TopicLocationBindingService {
         data.put("sourceConfigVersion", summary.get("sourceConfigVersion"));
         data.put("sourceContentRevisionId", summary.get("sourceContentRevisionId"));
         data.put("adoption", contract.path("adoption").isMissingNode() ? null : contract.path("adoption"));
+        data.put("placeCountryCode", TopicLocationContract.placeCountryCode(topic.getContentContractJson()));
         return data;
     }
 

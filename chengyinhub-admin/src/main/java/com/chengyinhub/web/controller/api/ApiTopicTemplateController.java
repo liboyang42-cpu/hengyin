@@ -329,6 +329,34 @@ public class ApiTopicTemplateController extends BaseController {
         }
     }
 
+    @Operation(summary = "作者填写地点国家（ISO 两位大写；空=清除；不默认、不推断）")
+    @PostMapping("/place-country")
+    public AjaxResult placeCountry(String topicId, String scope, String placeCountryCode) {
+        Long principalMemberId;
+        try {
+            principalMemberId = getAppUserId();
+        } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (principalMemberId == null || principalMemberId <= 0) {
+            return error("请先登录");
+        }
+        Long ownerMemberId;
+        try {
+            ownerMemberId = resolveOwnerMemberId(principalMemberId, scope);
+        } catch (ServiceException e) {
+            return new AjaxResult(e.getCode(), e.getMessage());
+        }
+        try {
+            return AjaxResult.success(locationBindingService.setPlaceCountry(Convert.toLong(topicId, 0L),
+                    placeCountryCode, ownerMemberId, principalMemberId));
+        } catch (ServiceException e) {
+            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode(), e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        }
+    }
+
     @Operation(summary = "地点合同与绑定状态（作者只读）")
     @PostMapping("/binding-status")
     public AjaxResult bindingStatus(String topicId, String scope) {

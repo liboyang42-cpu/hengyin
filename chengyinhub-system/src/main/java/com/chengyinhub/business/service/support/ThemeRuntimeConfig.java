@@ -9,6 +9,38 @@ import java.util.*;
 /** 通用主题配置。目录、触发和场景只含受控数据，不接受脚本或系统属性写入。 */
 public final class ThemeRuntimeConfig {
     private static final ObjectMapper JSON = new ObjectMapper();
+    /**
+     * qx-c1 #5(b) §23.1:节点到达设置的独立兄弟表 {@code scenes[].nodeArrivals[nodeId] = {arrivalPolicy?, arrivalReading?}}。
+     * 不放进 {@code nodeConfigs[nodeId]}:那一项在服务端 {@code GameplayTemplateRules} 与客户端 effectiveTemplate 里
+     * 都是「节点玩法整份覆盖」,只写到达设置会把节点玩法换掉。本表只有这两个键,两套模板覆盖规则都不读它。
+     */
+    public static final String NODE_ARRIVALS = "nodeArrivals";
+    private static final Set<String> ARRIVAL_FIELDS = Set.of(ArrivalPolicy.FIELD, ArrivalReading.FIELD);
+
+    private static void nodeArrivals(ObjectNode scene, boolean allowClientKeys) {
+        JsonNode rows = scene.get(NODE_ARRIVALS);
+        if (rows == null || !rows.isObject() || rows.size() > 200) fail("节点到达设置格式不正确");
+        ObjectNode normalized = JSON.createObjectNode();
+        Iterator<Map.Entry<String, JsonNode>> entries = rows.fields();
+        while (entries.hasNext()) {
+            Map.Entry<String, JsonNode> entry = entries.next();
+            String key = entry.getKey();
+            boolean client = allowClientKeys && key.startsWith("client:") && key.length() > 7 && key.length() <= 71
+                    && key.substring(7).equals(key.substring(7).trim());
+            if (!key.matches("[1-9][0-9]{0,17}") && !client) fail("到达设置节点 ID 不正确");
+            JsonNode value = entry.getValue();
+            if (value == null || !value.isObject() || value.size() == 0) fail("到达设置必须是对象且至少包含一项");
+            ObjectNode row = JSON.createObjectNode();
+            Iterator<String> names = value.fieldNames();
+            while (names.hasNext()) if (!ARRIVAL_FIELDS.contains(names.next())) fail("到达设置只能包含 arrivalPolicy / arrivalReading");
+            if (value.hasNonNull(ArrivalPolicy.FIELD)) row.set(ArrivalPolicy.FIELD, ArrivalPolicy.normalize(value.get(ArrivalPolicy.FIELD)));
+            if (value.hasNonNull(ArrivalReading.FIELD)) row.set(ArrivalReading.FIELD, ArrivalReading.normalize(value.get(ArrivalReading.FIELD)));
+            if (row.size() == 0) fail("到达设置必须是对象且至少包含一项");
+            normalized.set(key, row);
+        }
+        scene.set(NODE_ARRIVALS, normalized);
+    }
+
     private static final Set<String> ROOT = set("schemaVersion", "capacity", "hpName", "luckName", "actionName", "items", "grants", "events", "scenes", "rotation", "currentScene", "replayEnabled", "endings", "card", "rotationAnchor", "actionLimit", "actionSources", "rescueLimit", "allowDiscard", "chapters", "gameplayRuntime", "templateBindings", "teamTrail");
     public static ObjectNode parse(String raw) { return parse(raw,false); }
     public static ObjectNode parseDraft(String raw) { return parse(raw,true); }
@@ -55,7 +87,7 @@ public final class ThemeRuntimeConfig {
             chapters(config, items, allowClientKeys); grants(config, items); events(config, items); endings(config, items); card(config.path("card"));
             Set<String> scenes = new HashSet<>();
             for (JsonNode scene : rows(config, "scenes", 50)) {
-                fields(scene, set("id", "name", "grants", "events", "endings", "journeyStory", "nodeConfigs"));
+                fields(scene, set("id", "name", "grants", "events", "endings", "journeyStory", "nodeConfigs", NODE_ARRIVALS));
                 id(scene, scenes); text(scene, "name", 40, true);
                 grants(scene, items); events(scene, items); endings(scene, items);
                 if(scene.has("nodeConfigs")) {
@@ -68,6 +100,7 @@ public final class ThemeRuntimeConfig {
                         new AdvancedGameConfigValidator().validateAndNormalize(scene.get("nodeConfigs").get(key).toString());
                     }
                 }
+                if (scene.has(NODE_ARRIVALS)) nodeArrivals((ObjectNode) scene, allowClientKeys);
                 if (scene.has("journeyStory")) new JourneyStoryValidator().validate(scene.get("journeyStory").toString(), JourneyStoryValidator.Context.none());
             }
             if (config.has("rotation")) enumeration(config, "rotation", "FIXED", "ROUND_ROBIN", "WEEKLY");
@@ -91,6 +124,8 @@ public final class ThemeRuntimeConfig {
         for (JsonNode scene : config.path("scenes")) {
             Iterator<String> keys = scene.path("nodeConfigs").fieldNames();
             while (keys.hasNext()) if (keys.next().startsWith("client:")) keys.remove();
+            Iterator<String> arrivals = scene.path(NODE_ARRIVALS).fieldNames();
+            while (arrivals.hasNext()) if (arrivals.next().startsWith("client:")) arrivals.remove();
         }
         // 章节规则里引用同请求新建站点的 client:<key>:落库前的中间态先去掉(不足两站的互斥组整组去掉),
         // 站点建好后 remapForNodeSave 按原请求换成真实编号整段写回。
@@ -162,6 +197,14 @@ public final class ThemeRuntimeConfig {
                 if (configs.has(String.valueOf(target))) fail("场景节点重复：" + entry.getKey());
                 configs.set(String.valueOf(target), entry.getValue());
             });
+            source.path("scenes").get(index).path(NODE_ARRIVALS).fields().forEachRemaining(entry -> {
+                if (!entry.getKey().startsWith("client:")) return;
+                Long target = createdClients.get(entry.getKey().substring(7));
+                if (target == null || target <= 0L) fail("到达设置节点未在本次请求新建：" + entry.getKey());
+                ObjectNode arrivals = scene.with(NODE_ARRIVALS);
+                if (arrivals.has(String.valueOf(target))) fail("到达设置节点重复：" + entry.getKey());
+                arrivals.set(String.valueOf(target), entry.getValue());
+            });
         }
         return parseDraft(result.toString()).toString();
     }
@@ -177,7 +220,7 @@ public final class ThemeRuntimeConfig {
             offset = (int) Math.max(0,Math.floorDiv(epochMillis / 86400000L + 3, 7)-Math.floorDiv(config.path("rotationAnchor").asLong()/86400000L+3,7));
         }
         JsonNode scene = scenes.get(Math.floorMod(base + offset, scenes.size()));
-        for (String field : Arrays.asList("grants", "events", "endings", "journeyStory", "nodeConfigs")) if (scene.has(field)) frozen.set(field, scene.get(field).deepCopy());
+        for (String field : Arrays.asList("grants", "events", "endings", "journeyStory", "nodeConfigs", NODE_ARRIVALS)) if (scene.has(field)) frozen.set(field, scene.get(field).deepCopy());
         frozen.put("sceneId", scene.path("id").asText()); frozen.put("sceneName", scene.path("name").asText());
         frozen.remove("scenes");
         return frozen;
@@ -326,6 +369,7 @@ public final class ThemeRuntimeConfig {
         assertPlanEndings(config);
         assertItemReferences(config,config);
         for(JsonNode scene:config.path("scenes"))scene.path("nodeConfigs").fieldNames().forEachRemaining(id->{if(!nodeIds.contains(Long.valueOf(id)))fail("场景引用外来节点");});
+        for(JsonNode scene:config.path("scenes"))scene.path(NODE_ARRIVALS).fieldNames().forEachRemaining(id->{if(!nodeIds.contains(Long.valueOf(id)))fail("到达设置引用外来节点");});
     }
     static void assertPlanEndings(JsonNode config) {
         for (JsonNode plan : config.path("gameplayRuntime").path("plans")) if (plan.path("terminal").asBoolean(true)) {
@@ -422,6 +466,9 @@ public final class ThemeRuntimeConfig {
             if (n.has("nodeId")) { Long target = map.get(n.get("nodeId").asLong()); if (target == null) fail("复制时节点引用没有对应目标"); ((ObjectNode)n).put("nodeId", target); }
             if(n.has("nodeConfigs")) {
                 ObjectNode renamed=JSON.createObjectNode();n.get("nodeConfigs").fields().forEachRemaining(row->{Long target=map.get(Long.valueOf(row.getKey()));if(target==null)fail("复制时场景节点没有对应目标");renamed.set(String.valueOf(target),row.getValue());});((ObjectNode)n).set("nodeConfigs",renamed);
+            }
+            if(n.has(NODE_ARRIVALS) && n.get(NODE_ARRIVALS).isObject()) {
+                ObjectNode renamed=JSON.createObjectNode();n.get(NODE_ARRIVALS).fields().forEachRemaining(row->{Long target=map.get(Long.valueOf(row.getKey()));if(target==null)fail("复制时到达设置节点没有对应目标");renamed.set(String.valueOf(target),row.getValue());});((ObjectNode)n).set(NODE_ARRIVALS,renamed);
             }
             if (n.has("templateBindings")) {
                 ObjectNode renamed = JSON.createObjectNode();
