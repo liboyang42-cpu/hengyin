@@ -26,6 +26,7 @@ const { getPlayMapState, getPlayRouteNodeState } = require('../../utils/play-sta
 const gameSessionClient = require('../../utils/game-session-client.js');
 const orientLifecycle = require('./utils/orient-lifecycle.js');
 const arrivalGuardView = require('./utils/arrival-guard-view.js');
+const arrivalReading = require('./utils/arrival-reading.js');
 const guardAppeal = require('./utils/guard-appeal.js');
 const playBoardView = require('./utils/play-board-view.js');
 const { id: precisePlayId } = require('../../utils/orient-score-view.js');
@@ -3818,6 +3819,8 @@ Page({
           if (!readOnly) pushVoices(b.nodeId);
           const story = history && history.done === true ? history.story : n.story;
           if (story) push(story, '', history && history.readOnly);
+          const read = this._arrivalReadingFor(b.nodeId);   // §27.3 到达读数:作者叙事,接在这一站手记后
+          if (read) { const previousOdd = curOdd; curOdd = read.level; push(read.log); curOdd = previousOdd; }
           continue;
         }
         if (b.type === 'text') {
@@ -3845,6 +3848,8 @@ Page({
         } else if (b.type === 'reveal' && b.content) {
           const lines = String(b.content).split(/\n+/).map((x) => applyStoryVars(x.trim(), vars)).filter(Boolean);
           if (lines.length) items.push({ kind: 'reveal', who: String(b.who || ''), lines, mood: curMood, odd: curOdd });
+        } else if (b.type === 'divider') {
+          items.push({ kind: 'divider', text: '', mood: curMood, odd: curOdd });   // 作者分割线:一条细线,仍占一个 .chfull__para
         } else if (b.type === 'odd') {
           curOdd = Math.max(0, Math.min(3, Number(b.level) || 0));   // 标记块,同 mood 不产出 item
         } else if (b.type === 'voice' && STORY_VOICE_COLORS[b.who] && b.content) {
@@ -5109,7 +5114,7 @@ Page({
           type: 'gcj02', isHighAccuracy: true,
           success(loc) {
             if (!current()) return;
-            that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
+            that._loc = arrivalReading.stamp({ longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy });
             that._locationRequesting = false;
             that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
               if (!current()) return;
@@ -5275,7 +5280,7 @@ Page({
         if (!current() || !that._watching) { release(); return; }
         that._playLocationHandler = (loc) => {
           if (!current() || !that._watching) { release(); return; }
-          that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
+          that._loc = arrivalReading.stamp({ longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy });
           that._noteLocAccuracy(loc.accuracy);
           if (typeof that._noteMyTrail === 'function') that._noteMyTrail(loc);
           /* R11 g1(j4 F7):「下一站 · Xm」与罗盘距离跟着走 —— 以前只在 rebuild 时算一次,走到站上还写着出发时的距离。
@@ -6094,7 +6099,7 @@ Page({
           success: loc => {
             if (!live()) return;
             if (!Number.isFinite(loc.latitude) || !Number.isFinite(loc.longitude)) { this.diegetic('定位无效，未提交'); return; }
-            this._loc = { latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy };
+            this._loc = arrivalReading.stamp({ latitude: loc.latitude, longitude: loc.longitude, accuracy: loc.accuracy });
             this.arrive(view.reference.nodeId, 'guard-reverify');
           }, fail: () => { if (live()) this.diegetic('未取得现场定位，未提交'); } });
       } });
@@ -6112,7 +6117,9 @@ Page({
     // 完成请求在伏笔/步数同步之后才生成,带上同步后的路线版本。
     this._withThoughtSync(() => {
       if (!isCurrent()) return Promise.resolve({ obsolete: true });
-      const payload = this._routeWritePayload('arrive', nodeId, { nodeId, longitude: loc.longitude, latitude: loc.latitude, accuracy: playAccuracy.accuracyOf(loc) });
+      const located = arrivalReading.timestampOf(loc);   // §23.2:只带真实采样时刻,缺了就不带(旧指纹不变)
+      const payload = this._routeWritePayload('arrive', nodeId, Object.assign({ nodeId, longitude: loc.longitude, latitude: loc.latitude,
+        accuracy: playAccuracy.accuracyOf(loc) }, located ? { locationTimestamp: located } : {}));
       arrivalRequestId = payload.routeActionId;
       return req('/api/play/arrive', 'POST', payload);
     }, isCurrent)
@@ -6122,6 +6129,7 @@ Page({
         if (r.code == 200 || r.code == '200') {
           that._resolveRouteAction('arrive', nodeId);
           that.setData({ arrivalGuard: null });
+          that._noteArrivalReading(nodeId, r.data && r.data.arrivalReading);
           // 完整结算回执的 done 是完成计数；只有纯到店回执才进入商家三步条。
           const completedReceipt = r.data && typeof r.data.firstTime === 'boolean' && Number.isInteger(r.data.done) && String(r.data.nodeId) === String(nodeId);
           if (that.data.mode === 2 && !completedReceipt) { that.onShopDayArrived(nodeId, r.data); return; }
@@ -6141,6 +6149,8 @@ Page({
         else {
           that._resolveRouteAction('arrive', nodeId);
           const guard = arrivalGuardView.project(r, nodeId, arrivalRequestId);
+          // U05-01/02:稳定原因码 + 服务端批准的替代站(只列本局真实、未完成的节点)
+          if (guard) Object.assign(guard, arrivalReading.rejection(r, that.data.nodes));
           that.setData({ arrivalGuard: guard });
           if (guard && guard.appealable && guard.appealBizType === 'play_arrive_guard') {
             try { that._ensureGuardAppeal().reference(guard); } catch (error) { that.diegetic(error.message); }
@@ -7271,6 +7281,30 @@ Page({
     if (nx) { const node = this._nodeById(nx.nodeId); if (node && node.lat && node.lng) this.setData({ fmCenter: { lat: node.lat, lng: node.lng } }); }
   },
   diegetic(msg) { cyToast(msg); },
+  /** §27.3:真实到达成功回执里的读数,按本人+本局+节点只记一次;同回执重读、重试不再追加。 */
+  _noteArrivalReading(nodeId, raw) {
+    const value = arrivalReading.reading(raw);
+    if (!value || this.data.isPreview || this.data.isMock) return;
+    const k = arrivalReading.key(this._playOwner, String((this._routeState || {}).sessionId || this._sessionKey()), nodeId);
+    this._arrivalReadings = this._arrivalReadings || {};
+    if (this._arrivalReadings[k]) return;
+    this._arrivalReadings[k] = value;
+    arrivalReading.record(wx, k, value);
+  },
+  _arrivalReadingFor(nodeId) {
+    if (this.data.isPreview || this.data.isMock) return null;
+    const k = arrivalReading.key(this._playOwner, String((this._routeState || {}).sessionId || this._sessionKey()), nodeId);
+    const memo = this._arrivalReadings && this._arrivalReadings[k];
+    return memo || arrivalReading.lookup(wx, k);
+  },
+  /** U05-02:服务端批准的替代站 —— 只打开那一站的卡片,到达仍要在那一站真实完成。 */
+  openArrivalFallback(e) {
+    const target = String(e && e.currentTarget && e.currentTarget.dataset.nodeid || '');
+    const guard = this.data.arrivalGuard;
+    if (!guard || !(guard.fallbacks || []).some(row => row.nodeId === target)) return;
+    const node = this._nodeById(Number(target));
+    if (node && !node.done) this.setData({ 'sheet.show': true, 'sheet.node': node });
+  },
   // M2 夜间提示(自玩 22:00–06:00):完成结果时刻出,4.6s 自动收;纯展示层,不吃点击不弹窗。
   _flashNightHint() {
     if (this._nightHintTimer) clearTimeout(this._nightHintTimer);

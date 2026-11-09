@@ -541,6 +541,7 @@ page { background: var(--cy-color-bg-page); }
   padding:20rpx 28rpx; border-radius:36rpx 36rpx 8rpx 36rpx; background:var(--cy-color-bg-surface-strong); /* ds-ok 聊天气泡带尾角 */
   font-size:var(--cy-font-body); line-height:1.6; text-align:left; }
 .chfull__reveal{ margin:48rpx 0 0; text-align:left; }
+.chfull__divider{ height:2rpx; margin:24rpx auto; width:40%; background:var(--cy-border-line); }
 .chfull__reveal-who{ margin-bottom:16rpx; font-size:var(--cy-font-caption); color:var(--cy-color-text-tertiary); text-align:center; }
 .chfull__reveal-b{ display:table; max-width:76%; margin:0 0 16rpx; padding:20rpx 28rpx; border-radius:36rpx 36rpx 36rpx 8rpx; /* ds-ok 聊天气泡带尾角 */
   background:var(--cy-color-bg-elevated); font-size:var(--cy-font-body); line-height:1.6; color:var(--cy-color-text-primary); }
