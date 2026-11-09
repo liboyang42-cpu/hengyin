@@ -31,7 +31,7 @@ public class WorkshopWechatPaymentOrderAdapter {
         Reference reference = reference(observation);
         return Boolean.TRUE.equals(tx.execute(s -> {
             var order = mapper.lockOrder(no);
-            if (order == null) return false;
+            if (order == null || order.isEmpty()) return false;
             var fact = verified.requireConsumablePayment(reference).facts();
             requirePayment(order,fact);
             if (order.get("paid_at") != null) {
@@ -53,7 +53,7 @@ public class WorkshopWechatPaymentOrderAdapter {
         Reference reference = reference(observation);
         return Boolean.TRUE.equals(tx.execute(s -> {
             var order = mapper.lockOrder(no);
-            if (order == null || order.get("paid_at") == null) return false;
+            if (order == null || order.isEmpty() || order.get("paid_at") == null) return false;
             var original = verified.requireVerified(paymentReference(order)).facts(); requirePayment(order,original);
             var fact = verified.requireVerified(reference).facts();
             if (fact.kind()!=WechatVerifiedPaymentFact.Kind.REFUND || !no.equals(fact.businessOutTradeNo())
