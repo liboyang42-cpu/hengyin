@@ -25,7 +25,6 @@
 
 .mp-list { padding:8rpx var(--cy-page-x) 0; }
 .mp-card { display: flex; flex-direction: column; background: var(--cy-bg-card); border: 0; border-radius: var(--cy-radius-xl); padding:var(--cy-space-4) var(--cy-space-4); margin-top:var(--cy-space-3); }
-.mp-when-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
 .mp-main { display: flex; align-items: center; }
 .mp-cover { width: 176rpx; height: 176rpx; border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); flex-shrink: 0; }
 .mp-body { flex: 1; margin-left:var(--cy-space-3); overflow: hidden; }
@@ -33,9 +32,14 @@
 .mp-dot { width: var(--cy-legacy-14); height: var(--cy-legacy-14); border-radius: var(--cy-radius-pill); background: var(--cy-danger); flex-shrink: 0; }
 .mp-tit-row { margin-top: var(--cy-space-1); }
 .mp-tit { font-size: var(--cy-font-subtitle); color: var(--cy-text-title); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* V3-38/39:标题行 = 标题(省略号)+ 右侧状态词;状态词不缩、不折行 */
+.mp-tit-row .mp-tit { flex: 1; min-width: 0; }
+.mp-badge { flex-shrink: 0; margin-left: auto; white-space: nowrap; }
+.mp-meta { margin-top: var(--cy-space-1-5); display: flex; align-items: center; gap: var(--cy-space-1); min-width: 0; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); white-space: nowrap; overflow: hidden; }
+.mp-meta:empty { display: none; }
+.mp-meta-sep { color: var(--cy-text-muted); }
 .mp-tags { margin-top:var(--cy-space-2); display: flex; align-items: center; gap: var(--cy-space-1-5); }
 .mp-type { font-size: var(--cy-font-caption); color: var(--cy-text-body); background: var(--cy-bg-subtle); padding:var(--cy-legacy-4) 16rpx; border-radius: var(--cy-radius-pill); }
-.mp-owner { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 /* P0-4 承接三态徽标:未承接=中性等待态;已承接(.on)=成功态 */
 .mp-accept { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); background: var(--cy-bg-subtle); padding:var(--cy-legacy-4) 16rpx; border-radius: var(--cy-radius-pill); }
 .mp-accept.on { color: var(--cy-success); background: var(--cy-color-status-success-soft); }
