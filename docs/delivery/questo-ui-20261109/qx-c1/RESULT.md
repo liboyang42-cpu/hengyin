@@ -24,7 +24,10 @@ Proof files (`proof/`): `rig-http.json` (items 1, 2, 4, 5a, 6, 7, 8, 9, 10: ever
 
 - Targeted Java suites run green (each listed in the table) plus neighbours: `ApiTopicTemplate*Test`, `AuthorWriteReceiptServiceTest`, `PlayHelp*Test` (180), `VideoBounty*Test`, `AccusationTemplateSupportTest`, `QaOptionMediaSupportTest`, `PlayKitProfileRuntimeTest`, `ThemePresetAdoptionLoopContractTest`, `CmsTopicDraftBindingsTest`, `Workshop*CallerTest`, `WorkshopPublicationGuardTest`, `DruidWallBinaryComparisonContractTest`. `WorkshopPurchaseMyBatisIT` against the rig MySQL.
 - Python: `ci/test_questo_collation_alignment.py` (4), `ci/test_migration_runner_ci_contract.py` (50). `migration_gates.py sql` on all three new migrations and `dep-order --base origin/master` OK (29 batch migrations).
-- `GameplayDraftCopyTest.nativeThreeThemeCopiesSaveWithRealNodeMappingsAndRequireChallengeReselectionForPublish` fails with and without this lane's item-5 change (reproduced after stashing it); not caused by this lane. Full-module result: see the PR description.
+- Full `chengyinhub-admin` suite (`mvn -o -pl chengyinhub-admin test`): 13093 run, 3 failures, 35 errors, 589 skipped.
+  - The 3 failures (`GameplayDraftCopyTest.nativeThreeTheme…`, `ThemeCategoryConfigMappingTest.legacyFreeRetry…` and `.objectFindIsNotASettlementProof…`) fail identically on the untouched base 449fb80d (checked in a separate worktree). They are not caused by this lane.
+  - 34 errors are MyBatis ITs that need a MySQL on 127.0.0.1:3306 (`Communications link failure`); the rig MySQL is on 3316.
+  - 1 error, `MerchantCrmProfileNamespaceMyBatisTest`, is an H2 error that happens only inside the full run. The class passes on its own, both on this branch and on the base.
 - Fails-on-old-code: items 1 (wall IT + contract test), 9 (old code throws a plain `IllegalArgumentException`), 10 (scan finds the 23-char literal), 3/4/6/7/8/5 (new behaviour or endpoints absent), 2 (gate test requires the align migration).
 
 ## Deviations
