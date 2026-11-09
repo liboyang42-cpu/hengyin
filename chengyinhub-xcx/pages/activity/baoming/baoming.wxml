@@ -166,7 +166,8 @@
     </view>
   </view>
   <!-- §17.6 促销减免:标签直用服务端 label;有减免时原价划线,应付只看 payAmount -->
-  <view wx:if="{{mkt.show}}" class="setly_li">
+  <!-- 单张票时原价就是上面票种行,不重复;多张时才出整单原价划线 -->
+  <view wx:if="{{mkt.show && mkt.listAmount != selectedTicket.price}}" class="setly_li">
     <view class="setly_li_left">原价</view>
     <view class="setly_li_right"><text class="price-strike">¥{{mkt.listAmount}}</text></view>
   </view>
