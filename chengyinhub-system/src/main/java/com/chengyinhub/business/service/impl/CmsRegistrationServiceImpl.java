@@ -857,7 +857,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
         // 促销 + 积分:与报价走同一个方法、同一份行。促销只降到"促销后应付",积分仍由 computePrice 算。
         RegistrationOrderPrice priced = priceOrder(memberId, ownerType, ownerId, marketingLines, offerCode,
-                orderTotal, memberPriceTotal, userPoint, isUsePoint, new Date());
+                orderTotal, memberPriceTotal, userPoint,
+                isUsePoint != null && isUsePoint == 1 ? 1 : 0, new Date());
         PriceCalc order = priced.calc;
         // 促销指纹闸在建任何行之前:不通过就一个字节都不写。
         assertMarketingSign(marketingSign, priced.marketing);
