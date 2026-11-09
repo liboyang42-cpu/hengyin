@@ -15,7 +15,7 @@
           <view class="mp-row" wx:if="{{card.city}}"><text class="mp-row__k">城市</text><text class="mp-row__v">{{card.city}}</text></view>
           <view class="mp-row" wx:if="{{card.validity}}"><text class="mp-row__k">有效期</text><text class="mp-row__v">{{card.validity}}</text></view>
           <view class="mp-row" wx:if="{{card.seats}}"><text class="mp-row__k">包含人数</text><text class="mp-row__v">{{card.seats}}</text></view>
-          <view class="mp-row"><text class="mp-row__k">使用人</text><text class="mp-row__v">{{forGift ? '领取礼品的好友' : '你本人'}}</text></view>
+          <view class="mp-row" wx:if="{{forGift || !card.seats}}"><text class="mp-row__k">使用人</text><text class="mp-row__v">{{forGift ? '领取礼品的好友' : '你本人'}}</text></view>
           <view class="mp-row" wx:if="{{card.price}}"><text class="mp-row__k">价格</text><text class="mp-row__v mp-row__v--strong">{{card.price}}</text></view>
         </view>
         <text class="mp-sec" wx:if="{{card.topics.length}}">可游玩作品</text>
