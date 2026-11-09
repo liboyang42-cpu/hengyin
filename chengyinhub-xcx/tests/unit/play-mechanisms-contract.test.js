@@ -18,7 +18,8 @@ function locationHandler(source, node, questArrival = false, ready = false) {
     _noteLocAccuracy() {}, _distText: () => '', _questArrivalCandidates: () => [],
     _questAwaitsArrival: () => questArrival, haversine: () => 0,
     arrive: (...args) => arrivals.push(args), setData(patch) { Object.assign(this.data, patch); } };
-  new Function('that', 'playAccuracy', 'current', 'release', source.slice(start, end))(page, A, () => true, () => {});
+  new Function('that', 'playAccuracy', 'current', 'release', 'arrivalReading', source.slice(start, end))(page, A, () => true, () => {},
+    require('../../pages/play/utils/arrival-reading.js'));
   return { page, arrivals };
 }
 
@@ -92,7 +93,7 @@ test('O-01 删空精度放行:自动到达只在精度已知且 ≤80m 时发(�
   assert.throws(() => checkArrivalAccuracy(src.replace(' && playAccuracy.canAutoArrive(loc.accuracy)', '')),
     'removing the accuracy guard must fail this behavior check');
   // 两个定位来源都把 accuracy 原样带进 _loc,arrive 请求从 _loc 取
-  const locWrites = src.match(/_loc = \{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}/g) || [];
+  const locWrites = src.match(/_loc = arrivalReading\.stamp\(\{ longitude: loc\.longitude, latitude: loc\.latitude, accuracy: loc\.accuracy \}\)/g) || [];
   assert.equal(locWrites.length, 2);
 });
 

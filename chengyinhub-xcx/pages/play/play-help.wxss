@@ -1,0 +1,12 @@
+/* UG-05..09 提示阶梯:在案件册行样式上只补状态色与内容块。 */
+.phl__left{display:block;font-size:var(--cy-type-body);color:var(--cy-comp-sheet-player-muted);margin:calc(-1 * var(--cy-space-3)) 0 var(--cy-space-4)}
+.phl__row{min-height:88rpx;box-sizing:border-box}
+.phl__row.is-off .tb-name{color:var(--cy-comp-sheet-player-muted)}
+.phl__content{display:block;margin-top:var(--cy-space-2);font-size:var(--cy-type-body);line-height:1.6;overflow-wrap:anywhere}
+.phl__img{display:block;width:100%;margin-top:var(--cy-space-2);border-radius:var(--cy-radius-md)}
+.phl__err{display:block;margin-top:var(--cy-space-1);font-size:var(--cy-type-label);color:var(--cy-color-status-danger)}
+.phl__act--free,.phl__act--review{color:var(--cy-comp-sheet-player-text)}
+.phl__danger{color:var(--cy-color-status-danger)}
+.phl__chev{flex:none;width:16rpx;height:16rpx;border-right:3rpx solid var(--cy-comp-sheet-player-muted);border-bottom:3rpx solid var(--cy-comp-sheet-player-muted);transform:rotate(45deg);transition:transform .2s ease}
+.phl__chev.is-open{transform:rotate(-135deg)}
+@media (prefers-reduced-motion: reduce){.phl__chev{transition:none}}

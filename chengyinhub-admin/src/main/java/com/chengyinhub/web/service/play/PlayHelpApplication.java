@@ -95,14 +95,17 @@ public class PlayHelpApplication {
     }
 
     private PlayHelpViewVO viewResolved(Resolved resolved) {
-        List<LevelView> layers = resolved.freeUsesPerRun == null
+        // 整局共享 N:剩余次数由 G7 额度账本给出,未使用过时等于冻结的 N;旧局没有整局 N 时为 null。
+        Integer remaining = resolved.freeUsesPerRun == null ? null
+                : playHelpRunQuotaApplication.remainingFreeUses(
+                        resolved.memberId, resolved.scope, resolved.freeUsesPerRun);
+        List<LevelView> layers = remaining == null
                 // 旧局没有整局 N:沿用逐层 freeQuota 的老口径,一字不改。
                 ? PlayHelpUsagePolicy.views(resolved.ladder, unlockedLevels(resolved))
-                // 整局共享 N:剩余次数由 G7 额度账本给出,未使用过时等于冻结的 N。
-                : PlayHelpUsagePolicy.views(resolved.ladder, unlockedLevels(resolved),
-                        playHelpRunQuotaApplication.remainingFreeUses(
-                                resolved.memberId, resolved.scope, resolved.freeUsesPerRun));
-        return new PlayHelpViewVO(resolved.runId, resolved.nodeId, !layers.isEmpty(), List.copyOf(layers));
+                : PlayHelpUsagePolicy.views(resolved.ladder, unlockedLevels(resolved), remaining);
+        // 没有可用层时不给计数器:enabled=false 的旧主题界面保持原样。
+        return new PlayHelpViewVO(resolved.runId, resolved.nodeId, !layers.isEmpty(), List.copyOf(layers),
+                layers.isEmpty() ? null : remaining);
     }
 
     /**

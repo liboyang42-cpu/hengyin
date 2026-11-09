@@ -108,6 +108,9 @@ function saveDraft(storage, input) {
       if (typeof version === 'string' && /^[1-9][0-9]{0,18}$/.test(version)
           && (version.length < 19 || version <= '9223372036854775807')) envelope.publishAttempt[field] = version;
     });
+    // U03-01:原发布号随未知记录落盘,重进后的重试沿用它。
+    var requestId = input.publishAttempt.publishRequestId;
+    if (typeof requestId === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(requestId)) envelope.publishAttempt.publishRequestId = requestId;
   }
   if (input.serverDraftAttempt && input.serverDraftAttempt.status === 'UNKNOWN') {
     envelope.serverDraftAttempt = {

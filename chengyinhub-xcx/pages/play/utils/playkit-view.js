@@ -1140,4 +1140,4 @@ function serverPayload(type, action, detail) {
   }
 }
 
-module.exports = { pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, secondsUntilOpen, KIT_PRIORITY, presentOf, dailySignRevealState, applyStoryVars };
+module.exports = { TYPE_OF, pickPlayKit, pickJourneyCheck, checkReceiptView, serverAction, serverPayload, secondsUntilOpen, KIT_PRIORITY, presentOf, dailySignRevealState, applyStoryVars };

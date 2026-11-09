@@ -115,6 +115,7 @@ function preceding(history, currentId, liveCards) {
       const node = history.nodes.find(value => value.nodeId === block.nodeId);
       if (node) push(node.story);
     } else if (block.type === 'text' || block.type === 'voice') push(block.who ? block.who + '：' + (block.content || '') : block.content);
+    else if (block.type === 'divider') items.push({ kind: 'divider', text: '', history: true, readOnly: true }); // U04-01 同顺序
     else if ((block.type === 'image' || block.type === 'audio') && block.url) items.push({ kind: block.type, text: '', url: block.url,
       altText: block.altText || '', history: true, readOnly: true });
     else if (block.type === 'dream') {

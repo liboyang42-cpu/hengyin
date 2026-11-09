@@ -35,7 +35,8 @@ test('prepare persists identity before POST, double click cannot duplicate, rece
 test('start confirms frozen version; same session/server clock on reentry', async () => {
   await load(); page.startOrientSession();
   assert.match(modal.content, /版本 4/); modal.success({ confirm: true });
-  assert.deepEqual(requests[1].data, { sessionId: '9007199254740993', ackConfigVersion: 4, idempotencyKey: saved().key });
+  assert.deepEqual(requests[1].data, Object.assign({ sessionId: '9007199254740993', ackConfigVersion: 4, idempotencyKey: saved().key },
+    require('../../pages/play/utils/client-capabilities.js').declaration()), '开赛带本端能力声明(§27.2)');
   const running = row({ phase: 'RUNNING', startedAt: 1000, elapsedMs: 2000 });
   reply(1, running); await flush(); reply(2, { sessions: [running] }); await flush();
   page = create(); await load([row({ ...running, elapsedMs: 9000 })]);
