@@ -313,10 +313,10 @@
 <!-- 占位必须和 .bmbottom 的真实高度同算式(含安全区):写死 240rpx 会比底栏矮一个
      home indicator,正文最后一行被永久盖住 —— 实拍到「…不会重复创建订」被切。 -->
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom-spacer"
-  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) && !(quoteRefusal && hostResv.required) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}"></view>
 <view wx:if="{{pageState === 'ready'}}" class="bmbottom"
-  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) && !(quoteRefusal && hostResv.required) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
-  <cy-inline-error class="submit-inline-error" wx:if="{{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) && !(quoteRefusal && hostResv.required)}}" kind="data"
+  style="--baoming-action-extra: {{submitError && !(quoteRefusal && activityInfo.isSignUp === 1) ? 'calc(var(--cy-btn-h) + var(--cy-space-2))' : '0rpx'}}">
+  <cy-inline-error class="submit-inline-error" wx:if="{{submitError && !(quoteRefusal && activityInfo.isSignUp === 1)}}" kind="data"
     title="{{quoteRefusal ? '暂不可报名' : '这次报名还没完成'}}" sub="{{submitError}}"
     action="{{quoteRefusal ? '' : '重新提交'}}" bind:action="handlePayment" />
   <!-- 拍板 2026-09-16 #10:商家闭店时报名入口先说清原因(点了也会被后端拒),已售不受影响。 -->

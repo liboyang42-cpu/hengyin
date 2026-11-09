@@ -151,6 +151,10 @@
 
       <!-- ===== TAB · 项目 ===== -->
       <block wx:if="{{isSelf && activeTab === 'projects'}}">
+        <!-- qx-b5 §18 A/B:视频悬赏是创作者作品的推广投稿,挂在「项目」页签 -->
+        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
+          <cy-cell title="视频悬赏" description="" hairline="{{false}}" bind:tap="goVideoBounty" />
+        </view>
         <!-- M-25(2026-10-27):商家不报名游玩,没有订单也没有票夹 —— 商家视角整段不出,改看下面的项目段(承接进度)。
              P-47 / M-14:右侧只留箭头,不写「查看详情」。 -->
         <block wx:if="{{!isMerchantView && (orderPreviewList.length || orderErr)}}">
@@ -228,6 +232,10 @@
 
         <!-- 商家 Owner 与员工共用的经营身份入口。放在资产之后：资产回答“钱在哪里”，
              团队回答“谁能经营”；权限与主题只认 access/me，不拿全局 role/userType 猜。 -->
+        <!-- qx-b5 §17.1/§17.2/P6:通行证与礼品是本人购买记录,归在我的资产之下(P-53 不进「探索与更多」) -->
+        <view class="pc-team-entry" wx:if="{{!isMerchantView}}">
+          <cy-cell title="通行证与礼品" description="" hairline="{{false}}" bind:tap="goPasses" />
+        </view>
         <view class="pc-team-entry" wx:if="{{isClubLeader}}">
           <cy-cell icon="/images/icon_tab_workbench.svg"
                    title="俱乐部工作台"
@@ -504,16 +512,6 @@
           <view class="pc-benefit" bindtap="goCoupon" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="我的优惠券">
             <cy-icon class="pc-benefit-ic" name="coupon" size="48" />
             <text class="pc-benefit-text">我的优惠券</text>
-            <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
-          </view>
-          <view class="pc-benefit" bindtap="goPasses" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="通行证">
-            <cy-icon class="pc-benefit-ic" name="route" size="48" />
-            <text class="pc-benefit-text">通行证</text>
-            <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
-          </view>
-          <view class="pc-benefit" bindtap="goVideoBounty" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="视频悬赏">
-            <cy-icon class="pc-benefit-ic" name="play" size="48" />
-            <text class="pc-benefit-text">视频悬赏</text>
             <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
           </view>
           <view class="pc-benefit" bindtap="goInvite" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="邀请好友，分享城瘾给好友">

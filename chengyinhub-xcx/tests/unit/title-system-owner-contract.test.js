@@ -122,9 +122,15 @@ const EXPECTED_NAV_ROUTES = [
   /* 2026-09-22 Phase 0 物品卡实验室页:custom 导航 + cy-nav-bar,顶栏只有返回钮。 */
   /* 2026-09-22 Phase 3 藏品册页:同上,custom 导航 + cy-nav-bar。 */
   'subpackageP3/pages/object-cards/index/index',
+  // 2026-11-09 qx-b5:通行证列表/详情、视频悬赏为 cy-nav-bar plain + cy-page-title 标准二级页;礼品领取用导航栏标题
+  'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
+  'subpackageMember/market/gift/index', 'subpackageA/pages/video-bounty/index',
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
+  // 2026-11-09 qx-b5:通行证列表/详情、视频悬赏挂 cy-page-title(礼品领取不挂)
+  'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
+  'subpackageA/pages/video-bounty/index',
   // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
   'subpackageMember/character/index',
   'subpackageMember/invoice/index',
@@ -330,8 +336,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-30 V-24 +1:主题模板详情 topic-detail(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 158;custom 157。
   // 2026-10-29 −1:「动态」二级页 pages/square/list 删除(custom 导航)⇒ 157 → 156;custom 156 → 155。
   // 2026-10-31 dw29 发布集成:两边叠加(topic-detail +1、square/list −1)⇒ 157;custom 156。
-  assert.equal(rows.length, 157, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 156)
+  // 2026-11-09 qx-b5 +4(均 custom 导航):通行证列表/详情/礼品领取、视频悬赏 ⇒ 161;custom 160。
+  assert.equal(rows.length, 161, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 160)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)
