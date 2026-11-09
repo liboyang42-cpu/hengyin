@@ -290,15 +290,21 @@ public class ChannelOrderVerificationServiceImpl implements IChannelOrderVerific
         if (verificationId == null || verificationId <= 0) {
             throw ChannelVoucherException.badRequest("VERIFICATION_ID_REQUIRED", "缺少验证记录 id");
         }
-        ChannelOrderVerification row = verificationMapper.selectById(verificationId);
+        ChannelOrderVerification row = verificationMapper.selectByIdForUpdate(verificationId);
         if (row == null) {
             throw ChannelVoucherException.notFound("VERIFICATION_NOT_FOUND", "验证记录不存在");
         }
         if (Integer.valueOf(ChannelOrderVerification.STATUS_REVOKED).equals(row.getStatus())) {
             return toVerificationView(row);
         }
-        // 锁顺序与兑换一致：先 voucher 再 verification，避免与 redeem 交叉死锁。
-        voucherService.revokeByVerification(verificationId, why, "CHANNEL");
+        // 与发行、兑换、退款一致，先锁验证事实，再锁码。
+        com.chengyinhub.business.domain.dto.ChannelVoucherView voucher =
+                voucherService.revokeByVerification(verificationId, why, "CHANNEL");
+        if (voucher != null && Boolean.TRUE.equals(voucher.getRevokePending())) {
+            ChannelOrderVerificationView pending = toVerificationView(row);
+            pending.setReasonCode("REFUND_REQUIRED");
+            return pending;
+        }
         row = verificationMapper.selectByIdForUpdate(verificationId);
         if (row == null) {
             throw ChannelVoucherException.conflict("VERIFICATION_CONFLICT", "验证记录状态冲突");

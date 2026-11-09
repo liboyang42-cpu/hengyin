@@ -181,7 +181,11 @@ public class TopicPublicationContentGuard {
         return issues;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private WorkshopLicenseGuard workshopLicenses;
+
     public void assertPublishReady(CmsTopic topic) {
+        if(workshopLicenses!=null)workshopLicenses.requireTheme(topic);
         List<PublicationProblem> problems = publishReadinessProblems(topic);
         if (problems.isEmpty()) {
             return;

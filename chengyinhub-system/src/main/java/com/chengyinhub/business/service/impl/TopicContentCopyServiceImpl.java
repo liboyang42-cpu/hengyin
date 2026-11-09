@@ -62,6 +62,9 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
     @Autowired private ThemeStateKeyService themeStateKeyService;
     @Autowired private TopicContentWriteGuard contentWriteGuard;
 
+    @Autowired
+    private com.chengyinhub.business.service.support.WorkshopLicenseGuard workshopLicenses;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long copyCmsTopic(Long id, Map<String, Object> params) {
@@ -141,6 +144,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         if (copyType >= 3) {
             copyCollaborators(id, newTopicId);
         }
+        if(workshopLicenses!=null)workshopLicenses.requireTheme(newTopic);
         return newTopicId;
     }
 

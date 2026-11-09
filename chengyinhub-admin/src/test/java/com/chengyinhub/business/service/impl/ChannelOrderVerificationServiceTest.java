@@ -152,6 +152,22 @@ class ChannelOrderVerificationServiceTest {
         verify(vouchers, never()).issue(anyLong(), any());
     }
 
+
+    @Test
+    void pendingRefundDoesNotRevokeThePurchaseFactNeededByRefundConsumer() {
+        ChannelOrderVerification purchase = new ChannelOrderVerification();
+        purchase.setId(11L);
+        purchase.setStatus(ChannelOrderVerification.STATUS_VERIFIED);
+        when(verifications.selectByIdForUpdate(11L)).thenReturn(purchase);
+        com.chengyinhub.business.domain.dto.ChannelVoucherView pending = new com.chengyinhub.business.domain.dto.ChannelVoucherView();
+        pending.setRevokePending(true);
+        when(vouchers.revokeByVerification(11L, "refund", "CHANNEL")).thenReturn(pending);
+        var result = service.revokeVerification(9L, 11L, "refund", "revoke-1");
+        assertEquals(Integer.valueOf(ChannelOrderVerification.STATUS_VERIFIED), result.getStatus());
+        assertEquals("REFUND_REQUIRED", result.getReasonCode());
+        verify(verifications, never()).markRevoked(anyLong(), anyString(), any());
+    }
+
     private ChannelOrderVerificationServiceImpl serviceWith(ChannelOrderVerificationProvider provider) {
         return new ChannelOrderVerificationServiceImpl(accounts, verifications,
                 new ChannelOrderVerificationProviderRegistry(Collections.singletonList(provider)), vouchers);

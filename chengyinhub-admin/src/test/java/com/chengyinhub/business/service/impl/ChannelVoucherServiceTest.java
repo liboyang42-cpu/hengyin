@@ -7,6 +7,8 @@ import com.chengyinhub.business.domain.ChannelVoucherAccount;
 import com.chengyinhub.business.domain.MarketingProduct;
 import com.chengyinhub.business.domain.MarketingProductItem;
 import com.chengyinhub.business.domain.OmsTicket;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.domain.dto.ChannelGrantRevocation;
 import com.chengyinhub.business.domain.dto.ChannelVoucherIssueRequest;
 import com.chengyinhub.business.domain.dto.ChannelVoucherRevokeRequest;
@@ -79,8 +81,12 @@ class ChannelVoucherServiceTest {
         grantPort = mock(ChannelRedemptionGrantPort.class);
         when(grantPortResolver.isWired()).thenReturn(true);
         when(grantPortResolver.port()).thenReturn(grantPort);
+        ICmsTopicService topics = mock(ICmsTopicService.class);
+        CmsTopic topic = new CmsTopic();
+        topic.setSelfPlayPrice(new BigDecimal("50.00"));
+        when(topics.selectCmsTopicById(7L)).thenReturn(topic);
         service = new ChannelVoucherServiceImpl(accounts, verifications, vouchers, redemptions,
-                products, tickets, productRoles, grantPortResolver);
+                products, tickets, productRoles, topics, grantPortResolver);
         when(accounts.selectByIdForUpdate(ACCOUNT_ID)).thenReturn(activeAccount());
         when(verifications.selectByIdForUpdate(VERIFICATION_ID)).thenReturn(verifiedOrder());
         when(products.selectById(PRODUCT_ID)).thenReturn(product());
@@ -161,6 +167,7 @@ class ChannelVoucherServiceTest {
         voucher.setInventoryTicketId(5L);
         voucher.setInventoryQuantity(2);
         voucher.setInventoryState(ChannelVoucher.INVENTORY_RESERVED);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher);
         when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenReturn(voucher);
         when(tickets.restoreInventory(5L, 2L)).thenReturn(1);
 
@@ -174,6 +181,7 @@ class ChannelVoucherServiceTest {
     @Test
     void revokeRedeemedVoucherDelegatesToAuthoritativeGrantPort() {
         ChannelVoucher voucher = voucher(ChannelVoucher.STATUS_REDEEMED);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher);
         when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenReturn(voucher);
         when(redemptions.selectByVoucherIdForUpdate(VOUCHER_ID)).thenReturn(activeRedemption());
         when(redemptions.markRevoked(anyLong(), any(), any(), any())).thenReturn(1);
@@ -195,6 +203,7 @@ class ChannelVoucherServiceTest {
     @Test
     void revokeRedeemedVoucherFailsClosedWhenGrantPortIsNotWired() {
         ChannelVoucher voucher = voucher(ChannelVoucher.STATUS_REDEEMED);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher);
         when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenReturn(voucher);
         when(redemptions.selectByVoucherIdForUpdate(VOUCHER_ID)).thenReturn(activeRedemption());
         when(grantPortResolver.isWired()).thenReturn(false);
@@ -210,6 +219,7 @@ class ChannelVoucherServiceTest {
     @Test
     void revocableChannelIsPendingRefundAndDoesNotRevokeAccessYet() {
         ChannelVoucher voucher = voucher(ChannelVoucher.STATUS_REDEEMED);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher);
         when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenReturn(voucher);
         when(redemptions.selectByVoucherIdForUpdate(VOUCHER_ID)).thenReturn(activeRedemption());
         com.chengyinhub.business.domain.dto.ChannelGrantResult assessment =
@@ -232,6 +242,7 @@ class ChannelVoucherServiceTest {
     @Test
     void revokeUsedEntitlementPropagatesAndDoesNotMarkAnything() {
         ChannelVoucher voucher = voucher(ChannelVoucher.STATUS_REDEEMED);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher);
         when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenReturn(voucher);
         when(redemptions.selectByVoucherIdForUpdate(VOUCHER_ID)).thenReturn(activeRedemption());
         doThrow(ChannelVoucherException.conflict("ENTITLEMENT_IN_USE", "已有使用记录"))
@@ -243,6 +254,46 @@ class ChannelVoucherServiceTest {
         assertEquals("ENTITLEMENT_IN_USE", rejection.getReasonCode());
         verify(redemptions, never()).markRevoked(anyLong(), any(), any(), any());
         verify(vouchers, never()).markRevoked(anyLong(), any(), any());
+    }
+
+
+    @Test
+    void defaultExpiryReplayReturnsMetadataWithoutReissuingSecret() {
+        ChannelVoucherIssueRequest request = issueRequest("default-replay");
+        request.setExpiresAt(null);
+        ChannelVoucherView first = service.issue(OPERATOR, request);
+        ArgumentCaptor<ChannelVoucher> saved = ArgumentCaptor.forClass(ChannelVoucher.class);
+        verify(vouchers).insert(saved.capture());
+        when(vouchers.selectByAccountRequest(ACCOUNT_ID, "default-replay")).thenReturn(saved.getValue());
+        ChannelVoucherView replay = service.issue(OPERATOR, request);
+        assertEquals(first.getId(), replay.getId());
+        assertEquals(first.getExpiresAt(), replay.getExpiresAt());
+        assertTrue(replay.getReplayed());
+        org.junit.jupiter.api.Assertions.assertFalse(replay.getCodeAvailable());
+        org.junit.jupiter.api.Assertions.assertNull(replay.getCode());
+        verify(vouchers, org.mockito.Mockito.times(1)).insert(any());
+    }
+
+    @Test
+    void queriesNeverReturnTheIssuedSecretOrGrantSnapshot() {
+        service.issue(OPERATOR, issueRequest("secret"));
+        ArgumentCaptor<ChannelVoucher> saved = ArgumentCaptor.forClass(ChannelVoucher.class);
+        verify(vouchers).insert(saved.capture());
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(saved.getValue());
+        ChannelVoucherView queried = service.get(OPERATOR, VOUCHER_ID);
+        org.junit.jupiter.api.Assertions.assertNull(queried.getCode());
+        org.junit.jupiter.api.Assertions.assertFalse(queried.getCodeAvailable());
+        assertNotNull(saved.getValue().getGrantSnapshotJson());
+    }
+
+    @Test
+    void expiredVerificationCannotIssueCode() {
+        ChannelOrderVerification expired = verifiedOrder();
+        expired.setExpiresAt(new Date(System.currentTimeMillis() - 1));
+        when(verifications.selectByIdForUpdate(VERIFICATION_ID)).thenReturn(expired);
+        assertEquals("VERIFICATION_EXPIRED", assertThrows(ChannelVoucherException.class,
+                () -> service.issue(OPERATOR, issueRequest("expired"))).getReasonCode());
+        verify(vouchers, never()).insert(any());
     }
 
     private ChannelVoucherIssueRequest issueRequest(String requestId) {

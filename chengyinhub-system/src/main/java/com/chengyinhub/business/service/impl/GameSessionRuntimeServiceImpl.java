@@ -49,6 +49,13 @@ import com.chengyinhub.business.service.support.JourneyInitialState;
 import com.chengyinhub.business.service.support.NodeJourneySnapshot;
 import com.chengyinhub.business.service.support.ThemeRuntimeEngine;
 import com.chengyinhub.business.service.support.GameplayRuntimeConfig;
+import com.chengyinhub.business.service.support.PlayHelpUsagePolicy;
+import com.chengyinhub.business.service.support.PlayHelpContent;
+import com.chengyinhub.business.service.support.PlayHelpCostApplication;
+import com.chengyinhub.business.service.support.PlayHelpRunQuotaPolicy;
+import com.chengyinhub.business.util.PuzzleScorePolicy;
+import com.chengyinhub.business.domain.PlayHelpRunQuota;
+import com.chengyinhub.business.mapper.PlayHelpRunQuotaMapper;
 import com.chengyinhub.business.service.support.GameplaySupportMatrix;
 import com.chengyinhub.business.service.support.GameplayActionProjection;
 import com.chengyinhub.business.service.support.GameplayCooperationEngine;
@@ -187,6 +194,476 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     @FunctionalInterface
     interface PhotoEvidenceVerifier {
         void verify(String picUrl, Long memberId);
+    }
+
+
+    @Autowired private PlayHelpCostApplication cooperativeHelpCosts;
+    @Autowired private PlayHelpRunQuotaMapper cooperativeHelpQuotas;
+    @Autowired private com.chengyinhub.business.mapper.GameRuntimeSessionMapper cooperativeGameSessions;
+
+
+    private PlayerScope cooperativePlayer(GameSession session, CmsActivity activity, Long memberId) {
+        PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
+        if (!GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))) return player;
+        PlayTeam locked = playTeamMapper.selectPlayTeamByIdForUpdate(player.teamId);
+        if (locked == null || !Objects.equals(player.teamId,
+                runtimeMapper.selectActiveTeamIdForUpdate(activity.getId(), memberId)))
+            throw error("GAME_FORBIDDEN_SCOPE", "本场队伍成员已变更");
+        return player;
+    }
+
+    private ObjectNode cooperativePuzzle(GameSession session, TopicRouteEngine.State state, Long nodeId, String instance) {
+        ObjectNode cooperative = state.getThemeRuntime().with("cooperativePuzzles");
+        if (!cooperative.has("startedAt")) cooperative.put("startedAt", clock.now().getTime());
+        ObjectNode question = cooperative.with("questions").with(instance);
+        if (!question.has("nodeId")) question.put("nodeId", nodeId).put("startedAt", clock.now().getTime());
+        return question;
+    }
+
+    private JsonNode cooperativeQuest(GameSession session, TopicRouteEngine.State state, Long nodeId) {
+        String key = state.getThemeRuntime().path("gameplay").path("activeQuest").asText();
+        if (key.isEmpty())
+            throw error("GAME_TASK_UNVERIFIED", "请先开始本队任务");
+        JsonNode quest = configuredQuest(session, key);
+        if (bindingNode(session, quest) != nodeId)
+            throw error("GAME_FORBIDDEN_SCOPE", "该题不属于当前合作任务");
+        return quest;
+    }
+
+    private String cooperativeQuestInstance(GameSession session, TopicRouteEngine.State state) {
+        long start = state.getThemeRuntime().path("gameplay").path("activeQuestReceiptId").asLong();
+        if (start <= 0) throw error("GAME_TASK_UNVERIFIED", "合作任务缺少原启动事实");
+        return "game:" + session.getId() + ":quest:" + start;
+    }
+
+    private void requireCooperativeClient(GameSession session, TopicRouteEngine.State state, Long memberId) {
+        if (state.getThemeRuntime().path("cooperativePuzzles").path("acceptedMembers")
+                .path(String.valueOf(memberId)).asInt(-1) != runEpoch(session))
+            throw error("GAME_CLIENT_CAPABILITY_REQUIRED", "请使用支持团队合作的客户端重新进入本题");
+    }
+
+    private void finishCooperativePuzzle(GameSession session, TopicRouteEngine.State state, JsonNode quest,
+            String instance, boolean skipped) {
+        ObjectNode question = (ObjectNode) state.getThemeRuntime().path("cooperativePuzzles").path("questions").path(instance);
+        if (question.has("completedAt")) return;
+        int hintLevel = 0; boolean revealed = false;
+        for (JsonNode use : question.path("helpUses")) {
+            hintLevel = Math.max(hintLevel, use.path("level").asInt());
+            revealed |= PlayHelpUsagePolicy.TYPE_ANSWER.equals(use.path("type").asText());
+        }
+        int validation = sessionConfig(session).path("nodeAnswers").path(quest.path("nodeId").asText()).path("validationMethod").asInt(-1);
+        Integer score = !skipped && validation != 1 && validation != 3 ? null : skipped ? PuzzleScorePolicy.skippedScore()
+                : revealed ? PuzzleScorePolicy.revealedScore() : PuzzleScorePolicy.solvedScore(hintLevel);
+        question.put("completedAt", clock.now().getTime()).put("completionMode", skipped ? "SKIPPED" : "SOLVED")
+                .put("assisted", skipped || revealed).put("puzzleScore", score).put("confirmationStatus", "COMPLETED");
+        JsonNode slot = state.getThemeRuntime().path("gameplay").path("slots").path(quest.path("settlementSlot").asText());
+        question.put("settlementFingerprint",jsonDigest(slot));
+        question.remove("confirmationReason");
+    }
+
+    private void finishSettledCooperativePuzzles(GameSession session, TopicRouteEngine.State state) {
+        if (!GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))) return;
+        Iterator<Map.Entry<String,JsonNode>> questions = state.getThemeRuntime().path("cooperativePuzzles").path("questions").fields();
+        while (questions.hasNext()) {
+            Map.Entry<String,JsonNode> entry = questions.next();
+            JsonNode question = entry.getValue();
+            if (question.has("completedAt") || question.has("cancelledAt") || question.path("answerReceiptId").asLong() <= 0
+                    || question.path("answerAuthorityEpoch").asInt(-1) != runEpoch(session)) continue;
+            JsonNode quest = configuredQuest(session,question.path("questKey").asText());
+            JsonNode slot = state.getThemeRuntime().path("gameplay").path("slots").path(quest.path("settlementSlot").asText());
+            if (slot.isObject() && !slot.path("competitionLost").asBoolean()
+                    && state.getCompletedNodeIds().contains(quest.path("nodeId").asLong()))
+                finishCooperativePuzzle(session,state,quest,entry.getKey(),false);
+        }
+    }
+
+
+    private ObjectNode cooperativeCollectiveOperation(GameSession session, JsonNode quest) {
+        for (JsonNode facility : routeGameplay(session).path("facilities"))
+            if ("PARTICIPANTS".equals(facility.path("targetScope").asText())
+                    && facility.path("operationNodeId").asLong(-1) == quest.path("nodeId").asLong())
+                return objectMapper.createObjectNode().put("operationKind","FACILITY").put("operationKey",facility.path("facilityKey").asText())
+                        .put("action","FACILITY_USE");
+        for (JsonNode plan : routeGameplay(session).path("plans"))
+            if ((!plan.path("terminal").asBoolean(true) || plan.has("storyEndingId"))
+                    && plan.path("operationNodeId").asLong(-1) == quest.path("nodeId").asLong())
+                return objectMapper.createObjectNode().put("operationKind","PLAN").put("operationKey",plan.path("endingKey").asText())
+                        .put("action","PLAN_EXECUTE");
+        return null;
+    }
+
+    private ObjectNode cooperativeConfirmation(GameSession session, TopicRouteEngine.State state, JsonNode quest,
+            Long memberId, Map<String,Object> payload, boolean settled) {
+        requireCooperativeClient(session, state, memberId);
+        Object rawInstance = payload.get("runtimeInstance"), rawRevision = payload.get("answerRevision");
+        if (!(rawInstance instanceof String) || !(rawRevision instanceof Number))
+            throw error("GAME_BAD_REQUEST", "确认须提供原题实例与答对版本");
+        JsonNode found = state.getThemeRuntime().path("cooperativePuzzles").path("questions").path((String)rawInstance);
+        if (!found.isObject() || !quest.path("questKey").asText().equals(found.path("questKey").asText())
+                || found.path("answerReceiptId").asLong() <= 0
+                || !found.path("answerRevision").isIntegralNumber()
+                || !String.valueOf(rawRevision).equals(found.path("answerRevision").asText())
+                || found.path("answerAuthorityEpoch").asInt(-1) != runEpoch(session)
+                || found.path("bindingVersion").asLong(-1) != bindingVersion(session, quest))
+            throw error("GAME_TASK_UNVERIFIED", "确认不属于本队本题原版本的答对事实");
+        if (settled && (!found.has("completedAt") || !found.path("settlementFingerprint").asText().equals(
+                jsonDigest(state.getThemeRuntime().path("gameplay").path("slots").path(quest.path("settlementSlot").asText())))))
+            throw error("GAME_STATE_CONFLICT","该结算槽不属于请求指定的原合作题");
+        if (!settled && (!rawInstance.equals(cooperativeQuestInstance(session, state))
+                || !quest.path("questKey").asText().equals(state.getThemeRuntime().path("gameplay").path("activeQuest").asText())))
+            throw error("GAME_STATE_CONFLICT", "原合作任务实例已变更");
+        if (!settled && cooperativeCollectiveOperation(session,quest) != null)
+            throw error("GAME_OPERATION_REQUIRED","本题须通过原设施参与集合或真实方案执行确认");
+        if (!settled && !state.getThemeRuntime().path("verifiedNodes").path(quest.path("nodeId").asText()).isIntegralNumber())
+            throw error("GAME_TASK_UNVERIFIED", "本题缺少服务端通过证明");
+        return (ObjectNode) found;
+    }
+
+    private boolean cooperativeFacilityOperation(GameSession session, TopicRouteEngine.State state, JsonNode operation) {
+        if (!GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))
+                || !"FACILITY".equals(operation.path("operationKind").asText())) return false;
+        String key = state.getThemeRuntime().path("gameplay").path("activeQuest").asText();
+        if (key.isEmpty()) return false;
+        JsonNode quest = configuredQuest(session, key);
+        if (!quest.path("facilityKey").asText().equals(operation.path("operationKey").asText())) return false;
+        JsonNode pending = state.getThemeRuntime().path("cooperativePuzzles").path("questions").path(cooperativeQuestInstance(session,state));
+        return pending.path("answerReceiptId").asLong() > 0 && !pending.has("completedAt")
+                && pending.path("answerAuthorityEpoch").asInt(-1) == runEpoch(session);
+    }
+
+    private void completeCooperativePuzzle(GameSession session, PlayerScope player, Long nodeId,
+            String instance, Long receiptId, boolean skipped, Long memberId) {
+        if (!GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))) return;
+        GameStoryState owner = requireRouteOwner(session, player.teamId);
+        TopicRouteEngine.State state = routeOwnerState(owner);
+        JsonNode quest = cooperativeQuest(session, state, nodeId);
+        String proofInstance = instance;
+        instance = cooperativeQuestInstance(session, state);
+        ObjectNode question = cooperativePuzzle(session, state, nodeId, instance);
+        if (question.has("completedAt")) return;
+        requireCooperativeClient(session, state, memberId);
+        if (skipped) {
+            state.getThemeRuntime().with("verifiedNodes").remove(String.valueOf(nodeId));
+            com.chengyinhub.business.domain.GameRuntimeSession advanced = cooperativeGameSessions.selectOwnerByInstance(
+                    session.getActivityId(), session.getTopicId(), nodeId,
+                    com.chengyinhub.business.domain.GameRuntimeSession.OWNER_TEAM, player.teamId, instance);
+            if (advanced != null) {
+                advanced = cooperativeGameSessions.selectByIdForUpdate(advanced.getId());
+                JsonNode binding = readObject(advanced.getStateJson());
+                if (binding.path("originalGameSessionId").asLong() != session.getId()
+                        || binding.path("runtimeAuthorityEpoch").asInt(-1) != runEpoch(session))
+                    throw error("GAME_STATE_CONFLICT", "小游戏与原合作局绑定不一致");
+                if (advanced.getDeadlineAt() != null && clock.now().after(advanced.getDeadlineAt()))
+                    throw error("GAME_ROUTE_FINISHED", "小游戏已超时，不能改为跳过");
+                if (!Integer.valueOf(com.chengyinhub.business.domain.GameRuntimeSession.STATUS_RUNNING).equals(advanced.getStatus()))
+                    throw error("GAME_ROUTE_FINISHED", "小游戏已结束，不能改为跳过");
+                ObjectNode advancedState = (ObjectNode) binding.deepCopy();
+                advancedState.putObject("skip").put("skipped", true).put("completionMode", "SKIPPED")
+                        .put("score", 0).put("assisted", true).put("at", clock.now().getTime());
+                advanced.setStateJson(writeJson(advancedState));
+                advanced.setScore(0); advanced.setStatus(com.chengyinhub.business.domain.GameRuntimeSession.STATUS_COMPLETED);
+                advanced.setCompletedAt(clock.now()); advanced.setUpdateTime(clock.now());
+                if (cooperativeGameSessions.updateStateCas(advanced) != 1)
+                    throw error("GAME_STATE_CONFLICT", "小游戏状态已更新，请用原请求重试");
+            }
+            taskEngine.skipAssisted(sessionConfig(session).path("themeConfig"), routeRules(session), state,
+                    quest.path("questKey").asText(), "skip:" + digest(session.getId() + ":" + player.teamId + ":" + instance).substring(0,32),
+                    "TEAM:" + player.teamId, clock.now().getTime());
+            finishCooperativePuzzle(session, state, quest, instance, true);
+            saveRouteOwner(session, owner, state);
+            bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+        } else {
+            if (question.path("answerReceiptId").asLong() > 0) return;
+            if (receiptId == null || receiptId <= 0) throw error("GAME_TASK_UNVERIFIED", "答对缺少实际服务端回执");
+            question.put("answeredAt", clock.now().getTime()).put("answerReceiptId", receiptId)
+                    .put("answerRevision", session.getRevision()).put("answerOwnerRevision", owner.getRevision())
+                    .put("answerAuthorityEpoch", runEpoch(session)).put("proofRuntimeInstance", proofInstance)
+                    .put("confirmationStatus", "WAITING_CONFIRMATION");
+            String reason = quest.path("choices").size() > 0 ? "CHOICE_REQUIRED" : quest.has("facilityKey") ? "FACILITY_CONFIRMATION_REQUIRED" : null;
+            if (state.getThemeRuntime().has("activeOperation") || cooperativeCollectiveOperation(session,quest) != null) reason = "OPERATION_CONFIRMATION_REQUIRED";
+            if (reason == null) {
+                try {
+                    requireTemplateVoteSettled(session, quest);
+                    ObjectNode preview = taskEngine.preview(sessionConfig(session).path("themeConfig"), routeRules(session), state,
+                            quest.path("questKey").asText(), null, objectMapper.createArrayNode(),
+                            "TEAM:" + player.teamId, null, evaluationTime().getTime());
+                    if (preview.path("overflow").asBoolean()) reason = "CAPACITY_CONFIRMATION_REQUIRED";
+                    else if ("BLOCKED_COST".equals(preview.path("status").asText())) reason = "COST_CONFIRMATION_REQUIRED";
+                } catch (IllegalArgumentException | IllegalStateException unavailable) {
+                    reason = "PREVIEW_UNAVAILABLE";
+                } catch (GameSessionException blocked) {
+                    if (!"GAME_TEMPLATE_VOTE_REQUIRED".equals(blocked.getErrorCode())) throw blocked;
+                    reason = blocked.getErrorCode();
+                }
+            }
+            if (quest.has("facilityKey")) {
+                JsonNode facility = configuredCooperation(session,"facilities","facilityKey",quest.path("facilityKey").asText());
+                if (facility.has("operationNodeId")) {
+                    JsonNode proof = state.getThemeRuntime().path("operationFacts").path("FACILITY:" + quest.path("facilityKey").asText());
+                    if (!proof.isObject() || proof.path("epoch").asInt(-1) != runEpoch(session)) reason = "OPERATION_PROOF_REQUIRED";
+                }
+            }
+            if (reason != null) {
+                question.put("confirmationReason", reason);
+                if ("OPERATION_PROOF_REQUIRED".equals(reason)) question.put("confirmationStatus","WAITING_OPERATION");
+                saveRouteOwner(session, owner, state);
+                return;
+            }
+            saveRouteOwner(session, owner, state);
+            GameSessionCommand settle = new GameSessionCommand();
+            settle.setActivityId(session.getActivityId()); settle.setNodeId(nodeId);
+            settle.setAction("QUEST_RESOLVE"); settle.setAuthorityEpoch(runEpoch(session));
+            settle.getPayload().put("questKey", quest.path("questKey").asText());
+            settle.getPayload().put("runtimeInstance", instance);
+            settle.getPayload().put("answerRevision", question.path("answerRevision").asInt());
+            routeQuestAction(GameActorContext.player(memberId),
+                    requireActivity(session.getActivityId(), true), session, settle, receiptId);
+            JsonNode settled = routeOwnerState(requireRouteOwner(session, player.teamId)).getThemeRuntime()
+                    .path("gameplay").path("slots").path(quest.path("settlementSlot").asText());
+            if (!settled.isObject()) {
+                owner = requireRouteOwner(session, player.teamId); state = routeOwnerState(owner);
+                state.getThemeRuntime().with("cooperativePuzzles").with("questions").with(instance)
+                        .put("confirmationStatus", "WAITING_CONFIRMATION").put("confirmationReason", "COST_CONFIRMATION_REQUIRED");
+                saveRouteOwner(session, owner, state);
+            }
+        }
+    }
+
+    private Map<String, Object> cooperativePuzzleView(GameSession session, TopicRouteEngine.State state) {
+        Map<String, Object> view = new LinkedHashMap<>();
+        JsonNode cooperative = state.getThemeRuntime().path("cooperativePuzzles");
+        ArrayNode questions = objectMapper.createArrayNode();
+        int total = 0;
+        boolean unscored = false;
+        long timerNow = "PAUSED".equals(runControl(session).path("operationStatus").asText())
+                ? runControl(session).path("pausedAt").asLong(clock.now().getTime()) : clock.now().getTime();
+        long completedAt = 0;
+        Iterator<Map.Entry<String, JsonNode>> entries = cooperative.path("questions").fields();
+        while (entries.hasNext()) {
+            Map.Entry<String, JsonNode> entry = entries.next();
+            JsonNode row = entry.getValue();
+            ObjectNode visible = objectMapper.createObjectNode().put("runtimeInstance", entry.getKey());
+            long until = row.path("completedAt").asLong(row.path("cancelledAt").asLong(timerNow));
+            visible.put("elapsedMillis", Math.max(0, until - row.path("startedAt").asLong(until) - row.path("pausedMillis").asLong()));
+            completedAt = Math.max(completedAt, row.path("completedAt").asLong());
+            for (String field : Arrays.asList("nodeId", "questKey", "sourceNodeId", "bindingVersion", "startedAt", "answeredAt", "answerReceiptId", "answerRevision", "answerOwnerRevision", "answerAuthorityEpoch", "confirmationStatus", "confirmationReason", "cancelledAt", "completedAt", "completionMode", "assisted", "puzzleScore", "helpUses"))
+                if (row.has(field)) visible.set(field, row.get(field).deepCopy());
+            if (row.path("answerReceiptId").asLong() > 0 && !row.has("completedAt") && !row.has("cancelledAt")) {
+                JsonNode quest = configuredQuest(session,row.path("questKey").asText());
+                boolean currentAuthority = row.path("answerAuthorityEpoch").asInt(-1) == runEpoch(session)
+                        && row.path("bindingVersion").asLong(-1) == bindingVersion(session,quest);
+                if (!currentAuthority) {
+                    visible.put("confirmationStatus","UNAVAILABLE").put("confirmationReason","ORIGINAL_AUTHORITY_CHANGED");
+                    questions.add(visible);
+                    continue;
+                }
+                ObjectNode confirmation = visible.putObject("confirmation").put("action","QUEST_RESOLVE")
+                        .put("runtimeInstance",entry.getKey()).put("answerRevision",row.path("answerRevision").asInt())
+                        .put("authorityEpoch",row.path("answerAuthorityEpoch").asInt()).put("expectedRevision",session.getRevision())
+                        .put("requiresCurrentLeader",true);
+                ObjectNode collective = cooperativeCollectiveOperation(session,quest);
+                if (collective != null) {
+                    confirmation.put("action",collective.path("action").asText());
+                    confirmation.set("requiredOperation",collective);
+                    confirmation.putArray("inputs").add("FACILITY_USE".equals(collective.path("action").asText()) ? "participants" : "proposalKey")
+                            .add("discardRewards").add("previewVersion");
+                }
+                ArrayNode inputs = collective == null ? confirmation.putArray("inputs").add("runtimeInstance").add("answerRevision")
+                        : confirmation.withArray("inputs");
+                if (collective == null) {
+                    if (quest.path("choices").size() > 0) inputs.add("choiceKey");
+                    inputs.add("discardRewards").add("previewVersion");
+                }
+                if (quest.has("facilityKey")) {
+                    JsonNode facility = configuredCooperation(session,"facilities","facilityKey",quest.path("facilityKey").asText());
+                    if (facility.has("operationNodeId")) {
+                        JsonNode proof = state.getThemeRuntime().path("operationFacts").path("FACILITY:" + quest.path("facilityKey").asText());
+                        boolean verified = proof.isObject() && proof.path("epoch").asInt(-1) == runEpoch(session);
+                        ObjectNode operation = confirmation.putObject("requiredOperation").put("operationKind","FACILITY")
+                                .put("operationKey",quest.path("facilityKey").asText()).put("sourceNodeId",facility.path("operationNodeId").asLong())
+                                .put("verified",verified);
+                        operation.put("action",verified ? "QUEST_RESOLVE" : "OPERATION_START");
+                        if (!verified) visible.put("confirmationStatus","WAITING_OPERATION").put("confirmationReason","OPERATION_PROOF_REQUIRED");
+                        else if ("WAITING_OPERATION".equals(visible.path("confirmationStatus").asText()))
+                            visible.put("confirmationStatus","WAITING_CONFIRMATION").put("confirmationReason","FACILITY_CONFIRMATION_REQUIRED");
+                    }
+                }
+            }
+            questions.add(visible);
+            if (row.has("completedAt")) {
+                if (!row.path("puzzleScore").isIntegralNumber()) unscored = true;
+                else total = Math.addExact(total, row.path("puzzleScore").asInt());
+            }
+        }
+        view.put("version", 1); view.put("gameSessionId", session.getId());
+        view.put("authorityEpoch", runEpoch(session)); view.put("puzzleScore", unscored ? null : Integer.valueOf(total));
+        view.put("scoreStatus", unscored ? "NOT_SCORED" : "SCORED");
+        view.put("serverTime", clock.now().getTime()); view.put("questions", questions);
+        if (cooperative.has("startedAt")) {
+            view.put("startedAt", cooperative.path("startedAt").asLong());
+            long until = naturallyCompleted(session, state) && completedAt > 0 ? completedAt : timerNow;
+            view.put("elapsedMillis", Math.max(0, until - cooperative.path("startedAt").asLong() - cooperative.path("pausedMillis").asLong()));
+        }
+        return view;
+    }
+
+    /** Real shared-run identity is mandatory; help and skip never create a personal progress/reward fact. */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> cooperativePuzzleHelp(Long memberId, Long activityId, Long gameSessionId,
+            Long nodeId, String instance, Integer epoch, String operation, Integer level, String requestId, String capabilities) {
+        if (memberId == null || memberId <= 0 || activityId == null || activityId <= 0 || gameSessionId == null || gameSessionId <= 0)
+            throw error("GAME_BAD_REQUEST", "合作局身份不完整");
+        GameSession session = runtimeMapper.selectSessionByActivityForUpdate(activityId);
+        if (!isSharedRoute(session) || !Objects.equals(gameSessionId, session.getId())
+                || !GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig")))
+            throw error("GAME_FORBIDDEN_SCOPE", "该身份不属于合作团队局");
+        if (epoch == null || epoch != runEpoch(session) || StringUtils.isBlank(instance) || nodeId == null)
+            throw error("GAME_AUTHORITY_CONFLICT", "合作局身份或权威版本已变更");
+        com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration =
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.parse(null, null, capabilities);
+        if (declaration.malformed() || declaration.capabilities().getOrDefault("game.teamCooperation", 0) < 1)
+            throw error("GAME_CLIENT_CAPABILITY_REQUIRED", "客户端尚未声明团队合作能力");
+        CmsActivity activity = requireActivity(activityId, true);
+        PlayerScope player = cooperativePlayer(session, activity, memberId);
+        if (runControl(session).path("exitedTeams").has(String.valueOf(player.teamId)))
+            throw error("GAME_TEAM_EXITED", "本队已退出本局");
+        GameStoryState owner = requireRouteOwner(session, player.teamId);
+        TopicRouteEngine.State state = routeOwnerState(owner);
+        ObjectNode question = state.getThemeRuntime().with("cooperativePuzzles").with("questions").with(instance);
+        if (!question.has("nodeId") || question.path("nodeId").asLong() != nodeId)
+            throw error("GAME_FORBIDDEN_SCOPE", "该题不属于本队原任务实例");
+        if (!"VIEW".equals(operation) && StringUtils.isNotBlank(requestId)) {
+            JsonNode prior = state.getThemeRuntime().path("cooperativePuzzles").path("requests").path(digest(memberId + ":" + requestId));
+            if (prior.isObject()) {
+                String fingerprint = digest(instance + ":" + nodeId + ":" + operation + ":" + level);
+                if (!fingerprint.equals(prior.path("fingerprint").asText()))
+                    throw error("GAME_REQUEST_CONFLICT", "同一请求编号不能更换帮助动作");
+                return objectMapper.convertValue(prior.path("response"), Map.class);
+            }
+        }
+        if (!question.has("completedAt")) {
+            JsonNode activeOperation = state.getThemeRuntime().path("activeOperation");
+            boolean originalQuest = instance.equals(cooperativeQuestInstance(session,state))
+                    && (jointQuestOperation(session,state,activeOperation) || cooperativeFacilityOperation(session,state,activeOperation));
+            if (!instance.equals(sharedInstance(session, state, nodeId)) && !originalQuest)
+                throw error("GAME_STATE_CONFLICT", "该题不属于当前任务实例");
+            cooperativeQuest(session, state, nodeId);
+        }
+        long original = question.path("sourceNodeId").asLong(nodeId);
+        JsonNode snapshot = sessionConfig(session), config = snapshot.path("nodeConfigs").path(String.valueOf(original));
+        JsonNode ladder = config.path("hintLadder");
+        List<PlayHelpUsagePolicy.LevelSpec> specs = PlayHelpUsagePolicy.levels(ladder);
+        Integer configured = PlayHelpRunQuotaPolicy.runFreeUses(snapshot);
+        int total = configured == null ? 0 : configured;
+        String pool = "shared-game:" + session.getId();
+        PlayHelpRunQuota quota = cooperativeHelpQuotas.selectByScope(session.getTopicId(), activityId, pool, player.teamId);
+        if (quota != null && !Objects.equals(quota.getQuotaTotal(), total))
+            throw error("GAME_CONFIG_INVALID", "本局免费提示次数与冻结额度不一致");
+        int remaining = quota == null ? total : Math.max(0, quota.getQuotaTotal() - quota.getQuotaUsed());
+        Map<String, Object> response = new LinkedHashMap<>();
+        if ("VIEW".equals(operation)) {
+            Set<Integer> unlocked = new HashSet<>();
+            for (JsonNode use : question.path("helpUses")) unlocked.add(use.path("level").asInt());
+            List<PlayHelpUsagePolicy.LevelView> levels = new ArrayList<>();
+            JsonNode currentQuest = configuredQuest(session,question.path("questKey").asText());
+            int method = snapshot.path("nodeAnswers").path(String.valueOf(original)).path("validationMethod").asInt(-1);
+            boolean skipRestricted = currentQuest.has("facilityKey") || (method != 1 && method != 3);
+            for (String section : Arrays.asList("scan","photoCheck","steps","album","predict"))
+                skipRestricted |= config.path(section).path("enabled").asBoolean();
+            for (PlayHelpUsagePolicy.LevelView row : PlayHelpUsagePolicy.views(ladder,unlocked,remaining)) {
+                if (skipRestricted && PlayHelpUsagePolicy.TYPE_SKIP.equals(row.type()))
+                    levels.add(new PlayHelpUsagePolicy.LevelView(row.level(),row.type(),false,row.unlocked(),row.free(),
+                            row.costPoints(),row.freeQuota(),"REAL_OPERATION_REQUIRED"));
+                else levels.add(row);
+            }
+            response.put("levels", levels);
+            if (state.getThemeRuntime().path("cooperativePuzzles").path("acceptedMembers").path(String.valueOf(memberId)).asInt(-1) != epoch) {
+                state.getThemeRuntime().with("cooperativePuzzles").with("acceptedMembers").put(String.valueOf(memberId), epoch);
+                saveRouteOwner(session, owner, state);
+            }
+            long originalProof = state.getThemeRuntime().path("verifiedNodes").path(String.valueOf(original)).asLong();
+            if (!question.has("answeredAt") && !question.has("completedAt") && originalProof > 0
+                    && instance.equals(cooperativeQuestInstance(session,state))) {
+                completeCooperativePuzzle(session,player,nodeId,instance,originalProof,false,memberId);
+                owner = requireRouteOwner(session,player.teamId); state = routeOwnerState(owner);
+            }
+        } else {
+            if (!Arrays.asList("USE", "SKIP").contains(operation)) throw error("GAME_BAD_REQUEST", "帮助动作无效");
+            if (StringUtils.isBlank(requestId) || requestId.length() > 64) throw error("GAME_BAD_REQUEST", "缺少或无效请求编号");
+            String requestKey = digest(memberId + ":" + requestId);
+            String fingerprint = digest(instance + ":" + nodeId + ":" + operation + ":" + level);
+            ObjectNode requests = state.getThemeRuntime().with("cooperativePuzzles").with("requests");
+            state.getThemeRuntime().with("cooperativePuzzles").with("acceptedMembers").put(String.valueOf(memberId), epoch);
+            if ((question.has("completedAt") || question.has("answeredAt")) && !("USE".equals(operation) && question.path("helpUses").has(String.valueOf(level)))) {
+                if ("SKIP".equals(operation) && "SKIPPED".equals(question.path("completionMode").asText())) {
+                    response.put("cooperation", cooperativePuzzleView(session, state));
+                    return response;
+                }
+                throw error("GAME_ROUTE_FINISHED", "本题已通过或完成，请继续真实结算确认");
+            }
+            if (!question.has("completedAt") && !question.has("answeredAt")) {
+                assertSharedRouteWritable(memberId, session.getTopicId(), activityId, nodeId, epoch);
+                requireNaturalPlayOpen(session, state);
+            }
+            if (requests.size() >= 4096) throw error("GAME_STATE_CONFLICT", "本局帮助回执容量已满");
+            if ("SKIP".equals(operation)) {
+                boolean allowed = false;
+                for (PlayHelpUsagePolicy.LevelSpec spec : specs)
+                    if (spec.usable() && PlayHelpUsagePolicy.TYPE_SKIP.equals(spec.type())) allowed = true;
+                if (!allowed) throw error("GAME_BAD_REQUEST", "该节点未配置跳过");
+                int vm = snapshot.path("nodeAnswers").path(String.valueOf(original)).path("validationMethod").asInt(-1);
+                if (vm != 1 && vm != 3) throw error("GAME_BAD_REQUEST", "现场凭证或非答题节点不能直接跳过");
+                for (String section : Arrays.asList("scan", "photoCheck", "steps", "album", "predict"))
+                    if (config.path(section).path("enabled").asBoolean())
+                        throw error("GAME_BAD_REQUEST", "该节点依赖现场凭证，不能跳过");
+                saveRouteOwner(session, owner, state);
+                completeCooperativePuzzle(session, player, nodeId, instance, null, true, memberId);
+                owner = requireRouteOwner(session, player.teamId); state = routeOwnerState(owner);
+                response.put("skipped", true); response.put("completionMode", "SKIPPED"); response.put("puzzleScore", 0);
+            } else {
+                PlayHelpUsagePolicy.LevelSpec selected = null;
+                for (PlayHelpUsagePolicy.LevelSpec spec : specs) if (Objects.equals(level, spec.level())) selected = spec;
+                if (selected == null || !selected.usable() || PlayHelpUsagePolicy.TYPE_SKIP.equals(selected.type()))
+                    throw error("GAME_BAD_REQUEST", "该帮助层不可用");
+                JsonNode selectedEntry = null;
+                for (JsonNode entry : ladder) if (entry.path("level").asInt() == level) selectedEntry = entry;
+                String content = PlayHelpContent.approved(selected.level(), selected.type(), selectedEntry,
+                        snapshot.path("nodeAnswers").path(String.valueOf(original)));
+                if (content == null) throw error("GAME_CONFIG_INVALID", "该层内容不可用，未扣除代价");
+                boolean unlocked = question.path("helpUses").has(String.valueOf(level));
+                int charged = 0;
+                if (!unlocked) {
+                    boolean free = selected.costPoints() > 0 && remaining > 0;
+                    PlayHelpUsagePolicy.Scope scope = new PlayHelpUsagePolicy.Scope(session.getTopicId(), activityId, nodeId,
+                            "coop:" + digest(session.getId() + ":" + player.teamId + ":" + epoch + ":" + instance).substring(0, 32));
+                    PlayHelpCostApplication.Charge charge = cooperativeHelpCosts.use(memberId,
+                            PlayHelpUsagePolicy.scopeKey(scope), level, free ? 1 : 0, selected.costPoints(), requestId);
+                    charged = charge.chargedPoints();
+                    if (free && charge.applied() && !charge.alreadyUnlocked()) {
+                        cooperativeHelpQuotas.insertSharedIfAbsent(session.getTopicId(), activityId, pool, player.teamId, total, 0);
+                        if (cooperativeHelpQuotas.consumeOne(session.getTopicId(), activityId, pool, player.teamId) != 1)
+                            throw error("GAME_STATE_CONFLICT", "免费提示额度已更新，请用原请求重试");
+                        remaining--;
+                    }
+                    question.with("helpUses").putObject(String.valueOf(level)).put("level", level).put("type", selected.type())
+                            .put("pointsCharged", charged).put("usedAt", clock.now().getTime());
+                    response.put("balanceAfter", charge.balanceAfter());
+                }
+                response.put("content", content); response.put("level", level); response.put("alreadyUnlocked", unlocked);
+                response.put("chargedPoints", charged);
+            }
+            response.put("remainingFreeUses", remaining);
+            response.put("cooperation", cooperativePuzzleView(session, state));
+            ObjectNode claim = state.getThemeRuntime().with("cooperativePuzzles").with("requests").putObject(requestKey);
+            claim.put("fingerprint", fingerprint); claim.set("response", objectMapper.valueToTree(response));
+            saveRouteOwner(session, owner, state);
+            bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+            return response;
+        }
+        response.put("remainingFreeUses", remaining);
+        response.put("cooperation", cooperativePuzzleView(session, state));
+        return response;
     }
 
     /** Shared ledger owner; construction is effect-free and never captures/calls this runtime. */
@@ -665,6 +1142,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if ("OPERATION_CANCEL".equals(command.getAction())) {
             if (!command.getPayload().isEmpty()) throw error("GAME_BAD_REQUEST", "取消当前操作无需参数");
             JsonNode cancelled = state.getThemeRuntime().path("activeOperation");
+            if (cooperativeFacilityOperation(session,state,cancelled) && jointQuestOperation(session,state,cancelled))
+                throw error("GAME_STATE_CONFLICT","本题已通过，请确认任务或明确取消整个任务");
             if (cancelled.isObject()) {
                 // Joint operations own only the matching active quest cache; other node facts remain valid.
                 if (jointQuestOperation(session, state, cancelled)) state.getThemeRuntime().with("gameplay").with("pendingTaskEffects").remove(state.getThemeRuntime().path("gameplay").path("activeQuest").asText());
@@ -674,11 +1153,17 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             state.getThemeRuntime().remove("activeOperation");
         } else {
             JsonNode target = operationTarget(session, text(command.getPayload().get("operationKind"), 32), command.getPayload().get("operationKey"));
+            if (cooperativeFacilityOperation(session,state,target)) {
+                JsonNode quest = configuredQuest(session,state.getThemeRuntime().path("gameplay").path("activeQuest").asText());
+                if (target.path("sourceNodeId").asLong() == quest.path("nodeId").asLong())
+                    throw error("GAME_STATE_CONFLICT","本题已有真实通过证明，请继续任务确认");
+                requireCooperativeClient(session,state,actor.getMemberId());
+            }
             requirePlayableStation(activity, session, target.path("nodeId").asLong());
             CooperationScope scope = "PLAN".equals(target.path("operationKind").asText()) || "WORLD_SHARED".equals(GameplayRuntimeConfig.getWorldMode(sessionConfig(session).path("themeConfig"))) ? cooperationScope(session, true) : null;
             if (state.getThemeRuntime().has("activeOperation")) throw error("GAME_PUBLIC_OPERATION_LOCKED", "请先完成或取消当前操作题组");
             if (state.getThemeRuntime().path("gameplay").has("activeQuest")) {
-                if (!jointQuestOperation(session,state,target)) throw error("GAME_RESOURCE_RESERVED", "请先完成或取消当前任务");
+                if (!jointQuestOperation(session,state,target) && !cooperativeFacilityOperation(session,state,target)) throw error("GAME_RESOURCE_RESERVED", "请先完成或取消当前任务");
             }
             if ("PLAN".equals(target.path("operationKind").asText())) {
                 if(command.getPayload().containsKey("costOption"))throw error("GAME_BAD_REQUEST","方案操作不接受任选费用组");
@@ -768,7 +1253,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
 
     private ActionResult routeCooperationAction(GameActorContext actor, CmsActivity activity, GameSession session, GameSessionCommand command, Long receiptId) {
         requireSessionStatus(session, GameSession.RUNNING); requireOnlineRun(runControl(session)); requireActivityServiceWindow(activity, evaluationTime());
-        PlayerScope player = requirePlayer(actor, activity); requireRouteLeader(actor.getMemberId(), activity.getId(), player.teamId);
+        PlayerScope player = cooperativePlayer(session, activity, actor.getMemberId()); requireRouteLeader(actor.getMemberId(), activity.getId(), player.teamId);
+        if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))
+                && Arrays.asList("FACILITY_USE","PLAN_EXECUTE").contains(command.getAction())) {
+            TopicRouteEngine.State current = routeOwnerState(requireRouteOwner(session,player.teamId));
+            if (current.getThemeRuntime().path("gameplay").has("activeQuest"))
+                requireCooperativeClient(session,current,actor.getMemberId());
+        }
         if ("PLAN_PROPOSE".equals(command.getAction())) requirePlanNodeEligible(session, routeOwnerState(requireRouteOwner(session, player.teamId)), configuredCooperation(session, "plans", "endingKey", command.getPayload().get("endingKey")));
         if ("FACILITY_USE".equals(command.getAction()) && !"WORLD_SHARED".equals(GameplayRuntimeConfig.getWorldMode(sessionConfig(session).path("themeConfig")))) {
             GameStoryState owner = requireRouteOwner(session, player.teamId); TopicRouteEngine.State state = routeOwnerState(owner);
@@ -781,6 +1272,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             try { applied = cooperationEngine.settleFacility(sessionConfig(session).path("themeConfig"), routeRules(session),new TopicRouteEngine.State(),rewardOwners,Collections.singletonMap(player.teamId,actor.getMemberId()),player.teamId,actor.getMemberId(),facilityPayload(state,command.getPayload()),"receipt:"+receiptId,evaluationTime().getTime());state=rewardOwners.get(player.teamId); }
             catch (IllegalArgumentException | IllegalStateException invalid) { throw error("GAME_COOPERATION_UNAVAILABLE", invalid.getMessage()); }
             if(!"BLOCKED_COST".equals(applied.path("status").asText()))consumeFacilityOperation(state, facility.path("facilityKey").asText());
+            finishSettledCooperativePuzzles(session,state);
             saveRouteOwner(session, owner, state); bumpSession(session, session.getStatus(), session.getCurrentChapterId(), actor.getMemberId(), clock.now());
             return result(session, publicRouteSettlement(session, applied));
         }
@@ -850,6 +1342,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 }
             }
         }
+        for (TopicRouteEngine.State target : scope.teams.values()) finishSettledCooperativePuzzles(session,target);
         persistCooperation(scope); bumpSession(session, session.getStatus(), session.getCurrentChapterId(), actor.getMemberId(), clock.now());
         Map<String, Object> data = new LinkedHashMap<>(); data.put("result", publicRouteSettlement(session, applied));
         data.put("cooperation", cooperationEngine.view(sessionConfig(session).path("themeConfig"), scope.world, scope.teams, player.teamId, scope.leaders));
@@ -910,9 +1403,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 result.put("result", preview); state = scope.teams.get(player.teamId);
             } catch (IllegalArgumentException | IllegalStateException invalid) { throw error("GAME_COOPERATION_UNAVAILABLE", invalid.getMessage()); }
         } else if ("QUEST_RESOLVE".equals(normalized)) {
-            GameSessionCommand shape = new GameSessionCommand(); shape.setPayload(payload); runPayload(shape, "questKey", "choiceKey", "discardRewards", "costOption");
+            GameSessionCommand shape = new GameSessionCommand(); shape.setPayload(payload);
+            if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig")))
+                runPayload(shape, "questKey", "choiceKey", "discardRewards", "costOption", "runtimeInstance", "answerRevision");
+            else runPayload(shape, "questKey", "choiceKey", "discardRewards", "costOption");
             String questKey = text(payload.get("questKey"), 64), choiceKey = text(payload.get("choiceKey"), 64);
             JsonNode quest = configuredQuest(session, questKey); requireEligibleQuest(session, state, quest);
+            if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig")))
+                cooperativeConfirmation(session,state,quest,actor.getMemberId(),payload,false);
             if (routeFacilityOccupied(session, quest)) {
                 JsonNode facility = configuredCooperation(session, "facilities", "facilityKey", quest.path("facilityKey").asText());
                 CooperationScope scope = cooperationScope(session, false);
@@ -1053,14 +1551,24 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     private ActionResult routeQuestAction(GameActorContext actor, CmsActivity activity, GameSession session,
                                           GameSessionCommand command, Long receiptId) {
         requireSessionStatus(session, GameSession.RUNNING);
-        runPayload(command, "questKey", "choiceKey", "discardRewards", "previewVersion", "costOption");
+        boolean cooperativeResolve = GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))
+                && "QUEST_RESOLVE".equals(command.getAction());
+        if (cooperativeResolve) runPayload(command, "questKey", "choiceKey", "discardRewards", "previewVersion", "costOption", "runtimeInstance", "answerRevision");
+        else runPayload(command, "questKey", "choiceKey", "discardRewards", "previewVersion", "costOption");
         if (!(command.getPayload().get("questKey") instanceof String)) throw error("GAME_BAD_REQUEST", "任务动作参数无效");
         JsonNode quest = configuredQuest(session, (String)command.getPayload().get("questKey"));
-        PlayerScope player = requirePlayer(actor, activity);
+        PlayerScope player = cooperativePlayer(session, activity, actor.getMemberId());
         if (runControl(session).path("exitedTeams").has(String.valueOf(player.teamId))) throw error("GAME_TEAM_EXITED", "本队已退出本局");
         GameStoryState owner = requireRouteOwner(session, player.teamId); TopicRouteEngine.State state = routeOwnerState(owner);
         if (command.getAuthorityEpoch() == null || command.getAuthorityEpoch() != runEpoch(session)) throw error("GAME_AUTHORITY_CONFLICT", "本局权威版本已更新");
         String slot = quest.path("settlementSlot").asText(); JsonNode prior = state.getThemeRuntime().path("gameplay").path("slots").path(slot);
+        String cooperativeInstance = null;
+        String cancelledCooperativeInstance = GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))
+                && "QUEST_CANCEL".equals(command.getAction()) ? cooperativeQuestInstance(session,state) : null;
+        if (cooperativeResolve) {
+            cooperativeConfirmation(session, state, quest, actor.getMemberId(), command.getPayload(), prior.isObject());
+            cooperativeInstance = (String) command.getPayload().get("runtimeInstance");
+        }
         String choice = command.getPayload().containsKey("choiceKey") ? text(command.getPayload().get("choiceKey"), 64) : null;
         if (command.getPayload().containsKey("choiceKey") && !(command.getPayload().get("choiceKey") instanceof String)) throw error("GAME_BAD_REQUEST", "配包选项无效");
         JsonNode discarded = command.getPayload().containsKey("discardRewards") ? objectMapper.valueToTree(command.getPayload().get("discardRewards")) : objectMapper.createArrayNode();
@@ -1078,7 +1586,9 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         }
         requireEligibleQuest(session, state, quest);
         if ("QUEST_RESOLVE".equals(command.getAction())) requireTemplateVoteSettled(session, quest);
-        if (state.getThemeRuntime().has("activeOperation")) throw error("GAME_PUBLIC_OPERATION_LOCKED", "请先取消或完成当前操作题组");
+        if (state.getThemeRuntime().has("activeOperation") && !(cooperativeResolve
+                && cooperativeFacilityOperation(session, state, state.getThemeRuntime().path("activeOperation"))))
+            throw error("GAME_PUBLIC_OPERATION_LOCKED", "请先取消或完成当前操作题组");
         if (!"QUEST_CANCEL".equals(command.getAction())) {
             boolean lostFacility = routeFacilityOccupied(session, quest);
             if (!lostFacility) requireRoutePaidCostAllowed(session, state, questCosts);
@@ -1121,7 +1631,21 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (freshStart && state.getThemeRuntime().path("gameplay").has("activeQuest")) {
             state.getThemeRuntime().with("gameplay").put("activeQuestReceiptId", receiptId);
             bindBasicArrivalProof(session, state, quest, actor.getMemberId());
+            if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))) {
+                ObjectNode question = cooperativePuzzle(session, state, bindingNode(session, quest),
+                        sharedInstance(session, state, bindingNode(session, quest)));
+                question.put("sourceNodeId", quest.path("nodeId").asLong()).put("questKey", quest.path("questKey").asText())
+                        .put("bindingVersion", bindingVersion(session, quest));
+                for (JsonNode previous : state.getThemeRuntime().path("cooperativePuzzles").path("questions")) {
+                    if (previous != question && quest.path("questKey").asText().equals(previous.path("questKey").asText())
+                            && previous.path("helpUses").isObject())
+                        question.set("helpUses", previous.path("helpUses").deepCopy());
+                }
+            }
         }
+        if (cancelledCooperativeInstance != null)
+            state.getThemeRuntime().with("cooperativePuzzles").with("questions").with(cancelledCooperativeInstance)
+                    .put("cancelledAt",clock.now().getTime()).put("confirmationStatus","CANCELLED");
         if (!state.getThemeRuntime().path("gameplay").has("activeQuest")) {
             state.getThemeRuntime().with("gameplay").remove("activeQuestReceiptId");
             state.getThemeRuntime().with("gameplay").with("pendingTaskEffects").remove(quest.path("questKey").asText());
@@ -1132,12 +1656,19 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if ("QUEST_RESOLVE".equals(command.getAction()) && !applied.path("competitionLost").asBoolean() && !"BLOCKED_COST".equals(applied.path("status").asText())) {
             applied.put("receiptId", receiptId).put("actorMemberId", actor.getMemberId());
             state.getThemeRuntime().with("gameplay").with("slots").set(slot, applied.deepCopy());
+            if (cooperativeResolve) {
+                finishCooperativePuzzle(session, state, quest, cooperativeInstance, false);
+                if (quest.has("facilityKey")) consumeFacilityOperation(state, quest.path("facilityKey").asText());
+            }
             if (state.getThemeRuntime().has("result") && !"WORLD_SHARED".equals(GameplayRuntimeConfig.getWorldMode(sessionConfig(session).path("themeConfig")))) {
                 owner.setEndingCode(state.getThemeRuntime().path("result").path("endingId").asText(null)); owner.setStatus("ENDING_RESOLVED");
             }
         }
         saveRouteOwner(session, owner, state); bumpSession(session, session.getStatus(), session.getCurrentChapterId(), actor.getMemberId(), clock.now());
-        return result(session, publicRouteSettlement(session, applied));
+        Map<String,Object> response = publicRouteSettlement(session, applied);
+        if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig")))
+            response.put("cooperation", cooperativePuzzleView(session,state));
+        return result(session,response);
     }
 
     private ActionResult routeZeroHpSync(GameActorContext actor,CmsActivity activity,GameSession session,GameSessionCommand command) {
@@ -1227,7 +1758,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (runtimeMapper.insertStoryState(owner) != 1) throw error("GAME_STATE_CONFLICT", "队伍状态初始化失败");
     }
 
-    private GameStoryState requireRouteOwner(GameSession session, Long teamId) { return sharedRunControl().requireRouteOwner(session, teamId); }
+    private GameStoryState requireRouteOwner(GameSession session, Long teamId) {
+        if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig"))) {
+            GameStoryState owner = runtimeMapper.selectStoryStateForUpdate(session.getId(), "TEAM", teamId);
+            if (owner == null) throw error("GAME_FORBIDDEN_SCOPE", "本队不属于原局冻结范围");
+            return owner;
+        }
+        return sharedRunControl().requireRouteOwner(session, teamId);
+    }
 
     @Override
     @Transactional(rollbackFor=Exception.class)
@@ -1258,6 +1796,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         snapshot.put("teamId", player.teamId);
         snapshot.put("authorityEpoch", runEpoch(session));
         snapshot.put("runtimeInstance", sharedInstance(session, routeOwnerState(owner), nodeId));
+        if (GameplayRuntimeConfig.cooperativePuzzles(snapshot.path("themeConfig")))
+            snapshot.put("cooperationVersion", 1);
         if (activeChallenge(session, routeOwnerState(owner), nodeId)) snapshot.set("challenge", survivalEngine.challengeView(snapshot.path("themeConfig"),routeOwnerState(owner)));
         Long selectedOriginal = null;
         if (nodeId != null && !activeChallenge(session, routeOwnerState(owner), nodeId) && (routeGameplay(session).path("quests").size() > 0 || routeOwnerState(owner).getThemeRuntime().path("activeOperation").isObject())) {
@@ -1353,7 +1893,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         GameSession session = runtimeMapper.selectSessionByActivityForUpdate(activityId);
         if (!isSharedRoute(session) || !Objects.equals(topicId, session.getTopicId())) throw error("GAME_FORBIDDEN_SCOPE", "基础到达不属于当前共享场次");
         requireSessionStatus(session, GameSession.RUNNING); requireOnlineRun(runControl(session));
-        CmsActivity activity = requireActivity(activityId, true); PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
+        CmsActivity activity = requireActivity(activityId, true); PlayerScope player = cooperativePlayer(session, activity, memberId);
         if (runControl(session).path("exitedTeams").has(String.valueOf(player.teamId))) throw error("GAME_TEAM_EXITED", "本队已退出");
         if (authorityEpoch == null || authorityEpoch != runEpoch(session)) throw error("GAME_AUTHORITY_CONFLICT", "到达来自旧权威版本");
         if (!Arrays.asList("SCAN", "GPS", "ANSWER").contains(kind) || actionId == null || !actionId.matches("[A-Za-z0-9:_-]{1,80}")) throw error("GAME_BAD_REQUEST", "基础到达标识无效");
@@ -1379,8 +1919,13 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
             ObjectNode run = runControl(session);run.with("arrivals").putObject(arrivalKey(player.teamId,target.path("locationKey").asText())).put("used",true).put("sessionId",session.getId()).put("teamId",player.teamId)
                     .put("nodeId",nodeId).put("version",bindingVersion(session,target)).put("epoch",authorityEpoch).put("verifiedAt",at).put("expiresAt",expires).put("verifiedBy",memberId).put("basicReceiptId",claim.getId());saveRun(session,run);
         }
-        bindBasicArrivalProof(session, state, target, memberId); saveRouteOwner(session, owner,state); bumpSession(session,session.getStatus(),session.getCurrentChapterId(),memberId,clock.now()); appendRunEvent(session,GameActorContext.player(memberId),command,claim.getId(),balancesBefore);
+        bindBasicArrivalProof(session, state, target, memberId); saveRouteOwner(session, owner,state); bumpSession(session,session.getStatus(),session.getCurrentChapterId(),memberId,clock.now());
+        if ((!target.has("operationKind") || jointQuestOperation(session,state,target)) && state.getThemeRuntime().path("verifiedNodes").has(String.valueOf(original)))
+            completeCooperativePuzzle(session, player, nodeId, instance, claim.getId(), false, memberId);
+        appendRunEvent(session,GameActorContext.player(memberId),command,claim.getId(),balancesBefore);
         Map<String,Object> result = new LinkedHashMap<>();result.put("teamId",player.teamId);result.put("receiptId",claim.getId());result.put("runtimeInstance",sharedInstance(session,state,nodeId));result.put("authorityEpoch",authorityEpoch);result.put("basicVerified",state.getThemeRuntime().path("gameplay").path("arrivalFacts").path(String.valueOf(nodeId)).has("consumedBy"));
+        if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig")))
+            result.put("sharedRuntime", sharedRoutePlayer(session, player.teamId, memberId));
         claim.setOutcome("APPLIED");claim.setRevision(session.getRevision());claim.setResultJson(writeJson(result));claim.setUpdateTime(clock.now());if(runtimeMapper.completeReceipt(claim)!=1)throw error("GAME_STATE_CONFLICT","基础到达回执保存失败");return result;
     }
 
@@ -1579,7 +2124,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         requireSessionStatus(session, GameSession.RUNNING);
         requireOnlineRun(runControl(session));
         CmsActivity activity = requireActivity(activityId, true);
-        PlayerScope player = requirePlayer(GameActorContext.player(memberId), activity);
+        PlayerScope player = cooperativePlayer(session, activity, memberId);
         GameStationRun station = requirePlayableStation(activity, session, nodeId);
         GameStoryState owner = requireRouteOwner(session, player.teamId);
         TopicRouteEngine.State state = routeOwnerState(owner), before = routeOwnerState(owner);
@@ -1697,6 +2242,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         event.put("actorMemberId", memberId); event.put("owner", "TEAM:" + player.teamId); event.put("ready", Boolean.TRUE.equals(passed));
         if(failureScope!=null)persistCooperation(failureScope);else saveRouteOwner(session, owner, state);
         bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+        if (Boolean.TRUE.equals(passed) && (!operationNode || participantTaskScope))
+            completeCooperativePuzzle(session, player, nodeId, instance, claim.getId(), false, memberId);
         claim.setOutcome("APPLIED"); claim.setRevision(session.getRevision());
         fact.setRequestHash(hash);
         appendRunEvent(session, GameActorContext.player(memberId), fact, claim.getId(), balancesBefore);
@@ -1795,7 +2342,10 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if(gate!=null)reason=gate;
         else if(summary.path("remainingCount").asInt()==0 || summary.has("facility") && summary.path("facility").path("remainingCount").asInt()==0)reason=Reason.LIMIT_REACHED;
         else if(world!=null && GameplayCooperationEngine.publicFactsSettled("FACILITY_USE".equals(operation)?content:quest && content.has("facilityKey")?configuredCooperation(session,"facilities","facilityKey",content.path("facilityKey").asText()):objectMapper.createObjectNode(),world))reason=Reason.LIMIT_REACHED;
-        else if((active.isObject() && !current) || !progress.path("activeQuest").asText().isEmpty() && !current && !(related!=null && participantFreeQuest(session,state,content,false)))reason=Reason.TASK_ACTIVE;
+        else if((active.isObject() && !current && !(quest && cooperativeFacilityOperation(session,state,active)))
+                || !progress.path("activeQuest").asText().isEmpty() && !current && !(related!=null && participantFreeQuest(session,state,content,false))
+                && !("FACILITY_USE".equals(operation) && cooperativeFacilityOperation(session,state,
+                        objectMapper.createObjectNode().put("operationKind","FACILITY").put("operationKey",key))))reason=Reason.TASK_ACTIVE;
         else if(world!=null && (!operation.startsWith("PLAN") || "PLAN_PROPOSE".equals(next)) && cooperationEngine.isVotingFrozen(world))reason=Reason.WORLD_LOCKED;
         else if(node>0 && !"PLAN_PROPOSE".equals(next) && !routeViewArrived(session,teamId,related,actual,content))reason=Reason.NOT_ARRIVED;
         else if(current && node>0 && !passed)reason=Reason.PROOF_PENDING;
@@ -2000,6 +2550,8 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                         && summary.path("disabledReason").isTextual()) actions.set("disabledReason", summary.get("disabledReason"));
             }
         }
+        if (GameplayRuntimeConfig.cooperativePuzzles(sessionConfig(session).path("themeConfig")))
+            view.put("cooperation", cooperativePuzzleView(session, state));
         view.put("playMode", "ROUTE");
         return view;
     }

@@ -10,6 +10,7 @@
         <result property="codeHash" column="code_hash"/>
         <result property="productId" column="product_id"/>
         <result property="productRevision" column="product_revision"/>
+        <result property="grantSnapshotJson" column="grant_snapshot_json"/>
         <result property="quantity" column="quantity"/>
         <result property="seatCount" column="seat_count"/>
         <result property="subjectMode" column="subject_mode"/>
@@ -32,7 +33,7 @@
     </resultMap>
 
     <sql id="voucherColumns">
-        id, account_id, verification_id, public_id, code_hash, product_id, product_revision,
+        id, account_id, verification_id, public_id, code_hash, product_id, product_revision, grant_snapshot_json,
         quantity, seat_count, subject_mode, bound_member_id, inventory_ticket_id,
         inventory_quantity, inventory_state, status, issued_at, expires_at, revoke_source,
         issued_by, request_id, request_fingerprint, revoke_reason, revoke_request_id, revoke_requested_at,
@@ -42,13 +43,13 @@
     <insert id="insert" parameterType="com.chengyinhub.business.domain.ChannelVoucher"
             useGeneratedKeys="true" keyProperty="id">
         insert into marketing_channel_voucher
-            (account_id, verification_id, public_id, code_hash, product_id, product_revision,
+            (account_id, verification_id, public_id, code_hash, product_id, product_revision, grant_snapshot_json,
              quantity, seat_count, subject_mode, bound_member_id, inventory_ticket_id,
              inventory_quantity, inventory_state, status, issued_at, expires_at, revoke_source,
              issued_by, request_id, request_fingerprint, revoke_reason, revoke_request_id, revoke_requested_at,
         create_time, update_time)
         values
-            (#{accountId}, #{verificationId}, #{publicId}, #{codeHash}, #{productId}, #{productRevision},
+            (#{accountId}, #{verificationId}, #{publicId}, #{codeHash}, #{productId}, #{productRevision}, #{grantSnapshotJson},
              #{quantity}, #{seatCount}, #{subjectMode}, #{boundMemberId}, #{inventoryTicketId},
              #{inventoryQuantity}, #{inventoryState}, #{status}, #{issuedAt}, #{expiresAt}, #{revokeSource},
              #{issuedBy}, #{requestId}, #{requestFingerprint}, #{revokeReason}, #{revokeRequestId}, #{revokeRequestedAt},
@@ -76,6 +77,11 @@
     <select id="selectByVerification" resultMap="voucherMap" useCache="false">
         select <include refid="voucherColumns"/> from marketing_channel_voucher
         where verification_id = #{verificationId}
+    </select>
+
+    <select id="selectByVerificationForUpdate" resultMap="voucherMap" useCache="false" flushCache="true">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where verification_id = #{verificationId} for update
     </select>
 
     <select id="selectByAccountRequest" resultMap="voucherMap" useCache="false">

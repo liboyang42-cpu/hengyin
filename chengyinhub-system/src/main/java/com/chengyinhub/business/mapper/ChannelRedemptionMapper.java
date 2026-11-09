@@ -21,6 +21,8 @@ public interface ChannelRedemptionMapper {
 
     ChannelRedemption selectByChannelOrderNo(@Param("channelOrderNo") String channelOrderNo);
 
+    ChannelRedemption selectByVerificationForUpdate(@Param("verificationId") Long verificationId);
+
     int markRevoked(@Param("id") Long id,
                     @Param("reason") String reason,
                     @Param("revokedAt") Date revokedAt,

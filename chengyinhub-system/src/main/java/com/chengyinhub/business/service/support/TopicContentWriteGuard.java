@@ -156,6 +156,9 @@ public final class TopicContentWriteGuard {
         }
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private WorkshopLicenseGuard workshopLicenses;
+
     /**
      * [W4] 节点只能挂**自己的、已审核的、非草稿的**模板。
      *
@@ -181,6 +184,7 @@ public final class TopicContentWriteGuard {
         if (templateId == null || templateId <= 0L) {
             return;
         }
+        if(workshopLicenses!=null)workshopLicenses.requireCopy(templateId,memberId);
         com.chengyinhub.business.domain.CmsMemberTemplate tpl =
                 cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
         if (tpl == null || (tpl.getDelFlag() != null && tpl.getDelFlag() == 2)) {

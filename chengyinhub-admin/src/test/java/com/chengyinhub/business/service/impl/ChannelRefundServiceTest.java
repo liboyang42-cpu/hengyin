@@ -63,6 +63,9 @@ class ChannelRefundServiceTest {
                 vouchers, redemptions, tickets, fulfillment);
         when(accounts.selectByKey("acme")).thenReturn(activeAccount());
         when(purchases.selectByAccountOrderNo(ACCOUNT_ID, "ORDER-1")).thenReturn(purchase());
+        when(purchases.selectByIdForUpdate(PURCHASE_ID)).thenReturn(purchase());
+        when(vouchers.selectByVerificationForUpdate(PURCHASE_ID)).thenAnswer(inv -> vouchers.selectById(VOUCHER_ID));
+        when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenAnswer(inv -> vouchers.selectById(VOUCHER_ID));
         when(refunds.insert(any())).thenReturn(1);
     }
 
@@ -73,7 +76,7 @@ class ChannelRefundServiceTest {
         consumed.replayed = false;
         consumed.reasonCode = "REVOKED";
         when(fulfillment.consumeVerifiedChannelRefund(any())).thenReturn(consumed);
-        when(redemptions.selectByChannelOrderNo("ORDER-1")).thenReturn(activeRedemption());
+        when(redemptions.selectByVerificationForUpdate(PURCHASE_ID)).thenReturn(activeRedemption());
         when(vouchers.selectById(VOUCHER_ID)).thenReturn(redeemedVoucher());
 
         ChannelInboundCallbackView view = service.handleVerifiedRefund("acme", refundOutcome(), "{}");
@@ -117,7 +120,7 @@ class ChannelRefundServiceTest {
     void compensationRedrivesVerifiedButUnconsumedFactAndMarksConsumed() {
         ChannelRefundVerification pending = refund(ChannelRefundVerification.STATUS_VERIFIED, 1);
         when(refunds.selectVerifiedUnconsumed(20)).thenReturn(java.util.Collections.singletonList(pending));
-        when(redemptions.selectByChannelOrderNo("ORDER-1")).thenReturn(activeRedemption());
+        when(redemptions.selectByVerificationForUpdate(PURCHASE_ID)).thenReturn(activeRedemption());
         ChannelRevocationOutcome consumed = new ChannelRevocationOutcome();
         consumed.replayed = true;
         consumed.reasonCode = "ALREADY_REVOKED";
@@ -132,11 +135,11 @@ class ChannelRefundServiceTest {
     void compensationKeepsFactUnconsumedWhenConsumerStillFails() {
         ChannelRefundVerification pending = refund(ChannelRefundVerification.STATUS_VERIFIED, 1);
         when(refunds.selectVerifiedUnconsumed(10)).thenReturn(java.util.Collections.singletonList(pending));
-        when(redemptions.selectByChannelOrderNo("ORDER-1")).thenReturn(activeRedemption());
+        when(redemptions.selectByVerificationForUpdate(PURCHASE_ID)).thenReturn(activeRedemption());
         when(fulfillment.consumeVerifiedChannelRefund(any()))
                 .thenThrow(new IllegalStateException("撤权链路暂不可用"));
 
-        assertEquals(0, service.retryPendingConsumptions(10));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> service.retryPendingConsumptions(10));
         verify(store, never()).markConsumed(anyLong());
     }
 
@@ -144,11 +147,54 @@ class ChannelRefundServiceTest {
     void compensationClosesRefundWithoutGrantedAccessExplicitly() {
         ChannelRefundVerification pending = refund(ChannelRefundVerification.STATUS_VERIFIED, 1);
         when(refunds.selectVerifiedUnconsumed(5)).thenReturn(java.util.Collections.singletonList(pending));
-        when(redemptions.selectByChannelOrderNo("ORDER-1")).thenReturn(null);
+        when(redemptions.selectByVerificationForUpdate(PURCHASE_ID)).thenReturn(null);
 
         assertEquals(1, service.retryPendingConsumptions(5));
         verify(store).markNoRevenueToReverse(REFUND_ID, "NO_REVENUE_TO_REVERSE");
         verify(fulfillment, never()).consumeVerifiedChannelRefund(any());
+    }
+
+
+    @Test
+    void refundBeforeRedemptionRevokesIssuedVoucherWithoutGranting() {
+        ChannelVoucher issued = redeemedVoucher();
+        issued.setStatus(ChannelVoucher.STATUS_ACTIVE);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(issued);
+        when(store.store(any())).thenReturn(refund(ChannelRefundVerification.STATUS_VERIFIED, 1));
+        ChannelInboundCallbackView result = service.handleVerifiedRefund("acme", refundOutcome(), "{}");
+        assertTrue(result.getAccepted());
+        assertEquals("NO_REVENUE_TO_REVERSE", result.getReasonCode());
+        verify(vouchers).markRevoked(org.mockito.ArgumentMatchers.eq(VOUCHER_ID), org.mockito.ArgumentMatchers.eq("REFUND"), any());
+        verify(fulfillment, never()).consumeVerifiedChannelRefund(any());
+    }
+
+    @Test
+    void refundBeforeIssuanceClosesVerificationAndCannotMintLater() {
+        when(store.store(any())).thenReturn(refund(ChannelRefundVerification.STATUS_VERIFIED, 1));
+        assertTrue(service.handleVerifiedRefund("acme", refundOutcome(), "{}").getAccepted());
+        verify(purchases).markRevoked(org.mockito.ArgumentMatchers.eq(PURCHASE_ID),
+                org.mockito.ArgumentMatchers.eq("CHANNEL_REFUND"), any());
+        verify(fulfillment, never()).consumeVerifiedChannelRefund(any());
+    }
+
+    @Test
+    void successfulCompensationAlsoSynchronizesVoucherAndReceipt() {
+        when(refunds.selectVerifiedUnconsumed(1)).thenReturn(java.util.List.of(refund(ChannelRefundVerification.STATUS_VERIFIED, 1)));
+        when(redemptions.selectByVerificationForUpdate(PURCHASE_ID)).thenReturn(activeRedemption());
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(redeemedVoucher());
+        when(fulfillment.consumeVerifiedChannelRefund(any())).thenReturn(new ChannelRevocationOutcome());
+        assertEquals(1, service.retryPendingConsumptions(1));
+        verify(vouchers).markRevoked(anyLong(), any(), any());
+        verify(redemptions).markRevoked(anyLong(), any(), any(), any());
+    }
+
+    @Test
+    void nullCompensationOutcomeNeverMarksConsumed() {
+        when(refunds.selectVerifiedUnconsumed(1)).thenReturn(java.util.List.of(refund(ChannelRefundVerification.STATUS_VERIFIED, 1)));
+        when(redemptions.selectByVerificationForUpdate(PURCHASE_ID)).thenReturn(activeRedemption());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () -> service.retryPendingConsumptions(1));
+        verify(store, never()).markConsumed(anyLong());
+        verify(vouchers, never()).markRevoked(anyLong(), any(), any());
     }
 
     private ChannelVerificationOutcome refundOutcome() {

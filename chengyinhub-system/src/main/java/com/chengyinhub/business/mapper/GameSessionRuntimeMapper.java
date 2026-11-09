@@ -58,6 +58,8 @@ public interface GameSessionRuntimeMapper {
     int countTeamMembersWithoutRole(@Param("sessionId") Long sessionId, @Param("activityId") Long activityId);
 
     Long selectActiveTeamId(@Param("activityId") Long activityId, @Param("memberId") Long memberId);
+
+    Long selectActiveTeamIdForUpdate(@Param("activityId") Long activityId, @Param("memberId") Long memberId);
     int isActiveTeamMember(@Param("activityId") Long activityId, @Param("teamId") Long teamId,
                            @Param("memberId") Long memberId);
     int isActiveTeam(@Param("activityId") Long activityId, @Param("teamId") Long teamId);

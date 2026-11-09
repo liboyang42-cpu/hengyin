@@ -50,6 +50,13 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
 
     private static final Logger logger = LoggerFactory.getLogger(TemplatePublishServiceImpl.class);
 
+    @Autowired
+    private com.chengyinhub.business.service.support.WorkshopLicenseGuard workshopLicenses;
+
+    private void requireWorkshopPublication(Long id, boolean redistribution) {
+        if (workshopLicenses != null) workshopLicenses.requirePublication(id, redistribution);
+    }
+
     private final PreferenceResultEvaluator preferenceEvaluator = new PreferenceResultEvaluator();
     private final AdvancedGameConfigValidator advancedGameConfigValidator = new AdvancedGameConfigValidator();
     private final RewardRulesValidator rewardRulesValidator = new RewardRulesValidator();
@@ -88,6 +95,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long publishTemplateWithTransaction(CmsTemplatePublishRequest request, Long memberId, String username) {
+        requireWorkshopPublication(request.getId(), false);
         Date now = new Date();
 
         // 编辑既有模板:request 带 id 即为改写自己已发布的那一份。
@@ -224,6 +232,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (template == null || template.getId() == null) {
             throw new RuntimeException("缺少模板 id");
         }
+        requireWorkshopPublication(template.getId(), false);
         normalizeAndValidateSensorFields(template);
         normalizeAdvancedConfig(template);
         CmsMemberTemplate existing = requireActiveTemplate(template.getId());
@@ -251,6 +260,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long submitTemplateForReview(Long templateId) {
+        requireWorkshopPublication(templateId, false);
         CmsMemberTemplate template = requireActiveTemplate(templateId);
         validatePreferenceForReview(template);
         if (!Integer.valueOf(1).equals(template.getDraftStatus())) throw new ServiceException("草稿请先发布");
@@ -265,6 +275,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long submitTemplateToMarket(Long templateId, Long memberId, String username) {
+        requireWorkshopPublication(templateId, true);
         List<CmsMemberTemplate> locked = memberTemplateMapper.selectCmsMemberTemplateByIdsForUpdate(
                 Collections.singletonList(templateId));
         CmsMemberTemplate template = locked == null || locked.isEmpty() ? null : locked.get(0);
@@ -326,6 +337,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (stored == null || Integer.valueOf(2).equals(stored.getDelFlag()) || stored.getMemberTemplateId() == null) {
             throw new RuntimeException("模板库记录缺少可审核的模板真源");
         }
+        requireWorkshopPublication(stored.getMemberTemplateId(), true);
         CmsMemberTemplate canonical = requireActiveTemplate(stored.getMemberTemplateId());
         stored = lockedProjection(canonical.getId(), projection.getId());
         if (stored == null || !Integer.valueOf(0).equals(stored.getDelFlag())) throw new ServiceException("模板库记录已删除");
@@ -417,6 +429,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveMerchantNodeTemplate(CmsMemberTemplate input, Long memberId, String username) {
+        requireWorkshopPublication(input.getId(), false);
         CmsMemberTemplate existing = null;
         if (input.getId() != null && input.getId() > 0) {
             existing = lockTemplate(input.getId());
@@ -675,6 +688,37 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long saveOrUpdateDraft(CmsTemplatePublishRequest request, Long memberId, String username) {
+        return saveDraft(request, memberId, username, false);
+    }
+
+
+    @Override
+    public void validateWorkshopSnapshot(CmsTemplatePublishRequest snapshot,Long memberId) {
+        validateSensorFields(snapshot);
+        normalizeAdvancedConfig(snapshot,null,false);
+        assertCapabilities(snapshot,memberId);
+        CmsMemberTemplate template=new CmsMemberTemplate();
+        copyPropertiesToMemberTemplate(snapshot,template);template.setMemberId(memberId);
+        assertTemplateRewardOwnership(memberId,template,null);
+        validatePreferenceForReview(template);
+        mediaPublicationGuard.requireTemplate(memberId,template,true);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long installWorkshopSnapshot(CmsTemplatePublishRequest snapshot, Long memberId, String username) {
+        if (snapshot == null || snapshot.getId() != null || memberId == null || memberId <= 0
+                || snapshot.getOriginalTemplateId() == null || snapshot.getOriginalTemplateId() < 0) {
+            throw new IllegalArgumentException("工坊安装必须使用已校验的冻结来源创建新草稿");
+        }
+        snapshot.setAdoptSourceOnly(false);
+        snapshot.setScope("personal");
+        snapshot.setIsSync(0);
+        snapshot.setClearFields(null);
+        return saveDraft(snapshot, memberId, username, true);
+    }
+
+    private Long saveDraft(CmsTemplatePublishRequest request, Long memberId, String username, boolean workshopSnapshot) {
         if (request != null && Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
             if (request.getId() != null || request.getOriginalTemplateId() == null
                     || request.getOriginalTemplateId() <= 0) {
@@ -730,8 +774,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         preservePresetSource(request, existingDraft);
         prepareClearFields(request, existingDraft);
         validateSensorFields(request);
-        normalizeAdvancedConfig(request, existingDraft, !Boolean.TRUE.equals(request.getAdoptSourceOnly()));
-        if (!Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
+        // Paid copies keep the purchased answers and rewards even if the public source later changes.
+        normalizeAdvancedConfig(request, existingDraft, !workshopSnapshot && !Boolean.TRUE.equals(request.getAdoptSourceOnly()));
+        if (!workshopSnapshot && !Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
             normalizeAdoptedReward(request, existingDraft);
         }
         assertCapabilities(request, memberId);
@@ -1428,6 +1473,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (!Integer.valueOf(0).equals(publishStatus) && !Integer.valueOf(1).equals(publishStatus)) {
             throw new RuntimeException("发布状态仅支持 0 或 1");
         }
+        if (Integer.valueOf(1).equals(publishStatus)) requireWorkshopPublication(memberTemplateId, true);
         CmsMemberTemplate memberTemplate = requireActiveTemplate(memberTemplateId);
         if (!memberTemplate.getMemberId().equals(memberId)) {
             throw new ServiceException("无权操作此模板", HttpStatus.FORBIDDEN);

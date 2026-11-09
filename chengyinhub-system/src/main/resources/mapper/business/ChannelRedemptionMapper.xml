@@ -72,6 +72,12 @@
         order by id desc limit 1
     </select>
 
+    <select id="selectByVerificationForUpdate" resultMap="redemptionMap" useCache="false" flushCache="true">
+        select <include refid="redemptionColumns"/> from marketing_channel_redemption
+        where voucher_id = (select id from marketing_channel_voucher where verification_id = #{verificationId})
+        for update
+    </select>
+
     <update id="markRevoked">
         update marketing_channel_redemption
         set status = 1, revoke_reason = #{reason}, revoked_at = #{revokedAt}, update_time = #{updateTime}

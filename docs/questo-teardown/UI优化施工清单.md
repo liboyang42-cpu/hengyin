@@ -1,5 +1,11 @@
 # 城瘾 UI 优化施工清单（原第2至8项 + 新增玩法 + 商业营销 + 玩家闭环P1–P9）
 
+> **本轮最新交接（2026-11-09 UTC）：** 1A完整合作、2A独立收费版本与Apple服务器IAP、3A通用OTA已形成源码交付，实际新合同以第26节为准；下方v4.2及更早验收记录只覆盖其当时SHA。本轮Beta已在测试VPS完成完整生产/测试源码编译与42类888例定向回归（失败0、错误0、跳过0），未启用收费，不能视为Apple Sandbox/HTTP/真机或生产通过。
+
+> **2A 补充决定（2026-11-09 UTC，用户已明确确认）：** 旧免费版本与既有免费采用权保留；新收费版本独立提交审核，正文与权益不得经免费采用入口取得。允许引入 Apple 官方 App Store Server Java Library，补服务端交易验证、通知与退款撤销；开发本身不授权启用真实收费。本段为实施决定，当前下述 IAP/版本隔离的未实现记录不能据此改成已完成。
+
+> **新增范围决定（用户确认 1A/2A/3A，2026-11-09 UTC）：** ① 本轮补齐完整合作玩法：同一真实团队局内，答对推进、计时、提示与跳过、局内总分共享；复用现有运行时与权威判定，不改全局成长积分榜，不把当前仅共享免费提示的实现当成完整合作已完成。② 本轮补付费玩法模板的真实购买、许可授权、私有草稿安装及退款撤销后端，App 团队负责端侧支付接入；不得用客户端自报支付成功发权益，不因安装直接发布或授予执行权。③ OTA 本轮先完成通用兑换码、幂等、防重放及测试；真实渠道适配与联调等待渠道接入资料。以下历史 BLOCKED/不新增文字若与本段范围冲突，以本段为准；本段是施工授权，不是实现或验收通过证明。UI 源码由端侧团队处理，新字段、状态和验收继续归并到本文。
+
 > **v4.2 当前交接/验证状态（2026-11-09 UTC）**：本文是小程序、iOS 与管理后台 UI 的唯一完整落地清单；本轮未改 UI 源码。当前 PR #731 SHA `47cb972e773307aa93c55589adea8e871b55a362`，整轮 CI `42553085609` 已结束。后端完整构建/Java 测试、Spring 启动、Funds MySQL IT、迁移安全/布局门禁和部署契约均通过；focused followup `42553085617` 成功。VPS 定向 `TopicContentBudgetGuardTest` 10/10 通过。CI 仍失败：compiled-reference 门禁已不再报告尺寸策略方向问题，只剩 `ApiPresetController -> AuthorWriteReceiptService` 消费者未获独立 owner 注册；Fast architecture gate 有 138 项 `NEW_UNOWNED_BOUNDARY` 需独立归属审查；schema 回放仍卡在 `public_content_catalog_20261108` 第 6 条复合索引断言（历史迁移受保护，需经审查的替代流程）；小程序 shard 14/20 与 20/20 失败，详情见 §25.3。真库迁移、HTTP、支付/provider、真机、实地与生产均未验。P4 只覆盖同一真实团队局的免费提示额度，不代表跳过、计时或分数已共享。
 
 > **历史施工记录**：下文 v3.5、v3.2 与各章节中的 SOURCE/NOT_RUN 项是当时的分阶段记录；当前验证以本条、§24.3、§24.4 与 §25.1 为准。不得把历史 G-PACK/M402 阶段状态覆盖为当前验收，也不得把本次生产源码编译或选定单测扩大成全量通过。
@@ -1436,3 +1442,288 @@ OPS-01仅增加已有权限保护的内部指标读取，不新增本轮UI页面
 ### 25.2 并入原卡的端侧细节
 
 ### 25.3 当前 CI 指出的客户端合同同步（run `42553085609`，SHA `47cb972e773307aa93c55589adea8e871b55a362`）
+
+
+## 26 用户 1A/2A/3A 后端增量交接
+
+本节属于 `2af68e1b` 之后的新施工波次。各项源码交付和真实测试分别记录，旧 CI 不覆盖本节。
+
+### 26.1 完整合作玩法
+
+仅供 root 归并主 UI 清单；无 UI/Swift/小程序/Vue 源码修改。本文件替代上轮“choices/facilityKey 全局拒绝、外部 QUEST_RESOLVE 不可用”的候选限制。
+
+#### 新版本与正常入口
+
+原合法主题配置中显式冻结 `themeConfig.gameplayRuntime.cooperationVersion=1`、`runtimeScope=TEAM`，保留原 worldMode、acts、quests、facilities、choices、费用与奖励合同；不自动升级旧 TEAM/个人局。保存/发布继续原 ThemeRuntimeConfig/GameplayRuntimeConfig 校验，没有新增独立 publish-check issue code/fieldPath。
+
+既有 compatibility.requiredCapabilities 增加 `{key:"game.teamCooperation",minVersion:1}`；新端每位玩家先用下述 VIEW 声明能力。未声明旧端只读 compatibility 仍 UNKNOWN/null，新规则写入单独要求显式声明；不能由客户端自证 owner、支付、答案或完成。
+
+从服务端取真实 activityId/gameSessionId/nodeId/runtimeInstance/authorityEpoch；runtimeInstance 为当前题实际 QUEST_START 实例，不凭 teamId 拼局。原 QUEST_START、到达、队长、活动窗口与费用选择规则保留。
+
+#### 帮助入口（沿登录态与 AjaxResult）
+
+`POST /api/play/help/shared`：
+
+```json
+{
+  "activityId": 70,
+  "gameSessionId": 50,
+  "nodeId": 11,
+  "runtimeInstance": "服务端原题实例",
+  "authorityEpoch": 1,
+  "capabilities": "game.teamCooperation@1",
+  "operation": "VIEW"
+}
+```
+
+示例数字不是实际可用业务 ID。VIEW 返回 levels、remainingFreeUses、cooperation；首次为能力协商。启动时已绑定真实到达/扫码/工作人员验真 receipt 的题，在 VIEW 协商后可据原 proof 自动结算或进入待确认；不接受 passed/score。
+
+USE 另带 level/requestId，返回获准正文 content、alreadyUnlocked、本次 chargedPoints；全队同层一次解锁，其他人重看不扣。只有本人实际首用时有本人 balanceAfter，不透出队友余额。免费 N 整局同队共池；零价层不吃免费份，付费扣实际使用者现有积分。积分与局内解谜分分开。
+
+SKIP 带 requestId；作者冻结配置允许且不是现实/设施证明依赖时，全队辅助完成、puzzleScore=0，不伪造答对/到达/扫码/照片/核销/支付。受限层 VIEW 标 usable=false/reason=REAL_OPERATION_REQUIRED。普通配包题的辅助 skip 不发配包物资。实际高级 TEAM 子会话同步 SKIPPED 终态。
+
+答对待确认后不能新买提示或改成跳过；已解锁层仍能重看。未知请求只按原身份/requestId 重试；同号异动作冲突，不能换新号猜结果。cancel/restart 保留同一冻结 quest 的帮助解锁，免费池不重开。新合作局不能回旧 advanced help/skip 路径形成第二份个人收费。
+
+#### 答对后的三种状态
+
+- 无需选择/容量/实际操作确认：原事务自动结算，原真实完成槽成立后才推进、发原物资和计局分。
+- WAITING_CONFIRMATION：真实答对已提交，常见 reason 为 CHOICE_REQUIRED/CAPACITY_CONFIRMATION_REQUIRED/FACILITY_CONFIRMATION_REQUIRED/COST_CONFIRMATION_REQUIRED；展示原配包/装载确认输入，不能显示已最终完成或先加分。
+- WAITING_OPERATION：缺原 operationNodeId 的实际证明，或需真实参与集合/方案；沿原 OPERATION_START、真实判定、FACILITY_USE/PLAN_EXECUTE、参与集合/提案/投票/出资步骤，不能代选、假签或伪造通过。
+
+原 epoch/binding 变化逐题 UNAVAILABLE/ORIGINAL_AUTHORITY_CHANGED，明确取消为 CANCELLED；刷新原状态，不能把旧答案/预览搬到新局或新实例。
+
+#### 原显式确认 caller 已恢复
+
+对当前真实待确认题，原 `sharedPreview(action=QUEST_RESOLVE)` 和原共享局 `command(action=QUEST_RESOLVE)` payload 保留 questKey/choiceKey/discardRewards/previewVersion/costOption，新增数值 `answerRevision` 和原题 `runtimeInstance`：
+
+```json
+{
+  "questKey": "服务端原questKey",
+  "runtimeInstance": "原题QUEST_START实例",
+  "answerRevision": 12,
+  "choiceKey": "玩家从作者既有选项真实选择的key",
+  "discardRewards": [],
+  "previewVersion": "本次实际预览回包的版本"
+}
+```
+
+外层仍带原 requestId/expectedRevision/authorityEpoch。先按原预览入口发送同一选择和 discardRewards（不带 previewVersion），再用实际回包版本确认；无配包则不传 choiceKey，费用组沿 QUEST_START 原冻结选择。原预览、库存/奖励、当前队长、真实 proof 检查全部保留。所有成员可答题和读同一待确认；显式资源确认仍遵守原当前队长规则。
+
+预览过期/库存变动的确认拒绝仅回滚该次确认，已提交答案仍在；刷新后重做真实预览。确认未知必须保留原 expectedRevision/requestId/payload；新 expectedRevision 不属于同一次请求。重复原确认不重发奖励，换号同原选择也不重结算；不能更换已落地配包/放弃清单。
+
+绑定设施的独立操作节点不同于题目节点时，后端允许该真实待确认任务进入其原绑定设施 OPERATION_START，保留题目答案并等待真实 operationFacts，再由 QUEST_RESOLVE 同事务消费；不会直接独立执行 FACILITY_USE 来双份发奖。同节点已经通过的题直接确认，不重新开始操作抹掉通过事实。
+
+参与集合设施/非终局方案由服务端 questions[].confirmation 给出原 action=FACILITY_USE/PLAN_EXECUTE 与 requiredOperation 指引；不得自动执行第一个指引，作者配置的其他合法设施/方案仍由原工具/世界清单供玩家实际选择，后台继续核验原动作。沿原 participants/proposalKey/discardRewards/previewVersion 输入。它们不改走普通 QUEST_RESOLVE，不由客户端选全队名单或假定其他队已通过；只有原引擎实际完成槽后更新合作完成/分数。
+
+#### 共享投影
+
+原共享局 player 回包和 shared 帮助回包的 cooperation 包含 version/gameSessionId/authorityEpoch/serverTime/startedAt/elapsedMillis/puzzleScore/scoreStatus/questions。
+
+各题带 runtimeInstance/nodeId/questKey/sourceNodeId/bindingVersion、startedAt/elapsedMillis；真实通过后带 answeredAt/answerReceiptId/answerRevision/answerOwnerRevision/answerAuthorityEpoch、confirmationStatus/reason 与 confirmation（原 action、所需 inputs、原实例/答对版本、当前 expectedRevision、requiresCurrentLeader、必要 requiredOperation）。实际完成后才带 completedAt/completionMode/assisted/puzzleScore。
+
+计时统一按服务端事实，暂停冻结并在恢复扣除暂停段；客户端只做显示补间，不提交计时/分数。谜题局分与现有可兑换积分/成长积分榜分开；普通文字/选项沿现有 100/70/40，揭示/跳过为 0，原没有权威解谜基准的玩法保持 NOT_SCORED/null，不补 100 或未知填 0。帮助使用明细不含私有余额或未解锁正文。旧响应仍按原 revision/ownerRevision + 局/题/epoch 隔离。
+
+#### 证据边界
+
+当前仅后端源码和测试源码候选；编译、29 新测试、真实 MySQL/HTTP/钱包、端侧与真机均未验。没有付费 provider/发布/生产完成证明。root 统一验证后再把状态写入主清单。
+
+### 26.2 付费玩法模板
+
+状态：SOURCE / NOT_RUN。后端源码候选不代表渠道、数据库、HTTP、App或真实支付验收；完整2A仍为PARTIAL。
+
+#### 支付接入边界
+
+- 本轮唯一实现适配是既有微信移动应用支付 `WECHAT_APP`，复用原 GenericApp 网关、原 `wx_pay_order_intent`、验签/原单查询后的 `wx_verified_payment_fact`，不等同 Apple IAP。
+- `workshop.wechat-app-enabled` 默认 `false`，且原支付服务必须 `isAppReady()`。本轮没有修改配置、开通渠道或启用收费；未配置时创建订单及发起支付均明确返回 `CHANNEL_NOT_CONFIGURED`。
+- Apple IAP **服务端仍未实现**：App Store交易/产品/金额/币种/环境/应用身份校验、账户及购买版本绑定、服务器通知验签与去重、退款/撤销及恢复购买对账均仍需后端实现和渠道资料；不能由App自行验签后声称服务端已经接通。
+- App只请求订单和支付参数，支付SDK成功仅触发查询 `/v2/purchase/reconcile`。许可只由原验签回调或服务端原单查询得到的不可变事实激活；没有接收客户端 `paid`、IAP回执或手工交易号授予权益的接口。
+
+#### 兼容升级
+
+`GET /api/workshop/capabilities` 返回 `schema=workshop-capabilities-v2`、`contractVersion=2`、`privateDraftInstall=true`、`executionGranted=false`、`wechatApp={available,reason}`、`appleIap={available:false,reason:SERVER_VERIFICATION_UNAVAILABLE}`、`legacyAction=UPGRADE_REQUIRED`。
+
+旧 Swift 硬断言的 `contentUseStatus=PAID_INSTALL_AUTHORITY_UNAVAILABLE`、`mode=UNRESOLVED` 和旧七种安装状态不静默改义。所有原 `/api/workshop/purchased/...` 路径明确返回既有 AjaxResult 错误信封 `code=409,msg=WORKSHOP_CONTRACT_UPGRADE_REQUIRED`；不伪造空已购、不通过旧入口发付费内容。App须显式启用v2解码器及原有审批流程后才调用以下新路径；v2成功响应使用项目标准 AjaxResult 信封，接受标准 `code/msg/data`。
+
+#### 作者冻结与真实定价
+
+路径均以 `/api/workshop` 为前缀，除capabilities外均须登录。JSON端点下文注明，其余使用form参数。
+
+| POST路径 | 请求 | data与规则 |
+|---|---|---|
+| `/v2/author/source` | `source_id` | 真实owner本人已审核公开原作的 `moduleId/contentHash/title`，不发答案 |
+| `/v2/author/versions/freeze` | JSON `{requestId,sourceId,contentHash,priceFen,terms:{version,text,commercialUse,allowedRegions:[地区],installLimit}}` | 仅原作者配置实际价格/条款；服务端锁canonical及库记录、冻结完整配置与秘密、计算内容/条款hash，返回 `purchasedVersionId/moduleId/contentHash/termsHash/priceFen/currency/terms/capabilities` |
+| `/v2/offer/detail` | `purchased_version_id` | 同上安全offer投影，无正文、答案或完整配置 |
+
+`priceFen`为正整数分、上限原微信金额接口 `Integer.MAX_VALUE`，不从买方请求定价。只有原作者能冻结，拒绝别人的模板、未审核/未公开/删除来源、二次采用稿及携带其他商家券资产的来源；不存在缺配置时自动定价或自动上架的逻辑。冻结生成的是可引用offer版本，没有新增全站商品货架。购买后原作修改或下架不会替换已冻结正文；安装仍执行原能力/媒体/奖励归属校验。
+
+**免费来源关系与未完成项：** 当前原 `/api/template/adopt-draft` 仍按既有免费授权复制当前公开来源，原主题 `/use` 及既有免费副本也未被本轮撤销。初次冻结时付费快照可与公开免费内容相同；本轮没有把原免费内容变成独占付费内容，也未实现付费独占商品审核与免费/付费版本隔离。App不得显示“必须购买才能取得该公开玩法的内容/同等商业权限”，这项销售政策及隔离是完整2A的未完成项，需要另行确定原授权与商品边界，不能用通道默认关闭代替。
+
+#### 购买、退款、许可
+
+| POST路径 | 请求 | 结果 |
+|---|---|---|
+| `/v2/purchase/create` | JSON `{requestId,purchasedVersionId,contentHash,termsHash,provider:"WECHAT_APP"}` | 实际订单 `orderNo/orderLineId/purchasedVersionId/amountFen/currency/provider/state/licenseStatus`；唯一购买人是登录本人，禁止购买自己的版本 |
+| `/v2/purchase/pay` | `order_no` | 原订单投影加 `payParams`，本步绝不置ACTIVE |
+| `/v2/purchase/status` | `order_no` | 原订单持久状态 |
+| `/v2/purchase/reconcile` | `order_no` | 服务端查询原微信单，真实成功事实才能推进；无客户端支付成功参数 |
+| `/v2/purchase/refund` | `order_no` | 仅买家全额原路退款，先持久 `REFUND_PENDING/SUSPENDED` 后调用原网关；使用稳定 `R+orderNo`，可重试同一退款 |
+| `/v2/purchase/refund/reconcile` | `order_no` | 原支付引用约束的渠道退款查询；验付成功退款才 `REFUNDED/REVOKED` |
+| `/v2/purchased/list` | 可选 `before_order_line_id>0` | `schema/scope/items/hasMore/nextBeforeOrderLineId?/checkedAt`，50条游标分页 |
+| `/v2/purchased/detail` | `license_id` | 许可明细；`licenseId=orderNo`，只认已付订单 |
+| `/v2/purchased/revoke` | `license_id` | 买家主动关闭许可，保留付款、退款、安装审计及原草稿，不触发退款打款 |
+
+订单：`PENDING → PAID → REFUND_PENDING → REFUNDED`。许可：`UNPAID → ACTIVE → SUSPENDED/REVOKED`；旧支付SUCCESS重放不会恢复已撤销权益。退款未确定/失败时保持暂停，不能擅自恢复ACTIVE或显示已退款。
+
+许可v2沿用原22个业务字段，动态 `contentUseStatus=PRIVATE_DRAFT_INSTALL_AVAILABLE|LICENSE_DISABLED`、`purchaseActionStatus=EXACT_VERSION_PURCHASED`；固定个人购买、精确已购版本、禁止再分发/翻译。`themeLimit.maximum`表示本许可可安装的私有副本总数，不是全局主题发布额度；`merchantLimit.maximum=runLimit.maximum=0`表示本轮购买没有额外授予商家或执行额度，不能显示成“可以发售/执行0次”的伪额度账本。安装不解锁平台高级能力，原发布/媒体/奖励/审核规则继续生效。
+
+#### 私有草稿安装
+
+| POST路径 | 请求 | data |
+|---|---|---|
+| `/v2/purchased/install/targets` | `license_id,before_draft_id?` | 本人私有草稿 `items[{targetDraftId,targetRevision,targetPayloadHash,businessType:"MEMBER_TEMPLATE",title}],hasMore,nextBeforeDraftId?` |
+| `/v2/purchased/install/submit` | 下文原始JSON字节 | 不改目标草稿，只创建一个新私有模板副本 |
+| `/v2/purchased/install/status` | **只有** `request_id` | 原回执或 `{schema,requestId,state:"NOT_FOUND"}` |
+| `/v2/purchased/install/history` | `license_id,before_command_key?` | 50条历史回执分页，`nextBeforeCommandKey`是持久安装行ID |
+| `/v2/purchased/installed-text/detail` | `license_id,request_id` | 原九个文本字段加 `schema=w18-member-text-v1,bindings={}`，须当前ACTIVE且有同owner成功安装回执 |
+
+安装命令全部必需：
+
+```json
+{
+  "schema":"workshop-private-draft-install-command-v2",
+  "requestId":"客户端稳定动作号",
+  "licenseId":"订单即许可号",
+  "moduleId":8,
+  "purchasedVersionId":"服务端冻结版本",
+  "contentHash":"服务端内容hash",
+  "termsHash":"服务端条款hash",
+  "targetDraftId":20,
+  "targetRevision":1794182400000,
+  "businessType":"MEMBER_TEMPLATE",
+  "targetPayloadHash":"targets返回的完整草稿hash",
+  "planningRegion":"条款地区之一",
+  "commercialUse":false
+}
+```
+
+成功回执 `schema=workshop-private-draft-install-outcome-v2`，保留全部命令业务字段，增加 `state=INSTALLED_PRIVATE_DRAFT,ownedDraftId,installedAt,holdDeadline,mode=PRIVATE_COPY,professionalTemplateStatus=MATERIALIZATION_REQUIRED,published=false,executable=false`。`holdDeadline=installedAt`只表示同一同步事务已结束，本版没有PREPARED/RESERVED预留流程，不能画预留倒计时。
+
+同owner同requestId**完整原始UTF-8字节**必须重放，连空格变化也冲突；App保留已提交原始JSON，超时先查status。命令、完整回执与新草稿同事务提交，失败回滚后status为NOT_FOUND，可用同一原动作重试。新动作须重新检查许可、安装限次、目标owner、完整payload及revision；目标变化用 `TARGET_REVISION_CONFLICT` 刷新处理。退款后只允许读取旧无正文审计回执，不能新增安装或读取工坊保护正文。
+
+#### 撤销后新发布
+
+付费安装有持久lineage，原模板发布、重新提交审核、商家节点发布、后台模板重提、模板市场提交/上架、审核通过落状态及主题组包批准均增加同一原许可锁检查；SUSPENDED/REVOKED后不能由这些入口新增发布授权。ACTIVE也不能将付费副本再投免费模板市场（`WORKSHOP_REDISTRIBUTION_PROHIBITED`）。普通免费草稿继续原流程；不删除或自动下架已有玩家内容，原稿编辑/删除不改变。保护对象是安装lineage，并非阻止用户手工重写已知文本的内容DRM。
+
+#### App验收待办
+
+明确不可支付提示、v2解码器、地区及条款确认、保存原请求字节、原单查询回补、目标冲突刷新、账号切换隔离、退款UNKNOWN/暂停展示、ACTIVE/SUSPENDED/REVOKED读回和安装≠发布均待App团队实装及联调。真实微信支付/退款、IAP、HTTP、真机、发布与生产全部未验。
+
+### 26.3 通用 OTA 兑换码
+
+本轮没有端侧源码改动；具体 OTA provider 接入后置。真实 provider 未配置时保持 PROVIDER_NOT_CONFIGURED，不显示“已支付/已验真/已兑换成功”，不新增本地免费发码入口。
+
+- 玩家沿用 `POST /api/channel/redeem {code,requestId}`。真实登录会员由服务端确定；同一动作保留 requestId，未知结果用原 `POST /api/channel/receipt {requestId}` 或 `{receiptNo}` 查回，不换新请求号连点。成功只能以服务端真实 registrationId/receiptNo 为准；输入 code 不进日志、埋点、截图公开区或持久缓存。
+- 管理发行沿用 `POST /business/marketing/channel/vouchers`，只能使用真实已验证 verificationId；商品/数量来自服务端事实。原 issue 权限必需，list 权限不能签发，没有新增批量投放接口或自动授予角色。
+- 明文 code 仍只在首次成功签发响应返回一次。`codeAvailable=false` / `replayed=true` 时仅恢复已有发行元数据，不显示“重新取码”按钮，不从 publicId/codeHash 拼码。默认到期不传 expiresAt 的同 requestId 重试已修为元数据重放，不生成第二张码。
+- 商品/期限/条款/作品及金额分摊按发行快照生效；后改目录不追溯扩大或缩短原码权益。新拒绝 `VOUCHER_SNAPSHOT_UNAVAILABLE` 表示旧码缺发行快照，提示联系发行方核对，不能自动换成当前商品继续兑。
+- `VERIFICATION_EXPIRED` 表示验证事实已过期；`CHANNEL_ORDER_AMBIGUOUS` 表示外单号跨主体歧义；与 CODE_EXPIRED / CODE_REVOKED / SUBJECT_MISMATCH / ALREADY_REDEEMED_BY_OTHER 分开处理，不把它们当成功或空数据。
+- 管理已兑换码撤销返回 `revokePending=true` / REFUND_REQUIRED 时，只显示“待渠道退款确认”。验证记录此时仍可为 VERIFIED，这不是撤销失败，也不代表退款到账；真实退款完成事实驱动原准入、码与回执撤销后才显示撤销终态。
+- 退款先到的未兑换码会被封闭；尚未发码的验证记录会被撤销。NO_REVENUE_TO_REVERSE 仅表示尚无准入/应计可冲销，不显示“已撤销游玩权益/已冲销收入”。
+- 回执始终按当前登录会员读取；跨账号回执返回 RECEIPT_NOT_FOUND。切账号清理旧响应，不缓存其他账号 registrationId 或 bearer code。
+
+未验：HTTP/客户端/真机/真实provider与生产；以上为本轮后端源码合同，须 root 统一验证和归并主 UI 清单。
+
+
+### 26.4 Apple IAP 服务端合同增量（2026-11-09 UTC）
+
+
+状态：**SOURCE 已接真实 controller/service 与内部订单端口；编译、测试执行、HTTP、Apple Sandbox、真机及生产均 NOT_RUN/NOT_VERIFIED。** 本文件仅供 root 归并唯一 UI 清单，不是另一份主清单。本位未改 Swift、小程序、Vue 或主 UI 文档。
+
+#### 购买前与端侧支付
+
+- 新收费版本、审核上架、服务端订单/SKU/token 返回由 PAID 的 Workshop 合同负责；只有服务端 capabilities 和已审核版本明确可售时才提供支付动作。`workshop.apple-iap.enabled` 默认 false；缺服务端应用、信任根、明确 SKU 金额映射即不可用。本轮没有授权或启用真实收费。
+- 仅支持永久、精确版本的 **Non-Consumable**，单份且本人购买；不支持消耗品、订阅、家庭共享或赠送。服务端订单返回的 `productId` 和服务端生成的 UUID `appAccountToken` 必须原样用于 StoreKit 购买；App 不生成另一个账户 token。
+- 展示 StoreKit 实际商品价格/币种，服务端以已审核订单冻结映射及受控 SKU 表再次核对 Apple milliunits。新订单无明确币种/SKU 映射不可购；旧单确认/恢复/退款按原订单冻结映射，不能因现SKU停卖/变价阻断售后。不在 App 或服务端自动换汇。具体订单字段以 PAID-ui 为准。
+
+#### App 新增请求
+
+统一前缀 `/api/workshop/v2/apple-iap`，以下三个 App 请求必须登录；身份由现有登录会话取得，body 无 buyer、角色、环境、bundle、根证书、价格或 paid=true 字段。
+
+| 请求 | JSON | 含义 |
+|---|---|---|
+| `POST /confirm` | `{"orderNo":"服务端原订单","signedTransactionInfo":"StoreKit返回的完整交易JWS"}` | 官方 SDK 验签后匹配本人订单、账户 token、应用、环境、SKU、金额币种及原交易，再交真实 Workshop 许可端口 |
+| `POST /restore` | 同上 | 只读回本人已绑定的原交易许可，不创建新购买、不恢复暂停/撤销 |
+| `POST /reconcile` | `{"orderNo":"服务端原订单","transactionId":"Apple交易ID"}` | 原订单授权、冻结环境核对后由受控服务器 API 查交易，返回 JWS 再走相同验证链；未配只读 key/issuer/keyId 或关闭 query 时 503 |
+
+使用现有 AjaxResult：成功 `code=200,data={state,orderNo,...}`；本 controller 的 ServiceException 同时使用真实 HTTP 状态码与 body code。`VERIFIED` 只表示交易事实已验证并交给订单端口，不等于 UI 可自行认定许可 ACTIVE；超时或成功均再查原 Workshop `/v2/purchase/status` 或许可详情，以权威持久状态展示。
+
+- `state=REVOKED`：已存在原交易撤销事实，本次旧成功/恢复不会发新权益。
+- `state=RESTORED`：`data.license` 是订单端口的既有本人许可读回，仍按其真实状态展示；不直接当作 ACTIVE。
+- `APPLE_IAP_UNAVAILABLE / APPLE_TRUST_ROOTS_UNAVAILABLE / APPLE_ORDER_MAPPING_UNAVAILABLE / APPLE_SERVER_QUERY_UNAVAILABLE`：渠道未就绪，保留原订单，不展示支付成功或用假权益兜底。
+- `APPLE_TRANSACTION_VERIFICATION_FAILED / APPLE_PRODUCT_TYPE_UNSUPPORTED / APPLE_PRODUCT_CONFLICT`：不得发权益；保留实际交易及原订单供核对，不本地改价格/币种/类型重试。
+- 账户、环境、商品、订单金额、原交易或交易事实冲突：停止当前动作，刷新本人原订单；账号切换时隔离订单/token/JWS，不能把一个账号购买恢复给另一个账号。
+- `APPLE_RESTORE_ORIGINAL_REQUIRED`：尚无此前绑定的本人原交易，不能通过恢复创建许可；先处理原购买确认/查单链。App 失去本地记录时使用服务端本人订单/许可清单找原单。
+
+#### Apple 通知与退款
+
+`POST /notifications` body `{"signedPayload":"Apple完整通知JWS"}` 仅供 Apple 服务器。此方法使用项目已有 `@Anonymous`，业务信任仅来自官方 SDK 外层通知与内层交易双验签；App 不调用它表达退款、成功或恢复。
+
+通知处理完成才返回 2xx/APPLIED；未匹配订单、元数据不完整、不支持的通知或处理失败持久为 PENDING 并返回 503，允许同一完整签名通知重投。真实退款/撤销先持久原交易撤销闸，并按已绑定的应用/环境/原交易立即撤销既有许可；旧token/金额缺失或SKU配置变化只影响完整匹配待核，不阻塞既有绑定撤销。通知先于订单、旧成功重放与重试都不能重激活。未支持的 REFUND_REVERSED 不自动恢复许可，保留待核。
+
+App 不提供本域新增的“服务端直接 Apple 退款”动作；Apple 退款后以后端原许可状态为准，原安装≠发布、暂停/撤销后的正文/新安装/发布限制沿 PAID/WORKSHOP 合同。无须在 UI 展示 notificationUUID、证书、inbox 或内部错误堆栈。
+
+#### 待真实验收
+
+App Store Connect 商品/账户/通知配置、实际 Sandbox 购买/通知/退款/恢复、换账号、断线原单恢复、已暂停或撤销状态回读、真机及发布均待验。源码 mock 业务结果、官方 SDK 签名负例和独占 MySQL 测试均不能当成 Apple Sandbox 正向验收。
+
+
+### 26.5 独立收费版本与旧免费版的边界（2026-11-09 UTC）
+
+
+状态：SOURCE / NOT_RUN；交 root 归并唯一 UI 清单，本位未改 UI。此增量替代 WORKSHOP-ui 的“公开免费来源冻结”与“IAP未实现”历史描述；Apple验签/通知控制器合同另见 APPLE-ui.md，端到端仍未验收。
+
+#### 免费与收费边界
+
+旧免费库、原免费采用、原主题/use和既有免费副本保留。收费来源必须是作者本人的独立私有原作草稿：未公开、未挂主题、无公共库投影、无采用来源及付费安装lineage；不修改旧免费行的授权或价格。冻结后该源稿仍可编辑供下个收费版本使用，但不能再经普通发布/广场/主题引用变成免费来源；审核驳回或撤回也不解除这个保留事实。需要发布免费内容时用独立免费版本。
+
+#### 作者与审核
+
+均以/api/workshop为前缀，须登录，保持标准AjaxResult信封。
+
+| 路径 | 请求 | 含义 |
+|---|---|---|
+| POST /v2/author/source | source_id=私有cms_member_template.id | 返回sourceKind=PRIVATE_TEMPLATE、moduleId、contentHash、title；与旧public library ID分开 |
+| POST /v2/author/versions/freeze | JSON原Freeze字段加必需sourceKind=PRIVATE_TEMPLATE | 冻结完整秘密、条款和CNY priceFen，返回DRAFT；缺sourceKind拒绝PRIVATE_SOURCE_CONTRACT_REQUIRED，旧客户端不得静默改义 |
+| POST /v2/author/versions/submit | JSON {purchasedVersionId,contentHash,termsHash,priceFen} | owner和内容/条款/价格CAS，提交原统一审核，返回PENDING及auditTaskId/reviewHash |
+| POST /v2/author/versions/detail | purchased_version_id | 本人版本状态；未审核正文仍仅原作者私有编辑器访问 |
+| POST /v2/author/versions/withdraw | purchased_version_id | WITHDRAWN，停止新销售/支付准备，保留原已购许可 |
+| POST /v2/offer/list | before_version_id?为正整数游标 | 仅APPROVED、无正文货架；items/hasMore/nextBeforeVersionId? |
+| POST /v2/offer/detail | purchased_version_id | 仅APPROVED，title/内容及条款hash/审核hash/条款/channelPrices等安全元数据 |
+
+版本生命周期为DRAFT→PENDING→APPROVED或REJECTED，可撤回为WITHDRAWN；冻结正文、条款、CNY价格不可原地改版，修订须创建新独立版本并重审。审核通过不付款、不发许可、不发布作者源稿。
+
+原管理后台统一审核增加bizType=WORKSHOP_VERSION；详情snapshot为完整不可变内容、条款、CNY分价格及当次受控Apple映射，包含敏感谜底，只用于原审核权限内的详情。审批沿原/review，必传expectedVersion和稳定requestId，reject沿原reasonText规则；过期审核版本/hash冲突须刷新，不能假显示通过。原媒体、能力、奖励、传感与偏好验证在作者冻结及批准时继续执行。
+
+新收费Terms.allowedRegions使用现有地点合同的6位cityCode，例如310100；planningRegion及真实主题城市按相同编码核对，不用城市展示名。历史已冻结旧快照不批量改写。
+
+#### Apple价格、购买与售后
+
+server SKU映射由受控服务端资料配置，没有作者/买家改映射接口。先冻结DRAFT，服务端配置该版本的bundle/environment/productId/明确currency及priceMilliunits，再由作者submit；审核快照包含映射，审核后改映射不可售，须独立新版本重审。默认没有映射且通道未启用，不能展示已可真实支付。
+
+offer.channelPrices包含WECHAT_APP的CNY amountFen，以及被审核的APPLE_IAP productId/environment/currency/amountMilliunits。Apple milliunits是货币单位千分之一，例如USD 990=USD 0.990；不能当人民币分或编汇率。货架报价并非通道就绪证明，创建仍核当前配置与审批映射，缺配置如实返回CHANNEL_NOT_CONFIGURED/APPLE_PRODUCT_NOT_CONFIGURED。
+
+POST /v2/purchase/create沿原JSON合同，provider=APPLE_IAP时新增必需reviewHash，须与展示报价的审核hash一致；WECHAT_APP原v2字段仍可使用。Apple返回orderNo、purchasedVersionId、provider、currency、amountMilliunits、productId、服务端UUID appAccountToken，绝不返回amountFen；许可为UNPAID。StoreKit须用服务端productId及appAccountToken进行本人购买，随后走APPLE-ui中的签名交易确认/本人原单恢复，不能自报paid。
+
+旧WECHAT_APP下单、原GenericApp支付、原验签fact与原路退款均保留；通用微信pay/reconcile/refund入口拒绝Apple订单，Apple退款走App Store及原交易通知，不创建钱包、分账或自动打款。
+
+已购买Apple订单冻结bundle/environment/SKU/token/币种/milliunits与审批hash；停卖、SKU变价或撤回货架不改变原单售后。恢复仅回本人已绑定原交易的既有许可，不能创建第二份购买。官方退款/撤销先于付款到达也会封住许可；旧成功重放绝不把SUSPENDED/REVOKED恢复。缺旧token/price的合法退款可按已绑定bundle/environment/originalTransactionId立即撤销，未知原单仍待核重试，不能假ACK。
+
+#### 安装、主题复用与撤销
+
+原v2私有安装命令/稳定原始字节/回执合同保留，付款后仍只创建私有草稿，须原能力与审核才能发布。收费新版本安装不再带公共免费library来源ID。普通免费采用无法获取独立收费正文。
+
+合法同owner组主题或换城优先复用原已授权模板引用；NPC/节点引用需要独立副本时，复制继承原order/许可lineage并计入同一installLimit，不能复制后丢失退款围栏。themeLimit.maximum现包含安装副本及此类forced副本；界面不要承诺无限复制。跨owner主题/use不能顺带转移付费许可；已授权受益人须符合原许可地区/商业条款。普通主题返回/新期、主题实际发布及组包批准都检查当前许可，撤销后禁止新复制/发布，原审计和草稿保留。
+
+#### 端侧待验
+
+作者旧客户端升级提示、DRAFT送审及驳回、只元数据货架、审核后改版CAS、不同币种报价确认、StoreKit账户token、丢ACK原单重读、恢复/退款先到/重放、私有安装和主题合法同城/跨城/forced副本、账号切换及撤销后新发布均待真实HTTP/App联调。SOURCE不等于支付、真机、迁移或生产通过。

@@ -307,6 +307,8 @@ public class PlayHelpApplication {
             throw new IllegalStateException("原局状态暂时不可用，请重试", unavailable);
         }
         if (session == null) throw new HelpRefusal("原局不存在或无权访问");
+        if (parseSnapshot(session.getStateJson()) != null && parseSnapshot(session.getStateJson()).path("cooperationVersion").asInt() == 1)
+            throw new HelpRefusal("合作局请使用 /api/play/help/shared，共享解锁且仅扣实际使用者积分");
         if (!Long.valueOf(node).equals(session.getNodeId())) throw new HelpRefusal("节点与当前原局不一致");
         if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) {
             throw new HelpRefusal("本局已结束，不能使用帮助");

@@ -74,6 +74,14 @@ class ChannelVoucherAdminControllerTest {
         assertEquals("VOUCHER_ALREADY_ISSUED", rejected.get("reasonCode"));
     }
 
+
+    @Test
+    void issuanceResponseIsExcludedFromAuditStorage() throws Exception {
+        com.chengyinhub.common.annotation.Log audit = ChannelVoucherAdminController.class
+                .getMethod("issue", ChannelVoucherIssueRequest.class).getAnnotation(com.chengyinhub.common.annotation.Log.class);
+        org.junit.jupiter.api.Assertions.assertFalse(audit.isSaveResponseData());
+    }
+
     @Test
     void everyWriteEndpointDeclaresANewChannelPermission() {
         for (Method method : ChannelVoucherAdminController.class.getDeclaredMethods()) {

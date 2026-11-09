@@ -306,7 +306,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // Server-created state only: author config cannot supply an original content identity.
         if (input.content != null) state.set("originalNodeContent", input.content.deepCopy());
         if (config.has("outcomeRules")) state.put("attemptOrdinal", 1);
-        if (shared != null) {state.put("runtimeAuthorityEpoch", shared.path("authorityEpoch").asInt());state.put("originalGameSessionId",shared.path("gameSessionId").asLong());}
+        if (shared != null) {
+            state.put("runtimeAuthorityEpoch", shared.path("authorityEpoch").asInt());
+            state.put("originalGameSessionId", shared.path("gameSessionId").asLong());
+            if (shared.path("cooperationVersion").asInt() == 1) state.put("cooperationVersion", 1);
+        }
         else if(zeroChallenge != null || config.has("outcomeRules") && (enabled(config.path("branch")) || enabled(config.path("predict"))))state.put("originalRouteSessionId",topicRouteRuntimeService.gameplaySessionId(memberId,topicId,input.activityId));
         if (zeroChallenge != null) {state.put("zeroChallengeInstance", zeroChallenge.path("instanceId").asText()); state.set("challenge", zeroChallenge.deepCopy());}
         GameRuntimeSession session = new GameRuntimeSession();
@@ -1153,6 +1157,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         long actId = activityId == null ? 0L : activityId;
         GameRuntimeSession session = existingSession(memberId, actId, topicId, nodeId);
         if (session == null) throw new IllegalStateException("该节点尚未开局玩法，不能跳过");
+        if (objectState(session.getStateJson()).path("cooperationVersion").asInt() == 1)
+            throw new IllegalStateException("合作局请使用共享帮助与跳过入口");
         session = expireIfNeeded(session, memberId);
         JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
         requireSkippable(config, nodeId);

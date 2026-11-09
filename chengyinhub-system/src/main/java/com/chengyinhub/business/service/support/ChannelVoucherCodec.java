@@ -48,7 +48,7 @@ public final class ChannelVoucherCodec {
         }
         String trimmed = token.trim();
         String[] parts = trimmed.split("\\.", -1);
-        if (parts.length != 3 || !PREFIX.equals(parts[0]) || parts[1].isEmpty() || parts[2].isEmpty()) {
+        if (parts.length != 3 || !PREFIX.equals(parts[0]) || parts[1].isEmpty() || !parts[2].matches("[A-Za-z0-9_-]{43}")) {
             throw new IllegalArgumentException("CHANNEL_CODE_INVALID");
         }
         if (!parts[1].matches("[a-f0-9]{16,32}")) {

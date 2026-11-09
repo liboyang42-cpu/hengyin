@@ -369,6 +369,14 @@ final class GameSharedRunControl {
             if (zero.isObject() && !zero.path("resolved").asBoolean() && zero.path("deadlineAt").isIntegralNumber()) { ((ObjectNode) zero).put("deadlineAt", Math.addExact(zero.path("deadlineAt").asLong(), paused)); shifted = true; }
             JsonNode challenge = runtime.path("challenge");
             if (challenge.isObject() && !challenge.path("resolved").asBoolean() && challenge.path("deadlineAt").isIntegralNumber()) { ((ObjectNode) challenge).put("deadlineAt", Math.addExact(challenge.path("deadlineAt").asLong(), paused)); shifted = true; }
+            JsonNode cooperative = runtime.path("cooperativePuzzles");
+            if (cooperative.isObject() && !naturallyCompleted(session, state)) {
+                ObjectNode timers = (ObjectNode) cooperative;
+                timers.put("pausedMillis", Math.addExact(timers.path("pausedMillis").asLong(), paused));
+                for (JsonNode question : timers.path("questions")) if (question.isObject() && !question.has("completedAt"))
+                    ((ObjectNode) question).put("pausedMillis", Math.addExact(question.path("pausedMillis").asLong(), paused));
+                shifted = true;
+            }
             if (shifted) saveOwnerWithoutSurvival(owner, state);
         }
     }

@@ -22,6 +22,9 @@ public class JdbcWechatPaymentOrderOwner implements WechatPaymentOrderOwner {
         } else if (businessNo.startsWith("TPLTM_") || businessNo.startsWith("PROMOT_") || businessNo.startsWith("CUSTOM_")) {
             type = "COMMERCE";
             sql = "SELECT id,pay_amount AS amount,CASE WHEN status=0 THEN 1 ELSE 0 END AS payable FROM oms_order WHERE order_sn=? FOR UPDATE";
+        } else if (businessNo.startsWith("WKO")) {
+            type = "WORKSHOP"; cents = true;
+            sql = "SELECT id,amount_fen AS amount,CASE WHEN state='PENDING' AND provider='WECHAT_APP' THEN 1 ELSE 0 END AS payable FROM workshop_order WHERE order_no=? FOR UPDATE";
         } else if (businessNo.startsWith("MKO")) {
             // 营销商品订单(现金单)。type 由这次真实命中的行决定(该行确实存在于
             // marketing_product_order),不是凭前缀返回一个未经核对的字符串:

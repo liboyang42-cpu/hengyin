@@ -22,6 +22,8 @@ public interface ChannelVoucherMapper {
 
     ChannelVoucher selectByVerification(@Param("verificationId") Long verificationId);
 
+    ChannelVoucher selectByVerificationForUpdate(@Param("verificationId") Long verificationId);
+
     ChannelVoucher selectByAccountRequest(@Param("accountId") Long accountId,
                                           @Param("requestId") String requestId);
 

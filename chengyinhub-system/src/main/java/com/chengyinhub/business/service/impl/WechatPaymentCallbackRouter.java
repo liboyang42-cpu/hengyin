@@ -29,10 +29,19 @@ public class WechatPaymentCallbackRouter {
     private final WechatRefundCallbackOwner depositRefund;
     private final WechatRefundCallbackOwner registrationRefund;
 
-    @Autowired
+    private final WorkshopService workshop;
+
     public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
             ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
             IMarketingProductPurchaseService marketingProducts) {
+        this(club, commerce, coop, registration, refunds, marketingProducts, null);
+    }
+
+    @Autowired
+    public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
+            ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
+            IMarketingProductPurchaseService marketingProducts, WorkshopService workshop) {
+        this.workshop = workshop;
         // Reserve CLM even when malformed/unknown: it must never fall through to registration.
         owners = List.of(
                 new Owner("club-membership", no -> no != null && no.startsWith("CLM"), facts ->
@@ -57,6 +66,8 @@ public class WechatPaymentCallbackRouter {
                                 && marketingProducts.handlePaidOrder(facts.get("out_trade_no"), paid(facts),
                                         cents(facts), facts.get("transaction_id"),
                                         verifiedPaymentReference(facts)))),
+                new Owner("workshop", no -> no != null && no.startsWith("WKO"),
+                        facts -> ack(workshop != null && workshop.handlePaidOrder(facts))),
                 new Owner("registration", no -> no != null && registration != null && registration.getByRegistrationNo(no) != null, facts ->
                         registration == null ? "FAIL" : registration.handleWechatPayCallback(facts)));
         depositRefund = facts -> coop != null && coop.handleDepositRefundResult(facts);
@@ -66,6 +77,7 @@ public class WechatPaymentCallbackRouter {
     /** Explicit assembly seam for route tests; production uses the four existing owners above. */
     WechatPaymentCallbackRouter(List<WechatPaymentCallbackOwner> owners,
             WechatRefundCallbackOwner depositRefund, WechatRefundCallbackOwner registrationRefund) {
+        this.workshop = null;
         this.owners = List.copyOf(owners);
         this.depositRefund = depositRefund;
         this.registrationRefund = registrationRefund;
@@ -88,6 +100,7 @@ public class WechatPaymentCallbackRouter {
 
     public boolean refund(Map<String, String> facts) {
         String no = facts.get("outRefundNo");
+        if (no != null && no.startsWith("RWKO")) return workshop != null && workshop.handleRefund(facts);
         return no != null && no.startsWith("RDEP") ? depositRefund.apply(facts) : registrationRefund.apply(facts);
     }
 

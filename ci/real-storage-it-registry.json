@@ -842,7 +842,7 @@
       "gates": {}
     },
     "com.chengyinhub.business.it.MarketingChannelVoucherMySqlIT": {
-      "tests": 6,
+      "tests": 8,
       "storage": [
         "mysql"
       ],

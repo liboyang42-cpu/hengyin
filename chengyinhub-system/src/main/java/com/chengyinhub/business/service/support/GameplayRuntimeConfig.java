@@ -21,15 +21,26 @@ public final class GameplayRuntimeConfig {
         return themeConfig == null ? null : themeConfig.path("gameplayRuntime").path("worldMode").asText(null);
     }
 
+    public static boolean cooperativePuzzles(JsonNode themeConfig) {
+        return "TEAM".equals(getRuntimeScope(themeConfig))
+                && themeConfig.path("gameplayRuntime").path("cooperationVersion").isIntegralNumber()
+                && themeConfig.path("gameplayRuntime").path("cooperationVersion").asInt() == 1;
+    }
+
     static void validate(ObjectNode themeConfig, Set<String> items, boolean draft) {
         if (!themeConfig.has("gameplayRuntime")) return;
         JsonNode game = themeConfig.get("gameplayRuntime");
-        fields(game, "runtimeScope", "worldMode", "releaseCode", "ruleVersion", "storyVersion", "routeVersion", "survival", "initialGrants", "acts", "quests", "facilities", "plans", "allowTrade", "votePolicy", "arrivalTtlSeconds", "templateTools", "storyEndings");
+        fields(game, "runtimeScope", "worldMode", "releaseCode", "ruleVersion", "storyVersion", "routeVersion", "survival", "initialGrants", "acts", "quests", "facilities", "plans", "allowTrade", "votePolicy", "arrivalTtlSeconds", "templateTools", "storyEndings", "cooperationVersion");
         option(game, "runtimeScope", "PLAYER", "TEAM");
         boolean world = "WORLD_SHARED".equals(game.path("worldMode").asText());
         if ("TEAM".equals(game.path("runtimeScope").asText())) option(game, "worldMode", "TEAM_INDEPENDENT", "WORLD_SHARED");
         else if (game.has("worldMode")) fail("PLAYER 不适用 worldMode");
         for (String field : Arrays.asList("releaseCode", "ruleVersion", "storyVersion", "routeVersion")) if (game.has(field)) text(game, field, 64);
+        if (game.has("cooperationVersion")) {
+            number(game, "cooperationVersion", 1, 1);
+            if (!"TEAM".equals(game.path("runtimeScope").asText()))
+                fail("cooperationVersion 仅适用于真实团队局");
+        }
         survival(game.path("survival"));
         if (game.has("allowTrade") && (!game.path("allowTrade").isBoolean() || (!world && game.path("allowTrade").asBoolean()))) fail("allowTrade 须为公共世界开关");
         if (game.has("votePolicy")) { if (!world) fail("votePolicy 仅用于公共世界"); option(game,"votePolicy","MAJORITY","UNANIMOUS","MAJORITY_ACCEPTANCE"); }

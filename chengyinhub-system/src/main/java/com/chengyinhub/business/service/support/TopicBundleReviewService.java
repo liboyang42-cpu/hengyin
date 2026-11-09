@@ -51,6 +51,8 @@ public class TopicBundleReviewService {
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private WorkshopLicenseGuard workshopLicenses;
     public TopicBundleReviewService(CmsTopicMapper topicMapper,
                                     CmsTopicChapterMapper chapterMapper,
                                     CmsTopicNodeMapper nodeMapper,
@@ -234,6 +236,9 @@ public class TopicBundleReviewService {
             submittedIds.add(id);
         }
         Collections.sort(submittedIds);
+        if (approve && workshopLicenses != null) {
+            for (Long id : submittedIds) workshopLicenses.requirePublication(id, false);
+        }
 
         CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())
@@ -242,6 +247,7 @@ public class TopicBundleReviewService {
                         != (topic.getConfigVersion() == null ? 0L : topic.getConfigVersion())) {
             throw stale();
         }
+        if(approve && workshopLicenses!=null)workshopLicenses.requireTheme(topic);
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(
                 safe(chapterMapper.selectByTopicForUpdate(topicId)));
         sortChapters(chapters);

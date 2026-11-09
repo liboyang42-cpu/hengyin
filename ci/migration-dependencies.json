@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "z_channel_voucher_snapshot_20261109": ["marketing_z_channel_voucher_20261108"],
+    "z_workshop_purchase_20261109": [],
+    "z_workshop_apple_iap_20261109": [],
+    "z_workshop_paid_review_20261109": ["z_workshop_purchase_20261109"],
     "marketing_attribution_20261108": [],
     "marketing_extra_seat_20261108": ["marketing_product_20261108"],
     "marketing_product_20261108": [],

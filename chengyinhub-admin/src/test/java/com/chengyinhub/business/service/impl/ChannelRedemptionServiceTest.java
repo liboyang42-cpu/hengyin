@@ -8,6 +8,7 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.MarketingProduct;
 import com.chengyinhub.business.domain.MarketingProductItem;
 import com.chengyinhub.business.domain.dto.ChannelGrantCommand;
+import com.chengyinhub.business.domain.dto.ChannelReceiptRequest;
 import com.chengyinhub.business.domain.dto.ChannelGrantResult;
 import com.chengyinhub.business.domain.dto.ChannelRedeemRequest;
 import com.chengyinhub.business.domain.dto.ChannelRedeemResult;
@@ -92,6 +93,7 @@ class ChannelRedemptionServiceTest {
         code = ChannelVoucherCodec.issue(publicId);
         when(accounts.selectById(ACCOUNT_ID)).thenReturn(activeAccount());
         when(verifications.selectByIdForUpdate(VERIFICATION_ID)).thenReturn(verifiedOrder("CNY"));
+        when(verifications.selectVerifiedByChannelOrderNo("ORDER-1")).thenReturn(Collections.singletonList(verifiedOrder("CNY")));
         when(products.selectById(PRODUCT_ID)).thenReturn(product());
         when(products.selectItems(PRODUCT_ID)).thenReturn(Collections.singletonList(productItem(7L, "作品 A")));
         when(productRoles.isPlatformOwned(7L)).thenReturn(true);
@@ -104,7 +106,8 @@ class ChannelRedemptionServiceTest {
             redemption.setId(REDEMPTION_ID);
             return 1;
         });
-        when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher(ChannelVoucher.STATUS_REDEEMED));
+        ChannelVoucher redeemed = voucher(ChannelVoucher.STATUS_REDEEMED);
+        when(vouchers.selectById(VOUCHER_ID)).thenReturn(redeemed);
     }
 
     @Test
@@ -187,7 +190,8 @@ class ChannelRedemptionServiceTest {
 
     @Test
     void tamperedCodeIsRejectedWithoutLeakingWhetherItExists() {
-        when(vouchers.selectByPublicIdForUpdate(publicId)).thenReturn(voucher(ChannelVoucher.STATUS_ACTIVE));
+        ChannelVoucher active = voucher(ChannelVoucher.STATUS_ACTIVE);
+        when(vouchers.selectByPublicId(publicId)).thenReturn(active);
         ChannelRedeemRequest request = request("req-1");
         request.setCode("cv1." + publicId + ".tampered-secret");
 
@@ -224,7 +228,7 @@ class ChannelRedemptionServiceTest {
         stubRedeemableVoucher(voucher(ChannelVoucher.STATUS_REDEEMED));
         ChannelRedemption other = activeRedemption();
         other.setMemberId(8L);
-        when(redemptions.selectByVoucherId(VOUCHER_ID)).thenReturn(other);
+        when(redemptions.selectByVoucherIdForUpdate(VOUCHER_ID)).thenReturn(other);
 
         ChannelVoucherException rejection = assertThrows(ChannelVoucherException.class,
                 () -> service.redeem(MEMBER, request("req-1")));
@@ -307,9 +311,73 @@ class ChannelRedemptionServiceTest {
         assertEquals("ORDER-2", view.getIssues().get(0).getChannelOrderNo());
     }
 
+
+    @Test
+    void issuedTermsAndTopicsSurviveCatalogChanges() {
+        ChannelVoucher issued = voucher(ChannelVoucher.STATUS_ACTIVE);
+        stubRedeemableVoucher(issued);
+        MarketingProduct edited = product();
+        edited.setTermsVersion("later");
+        edited.setValidityKind(MarketingProduct.VALIDITY_RELATIVE_DAYS);
+        edited.setValidDays(1);
+        when(products.selectById(PRODUCT_ID)).thenReturn(edited);
+        when(products.selectItems(PRODUCT_ID)).thenReturn(Collections.singletonList(productItem(999L, "新作品")));
+        when(topics.selectCmsTopicById(7L)).thenReturn(topic(7L, "999.00"));
+        service.redeem(MEMBER, request("req-1"));
+        ArgumentCaptor<ChannelGrantCommand> command = ArgumentCaptor.forClass(ChannelGrantCommand.class);
+        verify(grantPort).grant(command.capture());
+        assertEquals("v1", command.getValue().getTermsVersion());
+        assertEquals(Integer.valueOf(MarketingProduct.VALIDITY_NONE), command.getValue().getValidityKind());
+        assertEquals(Long.valueOf(7L), command.getValue().getTopics().get(0).getTopicId());
+        assertEquals(0, new BigDecimal("20.00").compareTo(command.getValue().getTopics().get(0).getAllocatedAmount()));
+    }
+
+    @Test
+    void legacyVoucherWithoutSnapshotFailsClosed() {
+        ChannelVoucher issued = voucher(ChannelVoucher.STATUS_ACTIVE);
+        issued.setGrantSnapshotJson(null);
+        stubRedeemableVoucher(issued);
+        assertEquals("VOUCHER_SNAPSHOT_UNAVAILABLE", assertThrows(ChannelVoucherException.class,
+                () -> service.redeem(MEMBER, request("req-1"))).getReasonCode());
+        verify(grantPort, never()).grant(any());
+    }
+
+    @Test
+    void receiptCannotBeReadByAnotherMember() {
+        ChannelRedemption receipt = activeRedemption();
+        when(redemptions.selectByReceiptNo(receipt.getReceiptNo())).thenReturn(receipt);
+        ChannelReceiptRequest request = new ChannelReceiptRequest();
+        request.setReceiptNo(receipt.getReceiptNo());
+        assertEquals("RECEIPT_NOT_FOUND", assertThrows(ChannelVoucherException.class,
+                () -> service.receipt(MEMBER + 1, request)).getReasonCode());
+    }
+
+    @Test
+    void revokedCodeCannotReachGrant() {
+        stubRedeemableVoucher(voucher(ChannelVoucher.STATUS_REVOKED));
+        assertEquals("CODE_REVOKED", assertThrows(ChannelVoucherException.class,
+                () -> service.redeem(MEMBER, request("req-1"))).getReasonCode());
+        verify(grantPort, never()).grant(any());
+    }
+
+
+    @Test
+    void sameExternalOrderNumberAcrossAccountsCannotGrantForeignAdmission() {
+        stubRedeemableVoucher(voucher(ChannelVoucher.STATUS_ACTIVE));
+        ChannelOrderVerification foreign = verifiedOrder("CNY");
+        foreign.setId(VERIFICATION_ID + 1);
+        foreign.setAccountId(ACCOUNT_ID + 1);
+        when(verifications.selectVerifiedByChannelOrderNo("ORDER-1"))
+                .thenReturn(Arrays.asList(verifiedOrder("CNY"), foreign));
+        assertEquals("CHANNEL_ORDER_AMBIGUOUS", assertThrows(ChannelVoucherException.class,
+                () -> service.redeem(MEMBER, request("req-1"))).getReasonCode());
+        verify(grantPort, never()).grant(any());
+    }
+
     private void stubRedeemableVoucher(ChannelVoucher voucher) {
         when(redemptions.selectByMemberRequest(MEMBER, "req-1")).thenReturn(null);
-        when(vouchers.selectByPublicIdForUpdate(publicId)).thenReturn(voucher);
+        when(vouchers.selectByPublicId(publicId)).thenReturn(voucher);
+        when(vouchers.selectByIdForUpdate(VOUCHER_ID)).thenReturn(voucher);
         when(vouchers.selectById(VOUCHER_ID)).thenReturn(voucher);
     }
 
@@ -363,6 +431,9 @@ class ChannelRedemptionServiceTest {
         voucher.setIssuedAt(new Date());
         voucher.setExpiresAt(new Date(System.currentTimeMillis() + 86_400_000L));
         voucher.setInventoryState(ChannelVoucher.INVENTORY_NONE);
+        voucher.setGrantSnapshotJson(com.chengyinhub.business.service.support.ChannelVoucherSnapshot.capture(
+                product(), products.selectItems(PRODUCT_ID), topics,
+                verifications.selectByIdForUpdate(VERIFICATION_ID).getAmount(), 2));
         return voucher;
     }
 

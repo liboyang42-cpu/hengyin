@@ -37,6 +37,7 @@ public class ChannelVoucher {
     private String codeHash;
     private Long productId;
     private Long productRevision;
+    private String grantSnapshotJson;
     private Integer quantity;
     private Integer seatCount;
     private Integer subjectMode;
@@ -82,6 +83,9 @@ public class ChannelVoucher {
 
     public Long getProductRevision() { return productRevision; }
     public void setProductRevision(Long productRevision) { this.productRevision = productRevision; }
+
+    public String getGrantSnapshotJson() { return grantSnapshotJson; }
+    public void setGrantSnapshotJson(String grantSnapshotJson) { this.grantSnapshotJson = grantSnapshotJson; }
 
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }

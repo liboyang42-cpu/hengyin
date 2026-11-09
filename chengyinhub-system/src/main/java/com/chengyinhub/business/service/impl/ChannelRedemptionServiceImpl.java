@@ -27,6 +27,7 @@ import com.chengyinhub.business.service.IProductRoleService;
 import com.chengyinhub.business.service.support.ChannelGrantPlanner;
 import com.chengyinhub.business.service.support.ChannelRedemptionGrantPortResolver;
 import com.chengyinhub.business.service.support.ChannelVoucherCodec;
+import com.chengyinhub.business.service.support.ChannelVoucherSnapshot;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,10 +106,12 @@ public class ChannelRedemptionServiceImpl implements IChannelRedemptionService {
         } catch (IllegalArgumentException invalid) {
             throw ChannelVoucherException.badRequest("INVALID_CODE", "兑换码无效");
         }
-        ChannelVoucher voucher = voucherMapper.selectByPublicIdForUpdate(publicId);
+        ChannelVoucher voucher = voucherMapper.selectByPublicId(publicId);
         if (voucher == null || !ChannelVoucherCodec.matches(code, voucher.getCodeHash())) {
             throw ChannelVoucherException.notFound("INVALID_CODE", "兑换码无效");
         }
+        ChannelOrderVerification verification = verificationMapper.selectByIdForUpdate(voucher.getVerificationId());
+        voucher = voucherMapper.selectByIdForUpdate(voucher.getId());
         Date now = new Date();
         if (Integer.valueOf(ChannelVoucher.STATUS_REVOKED).equals(voucher.getStatus())) {
             throw ChannelVoucherException.conflict("CODE_REVOKED", "兑换码已撤销");
@@ -118,7 +121,7 @@ public class ChannelRedemptionServiceImpl implements IChannelRedemptionService {
             throw ChannelVoucherException.conflict("CODE_EXPIRED", "兑换码已过期");
         }
         if (Integer.valueOf(ChannelVoucher.STATUS_REDEEMED).equals(voucher.getStatus())) {
-            ChannelRedemption existing = redemptionMapper.selectByVoucherId(voucher.getId());
+            ChannelRedemption existing = redemptionMapper.selectByVoucherIdForUpdate(voucher.getId());
             if (existing != null && existing.getMemberId() != null && existing.getMemberId() == memberId) {
                 return buildResult(existing, true);
             }
@@ -132,32 +135,17 @@ public class ChannelRedemptionServiceImpl implements IChannelRedemptionService {
         if (account == null || !account.issuableAt(now)) {
             throw ChannelVoucherException.conflict("CHANNEL_INACTIVE", "渠道未启用或合同失效");
         }
-        ChannelOrderVerification verification = verificationMapper.selectByIdForUpdate(voucher.getVerificationId());
         if (verification == null
                 || !Integer.valueOf(ChannelOrderVerification.STATUS_VERIFIED).equals(verification.getStatus())) {
             throw ChannelVoucherException.conflict("VERIFICATION_NOT_VERIFIED", "渠道订单未通过可信验证");
         }
+        if (verification.getExpiresAt() != null && !verification.getExpiresAt().after(now)) {
+            throw ChannelVoucherException.conflict("VERIFICATION_EXPIRED", "渠道订单验证已过期");
+        }
         requireBoundVerification(account, voucher, verification);
-        MarketingProduct product = requireProduct(voucher.getProductId(), now);
-        List<MarketingProductItem> items = productMapper.selectItems(voucher.getProductId());
-        if (items == null || items.isEmpty()) {
-            throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE", "商品未绑定作品");
-        }
+        MarketingProduct product = requireProduct(voucher, now);
         String currency = ChannelGrantPlanner.requireBaseCurrency(verification.getCurrency());
-        List<BigDecimal> weights = new ArrayList<>(items.size());
-        BigDecimal quantityFactor = BigDecimal.valueOf(voucher.getQuantity() == null
-                ? 1L : voucher.getQuantity().longValue());
-        for (MarketingProductItem item : items) {
-            CmsTopic topic = topicService.selectCmsTopicById(item.getTopicId());
-            BigDecimal unitPrice = topic == null ? null : topic.getSelfPlayPrice();
-            if (unitPrice == null || unitPrice.signum() <= 0) {
-                throw ChannelVoucherException.conflict("PRODUCT_PRICE_UNAVAILABLE",
-                        "作品缺少单买价，无法按要求分摊渠道实付");
-            }
-            // 上限按“单价 × 数量”判定；只用单价会把多份商品误判为超过单份价格。
-            weights.add(unitPrice.multiply(quantityFactor));
-        }
-        List<ChannelGrantTopic> lines = ChannelGrantPlanner.plan(items, weights, verification.getAmount());
+        List<ChannelGrantTopic> lines = ChannelVoucherSnapshot.topics(voucher);
 
         ChannelGrantCommand command = new ChannelGrantCommand();
         command.setSourceType(ChannelGrantCommand.SOURCE_CHANNEL);
@@ -314,32 +302,26 @@ public class ChannelRedemptionServiceImpl implements IChannelRedemptionService {
                 || !verification.getQuantity().equals(voucher.getQuantity())) {
             throw ChannelVoucherException.conflict("QUANTITY_MISMATCH", "验证事实数量与兑换码不一致");
         }
+        List<ChannelOrderVerification> matchingOrders = verificationMapper.selectVerifiedByChannelOrderNo(verification.getChannelOrderNo());
+        if (matchingOrders == null || matchingOrders.size() != 1
+                || !verification.getId().equals(matchingOrders.get(0).getId())) {
+            throw ChannelVoucherException.conflict("CHANNEL_ORDER_AMBIGUOUS", "渠道单号存在跨主体歧义，不能发放准入");
+        }
         if (verification.getAmount() == null || verification.getAmount().signum() <= 0) {
             throw ChannelVoucherException.conflict("AMOUNT_INVALID", "验证事实金额无效");
         }
     }
 
-    private MarketingProduct requireProduct(Long productId, Date now) {
-        MarketingProduct product = productMapper.selectById(productId);
-        if (product == null) {
-            throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE", "渠道映射的商品不存在");
-        }
-        if (Integer.valueOf(MarketingProduct.STATUS_DRAFT).equals(product.getStatus())) {
-            throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE", "商品仍是草稿，不能兑换");
-        }
+    private MarketingProduct requireProduct(ChannelVoucher voucher, Date now) {
+        MarketingProduct product = ChannelVoucherSnapshot.product(voucher);
         if (Integer.valueOf(MarketingProduct.VALIDITY_FIXED_WINDOW).equals(product.getValidityKind())
                 && (product.getFixedValidTo() == null || !product.getFixedValidTo().after(now))) {
             throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE", "商品固定有效期已结束");
         }
         ChannelGrantPlanner.requireSupportedValidity(product);
-        List<MarketingProductItem> items = productMapper.selectItems(productId);
-        if (items == null || items.isEmpty()) {
-            throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE", "商品未绑定任何作品");
-        }
-        for (MarketingProductItem item : items) {
-            if (item.getTopicId() == null || !productRoleService.isPlatformOwned(item.getTopicId())) {
-                throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE",
-                        "渠道兑换只允许平台自营内容，第三方履约保持关闭");
+        for (ChannelGrantTopic topic : ChannelVoucherSnapshot.topics(voucher)) {
+            if (topic.getTopicId() == null || !productRoleService.isPlatformOwned(topic.getTopicId())) {
+                throw ChannelVoucherException.conflict("PRODUCT_UNAVAILABLE", "渠道兑换只允许平台自营内容，第三方履约保持关闭");
             }
         }
         return product;

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WorkshopMapper">
+  <select id="sourceExposure" resultType="int">
+    select (select count(*) from cms_template_library where member_template_id=#{id})
+      +(select count(*) from cms_topic_node where template_id=#{id})
+  </select>
+  <select id="paidSource" resultType="long">
+    select id from workshop_version where source_canonical_id=#{id} and source_kind='PRIVATE_TEMPLATE' for update
+  </select>
+  <select id="lockVersionById" resultType="java.util.HashMap">select * from workshop_version where id=#{id} for update</select>
+  <select id="shelf" resultType="java.util.HashMap">
+    select * from workshop_version where source_kind='PRIVATE_TEMPLATE' and review_state='APPROVED' and id &lt; #{before}
+    order by id desc limit 51
+  </select>
+  <select id="appleProducts" resultType="java.util.HashMap">
+    select bundle_id,environment,product_id,price_milliunits,currency from workshop_apple_product
+    where version_id=#{versionId} and enabled=1 order by bundle_id,environment,product_id for update
+  </select>
+  <update id="submitVersion">
+    update workshop_version set review_state='PENDING',audit_task_id=#{auditTaskId},
+      review_hash=#{reviewHash},review_snapshot=#{reviewSnapshot}
+    where version_id=#{versionId} and seller_id=#{owner} and review_state='DRAFT' and source_kind='PRIVATE_TEMPLATE'
+      and content_hash=#{contentHash} and terms_hash=#{termsHash} and price_fen=#{priceFen}
+  </update>
+  <update id="reviewVersion">
+    update workshop_version set review_state=#{reviewState},approved_at=if(#{reviewState}='APPROVED',current_timestamp(3),null)
+    where id=#{id} and audit_task_id=#{auditTaskId} and review_hash=#{reviewHash} and review_state='PENDING'
+  </update>
+  <update id="withdrawVersion">
+    update workshop_version set review_state='WITHDRAWN'
+    where version_id=#{versionId} and seller_id=#{owner} and review_state in ('DRAFT','PENDING','APPROVED','REJECTED')
+  </update>
+  <select id="lockBoundAppleOrder" resultType="java.util.HashMap">
+    select * from workshop_order where provider='APPLE_IAP' and apple_bundle_id=#{bundle}
+      and apple_environment=#{environment} and apple_original_transaction_id=#{originalId} for update
+  </select>
+  <update id="revokeBoundApple">
+    update workshop_order set state='REFUNDED',license_status='REVOKED',
+      refunded_at=coalesce(refunded_at,#{revokedAt}),revoked_at=coalesce(revoked_at,#{revokedAt}),
+      revoke_reason='APPLE_BOUND_ORIGINAL_REVOCATION'
+    where order_no=#{orderNo} and buyer_id=#{owner} and provider='APPLE_IAP'
+      and apple_original_transaction_id=#{originalId} and paid_at is not null
+  </update>
+  <select id="lockAppleOrder" resultType="java.util.HashMap">
+    select * from workshop_order where provider='APPLE_IAP'
+      and (app_account_token=#{token} or apple_original_transaction_id=#{originalId}) for update
+  </select>
+  <update id="activateApple">
+    update workshop_order set state='PAID',license_status='ACTIVE',paid_at=#{paidAt},
+      apple_transaction_id=#{transactionId},apple_original_transaction_id=#{originalId},apple_fact_hash=#{factHash}
+    where order_no=#{orderNo} and buyer_id=#{owner} and provider='APPLE_IAP' and state='PENDING' and license_status='UNPAID'
+      and apple_transaction_id is null
+  </update>
+  <update id="revokeApple">
+    update workshop_order set state='REFUNDED',license_status='REVOKED',
+      apple_transaction_id=coalesce(apple_transaction_id,#{transactionId}),
+      apple_original_transaction_id=coalesce(apple_original_transaction_id,#{originalId}),
+      apple_fact_hash=coalesce(apple_fact_hash,#{factHash}),apple_revocation_hash=#{factHash},
+      paid_at=coalesce(paid_at,#{paidAt}),refunded_at=#{revokedAt},
+      revoked_at=coalesce(revoked_at,#{revokedAt}),revoke_reason='APPLE_REVOCATION'
+    where order_no=#{orderNo} and buyer_id=#{owner} and provider='APPLE_IAP'
+  </update>
+  <select id="sourceCanonicalId" resultType="long">select member_template_id from cms_template_library where id=#{id}</select>
+  <select id="lockSource" resultMap="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.CmsTemplateLibraryResult">
+    <include refid="com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.selectCmsTemplateLibraryVo"/> where id=#{id} for update
+  </select>
+  <select id="lockDraft" resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult">
+    <include refid="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateVo"/> where id=#{id} for update
+  </select>
+  <select id="targets" resultMap="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.CmsMemberTemplateResult">
+    <include refid="com.chengyinhub.business.mapper.CmsMemberTemplateMapper.selectCmsMemberTemplateVo"/>
+    where member_id=#{owner} and id &lt; #{before} and del_flag=0 and draft_status=0 and status=0 and publish_status=0
+    order by id desc limit 51
+  </select>
+  <insert id="insertVersion">
+    insert into workshop_version(version_id,seller_id,request_id,request_hash,module_id,source_canonical_id,
+      content_hash,content_json,terms_hash,terms_json,price_fen,source_kind,review_state)
+    values(#{versionId},#{owner},#{requestId},#{requestHash},#{moduleId},#{sourceCanonicalId},
+      #{contentHash},#{contentJson},#{termsHash},#{termsJson},#{priceFen},'PRIVATE_TEMPLATE','DRAFT')
+    on duplicate key update version_id=version_id
+  </insert>
+  <select id="version" resultType="java.util.HashMap">select * from workshop_version where version_id=#{versionId} for update</select>
+  <select id="versionRequest" resultType="java.util.HashMap">
+    select * from workshop_version where seller_id=#{owner} and request_id=#{requestId} for update
+  </select>
+  <insert id="reserveOrder">
+    insert into workshop_order(order_no,buyer_id,request_id,request_hash,version_id,amount_fen,provider,state,license_status,
+      version_review_hash,currency,amount_milliunits,app_account_token,apple_bundle_id,apple_environment,apple_product_id)
+    values(#{orderNo},#{owner},#{requestId},#{requestHash},#{versionId},#{amountFen},#{provider},'PENDING','UNPAID',
+      #{reviewHash},#{currency},#{amountMilliunits},#{accountToken},#{bundleId},#{environment},#{productId})
+    on duplicate key update order_no=order_no
+  </insert>
+  <select id="lockOrder" resultType="java.util.HashMap">select * from workshop_order where order_no=#{orderNo} for update</select>
+  <select id="lockLicenseForDraft" resultType="java.util.HashMap">
+    select o.*,coalesce(i.buyer_id,l.buyer_id) as installation_owner,cast(m.member_id as signed) as draft_owner,
+      coalesce(i.command_json,l.command_json) as installation_command
+    from cms_member_template m
+    left join workshop_install i on i.draft_id=m.id
+    left join workshop_draft_lineage l on l.draft_id=m.id
+    inner join workshop_order o on o.order_no=coalesce(i.order_no,l.order_no)
+    where m.id=#{draftId} for update of o
+  </select>
+  <insert id="inheritDraft">
+    insert into workshop_draft_lineage(draft_id,buyer_id,order_no,command_json,parent_draft_id)
+    values(#{draftId},#{owner},#{orderNo},#{commandJson},#{parentDraftId})
+  </insert>
+  <select id="topicReferences" resultType="java.util.HashMap">
+    select distinct template_id,merchant_member_id from cms_topic_node where topic_id=#{topicId} and template_id>0 order by template_id
+  </select>
+  <select id="orderRequest" resultType="java.util.HashMap">
+    select * from workshop_order where buyer_id=#{owner} and request_id=#{requestId} for update
+  </select>
+  <select id="licenses" resultType="java.util.HashMap">
+    select * from workshop_order where buyer_id=#{owner} and id &lt; #{before} and paid_at is not null order by id desc limit 51
+  </select>
+  <update id="activate">
+    update workshop_order set state='PAID',license_status='ACTIVE',payment_fact_id=#{factId},payment_fact_hash=#{factHash},
+      paid_at=#{paidAt} where order_no=#{orderNo} and state='PENDING' and buyer_id=#{owner}
+  </update>
+  <update id="suspendRefund">
+    update workshop_order set state='REFUND_PENDING',license_status=if(license_status='REVOKED','REVOKED','SUSPENDED'),
+      refund_no=#{refundNo},refund_requested_at=current_timestamp(3)
+    where order_no=#{orderNo} and buyer_id=#{owner} and state='PAID'
+  </update>
+  <update id="refundDispatch">
+    update workshop_order set refund_dispatch=#{result} where order_no=#{orderNo} and buyer_id=#{owner} and state='REFUND_PENDING'
+  </update>
+  <update id="refunded">
+    update workshop_order set state='REFUNDED',license_status='REVOKED',refund_fact_id=#{factId},refund_fact_hash=#{factHash},
+      refunded_at=#{refundedAt},revoked_at=coalesce(revoked_at,#{refundedAt}),revoke_reason=coalesce(revoke_reason,'REFUND')
+    where order_no=#{orderNo} and buyer_id=#{owner} and state='REFUND_PENDING'
+  </update>
+  <update id="revoke">
+    update workshop_order set license_status='REVOKED',revoked_at=current_timestamp(3),revoke_reason='BUYER_REVOKED'
+    where order_no=#{orderNo} and buyer_id=#{owner} and paid_at is not null and license_status!='REVOKED'
+  </update>
+  <insert id="reserveInstall">
+    insert into workshop_install(buyer_id,request_id,order_no,command_hash,command_json)
+    values(#{owner},#{requestId},#{orderNo},#{commandHash},#{commandJson})
+    on duplicate key update request_id=request_id
+  </insert>
+  <select id="install" resultType="java.util.HashMap">
+    select * from workshop_install where buyer_id=#{owner} and request_id=#{requestId} for update
+  </select>
+  <update id="finishInstall">
+    update workshop_install set outcome_json=#{outcomeJson},draft_id=#{draftId},installed_at=#{installedAt}
+    where buyer_id=#{owner} and request_id=#{requestId} and outcome_json is null
+  </update>
+  <select id="installedCount" resultType="int">select (select count(*) from workshop_install where order_no=#{orderNo} and draft_id is not null)
+      +(select count(*) from workshop_draft_lineage where order_no=#{orderNo})</select>
+  <select id="history" resultType="java.util.HashMap">
+    select * from workshop_install where buyer_id=#{owner} and order_no=#{orderNo} and id &lt; #{before} order by id desc limit 51
+  </select>
+</mapper>

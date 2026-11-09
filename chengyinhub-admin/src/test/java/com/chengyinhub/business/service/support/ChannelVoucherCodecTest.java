@@ -40,6 +40,18 @@ class ChannelVoucherCodecTest {
                 () -> ChannelVoucherCodec.publicIdOf("cv1.short.secret"));
     }
 
+
+    @Test
+    void malformedSecretLengthsAndExtraSegmentsAreRejected() {
+        String publicId = ChannelVoucherCodec.newPublicId();
+        assertThrows(IllegalArgumentException.class,
+                () -> ChannelVoucherCodec.publicIdOf("cv1." + publicId + ".short"));
+        assertThrows(IllegalArgumentException.class,
+                () -> ChannelVoucherCodec.publicIdOf(ChannelVoucherCodec.issue(publicId) + ".extra"));
+        assertThrows(IllegalArgumentException.class,
+                () -> ChannelVoucherCodec.publicIdOf("cv1." + publicId + "." + "x".repeat(10000)));
+    }
+
     @Test
     void tamperedCodeDoesNotMatchStoredHash() {
         String publicId = ChannelVoucherCodec.newPublicId();

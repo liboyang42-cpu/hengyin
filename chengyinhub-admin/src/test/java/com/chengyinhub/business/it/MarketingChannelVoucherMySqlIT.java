@@ -21,6 +21,7 @@ import com.chengyinhub.business.service.ChannelRedemptionGrantPort;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IProductRoleService;
 import com.chengyinhub.business.service.impl.ChannelRedemptionServiceImpl;
+import com.chengyinhub.business.service.impl.ChannelVoucherServiceImpl;
 import com.chengyinhub.business.service.support.ChannelRedemptionGrantPortResolver;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,8 +36,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -99,6 +98,7 @@ class MarketingChannelVoucherMySqlIT {
     private ChannelRefundVerificationMapper refundMapper;
     private ChannelRedemptionServiceImpl service;
     private CountingGrantPort grantPort;
+    private ChannelVoucherServiceImpl issuance;
     private ChannelRedemptionServiceImpl unwiredService;
 
     private long productId;
@@ -122,7 +122,8 @@ class MarketingChannelVoucherMySqlIT {
         P0AcceptanceSchema.migrations(source, "migration_marketing_product_20261108.sql");
         // 渠道迁移的 preflight 要求既有 oms_ticket 存在；本域不读它，只建最小形状。
         db.execute("CREATE TABLE IF NOT EXISTS oms_ticket (id BIGINT NOT NULL, PRIMARY KEY (id))");
-        P0AcceptanceSchema.migrations(source, "migration_marketing_z_channel_voucher_20261108.sql");
+        P0AcceptanceSchema.migrations(source, "migration_marketing_z_channel_voucher_20261108.sql",
+                "migration_z_channel_voucher_snapshot_20261109.sql");
 
         var session = P0AcceptanceSchema.sql(source,
                 "MarketingProductMapper", "ChannelVoucherMapper", "ChannelRedemptionMapper",
@@ -144,6 +145,9 @@ class MarketingChannelVoucherMySqlIT {
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
 
         grantPort = new CountingGrantPort();
+        issuance = new ChannelVoucherServiceImpl(accountMapper, verificationMapper, voucherMapper, redemptionMapper,
+                productMapper, mock(com.chengyinhub.business.mapper.OmsTicketMapper.class), roleService, topicService,
+                new ChannelRedemptionGrantPortResolver(List.of(grantPort)));
         service = new ChannelRedemptionServiceImpl(voucherMapper, redemptionMapper, verificationMapper,
                 accountMapper, productMapper, roleService, topicService,
                 new ChannelRedemptionGrantPortResolver(List.of(grantPort)));
@@ -172,9 +176,12 @@ class MarketingChannelVoucherMySqlIT {
         insertItem(productId);
         accountId = insertAccount();
         verificationId = insertVerifiedOrder();
-        code = "cv1." + hex16() + "." + hex16();
-        voucherId = insertVoucher(code, new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)),
-                new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30)));
+        com.chengyinhub.business.domain.dto.ChannelVoucherIssueRequest issue = new com.chengyinhub.business.domain.dto.ChannelVoucherIssueRequest();
+        issue.setVerificationId(verificationId);
+        issue.setRequestId("issue-" + hex16());
+        var issued = tx.execute(status -> issuance.issue(1L, issue));
+        code = issued.getCode();
+        voucherId = issued.getId();
     }
 
     // ------------------------------------------------------------------ 同码并发兑换
@@ -272,6 +279,34 @@ class MarketingChannelVoucherMySqlIT {
         assertNotNull(after.getConsumedAt());
     }
 
+    @Test
+    void refundBeforeRedemptionPermanentlyClosesIssuedCode() {
+        long refundId = insertVerifiedRefund();
+        var fulfillment = mock(com.chengyinhub.business.service.IMarketingProductFulfillmentService.class);
+        var refund = new com.chengyinhub.business.service.impl.ChannelRefundServiceImpl(
+                accountMapper, verificationMapper, refundMapper,
+                new com.chengyinhub.business.service.impl.ChannelRefundFactStore(refundMapper),
+                voucherMapper, redemptionMapper, mock(com.chengyinhub.business.mapper.OmsTicketMapper.class), fulfillment);
+        assertEquals(Integer.valueOf(1), tx.execute(status -> refund.retryPendingConsumptions(5)));
+        ChannelVoucherException rejected = org.junit.jupiter.api.Assertions.assertThrows(ChannelVoucherException.class,
+                () -> tx.execute(status -> service.redeem(MEMBER_A, request("after-refund"))));
+        assertEquals("CODE_REVOKED", rejected.getReasonCode());
+        assertEquals(0, grantPort.calls.get());
+        assertEquals(Integer.valueOf(1), db.queryForObject(
+                "SELECT consumed FROM marketing_channel_refund_verification WHERE id=?", Integer.class, refundId));
+        org.mockito.Mockito.verifyNoInteractions(fulfillment);
+    }
+
+    @Test
+    void concurrentSameRequestReturnsOneReceiptAndOneGrant() throws Exception {
+        List<String> receipts = runConcurrently(2, index -> tx.execute(status ->
+                service.redeem(MEMBER_A, request("same-concurrent")).getReceiptNo()));
+        assertEquals(receipts.get(0), receipts.get(1));
+        assertEquals(1, grantPort.calls.get());
+        assertEquals(Integer.valueOf(1), db.queryForObject(
+                "SELECT COUNT(*) FROM marketing_channel_redemption WHERE voucher_id=?", Integer.class, voucherId));
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     private long insertProduct() {
@@ -330,18 +365,6 @@ class MarketingChannelVoucherMySqlIT {
                 Long.class, orderNo);
     }
 
-    private long insertVoucher(String token, Date issuedAt, Date expiresAt) {
-        String publicId = publicIdOf(token);
-        db.update("INSERT INTO marketing_channel_voucher"
-                        + " (account_id,verification_id,public_id,code_hash,product_id,product_revision,"
-                        + " quantity,seat_count,subject_mode,status,inventory_state,issued_at,expires_at,"
-                        + " issued_by,request_id,request_fingerprint,create_time,update_time)"
-                        + " VALUES(?,?,?,?,?,1,1,1,2,0,0,?,?,1,?,?,NOW(),NOW())",
-                accountId, verificationId, publicId, sha256(token), productId, issuedAt, expiresAt,
-                "issue-" + hex16(), "c".repeat(64));
-        return db.queryForObject("SELECT id FROM marketing_channel_voucher WHERE public_id=?",
-                Long.class, publicId);
-    }
 
     private long insertVerifiedRefund() {
         String orderNo = db.queryForObject(
@@ -429,26 +452,9 @@ class MarketingChannelVoucherMySqlIT {
         }
     }
 
-    private static String publicIdOf(String token) {
-        String[] parts = token.split("\\.");
-        return parts[1];
-    }
 
     private static String hex16() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     }
 
-    private static String sha256(String value) {
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(value.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder(digest.length * 2);
-            for (byte b : digest) {
-                hex.append(String.format("%02x", b & 0xff));
-            }
-            return hex.toString();
-        } catch (Exception impossible) {
-            throw new IllegalStateException(impossible);
-        }
-    }
 }

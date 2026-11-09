@@ -18,8 +18,6 @@ import com.chengyinhub.business.service.ChannelRevocationOutcome;
 import com.chengyinhub.business.service.IChannelRefundService;
 import com.chengyinhub.business.service.IMarketingProductFulfillmentService;
 import com.chengyinhub.business.service.support.ChannelVoucherCodec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +35,6 @@ import java.util.List;
  */
 @Service
 public class ChannelRefundServiceImpl implements IChannelRefundService {
-
-    private static final Logger log = LoggerFactory.getLogger(ChannelRefundServiceImpl.class);
 
     private final ChannelVoucherAccountMapper accountMapper;
     private final ChannelOrderVerificationMapper purchaseMapper;
@@ -87,6 +83,21 @@ public class ChannelRefundServiceImpl implements IChannelRefundService {
                 || outcome.getCurrency() == null || outcome.getCurrency().trim().isEmpty()) {
             throw new IllegalArgumentException("退款金额或币种无效");
         }
+        ChannelRefundVerification replay = refundMapper.selectByProviderEvent(providerKey, eventId);
+        if (replay != null && Integer.valueOf(ChannelRefundVerification.STATUS_VERIFIED).equals(replay.getStatus())
+                && channelKey.equals(replay.getChannelKey()) && Integer.valueOf(1).equals(replay.getFullRefund())
+                && !Boolean.FALSE.equals(outcome.getFullRefund()) && Integer.valueOf(1).equals(replay.getConsumed())
+                && orderNo.equals(replay.getChannelOrderNo()) && refundNo.equals(replay.getChannelRefundNo())
+                && replay.getAmount().compareTo(outcome.getAmount()) == 0
+                && replay.getCurrency().equalsIgnoreCase(outcome.getCurrency())) {
+            view.setAccepted(Boolean.TRUE);
+            view.setReplayed(Boolean.TRUE);
+            view.setReasonCode(replay.getReasonCode());
+            view.setEventId(eventId);
+            view.setChannelOrderNo(orderNo);
+            view.setStatus(replay.getStatus());
+            return view;
+        }
         ChannelVoucherAccount account = accountMapper.selectByKey(channelKey);
         if (account == null || !account.issuableAt(new Date())) {
             view.setReasonCode("CHANNEL_INACTIVE");
@@ -97,6 +108,10 @@ public class ChannelRefundServiceImpl implements IChannelRefundService {
         if (purchase == null
                 || !Integer.valueOf(ChannelOrderVerification.STATUS_VERIFIED).equals(purchase.getStatus())) {
             view.setReasonCode("PURCHASE_NOT_VERIFIED");
+            return view;
+        }
+        if (!providerKey.equals(purchase.getProviderKey())) {
+            view.setReasonCode("REFUND_PROVIDER_MISMATCH");
             return view;
         }
         boolean sameAmount = purchase.getAmount() != null
@@ -135,6 +150,8 @@ public class ChannelRefundServiceImpl implements IChannelRefundService {
         row.setCreateTime(now);
         row.setUpdateTime(now);
         ChannelRefundVerification stored = factStore.store(row);
+        // REQUIRES_NEW 先提交事实，再锁父行，避免退款插入的外键锁等待本事务。
+        purchaseMapper.selectByIdForUpdate(purchase.getId());
         if (!Integer.valueOf(ChannelRefundVerification.STATUS_VERIFIED).equals(stored.getStatus())) {
             view.setReasonCode(stored.getReasonCode() == null
                     ? "REFUND_NOT_SUPPORTED" : stored.getReasonCode());
@@ -143,6 +160,7 @@ public class ChannelRefundServiceImpl implements IChannelRefundService {
             return view;
         }
         if (Integer.valueOf(1).equals(stored.getConsumed())) {
+            syncLocalRevocation(orderNo, stored.getPurchaseVerificationId(), now);
             view.setAccepted(Boolean.TRUE);
             view.setReplayed(Boolean.TRUE);
             view.setEventId(eventId);
@@ -155,7 +173,8 @@ public class ChannelRefundServiceImpl implements IChannelRefundService {
 
         // 购买后从未兑换 ⇒ 没有准入行、也没有已应计收入可冲销。记显式原因并收敛该事实，
         // 不让渠道回调被无限重投，也不假装发生过冲销。
-        if (redemptionMapper.selectByChannelOrderNo(orderNo) == null) {
+        if (redemptionMapper.selectByVerificationForUpdate(stored.getPurchaseVerificationId()) == null) {
+            syncLocalRevocation(orderNo, stored.getPurchaseVerificationId(), now);
             factStore.markNoRevenueToReverse(stored.getId(), "NO_REVENUE_TO_REVERSE");
             view.setAccepted(Boolean.TRUE);
             view.setReplayed(Boolean.FALSE);
@@ -216,29 +235,30 @@ public class ChannelRefundServiceImpl implements IChannelRefundService {
             command.claimedAmount = fact.getAmount();
             command.claimedCurrency = fact.getCurrency();
             command.requestId = "channel-refund-retry-" + fact.getId();
-            if (redemptionMapper.selectByChannelOrderNo(fact.getChannelOrderNo()) == null) {
+            purchaseMapper.selectByIdForUpdate(fact.getPurchaseVerificationId());
+            if (redemptionMapper.selectByVerificationForUpdate(fact.getPurchaseVerificationId()) == null) {
+                syncLocalRevocation(fact.getChannelOrderNo(), fact.getPurchaseVerificationId(), new Date());
                 factStore.markNoRevenueToReverse(fact.getId(), "NO_REVENUE_TO_REVERSE");
                 driven++;
                 continue;
             }
-            try {
-                fulfillment.consumeVerifiedChannelRefund(command);
-                factStore.markConsumed(fact.getId());
-                driven++;
-            } catch (RuntimeException notYet) {
-                // 保持 unconsumed，下一轮再驱动；不吞成"已处理"。
-                log.warn("[M8] 渠道退款补偿消费未完成 factId={} error={}",
-                        fact.getId(), notYet.getClass().getSimpleName());
-            }
+            ChannelRevocationOutcome outcome = fulfillment.consumeVerifiedChannelRefund(command);
+            if (outcome == null) throw new IllegalStateException("渠道退款消费无结果");
+            syncLocalRevocation(fact.getChannelOrderNo(), fact.getPurchaseVerificationId(), new Date());
+            factStore.markConsumed(fact.getId());
+            driven++;
         }
         return driven;
     }
 
     private void syncLocalRevocation(String channelOrderNo, Long purchaseVerificationId, Date now) {
-        ChannelRedemption redemption = redemptionMapper.selectByChannelOrderNo(channelOrderNo);
-        ChannelVoucher voucher = redemption == null
-                ? (purchaseVerificationId == null ? null : voucherMapper.selectByVerification(purchaseVerificationId))
-                : voucherMapper.selectById(redemption.getVoucherId());
+        ChannelVoucher issued = purchaseVerificationId == null ? null : voucherMapper.selectByVerificationForUpdate(purchaseVerificationId);
+        if (issued == null) {
+            if (purchaseVerificationId != null) purchaseMapper.markRevoked(purchaseVerificationId, "CHANNEL_REFUND", now);
+            return;
+        }
+        ChannelRedemption redemption = redemptionMapper.selectByVerificationForUpdate(purchaseVerificationId);
+        ChannelVoucher voucher = issued;
         if (redemption != null
                 && !Integer.valueOf(ChannelRedemption.STATUS_REVOKED).equals(redemption.getStatus())) {
             redemptionMapper.markRevoked(redemption.getId(), "CHANNEL_REFUND", now, now);

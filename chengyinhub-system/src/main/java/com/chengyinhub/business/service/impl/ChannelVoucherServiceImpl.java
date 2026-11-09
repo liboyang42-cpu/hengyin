@@ -19,6 +19,8 @@ import com.chengyinhub.business.mapper.ChannelVoucherAccountMapper;
 import com.chengyinhub.business.mapper.ChannelVoucherMapper;
 import com.chengyinhub.business.mapper.MarketingProductMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.service.ICmsTopicService;
+import com.chengyinhub.business.service.support.ChannelVoucherSnapshot;
 import com.chengyinhub.business.service.IChannelVoucherService;
 import com.chengyinhub.business.service.IProductRoleService;
 import com.chengyinhub.business.service.support.ChannelGrantPlanner;
@@ -62,6 +64,7 @@ public class ChannelVoucherServiceImpl implements IChannelVoucherService {
     private final MarketingProductMapper productMapper;
     private final OmsTicketMapper ticketMapper;
     private final IProductRoleService productRoleService;
+    private final ICmsTopicService topicService;
     private final ChannelRedemptionGrantPortResolver grantPortResolver;
 
     public ChannelVoucherServiceImpl(
@@ -72,6 +75,7 @@ public class ChannelVoucherServiceImpl implements IChannelVoucherService {
             MarketingProductMapper productMapper,
             OmsTicketMapper ticketMapper,
             IProductRoleService productRoleService,
+            ICmsTopicService topicService,
             ChannelRedemptionGrantPortResolver grantPortResolver) {
         this.accountMapper = accountMapper;
         this.verificationMapper = verificationMapper;
@@ -80,6 +84,7 @@ public class ChannelVoucherServiceImpl implements IChannelVoucherService {
         this.productMapper = productMapper;
         this.ticketMapper = ticketMapper;
         this.productRoleService = productRoleService;
+        this.topicService = topicService;
         this.grantPortResolver = grantPortResolver;
     }
 
@@ -140,13 +145,17 @@ public class ChannelVoucherServiceImpl implements IChannelVoucherService {
         if (account == null || !account.issuableAt(now)) {
             throw ChannelVoucherException.conflict("CHANNEL_INACTIVE", "渠道未启用、合同缺失或不在生效窗口");
         }
+        if (verification.getExpiresAt() != null && !verification.getExpiresAt().after(now)) {
+            throw ChannelVoucherException.conflict("VERIFICATION_EXPIRED", "渠道订单验证已过期");
+        }
+        ChannelGrantPlanner.requireBaseCurrency(verification.getCurrency());
         Long productId = verification.getProductId();
         Integer quantity = verification.getQuantity();
         if (productId == null || productId <= 0 || quantity == null || quantity <= 0) {
             throw ChannelVoucherException.conflict("VERIFICATION_INCOMPLETE", "验证记录缺少商品或数量映射");
         }
         String fingerprint = ChannelVoucherCodec.sha256Hex(String.valueOf(verification.getId()) + "|"
-                + expiresAt.getTime() + "|" + subjectMode + "|" + valueOf(request.getBoundMemberId()) + "|"
+                + (request.getExpiresAt() == null ? "DEFAULT" : request.getExpiresAt().getTime()) + "|" + subjectMode + "|" + valueOf(request.getBoundMemberId()) + "|"
                 + valueOf(inventoryTicketId) + "|" + valueOf(inventoryQuantity));
         ChannelVoucher byRequest = voucherMapper.selectByAccountRequest(account.getId(), requestId);
         if (byRequest != null) {
@@ -172,6 +181,8 @@ public class ChannelVoucherServiceImpl implements IChannelVoucherService {
         voucher.setCodeHash(ChannelVoucherCodec.sha256Hex(code));
         voucher.setProductId(product.getId());
         voucher.setProductRevision(product.getRevision() == null ? 1L : product.getRevision());
+        voucher.setGrantSnapshotJson(ChannelVoucherSnapshot.capture(product, productMapper.selectItems(productId),
+                topicService, verification.getAmount(), quantity));
         voucher.setQuantity(quantity);
         voucher.setSeatCount(seatCount);
         voucher.setSubjectMode(subjectMode);
@@ -270,10 +281,12 @@ public class ChannelVoucherServiceImpl implements IChannelVoucherService {
     }
 
     private ChannelVoucherView revokeInternal(Long voucherId, String reason, String source, String requestId) {
-        ChannelVoucher voucher = voucherMapper.selectByIdForUpdate(voucherId);
+        ChannelVoucher voucher = voucherMapper.selectById(voucherId);
         if (voucher == null) {
             throw ChannelVoucherException.notFound("VOUCHER_NOT_FOUND", "兑换码不存在");
         }
+        verificationMapper.selectByIdForUpdate(voucher.getVerificationId());
+        voucher = voucherMapper.selectByIdForUpdate(voucherId);
         Date now = new Date();
         if (Integer.valueOf(ChannelVoucher.STATUS_REVOKED).equals(voucher.getStatus())) {
             return toView(voucher);

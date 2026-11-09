@@ -125,11 +125,16 @@ public class CmsMemberTemplateServiceImpl implements ICmsMemberTemplateService
         return cmsMemberTemplateMapper.deleteCmsMemberTemplateById(id);
     }
 
+    @Autowired
+    private com.chengyinhub.business.service.support.WorkshopLicenseGuard workshopLicenses;
+
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor=Exception.class)
     public Long copyForContentOwner(Long templateId, Long newOwnerMemberId, boolean forceCopy) {
         if (templateId == null || templateId <= 0L || newOwnerMemberId == null) {
             return templateId;
         }
+        if(workshopLicenses!=null)workshopLicenses.requireCopy(templateId,newOwnerMemberId);
         CmsMemberTemplate source = cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
         if (source == null || (!forceCopy && newOwnerMemberId.equals(source.getMemberId()))) {
             return templateId;
@@ -153,6 +158,7 @@ public class CmsMemberTemplateServiceImpl implements ICmsMemberTemplateService
         if (copy.getId() == null) {
             throw new IllegalStateException("复制主题失败: 节点模板深拷贝未回填主键, templateId=" + templateId);
         }
+        if(workshopLicenses!=null)workshopLicenses.inheritCopy(templateId,copy.getId(),newOwnerMemberId);
         return copy.getId();
     }
 }

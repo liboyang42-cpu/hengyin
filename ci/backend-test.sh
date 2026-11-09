@@ -8,6 +8,20 @@ cd "$(git rev-parse --show-toplevel)" || exit 1   # 路径均为仓库根相对,
 python3 -m unittest ci/test_role_permission_contract.py
 GATE_SELFTEST=1 GATE="$PWD/ci/assert_it_ran.py" python3 -m unittest ci/test_assert_it_ran.py
 
+# 官方公开根证书/负例按 SHA 固定下载到临时目录，不入库；缺失必须失败，不能让 SDK 负例静默 skip。
+APPLE_IAP_INPUTS="$(mktemp -d)"
+trap 'rm -rf "$APPLE_IAP_INPUTS"' EXIT
+while read -r expected name url; do
+  curl --fail --silent --show-error --location --retry 3 --retry-all-errors "$url" -o "$APPLE_IAP_INPUTS/$name"
+  printf '%s  %s\n' "$expected" "$APPLE_IAP_INPUTS/$name" | sha256sum --check --status
+done <<'APPLE_INPUTS'
+63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179 AppleRootCA-G3.cer https://www.apple.com/certificateauthority/AppleRootCA-G3.cer
+53090b903cdcd661a100ebfd41617103352ede6b3bcf91a34346ccdcc925c6d8 xcode-signed-transaction https://raw.githubusercontent.com/apple/app-store-server-library-java/v5.2.0/src/test/resources/xcode/xcode-signed-transaction
+e1fc5e5795383a5d672a3f355b86407c95a0eb01eb35397dee7e6d76270ef579 testNotification https://raw.githubusercontent.com/apple/app-store-server-library-java/v5.2.0/src/test/resources/mock_signed_data/testNotification
+APPLE_INPUTS
+export APPLE_IAP_TEST_ROOT="$APPLE_IAP_INPUTS/AppleRootCA-G3.cer"
+export APPLE_IAP_TEST_FIXTURE_DIR="$APPLE_IAP_INPUTS"
+
 # 全量编译 + 跑测试。首次接入若命中历史遗留失败用例,
 # 先在此收敛或用 -pl 缩到改动模块,再逐步扩全。
 mvn -B clean test
@@ -69,6 +83,8 @@ MYBATIS_ITS=(
   CircleThemeSeedMySqlIT
   TemplatePreferenceJsonMySqlIT
   TemplateMarketLifecycleMySqlIT
+  WorkshopPurchaseMyBatisIT
+  WorkshopAppleIapMyBatisIT
   AdvancedGameRuntimeMySqlIT
   ThemeRuntimeMySqlIT
   GenericRouteRuntimeMySqlIT

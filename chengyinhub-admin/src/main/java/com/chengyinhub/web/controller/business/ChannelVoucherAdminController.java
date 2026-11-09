@@ -106,7 +106,7 @@ public class ChannelVoucherAdminController extends BaseController {
     }
 
     @PreAuthorize("@ss.hasPermi('business:marketing:channel:issue')")
-    @Log(title = "渠道兑换码发行", businessType = BusinessType.INSERT)
+    @Log(title = "渠道兑换码发行", businessType = BusinessType.INSERT, isSaveResponseData = false)
     @PostMapping("/vouchers")
     public AjaxResult issue(@RequestBody(required = false) ChannelVoucherIssueRequest request) {
         return success(voucherService.issue(requireOperator(), request));

@@ -166,6 +166,8 @@ public final class ContentCapabilityRequirements {
         String mode = snapshot.path("routeMode").asText("");
         if (!mode.trim().isEmpty() && !"LINEAR".equals(mode)) keys.merge("route.branch", DEFAULT_VERSION, Math::max);
         if (snapshot.path("themeConfig").isObject()) keys.merge("theme.runtime", DEFAULT_VERSION, Math::max);
+        if (GameplayRuntimeConfig.cooperativePuzzles(snapshot.path("themeConfig")))
+            keys.merge("game.teamCooperation", DEFAULT_VERSION, Math::max);
     }
 
     private static void media(JsonNode row, String field, String key, Map<String, Integer> keys) {
