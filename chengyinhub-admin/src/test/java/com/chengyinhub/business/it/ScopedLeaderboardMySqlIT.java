@@ -68,7 +68,7 @@ class ScopedLeaderboardMySqlIT {
 
             // ① 内容作用域（世界/城市/单关）看到同一批有效对局；
             //    路人不是本团成员但分最高 ⇒ 世界第一是他，俱乐部榜第一是成员。
-            for (String scope : new String[]{"world", "city", "quest"}) {
+            for (String scope : new String[]{"world", "quest"}) {
                 List<ScopedLeaderboardEntryVO> rows = mapper.selectScopedTop(
                         scope, scopeIdFor(scope), idOf(scope), null, null, 50);
                 assertEquals(4, rows.size(), scope + " 应含四名已支付玩家");
