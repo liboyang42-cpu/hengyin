@@ -43,9 +43,11 @@ Mini-program only. No Java, SQL, migration or admin change.
 
 ## Gates
 
-- `node --test` on all 7 new `qx-b5-*` files plus the existing baoming / waitlist / checkout / order-detail / income suites: see PR body for the final run.
-- `scripts/uiaudit/route-matrix.json` regenerated (4 new player routes); action ledger rebuilt; `ui-integrity` result in the PR body.
+- Unit: 7 new files `tests/unit/qx-b5-*.test.js` (36 tests) pass. Related suites (222 files: baoming, waitlist, checkout, order, income, profile, topic, activity, share, route, title, nav, coupon, event-ops, action-ledger) 2255 tests: all pass after the contract updates below.
+- Contract tests updated because the change is intended (counts and allow-lists, each with a dated comment): `route-matrix-freshness` 157→161, `title-system-owner-contract` 157→161 / custom 156→160 and the two inventories, `nav-route-exists` orphan exemption for the gift claim deep link, `activity-detail-single-source-contract` dependency stub for `referral.js`, `order-refund-amount` refund-row condition, `action-ledger` 5751→5780 (tap +12, event +17, external tap +1).
+- `scripts/uiaudit/route-matrix.json` regenerated; `node scripts/uiaudit/build-action-ledger.js --write` → `ACTION-LEDGER WRITE PASS: 5780 controls`; `node tests/lint/ui-integrity.js` → `UI-GATE-0:PASS` (no baseline entries added; `silentError` replaced by `autoErrorToast:false` where a `fail` handler exists).
 - Main package: `scripts/mainpkg-size-report.js` ≈ 3150 KB source ≈ 1994 KiB counted. Only `utils/commerce/referral.js` (3.8 KB) is new in the main package; checkout-only modules live in the `pages/activity` subpackage.
+- Not run: `ci/xcx-check.sh`, `ds-hardcode-gate-selftest.sh` (forbidden by the brief), Java/admin builds (no backend or admin change in this lane).
 
 ## needs owner
 
