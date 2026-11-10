@@ -2,6 +2,7 @@
 // gate:上一章做完时先由星点拼出方块章节号 + 本章成绩,再升起三棱锥转到这一章那面;没有上一章就直接出三棱锥。
 // finale:文字全部隐去 → 三棱锥越转越快、停在金色面 → 炸成碎片 + 银色方块波 → 方块拼成银色城瘾标志 → 才出主题名、合计与按钮。
 const E = require('./engine');
+const { hapticConfirm } = require('../../../../utils/motion.js');   // M14(MOTION.md 4.5):溶解开始那一下 confirm
 
 const AW = 360, AH = 378;                 // 面图分辨率(与 250×262 的面同比例)
 const NOISE = '░▒▓█▚▞■□';
@@ -179,6 +180,7 @@ Component({
       if (this._stage !== 'end' || this._gone) return;
       this._stage = 'dissolve';
       const go = () => { this._stage = 'end-done'; this.setData({ endCard: null }); this._toFlip(true); };
+      hapticConfirm();   // 触感不读减动效:减动效下卡直接切走,也给这一下
       if (this.data.reducedMotion) { go(); return; }
       this.createSelectorQuery().select('.cf__end').boundingClientRect().exec((res) => {
         const r = res && res[0];

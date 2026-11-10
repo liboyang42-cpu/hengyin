@@ -4330,7 +4330,7 @@ Page({
       const prev = sig(this.data.nearbyPois);
       if (ids !== prev) {
         if (!this._nearbyShown) {
-          wx.vibrateShort && wx.vibrateShort({ type: 'light' });
+          motion.hapticTap();
           this._nearbyShown = true;
         }
         this.setData({
@@ -4599,7 +4599,7 @@ Page({
       cyToast('还差 ' + gapM + ' 米，走近后再打卡');
       return;
     }
-    wx.vibrateShort && wx.vibrateShort({ type: 'light' });
+    motion.hapticTap();
     this.setData({
       visit: { active: true, checkinOk: false, poi, photos: [], startedAt: Date.now() },
       nearbyBanner: { show: false },
@@ -4682,7 +4682,7 @@ Page({
         if (elapsed >= END_HOLD_MS) {
           this._endHoldTriggered = true;
           this._cancelEndHold();
-          wx.vibrateShort && wx.vibrateShort({ type: 'heavy' });
+          motion.hapticHit();   // M14:长按到达 = 本屏那一下 heavy
           this._arrive();
         }
       }, 40);

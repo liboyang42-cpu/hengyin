@@ -3,6 +3,7 @@ const view = require('../../utils/journey-view.js');
 const morph = require('../../../utils/morph-success.js');
 const join = require('../../utils/join-view.js');
 const pageMotion = require('../../../utils/page-motion.js');
+const { hapticTap } = require('../../../utils/motion.js');
 const app = getApp();
 
 /* P1 推荐/赠送/同行落地 + P4 玩法模式 + P5 领取席位。
@@ -109,7 +110,7 @@ Page({
     const key = e.currentTarget.dataset.key;
     const tile = this.data.tiles.find(t => t.key === key);
     if (!tile || key === this.data.activeMode) return;
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail() {} });
+    hapticTap();   // M14:选 chip
     this.setData({ activeMode: key, activeTile: tile });
   },
 

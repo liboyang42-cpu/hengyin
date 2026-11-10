@@ -43,6 +43,8 @@ function mount(source, kind, relativePath) {
     clearInterval() {},
     require(id) {
       if (!id.startsWith('.')) return require(id)
+      // 2026-11-10 r4-motion:核销震动改走 utils/motion.js 的具名档位(M14);沙箱把它接回同一个震动记录器,页 / 场景仍按同一口径比对
+      if (/utils\/motion\.js$/.test(id)) return { hapticConfirm() { wx.vibrateShort({ type: 'medium' }); return true } }
       return require(path.resolve(path.dirname(path.join(ROOT, relativePath)), id))
     },
     Page(options) { definition = options },
@@ -151,7 +153,8 @@ test('券核销时间在首次读取与轮询中统一展示北京时间，非�
 
 test('负控：qr-coupon 场景摘掉核销震动时必须判红', () => {
   const source = read(COUPON_SCENE)
-  const mutated = source.replace("            if (status === 1 && wx.vibrateShort) wx.vibrateShort({ type: 'medium' })\n", '')
+  // 2026-11-10 r4-motion:核销震动改走 utils/motion.js 的 hapticConfirm()(M14),负控锚点跟着改
+  const mutated = source.replace("            if (status === 1) hapticConfirm()   // M14:核销成功 = confirm\n", '')
   assert.notEqual(mutated, source, '负控锚点失效：核销震动能力不存在')
   assert.throws(() => assertCouponFeedbackParity(mutated), assert.AssertionError)
 })

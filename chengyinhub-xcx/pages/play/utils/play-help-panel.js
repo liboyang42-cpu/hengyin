@@ -11,6 +11,7 @@
 const { id } = require('../../../utils/orient-score-view.js');
 const modal = require('../../../utils/modal.js');
 const morph = require('../../../utils/morph-success.js');
+const { hapticConfirm } = require('../../../utils/motion.js');   // M14(MOTION.md 4.3):勾亮起时一次 confirm
 
 const BASE = '/api/play/help';
 const PENDING_KEY = 'play-help-pending:v1';
@@ -187,6 +188,7 @@ function methods(send) {
           patchRow({ pending: false, error: '', state: 'review', action: '重看', content: body.data.content,
             contentType: body.data.type, charge: chargeLine(body.data), fresh: hold > 0 }, { doneLevel: hold ? row.level : null });
           if (hold) {
+            hapticConfirm();   // 勾出现的这一帧(重看不亮勾也不震;减动效 hold=0 同样不震)
             morph.cancel(this);
             this._morphTimer = setTimeout(() => {
               this._morphTimer = null;

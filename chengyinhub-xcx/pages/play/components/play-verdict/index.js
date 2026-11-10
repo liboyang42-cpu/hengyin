@@ -27,6 +27,7 @@ function makeBubbles(n) {
 }
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
+const { hapticConfirm, hapticMiss } = require('../../../../utils/motion.js');   // M14(MOTION.md 4.4):对 = confirm,错 = miss(两下,不抖屏)
 
 Component({
   behaviors: [reducedMotionBehavior],
@@ -53,6 +54,7 @@ Component({
     'show, kind, timedOut': function (show, kind, timedOut) {
       this.setData({ word: failWord(timedOut) });
       if (!show) { this._clear(); this.setData({ rising: false }); return; }
+      if (kind === 'fail') hapticMiss(); else hapticConfirm();   // 判定屏亮起的那一下;触感不读减动效(视觉设置)
       // 先挂上再涨:同一帧里设 true 的话过渡没有起点,会直接就位、看不见涌上来那一下
       this._clear();
       this._raf = setTimeout(() => this.setData({ rising: true }), 20);

@@ -23,7 +23,12 @@
 .rb-period { display: flex; justify-content: center; }
 .rb-list { border-radius: var(--cy-comp-sheet-group-radius); overflow: hidden; background: var(--cy-comp-sheet-group-bg); transition: opacity .2s ease; }
 .rb-list.is-busy { opacity: .5; }
-.rb-row { position: relative; display: flex; align-items: center; gap: 24rpx; min-height: 96rpx; padding: 16rpx 31rpx; box-sizing: border-box; }
+.rb-row { position: relative; display: flex; align-items: center; gap: 24rpx; min-height: 96rpx; padding: 16rpx 31rpx; box-sizing: border-box;
+  filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * var(--cy-motion-rise-sm)); scale: calc(1 + var(--pm-l, 0) * .02);
+  transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) var(--cy-ease-page-rise), scale var(--pm-l-d, 0s) var(--cy-ease-settle);
+  transition-delay: calc(var(--pm-l-s, 0) * var(--i, 0) * var(--cy-motion-stagger)); }
+/* r4-motion 2026-11-10(M2):行按 --i 错峰上浮(封顶 8);自己那一行从 1.02 落到 1(一次性 settle),其余行 scale 不变 */
+.rb-row:not(.is-me) { scale: none; }
 .rb-row + .rb-row::before { content: ''; position: absolute; top: 0; left: 31rpx; right: 0; height: 1rpx; background: var(--cy-comp-sheet-group-line); }
 .rb-row--head { justify-content: space-between; min-height: 80rpx; }
 .rb-row.is-me .rb-row__b { color: var(--cy-color-status-success); }
@@ -37,6 +42,7 @@
   background: var(--cy-color-bg-elevated); font-size: var(--cy-type-label); font-weight: 600; }
 .rb-av image { width: 100%; height: 100%; }
 .rb-note { display: block; padding: 20rpx 31rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.rb--reduced .rb-digit__col, .rb--reduced .rb-list { transition: none; }
+.rb--reduced .rb-digit__col, .rb--reduced .rb-list, .rb--reduced .rb-row { transition: none; }
+.rb--reduced .rb-row { filter: none; translate: none; scale: none; }
 .rb-more__ic { display: flex; transform: rotate(90deg); }
 .rb-bar__tabs.is-single { flex: none; margin-right: auto; }

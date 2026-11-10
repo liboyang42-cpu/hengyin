@@ -38,6 +38,10 @@
 .chfull .hud2{ transition:opacity var(--cy-motion-fast) var(--cy-ease-standard), transform var(--cy-motion-fast) var(--cy-ease-standard); }
 .chfull.is-navmap .hud2{ opacity:0; transform:translateY(-12rpx); pointer-events:none; }
 @media (prefers-reduced-motion: reduce){ .chfull .hud2{ transition:none; } }
+/* r4-motion 2026-11-10(MOTION.md 4.1):故事屏第一次亮起时 HUD 两行从上方依次落下(page-motion --pm 约定,只 transition);地图档的让位仍走上面那条 */
+.hud2 > .theme-story-hud, .hud2 > .hud2-line{ filter:opacity(calc(1 - var(--pm-l, 0))); translate:0 calc(var(--pm-l, 0) * -1 * var(--cy-motion-rise-sm)); transition:filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) var(--cy-ease-page-rise); }
+.hud2 > .hud2-line{ transition-delay:calc(var(--pm-l-s, 0) * var(--cy-motion-stagger-hero)); }
+@media (prefers-reduced-motion: reduce){ .hud2 > .theme-story-hud, .hud2 > .hud2-line{ transition:none; filter:none; translate:none; } }
 /* a1-v3-15(2026-11-10 业主「UI要改 看起来不像是游戏」「这种灰色的弹窗看起来还是看不太清」):
    入口行加任务旗标、描边与按压微缩;半屏里每站一张任务卡(配图或序号徽章 + 名字 + 地址)。颜色只用玩家弹层 token。 */
 .chfull__tasks{ min-height:104rpx; padding:0 var(--cy-space-4) 0 var(--cy-space-2); box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong);
