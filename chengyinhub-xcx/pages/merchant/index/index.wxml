@@ -272,6 +272,10 @@
           <image class="rv-more-ico" src="/pages/merchant/images/icon_calendar.svg" mode="aspectFit" />
           <text class="rv-more-label">核销记录</text>
         </view>
+        <view class="rv-more-item" wx:if="{{merchantAccess.canReadFinance}}" bindtap="onMoreItem" data-action="payoutAccount" aria-role="button" aria-label="打开收款账户" hover-class="cy-pressed" hover-stay-time="80">
+          <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
+          <text class="rv-more-label">收款账户</text>
+        </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoupons}}" bindtap="onMoreItem" data-action="coupon" aria-role="button" aria-label="管理优惠券" hover-class="cy-pressed" hover-stay-time="80">
           <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
           <text class="rv-more-label">管理优惠券</text>

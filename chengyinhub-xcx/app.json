@@ -140,6 +140,7 @@
         "game-node/index",
         "customer/detail/index",
         "verify-records/index",
+        "payout-account/index",
         "crm-campaigns/index",
         "team/index"
       ]

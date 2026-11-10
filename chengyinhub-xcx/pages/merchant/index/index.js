@@ -341,6 +341,7 @@ Page({
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
     else if (action === 'verifyRecords') this.goVerifyRecords();
+    else if (action === 'payoutAccount') this.goPayoutAccount();
   },
 
   goManageCoupon() {
@@ -356,6 +357,11 @@ Page({
     if (!this.data.merchantAccess.canReadVerifyRecords || this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/verify-records/index', complete: () => { this._navigating = false; } });
+  },
+  goPayoutAccount() {
+    if (!this.data.merchantAccess.canReadFinance || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/payout-account/index', complete: () => { this._navigating = false; } });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {

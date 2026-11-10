@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5936,
+  "controlCount": 5941,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -3100,6 +3100,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -38591,6 +38592,160 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -92634,6 +92789,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -100003,6 +100159,40 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -152823,6 +153013,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -155537,6 +155728,24 @@
             {
               "selector": "cy-empty",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 1
             }
           ]
         },
@@ -160400,6 +160609,7 @@
         "pages/merchant/ledger/index",
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -163225,6 +163435,24 @@
               "selector": "cy-state-shell",
               "index": 0
             },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
             {
               "selector": "cy-error",
               "index": 1
@@ -167607,6 +167835,7 @@
         "pages/merchant/ledger/index",
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -170432,6 +170661,24 @@
               "selector": "cy-state-shell",
               "index": 0
             },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
             {
               "selector": "cy-error",
               "index": 1
@@ -174814,6 +175061,7 @@
         "pages/merchant/ledger/index",
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -177639,6 +177887,24 @@
               "selector": "cy-state-shell",
               "index": 0
             },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
             {
               "selector": "cy-error",
               "index": 1
@@ -281685,6 +281951,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -287058,6 +287325,15 @@
         },
         {
           "route": "pages/merchant/marketing/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -295083,6 +295359,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -301780,6 +302057,19 @@
         },
         {
           "route": "pages/merchant/marketing/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -323580,6 +323870,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -329390,6 +329681,32 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -337618,6 +337935,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -343428,6 +343746,32 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -351656,6 +352000,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -357466,6 +357811,32 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -365694,6 +366065,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -371504,6 +371876,32 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -379732,6 +380130,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -385542,6 +385941,32 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -436785,6 +437210,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -453263,6 +453689,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -477751,6 +478245,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -494229,6 +494724,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -518717,6 +519280,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -535195,6 +535759,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -559683,6 +560315,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -576161,6 +576794,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -600649,6 +601350,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -617127,6 +617829,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -641615,6 +642385,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -658093,6 +658864,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -682581,6 +683420,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -699059,6 +699899,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -723547,6 +724455,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -740025,6 +740934,74 @@
             {
               "selector": "#dc",
               "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 1
             },
             {
               "selector": "cy-result-sheet",
@@ -774228,6 +775205,7 @@
         "pages/merchant/ledger/order-detail/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/marketing/index",
+        "pages/merchant/payout-account/index",
         "pages/merchant/predict/index",
         "pages/merchant/profile/index",
         "pages/merchant/relation/index",
@@ -774881,6 +775859,15 @@
         },
         {
           "route": "pages/merchant/marketing/index",
+          "segments": [
+            {
+              "selector": "#cy-toast",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/payout-account/index",
           "segments": [
             {
               "selector": "#cy-toast",
@@ -894427,7 +895414,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1515"
+        "staticSource": "pages/merchant/index/index.js:1521"
       }
     },
     {
@@ -894603,7 +895590,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:350"
+        "staticSource": "pages/merchant/index/index.js:351"
       }
     },
     {
@@ -894671,7 +895658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:637"
+        "staticSource": "pages/merchant/index/index.js:643"
       }
     },
     {
@@ -894741,7 +895728,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:913"
+        "staticSource": "pages/merchant/index/index.js:919"
       }
     },
     {
@@ -894811,7 +895798,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1562"
+        "staticSource": "pages/merchant/index/index.js:1568"
       }
     },
     {
@@ -894921,7 +895908,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1546"
+        "staticSource": "pages/merchant/index/index.js:1552"
       }
     },
     {
@@ -895120,7 +896107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1571"
+        "staticSource": "pages/merchant/index/index.js:1577"
       }
     },
     {
@@ -895190,7 +896177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1562"
+        "staticSource": "pages/merchant/index/index.js:1568"
       }
     },
     {
@@ -895260,7 +896247,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1223"
+        "staticSource": "pages/merchant/index/index.js:1229"
       }
     },
     {
@@ -895330,7 +896317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1223"
+        "staticSource": "pages/merchant/index/index.js:1229"
       }
     },
     {
@@ -895404,7 +896391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1228"
+        "staticSource": "pages/merchant/index/index.js:1234"
       }
     },
     {
@@ -895516,7 +896503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1277"
+        "staticSource": "pages/merchant/index/index.js:1283"
       }
     },
     {
@@ -895586,7 +896573,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1223"
+        "staticSource": "pages/merchant/index/index.js:1229"
       }
     },
     {
@@ -895698,7 +896685,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1288"
+        "staticSource": "pages/merchant/index/index.js:1294"
       }
     },
     {
@@ -895889,6 +896876,7 @@
         "routes": [
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/payout-account/index",
           "pages/merchant/verify-records/index",
           "subpackageB/pages/im/list/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
@@ -895964,6 +896952,7 @@
         "routes": [
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/payout-account/index",
           "pages/merchant/verify-records/index",
           "subpackageB/pages/im/list/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
@@ -896039,6 +897028,7 @@
         "routes": [
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/payout-account/index",
           "pages/merchant/verify-records/index",
           "subpackageB/pages/im/list/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
@@ -896087,6 +897077,82 @@
         "handler": "onMoreItem",
         "line": 275,
         "selectorHint": ".rv-more-item",
+        "visibleCondition": "{{merchantAccess.canReadFinance}}",
+        "disabledCondition": null,
+        "ariaLabel": "打开收款账户",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/aftercare/index",
+          "pages/merchant/decor/index",
+          "pages/merchant/payout-account/index",
+          "pages/merchant/verify-records/index",
+          "subpackageB/pages/im/list/index",
+          "subpackageMember/coupon/coupon?scope=MERCHANT"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/index/index.js:336"
+      }
+    },
+    {
+      "id": "pages/merchant/index/index.wxml:279:bindtap:onMoreItem:29",
+      "route": "pages/merchant/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/index/index.wxml",
+        "js": "pages/merchant/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onMoreItem",
+        "line": 279,
+        "selectorHint": ".rv-more-item",
         "visibleCondition": "{{merchantAccess.canManageCoupons}}",
         "disabledCondition": null,
         "ariaLabel": "管理优惠券",
@@ -896114,6 +897180,7 @@
         "routes": [
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/payout-account/index",
           "pages/merchant/verify-records/index",
           "subpackageB/pages/im/list/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
@@ -896137,7 +897204,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:282:bindtap:onMoreItem:29",
+      "id": "pages/merchant/index/index.wxml:286:bindtap:onMoreItem:30",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896160,7 +897227,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMoreItem",
-        "line": 282,
+        "line": 286,
         "selectorHint": ".rv-more-item",
         "visibleCondition": "{{merchantAccess.canWriteProfile}}",
         "disabledCondition": null,
@@ -896189,6 +897256,7 @@
         "routes": [
           "pages/merchant/aftercare/index",
           "pages/merchant/decor/index",
+          "pages/merchant/payout-account/index",
           "pages/merchant/verify-records/index",
           "subpackageB/pages/im/list/index",
           "subpackageMember/coupon/coupon?scope=MERCHANT"
@@ -896212,7 +897280,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:292:catchtouchmove:blockSceneTouch:30",
+      "id": "pages/merchant/index/index.wxml:296:catchtouchmove:blockSceneTouch:31",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896235,7 +897303,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 292,
+        "line": 296,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-chapter-picker'}}",
         "disabledCondition": null,
@@ -896280,7 +897348,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:293:bind:requestclose:onChapterSheetClose:31",
+      "id": "pages/merchant/index/index.wxml:297:bind:requestclose:onChapterSheetClose:32",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896303,7 +897371,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onChapterSheetClose",
-        "line": 293,
+        "line": 297,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -896343,11 +897411,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1429"
+        "staticSource": "pages/merchant/index/index.js:1435"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:297:bindtap:onChapterPick:32",
+      "id": "pages/merchant/index/index.wxml:301:bindtap:onChapterPick:33",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896370,7 +897438,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChapterPick",
-        "line": 297,
+        "line": 301,
         "selectorHint": ".chpick__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -896550,11 +897618,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1461"
+        "staticSource": "pages/merchant/index/index.js:1467"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:306:catchtouchmove:blockSceneTouch:33",
+      "id": "pages/merchant/index/index.wxml:310:catchtouchmove:blockSceneTouch:34",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896577,7 +897645,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 306,
+        "line": 310,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-station-picker'}}",
         "disabledCondition": null,
@@ -896622,7 +897690,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:307:bind:requestclose:onStationSheetClose:34",
+      "id": "pages/merchant/index/index.wxml:311:bind:requestclose:onStationSheetClose:35",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896645,7 +897713,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "onStationSheetClose",
-        "line": 307,
+        "line": 311,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -896685,11 +897753,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1486"
+        "staticSource": "pages/merchant/index/index.js:1492"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:311:bindtap:onStationPick:35",
+      "id": "pages/merchant/index/index.wxml:315:bindtap:onStationPick:36",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896712,7 +897780,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStationPick",
-        "line": 311,
+        "line": 315,
         "selectorHint": ".chpick__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -896892,11 +897960,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1490"
+        "staticSource": "pages/merchant/index/index.js:1496"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:319:catchtouchmove:blockSceneTouch:36",
+      "id": "pages/merchant/index/index.wxml:323:catchtouchmove:blockSceneTouch:37",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896919,7 +897987,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 319,
+        "line": 323,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'merchant-verification-result'}}",
         "disabledCondition": null,
@@ -896964,7 +898032,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:324:bind:close:closeVerificationResult:39",
+      "id": "pages/merchant/index/index.wxml:328:bind:close:closeVerificationResult:40",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896987,7 +898055,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "closeVerificationResult",
-        "line": 324,
+        "line": 328,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897027,11 +898095,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1439"
+        "staticSource": "pages/merchant/index/index.js:1445"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:324:bind:primary:onVerificationPrimary:37",
+      "id": "pages/merchant/index/index.wxml:328:bind:primary:onVerificationPrimary:38",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897057,7 +898125,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:primary",
         "handler": "onVerificationPrimary",
-        "line": 324,
+        "line": 328,
         "selectorHint": "cy-result-sheet[bind:primary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897247,11 +898315,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1450"
+        "staticSource": "pages/merchant/index/index.js:1456"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:324:bind:secondary:closeVerificationResult:38",
+      "id": "pages/merchant/index/index.wxml:328:bind:secondary:closeVerificationResult:39",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897274,7 +898342,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:secondary",
         "handler": "closeVerificationResult",
-        "line": 324,
+        "line": 328,
         "selectorHint": "cy-result-sheet[bind:secondary]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897314,7 +898382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1439"
+        "staticSource": "pages/merchant/index/index.js:1445"
       }
     },
     {
@@ -897384,11 +898452,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:908"
+        "staticSource": "pages/merchant/index/index.js:914"
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:331:catchtouchmove:blockSceneTouch:40",
+      "id": "pages/merchant/index/index.wxml:335:catchtouchmove:blockSceneTouch:41",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897411,7 +898479,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 331,
+        "line": 335,
         "selectorHint": ".merchant-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id !== 'play-activity-detail' && sceneCurrent.id !== 'roam-poi-detail' && sceneCurrent.id !== 'merchant-more-menu' && sceneCurrent.id !== 'merchant-chapter-picker' && sceneCurrent.id !== 'merchant-station-picker' && sceneCurrent.id !== 'merchant-verification-result'}}",
         "disabledCondition": null,
@@ -897456,7 +898524,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:332:bind:back:backScene:42",
+      "id": "pages/merchant/index/index.wxml:336:bind:back:backScene:43",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897479,7 +898547,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 332,
+        "line": 336,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897523,7 +898591,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:332:bind:requestclose:requestSceneClose:41",
+      "id": "pages/merchant/index/index.wxml:336:bind:requestclose:requestSceneClose:42",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897546,7 +898614,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 332,
+        "line": 336,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897590,7 +898658,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:333:bind:back:backScene:44",
+      "id": "pages/merchant/index/index.wxml:337:bind:back:backScene:45",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897613,7 +898681,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 333,
+        "line": 337,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897657,7 +898725,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:333:bind:close:closeScene:45",
+      "id": "pages/merchant/index/index.wxml:337:bind:close:closeScene:46",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897680,7 +898748,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 333,
+        "line": 337,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897724,7 +898792,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:333:bind:dirtychange:onSceneDirtyChange:46",
+      "id": "pages/merchant/index/index.wxml:337:bind:dirtychange:onSceneDirtyChange:47",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897747,7 +898815,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:dirtychange",
         "handler": "onSceneDirtyChange",
-        "line": 333,
+        "line": 337,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897791,7 +898859,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:333:bind:open:openChildScene:43",
+      "id": "pages/merchant/index/index.wxml:337:bind:open:openChildScene:44",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897814,7 +898882,7 @@
         "tag": "cy-scene-route-content",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 333,
+        "line": 337,
         "selectorHint": "#sceneRouteContent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897897,7 +898965,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:335:bindtap:submitSceneForm:47",
+      "id": "pages/merchant/index/index.wxml:339:bindtap:submitSceneForm:48",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897920,7 +898988,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitSceneForm",
-        "line": 335,
+        "line": 339,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897965,7 +899033,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:340:catchtouchmove:blockSceneTouch:48",
+      "id": "pages/merchant/index/index.wxml:344:catchtouchmove:blockSceneTouch:49",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897988,7 +899056,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 340,
+        "line": 344,
         "selectorHint": ".merchant-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'play-activity-detail'}}",
         "disabledCondition": null,
@@ -898033,7 +899101,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:341:bind:back:backScene:50",
+      "id": "pages/merchant/index/index.wxml:345:bind:back:backScene:51",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898056,7 +899124,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 341,
+        "line": 345,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898100,7 +899168,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:341:bind:requestclose:requestSceneClose:49",
+      "id": "pages/merchant/index/index.wxml:345:bind:requestclose:requestSceneClose:50",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898123,7 +899191,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 341,
+        "line": 345,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898167,7 +899235,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:342:bind:close:closeScene:51",
+      "id": "pages/merchant/index/index.wxml:346:bind:close:closeScene:52",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898190,7 +899258,7 @@
         "tag": "cy-scene-play-activity-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 342,
+        "line": 346,
         "selectorHint": "cy-scene-play-activity-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898234,7 +899302,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:345:catchtouchmove:blockSceneTouch:52",
+      "id": "pages/merchant/index/index.wxml:349:catchtouchmove:blockSceneTouch:53",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898257,7 +899325,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 345,
+        "line": 349,
         "selectorHint": ".merchant-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-poi-detail'}}",
         "disabledCondition": null,
@@ -898302,7 +899370,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:346:bind:back:backScene:54",
+      "id": "pages/merchant/index/index.wxml:350:bind:back:backScene:55",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898325,7 +899393,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "backScene",
-        "line": 346,
+        "line": 350,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898369,7 +899437,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:346:bind:requestclose:requestSceneClose:53",
+      "id": "pages/merchant/index/index.wxml:350:bind:requestclose:requestSceneClose:54",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898392,7 +899460,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 346,
+        "line": 350,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898436,7 +899504,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:347:bind:citystamp:openCityStamp:57",
+      "id": "pages/merchant/index/index.wxml:351:bind:citystamp:openCityStamp:58",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898459,7 +899527,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:citystamp",
         "handler": "openCityStamp",
-        "line": 347,
+        "line": 351,
         "selectorHint": "cy-scene-roam-poi-detail[bind:citystamp]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898507,7 +899575,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:347:bind:close:closeScene:56",
+      "id": "pages/merchant/index/index.wxml:351:bind:close:closeScene:57",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898530,7 +899598,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 347,
+        "line": 351,
         "selectorHint": "cy-scene-roam-poi-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898574,7 +899642,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:347:bind:open:openChildScene:55",
+      "id": "pages/merchant/index/index.wxml:351:bind:open:openChildScene:56",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898597,7 +899665,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 347,
+        "line": 351,
         "selectorHint": "cy-scene-roam-poi-detail[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898680,7 +899748,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:350:bind:cancel:cancelSceneDiscard:59",
+      "id": "pages/merchant/index/index.wxml:354:bind:cancel:cancelSceneDiscard:60",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898703,7 +899771,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 350,
+        "line": 354,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898747,7 +899815,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:350:bind:confirm:confirmSceneDiscard:58",
+      "id": "pages/merchant/index/index.wxml:354:bind:confirm:confirmSceneDiscard:59",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898770,7 +899838,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 350,
+        "line": 354,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898814,7 +899882,7 @@
       }
     },
     {
-      "id": "pages/merchant/index/index.wxml:353:bind:settled:onPrivacyGateSettled:60",
+      "id": "pages/merchant/index/index.wxml:357:bind:settled:onPrivacyGateSettled:61",
       "route": "pages/merchant/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898837,7 +899905,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 353,
+        "line": 357,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -899067,7 +900135,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1519"
+        "staticSource": "pages/merchant/index/index.js:1525"
       }
     },
     {
@@ -899176,7 +900244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:997"
+        "staticSource": "pages/merchant/index/index.js:1003"
       }
     },
     {
@@ -899396,7 +900464,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1349"
+        "staticSource": "pages/merchant/index/index.js:1355"
       }
     },
     {
@@ -899466,7 +900534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/index/index.js:1527"
+        "staticSource": "pages/merchant/index/index.js:1533"
       }
     },
     {
@@ -903646,6 +904714,340 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/merchant/marketing/index.js:571"
+      }
+    },
+    {
+      "id": "pages/merchant/payout-account/index.wxml:12:bind:back:onNavBack:2",
+      "route": "pages/merchant/payout-account/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/payout-account/index.wxml",
+        "js": "pages/merchant/payout-account/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:back",
+        "handler": "onNavBack",
+        "line": 12,
+        "selectorHint": "cy-error[bind:back]",
+        "visibleCondition": "{{pageState === 'no-permission'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/payout-account/index.js:32"
+      }
+    },
+    {
+      "id": "pages/merchant/payout-account/index.wxml:3:bind:back:onNavBack:0",
+      "route": "pages/merchant/payout-account/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/payout-account/index.wxml",
+        "js": "pages/merchant/payout-account/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "onNavBack",
+        "line": 3,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/payout-account/index.js:32"
+      }
+    },
+    {
+      "id": "pages/merchant/payout-account/index.wxml:40:bindtap:copySignUrl:3",
+      "route": "pages/merchant/payout-account/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/payout-account/index.wxml",
+        "js": "pages/merchant/payout-account/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "copySignUrl",
+        "line": 40,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "setClipboardData"
+      ],
+      "successCapabilities": [
+        "setClipboardData"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/payout-account/index.js:101"
+      }
+    },
+    {
+      "id": "pages/merchant/payout-account/index.wxml:9:bind:retry:retry:1",
+      "route": "pages/merchant/payout-account/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/payout-account/index.wxml",
+        "js": "pages/merchant/payout-account/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "retry",
+        "line": 9,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{pageState === 'error'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/access/me",
+          "/api/merchant/payout-account",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/access/me",
+          "/api/merchant/payout-account"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/access/me",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/payout-account",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/payout-account/index.js:61"
       }
     },
     {
