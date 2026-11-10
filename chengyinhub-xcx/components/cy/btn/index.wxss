@@ -135,6 +135,8 @@
 .cy-mm__spin { animation: cy-btn-spin var(--cy-motion-spinner-cycle) linear infinite; }
 /* 只给读屏的状态文字 */
 .btn__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* 减动效:收圆 / 长回直接到位(.btn.btn--morph 的 transition 特异性更高,必须同级覆盖) */
+.btn.btn--morph.btn--reduced-motion { transition: none; }
 .btn--reduced-motion .cy-mm__spin { animation: none; }
 .btn--reduced-motion .cy-mm__spin, .btn--reduced-motion .cy-mm__check, .btn--reduced-motion .cy-mm::after { transition: none; }
 .btn--reduced-motion .cy-mm::after { display: none; }

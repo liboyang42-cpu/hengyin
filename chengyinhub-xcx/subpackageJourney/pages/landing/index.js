@@ -125,7 +125,7 @@ Page({
       this._claimed = res.data;
       // qx-u3:服务端确认后按钮先收成勾,停一拍再换成原本的成功标题与「进入本局」(utils/morph-success.js)
       const seatNo = res.data.seatNo;
-      morph.settle(this, 'claimDone', () => this.setData({ headline: '已领取同行席位', headRise: true,
+      morph.settle(this, 'claimDone', () => this.setData({ headline: '已领取同行席位', headRise: morph.holdFor() > 0,
         facts: [{ k: '席位', v: '第 ' + seatNo + ' 席' }],
         primary: this._activityId || this._topicId ? '进入本局' : '' }), { with: { busy: false } });
     });
@@ -143,7 +143,7 @@ Page({
       dropRequestId('gift', this._token);
       if (!api.ok(res)) { this.setData({ busy: false, primary: '', actionError: res.msg || '领取失败' }); return; }
       this._claimed = res.data || {};
-      morph.settle(this, 'claimDone', () => this.setData({ headline: '礼物已领取', headRise: true,
+      morph.settle(this, 'claimDone', () => this.setData({ headline: '礼物已领取', headRise: morph.holdFor() > 0,
         primary: view.isId((this._target || {}).id) ? '去看看' : '' }), { with: { busy: false } });
     });
   },

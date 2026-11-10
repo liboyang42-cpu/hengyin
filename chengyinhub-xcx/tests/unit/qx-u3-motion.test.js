@@ -163,6 +163,8 @@ test('cy-btn morph:done 期间吞点击;收圆转圈时不因 disabled=busy 变�
   const wxss = read('components/cy/btn/index.wxss')
   assert.match(wxss, /clip-path: inset\(calc\(50% - 44rpx\) calc\(50% - 44rpx\) round 44rpx\)/, '收成 88rpx 的圆')
   assert.doesNotMatch(read('style/morph-mark.wxss'), /@keyframes/, 'morph 只走 transition,不新增 keyframes')
+  assert.match(wxss, /\.btn\.btn--morph\.btn--reduced-motion \{ transition: none; \}/, '减动效下收圆 / 长回直接到位(rig 减动效实拍发现的回归)')
+  assert.equal((read('subpackageJourney/pages/landing/index.js').match(/headRise: morph\.holdFor\(\) > 0/g) || []).length, 2, '减动效不播标题浮出')
 })
 
 test('五个成功时刻接上 morph,且只在服务端确认成功的分支里亮勾', () => {
