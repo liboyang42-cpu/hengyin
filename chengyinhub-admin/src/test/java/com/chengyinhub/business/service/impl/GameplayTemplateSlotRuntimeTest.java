@@ -398,7 +398,12 @@ public class GameplayTemplateSlotRuntimeTest {
         }
         assertEquals(frozen, JSON.readTree(runtime.freezePublishedJourney(topic)));
         run(topic, 11L, 5, 5, "a");
-        assertEquals(frozen, JSON.readTree(sessions.get(10L).getConfigSnapshotJson()));
+        // 首局快照 = 发布冻结 + 建局时写入的帮助原局身份(qx-c4/c5);其余字节不受作者改模板影响。
+        ObjectNode runSnapshot = (ObjectNode) JSON.readTree(sessions.get(10L).getConfigSnapshotJson());
+        assertTrue(com.chengyinhub.business.service.support.FirstRunHelpIdentity.isIdentity(
+                runSnapshot.path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText()));
+        runSnapshot.remove(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD);
+        assertEquals(frozen, runSnapshot);
     }
 
     @Test void oneTemplateAtTwoNodesKeepsBindingsCostsAndCountersIndependent() throws Exception {

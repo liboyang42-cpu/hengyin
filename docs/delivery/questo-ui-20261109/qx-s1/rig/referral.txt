@@ -1,0 +1,1 @@
+{"msg": "操作成功", "code": 200, "data": {"token": "rf1.<redacted>", "targetType": 1, "targetId": 990014, "campaignKey": "share", "expiresAt": "2026-12-10T16:11:31.779+08:00"}, "_status": 200}
