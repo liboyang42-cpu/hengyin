@@ -2557,14 +2557,14 @@ Page({
   openGameSheet: function () {
     // 锚点要归零:不清的话第二次打开还停在上次跳到的那一组
     this._refreshSupportMatrix();
-    this.setData({ gameSheetOpen: true, sheetGroup: 0, sheetAnchor: '' });
+    this.setData({ gameSheetOpen: true, sheetGroup: 0 });
   },
 
   /** 分类快捷条:点一下滚到那一组(原型 #sheetNav 的 scrollTo)。 */
   jumpGameGroup: function (e) {
     const index = Number(e.currentTarget.dataset.index);
     if (!Number.isInteger(index)) return;
-    this.setData({ sheetGroup: index, sheetAnchor: 'gsheet-g' + index });
+    this.setData({ sheetGroup: index });
   },
 
   closeGameSheet: function () {

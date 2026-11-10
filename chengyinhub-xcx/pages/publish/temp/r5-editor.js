@@ -162,10 +162,10 @@ const methods = {
   openR5GameSheet() {
     const key = this._currentTagKey();
     const index = Math.max(0, (this.data.r5Editor.gameGroups || []).findIndex(group => group.items.some(item => item.key === key)));
-    this.setData({ gameSheetOpen: true, sheetGroup: index, sheetAnchor: index ? 'gsheet-g' + index : '', sheetNavAnchor: 'gnav-' + index, sheetPick: key, sheetPickItem: key ? this._gameTag(key) : null });
+    this.setData({ gameSheetOpen: true, sheetGroup: index, sheetNavAnchor: 'gnav-' + index, sheetPick: key, sheetPickItem: key ? this._gameTag(key) : null });
   },
   closeR5GameSheet() { this.setData({ gameSheetOpen: false }); },
-  jumpR5GameGroup(e) { const index = Number(e.currentTarget.dataset.index); this.setData({ sheetGroup: index, sheetAnchor: 'gsheet-g' + index, sheetNavAnchor: 'gnav-' + index }); },
+  jumpR5GameGroup(e) { const index = Number(e.currentTarget.dataset.index); this.setData({ sheetGroup: index, sheetNavAnchor: 'gnav-' + index }); },
   pickR5GameTag(e) { const key = e.currentTarget.dataset.key; this.setData({ sheetPick: key, sheetPickItem: this._gameTag(key) }); },
   confirmR5GameSheet() {
     const item = this.data.sheetPickItem;

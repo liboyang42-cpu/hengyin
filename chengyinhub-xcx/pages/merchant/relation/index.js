@@ -313,7 +313,7 @@ Page({
   _loadMemberClubs(ctx) {
     const that = this;
     app.sendRequest({
-      hideLoading: true, silentError: true, autoErrorToast: false,
+      hideLoading: true, autoErrorToast: false,
       url: '/api/club/my', method: 'POST', data: JSON.stringify({}),
       header: { 'Content-Type': 'application/json' },
       success(res) {
@@ -322,6 +322,8 @@ Page({
         that._memberClubIds = ok ? memberClubIds(res.data) : {};
         if (that.data.feed && that.data.feed.length) that.setData({ feed: markRepostable(that.data.feed, that._memberClubIds) });
       },
+      // 读不到成员关系:不出转发(按未加入处理),帖文流本身照常
+      fail() { if (!that._destroyed && ctx.requestId === that._feedRequestId) that._memberClubIds = {}; },
     });
   },
 
