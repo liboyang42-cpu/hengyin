@@ -1,4 +1,5 @@
 @import "../../../style/reduced-motion.wxss";
+@import "../../../style/morph-mark.wxss";
 /* cy-btn · 语义按钮(文档1 §2):variant = primary / secondary / ghost / danger / accent / disabled
  * 旧 kind(blue/black/red/secondary/disabled)经 index.js observer 映射到 variant,向后兼容。
  * 全走 token,浅/深主题自动适配(token 由 page 注入,穿透 isolated)。 */
@@ -107,3 +108,30 @@
 .btn--reduced-motion .btn__spinner { animation: none; }
 .btn--reduced-motion { transition: none; }
 .btn--reduced-motion.btn--press { transform: none; }
+
+/* ═══ qx-u3 成功 morph(ref3「Morph」)· 只在传了 morph 的按钮上生效 ═══
+ * 药丸 → 圆:用 clip-path 的 inset 收口,不动 width/height(布局不跳,手册 Motion 禁动画尺寸);
+ * 圆的直径 = 88rpx 触控档(.btn 的 min-height),所以任何档的按钮都收成同一个圆。
+ * 文字跟着褪成透明,中间只剩 morph-mark 的转圈 / 勾。全程 transition,没有新 keyframes。 */
+.btn.btn--morph {
+  clip-path: inset(0 round var(--cy-comp-btn-radius));
+  transition: transform var(--cy-motion-press) var(--cy-ease-spring), box-shadow var(--cy-motion-standard) var(--cy-ease), opacity var(--cy-motion-standard) var(--cy-ease),
+              clip-path var(--cy-motion-slow) var(--cy-ease-standard), color var(--cy-motion-fast) var(--cy-ease);
+}
+.btn.btn--morph-on {
+  clip-path: inset(calc(50% - 44rpx) calc(50% - 44rpx) round 44rpx);
+  color: transparent;
+  opacity: 1;
+}
+.btn--primary { --cy-mm-fg: var(--cy-comp-btn-primary-fg); }
+.btn--secondary { --cy-mm-fg: var(--cy-comp-btn-secondary-fg); }
+.btn--ghost { --cy-mm-fg: var(--cy-text-title); }
+.btn--danger { --cy-mm-fg: var(--cy-color-action-danger-fg); }
+.btn--disabled { --cy-mm-fg: var(--cy-text-placeholder); }
+/* 转圈复用本组件已有的 cy-btn-spin,不另起 keyframes */
+.cy-mm__spin { animation: cy-btn-spin var(--cy-motion-spinner-cycle) linear infinite; }
+/* 只给读屏的状态文字 */
+.btn__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.btn--reduced-motion .cy-mm__spin { animation: none; }
+.btn--reduced-motion .cy-mm__spin, .btn--reduced-motion .cy-mm__check, .btn--reduced-motion .cy-mm::after { transition: none; }
+.btn--reduced-motion .cy-mm::after { display: none; }

@@ -10,6 +10,7 @@
 // ★ 分数明细只搬服务端 helpReceipt;NOT_SCORED 显示「本题不计分」,绝不写 0 分;积分与解谜分分开列。
 const { id } = require('../../../utils/orient-score-view.js');
 const modal = require('../../../utils/modal.js');
+const morph = require('../../../utils/morph-success.js');
 
 const BASE = '/api/play/help';
 const PENDING_KEY = 'play-help-pending:v1';
@@ -17,7 +18,9 @@ const TYPE_LABEL = { TEXT: '文字提示', IMAGE: '图片提示', LETTER: '首�
 const RENDERABLE = ['TEXT', 'IMAGE', 'LETTER', 'DIGIT', 'ANSWER'];
 
 const data = { helpPanel: { show: false, loading: false, enabled: false, error: '', nodeId: '', runId: '',
-  freeLeft: null, rows: [], skip: null, notice: '', receipt: null, receiptOpen: false, receiptError: '', busy: false } };
+  freeLeft: null, rows: [], skip: null, notice: '', receipt: null, receiptOpen: false, receiptError: '', busy: false,
+  // qx-u3 morph:busyLevel = 正在解锁的那一层(行尾收成转圈),doneLevel = 刚解锁、正在亮勾的那一层
+  busyLevel: null, doneLevel: null } };
 
 const ok = body => body && Number(body.code) === 200;
 const definitive = body => body && !body.httpFail && !body.netFail && /^4\d\d$/.test(String(body.code));
@@ -171,15 +174,25 @@ function methods(send) {
       if (!all) { this._helpSet({ notice: '本机存储不可用，暂不提交' }); return; }
       const requestId = all[this._helpPendingKey(c, 'use', row.level)] || newRequestId();
       if (!this._helpRemember(c, 'use', row.level, requestId)) { this._helpSet({ notice: '无法保存原请求，暂不提交' }); return; }
-      const patchRow = patch => this._helpSet({ busy: false, rows: this.data.helpPanel.rows.map(item =>
-        item.level === row.level ? Object.assign({}, item, patch) : item) });
-      this._helpSet({ busy: true, notice: '' });
+      const patchRow = (patch, extra) => this._helpSet(Object.assign({ busy: false, busyLevel: null, rows: this.data.helpPanel.rows.map(item =>
+        item.level === row.level ? Object.assign({}, item, patch) : item) }, extra));
+      this._helpSet({ busy: true, busyLevel: row.level, notice: '' });
       return send(BASE + '/use', 'POST', { runId: c.runId, nodeId: c.nodeId, level: row.level, action: 'HELP', requestId }).then(body => {
         if (!this._helpCurrent(c)) return;
         if (ok(body) && body.data && body.data.level === row.level && typeof body.data.content === 'string') {
           this._helpForget(c, 'use', row.level);
+          // qx-u3 morph:内容随回包立即写入,行尾先亮勾停一拍(doneLevel),之后内容才浮出来(fresh → cy-rise-in)。
+          // 重看(已解锁)不再亮勾;减动效 hold=0 直接出内容。
+          const hold = row.state === 'review' ? 0 : morph.holdFor();
           patchRow({ pending: false, error: '', state: 'review', action: '重看', content: body.data.content,
-            contentType: body.data.type, charge: chargeLine(body.data) });
+            contentType: body.data.type, charge: chargeLine(body.data), fresh: hold > 0 }, { doneLevel: hold ? row.level : null });
+          if (hold) {
+            morph.cancel(this);
+            this._morphTimer = setTimeout(() => {
+              this._morphTimer = null;
+              if (this._helpCurrent(c) && this.data.helpPanel.doneLevel === row.level) this._helpSet({ doneLevel: null });
+            }, hold);
+          }
           return this.loadHelpCounter(c);
         }
         if (definitive(body)) {
@@ -200,7 +213,7 @@ function methods(send) {
         this.data.helpPanel.rows.forEach(row => { byLevel[row.level] = row; });
         const rows = view.rows.map(row => {
           const old = byLevel[row.level] || {};
-          return Object.assign(row, { content: old.content || null, contentType: old.contentType || '', charge: old.charge || '' });
+          return Object.assign(row, { content: old.content || null, contentType: old.contentType || '', charge: old.charge || '', fresh: !!old.fresh });
         });
         this._helpSet({ rows, skip: view.skip, freeLeft: view.freeLeft });
       }).catch(() => {});

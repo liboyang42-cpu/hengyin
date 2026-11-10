@@ -174,7 +174,7 @@
 
 
   <!-- ===== 俱乐部抽屉 ===== -->
-  <project-drawer show="{{ clubSheet.show }}" title="合作俱乐部" actions="{{ clubActions }}" under="{{ layers.clubInvite.show || layers.clubHome.show }}"
+  <project-drawer show="{{ clubSheet.show }}" title="合作俱乐部" actions="{{ clubActions }}"
                   bind:close="emitCloseClub" bind:action="emitDrawerAction">
     <!-- 走查 v2 R05(业主 2026-10-30):顶部三格数,下面「已邀约」与「可以邀约的俱乐部」两组;每行「邀约 / 主页」,不跳出主题 -->
     <view class="cs-sum">
@@ -234,7 +234,7 @@
   <!-- CU-C-126:原来 headerVariant="action" 走「取消 / 标题 / 完成」,两颗都只执行 onClose,
        面板内又没有待保存表单 —— 「完成」不完成任何业务动作,还和同类抽屉的右上 ✕ 不一致。
        退回默认标题头(右上 ✕),真正的招商动作留在底部 merchantActions(去找商家 / 收到的申请)。 -->
-  <project-drawer show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}" under="{{ layers.tier.show || layers.shops.show }}" class="merchant-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}"
+  <project-drawer show="{{ merchantSheet.show }}" title="招商" actions="{{ merchantActions }}" class="merchant-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}"
                   bind:close="emitCloseMerchant" bind:action="emitDrawerAction">
     <!-- 走查 v2 R06(业主 2026-10-30):顶部三格;每一站用主题图、给「自己承接 / 招商」;收到的申请在弹窗里确认,不跳出主题 -->
     <view class="cs-sum">
@@ -426,7 +426,7 @@
   </project-drawer>
 
   <!-- ===== 本主题客户抽屉 ===== -->
-  <project-drawer show="{{ playerSheet.show }}" title="客户" under="{{ broadcastSheet.show }}" done-text="{{ playerPick.selecting ? '完成' : '' }}" customer-mode="{{true}}" actions="{{ playerActions }}"
+  <project-drawer show="{{ playerSheet.show }}" title="客户" done-text="{{ playerPick.selecting ? '完成' : '' }}" customer-mode="{{true}}" actions="{{ playerActions }}"
                   bind:close="emitClosePlayer" bind:action="emitDrawerAction" class="customer-drawer {{ hostOwnerType === 'club' ? 'theme-dark' : '' }}">
     <!-- CU-C-67:名单读失败与「一单没卖」是两个态 —— 失败时不摆三个 0(那读起来就是「没人买票」),
          就地给可重试的错态。零单空态仍在 playerSheet.emptyText 那一条里。 -->
@@ -574,7 +574,7 @@
   </project-layer>
 
   <!-- 俱乐部主页:主理人、四格数据(没有的写「—」)、标签与常去区域、完整介绍、最近带过的活动、最近动态与成员 -->
-  <project-layer show="{{ layers.clubHome.show }}" depth="{{ layers.clubHome.depth }}" under="{{ layers.clubInvite.show }}" title="{{ layers.clubHome.name || '俱乐部' }}" data-act="closeLayer" data-layer="clubHome" bind:back="emit">
+  <project-layer show="{{ layers.clubHome.show }}" depth="{{ layers.clubHome.depth }}" title="{{ layers.clubHome.name || '俱乐部' }}" data-act="closeLayer" data-layer="clubHome" bind:back="emit">
     <cy-skeleton wx:if="{{ layers.clubHome.state === 'loading' }}" type="list" count="{{ 3 }}" />
     <cy-inline-error wx:elif="{{ layers.clubHome.state === 'error' }}" kind="data" title="俱乐部主页没读到" action="重试" data-act="reloadClubHome" bind:action="emit" />
     <block wx:else>
@@ -648,7 +648,7 @@
   </project-layer>
 
   <!-- 附近商家:为这一站找商家,可邀约的给「邀约承接」 -->
-  <project-layer show="{{ layers.shops.show }}" depth="{{ 2 }}" under="{{ layers.shopInvite.show }}" title="附近商家" data-act="closeLayer" data-layer="shops" bind:back="emit">
+  <project-layer show="{{ layers.shops.show }}" depth="{{ 2 }}" title="附近商家" data-act="closeLayer" data-layer="shops" bind:back="emit">
     <view class="lv-st">为「{{ layers.shops.name }}」找商家</view>
     <cy-skeleton wx:if="{{ layers.shops.state === 'loading' }}" type="list" count="{{ 4 }}" />
     <cy-inline-error wx:elif="{{ layers.shops.state === 'error' }}" kind="data" title="附近商家没读到" action="重试" data-act="reloadShops" bind:action="emit" />

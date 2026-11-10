@@ -90374,7 +90374,7 @@
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{_v === 'disabled' || loading}}",
+        "ariaDisabledExpression": "{{_v === 'disabled' || loading || (morph && done)}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -90406,7 +90406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/btn/index.js:38"
+        "staticSource": "components/cy/btn/index.js:45"
       }
     },
     {
@@ -402298,7 +402298,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:82"
+        "staticSource": "components/cy/scene-sheet/index.js:83"
       }
     },
     {
@@ -406892,7 +406892,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:92"
+        "staticSource": "components/cy/scene-sheet/index.js:93"
       }
     },
     {
@@ -411486,7 +411486,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:88"
+        "staticSource": "components/cy/scene-sheet/index.js:89"
       }
     },
     {
@@ -416080,7 +416080,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:81"
+        "staticSource": "components/cy/scene-sheet/index.js:82"
       }
     },
     {
@@ -420674,7 +420674,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:73"
+        "staticSource": "components/cy/scene-sheet/index.js:74"
       }
     },
     {
@@ -425268,7 +425268,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:81"
+        "staticSource": "components/cy/scene-sheet/index.js:82"
       }
     },
     {
@@ -429862,7 +429862,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:84"
+        "staticSource": "components/cy/scene-sheet/index.js:85"
       }
     },
     {
@@ -434456,7 +434456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-sheet/index.js:84"
+        "staticSource": "components/cy/scene-sheet/index.js:85"
       }
     },
     {
@@ -476729,7 +476729,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:255"
+        "staticSource": "components/cy/sheet/index.js:257"
       }
     },
     {
@@ -517557,7 +517557,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:168"
+        "staticSource": "components/cy/sheet/index.js:170"
       }
     },
     {
@@ -558385,7 +558385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:151"
+        "staticSource": "components/cy/sheet/index.js:153"
       }
     },
     {
@@ -599213,7 +599213,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:183"
+        "staticSource": "components/cy/sheet/index.js:185"
       }
     },
     {
@@ -640041,7 +640041,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:183"
+        "staticSource": "components/cy/sheet/index.js:185"
       }
     },
     {
@@ -680870,7 +680870,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:133"
+        "staticSource": "components/cy/sheet/index.js:135"
       }
     },
     {
@@ -721699,7 +721699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:255"
+        "staticSource": "components/cy/sheet/index.js:257"
       }
     },
     {
@@ -762528,7 +762528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:124"
+        "staticSource": "components/cy/sheet/index.js:126"
       }
     },
     {
@@ -803357,7 +803357,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:129"
+        "staticSource": "components/cy/sheet/index.js:131"
       }
     },
     {
@@ -844186,7 +844186,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:255"
+        "staticSource": "components/cy/sheet/index.js:257"
       }
     },
     {
@@ -885015,7 +885015,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:129"
+        "staticSource": "components/cy/sheet/index.js:131"
       }
     },
     {
@@ -925844,7 +925844,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/sheet/index.js:122"
+        "staticSource": "components/cy/sheet/index.js:124"
       }
     },
     {
@@ -1155225,7 +1155225,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:146"
+        "staticSource": "pages/play/utils/play-help-panel.js:149"
       }
     },
     {
@@ -1206708,11 +1206708,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:156"
+        "staticSource": "pages/play/utils/play-help-panel.js:159"
       }
     },
     {
-      "id": "pages/play/play-help.wxml:21:bindtap:tapHelpSkip:3",
+      "id": "pages/play/play-help.wxml:25:bindtap:tapHelpSkip:3",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1206788,7 +1206788,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tapHelpSkip",
-        "line": 21,
+        "line": 25,
         "selectorHint": ".tb-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1207206,11 +1207206,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:208"
+        "staticSource": "pages/play/utils/play-help-panel.js:221"
       }
     },
     {
-      "id": "pages/play/play-help.wxml:28:bindtap:toggleHelpReceipt:4",
+      "id": "pages/play/play-help.wxml:32:bindtap:toggleHelpReceipt:4",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1207233,7 +1207233,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "toggleHelpReceipt",
-        "line": 28,
+        "line": 32,
         "selectorHint": ".tb-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1207273,7 +1207273,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:240"
+        "staticSource": "pages/play/utils/play-help-panel.js:253"
       }
     },
     {
@@ -1207340,7 +1207340,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:156"
+        "staticSource": "pages/play/utils/play-help-panel.js:159"
       }
     },
     {
@@ -1207408,7 +1207408,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:157"
+        "staticSource": "pages/play/utils/play-help-panel.js:160"
       }
     },
     {
@@ -1379496,7 +1379496,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:219"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:222"
       }
     },
     {
@@ -1379563,7 +1379563,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:219"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:222"
       }
     },
     {
@@ -1379630,7 +1379630,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:224"
       }
     },
     {
@@ -1379697,7 +1379697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:224"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:227"
       }
     },
     {
@@ -1379810,7 +1379810,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:232"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:235"
       }
     },
     {
@@ -1379880,7 +1379880,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:192"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:195"
       }
     },
     {
@@ -1379991,7 +1379991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:207"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:210"
       }
     },
     {
@@ -1380058,7 +1380058,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:194"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:197"
       }
     },
     {
@@ -1380135,7 +1380135,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:199"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:202"
       }
     },
     {
@@ -1388508,7 +1388508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-drawer/index.js:38"
+        "staticSource": "pages/topic/components/project-drawer/index.js:41"
       }
     },
     {
@@ -1388839,7 +1388839,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-drawer/index.js:38"
+        "staticSource": "pages/topic/components/project-drawer/index.js:41"
       }
     },
     {
@@ -1389170,7 +1389170,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-drawer/index.js:39"
+        "staticSource": "pages/topic/components/project-drawer/index.js:42"
       }
     },
     {
@@ -1389501,7 +1389501,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-drawer/index.js:38"
+        "staticSource": "pages/topic/components/project-drawer/index.js:41"
       }
     },
     {
@@ -1389832,7 +1389832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-drawer/index.js:37"
+        "staticSource": "pages/topic/components/project-drawer/index.js:40"
       }
     },
     {
@@ -1399337,7 +1399337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-layer/index.js:26"
+        "staticSource": "pages/topic/components/project-layer/index.js:29"
       }
     },
     {
@@ -1399564,7 +1399564,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-layer/index.js:25"
+        "staticSource": "pages/topic/components/project-layer/index.js:28"
       }
     },
     {
@@ -1399791,7 +1399791,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/components/project-layer/index.js:26"
+        "staticSource": "pages/topic/components/project-layer/index.js:29"
       }
     },
     {
@@ -1432931,7 +1432931,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:90"
+        "staticSource": "subpackageJourney/pages/landing/index.js:94"
       }
     },
     {
@@ -1433118,7 +1433118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:54"
+        "staticSource": "subpackageJourney/pages/landing/index.js:58"
       }
     },
     {

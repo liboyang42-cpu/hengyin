@@ -5,6 +5,7 @@
 const art = require('../shelf/art.js');
 const cyToast = require('../../../utils/toast.js');
 const adoption = require('../utils/topic-adoption.js');
+const morph = require('../../../utils/morph-success.js');
 
 const app = getApp();
 const TABS = [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }];
@@ -96,6 +97,7 @@ Page({
     adoptRebind: 0,
     adoptError: '',
     adoptBusy: false,
+    adoptDone: false,
     adoptUnknown: false
   },
 
@@ -113,6 +115,7 @@ Page({
 
   onUnload() {
     this._unloaded = true;
+    morph.cancel(this);
     this._seq = (this._seq || 0) + 1;
   },
 
@@ -261,8 +264,12 @@ Page({
         }
         const copiedId = result.topicId;
         that._copiedId = copiedId;
-        that.setData({ adoptBusy: false, adoptShow: false });
-        that._openCopiedDraft(copiedId);
+        // qx-u3:复制成功后按钮先收成勾、停一拍,再关面板进编辑器(减动效直接走)
+        morph.settle(that, 'adoptDone', () => {
+          if (that._unloaded) return;
+          that.setData({ adoptShow: false });
+          that._openCopiedDraft(copiedId);
+        }, { with: { adoptBusy: false } });
       },
       fail() {
         that._using = false;

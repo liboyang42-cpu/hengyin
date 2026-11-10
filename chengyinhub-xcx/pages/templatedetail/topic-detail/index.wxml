@@ -40,7 +40,7 @@
 
     <!-- 「应用」与右边分享键同一套样式(V-24 业主「应用和旁边分享一样的样式」),点了直接复制进主题配置 -->
     <view class="xb-cta">
-      <cy-btn class="xb-cta-btn xb-cta-btn--share" variant="ghost" bindtap="useTemplate">应用</cy-btn>
+      <cy-btn class="xb-cta-btn xb-cta-btn--share" variant="ghost" morph loading="{{ adoptBusy && !adoptShow }}" done="{{ adoptDone && !adoptShow }}" bindtap="useTemplate">应用</cy-btn>
       <button class="xb-share" open-type="share" aria-label="分享主题模板" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="share" size="40" />
       </button>
@@ -174,7 +174,7 @@
     <text class="ad-err" wx:if="{{ adoptError }}" aria-role="alert">{{ adoptError }}</text>
   </view>
   <view slot="footer">
-    <cy-btn variant="primary" loading="{{ adoptBusy }}" disabled="{{ adoptBusy }}" bindtap="confirmAdopt">{{ adoptUnknown ? '查看我的草稿' : '确定' }}</cy-btn>
+    <cy-btn variant="primary" morph loading="{{ adoptBusy }}" done="{{ adoptDone }}" disabled="{{ adoptBusy }}" bindtap="confirmAdopt">{{ adoptUnknown ? '查看我的草稿' : '确定' }}</cy-btn>
   </view>
 </cy-sheet>
 </view>

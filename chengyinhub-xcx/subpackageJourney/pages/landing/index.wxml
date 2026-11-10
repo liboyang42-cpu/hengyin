@@ -6,7 +6,7 @@
     <view class="jn-head">
       <view class="jn-av jn-av--lg" wx:if="{{inviter}}"><image wx:if="{{inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" /><text wx:else>{{inviter.initial}}</text></view>
       <text class="jn-eyebrow jn-gap" wx:if="{{inviter}}">{{inviter.name}}</text>
-      <text class="jn-title">{{headline}}</text>
+      <text class="jn-title {{headRise ? 'cy-rise-in' : ''}}">{{headline}}</text>
       <text class="jn-pill" wx:if="{{title}}">{{title}}</text>
     </view>
 
@@ -24,7 +24,7 @@
     </view>
 
     <view class="jn-footer jn-footer--stack">
-      <cy-btn wx:if="{{primary}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
+      <cy-btn wx:if="{{primary}}" variant="primary" morph loading="{{busy}}" done="{{claimDone}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
       <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
     </view>
   </block>

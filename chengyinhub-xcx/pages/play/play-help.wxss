@@ -1,3 +1,5 @@
+@import "/style/morph-mark.wxss";
+@import "/style/motion-entry.wxss";
 /* UG-05..09 提示阶梯:在案件册行样式上只补状态色与内容块。 */
 .phl__left{display:block;font-size:var(--cy-type-body);color:var(--cy-comp-sheet-player-muted);margin:calc(-1 * var(--cy-space-3)) 0 var(--cy-space-4)}
 .phl__row{min-height:88rpx;box-sizing:border-box}
@@ -10,3 +12,10 @@
 .phl__chev{flex:none;width:16rpx;height:16rpx;border-right:3rpx solid var(--cy-comp-sheet-player-muted);border-bottom:3rpx solid var(--cy-comp-sheet-player-muted);transform:rotate(45deg);transition:transform .2s ease}
 .phl__chev.is-open{transform:rotate(-135deg)}
 @media (prefers-reduced-motion: reduce){.phl__chev{transition:none}}
+/* qx-u3 morph:行尾动作原位收成转圈 → 勾;转圈复用本页已有的 spin。 */
+.phl__act-box{position:relative;flex:none;display:flex;align-items:center;justify-content:flex-end;min-width:88rpx;min-height:88rpx}
+.phl__act{transition:opacity var(--cy-motion-fast) var(--cy-ease-out)}
+.phl__act.is-morph{opacity:0}
+.phl .cy-mm{--cy-mm-fg:var(--cy-comp-sheet-player-text);left:auto;right:24rpx;margin-left:0}
+.phl .cy-mm__spin{animation:spin var(--cy-motion-spinner-cycle) linear infinite}
+@media (prefers-reduced-motion: reduce){.phl__act{transition:none}.phl .cy-mm__spin{animation:none}}
