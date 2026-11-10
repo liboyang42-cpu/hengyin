@@ -56,7 +56,7 @@
 
 ## 门禁数字
 
-- 小程序全量单测(仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`):见提交 `50946928` 之后的复跑结果(本段由最后一次复跑填写):__UNIT_SUMMARY__
-- `mvn -q -DskipTests package`:__MVN_SUMMARY__
+- 小程序全量单测(仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`):见提交 `50946928` 之后的复跑结果(本段由最后一次复跑填写):**17162 个测试,17151 通过,11 失败**。其中 10 条是 launch 底座本来就红的(qx-base / qx-s2 §六记录的 `all-page-back-stack-contract`、`component-wxss-selector-lint`、`custom-nav-page-surface-contract`、`motion-property-ratchet`(keyframes 169 > 146,底座即红)、`no-system-actionsheet-contract`、`no-system-toast-contract`、`page-cleanup-audit`、`press-feedback-resolves-contract`(rank-board 的 cy-pressed)、`reduced-motion-coverage-contract`、`theme-look`),本线没有碰这些文件;剩下 1 条是 `action-ledger.test.js` 的事件合同 / external 计数(2957 → 2962、367 → 365)在最后一次台账重建后才定下来,已随本提交带来由更新(台账 JSON 本身与重建结果逐字节相同)。本线新增的 17 例与改动的既有用例全部通过。
+- `mvn -q -DskipTests package`:PASS(`mvn exit=0`,本分支 jar 也是 rig 后端用的那份)。
 
-STATUS: __STATUS__
+STATUS: COMPLETE - 编辑器按原型 v2 全部条目已实现并在 rig 实拍(壳 / 拖动 / 拆段 / 图片组 / 分支 / 章节卡 / 弹窗预览 / 模板列表);UI-GATE-0 PASS、台账与路由矩阵重建、主包不增、mvn 打包通过;全量单测只剩底座既有的 10 条红;真机拖动触感与 textarea 首帧高度待真机确认;玩家端三种新块的正式渲染交 l-play
