@@ -72,7 +72,6 @@
 .xd__c.is-on, .xd__c.is-in, .xd__c.is-out { visibility: visible; }
 .xd__c.is-out { transform: perspective(2200rpx) rotateY(-90deg) translateX(-80rpx); opacity: 0; }
 .xd__c.is-in { transform: perspective(2200rpx) rotateY(0deg); opacity: 1; z-index: 3; }
-.xd__c--press { opacity: .92; }
 /* 翻页卡会转(transform),MOTION.md:动的元素上不放 backdrop-filter;外层弹窗已是玻璃,卡面用半透明实底 */
 .look--stardust .xd__c { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(var(--lk-ink-rgb), .08); }
 .play--reduced-motion .xd__c { transition: none; }

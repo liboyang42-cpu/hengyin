@@ -50,3 +50,5 @@
 .rb--reduced .rb-hero__laurel--r { transform: scaleX(-1); }
 .rb-more__ic { display: flex; transform: rotate(90deg); }
 .rb-bar__tabs.is-single { flex: none; margin-right: auto; }
+/* qx-final:isolated 组件取不到全局 .cy-pressed,按压类在组件内定义(同 components/cy/card) */
+.cy-pressed { opacity: .88; }

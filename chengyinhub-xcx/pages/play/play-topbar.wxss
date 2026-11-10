@@ -58,3 +58,6 @@
 .stq__no{ font-size:var(--cy-type-section-title); font-weight:700; color:var(--cy-comp-sheet-player-text); font-variant-numeric:tabular-nums; }
 .stq__go{ flex:none; color:var(--cy-comp-sheet-player-text-secondary); }
 @media (prefers-reduced-motion: reduce){ .stq__card{ transition:none; } .chfull__tasks{ transition:none; } .stq__card--press,.chfull__tasks--press{ transform:none; } }
+/* qx-final:延伸任务翻页卡按压反馈。原写在 play-stage.wxss 的 .xd__c--press 被 .xd__c.is-on{opacity:1} 压过、按下无反应;
+   挪到本 partial 的样式表并提到同等特异度(本表经 index.wxss @import 生效)。 */
+.xd__c.is-on.xd__c--press { opacity: .92; }
