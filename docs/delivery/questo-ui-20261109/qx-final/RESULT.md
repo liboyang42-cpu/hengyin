@@ -72,6 +72,7 @@
 | 管理端 `npm run build:prod` | 通过(`DONE Build complete`)。用 `npm ci --registry=https://registry.npmjs.org/ --replace-registry-host=registry.npmmirror.com`，lockfile 没改 |
 | 主包体积 `mainpkg-size-report.js --json` | `mainTotal` 3,295,637 字节 × 0.633 ≈ **2037.2 KiB < 2048**(底座 2030.7 KiB，lane 合计 +6.5 KiB) |
 | keyframes 棘轮 | **本波没有新增 `@keyframes`**：非注释 keyframes 从底座的 169 降到 166(三条 lane 删了旧动画)。上限 146 没有改，测试照样是红的(底座本来就红，是 r2 波次留下的，见待你决定 3) |
+| CI「Mini program static gates」(`ci/xcx-check.sh`，按约束本地不跑，只看 CI 日志) | **红**，相对 master 新增 12 个子门禁红灯，见待你决定 9。之前只报了 DS 硬编码一项，漏报了其余各项 |
 | 迁移门禁 | `python3 ci/migration_ledger.py manifest`：32 个新迁移全部进入台账，0 个问题(合入 l-payout2 后为 33 个，仍是 0 个问题)；`ci/test_migration_gates.py`、`ci/test_migration_ledger.py` 共 202 条全部通过 |
 
 **全量单测失败明细(`a991b10f`，12 条)及处理：**
@@ -401,5 +402,15 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 6. **l-payout 的 P-09**：PR 开出后已由 l-payout2 接入(见 §一之二)。开关全部默认关闭。打开顺序和微信支付侧的步骤见 `l-payout2/RESULT.md` 第四、五节。
 7. **各 lane 自己的待你决定**原样保留，见 `l-play/`、`l-kits/`、`l-after/`、`l-pass/`、`l-payout/`、`l-editor/`、`l-misc/` 各自的 RESULT.md。
 8. **l-payout2 是否属于这次上线**：它是 PR 开出后由另一个代理合入的，不在 LAUNCH.md 的 lane 列表里。(默认保留，开关全部关闭；我已复核构建、测试和真库 IT。)如果不要，在 PR 分支上 `git revert -m 1 69332af6` 即可，不用改历史。
+9. **小程序静态门(CI `Mini program static gates`)相对 master 新增的红灯**：(本 PR 没有改；草稿 PR #780 改了其中多数涉及的文件，合入后要再看一次 CI。)以 `846dbe80` 的 CI 日志为准：
+   - DS 硬编码：16 个文件新增字号 / 圆角 / 颜色字面量；
+   - 组件 WXSS tag 选择器：rank-board 2 处(#780 已改)；
+   - 孤立单位：10 处 `{{x}}` 后紧跟单位没有 `||` 兜底(商家评价、编辑器、邀请记录、rank-board、订单详情、会员、通行证列表)；
+   - 分包互引：`subpackageMember/utils/pass-library.js` 引了 `pages/topic/utils/public-catalog.js`(#780 复制了一份到分包内)；
+   - 死数据字段 U4：新增 13 个(cy-illus 的 label、share-card、seats、membership、catalog 等)；
+   - 无障碍：album-intro 1 处无名点击区；share-card 色块、编辑器 2 处命中区小于 44px；
+   - 固定底栏缺背景：8 处(指认、游玩帮助、舞台弹层、编辑器工具条、目录详情底栏、结算弹层、礼品底栏)；
+   - 截图矩阵和覆盖率：14 条新路由没有 shot-matrix 行(视频悬赏、主题目录 2 页、收款账户、通行证 / 礼品 / 会员 / 主题库 5 页、旅程 report / landing / seats / promo / settle)；
+   - UI 有效性：U3 新增 7 个孤儿 handler(play 的 onHelpSkipped、编辑器 6 个拖拽 / 点按 handler)，U6 新增 10 处裸错误文案(编辑器玩法件、视频悬赏、landing、seats、settle、会员)。
 
-STATUS: PARTIAL - 七条 lane 都已合入，收口修复已推送。UI-GATE-0、台账和路由矩阵零差异、mvn 打包、改动类 Java 测试、管理端构建、主包 2037.2 KiB 都通过。真库 IT 通过：PlatformPass(UTC 与 Asia/Shanghai)、launch-l-payout、payment-intent-correctness 30/30。草稿 PR #779 已开。PR 开出后另一个代理合入了 l-payout2，我已在 69332af6 上复核：构建、支付 Java 测试、launch-l-payout2 和 payment-intent 真库 IT 都通过。还剩三项：小程序全量单测 7 条红灯，都是底座既有、r2 波次留下的；Gameplay HTTP generic-only 1 条失败，master 上同样失败；队伍详情没有在合并后复拍(rig 没有活动场次夹具)。
+STATUS: PARTIAL - 七条 lane 都已合入，收口修复已推送。UI-GATE-0、台账和路由矩阵零差异、mvn 打包、改动类 Java 测试、管理端构建、主包 2037.2 KiB 都通过。真库 IT 通过：PlatformPass(UTC 与 Asia/Shanghai)、launch-l-payout、payment-intent-correctness 30/30。草稿 PR #779 已开。PR 开出后另一个代理合入了 l-payout2，我已在 69332af6 上复核：构建、支付 Java 测试、launch-l-payout2 和 payment-intent 真库 IT 都通过。还剩四项：CI 小程序静态门相对 master 新增 12 个子门禁红灯(见待你决定 9)；小程序全量单测 7 条红灯，都是底座既有、r2 波次留下的；Gameplay HTTP generic-only 1 条失败，master 上同样失败；队伍详情没有在合并后复拍(rig 没有活动场次夹具)。
