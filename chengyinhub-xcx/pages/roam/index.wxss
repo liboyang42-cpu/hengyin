@@ -121,7 +121,12 @@ page{ background:var(--cy-color-bg-page); }
 .entry-roam-line text:first-child{ color:var(--cy-comp-sheet-player-text); font-size:var(--cy-type-body); font-weight:700; }
 .entry-roam-line text:last-child{ margin-top:var(--cy-space-1); color:var(--cy-comp-sheet-player-text-secondary); font-size:var(--cy-type-caption); }
 .entry-layer{ min-height:116rpx; display:flex; align-items:center; gap:var(--cy-space-3); border-bottom:1rpx solid var(--cy-comp-sheet-player-divider); }
-.entry-layer:first-of-type{ margin-top:var(--cy-space-4); }
+/* r2 a2-v3-18:图层三行收进一张分组卡(弹层内卡档),行高放宽,末行无分隔线;卡下留出底部安全距离 */
+.entry-layer-group{ margin:var(--cy-space-4) 0 var(--cy-space-6); padding:0 var(--cy-space-4); border-radius:var(--cy-radius-lg); background:var(--cy-comp-sheet-player-card); }
+.entry-layer-group .entry-layer{ min-height:120rpx; }
+.entry-layer-group .entry-layer:last-child{ border-bottom:0; }
+.entry-layer-group .entry-layer__icon{ background:var(--cy-comp-sheet-player-surface-strong); }
+.entry-layer-group .entry-layer__copy text:last-child{ margin-top:0; color:var(--cy-comp-sheet-player-text); font-size:var(--cy-type-body); font-weight:700; }
 .entry-layer__icon{ flex:none; width:72rpx; height:72rpx; border-radius:var(--cy-radius-md); background:var(--cy-comp-sheet-player-card); color:var(--cy-comp-sheet-player-text); display:flex; align-items:center; justify-content:center; }
 .entry-layer__copy{ min-width:0; flex:1; display:flex; flex-direction:column; }
 .entry-layer__copy text:first-child{ color:var(--cy-comp-sheet-player-text); font-size:var(--cy-type-body); font-weight:700; }
@@ -135,7 +140,6 @@ page{ background:var(--cy-color-bg-page); }
 .entry-layer__switch view{ position:absolute; left:6rpx; top:6rpx; width:40rpx; height:40rpx; border-radius:50%; background:var(--cy-comp-sheet-player-muted); transition:transform var(--cy-motion-fast) var(--cy-ease-out); }
 .entry-layer__switch.is-on{ background:var(--cy-comp-switch-on); } /* V3-20 开关一律绿 */
 .entry-layer__switch.is-on view{ transform:translateX(36rpx); background:#FFFFFF; } /* ds-ok V3-20 绿轨白滑块,同 cy-switch */
-.entry-layer__note{ margin-top:var(--cy-space-3); padding:var(--cy-space-3); border-radius:var(--cy-radius-md); background:var(--cy-comp-sheet-player-card); color:var(--cy-comp-sheet-player-text-secondary); font-size:var(--cy-type-caption); line-height:1.5; }
 /* ===================== A4 起始过场 · 深色 NRC 布局 ===================== */
 /* ds-ok 首页几何来自确认 HTML，安全区保留小程序原有胶囊计算。 */
 .intro{ position:absolute; inset:0; z-index:10; --roam-home-bg:#111111; --roam-card-inset:46rpx; background:var(--roam-home-bg); /* ds-ok 漫游原型刻意值(NRC 大读数/原型色) */
