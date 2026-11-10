@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5883,
+  "controlCount": 5886,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1503398,7 +1503398,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:707"
+        "staticSource": "subpackageMember/signup/index.js:704"
       }
     },
     {
@@ -1503468,7 +1503468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:708"
+        "staticSource": "subpackageMember/signup/index.js:705"
       }
     },
     {
@@ -1503588,7 +1503588,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:215"
+        "staticSource": "subpackageMember/signup/index.js:212"
       }
     },
     {
@@ -1503716,7 +1503716,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:410"
+        "staticSource": "subpackageMember/signup/index.js:407"
       }
     },
     {
@@ -1503784,7 +1503784,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:416"
+        "staticSource": "subpackageMember/signup/index.js:413"
       }
     },
     {
@@ -1503896,7 +1503896,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:670"
+        "staticSource": "subpackageMember/signup/index.js:667"
       }
     },
     {
@@ -1504008,7 +1504008,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:670"
+        "staticSource": "subpackageMember/signup/index.js:667"
       }
     },
     {
@@ -1504075,7 +1504075,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:658"
+        "staticSource": "subpackageMember/signup/index.js:655"
       }
     },
     {
@@ -1504142,7 +1504142,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:651"
+        "staticSource": "subpackageMember/signup/index.js:648"
       }
     },
     {
@@ -1504254,7 +1504254,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:352"
+        "staticSource": "subpackageMember/signup/index.js:349"
       }
     },
     {
@@ -1504366,7 +1504366,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:363"
+        "staticSource": "subpackageMember/signup/index.js:360"
       }
     },
     {
@@ -1504436,7 +1504436,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:470"
+        "staticSource": "subpackageMember/signup/index.js:467"
       }
     },
     {
@@ -1504508,7 +1504508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:329"
+        "staticSource": "subpackageMember/signup/index.js:326"
       }
     },
     {
@@ -1505051,7 +1505051,11 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "subpackageP3/pages/badge-wall/index/index",
+          "subpackageP3/pages/object-cards/index/index",
+          "subpackageP3/pages/stamp-album/index/index"
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
@@ -1505067,11 +1505071,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/album-head/index.js:17"
+        "staticSource": "subpackageP3/components/album-head/index.js:30"
       }
     },
     {
-      "id": "subpackageP3/components/album-intro/index.wxml:1:catchtap:skip:0",
+      "id": "subpackageP3/components/album-intro/index.wxml:11:catchtap:close:2",
       "route": "component:subpackageP3/components/album-intro/index",
       "hostRoutes": [
         "subpackageP3/pages/badge-wall/index/index",
@@ -1505150,14 +1505154,14 @@
       "control": {
         "tag": "view",
         "event": "catchtap",
-        "handler": "skip",
-        "line": 1,
-        "selectorHint": ".ai",
-        "visibleCondition": "{{show}}",
+        "handler": "close",
+        "line": 11,
+        "selectorHint": ".ar__x",
+        "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "关闭",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1505191,11 +1505195,269 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/album-intro/index.js:30"
+        "staticSource": "subpackageP3/components/album-intro/index.js:68"
       }
     },
     {
-      "id": "subpackageP3/components/album-intro/index.wxml:1:catchtouchmove:noop:1",
+      "id": "subpackageP3/components/album-intro/index.wxml:17:catchtap:enter:3",
+      "route": "component:subpackageP3/components/album-intro/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-wall/index/index",
+        "subpackageP3/pages/object-cards/index/index",
+        "subpackageP3/pages/stamp-album/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-wall/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 1
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/stamp-album/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/album-intro/index.wxml",
+        "js": "subpackageP3/components/album-intro/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "enter",
+        "line": 17,
+        "selectorHint": ".ar__card",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "打开{{item.label}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-wall/index/index",
+          "subpackageP3/pages/object-cards/index/index",
+          "subpackageP3/pages/stamp-album/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/album-intro/index.js:60"
+      }
+    },
+    {
+      "id": "subpackageP3/components/album-intro/index.wxml:25:catchtap:next:4",
+      "route": "component:subpackageP3/components/album-intro/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-wall/index/index",
+        "subpackageP3/pages/object-cards/index/index",
+        "subpackageP3/pages/stamp-album/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-wall/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 1
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/stamp-album/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/album-intro/index.wxml",
+        "js": "subpackageP3/components/album-intro/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "next",
+        "line": 25,
+        "selectorHint": ".ar__next",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "下一页",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageP3/pages/badge-wall/index/index",
+          "subpackageP3/pages/object-cards/index/index",
+          "subpackageP3/pages/stamp-album/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/album-intro/index.js:49"
+      }
+    },
+    {
+      "id": "subpackageP3/components/album-intro/index.wxml:3:catchtouchmove:noop:0",
       "route": "component:subpackageP3/components/album-intro/index",
       "hostRoutes": [
         "subpackageP3/pages/badge-wall/index/index",
@@ -1505275,7 +1505537,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "noop",
-        "line": 1,
+        "line": 3,
         "selectorHint": ".ai",
         "visibleCondition": "{{show}}",
         "disabledCondition": null,
@@ -1505316,7 +1505578,131 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/album-intro/index.js:35"
+        "staticSource": "subpackageP3/components/album-intro/index.js:73"
+      }
+    },
+    {
+      "id": "subpackageP3/components/album-intro/index.wxml:4:catchtap:toRing:1",
+      "route": "component:subpackageP3/components/album-intro/index",
+      "hostRoutes": [
+        "subpackageP3/pages/badge-wall/index/index",
+        "subpackageP3/pages/object-cards/index/index",
+        "subpackageP3/pages/stamp-album/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageP3/pages/badge-wall/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/object-cards/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 1
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/stamp-album/index/index",
+          "segments": [
+            {
+              "selector": "album-head",
+              "index": 0
+            },
+            {
+              "selector": "album-intro",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageP3/components/album-intro/index.wxml",
+        "js": "subpackageP3/components/album-intro/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "toRing",
+        "line": 4,
+        "selectorHint": ".ai__stamps",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/components/album-intro/index.js:43"
       }
     },
     {

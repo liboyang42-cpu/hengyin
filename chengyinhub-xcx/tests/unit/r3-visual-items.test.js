@@ -52,3 +52,76 @@ test('r3 票夹顶栏:左「票夹」+「+」去探索 + 本人头像(没有就�
   assert.match(js, /goMe\(\) \{ wx\.switchTab\(\{ url: '\/pages\/member\/index\/index' \}\); \}/)
   assert.match(read('subpackageMember/signup/index.wxss'), /\.signup--reduced \.wc \{ transition: none; \}/)
 })
+
+function loadIntro(active) {
+  let cfg
+  global.Component = (c) => { cfg = c }
+  const P = path.join(root, 'subpackageP3/components/album-intro/index.js')
+  delete require.cache[P]
+  delete require.cache[path.join(root, 'utils/motion-preference.js')]
+  global.wx = { getStorageSync: () => '', getSystemInfoSync: () => ({}), redirectTo: (o) => { global.__redirect = o.url; o.complete && o.complete() } }
+  global.getApp = () => ({ globalData: { statusBarHeight: 47, navBarHeight: 44 } })
+  global.getCurrentPages = () => [{ options: { from: 'profile' } }]
+  require(P)
+  const self = { data: Object.assign({}, cfg.data, { active }), setData(p) { Object.assign(this.data, p) } }
+  Object.assign(self, cfg.methods)
+  cfg.lifetimes.attached.call(self)
+  return self
+}
+
+test('r3 收集册环装卡堆:从所在那段开始,箭头绕环翻到下一张,点别的段就地换页,点本段收起', async () => {
+  const c = loadIntro('stamp')
+  assert.equal(c.data.idx, 1, '从「邮票」那张开始')
+  assert.equal(c.data.navTop, 91)
+  c.toRing()
+  assert.equal(c.data.ring, true)
+  c.next()
+  assert.equal(c.data.flip, 1, '正面那张在翻')
+  c.next()
+  assert.equal(c.data.flip, 1, '翻页中不叠第二次')
+  await new Promise(r => setTimeout(r, 600))
+  assert.equal(c.data.idx, 2)
+  assert.equal(c.data.flip, -1)
+  c.enter({ currentTarget: { dataset: { key: 'medal' } } })
+  assert.equal(global.__redirect, '/subpackageP3/pages/badge-wall/index/index', '不带 from,不重播')
+  c.enter({ currentTarget: { dataset: { key: 'stamp' } } })
+  assert.equal(c.data.out, true, '点本段 = 收起过场')
+  c._clear()
+})
+
+test('r3 收集册卡堆样式:只动 transform/opacity,关闭在右上角,减少动态效果整段不出', () => {
+  const wxss = read('subpackageP3/components/album-intro/index.wxss')
+  assert.doesNotMatch(wxss, /transition:[^;]*\b(width|height|left|top|right|bottom)\b/)
+  assert.doesNotMatch(wxss, /@keyframes|animation:/, '不新增 keyframes')
+  assert.match(wxss, /\.ar__x \{ position: absolute; right: /)
+  assert.match(wxss, /@media \(prefers-reduced-motion: reduce\) \{ \.ai \{ display: none; \} \}/)
+  const wxml = read('subpackageP3/components/album-intro/index.wxml')
+  assert.match(wxml, /class="ar__next" catchtap="next"/)
+  assert.match(wxml, /catchtap="enter" data-key="\{\{item\.key\}\}"/)
+})
+
+test('r3 收集册切段:新的一段从切换方向滑进来(via=l/r),减少动态效果不滑', () => {
+  const P = path.join(root, 'subpackageP3/components/album-head/index.js')
+  const run = (via, reduced) => {
+    let cfg
+    global.Component = (c) => { cfg = c }
+    delete require.cache[P]
+    delete require.cache[path.join(root, 'utils/motion-preference.js')]
+    global.wx = { getStorageSync: (k) => (reduced && /motion/i.test(k) ? true : ''), getSystemInfoSync: () => ({}), redirectTo: (o) => { global.__redirect = o.url; o.complete && o.complete() } }
+    const calls = []
+    global.getCurrentPages = () => [{ options: { via }, animate: (sel, frames, ms) => calls.push({ sel, frames, ms }) }]
+    require(P)
+    const self = { data: Object.assign({}, cfg.data, { active: 'stamp' }) }
+    cfg.lifetimes.attached.call(self)
+    cfg.methods.go.call(self, { currentTarget: { dataset: { key: 'object' } } })
+    return calls
+  }
+  const r = run('r', false)
+  assert.equal(r[0].sel, '.al-root')
+  assert.equal(r[0].frames[0].translateX, 48)
+  assert.deepEqual(Object.keys(r[0].frames[0]).sort(), ['ease', 'opacity', 'translateX'])
+  assert.equal(global.__redirect, '/subpackageP3/pages/object-cards/index/index?via=r')
+  assert.equal(run('l', false)[0].frames[0].translateX, -48)
+  assert.equal(run('r', true).length, 0)
+  assert.equal(run('', false).length, 0)
+})

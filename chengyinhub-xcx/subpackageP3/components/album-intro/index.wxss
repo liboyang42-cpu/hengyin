@@ -4,7 +4,10 @@
   background: radial-gradient(90% 60% at 15% 30%, #CFE0FF 0, rgba(207, 224, 255, 0) 70%), radial-gradient(80% 60% at 90% 80%, #CDEFEB 0, rgba(205, 239, 235, 0) 70%), #FAFBFD; /* ds-ok: 同 album-aura 收集册浅色底 */
   transition: opacity 360ms var(--cy-ease-out); }
 .ai.is-out { opacity: 0; }
-.ai--press { opacity: .9; }
+.ai--press { opacity: .7; }
+.ai__stamps { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+.ai.is-ring .ai__stamps { pointer-events: none; }
+.ai.is-ring .ai__route { opacity: 0; transition: opacity 240ms linear; }
 /* 路线:虚线从第一枚画到第三枚(scaleX 从左展开) */
 .ai__route { position: absolute; left: 170rpx; top: 640rpx; width: 450rpx; height: 6rpx; border-radius: 3rpx;
   background: repeating-linear-gradient(90deg, #1B1D22 0 14rpx, transparent 14rpx 26rpx); /* ds-ok: 路线墨色虚线 */
@@ -24,8 +27,8 @@
 .ai.is-land .ai__stamp--0 { transform: rotate(-7deg); }
 .ai.is-land .ai__stamp--1 { transform: rotate(5deg); }
 .ai.is-land .ai__stamp--2 { transform: rotate(-3deg); }
-/* 收场:三枚一起缩回页头方向,整层淡出 */
-.ai.is-out .ai__stamp { transform: translate3d(0, -520rpx, 0) scale(.4); opacity: 0; transition: transform 360ms var(--cy-ease-in, ease-in), opacity 300ms linear; transition-delay: 0ms; }
+/* 邮票段收场(进卡堆):三枚一起缩回页头方向淡出 */
+.ai.is-ring .ai__stamp, .ai.is-out .ai__stamp { transform: translate3d(0, -520rpx, 0) scale(.4); opacity: 0; transition: transform 360ms var(--cy-ease-in, ease-in), opacity 300ms linear; transition-delay: 0ms; }
 /* 图钉:落地后弹出 */
 .ai__pin { position: absolute; left: 50%; top: -10rpx; width: 26rpx; height: 26rpx; margin-left: -13rpx; border-radius: 50%; z-index: 1;
   background: radial-gradient(circle at 35% 35%, #FF8A8A 0, #E5484D 55%, #B4232A 100%); /* ds-ok: 红色图钉 */
@@ -33,4 +36,40 @@
 .ai.is-land .ai__stamp--0 .ai__pin { transform: scale(1); transition-delay: 520ms; }
 .ai.is-land .ai__stamp--1 .ai__pin { transform: scale(1); transition-delay: 660ms; }
 .ai.is-land .ai__stamp--2 .ai__pin { transform: scale(1); transition-delay: 800ms; }
+
+
+/* ===== r3 环装卡堆(refs4/album-ring-stack-frames) ===== */
+.ar { position: absolute; left: 0; top: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 320ms var(--cy-ease-out); }
+.ai.is-ring .ar { opacity: 1; }
+.ar__x { position: absolute; right: 16rpx; top: calc(var(--nav-top) + 8rpx); width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: #1B1D22; } /* ds-ok: 浅色收集册墨色 */
+/* 每页一句宋体大标题,换页时上一句往上淡出、下一句从下面升上来 */
+.ar__h-wrap { position: absolute; left: var(--cy-page-x); right: 120rpx; top: calc(var(--nav-top) + 24rpx); height: 120rpx; }
+.ar__h { position: absolute; left: 0; top: 0; font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 80rpx; /* ds-ok: 宋体大标题 */ font-weight: 600; line-height: 1.2; color: #1B1D22; /* ds-ok: 墨色 */
+  opacity: 0; transform: translateY(28rpx); transition: transform 420ms var(--cy-ease-out), opacity 300ms linear; }
+.ar__h.is-on { opacity: 1; transform: translateY(0); transition-delay: 160ms; }
+/* 卡堆:正面一张,后两张往右下错开、各转一点角,像穿在同一个环上的一摞卡 */
+.ar__stack { position: absolute; left: 50%; top: calc(var(--nav-top) + 200rpx); width: 500rpx; height: 620rpx; margin-left: -250rpx; transform: translateY(80rpx); transition: transform 560ms cubic-bezier(.2, 1.2, .4, 1); }
+.ai.is-ring .ar__stack { transform: translateY(0); }
+.ar__card { position: absolute; left: 0; top: 0; width: 500rpx; height: 620rpx; border-radius: 40rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2rpx 0 rgba(0, 0, 0, .06), 0 24rpx 48rpx rgba(27, 29, 34, .16); /* ds-ok: 浅底落影 */
+  transform-origin: 44rpx 52rpx; transition: transform 520ms cubic-bezier(.3, .7, .2, 1), opacity 260ms linear; }
+.ar__card--medal { background: #C6F05A; } /* ds-ok: 卡色(参考图荧光绿) */
+.ar__card--stamp { background: #46C3F5; } /* ds-ok: 卡色(参考图天蓝) */
+.ar__card--object { background: #F26CCB; } /* ds-ok: 卡色(参考图洋红) */
+.ar__card--r0 { z-index: 3; transform: rotate(-4deg); }
+.ar__card--r1 { z-index: 2; transform: translate3d(16rpx, 10rpx, 0) rotate(1deg); }
+.ar__card--r2 { z-index: 1; transform: translate3d(28rpx, 18rpx, 0) rotate(5deg); }
+/* 翻页:正面那张绕左上角的环向上翻过去(参考图第 7 帧),翻完 JS 无过渡地把它放到最后 */
+.ar__card.is-flip { z-index: 4; transform: perspective(1600rpx) rotate3d(1, -1, 0, 150deg) rotate(-30deg); opacity: 0; transition: transform 520ms cubic-bezier(.4, 0, .2, 1), opacity 200ms linear 300ms; }
+.ar__stack.is-still .ar__card { transition: none; }
+.ar__img { width: 300rpx; height: 300rpx; }
+.ar__hole { position: absolute; left: 30rpx; top: 38rpx; width: 28rpx; height: 28rpx; border-radius: 50%; background: #FAFBFD; box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, .25); } /* ds-ok: 打孔 */
+.ar__ring { position: absolute; left: -22rpx; top: 6rpx; z-index: 5; width: 92rpx; height: 92rpx; border-radius: 50%; box-sizing: border-box; pointer-events: none;
+  border: 10rpx solid #B9BEC7; border-right-color: transparent; transform: rotate(-30deg); /* ds-ok: 金属环 */
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, .12); }
+.ar__foot { position: absolute; left: var(--cy-page-x); right: var(--cy-page-x); bottom: calc(56rpx + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; }
+.ar__dots { display: flex; gap: 12rpx; }
+.ar__dot { width: 14rpx; height: 14rpx; border-radius: 7rpx; background: rgba(27, 29, 34, .2); /* ds-ok */ transition: transform 300ms var(--cy-ease-out), background-color 300ms linear; }
+.ar__dot.is-on { background: #1B1D22; transform: scaleX(1.6); } /* ds-ok */
+.ar__next { width: 104rpx; height: 104rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #1B1D22; color: #FFFFFF; } /* ds-ok: 黑底白箭头圆钮 */
 @media (prefers-reduced-motion: reduce) { .ai { display: none; } }
