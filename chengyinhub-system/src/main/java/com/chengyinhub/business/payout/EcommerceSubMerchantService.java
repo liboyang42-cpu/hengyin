@@ -143,7 +143,6 @@ public class EcommerceSubMerchantService {
             view.put("signUrl", row.getSignUrl());
         if (state == ApplymentState.FINISH || state == ApplymentState.FROZEN) view.put("subMchidMasked", mask(row.getSubMchid()));
         if (row.getLastQueriedAt() != null) view.put("checkedAt", row.getLastQueriedAt());
-        view.put("sellerRouting", switches.sellerRoutingEnabled() && state == ApplymentState.FINISH);
         return view;
     }
 

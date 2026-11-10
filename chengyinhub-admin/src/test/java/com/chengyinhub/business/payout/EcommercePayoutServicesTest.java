@@ -75,7 +75,7 @@ class EcommercePayoutServicesTest {
             assertEquals("FINISH", view.get("state"));
             assertEquals("19****0101", view.get("subMchidMasked"));
             assertNull(view.get("signUrl"));
-            assertEquals(true, view.get("sellerRouting"));
+            assertFalse(view.containsKey("sellerRouting")); // 下单路由尚未接入现有支付链路，不对外宣称
 
             // 终态不回退
             gateway.applyment = new EcommercePayGateway.ApplymentStatus(2000001L, "AUDITING", "", null, null);

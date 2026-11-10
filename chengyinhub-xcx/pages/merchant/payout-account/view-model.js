@@ -44,11 +44,11 @@ function shapeAccount(data) {
     state,
     stateText: STATE_TEXT[state],
     stateTone: STATE_TONE[state] || 'neutral',
-    stateDesc: typeof data.stateDesc === 'string' ? data.stateDesc : '',
+    // 已开通时微信的状态描述只是「完成」之类,与状态重复,不再显示。
+    stateDesc: state !== 'FINISH' && typeof data.stateDesc === 'string' ? data.stateDesc : '',
     signUrl,
     subMchid: (state === 'FINISH' || state === 'FROZEN') && typeof data.subMchidMasked === 'string' ? data.subMchidMasked : '',
     checkedText: timeText(data.checkedAt),
-    routing: data.sellerRouting === true,
   };
 }
 

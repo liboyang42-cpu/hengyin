@@ -19,12 +19,12 @@ test('待签约给出 https 签约链接；已开通给掩码商户号且不给�
   assert.equal(sign.signUrl, 'https://pay.weixin.qq.com/x');
   assert.equal(sign.stateDesc, '请签约');
   assert.equal(sign.subMchid, '');
-  const done = shapeAccount({ available: true, state: 'FINISH', subMchidMasked: '19****0101', signUrl: 'https://x', sellerRouting: true });
+  const done = shapeAccount({ available: true, state: 'FINISH', stateDesc: '完成', subMchidMasked: '19****0101', signUrl: 'https://x' });
+  assert.equal(done.stateDesc, '');
   assert.equal(done.stateText, '已开通');
   assert.equal(done.stateTone, 'success');
   assert.equal(done.subMchid, '19****0101');
   assert.equal(done.signUrl, '');
-  assert.equal(done.routing, true);
 });
 
 test('非 https 链接、未知状态、坏回包一律不当作可用', () => {
