@@ -62,7 +62,19 @@
 | GitHub CI 全量 | `f75d8d129` | failure，run [42882633387](https://github.com/liboyang42-cpu/hengyin/actions/runs/42882633387) | 暴露出第一节 G-7 到 G-18 的问题，以及 launch 自己已经修掉的两项(玩法目录计数 32≠33、silentError 白名单) |
 | GitHub CI 全量 | `78fb588e8` | failure，run [42887807090](https://github.com/liboyang42-cpu/hengyin/actions/runs/42887807090) | 小程序 20 个分片、迁移安全门、后台构建与 E2E 合同、SBOM 都已通过。剩下的是小程序静态门(之后已修)、gitleaks、架构门(Fast gates)，以及后端 job 末尾的架构判定 |
 
-**最终头 `9fbba0758`(待回填)**
+**最终头 `9fbba0758`(代码最终头；`a0c8137e9` 与之后只改了本文档)**
+
+| 工作流 / job | 结果 | 说明 |
+|---|---|---|
+| GitHub CI 全量 run [42893620946](https://github.com/liboyang42-cpu/hengyin/actions/runs/42893620946) | 31 个 job：**28 success / 3 failure** | 红的三个见下面三行，都在第四节 |
+| · 小程序 20 个单测分片、小程序静态门(汇总 job「Mini program static checks」)、迁移安全门、迁移布局门、后台构建门、后台 E2E 合同门、SBOM 与依赖扫描、变更检测 | **全部 success** | 小程序静态门在 launch 上原来有 11 个子门禁是红的 |
+| · Backend tests | failure：**单测 18670 个，0 失败、0 错误**(跳过 672)；只有 job 末尾的架构判定 `EXACT_STORAGE_PORT_CONSUMER`(`ApiTopicTemplateController → AuthorWriteReceiptService`)判 BLOCKED | 第四节第 2 条 |
+| · Fast gates | failure：架构门(`gate.py source`) | 第四节第 3 条 |
+| · Secret scan (gitleaks) | failure：`leaks found: 1`，来自 launch 波次的历史提交 | 第四节第 1 条 |
+| Gameplay HTTP `generic-only` run [42895095286](https://github.com/liboyang42-cpu/hengyin/actions/runs/42895095286) | **success** | |
+| Real Storage IT `marketing-db-acceptance`(含 PlatformPass) run [42895083479](https://github.com/liboyang42-cpu/hengyin/actions/runs/42895083479) | **success** | launch 改过通行证 FOR UPDATE 查询之后补跑 |
+| Real Storage IT `launch-l-payout2` run [42895090120](https://github.com/liboyang42-cpu/hengyin/actions/runs/42895090120) | **success** | |
+| Mini followup focused regression run [42893623895](https://github.com/liboyang42-cpu/hengyin/actions/runs/42893623895) | **success** | |
 
 ## 四、仍是红的(都需要你决定，本线不能自己放行)
 
