@@ -6,8 +6,8 @@
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 
 const LAND_MS = 40
-const OUT_MS = 1500
-const DONE_MS = 1900
+const OUT_MS = 1800
+const DONE_MS = 2200
 
 Component({
   data: { show: false, land: false, out: false },
