@@ -26,6 +26,11 @@ const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
 // C1:有服务端为这一局新发的挑战身份就随撞击数交(与 stopwatch/shout 同一口径)
 const { withAttempt, freshAttempt } = require('../../utils/sensor-contract.js');
+/* a1-v3-10-53(2026-11-10 业主「我晃动手机并没有反应」):与抛硬币 / 掷骰子同一个摇一摇识别器(同阈值、同防抖)。
+   没开局时摇一下 = 开始;球在跑时摇一下 = 给球一脚(冲量 + 震动)。 */
+const { createShakeDetector } = require('../../utils/play-shake.js');
+const KICK = 9;               // 摇一下给球的冲量,px/帧;方向随机,撞击数照旧由服务端按时间封顶复核
+const KICK_GAP_MS = 250;      // 跑动中两脚之间至少隔这么久
 
 /** 反弹:反向 + 一点随机。不加随机的话球会卡进一条来回直线,
  *  分照涨但人已经不用操作了 —— 那是动画不是游戏。 */
@@ -88,20 +93,63 @@ Component({
       }
     },
     show: function (show) {
-      if (!show) { this._interrupt(); return; }
+      if (!show) { this._offIdleShake(); this._interrupt(); return; }
       this._closed = false;
       this.setData({ hits: 0, running: false, flash: '', trail: [] });
       this._measure();
+      this._armIdleShake();
     },
   },
-  lifetimes: { detached() { this._detached = true; this._interrupt(); } },
+  lifetimes: {
+    attached() {
+      this._idleShake = createShakeDetector(() => this._onIdleShake());
+      this._runShake = createShakeDetector(() => this._kick(), { gapMs: KICK_GAP_MS });
+    },
+    detached() { this._detached = true; this._offIdleShake(); this._interrupt(); },
+  },
   pageLifetimes: {
-    hide() { this._hidden = true; this._interrupt(); },
-    show() { this._hidden = false; },
+    hide() { this._hidden = true; this._offIdleShake(); this._interrupt(); },
+    show() { this._hidden = false; this._armIdleShake(); },
   },
   methods: {
     _bounce: bounce,
     _tiltAccel: tiltAccel,
+
+    /** 没开局时听摇一摇:只在整屏露着、没在跑、没在等结果、这一站还能玩时开传感器 */
+    _armIdleShake() {
+      const c = this.data.challenge;
+      if (this._idleOn || this._hidden || this._detached || !this.data.show || this.data.running || this.data.awaitingResult
+        || this.data.skipped || (c && (c.success || c.disabledReason)) || this._attempt && this._attempt.phase !== 'finished') return;
+      // 四个传感器接口缺一个就不听(关不掉的监听不能留);中断后不自动再开,露出整屏(show / 页面回前台)时才开
+      if (!this._idleShake || typeof wx.startAccelerometer !== 'function' || typeof wx.onAccelerometerChange !== 'function'
+        || typeof wx.offAccelerometerChange !== 'function' || typeof wx.stopAccelerometer !== 'function') return;
+      const feed = this._idleShake;
+      const listener = (res) => { if (this._idleTick === listener && this._idleOn && feed) feed(res); };
+      this._idleTick = listener; this._idleOn = true;
+      try { wx.onAccelerometerChange(listener); wx.startAccelerometer({ interval: 'game', fail() {} }); } catch (e) { this._offIdleShake(); }
+    },
+    _offIdleShake() {
+      if (!this._idleOn) return;
+      const listener = this._idleTick;
+      this._idleOn = false; this._idleTick = null;
+      try { if (wx.offAccelerometerChange) wx.offAccelerometerChange(listener); } catch (e) { /* inert */ }
+      try { if (wx.stopAccelerometer) wx.stopAccelerometer({ fail() {} }); } catch (e) { /* best effort */ }
+    },
+    _onIdleShake() {
+      if (!this._idleOn) return;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      this.onStart();
+    },
+    /** 跑动中摇一下:球被踢一脚(随机方向的冲量)+ 震动。只改速度,撞击仍由撞边判定 */
+    _kick(rand) {
+      if (!this._attempt || this._attempt.phase !== 'running' || !this.data.running) return false;
+      const r = typeof rand === 'function' ? rand : Math.random;
+      const a = r() * Math.PI * 2;
+      this._vx = (this._vx || 0) + Math.cos(a) * KICK;
+      this._vy = (this._vy || 0) + Math.sin(a) * KICK;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      return true;
+    },
 
     _stop() {
       if (this._timer) clearInterval(this._timer);
@@ -183,6 +231,7 @@ Component({
       }
       const stage = this.selectComponent('#cy-play-stage');
       if (!stage || stage === this._retiredStage) return;
+      this._offIdleShake();   // 校准 / 开跑要独占传感器
       this._closed = false;
       this.setData({ localNotice: '' });
       this._zero = null;
@@ -213,6 +262,7 @@ Component({
         attempt.lastFrame = now;
         this._armWatchdog(attempt);
         if (!this._zero) { this._zero = { x: res.x, y: res.y }; return; }
+        if (this._runShake) this._runShake(res);
         const a = tiltAccel(res, this._zero);
         this._gx = a.gx; this._gy = a.gy;
       };

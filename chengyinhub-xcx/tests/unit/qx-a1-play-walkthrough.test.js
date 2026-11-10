@@ -27,7 +27,8 @@ function host(data) {
 
 test('V3-10/53/11:要整屏的玩法内嵌时只放入口卡,其余玩法真内嵌;整屏 kit 不变', () => {
   const coin = kitCard.playKitState({}, { type: 'coinflip' }, true, false)
-  assert.deepEqual(coin, { show: false, kit: { type: 'coinflip' }, readyForBase: false, card: false })
+  // r2-play a1-v3-10-53:入口卡多带类型名与图标(非卡时为空串)
+  assert.deepEqual(coin, { show: false, kit: { type: 'coinflip' }, readyForBase: false, card: false, cardLabel: '', cardIcon: '' })
   for (const type of ['album', 'ballshake', 'reaction', 'countdown']) {
     const s = kitCard.playKitState({}, { type }, true, false)
     assert.equal(s.card, true, type + ' 内嵌时应是入口卡')
@@ -36,7 +37,7 @@ test('V3-10/53/11:要整屏的玩法内嵌时只放入口卡,其余玩法真内�
   // 已经从卡点开的整屏:会话视图刷新不把它收回
   assert.equal(kitCard.playKitState({ card: true, show: true }, { type: 'album' }, true, true).show, true)
   // 作者配了整屏:照旧整屏,不是卡
-  assert.deepEqual(kitCard.playKitState({}, { type: 'album' }, false, false), { show: true, kit: { type: 'album' }, readyForBase: false, card: false })
+  assert.deepEqual(kitCard.playKitState({}, { type: 'album' }, false, false), { show: true, kit: { type: 'album' }, readyForBase: false, card: false, cardLabel: '', cardIcon: '' })
 })
 
 test('V3-10/53/11:入口卡点开整屏;关整屏只收回到卡,能继续就接着走故事', () => {
@@ -65,7 +66,8 @@ test('V3-15:延伸任务收进一行入口 + 半屏,点一行打开那一站;正
   const items = []
   page._pushStoryTasks(items, nodes, [{ type: 'node', nodeId: 1 }], false, '')
   assert.deepEqual(items, [{ kind: 'tasks', count: 1, mood: '' }])
-  assert.deepEqual(page.data.storyTasks.rows, [{ nodeId: 101, name: '旧书摊' }])
+  // r2-play a1-v3-15:任务卡多带序号、站点配图与地址(服务端节点字段,没有就是空串)
+  assert.deepEqual(page.data.storyTasks.rows, [{ nodeId: 101, name: '旧书摊', no: 1, img: '', address: '' }])
   page.openStoryTasks()
   assert.equal(page.data.storyTasks.show, true)
   page.openStoryTask({ currentTarget: { dataset: { nodeid: 101 } } })
@@ -98,7 +100,8 @@ test('V3-10/53:故事流内嵌块不再撑满一屏、不再垫台面底色;滚�
   }
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="chfull__kit-anchor" id="\{\{'chapter-kit-' \+ item\.nodeId\}\}"/)
-  assert.match(wxml, /wx:if="\{\{playKit\.card\}\}" class="chfull__fsentry" bindtap="expandPlayKit"/)
+  // r2-play a1-v3-10-53:入口卡换成封面 + 类型 + 名字的横卡
+  assert.match(wxml, /wx:if="\{\{playKit\.card\}\}" class="chfull__kitcard" bindtap="expandPlayKit"/)
   assert.match(read('pages/play/index.js'), /const anchor = 'chapter-kit-' \+ this\._playKitNodeId;/)
 })
 
@@ -119,12 +122,17 @@ test('V3-16:背包装载一格一块;没有物品时下面是同一张底的空�
   const wxml = read('pages/play/theme-backpack.wxml')
   assert.match(wxml, /class="tb-slots" wx:if="\{\{themeBag\.capacity > 0 && themeBag\.capacity <= 24\}\}"/)
   assert.match(wxml, /tbAttr\.slots\(themeBag\.used, themeBag\.capacity\)/)
-  assert.match(wxml, /class="tb-group tb-items-empty" wx:if="\{\{!themeBag\.items\.length\}\}"/)
+  // r2-play a1-v3-16:随身物品一行两格方块,空格是灰方块(至少两行),不再是图标 + 文案的空态卡
+  assert.match(wxml, /class="tb-items"[\s\S]*?wx:for="\{\{tbAttr\.pad\(themeBag\.items\.length\)\}\}"/)
   const wxs = read('pages/play/index.wxml').match(/<wxs module="tbAttr">([\s\S]*?)<\/wxs>/)[1]
   const mod = {}
   new Function('module', wxs)(mod)
   assert.deepEqual(mod.exports.slots(2, 6), [true, true, false, false, false, false])
   assert.equal(mod.exports.slots(0, 40).length, 24)
+  assert.equal(mod.exports.pad(0).length, 4)
+  assert.equal(mod.exports.pad(3).length, 1)
+  assert.equal(mod.exports.pad(5).length, 1)
+  assert.equal(mod.exports.pad(6).length, 0)
 })
 
 test('V3-17:入场码半屏不再有左下返回钮(关闭走右上 ×)', () => {

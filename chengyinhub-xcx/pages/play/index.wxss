@@ -2086,3 +2086,32 @@ page { background: var(--cy-color-bg-page); }
 .chapter-video { position: fixed; inset: 0; z-index: var(--cy-z-modal); background: var(--cy-color-play-page); }
 .chapter-video__film, .chapter-video__poster { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
 .chapter-video__skip { position: absolute; top: calc(env(safe-area-inset-top) + 100rpx); right: 32rpx; padding: 20rpx 28rpx; color: var(--cy-color-play-accent); background: var(--cy-color-play-surface); border-radius: var(--cy-radius-pill); }
+/* a1-v3-10-53 故事流里整屏玩法的入口卡:封面 + 类型 + 名字,右侧一颗播放钮;不写「打开」。
+   横排一张卡,封面方块在左(站点配图;没有图时是玩法图标),按下微缩;颜色走玩家弹层 token。 */
+.chfull__kitcard{ display:flex; box-sizing:border-box; margin:0 var(--cy-page-x); flex-direction:row; align-items:center; gap:var(--cy-space-3);
+  padding:var(--cy-space-3); text-align:left; border-radius:var(--cy-radius-xl);
+  background:var(--cy-comp-sheet-player-surface); box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong);
+  transition:transform var(--cy-motion-fast) var(--cy-ease-standard); }
+.chfull__kitcard--press{ transform:scale(.98); }
+.chfull__kitcard-cover{ flex:none; position:relative; width:136rpx; height:136rpx; border-radius:var(--cy-radius-lg); overflow:hidden;
+  display:flex; align-items:center; justify-content:center; background:var(--cy-comp-sheet-player-elevated); color:var(--cy-comp-sheet-player-text); }
+.chfull__kitcard-img{ position:absolute; left:0; top:0; width:100%; height:100%; }
+.chfull__kitcard-copy{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--cy-space-1); }
+.chfull__kitcard-type{ font-size:var(--cy-type-label); color:var(--cy-comp-sheet-player-text-secondary); }
+.chfull__kitcard-title{ font-weight:700;  font-size:var(--cy-type-body); color:var(--cy-comp-sheet-player-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chfull__kitcard-play{ flex:none; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--cy-comp-sheet-player-text); }
+.chfull__kitcard-tri{ width:0; height:0; margin-left:6rpx; border-top:14rpx solid transparent; border-bottom:14rpx solid transparent; border-left:22rpx solid var(--cy-comp-sheet-player-page); }
+@media (prefers-reduced-motion: reduce){ .chfull__kitcard{ transition:none; } .chfull__kitcard--press{ transform:none; } }
+/* a1-v3-21 城市定向站点 = 整屏游戏画面:顶到屏顶、无圆角、无抓手;封面放大成主视觉,没配图时是一块带站号的深色主视觉;关闭在右上角胶囊下方 */
+.sheet.sheet--game{ top:0; border-radius:0; min-height:100vh; max-height:none; display:flex; flex-direction:column; }
+.sheet--game .sheet-cover{ flex:none; height:56vh; }
+.sheet--game .sheet-cover--bare{ height:38vh; background:var(--cy-comp-sheet-player-elevated); }
+.sheet--game .cover-tag{ top:auto; bottom:var(--cy-space-5); }
+.sheet--game .cover-open{ top:auto; bottom:var(--cy-space-5); }
+.sheet--game .cover-fade{ height:240rpx; background:linear-gradient(to top,var(--cy-comp-sheet-player-glass),transparent); }
+.sheet--game .sheet-grab{ display:none; }
+.sheet--game .sheet-body{ flex:1; }
+.sheet--game .sheet-name{ font-size:var(--cy-type-page-title); margin-top:var(--cy-space-2); }
+.sheet-x{ position:absolute; right:var(--cy-page-x); z-index:3; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--cy-color-bg-glass); color:var(--cy-color-text-primary); }

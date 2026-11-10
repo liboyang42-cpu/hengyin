@@ -50,9 +50,14 @@ for (const mode of [1, 2]) test('entering a playable located game offers consent
   h.dialogs[0].success({ confirm: false });
   await h.load(h.response({ mode }), false);
   assert.equal(h.dialogs.length, 1, 'poll/reload must not repeat a declined offer');
+  // r2-play a1-v3-21(2026-11-10 业主「开启定位最好进入游戏就提示 后面就不需要提示了」):进页问过一次后,
+  // 任何入口再调都不再弹说明;系统里没授权就零 GPS,系统里已授权(玩家去设置打开后)才静默取一次。
   h.page.requestPlayLocation();
-  assert.equal(h.dialogs.length, 2, 'existing task control can explicitly retry after refusal');
-  h.dialogs[1].success({ confirm: true });
+  assert.equal(h.dialogs.length, 1, 'a declined entry offer is never repeated by later controls');
+  assert.equal(h.locations.length, 0, 'no SDK location without consent');
+  global.wx.getSetting = options => options.success({ authSetting: { 'scope.userLocation': true } });
+  h.page.requestPlayLocation();
+  assert.equal(h.dialogs.length, 1, 'system-granted permission locates silently, still no second dialog');
   assert.equal(h.locations.length, 1);
   h.page._stopTracking();
 });

@@ -126,6 +126,8 @@ test('页面接线:任务页进入时读阶梯;旧提示入口与新面板互斥
   assert.match(wxml, /wx:if="\{\{helpPanel\.enabled\}\}" bindtap="openHelpPanel"/)
   assert.match(wxml, /wx:elif="\{\{canHint\}\}" bindtap="useHint"/)
   assert.match(wxml, /canReveal && !helpPanel\.enabled/)
-  assert.match(sheet, /<cy-sheet show="\{\{helpPanel\.show\}\}"[^>]*fixed="half"/)
+  // r2-play a1-v3-21(业主「提示应该是弹窗 不是背包」):提示改为居中弹窗,内容与行为不变
+  assert.match(sheet, /<view class="phl-pop" wx:if="\{\{helpPanel\.show\}\}">/)
+  assert.match(sheet, /class="phl-pop-mask" bindtap="closeHelpPanel"/)
   assert.ok(!/0 分<\/text>/.test(sheet))
 })

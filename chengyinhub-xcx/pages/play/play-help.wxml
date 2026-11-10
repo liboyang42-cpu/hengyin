@@ -1,5 +1,8 @@
 <!-- UG-05..09 提示阶梯(play-help-panel.js):只在服务端下发可用层时出现;沿用案件册同一套半屏与行样式。 -->
-<cy-sheet show="{{helpPanel.show}}" title="" closable="{{false}}" handle="{{true}}" footer="{{false}}" fixed="half" bind:close="closeHelpPanel">
+<!-- a1-v3-21(2026-11-10 业主「提示应该是弹窗 不是背包」):提示是居中弹窗,不再是和背包同款的底部半屏;内容与行为不变,关闭在右上角 -->
+<view class="phl-pop" wx:if="{{helpPanel.show}}">
+  <view class="phl-pop-mask" bindtap="closeHelpPanel" catchtouchmove="noop" hover-class="none" aria-role="button" aria-label="关闭提示"></view>
+  <scroll-view class="phl-pop__card" scroll-y enhanced show-scrollbar="{{false}}">
   <view class="tb-sheet ptb phl">
     <view class="tb-close" bindtap="closeHelpPanel" aria-role="button" aria-label="关闭提示" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
     <text class="tb-title">提示</text>
@@ -39,4 +42,5 @@
       </block>
     </view>
   </view>
-</cy-sheet>
+  </scroll-view>
+</view>

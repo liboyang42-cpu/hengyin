@@ -34,3 +34,27 @@
   border-radius:var(--cy-radius-pill); background:var(--cy-comp-sheet-player-surface); font-size:var(--cy-type-body); line-height:1.4; color:var(--cy-color-text-primary); }
 .chfull__tasks-t{ flex:1; min-width:0; text-align:left; }
 .chfull__tasks-n{ color:var(--cy-color-text-tertiary); font-variant-numeric:tabular-nums; }
+/* a1-v3-13-14 左上角地图放大(地图档)时顶部数据行(生命值 / 背包 / 属性)让开,收回罗盘再出现;只走 opacity + transform */
+.chfull .hud2{ transition:opacity var(--cy-motion-fast) var(--cy-ease-standard), transform var(--cy-motion-fast) var(--cy-ease-standard); }
+.chfull.is-navmap .hud2{ opacity:0; transform:translateY(-12rpx); pointer-events:none; }
+@media (prefers-reduced-motion: reduce){ .chfull .hud2{ transition:none; } }
+/* a1-v3-15(2026-11-10 业主「UI要改 看起来不像是游戏」「这种灰色的弹窗看起来还是看不太清」):
+   入口行加任务旗标、描边与按压微缩;半屏里每站一张任务卡(配图或序号徽章 + 名字 + 地址)。颜色只用玩家弹层 token。 */
+.chfull__tasks{ min-height:104rpx; padding:0 var(--cy-space-4) 0 var(--cy-space-2); box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong);
+  transition:transform var(--cy-motion-fast) var(--cy-ease-standard); }
+.chfull__tasks--press{ transform:scale(.98); }
+.chfull__tasks-ico{ flex:none; width:72rpx; height:72rpx; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--cy-color-play-accent-soft); color:var(--cy-color-play-accent); }
+.chfull__tasks-n{ min-width:44rpx; height:44rpx; padding:0 var(--cy-space-2); box-sizing:border-box; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center;
+  background:var(--cy-comp-sheet-player-text); color:var(--cy-comp-sheet-player-page); font-size:var(--cy-type-label); font-weight:700; }
+.stq{ display:flex; flex-direction:column; gap:var(--cy-space-3); }
+.stq__card{ display:flex; align-items:center; gap:var(--cy-space-3); padding:var(--cy-space-3); border-radius:var(--cy-radius-xl);
+  background:var(--cy-comp-sheet-player-surface); box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong);
+  transition:transform var(--cy-motion-fast) var(--cy-ease-standard); }
+.stq__card--press{ transform:scale(.98); }
+.stq__cover{ flex:none; position:relative; width:112rpx; height:112rpx; border-radius:var(--cy-radius-lg); overflow:hidden; display:flex; align-items:center; justify-content:center;
+  background:var(--cy-comp-sheet-player-elevated); }
+.stq__img{ position:absolute; left:0; top:0; width:100%; height:100%; }
+.stq__no{ font-size:var(--cy-type-section-title); font-weight:700; color:var(--cy-comp-sheet-player-text); font-variant-numeric:tabular-nums; }
+.stq__go{ flex:none; color:var(--cy-comp-sheet-player-text-secondary); }
+@media (prefers-reduced-motion: reduce){ .stq__card{ transition:none; } .chfull__tasks{ transition:none; } .stq__card--press,.chfull__tasks--press{ transform:none; } }

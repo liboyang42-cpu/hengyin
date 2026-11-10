@@ -13,7 +13,7 @@
 <wxs src="../../utils/wxs/hud-slots.wxs" module="hud" />
 <wxs src="./utils/wxs/ring.wxs" module="ring" />
 <!-- 文档二 L5 p-bag:背包属性行按类型画星级 / 小条(theme-backpack.wxml 用;include 不带 wxs,声明放宿主) -->
-<wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function slots(used, cap) { var a = []; for (var i = 0; i < cap && i < 24; i++) a.push(i < used); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } module.exports = { stars: stars, slots: slots, pct: pct };</wxs>
+<wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function slots(used, cap) { var a = []; for (var i = 0; i < cap && i < 24; i++) a.push(i < used); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } function pad(n) { var t = n < 4 ? 4 : n + n % 2; var a = []; for (var i = n; i < t; i++) a.push(i); return a; } module.exports = { stars: stars, slots: slots, pct: pct, pad: pad };</wxs>
 <wxs src="../../utils/wxs/list-key.wxs" module="lk" />
 <wxs src="../../utils/wxs/display-label.wxs" module="dl" />
 
@@ -22,9 +22,9 @@
   bind:ready="onAdvancedReady" bind:close="onAdvancedClose" bind:session="onAdvancedSession"
   bind:actionfail="onAdvancedActionFail" bind:bgm="onAdvancedBgm" />
 
-<!-- 预览态返回(2026-09-24 用户:左上角就是返回,没有其它字,没有跳过)。
+<!-- 预览态返回(2026-09-24 用户:左上角就是返回,没有其它字,没有跳过)。a1-v3-10-53(业主「上面有两个返回」):玩法自己的返回在屏上时这颗让开。
      下一章 / 看结局改由故事流底部的「继续探索」接上(continueChapterStory 在试玩里走 advancePreview)。 -->
-<view class="preview-back glass" wx:if="{{isPreview}}" style="top: {{statusBarHeight + 8}}px;"
+<view class="preview-back glass" wx:if="{{isPreview && !playKit.show && !album.show && !(chapterFull && advancedPlay.show && playKit.kit && !playKit.card)}}" style="top: {{statusBarHeight + 8}}px;"
       bindtap="previewGoBack" aria-role="button" aria-label="返回草稿编辑" hover-class="cy-pressed" hover-stay-time="80">
   <cy-icon name="back" size="32" />
 </view>
@@ -84,9 +84,9 @@
      下面三格读数与三键栏沿用运行栈,不另做一套。 -->
 <view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}} {{lookOn ? chapter.atmosphereClass : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit && !(journeyCheck.show && journeyCheck.present === 'inline'))}}">
   <!-- P-09 第四轮(业主):猜数字的题目和返回、微信胶囊在同一行(返回右边、胶囊左边,最多两行),不再单独一行压在圆钮下面 -->
-  <view class="fx-story__hd {{advancedPlay.show && playKit.kit ? 'is-kit' : ''}} {{advancedPlay.show && playKit.kit.type === 'estimate' ? 'is-kitq' : ''}}" style="{{advancedPlay.show && playKit.kit.type === 'estimate' ? 'padding-top:' + chrome.kitTop + 'px;padding-right:' + chrome.actionRight + 'px' : 'padding-top:' + chrome.contentTop + 'px'}}">
+  <view class="fx-story__hd {{advancedPlay.show && playKit.kit && !playKit.card ? 'is-kit' : ''}} {{advancedPlay.show && playKit.kit.type === 'estimate' ? 'is-kitq' : ''}}" style="{{advancedPlay.show && playKit.kit.type === 'estimate' ? 'padding-top:' + chrome.kitTop + 'px;padding-right:' + chrome.actionRight + 'px' : 'padding-top:' + chrome.contentTop + 'px'}}">
     <!-- P-09(2026-11-02 业主):整屏玩法在场时不显示左上地图与主题标题,换成返回;题目由玩法自己写在屏上 -->
-    <view class="fx-story__act fx-story__kitback" wx:if="{{advancedPlay.show && playKit.kit}}" bindtap="closePlayKit" aria-role="button" aria-label="返回故事" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="30" /></view>
+    <view class="fx-story__act fx-story__kitback" wx:if="{{advancedPlay.show && playKit.kit && !playKit.card}}" bindtap="closePlayKit" aria-role="button" aria-label="返回故事" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="30" /></view>
     <view class="fx-story__kitq" wx:if="{{advancedPlay.show && playKit.kit.type === 'estimate' && playKit.kit.title}}">{{playKit.kit.title}}</view>
     <!-- 左上角:罗盘(2026-09-22 用户裁决「左上角还是地图切换」,按预制人生排版)。
          2026-09-23 裁决:点它打开真实小地图(下方 .story-map),没有带坐标的地点时回卡包;距离走既有的 _distText。 -->
@@ -231,9 +231,9 @@
         </view>
         <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="--pk-es-reel-h:860rpx;--pk-es-q-display:none">
           <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
-          <view wx:if="{{playKit.card}}" class="chfull__fsentry" bindtap="expandPlayKit" aria-role="button" aria-label="打开{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="chfull__fsentry-title">{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}</view>
-            <view class="chfull__fsentry-go">打开</view>
+          <view wx:if="{{playKit.card}}" class="chfull__kitcard" bindtap="expandPlayKit" aria-role="button" aria-label="打开{{playKit.cardLabel ? playKit.cardLabel + '，' : ''}}{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="chfull__kitcard--press" hover-stay-time="80"><view class="chfull__kitcard-cover"><image wx:if="{{advancedPlay.node.imgUrl}}" class="chfull__kitcard-img" src="{{img.first(advancedPlay.node.imgUrl)}}" mode="aspectFill" lazy-load="true" /><cy-icon wx:else name="{{playKit.cardIcon || 'play'}}" size="44" /></view>
+            <view class="chfull__kitcard-copy"><text class="chfull__kitcard-type" wx:if="{{playKit.cardLabel}}">{{playKit.cardLabel}}</text><text class="chfull__kitcard-title">{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}</text></view>
+            <view class="chfull__kitcard-play" aria-hidden="true"><view class="chfull__kitcard-tri"></view></view>
           </view>
           <cy-playkit wx:else kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
           <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
@@ -247,7 +247,7 @@
             receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}" bind:action="onJourneyCheckAction" bind:close="closeJourneyCheck" />
         </view>
         <!-- V3-15:延伸任务不写进正文,流末尾一行入口,点开半屏(utils/story-kit-card.js) -->
-        <view wx:elif="{{item.kind === 'tasks'}}" class="chfull__tasks" bindtap="openStoryTasks" aria-role="button" aria-label="延伸任务，{{item.count}} 个" hover-class="cy-pressed" hover-stay-time="80"><text class="chfull__tasks-t">延伸任务</text><text class="chfull__tasks-n">{{item.count}}</text><cy-icon name="chevron-right" size="28" /></view>
+        <view wx:elif="{{item.kind === 'tasks'}}" class="chfull__tasks" bindtap="openStoryTasks" aria-role="button" aria-label="延伸任务，{{item.count}} 个" hover-class="chfull__tasks--press" hover-stay-time="80"><view class="chfull__tasks-ico" aria-hidden="true"><cy-icon name="flag" size="32" /></view><text class="chfull__tasks-t">延伸任务</text><text class="chfull__tasks-n">{{item.count}}</text><cy-icon name="chevron-right" size="28" /></view>
         <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
       </view>
       <view class="chfull__end" wx:if="{{(chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done}}">
@@ -1005,9 +1005,9 @@
 
 <!-- 卡堆半屏已删除:选点统一走地点卡层(切换章节),入口在底栏与详情卡「换一处地点」 -->
 
-<!-- ===================== C. 节点详情卡 ===================== -->
+<!-- ===================== C. 节点详情卡 ===================== a1-v3-21(业主「节点游戏进入不是弹窗」):城市定向的站点整屏打开,关闭在右上角(胶囊下方);自由探索的店卡不变 -->
 <view class="mask {{chapterFull ? 'mask--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}" bindtap="closeSheet" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}">
+<view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{mode!=2 ? 'sheet--game' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}"><view class="sheet-x" wx:if="{{mode!=2}}" style="top:{{chrome.contentTop}}px" bindtap="closeSheet" aria-role="button" aria-label="关闭{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
   <view class="sheet-cover {{sheet.node.imgUrl ? '' : 'sheet-cover--bare'}}" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{sheet.node.imgUrl}}" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill"></image>
     
@@ -1055,7 +1055,7 @@
     <!-- 无模板 → 读文字,到达即完成 -->
     <block wx:else>
       <cy-btn wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="reverifyGuardArrival">我已到达此站</cy-btn>
-      <cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : (gpsOk ? '我已到达此站' : '开启定位'))}}</cy-btn>
+      <cy-btn wx:elif="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onScanArrive">扫码到达</cy-btn><cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : (gpsOk ? '我已到达此站' : '开启定位'))}}</cy-btn>
       <!-- 文档二 L5 B T-34 / X8:到站被拦 —— 同一行一句话 + 一个动作 -->
       <block wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.command}}">
         <view class="sheet-note" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}">申诉已通过，请在本节点重新确认到达</view>
@@ -1064,7 +1064,7 @@
       </block>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId && arrivalGuard.appealable}}">本次到达未记录<text class="sheet-note-action" bindtap="appealArrivalFromSheet" hover-class="cy-pressed" hover-stay-time="80"> · 申诉</text></view>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId}}">{{arrivalGuard.message}}<text class="sheet-note-action" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text><text wx:for="{{arrivalGuard.fallbacks}}" wx:for-item="alt" wx:key="nodeId" class="sheet-note-action" data-nodeid="{{alt.nodeId}}" bindtap="openArrivalFallback" aria-role="button" aria-label="改去{{alt.name}}" hover-class="cy-pressed" hover-stay-time="80"> · 改去「{{alt.name}}」</text></view>
-      <view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat}}">{{gpsHint}}<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
+      <view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat && gpsLowAcc}}">{{gpsHint}}</view><view wx:elif="{{mode!=2 && sheet.node.lat}}"><!-- a1-v3-21:定位只在进这一局时问一次,站点卡不再写定位提示;没开定位时主按钮就是「扫码到达」 --></view>
       <!-- 自由探索:核销由商家扫玩家的码完成,所以这里说的是「到店后怎么办」,不是「怎么打卡」 -->
       <view class="sheet-note" wx:else>到店后出示核销码给商家扫<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
     </block>
