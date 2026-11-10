@@ -43,6 +43,7 @@ Page({
 
   load() {
     const epoch = this._epoch = (this._epoch || 0) + 1;
+    this._buyOwn = false;
     this.setData({ state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', actionError: '' });
     if (this._kind === 'seat') { this._renderSeat(epoch); return; }
     const read = this._kind === 'gift' ? api.gift(app, this._token) : api.referral(app, this._token);
@@ -107,6 +108,7 @@ Page({
   onPrimary() {
     if (this.data.busy) return;
     if (this._claimed) { this._enter(); return; }
+    if (this._buyOwn) { this._goOwn(); return; }
     if (this._kind === 'referral') { this._goTarget(); return; }
     const owner = String(app.getUserID && app.getUserID() || '');
     const run = () => (this._kind === 'gift' ? this._claimGift() : this._claimSeat());
@@ -116,6 +118,11 @@ Page({
       this._owner = String(app.getUserID && app.getUserID() || '');
       run();
     });
+  },
+
+  _goOwn() {
+    const url = this._activityId ? '/pages/activity/detail/index?id=' + this._activityId : '/pages/topic/index/index?id=' + this._topicId;
+    wx.navigateTo({ url });
   },
 
   _goTarget() {
@@ -134,7 +141,12 @@ Page({
         return;
       }
       dropRequestId('seat', this._token);
-      if (!api.ok(res) || !res.data) { this.setData({ busy: false, primary: '', actionError: res.msg || '领取失败' }); return; }
+      // r2-store:席位已被领 / 邀请过期 / 已撤回都是服务端 409 原话;给一个「自己购买」出口回到原活动或主题
+      if (!api.ok(res) || !res.data) {
+        this._buyOwn = !!(this._activityId || this._topicId);
+        this.setData({ busy: false, primary: this._buyOwn ? '自己购买' : '', actionError: res.msg || '领取失败' });
+        return;
+      }
       this._claimed = res.data;
       // qx-u3:服务端确认后按钮先收成勾,停一拍再换成成功标题与「进入本局」(utils/morph-success.js)
       // qx-s2 合并:落地页版式取 r2-join(后一轮业主点名 b3-p1-5),u3 的 headRise 浮出挂在 .jl-facts 事实行

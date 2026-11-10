@@ -28,6 +28,15 @@
 
   <!-- ===== 帖文 ===== -->
   <view class="tab-body tab-body--feed" wx:if="{{activeTopTab === 'feed'}}" style="{{pmFeed === 1 ? '--pm-p:1;' : (pmFeed === 2 ? '--pm-p-d:.32s;--pm-p-s:1;' : '')}}">
+    <!-- r2-store 通票入口卡:帖文流里的一张卡(不做整屏付费墙);只在服务端有在售通票时出现 -->
+    <view wx:if="{{storeCard}}" class="store-card" bindtap="goStore" aria-role="button" aria-label="{{storeCard.title}} {{storeCard.price}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="store-card__main">
+        <text class="store-card__t">{{storeCard.title}}</text>
+        <text class="store-card__m">{{storeCard.meta}}</text>
+        <view class="store-card__tags" wx:if="{{storeCard.covers.length}}"><text class="store-card__tag" wx:for="{{storeCard.covers}}" wx:key="*this">{{item}}</text></view>
+      </view>
+      <view class="store-card__side"><text class="store-card__p">{{storeCard.price}}</text><text class="store-card__go">获取通票</text></view>
+    </view>
     <cy-skeleton class="feed-state" wx:if="{{feedState === 'loading'}}" type="card" count="{{3}}" />
     <cy-error load-failure="{{!feedLoginRequired}}" class="feed-state cy-fade-in" wx:elif="{{feedState === 'error'}}" title="{{feedLoginRequired ? '登录后查看帖文' : '动态加载失败'}}" sub="{{feedError}}" retry="{{feedLoginRequired ? '登录' : '重试'}}" bind:retry="retryFeed" />
     <block wx:else>

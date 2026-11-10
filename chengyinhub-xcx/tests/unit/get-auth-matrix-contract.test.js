@@ -45,6 +45,9 @@ const MATRIX = [
   //   通行证详情 ApiMarketingProductController /{productId}:catalogService.detail,无会员维度;/orders 按 requireAppMemberId 本人。
   ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/' + encodeURIComponent(this._id)", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/orders'", 'required', 'member', 'self-account'],
+  // 2026-11-10 r2-store:主题结账层列覆盖本主题的通票、发现页通票入口卡,同通行证列表一个在售目录端点(需登录)。
+  ['pages/topic/index/index.js', "url: '/api/marketing/product/list'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/talent/list/index.js', "url: '/api/marketing/product/list'", 'required', 'member', 'global-authenticated-read'],
   //   通行证列表 get() 服务 /list(listSellable,无会员维度)与 /orders、/gifts/bought、/gifts/received(均 requireAppMemberId 本人);
   //   同一调用点按其中最严的本人档登记,四个端点都必须登录。
   ['subpackageMember/market/passes/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
@@ -469,7 +472,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 qx-b5(qx-c3 补登):报名促销目录、收益分佣、视频悬赏、通行证详情两处、通行证列表两处,均已按服务端守卫入 MATRIX,113 → 120。
   // 2026-11-10 qx-c3 staging 重建:b4/b5 各自补登的行均已在 MATRIX,合并树实测仍 122。
   // 2026-11-10 qx-b4(qx-c3 补登):固定玩法预设库一处、模板详情素材署名一处,均已按服务端守卫入 MATRIX,113 → 115。
-  assert.equal(directCount, 122, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-10 r2-store:主题结账层与发现页各读一次在售通票目录(已入 MATRIX),122 → 124。
+  assert.equal(directCount, 124, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

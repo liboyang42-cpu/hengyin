@@ -31,13 +31,30 @@ Page({
     orders: [],
     giftsBought: [],
     giftsReceived: [],
-    workshopReason: ''
+    workshopReason: '',
+    pointBalance: null // r2-store:/api/user/info.point;读不到为 null,整卡不出(不写 0)
   },
   onLoad(options) {
     const tab = options && TABS.some((t) => t.key === options.tab) ? options.tab : 'shop'
     this.setData({ tab })
     this.load()
     this.loadWorkshop()
+    this.loadPoints()
+  },
+  // r2-store 积分余额卡:只读服务端余额;积分只能挣、不卖,这里不出充值包
+  loadPoints() {
+    app.sendRequest({
+      url: '/api/user/info', method: 'POST', hideLoading: true, autoErrorToast: false,
+      success: (res) => {
+        const p = isBizOk(res) && res.data ? res.data.point : null
+        this.setData({ pointBalance: p !== null && p !== undefined && p !== '' && Number.isFinite(Number(p)) ? Number(p) : null })
+      }
+    })
+  },
+  goPoints() {
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({ url: '/subpackageMember/points-history/index', complete: () => { this._navigating = false } })
   },
   // U07-03:付费模板只看服务端能力;微信通道不可用时写原因,可用时本端仍未接安装流程,不出入口
   loadWorkshop() {
@@ -49,7 +66,7 @@ Page({
       }
     })
   },
-  onShow() { if (this._loaded) this.load(true) },
+  onShow() { if (this._loaded) { this.load(true); this.loadPoints() } },
   onPullDownRefresh() { this.load(true) },
   load(quiet) {
     const seq = (this._seq = (this._seq || 0) + 1)

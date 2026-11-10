@@ -7,6 +7,11 @@
     <cy-nav-bar plain custom-back bind:back="goBack" />
     <cy-page-title title="通行证" safe-top="{{false}}" />
     <view class="mk__body">
+      <!-- r2-store 积分余额卡(STRUCTURE 票夹结构):余额只读服务端,点进原积分明细;平台会员卡服务端未上线,不出 -->
+      <view class="mk-balance" wx:if="{{pointBalance !== null}}" bindtap="goPoints" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="积分 {{pointBalance}}，查看积分记录">
+        <view class="mk-balance__main"><text class="mk-balance__k">积分</text><text class="mk-balance__v">{{pointBalance}}</text></view>
+        <view class="mk-balance__go"><text>积分记录</text><cy-icon name="chevron-right" size="28" /></view>
+      </view>
       <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
       <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
       <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />

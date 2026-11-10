@@ -1,16 +1,23 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const modal = require('../../../utils/modal.js');
+const { resolveTopicCover } = require('../../../utils/topic-share.js');
+const joinView = require('../../utils/join-view.js');
+const lobby = require('../../utils/lobby-view.js');
 const app = getApp();
 
 /* P5 票内席位：仅购票人可见。数量、状态、有效期全读服务端；写动作只在服务端声明支持时出现。
- * 释放已领取席位按清单 §24.3 暂不开放（已结束局/并发保护仍在补证）。 */
+ * 释放已领取席位按清单 §24.3 暂不开放（已结束局/并发保护仍在补证）。
+ * r2-store 2026-11-10:按 refs3/STRUCTURE.md §2 重排成「开局大厅」—— 主题头 → 以谁身份游玩 → 一起玩的人 N/M →
+ * 怎么玩(服务端 choices,≥2 席才出)→ 底部「去起点」;邀请收进半屏(发给微信好友 + 已邀请/撤回)。
+ * 二维码、加入码、玩法选择写接口、同时开始/各自时间服务端都没有,不画。 */
 
 const INVITE_KEY = 'journey-seat-invite:';
 
 Page({
   data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', seats: null,
-    busy: false, actionError: '', inviteToken: '', pendingInvite: false },
+    busy: false, actionError: '', inviteToken: '', pendingInvite: false,
+    lobby: null, head: null, me: null, tiles: [], inviteShow: false, playUrl: '' },
 
   onLoad(options) {
     this._registrationId = view.isId(options && options.registrationId) ? String(options.registrationId) : '';
@@ -34,8 +41,51 @@ Page({
         return;
       }
       this._summary = res.data;
-      this.setData({ state: 'ready', seats: view.seatsView(res.data) });
+      const seats = view.seatsView(res.data);
+      this._seats = seats;
+      this.setData({ state: 'ready', seats, lobby: lobby.lobbyView(seats, res.data, this.data.me), playUrl: lobby.playUrl(seats) });
+      if (!this._extrasRead) { this._extrasRead = true; this._loadExtras(seats); }
     });
+  },
+
+  // 主题头 / 本人昵称头像 / 怎么玩:三路只读,任一失败只是那一块不出,不挡大厅
+  _loadExtras(seats) {
+    if (seats.topicId) {
+      app.sendRequest({ url: '/api/topic/info-to-user', method: 'POST', data: { id: seats.topicId }, hideLoading: true, autoErrorToast: false,
+        success: res => {
+          const d = res && String(res.code) === '200' && res.data;
+          if (d && d.name) this.setData({ head: { name: d.name, cover: resolveTopicCover(d, path => app.getImgUrl(path)) } });
+        } });
+      const q = Number(seats.ownerType) === 2 && seats.ownerId ? { activityId: seats.ownerId } : { topicId: seats.topicId };
+      api.choices(app, q).then(res => {
+        if (!api.ok(res)) return;
+        const m = joinView.modeTiles(res.data);
+        if (m) this.setData({ tiles: m.tiles });
+      });
+    }
+    app.sendRequest({ url: '/api/user/info', method: 'POST', hideLoading: true, autoErrorToast: false,
+      success: res => {
+        const u = res && String(res.code) === '200' && res.data;
+        if (!u) return;
+        const name = String(u.nickname || '').trim();
+        const me = { name, avatar: u.avatar || '', initial: name ? name.slice(0, 1) : '我' };
+        this.setData({ me, lobby: lobby.lobbyView(this._seats, this._summary, me) });
+      } });
+  },
+
+  onOpenInvite() {
+    const l = this.data.lobby;
+    if (!l || (!l.canInvite && !(l.invited || []).length)) return;
+    this.setData({ inviteShow: true });
+    if (!this.data.inviteToken && this.data.lobby.canInvite && !this.data.busy) this.onInvite();
+  },
+  onSeatTap(e) { if (e.currentTarget.dataset.tappable) this.onOpenInvite(); },
+  onCloseInvite() { this.setData({ inviteShow: false }); },
+  onEditMe() { wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' }); },
+  onGoStart() {
+    if (!this.data.playUrl || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: this.data.playUrl, complete: () => { this._navigating = false; } });
   },
 
   onInvite() {
