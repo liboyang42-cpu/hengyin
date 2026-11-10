@@ -803,7 +803,7 @@ Page({
           { key: 'history', icon: 'route', title: '漫游记录', value: summary.trips + ' 次已完成旅程', img: latestTrackThumb(localRows), photo: 'history' },
           { key: 'stamp', icon: 'image', title: '集邮册', value: stamps == null ? '本机邮票暂不可读' : stamps + ' 张本机邮票', img: latestStampImage(localRows), photo: 'stamp' },
           // 2026-10-14 随漫游上线的两项(读数在各自页面现读,方卡不摆数字)
-          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标' },
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '给自己定个小目标', photo: 'goals' }, // r2 a4-v3-36:三卡同一种 3D 图标样式
         ],
         // 2026-10-28 业主:「官方活动就是漫游」—— 大卡常驻(不再是「暂未开放」灰卡),有可参与的活动时换上它的封面(_loadActiveRoamEvents)
         plays: [
