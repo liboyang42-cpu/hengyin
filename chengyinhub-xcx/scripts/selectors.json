@@ -1187,7 +1187,7 @@
   "_why": "提现记录是 full-sheet 壳，empty DOM 与新状态容器 .txjl-state 都在 #withdrawHistory 内。"
  },
  "D23": {
-  "selector": ".ir-summary, .ir-group, .ir-row",
+  "selector": ".ir-hero, .ir-group, .ir-row",
   "min": 1,
   "forbid": [
    "cy-error",

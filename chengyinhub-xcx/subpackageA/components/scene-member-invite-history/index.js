@@ -115,6 +115,7 @@ function buildGroups(records, rewards, rewardReady) {
         ? '首购奖励已到账' + (!recordTime && rewardTime ? ' · ' + rewardTime : '')
         : (rewardReady ? '已加入 · 首购待完成' : '已加入 · 奖励发放中'),
       rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '发放中'),
+      earned,
     })
   })
   groups.forEach((group) => {
@@ -151,6 +152,7 @@ Component({
     groups: [],
     rewardReady: true,
     earnedTotalText: '0',
+    earnedCount: 0,
     stack: [],
     // utils/page-motion.js:1 = 先隐着渲染,2 = 依次浮上来,0 = 静止
     pmIn: 0,
@@ -268,6 +270,7 @@ Component({
           groups: buildGroups(merged, this._rewards || {}, this._rewardReady),
           rewardReady: this._rewardReady,
           earnedTotalText: pointText(earnedTotal) || '0',
+          earnedCount: Object.keys(this._rewards || {}).length,
           stack: buildStack(merged),
         })
       })
