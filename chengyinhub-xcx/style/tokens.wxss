@@ -1587,6 +1587,9 @@ page.theme-dark,
   --cy-white-64: rgba(255,255,255,0.64);
   --cy-price: #FFFFFF;
   --cy-shadow-card: none;
+  /* r4-motion:嵌在浅色区里的暗色逃生口要把抬起 / 叠层投影也写回暗值(nav-theme-surface-contract) */
+  --cy-shadow-lift:  0 24rpx 48rpx rgba(0,0,0,.45);
+  --cy-shadow-stack: 0 12rpx 32rpx rgba(0,0,0,.35);
   /* ② 旧名 alias 快照重估:与 .theme-light/.theme-merchant 块对称(嵌套主题时不许停在浅值上) */
   --cy-bg-page:        var(--cy-color-bg-page);
   --cy-bg-card:        var(--cy-color-bg-surface);

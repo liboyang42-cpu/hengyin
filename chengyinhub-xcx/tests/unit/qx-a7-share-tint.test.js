@@ -63,6 +63,7 @@ test('分享层:导出图标题与眉题按宽度截断加省略号,不再按字
 test('分享层组件运行:封面取色后第一个色块与底色换成主色', () => {
   let config
   global.Component = (c) => { config = c }
+  global.Behavior = (b) => b   // 2026-11-10 r4-motion:分享层挂上 behaviors/reduced-motion,沙箱补 Behavior 桩
   global.getApp = () => ({ globalData: {}, getImgUrl: (u) => u, sendRequest() {} })
   const img = {}
   const ctx = { drawImage() {}, getImageData: () => ({ data: px(Array(4).fill([30, 150, 160])) }) }

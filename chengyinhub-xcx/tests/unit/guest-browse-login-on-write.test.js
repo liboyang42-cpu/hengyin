@@ -318,6 +318,7 @@ function continuationFixture() {
     Page: page => { definition = page; }, getApp: () => h.app,
     require: id => {
       if (id === '../../../utils/toast.js') return () => {};
+      if (id === '../../../utils/page-motion.js') return { enter() {} };   // 2026-11-10 r4-motion:席位圈入场只在 WXSS,沙箱给空桩
       assert.ok(['../../../utils/user-character.js', '../../../utils/team-event-command.js', '../utils/team-seats.js'].includes(id), id); // qx-b4:席位纯函数
       return require(path.resolve(root, 'pages/team/join', id));
     },
