@@ -1,0 +1,16 @@
+{
+  "name": "M-LANDING-reduced",
+  "framesCaptured": 3,
+  "spanMs": 72,
+  "fpsAvg": 41.7,
+  "gapsOver50ms": 1,
+  "maxGapMs": 56,
+  "metricsDelta": {
+    "LayoutCount": 3,
+    "RecalcStyleCount": 3,
+    "LayoutDuration": 0.0315,
+    "RecalcStyleDuration": 0.0091,
+    "ScriptDuration": 0.0165,
+    "TaskDuration": 0.1569
+  }
+}

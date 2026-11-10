@@ -1,0 +1,16 @@
+{
+  "name": "M-SETTLE-after",
+  "framesCaptured": 232,
+  "spanMs": 3861,
+  "fpsAvg": 60.1,
+  "gapsOver50ms": 0,
+  "maxGapMs": 37,
+  "metricsDelta": {
+    "LayoutCount": 34,
+    "RecalcStyleCount": 238,
+    "LayoutDuration": 0.012,
+    "RecalcStyleDuration": 0.0703,
+    "ScriptDuration": 0.0173,
+    "TaskDuration": 0.3556
+  }
+}

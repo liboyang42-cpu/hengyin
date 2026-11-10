@@ -1,0 +1,16 @@
+{
+  "name": "M-AINPC-open-reduced",
+  "framesCaptured": 4,
+  "spanMs": 103,
+  "fpsAvg": 39,
+  "gapsOver50ms": 0,
+  "maxGapMs": 39,
+  "metricsDelta": {
+    "LayoutCount": 4,
+    "RecalcStyleCount": 4,
+    "LayoutDuration": 0.0175,
+    "RecalcStyleDuration": 0.0051,
+    "ScriptDuration": 0.015,
+    "TaskDuration": 0.249
+  }
+}

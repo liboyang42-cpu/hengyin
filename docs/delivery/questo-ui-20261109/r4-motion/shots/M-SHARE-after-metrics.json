@@ -1,0 +1,16 @@
+{
+  "name": "M-SHARE-after",
+  "framesCaptured": 40,
+  "spanMs": 650,
+  "fpsAvg": 61.5,
+  "gapsOver50ms": 0,
+  "maxGapMs": 25,
+  "metricsDelta": {
+    "LayoutCount": 4,
+    "RecalcStyleCount": 41,
+    "LayoutDuration": 0.0147,
+    "RecalcStyleDuration": 0.0131,
+    "ScriptDuration": 0.0035,
+    "TaskDuration": 0.1002
+  }
+}
