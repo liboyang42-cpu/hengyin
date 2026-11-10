@@ -53,6 +53,8 @@
 
     <view class="team-actions" wx:if="{{team.status == 0}}">
       <button class="team-action primary" open-type="share" hover-class="cy-pressed" hover-stay-time="80">邀请队友</button>
+      <view wx:if="{{joined}}" class="team-action secondary" bindtap="openInviteQr"
+            aria-role="button" aria-label="队伍二维码与加入码" hover-class="cy-pressed" hover-stay-time="80">二维码</view>
       <view wx:if="{{!joined}}" class="team-action secondary" bindtap="goJoin"
             aria-role="button" aria-label="加入队伍" hover-class="cy-pressed" hover-stay-time="80">加入队伍</view>
     </view>
@@ -160,3 +162,16 @@
 <cy-danger-confirm id="dcReject" bind:confirm="onConfirmReject" />
 <cy-danger-confirm id="dcDisband" bind:confirm="onConfirmDisband" bind:alt="onDisbandAlt" />
 <team-report-sheet show="{{reportShow}}" team-id="{{reportTeamId}}" bind:close="closeReport" />
+<!-- l-misc 队伍小程序码:码图白底方块(扫码要白底);微信不可用时只给加入码 -->
+<cy-sheet show="{{qrSheet.show}}" title="队伍二维码" closable maskClosable bind:close="closeInviteQr">
+  <view class="tm-qr">
+    <image wx:if="{{qrSheet.state === 'ready'}}" class="tm-qr__img" src="{{qrSheet.qr}}" mode="aspectFit" show-menu-by-longpress aria-label="队伍小程序码" />
+    <text wx:elif="{{qrSheet.state === 'loading'}}" class="tm-qr__state" aria-role="status">正在加载…</text>
+    <text wx:elif="{{qrSheet.state === 'error'}}" class="tm-qr__state" aria-role="alert">{{qrSheet.message}}</text>
+    <view wx:if="{{qrSheet.code}}" class="tm-qr__code" bindtap="copyJoinCode" aria-role="button" aria-label="复制加入码 {{qrSheet.code}}" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="tm-qr__k">加入码</text>
+      <text class="tm-qr__v" user-select>{{qrSheet.code}}</text>
+      <text class="tm-qr__copy">复制</text>
+    </view>
+  </view>
+</cy-sheet>
