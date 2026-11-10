@@ -35,7 +35,8 @@
 
 - 单测：`node --test` 跑了 `chapter-flip*`、`play-chapter-*`、`r2-finish-settlement`、`qx-b3-player-journey`、`finish-page-redesign`、`play-finish-panel-not-nested-in-ending`、`play-ui-contract`、`r11-g1-finish-sheet-label`、`k7-map`、`ui-review-0831-marks-contract`、`privacy-gate-coverage-contract`，全部通过。改了 4 条钉住旧写法的断言（章节眉标「第 1 章完成」、兜底计时 10.8 秒、翻转门「轻点跳过」在完成卡在场时不出、完成页用时格多了 `fst--dup` 类、分包页面列表多了 settle、战报页禁写口的正则不再把页面路由 `pages/settle` 当写口），每处都写了注释。
 - DS 硬编码门禁：把本分支改动放进 staging 的临时工作树暂存后跑 `scripts/ds-hardcode-gate.sh`，无报错（分享图画面色、月桂大名次字号这类刻意值行尾标了 `ds-ok`）。
-- 动作台账与 UI 门禁：见下面「门禁结果」一节。
+- 动作台账与 UI 门禁：先 `build-route-matrix.js --json` 重建路由矩阵（新增结算页），再 `build-action-ledger.js --write` 重建台账（5893 条），`node tests/lint/ui-integrity.js` 输出 `UI-GATE-0:PASS`，没有新增任何基线条目（中途门禁报过 2 个零消费字段和 1 处基线行号漂移，已改代码收掉：把新增的辅助方法挪到基线行之后）。
+- 游玩页单色契约（`play-monochrome-contract`）：第一版结局印章用了金色被判红，已改成黑白；同批 play/finish/journey/chapter 相关单测 2430 例全部通过（含这次修正后重跑的 5 个）。
 - 主包体积：`scripts/mainpkg-size-report.js` 本分支与基线都是 3,233,159 字节 ≈ 1998.6 KiB（< 2048）。新增文件都在 `subpackageJourney` 分包；`pages/play` 的改动不计入主包估算。
 - 没有跑 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`（brief 禁止）。
 
@@ -63,3 +64,5 @@
 - `pages/play/components/chapter-flip/*` 只改了「上一章完成」那一段和溶解；三棱锥过场、通关过场没动。
 - 共享文件：`app.json` 只在 `subpackageJourney` 里加了 `pages/settle/index`。
 - r2-visual 改玩家弹层 token / 底部按钮圆角 token 后，本 lane 的面板和按钮会跟着变，不需要再改。
+
+STATUS: PARTIAL - 所有条目已改完并在 rig 截图；只差：「队内」「队伍」两个榜单页签 rig 没有组队主题、未截到图（仅单测）；视频分享与保存相册需要真机验证
