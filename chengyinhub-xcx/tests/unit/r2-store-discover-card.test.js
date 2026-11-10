@@ -29,12 +29,12 @@ test('多种通票:取最低价并标「起」,跨城不写城市', () => {
   assert.equal(c.meta, '2 种通票');
 });
 
-test('发现页:卡跟在第一条帖文后、商家视角不读', () => {
+test('发现页:卡在帖文流顶部、商家视角与未登录不读、只读一次', () => {
   const dir = path.join(__dirname, '../../pages/talent/list');
   const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
-  assert.match(wxml, /wx:if="\{\{storeCard && index === 0\}\}"/);
-  assert.match(wxml, /<block wx:else>\s*<view wx:if="\{\{storeCard\}\}" class="store-card"/);
+  assert.match(wxml, /<view wx:if="\{\{storeCard\}\}" class="store-card"/);
   const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8');
   assert.match(js, /if \(this\.data\.isMerchantViewer \|\| !app\.getUserID\(\)\)/);
+  assert.match(js, /if \(this\._storeCardRead\) return;/);
   assert.match(js, /\/subpackageMember\/market\/passes\/index/);
 });
