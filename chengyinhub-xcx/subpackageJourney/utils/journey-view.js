@@ -371,6 +371,11 @@ function affiliateView(data) {
   };
 }
 
+/* ——— qx-u2 首屏 hero(ref 1)：一行弱化事实，只拼服务端事实 ——— */
+function factLine(facts) {
+  return list(facts).filter(f => record(f) && f.v).map(f => (f.k ? f.k + ' ' : '') + f.v).join(' · ');
+}
+
 function newRequestId(prefix) {
   return String(prefix || 'journey') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
 }
@@ -378,5 +383,6 @@ function newRequestId(prefix) {
 module.exports = {
   isId, dateText, durationText,
   reportView, rankScopes, rankView, teamRankView, memoryView, choicesView, seatsView,
-  landingKind, referralView, giftView, affiliateView, newRequestId, SEAT_ERROR_TEXT
+  landingKind, referralView, giftView, affiliateView, newRequestId, SEAT_ERROR_TEXT,
+  factLine
 };

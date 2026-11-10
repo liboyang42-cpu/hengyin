@@ -251,9 +251,15 @@
 .ni-hi { position: absolute; right: 24rpx; top: 36rpx; min-width: 88rpx; height: 56rpx; padding: 0 20rpx; border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 700; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.2); transform-origin: left bottom; transition: transform 0.4s cubic-bezier(0.3, 1.5, 0.45, 1), opacity 0.25s; }
 .ni-stage--s3 .ni-hi { opacity: 1; transform: scale(1); }
 @media (prefers-reduced-motion: reduce) { .ni-lp, .ni-hi { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .ni-dot, .ni-back, .ni-skip { transition: none; } }
 .ni-t { margin-top: var(--cy-space-3); font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-text-title); text-align: center; }
 .ni-s { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); text-align: center; line-height: 1.5; }
-.ni-dots { display: flex; gap: 12rpx; margin: var(--cy-space-5) 0; }
+.ni-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: var(--cy-space-2); }
+.ni-back { width: 88rpx; height: 88rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-bg-card-2); color: var(--cy-text-title); transition: opacity var(--cy-motion-standard); }
+.ni-skip { min-width: 88rpx; height: 88rpx; line-height: 88rpx; text-align: right; font-size: var(--cy-font-body); color: var(--cy-text-title); transition: opacity var(--cy-motion-standard); }
+.ni-back.is-off, .ni-skip.is-off { opacity: 0; pointer-events: none; }
+.ni-period { color: var(--cy-ref-violet-500); }
+.ni-dots { display: flex; gap: 12rpx; }
 .ni-dot { width: 36rpx; height: 12rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); transform: scaleX(0.34); transition: transform 0.3s; }
 .ni-dot--on { transform: scaleX(1); background: var(--cy-text-title); }
-.ni-btn { width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }
+.ni-btn { margin-top: var(--cy-space-5); width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }

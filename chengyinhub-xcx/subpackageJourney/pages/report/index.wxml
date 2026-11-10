@@ -3,14 +3,26 @@
   <cy-page-title align="center" title="{{report && report.legacy ? '主题记录' : '本局战报'}}" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
-    <view class="jn-head">
-      <text class="jn-eyebrow" wx:if="{{eyebrow}}">{{eyebrow}}</text>
-      <text class="jn-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text>
+    <!-- qx-u2 / ref 1：叠层战报卡。分数照 NRC 粗斜体大数字；不计分/未知按原文案弱化显示，不画成 0。 -->
+    <view class="ob-hero rp-hero">
+      <view class="ob-glow"></view>
+      <view class="ob-card rp-card ob-card--back2"></view>
+      <view class="ob-card rp-card ob-card--back1"></view>
+      <view class="ob-card rp-card ob-card--front">
+        <view class="rp-card__top"><text class="jn-pill rp-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text></view>
+        <view class="rp-score">
+          <text class="rp-score__n" wx:if="{{report.scored}}">{{report.scoreText}}</text>
+          <text class="rp-score__muted" wx:else>{{report.scoreText}}</text>
+          <text class="rp-score__l" wx:if="{{report.scored}}">解谜分</text>
+        </view>
+        <view class="rp-stats">
+          <view class="rp-stat"><text class="rp-stat__v {{report.nodesText === '未知' ? 'is-muted' : ''}}">{{report.nodesText}}</text><text class="rp-stat__l">完成节点</text></view>
+          <view class="rp-stat"><text class="rp-stat__v {{report.elapsedText === '未知' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="rp-stat__l">用时</text></view>
+        </view>
+      </view>
     </view>
-    <view class="jn-grid">
-      <view class="jn-stat"><text class="jn-stat__v">{{report.nodesText}}</text><text class="jn-stat__l">完成节点</text></view>
-      <view class="jn-stat"><text class="jn-stat__v {{report.elapsedText === '未知' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="jn-stat__l">用时</text></view>
-      <view class="jn-stat"><text class="jn-stat__v {{report.scored ? '' : 'is-muted'}}">{{report.scoreText}}</text><text class="jn-stat__l">解谜分</text></view>
+    <view class="ob-copy">
+      <text class="ob-muted" wx:if="{{eyebrow}}">{{eyebrow}}</text>
     </view>
 
     <view class="jn-sec">
@@ -49,7 +61,7 @@
       </view>
     </view>
 
-    <view class="jn-footer" wx:if="{{report.finished}}">
+    <view class="jn-footer ob-footer" wx:if="{{report.finished}}">
       <button class="jn-share" open-type="share" aria-label="分享本局"><cy-btn variant="primary">分享</cy-btn></button>
     </view>
     <view class="jn-footer" wx:elif="{{report.inProgress}}">

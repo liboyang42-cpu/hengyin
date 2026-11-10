@@ -157,6 +157,24 @@ Page({
     if (this.data.introStep < this.data.introSteps.length - 1) { this.setData({ introStep: this.data.introStep + 1 }); return; }
     this.dismissIntro();
   },
+  prevIntro() {
+    if (this.data.introStep > 0) this.setData({ introStep: this.data.introStep - 1 });
+  },
+  // qx-u2:舞台左右滑翻页;横向位移不足 60px 或偏竖直的手势不算翻页。
+  onIntroTouchStart(e) {
+    const t = e && e.touches && e.touches[0];
+    this._introTouch = t ? { x: t.clientX, y: t.clientY } : null;
+  },
+  onIntroTouchEnd(e) {
+    const start = this._introTouch;
+    const t = e && e.changedTouches && e.changedTouches[0];
+    this._introTouch = null;
+    if (!start || !t) return;
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0 && this.data.introStep < this.data.introSteps.length - 1) this.setData({ introStep: this.data.introStep + 1 });
+    else if (dx > 0) this.prevIntro();
+  },
   dismissIntro() {
     this.setData({ introVisible: false, introStep: 0 });
     try { if (typeof wx.setStorageSync === 'function') wx.setStorageSync(INTRO_SEEN_KEY, 1); } catch (e) { /* 存不下只是下次再说明一遍 */ }
