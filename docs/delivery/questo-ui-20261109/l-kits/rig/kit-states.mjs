@@ -1,6 +1,6 @@
 // l-kits 截图状态:服务端形状的会话视图(字段名照 AdvancedGameRuntimeServiceImpl / HangmanGameplay.publicProjection / accusationView / GameSessionRuntimeServiceImpl.clueView)。
 // 图片用小程序包内站内路径(rig 能出图;线上是 OSS https 地址,同一条 displayImage 口径)。改前 / 改后两个包各跑一次同一份视图。
-const IMG = { a: '/subpackageP3/images/memoji-1.png', b: '/subpackageP3/images/memoji-2.png', c: '/subpackageP3/images/memoji-3.png', d: '/images/home-banner-1.jpg', board: '/images/home-banner-2.jpg' };
+const IMG = { a: '/subpackageP3/images/memoji-1.png', b: '/subpackageP3/images/memoji-2.png', c: '/subpackageP3/images/memoji-3.png', d: '/images/home-banner-club.jpg', board: '/images/home-banner-2.jpg' };
 const hangSeg = (over) => Object.assign({ length: 7, blankCount: 5, caseSensitive: false, solved: false, display: 'E_____S',
   slots: [{ i: 0, ch: 'E', kind: 'PREFILLED' }, { i: 1, kind: 'BLANK' }, { i: 2, kind: 'BLANK' }, { i: 3, kind: 'BLANK' },
     { i: 4, kind: 'BLANK' }, { i: 5, kind: 'BLANK' }, { i: 6, ch: 'S', kind: 'PREFILLED' }], title: '钟楼的看守人，在信里被叫作什么？' }, over);
@@ -41,6 +41,5 @@ export const STATES = [
   { id: 'lk-acc-solved', view: done({ verdict: 'CORRECT', correct: true, early: false, terminal: true, canRetry: false }, '钥匙就在守夜人的值班室里。钟楼的秘密到此揭开。', { finished: true, passed: true, attempts: 1 }, 'COMPLETED'), wait: 4200 },
   { id: 'lk-acc-failed', view: done({ verdict: 'FAILED', correct: false, early: false, terminal: true, canRetry: false }, '他趁夜色离开了小城。账本上那一页，再也找不回来。', { finished: true, passed: false, attempts: 3 }, 'FAILED'), wait: 4200 },
   { id: 'lk-acc-pending', view: acc({}, { finished: true, passed: false, attempts: 1 }), wait: 4200 },
-  // 内嵌掷骰子(摇一摇在 rig 没有传感器,只截构图)
-  { id: 'lk-dice-inline', view: { sessionId: 's5', version: 1, present: 'inline', playKit: { diceRoll: { faces: ['去钟楼', '找报童', '翻账本', '回邮局', '等钟响', '问老人'], diceCount: 1, values: [] } } } },
+  // 掷骰子摇一摇只改监听,画面无变化;rig 没有传感器,不截。
 ];

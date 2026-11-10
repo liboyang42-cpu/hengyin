@@ -167,7 +167,7 @@ test('UG-03 l-kits:嫌疑人翻页卡一次一张,「再想想」/ 箭头 / 点�
   const Comp = loadComponent('pages/play/components/playkit-accusation/index.js')
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxml'), 'utf8')
   assert.match(wxml, /class="ac__fcard \{\{index === cur \? 'is-on' : ''\}\} \{\{index === outIdx \? 'is-out' : ''\}\} \{\{index === inIdx \? 'is-in' : ''\}\}"[^>]*bindtap="onFlipNext"/, '点卡翻页')
-  assert.match(wxml, /class="ac__arrow" bindtap="onFlipNext"/, '右下角箭头翻页')
+  assert.match(wxml, /class="ac__arrow" catchtap="onFlipNext"/, "右下角箭头翻页(catchtap:不再冒泡到卡片再翻一次)")
   assert.match(wxml, /class="ac__ghost" bindtap="onFlipNext"[^>]*>再想想</, '「再想想」= 翻到下一位')
   assert.match(wxml, /class="g-btn ac__go" bindtap="onConfirm"[^>]*>指认 \{\{suspects\[cur\]\.name\}\}</, '「指认 X」跟当前这张')
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxss'), 'utf8')

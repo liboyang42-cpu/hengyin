@@ -11,7 +11,7 @@ const motion = require('../../../../utils/motion.js');
 
 const FLIP_MS = 480;    // = --cy-motion-flip(MOTION.md §2.1);减少动态效果时 10ms
 /* 便签在板上的位置与倾斜(原型三张:左上 / 中下 / 右上;再多的循环错开,最多画 6 张) */
-const PIN_SLOTS = [[44, 44, -4], [280, 140, 3], [480, 40, -2], [120, 160, 4], [360, 60, -3], [540, 150, 2]];
+const PIN_SLOTS = [[40, 36, -4], [260, 120, 3], [460, 32, -2], [110, 136, 4], [340, 48, -3], [520, 130, 2]];
 const MAX_PINS = 6;
 
 function withInitials(suspects) {
@@ -97,26 +97,35 @@ Component({
         this.setData({ cur: next, outIdx: -1, inIdx: -1 });
       }, this.data.reducedMotion ? 10 : FLIP_MS);
     },
-    /** 弹窗两帧后加 is-on:起点样式先落地,过渡才看得见(与 cy-illus 同一做法)。 */
-    _openPop(patch) {
+    /** 弹窗两帧后加 is-on:起点样式先落地,过渡才看得见(与 cy-illus 同一做法)。
+        字段写死成字面量,不拼 patch:动态 setData 门禁核不出写了哪些顶层字段。 */
+    _popIn() {
       this._clearPop();
-      this.setData(Object.assign({ cfOn: !!this.data.reducedMotion }, patch));
-      if (this.data.reducedMotion) return;
+      if (this.data.reducedMotion) { this.setData({ cfOn: true }); return; }
+      this.setData({ cfOn: false });
       this._popT = setTimeout(() => { this._popT = null; this.setData({ cfOn: true }); }, 34);
     },
     onOpenClue(e) {
       const i = Number(e.currentTarget.dataset.i);
       if (!this.data.pins[i] || this.data.confirmOpen) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this._openPop({ clueOpen: i });
+      this.setData({ clueOpen: i });
+      this._popIn();
     },
     onCloseClue() { this._clearPop(); this.setData({ clueOpen: -1, cfOn: false }); },
+    /** 线索图读不出来:只撤这一张图,文字照旧 —— 不显示破图(与 UG-02 选项图同一规则)。 */
+    onClueImgError(e) {
+      const i = Number(e.currentTarget.dataset.i);
+      if (!(this.data.pins[i] && this.data.pins[i].img)) return;
+      this.setData({ ['pins[' + i + '].img']: '' });
+    },
     /** 「指认 X」:先开居中确认弹窗;弹窗里再确认才交原 SUBMIT_QA。 */
     onConfirm() {
       const pick = this.data.suspects[this.data.cur];
       if (!pick || this.data.confirmOpen || this._flipT) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this._openPop({ confirmOpen: true, clueOpen: -1, confirmText: confirmContent(pick.name) });
+      this.setData({ confirmOpen: true, clueOpen: -1, confirmText: confirmContent(pick.name) });
+      this._popIn();
     },
     onConfirmCancel() { this._clearPop(); this.setData({ confirmOpen: false, cfOn: false }); },
     onConfirmGo() {

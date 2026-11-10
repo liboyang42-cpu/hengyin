@@ -7,15 +7,14 @@
     <view class="hm__stage">
       <view class="hm__q pk-in" wx:if="{{title}}">{{title}}</view>
 
-      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" bindtap="onPickCell" data-i="-1"
-            aria-role="{{solved ? 'text' : 'button'}}" aria-label="{{solved ? '答案：' + display : '点格子，用系统键盘输入'}}">
+      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : '点格子，用系统键盘输入'}}">
         <block wx:for="{{groups}}" wx:key="k" wx:for-item="g">
           <view wx:if="{{g.sep}}" class="hm__sep" aria-hidden="true">{{g.sep}}</view>
           <view wx:else class="hm__word-row">
             <view wx:for="{{g.cells}}" wx:key="i"
                   class="hm__cell {{item.kind === 'PREFILLED' ? 'is-given' : ''}} {{item.ch && item.kind !== 'PREFILLED' ? 'is-typed' : ''}} {{active === item.i ? 'is-active' : ''}} {{pop === item.i ? 'is-pop' : ''}} {{solved ? 'is-ok' : ''}}"
                   style="--i:{{item.n < 8 ? item.n : 7}}"
-                  data-i="{{item.i}}" data-kind="{{item.kind}}" data-n="{{item.n}}" catchtap="onPickCell"
+                  data-i="{{item.i}}" data-kind="{{item.kind}}" data-n="{{item.n}}" bindtap="onPickCell"
                   aria-role="{{item.kind === 'PREFILLED' || solved ? 'text' : 'button'}}"
                   aria-label="第 {{item.i + 1}} 格{{item.ch ? '：' + item.ch : '：空'}}"
                   hover-class="{{item.kind === 'PREFILLED' || solved ? '' : 'hm__press'}}" hover-stay-time="80">{{item.ch || ''}}</view>

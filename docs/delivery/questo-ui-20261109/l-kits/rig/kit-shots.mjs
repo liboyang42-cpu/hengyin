@@ -25,10 +25,11 @@ for (const s of STATES) {
   })()`);
   await sleep(s.wait || 2600);
   for (const step of s.steps || []) {
-    if (step.tapSel) await w.tapSel(step.tapSel);
+    /* 改前的包没有新类名(.ac__pin / .qa__pic …):步骤找不到就记一笔继续,不中断整轮 */
+    if (step.tapSel) { try { await w.tapSel(step.tapSel); } catch (e) { console.log('step skipped', s.id, step.tapSel); } }
     if (step.tap) await w.tap(step.tap);
     if (step.tapAny) { for (const t of step.tapAny) { try { await w.tap(t); break; } catch (e) { /* 改前/改后按钮文案不同 */ } } }
-    if (step.type) await w.type(step.type[0], step.type[1]);
+    if (step.type) { try { await w.type(step.type[0], step.type[1]); } catch (e) { console.log('step skipped', s.id, step.type[0]); } }
     if (step.eval) await w.eval(step.eval);
     await sleep(step.wait || 700);
   }

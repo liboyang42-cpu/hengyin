@@ -30,11 +30,14 @@
       <view class="ac__intro" wx:for="{{intro}}" wx:key="index" wx:if="{{item.kind === 'text'}}">{{item.text}}</view>
 
       <!-- 嫌疑人翻页卡:一次一张;点卡片 / 右下箭头 / 「再想想」翻到下一张 -->
+      <view class="ac__err {{wrongAttempt ? 'is-show' : ''}}" aria-live="polite">{{wrongAttempt ? (retryNote || '还不是这个人，继续调查') : ''}}</view>
+
       <view class="ac__deck" wx:if="{{suspects.length}}">
         <view wx:for="{{suspects}}" wx:key="id"
               class="ac__fcard {{index === cur ? 'is-on' : ''}} {{index === outIdx ? 'is-out' : ''}} {{index === inIdx ? 'is-in' : ''}}"
               data-i="{{index}}" bindtap="onFlipNext" aria-role="button" aria-hidden="{{index !== cur}}"
-              aria-label="{{item.name}}{{item.identity ? '，' + item.identity : ''}}，第 {{index + 1}} / {{suspects.length}} 位，点一下看下一位">
+              aria-label="{{item.name}}{{item.identity ? '，' + item.identity : ''}}，第 {{index + 1}} / {{suspects.length}} 位，点一下看下一位"
+              hover-class="ac__fcard--press" hover-stay-time="80">
           <image wx:if="{{item.avatar}}" class="ac__cov" src="{{item.avatar}}" mode="aspectFill" aria-hidden="true" />
           <view wx:else class="ac__cov ac__cov--none" aria-hidden="true">{{item.initial}}</view>
           <view class="ac__fbody">
@@ -44,13 +47,12 @@
             <view class="ac__testi" wx:for="{{item.testimony}}" wx:for-item="t" wx:key="key">「{{t.text}}」</view>
           </view>
         </view>
+        <!-- 圆点 + 右下角箭头压在卡组底部(原型 .flipctl 在卡下;这里叠在卡上,底栏之上一定露得出来) -->
+        <view class="ac__ctl" wx:if="{{suspects.length > 1}}">
+          <view class="ac__dots" aria-hidden="true"><view class="ac__dot {{index === cur ? 'is-on' : ''}}" wx:for="{{suspects}}" wx:key="id"></view></view>
+          <view class="ac__arrow" catchtap="onFlipNext" aria-role="button" aria-label="下一位" hover-class="ac__press" hover-stay-time="80"><cy-icon name="chevron-right" size="32" /></view>
+        </view>
       </view>
-      <view class="ac__ctl" wx:if="{{suspects.length > 1}}">
-        <view class="ac__dots" aria-hidden="true"><view class="ac__dot {{index === cur ? 'is-on' : ''}}" wx:for="{{suspects}}" wx:key="id"></view></view>
-        <view class="ac__arrow" bindtap="onFlipNext" aria-role="button" aria-label="下一位" hover-class="ac__press" hover-stay-time="80"><cy-icon name="chevron-right" size="32" /></view>
-      </view>
-
-      <view class="ac__err {{wrongAttempt ? 'is-show' : ''}}" aria-live="polite">{{wrongAttempt ? (retryNote || '还不是这个人，继续调查') : ''}}</view>
     </block>
   </view>
 
@@ -61,7 +63,7 @@
 
   <!-- 确认:居中弹窗(原型 pop-accuse),「确认指认」才交原 SUBMIT_QA 的 optionId;「再想想」关掉 -->
   <view class="ac-cf {{cfOn ? 'is-on' : ''}}" wx:if="{{confirmOpen}}" catchtouchmove="noop">
-    <view class="ac-cf__mask" bindtap="onConfirmCancel" aria-hidden="true"></view>
+    <view class="ac-cf__mask" aria-hidden="true"></view>
     <view class="ac-cf__panel" aria-role="dialog" aria-label="{{confirmText}}">
       <view class="ac-cf__ava" aria-hidden="true">
         <image wx:if="{{suspects[cur].avatar}}" class="ac-cf__ava-img" src="{{suspects[cur].avatar}}" mode="aspectFill" />
@@ -76,10 +78,10 @@
 
   <!-- 线索详情:居中弹窗(原型 pop-clue):图 + 名字 + 一句描述;「收起」(线索已在背包里,这里只是看一眼) -->
   <view class="ac-cf ac-cl {{cfOn ? 'is-on' : ''}}" wx:if="{{clueOpen >= 0}}" catchtouchmove="noop">
-    <view class="ac-cf__mask" bindtap="onCloseClue" aria-hidden="true"></view>
+    <view class="ac-cf__mask" aria-hidden="true"></view>
     <view class="ac-cf__panel ac-cl__panel" aria-role="dialog" aria-label="线索：{{pins[clueOpen].name}}">
       <view class="ac-cl__h">线索</view>
-      <image wx:if="{{pins[clueOpen].img}}" class="ac-cl__img" src="{{pins[clueOpen].img}}" mode="aspectFill" aria-hidden="true" />
+      <image wx:if="{{pins[clueOpen].img}}" class="ac-cl__img" src="{{pins[clueOpen].img}}" mode="aspectFill" aria-hidden="true" binderror="onClueImgError" data-i="{{clueOpen}}" />
       <view class="ac-cl__t">{{pins[clueOpen].name}}</view>
       <view class="ac-cl__p" wx:if="{{pins[clueOpen].text}}">{{pins[clueOpen].text}}</view>
       <view class="ac-cf__ghost" bindtap="onCloseClue" aria-role="button" aria-label="收起" hover-class="g-btn--press" hover-stay-time="80">收起</view>

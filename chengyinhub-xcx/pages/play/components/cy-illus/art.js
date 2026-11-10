@@ -41,8 +41,18 @@ var D = {
 };
 var NAMES = { clue: '线索', badge: '勋章', stamp: '邮戳 / 延伸任务', key: '钥匙 / 解锁', success: '成功', fail: '失败', wait: '调查中', team: '队伍', seat: '席位', pass: '通行证', points: '积分', seal: '章节印', trophy: '名次', compass: '雷达 / 方向', backpack: '背包', bookmark: '任务', envelope: '邀请', star: '评价', locked: '未解锁', unlocked: '已解锁', hourglass: '等待', gem: '藏品', sparkles: '闪光', question: '提示', rays: '光芒' };
 
+/** 同一个标签里重复的属性只留第一个(l-kits 2026-11-10 rig 实测:原型把 SVG 内联在 HTML 里,HTML 解析器对重复属性取第一个;
+ *  这里是 data URI 的独立 SVG,走 XML 解析,重复属性 = 格式错误,整张图不渲染(Chrome naturalWidth 0)。
+ *  取第一个 = 与业主在原型里看到的一致。 */
+function dedupeAttrs(markup) {
+  return markup.replace(/<([a-zA-Z][\w-]*)((?:\s+[\w:-]+="[^"]*")*)\s*(\/?)>/g, function (m, tag, attrs, close) {
+    var seen = {}, out = '';
+    attrs.replace(/\s+([\w:-]+)="([^"]*)"/g, function (a, k, v) { if (!seen[k]) { seen[k] = 1; out += ' ' + k + '="' + v + '"'; } return a; });
+    return '<' + tag + out + (close ? '/' : '') + '>';
+  });
+}
 function uri(body) {
-  return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" overflow="visible">' + body + '</svg>');
+  return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(dedupeAttrs('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" overflow="visible">' + body + '</svg>'));
 }
 function has(name) { return Object.prototype.hasOwnProperty.call(D, name); }
 /** 两层图:blob 底 + figure;未知名字回落「线索」,与原型 img() 一致。n 只用于「章节印」的数字。 */
@@ -51,4 +61,4 @@ function layers(name, n) {
   var label = n == null || n === '' ? '一' : String(n).replace(/[<>&"']/g, '');
   return { name: key, label: NAMES[key], blob: uri('<path d="' + BLOB[d.b] + '" fill="' + W + '"/>'), fg: uri(d.f.replace('__N__', label)) };
 }
-module.exports = { NAMES: NAMES, LIST: Object.keys(D), layers: layers, has: has };
+module.exports = { NAMES: NAMES, LIST: Object.keys(D), layers: layers, has: has, dedupeAttrs: dedupeAttrs };

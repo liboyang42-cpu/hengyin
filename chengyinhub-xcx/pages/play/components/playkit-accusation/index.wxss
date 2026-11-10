@@ -7,7 +7,7 @@
 
 /* 线索板:板图 + 便签(旋转、顶上一颗图钉),便签可点 */
 .ac__board {
-  position: relative; width: 100%; height: 260rpx; margin-top: var(--cy-space-4);   /* ds-ok 原型 .board 130px */
+  position: relative; width: 100%; height: 220rpx; margin-top: var(--cy-space-4);   /* ds-ok 原型 .board 130px,收到 220rpx 给翻页卡让位 */
   border: 1rpx solid rgba(var(--lk-ink-rgb, 255, 255, 255), .2);   /* ds-ok 原型 --lk-line */
   border-radius: var(--lk-r, var(--cy-radius-lg)); clip-path: var(--lk-cut, none); overflow: hidden;
   background: var(--lk-card, var(--soft));
@@ -28,7 +28,7 @@
 .ac__intro { margin-top: var(--cy-space-3); font-family: var(--lk-fs, inherit); font-size: var(--cy-type-body); line-height: 1.7; color: var(--sub); text-align: center; }
 
 /* 嫌疑人翻页卡组:一次一张,绕竖轴翻(原型 .flipdeck--sus 400px 高,perspective 1100px) */
-.ac__deck { position: relative; width: 100%; height: 800rpx; margin-top: var(--cy-space-4); perspective: 2200rpx; }   /* ds-ok 原型 */
+.ac__deck { position: relative; width: 100%; height: 600rpx; margin-top: var(--cy-space-3); perspective: 2200rpx; }   /* ds-ok 原型 400px;这里收到 600rpx,整张卡连圆点 / 箭头一起落在底栏之上(rig 390×844 实测) */
 .ac__fcard {
   position: absolute; left: 0; top: 0; right: 0; bottom: 0;
   display: flex; flex-direction: column; overflow: hidden; text-align: left;
@@ -40,27 +40,30 @@
   transition: transform var(--cy-motion-flip, 480ms) var(--cy-ease-flip, cubic-bezier(.45, 0, .2, 1)), opacity var(--cy-motion-slow) ease;
 }
 .ac__fcard.is-on { transform: none; opacity: 1; pointer-events: auto; z-index: 2; }
+.ac__fcard--press { opacity: .92; }
 .ac__fcard.is-out { transform: rotateY(-90deg) translateX(-80rpx); opacity: 0; pointer-events: none; }   /* ds-ok 原型 -40px */
 .ac__fcard.is-in { transform: none; opacity: 1; z-index: 3; }
-.ac__cov { flex: none; width: 100%; height: 300rpx; opacity: .75; }   /* ds-ok 原型 150px */
+.ac__cov { flex: none; width: 100%; height: 240rpx; opacity: .75; }   /* ds-ok 原型 150px,随卡高同比收小 */
 .ac__cov--none { display: flex; align-items: center; justify-content: center; background: var(--lk-ctl, var(--bg)); font-size: var(--cy-type-display); font-weight: 800; color: var(--sub); }
-.ac__fbody { flex: 1; min-height: 0; padding: 0 28rpx 24rpx; overflow-y: auto; }   /* ds-ok 原型 12px 14px */
+.ac__fbody { flex: 1; min-height: 0; padding: 64rpx 28rpx 100rpx; overflow-y: auto; }   /* ds-ok 原型 12px 14px;上留头像字的位置,下留圆点 / 箭头 */
 .ac__av {
-  display: flex; align-items: center; justify-content: center; width: 96rpx; height: 96rpx; margin-top: -76rpx; margin-bottom: 16rpx;   /* ds-ok 原型 48px 圆,上提 38px */
-  border-radius: 50%; border: 4rpx solid var(--lk-card, var(--soft)); background: var(--lk-ctl, var(--bg));
+  position: absolute; left: 28rpx; top: 192rpx;   /* ds-ok 原型 48px 圆,骑在封面下沿(封面 240rpx − 半径 48rpx);绝对定位而不是负边距,正文区 overflow 不会把它裁掉 */
+  display: flex; align-items: center; justify-content: center; width: 96rpx; height: 96rpx;
+  border-radius: 50%; border: 4rpx solid var(--lk-card, var(--soft)); background: var(--lk-ctl, var(--bg)); color: var(--lk-ink, var(--ink));
   font-family: var(--lk-fd, inherit); font-size: var(--cy-type-sheet-title); font-weight: 700;
 }
 .ac__name { font-family: var(--lk-fd, inherit); font-size: var(--cy-type-section-title); font-weight: 600; letter-spacing: var(--lk-ls, normal); line-height: 1.3; }
 .ac__role { margin: 4rpx 0 20rpx; font-family: var(--lk-fm, inherit); font-size: var(--cy-type-label); color: var(--lk-mute, var(--sub)); }
 .ac__testi { margin-top: 12rpx; padding: 20rpx 28rpx; border-left: 6rpx solid var(--lk-a, var(--accent)); background: rgba(var(--lk-ink-rgb, 255, 255, 255), .06); font-family: var(--lk-fs, inherit); font-size: var(--cy-type-body); line-height: 1.6; }   /* ds-ok 原型 .testi */
-.ac__ctl { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-3); padding: 0 4rpx; }
+.ac__ctl { position: absolute; left: 28rpx; right: 20rpx; bottom: 20rpx; z-index: 4; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }   /* ds-ok 叠在卡组底部 */
+.ac__arrow { pointer-events: auto; }
 .ac__dots { display: flex; gap: 10rpx; }
 .ac__dot { width: 12rpx; height: 12rpx; border-radius: 50%; background: rgba(var(--lk-ink-rgb, 255, 255, 255), .25); transition: background-color var(--cy-motion-fast) ease; }
 .ac__dot.is-on { background: var(--lk-ink, var(--ink)); }
 .ac__arrow { display: flex; align-items: center; justify-content: center; width: 88rpx; height: 88rpx; border-radius: 50%; clip-path: var(--lk-cut, none); background: var(--lk-ink, var(--ink)); color: var(--lk-bg, var(--bg)); }
 .ac__press { opacity: .88; }
 /* 指错:红字落在卡下,升 16rpx 淡入(规则:红字,不弹窗) */
-.ac__err { min-height: 36rpx; margin-top: var(--cy-space-3); font-size: var(--cy-type-label); font-weight: 600; color: var(--accent); opacity: 0; transform: translateY(16rpx); transition: opacity var(--cy-motion-slow) var(--cy-ease-out), transform var(--cy-motion-slow) var(--cy-ease-out); }
+.ac__err { min-height: 36rpx; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); font-weight: 600; color: var(--accent); opacity: 0; transform: translateY(16rpx); transition: opacity var(--cy-motion-slow) var(--cy-ease-out), transform var(--cy-motion-slow) var(--cy-ease-out); }
 .ac__err.is-show { opacity: 1; transform: none; }
 
 /* 底栏:「再想想」(翻到下一位)+ 「指认 X」 */
@@ -74,7 +77,7 @@
 .ac__bar .ac__go { position: static; flex: 1.4; }
 .ac__ghost { flex: 1; display: flex; align-items: center; justify-content: center; height: 112rpx; border-radius: 56rpx; box-sizing: border-box; border: 2rpx solid rgba(var(--lk-ink-rgb, 255, 255, 255), .2); background: rgba(var(--lk-ink-rgb, 255, 255, 255), .07); color: var(--ink); font-size: var(--cy-type-button); font-weight: 700; }   /* ds-ok 与玩法屏主按钮同一胶囊 */
 .ac--full { overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom) + 200rpx); }
-.ac__q, .ac__board, .ac__intro, .ac__deck, .ac__ctl, .ac__err { flex-shrink: 0; }
+.ac__q, .ac__board, .ac__intro, .ac__deck, .ac__err { flex-shrink: 0; }
 .ac__bar--full { left: 0; right: 0; bottom: 0; padding: 24rpx 40rpx calc(env(safe-area-inset-bottom) + 60rpx); background: var(--bg); }
 
 /* 结果整屏(原型 .verdict):插图 + 大字结论 + 结局段 + 继续;整屏档 fixed 盖住台面,内嵌档在流里占一块 */
