@@ -1522,13 +1522,25 @@ function dynamicAttr(value) {
 }
 // ponytail: only literal branches under a simple data-path condition are supported.
 // Extend this grammar when a real binding needs more; unknown expressions fail closed.
-function eventHandlerNames(value) {
+// 2026-11-10 r2-create:再认两种形状 ——
+//   1. 条件里有一支是空串:`{{cond ? 'a' : ''}}` / `{{cond ? '' : 'a'}}`(空串 = 这一态不绑定);
+//   2. WXS 响应事件:`{{mod.fn}}` / `{{cond ? mod.fn : ''}}`,mod 必须是本 WXML 声明的 <wxs module>。
+//      它跑在渲染层,不是逻辑层 handler,自己不成为控件行;它经 callMethod 调回的方法由 ui-integrity U3 核对。
+function eventHandlerNames(value, wxsModules) {
   const classified = classifyBinding(value)
   if (classified.kind === 'identifier') return [classified.name]
   if (classified.kind === 'empty') return []
   const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
-  if (!match) throw new Error(`无法静态解析事件绑定: ${value}`)
-  return [...new Set([match[2], match[4]])]
+  if (match) return [...new Set([match[2], match[4]])]
+  const half = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(?:(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])\3|(['"])\4\s*:\s*(['"])([A-Za-z_$][\w$]*)\5)\s*\}\}$/.exec(value)
+  if (half) return [half[2] || half[6]]
+  const wxs = /^\{\{\s*(?:!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*)?([A-Za-z_$][\w$]*)\.[A-Za-z_$][\w$]*\s*(?::\s*(['"])\2)?\s*\}\}$/.exec(value)
+  if (wxs && wxsModules && wxsModules.has(wxs[1])) return []
+  throw new Error(`无法静态解析事件绑定: ${value}`)
+}
+
+function wxsModuleNames(source) {
+  return new Set([...String(source || '').matchAll(/<wxs\b[^>]*\bmodule\s*=\s*['"]([A-Za-z_$][\w$]*)['"]/g)].map((m) => m[1]))
 }
 
 /**
@@ -2770,8 +2782,9 @@ function buildLedger() {
       const hostRoutes = [...new Set(hostComponentPaths.map((item) => item.route))].sort()
       // 未被任何 app page（含组件依赖闭包）引用的孤儿组件不属于可操作产品分母。
       if (route.startsWith('component:') && hostRoutes.length === 0) return
+      const wxsModules = wxsModuleNames(source)
       findEventBindings(source).flatMap((binding, bindingIndex) =>
-        eventHandlerNames(binding.value).map(name => ({ binding, bindingIndex, name }))
+        eventHandlerNames(binding.value, wxsModules).map(name => ({ binding, bindingIndex, name }))
       ).forEach(({ binding, bindingIndex, name }) => {
         const tag = tags.find((candidate) => candidate.start <= binding.offset && binding.offset <= candidate.end)
         const tagSource = tag ? source.slice(tag.start, tag.end + 1) : ''

@@ -386,3 +386,48 @@ test('页面:图片先选图上传,回来后插到点插入栏时的光标处(�
   assert.deepEqual(blocksOf(page).map((b) => b.type === 'text' ? b.content : b.type), ['雨停', 'image', '了。', '她推开门。'])
   assert.equal(blocksOf(page)[1].url, 'https://example.com/rain.jpg')
 })
+
+// ── r2-create(2026-11-10):段首哨兵 / 退格合并 / 工具栏格式 ─────────────────
+const ZW = '​'
+
+test('页面:非首段输入框值带段首哨兵,收字时去掉哨兵并把光标换回正文坐标', () => {
+  const page = openPage()
+  page.onStoryTextInput(ev({ blockkey: 'p2' }, { value: ZW + '她推开门了。', cursor: 7 }))
+  assert.equal(blocksOf(page)[1].content, '她推开门了。')
+  assert.equal(page._storyTextCursor.index, 6)
+})
+
+test('页面:段首退格(哨兵被删、正文没变)→ 并入上一段,光标落在接缝处', () => {
+  const page = openPage()
+  page.onStoryTextInput(ev({ blockkey: 'p2' }, { value: '她推开门。', cursor: 0 }))
+  assert.deepEqual(blocksOf(page).map((b) => b.content), ['雨停了。她推开门。'])
+  assert.equal(page.data.storyEditor.focusBlockKey, 'p1')
+  assert.equal(page.data.storyEditor.focusCursor, 4)
+})
+
+test('页面:光标落在哨兵前又打了字 → 摘掉哨兵照常收字,不误判成退格', () => {
+  const page = openPage()
+  page.onStoryTextInput(ev({ blockkey: 'p2' }, { value: '「' + ZW + '她推开门。', cursor: 1 }))
+  assert.deepEqual(blocksOf(page).map((b) => b.content), ['雨停了。', '「她推开门。'])
+})
+
+test('页面:B 没有选区时作用于整段,工具栏高亮跟着变;段落样式下拉写进块', () => {
+  const page = openPage()
+  page.onStoryTextBlur(ev({ blockkey: 'p1' }, { value: '雨停了。', cursor: 2 }))
+  page.onStoryMark(ev({ mark: 'bold' }))
+  assert.deepEqual(blocksOf(page)[0].marks, [{ from: 0, to: 4, type: 'bold' }])
+  assert.equal(page.data.storyFmt.bold, true)
+  assert.deepEqual(page.data.storySegs.p1.map((s) => [s.text, s.bold]), [['雨停了。', true]])
+  page.onStoryParaPick({ detail: { value: 1 } })
+  assert.equal(blocksOf(page)[0].style, 'h1')
+  assert.equal(page.data.storyFmt.paraLabel, '标题')
+})
+
+test('页面:字数与封面跟着章节走;没有正文段时点 B 只提示', () => {
+  const page = openPage()
+  assert.equal(page.data.storyWordCount, 9)
+  page.data.formData.chapters[0].blocks = []
+  page._storyCaret = null; page._storyFocusKey = ''
+  page.onStoryMark(ev({ mark: 'bold' }))
+  assert.ok(toasts.includes('先点一段正文'))
+})
