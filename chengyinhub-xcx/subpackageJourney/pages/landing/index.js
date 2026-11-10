@@ -1,5 +1,6 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
+const join = require('../../utils/join-view.js');
 const app = getApp();
 
 /* P1 推荐/赠送/同行落地 + P4 玩法模式 + P5 领取席位。
@@ -18,7 +19,7 @@ function dropRequestId(kind, token) { try { wx.removeStorageSync(storeKey(kind, 
 Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
-    inviter: null, headline: '', title: '', modes: [], facts: [], primary: '', busy: false, actionError: ''
+    inviter: null, headline: '', title: '', tiles: [], activeMode: '', activeTile: null, seatNo: '', facts: [], primary: '', busy: false, actionError: ''
   },
 
   onLoad(options) {
@@ -82,9 +83,18 @@ Page({
   _loadModes(query, epoch) {
     api.choices(app, query).then(res => {
       if (epoch !== this._epoch || !api.ok(res)) return;
-      const choices = view.choicesView(res.data);
-      if (choices && !choices.unavailable) this.setData({ modes: choices.modes });
+      const play = join.modeTiles(res.data);
+      if (play) this.setData({ tiles: play.tiles, activeMode: play.active, activeTile: play.tiles.find(t => t.key === play.active) || null });
     });
+  },
+
+  // 模式卡只切换下方规则说明，不写服务端：真正的玩法仍按开局时服务端冻结的配置。
+  onMode(e) {
+    const key = e.currentTarget.dataset.key;
+    const tile = this.data.tiles.find(t => t.key === key);
+    if (!tile || key === this.data.activeMode) return;
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light', fail() {} });
+    this.setData({ activeMode: key, activeTile: tile });
   },
 
   onPrimary() {
@@ -120,7 +130,7 @@ Page({
       dropRequestId('seat', this._token);
       if (!api.ok(res) || !res.data) { this.setData({ primary: '', actionError: res.msg || '领取失败' }); return; }
       this._claimed = res.data;
-      this.setData({ headline: '已领取同行席位', facts: [{ k: '席位', v: '第 ' + res.data.seatNo + ' 席' }],
+      this.setData({ headline: '已领取同行席位', seatNo: String(res.data.seatNo || ''), facts: [{ k: '席位', v: '第 ' + res.data.seatNo + ' 席' }],
         primary: this._activityId || this._topicId ? '进入本局' : '' });
     });
   },

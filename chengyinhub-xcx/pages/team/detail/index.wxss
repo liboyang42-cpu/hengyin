@@ -19,10 +19,18 @@ button.team-action::after { border: 0; }
 .tm-rank { flex: none; width: 46rpx; font-weight: 800; color: var(--cy-text-secondary); }
 .tm-val { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 
-/* U06-01 席位:键值行,值右对齐;票已失效用危险色 */
-.tm-seats { padding-top: var(--cy-space-1); padding-bottom: var(--cy-space-1); }
-.tm-seat { display: flex; align-items: center; justify-content: space-between; min-height: 72rpx; border-bottom: 1rpx solid var(--cy-border-line); font-size: var(--cy-font-body); }
-.tm-seat:last-child { border-bottom: 0; }
-.tm-seat__k { color: var(--cy-text-secondary); }
-.tm-seat__v { font-weight: 700; color: var(--cy-text-title); }
-.tm-seat__v.is-bad { color: var(--cy-danger); }
+/* U06-01 席位(r2-join):头像 + 空位虚线圈一排,依次弹入;空位轻呼吸;下方小标签 */
+.tm-seats { padding-top: var(--cy-space-3); padding-bottom: var(--cy-space-3); }
+.tm-seat-strip { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
+.tm-seat-cell { position: relative; width: 88rpx; height: 88rpx; animation: tm-seat-in 360ms cubic-bezier(.3,1.3,.5,1) both; }
+.tm-seat-av { width: 88rpx; height: 88rpx; border-radius: 50%; background: var(--cy-bg-elevated); }
+.tm-seat-crown { position: absolute; left: 50%; bottom: -10rpx; transform: translateX(-50%); padding: 0 10rpx; border-radius: var(--cy-radius-pill); background: var(--cy-brand); color: var(--cy-text-inverse); font-size: var(--cy-font-micro); line-height: 1.4; white-space: nowrap; }
+.tm-seat-open { width: 88rpx; height: 88rpx; box-sizing: border-box; border-radius: 50%; border: 3rpx dashed var(--cy-text-secondary); display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary); animation: tm-seat-breathe 2.4s ease-in-out infinite; }
+.tm-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-top: var(--cy-space-3); }
+.tm-seat-strip + .tm-chips { padding-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-border-line); }
+.tm-chip { display: inline-flex; align-items: center; gap: 8rpx; padding: 8rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-bg-elevated); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.tm-chip__v { font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
+.tm-chip.is-bad, .tm-chip.is-bad .tm-chip__v { color: var(--cy-danger); }
+@keyframes tm-seat-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes tm-seat-breathe { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tm-seat-cell, .tm-seat-open { animation: none; } }

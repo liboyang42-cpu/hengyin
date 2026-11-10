@@ -5,7 +5,7 @@
   "backgroundColor": "#000000",
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-empty": "/components/cy/empty/index",
+    "cy-icon": "/components/cy/icon/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",

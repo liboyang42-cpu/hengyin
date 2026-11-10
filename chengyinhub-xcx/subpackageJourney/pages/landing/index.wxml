@@ -1,28 +1,60 @@
-<view class="theme-dark jn">
+<view class="theme-dark jn jl">
   <cy-nav-bar plain />
   <cy-page-title align="center" title="{{headline}}" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
-    <view class="jn-head">
-      <view class="jn-av jn-av--lg" wx:if="{{inviter}}"><image wx:if="{{inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" /><text wx:else>{{inviter.initial}}</text></view>
-      <text class="jn-eyebrow jn-gap" wx:if="{{inviter}}">{{inviter.name}}</text>
-      <text class="jn-pill" wx:if="{{title}}">{{title}}</text>
+    <!-- 同行两端：邀请人 ↔ 你，连线上的光点表示「一起」；领到席位后右侧换成席位号 -->
+    <view class="jl-duo" aria-hidden="true">
+      <view class="jl-seat jl-seat--host">
+        <view class="jl-ring"></view>
+        <view class="jl-av">
+          <image wx:if="{{inviter && inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" />
+          <text wx:elif="{{inviter}}">{{inviter.initial}}</text>
+          <cy-icon wx:else name="tab-club" size="44" />
+        </view>
+      </view>
+      <view class="jl-link"><view class="jl-link__dot"></view><view class="jl-link__dot jl-link__dot--2"></view><view class="jl-link__dot jl-link__dot--3"></view></view>
+      <view class="jl-seat jl-seat--you {{seatNo ? 'is-on' : ''}}">
+        <view class="jl-ring jl-ring--you"></view>
+        <view class="jl-av jl-av--you">
+          <text wx:if="{{seatNo}}" class="jl-av__no">{{seatNo}}</text>
+          <cy-icon wx:else name="plus" size="40" />
+        </view>
+      </view>
     </view>
+    <text class="jl-name" wx:if="{{inviter}}">{{inviter.name}}</text>
+    <text class="jn-pill jl-pill" wx:if="{{title}}">{{title}}</text>
 
-    <view class="jn-sec" wx:if="{{modes.length}}">
-      <view class="jn-group" wx:for="{{modes}}" wx:key="key" wx:for-item="mode">
-        <view class="jn-row"><view class="jn-row__t"><text class="jn-row__b">{{mode.title}}</text><text class="jn-row__s" wx:if="{{mode.reason}}">{{mode.reason}}</text></view></view>
-        <view class="jn-row" wx:for="{{mode.rows}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v">{{item.v}}</text></view>
+    <view class="jl-play" wx:if="{{tiles.length}}">
+      <text class="jl-play__h">怎么玩</text>
+      <view class="jl-tiles">
+        <view wx:for="{{tiles}}" wx:key="key" class="jl-tile {{item.key === activeMode ? 'is-active' : ''}} {{item.available ? '' : 'is-off'}} {{tiles.length > 1 ? '' : 'is-solo'}}"
+              style="animation-delay: {{index * 90 + 120}}ms" data-key="{{item.key}}" bindtap="onMode" hover-class="cy-pressed" hover-stay-time="80"
+              aria-role="{{tiles.length > 1 ? 'radio' : 'text'}}" aria-checked="{{item.key === activeMode}}" aria-label="{{item.name}}">
+          <view class="jl-tile__top">
+            <cy-icon name="{{item.icon}}" size="36" />
+            <view class="jl-tile__radio" wx:if="{{tiles.length > 1}}"></view>
+          </view>
+          <text class="jl-tile__name">{{item.name}}</text>
+          <text class="jl-tile__sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text>
+        </view>
+      </view>
+      <view class="jl-rules" wx:if="{{activeTile && activeTile.rules.length}}">
+        <view class="jl-rule" wx:for="{{activeTile.rules}}" wx:key="k" style="animation-delay: {{index * 60}}ms">
+          <view class="jl-rule__dot {{item.on ? 'is-on' : ''}}"></view>
+          <text class="jl-rule__k">{{item.k}}</text>
+          <text class="jl-rule__v">{{item.v}}</text>
+        </view>
       </view>
     </view>
 
-    <view class="jn-sec" wx:if="{{facts.length}}">
+    <view class="jn-sec jl-facts" wx:if="{{facts.length}}">
       <view class="jn-group">
         <view class="jn-row" wx:for="{{facts}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v is-strong">{{item.v}}</text></view>
       </view>
     </view>
 
-    <view class="jn-footer jn-footer--stack">
+    <view class="jn-footer jn-footer--stack" wx:if="{{primary || actionError}}">
       <cy-btn class="jn-grow" wx:if="{{primary}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
       <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
     </view>

@@ -6,7 +6,7 @@ const merchantTheme = require('../../../../utils/merchant-theme.js')
 Page({
   data: {
     merchantView: false,
-    revTabs: [{ key: 'income', label: '收益明细' }, { key: 'revenue', label: '分佣' }],
+    revTabs: [{ key: 'income', label: '收益' }, { key: 'revenue', label: '分佣' }], // r2-join b5-19:不与页标题「收益明细」重名
     revTab: 'income',
     revState: 'hidden'
   },

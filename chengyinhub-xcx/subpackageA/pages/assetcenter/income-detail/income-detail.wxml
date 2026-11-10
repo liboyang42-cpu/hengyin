@@ -11,7 +11,7 @@
 <cy-page-title title="收益明细" />
 <view class="id-page-body">
   <!-- §19/§27.10:分佣是营销分配投影,与上面的收益明细是两条账,不相加;只在服务端有本人分项时出现 -->
-  <cy-tabs wx:if="{{!merchantView && revState !== 'hidden'}}" class="id-tabs" variant="segmented" tabs="{{revTabs}}" active="{{revTab}}" bind:change="onRevTab" />
+  <cy-tabs wx:if="{{!merchantView && revState !== 'hidden'}}" class="id-tabs" variant="fill" tabs="{{revTabs}}" active="{{revTab}}" bind:change="onRevTab" />
   <block wx:if="{{revTab === 'income'}}">
     <cy-scene-asset-income-detail id="incomeDetail" surface="page" theme="{{merchantView ? 'merchant' : 'player'}}" />
   </block>

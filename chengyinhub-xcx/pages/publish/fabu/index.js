@@ -6146,16 +6146,8 @@ Page({
     this.setData({ 'formData.recruitDeadline': e.detail.value || '' }, () => this.refreshPrimaryActionState());
   },
 
-  // M2 自玩票(仅经典定向):开关 + 价格 + 票数
-  onSelfPlayToggle(e) {
-    this.setData({ 'formData.selfPlay': !!e.detail.value }, () => this.syncIdentityReady());
-  },
-  onSelfPlayPriceInput(e) {
-    this.setData({ 'formData.selfPlayPrice': e.detail.value }, () => this.syncIdentityReady());
-  },
-  onSelfPlayQuotaInput(e) {
-    this.setData({ 'formData.selfPlayQuota': e.detail.value });
-  },
+  // r2-join a5-v3-29:自玩票是平台官方玩家会员,发布者票务页不再出现自玩票开关/价格/票数,三个 handler 随之移除;
+  // 已存草稿里的 formData.selfPlay* 原样保留,不在此改写。
 
   // ===== 主题级分支路线编辑器 =====
   _routeOutcomeContract(node) {

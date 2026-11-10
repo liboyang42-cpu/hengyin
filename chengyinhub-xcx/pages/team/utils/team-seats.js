@@ -51,4 +51,32 @@ function blockerText(viewer, kind) {
   return { code: code || '', text: code ? BLOCKER_TEXT[code] : '' };
 }
 
-module.exports = { seatRows, inviteText, blockerText, fmt, BLOCKER_TEXT };
+// r2-join U06-01 席位条:空位数优先用服务端 seats.available,否则 maxMembers - joinedCount;
+// 两者都读不到 = 未知,一个空位都不画(不把未知画成 0 或满员)。最多画 12 席。
+function openSeats(team, seats) {
+  let n = seats && typeof seats === 'object' ? count(seats.available) : null;
+  if (n == null && team) {
+    const max = count(team.maxMembers);
+    const joined = count(team.joinedCount);
+    if (max != null && joined != null) n = Math.max(0, max - joined);
+  }
+  if (n == null) return [];
+  const out = [];
+  for (let i = 0; i < Math.min(n, 12); i++) out.push(i);
+  return out;
+}
+
+// 席位条下方的小标签:持有效票 / 票已失效(红) / 待审申请。「还可加入」已由空位表达,不重复。
+function seatChips(seats) {
+  return seatRows(seats).filter(r => r.key !== 'available');
+}
+
+// 加入页没有成员名单:已入队席位按 joinedCount 画实心圈;读不到不画。
+function joinedSeats(team) {
+  const n = team ? count(team.joinedCount) : null;
+  const out = [];
+  for (let i = 0; i < Math.min(n || 0, 12); i++) out.push(i);
+  return out;
+}
+
+module.exports = { seatRows, inviteText, blockerText, fmt, openSeats, seatChips, joinedSeats, BLOCKER_TEXT };
