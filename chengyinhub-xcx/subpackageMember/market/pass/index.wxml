@@ -10,6 +10,8 @@
     <block wx:else>
       <cy-page-title title="{{card.name}}" safe-top="{{false}}" />
       <view class="mp__body">
+        <!-- r3-pass:金色城市通票由碎片拼起(票面字 = 服务端城市 / 类型) -->
+        <view class="mp-hero"><cy-pass-object state="{{heroState}}" face="{{heroFace}}" reduced-motion="{{reducedMotion}}" /></view>
         <view class="mp-group">
           <view class="mp-row" wx:if="{{card.kind}}"><text class="mp-row__k">类型</text><text class="mp-row__v">{{card.kind}}</text></view>
           <view class="mp-row" wx:if="{{card.city}}"><text class="mp-row__k">城市</text><text class="mp-row__v">{{card.city}}</text></view>
@@ -44,6 +46,9 @@
       </view>
     </block>
   </view>
+  <!-- r3-pass:自己用的订单服务端回 PAID 后才出到账分步;礼品不出(好友领取前买家也不能玩) -->
+  <cy-pass-unlock id="pass-unlock" show="{{unlock.show}}" steps="{{unlock.steps}}" face="{{heroFace}}" top="{{statusBarHeight + navBarHeight}}"
+                  reduced-motion="{{reducedMotion}}" bind:done="onUnlockDone" />
   <!-- 礼品领取码只在购买成功回包里出现一次:发给好友后由对方领取 -->
   <cy-sheet show="{{giftSheet}}" title="礼品已买好" footer bind:close="closeGiftSheet">
     <view class="mp-gift">领取前你和好友都不能游玩</view>
