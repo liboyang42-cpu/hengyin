@@ -27,9 +27,12 @@ test('玩法段声明取自玩家端分发表 TYPE_OF,一段不多一段不少',
 
 test('没有渲染或提交入口的能力不声明:App 传感器、双人视角、团队共解', () => {
   const keys = caps.keys()
-  for (const absent of ['answer.sensor', 'role.views', 'game.teamcooperation', 'game.hangman']) {
+  for (const absent of ['answer.sensor', 'role.views', 'game.teamcooperation']) {
     assert.ok(!keys.includes(absent), absent + ' 本端没有实现,不能声明')
   }
+  // 2026-11-10 staging 合流:qx-b2 的逐字猜词渲染器已进 play-kit 分发表(TYPE_OF.hangman),
+  // game.hangman 按 qx-b1 的设计随 TYPE_OF 自动声明(见 qx-b1 RESULT Cross-lane 2)。
+  assert.ok(keys.includes('game.hangman'), 'hangman 已有渲染器,应随 TYPE_OF 声明')
   assert.ok(!keys.some(k => k.startsWith('sensor.')))
   assert.ok(!keys.some(k => k.startsWith('answer.method.')))
 })

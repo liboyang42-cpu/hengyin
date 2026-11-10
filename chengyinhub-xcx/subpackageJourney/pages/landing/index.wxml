@@ -24,7 +24,7 @@
     </view>
 
     <view class="jn-footer jn-footer--stack">
-      <cy-btn wx:if="{{primary}}" variant="primary" morph loading="{{busy}}" done="{{claimDone}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
+      <cy-btn class="jn-grow" wx:if="{{primary}}" variant="primary" morph loading="{{busy}}" done="{{claimDone}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
       <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
     </view>
   </block>
