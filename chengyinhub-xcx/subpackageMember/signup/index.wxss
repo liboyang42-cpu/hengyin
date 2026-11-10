@@ -231,3 +231,16 @@
 .signup .team-entry { width: max-content; max-width: calc(100vw - 2 * var(--cy-page-x)); box-sizing: border-box; }
 .signup .team-entry__k, .signup .team-entry__n { flex-shrink: 0; white-space: nowrap; }
 
+
+/* ===== l-after 票夹(业主批准 proto/game wl-wallet):「票夹 ▾」筛选弹出、卷页镜面高光 + 卡下倒影 ===== */
+.wl-nav__flt { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8rpx; min-height: 88rpx; color: #fff; } /* ds-ok: 压在用户照片模糊底上,不随主题翻转 */
+.wl-nav__flt .wl-nav__b { flex: none; }
+.wl-pop { position: fixed; left: var(--cy-page-x); z-index: 96; padding: 12rpx; border-radius: var(--cy-radius-md); background: var(--cy-comp-sheet-player-glass, var(--cy-color-bg-elevated)); box-shadow: 0 24rpx 60rpx rgba(0,0,0,.4); /* ds-ok 弹出投影 */
+  opacity: 0; transform: translateY(-16rpx); pointer-events: none; transition: opacity var(--cy-motion-fast) ease, transform var(--cy-motion-fast) var(--cy-ease-out); }
+.wl-pop.is-open { opacity: 1; transform: none; pointer-events: auto; }
+.wl-pop__i { min-width: 200rpx; min-height: 88rpx; display: flex; align-items: center; padding: 0 32rpx; border-radius: var(--cy-radius-sm); font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.wl-pop__i.is-on { background: var(--cy-comp-sheet-group-bg); font-weight: 600; }
+.wc__spec { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 54rpx; pointer-events: none; opacity: var(--spec, 0); mix-blend-mode: screen;
+  background: linear-gradient(100deg, transparent calc(var(--sx, 120%) - 18%), rgba(255,255,255,.55) var(--sx, 120%), transparent calc(var(--sx, 120%) + 10%)); } /* ds-ok: 卷页镜面高光带 */
+.wc { -webkit-box-reflect: below 12rpx linear-gradient(transparent 62%, rgba(255,255,255,.18)); } /* ds-ok: 卡下倒影(proto wal3) */
+.signup--reduced .wl-pop { transition: none; }
