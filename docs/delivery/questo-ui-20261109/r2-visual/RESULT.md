@@ -79,7 +79,8 @@
   - 收集册过场：跳过 +1，拦截滑动 +1。
   - 订单封面判横图：bindload ×2。
   - 城市目录：城市名入口和城市列表行 tap +2，cy-tabs 的 change −1，城市弹层的 close +1。
-- 全量小程序单测和 `ui-integrity.js` 的结果见文末。
+- 全量小程序单测（`node --test tests/unit/*.test.js`）：16977 条全部通过，0 失败。
+- `node tests/lint/ui-integrity.js`：`UI-GATE-0:PASS`。
 - 没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`。
 
 ## Rig
@@ -114,3 +115,5 @@
 5. **玩家灰字整体提亮。** 这一项影响所有玩家页的二、三级字，商家页不变。如果哪一页因此显得太亮，请指给我看。
 6. **漫游护照三张卡要不要动起来。** 默认是静态 3D 图标。循环浮动要新增 keyframe，而 keyframes 棘轮（`motion-property-ratchet`，上限 146 组）不允许新增。如果你要动起来，需要先批准放宽这个棘轮，或者换成 Lottie 动图。
 7. **订单卡横图封面。** 默认的判断是图片宽 ≥ 1.25 倍高就换成横版。rig 里读不到封面，需要你在真机上看一眼。
+
+STATUS: COMPLETE
