@@ -54,7 +54,7 @@ const nodes = [
 test('章节开场:上一章玩过才先出「上一章完成」,成绩只写真读数', () => {
   const g = buildGateFlip({ cards, chapterId: 2, nodes, topicCover: 'https://x/t.jpg', topicName: '海上方舟', desc: '舟山路一带。' })
   assert.equal(g.endInfo.number, '01')
-  assert.equal(g.endInfo.kicker, '第 1 章 · 完成')
+  assert.equal(g.endInfo.kicker, '第 1 章完成')
   assert.deepEqual(g.endInfo.stats, [{ v: '1/2', k: '坐标' }], '没有解谜题就不出解谜分格,不拿 0 凑')
   assert.equal(g.info.kicker, '第 2 章 / 共 2 章')
   assert.deepEqual(g.info.stats, [{ v: '1', k: '坐标' }], '没配里程/时长的格子不出')
@@ -99,4 +99,17 @@ test('过场组件:通关期间不出字,按钮最后才出;盖在通关勋章�
 
 test('通关:拿不到主题名时标题用「主题通关」,不留空', () => {
   assert.equal(buildFinale({ cards: [], nodes: [], topicName: '' }).info.title, '主题通关')
+})
+
+test('r2-finish 章节完成卡:用时只写真读数,本章得分只在有计分题时出,下一站取本章第一个没完成的节点', () => {
+  const ns = [
+    { nodeId: 11, chapterId: 1, done: true, puzzleScore: 80 },
+    { nodeId: 21, chapterId: 2, done: false, name: '南京东路站' },
+  ]
+  const g = buildGateFlip({ cards, chapterId: 2, nodes: ns, elapsed: '12:30' })
+  assert.deepEqual(g.endInfo.rows, [{ k: '用时', v: '12:30' }, { k: '本章得分', v: '80' }, { k: '坐标', v: '1/1' }])
+  assert.equal(g.endInfo.next, '南京东路站')
+  const noClock = buildGateFlip({ cards, chapterId: 2, nodes: nodes })
+  assert.deepEqual(noClock.endInfo.rows.map(r => r.k), ['坐标'], '没有跑表、没有计分题就只剩坐标,不拿 0 凑')
+  assert.equal(noClock.endInfo.next, '', '下一站没有名字就不写')
 })
