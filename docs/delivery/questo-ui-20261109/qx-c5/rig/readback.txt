@@ -1,0 +1,10 @@
+[库回读] topic_route_session          ((1, 9004, 15, 'default', 0, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'),)
+re-entry GET /api/play/nodes       200
+[库回读] after re-entry               ((1, 'default', 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'),)
+re-entry same identity, one row    True
+[库回读] play_help_run_quota          ((9004, 990015, 15, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba', 1, 1),)
+[库回读] play_attempt_log playInstance ((9004, 15, 3, None), (9004, 15, 5, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'), (9004, 15, 5, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'), (9004, 15, 5, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'), (9004, 15, 5, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'), (9004, 15, 5, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'), (9004, 15, 5, 'firstrun:20089659-0678-4f18-a23c-a1146f2a84ba'))
+[库回读] player_node_progress         ((9004, 15, 73, 'default', 1),)
+other member GET help              {"msg": "原局不存在或无权访问", "code": 400, "_status": 200}
+other member POST use              {"msg": "原局不存在或无权访问", "code": 400, "_status": 200}
+receipt (owner)                    {"msg": "操作成功", "code": 200, "data": {"scoreState": "SCORED", "baseScore": 100, "bonus": 0, "bonusSource": "NONE", "helpDeduction": 0, "skipDeduction": 0, "netScore": 100, "pointsCharged": 0, "skipped": false, "assisted": false, "levels": [{"level": 1, "type": "TEXT", "free": false, "pointsCharged": 0}, {"level": 2, "type": "LETTER", "free": true, "pointsCharged": 0}]}, "_status": 200}
