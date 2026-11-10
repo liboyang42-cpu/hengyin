@@ -317,6 +317,44 @@ function haptic(options) {
   }
 }
 
+/* —— 触感映射(r4-motion,2026-11-10,MOTION.md M14)——
+ * 四个具名档位,页面不再各自挑强度:
+ *   hapticTap()     light  —— 档位吸附、拖拽换槽、翻页落定、滑动提交、玩法里选 chip、点星
+ *   hapticConfirm() medium —— 勾出现(M7)、到站、提示解锁、消散开始、拖拽排序落下
+ *   hapticHit()     heavy  —— 通关庆祝一下(M12)、徽章/邮票到手、通票购买成功;每屏最多一次,从不在打开和列表里
+ *   hapticMiss()    答错   —— 一下 medium,120ms 后再一下 light(两下,不抖屏)
+ * 规矩:
+ *   · wx.vibrateShort 不存在(rig / 单测)时是空操作,返回 false;机型 reject 不掀翻调用方。
+ *   · **不读**减动效开关:减动效是视觉设置,触感照给(MOTION.md §1.7「Haptics stay」)。
+ *     老调用方 haptic({reducedMotion}) 保持原来的门控不变。
+ *   · 可注入 haptics / setTimeout,供单测断言顺序与间隔。 */
+const MISS_SECOND_TAP_MS = 120;
+
+function fire(type, opts) {
+  const o = opts || {};
+  const source = o.haptics || (typeof wx !== 'undefined' ? wx : null);
+  if (!source || typeof source.vibrateShort !== 'function') return false;
+  try {
+    const request = source.vibrateShort({ type, fail: function () {} });
+    if (request && typeof request.catch === 'function') request.catch(function () {});
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function hapticTap(opts) { return fire('light', opts); }
+function hapticConfirm(opts) { return fire('medium', opts); }
+function hapticHit(opts) { return fire('heavy', opts); }
+function hapticMiss(opts) {
+  const o = opts || {};
+  const first = fire('medium', o);
+  if (!first) return false;
+  const schedule = typeof o.setTimeout === 'function' ? o.setTimeout : (typeof setTimeout === 'function' ? setTimeout : null);
+  if (schedule) schedule(function () { fire('light', o); }, MISS_SECOND_TAP_MS);
+  return true;
+}
+
 module.exports = {
   COUNT_UP_MS,
   STAMP_MS,
@@ -331,6 +369,11 @@ module.exports = {
   stampInPlan,
   stampIn,
   haptic,
+  hapticTap,
+  hapticConfirm,
+  hapticHit,
+  hapticMiss,
+  MISS_SECOND_TAP_MS,
   fadeSwapPlan,
   fadeSwap,
   ROUTE_DRAW_MS,

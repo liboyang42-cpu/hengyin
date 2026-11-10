@@ -462,6 +462,38 @@ page {
    * 值不变收成一条,日后调「再快一点」改这一处。r2-shared 2026-11-02。 */
   --cy-ease-page-rise: cubic-bezier(.2, .82, .2, 1);
 
+  /* —— 动效系统补档(r4-motion,2026-11-10;docs/delivery/questo-ui-20261109/MOTION.md §2)——
+   * 时长:在 press…celebrate 之外补「英雄时刻」用的几档。只给页面/组件引用,不改旧档。 */
+  --cy-motion-micro:        100ms;  /* 图标换形、勾填充、列表 chip 交叉淡切(press 80 与 fast 140 之间) */
+  --cy-motion-reveal:       450ms;  /* 英雄元素落位:结果卡 / 桂冠 / 徽章 / 大数字 */
+  --cy-motion-roll:         520ms;  /* 数字滚柱的列位移 */
+  --cy-motion-curl:         420ms;  /* 票夹卡片翻页卷角 */
+  --cy-motion-flip:         480ms;  /* 环装册翻页 / 卡片翻面 */
+  --cy-motion-dissolve:     900ms;  /* 章末卡片粒子消散(画布) */
+  --cy-motion-stagger:       40ms;  /* 列表逐项错峰,最多 8 项 ⇒ 320ms */
+  --cy-motion-stagger-hero:  90ms;  /* 英雄编排逐元素错峰(标题 → 数据 → 按钮) */
+  --cy-motion-hold:         720ms;  /* 勾出现后停住再进下一步(= utils/morph-success.js HOLD_MS) */
+  --cy-motion-ambient:     6000ms;  /* 常驻环境循环(游玩页尘粒)唯一允许的循环时长 */
+  /* 缓动:expo-out 落位 / 轻过冲 / 对称翻转 / 滚柱 */
+  --cy-ease-settle:      cubic-bezier(.16, 1, .3, 1);     /* 大元素落位(卡 / 桂冠 / 数字) */
+  --cy-ease-spring-soft: cubic-bezier(.34, 1.3, .64, 1);  /* 轻过冲:列表项 / chip / 头像堆叠 */
+  --cy-ease-flip:        cubic-bezier(.45, 0, .2, 1);     /* 对称 3D 翻转 / 卷角 */
+  --cy-ease-roll:        cubic-bezier(.2, .9, .2, 1);     /* 数字滚柱 */
+  /* 位移与缩放档:入场上浮距离三档、叠层下沉、按压/抬起缩放、跟手倾斜、叠卡旋转 */
+  --cy-motion-rise-sm:   16rpx;   /* 行 / chip 上浮入场 */
+  --cy-motion-rise-md:   40rpx;   /* 卡片上浮入场 */
+  --cy-motion-rise-lg:  160rpx;   /* 整页正文上浮(a7 G-11 已用 160rpx) */
+  --cy-motion-scale-under: .94;   /* 叠层下面那层(u3 值) */
+  --cy-motion-shift-under: -10px; /* 同上,纵向位移 */
+  --cy-motion-scale-lift:  1.02;  /* 拖拽中被抬起的卡 */
+  --cy-motion-scale-press: .97;   /* 卡片按压(按钮沿用 cy-btn 自己的) */
+  --cy-motion-tilt-max:    8deg;  /* 跟手倾斜上限(M16) */
+  --cy-motion-stack-rot:  -6deg;  /* 叠卡最底层旋转(M8) */
+  --cy-motion-stack-rot-mid: 4deg; /* 叠卡中层旋转(M8) */
+  /* 抬起 / 叠层投影(一次性设在抬起类上,不做过渡;看起来在动是因为缩放在固定投影下变化) */
+  --cy-shadow-lift:  0 24rpx 48rpx rgba(0,0,0,.45);
+  --cy-shadow-stack: 0 12rpx 32rpx rgba(0,0,0,.35);
+
   /* ==========================================================
    * ①'' 组件 token 层(T2,2026-07-14;DTCG tier-3 / M3 comp)
    * 组件 wxss 只读本层 + 布局 token;页面不读本层。改版只动映射,不动组件实现。
@@ -1167,6 +1199,9 @@ page.theme-light,
                                    的既有注释);本轮把 --cy-ref-ink-900 本身去墨蓝后,这里跟着自动变灰,
                                    不用再留字面值 */
   --cy-shadow-card: 0 4rpx 16rpx rgba(0,0,0,0.04);   /* 浅色用投影分层 */
+  /* 抬起 / 叠层投影的浅色值(r4-motion,MOTION.md §2.4;merchant-light.wxss 镜像) */
+  --cy-shadow-lift:  0 16rpx 40rpx rgba(0,0,0,.14);
+  --cy-shadow-stack: 0 8rpx 24rpx rgba(0,0,0,.10);
 
   /* ② 旧名 alias 快照重估:WXSS 变量在 page{} 里就地求值、按值继承(见上文 sheet-bg 注释),
    * 白域必须整组重声明,否则旧名元素读到深色快照 —— 2026-08-07 实证:
@@ -1431,6 +1466,9 @@ page.theme-topic-editor,
   --cy-color-glow-sweep:         #7C3AED;
   --cy-color-glow-sweep-soft:    #A97CF0;
   --cy-shadow-card:             none;
+  /* 创作域是浅底:抬起 / 叠层投影沿用浅色值(r4-motion,MOTION.md §2.4;编辑器拖块抬起用) */
+  --cy-shadow-lift:             0 16rpx 40rpx rgba(0,0,0,.14);
+  --cy-shadow-stack:            0 8rpx 24rpx rgba(0,0,0,.10);
 
   /* 简单 AI 对话画布：暖白至浅紫的引导式创作环境。
    * 只在主题编辑域消费；紫色负责“继续创作/发送”这一条动作，不替代表单状态。 */
