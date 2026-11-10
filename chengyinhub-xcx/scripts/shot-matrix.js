@@ -622,6 +622,21 @@ const RAW = [
   ['F29', 'F29-merchant-team-empty.png', '/pages/merchant/team/index', 'merchant', 'empty', { accessState: 'ready', access: { active: true, roleName: '店主', canManageOperators: true, merchant: { id: 1, name: '河畔咖啡', logo: IMG } }, teamState: 'ready', operators: [], pendingInvites: [], hasIncomingInvite: false }, undefined, { selector: '.tm-page', min: 1 }, 'identity+setData', 'P1', '', '经营团队无员工空态；保留按岗位邀请的下一步入口。'],
   ['F81', 'F81-merchant-predict-ready.png', '/pages/merchant/predict/index', 'merchant', 'normal', { pageState: 'ready', items: [{ rid: '8:2026-09-11', nodeId: 8, playDay: '09-11', nodeName: '河畔咖啡', question: '明天哪款会卖得最好?', options: [{ key: 'A', label: '冰美式' }, { key: 'B', label: '燕麦拿铁' }], betCount: 12, betText: '12 个人选了这一轮', optionText: '2 个选项', daysLeft: 1, deadlineText: '还剩 1 天' }] }, undefined, { selector: '.pdm-card', min: 1 }, 'identity+setData', 'P1', '', '竞猜待答:有期限的一轮、押注人数与选项同屏。超过时限不给答案,这一轮由平台作废。'],
   ['F200', 'F200-poi-challenge-missing.png', '/pages/play/poi-challenge/index', 'player', 'missing-param', null, undefined, { selector: '.pc-page__state', min: 1 }, 'real-data', 'P1', '', '官方地点挑战缺 poiId 时显示真实错误和返回入口；完整拍照、答题、勋章另走真实账号 E2E，不以缺参态代替通关验收。'],
+  // 2026-11-10 qx-green:上线波次新增的 14 条路由补矩阵行(真实运行时、不注入假数据;能拍的态先拍出来,常态 fixture 待总控首轮校准)
+  ['F300', 'F300-video-bounty-missing-param.png', '/subpackageA/pages/video-bounty/index', 'player', 'missing-param', null, undefined, { selector: '.vb__body', min: 1 }, 'real-data', 'P1', '', '视频悬赏页:无活动参数时只给说明,不拼假活动'],
+  ['F301', 'F301-topic-catalog-normal.png', '/pages/topic/catalog/index', 'player', 'normal', null, undefined, { selector: '.catalog-nav-spacer', min: 1 }, 'real-data', 'P1', '', '公开主题目录:城市标题、筛选与卡片走真实公开接口'],
+  ['F302', 'F302-topic-catalog-detail-missing-param.png', '/pages/topic/catalog/detail', 'player', 'missing-param', null, undefined, { selector: '.cdetail', min: 1 }, 'real-data', 'P1', '', '目录作品详情:缺 id 时落到下架 / 加载失败态'],
+  ['F303', 'F303-merchant-payout-account-normal.png', '/pages/merchant/payout-account/index', 'merchant', 'normal', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '商家收款账户(l-payout):进件状态只读服务端'],
+  ['F304', 'F304-market-passes-normal.png', '/subpackageMember/market/passes/index', 'player', 'normal', null, undefined, { selector: '.mk__body', min: 1 }, 'real-data', 'P1', '', '通行证与礼品:积分余额与通行证入口'],
+  ['F305', 'F305-market-pass-missing-param.png', '/subpackageMember/market/pass/index', 'player', 'missing-param', null, undefined, { selector: '.mp__frame', min: 1 }, 'real-data', 'P1', '', '通行证详情:缺商品参数时的错误态'],
+  ['F306', 'F306-market-gift-missing-param.png', '/subpackageMember/market/gift/index', 'player', 'missing-param', null, undefined, { selector: '.gf-hero', min: 1 }, 'real-data', 'P1', '', '领取礼品:无领取码时按原因失败,不显示他人订单'],
+  ['F307', 'F307-market-membership-normal.png', '/subpackageMember/market/membership/index', 'player', 'normal', null, undefined, { selector: '.pp__frame', min: 1 }, 'real-data', 'P1', '', '平台通行证:开关关闭时「通行证暂未开放」'],
+  ['F308', 'F308-market-library-normal.png', '/subpackageMember/market/library/index', 'player', 'normal', null, undefined, { selector: '.lb-kind', min: 3 }, 'real-data', 'P1', '', '游戏主题库:三个类别筛选 + 列表 / 空态'],
+  ['F309', 'F309-journey-report-missing-param.png', '/subpackageJourney/pages/report/index', 'player', 'missing-param', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '本局战报:缺局次参数时的状态行'],
+  ['F310', 'F310-journey-landing-missing-param.png', '/subpackageJourney/pages/landing/index', 'guest', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '推荐 / 赠送 / 同行落地:链接缺参时「链接已失效」'],
+  ['F311', 'F311-journey-seats-missing-param.png', '/subpackageJourney/pages/seats/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '同行席位大厅:缺报名单时的状态'],
+  ['F312', 'F312-journey-promo-missing-param.png', '/subpackageJourney/pages/promo/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '推广记录:缺参数时的状态'],
+  ['F313', 'F313-journey-settle-missing-param.png', '/subpackageJourney/pages/settle/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '结算四步:缺参数时的状态(真数据走战报)'],
 ];
 /* eslint-enable max-len */
 
@@ -669,10 +684,10 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
 // 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 const STATS = {
-  "total": 349,
+  "total": 365,
   "byPriority": {
     "P0": 139,
-    "P1": 200,
+    "P1": 216,
     "P2": 10
   },
   "blockedByPriority": {
@@ -682,9 +697,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 193,
+    "P1": 209,
     "P2": 2,
-    "total": 325
+    "total": 341
   },
   "blocked": 24,
   "domains": {
@@ -693,12 +708,12 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 95
+    "F": 111
   },
   "control": {
-    "setData": 183,
+    "setData": 185,
     "identity+setData": 115,
-    "real-data": 44,
+    "real-data": 58,
     "real-device": 7
   },
   "fixtureVerified": 16

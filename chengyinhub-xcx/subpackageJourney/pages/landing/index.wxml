@@ -56,7 +56,7 @@
 
     <view class="jn-footer jn-footer--stack ob-footer" wx:if="{{primary || actionError}}">
       <cy-btn class="jn-grow" wx:if="{{primary}}" variant="primary" morph loading="{{busy}}" done="{{claimDone}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
-      <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
+      <cy-inline-error class="jn-err" wx:if="{{actionError}}" kind="field" title="{{actionError}}" />
       <view class="ob-secondary" bindtap="onBrowse" aria-role="button" aria-label="先逛逛" hover-class="cy-pressed" hover-stay-time="80">先逛逛</view>
     </view>
   </block>

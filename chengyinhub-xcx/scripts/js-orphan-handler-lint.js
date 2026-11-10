@@ -87,19 +87,7 @@ function includedWxml(wxmlFile, seen = new Set()) {
   return [...seen];
 }
 
-// 2026-11-10 qx-green:视图层 WXS 经 ownerInstance.callMethod('name') 调逻辑层方法(拖拽 / 手势的落点、
-//    跨格、贴边滚屏只在这里触发)。只认这份 wxml 自己用 <wxs src> 引入的 .wxs 里的字符串字面量方法名;
-//    别的页面 / 没被引入的 wxs / 注释里的 callMethod 都不算 —— 范围与「wxml 绑定」同一口径,真孤儿照样判红。
-function wxsCallMethodNames(wxmlFile, wxmlSrc) {
-  const names = new Set();
-  for (const m of S.maskWxmlComments(wxmlSrc).matchAll(/<wxs\b[^>]*\bsrc\s*=\s*["']([^"']+\.wxs)["']/g)) {
-    let code = '';
-    try { code = fs.readFileSync(path.resolve(path.dirname(wxmlFile), m[1]), 'utf8'); } catch (e) { continue; }
-    code = code.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
-    for (const c of code.matchAll(/\.callMethod\(\s*['"]([A-Za-z_$][\w$]*)['"]/g)) names.add(c[1]);
-  }
-  return names;
-}
+const wxsCallMethodNames = S.wxsCallMethodNames; // 2026-11-10 qx-green:见 lib/xcx-scan.js
 
 function lintRepo() {
   const { map } = S.buildJsToWxmlMap();

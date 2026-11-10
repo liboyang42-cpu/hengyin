@@ -374,7 +374,7 @@
       <input class="cg-cfg-input" value="{{item}}" placeholder="例如 一九三七" data-index="{{index}}" bindinput="qzAlias" />
       <view class="cg-adv-del" data-index="{{index}}" bindtap="qzAliasDel" aria-role="button" aria-label="删除写法 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
     </view>
-    <view class="cg-qz-err" wx:if="{{qzAliasError}}">{{qzAliasError}}</view>
+    <cy-inline-error class="cg-qz-err" wx:if="{{qzAliasError}}" kind="field" title="{{qzAliasError}}" />
     <view class="cg-adv-add" bindtap="qzAliasAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
     </block>
 
@@ -469,7 +469,7 @@
       <textarea class="cg-cfg-textarea" value="{{advanced.accusation.loseScreen}}" placeholder="机会用完仍指认错误时看到的结局" data-field="loseScreen" bindinput="qzAccusationText" />
       <view class="cg-rw-line cg-qz-early"><view class="cg-rw-meta"><view class="cg-rw-name">允许提前指认</view></view><cy-switch checked="{{advanced.accusation.earlyAccuse.allowed}}" bindchange="qzEarlyToggle" accessibility-label="允许提前指认" /></view>
       <input wx:if="{{advanced.accusation.earlyAccuse.allowed}}" class="cg-cfg-input" value="{{advanced.accusation.earlyAccuse.recordAs}}" placeholder="提前结案的记录名" bindinput="qzEarlyRecord" />
-      <view class="cg-qz-err" wx:if="{{qzAccusationError}}">{{qzAccusationError}}</view>
+      <cy-inline-error class="cg-qz-err" wx:if="{{qzAccusationError}}" kind="field" title="{{qzAccusationError}}" />
     </block>
     </block>
     </block>
@@ -499,7 +499,7 @@
       </block>
     </view>
     </block>
-    <view class="cg-qz-err" wx:if="{{qzHangmanError}}">{{qzHangmanError}}</view>
+    <cy-inline-error class="cg-qz-err" wx:if="{{qzHangmanError}}" kind="field" title="{{qzHangmanError}}" />
     <view class="cg-cfg-label">其他可接受写法</view>
     <view class="cg-qz-line" wx:for="{{advanced.hangman.aliases}}" wx:key="index">
       <input class="cg-cfg-input" value="{{item}}" placeholder="例如 NICOLAS AND PERNELLE" data-index="{{index}}" bindinput="qzHangmanAlias" />
@@ -1290,7 +1290,7 @@
       <block wx:if="{{qzHintOn}}">
         <view class="cg-cfg-label">整局免费次数</view>
         <input class="cg-cfg-input" type="number" value="{{advanced.hintFreeUsesPerRun}}" placeholder="0" bindinput="qzHintQuota" />
-        <view class="cg-qz-err" wx:if="{{qzHintQuotaError}}">{{qzHintQuotaError}}</view>
+        <cy-inline-error class="cg-qz-err" wx:if="{{qzHintQuotaError}}" kind="field" title="{{qzHintQuotaError}}" />
         <view class="cg-adv-repeat" wx:for="{{qzHintRows}}" wx:key="i">
           <view class="cg-adv-repeat-head"><text>第 {{index + 1}} 层</text><view class="cg-adv-del" data-index="{{index}}" bindtap="qzHintDel" aria-role="button" aria-label="删除第 {{index + 1}} 层" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
           <view class="cg-two cg-qa-pair">

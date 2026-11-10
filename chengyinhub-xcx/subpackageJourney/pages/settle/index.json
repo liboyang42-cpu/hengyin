@@ -11,6 +11,7 @@
     "cy-tabs": "/components/cy/tabs/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "rank-board": "/subpackageJourney/components/rank-board/index",
-    "cy-illus": "/subpackageJourney/components/cy-illus/index"
+    "cy-illus": "/subpackageJourney/components/cy-illus/index",
+    "cy-inline-error": "/components/cy/inline-error/index"
   }
 }

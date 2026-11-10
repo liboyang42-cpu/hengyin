@@ -54,7 +54,7 @@
         <textarea class="st-textarea" value="{{review}}" maxlength="{{reviewMax}}" placeholder="喜欢哪一站？" placeholder-class="st-ph" bindinput="onReview" auto-height />
         <text class="st-count">{{review.length}} / {{reviewMax}}</text>
       </view>
-      <text class="st-err" wx:if="{{rateError}}">{{rateError}}</text>
+      <cy-inline-error class="st-err" wx:if="{{rateError}}" kind="field" title="{{rateError}}" />
     </view>
 
     <!-- 4 分享:帖文 / 故事 分段;卡片 = 封面淡入底 + 勋章插图 + 已通关 + 主题名 + 节点 / 分 / 名次 + 城瘾;底部一行 分享 + 完成 -->
