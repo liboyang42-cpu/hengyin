@@ -20,33 +20,21 @@ function loadPage(rel, extraWx) {
   return Object.assign({ data: JSON.parse(JSON.stringify(def.data)), setData(p) { Object.assign(this.data, p); } }, def);
 }
 
-test('hero 标题只换行不改字;未登记的标题原样一行;空标题不出行', () => {
-  assert.deepEqual(v.heroLines('朋友邀请你一起玩'), ['朋友邀请你', '一起玩']);
-  assert.deepEqual(v.heroLines('朋友送你一局'), ['朋友送你', '一局']);
-  assert.deepEqual(v.heroLines('已领取同行席位'), ['已领取', '同行席位']);
-  assert.deepEqual(v.heroLines('本局战报'), ['本局', '战报']);
-  for (const t of ['朋友邀请你一起玩', '朋友送你一局', '朋友邀请你同行', '已领取同行席位', '礼物已领取', '本局战报', '主题记录']) {
-    assert.equal(v.heroLines(t).join(''), t, t + ' 拼回原文');
-  }
-  assert.deepEqual(v.heroLines('服务端新文案'), ['服务端新文案']);
-  assert.deepEqual(v.heroLines(''), []);
-});
-
 test('弱化行只拼服务端事实,没有值的事实不出;没有事实就没有这一行', () => {
   assert.equal(v.factLine([{ k: '邀请', v: '2026.12.10 09:37 前有效' }, { k: '报名', v: '已关闭' }]), '邀请 2026.12.10 09:37 前有效 · 报名 已关闭');
   assert.equal(v.factLine([{ k: '领取', v: '' }]), '');
   assert.equal(v.factLine(null), '');
 });
 
-test('P1 落地:叠卡 hero + 两行标题(品牌紫句点)+ 白药丸主按钮 + 文字次要动作;没有封面字段就不画封面', () => {
+test('P1 落地:叠卡 hero + 共享页标题 + 白药丸主按钮 + 文字次要动作;没有封面字段就不画封面', () => {
   const view = read('subpackageJourney/pages/landing/index.wxml');
   assert.match(view, /class="ob-hero"[\s\S]*ob-card--back2[\s\S]*ob-card--back1[\s\S]*ob-card--front/);
   assert.doesNotMatch(view, /<image[^>]*cover/i, '落地读口没有封面字段,不拿别处的图冒充');
-  assert.match(view, /wx:for="\{\{headLines\}\}"[\s\S]*class="ob-dot">\.<\/text>/);
+  assert.match(view, /<cy-page-title align="center" title="\{\{headline\}\}" \/>/, '标题合同:页标题走共享 cy-page-title,正文不再重复大标题');
+  assert.doesNotMatch(view, /ob-title/);
   assert.match(view, /<cy-btn class="jn-grow" wx:if="\{\{primary\}\}" variant="primary"/);
   assert.match(view, /bindtap="onBrowse"[^>]*>先逛逛</);
   const css = read('subpackageJourney/style/journey.wxss');
-  assert.match(css, /\.ob-dot \{ color: var\(--cy-ref-violet-500\); \}/);
   assert.match(css, /\.ob-footer \{ --cy-comp-btn-radius: var\(--cy-radius-pill\); \}/);
   assert.match(css, /prefers-reduced-motion: reduce\) \{ \.ob-card, \.ob-mode, \.ob-progress__seg \{ transition: none; \}/);
   assert.doesNotMatch(css.slice(css.indexOf('qx-u2')), /@keyframes/, '只用 transition');
@@ -59,7 +47,7 @@ test('P1 落地:领取后标题与事实行同步更新;次要动作只回首页
   assert.equal(tabbed, '/pages/index/index');
   page._kind = 'seat';
   page._renderSeat(1);
-  assert.deepEqual(page.data.headLines, ['朋友邀请你', '同行']);
+  assert.equal(page.data.headline, '朋友邀请你同行');
   assert.equal(page.data.factLine, '');
   assert.equal(page.data.primary, '领取席位');
 });

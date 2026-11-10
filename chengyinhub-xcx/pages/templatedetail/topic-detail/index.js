@@ -93,6 +93,8 @@ Page({
     adoptIntent: '',
     adoptCityName: '',
     adoptCityCode: '',
+    adoptCities: adoption.adoptCities(),
+    adoptCityIndex: -1,
     adoptRebind: 0,
     adoptError: '',
     adoptBusy: false,
@@ -223,10 +225,11 @@ Page({
   // 原生地区选择器 level=city:code[1] 是 6 位城市 adcode,与服务端 targetCityCode 同口径
   onAdoptCity(e) {
     if (this.data.adoptBusy || this.data.adoptUnknown) return;
-    const d = e && e.detail || {};
-    const code = Array.isArray(d.code) ? String(d.code[1] || '') : '';
-    const name = Array.isArray(d.value) ? String(d.value[1] || d.value[0] || '') : '';
-    this.setData({ adoptIntent: 'NEW_CITY', adoptCityCode: code, adoptCityName: name, adoptError: /^\d{6}$/.test(code) ? '' : '没有读到这个城市的编码，请重新选择' });
+    const idx = Number(e && e.detail && e.detail.value);
+    const city = this.data.adoptCities[idx] || null;
+    const code = city ? city.code : '';
+    this.setData({ adoptIntent: 'NEW_CITY', adoptCityCode: code, adoptCityName: city ? city.name : '', adoptCityIndex: city ? idx : -1,
+      adoptError: /^\d{6}$/.test(code) ? '' : '没有读到这个城市的编码，请重新选择' });
   },
 
   confirmAdopt() {

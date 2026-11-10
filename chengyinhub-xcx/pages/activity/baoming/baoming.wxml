@@ -131,7 +131,7 @@
     </view>
     <view wx:for="{{promoCatalog.tiers}}" wx:key="key" class="setly_li">
       <view class="setly_li_left">{{item.range}}</view>
-      <view class="setly_li_right"><text>¥{{item.unitPrice}}/人</text></view>
+      <view class="setly_li_right"><text>{{money.amount(item.unitPrice)}}/人</text></view>
     </view>
     <view wx:if="{{mkt.rewardCoupon}}" class="setly_li">
       <view class="setly_li_left">完局奖励</view>
@@ -169,11 +169,11 @@
   <!-- 单张票时原价就是上面票种行,不重复;多张时才出整单原价划线 -->
   <view wx:if="{{mkt.show && mkt.listAmount != selectedTicket.price}}" class="setly_li">
     <view class="setly_li_left">原价</view>
-    <view class="setly_li_right"><text class="price-strike">¥{{mkt.listAmount}}</text></view>
+    <view class="setly_li_right"><text class="price-strike">{{money.amount(mkt.listAmount)}}</text></view>
   </view>
   <view wx:for="{{mkt.adjustments}}" wx:key="key" class="setly_li">
     <view class="setly_li_left">{{item.label}}</view>
-    <view class="setly_li_right"><view class="setly_li_right_span">-¥{{item.amount}}</view></view>
+    <view class="setly_li_right"><view class="setly_li_right_span">-{{money.amount(item.amount)}}</view></view>
   </view>
   <view wx:if="{{mkt.coveredByPass}}" class="setly_li">
     <view class="setly_li_left">通行证</view>

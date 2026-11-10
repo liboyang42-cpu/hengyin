@@ -21,7 +21,7 @@ Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
     inviter: null, title: '', modes: [], primary: '', busy: false, actionError: '',
-    headLines: [], factLine: '', cardIcon: 'route', modeIndex: 0
+    headline: '', factLine: '', cardIcon: 'route', modeIndex: 0
   },
 
   onLoad(options) {
@@ -72,7 +72,7 @@ Page({
     const facts = [];
     if (ref.expires) facts.push({ k: '邀请', v: ref.expires });
     if (ref.closed) facts.push({ k: '报名', v: '已关闭' });
-    this.setData({ state: 'ready', inviter: ref.inviter, headLines: view.heroLines(ref.headline), title: ref.title,
+    this.setData({ state: 'ready', inviter: ref.inviter, headline: ref.headline, title: ref.title,
       factLine: view.factLine(facts), primary: ref.canView ? '去看看' : '' });
     this._loadModes(ref.targetType === 2 ? { activityId: ref.targetId } : { topicId: ref.targetId }, epoch);
   },
@@ -81,14 +81,14 @@ Page({
     if (!gift.valid) { this.setData({ state: 'invalid', stateKind: gift.stateText === '礼物已被领取' ? 'success' : 'missing-param', stateTitle: gift.stateText }); return; }
     this._target = { type: 1, id: gift.topicId };
     const facts = gift.expires ? [{ k: '领取', v: gift.expires }] : [];
-    this.setData({ state: 'ready', inviter: null, headLines: view.heroLines(gift.headline), title: gift.title,
+    this.setData({ state: 'ready', inviter: null, headline: gift.headline, title: gift.title,
       factLine: view.factLine(facts), primary: gift.canClaim ? '领取' : '' });
   },
 
   // 同行席位码没有匿名读口：页面只说明来意，领取由服务端判定。
   _renderSeat(epoch) {
     const pending = savedRequestId('seat', this._token);
-    this.setData({ state: 'ready', inviter: null, headLines: view.heroLines('朋友邀请你同行'), title: '', factLine: '',
+    this.setData({ state: 'ready', inviter: null, headline: '朋友邀请你同行', title: '', factLine: '',
       primary: pending ? '查询领取结果' : '领取席位' });
     if (this._activityId || this._topicId) this._loadModes({ activityId: this._activityId, topicId: this._activityId ? '' : this._topicId }, epoch);
   },
@@ -135,7 +135,7 @@ Page({
       if (!api.ok(res) || !res.data) { this.setData({ primary: '', actionError: res.msg || '领取失败' }); return; }
       this._claimed = res.data;
       const facts = [{ k: '席位', v: '第 ' + res.data.seatNo + ' 席' }];
-      this.setData({ headLines: view.heroLines('已领取同行席位'), factLine: view.factLine(facts),
+      this.setData({ headline: '已领取同行席位', factLine: view.factLine(facts),
         primary: this._activityId || this._topicId ? '进入本局' : '' });
     });
   },
@@ -153,7 +153,7 @@ Page({
       dropRequestId('gift', this._token);
       if (!api.ok(res)) { this.setData({ primary: '', actionError: res.msg || '领取失败' }); return; }
       this._claimed = res.data || {};
-      this.setData({ headLines: view.heroLines('礼物已领取'), primary: view.isId((this._target || {}).id) ? '去看看' : '' });
+      this.setData({ headline: '礼物已领取', primary: view.isId((this._target || {}).id) ? '去看看' : '' });
     });
   },
 

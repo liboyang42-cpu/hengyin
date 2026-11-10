@@ -12,6 +12,6 @@
     "cy-modal-host": "/components/cy/modal-host/index"
   },
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "white",
-  "backgroundColor": "#000000"
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FFFFFF"
 }

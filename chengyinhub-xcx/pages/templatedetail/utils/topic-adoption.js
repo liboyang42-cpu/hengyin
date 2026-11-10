@@ -124,3 +124,17 @@ function creditText(data) {
   return parts.join(' · ');
 }
 module.exports.creditText = creditText;
+
+// 换城市选项:与首页手动选城同一份城市名单(utils/index/home-city-location.js),附 GB/T 2260 地级市编码
+// (与原生 region picker level=city 回的 code[1] 同形,如南京 320100)。名单之外的城市暂不提供,见 qx-c3 RESULT needs owner。
+const CITY_CODE = {
+  '北京市': '110100', '上海市': '310100', '广州市': '440100', '深圳市': '440300', '杭州市': '330100',
+  '成都市': '510100', '重庆市': '500100', '武汉市': '420100', '西安市': '610100', '南京市': '320100',
+  '苏州市': '320500', '天津市': '120100', '长沙市': '430100', '郑州市': '410100', '青岛市': '370200',
+  '厦门市': '350200', '昆明市': '530100', '沈阳市': '210100', '济南市': '370100', '合肥市': '340100'
+};
+function adoptCities() {
+  const names = require('../../../utils/index/home-city-location.js').CITY_OPTIONS;
+  return names.filter(name => CITY_CODE[name]).map(name => ({ name, code: CITY_CODE[name] }));
+}
+module.exports.adoptCities = adoptCities;

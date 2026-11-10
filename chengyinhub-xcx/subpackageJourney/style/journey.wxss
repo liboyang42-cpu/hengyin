@@ -52,8 +52,8 @@ page { background: var(--cy-bg-page); }
 .jn-tabbar__scope { flex: 1; min-width: 0; }
 .jn-tabbar__period { flex: none; }
 
-/* ——— qx-u2 首屏(ref 1)：倾斜叠卡 hero + 两行大标题 + 一行弱化 + 白色药丸主按钮 + 文字次要动作 ———
- * 颜色全走 token；句点强调色取品牌紫原子 token(同底栏选中态 UI-03 的裁决)。动效只用 transition。 */
+/* ——— qx-u2 首屏(ref 1)：倾斜叠卡 hero + 一行弱化 + 白色药丸主按钮 + 文字次要动作 ———
+ * 页标题走共享 cy-page-title(标题合同);颜色全走 token,动效只用 transition。 */
 .ob-hero { position: relative; height: 520rpx; margin: 8rpx 0 0; perspective: 1600rpx; }
 .ob-glow { position: absolute; left: 50%; top: 50%; width: 520rpx; height: 520rpx; margin: -260rpx 0 0 -260rpx; border-radius: 50%;
   background: radial-gradient(circle, var(--cy-color-brand-soft), transparent 68%); }
@@ -73,9 +73,6 @@ page { background: var(--cy-bg-page); }
 .ob-card__title { font-size: var(--cy-type-section-title); font-weight: 700; line-height: 1.3; color: var(--cy-color-text-primary);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ob-copy { display: flex; flex-direction: column; align-items: center; padding: 24rpx 38rpx 0; text-align: center; }
-.ob-title { display: flex; flex-direction: column; align-items: center; }
-.ob-title__l { font-size: var(--cy-type-display); font-weight: 700; line-height: 1.2; color: var(--cy-color-text-primary); }
-.ob-dot { color: var(--cy-ref-violet-500); }
 .ob-muted { margin-top: 20rpx; max-width: 600rpx; font-size: var(--cy-type-body); line-height: 1.5; color: var(--cy-color-text-secondary); }
 .ob-modes { margin-top: 40rpx; }
 .ob-swiper { height: 300rpx; }

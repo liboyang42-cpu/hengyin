@@ -1,6 +1,6 @@
 <view class="theme-dark jn">
   <cy-nav-bar plain />
-  <cy-nav-spacer />
+  <cy-page-title align="center" title="{{report && report.legacy ? '主题记录' : '本局战报'}}" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
     <!-- qx-u2 / ref 1：叠层战报卡。分数照 NRC 粗斜体大数字；不计分/未知按原文案弱化显示，不画成 0。 -->
@@ -22,7 +22,6 @@
       </view>
     </view>
     <view class="ob-copy">
-      <view class="ob-title"><text wx:for="{{headLines}}" wx:key="*this" class="ob-title__l">{{item}}<text wx:if="{{index === headLines.length - 1}}" class="ob-dot">.</text></text></view>
       <text class="ob-muted" wx:if="{{eyebrow}}">{{eyebrow}}</text>
     </view>
 

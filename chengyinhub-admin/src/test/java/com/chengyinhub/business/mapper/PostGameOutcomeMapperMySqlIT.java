@@ -105,6 +105,10 @@ class PostGameOutcomeMapperMySqlIT {
 
     @BeforeAll
     static void start() throws Exception {
+        // 报表按生产时钟(Asia/Shanghai「现在」)判成熟:成熟 cohort 取 120 天前(30 天窗早已关闭),
+        // 未成熟用例取今天。两者此前从未赋值,本类首次进 CI(qx-c3)即全部 NPE。
+        nowDate = LocalDate.now(ZONE);
+        matureCohort = nowDate.minusDays(120);
         adminUrl = "jdbc:mysql://" + MybatisItDatabase.host() + ":" + MybatisItDatabase.port()
                 + "/?useSSL=false&allowPublicKeyRetrieval=true";
         try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(),

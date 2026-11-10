@@ -62,3 +62,16 @@ test('素材署名只显示署名 / AI 生成 / 来源待确认,不带私有许�
   assert.equal(a.creditText({ sourceType: 'original', licenseNote: '私有备注', aiModel: 'x' }), '');
   assert.equal(a.creditText(null), '');
 });
+
+// qx-c3:换城市改用 kit cy-dropdown(picker-unification 合同),候选与首页手动选城同一份名单,编码为 6 位地级市码。
+test('换城市候选:与首页选城名单一致且每项都有 6 位城市编码', () => {
+  const adoption = require('../../pages/templatedetail/utils/topic-adoption.js');
+  const home = require('../../utils/index/home-city-location.js');
+  const cities = adoption.adoptCities();
+  assert.deepEqual(cities.map(c => c.name), home.CITY_OPTIONS);
+  for (const c of cities) assert.match(c.code, /^\d{6}$/, c.name);
+  assert.equal(new Set(cities.map(c => c.code)).size, cities.length);
+  assert.equal(cities.find(c => c.name === '南京市').code, '320100');
+  const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/templatedetail/topic-detail/index.wxml'), 'utf8');
+  assert.match(wxml, /<cy-dropdown mode="selector" range="\{\{ adoptCities \}\}" range-key="name"[^>]*bind:change="onAdoptCity"/);
+});

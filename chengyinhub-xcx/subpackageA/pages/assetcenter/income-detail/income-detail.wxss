@@ -14,15 +14,4 @@ page { min-height: 100vh; display: flex; flex-direction: column; }
 .id-page-body { flex: 1; min-height: 0; display: flex; flex-direction: column;
   padding: 0 var(--cy-page-x) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
 
-/* §19 分佣卡:沿用资金域的卡片口径(surface + subtle 边),正向/冲回分行 */
 .id-tabs { margin-bottom: var(--cy-space-3); }
-.rv-card { display: flex; flex-direction: column; gap: var(--cy-space-1-5); margin-bottom: var(--cy-space-3); padding: var(--cy-space-4); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); }
-.rv-card__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--cy-space-3); }
-.rv-card__title { font-size: var(--cy-type-body); font-weight: 600; }
-.rv-card__status { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
-.rv-card__status--paid { color: var(--cy-color-text-primary); }
-.rv-card__when { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
-.rv-line { display: flex; justify-content: space-between; min-height: 56rpx; align-items: center; }
-.rv-line__k { font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
-.rv-line__v { font-size: var(--cy-type-body); font-weight: 600; font-variant-numeric: tabular-nums; }
-.rv-line__v.is-reverse { color: var(--cy-color-text-secondary); }

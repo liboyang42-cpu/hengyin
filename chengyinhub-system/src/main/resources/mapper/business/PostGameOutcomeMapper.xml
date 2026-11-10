@@ -189,7 +189,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       退款水位必须限定到本报表真正读的那部分（registration 来源、del_flag=0），
       因为退款会在支付之后回溯改变 cohort 排除口径 —— 一个宽口径水位会让人误以为排除已刷新。
     -->
-    <select id="selectSourceWatermarks" resultType="java.util.HashMap">
+    <!-- 水位列显式按 java.util.Date 取：resultType=HashMap 时 Connector/J 8 把 DATETIME 交成 LocalDateTime，
+         服务端只认 Date，所有水位都会被静默丢掉（qx-c3 真库首跑发现）。 -->
+    <resultMap id="sourceWatermarkMap" type="java.util.HashMap">
+        <result column="sourceName" property="sourceName" javaType="java.lang.String"/>
+        <result column="watermarkAt" property="watermarkAt" javaType="java.util.Date"/>
+    </resultMap>
+    <select id="selectSourceWatermarks" resultMap="sourceWatermarkMap">
         select 'cms_registration.payment_time' as sourceName, max(payment_time) as watermarkAt from cms_registration
         union all
         select 'cms_registration.create_time', max(create_time) from cms_registration

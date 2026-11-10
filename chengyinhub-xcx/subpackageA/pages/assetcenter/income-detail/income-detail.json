@@ -3,12 +3,12 @@
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-tabs": "/components/cy/tabs/index",
-    "cy-error": "/components/cy/error/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-scene-asset-income-detail": "/subpackageA/components/scene-asset-income-detail/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-revenue-allocations": "/subpackageA/components/revenue-allocations/index"
   },
   "navigationBarTextStyle": "white"
 }

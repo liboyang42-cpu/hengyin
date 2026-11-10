@@ -1,6 +1,6 @@
 <view class="theme-dark jn jn-ob">
   <cy-nav-bar plain />
-  <cy-nav-spacer />
+  <cy-page-title align="center" title="{{headline}}" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
     <!-- qx-u2 / ref 1：倾斜叠卡 hero。卡面只放本页已有的事实(邀请人、主题名)，没有封面字段就不画封面。 -->
@@ -19,7 +19,6 @@
     </view>
 
     <view class="ob-copy">
-      <view class="ob-title"><text wx:for="{{headLines}}" wx:key="*this" class="ob-title__l">{{item}}<text wx:if="{{index === headLines.length - 1}}" class="ob-dot">.</text></text></view>
       <text class="ob-muted" wx:if="{{factLine}}">{{factLine}}</text>
     </view>
 

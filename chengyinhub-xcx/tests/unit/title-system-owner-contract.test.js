@@ -208,6 +208,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'pages/publish/preset/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageJourney/pages/landing/index', 'subpackageJourney/pages/report/index', // 2026-11-10 qx-c3:两页标题改为条件外 cy-page-title(qx-b3 分支同改)
 ]
 
 // 2026-09-03 入职流重做:apply 与 create 统一成 cy-nav-bar + cy-h1 的向导形态,
@@ -349,6 +350,7 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 staging 合流:qx-b4/b5/b8 等各线新页叠加,合并树实测 168;custom 167。
   // 2026-11-09 V3-42 −1:时光胶囊 subpackageTools/capsule 先删(custom 导航)⇒ 156;custom 155。
   // 2026-11-10 staging 合流:再叠加 qx-a4 −1(时光胶囊)⇒ 167;custom 166。
+  // 2026-11-10 qx-b4 +1(custom 导航):固定玩法预设 pages/publish/preset ⇒ 158;custom 157。
   assert.equal(rows.length, 167, '注册页面盘点数量发生漂移,需重新核对标题规范')
   assert.equal(rows.filter((row) => row.custom).length, 166)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),

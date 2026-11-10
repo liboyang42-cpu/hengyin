@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5880,
+  "controlCount": 5881,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -63433,6 +63433,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -63449,6 +63453,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -63467,6 +63475,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -63483,6 +63495,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -104303,6 +104319,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -137395,6 +137415,7 @@
         "pages/merchant/game-node/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/exploration-export/index",
@@ -139431,6 +139452,24 @@
               "selector": "cy-reward-selector",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -139907,6 +139946,7 @@
         "pages/merchant/game-node/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/exploration-export/index",
@@ -141943,6 +141983,24 @@
               "selector": "cy-reward-selector",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -142418,6 +142476,7 @@
         "pages/merchant/game-node/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/exploration-export/index",
@@ -144454,6 +144513,24 @@
               "selector": "cy-reward-selector",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -144930,6 +145007,7 @@
         "pages/merchant/game-node/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/exploration-export/index",
@@ -146966,6 +147044,24 @@
               "selector": "cy-reward-selector",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -147441,6 +147537,7 @@
         "pages/merchant/game-node/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/exploration-export/index",
@@ -149477,6 +149574,24 @@
               "selector": "cy-reward-selector",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -149952,6 +150067,7 @@
         "pages/merchant/game-node/index",
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/exploration-export/index",
@@ -151988,6 +152104,24 @@
               "selector": "cy-reward-selector",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -164702,6 +164836,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             }
@@ -171892,6 +172030,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             }
@@ -179081,6 +179223,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -332691,6 +332837,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -346725,6 +346875,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -360761,6 +360915,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -374796,6 +374954,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -388830,6 +388992,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -464430,6 +464596,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -464446,6 +464616,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -505259,6 +505433,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -505275,6 +505453,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -546087,6 +546269,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -546103,6 +546289,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -586915,6 +587105,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -586931,6 +587125,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -627743,6 +627941,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -627759,6 +627961,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -668571,6 +668777,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -668587,6 +668797,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -709400,6 +709614,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -709416,6 +709634,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -750229,6 +750451,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -750245,6 +750471,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -791058,6 +791288,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -791074,6 +791308,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -831887,6 +832125,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -831903,6 +832145,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -872716,6 +872962,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -872732,6 +872982,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -913545,6 +913799,10 @@
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
             {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
+            {
               "selector": "cy-error",
               "index": 0
             },
@@ -913561,6 +913819,10 @@
         {
           "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
           "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            },
             {
               "selector": "cy-error",
               "index": 0
@@ -1278507,7 +1278769,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:30:bindblur:onTextDone:3",
+      "id": "pages/publish/preset/index.wxml:29:bindblur:onTextDone:3",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278530,7 +1278792,7 @@
         "tag": "input",
         "event": "bindblur",
         "handler": "onTextDone",
-        "line": 30,
+        "line": 29,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'text'}}",
         "disabledCondition": null,
@@ -1278574,7 +1278836,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:30:bindinput:onText:2",
+      "id": "pages/publish/preset/index.wxml:29:bindinput:onText:2",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278597,7 +1278859,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onText",
-        "line": 30,
+        "line": 29,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'text'}}",
         "disabledCondition": null,
@@ -1278641,7 +1278903,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:31:bindblur:onTextDone:5",
+      "id": "pages/publish/preset/index.wxml:30:bindblur:onTextDone:5",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278664,7 +1278926,7 @@
         "tag": "input",
         "event": "bindblur",
         "handler": "onTextDone",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'number'}}",
         "disabledCondition": null,
@@ -1278708,7 +1278970,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:31:bindinput:onText:4",
+      "id": "pages/publish/preset/index.wxml:30:bindinput:onText:4",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278731,7 +1278993,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onText",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'number'}}",
         "disabledCondition": null,
@@ -1278775,7 +1279037,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:33:bindtap:onChoice:6",
+      "id": "pages/publish/preset/index.wxml:32:bindtap:onChoice:6",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278798,7 +1279060,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChoice",
-        "line": 33,
+        "line": 32,
         "selectorHint": ".pp-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1278842,7 +1279104,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:42:bindtap:onMove:7",
+      "id": "pages/publish/preset/index.wxml:41:bindtap:onMove:7",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278865,7 +1279127,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMove",
-        "line": 42,
+        "line": 41,
         "selectorHint": ".pp-mv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1278919,7 +1279181,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:43:bindtap:onMove:8",
+      "id": "pages/publish/preset/index.wxml:42:bindtap:onMove:8",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278942,7 +1279204,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMove",
-        "line": 43,
+        "line": 42,
         "selectorHint": ".pp-mv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1278996,7 +1279258,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:50:bindtap:onBin:9",
+      "id": "pages/publish/preset/index.wxml:49:bindtap:onBin:9",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279019,7 +1279281,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onBin",
-        "line": 50,
+        "line": 49,
         "selectorHint": ".pp-seg__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279063,7 +1279325,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:64:bindtap:backToList:10",
+      "id": "pages/publish/preset/index.wxml:63:bindtap:backToList:10",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279086,7 +1279348,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "backToList",
-        "line": 64,
+        "line": 63,
         "selectorHint": ".pp-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279130,7 +1279392,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:65:bindtap:submit:11",
+      "id": "pages/publish/preset/index.wxml:64:bindtap:submit:11",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279153,7 +1279415,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submit",
-        "line": 65,
+        "line": 64,
         "selectorHint": ".pp-btn-main",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -1279240,7 +1279502,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:76:bindtap:openDraft:12",
+      "id": "pages/publish/preset/index.wxml:74:bindtap:openDraft:12",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279263,7 +1279525,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openDraft",
-        "line": 76,
+        "line": 74,
         "selectorHint": ".pp-btn-main",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1379765,7 +1380027,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:219"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
       }
     },
     {
@@ -1379832,7 +1380094,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:219"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
       }
     },
     {
@@ -1379899,11 +1380161,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:223"
       }
     },
     {
-      "id": "pages/templatedetail/topic-detail/index.wxml:166:bindchange:onAdoptCity:8",
+      "id": "pages/templatedetail/topic-detail/index.wxml:166:bind:change:onAdoptCity:8",
       "route": "pages/templatedetail/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1379923,14 +1380185,14 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "picker",
-        "event": "bindchange",
+        "tag": "cy-dropdown",
+        "event": "bind:change",
         "handler": "onAdoptCity",
         "line": 166,
-        "selectorHint": "picker[bindchange]",
+        "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{ adoptBusy || adoptUnknown }}",
-        "ariaLabel": null,
+        "ariaLabel": "换一个城市",
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
@@ -1379966,7 +1380228,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:224"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:226"
       }
     },
     {
@@ -1380079,7 +1380341,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:232"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:235"
       }
     },
     {
@@ -1380149,7 +1380411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:192"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:194"
       }
     },
     {
@@ -1380260,7 +1380522,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:207"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:209"
       }
     },
     {
@@ -1380327,7 +1380589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:194"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:196"
       }
     },
     {
@@ -1380404,7 +1380666,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:199"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:201"
       }
     },
     {
@@ -1416125,6 +1416387,127 @@
       }
     },
     {
+      "id": "subpackageA/components/revenue-allocations/index.wxml:3:bind:retry:loadRevenue:0",
+      "route": "component:subpackageA/components/revenue-allocations/index",
+      "hostRoutes": [
+        "subpackageA/pages/assetcenter/income-detail/income-detail"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
+          "segments": [
+            {
+              "selector": "cy-revenue-allocations",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageA/components/revenue-allocations/index.wxml",
+        "js": "subpackageA/components/revenue-allocations/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "loadRevenue",
+        "line": 3,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{rev.state === 'error'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/revenue/author/mine",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/revenue/author/mine"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/revenue/author/mine",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageA/components/revenue-allocations/index.js:16"
+      }
+    },
+    {
       "id": "subpackageA/components/scene-asset-earnings/index.wxml:16:bindtap:openWithdraw:1",
       "route": "component:subpackageA/components/scene-asset-earnings/index",
       "hostRoutes": [
@@ -1421370,7 +1421753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/assetcenter/income-detail/income-detail.js:44"
+        "staticSource": "subpackageA/pages/assetcenter/income-detail/income-detail.js:32"
       }
     },
     {
@@ -1421399,7 +1421782,7 @@
         "handler": "onRevTab",
         "line": 14,
         "selectorHint": ".id-tabs",
-        "visibleCondition": "{{!merchantView && rev.state !== 'hidden'}}",
+        "visibleCondition": "{{!merchantView && revState !== 'hidden'}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1421437,11 +1421820,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/assetcenter/income-detail/income-detail.js:36"
+        "staticSource": "subpackageA/pages/assetcenter/income-detail/income-detail.js:24"
       }
     },
     {
-      "id": "subpackageA/pages/assetcenter/income-detail/income-detail.wxml:17:bind:retry:loadRevenue:2",
+      "id": "subpackageA/pages/assetcenter/income-detail/income-detail.wxml:18:bind:state:onRevState:2",
       "route": "subpackageA/pages/assetcenter/income-detail/income-detail",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1421461,12 +1421844,12 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-error",
-        "event": "bind:retry",
-        "handler": "loadRevenue",
-        "line": 17,
-        "selectorHint": "cy-error[bind:retry]",
-        "visibleCondition": "{{rev.state === 'error'}}",
+        "tag": "cy-revenue-allocations",
+        "event": "bind:state",
+        "handler": "onRevState",
+        "line": 18,
+        "selectorHint": "cy-revenue-allocations[bind:state]",
+        "visibleCondition": "{{!merchantView}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1421479,74 +1421862,32 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "read",
+      "baseActionClass": "state",
       "effectClasses": [
-        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/marketing/revenue/author/mine",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/marketing/revenue/author/mine"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/marketing/revenue/author/mine",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/pages/assetcenter/income-detail/income-detail.js:23"
+        "staticSource": "subpackageA/pages/assetcenter/income-detail/income-detail.js:19"
       }
     },
     {
@@ -1433012,7 +1433353,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:28:bindchange:onModeChange:1",
+      "id": "subpackageJourney/pages/landing/index.wxml:27:bindchange:onModeChange:1",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1433035,7 +1433376,7 @@
         "tag": "swiper",
         "event": "bindchange",
         "handler": "onModeChange",
-        "line": 28,
+        "line": 27,
         "selectorHint": ".ob-swiper",
         "visibleCondition": "{{modes.length > 1}}",
         "disabledCondition": null,
@@ -1433266,7 +1433607,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:46:bindtap:onPrimary:2",
+      "id": "subpackageJourney/pages/landing/index.wxml:45:bindtap:onPrimary:2",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1433289,7 +1433630,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onPrimary",
-        "line": 46,
+        "line": 45,
         "selectorHint": ".jn-grow",
         "visibleCondition": "{{primary}}",
         "disabledCondition": "{{busy}}",
@@ -1433458,7 +1433799,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:48:bindtap:onBrowse:3",
+      "id": "subpackageJourney/pages/landing/index.wxml:47:bindtap:onBrowse:3",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1433481,7 +1433822,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onBrowse",
-        "line": 48,
+        "line": 47,
         "selectorHint": ".ob-secondary",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1433715,7 +1434056,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:101:bind:cta:loadMemory:10",
+      "id": "subpackageJourney/pages/report/index.wxml:100:bind:cta:loadMemory:10",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1433738,7 +1434079,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadMemory",
-        "line": 101,
+        "line": 100,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{memoryState === 'error'}}",
         "disabledCondition": null,
@@ -1433902,7 +1434243,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:31:bindtap:openRank:1",
+      "id": "subpackageJourney/pages/report/index.wxml:30:bindtap:openRank:1",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1433925,7 +1434266,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openRank",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".jn-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1434276,7 +1434617,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:44:bindtap:openMemory:2",
+      "id": "subpackageJourney/pages/report/index.wxml:43:bindtap:openMemory:2",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1434299,7 +1434640,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openMemory",
-        "line": 44,
+        "line": 43,
         "selectorHint": ".jn-row",
         "visibleCondition": "{{!report.legacy && report.runId}}",
         "disabledCondition": null,
@@ -1434463,7 +1434804,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:48:bindtap:openSeats:3",
+      "id": "subpackageJourney/pages/report/index.wxml:47:bindtap:openSeats:3",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1434486,7 +1434827,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openSeats",
-        "line": 48,
+        "line": 47,
         "selectorHint": ".jn-row",
         "visibleCondition": "{{registrationId}}",
         "disabledCondition": null,
@@ -1434533,7 +1434874,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:69:bindtap:reload:4",
+      "id": "subpackageJourney/pages/report/index.wxml:68:bindtap:reload:4",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1434556,7 +1434897,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reload",
-        "line": 69,
+        "line": 68,
         "selectorHint": ".jn-grow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1434720,7 +1435061,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:73:bind:close:closeRank:5",
+      "id": "subpackageJourney/pages/report/index.wxml:72:bind:close:closeRank:5",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1434743,7 +1435084,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeRank",
-        "line": 73,
+        "line": 72,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1434787,7 +1435128,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:76:bind:change:onRankScope:6",
+      "id": "subpackageJourney/pages/report/index.wxml:75:bind:change:onRankScope:6",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1434810,7 +1435151,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onRankScope",
-        "line": 76,
+        "line": 75,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1434974,7 +1435315,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:77:bind:change:onRankPeriod:7",
+      "id": "subpackageJourney/pages/report/index.wxml:76:bind:change:onRankPeriod:7",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1434997,7 +1435338,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onRankPeriod",
-        "line": 77,
+        "line": 76,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1435161,7 +1435502,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:80:bind:cta:loadRank:8",
+      "id": "subpackageJourney/pages/report/index.wxml:79:bind:cta:loadRank:8",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1435184,7 +1435525,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadRank",
-        "line": 80,
+        "line": 79,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{rankState === 'error'}}",
         "disabledCondition": null,
@@ -1435348,7 +1435689,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:98:bind:close:closeMemory:9",
+      "id": "subpackageJourney/pages/report/index.wxml:97:bind:close:closeMemory:9",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1435371,7 +1435712,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMemory",
-        "line": 98,
+        "line": 97,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
