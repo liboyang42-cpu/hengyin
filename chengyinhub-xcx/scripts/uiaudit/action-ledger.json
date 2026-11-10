@@ -65871,7 +65871,7 @@
           "route": "subpackageJourney/pages/landing/index",
           "segments": [
             {
-              "selector": "cy-btn",
+              "selector": "cy-btn.jn-grow",
               "index": 0
             }
           ]
@@ -65881,7 +65881,16 @@
           "segments": [
             {
               "selector": "cy-btn",
-              "index": 1
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "cy-btn.jn-grow",
+              "index": 0
             }
           ]
         },
@@ -65909,15 +65918,6 @@
             {
               "selector": "cy-btn",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/report/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 3
             }
           ]
         },
@@ -66009,6 +66009,15 @@
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
+              "selector": "cy-btn.jn-grow",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
               "selector": "cy-btn",
               "index": 0
             }
@@ -66029,15 +66038,6 @@
             {
               "selector": "cy-btn",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/seats/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 3
             }
           ]
         },
@@ -1433290,7 +1433290,7 @@
         "event": "bindtap",
         "handler": "onPrimary",
         "line": 46,
-        "selectorHint": "cy-btn[bindtap]",
+        "selectorHint": ".jn-grow",
         "visibleCondition": "{{primary}}",
         "disabledCondition": "{{busy}}",
         "ariaLabel": null,
@@ -1434557,7 +1434557,7 @@
         "event": "bindtap",
         "handler": "reload",
         "line": 69,
-        "selectorHint": "cy-btn[bindtap]",
+        "selectorHint": ".jn-grow",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1435627,7 +1435627,7 @@
         "event": "bindtap",
         "handler": "onInvite",
         "line": 25,
-        "selectorHint": "cy-btn[bindtap]",
+        "selectorHint": ".jn-grow",
         "visibleCondition": null,
         "disabledCondition": "{{busy}}",
         "ariaLabel": null,

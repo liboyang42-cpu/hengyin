@@ -22,7 +22,7 @@
     </view>
     <view class="jn-footer jn-footer--stack" wx:if="{{inviteToken || seats.canInvite || pendingInvite}}">
       <button wx:if="{{inviteToken}}" class="jn-share" open-type="share" aria-label="发送席位邀请"><cy-btn variant="primary">发送邀请</cy-btn></button>
-      <cy-btn wx:else variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onInvite">{{pendingInvite ? '查询邀请结果' : '邀请同行'}}</cy-btn>
+      <cy-btn class="jn-grow" wx:else variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onInvite">{{pendingInvite ? '查询邀请结果' : '邀请同行'}}</cy-btn>
       <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
     </view>
   </block>

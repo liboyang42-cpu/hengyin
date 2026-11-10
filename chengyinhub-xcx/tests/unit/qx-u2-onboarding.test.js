@@ -43,7 +43,7 @@ test('P1 落地:叠卡 hero + 两行标题(品牌紫句点)+ 白药丸主按钮 
   assert.match(view, /class="ob-hero"[\s\S]*ob-card--back2[\s\S]*ob-card--back1[\s\S]*ob-card--front/);
   assert.doesNotMatch(view, /<image[^>]*cover/i, '落地读口没有封面字段,不拿别处的图冒充');
   assert.match(view, /wx:for="\{\{headLines\}\}"[\s\S]*class="ob-dot">\.<\/text>/);
-  assert.match(view, /<cy-btn wx:if="\{\{primary\}\}" variant="primary"/);
+  assert.match(view, /<cy-btn class="jn-grow" wx:if="\{\{primary\}\}" variant="primary"/);
   assert.match(view, /bindtap="onBrowse"[^>]*>先逛逛</);
   const css = read('subpackageJourney/style/journey.wxss');
   assert.match(css, /\.ob-dot \{ color: var\(--cy-ref-violet-500\); \}/);
