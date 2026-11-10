@@ -284,6 +284,17 @@ public class RegistrationQuoteResult {
     @Schema(description = "通行证覆盖判定的主题 id")
     private Long coveredTopicId;
 
+    /** 通行证（平台会员）覆盖本主题：true 时本单金额已按 ¥0 报价，前端按钮显示「免费领取」。未覆盖为 null。 */
+    private Boolean platformPassCovered;
+
+    /** 覆盖本单的通行证有效段到期时刻（领取后的自玩票到期不晚于它）。 */
+    private java.util.Date platformPassValidTo;
+
+    public Boolean getPlatformPassCovered() { return platformPassCovered; }
+    public void setPlatformPassCovered(Boolean v) { this.platformPassCovered = v; }
+    public java.util.Date getPlatformPassValidTo() { return platformPassValidTo; }
+    public void setPlatformPassValidTo(java.util.Date v) { this.platformPassValidTo = v; }
+
     /**
      * 票面合计(促销前,元)。= Σ 票种现价 × 张数,由服务端读 {@code oms_ticket.price} 算出。
      * 它与 {@link #payAmount} 的差额里同时含会员价与促销减免;分项见下面三个字段。

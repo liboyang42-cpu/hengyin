@@ -201,6 +201,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired(required = false)
     private IMarketingPassAccessService marketingPassAccessService;
 
+    /** 通行证（平台会员）：总开关关闭或缺失时恒不覆盖，自玩票报价/下单与原来完全一致。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.PlatformPassService platformPassService;
+
     /** 候补 offer 已在晋级事务占过库存；报名事务只 claim/bind，绝不能再扣一次。 */
     @Autowired(required = false)
     private IClubWaitlistOrderBridge clubWaitlistOrderBridge;
@@ -979,6 +983,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return reusable;
         }
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, topic.getClubId());
+        com.chengyinhub.business.platformpass.PlatformPassService.Coverage passCoverage =
+                platformPassCoverage(memberId, topic, freeTopic);
         // M2 自玩配额：待支付单也占位，过期/取消单由 orderCloseTask 置为 3 后自动释放。
         // topic 行锁保证「计数 → 插单」对同一主题串行，避免非会员并发越过会员保留名额。
         Integer quota = topic.getSelfPlayQuota();
@@ -993,7 +999,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
         }
         BigDecimal originalPrice = topic.getSelfPlayPrice();
-        BigDecimal price = clubBenefit.effectivePrice(originalPrice);
+        BigDecimal price = passCoverage != null ? BigDecimal.ZERO : clubBenefit.effectivePrice(originalPrice);
 
         // [#22 二清闸] 自玩恒收费(上面 :509 已强制 selfPlayPrice > 0)且 ② 的 CONTENT 槽恒为第三方
         // (玩家/俱乐部)⇒ 每一张自玩票都是「平台替第三方收钱」。生产实测 21 笔付费单是 ownerType=1,
@@ -1029,6 +1035,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setRegistrationStatus(1);
         r.setPayExpireTime(DateUtils.addMinutes(new Date(), 30));
         r.setExpiresAt(selfPlayPassExpiry(topic, new Date())); // M2 通行证有效期 90 天,不越过主题履约窗
+        if (passCoverage != null && passCoverage.validTo() != null
+                && (r.getExpiresAt() == null || passCoverage.validTo().before(r.getExpiresAt()))) {
+            // 通行证领取的 ¥0 自玩票不越过通行证本段到期
+            r.setExpiresAt(passCoverage.validTo());
+        }
         // [P0-02] 自玩通行证恒为 ②。此前「是不是自玩票」只能靠 (owner_type=1 + ticket_id 为空 + expires_at 非空)
         // 的组合约定反推,没有任何一列直说 —— 现在有了。
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
@@ -1044,7 +1055,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
             throw new IllegalStateException("自玩报名原订单写入失败");
         }
+        if (passCoverage != null) {
+            platformPassService.recordClaim(passCoverage, memberId, topicId, r.getId());
+        }
         return r;
+    }
+
+    /**
+     * 通行证覆盖：只对收费的官方开放自玩主题生效（免费主题本来就是 ¥0）。
+     * 退款快照仍按主题冻结；¥0 行没有可退金额。
+     */
+    private com.chengyinhub.business.platformpass.PlatformPassService.Coverage platformPassCoverage(
+            Long memberId, CmsTopic topic, boolean freeTopic) {
+        if (platformPassService == null || freeTopic || topic == null || topic.getId() == null) return null;
+        return platformPassService.coverage(memberId, topic.getId(), new Date());
     }
 
     /**
@@ -1335,7 +1359,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         validateAndGetMember(memberId);
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, topic.getClubId());
         BigDecimal originalPrice = topic.getSelfPlayPrice();
-        BigDecimal price = clubBenefit.effectivePrice(originalPrice);
+        com.chengyinhub.business.platformpass.PlatformPassService.Coverage passCoverage =
+                platformPassCoverage(memberId, topic, freeTopic);
+        BigDecimal price = passCoverage != null ? BigDecimal.ZERO : clubBenefit.effectivePrice(originalPrice);
         if (price.compareTo(BigDecimal.ZERO) > 0) {
             // 与下单同一对收费闸:报价放行而下单被拒 = 用户走到末端才失败
             assertCollectible(topic, price);
@@ -1365,6 +1391,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         result.setDelivery(quoteDelivery(null, topic, null, ticketId));
         result.setCompleteRewardCoupon(projectCompleteRewardCoupon(topic, memberId));
         projectPassCoverage(result, memberId, topic);
+        if (passCoverage != null) {
+            result.setPlatformPassCovered(Boolean.TRUE);
+            result.setPlatformPassValidTo(passCoverage.validTo());
+        }
         if (payAmount.signum() > 0) {
             RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
             if (passPolicy != null && passPolicy.deadline != null) {
