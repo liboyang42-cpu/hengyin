@@ -73,7 +73,7 @@ function later(fn, ms) {
 function beats(page, key, frames, options) {
   const opts = options || {};
   const timer = '_' + key + 'Beat';
-  const stop = () => { if (page) { clearTimeout(page[timer]); page[timer] = null; } };
+  const stop = () => { if (page) { if (typeof clearTimeout === 'function') clearTimeout(page[timer]); page[timer] = null; } };
   if (!page || typeof page.setData !== 'function' || !frames || !frames.length) return stop;
   stop();
   page.setData({ [key]: 'rest' in opts ? opts.rest : frames[0][0] });
