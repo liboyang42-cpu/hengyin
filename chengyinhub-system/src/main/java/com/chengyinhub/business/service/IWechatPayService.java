@@ -57,6 +57,16 @@ public interface IWechatPayService extends WechatPaymentOperations {
     /** 处理微信退款结果通知回调(验签+解析+回写打款态)。返回微信 ACK 应答体。 */
     String handleRefundCallback(String requestBody, Map<String, String> headers);
 
+    /** l-payout2：电商收付通（服务商 JSAPI，二级商户为卖家）支付通知。开关关闭时一律回 FAIL，不处理。 */
+    default String handleEcommercePayCallback(String requestBody, Map<String, String> headers) {
+        return "{\"code\": \"FAIL\",\"message\": \"未开通\"}";
+    }
+
+    /** l-payout2：电商收付通退款通知。开关关闭时一律回 FAIL，不处理。 */
+    default String handleEcommerceRefundCallback(String requestBody, Map<String, String> headers) {
+        return "{\"code\": \"FAIL\",\"message\": \"未开通\"}";
+    }
+
     /** 查微信退款真实状态(SUCCESS/PROCESSING/ABNORMAL/CLOSED),失败返回 null。 */
     String queryRefundStatus(String outRefundNo);
 

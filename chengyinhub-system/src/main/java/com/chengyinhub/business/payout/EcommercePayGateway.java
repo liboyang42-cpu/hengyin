@@ -47,4 +47,43 @@ public interface EcommercePayGateway {
 
     RefundAccepted createRefund(String subMchid, String transactionId, String outRefundNo, long refundFen,
                                 long totalFen, String reason);
+
+    // ---- l-payout2：接入现有支付链路 ----
+
+    /** 服务商 JSAPI 原单（查单或已验签通知）的事实。tradeState/tradeType 用微信枚举名。 */
+    record PartnerOrder(String spMchid, String subMchid, String spAppid, String outTradeNo, String transactionId,
+                        String tradeState, String tradeType, Long totalFen, String currency, String successTime) { }
+
+    /** 电商收付通退款查询结果（GET /v3/ecommerce/refunds/out-refund-no/{out_refund_no}）。 */
+    record RefundQuery(String outRefundNo, String refundId, String outTradeNo, String transactionId, String status,
+                       Long refundFen, String currency, String successTime) { }
+
+    /** 已验签的电商退款通知里可信的定位字段；业务事实一律另行查单核对。 */
+    record RefundNotice(String spMchid, String subMchid, String outRefundNo) { }
+
+    /** 服务商 JSAPI 原单不存在（404 ORDER_NOT_EXIST）。 */
+    final class PartnerOrderNotFound extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        public PartnerOrderNotFound(String message, Throwable cause) { super(message, cause); }
+    }
+
+    /** 电商退款单不存在（404 RESOURCE_NOT_EXISTS）。 */
+    final class RefundNotFound extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        public RefundNotFound(String message, Throwable cause) { super(message, cause); }
+    }
+
+    /** 服务商 JSAPI 支付通知地址（冻结支付意图时作为原请求指纹的一部分）。 */
+    String paymentNotifyUrl();
+
+    PartnerOrder queryPartnerOrder(String subMchid, String outTradeNo);
+
+    void closePartnerOrder(String subMchid, String outTradeNo);
+
+    /** 用电商平台商户号的 APIv3 密钥与平台证书验签并解密支付通知；验签失败抛 SDK 的 ValidationException。 */
+    PartnerOrder parsePaymentNotification(String body, Map<String, String> headers);
+
+    RefundNotice parseRefundNotification(String body, Map<String, String> headers);
+
+    RefundQuery queryRefund(String subMchid, String outRefundNo);
 }

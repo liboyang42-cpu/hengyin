@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 /** 记录调用、按预设回包的电商收付通桩。 */
-class FakeEcommerceGateway implements EcommercePayGateway {
-    final List<String> calls = new ArrayList<>();
+public class FakeEcommerceGateway implements EcommercePayGateway {
+    public final List<String> calls = new ArrayList<>();
+    public PartnerOrder partnerOrder;
+    public RefundQuery refundQuery;
+    public RuntimeException refundFailure;
     ApplymentStatus applyment;
     ShareResult share = new ShareResult("FINISHED", "W1", List.of());
     ShareResult query = new ShareResult("FINISHED", "W1", List.of());
@@ -28,5 +31,23 @@ class FakeEcommerceGateway implements EcommercePayGateway {
     }
     @Override public ReturnResult queryReturn(String sub, String no, String rno) { calls.add("returnQuery"); return new ReturnResult(returnResult, null, null); }
     @Override public void finishProfitSharing(String sub, String tx, String no, String d) { calls.add("finish:" + no); maybeFail(); }
-    @Override public RefundAccepted createRefund(String sub, String tx, String no, long r, long t, String reason) { calls.add("refund"); return new RefundAccepted("R1", no); }
+    @Override public RefundAccepted createRefund(String sub, String tx, String no, long r, long t, String reason) {
+        calls.add("refund:" + no + ":" + r + "/" + t);
+        if (refundFailure != null) { RuntimeException e = refundFailure; refundFailure = null; throw e; }
+        return new RefundAccepted("R1", no);
+    }
+    @Override public String paymentNotifyUrl() { return "https://api.example.com/api/registration/ecommerce-callback"; }
+    @Override public PartnerOrder queryPartnerOrder(String sub, String no) {
+        calls.add("partnerQuery:" + no);
+        if (partnerOrder == null) throw new PartnerOrderNotFound("ORDER_NOT_EXIST", null);
+        return partnerOrder;
+    }
+    @Override public void closePartnerOrder(String sub, String no) { calls.add("partnerClose:" + no); }
+    @Override public PartnerOrder parsePaymentNotification(String body, Map<String, String> headers) { calls.add("parsePay"); return partnerOrder; }
+    @Override public RefundNotice parseRefundNotification(String body, Map<String, String> headers) { calls.add("parseRefund"); return null; }
+    @Override public RefundQuery queryRefund(String sub, String no) {
+        calls.add("refundQuery:" + no);
+        if (refundQuery == null) throw new RefundNotFound("RESOURCE_NOT_EXISTS", null);
+        return refundQuery;
+    }
 }

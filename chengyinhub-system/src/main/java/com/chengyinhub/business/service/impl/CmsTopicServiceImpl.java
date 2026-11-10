@@ -313,6 +313,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private CoopSettlementOriginalMapper coopSettlementOriginalMapper;
     @Autowired
     private CoopSettlementOriginalProducer coopSettlementOriginalProducer;
+    /** l-payout2：电商收付通接点。未装配或开关关闭时下列新分支都不进入，结算结果逐字不变。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.payout.EcommerceSettlementGuard ecommerceSettlementGuard;
 
     @Autowired(required = false)
     private ITopicSaleCanonicalMutationService canonicalMutationService;
@@ -595,6 +598,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 Boolean settled = tx.execute(status -> settleTopic(topic, rule));
                 if (Boolean.TRUE.equals(settled)) {
                     settledCount++;
+                    if (ecommerceSettlementGuard != null) ecommerceSettlementGuard.afterTopicSettled(topic.getId());
                 }
             } catch (Exception e) {
                 logger.error("主题结算失败, topicId: " + topic.getId(), e);
@@ -1549,6 +1553,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         BigDecimal payoutAmount = currentCoopHeadNet(s);
         if (payoutAmount.signum() < 0) {
             throw new IllegalStateException("NEGATIVE_SETTLEMENT_HEAD_POLICY_REQUIRED:settlementId=" + s.getId());
+        }
+        if (ecommerceSettlementGuard != null && ecommerceSettlementGuard.active()) {
+            // l-payout2：由二级商户收款的分项已在微信侧（卖家冻结资金 / 分账给接收方），不能再记进会员余额。
+            payoutAmount = payoutAmount.subtract(ecommerceSettlementGuard.partnerPortion(s.getId()));
+            if (payoutAmount.signum() < 0) {
+                throw new IllegalStateException("ECOMMERCE_PARTNER_PORTION_EXCEEDS_HEAD:settlementId=" + s.getId());
+            }
         }
         if (payoutAmount.signum() == 0) {
             requireExactlyOne(coopSettlementMapper.markPaidIfPending(s.getId(), now), "置零元结算为已打款", s.getId());
