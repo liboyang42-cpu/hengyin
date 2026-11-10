@@ -19,7 +19,8 @@ class AuthorWriteOwnerTest(unittest.TestCase):
         self.assertEqual(["com.chengyinhub.business.mapper.AuthorWriteReceiptMapper"], owners[storage]["members"])
         self.assertEqual(owners[service]["members"], owners[storage]["allowed_consumers"])
         callers = ["com.chengyinhub.web.controller.api." + name for name in
-                   ("ApiActivityController", "ApiTemplateController", "ApiAiNpcController", "ApiAuthorWriteReceiptController")]
+                   ("ApiActivityController", "ApiTemplateController", "ApiAiNpcController", "ApiAuthorWriteReceiptController",
+                    "ApiPresetController")]
         self.assertEqual(callers, owners[service]["allowed_consumers"])
         edges = {e for e in policy["allowed_directions"] if any(n in (api, service, storage) for n in e)}
         self.assertEqual({(api, service), (service, storage)}, edges)

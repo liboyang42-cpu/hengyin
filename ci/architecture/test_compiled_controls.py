@@ -100,7 +100,7 @@ class CompiledControlSourceTest(unittest.TestCase):
         self.assertIn(b"public interface", controls.LEAF_SOURCES["architecture.leafcontrol.EmptyInterface"])
 
     def test_exact_clean_verifier_matches_both_workflow_callers_and_loads_once(self):
-        expected = "9cd002fb9db978d0ab1f5b6b0504481c4ae3571a"
+        expected = "c7c5e838bf37901cd8ad0c89cdee7bd42e747f0c"
         self.assertEqual(expected, controls.VERIFIER)
         workflow = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertEqual([expected, expected], re.findall(r"(?m)^\s+ref: ([0-9a-f]{40})$", workflow))
