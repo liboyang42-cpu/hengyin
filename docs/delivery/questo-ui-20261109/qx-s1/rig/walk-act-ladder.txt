@@ -1,0 +1,19 @@
+open pages/play/index?topicId=990015&activityId=11
+tap [ '开启定位', { nth: 1 } ]
+tap 开始游戏
+tap 继续探索
+tap "开始任务"
+tap "提示"
+shot act-UG-05-ladder-open-after
+tap "文字提示"
+tapSel .mo__btn--primary
+shot act-UG-05-hint-unlocked-after
+tap "首字"
+tapSel .mo__btn--primary
+TEXT 提示 | 本局剩余免费 0 次 | 文字提示 | 看站厅里的线路图 | 重看 | 首字 | L | 重看 | 答案 | 30 积分 | 跳过本题 | rig 站台问答 1110080231 | 人民广场的地铁站共有几条线路换乘？ | 当前最高 100 解谜分 | 提示 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+shot act-UG-06-counter-after
+FAIL {"tap":"分数明细"} tap: no visible element with text "分数明细"
+TEXT 提示 | 本局剩余免费 0 次 | 文字提示 | 看站厅里的线路图 | 重看 | 首字 | L | 重看 | 答案 | 30 积分 | 跳过本题 | rig 站台问答 1110080231 | 人民广场的地铁站共有几条线路换乘？ | 当前最高 100 解谜分 | 提示 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+shot act-UG-07-score-detail-after
+ERR []
+NET [["GET","/__api/api/play/nodes?activityId=11",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"topicId\":990015,\"topicDesc\":\"rig 免费城市定向样板\",\"topicName\":\"城市定向样板 1110080231\",\"topicCover\":\"https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109658126&OSSAccessKeyId=rig-placeholder&Signature=<redacted>\",\"topicAudioUrl\":null,\"loo"],["GET","/__api/api/play/run-session?activityId=11",200,"{\"msg\":\"操作成功\",\"code\":200}"],["GET","/__api/api/play/help?runId=2&nodeId=74",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"runId\":2,\"nodeId\":74,\"enabled\":true,\"layers\":[{\"level\":1,\"type\":\"TEXT\",\"usable\":true,\"unlocked\":false,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":null},{\"level\":2,\"type\":\"LETTER\",\"usable\":true,\"unlocked\":false,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":"],["POST","/__api/api/play/help/use",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"runId\":2,\"nodeId\":74,\"level\":1,\"type\":\"TEXT\",\"content\":\"看站厅里的线路图\",\"applied\":true,\"alreadyUnlocked\":false,\"chargedPoints\":0,\"balanceAfter\":0}}"],["GET","/__api/api/play/help?runId=2&nodeId=74",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"runId\":2,\"nodeId\":74,\"enabled\":true,\"layers\":[{\"level\":1,\"type\":\"TEXT\",\"usable\":true,\"unlocked\":true,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":null},{\"level\":2,\"type\":\"LETTER\",\"usable\":true,\"unlocked\":false,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":n"],["POST","/__api/api/play/help/use",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"runId\":2,\"nodeId\":74,\"level\":2,\"type\":\"LETTER\",\"content\":\"L\",\"applied\":true,\"alreadyUnlocked\":false,\"chargedPoints\":0,\"balanceAfter\":0}}"],["GET","/__api/api/play/help?runId=2&nodeId=74",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"runId\":2,\"nodeId\":74,\"enabled\":true,\"layers\":[{\"level\":1,\"type\":\"TEXT\",\"usable\":true,\"unlocked\":true,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":null},{\"level\":2,\"type\":\"LETTER\",\"usable\":true,\"unlocked\":true,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":nu"]]
