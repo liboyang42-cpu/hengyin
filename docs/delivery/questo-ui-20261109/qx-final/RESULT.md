@@ -1,6 +1,6 @@
 # qx-final · launch 收口 — RESULT(2026-11-10)
 
-分支 `launch/questo-20261110`。七条 lane 都按顺序 `--no-ff` 合入，跑完全部门禁，修了合并和 lane 带来的问题。之后开了一个草稿 PR，从 `launch/questo-20261110` 到 `master`，见 §八。
+分支 `launch/questo-20261110`。七条 lane 都按顺序 `--no-ff` 合入，跑完全部门禁，修了合并和 lane 带来的问题。之后开了草稿 PR **#779**(`launch/questo-20261110` → `master`)，正文是 §七的上线清单。
 
 以下事情都没有做：
 - 没有合并到 `master`，PR 没有标为就绪。
@@ -376,4 +376,4 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 6. **l-payout 的 P-09**(把电商收付通接入现有下单、回调、退款、T+14 链路)：(没有接入，开关打开也不生效。)这需要支付链路 owner 和你确认后另做。
 7. **各 lane 自己的待你决定**原样保留，见 `l-play/`、`l-kits/`、`l-after/`、`l-pass/`、`l-payout/`、`l-editor/`、`l-misc/` 各自的 RESULT.md。
 
-STATUS: PARTIAL - 七条 lane 都已合入，收口修复已推送。UI-GATE-0、台账和路由矩阵零差异、mvn 打包、改动类 Java 测试、管理端构建、主包 2037.2 KiB 都通过。真库 IT 通过：PlatformPass(UTC 与 Asia/Shanghai)、launch-l-payout、payment-intent-correctness 30/30。草稿 PR 已开。还剩三项：小程序全量单测 7 条红灯，都是底座既有、r2 波次留下的；Gameplay HTTP generic-only 1 条失败，master 上同样失败；队伍详情没有在合并后复拍(rig 没有活动场次夹具)。
+STATUS: PARTIAL - 七条 lane 都已合入，收口修复已推送。UI-GATE-0、台账和路由矩阵零差异、mvn 打包、改动类 Java 测试、管理端构建、主包 2037.2 KiB 都通过。真库 IT 通过：PlatformPass(UTC 与 Asia/Shanghai)、launch-l-payout、payment-intent-correctness 30/30。草稿 PR #779 已开。还剩三项：小程序全量单测 7 条红灯，都是底座既有、r2 波次留下的；Gameplay HTTP generic-only 1 条失败，master 上同样失败；队伍详情没有在合并后复拍(rig 没有活动场次夹具)。
