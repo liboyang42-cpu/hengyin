@@ -6,7 +6,7 @@
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-tabs": "/components/cy/tabs/index"
+    "cy-sheet": "/components/cy/sheet/index"
   },
   "navigationBarTitleText": "城市目录",
   "navigationStyle": "custom",
