@@ -1,0 +1,16 @@
+{
+  "name": "M-LANDING-after",
+  "framesCaptured": 47,
+  "spanMs": 995,
+  "fpsAvg": 47.2,
+  "gapsOver50ms": 1,
+  "maxGapMs": 219,
+  "metricsDelta": {
+    "LayoutCount": 3,
+    "RecalcStyleCount": 232,
+    "LayoutDuration": 0.0375,
+    "RecalcStyleDuration": 0.0379,
+    "ScriptDuration": 0.0151,
+    "TaskDuration": 0.224
+  }
+}

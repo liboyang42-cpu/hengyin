@@ -1,0 +1,16 @@
+{
+  "name": "M-TEAM-after",
+  "framesCaptured": 41,
+  "spanMs": 1098,
+  "fpsAvg": 37.4,
+  "gapsOver50ms": 1,
+  "maxGapMs": 416,
+  "metricsDelta": {
+    "LayoutCount": 12,
+    "RecalcStyleCount": 44,
+    "LayoutDuration": 0.0124,
+    "RecalcStyleDuration": 0.0156,
+    "ScriptDuration": 0.012,
+    "TaskDuration": 0.2108
+  }
+}

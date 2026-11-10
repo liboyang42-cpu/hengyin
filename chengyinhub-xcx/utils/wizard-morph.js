@@ -22,6 +22,10 @@
 // 免得在最后一帧就把形变层撤掉、留下一次可见的跳变。改 transition 时这里要跟着改。
 var DURATION = 420;
 
+// 2026-11-10 r4-motion(MOTION.md §0):本文件以前不读「减少动态效果」,全靠三个页面各自在 startForm 里先判一遍。
+// 现在形变自己也读一次开关 —— 页面漏判时也不会放形变;开关开着就直接切到表单态。
+var readReducedMotion = require('./motion-preference.js').readReducedMotion;
+
 /**
  * @param {Object} page      页面实例(this)
  * @param {Object} opt
@@ -36,6 +40,7 @@ function runIntroMorph(page, opt) {
     page.setData(opt.enterData);
     if (opt.afterEnter) opt.afterEnter();
   };
+  if (readReducedMotion()) { enterOnly(); return; }
   wx.createSelectorQuery().in(page).select(ctaSel).boundingClientRect(function (cta) {
     // 量不到就老老实实直接切,不留半截动画
     if (!cta) { enterOnly(); return; }

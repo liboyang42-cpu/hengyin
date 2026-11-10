@@ -143,6 +143,8 @@ page {
   --cy-price:       var(--cy-color-text-primary);   /* 2026-07-31(镜像真源):同批8 已做的去重复字面量,
                                    单真源;--cy-ref-ink-900 本轮去墨蓝后这里自动跟随变灰 */
   --cy-shadow-card: 0 4rpx 16rpx rgba(0,0,0,0.04);
+  --cy-shadow-lift:  0 16rpx 40rpx rgba(0,0,0,.14);   /* 镜像真源 .theme-light(r4-motion) */
+  --cy-shadow-stack: 0 8rpx 24rpx rgba(0,0,0,.10);
 
   /* —— ② 商家过渡:黑 CTA(旧页拿 brand/accent 当主按钮色;Batch 3 迁移后删) —— */
   --cy-brand:          var(--cy-color-selection);

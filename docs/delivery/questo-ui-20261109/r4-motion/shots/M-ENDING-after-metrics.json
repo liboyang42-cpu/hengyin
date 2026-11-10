@@ -1,0 +1,16 @@
+{
+  "name": "M-ENDING-after",
+  "framesCaptured": 309,
+  "spanMs": 6269,
+  "fpsAvg": 49.3,
+  "gapsOver50ms": 1,
+  "maxGapMs": 1105,
+  "metricsDelta": {
+    "LayoutCount": 12,
+    "RecalcStyleCount": 280,
+    "LayoutDuration": 0.0173,
+    "RecalcStyleDuration": 0.0882,
+    "ScriptDuration": 0.1193,
+    "TaskDuration": 1.4462
+  }
+}

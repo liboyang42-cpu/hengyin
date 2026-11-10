@@ -242,27 +242,36 @@
 .ni-o--sm { width: 128rpx; height: 128rpx; margin: -150rpx 0 0 40rpx; }
 .ni-o--on { opacity: 1; transform: scale(1) rotate(-6deg); }
 .ni-o--sm.ni-o--on { transform: scale(1) rotate(10deg); }
-/* 1 分身:店铺从下面升起落定,星光一闪一闪 */
-.ni-o--k0.ni-o--on { animation: ni-rise 0.7s cubic-bezier(0.3, 1.4, 0.45, 1) both; }
-.ni-o--sm.ni-o--k0.ni-o--on { animation: ni-twinkle 1.4s ease-in-out 0.4s infinite both; }
-@keyframes ni-rise { from { opacity: 0; transform: translateY(80rpx) scale(0.7) rotate(-6deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(-6deg); } }
-@keyframes ni-twinkle { 0%, 100% { opacity: 1; transform: scale(1) rotate(10deg); } 50% { opacity: 0.45; transform: scale(0.72) rotate(28deg); } }
+/* r4-motion 2026-11-10:四步各自的动效改成 transition(动效棘轮不许新增关键帧)。进场靠每步不同的「未上场」起点,
+   多拍的挥手 / 摆动 / 闪烁由页面按节拍翻 .ni-stage--p1…p4(utils 里没有 createAnimation,页面每拍一次 setData,不是逐帧),
+   气泡 / 面具这类「随后出现」用 transition-delay。减动效:不翻拍、所有过渡关掉。 */
+/* 1 分身:店铺从下面升起落定,星光闪两下 */
+.ni-o--k0 { transform: translateY(80rpx) scale(.7) rotate(-6deg); }
+.ni-o--k0.ni-o--on { transform: translateY(0) scale(1) rotate(-6deg); transition: transform var(--cy-motion-celebrate) var(--cy-ease-spring), opacity var(--cy-motion-slow); }
+.ni-o--sm.ni-o--k0 { transform: scale(.4) rotate(10deg); }
+.ni-o--sm.ni-o--k0.ni-o--on { transform: scale(1) rotate(10deg); transition: transform var(--cy-motion-slow) ease-in-out, opacity var(--cy-motion-slow) ease-in-out; }
+.ni-stage--p1 .ni-o--sm.ni-o--k0.ni-o--on, .ni-stage--p3 .ni-o--sm.ni-o--k0.ni-o--on { opacity: .45; transform: scale(.72) rotate(28deg); }
 /* 2 打招呼:手绕手腕挥两下,气泡随后冒出 */
-.ni-o--k1.ni-o--on { transform-origin: 70% 90%; animation: ni-wave 1.6s ease-in-out 0.2s 2 both; }
-.ni-o--sm.ni-o--k1.ni-o--on { transform-origin: 0% 100%; animation: ni-pop 0.5s cubic-bezier(0.3, 1.6, 0.45, 1) 0.45s both; }
-@keyframes ni-wave { 0%, 60%, 100% { transform: rotate(-6deg); } 15% { transform: rotate(-22deg); } 30% { transform: rotate(8deg); } 45% { transform: rotate(-18deg); } }
-@keyframes ni-pop { from { opacity: 0; transform: scale(0.2) rotate(10deg); } to { opacity: 1; transform: scale(1) rotate(10deg); } }
+.ni-o--k1.ni-o--on { transform-origin: 70% 90%; transition: transform var(--cy-motion-standard) ease-in-out, opacity var(--cy-motion-slow); }
+.ni-stage--p1 .ni-o--k1.ni-o--on { transform: scale(1) rotate(-22deg); }
+.ni-stage--p2 .ni-o--k1.ni-o--on { transform: scale(1) rotate(8deg); }
+.ni-stage--p3 .ni-o--k1.ni-o--on { transform: scale(1) rotate(-18deg); }
+.ni-o--sm.ni-o--k1 { transform-origin: 0% 100%; transform: scale(.2) rotate(10deg); }
+.ni-o--sm.ni-o--k1.ni-o--on { transform: scale(1) rotate(10deg); transition: transform var(--cy-motion-reveal) var(--cy-ease-spring) var(--cy-motion-reveal), opacity var(--cy-motion-standard) ease var(--cy-motion-reveal); }
 /* 3 菜单和营业时间:餐盘从上面落到桌面,闹钟左右摆两下 */
-.ni-o--k2.ni-o--on { animation: ni-drop 0.65s cubic-bezier(0.3, 1.3, 0.45, 1) both; }
-.ni-o--sm.ni-o--k2.ni-o--on { transform-origin: 50% 100%; animation: ni-swing 1.2s ease-in-out 0.5s 2 both; }
-@keyframes ni-drop { from { opacity: 0; transform: translateY(-90rpx) rotate(-6deg); } to { opacity: 1; transform: translateY(0) rotate(-6deg); } }
-@keyframes ni-swing { 0%, 100% { opacity: 1; transform: rotate(10deg); } 25% { transform: rotate(-4deg); } 50% { transform: rotate(18deg); } 75% { transform: rotate(4deg); } }
-/* 4 起名字、选性格:名牌翻正,面具转一圈换张脸 */
-.ni-o--k3.ni-o--on { animation: ni-flip 0.7s cubic-bezier(0.3, 1.2, 0.45, 1) both; }
-.ni-o--sm.ni-o--k3.ni-o--on { animation: ni-turn 0.9s ease-in-out 0.4s both; }
-@keyframes ni-flip { from { opacity: 0; transform: perspective(600rpx) rotateY(90deg) rotate(-6deg); } to { opacity: 1; transform: perspective(600rpx) rotateY(0) rotate(-6deg); } }
-@keyframes ni-turn { from { opacity: 0; transform: rotateY(-180deg) rotate(10deg); } to { opacity: 1; transform: rotateY(0) rotate(10deg); } }
-@media (prefers-reduced-motion: reduce) { .ni-o { transition: none; } .ni-stage .ni-o.ni-o--on { animation: none; } }
+.ni-o--k2 { transform: translateY(-90rpx) rotate(-6deg); }
+.ni-o--k2.ni-o--on { transform: translateY(0) rotate(-6deg); transition: transform var(--cy-motion-celebrate) var(--cy-ease-spring-soft), opacity var(--cy-motion-slow); }
+.ni-o--sm.ni-o--k2.ni-o--on { transform-origin: 50% 100%; transition: transform var(--cy-motion-standard) ease-in-out, opacity var(--cy-motion-slow); }
+.ni-stage--p1 .ni-o--sm.ni-o--k2.ni-o--on { transform: scale(1) rotate(-4deg); }
+.ni-stage--p2 .ni-o--sm.ni-o--k2.ni-o--on { transform: scale(1) rotate(18deg); }
+.ni-stage--p3 .ni-o--sm.ni-o--k2.ni-o--on { transform: scale(1) rotate(4deg); }
+/* 4 起名字、选性格:名牌翻正,面具转过来换张脸 */
+.ni-o--k3 { transform: perspective(600rpx) rotateY(90deg) rotate(-6deg); }
+.ni-o--k3.ni-o--on { transform: perspective(600rpx) rotateY(0) rotate(-6deg); transition: transform var(--cy-motion-flip) var(--cy-ease-flip), opacity var(--cy-motion-slow); }
+.ni-o--sm.ni-o--k3 { transform: rotateY(-180deg) rotate(10deg); }
+.ni-o--sm.ni-o--k3.ni-o--on { transform: rotateY(0) rotate(10deg); transition: transform calc(var(--cy-motion-flip) * 2) var(--cy-ease-flip) var(--cy-motion-reveal), opacity var(--cy-motion-standard) ease var(--cy-motion-reveal); }
+.ni--reduced .ni-o, .ni--reduced .ni-o.ni-o--on { transition: none; }
+@media (prefers-reduced-motion: reduce) { .ni-o, .ni-o.ni-o--on { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .ni-dot, .ni-back, .ni-skip { transition: none; } }
 .ni-t { margin-top: var(--cy-space-3); font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-text-title); text-align: center; }
 .ni-s { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); text-align: center; line-height: 1.5; }

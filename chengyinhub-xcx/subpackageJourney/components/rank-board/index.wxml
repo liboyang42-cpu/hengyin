@@ -30,11 +30,11 @@
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
   <cy-empty wx:elif="{{state === 'error'}}" kind="data" title="{{error}}" cta="重试" bind:cta="load" size="sm" />
   <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="{{scope === 'team' ? '队内还没有名次' : '这张榜还没有人上榜'}}" size="sm" />
-  <view wx:elif="{{rank}}" class="rb-list {{state === 'refresh' ? 'is-busy' : ''}}">
+  <view wx:elif="{{rank}}" class="rb-list {{state === 'refresh' ? 'is-busy' : ''}}" style="{{pmRows === 1 ? '--pm-l:1;' : (pmRows === 2 ? '--pm-l-d:.35s;--pm-l-s:1;' : '')}}">
     <view class="rb-row rb-row--head" wx:if="{{rank.basis || rank.window}}">
       <text class="rb-row__b">{{rank.basis}}</text><text class="rb-row__s" wx:if="{{rank.window}}">{{rank.window}}</text>
     </view>
-    <view class="rb-row {{item.mine ? 'is-me' : ''}}" wx:for="{{rank.entries}}" wx:key="key">
+    <view class="rb-row {{item.mine ? 'is-me' : ''}}" wx:for="{{rank.entries}}" wx:key="key" style="--i:{{index < 8 ? index : 7}}">
       <text class="rb-rank {{item.rank && item.rank <= 3 ? 'is-top' : ''}}">{{item.rank || '—'}}</text>
       <view class="rb-av"><image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
       <text class="rb-row__b rb-grow">{{item.name}}</text>

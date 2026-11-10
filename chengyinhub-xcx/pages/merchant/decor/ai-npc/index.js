@@ -16,6 +16,7 @@ const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { streetOnly } = require('../../utils/address-short.js');
 
 /**
@@ -91,6 +92,9 @@ Page({
     editing: false,
     introVisible: false,
     introStep: 0,
+    // r4-motion:每步的多拍动效(挥手 / 摆动 / 闪烁)由 introPhase 0→4 翻 class 驱动(transition,不逐帧);减动效时不翻拍
+    introPhase: 0,
+    introReduced: false,
     // r2 a6-w2-16(业主「不是之前说用上一版吗 不要用积木的这个啦」「每一个阶段是不一样的动图 要和ai店铺角色和文字匹配」):
     // 回到 R12 定稿那一版(每步两个 3D 物件),每步一种动效,和这一步的话对上:
     // 分身 = 店铺升起 + 星光闪 · 打招呼 = 挥手 + 气泡冒出 · 菜单 = 餐盘落下 + 闹钟摆动 · 起名选性格 = 名牌翻出 + 面具换脸
@@ -151,15 +155,31 @@ Page({
     });
     let introSeen = false;
     try { introSeen = typeof wx.getStorageSync === 'function' && !!wx.getStorageSync(INTRO_SEEN_KEY); } catch (e) { introSeen = false; }
-    if (!introSeen) this.setData({ introVisible: true });
+    if (!introSeen) { this.setData({ introVisible: true }); this._introBeat(); }
     this._loadProfile();
   },
+  /* 一步的节拍:上场后 220ms 起每拍一次 setData 翻 introPhase(1→4),WXSS 按拍给挥手 / 摆动 / 闪烁的角度。
+     换步、关掉说明都先清掉旧拍。减动效:不翻拍、整组过渡关掉。 */
+  _introBeat() {
+    (this._introTimers || []).forEach(clearTimeout);
+    this._introTimers = [];
+    const reduced = readReducedMotion();
+    this.setData({ introPhase: 0, introReduced: reduced });
+    if (reduced) return;
+    [220, 440, 660, 880].forEach((ms, i) => {
+      this._introTimers.push(setTimeout(() => { if (this.data.introVisible) this.setData({ introPhase: i + 1 }); }, ms));
+    });
+  },
+  _introGo(step) {
+    this.setData({ introStep: step });
+    this._introBeat();
+  },
   nextIntro() {
-    if (this.data.introStep < this.data.introSteps.length - 1) { this.setData({ introStep: this.data.introStep + 1 }); return; }
+    if (this.data.introStep < this.data.introSteps.length - 1) { this._introGo(this.data.introStep + 1); return; }
     this.dismissIntro();
   },
   prevIntro() {
-    if (this.data.introStep > 0) this.setData({ introStep: this.data.introStep - 1 });
+    if (this.data.introStep > 0) this._introGo(this.data.introStep - 1);
   },
   // qx-u2:舞台左右滑翻页;横向位移不足 60px 或偏竖直的手势不算翻页。
   onIntroTouchStart(e) {
@@ -173,11 +193,13 @@ Page({
     if (!start || !t) return;
     const dx = t.clientX - start.x, dy = t.clientY - start.y;
     if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    if (dx < 0 && this.data.introStep < this.data.introSteps.length - 1) this.setData({ introStep: this.data.introStep + 1 });
+    if (dx < 0 && this.data.introStep < this.data.introSteps.length - 1) this._introGo(this.data.introStep + 1);
     else if (dx > 0) this.prevIntro();
   },
   dismissIntro() {
-    this.setData({ introVisible: false, introStep: 0 });
+    (this._introTimers || []).forEach(clearTimeout);
+    this._introTimers = [];
+    this.setData({ introVisible: false, introStep: 0, introPhase: 0 });
     try { if (typeof wx.setStorageSync === 'function') wx.setStorageSync(INTRO_SEEN_KEY, 1); } catch (e) { /* 存不下只是下次再说明一遍 */ }
   },
   toggleEditing() {

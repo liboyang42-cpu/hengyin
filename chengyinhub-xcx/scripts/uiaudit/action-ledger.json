@@ -436310,7 +436310,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:130"
+        "staticSource": "components/cy/share-card/index.js:143"
       }
     },
     {
@@ -436438,7 +436438,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:77"
+        "staticSource": "components/cy/share-card/index.js:90"
       }
     },
     {
@@ -436587,7 +436587,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:141"
+        "staticSource": "components/cy/share-card/index.js:154"
       }
     },
     {
@@ -436715,7 +436715,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:128"
+        "staticSource": "components/cy/share-card/index.js:141"
       }
     },
     {
@@ -876536,7 +876536,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:183"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:205"
       }
     },
     {
@@ -876680,7 +876680,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:738"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:760"
       }
     },
     {
@@ -876747,7 +876747,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:179"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:199"
       }
     },
     {
@@ -876814,7 +876814,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:161"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:181"
       }
     },
     {
@@ -876881,7 +876881,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:179"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:199"
       }
     },
     {
@@ -876948,7 +876948,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:169"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:189"
       }
     },
     {
@@ -877016,7 +877016,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:165"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:185"
       }
     },
     {
@@ -877083,7 +877083,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:157"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:177"
       }
     },
     {
@@ -877150,7 +877150,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:360"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:382"
       }
     },
     {
@@ -877217,7 +877217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:356"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:378"
       }
     },
     {
@@ -877284,7 +877284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:363"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:385"
       }
     },
     {
@@ -877351,7 +877351,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:423"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:445"
       }
     },
     {
@@ -877418,7 +877418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:420"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:442"
       }
     },
     {
@@ -877485,7 +877485,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:420"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:442"
       }
     },
     {
@@ -877629,7 +877629,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:430"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:452"
       }
     },
     {
@@ -877696,7 +877696,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:389"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:411"
       }
     },
     {
@@ -877840,7 +877840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:392"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:414"
       }
     },
     {
@@ -877907,7 +877907,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:490"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:512"
       }
     },
     {
@@ -877978,7 +877978,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:493"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:515"
       }
     },
     {
@@ -878045,7 +878045,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:490"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:512"
       }
     },
     {
@@ -878112,7 +878112,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:784"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:806"
       }
     },
     {
@@ -878179,7 +878179,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:921"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:943"
       }
     },
     {
@@ -878289,7 +878289,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:829"
       }
     },
     {
@@ -878366,7 +878366,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1171"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1193"
       }
     },
     {
@@ -878433,7 +878433,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1133"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1155"
       }
     },
     {
@@ -878553,7 +878553,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1095"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1117"
       }
     },
     {
@@ -878620,7 +878620,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1065"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1087"
       }
     },
     {
@@ -878687,7 +878687,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1056"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1078"
       }
     },
     {
@@ -878754,7 +878754,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1056"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1078"
       }
     },
     {
@@ -878862,7 +878862,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:998"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1020"
       }
     },
     {
@@ -878939,7 +878939,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1171"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1193"
       }
     },
     {
@@ -879006,7 +879006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1133"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1155"
       }
     },
     {
@@ -879165,7 +879165,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1210"
       }
     },
     {
@@ -879275,7 +879275,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:829"
       }
     },
     {
@@ -879828,7 +879828,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:860"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:882"
       }
     },
     {
@@ -879938,7 +879938,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:845"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:867"
       }
     },
     {
@@ -880048,7 +880048,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:829"
       }
     },
     {
@@ -880128,7 +880128,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1047"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1069"
       }
     },
     {
@@ -880238,7 +880238,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:829"
       }
     },
     {
@@ -880305,7 +880305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:143"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:147"
       }
     },
     {
@@ -880387,7 +880387,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:582"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:604"
       }
     },
     {
@@ -880454,7 +880454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:352"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:374"
       }
     },
     {
@@ -880522,7 +880522,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -880590,7 +880590,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -880658,7 +880658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -880726,7 +880726,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -880794,7 +880794,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -880865,7 +880865,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:465"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:487"
       }
     },
     {
@@ -880933,7 +880933,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -881001,7 +881001,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:210"
       }
     },
     {
@@ -916069,15 +916069,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -916086,15 +916090,21 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:171"
+        "staticSource": "pages/play/components/chapter-flip/index.js:172"
       }
     },
     {
@@ -916183,7 +916193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:47"
+        "staticSource": "pages/play/components/chapter-flip/index.js:48"
       }
     },
     {
@@ -916246,15 +916256,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -916263,15 +916277,21 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:171"
+        "staticSource": "pages/play/components/chapter-flip/index.js:172"
       }
     },
     {
@@ -916360,7 +916380,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:217"
+        "staticSource": "pages/play/components/chapter-flip/index.js:219"
       }
     },
     {
@@ -916449,7 +916469,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:216"
+        "staticSource": "pages/play/components/chapter-flip/index.js:218"
       }
     },
     {
@@ -942247,7 +942267,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-verdict/index.js:66"
+        "staticSource": "pages/play/components/play-verdict/index.js:68"
       }
     },
     {
@@ -996070,7 +996090,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:149"
+        "staticSource": "pages/play/utils/play-help-panel.js:150"
       }
     },
     {
@@ -1047287,15 +1047307,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1047304,16 +1047328,22 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
         "modal-cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:160"
+        "staticSource": "pages/play/utils/play-help-panel.js:161"
       }
     },
     {
@@ -1047814,7 +1047844,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:221"
+        "staticSource": "pages/play/utils/play-help-panel.js:223"
       }
     },
     {
@@ -1047881,7 +1047911,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:253"
+        "staticSource": "pages/play/utils/play-help-panel.js:255"
       }
     },
     {
@@ -1047948,7 +1047978,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:159"
+        "staticSource": "pages/play/utils/play-help-panel.js:160"
       }
     },
     {
@@ -1048083,7 +1048113,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-help-panel.js:159"
+        "staticSource": "pages/play/utils/play-help-panel.js:160"
       }
     },
     {
@@ -1086089,9 +1086119,12 @@
       ],
       "accessBoundary": "owned-resource",
       "externalCapabilities": [
-        "requestSubscribeMessage"
+        "requestSubscribeMessage",
+        "vibrateShort"
       ],
-      "successCapabilities": [],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1086196,9 +1086229,12 @@
       ],
       "accessBoundary": "owned-resource",
       "externalCapabilities": [
-        "requestSubscribeMessage"
+        "requestSubscribeMessage",
+        "vibrateShort"
       ],
-      "successCapabilities": [],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1094918,7 +1094954,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1094926,8 +1094962,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1094951,15 +1094991,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/index.js:8065"
@@ -1095014,7 +1095057,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1095022,8 +1095065,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1095047,15 +1095094,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/index.js:8065"
@@ -1215029,7 +1215079,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:101"
+        "staticSource": "pages/team/detail/index.js:103"
       }
     },
     {
@@ -1215098,7 +1215148,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:476"
+        "staticSource": "pages/team/detail/index.js:480"
       }
     },
     {
@@ -1215182,7 +1215232,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:102"
+        "staticSource": "pages/team/detail/index.js:104"
       }
     },
     {
@@ -1215315,7 +1215365,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:413"
+        "staticSource": "pages/team/detail/index.js:417"
       }
     },
     {
@@ -1215448,7 +1215498,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:413"
+        "staticSource": "pages/team/detail/index.js:417"
       }
     },
     {
@@ -1215517,7 +1215567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:467"
+        "staticSource": "pages/team/detail/index.js:471"
       }
     },
     {
@@ -1215586,7 +1215636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:482"
+        "staticSource": "pages/team/detail/index.js:486"
       }
     },
     {
@@ -1215653,7 +1215703,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:141"
+        "staticSource": "pages/team/detail/index.js:143"
       }
     },
     {
@@ -1215806,7 +1215856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:491"
+        "staticSource": "pages/team/detail/index.js:495"
       }
     },
     {
@@ -1215960,7 +1216010,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:492"
+        "staticSource": "pages/team/detail/index.js:496"
       }
     },
     {
@@ -1216104,7 +1216154,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:365"
+        "staticSource": "pages/team/detail/index.js:369"
       }
     },
     {
@@ -1216172,7 +1216222,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:496"
+        "staticSource": "pages/team/detail/index.js:500"
       }
     },
     {
@@ -1216326,7 +1216376,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:493"
+        "staticSource": "pages/team/detail/index.js:497"
       }
     },
     {
@@ -1216393,7 +1216443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:142"
+        "staticSource": "pages/team/detail/index.js:144"
       }
     },
     {
@@ -1216528,7 +1216578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:418"
+        "staticSource": "pages/team/detail/index.js:422"
       }
     },
     {
@@ -1216598,7 +1216648,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:457"
+        "staticSource": "pages/team/detail/index.js:461"
       }
     },
     {
@@ -1216742,7 +1216792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:431"
+        "staticSource": "pages/team/detail/index.js:435"
       }
     },
     {
@@ -1216875,7 +1216925,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:358"
+        "staticSource": "pages/team/detail/index.js:362"
       }
     },
     {
@@ -1216944,7 +1216994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:360"
+        "staticSource": "pages/team/detail/index.js:364"
       }
     },
     {
@@ -1217088,7 +1217138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:359"
+        "staticSource": "pages/team/detail/index.js:363"
       }
     },
     {
@@ -1217169,7 +1217219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:100"
+        "staticSource": "pages/team/detail/index.js:102"
       }
     },
     {
@@ -1217280,7 +1217330,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:170"
+        "staticSource": "pages/team/join/index.js:172"
       }
     },
     {
@@ -1217351,7 +1217401,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:194"
+        "staticSource": "pages/team/join/index.js:196"
       }
     },
     {
@@ -1217421,7 +1217471,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:187"
+        "staticSource": "pages/team/join/index.js:189"
       }
     },
     {
@@ -1217539,7 +1217589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:178"
+        "staticSource": "pages/team/join/index.js:180"
       }
     },
     {
@@ -1217620,7 +1217670,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:64"
+        "staticSource": "pages/team/join/index.js:65"
       }
     },
     {
@@ -1217701,7 +1217751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:65"
+        "staticSource": "pages/team/join/index.js:66"
       }
     },
     {
@@ -1217785,7 +1217835,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:66"
+        "staticSource": "pages/team/join/index.js:67"
       }
     },
     {
@@ -1274828,7 +1274878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/components/rank-board/index.js:78"
+        "staticSource": "subpackageJourney/components/rank-board/index.js:79"
       }
     },
     {
@@ -1275053,7 +1275103,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/components/rank-board/index.js:64"
+        "staticSource": "subpackageJourney/components/rank-board/index.js:65"
       }
     },
     {
@@ -1275278,7 +1275328,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/components/rank-board/index.js:88"
+        "staticSource": "subpackageJourney/components/rank-board/index.js:94"
       }
     },
     {
@@ -1275503,7 +1275553,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/components/rank-board/index.js:65"
+        "staticSource": "subpackageJourney/components/rank-board/index.js:66"
       }
     },
     {
@@ -1275580,7 +1275630,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:100"
+        "staticSource": "subpackageJourney/pages/landing/index.js:109"
       }
     },
     {
@@ -1275783,7 +1275833,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:60"
+        "staticSource": "subpackageJourney/pages/landing/index.js:64"
       }
     },
     {
@@ -1275825,7 +1275875,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1275834,8 +1275884,12 @@
         "state"
       ],
       "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/activity/detail/index?id=",
@@ -1275979,7 +1276033,7 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
@@ -1275987,11 +1276041,14 @@
         "duplicate-trigger",
         "forbidden-owner"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:108"
+        "staticSource": "subpackageJourney/pages/landing/index.js:117"
       }
     },
     {
@@ -1276061,7 +1276118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:63"
+        "staticSource": "subpackageJourney/pages/landing/index.js:67"
       }
     },
     {
@@ -1278867,7 +1278924,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:2:bind:back:onBack:0",
+      "id": "subpackageJourney/pages/settle/index.wxml:3:bind:back:onBack:0",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278890,7 +1278947,7 @@
         "tag": "cy-nav-bar",
         "event": "bind:back",
         "handler": "onBack",
-        "line": 2,
+        "line": 3,
         "selectorHint": "cy-nav-bar[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1278932,11 +1278989,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:84"
+        "staticSource": "subpackageJourney/pages/settle/index.js:103"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:33:bindtap:pickStar:2",
+      "id": "subpackageJourney/pages/settle/index.wxml:34:bindtap:pickStar:2",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1278959,7 +1279016,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickStar",
-        "line": 33,
+        "line": 34,
         "selectorHint": ".st-star",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1278999,11 +1279056,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:92"
+        "staticSource": "subpackageJourney/pages/settle/index.js:111"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:38:bindinput:onReview:3",
+      "id": "subpackageJourney/pages/settle/index.wxml:39:bindinput:onReview:3",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279026,7 +1279083,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onReview",
-        "line": 38,
+        "line": 39,
         "selectorHint": ".st-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279066,11 +1279123,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:93"
+        "staticSource": "subpackageJourney/pages/settle/index.js:112"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:46:bind:change:onShareKind:4",
+      "id": "subpackageJourney/pages/settle/index.wxml:47:bind:change:onShareKind:4",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279093,7 +1279150,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onShareKind",
-        "line": 46,
+        "line": 47,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279133,11 +1279190,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:114"
+        "staticSource": "subpackageJourney/pages/settle/index.js:133"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:53:bindtap:saveCard:5",
+      "id": "subpackageJourney/pages/settle/index.wxml:54:bindtap:saveCard:5",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279165,7 +1279222,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveCard",
-        "line": 53,
+        "line": 54,
         "selectorHint": ".st-acts__i",
         "visibleCondition": null,
         "disabledCondition": "{{!cardReady}}",
@@ -1279220,11 +1279277,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:150"
+        "staticSource": "subpackageJourney/pages/settle/index.js:169"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:54:bindtap:shareVideo:6",
+      "id": "subpackageJourney/pages/settle/index.wxml:55:bindtap:shareVideo:6",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279247,7 +1279304,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "shareVideo",
-        "line": 54,
+        "line": 55,
         "selectorHint": ".st-acts__i",
         "visibleCondition": "{{videoOk}}",
         "disabledCondition": "{{!cardReady || videoBusy}}",
@@ -1279287,11 +1279344,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:167"
+        "staticSource": "subpackageJourney/pages/settle/index.js:186"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:61:bindtap:goRank:7",
+      "id": "subpackageJourney/pages/settle/index.wxml:62:bindtap:goRank:7",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279314,7 +1279371,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goRank",
-        "line": 61,
+        "line": 62,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279354,11 +1279411,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:89"
+        "staticSource": "subpackageJourney/pages/settle/index.js:108"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:62:bindtap:done:8",
+      "id": "subpackageJourney/pages/settle/index.wxml:63:bindtap:done:8",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279381,7 +1279438,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "done",
-        "line": 62,
+        "line": 63,
         "selectorHint": ".st-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279422,11 +1279479,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:88"
+        "staticSource": "subpackageJourney/pages/settle/index.js:107"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:65:bindtap:next:9",
+      "id": "subpackageJourney/pages/settle/index.wxml:66:bindtap:next:9",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279449,7 +1279506,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "next",
-        "line": 65,
+        "line": 66,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279489,11 +1279546,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:82"
+        "staticSource": "subpackageJourney/pages/settle/index.js:101"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:68:bindtap:submitRate:10",
+      "id": "subpackageJourney/pages/settle/index.wxml:69:bindtap:submitRate:10",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279516,7 +1279573,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitRate",
-        "line": 68,
+        "line": 69,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!stars || rateBusy}}",
@@ -1279692,11 +1279749,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:95"
+        "staticSource": "subpackageJourney/pages/settle/index.js:114"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:69:bindtap:skipRate:11",
+      "id": "subpackageJourney/pages/settle/index.wxml:70:bindtap:skipRate:11",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279719,7 +1279776,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "skipRate",
-        "line": 69,
+        "line": 70,
         "selectorHint": ".st-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1279759,11 +1279816,146 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:94"
+        "staticSource": "subpackageJourney/pages/settle/index.js:113"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:7:bind:cta:onStateCta:1",
+      "id": "subpackageJourney/pages/settle/index.wxml:73:bindtap:done:12",
+      "route": "subpackageJourney/pages/settle/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/settle/index.wxml",
+        "js": "subpackageJourney/pages/settle/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "done",
+        "line": 73,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/settle/index.js:107"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/settle/index.wxml:78:bind:settled:onPrivacyGateSettled:13",
+      "route": "subpackageJourney/pages/settle/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/settle/index.wxml",
+        "js": "subpackageJourney/pages/settle/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-privacy-gate",
+        "event": "bind:settled",
+        "handler": "onPrivacyGateSettled",
+        "line": 78,
+        "selectorHint": "cy-privacy-gate[bind:settled]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/settle/index.js:168"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/settle/index.wxml:8:bind:cta:onStateCta:1",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1279786,7 +1279978,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onStateCta",
-        "line": 7,
+        "line": 8,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{state !== 'ready'}}",
         "disabledCondition": null,
@@ -1279801,7 +1279993,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1279809,8 +1280001,12 @@
         "state"
       ],
       "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [
@@ -1279950,7 +1280146,7 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
@@ -1279958,146 +1280154,14 @@
         "duplicate-trigger",
         "forbidden-owner"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:71"
-      }
-    },
-    {
-      "id": "subpackageJourney/pages/settle/index.wxml:72:bindtap:done:12",
-      "route": "subpackageJourney/pages/settle/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageJourney/pages/settle/index.wxml",
-        "js": "subpackageJourney/pages/settle/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "done",
-        "line": 72,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:88"
-      }
-    },
-    {
-      "id": "subpackageJourney/pages/settle/index.wxml:77:bind:settled:onPrivacyGateSettled:13",
-      "route": "subpackageJourney/pages/settle/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageJourney/pages/settle/index.wxml",
-        "js": "subpackageJourney/pages/settle/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-privacy-gate",
-        "event": "bind:settled",
-        "handler": "onPrivacyGateSettled",
-        "line": 77,
-        "selectorHint": "cy-privacy-gate[bind:settled]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:149"
+        "staticSource": "subpackageJourney/pages/settle/index.js:90"
       }
     },
     {
@@ -1313507,7 +1313571,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:310"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:311"
       }
     },
     {
@@ -1313709,7 +1313773,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:301"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:302"
       }
     },
     {
@@ -1313855,7 +1313919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:310"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:311"
       }
     },
     {
@@ -1314001,7 +1314065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:310"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:311"
       }
     },
     {
@@ -1314203,7 +1314267,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:302"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:303"
       }
     },
     {
@@ -1314349,7 +1314413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:310"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:311"
       }
     },
     {
@@ -1314551,7 +1314615,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:302"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:303"
       }
     },
     {
@@ -1314753,7 +1314817,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:302"
+        "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:303"
       }
     },
     {
@@ -1339057,7 +1339121,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1339065,8 +1339129,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1339113,18 +1339181,21 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/gift/index.js:18"
+        "staticSource": "subpackageMember/market/gift/index.js:23"
       }
     },
     {
@@ -1339195,7 +1339266,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/gift/index.js:37"
+        "staticSource": "subpackageMember/market/gift/index.js:43"
       }
     },
     {
@@ -1339265,7 +1339336,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/gift/index.js:44"
+        "staticSource": "subpackageMember/market/gift/index.js:50"
       }
     },
     {
@@ -1356347,7 +1356418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:404"
+        "staticSource": "subpackageRoam/citystamp/index.js:405"
       }
     },
     {
@@ -1356415,7 +1356486,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:390"
+        "staticSource": "subpackageRoam/citystamp/index.js:391"
       }
     },
     {
@@ -1356483,7 +1356554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:390"
+        "staticSource": "subpackageRoam/citystamp/index.js:391"
       }
     },
     {
@@ -1356570,7 +1356641,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:424"
+        "staticSource": "subpackageRoam/citystamp/index.js:425"
       }
     },
     {
@@ -1356640,7 +1356711,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:457"
+        "staticSource": "subpackageRoam/citystamp/index.js:458"
       }
     },
     {
@@ -1356710,7 +1356781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:130"
+        "staticSource": "subpackageRoam/citystamp/index.js:131"
       }
     },
     {
@@ -1356777,7 +1356848,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:140"
+        "staticSource": "subpackageRoam/citystamp/index.js:141"
       }
     },
     {
@@ -1356847,7 +1356918,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:152"
+        "staticSource": "subpackageRoam/citystamp/index.js:153"
       }
     },
     {
@@ -1356963,7 +1357034,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:193"
+        "staticSource": "subpackageRoam/citystamp/index.js:194"
       }
     },
     {
@@ -1357079,7 +1357150,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:193"
+        "staticSource": "subpackageRoam/citystamp/index.js:194"
       }
     },
     {
@@ -1357146,7 +1357217,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:170"
+        "staticSource": "subpackageRoam/citystamp/index.js:171"
       }
     },
     {
@@ -1357213,7 +1357284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:155"
+        "staticSource": "subpackageRoam/citystamp/index.js:156"
       }
     },
     {
@@ -1357280,7 +1357351,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:144"
+        "staticSource": "subpackageRoam/citystamp/index.js:145"
       }
     },
     {
@@ -1357347,7 +1357418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:150"
+        "staticSource": "subpackageRoam/citystamp/index.js:151"
       }
     },
     {
@@ -1357463,7 +1357534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:208"
+        "staticSource": "subpackageRoam/citystamp/index.js:209"
       }
     },
     {
@@ -1357530,7 +1357601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:92"
+        "staticSource": "subpackageRoam/citystamp/index.js:93"
       }
     },
     {
@@ -1357600,7 +1357671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:152"
+        "staticSource": "subpackageRoam/citystamp/index.js:153"
       }
     },
     {
@@ -1357677,7 +1357748,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:347"
+        "staticSource": "subpackageRoam/citystamp/index.js:348"
       }
     },
     {
@@ -1357754,7 +1357825,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:347"
+        "staticSource": "subpackageRoam/citystamp/index.js:348"
       }
     },
     {
@@ -1357821,7 +1357892,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:337"
+        "staticSource": "subpackageRoam/citystamp/index.js:338"
       }
     },
     {
@@ -1357888,7 +1357959,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/citystamp/index.js:329"
+        "staticSource": "subpackageRoam/citystamp/index.js:330"
       }
     },
     {

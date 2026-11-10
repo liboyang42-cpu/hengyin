@@ -8,6 +8,7 @@
 //   再拿它的 id 去 /api/roam/stamp/exchange 换回别人那张。没投成就不换。
 const app = getApp();
 const cyToast = require('../../utils/toast.js');
+const { hapticTap } = require('../../utils/motion.js');   // M14 触感档位(r4-motion)
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 
@@ -355,7 +356,7 @@ Page({
     }
     this.setData({ paperTrans: 'transform 280ms cubic-bezier(.2,.8,.3,1)', paperY: dy * 0.7 + 54, paperRot: -6 });
     this._later(() => {
-      wx.vibrateShort && wx.vibrateShort({ type: 'light' });
+      hapticTap();   // M14
       this.setData({ torn: true, paperTrans: 'none', paperY: 0, paperRot: 0, hint: '刮开 TA 留给你的那句' },
         () => this._initScratch());
     }, 240);

@@ -1,0 +1,2 @@
+{"name":"M-SETTLE-before","opts":{"path":"pages/index/index","identity":"e2e-openid-9004","agree":true,"settle":2500},
+ "setup":[{"wait":300}],"action":{"open":"subpackageJourney/pages/settle/index?topicId=990014"},"frames":8,"offsets":[400,700,1000,1300,1600,2000,2600,3400],"windowMs":4000,"final":{"dump":1}}

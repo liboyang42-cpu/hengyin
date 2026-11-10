@@ -2,6 +2,7 @@
 
 const app = getApp()
 const credential = require('../../../utils/coupon-credential.js')
+const { hapticConfirm } = require('../../../../utils/motion.js')   // M14 触感档位(r4-motion)
 const datetime = require('../../../../utils/datetime.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
@@ -288,7 +289,7 @@ Component({
             if ((this._terminalStatus === 1 || this._terminalStatus === 2 || this._terminalStatus === 3) && status === 0) return
             if (status === 1 || status === 2 || status === 3) this._terminalStatus = status
             this.setData({ useStatus: status, useTime: datetime.formatMinuteDots(res.data.useTime), resultText: status === 1 ? '已核销' : (status === 2 ? '该券已过期' : (status === 3 ? '该券已失效' : '')), pollError: '' })
-            if (status === 1 && wx.vibrateShort) wx.vibrateShort({ type: 'medium' })
+            if (status === 1) hapticConfirm()   // M14:核销成功 = confirm
             if (status !== 0) this.clearTimers()
           },
           successStatusAbnormal: (res) => { if (stillCurrent() && (!this._activeCouponId || couponHistoryId === this._activeCouponId)) { if (res && res.code == 503) this.qrServiceDisabled(res.msg)

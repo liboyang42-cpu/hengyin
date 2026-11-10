@@ -1,4 +1,4 @@
-const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js');
+const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js'); const { hapticTap, hapticConfirm } = require('../../../utils/motion.js'); /* M14 触感档位(r4-motion) */
 const { readReducedMotion } = require('../../../utils/motion-preference.js'); const morph = require('../../../utils/morph-success.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
@@ -2146,7 +2146,7 @@ Page({
           key: blockKey, from, y: startY, st: scrollTop, vt: area.top, vb: area.bottom, max,
           top: rects.map((r) => Math.round(r.top)), h: rects.map((r) => Math.round(r.height)),
         };
-        if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+        hapticTap();   // M14:抬起块
         if (arming.released) { // 量完之前手已经松开:等于原地松手
           this.setData({ 'storyEditor.selectedBlockKey': blockKey });
           return;
@@ -2169,7 +2169,7 @@ Page({
     const now = Date.now();
     if (now - (this._storyDragSlotAt || 0) < 60) return;
     this._storyDragSlotAt = now;
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+    hapticTap();   // M14:换槽一下
   },
 
   // 贴边自动滚屏:渲染层每两帧报一次目标 scrollTop
@@ -2186,7 +2186,7 @@ Page({
     const reset = { key: '', geo: '', epoch: this.data.storyDrag.epoch + 1 };
     if (Number.isFinite(Number(drag.scrollTop))) this._storyScrollNow = Number(drag.scrollTop);
     const scrollTop = this._storyScrollNow || 0;
-    if (wx.vibrateShort) wx.vibrateShort({ type: 'medium' });
+    hapticConfirm();   // M14:落下
     if (drag.to === drag.from || !Number.isInteger(drag.to)) {
       // 原地松手 = 选中(显示删除键),与改版前「长按选中」一致
       this.setData({ storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
@@ -2229,7 +2229,7 @@ Page({
     try {
       this._pushUndo();
       this._storyCommand({ type: 'moveBlock', blockKey, index: pick === '上移' ? index - 1 : index + 1 });
-      if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+      hapticTap();
     } catch (error) {
       cyToast(app.getRequestErrorMessage(error, '移动失败'));
     }

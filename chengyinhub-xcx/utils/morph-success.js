@@ -14,6 +14,7 @@
  * 减动效:不停留,直接 then()。页面离开(onUnload / detached)时调 cancel(),定时器不再回调。
  */
 const { readReducedMotion } = require('./motion-preference.js')
+const { hapticConfirm } = require('./motion.js')
 
 // 勾的弹出(--cy-motion-slow 350)+ 脉冲圈散开(--cy-motion-celebrate 600)看完再换,略多一拍
 const HOLD_MS = 720
@@ -25,6 +26,8 @@ const HOLD_MS = 720
  * @param {object} [opts]  { reduced?: boolean, hold?: number, with?: object }
  *   with:与 done 同一次 setData 写入的字段(如 busy:false)—— 分两次写的话药丸会先弹回一帧再收成勾。
  *   减动效时 with 同样会写入(和 then 之前)。
+ *   haptics:震动源(单测注入);默认 wx。勾出现的那一刻给一次 medium(MOTION.md M7 / M14 hapticConfirm),
+ *   转圈时不震;减动效下没有勾,也就没有这一下。
  */
 /** 本次成功要停多久:减动效为 0(不停留、不出勾)。给不走 cy-btn 的宿主(如提示阶梯行)自己排节拍用。 */
 function holdFor(opts) {
@@ -45,6 +48,7 @@ function settle(vm, key, then, opts) {
   }
   patch[key] = true
   vm.setData(patch)
+  hapticConfirm({ haptics: o.haptics })   // 勾弹出来的这一帧:一次 medium,不在转圈时震
   vm._morphTimer = setTimeout(() => {
     vm._morphTimer = null
     // 先写页面的成功状态(圆还收着、文字透明,换字看不见),再撤 done —— 药丸带着新文字长回来

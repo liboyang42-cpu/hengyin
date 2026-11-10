@@ -2125,12 +2125,13 @@ page { background: var(--cy-color-bg-page); }
   display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.3) rotate(-20deg); transition:opacity .3s ease, transform .7s cubic-bezier(.3,1.6,.5,1); }
 .pv-ending--in .pv-ending__seal{ opacity:1; transform:none; }
 .pv-ending__tick{ width:64rpx; height:32rpx; margin-top:-14rpx; border-left:12rpx solid #111111; border-bottom:12rpx solid #111111; transform:rotate(-45deg); } /* ds-ok 金底墨勾 */
-.pv-ending__ring{ position:absolute; inset:0; border-radius:50%; border:4rpx solid rgba(255,255,255,.7); opacity:0; } /* ds-ok 白色光环 */
-.pv-ending--in .pv-ending__ring{ animation:pv-ending-ring 1.6s cubic-bezier(.2,.8,.2,1) .35s 2 both; }
-.pv-ending--in .pv-ending__ring--2{ animation-delay:.75s; }
-@keyframes pv-ending-ring{ 0%{ opacity:.9; transform:scale(1); } 100%{ opacity:0; transform:scale(2.4); } }
+.pv-ending__ring{ position:absolute; inset:0; border-radius:50%; border:4rpx solid rgba(255,255,255,.7); opacity:.9; } /* ds-ok 白色光环 */
+/* r4-motion 2026-11-10:光环外扩改成 transition(动效棘轮不许新增关键帧;MOTION.md 4.8 「ring expands from the badge edge and fades」)。
+   印章未 in 时整体 opacity 0,光环藏在里面;in 之后两圈各自外扩淡出,第二圈晚一拍,看起来就是「扩两次」。 */
+.pv-ending--in .pv-ending__ring{ opacity:0; transform:scale(2.4); transition:opacity calc(var(--cy-motion-celebrate) * 2) var(--cy-ease-out) var(--cy-motion-slow), transform calc(var(--cy-motion-celebrate) * 2) var(--cy-ease-out) var(--cy-motion-slow); }
+.pv-ending--in .pv-ending__ring--2{ transition-delay:calc(var(--cy-motion-slow) + var(--cy-motion-hold)); }
 .pv-ending--reduced .pv-ending__seal{ opacity:1; transform:none; transition:none; }
-.pv-ending--reduced .pv-ending__ring{ animation:none; display:none; }
+.pv-ending--reduced .pv-ending__ring{ transition:none; display:none; }
 .pv-ending__confetti{ position:absolute; inset:0; z-index:2; pointer-events:none; --cy-motion-celebrate:2200ms; --cy-color-play-accent:#FFFFFF; } /* ds-ok 结局庆祝:彩旗落得慢一点、用白色(游玩页单色契约),看得见 */
 
 /* r2-finish s0-b8-u08-01 完成页收拾:路线卡在时标题行提到最上;卡上已写距离/用时/站数,下面不再重复大数字和这两格;

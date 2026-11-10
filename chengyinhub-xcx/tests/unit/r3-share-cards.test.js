@@ -25,6 +25,7 @@ test('标题折行:中文逐字、数字字母整词换行,最多两行,放不�
 function loadComponent() {
   let config
   global.Component = (c) => { config = c }
+  global.Behavior = (b) => b   // 2026-11-10 r4-motion:分享层挂上 behaviors/reduced-motion,沙箱补 Behavior 桩
   global.getApp = () => ({ globalData: {}, getImgUrl: (u) => u, sendRequest() {} })
   global.wx = {}
   const file = path.join(ROOT, 'components/cy/share-card/index.js')
@@ -59,7 +60,10 @@ test('分享层版式:整色卡 + 封面 / 插画 + 弧 + 徽标 + 两行标题;
   assert.match(wxss, /\.sc-big \{[^}]*-webkit-line-clamp: 2;/)
   assert.match(wxss, /\.sc-primary \{[^}]*border-radius: var\(--cy-comp-btn-radius\)/)
   // 动效只用 transform / opacity,并尊重减弱动态
-  assert.match(wxss, /@media \(prefers-reduced-motion: reduce\) \{ \.sc-card, \.sc-badge, \.sc-in \{ animation: none; \}/)
+  // 2026-11-10 r4-motion:进场由 keyframes 改为 transition(棘轮),减动效下三层直接落位
+  assert.match(wxss, /@media \(prefers-reduced-motion: reduce\) \{ \.sc-card, \.sc-badge, \.sc-in \{ transition: none; opacity: 1; transform: none; \}/)
+  assert.match(wxss, /\.sc--in \.sc-card \{ opacity: 1; transform: none; \}/)
+  assert.doesNotMatch(wxss, /@keyframes/)
   // 导出图与预览同一椭圆弧与徽标
   const js = read('components/cy/share-card/index.js')
   assert.match(js, /g\.ellipse\(mx, 905, 600, 365, 0, 0, Math\.PI \* 2\)/)

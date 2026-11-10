@@ -4,30 +4,38 @@
 /* r2-join 落地页:同行两端 + 「怎么玩」模式卡。颜色全走 token;动效只用 transform/opacity,
  * 减弱动态效果时整体静止(app.wxss 全局兜底 + 本页显式关掉循环)。 */
 .jl { display: flex; flex-direction: column; align-items: center; }
-.jl-duo { display: flex; align-items: center; justify-content: center; margin-top: 24rpx; animation: jl-rise 420ms cubic-bezier(.2,.8,.2,1) both; }
+.jl-duo { display: flex; align-items: center; justify-content: center; margin-top: 24rpx; }
+/* r4-motion 2026-11-10:入场改走 utils/page-motion.js 的 --pm-* 约定(只 transition,棘轮不动),同行两端 → 昵称 → 主题药丸按 stagger-hero 依次浮上来;
+   玩法卡与规则行读 .jl-play 上的 --pm-p,按 --i 错峰(封顶 8 项)。光环与连线光点不再循环(MOTION.md §1:列表 / 表单 / 落地页不放装饰循环),改成静态。 */
+.jl-duo, .jl-name, .jl-pill { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * var(--cy-motion-rise-sm)); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) var(--cy-ease-page-rise); }
+.jl-name { transition-delay: calc(var(--pm-l-s, 0) * var(--cy-motion-stagger-hero)); }
+.jl-pill { transition-delay: calc(var(--pm-l-s, 0) * 2 * var(--cy-motion-stagger-hero)); }
 .jl-seat { position: relative; width: 136rpx; height: 136rpx; display: flex; align-items: center; justify-content: center; }
 .jl-av { position: relative; z-index: 1; width: 112rpx; height: 112rpx; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
   background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }
 .jl-av image { width: 100%; height: 100%; }
 .jl-av--you { background: transparent; border: 3rpx dashed var(--cy-color-text-secondary); box-sizing: border-box; color: var(--cy-color-text-secondary); }
-.jl-seat--you.is-on .jl-av--you { border-style: solid; border-color: var(--cy-color-brand); background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); animation: jl-pop 380ms cubic-bezier(.3,1.4,.5,1) both; }
+.jl-av--you { transition: transform var(--cy-motion-slow) var(--cy-ease-spring-soft), border-color var(--cy-motion-fast) ease, background-color var(--cy-motion-fast) ease; }
+.jl-seat--you.is-on .jl-av--you { border-style: solid; border-color: var(--cy-color-brand); background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); }
+/* 领到席位的那一下(MOTION.md 4.12):先在 .6 停一帧(is-pop,无过渡),撤掉后用 spring-soft 长回 1 */
+.jl-seat--you.is-pop .jl-av--you { transform: scale(.6); transition: none; }
 .jl-av__no { font-variant-numeric: tabular-nums; }
-.jl-ring { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2rpx solid var(--cy-color-brand); opacity: 0; animation: jl-ring 2.4s ease-out infinite; }
-.jl-ring--you { animation-delay: 1.2s; }
+.jl-ring { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2rpx solid var(--cy-color-brand); opacity: .35; transform: scale(1.08); }
 .jl-link { position: relative; width: 150rpx; height: 8rpx; margin: 0 4rpx; border-radius: 4rpx; background: var(--cy-color-border-subtle); overflow: hidden; }
-.jl-link__dot { position: absolute; top: 0; left: 0; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--cy-color-brand); animation: jl-flow 1.8s linear infinite; }
-.jl-link__dot--2 { animation-delay: .6s; }
-.jl-link__dot--3 { animation-delay: 1.2s; }
+.jl-link__dot { position: absolute; top: 0; left: 18%; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--cy-color-brand); }
+.jl-link__dot--2 { left: 46%; }
+.jl-link__dot--3 { left: 74%; }
 .jl-name { margin-top: 16rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.jl-pill { animation: jl-rise 420ms 80ms cubic-bezier(.2,.8,.2,1) both; }
 
 .jl-play { align-self: stretch; margin: 48rpx 38rpx 0; }
 .jl-play__h { display: block; margin-bottom: 19rpx; font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-color-text-primary); }
 .jl-tiles { display: flex; gap: 19rpx; }
 .jl-tile { flex: 1; min-width: 0; min-height: 176rpx; box-sizing: border-box; padding: 24rpx; display: flex; flex-direction: column; gap: 8rpx;
   border-radius: var(--cy-comp-sheet-group-radius); background: var(--cy-comp-sheet-group-bg); border: 3rpx solid transparent;
-  color: var(--cy-color-text-secondary); animation: jl-rise 420ms cubic-bezier(.2,.8,.2,1) both;
-  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease; }
+  color: var(--cy-color-text-secondary);
+  filter: opacity(calc(1 - var(--pm-p, 0))); translate: 0 calc(var(--pm-p, 0) * var(--cy-motion-rise-md));
+  transition: filter var(--pm-p-d, 0s) ease, translate var(--pm-p-d, 0s) var(--cy-ease-page-rise), transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+  transition-delay: calc(var(--pm-p-s, 0) * var(--i, 0) * var(--cy-motion-stagger)), calc(var(--pm-p-s, 0) * var(--i, 0) * var(--cy-motion-stagger)), 0s, 0s, 0s; }
 .jl-tile.is-active { border-color: var(--cy-color-brand); background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); }
 .jl-tile.is-off { opacity: .55; }
 /* 服务端只给一种玩法时:整宽一张,不画单选圈(没有可选的东西) */
@@ -42,19 +50,15 @@
 .jl-tile__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .jl-rules { margin-top: 19rpx; padding: 8rpx 31rpx; border-radius: var(--cy-comp-sheet-group-radius); background: var(--cy-comp-sheet-group-bg); }
-.jl-rule { display: flex; align-items: center; gap: 19rpx; min-height: 80rpx; animation: jl-rise 320ms cubic-bezier(.2,.8,.2,1) both; }
+.jl-rule { display: flex; align-items: center; gap: 19rpx; min-height: 80rpx; filter: opacity(calc(1 - var(--pm-p, 0))); translate: 0 calc(var(--pm-p, 0) * var(--cy-motion-rise-sm));
+  transition: filter var(--pm-p-d, 0s) ease, translate var(--pm-p-d, 0s) var(--cy-ease-page-rise); transition-delay: calc(var(--pm-p-s, 0) * (var(--i, 0) + 3) * var(--cy-motion-stagger)); }
 .jl-rule__dot { flex: none; width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--cy-color-border-strong); }
 .jl-rule__dot.is-on { background: var(--cy-color-brand); }
 .jl-rule__k { flex: 1; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
 .jl-rule__v { font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary); }
 .jl-facts { align-self: stretch; }
 
-@keyframes jl-rise { from { opacity: 0; transform: translateY(24rpx); } to { opacity: 1; transform: none; } }
-@keyframes jl-pop { from { transform: scale(.6); } to { transform: none; } }
-@keyframes jl-ring { 0% { opacity: .6; transform: scale(.82); } 70% { opacity: 0; transform: scale(1.18); } 100% { opacity: 0; transform: scale(1.18); } }
-@keyframes jl-flow { from { transform: translateX(-12rpx); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } to { transform: translateX(150rpx); opacity: 0; } }
-
 @media (prefers-reduced-motion: reduce) {
-  .jl-duo, .jl-pill, .jl-tile, .jl-rule, .jl-seat--you.is-on .jl-av--you { animation: none; }
-  .jl-ring, .jl-link__dot { animation: none; opacity: 0; }
+  .jl-duo, .jl-name, .jl-pill, .jl-tile, .jl-rule { transition: none; filter: none; translate: none; }
+  .jl-av--you, .jl-seat--you.is-pop .jl-av--you { transition: none; transform: none; }
 }

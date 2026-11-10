@@ -1,0 +1,3 @@
+{"name":"M-CHAPTER-before","opts":{"path":"pages/index/index","identity":"e2e-openid-9004","agree":true,"settle":2500},
+ "setup":[{"open":"pages/play/index?topicId=990015"},{"wait":4500},{"tryTap":["开启定位",{"nth":1}]},{"wait":2000},{"tryTap":"开始游戏"},{"wait":3000},{"scroll":800},{"wait":1500},{"tryTap":"继续探索"},{"wait":2500}],
+ "action":{"tap":"我已到达此站"},"frames":8,"offsets":[400,1200,2400,3600,4800,5800,6400,7200],"windowMs":7800,"final":{"dump":1}}

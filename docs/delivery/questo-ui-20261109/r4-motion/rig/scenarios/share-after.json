@@ -1,0 +1,2 @@
+{"name":"M-SHARE-after","opts":{"path":"pages/roam/index","identity":"e2e-openid-9004","agree":true,"settle":3500},
+ "setup":[{"wait":500}],"action":{"eval":"(()=>{const p=getCurrentPages().slice(-1)[0]; p.setData({medal:{name:'外滩夜行者',sub:'点亮 12 个外滩节点'}}); p.shareMedal(); return 'ok'})()"},"frames":8,"offsets":[60,160,260,360,480,620,800,1200],"windowMs":1500,"final":{"dump":1}}

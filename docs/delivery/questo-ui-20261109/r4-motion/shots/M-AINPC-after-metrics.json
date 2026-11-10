@@ -1,0 +1,16 @@
+{
+  "name": "M-AINPC-after",
+  "framesCaptured": 68,
+  "spanMs": 1112,
+  "fpsAvg": 61.1,
+  "gapsOver50ms": 0,
+  "maxGapMs": 23,
+  "metricsDelta": {
+    "LayoutCount": 4,
+    "RecalcStyleCount": 74,
+    "LayoutDuration": 0.0015,
+    "RecalcStyleDuration": 0.0109,
+    "ScriptDuration": 0.0168,
+    "TaskDuration": 0.1411
+  }
+}

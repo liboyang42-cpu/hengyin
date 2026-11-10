@@ -1,0 +1,2 @@
+{"name":"M-AINPC-after","opts":{"path":"pages/index/index","identity":"e2e-openid-9002","agree":true,"settle":2500},
+ "setup":[{"open":"pages/merchant/decor/ai-npc/index"},{"wait":2500}],"action":{"tap":"下一步"},"frames":8,"offsets":[100,300,500,800,1100,1500,2000,2600],"windowMs":3000,"final":{"dump":1}}

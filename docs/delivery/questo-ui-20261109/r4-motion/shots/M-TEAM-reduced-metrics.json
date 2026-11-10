@@ -1,0 +1,16 @@
+{
+  "name": "M-TEAM-reduced",
+  "framesCaptured": 1,
+  "spanMs": 0,
+  "fpsAvg": null,
+  "gapsOver50ms": 0,
+  "maxGapMs": 0,
+  "metricsDelta": {
+    "LayoutCount": 1,
+    "RecalcStyleCount": 2,
+    "LayoutDuration": 0.0105,
+    "RecalcStyleDuration": 0.0063,
+    "ScriptDuration": 0.0019,
+    "TaskDuration": 0.1128
+  }
+}

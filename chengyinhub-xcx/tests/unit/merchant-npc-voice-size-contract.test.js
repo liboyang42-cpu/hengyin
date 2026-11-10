@@ -70,6 +70,8 @@ function loadPage(options = {}) {
     if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
     // 2026-10-27 M-28/G-7:漫游落点只显示到路名(纯函数,无副作用)
     if (id.endsWith('address-short.js')) return require('../../pages/merchant/utils/address-short.js')
+    // 2026-11-10 r4-motion:四步介绍按拍翻 class 前读「减少动态效果」开关(纯读 storage,沙箱里恒为关)
+    if (id.endsWith('motion-preference.js')) return { readReducedMotion() { return false } }
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {

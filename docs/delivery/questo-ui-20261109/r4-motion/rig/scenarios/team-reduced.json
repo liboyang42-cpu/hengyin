@@ -1,0 +1,1 @@
+{"name": "M-TEAM-reduced", "opts": {"path": "pages/index/index", "identity": "e2e-openid-9004", "agree": true, "settle": 2500}, "setup": [{"eval": "wx.setStorageSync('play_reduced_motion', true)"}, {"wait": 300}], "action": {"open": "pages/team/detail/index?teamId=501"}, "frames": 4, "offsets": [100, 400, 900, 2000], "windowMs": 2400, "final": {"dump": 1}}

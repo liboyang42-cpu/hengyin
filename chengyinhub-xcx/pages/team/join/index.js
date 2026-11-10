@@ -1,6 +1,7 @@
 const teamSeats = require('../utils/team-seats.js');
 const toast = require('../../../utils/toast.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
+const pageMotion = require('../../../utils/page-motion.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
 
@@ -16,7 +17,7 @@ Page({
     joining: false,
     joinError: '',
     ticketRequired: false,
-    inviteText: '', joinedSeats: [], openSeats: [],
+    inviteText: '', joinedSeats: [], openSeats: [], pmSeats: 0,   // pmSeats:r4-motion 席位圈入场(page-motion --pm 变量)
     joinHint: '',
     error: '',
     errorKind: 'network',
@@ -121,6 +122,7 @@ Page({
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id)) {
           that.teamId = exactId(res.data.team.id);
           that._recovery.setTarget(that.teamId);
+          pageMotion.enter(that, 'pmSeats', { once: true });
           that.setData({
             loading: false,
             refreshing: false,

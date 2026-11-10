@@ -1,0 +1,16 @@
+{
+  "name": "M-SHARE-reduced",
+  "framesCaptured": 50,
+  "spanMs": 2192,
+  "fpsAvg": 22.8,
+  "gapsOver50ms": 1,
+  "maxGapMs": 1382,
+  "metricsDelta": {
+    "LayoutCount": 5,
+    "RecalcStyleCount": 52,
+    "LayoutDuration": 0.0131,
+    "RecalcStyleDuration": 0.0193,
+    "ScriptDuration": 0.0058,
+    "TaskDuration": 0.1516
+  }
+}

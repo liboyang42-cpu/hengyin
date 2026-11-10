@@ -1,0 +1,1 @@
+{"name": "M-LANDING-after", "opts": {"path": "pages/index/index", "identity": "e2e-openid-9005", "agree": true, "settle": 2500}, "setup": [{"wait": 300}], "action": {"open": "subpackageJourney/pages/landing/index?k=r&t=<referral-token>"}, "frames": 8, "offsets": [100, 250, 400, 550, 700, 900, 1200, 2000], "windowMs": 2400, "final": {"dump": 1}}

@@ -4,7 +4,7 @@
 const cyModal = require('../../utils/modal.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
-const motion = require('../../utils/motion.js');
+const motion = require('../../utils/motion.js'); const pageMotion = require('../../utils/page-motion.js'); // r4-motion:HUD 行入场(MOTION.md 4.1)
 const app = getApp();
 const discoverNav = require('../../utils/discover-nav.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
@@ -523,7 +523,7 @@ Page({
     // 导航态顶部条的第二行。⚠️ 全部是「预计」:没有导航 SDK,只能按直线距离 + 步行速度估。
     navMeta: { km: '0.0', dur: '—', eta: '—' },
     chapter: { idxLabel: '第一章', name: '', description: '', cover: '', mileage: '', timeText: '', atmospherePreset: 'DEFAULT', atmosphereClass: 'atmosphere--default' },
-    previewEnding: { show: false, list: [], idx: 0 },
+    previewEnding: { show: false, list: [], idx: 0 }, pmHud: 0,   // pmHud:r4-motion HUD 行入场(page-motion --pm 变量)
     bootStage: '',   // 开局「开机」动画的阶段(on/line/open/fade),空 = 不显示   // W-15 试玩末尾的结局卡(只在预览出现)
     chapterCards: [], /* 横滑章节卡(buildChapterCards) */ lookClass: themeLook.lookClass(null), lookTransition: themeLook.resolveTransition(null), /* 主题画面风格(/api/play/nodes 的 look) */
     // mode2(自由探索)首屏:卡包 → 六宫格。动画标志位只驱动 WXSS class,不参与业务判定。
@@ -1347,7 +1347,7 @@ Page({
         if (pct >= 100) {
           this._runHoldTriggered = true;
           this._cancelRunHold();
-          wx.vibrateShort && wx.vibrateShort({ type: 'heavy' });
+          motion.hapticHit();   // M14:长按结束局 = 本屏那一下 heavy
           this._finishRun();
         }
       }, 40);
@@ -1424,7 +1424,7 @@ Page({
     this._packTimers = this._packTimers || [];
 
     this.setData({ packShake: true, packDim: true });
-    wx.vibrateShort({ type: 'light' });
+    motion.hapticTap();
 
     this._packTimers.push(setTimeout(() => {
       this.setData({ packShake: false, packDim: false, packTear: true });
@@ -1438,7 +1438,7 @@ Page({
   _finishTearAndDeal(delay) {
     this._packTimers = this._packTimers || [];
     this.setData({ packBurst: true });
-    wx.vibrateShort({ type: 'heavy' });
+    motion.hapticHit();   // M14:卡包撕开 = 到手那一下
     this._fireBlast();
 
     this._packTimers.push(setTimeout(() => {
@@ -1478,7 +1478,7 @@ Page({
     this._tearLastTs = now;
     if (pct > 4 && !this.data.packGrab) {
       this.setData({ packGrab: true });
-      wx.vibrateShort({ type: 'light' });    // 咬住封口的那一下
+      motion.hapticTap();    // 咬住封口的那一下
     }
     this._applyTear(pct);
   },
@@ -1528,7 +1528,7 @@ Page({
       this._packTimers.push(setTimeout(() => this._markTile(i, 'fly'), fly));
       this._packTimers.push(setTimeout(() => {
         this._markTile(i, 'land');
-        wx.vibrateShort({ type: 'light' });    // 每张落地一次轻震 = 逐张的那个点
+        motion.hapticTap();    // 每张落地一次轻震 = 逐张的那个点
       }, land));
     });
     return schedule;
@@ -1841,7 +1841,7 @@ Page({
         if (chapterFull && !that.data.storyChat && lines.some((ln, i) => ln.kind === 'reveal' && list[i]
           && list[i].top < box.bottom - 40 && list[i].bottom > box.top + 80)) {
           that.setData({ storyChat: true }, () => that.measureChapter());
-          if (!that.data.reducedMotion) wx.vibrateShort({ type: 'light' });
+          if (!that.data.reducedMotion) motion.hapticTap();
         }
         // 同一批补显形的行要**逐条错开** 50ms:一起亮就是整块淡入,不是样机那种一行一行浮起来
         let order = 0;
@@ -3905,7 +3905,7 @@ Page({
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
     this._pushStoryTasks(items, nodes, blocks, readOnly, curMood);   // V3-15:故事流只放故事,没写内容不再补一句系统提示;延伸任务收进一行入口
     if (!readOnly && claims.length) this._claimThoughts(claims);
-    audioSession.keepAwake('chapterFull', true);
+    audioSession.keepAwake('chapterFull', true); pageMotion.enter(this, 'pmHud', { once: true }); // MOTION.md 4.1:故事屏第一次亮起时 HUD 行(生命值 / 背包 → 角色属性)从上方错峰落下,刷新不重播
     this.setData({
       chapterFull: true,
       chapterParas: items.map((item, i) => Object.assign({
@@ -7182,9 +7182,9 @@ Page({
     }
     const node = nodes.find((n) => n.nodeId === nodeId) || {};
     const score = Number(data && (data.xp != null ? data.xp : data.score));
-    // M8 到达双震:两次短震间隔 ~120ms,只强化到达这一处;彩蛋(light)/券(heavy)分级不动
-    wx.vibrateShort({ type: 'medium' });
-    setTimeout(() => { if (effectsCurrent()) wx.vibrateShort({ type: 'medium' }); }, 120);
+    // M14(MOTION.md 4.2):到站 = 一次 confirm(medium);原来的双震收成一下。
+    // 彩蛋 tap / 券 hit 分级不动
+    motion.hapticConfirm();
     // 飞字(双轨文案:探索值升等级,区别于可抵现积分)
     if (Number.isFinite(score) && score > 0 && data.firstTime !== false) {
       this.setData({ flyScore: true, flyText: '+' + score + ' 探索值' });
@@ -7280,7 +7280,7 @@ Page({
   // P0 券断链修复:落袋可见(文案+重震动)+ 可点击一跳到卡券包;停留 5s 给足点击窗口
   // M11 掉落分级·重:券=独立 couponBurst 彩带+重震动,不并入完成庆祝语义
   showCoupon(text) {
-    wx.vibrateShort({ type: 'heavy' });   // 动效分级:券=重
+    motion.hapticHit();   // 动效分级:券=重(M14 hit)
     const colors = ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#EEEEEE'];
     const couponBurst = [];
     for (let i = 0; i < 22; i++) couponBurst.push({ i, left: Math.round(Math.random() * 100), color: colors[i % colors.length], dur: (1.4 + Math.random() * 1.2).toFixed(2), delay: (Math.random() * 0.4).toFixed(2) });
@@ -7691,7 +7691,7 @@ Page({
     this._storyVoices = Object.assign({}, this._storyVoices, { [key]: kacchaLines(hits) });
     const prev = this._kit();
     if (!fresh || !prev || prev.type !== 'profile' || prev.done) return;
-    if (!this.data.reducedMotion) wx.vibrateShort({ type: 'heavy' });
+    if (!this.data.reducedMotion) motion.hapticConfirm();   // M14:一屏只留一处 heavy(券 / 通关),咔哒降为 confirm
     cyToast('——咔哒。');
   },
 

@@ -1,6 +1,6 @@
 // M0-2 优惠券出示与核销闭环
 // 动态二维码(couponHistoryId + 60s 签名 token,倒计时自动刷新) + 每 5s 轮询核销状态
-const cyToast = require('../../utils/toast.js');
+const cyToast = require('../../utils/toast.js'); const { hapticConfirm } = require('../../utils/motion.js'); // M14 触感档位(r4-motion)
 const app = getApp();
 const credential = require('../utils/coupon-credential.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
@@ -411,9 +411,9 @@ Page({
   // 核销成功:停计时 + 轻震动(绿章动画由 wxss 呈现)
   onVerified() {
     this.clearTimers();
-    if (wx.vibrateShort) {
-      wx.vibrateShort({ type: 'medium' });
-    }
+    // M14:核销成功 = confirm(utils/motion.js hapticConfirm,内部仍是 wx.vibrateShort medium)
+    hapticConfirm();
+    // (原来这里是 if (wx.vibrateShort) { ... } 三行;保留行数,基线行锚不动)
   },
 
   fmt(t) {

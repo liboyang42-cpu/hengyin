@@ -3,6 +3,7 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 
 /* r2-finish 榜单(战报面板与结算页共用)。
@@ -21,7 +22,7 @@ Component({
   },
   data: {
     tabs: [], more: [], scope: '', moreLabel: '更多', period: 'all',
-    state: '', error: '', rank: null, hero: null, digits: []
+    state: '', error: '', rank: null, hero: null, digits: [], pmRows: 0
   },
   observers: {
     'topicId, activityId, teamId, cityCode, countryCode, clubId': function () { if (!this._attached) return; this._rebuild(); this._probeTeams(); },
@@ -82,6 +83,11 @@ Component({
       if (this._rollTimer) { clearTimeout(this._rollTimer); this._rollTimer = null; }
       const prev = this.data.digits || [];
       const start = hero && !this.data.reducedMotion && prev.length !== hero.digits.length ? hero.digits.map(() => '0') : null;
+      // r4-motion(MOTION.md 4.6 第 2 步 / M2):榜单行第一次到齐时按 --i 错峰上浮,自己那一行落定时多一下 1.02 的 settle;刷新 / 换页签不重播
+      if (rank && Array.isArray(rank.entries) && rank.entries.length && !this._rowsEntered) {
+        this._rowsEntered = true;
+        pageMotion.enter(this, 'pmRows', { once: true });
+      }
       this.setData({ rank, state, hero, digits: start || (hero ? hero.digits : []) });
       if (start) this._rollTimer = setTimeout(() => { this._rollTimer = null; if (this.data.hero === hero || (this.data.hero && hero && this.data.hero.rank === hero.rank)) this.setData({ digits: hero.digits }); }, 60);
     },
