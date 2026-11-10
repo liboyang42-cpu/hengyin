@@ -222,6 +222,10 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/privacy/index` | 否 | `chengyinhub-xcx/app.js:349` | KEEP |
 | `pages/agreement/index` | 否 | `chengyinhub-xcx/components/cy/danger-confirm/index.wxml:5` | KEEP |
 | `pages/deregister/index` | 否 | `chengyinhub-xcx/pages/agreement/index.js:9` | KEEP |
+| `subpackageJourney/pages/report/index` | 否 | `chengyinhub-xcx/pages/play/index.js:9385` | KEEP |
+| `subpackageJourney/pages/landing/index` | 否 | 无直接源引用；兼容契约/外发历史待确认 | KEEP |
+| `subpackageJourney/pages/seats/index` | 否 | `chengyinhub-xcx/subpackageJourney/pages/report/index.js:136` | KEEP |
+| `subpackageJourney/pages/promo/index` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:178` | KEEP |
 | `pages/team/detail/index` | 否 | `chengyinhub-xcx/pages/team/join/index.js:119` | KEEP |
 | `pages/team/join/index` | 否 | `chengyinhub-xcx/pages/team/detail/index.js:172` | KEEP |
 

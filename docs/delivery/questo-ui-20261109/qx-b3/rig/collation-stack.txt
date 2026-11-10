@@ -1,0 +1,7 @@
+### Error querying database.  Cause: java.sql.SQLException: Illegal mix of collations (utf8mb4_general_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='
+### The error may exist in URL [jar:file:/root/walk-rig/work/app/BOOT-INF/lib/chengyinhub-system-3.9.0.jar!/mapper/business/GiftEntitlementMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: select r.id as registration_id, g.status, g.claimed_member_id         from gift_entitlement g         join marketing_product_order o on o.id = g.order_id         join cms_registration r on r.parent_order_no = o.order_no         where r.owner_type = ?           and r.owner_id = ?           and g.status in (0, 1)           and (r.member_id = ? or g.claimed_member_id = ?)
+### Cause: java.sql.SQLException: Illegal mix of collations (utf8mb4_general_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='
+; uncategorized SQLException; SQL state [HY000]; error code [1267]; Illegal mix of collations (utf8mb4_general_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='

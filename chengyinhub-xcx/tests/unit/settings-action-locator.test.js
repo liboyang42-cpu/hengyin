@@ -9,7 +9,8 @@ const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/shezhi/shezhi.
 
 test('设置页每个 cy-cell 动作都有稳定且唯一的 id 定位器', () => {
   const cells = wxml.match(/<cy-cell\b[^>]*\bbind:tap="[^"]+"[^>]*\/>/g) || [];
-  assert.equal(cells.length, 13, '设置菜单动作数量变化时必须同步定位器合同');
+  // 2026-11-10 qx-b3「邀请与收益」(settings-promo) +1(qx-c3 补;与 staging 28f3c5bf 同一口径),13 → 14
+  assert.equal(cells.length, 14, '设置菜单动作数量变化时必须同步定位器合同');
   const ids = cells.map((tag) => {
     const match = /\bid="([^"]+)"/.exec(tag);
     assert.ok(match, `缺少 id: ${tag}`);

@@ -613,6 +613,18 @@ const DANGER_ACTIONS = {
     alt: null,
     done: { title: '权益已取消', text: '' },
   },
+  // ===== 同行席位(P5) =====
+  'seat.invite-cancel': {
+    irreversible: false,
+    title: '撤销第 {name} 席的邀请?',
+    consequences: [
+      { icon: 'share', text: '已发出的邀请链接立即失效' },
+      { icon: 'mtab-customers', text: '席位回到可邀请，可以重新邀请别人' },
+    ],
+    confirmText: '撤销邀请',
+    alt: null,
+    done: { title: '邀请已撤销', text: '' },
+  },
   // ===== 漫游·附近的局(2026-09-06 从 wx.showModal 收编) =====
   'hangout.close': {
     irreversible: true,

@@ -1,0 +1,104 @@
+<view class="theme-dark jn">
+  <cy-nav-bar plain />
+  <cy-page-title align="center" title="{{report && report.legacy ? '主题记录' : '本局战报'}}" />
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
+  <block wx:else>
+    <view class="jn-head">
+      <text class="jn-eyebrow" wx:if="{{eyebrow}}">{{eyebrow}}</text>
+      <text class="jn-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text>
+    </view>
+    <view class="jn-grid">
+      <view class="jn-stat"><text class="jn-stat__v">{{report.nodesText}}</text><text class="jn-stat__l">完成节点</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.elapsedText === '未知' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="jn-stat__l">用时</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.scored ? '' : 'is-muted'}}">{{report.scoreText}}</text><text class="jn-stat__l">解谜分</text></view>
+    </view>
+
+    <view class="jn-sec">
+      <view class="jn-group">
+        <view class="jn-row" bindtap="openRank" aria-role="button" aria-label="查看榜单" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="jn-row__t"><text class="jn-row__b">名次</text><text class="jn-row__s" wx:if="{{report.rankSub}}">{{report.rankSub}}</text></view>
+          <text class="jn-row__v {{report.rankSub ? 'is-strong' : ''}}">{{report.rankText}}</text>
+          <cy-icon class="jn-row__arr" name="arrow-right" size="28" />
+        </view>
+        <view class="jn-row" wx:if="{{report.penaltyText}}">
+          <view class="jn-row__t"><text class="jn-row__b">提示扣减</text></view>
+          <text class="jn-row__v">{{report.penaltyText}}</text>
+        </view>
+        <view class="jn-row" wx:if="{{report.rewardsText}}">
+          <view class="jn-row__t"><text class="jn-row__b">主题背包</text></view>
+          <text class="jn-row__v">{{report.rewardsText}}</text>
+        </view>
+        <view class="jn-row" wx:if="{{!report.legacy && report.runId}}" bindtap="openMemory" aria-role="button" aria-label="本局回忆" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="jn-row__t"><text class="jn-row__b">本局回忆</text></view>
+          <cy-icon class="jn-row__arr" name="arrow-right" size="28" />
+        </view>
+        <view class="jn-row" wx:if="{{registrationId}}" bindtap="openSeats" aria-role="button" aria-label="同行席位" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="jn-row__t"><text class="jn-row__b">同行席位</text></view>
+          <cy-icon class="jn-row__arr" name="arrow-right" size="28" />
+        </view>
+      </view>
+    </view>
+
+    <view class="jn-sec" wx:if="{{report.nodes.length}}">
+      <text class="jn-sec__h">节点</text>
+      <view class="jn-group">
+        <view class="jn-row" wx:for="{{report.nodes}}" wx:key="key">
+          <view class="jn-row__t"><text class="jn-row__b">{{item.name}}</text><text class="jn-row__s" wx:if="{{item.mode}}">{{item.mode}}</text></view>
+          <text class="jn-row__v">{{item.scoreText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="jn-footer" wx:if="{{report.finished}}">
+      <button class="jn-share" open-type="share" aria-label="分享本局"><cy-btn variant="primary">分享</cy-btn></button>
+    </view>
+    <view class="jn-footer" wx:elif="{{report.inProgress}}">
+      <cy-btn class="jn-grow" variant="secondary" bindtap="reload">刷新结果</cy-btn>
+    </view>
+  </block>
+
+  <cy-sheet show="{{rankOpen}}" title="榜单" fixed="half" handle bind:close="closeRank">
+    <view class="jn-sheet">
+      <view class="jn-tabbar">
+        <view class="jn-tabbar__scope"><cy-tabs variant="chip" tabs="{{rankTabs}}" active="{{rankScope}}" bind:change="onRankScope" /></view>
+        <view class="jn-tabbar__period" wx:if="{{rankScope !== 'team'}}"><cy-tabs variant="chip" tabs="{{[{key:'all',label:'累计'},{key:'week',label:'本周'}]}}" active="{{rankPeriod}}" bind:change="onRankPeriod" /></view>
+      </view>
+      <cy-skeleton wx:if="{{rankState === 'loading'}}" type="list" count="3" />
+      <cy-empty wx:elif="{{rankState === 'error'}}" kind="data" title="{{rankError}}" cta="重试" bind:cta="loadRank" size="sm" />
+      <cy-empty wx:elif="{{rankState === 'empty'}}" kind="empty" title="{{rankScope === 'team' ? '队内还没有名次' : '这张榜还没有人上榜'}}" size="sm" />
+      <view wx:elif="{{rankState === 'ready'}}" class="jn-group">
+        <view class="jn-row">
+          <view class="jn-row__t"><text class="jn-row__b">{{rank.basis}}</text><text class="jn-row__s" wx:if="{{rank.window}}">{{rank.window}}</text></view>
+          <text class="jn-row__v is-strong jn-me" wx:if="{{rankScope !== 'team'}}">{{rank.meText}}</text>
+        </view>
+        <view class="jn-row" wx:for="{{rank.entries}}" wx:key="key">
+          <text class="jn-rank {{item.rank && item.rank <= 3 ? 'is-top' : ''}}">{{item.rank || '—'}}</text>
+          <view class="jn-av"><image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
+          <view class="jn-row__t"><text class="jn-row__b {{item.mine ? 'jn-me' : ''}}">{{item.name}}</text></view>
+          <text class="jn-row__v">{{item.scoreText}}</text>
+        </view>
+        <text class="jn-note" wx:if="{{rank.unattributed}}">{{rank.unattributed}}</text>
+      </view>
+    </view>
+  </cy-sheet>
+
+  <cy-sheet show="{{memoryOpen}}" title="本局回忆" fixed="half" handle bind:close="closeMemory">
+    <view class="jn-sheet">
+      <cy-skeleton wx:if="{{memoryState === 'loading'}}" type="list" count="3" />
+      <cy-empty wx:elif="{{memoryState === 'error'}}" kind="data" title="{{memoryError}}" cta="重试" bind:cta="loadMemory" size="sm" />
+      <cy-empty wx:elif="{{memoryState === 'empty'}}" kind="empty" title="这一局还没有回忆" size="sm" />
+      <block wx:elif="{{memoryState === 'ready'}}">
+        <scroll-view class="jn-photos-scroll" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{memory.photos.length}}">
+          <view class="jn-photos"><view class="jn-photo" wx:for="{{memory.photos}}" wx:key="key"><image src="{{item.pic}}" mode="aspectFill" /></view></view>
+        </scroll-view>
+        <view class="jn-group">
+          <view class="jn-row" wx:if="{{memory.participants}}"><view class="jn-row__t"><text class="jn-row__b">{{memory.participants}}</text></view></view>
+          <view class="jn-row" wx:for="{{memory.moments}}" wx:key="key">
+            <view class="jn-row__t"><text class="jn-row__b">{{item.name}}</text><text class="jn-row__s" wx:if="{{item.text}}">{{item.text}}</text></view>
+            <text class="jn-row__v">{{item.at}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </cy-sheet>
+</view>
