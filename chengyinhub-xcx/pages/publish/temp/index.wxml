@@ -1670,7 +1670,7 @@
         <view class="cg-glist__in" wx:if="{{ gi === sheetGroup }}">
           <view class="cg-r5-row cg-grow {{ sheetPick === g.key ? 'is-on' : '' }} {{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] ? 'is-off' : '' }}" wx:for="{{ group.items }}" wx:key="key" wx:for-item="g"
                 data-key="{{ g.key }}" data-reason="{{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] }}" bindtap="pickR5GameTag"
-                aria-role="radio" aria-checked="{{ sheetPick === g.key }}" aria-label="{{ g.label }}" hover-class="cy-pressed" hover-stay-time="60">
+                aria-role="button" aria-selected="{{ sheetPick === g.key }}" aria-label="{{ g.label }}" hover-class="cy-pressed" hover-stay-time="60">
             <view class="cg-game-ico cg-game-ico--{{ group.title === '问答' ? 'qa' : (group.title === '推理' ? 'logic' : (group.title === '互动' ? 'play' : (group.title === '挑战' ? 'challenge' : 'plain'))) }}"><cy-icon name="{{ g.icon }}" size="36" /></view>
             <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{ g.label }}</text><text class="cg-grow__sub" wx:if="{{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] || g.sub }}">{{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] || g.sub }}</text></view>
             <view class="cg-grow__ck"><cy-icon wx:if="{{ sheetPick === g.key }}" name="check" size="28" /></view>

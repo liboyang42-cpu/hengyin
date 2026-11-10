@@ -1135043,14 +1135043,14 @@
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{ g.label }}",
-        "ariaRole": "radio",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
-        "ariaCheckedExpression": "{{ sheetPick === g.key }}"
+        "ariaCheckedExpression": null
       },
       "actionClass": "state",
       "interactionMode": "tap",
