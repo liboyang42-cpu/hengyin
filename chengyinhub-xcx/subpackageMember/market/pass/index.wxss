@@ -10,6 +10,7 @@ page { background: var(--cy-color-bg-page); }
 .mp-row__k--main { color: var(--cy-color-text-primary); flex: 1; min-width: 0; }
 .mp-row__v { font-size: var(--cy-type-body); text-align: right; min-width: 0; }
 .mp-row__v--strong { font-weight: 700; font-variant-numeric: tabular-nums; }
+.mp-hero { padding: var(--cy-space-4) 0 var(--cy-space-6); }
 .mp-for { margin-top: var(--cy-space-2); }
 .mp-bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: var(--cy-space-2); padding: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); border-top: 1rpx solid var(--cy-color-border-subtle); }
 .mp-bar__reason { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }

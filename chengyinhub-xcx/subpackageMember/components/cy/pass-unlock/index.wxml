@@ -1,0 +1,57 @@
+<view wx:if="{{show && cur}}" class="pu {{on ? 'is-on' : ''}} pu--{{cur.key}} {{reducedMotion ? 'pu--reduced' : ''}}" style="--pu-top: {{top}}px;" catchtouchmove="noop" aria-role="dialog" aria-label="{{cur.eyebrow}}">
+  <view class="pu__warm pu__warm--{{i}}"></view>
+  <view wx:if="{{!last}}" class="pu__skip" bindtap="onSkip" aria-role="button" aria-label="跳过" hover-class="pu-pressed" hover-stay-time="80">跳过</view>
+
+  <view class="pu__stage">
+    <!-- 第一步:通票由碎片拼起,印章亮起 -->
+    <view wx:if="{{cur.key === 'pass'}}" class="pu__obj"><cy-pass-object state="{{obj}}" face="{{face}}" reduced-motion="{{reducedMotion}}" /></view>
+
+    <!-- 覆盖主题:小通票在上,主题一行一行勾上,每行 +1 -->
+    <block wx:elif="{{cur.key === 'themes'}}">
+      <view class="pu__mini"><cy-pass-object state="assembled" face="{{face}}" reduced-motion="{{reducedMotion}}" /></view>
+      <view class="pu__rows">
+        <view wx:for="{{cur.rows}}" wx:key="k" class="pu__row {{index < hit ? 'is-hit' : ''}}">
+          <view class="pu__box"><view class="pu__tick"></view></view>
+          <text class="pu__rt">{{item.t}}</text>
+          <text class="pu__coin">+1</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 有效期:拨盘转开,下面一格一位数滚到服务端给的期限 -->
+    <block wx:elif="{{cur.key === 'dial'}}">
+      <view class="pu__dial {{turned ? 'is-turned' : ''}} {{open ? 'is-open' : ''}}">
+        <view class="pu__ticks"></view>
+        <view class="pu__knob" style="transform: rotate({{turned ? cur.dial.angle : 0}}deg);"><view class="pu__notch"></view></view>
+        <view class="pu__core"><image class="pu__core-mark" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
+      </view>
+      <view class="pu__cells">
+        <view wx:for="{{cur.dial.cells}}" wx:key="k" class="pu__cell {{item.d === null ? 'is-sep' : ''}}">
+          <view wx:if="{{item.d !== null}}" class="pu__col" style="transform: translateY({{turned ? -item.d * 72 : 0}}rpx); transition-delay: {{200 + index * 110}}ms;">
+            <text class="pu__n" wx:for="{{[0,1,2,3,4,5,6,7,8,9]}}" wx:for-item="n" wx:key="*this">{{n}}</text>
+          </view>
+          <text wx:else class="pu__sep">{{item.c}}</text>
+        </view>
+        <text wx:if="{{cur.dial.unit}}" class="pu__unit">{{cur.dial.unit}}</text>
+      </view>
+    </block>
+
+    <!-- 同行人数:一节一节连成链 -->
+    <view wx:elif="{{cur.key === 'seats'}}" class="pu__chain">
+      <view wx:for="{{cur.links}}" wx:key="k" class="pu__link {{index % 2 ? 'pu__link--b' : ''}} {{index < hit ? 'is-hit' : ''}}"></view>
+    </view>
+  </view>
+
+  <view class="pu__text">
+    <text class="pu__eyebrow">{{cur.eyebrow}}</text>
+    <text class="pu__title">{{cur.title}}</text>
+    <text wx:if="{{cur.line}}" class="pu__line">{{cur.line}}</text>
+  </view>
+
+  <view class="pu__foot">
+    <view class="pu__dots" wx:if="{{steps.length > 1}}">
+      <view wx:for="{{steps}}" wx:key="key" class="pu__dot {{index === i ? 'is-cur' : ''}}"></view>
+    </view>
+    <view class="pu__btn" bindtap="onNext" aria-role="button" aria-label="{{last ? '完成' : '继续'}}" hover-class="pu-pressed" hover-stay-time="80">{{last ? '完成' : '继续'}}</view>
+  </view>
+</view>

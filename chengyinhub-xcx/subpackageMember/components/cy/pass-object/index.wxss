@@ -1,0 +1,69 @@
+/* 金色城市通票。只过渡 transform / opacity / box-shadow;没有 keyframes。 */
+.po {
+  --po-gold-deep: var(--cy-ref-amber-700);
+  --po-gold: var(--cy-color-medal-gold);
+  --po-gold-hi: #FFF1B8; /* ds-ok 金属高光(物件固有色) */
+  --po-gold-dark: #5A3606; /* ds-ok 金属暗部(物件固有色) */
+  --po-warm: rgba(234, 108, 32, .55); /* ds-ok 暖橙光(参考 refs4 通票动效) */
+  --po-ease: cubic-bezier(.2, 1.25, .4, 1);
+  position: relative; width: 420rpx; height: 252rpx; margin: 0 auto;
+}
+.po__glow { position: absolute; left: -90rpx; right: -90rpx; top: -40rpx; bottom: -120rpx; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, var(--po-warm), rgba(234, 108, 32, 0)); /* ds-ok 暖橙光 */
+  transition: opacity .9s ease .3s; }
+.po--assembled .po__glow { opacity: .7; }
+.po--open .po__glow { opacity: 1; }
+
+.po__tilt { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform-style: preserve-3d;
+  transform: perspective(1400rpx) rotateY(28deg) rotateX(-6deg) scale(.86); transition: transform 1.1s var(--po-ease); }
+.po--assembled .po__tilt { transform: perspective(1400rpx) rotateX(12deg) rotateY(-18deg) rotateZ(-4deg); }
+.po--open .po__tilt { transform: perspective(1400rpx) rotateX(6deg) rotateY(-6deg) scale(1.04); }
+
+.po__p { position: absolute; transition: transform .9s var(--po-ease), opacity .5s ease, box-shadow .5s ease; }
+
+/* 厚度:同形状的暗金层错开一点,看起来是块金属 */
+.po__edge { left: 10rpx; top: 14rpx; width: 420rpx; height: 252rpx; border-radius: 28rpx; background: var(--po-gold-dark); opacity: 0;
+  transform: translate(-150rpx, -120rpx) rotate(-24deg) scale(.7); }
+.po__body { left: 0; top: 0; width: 300rpx; height: 252rpx; border-radius: 28rpx 8rpx 8rpx 28rpx; overflow: hidden; opacity: .5;
+  background: linear-gradient(135deg, var(--po-gold-deep) 0%, var(--po-gold) 32%, var(--po-gold-hi) 46%, var(--po-gold) 60%, var(--po-gold-deep) 100%);
+  transform: translate(-160rpx, -140rpx) rotate(-24deg) scale(.7); }
+.po__stub { left: 304rpx; top: 0; width: 116rpx; height: 252rpx; border-radius: 8rpx 28rpx 28rpx 8rpx; overflow: hidden; opacity: .5;
+  background: linear-gradient(160deg, var(--po-gold) 0%, var(--po-gold-hi) 40%, var(--po-gold-deep) 100%);
+  transform: translate(200rpx, 160rpx) rotate(38deg) scale(.7); transition-delay: .08s; }
+.po__perf { left: 296rpx; top: 18rpx; width: 16rpx; height: 216rpx; opacity: .5;
+  background: radial-gradient(circle, var(--po-gold-dark) 4rpx, rgba(0, 0, 0, 0) 5rpx) 0 0 / 16rpx 18rpx repeat-y; /* ds-ok 骑缝孔 */
+  transform: translate(40rpx, -220rpx) rotate(90deg); transition-delay: .16s; }
+.po__seal { left: 66rpx; top: 46rpx; width: 136rpx; height: 136rpx; border-radius: 50%; opacity: .5;
+  background: radial-gradient(circle at 35% 30%, var(--po-gold-hi), var(--po-gold) 45%, var(--po-gold-deep) 100%);
+  box-shadow: inset 0 0 0 6rpx var(--po-gold-deep), 0 6rpx 14rpx rgba(0, 0, 0, .35); /* ds-ok 印章压痕 */
+  transform: translate(190rpx, -190rpx) rotate(-120deg) scale(.5); transition-delay: .24s; }
+.po__ring { position: absolute; top: 14rpx; right: 14rpx; bottom: 14rpx; left: 14rpx; border-radius: 50%;
+  box-shadow: inset 0 0 0 3rpx var(--po-gold-dark); opacity: .6; }
+.po__mark { position: absolute; left: 34rpx; top: 34rpx; width: 68rpx; height: 68rpx; opacity: .75; filter: sepia(1) saturate(2.4) brightness(.55); transition: filter .6s ease, opacity .6s ease; }
+.po__shine { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; opacity: .0;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .55) 48%, rgba(255, 255, 255, 0) 62%); /* ds-ok 金属扫光 */
+  transform: translateX(-100%); transition: transform 1.2s ease .7s, opacity .3s ease .7s; }
+.po__face { position: absolute; left: 30rpx; right: 24rpx; bottom: 22rpx; font-size: 26rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--po-gold-dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.po__bars { position: absolute; left: 28rpx; right: 28rpx; top: 36rpx; bottom: 36rpx; display: flex; flex-direction: column; justify-content: space-between; }
+.po__bar { height: 6rpx; border-radius: 3rpx; background: var(--po-gold-dark); opacity: .35; }
+
+.po__spark { width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--po-gold-hi); opacity: 0; left: 127rpx; top: 107rpx; transform: scale(.2); }
+.po--open .po__spark { opacity: .9; transition: transform .9s cubic-bezier(.1, .7, .3, 1), opacity .4s ease; }
+.po--open .po__spark--1 { transform: translate(-150rpx, -130rpx) scale(1); }
+.po--open .po__spark--2 { transform: translate(190rpx, -150rpx) scale(.8); }
+.po--open .po__spark--3 { transform: translate(40rpx, 170rpx) scale(.6); }
+
+/* 拼好 */
+.po--assembled .po__p, .po--open .po__p:not(.po__spark) { transform: none; opacity: 1; }
+.po--assembled .po__shine, .po--open .po__shine { opacity: 1; transform: translateX(100%); }
+.po--assembled .po__spark { opacity: 0; }
+/* 解锁:印章亮起 */
+.po--open .po__seal { box-shadow: inset 0 0 0 6rpx var(--po-gold-deep), 0 0 48rpx var(--po-gold); }
+.po--open .po__mark { opacity: 1; filter: sepia(1) saturate(2.4) brightness(.35); }
+
+/* 减少动态效果:不飞、不转,直接终态 */
+.po--reduced .po__glow, .po--reduced .po__tilt, .po--reduced .po__p, .po--reduced .po__mark, .po--reduced .po__shine { transition: none !important; }
+.po--reduced .po__tilt { transform: none; }
+.po--reduced .po__p { transform: none; opacity: 1; }
+.po--reduced .po__spark { opacity: 0; }

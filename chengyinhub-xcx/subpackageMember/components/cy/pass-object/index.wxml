@@ -1,0 +1,21 @@
+<view class="po po--{{state}} {{reducedMotion ? 'po--reduced' : ''}}" aria-hidden="true">
+  <view class="po__glow"></view>
+  <view class="po__tilt">
+    <view class="po__p po__edge"></view>
+    <view class="po__p po__body">
+      <view class="po__shine"></view>
+      <text class="po__face" wx:if="{{face}}">{{face}}</text>
+    </view>
+    <view class="po__p po__stub">
+      <view class="po__bars"><view class="po__bar" wx:for="{{[0,1,2,3,4,5]}}" wx:key="*this"></view></view>
+    </view>
+    <view class="po__p po__perf"></view>
+    <view class="po__p po__seal">
+      <view class="po__ring"></view>
+      <image class="po__mark" src="/images/cy_logo_mark.png" mode="aspectFit" />
+    </view>
+    <view class="po__p po__spark po__spark--1"></view>
+    <view class="po__p po__spark po__spark--2"></view>
+    <view class="po__p po__spark po__spark--3"></view>
+  </view>
+</view>

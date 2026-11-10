@@ -7,6 +7,8 @@ const cyToast = require('../../../utils/toast.js')
 const modal = require('../../../utils/modal.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
+const pu = require('../../utils/pass-unlock-view.js')
+const { readReducedMotion } = require('../../../utils/motion-preference.js')
 
 function newRequestId() {
   return 'mkp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10)
@@ -26,10 +28,16 @@ Page({
     buying: false,
     buyingMode: 0,
     buyError: '',
-    giftSheet: false
+    giftSheet: false,
+    // r3-pass:票面拼合动效与到账分步(只来自服务端商品详情与已付订单)
+    heroState: 'scattered',
+    heroFace: '',
+    reducedMotion: false,
+    unlock: { show: false, steps: [] }
   },
   onLoad(options) {
     this._id = options && options.id
+    this.setData({ reducedMotion: readReducedMotion() })
     this.load()
   },
   load() {
@@ -45,7 +53,11 @@ Page({
           this.setData({ state: 'error', errorTitle: res && res.reasonCode ? mv.reasonText(res.reasonCode) : '加载失败' })
           return
         }
-        this.setData({ state: 'ready', card, forGift: card.giftOnly ? true : this.data.forGift })
+        this._product = res.data
+        this.setData({ state: 'ready', card, forGift: card.giftOnly ? true : this.data.forGift, heroFace: pu.faceText(res.data), heroState: 'scattered' })
+        // 下一帧再挂拼好的类,碎片才会飞回来
+        clearTimeout(this._heroT)
+        this._heroT = setTimeout(() => this.setData({ heroState: 'assembled' }), this.data.reducedMotion ? 0 : 80)
         if (card.isExtraSeat) {
           this.setData({ buy: mv.purchaseView({ purchaseRoute: mv.ROUTE.EXTRA_SEAT }) })
           return
@@ -126,8 +138,10 @@ Page({
     if (order.statusLabel === 'PAID') {
       this.setData({ buying: false })
       if (token) { this._giftToken = token; this.setData({ giftSheet: true }); return }
-      cyToast('已购买')
-      wx.redirectTo({ url: '/subpackageMember/market/passes/index?tab=orders' })
+      // r3-pass:服务端回 PAID 才放到账分步;步数全由真实字段决定,没有的事实没有那一步
+      const steps = pu.unlockSteps(this._product, order)
+      if (steps.length) { this.setData({ unlock: { show: true, steps } }); return }
+      this._toOrders()
       return
     }
     if (order.statusLabel === 'PENDING_CASH') { this._payCash(order); return }
@@ -162,6 +176,15 @@ Page({
       fail: () => this.setData({ buying: false, buyError: '支付结果确认中，请到我的订单查看' })
     })
   },
+  onUnlockDone() {
+    this.setData({ 'unlock.show': false })
+    this._toOrders()
+  },
+  _toOrders() {
+    cyToast('已购买')
+    wx.redirectTo({ url: '/subpackageMember/market/passes/index?tab=orders' })
+  },
+  onUnload() { clearTimeout(this._heroT) },
   goCheckout() {
     const c = this.data.buy && this._quote ? this._quote.checkout : null
     const checkout = c || (this.data.buy && this.data.buy.checkout)

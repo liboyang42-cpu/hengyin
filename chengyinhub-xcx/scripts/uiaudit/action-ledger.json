@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5913,
+  "controlCount": 5917,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1284876,6 +1284876,245 @@
       }
     },
     {
+      "id": "subpackageMember/components/cy/pass-unlock/index.wxml:1:catchtouchmove:noop:0",
+      "route": "component:subpackageMember/components/cy/pass-unlock/index",
+      "hostRoutes": [
+        "subpackageMember/market/pass/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/market/pass/index",
+          "segments": [
+            {
+              "selector": "#pass-unlock",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/pass-unlock/index.wxml",
+        "js": "subpackageMember/components/cy/pass-unlock/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "noop",
+        "line": 1,
+        "selectorHint": ".pu",
+        "visibleCondition": "{{show && cur}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{cur.eyebrow}}",
+        "ariaRole": "dialog",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/pass-unlock/index.js:26"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/pass-unlock/index.wxml:3:bindtap:onSkip:1",
+      "route": "component:subpackageMember/components/cy/pass-unlock/index",
+      "hostRoutes": [
+        "subpackageMember/market/pass/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/market/pass/index",
+          "segments": [
+            {
+              "selector": "#pass-unlock",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/pass-unlock/index.wxml",
+        "js": "subpackageMember/components/cy/pass-unlock/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onSkip",
+        "line": 3,
+        "selectorHint": ".pu__skip",
+        "visibleCondition": "{{!last}}",
+        "disabledCondition": null,
+        "ariaLabel": "跳过",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/pass-unlock/index.js:67"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/pass-unlock/index.wxml:55:bindtap:onNext:2",
+      "route": "component:subpackageMember/components/cy/pass-unlock/index",
+      "hostRoutes": [
+        "subpackageMember/market/pass/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageMember/market/pass/index",
+          "segments": [
+            {
+              "selector": "#pass-unlock",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/pass-unlock/index.wxml",
+        "js": "subpackageMember/components/cy/pass-unlock/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onNext",
+        "line": 55,
+        "selectorHint": ".pu__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{last ? '完成' : '继续'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/pass-unlock/index.js:63"
+      }
+    },
+    {
       "id": "subpackageMember/components/cy/profile/index.wxml:100:bindtap:onPrimaryCta:5:variant:self-merchant-scan",
       "route": "component:subpackageMember/components/cy/profile/index",
       "hostRoutes": [
@@ -1336687,7 +1336926,7 @@
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:24:bind:change:onFor:2",
+      "id": "subpackageMember/market/pass/index.wxml:26:bind:change:onFor:2",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336710,7 +1336949,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onFor",
-        "line": 24,
+        "line": 26,
         "selectorHint": ".mp-for",
         "visibleCondition": "{{card.giftAllowed}}",
         "disabledCondition": null,
@@ -1336792,11 +1337031,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:87"
+        "staticSource": "subpackageMember/market/pass/index.js:99"
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:38:bindtap:goCheckout:3",
+      "id": "subpackageMember/market/pass/index.wxml:40:bindtap:goCheckout:3",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336819,7 +1337058,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goCheckout",
-        "line": 38,
+        "line": 40,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{buy.state === 'checkout'}}",
         "disabledCondition": null,
@@ -1336862,11 +1337101,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:165"
+        "staticSource": "subpackageMember/market/pass/index.js:188"
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:42:bindtap:onBuy:4",
+      "id": "subpackageMember/market/pass/index.wxml:44:bindtap:onBuy:4",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336891,7 +1337130,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onBuy",
-        "line": 42,
+        "line": 44,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{buying}}",
@@ -1337011,11 +1337250,82 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:94"
+        "staticSource": "subpackageMember/market/pass/index.js:106"
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:48:bind:close:closeGiftSheet:5",
+      "id": "subpackageMember/market/pass/index.wxml:51:bind:done:onUnlockDone:5",
+      "route": "subpackageMember/market/pass/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/pass/index.wxml",
+        "js": "subpackageMember/market/pass/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-pass-unlock",
+        "event": "bind:done",
+        "handler": "onUnlockDone",
+        "line": 51,
+        "selectorHint": "#pass-unlock",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/passes/index?tab=orders"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/pass/index.js:179"
+      }
+    },
+    {
+      "id": "subpackageMember/market/pass/index.wxml:53:bind:close:closeGiftSheet:6",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1337038,7 +1337348,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeGiftSheet",
-        "line": 48,
+        "line": 53,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1337082,7 +1337392,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:172"
+        "staticSource": "subpackageMember/market/pass/index.js:195"
       }
     },
     {
@@ -1337152,7 +1337462,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:181"
+        "staticSource": "subpackageMember/market/pass/index.js:204"
       }
     },
     {
@@ -1337268,7 +1337578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:35"
+        "staticSource": "subpackageMember/market/pass/index.js:43"
       }
     },
     {
