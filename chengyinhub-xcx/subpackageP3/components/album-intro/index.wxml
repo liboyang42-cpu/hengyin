@@ -1,0 +1,6 @@
+<view wx:if="{{show}}" class="ai {{land ? 'is-land' : ''}} {{out ? 'is-out' : ''}}" catchtap="skip" catchtouchmove="noop" aria-hidden="true">
+  <view class="ai__route"></view>
+  <view class="ai__stamp ai__stamp--0"><view class="ai__pin"></view><image class="ai__img" src="/subpackageP3/images/album-intro/medal.png" mode="aspectFit" /></view>
+  <view class="ai__stamp ai__stamp--1"><view class="ai__pin"></view><image class="ai__img" src="/subpackageP3/images/album-intro/stamp.png" mode="aspectFit" /></view>
+  <view class="ai__stamp ai__stamp--2"><view class="ai__pin"></view><image class="ai__img" src="/subpackageP3/images/album-intro/object.png" mode="aspectFit" /></view>
+</view>

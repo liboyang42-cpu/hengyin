@@ -1021,8 +1021,9 @@
 .pc-pile-n { font-family: -apple-system, "PingFang SC", sans-serif; font-size: 22rpx; /* ds-ok: 数量小字 */ font-weight: 500; color: #8A8F99; /* ds-ok: 同上 */ }
 /* P-22(2026-11-02 走查):玩家页是深色,收集册跟上面「总积分排名」同一张卡的底、边、字,不再单独一块浅色纸页。
    三叠小卡与册名保留,只换成深色套件的面、边和无衬线字。 */
-.pc-player .pc-album { margin-top: 0; border-radius: var(--cy-radius-md); padding: var(--cy-space-3-5) 32rpx var(--cy-space-4);
-  background: var(--cy-color-bg-elevated); border: 1rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-primary); }
+/* 2026-11-10 r2 a4-v3-34 业主「收集册底部不需要灰色的底 直接在背景上」:去掉卡底与描边,三叠小卡直接落在页面背景上 */
+.pc-player .pc-album { margin-top: var(--cy-space-2); border-radius: 0; padding: var(--cy-space-2) 0 var(--cy-space-4);
+  background: transparent; border: 0; overflow: visible; color: var(--cy-color-text-primary); }
 .pc-player .pc-album-t { font-family: inherit; font-size: var(--cy-type-label); font-weight: 400; color: var(--cy-color-text-secondary); }
 .pc-player .pc-album-arrow { color: var(--cy-color-text-tertiary); }
 .pc-player .pc-pile-t { font-family: inherit; font-size: var(--cy-type-label); font-weight: 600; }
