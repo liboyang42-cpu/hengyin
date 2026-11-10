@@ -446,7 +446,8 @@ module.exports = {
     // 2026-10-27 L11 集成:L05 出账 2 条 + L06 登记 1 条,43 → 42。
     // 2026-10-28 p74:漫游附近活动两级兜底读取逐项登记 2 条,42 → 44(未超冻结上限 44)。
     // 2026-11-09 qx-a4 V3-27:护照不再单摆勋章墙方卡,P-29 那条勋章图静默读取随方卡删除,44 → 43。
-    "u5Silent": 43,
+    // 2026-11-10 r2-merchant a6-w2-17:商家发现帖文流改走玩家发现页同一套合流,两路请求 fail 经具名 _onFeedFail 落错误卡并给重试(门禁静态证明),relation:265 那条登记随之出账,43 → 42。
+    "u5Silent": 42,
     "keyDigest": {
       // 2026-09-24 卡包底图:play/index.js data 里加 topicCover 一行,u5Silent 那条已完成里程碑读取 5444→5445,
       //   新旧行内容一致、理由一字未改,u5Silent digest 按同算法显式重算(旧值复算吻合)。
@@ -1166,7 +1167,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"f06788c02cdd248d68027ec6b791c42ac3476adeb02f3ea36ba7db787558d7c6"
+"df308074fc64eb232fe511c59bd5c488084e560eb929b08f5c3020099b0715a5"
 
     }
   },
@@ -1572,7 +1573,6 @@ module.exports = {
       //   2026-11-03 round5D P-08(「返回地图」三个方法 + 放行对账抽成 _syncChapterHold,上方净增 29 行):8236→8265,调用与理由未改。
       "chengyinhub-xcx/pages/play/index.js:8883": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/pages/merchant/relation/index.js:265": "合作 tab 帖文流读取(2026-10-22 业主:合作 tab 看帖文):失败经同函数内具名 fail() 落 feedState=error/stale-error 与 feedError,页面 cy-error 呈现并给重试,关通道 toast 避免双重反馈;owner=小程序,复核=2026-11-30",
     "chengyinhub-xcx/subpackageB/utils/predict-entry.js:15": "消息页「竞猜待答」入口显隐读取(2026-10-22 业主:无待答不出入口):读失败照样显示入口(宁可多一行,不让 48 小时期限提醒消失),不是用户动作,无需弹错;owner=小程序,复核=2026-11-30",
   }
 };

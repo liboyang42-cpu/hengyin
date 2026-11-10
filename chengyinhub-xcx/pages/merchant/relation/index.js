@@ -263,30 +263,36 @@ Page({
         if (that._feedLoading && !that._destroyed) that.setData({ feedSlow: true });
       }, 400);
     }
-    function isCurrent() { return !that._destroyed && !ctx.done && ctx.requestId === that._feedRequestId; }
-    function finish() { ctx.done = true; clearTimeout(that._feedSlowTimer); that._feedLoading = false; }
-    function fail(res) {
-      if (!isCurrent()) return;
-      finish();
-      if (more) return;   // 翻页失败不出错误文案,没取到的那一路保留游标,下次触底重试(与玩家发现页同口径)
-      that.setData({ feedState: hasSnapshot ? 'stale-error' : 'error', feedSlow: false,
-        feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试') });
-    }
+    this._feedCtx = ctx;
     if (!more) {
       // 发帖入口跟着服务端开关:社区写开着才出(app.canUseCommunity(true)),读开着才合社区帖文
       this.setData({ canCompose: typeof app.canUseCommunity === 'function' && app.canUseCommunity(true) });
       this._feedMerger = discoverFeed.createFeedMerger(this._feedSources());
     }
     this._feedMerger.take(FEED_PAGE_SIZE).then(function (page) {
-      if (!isCurrent()) return;
-      finish();
+      if (!that._feedCurrent(ctx)) return;
+      that._feedFinish(ctx);
       that._feedHasMore = page.hasMore;
       const feed = more ? that.data.feed.concat(page.rows) : page.rows;
       that.setData({ feed: feed, feedState: feed.length ? 'ready' : 'empty', feedSlow: false, feedError: '' });
-    }, fail);
+    }, function (res) { that._onFeedFail(ctx, res); });
+  },
+
+  _feedCurrent(ctx) { return !!ctx && !this._destroyed && !ctx.done && ctx.requestId === this._feedRequestId; },
+  _feedFinish(ctx) { ctx.done = true; clearTimeout(this._feedSlowTimer); this._feedLoading = false; },
+
+  // 两路请求的 fail 与合流的 reject 都汇到这里,同一轮只落一次。首屏/刷新失败落 feedState=error/stale-error
+  // + feedError(页面 cy-error 呈现并给重试);翻页失败不出错误文案,没取到的那一路保留游标,下次触底重试。
+  _onFeedFail(ctx, res) {
+    if (!this._feedCurrent(ctx)) return;
+    this._feedFinish(ctx);
+    if (ctx.more) return;
+    this.setData({ feedState: ctx.hasSnapshot ? 'stale-error' : 'error', feedSlow: false,
+      feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试') });
   },
 
   _feedSources() {
+    const that = this;
     const sources = [{ fetch: function (beforeId) {
       return new Promise(function (resolve, reject) {
         const body = { scope: 'all', limit: FEED_PAGE_SIZE };
@@ -302,7 +308,7 @@ Page({
             const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
             resolve({ rows: rows, hasMore: res.data.hasMore, cursor: rows.length ? rows[rows.length - 1].id : beforeId });
           },
-          fail: reject,
+          fail(res) { that._onFeedFail(that._feedCtx, res); reject(res); },
         });
       });
     } }];
@@ -319,7 +325,7 @@ Page({
               if (!res || res.code != 200 || !isRecord(res.data) || !isRecordList(res.data.rows)) return reject(res);
               resolve({ rows: res.data.rows.map(discoverFeed.normalizeCommunityPost), hasMore: res.data.hasMore === true, cursor: page + 1 });
             },
-            fail: reject,
+            fail(res) { that._onFeedFail(that._feedCtx, res); reject(res); },
           });
         });
       } });
