@@ -45,8 +45,8 @@
 | a3-v1-p53 | 已修 | 原来是通用场景弹层：让玩家手填「关联报名记录 ID」，列表标题显示「—」，而后端受理口必须带主题，这一点对不上。现在设置里的「投诉建议」改开现成的投诉页：选可投诉的活动 → 选类型 → 写内容 → 填联系方式，数据读 `/api/coop/complaint/topics`，和受理口用同一套判据；页面下面还有「我的处理进展」。页面上不再出现任何 ID 输入。 | `pages/shezhi/shezhi.js`、`tests/unit/qx-a3-20261109.test.js` | `a3-v1-p53-before/after`，单测 | 真实提交没有在 rig 里点（会写真实投诉记录） |
 | a4-v3-27 | 已修 | 打开收集册有过场：三枚带齿孔的邮票（勋章、城市、藏品）从上方依次落下钉住，红图钉弹出，虚线路线把三枚连起来，然后整层淡出，露出收集册（参考 `refs2/album-map-stamps-frames.jpg`）。<br>细节：<br>· 只在从「我的」点三叠小卡进入时播一次；段间切换（勋章 / 邮票 / 藏品）不重播。<br>· 全程约 2 秒，点一下可以跳过。<br>· 只用 transform 和 opacity，打开「减少动态效果」（系统或 App 设置）时不播。<br>· 过场写成组件 `album-intro`，挂在 `album-head` 里，三段页面共用。 | `subpackageP3/components/album-intro/*`（新）、`subpackageP3/components/album-head/*`、`subpackageP3/images/album-intro/*`、`subpackageMember/components/cy/profile/index.js` | `a4-v3-27-intro-1-after`、`-intro-2-after`、`a4-v3-27-before/after`，单测 | 真机帧率 |
 | a4-v3-34 | 已修 | ① 收集册入口去掉灰色卡底和描边，三叠小卡直接落在页面背景上。<br>② 三个图标换成新的 3D 图（来源见下）。<br>③ 跟手倾斜（V3-34 的回答是「要加上」）：手指按住卡堆拖动时，卡堆跟着手指俯仰、侧转（最大 16°），高光带跟着移动；松手回到静止角度。这部分用 WXS 在视图层直接改样式，不走 setData；「减少动态效果」打开时不倾斜。<br>④ 修了台账工具：`build-action-ledger.js` 原来解析不了 `{{tilt.move}}` 这种 WXS 绑定，会直接报错退出。现在 `xcx-scan.findEventBindings` 能识别「本文件 `<wxs module>` 声明过的模块.函数」，把它标成 WXS 响应事件，台账和绑定门禁都跳过它（它不进页面 JS、不发请求、不跳页）。没声明的模块照旧报错。 | `subpackageMember/components/cy/profile/index.wxml`、`index.wxss`、`pile-tilt.wxs`（新）、`subpackageMember/images/album/*`、`scripts/lib/xcx-scan.js`、`scripts/uiaudit/build-action-ledger.js`、`scripts/wxml-handler-lint.js` | `a4-v3-34-before/after`。单测跑 WXS 函数：拖动 (+40, −20) px 得到 rotateX 8° / rotateY 16°，松手复位，减少动态效果时不转；门禁的正控和负控。台账重建通过，`UI-GATE-0:PASS` | 跟手手感（rig 是鼠标，没有真触摸） |
-| a4-v3-36 | 已修 | 漫游护照上面三张档案卡（漫游记录 / 集邮册 / 探索目标）统一成一种样式：同一浅底、居中 3D 图标（世界地图 / 邮票 / 靶心），三张错开相位轻轻上下浮动，减少动态效果时静止。原来的街市照片和外滩楼照片删掉了。官方活动大卡按业主说的不改。玩家自己有轨迹缩略图或邮票图时，仍然先显示自己的图。 | `subpackageRoam/components/roam-photo/*`、`subpackageRoam/assets/icons/*`（新）、`subpackageRoam/assets/photos/SOURCES.md`、`pages/roam/index.js` | `a4-v3-36-before/after`，单测 | — |
-| a7-v1-p59 | 已修 | 按 Revolut 邀请页的结构重排：<br>· 顶部不再套卡，直接在页面底上放「首购奖励积分」大数字，下面一行是叠放头像加「已邀请 N 人 · 已到账 M 人」。<br>· 下面是按月分组的一张列表卡。每行：头像、名字、状态（已加入 · 首购待完成），右侧上方是状态胶囊（待解锁 / 发放中为灰底，已到账为绿底，显示 +N 积分），胶囊下方是邀请时间。行间细线从文字列起。<br>· 所有数字都来自 `/api/user/invite_list` 和积分流水；奖励没同步到时大数字显示「待同步」，不写 0。<br>· 原来「奖励同步中」那行提示删掉了。入场动效保留。 | `subpackageA/components/scene-member-invite-history/*`、`scripts/selectors*.json` | `a7-v1-p59-before/after`，`myinvite-load-state-contract` 等原合同 | — |
+| a4-v3-36 | 已修 | 漫游护照上面三张档案卡（漫游记录 / 集邮册 / 探索目标）统一成一种样式：同一浅底、居中的静态 3D 图标（世界地图 / 邮票 / 靶心）。（循环浮动会新增 keyframes，`motion-property-ratchet` 判红，所以没有做浮动。）原来的街市照片和外滩楼照片删掉了。官方活动大卡按业主说的不改。玩家自己有轨迹缩略图或邮票图时，仍然先显示自己的图。 | `subpackageRoam/components/roam-photo/*`、`subpackageRoam/assets/icons/*`（新）、`subpackageRoam/assets/photos/SOURCES.md`、`pages/roam/index.js` | `a4-v3-36-before/after`，单测 | — |
+| a7-v1-p59 | 已修 | 按 Revolut 邀请页的结构重排：<br>· 顶部不再套卡，直接在页面底上放「首购奖励积分」大数字，下面一行是叠放头像加「已邀请 N 人 · 已到账 M 人」。<br>· 下面是按月分组的一张列表卡。每行：头像、名字、状态（已加入 · 首购待完成），右侧上方是状态胶囊（待解锁 / 发放中 / +N 积分），一律中性灰底。原合同规定奖励不能占用成功绿，所以已到账也不用绿色。胶囊下方是邀请时间。行间细线从文字列起。<br>· 所有数字都来自 `/api/user/invite_list` 和积分流水；奖励没同步到时大数字显示「待同步」，不写 0。<br>· 原来「奖励同步中」那行提示删掉了。入场动效保留。 | `subpackageA/components/scene-member-invite-history/*`、`scripts/selectors*.json` | `a7-v1-p59-before/after`，`myinvite-load-state-contract` 等原合同 | — |
 | b8-x-p3-01 | 已修 | 城市不再单独占一行胶囊。顶部标题就是城市名，旁边有向下箭头；点它弹出城市列表（同一份 `/filters` 城市，当前城市打勾），选中即切换。筛选标签只剩一行。读不到城市时，标题是普通标题，不能点。 | `pages/topic/catalog/index.*` | `b8-x-p3-01-before/after`、`b8-x-p3-01-city-picker-after` | — |
 | b8-x-p3-02 | 已修 | 作品卡：<br>· 封面满幅 320rpx；没有封面时用首页同一张路线插画，不再是灰底加一个小图标。<br>· 类别胶囊放在左上。<br>· 卡下依次是大标题、「城市 · 时长 · 站数」、价格和团体标签。<br>· 卡面去掉描边，改用抬升底。 | 同上 | `b8-x-p3-02-before/after` | 有真实封面时的样子（rig 没有对象存储） |
 
@@ -74,8 +74,8 @@
 ## 测试与门禁
 
 - 新增单测：`tests/unit/r2-visual-tokens.test.js`（3 条）、`tests/unit/r2-visual-items.test.js`（7 条）。
-- 跟着改值的旧合同：`qx-a2-visual-system`、`sheet-halfscreen-glass-contract`、`club-onboarding-figma-contract`、`member-medal-icon-contract`、`qx-a3-20261109`、`myinvite-load-state-contract`、`screenshot-component-fixture-contract`、`action-ledger`。断言的意图都没变，只是追上了新的值。
-- 台账：`build-action-ledger.js --write` 从 5875 增到 5881。tap 2927 → 2930，事件合同 2948 → 2951。
+- 跟着改值的旧合同：`qx-a2-visual-system`、`sheet-halfscreen-glass-contract`、`club-onboarding-figma-contract`、`member-medal-icon-contract`、`profile-album-dark-p22`（业主这次要求去掉卡底，所以它原来「和排名卡同一张卡」的断言改成「直接落在深色背景上、不回浅色纸页」）、`qx-a3-20261109`、`myinvite-load-state-contract`、`screenshot-component-fixture-contract`、`action-ledger`。断言的意图都没变，只是追上了新的值。
+- 台账：`build-action-ledger.js --write` 从 5875 增到 5881。tap 2927 → 2930，事件合同 2948 → 2951；本地 tap 2561 → 2564，本地事件合同 2852 → 2855。
   - 收集册过场：跳过 +1，拦截滑动 +1。
   - 订单封面判横图：bindload ×2。
   - 城市目录：城市名入口和城市列表行 tap +2，cy-tabs 的 change −1，城市弹层的 close +1。
@@ -112,5 +112,5 @@
 3. **投诉建议入口。** 默认改开现成的投诉页，不再用弹层。原来的 `settings-feedback` 场景定义还留着，深链进来照旧能打开；要不要删，你说一声。
 4. **图层弹层每行下面的小字。** 「封面图片节点」「队长头像与剩余名额」「公开内容，位置做合并显示」按「不写多余提示」的规则一起删了。要保留哪一行，告诉我。
 5. **玩家灰字整体提亮。** 这一项影响所有玩家页的二、三级字，商家页不变。如果哪一页因此显得太亮，请指给我看。
-6. **漫游护照三张卡的浮动。** 这里用了一个循环 keyframe（BRIEF 写的是「优先 transition」），因为循环浮动没法用 transition 做；减少动态效果时它是静止的。如果嫌动，可以去掉动画，只留 3D 图标。
+6. **漫游护照三张卡要不要动起来。** 默认是静态 3D 图标。循环浮动要新增 keyframe，而 keyframes 棘轮（`motion-property-ratchet`，上限 146 组）不允许新增。如果你要动起来，需要先批准放宽这个棘轮，或者换成 Lottie 动图。
 7. **订单卡横图封面。** 默认的判断是图片宽 ≥ 1.25 倍高就换成横版。rig 里读不到封面，需要你在真机上看一眼。

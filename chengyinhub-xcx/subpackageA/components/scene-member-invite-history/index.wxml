@@ -32,9 +32,9 @@
           <view class="ir-copy">
             <text class="ir-name ep1">{{item.nickname}}</text>
             <text class="ir-time">{{item.timeText}}</text>
-            <text class="ir-status ep1">{{item.statusText}}</text>
+            <text class="ir-status">{{item.statusText}}</text>
           </view>
-          <view class="ir-pill {{item.earned ? 'ir-pill--earned' : ''}}"><text class="ir-reward">{{item.rewardText}}</text></view>
+          <view class="ir-pill"><text class="ir-reward">{{item.rewardText}}</text></view>
         </view>
       </view>
     </view>

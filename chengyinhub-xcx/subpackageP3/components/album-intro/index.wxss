@@ -4,6 +4,7 @@
   background: radial-gradient(90% 60% at 15% 30%, #CFE0FF 0, rgba(207, 224, 255, 0) 70%), radial-gradient(80% 60% at 90% 80%, #CDEFEB 0, rgba(205, 239, 235, 0) 70%), #FAFBFD; /* ds-ok: 同 album-aura 收集册浅色底 */
   transition: opacity 360ms var(--cy-ease-out); }
 .ai.is-out { opacity: 0; }
+.ai--press { opacity: .9; }
 /* 路线:虚线从第一枚画到第三枚(scaleX 从左展开) */
 .ai__route { position: absolute; left: 170rpx; top: 640rpx; width: 450rpx; height: 6rpx; border-radius: 3rpx;
   background: repeating-linear-gradient(90deg, #1B1D22 0 14rpx, transparent 14rpx 26rpx); /* ds-ok: 路线墨色虚线 */

@@ -1,10 +1,5 @@
 .roam-photo { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-/* 2026-11-10 r2 a4-v3-36:档案三卡统一成同一底色 + 居中 3D 图标,轻浮动(只动 transform),三张错开相位 */
+/* 2026-11-10 r2 a4-v3-36:档案三卡统一成同一底色 + 居中 3D 图标(静止;不新增 keyframes,见 motion-property-ratchet) */
 .roam-3d { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(80% 70% at 30% 20%, #FFFFFF 0, rgba(255, 255, 255, 0) 70%), #F1EFEA; /* ds-ok: 漫游档案卡浅底,与方卡定稿底 #F6F5F2 同族 */ }
-.roam-3d__img { width: 58%; height: 58%; filter: drop-shadow(0 14rpx 18rpx rgba(40, 36, 30, .22)); /* ds-ok: 浅底上的落影 */
-  animation: roam3dFloat 3.2s ease-in-out infinite alternate; }
-.roam-3d__img--stamp { animation-delay: -1.1s; }
-.roam-3d__img--goals { animation-delay: -2.2s; }
-@keyframes roam3dFloat { from { transform: translate3d(0, 6rpx, 0) rotate(-2deg); } to { transform: translate3d(0, -8rpx, 0) rotate(2deg); } }
-@media (prefers-reduced-motion: reduce) { .roam-3d__img { animation: none; } }
+.roam-3d__img { width: 58%; height: 58%; filter: drop-shadow(0 14rpx 18rpx rgba(40, 36, 30, .22)); /* ds-ok: 浅底上的落影 */ }

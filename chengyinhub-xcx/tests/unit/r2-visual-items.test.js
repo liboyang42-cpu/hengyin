@@ -121,5 +121,5 @@ test('a4-v3-36 漫游护照三卡统一 3D 图标;官方活动仍用原照片', 
   assert.match(wxml, /name === 'history' \|\| name === 'stamp' \|\| name === 'goals'/)
   for (const n of ['history', 'stamp', 'goals']) assert.ok(fs.existsSync(path.join(root, 'subpackageRoam/assets/icons/' + n + '.png')))
   assert.match(read('pages/roam/index.js'), /key: 'goals'[^}]*photo: 'goals'/)
-  assert.match(read('subpackageRoam/components/roam-photo/index.wxss'), /@media \(prefers-reduced-motion: reduce\)/)
+  assert.doesNotMatch(read('subpackageRoam/components/roam-photo/index.wxss'), /@keyframes|animation:/, '不新增 keyframes')
 })

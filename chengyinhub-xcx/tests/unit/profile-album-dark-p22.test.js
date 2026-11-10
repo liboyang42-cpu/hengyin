@@ -11,13 +11,13 @@ function rule(selector) {
   return wxss.slice(i, wxss.indexOf('}', i))
 }
 
-test('玩家收集册用深色套件的面与边,和排名卡一致', () => {
+// 2026-11-10 r2 a4-v3-34 业主「收集册底部不需要灰色的底 直接在背景上」:P-22 的「同排名卡一张卡」改为不垫卡底,
+// 仍是玩家深色套件的字(无衬线、继承深色字色),不退回浅色纸页。
+test('玩家收集册直接落在深色页面背景上,不垫卡底、不回浅色纸页', () => {
   const album = rule('.pc-player .pc-album')
-  const rank = rule('.pc-player .pc-rank')
-  for (const token of ['var(--cy-color-bg-elevated)', 'var(--cy-color-border-subtle)']) {
-    assert.ok(album.includes(token), 'album ' + token)
-    assert.ok(rank.includes(token), 'rank ' + token)
-  }
-  assert.match(album, /border-radius: var\(--cy-radius-md\)/)
+  assert.match(album, /background: transparent; border: 0;/)
+  assert.doesNotMatch(album, /#FAFBFD|radial-gradient/, '不回浅色纸页')
+  assert.match(album, /color: var\(--cy-color-text-primary\)/)
+  assert.match(rule('.pc-player .pc-rank'), /var\(--cy-color-bg-elevated\)/, '排名卡不受影响')
   assert.match(rule('.pc-player .pc-album-t'), /font-family: inherit/)
 })
