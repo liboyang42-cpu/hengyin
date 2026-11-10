@@ -207,7 +207,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
                 || StringUtils.isBlank(frozen)
                 || !Objects.equals(revision.getContentSha256(),
                     com.chengyinhub.business.service.support.CanonicalDigest.sha256Hex(frozen))
-                || !Objects.equals(frozen, source.getPublishedRouteGraphJson())) {
+                || !samePublishedSnapshot(frozen, source.getPublishedRouteGraphJson())) {
             throw new IllegalArgumentException("来源修订与当前发布快照不一致");
         }
         try {
@@ -227,6 +227,22 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             throw new IllegalArgumentException("来源草稿不能按当前发布修订采用：" + invalid.getMessage(), invalid);
         }
         return revision.getId();
+    }
+
+    /**
+     * 修订行 snapshot_json 是 longtext,原样保存发布时的字节(content_sha256 也按它算);
+     * cms_topic.published_route_graph_json 是 MySQL JSON 列,读回时键序与空白已被服务器重排。
+     * 两者只能按 JSON 语义比较:字符串相等在真库上恒不成立,会让每一次整主题采用都被拒。
+     * 内容哈希仍对修订原文校验,语义比较只用来确认「发布头就是这份修订」。
+     */
+    private boolean samePublishedSnapshot(String frozen, String publishedHead) {
+        if (StringUtils.isBlank(publishedHead)) return false;
+        if (frozen.equals(publishedHead)) return true;
+        try {
+            return topicRouteConfigValidator.readTree(frozen).equals(topicRouteConfigValidator.readTree(publishedHead));
+        } catch (IllegalArgumentException | IllegalStateException unreadable) {
+            return false;
+        }
     }
 
     /**
