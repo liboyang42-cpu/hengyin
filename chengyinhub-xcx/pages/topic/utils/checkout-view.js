@@ -73,13 +73,17 @@ function checkoutView(o) {
   const quote = opt.quoteState === 'ready' ? (opt.quote || null) : null;
   const listed = isNum(info.selfPlayPrice) ? Number(info.selfPlayPrice) : null;
   const pay = quote && isNum(quote.payAmount) ? Number(quote.payAmount) : (opt.quoteState === 'refused' ? null : listed);
-  const discount = quote && isNum(quote.memberDiscountYuan) && Number(quote.memberDiscountYuan) > 0 ? Number(quote.memberDiscountYuan) : 0;
+  // l-pass:通行证覆盖(服务端 platformPassCovered === true)时报价已是 ¥0,减免额 = 原价,不是俱乐部会员减免。
+  const member = !!(quote && quote.platformPassCovered === true && pay !== null && !(pay > 0));
+  const discount = !member && quote && isNum(quote.memberDiscountYuan) && Number(quote.memberDiscountYuan) > 0 ? Number(quote.memberDiscountYuan) : 0;
   const win = opt.win || {};
 
   const bill = [];
   if (pay !== null) {
-    bill.push({ key: 'pass', k: '自玩通行证 × 1', v: yuan(discount ? pay + discount : pay) });
+    const listAmount = member && isNum(quote.memberDiscountYuan) ? Number(quote.memberDiscountYuan) : (discount ? pay + discount : pay);
+    bill.push({ key: 'pass', k: '自玩通行证 × 1', v: yuan(listAmount) });
     if (discount) bill.push({ key: 'club', k: '俱乐部会员', v: '-' + yuan(discount), minus: true });
+    if (member) bill.push({ key: 'member', k: '通行证', v: '你已可直接游玩', minus: true });
   }
 
   const trust = [];
@@ -97,7 +101,8 @@ function checkoutView(o) {
       strike: discount ? yuan(pay + discount) : '',
       line: win.untilText ? '可玩至 ' + win.untilText : ''
     },
-    passes: coveringPasses(opt.products, info.id),
+    member,
+    passes: member ? [] : coveringPasses(opt.products, info.id),
     bill,
     totalText: pay === null ? '—' : yuan(pay),
     trust,

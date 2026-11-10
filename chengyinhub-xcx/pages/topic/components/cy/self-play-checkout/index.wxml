@@ -14,6 +14,9 @@
       </view>
     </view>
 
+    <!-- l-pass:通行证覆盖本主题(服务端 platformPassCovered)时本单 ¥0 -->
+    <view class="ck__member" wx:if="{{view.member}}" aria-role="status"><text>你的通行证覆盖这个主题 · 本单 ¥0</text></view>
+
     <!-- 2 单次购买(默认选中) -->
     <view class="ck__opt is-sel" aria-role="radio" aria-checked="true" aria-label="{{view.single.title}} {{view.single.price}}">
       <view class="ck__opt-top">

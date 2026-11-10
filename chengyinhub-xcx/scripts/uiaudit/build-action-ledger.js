@@ -558,6 +558,31 @@ const ACTION_VARIANTS = new Map([
     effectClasses: ['write', 'state'],
   }]],
   ['subpackageMember/tixian/tixian.js:saveData', [withdrawSubmitVariant('saveData')]],
+  // l-pass 通行证开通:同一次点击串行「建单 → 拉支付参数 →(虚拟支付)服务端回查」,开通只认服务端 PAID。
+  // iOS 走 requestVirtualPayment(虚拟支付),其他走 requestPayment(JSAPI);取消不回查。
+  ['subpackageMember/market/membership/index.js:onBuy', [{
+    id: null, handler: 'onBuy',
+    apis: ['/api/platform-pass/orders', '/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm', '/api/platform-pass/orders/{param}'],
+    writeApis: ['/api/platform-pass/orders', '/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm'],
+    effectClasses: ['write', 'state'],
+    externalCapabilities: ['requestPayment', 'login'],
+    requiredRequests: [
+      { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
+      { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+    ],
+    requiredRequestsByBranch: {
+      'jsapi-paid': [
+        { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+      ],
+      'xpay-paid': [
+        { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/confirm', method: 'POST', kind: 'write' },
+      ],
+      'order-refused': [{ urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' }],
+    },
+  }]],
   ['subpackageA/pages/assetcenter/earnings/index.js:onTxSave', [withdrawSubmitVariant('onTxSave')]],
   ['pages/roam/index.js:goStart', [{
     id: null, handler: 'goStart', apis: ['/api/compliance/consents', '/api/compliance/consents/latest'],

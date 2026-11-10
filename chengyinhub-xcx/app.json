@@ -272,7 +272,9 @@
         "tixianjilu/tixianjilu",
         "market/passes/index",
         "market/pass/index",
-        "market/gift/index"
+        "market/gift/index",
+        "market/membership/index",
+        "market/library/index"
       ]
     },
     {
