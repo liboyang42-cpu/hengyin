@@ -18,6 +18,23 @@ function paintCells(slots, typed) {
   });
 }
 
+/** 按分隔符把格子分成词组:一个词不被折断,词与词之间才换行(长短语也能一屏看全)。 */
+function groupCells(cells) {
+  const groups = [];
+  let cur = [];
+  (cells || []).forEach((cell) => {
+    if (cell.kind === 'SEPARATOR') {
+      if (cur.length) groups.push({ k: 'g' + cur[0].i, cells: cur });
+      cur = [];
+      if (cell.ch && cell.ch !== ' ') groups.push({ k: 's' + cell.i, sep: cell.ch, cells: [] });
+      return;
+    }
+    cur.push(cell);
+  });
+  if (cur.length) groups.push({ k: 'g' + cur[0].i, cells: cur });
+  return groups;
+}
+
 /** 下一格可编辑的空格;没有返回 -1。 */
 function nextBlank(cells, from) {
   const list = cells || [];
@@ -38,7 +55,7 @@ Component({
     solved: { type: Boolean, value: false },
     display: { type: String, value: '' },
   },
-  data: { cells: [], active: -1, activeAnchor: '', word: '', verdict: '', canSubmit: false },
+  data: { groups: [], active: -1, word: '', verdict: '', canSubmit: false },
   observers: {
     'show, slots, solved': function (show, slots, solved) {
       if (!show) { this._typed = {}; this._pending = false; return; }
@@ -47,20 +64,21 @@ Component({
       /* 刚交过、服务端回来仍未解开:整体提示「还不对」,不逐格标红(服务端不给逐格对错) */
       const verdict = this._pending && !solved ? 'no' : (solved ? 'ok' : this.data.verdict);
       this._pending = false;
-      this.setData({ cells, verdict, active: solved ? -1 : this.data.active, canSubmit: !!hangmanPayload(slots, this._typed, this.data.word) });
+      this.setData({ groups: groupCells(cells), verdict, active: solved ? -1 : this.data.active, canSubmit: !!hangmanPayload(slots, this._typed, this.data.word) });
       if (solved) motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
     },
   },
   methods: {
     _paintCells: paintCells,
     _nextBlank: nextBlank,
+    _groupCells: groupCells,
     onPickCell(e) {
       if (this.data.solved) return;
       const kind = e.currentTarget.dataset.kind;
       if (kind === 'PREFILLED' || kind === 'SEPARATOR') return;
       const i = Number(e.currentTarget.dataset.i);
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this.setData({ active: this.data.active === i ? -1 : i, activeAnchor: 'hm-' + i });
+      this.setData({ active: this.data.active === i ? -1 : i });
     },
     onCellInput(e) {
       const i = this.data.active;
@@ -70,10 +88,12 @@ Component({
       this._typed = Object.assign({}, this._typed, { [i]: ch });
       const cells = paintCells(this.data.slots, this._typed);
       const next = ch ? nextBlank(cells, i) : i;
-      this.setData({ cells, verdict: '', active: next, activeAnchor: next >= 0 ? 'hm-' + next : '',
+      this.setData({ groups: groupCells(cells), verdict: '', active: next,
         canSubmit: !!hangmanPayload(this.data.slots, this._typed, this.data.word) });
       return '';
     },
+    /** 键盘收起:格子退出编辑态,已补的字留着。 */
+    onCellBlur() { if (this.data.active >= 0) this.setData({ active: -1 }); },
     onWordInput(e) {
       const word = e.detail.value;
       this.setData({ word, verdict: '', canSubmit: !!hangmanPayload(this.data.slots, this._typed, word) });

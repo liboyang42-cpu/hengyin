@@ -573,8 +573,6 @@ function pickPlayKit(view, now) {
         // 选项文案要给,**哪个是对的不给** —— 判定回来之后才知道
         /* UG-02:选项图只在服务端给了可显示地址时出现;没给或是 media-asset 引用就只显示文字 */
         options: questo.qaOptions(seg.options),
-        /* UG-10:只有 MIRROR 要呈现层翻转题面文字;REVERSE 的倒序串服务端已给好,原样渲染 */
-        clueMode: questo.clueMode(view),
         // 多选标记:老单选配置服务端不给这个字段,缺省按单选渲染(单选行为一字不变)
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,

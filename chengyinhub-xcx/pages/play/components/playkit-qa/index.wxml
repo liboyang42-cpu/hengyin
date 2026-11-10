@@ -7,8 +7,7 @@
   <view class="g-col qa {{intro ? 'qa--intro' : ''}} {{burning ? 'qa--burning' : ''}} {{reducedMotion ? 'qa--reduced' : ''}}">
     <!-- 拍照那一档的大字默认回落成题干(见 advanced-game-preview 的 shotLead)。
          两处印同一句话时,只留中间那一句 —— 上面再来一遍是重复,不是强调。 -->
-    <!-- UG-10 谜面变换:MIRROR 只翻这一层题面文字(选项/输入/按钮都不翻);REVERSE 的倒序串服务端已给好,原样渲染 -->
-    <view class="qa__q pe pe--blur" style="--pe-d:.05s;--pe-dur:.7s" wx:if="{{!(mode === 'shot' && shotLead === title)}}"><view class="{{clueMode === 'MIRROR' ? 'qa__q-mirror' : ''}}">{{title}}</view></view>
+    <view class="qa__q pe pe--blur" style="--pe-d:.05s;--pe-dur:.7s" wx:if="{{!(mode === 'shot' && shotLead === title)}}">{{title}}</view>
 
     <!-- 一进来题目在屏幕正中,一秒后选项才出现 —— 一屏一件事:
          先让人把题读完,再给他可以按的东西。同时出现的话,人只会扫按钮。 -->
@@ -33,7 +32,7 @@
       </block>
 
       <!-- ② 选项作答。每一条的文案、对错、反馈都在它自己里面 -->
-      <view class="qa__opts" wx:elif="{{mode === 'pick'}}">
+      <view class="qa__opts {{picGrid ? 'qa__opts--pic' : ''}}" wx:elif="{{mode === 'pick'}}">
         <view class="qa__opt {{item.state}} {{index === 0 ? 'qa__opt--first' : ''}}"
               wx:for="{{optionList}}" wx:key="k"
               data-i="{{index}}" bindtap="onPick"
@@ -43,6 +42,7 @@
             <view class="qa__opt-k">{{item.key}}</view>
             <!-- UG-02 选项图:服务端给了可显示地址才出;固定比例,选中态不跳。文字仍是主标签 -->
             <image wx:if="{{item.img}}" class="qa__opt-img" src="{{item.img}}" mode="aspectFill" aria-hidden="true" binderror="onOptionImgError" data-i="{{index}}" />
+            <view wx:elif="{{picGrid}}" class="qa__opt-img qa__opt-img--none" aria-hidden="true">{{item.key}}</view>
             <!-- 这儿原先还有「选项配图」和「选项配音」两个角标。删掉的理由:**商家配不了** ——
                  选项配置只有 {id, label, fb, correct},pickPlayKit 也只过桥 {id, t},
                  img / audio 全链路没有一处产出。留着它只在夹具里演:实测选项 B 空出一个

@@ -4,7 +4,6 @@
  * 只往原 advancedConfigJson 里写服务端已接线的键,不新增接口:
  *   hangman{enabled,answer,format[],aliases[],caseSensitive}
  *   qa.options[].img / alt
- *   clueTransform{mode}            (STANDARD = 不写键)
  *   accusation{enabled,suspects[],introScreens,winScreen,loseScreen,corkboardImage,earlyAccuse}
  *   hintLadder[{level,type,payload,cost:{points}}] + 根层 hintFreeUsesPerRun
  *   answerPolicy{version:1,normalizationPolicy:'LEGACY_V1',acceptedAliases[]}
@@ -18,11 +17,6 @@ const HINT_TYPES = [
   { value: 'DIGIT', label: '数字' },
   { value: 'ANSWER', label: '答案' },
   { value: 'SKIP', label: '跳过' },
-];
-const CLUE_MODES = [
-  { value: 'STANDARD', label: '原样' },
-  { value: 'MIRROR', label: '镜像' },
-  { value: 'REVERSE', label: '倒序' },
 ];
 const MAX_HINT_LEVELS = 6;
 const MAX_RUN_FREE_USES = 1000;
@@ -47,6 +41,18 @@ function hangmanCells(section) {
     const given = !sep && typeof slot === 'string' && slot !== '' && slot !== BLANK;
     return { i, ch, sep, given };
   });
+}
+
+/** 格子按词分组:一个词不折行,词与词之间才换行(长答案也一眼看全)。 */
+function hangmanGroups(cells) {
+  const groups = [];
+  let cur = [];
+  (cells || []).forEach((cell) => {
+    if (cell.sep) { if (cur.length) groups.push({ k: 'g' + cur[0].i, cells: cur }); cur = []; if (cell.ch.trim()) groups.push({ k: 's' + cell.i, sep: cell.ch, cells: [] }); return; }
+    cur.push(cell);
+  });
+  if (cur.length) groups.push({ k: 'g' + cur[0].i, cells: cur });
+  return groups;
 }
 
 /** 改答案时保留仍对得上的预填格,对不上的改回待补。全部待补时不写 format。 */
@@ -84,15 +90,15 @@ function hangmanError(section, live) {
   return '';
 }
 
-/** 选项配图必须带替代文字(UG-02);返回 { 选项下标: 错误 }。 */
-function optionMediaErrors(qa) {
+/** 选项配图(UG-02):替代文字默认取选项文案(存盘时补),不再单独要作者填。
+ *  只剩一种冲突:配了图却没写选项文案,读屏和图片说明都无从取。返回 { 选项下标: 错误 }。 */
+function optionMediaErrors(qa, live) {
   const out = {};
-  if (!qa || !qa.enabled || qa.mode !== 'PICK') return out;
+  if (live || !qa || !qa.enabled || qa.mode !== 'PICK') return out;
   (qa.options || []).forEach((o, i) => {
     const img = String((o && o.img) || '').trim();
-    const alt = String((o && o.alt) || '').trim();
-    if (img && !alt) out[i] = '配了图就要写替代文字';
-    else if (!img && alt) out[i] = '写了替代文字就要配图';
+    const alt = String((o && o.alt) || '').trim() || String((o && o.label) || '').trim();
+    if (img && !alt) out[i] = '配了图的选项要写文案';
   });
   return out;
 }
@@ -170,7 +176,8 @@ function beforeSave(advanced) {
   if (next.qa && Array.isArray(next.qa.options)) {
     next.qa.options = next.qa.options.map((o) => {
       const row = Object.assign({}, o);
-      if (!String(row.img || '').trim()) { delete row.img; delete row.alt; }
+      if (!String(row.img || '').trim()) { delete row.img; delete row.alt; return row; }
+      if (!String(row.alt || '').trim() && String(row.label || '').trim()) row.alt = String(row.label).trim();
       return row;
     });
   }
@@ -201,9 +208,9 @@ function view(advanced, submitted) {
   const hint = hintErrors(a, live);
   return {
     qzHangmanCells: hangmanCells(a.hangman),
+    qzHangmanGroups: hangmanGroups(hangmanCells(a.hangman)),
     qzHangmanError: hangmanError(a.hangman, live),
-    qzOptionErrors: optionMediaErrors(a.qa),
-    qzClueIndex: Math.max(0, CLUE_MODES.findIndex((m) => m.value === ((a.clueTransform && a.clueTransform.mode) || 'STANDARD'))),
+    qzOptionErrors: optionMediaErrors(a.qa, live),
     qzAccusationOn: !!(a.accusation && a.accusation.enabled),
     qzSuspects: a.accusation && a.accusation.enabled ? syncSuspects(a.accusation, a.qa && a.qa.options) : [],
     qzAccusationError: accusationError(a, live),
@@ -274,14 +281,15 @@ const methods = {
     const i = Number(e.currentTarget.dataset.index);
     this._qzAdvanced((a) => { const o = a.qa.options[i]; if (!o) return false; delete o.img; delete o.alt; });
   },
-  qzOptionAlt(e) {
-    const i = Number(e.currentTarget.dataset.index);
-    this._qzAdvanced((a) => { const o = a.qa.options[i]; if (!o) return false; o.alt = e.detail.value; });
-  },
-  /* ---- UG-10 谜面变换 ---- */
-  qzClueMode(e) {
-    const mode = (CLUE_MODES[Number(e.detail.value)] || CLUE_MODES[0]).value;
-    this._qzAdvanced((a) => { if (mode === 'STANDARD') delete a.clueTransform; else a.clueTransform = { mode }; });
+  /* ---- b2-x-cat 逐字猜词在文字问答表单里切换(不单独占选择器标签) ---- */
+  qzHangmanForm(e) {
+    const on = !!e.detail.value;
+    const before = this.data.advanced || {};
+    const answer = String((before.qa && before.qa.answerText) || '').split(/[、,，]/)[0].trim();
+    this.pickGame({ currentTarget: { dataset: { key: on ? 'hangman' : 'qaText', r5: true } } });
+    if (on && answer && !String((this.data.advanced.hangman || {}).answer || '').trim()) {
+      this._qzAdvanced((a) => { a.hangman = Object.assign({}, a.hangman, { answer, format: reshapeFormat(answer, []) }); });
+    }
   },
   /* ---- UG-03/04 指认结案 ---- */
   qzAccusationToggle(e) {
@@ -358,5 +366,5 @@ const methods = {
   qzAliasDel(e) { const i = Number(e.currentTarget.dataset.index); this._qzAdvanced((a) => { a.answerPolicy.acceptedAliases.splice(i, 1); if (!a.answerPolicy.acceptedAliases.length) delete a.answerPolicy; }); },
 };
 
-module.exports = { HINT_TYPES, CLUE_MODES, hangmanCells, reshapeFormat, toggleGiven, hangmanError, optionMediaErrors,
+module.exports = { HINT_TYPES, hangmanCells, hangmanGroups, reshapeFormat, toggleGiven, hangmanError, optionMediaErrors,
   syncSuspects, accusationError, hintErrors, aliasError, beforeSave, view, hasErrors, methods };

@@ -374,7 +374,7 @@ Page({
 
     // 通用底部选择器
     pickerSheet: { open: false, key: '', title: '', options: [] },
-    qaAnswerError: '', qzHintTypes: questoAuthor.HINT_TYPES, qzClueModes: questoAuthor.CLUE_MODES, ...questoAuthor.view(advancedGameConfig.defaultConfig()), // Questo 新玩法作者配置(questo-author.js)
+    qaAnswerError: '', qzHintTypes: questoAuthor.HINT_TYPES, ...questoAuthor.view(advancedGameConfig.defaultConfig()), // Questo 新玩法作者配置(questo-author.js)
     segmentOn: {}, segmentAddOptions: [], clueContent: {},
 
     // 校验滚动(scroll-view 内)

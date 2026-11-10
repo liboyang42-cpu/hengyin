@@ -358,8 +358,6 @@
     <view class="cg-qa-sec cg-qa-sec--first">题目</view>
     <view class="cg-cfg-label">题干 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.title}}" placeholder="例如 这座桥建于哪一年？" data-section="qa" data-field="title" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">谜面呈现</view>
-    <cy-dropdown topic-editor columns="{{3}}" range="{{qzClueModes}}" range-key="label" value="{{qzClueIndex}}" bind:change="qzClueMode"><view class="cg-pick">{{opt.label(qzClueModes, advanced.clueTransform.mode || 'STANDARD', 'value')}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
     <view class="cg-cfg-label">前置说明 <text class="req" wx:if="{{advanced.qa.mode === 'SHOT'}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.lead}}" placeholder="例如 先闭上眼睛尝一口" data-section="qa" data-field="lead" bindinput="onAdvancedField" />
     <block wx:if="{{advanced.qa.mode === 'SHOT'}}">
@@ -368,6 +366,7 @@
     </block>
 
     <block wx:if="{{advanced.qa.mode === 'TYPE'}}">
+    <view class="cg-rw-line" wx:if="{{gameKey === 'qaText'}}"><view class="cg-rw-meta"><view class="cg-rw-name">逐字猜词</view></view><cy-switch checked="{{false}}" bindchange="qzHangmanForm" accessibility-label="逐字猜词" /></view>
     <view class="cg-cfg-label">正确答案 <text class="req" wx:if="{{!formData.originalTemplateId}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.answerText}}" placeholder="可填多个，用、分隔" data-section="qa" data-field="answerText" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">其他可接受写法</view>
@@ -401,15 +400,15 @@
         <text>选项 {{qi + 1}}</text>
         <view class="cg-adv-del" data-path="qa.options" data-index="{{qi}}" bindtap="removeAdvancedRow" aria-role="button" aria-label="删除选项 {{qi + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
       </view>
-      <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
-      <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
-        <view class="cg-qmedia-slot" wx:if="{{item.img}}">
-          <image class="cg-qmedia-img" src="{{item.img}}" mode="aspectFill" />
-          <view class="cg-qmedia-x" data-index="{{qi}}" catchtap="qzOptionImgDel" aria-role="button" aria-label="删除选项 {{qi + 1}} 的图" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-qmedia-x__glyph"><cy-icon name="close-sm" size="24" /></view></view>
+      <!-- UG-02 r2:选项图与文案并排一行;图片说明默认取选项文案,不另设一栏 -->
+      <view class="cg-qz-optrow">
+        <view class="cg-qz-thumb" wx:if="{{item.img}}">
+          <image class="cg-qz-thumb__img" src="{{item.img}}" mode="aspectFill" />
+          <view class="cg-qz-thumb__x" data-index="{{qi}}" catchtap="qzOptionImgDel" aria-role="button" aria-label="删除选项 {{qi + 1}} 的图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="20" /></view>
         </view>
-        <view class="cg-qmedia-add" wx:else data-index="{{qi}}" bindtap="qzOptionImg" aria-role="button" aria-label="给选项 {{qi + 1}} 配图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">选项图</text></view>
+        <view class="cg-qz-thumb cg-qz-thumb--add" wx:else data-index="{{qi}}" bindtap="qzOptionImg" aria-role="button" aria-label="给选项 {{qi + 1}} 配图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /></view>
+        <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
       </view>
-      <input wx:if="{{item.img || item.alt}}" class="cg-cfg-input" value="{{item.alt}}" placeholder="图片替代文字" data-index="{{qi}}" bindinput="qzOptionAlt" />
       <view class="cg-qz-err" wx:if="{{qzOptionErrors[qi]}}">{{qzOptionErrors[qi]}}</view>
       <view class="cg-qa-fb">
         <view class="cg-cfg-label">选中后的反馈</view>
@@ -439,18 +438,22 @@
     <view class="cg-qa-sec">指认结案</view>
     <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">把选项做成人物指认</view></view><cy-switch checked="{{qzAccusationOn}}" bindchange="qzAccusationToggle" accessibility-label="把选项做成人物指认" /></view>
     <block wx:if="{{qzAccusationOn}}">
-      <view class="cg-qz-tag">待运行验证</view>
-      <view class="cg-adv-repeat" wx:for="{{qzSuspects}}" wx:key="id" wx:for-item="sp" wx:for-index="si">
-        <view class="cg-adv-repeat-head"><text>{{sp.name || ('选项 ' + (si + 1))}}</text></view>
-        <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
-          <view class="cg-qmedia-slot" wx:if="{{sp.avatar}}" data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="更换{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qmedia-img" src="{{sp.avatar}}" mode="aspectFill" /></view>
-          <view class="cg-qmedia-add" wx:else data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="上传{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">头像</text></view>
+      <!-- UG-03 r2:人物卡 = 头像与姓名/身份同一行;证词整行写,解锁线索在它下面 -->
+      <view class="cg-qz-person" wx:for="{{qzSuspects}}" wx:key="id" wx:for-item="sp" wx:for-index="si">
+        <view class="cg-qz-optrow">
+          <view class="cg-qz-thumb" wx:if="{{sp.avatar}}" data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="更换{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qz-thumb__img" src="{{sp.avatar}}" mode="aspectFill" /></view>
+          <view class="cg-qz-thumb cg-qz-thumb--add" wx:else data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="上传{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /></view>
+          <view class="cg-qz-person__main">
+            <view class="cg-qz-person__name">{{sp.name || ('选项 ' + (si + 1))}}</view>
+            <input class="cg-cfg-input" value="{{sp.identity}}" placeholder="身份" data-index="{{si}}" bindinput="qzSuspectIdentity" />
+          </view>
         </view>
-        <input class="cg-cfg-input" value="{{sp.identity}}" placeholder="身份，如 古董店老板" data-index="{{si}}" bindinput="qzSuspectIdentity" />
-        <view class="cg-qz-line" wx:for="{{sp.testimony}}" wx:key="index" wx:for-item="tm" wx:for-index="ti">
-          <input class="cg-cfg-input cg-qz-key" value="{{tm.key}}" placeholder="线索，如 clue.a" data-index="{{si}}" data-row="{{ti}}" data-field="key" bindinput="qzTestimonyField" />
-          <input class="cg-cfg-input" value="{{tm.text}}" placeholder="证词" data-index="{{si}}" data-row="{{ti}}" data-field="text" bindinput="qzTestimonyField" />
-          <view class="cg-adv-del" data-index="{{si}}" data-row="{{ti}}" bindtap="qzTestimonyDel" aria-role="button" aria-label="删除证词 {{ti + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+        <view class="cg-qz-tm" wx:for="{{sp.testimony}}" wx:key="index" wx:for-item="tm" wx:for-index="ti">
+          <view class="cg-qz-line">
+            <input class="cg-cfg-input" value="{{tm.text}}" placeholder="证词" data-index="{{si}}" data-row="{{ti}}" data-field="text" bindinput="qzTestimonyField" />
+            <view class="cg-adv-del" data-index="{{si}}" data-row="{{ti}}" bindtap="qzTestimonyDel" aria-role="button" aria-label="删除证词 {{ti + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+          </view>
+          <input class="cg-cfg-input cg-qz-key" value="{{tm.key}}" placeholder="拿到哪条线索后显示" data-index="{{si}}" data-row="{{ti}}" data-field="key" bindinput="qzTestimonyField" />
         </view>
         <view class="cg-adv-add" data-index="{{si}}" bindtap="qzTestimonyAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加证词</view>
       </view>
@@ -479,14 +482,20 @@
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'hangman'}}">
       <view class="cg-adv-body">
+    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">逐字猜词</view></view><cy-switch checked="{{true}}" bindchange="qzHangmanForm" accessibility-label="逐字猜词" /></view>
     <view class="cg-cfg-label">答案 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.hangman.answer}}" maxlength="40" placeholder="例如 ENDLESS" bindinput="qzHangmanAnswer" />
     <block wx:if="{{qzHangmanCells.length}}">
     <view class="cg-cfg-label">格子</view>
     <view class="cg-qz-cells">
-      <view wx:for="{{qzHangmanCells}}" wx:key="i" class="cg-qz-cell {{item.sep ? 'is-sep' : ''}} {{item.given ? 'is-given' : ''}}"
-            data-index="{{item.i}}" bindtap="qzHangmanCell" aria-role="{{item.sep ? 'text' : 'button'}}"
-            aria-label="第 {{item.i + 1}} 格 {{item.ch}}{{item.sep ? '' : (item.given ? '，已给出' : '，玩家补')}}" hover-class="{{item.sep ? '' : 'cy-pressed'}}" hover-stay-time="80">{{item.given || item.sep ? item.ch : '_'}}</view>
+      <block wx:for="{{qzHangmanGroups}}" wx:key="k" wx:for-item="g">
+        <view wx:if="{{g.sep}}" class="cg-qz-cell is-sep" aria-hidden="true">{{g.sep}}</view>
+        <view wx:else class="cg-qz-word">
+          <view wx:for="{{g.cells}}" wx:key="i" class="cg-qz-cell {{item.given ? 'is-given' : ''}}"
+                data-index="{{item.i}}" bindtap="qzHangmanCell" aria-role="button"
+                aria-label="第 {{item.i + 1}} 格 {{item.ch}}{{item.given ? '，已给出' : '，玩家补'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.given ? item.ch : ''}}</view>
+        </view>
+      </block>
     </view>
     </block>
     <view class="cg-qz-err" wx:if="{{qzHangmanError}}">{{qzHangmanError}}</view>

@@ -126,7 +126,7 @@
 
 <cy-playkit-qa wx:elif="{{kit.type === 'qa'}}" inline="{{inline}}"
   session-id="{{kit.sessionId}}" node-id="{{kit.nodeId}}"
-  show="{{show}}" mode="{{kit.mode}}" theme="{{kit.theme}}" title="{{kit.title}}" clue-mode="{{kit.clueMode}}"
+  show="{{show}}" mode="{{kit.mode}}" theme="{{kit.theme}}" title="{{kit.title}}"
   image-url="{{kit.imageUrl}}" audio-url="{{kit.audioUrl}}" lead="{{kit.lead}}"
   options="{{kit.options}}" shot-lead="{{kit.shotLead}}" shot-note="{{kit.shotNote}}"
   limit-seconds="{{kit.limitSeconds}}" max-tries="{{kit.maxTries}}" reveal="{{kit.reveal}}"

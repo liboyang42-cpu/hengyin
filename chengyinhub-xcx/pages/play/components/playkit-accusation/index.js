@@ -7,15 +7,21 @@
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
-const modal = require('../../../../utils/modal.js');
 
 function withInitials(suspects) {
   return (suspects || []).map((s) => Object.assign({}, s, { initial: Array.from(String(s.name || ''))[0] || '' }));
 }
 
-/** 二次确认文案:必须写明「这是最终指认」(UG-03)。 */
+/** 二次确认文案:必须写明「这是最终指认」(UG-03)。r2 起由本屏自己的确认层展示,不再走系统弹窗。 */
 function confirmContent(name) {
   return '这是最终指认：' + (name || '所选人物');
+}
+
+/** 结论 → 动图种类(r2 b2-ug-04):结案 = 庆祝,失败 = 失败,结算确认中 = 搜查。 */
+function animKind(outcome, pending) {
+  if (outcome === 'SOLVED' || outcome === 'EARLY') return 'success';
+  if (outcome === 'FAILED') return 'fail';
+  return pending ? 'search' : '';
 }
 
 Component({
@@ -35,10 +41,13 @@ Component({
     retryNote: { type: String, value: '' },
     screen: { type: Array, value: [] },
   },
-  data: { suspects: [], selected: '', dossier: null },
+  data: { suspects: [], selected: '', dossier: null, confirmOpen: false, confirmText: '', anim: '' },
   observers: {
+    'outcome, pending': function (outcome, pending) {
+      this.setData({ anim: animKind(outcome, pending) });
+    },
     'show, suspectList': function (show, list) {
-      if (!show) { this.setData({ selected: '', dossier: null }); return; }
+      if (!show) { this.setData({ selected: '', dossier: null, confirmOpen: false }); return; }
       const suspects = withInitials(list);
       const keep = suspects.find((s) => s.id === this.data.selected) || null;
       this.setData({ suspects, selected: keep ? keep.id : '', dossier: keep });
@@ -46,28 +55,29 @@ Component({
   },
   methods: {
     _confirmContent: confirmContent,
+    _animKind: animKind,
     onPick(e) {
       const id = e.currentTarget.dataset.id;
       const dossier = this.data.suspects.find((s) => s.id === id) || null;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
       this.setData({ selected: id, dossier });
     },
-    onReset() { this.setData({ selected: '', dossier: null }); },
+    /** 「确认指认」:先开本屏的确认层(关闭在右上角);层里再确认才交原 SUBMIT_QA。 */
     onConfirm() {
       const pick = this.data.dossier;
-      if (!pick || this._asking) return;
-      this._asking = true;
-      modal.show({
-        title: '确认指认',
-        content: confirmContent(pick.name),
-        confirmText: '确认指认',
-        cancelText: '再想想',
-        success: (res) => {
-          if (res.confirm && this.data.selected === pick.id) this.triggerEvent('submit', { optionId: pick.id });
-        },
-        complete: () => { this._asking = false; },
-      });
+      if (!pick || this.data.confirmOpen) return;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ confirmOpen: true, confirmText: confirmContent(pick.name) });
     },
+    onConfirmCancel() { this.setData({ confirmOpen: false }); },
+    onConfirmGo() {
+      const pick = this.data.dossier;
+      if (!pick || !this.data.confirmOpen) return;
+      this.setData({ confirmOpen: false });
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      if (this.data.selected === pick.id) this.triggerEvent('submit', { optionId: pick.id });
+    },
+    noop() {},
     onClose() { this.triggerEvent('close'); },
   },
 });

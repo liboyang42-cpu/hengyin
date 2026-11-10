@@ -1,5 +1,6 @@
 /**
- * Questo 新玩法的玩家端字段搬运(UG-01 逐字猜词 / UG-02 图片选项 / UG-03·04 指认结案 / UG-10 谜面变换)。
+ * Questo 新玩法的玩家端字段搬运(UG-01 逐字猜词 / UG-02 图片选项 / UG-03·04 指认结案)。
+ * r2 b2-ug-10:谜面翻转(MIRROR/REVERSE)已整体删除,题面一律原样呈现。
  *
  * 只做「服务端事实 → 组件 props」:不判对错、不存答案、不推断提前或成功。
  * 判定、机会、结局段、提前结案全部来自服务端回包(施工清单 UG-01..04、§27.9)。
@@ -31,12 +32,6 @@ function qaOptions(options, resolve) {
     if (img) { row.img = img; row.alt = (o && typeof o.alt === 'string') ? o.alt.trim() : ''; }
     return row;
   });
-}
-
-/** 谜面变换:只认服务端给的两种非原样模式;缺省、STANDARD、未知值都按原样呈现。 */
-function clueMode(view) {
-  const mode = view && view.clueTransform && view.clueTransform.mode;
-  return mode === 'MIRROR' || mode === 'REVERSE' ? mode : '';
 }
 
 /** 逐字猜词:服务端 publicProjection → 槽位。BLANK 不带字符;answer/aliases/format 本来就不在回包里。 */
@@ -165,5 +160,5 @@ function accusationKit(view, qaSeg, resolve) {
   };
 }
 
-module.exports = { displayImage, qaOptions, clueMode, hangmanSlots, hangmanKit, codePoints, hangmanPayload,
+module.exports = { displayImage, qaOptions, hangmanSlots, hangmanKit, codePoints, hangmanPayload,
   screenBlocks, accusationOutcome, accusationKit, OUTCOME_LABEL };
