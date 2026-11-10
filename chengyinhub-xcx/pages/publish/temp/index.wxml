@@ -75,6 +75,12 @@
         <view class="cg-hero-c1">上传玩法封面</view>
       </view>
       <view class="cg-cover-unusable" wx:if="{{coverMediaUnusable}}" bindtap="uploadPic" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="原封面暂不可用，点按重新上传">原封面暂不可用，点按重新上传</view>
+      <!-- r2-create(业主「放到模板配置里」):本次上传的封面可声明素材来源,声明写在素材上(服务端校验归属) -->
+      <view class="cg-prov-row" wx:if="{{coverProvenance.assetId}}" bindtap="openProvenance" aria-role="button" aria-label="素材来源" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="cg-prov-row__k">素材来源</text>
+        <text class="cg-prov-row__v {{coverProvenance.label ? '' : 'is-empty'}}">{{coverProvenance.label || '未声明'}}</text>
+        <cy-icon name="chevron-right" size="28" />
+      </view>
       <view class="cg-hero-body">
         <view class="cg-title-row">
           <text class="req" aria-hidden="true">*</text>
@@ -1628,6 +1634,20 @@
     </view>
   </view>
 
+  <!-- ============ 素材来源声明 sheet(r2-create)============ -->
+  <view class="cg-mask" wx:if="{{ provenanceSheet.show }}" bindtap="closeProvenance" hover-class="none"></view>
+  <view class="cg-sheet cg-prov" wx:if="{{ provenanceSheet.show }}">
+    <view class="cg-sheet-bar"></view>
+    <view class="cg-prov__head"><text class="cg-prov__title">素材来源</text><view class="cg-prov__close" bindtap="closeProvenance" aria-role="button" aria-label="关闭素材来源" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
+    <view class="cg-prov__opt {{ provenanceSheet.sourceType === item.value ? 'is-on' : '' }}" wx:for="{{ provenanceTypes }}" wx:key="value" data-type="{{ item.value }}" bindtap="pickProvenanceType" aria-role="radio" aria-checked="{{ provenanceSheet.sourceType === item.value }}" aria-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="cg-prov__opt-t">{{ item.label }}</text><view class="cg-prov__dot" aria-hidden="true"></view>
+    </view>
+    <view class="cg-prov__field"><text class="cg-prov__k">署名</text><input class="cg-prov__input" value="{{ provenanceSheet.attribution }}" data-field="attribution" bindinput="onProvenanceInput" maxlength="255" placeholder="作者或来源" /></view>
+    <view class="cg-prov__field"><text class="cg-prov__k">授权说明</text><input class="cg-prov__input" value="{{ provenanceSheet.licenseNote }}" data-field="licenseNote" bindinput="onProvenanceInput" maxlength="2000" placeholder="本人拍摄 / 授权协议" /></view>
+    <text class="cg-prov__err" wx:if="{{ provenanceSheet.error }}" aria-role="alert">{{ provenanceSheet.error }}</text>
+    <view class="cg-prov__foot"><cy-btn variant="primary" style="display:block;width:100%" loading="{{ provenanceSheet.saving }}" disabled="{{ provenanceSheet.saving }}" bindtap="saveProvenance">保存</cy-btn></view>
+  </view>
+
   <!-- ============ 添加模块 sheet ============ -->
   <view class="cg-mask {{cgOut === 'add' ? 'is-out' : ''}}" wx:if="{{ showAddSheet }}" bindtap="cgDismiss" data-close="closeAddSheet" data-out="add" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet {{cgOut === 'add' ? 'is-out' : ''}}" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ showAddSheet }}">
@@ -2056,7 +2076,7 @@
        返回键/侧滑先关最上层浮层再谈退页。表达式覆盖本页全部浮层且无排斥项,
        浮层间切换时保持为真,不产生误触发竞态;backGuardOff 用于返回键消费后重挂。 -->
   <page-container
-    show="{{!backGuardOff && (previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}"
+    show="{{!backGuardOff && (previewVisible || provenanceSheet.show || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}"
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />

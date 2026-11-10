@@ -1698,3 +1698,21 @@ page {
   background: var(--cy-color-bg-surface-subtle); font-weight: 700; color: var(--cy-color-text-tertiary); }
 .cg-qz-cell.is-given { background: var(--cy-color-text-primary); color: var(--cy-color-bg-surface); }
 .cg-qz-cell.is-sep { background: transparent; color: var(--cy-color-text-secondary); }
+
+/* r2-create:封面素材来源声明 —— 封面卡下一行 + 一张小弹层(peek 档),关闭在右上角,保存钉底 */
+.cg-prov-row { display: flex; align-items: center; gap: var(--cy-space-2); min-height: var(--cy-btn-h); padding: 0 var(--cy-space-4); border-top: 1rpx solid var(--cy-border-line); color: var(--cy-text-tertiary); }
+.cg-prov-row__k { flex: 1; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov-row__v { font-size: var(--cy-font-label); color: var(--cy-text-title); }
+.cg-prov-row__v.is-empty { color: var(--cy-color-text-secondary); }
+.cg-prov__head { display: flex; align-items: center; justify-content: space-between; min-height: var(--cy-btn-h); }
+.cg-prov__title { font-size: var(--cy-comp-sheet-title-size); font-weight: 700; color: var(--cy-text-title); }
+.cg-prov__close { width: var(--cy-btn-h); height: var(--cy-btn-h); margin-right: calc(-1 * var(--cy-space-2)); display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
+.cg-prov__opt { display: flex; align-items: center; min-height: var(--cy-btn-h); border-bottom: 1rpx solid var(--cy-border-line); }
+.cg-prov__opt-t { flex: 1; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov__dot { width: 40rpx; height: 40rpx; box-sizing: border-box; border-radius: var(--cy-radius-pill); border: 2rpx solid var(--cy-color-border-strong); }
+.cg-prov__opt.is-on .cg-prov__dot { border: 12rpx solid var(--cy-color-text-primary); }
+.cg-prov__field { display: flex; align-items: center; gap: var(--cy-space-3); min-height: var(--cy-btn-h); border-bottom: 1rpx solid var(--cy-border-line); }
+.cg-prov__k { flex: none; width: 140rpx; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov__input { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov__err { display: block; padding-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-color-status-danger-on-interactive); }
+.cg-prov__foot { padding-top: var(--cy-space-4); }
