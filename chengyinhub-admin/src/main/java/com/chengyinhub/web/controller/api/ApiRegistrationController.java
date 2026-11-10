@@ -595,6 +595,27 @@ public class ApiRegistrationController extends BaseController {
         return callbackResponse(() -> wechatPayService.handleRefundCallback(requestBody, headers));
     }
 
+    /**
+     * l-payout2：电商收付通（二级商户为卖家）支付通知。payout.ecommerce.notify-url 指向本端点。
+     * 开关关闭时服务层直接回 FAIL；验签、查原单核对、写不可变事实后才交给同一业务路由。
+     */
+    @Operation(summary = "电商收付通支付回调")
+    @PostMapping("/ecommerce-callback")
+    @Anonymous
+    public ResponseEntity<?> ecommercePayCallback(@RequestBody String requestBody,
+                                                  @RequestHeader Map<String, String> headers) {
+        return callbackResponse(() -> wechatPayService.handleEcommercePayCallback(requestBody, headers));
+    }
+
+    /** l-payout2：电商收付通退款通知。payout.ecommerce.refund-notify-url 指向本端点。 */
+    @Operation(summary = "电商收付通退款回调")
+    @PostMapping("/ecommerce-refund-callback")
+    @Anonymous
+    public ResponseEntity<?> ecommerceRefundCallback(@RequestBody String requestBody,
+                                                     @RequestHeader Map<String, String> headers) {
+        return callbackResponse(() -> wechatPayService.handleEcommerceRefundCallback(requestBody, headers));
+    }
+
     private ResponseEntity<?> callbackResponse(Supplier<String> callback) {
         try {
             Map<String, Object> ack = JSON.parseObject(callback.get());

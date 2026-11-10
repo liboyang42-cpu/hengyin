@@ -172,4 +172,125 @@
             fail_reason = #{failReason}
         where id = #{id} and state = #{expectedState}
     </update>
+    <!-- ==== l-payout2：接入现有支付链路 ==== -->
+
+    <sql id="refundCols">
+        out_refund_no as outRefundNo, out_trade_no as outTradeNo, sub_mchid as subMchid, transaction_id as transactionId, refund_fen as refundFen, total_fen as totalFen, state, refund_id as refundId, fail_reason as failReason, created_at as createdAt, updated_at as updatedAt
+    </sql>
+
+    <insert id="insertRefund">
+        insert into ecom_refund (out_refund_no, out_trade_no, sub_mchid, transaction_id, refund_fen, total_fen, state)
+        values (#{outRefundNo}, #{outTradeNo}, #{subMchid}, #{transactionId}, #{refundFen}, #{totalFen}, 'RETURNING')
+    </insert>
+
+    <select id="selectRefund" resultType="com.chengyinhub.business.domain.EcomRefund" useCache="false" flushCache="true">
+        select <include refid="refundCols"/> from ecom_refund where out_refund_no = #{outRefundNo}
+    </select>
+
+    <select id="selectRefundsByTrade" resultType="com.chengyinhub.business.domain.EcomRefund" useCache="false" flushCache="true">
+        select <include refid="refundCols"/> from ecom_refund where out_trade_no = #{outTradeNo} order by created_at, out_refund_no
+    </select>
+
+    <select id="selectRefundsByStates" resultType="com.chengyinhub.business.domain.EcomRefund" useCache="false" flushCache="true">
+        select <include refid="refundCols"/> from ecom_refund
+        where state in <foreach collection="states" item="st" open="(" separator="," close=")">#{st}</foreach>
+        order by updated_at desc limit #{limit}
+    </select>
+
+    <update id="updateRefundState">
+        update ecom_refund set state = #{state}, refund_id = coalesce(#{refundId}, refund_id), fail_reason = #{failReason}
+        where out_refund_no = #{outRefundNo} and state = #{expectedState}
+    </update>
+
+    <select id="selectDuePlannedShareOrders" resultType="com.chengyinhub.business.domain.EcomProfitShareOrder" useCache="false" flushCache="true">
+        select <include refid="shareOrderCols"/> from ecom_profit_share_order o
+        where o.state = 'PLANNED'
+          and not exists (
+              select 1 from ecom_profit_share_line l join coop_settlement s on s.id = l.settlement_id
+              where l.share_order_id = o.id
+                and (s.del_flag != 0 or s.payable_time is null or s.payable_time &gt; #{now}))
+          and not exists (
+              select 1 from coop_complaint c where c.del_flag = 0 and c.topic_id = o.topic_id and c.status &lt; 3)
+        order by o.id limit #{limit}
+    </select>
+
+    <select id="selectSettledTopicsMissingSharePlans" resultType="long" useCache="false" flushCache="true">
+        select distinct r.owner_id
+        from ecom_order_seller s
+        join cms_registration r on CAST(r.registration_no AS BINARY) = CAST(s.out_trade_no AS BINARY) and r.owner_type = 1
+        join cms_topic t on t.id = r.owner_id and t.is_settlement = 1
+        where s.transaction_id is not null
+          and exists (select 1 from coop_settlement_original_component c
+                      where c.topic_id = r.owner_id and c.payer_registration_id = r.id)
+          and not exists (select 1 from ecom_profit_share_order o
+                          where o.out_trade_no = s.out_trade_no and o.topic_id = r.owner_id)
+        order by r.owner_id limit #{limit}
+    </select>
+
+    <select id="sumPartnerPortionForSettlement" resultType="java.math.BigDecimal" useCache="false" flushCache="true">
+        select coalesce((
+            select sum(c.original_amount)
+            from coop_settlement_original_component c
+            join wx_verified_payment_fact f on f.id = c.payment_fact_id
+            join ecom_order_seller s on CAST(s.out_trade_no AS BINARY) = CAST(f.business_out_trade_no AS BINARY)
+                                    and CAST(s.sub_mchid AS BINARY) = CAST(f.mchid AS BINARY)
+            where c.settlement_id = #{settlementId}), 0)
+          + coalesce((
+            select sum(a.amount)
+            from coop_settlement_original_adjustment a
+            join coop_settlement_original_component c on c.id = a.component_id
+            join wx_verified_payment_fact f on f.id = c.payment_fact_id
+            join ecom_order_seller s on CAST(s.out_trade_no AS BINARY) = CAST(f.business_out_trade_no AS BINARY)
+                                    and CAST(s.sub_mchid AS BINARY) = CAST(f.mchid AS BINARY)
+            where a.settlement_id = #{settlementId}), 0)
+    </select>
+
+    <select id="countPartnerPaymentFact" resultType="int" useCache="false" flushCache="true">
+        select count(*) from wx_verified_payment_fact f
+        join ecom_order_seller s on CAST(s.out_trade_no AS BINARY) = CAST(f.business_out_trade_no AS BINARY)
+                                and CAST(s.sub_mchid AS BINARY) = CAST(f.mchid AS BINARY)
+        where f.id = #{paymentFactId}
+    </select>
+
+    <select id="selectSubMerchantsForAdmin" resultType="com.chengyinhub.business.domain.EcomSubMerchant" useCache="false" flushCache="true">
+        select <include refid="subMerchantCols"/> from ecom_sub_merchant
+        <where><if test="state != null and state != ''">applyment_state = #{state}</if></where>
+        order by updated_at desc limit #{limit}
+    </select>
+
+    <select id="selectShareOrdersForAdmin" resultType="com.chengyinhub.business.domain.EcomProfitShareOrder" useCache="false" flushCache="true">
+        select <include refid="shareOrderCols"/> from ecom_profit_share_order
+        <where>
+            <if test="state != null and state != ''">state = #{state}</if>
+            <if test="topicId != null">and topic_id = #{topicId}</if>
+        </where>
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="selectReturnsByState" resultType="com.chengyinhub.business.domain.EcomProfitShareReturn" useCache="false" flushCache="true">
+        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason
+        from ecom_profit_share_return
+        <where><if test="state != null and state != ''">state = #{state}</if></where>
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="selectShareOrderById" resultType="com.chengyinhub.business.domain.EcomProfitShareOrder" useCache="false" flushCache="true">
+        select <include refid="shareOrderCols"/> from ecom_profit_share_order where id = #{id}
+    </select>
+
+    <select id="selectReturnById" resultType="com.chengyinhub.business.domain.EcomProfitShareReturn" useCache="false" flushCache="true">
+        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason
+        from ecom_profit_share_return where id = #{id}
+    </select>
+
+    <delete id="deleteShareLines">
+        delete from ecom_profit_share_line where share_order_id = #{shareOrderId}
+    </delete>
+
+    <update id="replanShareOrder">
+        update ecom_profit_share_order
+        set state = #{state}, shared_fen = #{sharedFen}, plan_hash = #{planHash}, manual_reason = #{manualReason},
+            attempts = attempts + 1
+        where id = #{id} and state = 'MANUAL' and wx_order_id is null
+    </update>
 </mapper>

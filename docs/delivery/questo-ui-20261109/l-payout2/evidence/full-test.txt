@@ -1,0 +1,22 @@
+# 后端全量单测（chengyinhub-system + chengyinhub-admin，提交 2a645f80ae33，开关全关默认配置）
+
+[ERROR] Tests run: 13113, Failures: 1, Errors: 34, Skipped: 583
+
+## 未通过的类（15 个）
+
+- 14 个 com.chengyinhub.business.it.*MyBatisTest：本容器没有 MySQL，建 IT 专属库时 Communications link failure（环境原因，与本线无关；真库 IT 走 Real Storage IT 工作流）
+  - com.chengyinhub.business.it.AuditReportLaneMyBatisTest
+  - com.chengyinhub.business.it.ClubCrmCheckinDetailMyBatisTest
+  - com.chengyinhub.business.it.ClubDissolutionGateMyBatisTest
+  - com.chengyinhub.business.it.ClubTopicManageStatsMyBatisTest
+  - com.chengyinhub.business.it.ComplianceF7MyBatisTest
+  - com.chengyinhub.business.it.MerchantDashboardAggregationMyBatisTest
+  - com.chengyinhub.business.it.MerchantNumbersAgreeMyBatisTest
+  - com.chengyinhub.business.it.O08MemberOnlyTopicLocationMyBatisTest
+  - com.chengyinhub.business.it.PublicActivityScopeGateMyBatisTest
+  - com.chengyinhub.business.it.PublicTopicFeedGateMyBatisTest
+  - com.chengyinhub.business.it.PublicVisibilityMyBatisTest
+  - com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest
+  - com.chengyinhub.business.it.TopicDraftVisibilityMyBatisTest
+  - com.chengyinhub.business.it.TopicSyncPostRestoreMyBatisTest
+- 1 个 GameplaySupportMatrixTest.tableCoversTheRealCatalogAndCannotBeChangedThroughReadback：玩法目录计数 expected 32 but was 33。本线没有改任何玩法 / 目录文件，属基线已有问题

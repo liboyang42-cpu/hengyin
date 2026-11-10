@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.business;
 
+import com.chengyinhub.business.payout.EcommercePayoutQueryService;
 import com.chengyinhub.business.payout.EcommerceProfitShareService;
 import com.chengyinhub.business.payout.EcommerceSubMerchantService;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class EcommercePayoutAdminController extends BaseController {
     @Autowired private EcommerceSubMerchantService subMerchantService;
     @Autowired private EcommerceProfitShareService profitShareService;
+    @Autowired private EcommercePayoutQueryService queryService;
 
     @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
     @GetMapping("/sub-merchant")
@@ -84,5 +86,68 @@ public class EcommercePayoutAdminController extends BaseController {
     @PostMapping("/profit-share/sync")
     public AjaxResult sync() {
         return success(profitShareService.syncProcessing(50));
+    }
+
+    // ---- l-payout2：运营端页面（进件审核 / 分账记录 / 回退与退款 / 失败重试） ----
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/switches")
+    public AjaxResult switches() {
+        return success(queryService.switches());
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/sub-merchants")
+    public AjaxResult subMerchants(@RequestParam(required = false) String state, @RequestParam(required = false) Integer limit) {
+        return success(queryService.subMerchants(state, limit));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:edit')")
+    @PostMapping("/sub-merchant/sync")
+    public AjaxResult syncOnboarding() {
+        return success(subMerchantService.refreshInProgress(50));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/profit-share/orders")
+    public AjaxResult shareOrders(@RequestParam(required = false) String state, @RequestParam(required = false) Long topicId,
+                                  @RequestParam(required = false) Integer limit) {
+        return success(queryService.shareOrders(state, topicId, limit));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/profit-share/orders/{id}/lines")
+    public AjaxResult shareLines(@PathVariable Long id) {
+        return success(queryService.shareLines(id));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:edit')")
+    @PostMapping("/profit-share/orders/{id}/replan")
+    public AjaxResult replan(@PathVariable Long id) {
+        return success(profitShareService.replan(id));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/profit-share/returns")
+    public AjaxResult returns(@RequestParam(required = false) String state, @RequestParam(required = false) Integer limit) {
+        return success(queryService.returns(state, limit));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:edit')")
+    @PostMapping("/profit-share/returns/{id}/retry")
+    public AjaxResult retryReturn(@PathVariable Long id) {
+        return success(profitShareService.retryReturn(id).name());
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:edit')")
+    @PostMapping("/profit-share/returns/sync")
+    public AjaxResult syncReturns() {
+        return success(profitShareService.syncReturns(50));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/refunds")
+    public AjaxResult refunds(@RequestParam(required = false) String state, @RequestParam(required = false) Integer limit) {
+        return success(queryService.refunds(state, limit));
     }
 }

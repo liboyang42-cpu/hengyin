@@ -95,7 +95,26 @@ class EcomPayoutMapperMySqlIT {
                     + " receiver_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,"
                     + " receiver_member_id BIGINT UNSIGNED NULL, line_type VARCHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,"
                     + " original_amount DECIMAL(15,2) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-            ItSchema.applyMigrations(c, "sql/migration_20261110_ecommerce_payout.sql");
+            // l-payout2：分账提交改为「结算头到期 + 无未结客诉」，计划会读 ecom_refund；这里补齐这些表并执行接线迁移。
+            st.execute("CREATE TABLE coop_settlement (id bigint NOT NULL PRIMARY KEY, topic_id bigint NOT NULL,"
+                    + " del_flag int NOT NULL DEFAULT 0, payable_time datetime NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("CREATE TABLE coop_complaint (id bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, topic_id bigint NOT NULL,"
+                    + " status int NOT NULL, del_flag int NOT NULL DEFAULT 0) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("CREATE TABLE sys_job (job_id bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, job_name varchar(64) NOT NULL,"
+                    + " job_group varchar(64) NOT NULL, invoke_target varchar(500) NOT NULL, cron_expression varchar(255),"
+                    + " misfire_policy varchar(20), concurrent char(1), status char(1), create_by varchar(64),"
+                    + " create_time datetime, remark varchar(500)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("CREATE TABLE sys_menu (menu_id bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, menu_name varchar(50) NOT NULL,"
+                    + " parent_id bigint DEFAULT 0, order_num int DEFAULT 0, path varchar(200) DEFAULT '', component varchar(255),"
+                    + " `query` varchar(255), route_name varchar(50) DEFAULT '', is_frame int DEFAULT 1, is_cache int DEFAULT 0,"
+                    + " menu_type char(1) DEFAULT '', visible char(1) DEFAULT '0', status char(1) DEFAULT '0', perms varchar(100),"
+                    + " icon varchar(100) DEFAULT '#', create_by varchar(64), create_time datetime, remark varchar(500))"
+                    + " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("CREATE TABLE sys_role_menu (role_id bigint NOT NULL, menu_id bigint NOT NULL, PRIMARY KEY(role_id, menu_id))"
+                    + " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("INSERT INTO sys_menu(menu_name, parent_id, path, menu_type, perms) VALUES ('资金售后', 0, 'funds-aftercare', 'M', '')");
+            ItSchema.applyMigrations(c, "sql/migration_20261110_ecommerce_payout.sql",
+                    "sql/migration_20261110_ecommerce_payout_wiring.sql");
         }
     }
 
@@ -119,7 +138,7 @@ class EcomPayoutMapperMySqlIT {
         session = factory.openSession(true);
         mapper = session.getMapper(EcomPayoutMapper.class);
         try (Statement st = session.getConnection().createStatement()) {
-            for (String t : List.of("ecom_profit_share_return", "ecom_profit_share_line", "ecom_profit_share_order",
+            for (String t : List.of("ecom_refund", "coop_settlement", "coop_complaint", "ecom_profit_share_return", "ecom_profit_share_line", "ecom_profit_share_order",
                     "ecom_order_seller", "ecom_sub_merchant", "creator_payout_request", "cms_registration",
                     "mms_merchant", "club", "coop_settlement_original_component")) st.execute("delete from " + t);
         }
@@ -321,6 +340,8 @@ class EcomPayoutMapperMySqlIT {
         mapper.updateApplymentStatus(seller.getId(), "CHECKING", "FINISH", null, null, "1900000101", null);
         mapper.updateApplymentStatus(other.getId(), "CHECKING", "FINISH", null, null, "1900000202", null);
         seller("REG77", 10000, "4200000077");
+        exec("insert into coop_settlement(id, topic_id, payable_time) values (11, 1, date_sub(now(), interval 1 day)),"
+                + " (12, 1, date_sub(now(), interval 1 day)), (13, 1, date_add(now(), interval 1 day))");
 
         PayoutSwitches on = new PayoutSwitches(true, true, true, "1900000001", "wxsp", "", 30, false, "none");
         FakeEcommerceGateway gateway = new FakeEcommerceGateway();
@@ -331,6 +352,8 @@ class EcomPayoutMapperMySqlIT {
         assertEquals("PLANNED", order.getState());
         assertEquals(2500L, order.getSharedFen());
         assertEquals(3, mapper.selectShareLines(order.getId()).size());
+        assertEquals(0, service.submitPlanned(10), "l-payout2：结算头 13 未到期，不提交");
+        exec("update coop_settlement set payable_time = date_sub(now(), interval 1 hour) where id = 13");
         assertEquals(1, service.submitPlanned(10));
         assertEquals("SUCCESS", mapper.selectShareOrder("REG77", 1L).getState());
         assertEquals(List.of(new ProfitSharePlanner.Receiver("1900000001", 1500), new ProfitSharePlanner.Receiver("1900000202", 1000)),

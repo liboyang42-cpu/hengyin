@@ -1,0 +1,29 @@
+# 接线前特征测试（基线提交 a03b4ea4，未改任何生产代码）
+
+## 现有支付/退款/结算测试 21 类
+测试列表：WechatPayNotifyUrlTest,WechatRefundOriginalFactSubmitTest,CoopSettlementPayoutTransactionTest,CoopSettlementTest,WechatPaymentCallbackRouterTest,WechatOrderCenterGatewayTest,WechatPaymentKnownSuccessGuardTest,RefundPayoutServiceTest,TopicSettlementIdempotencyTest,CoopSettlementPayoutTaskTest,SettlementTaskTest,RegistrationCheckoutTransactionBoundaryTest,WechatPayReadinessTest,WechatPayRefundNotifyUrlTest,DoublePaymentReproductionTest,RestoreMoneyDispatchTest,ClubTopicSettlementRuleTest,WechatPayTransferIntentGatewayTest,WechatPayTransferClassificationTest,ArchitectureDayGSettlementGuardsTest,SettlementRateConvergenceTest
+[INFO] Tests run: 192, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.ArchitectureDayGSettlementGuardsTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.RegistrationCheckoutTransactionBoundaryTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPaymentCallbackRouterTest
+Tests run: 32, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.CoopSettlementTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPayNotifyUrlTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPayReadinessTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatRefundOriginalFactSubmitTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatOrderCenterGatewayTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.RestoreMoneyDispatchTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.ClubTopicSettlementRuleTest
+Tests run: 13, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPayTransferClassificationTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.CoopSettlementPayoutTransactionTest
+Tests run: 12, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPayTransferIntentGatewayTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPayRefundNotifyUrlTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.RefundPayoutServiceTest
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.WechatPaymentKnownSuccessGuardTest
+Tests run: 24, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.SettlementRateConvergenceTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.TopicSettlementIdempotencyTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.web.task.SettlementTaskTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.web.task.CoopSettlementPayoutTaskTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.web.controller.api.DoublePaymentReproductionTest
+
+## 金标准特征测试 PayoutSwitchOffCharacterizationTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- in com.chengyinhub.business.service.impl.PayoutSwitchOffCharacterizationTest

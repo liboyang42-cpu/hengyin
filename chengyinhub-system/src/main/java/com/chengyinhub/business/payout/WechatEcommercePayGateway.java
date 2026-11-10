@@ -68,7 +68,9 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
     private volatile Clients clients;
 
     private record Clients(Config config, HttpClient http, JsapiServiceExtension partnerJsapi,
-                           EcommerceProfitSharingService sharing, EcommerceRefundService refunds) { }
+                           EcommerceProfitSharingService sharing, EcommerceRefundService refunds,
+                           com.wechat.pay.java.service.partnerpayments.jsapi.JsapiService partnerQuery,
+                           com.wechat.pay.java.core.notification.NotificationParser notifications) { }
 
     public WechatEcommercePayGateway(PayoutSwitches switches,
                                      @Value("${payout.ecommerce.private-key-path:}") String privateKeyPath,
@@ -92,14 +94,16 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
             if (clients != null) return clients;
             if (blank(privateKeyPath) || blank(merchantSerialNumber) || blank(apiV3Key))
                 throw new IllegalStateException("ECOMMERCE_CREDENTIAL_MISSING");
-            Config config = new RSAAutoCertificateConfig.Builder().merchantId(switches.spMchid())
+            RSAAutoCertificateConfig config = new RSAAutoCertificateConfig.Builder().merchantId(switches.spMchid())
                     .privateKeyFromPath(privateKeyPath).merchantSerialNumber(merchantSerialNumber)
                     .apiV3Key(apiV3Key).build();
             HttpClient http = new DefaultHttpClientBuilder().config(config).build();
             clients = new Clients(config, http,
                     new JsapiServiceExtension.Builder().config(config).build(),
                     new EcommerceProfitSharingService.Builder().httpClient(http).build(),
-                    new EcommerceRefundService.Builder().httpClient(http).build());
+                    new EcommerceRefundService.Builder().httpClient(http).build(),
+                    new com.wechat.pay.java.service.partnerpayments.jsapi.JsapiService.Builder().httpClient(http).build(),
+                    new com.wechat.pay.java.core.notification.NotificationParser(config));
             return clients;
         }
     }
@@ -277,6 +281,90 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
         request.setAmount(amount);
         Refund4Create r = clients().refunds().createRefund(request);
         return new RefundAccepted(r.getRefundId(), r.getOutRefundNo());
+    }
+
+    // ---- l-payout2：接入现有支付链路 ----
+
+    @Override
+    public String paymentNotifyUrl() {
+        if (blank(notifyUrl)) throw new IllegalStateException("ECOMMERCE_NOTIFY_URL_MISSING");
+        return notifyUrl.trim();
+    }
+
+    @Override
+    public PartnerOrder queryPartnerOrder(String subMchid, String outTradeNo) {
+        Clients c = clients();
+        com.wechat.pay.java.service.partnerpayments.jsapi.model.QueryOrderByOutTradeNoRequest request =
+                new com.wechat.pay.java.service.partnerpayments.jsapi.model.QueryOrderByOutTradeNoRequest();
+        request.setSpMchid(switches.spMchid());
+        request.setSubMchid(subMchid);
+        request.setOutTradeNo(outTradeNo);
+        try {
+            return partnerOrder(c.partnerQuery().queryOrderByOutTradeNo(request));
+        } catch (com.wechat.pay.java.core.exception.ServiceException e) {
+            if (e.getHttpStatusCode() == 404 && "ORDER_NOT_EXIST".equals(e.getErrorCode()))
+                throw new PartnerOrderNotFound("ORDER_NOT_EXIST", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void closePartnerOrder(String subMchid, String outTradeNo) {
+        com.wechat.pay.java.service.partnerpayments.jsapi.model.CloseOrderRequest request =
+                new com.wechat.pay.java.service.partnerpayments.jsapi.model.CloseOrderRequest();
+        request.setSpMchid(switches.spMchid());
+        request.setSubMchid(subMchid);
+        request.setOutTradeNo(outTradeNo);
+        clients().partnerQuery().closeOrder(request);
+    }
+
+    @Override
+    public PartnerOrder parsePaymentNotification(String body, Map<String, String> headers) {
+        return partnerOrder(clients().notifications().parse(notificationParam(body, headers),
+                com.wechat.pay.java.service.partnerpayments.jsapi.model.Transaction.class));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public RefundNotice parseRefundNotification(String body, Map<String, String> headers) {
+        Map<String, Object> r = clients().notifications().parse(notificationParam(body, headers), Map.class);
+        if (r == null) return null;
+        return new RefundNotice(str(r.get("sp_mchid")), str(r.get("sub_mchid")), str(r.get("out_refund_no")));
+    }
+
+    @Override
+    public RefundQuery queryRefund(String subMchid, String outRefundNo) {
+        com.wechat.pay.java.service.ecommercerefund.model.QueryRefundByOutRefundNoRequest request =
+                new com.wechat.pay.java.service.ecommercerefund.model.QueryRefundByOutRefundNoRequest();
+        request.setSubMchid(subMchid);
+        request.setOutRefundNo(outRefundNo);
+        try {
+            com.wechat.pay.java.service.ecommercerefund.model.Refund r = clients().refunds().queryRefundByOutRefundNo(request);
+            if (r == null) return null;
+            return new RefundQuery(r.getOutRefundNo(), r.getRefundId(), r.getOutTradeNo(), r.getTransactionId(), r.getStatus(),
+                    r.getAmount() == null ? null : r.getAmount().getRefund(),
+                    r.getAmount() == null ? null : r.getAmount().getCurrency(), r.getSuccessTime());
+        } catch (com.wechat.pay.java.core.exception.ServiceException e) {
+            if (e.getHttpStatusCode() == 404 && "RESOURCE_NOT_EXISTS".equals(e.getErrorCode()))
+                throw new RefundNotFound("RESOURCE_NOT_EXISTS", e);
+            throw e;
+        }
+    }
+
+    private static com.wechat.pay.java.core.notification.RequestParam notificationParam(String body, Map<String, String> headers) {
+        return new com.wechat.pay.java.core.notification.RequestParam.Builder()
+                .serialNumber(headers.get("wechatpay-serial")).nonce(headers.get("wechatpay-nonce"))
+                .signature(headers.get("wechatpay-signature")).timestamp(headers.get("wechatpay-timestamp"))
+                .body(body).build();
+    }
+
+    private static PartnerOrder partnerOrder(com.wechat.pay.java.service.partnerpayments.jsapi.model.Transaction t) {
+        if (t == null) return null;
+        return new PartnerOrder(t.getSpMchid(), t.getSubMchid(), t.getSpAppid(), t.getOutTradeNo(), t.getTransactionId(),
+                t.getTradeState() == null ? null : t.getTradeState().name(),
+                t.getTradeType() == null ? null : t.getTradeType().name(),
+                t.getAmount() == null || t.getAmount().getTotal() == null ? null : t.getAmount().getTotal().longValue(),
+                t.getAmount() == null ? null : t.getAmount().getCurrency(), t.getSuccessTime());
     }
 
     @SuppressWarnings("unchecked")

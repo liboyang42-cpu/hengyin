@@ -81,6 +81,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     private record VerifiedProviderClients(JsapiService payments, RefundService refunds, String mchid) { }
     private volatile VerifiedProviderClients verifiedProviderClients;
     @Autowired private WechatVerifiedPaymentFactService verifiedFacts;
+    /** l-payout2：电商收付通（二级商户为卖家）接线。开关关闭或未装配时为 null / 未启用，以下各处原逻辑逐字不变。 */
+    @Autowired(required = false) private EcommercePartnerPaymentAdapter partner;
     private Config config;
 
     private NotificationParser notificationParser;
@@ -217,6 +219,21 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
                 return RefundRequestResult.DEFINITIVE_FAILED;
         } catch (ArithmeticException | IllegalArgumentException invalidAmount) {
             return RefundRequestResult.DEFINITIVE_FAILED;
+        }
+        if (partner != null && partner.enabled()) {
+            try {
+                var partnerPaid = verifiedFacts.requireVerified(originalPayment).facts();
+                var partnerSeller = partner.sellerForPaidFact(partnerPaid);
+                if (partnerSeller != null) {
+                    if (!partnerPaid.businessOutTradeNo().equals(outTradeNo)) return RefundRequestResult.UNKNOWN;
+                    return partner.submitRefund(partnerPaid, partnerSeller, outRefundNo, refundCents, totalCents, reason);
+                }
+            } catch (RestoreDispatchGuard.Blocked paused) {
+                throw paused;
+            } catch (RuntimeException unavailable) {
+                logger.warn("卖家收款单退款提交未知 type={}", unavailable.getClass().getSimpleName());
+                return RefundRequestResult.UNKNOWN;
+            }
         }
         VerifiedProviderClients clients=verifiedProviderClients;
         if (clients==null || clients.refunds()==null) return RefundRequestResult.UNKNOWN;
@@ -581,6 +598,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
         RestoreDispatchGuard.requireDispatchAllowed();
         if (!isReady()) {
             throw PaymentPreorderException.definiteFailure("支付服务暂不可用，请稍后再试", null);
+        }
+        if (partner != null && partner.enabled()) {
+            Map<String, String> partnerParams = partner.createOrder(registration, wxPayConfig.getMerchantId());
+            if (partnerParams != null) return partnerParams;
         }
         requireNotifyUrl();
         PrepayRequest request;
@@ -966,6 +987,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {
         try {
             var expected=verifiedFacts.requireVerified(originalPayment);
+            if (partner != null && partner.enabled()) {
+                var partnerSeller = partner.sellerForPaidFact(expected.facts());
+                if (partnerSeller != null) return partner.queryRefundFacts(expected.facts(), partnerSeller, outRefundNo);
+            }
             if (expected.facts().kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
                     || verifiedProviderClients==null || !expected.facts().mchid().equals(verifiedProviderClients.mchid())) return null;
             return queryRefundFactsForOriginal(outRefundNo,expected);
@@ -1044,6 +1069,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      */
     @Override
     public Map<String, String> queryOrderStatus(String outTradeNo) {
+        if (partner != null && partner.enabled()) {
+            var partnerSeller = partner.sellerFor(outTradeNo);
+            if (partnerSeller != null) return partner.queryOrderStatus(outTradeNo, partnerSeller);
+        }
         try {
             String wxOrderNo = currentWechatPaymentNo(outTradeNo);
             Transaction transaction = queryVerifiedOrder(wxOrderNo);
@@ -1127,6 +1156,11 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
      */
     @Override
     public boolean closeOrder(String outTradeNo) {
+        if (partner != null && partner.enabled()) {
+            var partnerSeller = partner.sellerFor(outTradeNo);
+            if (partnerSeller != null) return partner.closePaymentAttempt(outTradeNo,
+                    partner.currentWechatPaymentNo(outTradeNo, partnerSeller), partnerSeller);
+        }
         return closePaymentAttempt(outTradeNo, currentWechatPaymentNo(outTradeNo));
     }
 
@@ -1134,6 +1168,10 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo) {
         RestoreDispatchGuard.requireDispatchAllowed();
         requireObservationOutsideBusinessTransaction();
+        if (partner != null && partner.enabled()) {
+            var partnerSeller = partner.sellerFor(businessOutTradeNo);
+            if (partnerSeller != null) return partner.closePaymentAttempt(businessOutTradeNo, observedWxOutTradeNo, partnerSeller);
+        }
         if (businessOutTradeNo == null || observedWxOutTradeNo == null
                 || !businessOutTradeNo.equals(businessPaymentOrderNo(observedWxOutTradeNo))) {
             throw new IllegalArgumentException("关单必须携带原业务及所观察的微信尝试身份");
@@ -1201,11 +1239,23 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
             throw new IllegalStateException("支付尝试校验必须与领域关闭CAS共用事务");
         }
         if (businessNo == null || observedWxNo == null || observedWxNo.isBlank()) return false;
+        if (partner != null && partner.enabled()) {
+            String partnerMchid = partner.partnerMchid(businessNo);
+            if (partnerMchid != null) return intents.lockPaymentAttemptForUpdate(businessNo, observedWxNo, partnerMchid);
+        }
         return intents.lockPaymentAttemptForUpdate(businessNo, observedWxNo, wxPayConfig.getMerchantId());
     }
     @Override
     public boolean lockClosablePaymentAttemptForUpdate(String businessNo,String observedWxNo) {
+        if (partner != null && partner.enabled()) {
+            String partnerMchid = partner.partnerMchid(businessNo);
+            if (partnerMchid != null) return intents.lockClosablePaymentAttemptForUpdate(businessNo,observedWxNo,partnerMchid);
+        }
         return intents.lockClosablePaymentAttemptForUpdate(businessNo,observedWxNo,verifiedProviderMerchant());
+    }
+    /** l-payout2：电商收付通回调入口用；未启用时 null。 */
+    EcommercePartnerPaymentAdapter enabledPartner() {
+        return partner != null && partner.enabled() ? partner : null;
     }
     Transaction parsePaymentNotification(String body, Map<String, String> headers) {
         requireObservationOutsideBusinessTransaction();
