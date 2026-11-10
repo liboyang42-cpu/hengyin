@@ -2102,3 +2102,4 @@ page { background: var(--cy-color-bg-page); }
 @keyframes pv-ending-ring{ 0%{ opacity:.9; transform:scale(1); } 100%{ opacity:0; transform:scale(2.4); } }
 .pv-ending--reduced .pv-ending__seal{ opacity:1; transform:none; transition:none; }
 .pv-ending--reduced .pv-ending__ring{ animation:none; display:none; }
+.pv-ending__confetti{ position:absolute; inset:0; z-index:2; pointer-events:none; --cy-motion-celebrate:2200ms; --cy-color-play-accent:#E9C47C; } /* ds-ok 结局庆祝:彩旗落得慢一点、用印章金,看得见 */
