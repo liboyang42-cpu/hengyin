@@ -73,7 +73,7 @@ page{ background:var(--cy-color-bg-page); }
 .entry-card__meta{ margin-top:var(--cy-space-1); color:var(--cy-color-text-secondary); font-size:calc(19rpx * var(--cy-type-scale, 1)); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 
 .entry-sheet__mask{ background:rgba(0,0,0,.62); } /* ds-ok Figma 20:4 地图退后遮罩实测 */
-.entry-sheet{ background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur));
+.entry-sheet{ background:var(--cy-comp-sheet-player-glass); box-shadow:var(--cy-comp-sheet-player-lift); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur));
   padding-bottom:env(safe-area-inset-bottom);
   transform:translateY(100%) scale(.985); transform-origin:50% 100%;
   /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);原 350ms 弹簧曲线取消 */
@@ -85,7 +85,7 @@ page{ background:var(--cy-color-bg-page); }
 .entry-sheet__close{ position:relative; flex:none; top:auto; right:auto; margin-right:calc(var(--cy-space-2) * -1); }
 .entry-sheet__title{ display:block; color:var(--cy-comp-sheet-player-text); font-size:var(--cy-type-sheet-title); line-height:1.25; font-weight:800; }
 .entry-sheet__sub,.entry-sheet__hint{ display:block; margin-top:var(--cy-space-2); color:var(--cy-comp-sheet-player-text-secondary); font-size:var(--cy-type-caption); line-height:1.55; }
-.entry-sheet__primary{ height:var(--cy-btn-h); margin-top:var(--cy-space-4); border-radius:var(--cy-radius-pill); background:var(--cy-comp-sheet-player-text); color:var(--cy-color-text-inverse); display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:800; }
+.entry-sheet__primary{ height:var(--cy-btn-h); margin-top:var(--cy-space-4); border-radius:var(--cy-comp-bottom-btn-radius); background:var(--cy-comp-sheet-player-text); color:var(--cy-color-text-inverse); display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:800; }
 .entry-sheet__secondary{ height:var(--cy-btn-h); margin-top:var(--cy-space-2); color:var(--cy-comp-sheet-player-text); display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-caption); font-weight:700; }
 .entry-sheet__section{ margin-top:var(--cy-space-5); padding-top:var(--cy-space-4); border-top:1rpx solid var(--cy-comp-sheet-player-divider); }
 .entry-sheet__section-title{ display:block; font-size:var(--cy-type-body); font-weight:800; }

@@ -49,6 +49,7 @@
   --cy-text-body: var(--cy-comp-sheet-role-text-secondary);
   --cy-text-secondary: var(--cy-comp-sheet-role-muted);
   background: var(--cy-comp-sheet-bg);
+  box-shadow: var(--cy-comp-sheet-role-lift); /* 2026-11-10 r2 玩家弹层顶边高光 + 向上投影;商家档为 none */
   /* 玻璃模糊;安卓部分 webview 不支持 backdrop-filter 时自动忽略,
    * 面板退回上面的半透明深底,不会变成透明白板。 */
   backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
@@ -298,6 +299,7 @@
 }
 
 /* 底部固定 CTA:贴底、让出安全区,键盘顶起时不被遮 */
+.sh__footer { --cy-comp-btn-radius: var(--cy-comp-bottom-btn-radius); } /* 2026-11-10 r2 底部按钮统一圆角 */
 .sh--full .sh__footer {
   flex: none;
   padding: var(--cy-space-2) 0 calc(env(safe-area-inset-bottom) + var(--cy-space-2));
