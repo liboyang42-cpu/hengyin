@@ -6,6 +6,7 @@
 //      红绿蓝三层张开量不同 → 边上裂出五彩色散。
 // 翻下一张 = 整圈转一格,全程连着。当前第几张由页面管:手滑 / 点两侧停稳后只抛 change。
 const { offsetOf, cardColumns, lensColumns, HIDE_AT } = require('../../utils/album-lens.js');
+const { EDGE } = require('../../../../utils/gesture-physics.js');
 
 const H_RPX = 900;
 const CARD_W_RPX = 420;
@@ -178,6 +179,8 @@ Component({
     onTouchStart(e) {
       const t = e.touches && e.touches[0];
       if (!t || this._n() < 2) return;
+      // qx-u1:左缘一条留给全屏相册的侧滑返回(utils/wxs/gesture.wxs edgeStart),从那里起手不翻页
+      if (t.clientX <= EDGE) return;
       clearTimeout(this._timer);
       this._touching = true;
       this._x0 = t.clientX;
