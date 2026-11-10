@@ -439,7 +439,11 @@
 <!-- W-15 试玩末尾的结局卡:只在作者预览出现。默认看兜底那条,chip 切换看每个结局与它的触发条件。
      真实游玩的结局在完成页(finsheet__game-ending),由服务端按本局状态判定。 -->
 <view class="pv-ending {{previewEnding.in ? 'pv-ending--in' : ''}} {{previewEnding.off ? 'pv-ending--' + previewEnding.off : ''}} {{reducedMotion ? 'pv-ending--reduced' : ''}}" wx:if="{{previewEnding.show}}" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-5))">
+  <!-- r2-finish s0-b1-run-ending:真玩家通关结局先有庆祝 —— 金色印章落下 + 两圈光环 + 彩旗;整屏居中。减弱动态时静止落位。 -->
+  <cy-celebrate wx:if="{{previewEnding.real}}" event-key="{{previewEnding.in ? 'run-ending' : ''}}" reduced-motion="{{reducedMotion}}" />
   <scroll-view scroll-y class="pv-ending__scroll" enhanced show-scrollbar="{{false}}">
+  <view class="pv-ending__body {{previewEnding.real ? 'pv-ending__body--real' : ''}}">
+  <view class="pv-ending__seal" wx:if="{{previewEnding.real}}" aria-hidden="true"><view class="pv-ending__ring"></view><view class="pv-ending__ring pv-ending__ring--2"></view><view class="pv-ending__tick"></view></view>
   <text class="pv-ending__k">{{previewEnding.real ? (previewEnding.archive.identity.length ? '这一生的结局' : '本局结局') : '本局结局 · 试玩'}}</text>
   <text class="pv-ending__title">{{previewEnding.list[previewEnding.idx].title}}</text>
   <text class="pv-ending__copy" wx:if="{{previewEnding.list[previewEnding.idx].summary}}">{{previewEnding.list[previewEnding.idx].summary}}</text>
@@ -470,6 +474,7 @@
     <text class="life-arc__walk" wx:if="{{previewEnding.archive.stations.length}}">走过 · {{previewEnding.archive.walkText}}</text>
   </view>
   <view class="pv-ending__go" wx:if="{{previewEnding.real}}" bindtap="continueLifeEnding" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
+  </view>
   </scroll-view>
 </view>
 <!-- 开场(原型 game-intro,2026-09-24):故事主题开局先看这一页;点「开始游戏」淡出,接开机与第一道开场门。
