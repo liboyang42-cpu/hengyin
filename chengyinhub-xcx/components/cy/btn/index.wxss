@@ -123,6 +123,9 @@
   color: transparent;
   opacity: 1;
 }
+/* 收圆后不吃按压态:手指还按着(或按压类晚一拍才撤)时,圆仍是本色,不出现灰圆 */
+.btn--morph-on.btn--press { transform: none; }
+.btn--primary.btn--morph-on { background: var(--cy-comp-btn-primary-bg); }
 .btn--primary { --cy-mm-fg: var(--cy-comp-btn-primary-fg); }
 .btn--secondary { --cy-mm-fg: var(--cy-comp-btn-secondary-fg); }
 .btn--ghost { --cy-mm-fg: var(--cy-text-title); }
