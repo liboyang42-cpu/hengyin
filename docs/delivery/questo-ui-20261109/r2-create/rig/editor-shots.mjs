@@ -13,7 +13,7 @@ const w = await launch({ path: 'pages/publish/fabu/index', identity: 'e2e-openid
 await sleep(2500);
 await w.tap('＋ 创建章节');
 await sleep(1500);
-await w.shot(`A5D-empty-${tag}`);
+await w.shot(`a5d-empty-${tag}`);
 
 // 写一章:四段文字 + 分割线 + 一张图 + 一段音频占位
 await w.eval(`(() => {
@@ -35,7 +35,7 @@ await w.eval(`(() => {
   p.setData({ 'storyEditor.focusBlockKey': '' });
 })()`);
 await sleep(1200);
-await w.shot(`A5D-written-${tag}`);
+await w.shot(`a5d-written-${tag}`);
 
 if (tag === 'after') {
   // 排版:第 2 段「铃铛响了一声」加粗、第 3 段斜体一截、第 4 段引用、开头插一个副标题;封面
@@ -94,25 +94,25 @@ if (wantDrag) {
   await page.mouse.move(x, y0);
   await page.mouse.down();
   await sleep(600); // 长按 350ms 起拖
-  await w.shot(`A5D-drag-f0-lift-${tag}`);
+  await w.shot(`a5d-drag-f0-lift-${tag}`);
   const path = [40, 90, 140, 190];
   for (let i = 0; i < path.length; i++) {
     await page.mouse.move(x, y0 + path[i], { steps: 4 });
     await sleep(160);
-    await w.shot(`A5D-drag-f${i + 1}-${tag}`);
+    await w.shot(`a5d-drag-f${i + 1}-${tag}`);
   }
   // 贴到底边:自动滚屏
   await page.mouse.move(x, 815, { steps: 6 });
   await sleep(250);
-  await w.shot(`A5D-drag-f5-edge-${tag}`);
+  await w.shot(`a5d-drag-f5-edge-${tag}`);
   await sleep(450);
-  await w.shot(`A5D-drag-f6-edge-${tag}`);
+  await w.shot(`a5d-drag-f6-edge-${tag}`);
   await page.mouse.move(x, 700, { steps: 4 });
   await sleep(200);
-  await w.shot(`A5D-drag-f7-${tag}`);
+  await w.shot(`a5d-drag-f7-${tag}`);
   await page.mouse.up();
   await sleep(500);
-  await w.shot(`A5D-drag-f9-drop-${tag}`);
+  await w.shot(`a5d-drag-f9-drop-${tag}`);
   const order = await w.eval(`getCurrentPages().slice(-1)[0].data.formData.chapters[0].blocks.map(b => b.type + ':' + (b.content || b.url || '').slice(0, 6))`);
   console.log('ORDER', JSON.stringify(order));
 }

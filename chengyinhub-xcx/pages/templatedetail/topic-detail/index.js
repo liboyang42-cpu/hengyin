@@ -88,8 +88,6 @@ Page({
     medalName: '',
     medalImg: '',
     deliveryRows: [],
-    // U02-02:采用方式弹层(沿用原地点 / 换一个城市)
-    adoptBusy: false
   },
 
   onLoad(options) {
@@ -216,7 +214,6 @@ Page({
       sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) });
     const that = this;
     this._using = true;
-    this.setData({ adoptBusy: true });
     app.sendRequest({
       url: '/api/template/topic-template/use',
       method: 'POST',
@@ -227,20 +224,17 @@ Page({
         const result = adoption.useResult(res);
         if (!result.ok) {
           // 服务端明确拒绝:原文提示
-          that.setData({ adoptBusy: false });
           cyToast(result.message || '使用模板失败');
           return;
         }
         const copiedId = result.topicId;
         that._copiedId = copiedId;
-        that.setData({ adoptBusy: false });
         that._openCopiedDraft(copiedId);
       },
       fail() {
         that._using = false;
         if (that._unloaded) return;
         // 网络失败:不自动重发,由用户再点一次(与改版前一致)
-        that.setData({ adoptBusy: false });
         cyToast('网络错误，请重试');
       }
     });
