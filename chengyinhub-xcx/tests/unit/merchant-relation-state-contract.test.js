@@ -391,6 +391,7 @@ test('r2 a6-w2-17:社区读开关开着时合入社区帖文;写开关开着才�
   assert.equal(json.componentPlaceholder['cy-post-compose'], 'view', '跨分包组件要占位')
   const js = read('pages/merchant/relation/index.js')
   assert.match(js, /canCompose: typeof app\.canUseCommunity === 'function' && app\.canUseCommunity\(true\)/)
+  assert.match(js, /app\.loadFeatureFlags\(\)/, '开关没读到先读一次,与玩家发现页同一道闸')
   assert.match(js, /app\.canUseCommunity\(false\)[\s\S]*url: '\/api\/creativesquare\/list'[\s\S]*normalizeCommunityPost/)
   assert.match(js, /onComposePublished\(\) \{\s*this\.setData\(\{ composerOpen: false \}\);\s*this\.loadFeed\(\);/)
   const { page } = createPage()

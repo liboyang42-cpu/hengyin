@@ -264,13 +264,19 @@ Page({
       }, 400);
     }
     this._feedCtx = ctx;
-    if (!more) {
-      // 发帖入口跟着服务端开关:社区写开着才出(app.canUseCommunity(true)),读开着才合社区帖文
-      this.setData({ canCompose: typeof app.canUseCommunity === 'function' && app.canUseCommunity(true) });
-      this._feedMerger = discoverFeed.createFeedMerger(this._feedSources());
-    }
-    this._feedMerger.take(FEED_PAGE_SIZE).then(function (page) {
-      if (!that._feedCurrent(ctx)) return;
+    // 与玩家发现页同一道闸:社区开关还没读到时先读一次(app.loadFeatureFlags),再决定合不合社区帖文、出不出发帖入口
+    const gate = !more && typeof app.canUseCommunity === 'function' && !app.canUseCommunity(false)
+      && typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : Promise.resolve();
+    Promise.resolve(gate).then(function () {
+      if (!that._feedCurrent(ctx)) return null;
+      if (!more) {
+        // 发帖入口跟着服务端开关:社区写开着才出(app.canUseCommunity(true)),读开着才合社区帖文
+        that.setData({ canCompose: typeof app.canUseCommunity === 'function' && app.canUseCommunity(true) });
+        that._feedMerger = discoverFeed.createFeedMerger(that._feedSources());
+      }
+      return that._feedMerger.take(FEED_PAGE_SIZE);
+    }).then(function (page) {
+      if (!page || !that._feedCurrent(ctx)) return;
       that._feedFinish(ctx);
       that._feedHasMore = page.hasMore;
       const feed = more ? that.data.feed.concat(page.rows) : page.rows;
