@@ -524,7 +524,9 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-11-10 r2-create(b4-21):撤掉预设页 pages/publish/preset ⇒ 91。
   // 2026-11-10 qx-final:l-after 与 l-pass 各自新增了同一页 market/library,合并后只算一次,取 l-pass 的计数。
   /* 2026-11-10 +1:l-pass 游戏主题库 subpackageMember/market/library(cy-nav-bar plain + cy-page-title 标准二级页)。 */
-  assert.equal(files.length, 92, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-11-10 l-payout +1:商家收款账户,cy-nav-bar + 共享 cy-page-title 二级页(照核销记录)⇒ 92。
+  // 2026-11-10 qx-final 合入 l-payout:l-pass 主题库与 l-payout 收款账户各 +1,91 → 93。
+  assert.equal(files.length, 93, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

@@ -1,0 +1,43 @@
+<view class="pa-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-page-title title="收款账户" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="2" />
+  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+            title="收款账户加载失败" sub="{{errorMessage}}"
+            retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+            title="当前岗位没有财务查看权限"
+            retry="" bind:back="onNavBack" auto-back custom-back />
+  <view wx:elif="{{pageState === 'unavailable'}}" class="pa-shell">
+    <cy-empty fill size="lg" kind="empty" title="收款账户暂未开放" />
+  </view>
+  <view wx:elif="{{pageState === 'none'}}" class="pa-shell">
+    <cy-empty fill size="lg" kind="empty" title="还没有开通收款账户" />
+  </view>
+
+  <view wx:elif="{{pageState === 'ready'}}" class="pa-shell">
+    <view class="fin-card pa-card">
+      <view class="fin-row pa-row" aria-label="开通状态，{{account.stateText}}">
+        <view class="fin-row__dot fin-row__dot--{{account.stateTone}}" aria-hidden="true" />
+        <view class="fin-row__main"><text class="fin-row__t">开通状态</text></view>
+        <text class="fin-row__v pa-state pa-state--{{account.stateTone}}">{{account.stateText}}</text>
+      </view>
+      <view class="fin-row pa-row" wx:if="{{account.subMchid}}" aria-label="商户号，{{account.subMchid}}">
+        <view class="fin-row__dot" aria-hidden="true" />
+        <view class="fin-row__main"><text class="fin-row__t">商户号</text></view>
+        <text class="fin-row__v">{{account.subMchid}}</text>
+      </view>
+      <view class="fin-row pa-row" wx:if="{{account.checkedText}}" aria-label="状态更新于{{account.checkedText}}">
+        <view class="fin-row__dot" aria-hidden="true" />
+        <view class="fin-row__main"><text class="fin-row__t">更新于</text></view>
+        <text class="fin-row__v fin-row__v--mute">{{account.checkedText}}</text>
+      </view>
+    </view>
+    <text class="pa-desc" wx:if="{{account.stateDesc}}">{{account.stateDesc}}</text>
+    <view class="pa-action" wx:if="{{account.signUrl}}">
+      <cy-btn variant="primary" bindtap="copySignUrl">{{account.state === 'NEED_SIGN' ? '复制签约链接' : '复制验证链接'}}</cy-btn>
+    </view>
+  </view>
+</view>

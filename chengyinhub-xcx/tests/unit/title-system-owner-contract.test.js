@@ -111,6 +111,7 @@ const EXPECTED_NAV_ROUTES = [
   'pages/merchant/coop-center/index', 'pages/merchant/customer/index', 'pages/merchant/game-node/index',
   'pages/merchant/aftercare/index', 'pages/merchant/aftercare/detail/index',
   'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
+  'pages/merchant/payout-account/index', // 2026-11-10 l-payout 商家收款账户:cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/customer/detail/index', 'pages/merchant/reviews/index', 'pages/merchant/team/index',
   'pages/merchant/predict/index',
   'pages/merchant/marketing/ai-insight/index',
@@ -201,6 +202,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-09-17 用户裁决:退款售后列表照 Revolut Business 316-318,改为返回 + 左对齐 L1 大标题。
   'pages/merchant/aftercare/index',
   'pages/merchant/verify-records/index', // 2026-10-15 BL-76 商家核销记录页:cy-nav-bar + cy-page-title 标准二级页
+  'pages/merchant/payout-account/index', // 2026-11-10 l-payout 商家收款账户:cy-nav-bar + cy-page-title 标准二级页
   // 其余商家页继续使用居中 nav 标题，仍只保留在 nav inventory。
   'pages/coop/list/index', 'pages/coop/invite-detail/index', 'pages/coop/invite/index', 'pages/coop/nearby/index',
   'pages/coop/finance/index',
@@ -359,8 +361,10 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 qx-s2 staging 合并树:r2-finish 结算页 settle +1(custom)叠加 r2-create 撤 preset −1 ⇒ 167;custom 166。
   // 2026-11-10 qx-final:l-after 与 l-pass 各自新增了同一页 market/library,合并后只算一次,取 l-pass 的计数。
   // 2026-11-10 l-pass +2(均 custom 导航):通行证页 market/membership、游戏主题库 market/library ⇒ 169;custom 168。
-  assert.equal(rows.length, 169, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 168)
+  // 2026-11-10 l-payout +1(custom 导航):商家收款账户 ⇒ 168;custom 167。
+  // 2026-11-10 qx-final 合入 l-payout:商家收款账户 pages/merchant/payout-account +1,叠加在 l-pass/l-after 合并计数之上。
+  assert.equal(rows.length, 170, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 169)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

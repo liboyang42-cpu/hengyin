@@ -1,0 +1,15 @@
+@import '../../../style/merchant-light.wxss';
+@import '../style/merchant-finance.wxss';
+
+/* l-payout 收款账户:结构照 pages/merchant/verify-records(浅色商家域,fin-card 行)。 */
+page { background: var(--cy-bg-page); }
+.pa-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); display: flex; flex-direction: column; }
+.pa-shell { flex: 1; box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); display: flex; flex-direction: column; }
+.pa-row { min-height: var(--cy-btn-h); }
+.pa-row + .pa-row { margin-top: 0; }
+.pa-state--success { color: var(--cy-color-status-success); }
+.pa-state--danger { color: var(--cy-color-status-danger); }
+.pa-state--warning { color: var(--cy-color-status-warning); }
+.pa-state--neutral { color: var(--cy-text-title); }
+.pa-desc { display: block; margin: var(--cy-space-3) var(--cy-space-1) 0; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.pa-action { margin-top: var(--cy-space-6); }

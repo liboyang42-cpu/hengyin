@@ -1,0 +1,348 @@
+package com.chengyinhub.business.payout;
+
+import com.chengyinhub.business.domain.CreatorPayoutRequest;
+import com.chengyinhub.business.domain.EcomLedgerComponent;
+import com.chengyinhub.business.domain.EcomOrderSeller;
+import com.chengyinhub.business.domain.EcomProfitShareLine;
+import com.chengyinhub.business.domain.EcomProfitShareOrder;
+import com.chengyinhub.business.domain.EcomProfitShareReturn;
+import com.chengyinhub.business.domain.EcomSubMerchant;
+import com.chengyinhub.business.it.ItSchema;
+import com.chengyinhub.business.it.MybatisItDatabase;
+import com.chengyinhub.business.mapper.EcomPayoutMapper;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.datasource.pooled.PooledDataSource;
+import org.apache.ibatis.exceptions.PersistenceException;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.transaction.support.TransactionOperations;
+
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * l-payout：真实 MySQL 8 + 真实 MyBatis 执行 {@code EcomPayoutMapper.xml} 与 {@code migration_20261110_ecommerce_payout.sql}。
+ *
+ * <p>新表直接执行仓库迁移；被读取的既有表（cms_registration / mms_merchant / club / coop_settlement_original_component）
+ * 只建本 mapper 读到的列，列类型与字符集/排序规则照生产（registration_no 为 utf8mb4_general_ci，
+ * 新表单号为 ascii_bin），以证明跨排序规则的连接在真库上成立。component 表去掉了指向其它账本表的外键。
+ *
+ * <p>只在 {@link MybatisItDatabase} 分配的一次性 scratch 库里跑，结束时 DROP 并回读确认。
+ * ⚠️ surefire 默认只收 *Test，本类需 -Dtest 点名（Real Storage IT 工作流按登记执行）。
+ */
+class EcomPayoutMapperMySqlIT {
+    private static final String SUITE = "ecom_payout";
+    private static PooledDataSource dataSource;
+    private static SqlSessionFactory factory;
+    private static String database;
+    private static String adminUrl;
+
+    private SqlSession session;
+    private EcomPayoutMapper mapper;
+
+    @BeforeAll
+    static void start() throws Exception {
+        adminUrl = "jdbc:mysql://" + MybatisItDatabase.host() + ":" + MybatisItDatabase.port()
+                + "/?useSSL=false&allowPublicKeyRetrieval=true";
+        try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+             Statement st = c.createStatement(); ResultSet rs = st.executeQuery("select version()")) {
+            assertTrue(rs.next());
+            assertTrue(rs.getString(1).startsWith("8.0."), "必须是 MySQL 8.0，实际=" + rs.getString(1));
+        }
+        dataSource = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url(SUITE),
+                MybatisItDatabase.user(), MybatisItDatabase.password());
+        database = MybatisItDatabase.databaseName(SUITE);
+        Configuration cfg = new Configuration();
+        cfg.setEnvironment(new Environment("ecom-payout", new JdbcTransactionFactory(), dataSource));
+        String resource = "mapper/business/EcomPayoutMapper.xml";
+        try (InputStream in = EcomPayoutMapperMySqlIT.class.getClassLoader().getResourceAsStream(resource)) {
+            if (in == null) throw new IllegalStateException("mapper XML 不在 classpath:" + resource);
+            new XMLMapperBuilder(in, cfg, resource, cfg.getSqlFragments()).parse();
+        }
+        factory = new SqlSessionFactoryBuilder().build(cfg);
+        try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
+            st.execute("CREATE TABLE cms_registration (id bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+                    + " registration_no varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,"
+                    + " owner_type int DEFAULT '0', owner_id bigint NOT NULL, UNIQUE KEY uk_reg_no(registration_no))"
+                    + " ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+            st.execute("CREATE TABLE mms_merchant (id bigint unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+                    + " member_id bigint DEFAULT NULL, del_flag int DEFAULT 0) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("CREATE TABLE club (id bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, member_id bigint NOT NULL,"
+                    + " del_flag int DEFAULT 0) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            st.execute("CREATE TABLE coop_settlement_original_component (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
+                    + " topic_id BIGINT NOT NULL, payer_registration_id BIGINT NOT NULL, settlement_id BIGINT NOT NULL,"
+                    + " receiver_kind VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,"
+                    + " receiver_member_id BIGINT UNSIGNED NULL, line_type VARCHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,"
+                    + " original_amount DECIMAL(15,2) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            ItSchema.applyMigrations(c, "sql/migration_20261110_ecommerce_payout.sql");
+        }
+    }
+
+    @AfterAll
+    static void cleanup() throws Exception {
+        if (dataSource != null) dataSource.forceCloseAll();
+        if (database == null || adminUrl == null) return;
+        assertTrue(database.matches("chengyin_mybatis_ecom_payout[a-z0-9_]*"), "只许 DROP 本套 scratch 库:" + database);
+        try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+             Statement st = c.createStatement()) {
+            st.execute("drop database `" + database + "`");
+            try (ResultSet rs = st.executeQuery("select count(*) from information_schema.schemata where schema_name = '" + database + "'")) {
+                assertTrue(rs.next());
+                assertEquals(0, rs.getInt(1));
+            }
+        }
+    }
+
+    @BeforeEach
+    void open() throws Exception {
+        session = factory.openSession(true);
+        mapper = session.getMapper(EcomPayoutMapper.class);
+        try (Statement st = session.getConnection().createStatement()) {
+            for (String t : List.of("ecom_profit_share_return", "ecom_profit_share_line", "ecom_profit_share_order",
+                    "ecom_order_seller", "ecom_sub_merchant", "creator_payout_request", "cms_registration",
+                    "mms_merchant", "club", "coop_settlement_original_component")) st.execute("delete from " + t);
+        }
+    }
+
+    @AfterEach
+    void close() { if (session != null) session.close(); }
+
+    private void exec(String sql) throws Exception {
+        try (Statement st = session.getConnection().createStatement()) { st.execute(sql); }
+    }
+
+    private static boolean isDuplicate(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) if (t instanceof SQLIntegrityConstraintViolationException) return true;
+        return false;
+    }
+
+    private EcomSubMerchant sub(String type, long ownerId) {
+        EcomSubMerchant row = new EcomSubMerchant();
+        row.setOwnerType(type); row.setOwnerId(ownerId);
+        row.setOutRequestNo(EcommerceSubMerchantService.outRequestNo(type, ownerId)); row.setCreatedBy("it");
+        mapper.insertSubMerchant(row);
+        return row;
+    }
+
+    @Test
+    void subMerchantOwnerAndRequestAreUniqueAndOwnerTypeIsChecked() {
+        sub("MERCHANT", 5);
+        PersistenceException dup = assertThrows(PersistenceException.class, () -> sub("MERCHANT", 5));
+        assertTrue(isDuplicate(dup));
+        PersistenceException bad = assertThrows(PersistenceException.class, () -> sub("PERSON", 6));
+        assertTrue(bad.getMessage().contains("ck_ecom_sub_merchant_owner"));
+        EcomSubMerchant read = mapper.selectSubMerchant("MERCHANT", 5L);
+        assertEquals("DRAFT", read.getApplymentState());
+        assertEquals("CYAPM5", read.getOutRequestNo());
+    }
+
+    @Test
+    void applymentStatusUpdatesAreCompareAndSetAndSubMchidIsWriteOnce() {
+        EcomSubMerchant row = sub("CLUB", 9);
+        assertEquals(0, mapper.markApplymentSubmitted(row.getId() + 999, 1L));
+        assertEquals(1, mapper.markApplymentSubmitted(row.getId(), 2000001L));
+        assertEquals(0, mapper.markApplymentSubmitted(row.getId(), 2000002L));
+        assertEquals(0, mapper.updateApplymentStatus(row.getId(), "AUDITING", "FINISH", "x", null, "1900000101", null));
+        assertEquals(1, mapper.updateApplymentStatus(row.getId(), "CHECKING", "FINISH", "完成", null, "1900000101", null));
+        assertEquals(0, mapper.updateApplymentStatus(row.getId(), "FINISH", "FROZEN", "冻结", null, "1900000999", null));
+        assertEquals(1, mapper.updateApplymentStatus(row.getId(), "FINISH", "FROZEN", "冻结", null, "1900000101", null));
+        EcomSubMerchant read = mapper.selectSubMerchantById(row.getId());
+        assertEquals("FROZEN", read.getApplymentState());
+        assertEquals("1900000101", read.getSubMchid());
+        assertEquals(2000001L, read.getApplymentId());
+        assertTrue(mapper.selectSubMerchantsInProgress(10).isEmpty());
+    }
+
+    @Test
+    void finishedSubMchidForMemberCoversMerchantAndClubButNotUnfinishedOrDeleted() throws Exception {
+        exec("insert into mms_merchant(id, member_id, del_flag) values (5, 55, 0), (6, 66, 1)");
+        exec("insert into club(id, member_id, del_flag) values (9, 55, 0)");
+        EcomSubMerchant m = sub("MERCHANT", 5);
+        EcomSubMerchant deleted = sub("MERCHANT", 6);
+        EcomSubMerchant c = sub("CLUB", 9);
+        mapper.markApplymentSubmitted(m.getId(), 1L);
+        mapper.markApplymentSubmitted(deleted.getId(), 2L);
+        mapper.updateApplymentStatus(m.getId(), "CHECKING", "FINISH", null, null, "1900000101", null);
+        mapper.updateApplymentStatus(deleted.getId(), "CHECKING", "FINISH", null, null, "1900000102", null);
+        assertEquals(List.of("1900000101"), mapper.selectFinishedSubMchidsForMember(55L));
+        assertTrue(mapper.selectFinishedSubMchidsForMember(66L).isEmpty());
+        mapper.markApplymentSubmitted(c.getId(), 3L);
+        mapper.updateApplymentStatus(c.getId(), "CHECKING", "FINISH", null, null, "1900000103", null);
+        assertEquals(2, mapper.selectFinishedSubMchidsForMember(55L).size());
+        assertEquals(55L, mapper.selectSellerMemberId("MERCHANT", 5L));
+        assertEquals(55L, mapper.selectSellerMemberId("CLUB", 9L));
+        assertNull(mapper.selectSellerMemberId("MERCHANT", 6L));
+        PersistenceException dupMchid = assertThrows(PersistenceException.class, () -> {
+            EcomSubMerchant other = sub("MERCHANT", 7);
+            mapper.markApplymentSubmitted(other.getId(), 4L);
+            mapper.updateApplymentStatus(other.getId(), "CHECKING", "FINISH", null, null, "1900000101", null);
+        });
+        assertTrue(isDuplicate(dupMchid));
+    }
+
+    private void seller(String no, long total, String tx) {
+        EcomOrderSeller s = new EcomOrderSeller();
+        s.setOutTradeNo(no); s.setSubMchid("1900000101"); s.setSellerType("MERCHANT"); s.setSellerId(5L); s.setTotalFen(total);
+        mapper.insertOrderSeller(s);
+        if (tx != null) assertEquals(1, mapper.bindOrderSellerTransaction(no, tx));
+    }
+
+    @Test
+    void paidSubMerchantTradesJoinAcrossCollationsAndFilterByTopicAndPayment() throws Exception {
+        exec("insert into cms_registration(id, registration_no, owner_type, owner_id) values"
+                + " (77, 'REG77', 1, 1), (78, 'REG78', 1, 1), (79, 'REG79', 1, 2), (80, 'REG80', 2, 1), (81, 'reg81', 1, 1)");
+        seller("REG77", 10000, "4200000077");
+        seller("REG78", 10000, null);
+        seller("REG79", 10000, "4200000079");
+        seller("REG80", 10000, "4200000080");
+        seller("REG81", 10000, "4200000081"); // 大小写不同：二进制比较不得误配
+        assertEquals(0, mapper.bindOrderSellerTransaction("REG77", "4200009999"));
+        List<EcomOrderSeller> paid = mapper.selectPaidSubMerchantTradesForTopic(1L);
+        assertEquals(1, paid.size());
+        assertEquals("REG77", paid.get(0).getOutTradeNo());
+        assertEquals(77L, paid.get(0).getRegistrationId());
+        assertEquals("4200000077", paid.get(0).getTransactionId());
+        assertEquals(10000L, paid.get(0).getTotalFen());
+        PersistenceException zero = assertThrows(PersistenceException.class, () -> seller("REG90", 0, null));
+        assertTrue(zero.getMessage().contains("ck_ecom_order_seller_total"));
+    }
+
+    @Test
+    void ledgerComponentsMapFromProductionColumns() throws Exception {
+        exec("insert into coop_settlement_original_component(topic_id, payer_registration_id, settlement_id, receiver_kind,"
+                + " receiver_member_id, line_type, original_amount) values (1, 77, 11, 'ACCOUNTING', null, 'PLATFORM', 15.00),"
+                + " (1, 77, 12, 'MEMBER', 66, 'MERCHANT_VERIFY', 10.00), (1, 78, 11, 'ACCOUNTING', null, 'PLATFORM', 1.00)");
+        List<EcomLedgerComponent> cs = mapper.selectLedgerComponents(1L, 77L);
+        assertEquals(2, cs.size());
+        assertEquals(11L, cs.get(0).getSettlementId());
+        assertEquals("ACCOUNTING", cs.get(0).getReceiverKind());
+        assertEquals(new BigDecimal("15.00"), cs.get(0).getOriginalAmount());
+        assertEquals(66L, cs.get(1).getReceiverMemberId());
+        assertEquals("MERCHANT_VERIFY", cs.get(1).getLineType());
+    }
+
+    private EcomProfitShareOrder shareOrder(String no, long topic) {
+        EcomProfitShareOrder o = new EcomProfitShareOrder();
+        o.setOutOrderNo(EcommerceProfitShareService.outOrderNo(no, topic)); o.setOutTradeNo(no); o.setTopicId(topic);
+        o.setSubMchid("1900000101"); o.setTransactionId("42"); o.setTotalFen(10000L); o.setSharedFen(2500L);
+        o.setPlanHash("a".repeat(64)); o.setState("PLANNED");
+        mapper.insertShareOrder(o);
+        return o;
+    }
+
+    @Test
+    void shareOrderIsUniquePerTradeAndTopicAndStateIsCas() {
+        EcomProfitShareOrder o = shareOrder("REG77", 1);
+        assertTrue(isDuplicate(assertThrows(PersistenceException.class, () -> shareOrder("REG77", 1))));
+        assertEquals(1, mapper.updateShareOrderState(o.getId(), "PLANNED", "PROCESSING", null, null));
+        assertEquals(0, mapper.updateShareOrderState(o.getId(), "PLANNED", "PROCESSING", null, null));
+        assertEquals(1, mapper.updateShareOrderState(o.getId(), "PROCESSING", "SUCCESS", "W1", null));
+        assertEquals(1, mapper.updateShareOrderState(o.getId(), "SUCCESS", "SUCCESS", null, null));
+        EcomProfitShareOrder read = mapper.selectShareOrder("REG77", 1L);
+        assertEquals("W1", read.getWxOrderId()); // coalesce 保留已知微信单号
+        assertEquals(3, read.getAttempts());
+        assertEquals(1, mapper.selectShareOrdersByState("SUCCESS", 10).size());
+        EcomProfitShareOrder bad = new EcomProfitShareOrder();
+        bad.setOutOrderNo("X"); bad.setOutTradeNo("REG1"); bad.setTopicId(9L); bad.setSubMchid("1"); bad.setTransactionId("1");
+        bad.setTotalFen(100L); bad.setSharedFen(101L); bad.setPlanHash("b".repeat(64)); bad.setState("PLANNED");
+        assertTrue(assertThrows(PersistenceException.class, () -> mapper.insertShareOrder(bad)).getMessage().contains("ck_ecom_share_amount"));
+    }
+
+    @Test
+    void shareLinesAndReturnsKeepTheirUniqueKeys() {
+        EcomProfitShareOrder o = shareOrder("REG77", 1);
+        EcomProfitShareLine l = new EcomProfitShareLine();
+        l.setShareOrderId(o.getId()); l.setSettlementId(11L); l.setLineType("PLATFORM"); l.setReceiverKind("PLATFORM");
+        l.setReceiverMchid("1900000001"); l.setAmountFen(1500L);
+        mapper.insertShareLine(l);
+        assertTrue(isDuplicate(assertThrows(PersistenceException.class, () -> mapper.insertShareLine(l))));
+        assertEquals(1, mapper.selectShareLines(o.getId()).size());
+
+        EcomProfitShareReturn r = new EcomProfitShareReturn();
+        r.setOutReturnNo(EcommerceProfitShareService.outReturnNo(o.getId(), "RF1", "1900000001")); r.setShareOrderId(o.getId());
+        r.setOutRefundNo("RF1"); r.setReturnMchid("1900000001"); r.setAmountFen(1500L);
+        mapper.insertReturn(r);
+        EcomProfitShareReturn again = new EcomProfitShareReturn();
+        again.setOutReturnNo("OTHER"); again.setShareOrderId(o.getId()); again.setOutRefundNo("RF1");
+        again.setReturnMchid("1900000001"); again.setAmountFen(1L);
+        assertTrue(isDuplicate(assertThrows(PersistenceException.class, () -> mapper.insertReturn(again))));
+        assertEquals("PROCESSING", mapper.selectReturn(r.getOutReturnNo()).getState());
+        assertEquals(1, mapper.updateReturnState(r.getId(), "PROCESSING", "SUCCESS", "WR1", null));
+        assertEquals(0, mapper.updateReturnState(r.getId(), "PROCESSING", "FAILED", null, "X"));
+        assertEquals("SUCCESS", mapper.selectReturnsByShareOrder(o.getId()).get(0).getState());
+    }
+
+    @Test
+    void creatorPayoutIsUniquePerSource() {
+        CreatorPayoutRequest p = new CreatorPayoutRequest();
+        p.setOutPayoutNo("CYCPC2M1"); p.setCreatorMemberId(1L); p.setSourceType("CREATOR_REVENUE"); p.setSourceId(2L);
+        p.setAmountFen(100L); p.setProvider("acme");
+        mapper.insertCreatorPayout(p);
+        p.setOutPayoutNo("CYCPC2M1-B");
+        assertTrue(isDuplicate(assertThrows(PersistenceException.class, () -> mapper.insertCreatorPayout(p))));
+        CreatorPayoutRequest read = mapper.selectCreatorPayout("CREATOR_REVENUE", 2L, 1L);
+        assertEquals("REQUESTED", read.getState());
+        assertEquals(1, mapper.updateCreatorPayoutState(read.getId(), "REQUESTED", "SUBMITTED", "P1", null));
+        assertEquals(0, mapper.updateCreatorPayoutState(read.getId(), "REQUESTED", "FAILED", null, "X"));
+    }
+
+    @Test
+    void serviceEndToEndOnRealSqlPlansSplitsAndReturnsFromTheLedger() throws Exception {
+        exec("insert into mms_merchant(id, member_id, del_flag) values (5, 55, 0), (6, 66, 0)");
+        exec("insert into cms_registration(id, registration_no, owner_type, owner_id) values (77, 'REG77', 1, 1)");
+        exec("insert into coop_settlement_original_component(topic_id, payer_registration_id, settlement_id, receiver_kind,"
+                + " receiver_member_id, line_type, original_amount) values (1, 77, 11, 'ACCOUNTING', null, 'PLATFORM', 15.00),"
+                + " (1, 77, 12, 'MEMBER', 66, 'MERCHANT_VERIFY', 10.00), (1, 77, 13, 'MEMBER', 55, 'INITIATOR_MARGIN', 75.00)");
+        EcomSubMerchant seller = sub("MERCHANT", 5);
+        EcomSubMerchant other = sub("MERCHANT", 6);
+        mapper.markApplymentSubmitted(seller.getId(), 1L);
+        mapper.markApplymentSubmitted(other.getId(), 2L);
+        mapper.updateApplymentStatus(seller.getId(), "CHECKING", "FINISH", null, null, "1900000101", null);
+        mapper.updateApplymentStatus(other.getId(), "CHECKING", "FINISH", null, null, "1900000202", null);
+        seller("REG77", 10000, "4200000077");
+
+        PayoutSwitches on = new PayoutSwitches(true, true, true, "1900000001", "wxsp", "", 30, false, "none");
+        FakeEcommerceGateway gateway = new FakeEcommerceGateway();
+        EcommerceProfitShareService service = new EcommerceProfitShareService(mapper, gateway, on, TransactionOperations.withoutTransaction());
+        assertEquals(1, service.planTopic(1));
+        assertEquals(0, service.planTopic(1));
+        EcomProfitShareOrder order = mapper.selectShareOrder("REG77", 1L);
+        assertEquals("PLANNED", order.getState());
+        assertEquals(2500L, order.getSharedFen());
+        assertEquals(3, mapper.selectShareLines(order.getId()).size());
+        assertEquals(1, service.submitPlanned(10));
+        assertEquals("SUCCESS", mapper.selectShareOrder("REG77", 1L).getState());
+        assertEquals(List.of(new ProfitSharePlanner.Receiver("1900000001", 1500), new ProfitSharePlanner.Receiver("1900000202", 1000)),
+                gateway.lastReceivers);
+        assertEquals(EcommerceProfitShareService.ReturnOutcome.ALL_RETURNED, service.returnForRefund("REG77", "RF1", 4000, 0));
+        long returned = mapper.selectReturnsByShareOrder(order.getId()).stream().mapToLong(EcomProfitShareReturn::getAmountFen).sum();
+        assertEquals(1000, returned); // round(2500 × 4000 / 10000)
+        assertEquals(EcommerceProfitShareService.ReturnOutcome.ALL_RETURNED, service.returnForRefund("REG77", "RF2", 6000, 4000));
+        returned = mapper.selectReturnsByShareOrder(order.getId()).stream().mapToLong(EcomProfitShareReturn::getAmountFen).sum();
+        assertEquals(2500, returned);
+        Map<String, Long> byMchid = new java.util.TreeMap<>();
+        mapper.selectReturnsByShareOrder(order.getId()).forEach(r -> byMchid.merge(r.getReturnMchid(), r.getAmountFen(), Long::sum));
+        assertEquals(Map.of("1900000001", 1500L, "1900000202", 1000L), byMchid);
+    }
+}

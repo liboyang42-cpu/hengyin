@@ -726,6 +726,14 @@
         "com.chengyinhub.business.mapper.PostGameOutcomeMapperMySqlIT",
         "com.chengyinhub.business.it.PlatformPassMySqlIT"
       ]
+    },
+    "launch-l-payout": {
+      "lineage": "l-payout 20261110 launch wave: WeChat Pay 电商收付通 sub-merchant onboarding, seller-of-record order mapping, profit sharing and returns, creator payout requests",
+      "registered_source": "ca1f85b6844fae8014661ab1d9eb92cd6c3cbde7",
+      "note": "EcomPayoutMapperMySqlIT (9): migration_20261110_ecommerce_payout.sql applied verbatim on a scratch MySQL 8 schema; read-only legacy tables carry production column types/collations (FKs omitted). Covers unique keys, CHECK constraints, CAS state updates, cross-collation registration join and one service end-to-end run with a stub gateway. Source registration only, execution NOT_RUN until dispatched.",
+      "classes": [
+        "com.chengyinhub.business.payout.EcomPayoutMapperMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -2098,6 +2106,14 @@
       "database_base": "cyit",
       "nested": [],
       "note": "R14 historical club payee isolation; same seven H2 behavior assertions on production MyBatis SQL with real MySQL; unique task-owned inline schema per method, no migration or shared data. Source registration is not execution evidence."
+    },
+    "com.chengyinhub.business.payout.EcomPayoutMapperMySqlIT": {
+      "tests": 9,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "l-payout EcomPayoutMapper.xml + migration on real MySQL/MyBatis; task-owned scratch schema dropped and read back at the end. Source registration 20261110, execution evidence is the dispatched run receipt only."
     }
   }
 }

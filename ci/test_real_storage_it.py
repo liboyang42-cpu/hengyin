@@ -540,7 +540,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-refund-lifecycle": 76,
                     "architecture-day-integrated-changes": 968,  # R14 payee isolation seven; R30 adoption receipt +1, CITY copy rollback +1, template draft +2, alternative graph +8; publication binding issue codes +1; TopicContentGraph +1 (qx-c3)
                     "payment-intent-correctness": 30,
-                    "marketing-db-acceptance": 236}  # ClubEventTransferCancellation 14 -> 15, PostGameOutcomeMapperMySqlIT +10 (qx-c3), PlatformPassMySqlIT +7 (l-pass)
+                    "marketing-db-acceptance": 236,  # ClubEventTransferCancellation 14 -> 15, PostGameOutcomeMapperMySqlIT +10 (qx-c3), PlatformPassMySqlIT +7 (l-pass)
+                    "launch-l-payout": 9}  # l-payout EcomPayoutMapperMySqlIT
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
