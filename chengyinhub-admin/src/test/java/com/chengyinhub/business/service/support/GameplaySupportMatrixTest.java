@@ -104,12 +104,11 @@ public class GameplaySupportMatrixTest {
             Matcher mode = Pattern.compile("mode: '([^']+)'").matcher(entries.group(3));
             if (mode.find()) assertEquals(mode.group(1), row.path("mode").asText()); count++;
         }
-        // 客户端目录仍是 32 行(编辑器 UI 源,服务端不改)。矩阵多出的行只能是**已登记但客户端尚未跟上**
-        // 的那一个:逐字猜词有服务端完成证明(SUBMIT_HANGMAN 的 solved 事实),后端先放行发布,
-        // 客户端编辑器与 fixture 由 UI 负责人同批补(见 ui-inputs/V2.md)。除它之外任何多行都算漂移。
-        assertEquals(32, count);
-        assertEquals(new LinkedHashSet<>(java.util.Arrays.asList("hangman")), rows.keySet(),
-                "矩阵相对客户端目录只能多出已登记的新玩法:" + rows.keySet());
+        // 2026-11-10 qx-final:客户端目录已由 qx-b2 补上逐字猜词(hangman),32 → 33 行,与服务端矩阵逐行对齐;
+        // 原先「矩阵只能多出 hangman」的过渡断言收紧为「矩阵与客户端目录完全一致」,任何多行都算漂移。
+        assertEquals(33, count);
+        assertEquals(new LinkedHashSet<String>(), rows.keySet(),
+                "矩阵相对客户端目录不能多出行:" + rows.keySet());
         Set<String> addons = new LinkedHashSet<>(); for (JsonNode row : GameplaySupportMatrix.view().path("addons")) addons.add(row.path("key").asText());
         // R5（2026-10-10 主人裁定）：作者端只再提供 4 个附加规则（限时/时段/排行榜/多人协作-待定义）；
         // 闭眼盲品、今日城市签改为玩法「形式」（在 ALL 里），沉默点单/作品命名/治愈音乐角/跨日慢任务不再提供但服务端继续支持存量。
