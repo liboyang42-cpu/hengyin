@@ -698,7 +698,7 @@
     "marketing-db-acceptance": {
       "lineage": "MDB-F2 20261108 marketing DB/transaction acceptance (M3/M4/M5/M6/M7/M8) plus the three pre-existing M7/M5 ITs fixed to be registrable",
       "registered_source": "147754ba8740abf208bda75cf86ed5901cac4c02",
-      "note": "Nine baseline classes plus P-wave PlayerMarketingReadMySqlIT (6), TopicContentRevisionMySqlIT (7), PlayHelpRunQuotaConcurrencyMySqlIT (8) and RegistrationSeatInvitationMySqlIT (7), one scratch MySQL database each. Expected counts equal @Test declarations; the gate fails closed on any skipped/failed/error/drift. M5 applies both its table migration and the M8F3 z migration so task_kind=3 exists exactly as in production. ME-08 (old report drift about marketing_product refund_policy columns) is deliberately NOT restored: the current refund source is M2 cms_registration.refund_policy_*. ME-09 (nullable channel account_id in a unique key) is recorded only, not changed. Registration lineage is the reviewed baseline, not final execution identity; actual workflow source_sha/HEAD, source hashes and per-class receipt determine tested candidate. Registration counts are metadata, not a passing run. 20261109 adds GenericRouteRuntimeMySqlIT (77), WorkshopPurchaseMyBatisIT (2), WorkshopAppleIapMyBatisIT (4) as focused recovery routes after actual CI failures; Historical recovery registration: 16 classes / 167 cases. Current source adds item-refund/media/host routes: 23 classes / 218 declared cases (including 10 parent-cash refund chain cases) (including 11 host waitlist cases); execution NOT_RUN. Same classes remain in the existing backend IT route; this entry shortens failure feedback and does not prove payment or business acceptance. Source registration only, execution NOT_RUN.",
+      "note": "Nine baseline classes plus P-wave PlayerMarketingReadMySqlIT (6), TopicContentRevisionMySqlIT (7), PlayHelpRunQuotaConcurrencyMySqlIT (8) and RegistrationSeatInvitationMySqlIT (7), one scratch MySQL database each. Expected counts equal @Test declarations; the gate fails closed on any skipped/failed/error/drift. M5 applies both its table migration and the M8F3 z migration so task_kind=3 exists exactly as in production. ME-08 (old report drift about marketing_product refund_policy columns) is deliberately NOT restored: the current refund source is M2 cms_registration.refund_policy_*. ME-09 (nullable channel account_id in a unique key) is recorded only, not changed. Registration lineage is the reviewed baseline, not final execution identity; actual workflow source_sha/HEAD, source hashes and per-class receipt determine tested candidate. Registration counts are metadata, not a passing run. 20261109 adds GenericRouteRuntimeMySqlIT (77), WorkshopPurchaseMyBatisIT (2), WorkshopAppleIapMyBatisIT (4) as focused recovery routes after actual CI failures; Historical recovery registration: 16 classes / 167 cases. Current source adds item-refund/media/host routes: 23 classes / 218 declared cases (including 10 parent-cash refund chain cases) (including 11 host waitlist cases); execution NOT_RUN. 20261110 qx-c3: ClubEventTransferCancellationMySqlIT 14 -> 15 declarations and PostGameOutcomeMapperMySqlIT (10) registered, giving 24 classes / 229 declared cases. Same classes remain in the existing backend IT route; this entry shortens failure feedback and does not prove payment or business acceptance. Source registration only, execution NOT_RUN.",
       "classes": [
         "com.chengyinhub.business.it.ContentLandingMetadataVersionMySqlIT",
         "com.chengyinhub.business.it.ContentLandingReviewConcurrencyMySqlIT",
@@ -722,11 +722,20 @@
         "com.chengyinhub.business.it.TemplateMarketLifecycleMySqlIT",
         "com.chengyinhub.business.service.ClubEventTransferCancellationMySqlIT",
         "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
-        "com.chengyinhub.business.it.MarketingCashOriginalRefundMySqlIT"
+        "com.chengyinhub.business.it.MarketingCashOriginalRefundMySqlIT",
+        "com.chengyinhub.business.mapper.PostGameOutcomeMapperMySqlIT"
       ]
     }
   },
   "classes": {
+    "com.chengyinhub.business.mapper.PostGameOutcomeMapperMySqlIT": {
+      "tests": 10,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Questo post-game outcome mapper (PostGameOutcomeMapper.xml) on real MySQL/MyBatis with its verbatim it-schema extract; previously in no CI list. Source registration 20261110 (qx-c3), execution evidence is the dispatched run receipt only."
+    },
     "com.chengyinhub.business.it.MarketingCashOriginalRefundMySqlIT": {
       "tests": 10,
       "storage": [
@@ -778,7 +787,7 @@
       "note": "Reviewed current source registration for focused Questo backend repairs; execution NOT_RUN; storage proof only, no provider or product acceptance."
     },
     "com.chengyinhub.business.service.ClubEventTransferCancellationMySqlIT": {
-      "tests": 14,
+      "tests": 15,
       "storage": [
         "mysql"
       ],
@@ -1950,7 +1959,7 @@
       "note": "Exact whole copy/rollback/transfer production mapper+transaction cases; source verifies legacy absence/extracted presence; catalogue outer transfer collaborators explicit doubles. Equivalence JSON retained under Surefire reports. Current source retains original29 (original25 plus3 coupon-ownership copy/rollback cases plus1 cross-owner CITY count-rule zero-write rollback) and adds explicitTemplateUseCommitsPersistedDraftAndWholeContentGraph and zeroDraftUpdateRollsBackTopicContentSlotAndEveryCopiedChild; declarations only, NOT_RUN."
     },
     "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT": {
-      "tests": 40,
+      "tests": 41,
       "storage": [
         "mysql"
       ],

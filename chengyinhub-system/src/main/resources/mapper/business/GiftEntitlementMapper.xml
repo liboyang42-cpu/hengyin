@@ -67,12 +67,16 @@
       相关 = 行属本人（r.member_id，含待领取 ⇒ 遮断买家）或已领取给本人（g.claimed_member_id）。
       多主题 pass：按礼品订单的 parent_order_no 展开到**该单产出的每一行**，不只 primary ——
       否则多作品包只有第一个主题能被领取人玩到。
+      排序规则：cms_registration 为 utf8mb4_general_ci，marketing_product_order 建表只写 DEFAULT CHARSET=utf8mb4，
+      在 MySQL 8 落成 utf8mb4_0900_ai_ci；两列都是 IMPLICIT，直接相等会报 1267 Illegal mix of collations，
+      整条自玩准入（/api/play/theme/state 等）随之 500。显式把订单号侧按 general_ci 比较：EXPLICIT 优先，
+      无论两表实际落成哪种都能比较，且 cms_registration.parent_order_no 侧索引仍可用。
     -->
     <select id="selectPlayFactsByOwner" resultMap="playFactMap" useCache="false">
         select r.id as registration_id, g.status, g.claimed_member_id
         from gift_entitlement g
         join marketing_product_order o on o.id = g.order_id
-        join cms_registration r on r.parent_order_no = o.order_no
+        join cms_registration r on r.parent_order_no = o.order_no collate utf8mb4_general_ci
         where r.owner_type = #{ownerType}
           and r.owner_id = #{ownerId}
           and g.status in (0, 1)

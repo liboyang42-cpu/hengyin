@@ -513,7 +513,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-ai-not-sent": 4,
                     "architecture-day-lead-admission": 14,
                     "architecture-day-topic-copy": 31,
-                    "architecture-day-topic-authoring": 40,
+                    "architecture-day-topic-authoring": 41,  # TopicContentGraph 40 -> 41 (Questo source, qx-c3 20261110)
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
                     "architecture-day-payment-inbox": 14,
@@ -538,9 +538,9 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 76,
-                    "architecture-day-integrated-changes": 967,  # R14 payee isolation seven; R30 adoption receipt +1, CITY copy rollback +1, template draft +2, alternative graph +8; publication binding issue codes +1
+                    "architecture-day-integrated-changes": 968,  # R14 payee isolation seven; R30 adoption receipt +1, CITY copy rollback +1, template draft +2, alternative graph +8; publication binding issue codes +1; TopicContentGraph +1 (qx-c3)
                     "payment-intent-correctness": 30,
-                    "marketing-db-acceptance": 218}
+                    "marketing-db-acceptance": 229}  # ClubEventTransferCancellation 14 -> 15, PostGameOutcomeMapperMySqlIT +10 (qx-c3)
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
