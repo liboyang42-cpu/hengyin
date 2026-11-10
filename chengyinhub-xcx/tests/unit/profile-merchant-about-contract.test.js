@@ -418,7 +418,7 @@ test('§3.6 商家公开身份接管身份头,不残留个人昵称/玩家角色
     '品牌名必须接管昵称位')
   assert.match(js, /identitySync\.resolveSelfIdentity\(d\.subjectIsMerchant \|\| selfAsMerchant,\s*d\.subjectIsMerchant \? d\.subjectMerchant : selfMerchant, d\.userInfo\)/,
     '商家被看者走商家身份')
-  const identity = read('utils/identity-sync.js')
+  const identity = read(path.join(ROOT, 'utils/identity-sync.js'))
   // 头像位:商家走 logo,没有就落店名首字(lettermark);玩家走 avatar,没有才用默认头像那张图。
   assert.match(identity, /avatar: String\(m\.logo \|\| ''\)\.trim\(\), initial: name \? name\.charAt\(0\) : '店'/,
     'logo 必须接管商家的头像位；没 logo 时落店名首字，不借玩家默认头像那张人脸')

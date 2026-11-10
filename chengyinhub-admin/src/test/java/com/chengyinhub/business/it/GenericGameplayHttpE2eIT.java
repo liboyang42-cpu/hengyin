@@ -197,6 +197,12 @@ class GenericGameplayHttpE2eIT {
                         + " AND action='AUDIT_DECISION_APPROVE' AND actor_type='SYS_USER' AND actor_member_id=? AND request_id=?",
                         Integer.class, taskId, operator.getUserId(), request.getRequestId()));
                 assertEquals(1, notificationCount(database, memberId, taskId));
+                // Questo 素材来源合同：审核通过但未声明来源/授权的素材仍不能公开；由本人走 PUT /{id}/provenance 的同一服务补声明。
+                assertEquals("ASSET_LICENSE_MISSING：请补充素材来源和授权声明后再公开", assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                        () -> guard.requireMedia(memberId, reference, true)).getMessage());
+                assets.saveProvenance(id, memberId, java.util.Map.of("sourceType", "original", "licenseNote", "仅测试夹具：原创素材声明"));
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM app_media_asset WHERE id=? AND member_id=? AND source_type='original'"
+                        + " AND review_state='APPROVED' AND version=0", Integer.class, id, memberId));
                 assertEquals(reference, guard.requireMedia(memberId, reference, true));
                 byKey.put(key, reference);
                 String signed = assets.approvedUrl(id);

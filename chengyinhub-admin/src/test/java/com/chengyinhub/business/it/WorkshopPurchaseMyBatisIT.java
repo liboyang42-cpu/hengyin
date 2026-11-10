@@ -192,12 +192,14 @@ class WorkshopPurchaseMyBatisIT {
         fixtureTable(jdbc,"CmsMemberTemplateMapper","CmsMemberTemplateResult","cms_member_template");
         fixtureNodeReferences(jdbc);
         jdbc.update("insert into cms_member_template(id,member_id,title,status,draft_status,publish_status,del_flag) values(80,99,'private paid',0,0,0,0)");
-        var factory=new SqlSessionFactoryBean();factory.setDataSource(ds);
+        // qx-c1 #1: mapper SQL runs through the app's Druid wall (multi-statement off), like production; fixtures stay raw.
+        var walled=appWalledDataSource(MybatisItDatabase.url("workshop_paid_apple"));
+        var factory=new SqlSessionFactoryBean();factory.setDataSource(walled);
         factory.setTypeAliases(CmsTemplateLibrary.class,TemplateLibraryVO.class,CmsMemberTemplate.class,MemberTemplateVO.class);
         factory.setMapperLocations(new ClassPathResource("mapper/business/CmsTemplateLibraryMapper.xml"),
                 new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"),new ClassPathResource("mapper/business/WorkshopMapper.xml"));
         var sessions=new SqlSessionTemplate(Objects.requireNonNull(factory.getObject()));var mapper=sessions.getMapper(WorkshopMapper.class);
-        var manager=new DataSourceTransactionManager(ds);var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
+        var manager=new DataSourceTransactionManager(walled);var tx=new org.springframework.transaction.support.TransactionTemplate(manager);
         var service=new WorkshopService(mapper,mock(ITemplatePublishService.class),mock(IWechatPayService.class),
                 new WorkshopWechatPaymentOrderAdapter(mapper,mock(WechatVerifiedPaymentFactService.class),manager),manager);
         var review=new com.chengyinhub.business.service.support.WorkshopVersionReview(mapper);
@@ -262,6 +264,7 @@ class WorkshopPurchaseMyBatisIT {
         jdbc.update("insert into cms_member_template(id,member_id,title,status,draft_status,publish_status,del_flag) values(21,7,'installed',0,0,0,0),(22,7,'forced copy',0,0,0,0)");
         jdbc.update("insert into workshop_install(buyer_id,request_id,order_no,command_hash,command_json,draft_id) values(7,'install',?,?,'{}',21)",no3,"a".repeat(64));
         var guard=new com.chengyinhub.business.service.support.WorkshopLicenseGuard(mapper);
+        assertLicenseLockTargetsOnlyTheOrderRow(tx,mapper,ds,no3);
         tx.execute(s->{guard.inheritCopy(21L,22L,7L);return null;});
         assertEquals(2,mapper.installedCount(no3));
         assertThrows(ServiceException.class,()->tx.execute(s->{guard.inheritCopy(21L,23L,7L);return null;}));
@@ -274,6 +277,47 @@ class WorkshopPurchaseMyBatisIT {
         service.revoke(7,no3);
         assertThrows(ServiceException.class,()->tx.execute(s->{guard.requirePublication(22L,false);return null;}));
         assertEquals(1,jdbc.queryForObject("select count(*) from workshop_draft_lineage where draft_id=22",Integer.class));
+    }
+
+    /** Same wall the app datasource runs (application-druid.yml: wall.enabled, multi-statement-allow=false). */
+    static com.alibaba.druid.pool.DruidDataSource appWalledDataSource(String url) throws Exception {
+        var config=new com.alibaba.druid.wall.WallConfig(com.alibaba.druid.wall.spi.MySqlWallProvider.DEFAULT_CONFIG_DIR);
+        config.setMultiStatementAllow(false);
+        var wall=new com.alibaba.druid.wall.WallFilter();wall.setDbType("mysql");wall.setConfig(config);
+        var walled=new com.alibaba.druid.pool.DruidDataSource();
+        walled.setUrl(url);walled.setUsername(MybatisItDatabase.user());walled.setPassword(MybatisItDatabase.password());
+        walled.setProxyFilters(List.of(wall));walled.init();
+        return walled;
+    }
+
+    /**
+     * The license lock goes through the wall and keeps the old alias-scoped semantics: inside the transaction the
+     * license order row is locked; the draft and installation rows it reads are not.
+     */
+    private static void assertLicenseLockTargetsOnlyTheOrderRow(org.springframework.transaction.support.TransactionTemplate tx,
+            WorkshopMapper mapper,javax.sql.DataSource raw,String orderNo) throws Exception {
+        CountDownLatch locked=new CountDownLatch(1),release=new CountDownLatch(1);
+        var pool=Executors.newSingleThreadExecutor();
+        try {
+            var holder=pool.submit(()->tx.execute(s->{
+                var row=mapper.lockLicenseForDraft(21L);
+                assertEquals(orderNo,row.get("order_no"));assertEquals(7L,((Number)row.get("installation_owner")).longValue());
+                assertEquals(7L,((Number)row.get("draft_owner")).longValue());assertEquals("{}",row.get("installation_command"));
+                locked.countDown();
+                try{assertTrue(release.await(10,TimeUnit.SECONDS));}catch(InterruptedException e){throw new RuntimeException(e);}
+                return null;}));
+            assertTrue(locked.await(10,TimeUnit.SECONDS));
+            try(var other=raw.getConnection();var st=other.createStatement()){
+                other.setAutoCommit(false);
+                assertThrows(java.sql.SQLException.class,()->st.executeQuery("select id from workshop_order where order_no='"+orderNo+"' for update nowait"),
+                        "license order row must be locked");
+                st.executeQuery("select id from cms_member_template where id=21 for update nowait").close();
+                st.executeQuery("select id from workshop_install where draft_id=21 for update nowait").close();
+                other.rollback();
+            }
+            release.countDown();holder.get(10,TimeUnit.SECONDS);
+        } finally {release.countDown();pool.shutdownNow();}
+        assertNull(tx.execute(s->mapper.lockLicenseForDraft(80L)),"a draft without a license has no locked row");
     }
 
 @org.junit.jupiter.api.AfterAll
