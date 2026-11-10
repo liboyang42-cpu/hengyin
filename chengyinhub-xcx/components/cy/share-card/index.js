@@ -11,6 +11,7 @@ const cyModal = require('../../../utils/modal.js');
 const { ALBUM_SAVE, classifyAlbumSaveError } = require('../../../utils/album-save-outcome.js');
 const { tintFromPixels } = require('../../../utils/share-tint.js');
 const { fitRows } = require('../../../utils/share-lines.js');
+const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 
 const KINDS = {
   activity: { label: '活动', colors: ['#5A3426', '#8E6430', '#1E2A24', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿) */
@@ -41,6 +42,7 @@ function cardText(kind, meta, date, when, stops) {
 }
 
 Component({
+  behaviors: [reducedMotionBehavior],
   properties: {
     show: { type: Boolean, value: false },
     // { kind: activity | theme | medal, id, title, meta, cover, date, when, stops: [] }
@@ -49,8 +51,19 @@ Component({
   data: {
     statusBarHeight: 20, kind: 'theme', label: '主题', title: '', meta: '', cover: '', eyebrow: '主题', sub: '',
     colors: KINDS.theme.colors, colorIndex: 0, bg: KINDS.theme.colors[0], qr: '', channels: CHANNELS,
+    entered: false,
   },
+  lifetimes: { detached() { if (this._enterTimer) clearTimeout(this._enterTimer); } },
   observers: {
+    // r4-motion:层打开后下一帧挂 sc--in,卡 / 徽标 / 文字按 transition 依次进场(减动效时同帧到位);关掉就复位,下次再播
+    show(show) {
+      if (this._enterTimer) clearTimeout(this._enterTimer);
+      this._enterTimer = null;
+      if (!show) { if (this.data.entered) this.setData({ entered: false }); return; }
+      if (this.data.reducedMotion) { this.setData({ entered: true }); return; }
+      this.setData({ entered: false });
+      this._enterTimer = setTimeout(() => { this._enterTimer = null; if (this.data.show) this.setData({ entered: true }); }, 34);
+    },
     'show, card': function (show, card) {
       if (!show) return;
       const app = getApp();

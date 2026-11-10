@@ -2,6 +2,8 @@
 const app = getApp()
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
+const pageMotion = require('../../../utils/page-motion.js')
+const morph = require('../../../utils/morph-success.js')
 
 Page({
   data: {
@@ -9,10 +11,13 @@ Page({
     navBarHeight: app.globalData.navBarHeight,
     state: 'ready', // ready | claimed | failed | unknown
     reason: '',
-    claiming: false
+    claiming: false,
+    claimDone: false,   // r4-motion:服务端确认后「领取」先收成勾(M7),停一拍再换成已领取
+    pmHero: 0           // r4-motion:礼物圆章入场(page-motion --pm 变量)
   },
   onLoad(options) {
     this._token = options && options.token ? decodeURIComponent(options.token) : ''
+    pageMotion.enter(this, 'pmHero', { once: true })
     if (!this._token) this.setData({ state: 'failed', reason: mv.claimReasonText('TOKEN_REQUIRED') })
   },
   claim() {
@@ -26,7 +31,7 @@ Page({
       success: (res) => {
         if (isBizOk(res) && res.data) {
           this._registrationId = res.data.registrationId || null
-          this.setData({ claiming: false, state: 'claimed' })
+          morph.settle(this, 'claimDone', () => this.setData({ state: 'claimed' }), { with: { claiming: false } })
           return
         }
         this.setData({ claiming: false, state: 'failed', reason: mv.claimReasonText(res && res.reasonCode) })
@@ -34,6 +39,7 @@ Page({
       fail: () => this.setData({ claiming: false, state: 'unknown' })
     })
   },
+  onUnload() { morph.cancel(this) },
   goOrder() {
     if (this._registrationId) {
       wx.redirectTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + encodeURIComponent(this._registrationId) })

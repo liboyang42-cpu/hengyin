@@ -77,15 +77,21 @@ test('r2 a6-w2-16:AI 店铺角色首次介绍回到 R12 那一版(3D 物件),每
     for (const n of [a, b]) assert.ok(fs.existsSync(path.join(root, 'pages/merchant/images/npc-intro/' + n + '.png')), n);
   }
   const css = read('pages/merchant/decor/ai-npc/index.wxss');
-  const anims = [0, 1, 2, 3].map((k) => {
-    const m = css.match(new RegExp('\\.ni-o--k' + k + '\\.ni-o--on \\{[^}]*animation: (ni-[a-z]+)'));
-    const n = css.match(new RegExp('\\.ni-o--sm\\.ni-o--k' + k + '\\.ni-o--on \\{[^}]*animation: (ni-[a-z]+)'));
-    assert.ok(m && n, 'step ' + k + ' 两个物件都有动效');
-    return m[1] + '+' + n[1];
+  // 2026-11-10 r4-motion:四步动效改成 transition(动效棘轮不许新增关键帧):每步两个物件各有自己的「未上场」起点 / 上场终点,
+  // 挥手 / 摆动 / 闪烁由页面按拍翻 .ni-stage--p1…p4;每步的起点两两不同。
+  const starts = [0, 1, 2, 3].map((k) => {
+    const big = css.match(new RegExp('\\.ni-o--k' + k + '(?:\\.ni-o--on)? \\{[^}]*transform: ([^;]+);'));
+    const sm = css.match(new RegExp('\\.ni-o--sm\\.ni-o--k' + k + '(?:\\.ni-o--on)? \\{[^}]*transform: ([^;]+);'));
+    assert.ok(big && sm, 'step ' + k + ' 两个物件都有自己的动效');
+    return big[1] + '+' + sm[1];
   });
-  assert.equal(new Set(anims).size, 4, '每步动效不一样:' + anims.join(' / '));
-  for (const name of ['ni-rise', 'ni-twinkle', 'ni-wave', 'ni-pop', 'ni-drop', 'ni-swing', 'ni-flip', 'ni-turn']) assert.match(css, new RegExp('@keyframes ' + name + ' '));
+  assert.equal(new Set(starts).size, 4, '每步动效不一样:' + starts.join(' / '));
+  for (const k of [1, 2, 3]) assert.match(css, new RegExp('\\.ni-stage--p' + k + ' \\.ni-o--k1\\.ni-o--on \\{ transform: scale\\(1\\) rotate\\('), '挥手第 ' + k + ' 拍');
+  assert.doesNotMatch(css, /@keyframes|animation\s*:/, '只用过渡');
+  assert.match(js, /_introBeat\(\)[\s\S]*\[220, 440, 660, 880\]/, '页面按拍翻 introPhase');
+  assert.match(view, /class="ni-stage ni-stage--p\{\{introPhase\}\}"/);
   for (const k of [1, 2, 3]) assert.match(css, new RegExp('\\.ni-glow--' + k + ' \\{'), '每步光晕换色');
-  assert.match(css, /prefers-reduced-motion: reduce\) \{ \.ni-o \{ transition: none; \} \.ni-stage \.ni-o\.ni-o--on \{ animation: none; \} \}/);
+  assert.match(css, /prefers-reduced-motion: reduce\) \{ \.ni-o, \.ni-o\.ni-o--on \{ transition: none; \} \}/);
+  assert.match(css, /\.ni--reduced \.ni-o, \.ni--reduced \.ni-o\.ni-o--on \{ transition: none; \}/, '应用内「减少动态效果」同样关掉');
   assert.match(js, /INTRO_SEEN_KEY = 'cy_ai_npc_intro_seen'/, '只弹一次的存储标记不变');
 });

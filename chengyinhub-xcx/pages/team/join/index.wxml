@@ -28,9 +28,9 @@
     </view>
     <!-- U06-01 加入页(r2-join):席位一排(已入队实心、空位虚线,空位数只来自服务端),右侧人数;下方加入方式与邀请到期 -->
     <view class="team-card tj-card">
-      <view class="tj-seats" wx:if="{{joinedSeats.length || openSeats.length}}">
-        <view class="tj-seat is-on" wx:for="{{joinedSeats}}" wx:key="*this" style="animation-delay: {{index * 70}}ms"><cy-icon name="tab-me" size="36" /></view>
-        <view class="tj-seat" wx:for="{{openSeats}}" wx:key="*this" style="animation-delay: {{(joinedSeats.length + index) * 70}}ms"><cy-icon name="plus" size="32" /></view>
+      <view class="tj-seats" wx:if="{{joinedSeats.length || openSeats.length}}" style="{{pmSeats === 1 ? '--pm-l:1;' : (pmSeats === 2 ? '--pm-l-d:.36s;--pm-l-s:1;' : '')}}">
+        <view class="tj-seat is-on" wx:for="{{joinedSeats}}" wx:key="*this" style="--i:{{index < 8 ? index : 7}}"><cy-icon name="tab-me" size="36" /></view>
+        <view class="tj-seat" wx:for="{{openSeats}}" wx:key="*this" style="--i:{{joinedSeats.length + index < 8 ? joinedSeats.length + index : 7}}"><cy-icon name="plus" size="32" /></view>
       </view>
       <view class="tj-facts">
         <view class="tj-fact"><text class="tj-fact__v">{{team.joinedCount != null ? team.joinedCount : '—'}} / {{team.maxMembers != null ? team.maxMembers : '—'}}</text><text class="team-meta-key">当前成员</text></view>

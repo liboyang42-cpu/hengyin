@@ -1,6 +1,9 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const shareCard = require('../../utils/share-card.js');
+const pageMotion = require('../../../utils/page-motion.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { hapticHit } = require('../../../utils/motion.js');
 const app = getApp();
 
 /* r2-finish 结算流程:整局走完后 总览 → 排行榜(队内/全体/队伍) → 评价(星级+文字,可跳过) → 分享卡(帖文/故事,保存图片,视频)。
@@ -23,7 +26,7 @@ Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
     step: 'overview', stepIndex: 0, title: TITLES.overview, steps: STEPS,
-    report: null, topicName: '', celebrate: '',
+    report: null, topicName: '', celebrate: '', heroIn: false, reducedMotion: false, scoreK: null,
     stars: 0, starList: [1, 2, 3, 4, 5], review: '', reviewMax: MAX_REVIEW, rateBusy: false, rateError: '',
     shareKind: 'post', shareTabs: [{ key: 'post', label: '帖文' }, { key: 'story', label: '故事' }],
     cardReady: false, videoOk: false, videoBusy: false, privacyGateShow: false
@@ -44,7 +47,22 @@ Page({
     this.reload();
   },
 
-  onUnload() { this._gone = true; if (this._videoTimer) clearTimeout(this._videoTimer); },
+  onUnload() { this._gone = true; if (this._videoTimer) clearTimeout(this._videoTimer); (this._heroTimers || []).forEach(clearTimeout); },
+
+  /* 总览的节拍(MOTION.md 4.6 第 1 步,r4-motion):0 印章弹入 → 眉题 / 标题 / 名次 / 数据按 stagger-hero 上浮(WXSS 按 --i 排延时)
+   * → 约 600ms 分数从 0 数到真实值(只在服务端计分时) → 900ms 一次彩旗 + heavy 触感(只在通关时,一局只放一次)。
+   * 减动效:一步到位,数字直接是终值,不撒彩旗(cy-celebrate 本来也不画)。 */
+  _hero(report) {
+    (this._heroTimers || []).forEach(clearTimeout);
+    this._heroTimers = [];
+    const reduced = readReducedMotion();
+    if (reduced) { this.setData({ heroIn: true, reducedMotion: true, celebrate: '' }); return; }
+    const at = (fn, ms) => this._heroTimers.push(setTimeout(() => { if (!this._gone) fn(); }, ms));
+    this.setData({ heroIn: false, reducedMotion: false, celebrate: '' });
+    at(() => this.setData({ heroIn: true }), 34);
+    if (report.scored) at(() => pageMotion.countIn(this, 'scoreK', { duration: 600 }), 450);
+    if (report.win) at(() => { this.setData({ celebrate: 'settle:' + Date.now() }); hapticHit(); }, 900);
+  },
 
   reload() {
     const epoch = this._epoch = (this._epoch || 0) + 1;
@@ -64,7 +82,8 @@ Page({
       }
       // 结算只给结束的局;进行中不出结算(去战报看进度)。
       if (!report.finished) { this.setData({ state: 'error', stateKind: 'not-started', stateTitle: '这一局还没结束', stateCta: '' }); return; }
-      this.setData({ state: 'ready', report, celebrate: report.win ? 'settle:' + Date.now() : '' });
+      this.setData({ state: 'ready', report });
+      this._hero(report);
     });
   },
 

@@ -2,6 +2,7 @@ const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const morph = require('../../../utils/morph-success.js');
 const join = require('../../utils/join-view.js');
+const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 
 /* P1 推荐/赠送/同行落地 + P4 玩法模式 + P5 领取席位。
@@ -21,7 +22,9 @@ Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
     inviter: null, headline: '', title: '', tiles: [], activeMode: '', activeTile: null, seatNo: '', facts: [], primary: '', busy: false, actionError: '',
-    claimDone: false, headRise: false
+    claimDone: false, headRise: false,
+    // r4-motion:首屏入场(同行两端 / 昵称 / 药丸)与玩法卡入场各一组 --pm 变量;seatPop 是领到席位那一帧的 .6 起点
+    pmHead: 0, pmPlay: 0, seatPop: false
   },
 
   onLoad(options) {
@@ -55,7 +58,7 @@ Page({
     });
   },
 
-  onUnload() { morph.cancel(this); },
+  onUnload() { morph.cancel(this); if (this._popTimer) clearTimeout(this._popTimer); },
 
   onStateCta() { if (this.data.state === 'error') this.load(); },
 
@@ -68,6 +71,7 @@ Page({
     const facts = [];
     if (ref.expires) facts.push({ k: '邀请', v: ref.expires });
     if (ref.closed) facts.push({ k: '报名', v: '已关闭' });
+    pageMotion.enter(this, 'pmHead', { once: true });
     this.setData({ state: 'ready', inviter: ref.inviter, headline: ref.headline, title: ref.title, facts,
       primary: ref.canView ? '去看看' : '' });
     this._loadModes(ref.targetType === 2 ? { activityId: ref.targetId } : { topicId: ref.targetId }, epoch);
@@ -76,6 +80,7 @@ Page({
   _renderGift(gift) {
     if (!gift.valid) { this.setData({ state: 'invalid', stateKind: gift.stateText === '礼物已被领取' ? 'success' : 'missing-param', stateTitle: gift.stateText }); return; }
     this._target = { type: 1, id: gift.topicId };
+    pageMotion.enter(this, 'pmHead', { once: true });
     this.setData({ state: 'ready', inviter: null, headline: gift.headline, title: gift.title,
       facts: gift.expires ? [{ k: '领取', v: gift.expires }] : [], primary: gift.canClaim ? '领取' : '' });
   },
@@ -83,6 +88,7 @@ Page({
   // 同行席位码没有匿名读口：页面只说明来意，领取由服务端判定。
   _renderSeat(epoch) {
     const pending = savedRequestId('seat', this._token);
+    pageMotion.enter(this, 'pmHead', { once: true });
     this.setData({ state: 'ready', inviter: null, headline: '朋友邀请你同行', title: '', facts: [],
       primary: pending ? '查询领取结果' : '领取席位' });
     if (this._activityId || this._topicId) this._loadModes({ activityId: this._activityId, topicId: this._activityId ? '' : this._topicId }, epoch);
@@ -92,7 +98,9 @@ Page({
     api.choices(app, query).then(res => {
       if (epoch !== this._epoch || !api.ok(res)) return;
       const play = join.modeTiles(res.data);
-      if (play) this.setData({ tiles: play.tiles, activeMode: play.active, activeTile: play.tiles.find(t => t.key === play.active) || null });
+      if (!play) return;
+      pageMotion.enter(this, 'pmPlay', { once: true });
+      this.setData({ tiles: play.tiles, activeMode: play.active, activeTile: play.tiles.find(t => t.key === play.active) || null });
     });
   },
 
@@ -151,9 +159,13 @@ Page({
       // qx-u3:服务端确认后按钮先收成勾,停一拍再换成成功标题与「进入本局」(utils/morph-success.js)
       // qx-s2 合并:落地页版式取 r2-join(后一轮业主点名 b3-p1-5),u3 的 headRise 浮出挂在 .jl-facts 事实行
       const seatNo = res.data.seatNo;
-      morph.settle(this, 'claimDone', () => this.setData({ headline: '已领取同行席位', headRise: morph.holdFor() > 0, seatNo: String(seatNo || ''),
-        facts: [{ k: '席位', v: '第 ' + seatNo + ' 席' }],
-        primary: this._activityId || this._topicId ? '进入本局' : '' }), { with: { busy: false } });
+      morph.settle(this, 'claimDone', () => {
+        const pop = morph.holdFor() > 0;   // 减动效:不弹,直接是席位号
+        this.setData({ headline: '已领取同行席位', headRise: morph.holdFor() > 0, seatNo: String(seatNo || ''), seatPop: pop,
+          facts: [{ k: '席位', v: '第 ' + seatNo + ' 席' }],
+          primary: this._activityId || this._topicId ? '进入本局' : '' });
+        if (pop) this._popTimer = setTimeout(() => { this._popTimer = null; this.setData({ seatPop: false }); }, 34);
+      }, { with: { busy: false } });
     });
   },
 

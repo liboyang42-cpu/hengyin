@@ -36,12 +36,12 @@
     <!-- U06-01 席位(r2-join):已入队成员头像 + 空位虚线圈;空位数只来自服务端(seats.available 或 max-joined),
          读不到不画。下方小标签:持有效票 / 票已失效(红) / 待审申请 / 邀请到期 -->
     <view class="team-card tm-seats" wx:if="{{members.length || openSeats.length || seatChips.length || inviteText}}">
-      <view class="tm-seat-strip" wx:if="{{members.length || openSeats.length}}">
-        <view class="tm-seat-cell" wx:for="{{members}}" wx:key="memberId" style="animation-delay: {{index * 70}}ms">
+      <view class="tm-seat-strip" wx:if="{{members.length || openSeats.length}}" style="{{pmSeats === 1 ? '--pm-l:1;' : (pmSeats === 2 ? '--pm-l-d:.36s;--pm-l-s:1;' : '')}}">
+        <view class="tm-seat-cell" wx:for="{{members}}" wx:key="memberId" style="--i:{{index < 8 ? index : 7}}">
           <image class="tm-seat-av" src="{{item.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />
           <view class="tm-seat-crown" wx:if="{{item.role == 1}}">队长</view>
         </view>
-        <view class="tm-seat-cell" wx:for="{{openSeats}}" wx:key="*this" style="animation-delay: {{(members.length + index) * 70}}ms">
+        <view class="tm-seat-cell" wx:for="{{openSeats}}" wx:key="*this" style="--i:{{members.length + index < 8 ? members.length + index : 7}}">
           <view class="tm-seat-open"><cy-icon name="plus" size="32" /></view>
         </view>
       </view>

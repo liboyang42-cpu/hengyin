@@ -5,6 +5,7 @@ const { exactId, reader, sameReader } = require('../../../utils/user-character.j
 const { createRecovery } = require('../../../utils/team-event-command.js');
 const { ROAM_SHARE_COVER } = require('../../../utils/roam-menu-share.js');
 const { applicantRows } = require('../../../utils/team-applicant-rows.js');
+const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 
 // Preserve numeric IDs for existing callers, but never round a Long string.
@@ -38,6 +39,7 @@ Page({
     rankingState: '',
     team: null,
     members: [],
+    pmSeats: 0,   // r4-motion:席位圈入场(page-motion --pm 变量)
     joined: false,
     leader: false,
     // C-02b:队长切换公开招募/仅邀请的回显与提交中状态。
@@ -318,6 +320,7 @@ Page({
           reject({ errorCode: 'ORIENT_TEAM_NOT_MEMBER' }); return;
         }
         const self = d.members.find(m => exactId(m.memberId) === context.reader.id);
+        pageMotion.enter(this, 'pmSeats', { once: true });
         this.setData({ members: d.members.map(m => ({ memberId: exactId(m.memberId),
           memberName: m.name || '城瘾玩家', memberAvatar: m.avatar || '', role: m.role })),
           'team.joinedCount': d.threshold.activeCount,
