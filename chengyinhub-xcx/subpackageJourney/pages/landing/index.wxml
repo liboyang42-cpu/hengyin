@@ -1,31 +1,51 @@
-<view class="theme-dark jn">
+<view class="theme-dark jn jn-ob">
   <cy-nav-bar plain />
   <cy-nav-spacer />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
-    <view class="jn-head">
-      <view class="jn-av jn-av--lg" wx:if="{{inviter}}"><image wx:if="{{inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" /><text wx:else>{{inviter.initial}}</text></view>
-      <text class="jn-eyebrow jn-gap" wx:if="{{inviter}}">{{inviter.name}}</text>
-      <text class="jn-title">{{headline}}</text>
-      <text class="jn-pill" wx:if="{{title}}">{{title}}</text>
-    </view>
-
-    <view class="jn-sec" wx:if="{{modes.length}}">
-      <view class="jn-group" wx:for="{{modes}}" wx:key="key" wx:for-item="mode">
-        <view class="jn-row"><view class="jn-row__t"><text class="jn-row__b">{{mode.title}}</text><text class="jn-row__s" wx:if="{{mode.reason}}">{{mode.reason}}</text></view></view>
-        <view class="jn-row" wx:for="{{mode.rows}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v">{{item.v}}</text></view>
+    <!-- qx-u2 / ref 1：倾斜叠卡 hero。卡面只放本页已有的事实(邀请人、主题名)，没有封面字段就不画封面。 -->
+    <view class="ob-hero" aria-hidden="true">
+      <view class="ob-glow"></view>
+      <view class="ob-card ob-card--back2"></view>
+      <view class="ob-card ob-card--back1"></view>
+      <view class="ob-card ob-card--front">
+        <view class="ob-card__head">
+          <view class="jn-av" wx:if="{{inviter}}"><image wx:if="{{inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" /><text wx:else>{{inviter.initial}}</text></view>
+          <view class="ob-card__glyph" wx:else><cy-icon name="{{cardIcon}}" size="40" /></view>
+          <text class="ob-card__who" wx:if="{{inviter}}">{{inviter.name}}</text>
+        </view>
+        <text class="ob-card__title" wx:if="{{title}}">{{title}}</text>
       </view>
     </view>
 
-    <view class="jn-sec" wx:if="{{facts.length}}">
-      <view class="jn-group">
-        <view class="jn-row" wx:for="{{facts}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v is-strong">{{item.v}}</text></view>
-      </view>
+    <view class="ob-copy">
+      <view class="ob-title"><text wx:for="{{headLines}}" wx:key="*this" class="ob-title__l">{{item}}<text wx:if="{{index === headLines.length - 1}}" class="ob-dot">.</text></text></view>
+      <text class="ob-muted" wx:if="{{factLine}}">{{factLine}}</text>
     </view>
 
-    <view class="jn-footer jn-footer--stack">
+    <!-- P4 玩法模式：服务端给出的模式做成横向分页卡，分段进度条跟随当前页。卡片只读，不在客户端选模式。 -->
+    <view class="ob-modes" wx:if="{{modes.length}}">
+      <swiper wx:if="{{modes.length > 1}}" class="ob-swiper" current="{{modeIndex}}" bindchange="onModeChange" previous-margin="48rpx" next-margin="48rpx">
+        <swiper-item wx:for="{{modes}}" wx:key="key" wx:for-item="mode">
+          <view class="ob-mode {{index === modeIndex ? 'is-on' : ''}}">
+            <view class="ob-mode__h"><text class="ob-mode__t">{{mode.title}}</text><text class="ob-mode__r" wx:if="{{mode.reason}}">{{mode.reason}}</text></view>
+            <view class="ob-mode__row" wx:for="{{mode.rows}}" wx:key="k"><text class="ob-mode__k">{{item.k}}</text><text class="ob-mode__v">{{item.v}}</text></view>
+          </view>
+        </swiper-item>
+      </swiper>
+      <view wx:else class="ob-single" wx:for="{{modes}}" wx:key="key" wx:for-item="mode">
+        <view class="ob-mode is-on">
+          <view class="ob-mode__h"><text class="ob-mode__t">{{mode.title}}</text><text class="ob-mode__r" wx:if="{{mode.reason}}">{{mode.reason}}</text></view>
+          <view class="ob-mode__row" wx:for="{{mode.rows}}" wx:key="k"><text class="ob-mode__k">{{item.k}}</text><text class="ob-mode__v">{{item.v}}</text></view>
+        </view>
+      </view>
+      <view class="ob-progress" wx:if="{{modes.length > 1}}" aria-hidden="true"><view wx:for="{{modes}}" wx:key="key" class="ob-progress__seg {{index === modeIndex ? 'is-on' : ''}}"></view></view>
+    </view>
+
+    <view class="jn-footer jn-footer--stack ob-footer">
       <cy-btn wx:if="{{primary}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
       <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
+      <view class="ob-secondary" bindtap="onBrowse" aria-role="button" aria-label="先逛逛" hover-class="cy-pressed" hover-stay-time="80">先逛逛</view>
     </view>
   </block>
 </view>

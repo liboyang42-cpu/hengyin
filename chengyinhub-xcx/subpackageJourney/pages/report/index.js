@@ -12,7 +12,7 @@ function landingPath(token) {
 Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
-    report: null, eyebrow: '', registrationId: '',
+    report: null, eyebrow: '', headLines: [], registrationId: '',
     rankOpen: false, rankTabs: [], rankScope: 'quest', rankPeriod: 'all', rankState: '', rankError: '', rank: null,
     memoryOpen: false, memoryState: '', memoryError: '', memory: null
   },
@@ -47,7 +47,7 @@ Page({
       if (this._query.runId && report.runId && report.runId !== String(this._query.runId)) { this._fail({ reasonCode: 'RUN_SCOPE_MISMATCH' }); return; }
       this._report = res.data;
       const eyebrow = [report.dateLabel, this._topicName].filter(Boolean).join(' · ');
-      this.setData({ state: 'ready', report, eyebrow,
+      this.setData({ state: 'ready', report, eyebrow, headLines: view.heroLines(report.legacy ? '主题记录' : '本局战报'),
         rankTabs: view.rankScopes({ topicId: report.topicId, cityCode: this._cityCode, countryCode: this._countryCode, clubId: this._clubId })
           .map(tab => ({ key: tab.key, label: tab.label })) });
       this._loadTeam(report);

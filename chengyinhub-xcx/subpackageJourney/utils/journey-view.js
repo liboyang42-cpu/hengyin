@@ -371,6 +371,28 @@ function affiliateView(data) {
   };
 }
 
+/* ——— qx-u2 首屏 hero(ref 1)：两行大标题 + 一行弱化事实 ———
+ * 只换行，不改服务端/既有文案；未登记的标题原样一行。 */
+const HERO_LINES = {
+  '朋友邀请你一起玩': ['朋友邀请你', '一起玩'],
+  '朋友送你一局': ['朋友送你', '一局'],
+  '朋友邀请你同行': ['朋友邀请你', '同行'],
+  '已领取同行席位': ['已领取', '同行席位'],
+  '礼物已领取': ['礼物', '已领取'],
+  '本局战报': ['本局', '战报'],
+  '主题记录': ['主题', '记录']
+};
+
+function heroLines(text) {
+  const t = String(text || '').trim();
+  if (!t) return [];
+  return (HERO_LINES[t] || [t]).slice();
+}
+
+function factLine(facts) {
+  return list(facts).filter(f => record(f) && f.v).map(f => (f.k ? f.k + ' ' : '') + f.v).join(' · ');
+}
+
 function newRequestId(prefix) {
   return String(prefix || 'journey') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
 }
@@ -378,5 +400,6 @@ function newRequestId(prefix) {
 module.exports = {
   isId, dateText, durationText,
   reportView, rankScopes, rankView, teamRankView, memoryView, choicesView, seatsView,
-  landingKind, referralView, giftView, affiliateView, newRequestId, SEAT_ERROR_TEXT
+  landingKind, referralView, giftView, affiliateView, newRequestId, SEAT_ERROR_TEXT,
+  heroLines, factLine
 };

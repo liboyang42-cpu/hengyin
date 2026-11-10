@@ -51,3 +51,68 @@ page { background: var(--cy-bg-page); }
 .jn-tabbar { display: flex; align-items: center; gap: 16rpx; margin: 0 0 24rpx; }
 .jn-tabbar__scope { flex: 1; min-width: 0; }
 .jn-tabbar__period { flex: none; }
+
+/* ——— qx-u2 首屏(ref 1)：倾斜叠卡 hero + 两行大标题 + 一行弱化 + 白色药丸主按钮 + 文字次要动作 ———
+ * 颜色全走 token；句点强调色取品牌紫原子 token(同底栏选中态 UI-03 的裁决)。动效只用 transition。 */
+.ob-hero { position: relative; height: 520rpx; margin: 8rpx 0 0; perspective: 1600rpx; }
+.ob-glow { position: absolute; left: 50%; top: 50%; width: 520rpx; height: 520rpx; margin: -260rpx 0 0 -260rpx; border-radius: 50%;
+  background: radial-gradient(circle, var(--cy-color-brand-soft), transparent 68%); }
+.ob-card { position: absolute; left: 50%; top: 50%; width: 500rpx; height: 330rpx; margin: -165rpx 0 0 -250rpx; box-sizing: border-box;
+  border-radius: var(--cy-radius-xl); border: 1rpx solid var(--cy-color-border-subtle);
+  transition: transform var(--cy-motion-slow) var(--cy-ease-out), opacity var(--cy-motion-slow) var(--cy-ease-out); }
+.ob-card--back2 { background: var(--cy-comp-sheet-group-bg); opacity: .45; transform: translate(34rpx, 62rpx) rotate(9deg) scale(.9); }
+.ob-card--back1 { background: var(--cy-comp-sheet-group-bg); opacity: .75; transform: translate(-22rpx, 32rpx) rotate(-5deg) scale(.95); }
+.ob-card--front { display: flex; flex-direction: column; justify-content: space-between; padding: 36rpx 38rpx;
+  background: var(--cy-color-bg-elevated); transform: rotate(-3deg); box-shadow: 0 24rpx 64rpx var(--cy-color-overlay); }
+.ob-card__head { display: flex; align-items: center; gap: 20rpx; min-height: 64rpx; }
+.ob-card__head .jn-av { background: var(--cy-color-brand-soft); }
+.ob-card__glyph { width: 72rpx; height: 72rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); }
+.ob-card__who { flex: 1; min-width: 0; font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-card__title { font-size: var(--cy-type-section-title); font-weight: 700; line-height: 1.3; color: var(--cy-color-text-primary);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ob-copy { display: flex; flex-direction: column; align-items: center; padding: 24rpx 38rpx 0; text-align: center; }
+.ob-title { display: flex; flex-direction: column; align-items: center; }
+.ob-title__l { font-size: var(--cy-type-display); font-weight: 700; line-height: 1.2; color: var(--cy-color-text-primary); }
+.ob-dot { color: var(--cy-ref-violet-500); }
+.ob-muted { margin-top: 20rpx; max-width: 600rpx; font-size: var(--cy-type-body); line-height: 1.5; color: var(--cy-color-text-secondary); }
+.ob-modes { margin-top: 40rpx; }
+.ob-swiper { height: 300rpx; }
+.ob-single { margin: 0 38rpx; }
+.ob-single .ob-mode { margin: 0; }
+.ob-mode { height: 100%; margin: 0 10rpx; box-sizing: border-box; padding: 28rpx 31rpx; border-radius: var(--cy-radius-xl);
+  background: var(--cy-comp-sheet-group-bg); opacity: .6; transform: scale(.95);
+  transition: transform var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out); }
+.ob-mode.is-on { opacity: 1; transform: none; }
+.ob-mode__h { display: flex; align-items: baseline; justify-content: space-between; gap: 16rpx; margin-bottom: 12rpx; }
+.ob-mode__t { font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-color-text-primary); }
+.ob-mode__r { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.ob-mode__row { display: flex; justify-content: space-between; min-height: 52rpx; align-items: center; }
+.ob-mode__k { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.ob-mode__v { font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.ob-progress { display: flex; justify-content: center; gap: 10rpx; margin-top: 24rpx; }
+.ob-progress__seg { width: 48rpx; height: 8rpx; border-radius: var(--cy-radius-pill); background: var(--cy-comp-sheet-group-bg);
+  transform: scaleX(.35); transition: transform var(--cy-motion-standard) var(--cy-ease-out), background var(--cy-motion-standard) var(--cy-ease-out); }
+.ob-progress__seg.is-on { transform: none; background: var(--cy-color-text-primary); }
+.ob-footer { --cy-comp-btn-radius: var(--cy-radius-pill); }
+.ob-secondary { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body);
+  color: var(--cy-color-text-primary); }
+.jn-ob { padding-bottom: calc(260rpx + env(safe-area-inset-bottom)); }
+@media (prefers-reduced-motion: reduce) { .ob-card, .ob-mode, .ob-progress__seg { transition: none; } }
+/* qx-u2 P7 战报卡 */
+.rp-hero { height: 560rpx; }
+.rp-card { height: 400rpx; margin-top: -200rpx; }
+.rp-card.ob-card--front { justify-content: flex-start; gap: 12rpx; }
+.rp-card__top { display: flex; }
+.rp-pill { margin-top: 0; }
+.rp-score { display: flex; align-items: baseline; gap: 12rpx; min-height: 120rpx; }
+.rp-score__n { font-size: var(--cy-type-data-2xl); line-height: 1.1; font-weight: 900; font-style: italic; letter-spacing: -.02em;
+  color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.rp-score__l { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.rp-score__muted { align-self: center; font-size: var(--cy-type-card-title); font-weight: 600; color: var(--cy-color-text-secondary); }
+.rp-stats { display: flex; gap: 48rpx; margin-top: auto; }
+.rp-stat { display: flex; flex-direction: column; gap: 4rpx; }
+.rp-stat__v { font-size: var(--cy-type-section-title); font-weight: 800; font-style: italic; color: var(--cy-color-text-primary); font-variant-numeric: tabular-nums; }
+.rp-stat__v.is-muted { font-style: normal; font-weight: 500; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+.rp-stat__l { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
