@@ -25,11 +25,12 @@
 .ir-avatar { flex: none; }
 .ir-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
 .ir-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 650; }
-.ir-sub { display: flex; align-items: baseline; min-width: 0; gap: var(--cy-space-2); }
-.ir-time { flex: none; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
-.ir-status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+/* Revolut 列表行:左列 名字 / 状态;时间放到右侧胶囊下面(绝对定位,源码顺序不变) */
+.ir-copy { padding-right: 200rpx; }
+.ir-time { position: absolute; right: var(--cy-space-4); bottom: var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
+.ir-status { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
 /* 右侧状态胶囊:待解锁/发放中中性灰底,已到账绿 */
-.ir-pill { flex: none; padding: 6rpx var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-status-neutral-soft); color: var(--cy-color-text-secondary); }
+.ir-pill { position: absolute; right: var(--cy-space-4); top: var(--cy-space-3); padding: 6rpx var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-status-neutral-soft); color: var(--cy-color-text-secondary); }
 .ir-pill--earned { background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); }
 .ir-reward { color: inherit; font-size: var(--cy-type-caption); font-weight: 650; font-variant-numeric: tabular-nums; }
 

@@ -31,7 +31,8 @@
           <cy-avatar class="ir-avatar" size="sm" src="{{item.avatar}}" name="{{item.nickname}}" />
           <view class="ir-copy">
             <text class="ir-name ep1">{{item.nickname}}</text>
-            <view class="ir-sub"><text class="ir-time">{{item.timeText}}</text><text class="ir-status">{{item.statusText}}</text></view>
+            <text class="ir-time">{{item.timeText}}</text>
+            <text class="ir-status ep1">{{item.statusText}}</text>
           </view>
           <view class="ir-pill {{item.earned ? 'ir-pill--earned' : ''}}"><text class="ir-reward">{{item.rewardText}}</text></view>
         </view>
