@@ -32,7 +32,7 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
           --health-interval=10s --health-timeout=5s --health-retries=15
     env:
-      MAVEN_OPTS: -Xmx640m
+      MAVEN_OPTS: -Xmx1536m  # 2026-11-10 qx-final:launch 波次测试源增多后 javac 在 640m 下 OOM(CI 连续两次;本地 448m 复现同样 OOM),提高编译堆
       CHENGYIN_FUNDS_MYSQL_IT: '1'
       CHENGYIN_NPC_DELETE_IT: '1'
       CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
