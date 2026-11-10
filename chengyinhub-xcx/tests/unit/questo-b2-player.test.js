@@ -174,7 +174,7 @@ test('分发器登记了两屏并把 kit 字段喂给组件', () => {
   for (const key of ['suspects', 'outcome', 'outcomeLabel', 'pending', 'screen']) assert.ok(wxml.includes('{{kit.' + key + '}}'), key)
 })
 
-test('UG-01 r2:格子按词分组(长短语不再横向滚走),补字走隐藏输入框不另起一栏', () => {
+test('UG-01 r2:格子按词分组(长短语不再横向滚走);l-kits 2026-11-10:系统键盘,输入框在格子下面', () => {
   const Comp = loadComponent('pages/play/components/playkit-hangman/index.js')
   const cells = questo.hangmanSlots({ slots: 'AB C-D'.split('').map((ch, i) => (ch === ' ' || ch === '-') ? { i, ch, kind: 'SEPARATOR' } : { i, kind: 'BLANK' }) })
   const groups = Comp.methods._groupCells(cells)
@@ -182,5 +182,31 @@ test('UG-01 r2:格子按词分组(长短语不再横向滚走),补字走隐藏�
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-hangman/index.wxml'), 'utf8')
   assert.ok(!/scroll-x/.test(wxml), '不再横向滚动')
   assert.ok(!/placeholder="第 \{\{active/.test(wxml), '不再出「第 N 格」输入栏')
-  assert.ok(/class="hm__ghost"/.test(wxml))
+  assert.ok(!/hm__ghost/.test(wxml), '不再用隐藏输入框:原型是看得见的输入框就在格子下面')
+  assert.match(wxml, /<input class="hm__in[^>]*focus="\{\{focused\}\}" cursor="\{\{cursor\}\}" maxlength="\{\{blankCount\}\}"/, '一个输入框接系统键盘,点格子挪光标,字数封顶 = 可编辑格数')
+  assert.ok(!/<view class="keys"|hm__key/.test(wxml), '不画自定义键盘')
 })
+
+test('UG-01 l-kits:输入什么格子按顺序填什么;预填 / 分隔符跳过;点格子 = 光标挪到它;填满才能交 {slots}', () => {
+  const Comp = loadComponent('pages/play/components/playkit-hangman/index.js')
+  const slots = questo.hangmanSlots({ slots: 'NICOLAS AND'.split('').map((ch, i) => ch === ' ' ? { i, ch, kind: 'SEPARATOR' } : ([0, 8].includes(i) ? { i, ch, kind: 'PREFILLED' } : { i, kind: 'BLANK' })) })
+  const m = Comp.methods
+  assert.deepEqual(m._distribute(slots, 'ic o'), { 1: 'i', 2: 'c', 3: 'o' }, '空白不占格,按可编辑格顺序落')
+  assert.equal(m._cellAt(slots, 3), 4, '第 4 个可编辑格是槽位 4(跳过预填 0)')
+  assert.equal(m._cellAt(slots, 99), -1)
+  const cells = m._paintCells(slots, m._distribute(slots, 'ic o'))
+  assert.deepEqual(cells.filter((c) => c.kind === 'BLANK').map((c) => c.n), [0, 1, 2, 3, 4, 5, 6, 7], '可编辑格带顺序号 = 输入框里第几个字')
+  assert.equal(hangmanPayloadOf(slots, m._distribute(slots, 'icolas')), null, '缺格不发')
+  assert.deepEqual(hangmanPayloadOf(slots, m._distribute(slots, 'icolasnd')), { slots: { 1: 'i', 2: 'c', 3: 'o', 4: 'l', 5: 'a', 6: 's', 9: 'n', 10: 'd' } })
+  // 服务端已记下的 FILLED 格进输入框初值:从头连续有字的那几格
+  const filled = questo.hangmanSlots({ slots: [{ i: 0, ch: 'E', kind: 'PREFILLED' }, { i: 1, ch: 'N', kind: 'FILLED' }, { i: 2, kind: 'BLANK' }, { i: 3, ch: 'X', kind: 'FILLED' }] })
+  assert.equal(m._initialText(filled), 'N')
+  const js = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-hangman/index.js'), 'utf8')
+  assert.match(js, /hangmanPayload\(this\.data\.slots, this\._typed, ''\)/, '只交逐格 slots,不再有整词栏')
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-hangman/index.wxss'), 'utf8')
+  assert.match(wxss, /\.hm__cell\.is-pop \{ transform: scale\(1\.18\); \}/, '每填一格弹一下走过渡,不加关键帧')
+  assert.doesNotMatch(wxss, /@keyframes/)
+  assert.match(wxss, /\.hm__cell\.is-ok \{[^}]*transition-delay: calc\(var\(--i, 0\) \* 70ms\)/, '答对格子依次变绿')
+  assert.match(wxss, /\.hm--reduced \.hm__cell\.is-pop, \.hm--reduced \.hm__cell\.is-active \{ transform: none; \}/, '减少动态效果:终态')
+})
+function hangmanPayloadOf(slots, typed) { return questo.hangmanPayload(slots, typed, '') }
