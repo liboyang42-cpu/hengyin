@@ -1951,11 +1951,17 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         # 第九轮 m2 第 2 项:同场队伍路线服务,只被 ApiPlayTeamController 调用,不回调它。
         r9_owners = {"R9_MAP_WEATHER", "R9_TEAM_TRAIL"}
         self.assertEqual(r9_owners, {o["id"] for o in now["owners"] if o["id"] in r9_owners})
-        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith("M_")
+        # Questo 新增模块(业主 2026-11-09 批准):44 个 Q_ 职责精确登记 144 个类型,60 条方向均为编译图实测前向边。
+        q_owners = [o for o in now["owners"] if o["id"].startswith("Q_")]
+        self.assertEqual(44, len(q_owners))
+        self.assertEqual(144, len({m for o in q_owners for m in o["members"]}))
+        self.assertTrue(all(o["forbidden_backrefs"] and "allowed_consumers" not in o for o in q_owners))
+        self.assertEqual(60, len([e for e in now["allowed_directions"] if any(n.startswith("Q_") for n in e)]))
+        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith(("M_", "Q_"))
                                          and o["id"] not in l8_owners and o["id"] not in r9_owners
                                          and o["id"] not in r28_owners])
         self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"]
-                         if not any(n.startswith("M_") for n in e) and tuple(e) not in self.original_intent_edges
+                         if not any(n.startswith(("M_", "Q_")) for n in e) and tuple(e) not in self.original_intent_edges
                          and tuple(e) not in l8_edges and not any(n in r28_owners for n in e)])
         self.assertEqual(self.original_intent_edges, {tuple(e) for e in now["allowed_directions"]
                                                     if tuple(e) in self.original_intent_edges})
