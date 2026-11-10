@@ -43,7 +43,9 @@
 .sc-qr--inv { width: 112rpx; height: 112rpx; }
 
 .sc-sw { position: relative; flex: none; display: flex; justify-content: center; gap: 0; }
-.sc-swatch { width: 72rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.sc-swatch { position: relative; width: 72rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+/* 命中区 44px:透明 ::after 撑到 88rpx 见方,视觉尺寸不变 */
+.sc-swatch::after { content: ''; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); }
 .sc-dot { width: 32rpx; height: 32rpx; border-radius: 50%; box-shadow: inset 0 0 0 3rpx rgba(255, 255, 255, .35); transition: transform .2s; } /* ds-ok 色块描边 */
 .sc-swatch.is-on .sc-dot { transform: scale(1.25); box-shadow: 0 0 0 4rpx #FFFFFF; } /* ds-ok 当前色块 */
 

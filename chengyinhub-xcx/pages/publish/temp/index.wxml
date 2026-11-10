@@ -492,6 +492,7 @@
         <view wx:if="{{g.sep}}" class="cg-qz-cell is-sep" aria-hidden="true">{{g.sep}}</view>
         <view wx:else class="cg-qz-word">
           <view wx:for="{{g.cells}}" wx:key="i" class="cg-qz-cell {{item.given ? 'is-given' : ''}}"
+                ds-ok="逐字格按原型 56rpx 密排成一行,放大热区会与相邻格重叠误触;点错再点一次即切回"
                 data-index="{{item.i}}" bindtap="qzHangmanCell" aria-role="button"
                 aria-label="第 {{item.i + 1}} 格 {{item.ch}}{{item.given ? '，已给出' : '，玩家补'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.given ? item.ch : ''}}</view>
         </view>

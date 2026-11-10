@@ -35,6 +35,12 @@ const ALLOW = new Set([
   'pages/play/index.wxss::.fx-bg',                                    // 满屏背景层(pointer-events:none),图与蒙版在 .fx-bg__im / .fx-bg__veil
   'pages/play/index.wxss::.fx-hero',                                  // 满屏展开层,兜底底色在 .fx-hero__bg
   'pages/roam/index.wxss::cy-proto-cam',                              // 满屏取景浮层(pointer-events:none),不是一根条
+  // ↓ 2026-11-10 qx-green 逐条读过:上线波次的满屏模态根(top:0 且 bottom:0),压暗在子层 mask,不是底栏
+  'pages/play/components/playkit-accusation/index.wxss::.ac--full .ac__end', // 满屏结局层,不透明底在同文件 .ac__end 基础规则
+  'pages/play/components/playkit-accusation/index.wxss::.ac-cf',            // 指认确认模态根,压暗在 .ac-cf__mask
+  'pages/play/play-help.wxss::.phl-pop',                                     // 提示面板模态根,压暗在 .phl-pop-mask
+  'pages/play/play-stage.wxss::.lk-popwrap',                                 // 玩法开始 / 岔路模态根,压暗在 .lk-pop-mask
+  'subpackageJourney/pages/settle/index.wxss::.st-pop',                      // 评价已提交模态根,压暗在 .st-pop__mask
 ]);
 
 function scanText(text) {
@@ -45,7 +51,8 @@ function scanText(text) {
     const sel = m[1].trim().split('\n').pop().trim();
     const body = m[2];
     if (!/position\s*:\s*(sticky|fixed)/.test(body)) continue;
-    if (!/\bbottom\s*:\s*0/.test(body)) continue;
+    // (?<![-\w]):border-bottom:0 是去掉下边线,不是贴底;\b 会把连字符当边界而误报(2026-11-10 fabu .sx-tools.is-docked)
+    if (!/(?<![-\w])bottom\s*:\s*0/.test(body)) continue;
     if (/background(-color)?\s*:/.test(body)) continue;
     out.push(sel);
   }
@@ -60,6 +67,8 @@ function selftest() {
     ['不误报:bottom 不是 0', '.a{position:fixed;bottom:80rpx;}', 0],
     ['不误报:不是固定定位', '.a{bottom:0;padding:8rpx;}', 0],
     ['不误报:background-color 也算数', '.a{position:fixed;bottom:0;background-color:#111;}', 0],
+    ['不误报:border-bottom:0 不是贴底', '.a{position:fixed;left:0;right:0;border-bottom:0;}', 0],
+    ['负控:border-bottom:0 与 bottom:0 同在仍判红', '.a{position:fixed;border-bottom:0;bottom:0;}', 1],
   ];
   let bad = 0;
   for (const [name, css, want] of cases) {
@@ -69,7 +78,7 @@ function selftest() {
     if (!ok) bad += 1;
   }
   if (bad) { console.error(`selftest 失败 ${bad} 例`); process.exit(1); }
-  console.log('selftest 通过:2 个负控真能判红,4 个「不该红」的场景没被误报');
+  console.log('selftest 通过:3 个负控真能判红,5 个「不该红」的场景没被误报');
 }
 
 if (process.argv.includes('--selftest')) { selftest(); process.exit(0); }
