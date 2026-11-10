@@ -5299,6 +5299,8 @@ page { background: var(--cy-btn-solid-bg); }
 .story-gallery__grid--1 .story-gallery__cell { aspect-ratio: 16 / 10; }
 .story-gallery__grid--3 .story-gallery__cell:first-child { grid-row: 1 / 3; aspect-ratio: auto; }
 .story-gallery__cell--empty { border: 2rpx dashed var(--cy-color-border-strong); box-sizing: border-box; }
+.story-gallery__cell--img { position: relative; overflow: hidden; }
+.story-gallery__img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
 .story-gallery__cap { width: 100%; min-height: 48rpx; margin-top: var(--cy-space-2); color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
 .story-gallery__cap--read { display: block; }
 

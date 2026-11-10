@@ -536,7 +536,7 @@
           <view class="story-gallery" wx:elif="{{block.type === 'gallery'}}" data-blockkey="{{block.key}}">
             <view class="story-gallery__grid story-gallery__grid--{{block.layout}}">
               <block wx:for="{{storyGalleryCells[block.key]}}" wx:key="index" wx:for-item="cell" wx:for-index="cellIndex">
-                <image wx:if="{{cell}}" class="story-gallery__cell" src="{{cell}}" mode="aspectFill" lazy-load="true" data-blockkey="{{block.key}}" data-index="{{cellIndex}}" catchtap="{{storyEditor.preview ? '' : 'fillStoryGalleryCell'}}" aria-role="button" aria-label="换这一格的图" />
+                <view wx:if="{{cell}}" class="story-gallery__cell story-gallery__cell--img" data-blockkey="{{block.key}}" data-index="{{cellIndex}}" catchtap="fillStoryGalleryCell" aria-role="button" aria-label="换这一格的图" hover-class="cy-pressed" hover-stay-time="80"><image class="story-gallery__img" src="{{cell}}" mode="aspectFill" lazy-load="true" /></view>
                 <view wx:else class="story-gallery__cell story-gallery__cell--empty" data-blockkey="{{block.key}}" data-index="{{cellIndex}}" catchtap="fillStoryGalleryCell" aria-role="button" aria-label="选图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="40" /><text>选图</text></view>
               </block>
             </view>
@@ -550,7 +550,7 @@
             <view class="story-branch__head">
               <cy-icon name="turn-right" size="28" /><text class="story-branch__tag">分支任务</text>
               <text class="story-branch__act" wx:if="{{!storyEditor.preview}}">编辑</text>
-              <text class="story-branch__act" data-stage="branch" data-blockkey="{{block.key}}" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览分支弹窗">预览</text>
+              <view class="story-branch__act" data-stage="branch" data-blockkey="{{block.key}}" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览分支弹窗" hover-class="cy-pressed" hover-stay-time="80">预览</view>
             </view>
             <text class="story-branch__q {{block.content ? '' : 'is-ph'}}">{{block.content || '写一个问题'}}</text>
             <view class="story-branch__opt" wx:for="{{block.options}}" wx:key="index" wx:for-item="opt" wx:for-index="optIndex">

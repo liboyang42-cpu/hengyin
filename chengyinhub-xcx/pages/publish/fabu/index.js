@@ -337,7 +337,6 @@ Page({
     storyScrollTop: 0,
     // X Articles 式工具栏 / 封面 / 作者行(2026-11-10 r2-create)
     zw: STORY_SENTINEL,
-    storyWordCount: 0,
     storySegs: {},
     storyListNo: [],
     storyCover: '',
@@ -1261,7 +1260,6 @@ Page({
     return {
       storySegs: segs,
       storyListNo: storyInline.listNumbers(blocks),
-      storyWordCount: storyInline.wordCount(blocks),
       storyCover: cover,
       // 章节开始 / 结束卡:开场白、结语挂在章节的 _capOpen / _capEnd 上;去向由章节顺序派生,不是一个可点的控件
       storyCaps: { open: String((chapter && chapter._capOpen) || ''), end: String((chapter && chapter._capEnd) || ''), next: nextChapter ? ('下一章 · ' + (nextChapter.name || ('第 ' + (chapterIndex + 2) + ' 章'))) : '结束主题' },
@@ -1326,7 +1324,6 @@ Page({
       storyScrollTop: 0,
       storySegs: derived.storySegs,
       storyListNo: derived.storyListNo,
-      storyWordCount: derived.storyWordCount,
       storyCover: derived.storyCover,
       storyCaps: derived.storyCaps,
       storyGalleryCells: derived.storyGalleryCells,
@@ -2364,11 +2361,14 @@ Page({
   undoStoryStep() {
     if (!this._undoStack || !this._undoStack.length) return;
     this.undo();
-    const chapter = this._storyChapter();
-    this.setData(Object.assign({
+    const chapter = this._storyChapter() || {};
+    const derived = this._storyDerived(chapter);
+    this.setData({
       storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1, split: null },
       'storyEditor.focusBlockKey': '', 'storyEditor.selectedBlockKey': '',
-    }, chapter ? this._storyDerived(chapter) : {}));
+      storySegs: derived.storySegs, storyListNo: derived.storyListNo, storyCover: derived.storyCover,
+      storyCaps: derived.storyCaps, storyGalleryCells: derived.storyGalleryCells, storyBranchToLabel: derived.storyBranchToLabel,
+    });
     this._storyUndoBar('已撤销', false);
   },
 
