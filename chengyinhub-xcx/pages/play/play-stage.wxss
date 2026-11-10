@@ -5,7 +5,7 @@
 /* ===== 居中弹窗壳(proto .gm-pop):压暗 + 居中外观卡,最高 80% 屏高 ===== */
 .lk-popwrap { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: var(--cy-z-modal); display: flex; align-items: center; justify-content: center; padding: 0 40rpx; box-sizing: border-box; }
 .lk-pop-mask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); } /* ds-ok 原型 .gm-pop .mask */
-.look--stardust .lk-pop-mask { background: rgba(0,0,0,.18); } /* ds-ok 原型:星尘玻璃下面的压暗更轻,星野透过来 */
+.look--stardust .lk-pop-mask { background: rgba(0,0,0,.4); } /* ds-ok 原型是 .18;这里压到 .4 —— 故事流底部的白色「继续探索」会透过果冻玻璃糊成一道白光,压暗一点仍看得见星野 */
 .lk-popwrap .lk-pop { width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
 
 /* ===== 玩法开始弹窗(proto pop-kitstart / .kstart) ===== */
@@ -20,8 +20,8 @@
 .ks__meta { display: flex; flex-wrap: wrap; gap: 16rpx; margin: 24rpx 0 8rpx; }
 .ks__meta .lk-chip { min-height: 56rpx; padding: 0 20rpx; font-size: 24rpx; white-space: nowrap; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
 .ks__name { font-size: 48rpx; line-height: 1.3; margin: 20rpx 0 8rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
-.ks__lede { font-size: 30rpx; line-height: 1.8; }
-.ks__row { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; min-height: 92rpx; margin-top: 16rpx; border-top: 1rpx solid; font-size: 30rpx; color: var(--lk-ink); }
+.ks__lede { font-size: 30rpx; line-height: 1.8; } /* ds-ok 原型 px×2 */
+.ks__row { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; min-height: 92rpx; margin-top: 16rpx; border-top: 1rpx solid; font-size: 30rpx; color: var(--lk-ink); } /* ds-ok 原型 px×2 */
 .ks__v { font-family: var(--lk-fm); font-weight: 700; }
 .ks__seg { display: flex; padding: 6rpx; margin: 24rpx 0 8rpx; border-radius: var(--lk-rb); background: var(--lk-ctl); gap: 4rpx; clip-path: var(--lk-cut); }
 .look--stardust .ks__seg { background: rgba(var(--lk-ink-rgb), .10); }
@@ -35,7 +35,7 @@
 .sheet--game .sheet-cover image { object-fit: cover; }
 .sheet.sheet--game .cover-fade { height: 100%; background: linear-gradient(180deg, rgba(0,0,0,.3), transparent 30%, transparent 55%, rgba(0,0,0,.35)); } /* ds-ok 原型 .place--v2 .photo::after */
 .sheet.sheet--game .cover-tag { top: calc(var(--sheet-top, 0px) + 112rpx); bottom: auto; left: 40rpx; height: 56rpx; padding: 0 24rpx; display: inline-flex; align-items: center; gap: 12rpx; border: 0; border-radius: var(--lk-rb, var(--cy-radius-pill)); clip-path: var(--lk-cut); background: var(--lk-ink, #FFFFFF); color: var(--lk-bg, #000000); font-family: var(--lk-fm); font-weight: 700; letter-spacing: .04em; } /* ds-ok 回落玩家黑白 */
-.sheet.sheet--game .cover-open { top: calc(var(--sheet-top, 0px) + 112rpx); bottom: auto; right: 40rpx; }
+.sheet.sheet--game .cover-open { top: calc(var(--sheet-top, 0px) + 200rpx); bottom: auto; right: 40rpx; left: auto; } /* 营业态在胶囊下方右侧(左侧是返回钮) */
 .sheet.sheet--game .cover-photos { bottom: auto; top: calc(var(--sheet-top, 0px) + 112rpx); }
 .sheet.sheet--game .cover-stamp { bottom: auto; top: calc(var(--sheet-top, 0px) + 184rpx); right: 40rpx; }
 .sheet.sheet--game .sheet-x { left: 24rpx; right: auto; background: rgba(var(--lk-ink-rgb, 255,255,255), .12); color: var(--lk-ink, #FFFFFF); } /* ds-ok 回落白 */
@@ -64,11 +64,14 @@
 .sheet--game .sheet-row cy-btn { margin-top: 0 !important; }
 
 /* ===== 延伸任务翻页卡(proto pop-ext / .flipdeck):一次一张,绕竖轴翻到下一张;圆点 + 右下箭头;「去做」 ===== */
-.xd { height: 820rpx; position: relative; perspective: 2200rpx; }
-.xd__c { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; flex-direction: column; overflow: hidden; backface-visibility: hidden; transform-origin: 50% 50%; transform: rotateY(90deg) translateX(80rpx); opacity: 0; pointer-events: none; transition: transform .52s cubic-bezier(.45,0,.2,1), opacity .4s ease; }
-.xd__c.is-on { transform: none; opacity: 1; pointer-events: auto; z-index: 2; }
-.xd__c.is-out { transform: rotateY(-90deg) translateX(-80rpx); opacity: 0; }
-.xd__c.is-in { transform: none; opacity: 1; z-index: 3; }
+.xd { height: 820rpx; position: relative; } /* 透视写在每张卡自己的 transform 里:父级一开 3D 渲染上下文,外层玻璃的 backdrop-filter 会把卡上的白按钮糊成一道光(Chrome) */
+.xd__c { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; flex-direction: column; overflow: hidden; transform-origin: 50% 50%; transform: perspective(2200rpx) rotateY(90deg) translateX(80rpx); opacity: 0; pointer-events: none; transition: transform .52s cubic-bezier(.45,0,.2,1), opacity .4s ease; }
+.xd__c.is-on { transform: perspective(2200rpx) rotateY(0deg); opacity: 1; pointer-events: auto; z-index: 2; }
+/* 没在台上的卡整张不画(只靠 opacity:0 时,正好侧立 90° 的卡在 Chrome 里会糊成一道白光) */
+.xd__c { visibility: hidden; }
+.xd__c.is-on, .xd__c.is-in, .xd__c.is-out { visibility: visible; }
+.xd__c.is-out { transform: perspective(2200rpx) rotateY(-90deg) translateX(-80rpx); opacity: 0; }
+.xd__c.is-in { transform: perspective(2200rpx) rotateY(0deg); opacity: 1; z-index: 3; }
 .xd__c--press { opacity: .92; }
 /* 翻页卡会转(transform),MOTION.md:动的元素上不放 backdrop-filter;外层弹窗已是玻璃,卡面用半透明实底 */
 .look--stardust .xd__c { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(var(--lk-ink-rgb), .08); }
@@ -114,7 +117,9 @@
 /* ===== 岔路弹窗(proto pop-branch):分支剧情在故事流里是一张入口卡(钥匙插图),点开是居中弹窗,玩法本身仍是 cy-playkit(分支) ===== */
 .lk-popwrap--branch .lk-pop { max-height: 86vh; }
 .bp__h { display: flex; align-items: center; justify-content: space-between; padding: 36rpx 36rpx 0; flex: none; }
-.bp__b { flex: 1; min-height: 0; overflow-y: auto; padding: 8rpx 36rpx 28rpx; box-sizing: border-box; --pk-embed-bg: var(--lk-pop); --pk-embed-ink: var(--lk-ink); --pk-embed-sub: var(--lk-mute); --pk-embed-soft: rgba(var(--lk-ink-rgb), .1); --pk-embed-accent: var(--lk-a); --pk-embed-ok: var(--lk-ok); }
+.bp__b { flex: 1; min-height: 0; overflow-y: auto; padding: 8rpx 36rpx 28rpx; box-sizing: border-box; }
+/* 岔路弹窗里的分支玩法读外观变量(.chfull__kit 在 index.wxss 里给的是章节配色,这里要压过它) */
+.lk-popwrap--branch .bp__b.chfull__kit { --pk-embed-bg: var(--lk-pop); --pk-embed-ink: var(--lk-ink); --pk-embed-sub: var(--lk-mute); --pk-embed-soft: rgba(var(--lk-ink-rgb), .1); --pk-embed-accent: var(--lk-a); --pk-embed-ok: var(--lk-ok); }
 .chfull__kitcard-illus { flex: none; width: 136rpx; height: 136rpx; display: flex; align-items: center; justify-content: center; }
 
 /* ===== 顶栏进度药丸(proto hud .gpill):N/M 站,底边一条随进度长 ===== */

@@ -554,7 +554,7 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   assert.match(plan, /'photo-consent-declined': \[\]/);
   assert.match(plan, /'album-submit-existing-photo': \[\{ urlTemplate: '\/api\/play\/advanced\/action'/);
   const controls = ledger().controls.filter(item => item.entry.js === 'pages/play/index.js' && item.control.handler === 'onPlayKitAction');
-  assert.equal(controls.length, 2);
+  assert.equal(controls.length, 3);  // 2026-11-10 l-play:岔路弹窗(play-stage.wxml)里再挂一个内嵌 cy-playkit,bind:kitaction 同一处理器,计划与另两处一致(下面逐个核)
   for (const control of controls) {
     const branches = control.requiredRequestsByBranch;
     assert.deepEqual(branches['terminal-explicit-retry'].map(r => r.urlTemplate), ['/api/play/advanced/action']);

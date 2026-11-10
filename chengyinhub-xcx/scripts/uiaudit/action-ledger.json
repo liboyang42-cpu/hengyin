@@ -1025226,7 +1025226,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:235:bindtap:expandPlayKit:27",
+      "id": "pages/play/index.wxml:235:bindtap:openKitStart:27",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1025236,19 +1025236,74 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "openSetting",
+        "authorize-denied": "authorize",
+        "getLocation-denied": "getLocation",
+        "openSetting-denied": "openSetting",
+        "startLocationUpdate-denied": "startLocationUpdate",
+        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+      },
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "expandPlayKit",
+        "handler": "openKitStart",
         "line": 235,
         "selectorHint": ".chfull__kitcard",
         "visibleCondition": "{{playKit.card}}",
@@ -1025264,32 +1025319,410 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
+        "navigation",
         "state"
       ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "authorize",
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "openSetting",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "successCapabilities": [
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "targets": {
+        "routes": [
+          "pages/play/merchant/index?nodeId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/activity/list",
+          "/api/analytics/events/batch",
+          "/api/audit/guard/appeal",
+          "/api/audit/guard/appeal/receipt",
+          "/api/audit/guard/reference",
+          "/api/club/lead/team-progress",
+          "/api/config/features",
+          "/api/game/session/command",
+          "/api/game/session/receipt",
+          "/api/game/session/view",
+          "/api/login/code",
+          "/api/map/reverse-geocode",
+          "/api/orient/scoring/dispute",
+          "/api/orient/scoring/session/",
+          "/api/play/arrive",
+          "/api/play/character",
+          "/api/play/companionLine",
+          "/api/play/contact",
+          "/api/play/encounter",
+          "/api/play/ending",
+          "/api/play/history",
+          "/api/play/journey/casebook",
+          "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
+          "/api/play/journey/thought/sync",
+          "/api/play/my-completed",
+          "/api/play/nodes",
+          "/api/play/os/",
+          "/api/play/player-journey/report",
+          "/api/play/preference/",
+          "/api/play/route-state",
+          "/api/play/run-session",
+          "/api/play/run-session/clear",
+          "/api/play/theme/action",
+          "/api/play/theme/card",
+          "/api/play/theme/gameplay-action",
+          "/api/play/theme/state",
+          "/api/role/info",
+          "/api/team/trail/consent",
+          "/api/team/trail/state",
+          "/api/team/trail/sync",
+          "/api/topic/share-code"
+        ],
+        "primaryApis": [
+          "/api/activity/list",
+          "/api/audit/guard/appeal",
+          "/api/audit/guard/appeal/receipt",
+          "/api/audit/guard/reference",
+          "/api/club/lead/team-progress",
+          "/api/game/session/command",
+          "/api/game/session/receipt",
+          "/api/game/session/view",
+          "/api/map/reverse-geocode",
+          "/api/orient/scoring/dispute",
+          "/api/orient/scoring/session/",
+          "/api/play/arrive",
+          "/api/play/character",
+          "/api/play/companionLine",
+          "/api/play/contact",
+          "/api/play/encounter",
+          "/api/play/ending",
+          "/api/play/history",
+          "/api/play/journey/casebook",
+          "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
+          "/api/play/journey/thought/sync",
+          "/api/play/my-completed",
+          "/api/play/nodes",
+          "/api/play/os/",
+          "/api/play/player-journey/report",
+          "/api/play/preference/",
+          "/api/play/route-state",
+          "/api/play/run-session",
+          "/api/play/run-session/clear",
+          "/api/play/theme/action",
+          "/api/play/theme/card",
+          "/api/play/theme/gameplay-action",
+          "/api/play/theme/state",
+          "/api/team/trail/consent",
+          "/api/team/trail/state",
+          "/api/team/trail/sync",
+          "/api/topic/share-code"
+        ],
+        "auxiliaryApis": [
+          "/api/analytics/events/batch",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/activity/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/analytics/events/batch",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/guard/appeal",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/guard/appeal/receipt",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/audit/guard/reference",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/lead/team-progress",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/game/session/command",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/game/session/receipt",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/game/session/view",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/map/reverse-geocode",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/scoring/dispute",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/scoring/session/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "handler-default"
+          },
+          {
+            "url": "/api/play/arrive",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/character",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/companionLine",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/contact",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/encounter",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/history",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/casebook",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/thought/sync",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/my-completed",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/nodes",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/os/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "handler-default"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/preference/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "handler-default"
+          },
+          {
+            "url": "/api/play/route-state",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/run-session",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/run-session/clear",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/theme/action",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/theme/card",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/theme/gameplay-action",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/theme/state",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/team/trail/consent",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/team/trail/state",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/team/trail/sync",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/share-code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/game/session/command",
+          "/api/play/theme/action"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "without-chapter-grant"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/story-kit-card.js:51"
+        "staticSource": "pages/play/utils/play-stage-pops.js:54"
       }
     },
     {
@@ -1050040,7 +1050473,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:76"
+        "staticSource": "pages/play/utils/play-stage-pops.js:80"
       }
     },
     {
@@ -1050107,7 +1050540,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:76"
+        "staticSource": "pages/play/utils/play-stage-pops.js:80"
       }
     },
     {
@@ -1050607,7 +1051040,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:78"
+        "staticSource": "pages/play/utils/play-stage-pops.js:82"
       }
     },
     {
@@ -1051709,7 +1052142,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:75"
+        "staticSource": "pages/play/utils/play-stage-pops.js:79"
       }
     },
     {
@@ -1051776,7 +1052209,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:75"
+        "staticSource": "pages/play/utils/play-stage-pops.js:79"
       }
     },
     {
@@ -1052395,7 +1052828,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:87"
+        "staticSource": "pages/play/utils/play-stage-pops.js:92"
       }
     },
     {
@@ -1052895,7 +1053328,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:98"
+        "staticSource": "pages/play/utils/play-stage-pops.js:103"
       }
     },
     {
@@ -1052962,7 +1053395,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:87"
+        "staticSource": "pages/play/utils/play-stage-pops.js:92"
       }
     },
     {

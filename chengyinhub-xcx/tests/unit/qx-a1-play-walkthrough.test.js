@@ -102,7 +102,7 @@ test('V3-10/53:故事流内嵌块不再撑满一屏、不再垫台面底色;滚�
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="chfull__kit-anchor" id="\{\{'chapter-kit-' \+ item\.nodeId\}\}"/)
   // r2-play a1-v3-10-53:入口卡换成封面 + 类型 + 名字的横卡
-  assert.match(wxml, /wx:if="\{\{playKit\.card\}\}" class="chfull__kitcard" bindtap="expandPlayKit"/)
+  assert.match(wxml, /wx:if="\{\{playKit\.card\}\}" class="chfull__kitcard" data-origin="card" bindtap="openKitStart"/)  // 2026-11-10 l-play:入口卡先开玩法开始弹窗(play-stage-pops.openKitStart),弹窗里「开始」再 expandPlayKit
   assert.match(read('pages/play/index.js'), /const anchor = 'chapter-kit-' \+ this\._playKitNodeId;/)
 })
 

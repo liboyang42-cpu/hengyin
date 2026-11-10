@@ -27,7 +27,8 @@ test('预测故事流内嵌:提示行落到卡和按钮之间,不压在卡底', 
 
 test('j3 F15:结局页「这一生」只给有角色建档的主题,其它主题说「本局」', () => {
   const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /previewEnding\.real \? \(previewEnding\.archive\.identity\.length \? '这一生的结局' : '本局结局'\)/)
+  // 2026-11-10 l-play:真局夺到勋章时眉头写「本局完成 · 获得勋章」,其余仍按 F15:有角色建档说「这一生」,没有说「本局」
+  assert.match(wxml, /previewEnding\.real \? \(previewEnding\.reward \? '本局完成 · 获得勋章' : \(previewEnding\.archive\.identity\.length \? '这一生的结局' : '本局完成'\)\)/)
   assert.match(wxml, /previewEnding\.archive\.identity\.length \? '这一生的档案' : '本局档案'/)
 })
 
