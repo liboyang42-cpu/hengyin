@@ -520,7 +520,8 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-11-10 qx-b5 +3:通行证列表 / 通行证详情 / 视频悬赏,均为 cy-nav-bar + 共享 cy-page-title 二级页 ⇒ 89 → 92。
   // 2026-11-10 qx-c3 staging 重建:b5 +3 叠加,合并树实测 92。
   // 2026-11-10 r2-create(b4-21):撤掉预设页 pages/publish/preset ⇒ 91。
-  assert.equal(files.length, 91, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-11-10 l-after +1:游戏主题库 subpackageMember/market/library,cy-nav-bar + 共享 cy-page-title 二级页 ⇒ 91 → 92(实测)。
+  assert.equal(files.length, 92, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {
