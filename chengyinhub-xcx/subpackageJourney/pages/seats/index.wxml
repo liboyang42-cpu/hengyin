@@ -24,7 +24,7 @@
         <text class="lb-link lb-party__inv" wx:if="{{lobby.canInvite || lobby.invited.length}}" bindtap="onOpenInvite" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">邀请</text>
       </view>
       <view class="lb-seats">
-        <view wx:for="{{lobby.circles}}" wx:key="key" class="lb-seat is-{{item.kind}}" style="animation-delay: {{index * 70}}ms"
+        <view wx:for="{{lobby.circles}}" wx:key="key" class="lb-seat is-{{item.kind}}"
               bindtap="onSeatTap" data-tappable="{{item.tappable}}" aria-role="{{item.tappable ? 'button' : 'text'}}"
               aria-label="第{{item.no}}席 {{item.label}}" hover-class="{{item.tappable ? 'cy-pressed' : 'none'}}" hover-stay-time="80">
           <view class="lb-seat__c">

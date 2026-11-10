@@ -35,14 +35,14 @@ test('去起点带原活动/主题与报名单', () => {
   assert.equal(playUrl(view.seatsView(t)), '/pages/play/index?topicId=990014&registrationId=901&entry=ticket');
 });
 
-test('大厅页:无二维码/加入码/释放;关闭在半屏标题栏;动效可减弱', () => {
+test('大厅页:无二维码/加入码/释放;关闭在半屏标题栏;不新增 keyframes', () => {
   const dir = path.join(__dirname, '../../subpackageJourney/pages/seats');
   const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
   assert.ok(!/二维码|加入码|释放/.test(wxml.replace(/<!--[\s\S]*?-->/g, '')));
   assert.match(wxml, /<cy-sheet show="\{\{inviteShow\}\}" title="邀请同行"/);
   assert.match(wxml, /open-type="share"/);
   const wxss = fs.readFileSync(path.join(dir, 'index.wxss'), 'utf8');
-  assert.match(wxss, /prefers-reduced-motion: reduce/);
+  assert.ok(!/@keyframes/.test(wxss));
 });
 
 test('受邀落地:领取被拒(已满/过期/撤回,服务端原话)时给「自己购买」回原活动或主题', () => {

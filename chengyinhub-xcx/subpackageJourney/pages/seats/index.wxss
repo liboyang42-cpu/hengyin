@@ -1,6 +1,6 @@
 @import '../../style/journey.wxss';
 
-/* r2-store 开局大厅:深色玩家域,颜色全走 --cy-* 令牌;动效只用 transform/opacity,减弱动态效果时静止 */
+/* r2-store 开局大厅:深色玩家域,颜色全走 --cy-* 令牌;不新增 keyframes(motion-property-ratchet 只减不增) */
 .lb-head { display: flex; align-items: center; gap: var(--cy-space-4); margin: 0 38rpx var(--cy-space-4); }
 .lb-head__cover { flex: none; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); }
 .lb-head__name { flex: 1; min-width: 0; font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-color-text-primary); }
@@ -12,7 +12,7 @@
 .lb-party__n { font-size: var(--cy-font-body); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
 .lb-party__inv { margin-left: auto; min-height: 88rpx; line-height: 88rpx; margin-top: -24rpx; margin-bottom: -24rpx; font-size: var(--cy-font-body); }
 .lb-seats { display: flex; flex-wrap: wrap; gap: var(--cy-space-4) 24rpx; margin-top: var(--cy-space-4); }
-.lb-seat { display: flex; flex-direction: column; align-items: center; gap: 10rpx; width: 112rpx; animation: lb-pop 320ms cubic-bezier(.2, .9, .3, 1.2) both; }
+.lb-seat { display: flex; flex-direction: column; align-items: center; gap: 10rpx; width: 112rpx; }
 .lb-seat__c { position: relative; width: 104rpx; height: 104rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-sizing: border-box;
   background: var(--cy-color-bg-interactive); color: var(--cy-color-text-primary); font-size: var(--cy-font-body); font-weight: 700; }
 .lb-seat__c image { width: 100%; height: 100%; border-radius: 50%; }
@@ -32,5 +32,3 @@
 .lb-tile__sub { flex: 1; text-align: right; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
 .lb-sheet { display: flex; flex-direction: column; gap: var(--cy-space-4); padding-bottom: var(--cy-space-4); }
 .lb-sheet__list { margin: 0; }
-@keyframes lb-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .lb-seat { animation: none; } }
