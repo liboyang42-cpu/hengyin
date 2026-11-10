@@ -79,6 +79,10 @@ const STORY_ADD_ITEMS = [
   { kind: 'node', label: '玩法', icon: 'tab-explore' }, { kind: 'branch', label: '分支', icon: 'turn-right' }, { kind: 'divider', label: '分割线', icon: '' },
 ];
 const STORY_GALLERY_LAYOUTS = [1, 2, 3, 4].map((n) => ({ n, label: ['单图', '双图', '三图', '四图'][n - 1], cells: Array.from({ length: n }, (_, i) => i) }));
+const storyThemeLook = require('../utils/publish/theme-look.js');
+// 玩家端弹窗预览的六个阶段(编辑器原型 v2 · preview.js)
+const STORY_PV_STAGES = [['theme', '主题开始'], ['chStart', '章节开始'], ['chEnd', '章节结束'], ['gStart', '玩法开始'], ['gEnd', '玩法结束'], ['branch', '分支选择']];
+const STORY_PV_SW = { STARDUST: 'look-sw--stardust', PAPER: 'look-sw--paper', SURVIVAL: 'look-sw--survival', CYBER: 'look-sw--cyber' };
 const STORY_BRANCH_TO_BASE = [{ value: 'continue', label: '继续本章' }, { value: 'end', label: '结束本章' }];
 const { buildTopicPreview } = require('../utils/publish/topic-draft-preview.js');
 const publishStats = require('../utils/publish/publish-stats.js');
@@ -346,6 +350,7 @@ Page({
     storyBranch: { blockKey: '', content: '', options: [] },
     storyBranchTos: [],
     storyBranchToLabel: {},
+    storyPreviewPop: { show: false },
     storySheet: '',
     storyOptions: { show: false, title: '', items: [] },
     storyLiveKey: '',
@@ -1316,6 +1321,7 @@ Page({
       storySheet: '',
       storyBranch: { blockKey: '', content: '', options: [] },
       storyBranchTos: [],
+      storyPreviewPop: { show: false },
       storyLiveKey: '',
       storyScrollTop: 0,
       storySegs: derived.storySegs,
@@ -1383,6 +1389,7 @@ Page({
       storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
       storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1, split: null },
       storyUndo: { show: false, text: '', canUndo: false },
+      storyPreviewPop: { show: false },
       storyVarSheet: { show: false, blockKey: '', keys: [] },
       storySheet: '',
       pendingInsertAt: null,
@@ -1415,6 +1422,8 @@ Page({
       this.closeModePicker(); } else if (this.data.lookSheetShow) { this.closeLookEditor();
     } else if (this.data.topicDetailShow) {
       this.closeTopicDetail();
+    } else if (this.data.storyPreviewPop && this.data.storyPreviewPop.show) {
+      this.closeStoryPreviewPop();
     } else if (this.data.storySheet) {
       this.closeStorySheet();
     } else if (this.data.storyVarSheet && this.data.storyVarSheet.show) {
@@ -1924,10 +1933,77 @@ Page({
 
 
 
-  toggleStoryPreview() {
-    const preview = !this.data.storyEditor.preview;
+  // ── 玩家端弹窗预览(编辑器原型 v2 · 6):主题开始 / 章节开始 / 章节结束 / 玩法开始 / 玩法结束 / 分支选择。
+  //    按主题的画面风格(formData.look)着色;底部切阶段 / 风格 / 配色只改预览自己的状态,不写回主题设置。
+  //    内容只用作者已经写的东西(章节名、开场白、结语、模板名、分支),没有的就空着,不编数字。
+  openStoryPreviewPop(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const look = storyThemeLook.normalizeLook(this.data.formData && this.data.formData.look);
     this._storyFocusKey = '';
-    this.setData({ 'storyEditor.preview': preview, 'storyEditor.focusBlockKey': '', 'storyEditor.selectedBlockKey': '', 'storyEditor.kb': 0, storySheet: '', storyScrollTop: 0 });
+    this._storyPv = { stage: STORY_PV_STAGES.some((s) => s[0] === ds.stage) ? ds.stage : 'theme', fail: false, style: look.style, palette: look.palette || 'DEFAULT', blockKey: ds.blockkey || '' };
+    this.setData({ storyPreviewPop: this._storyPvView(), 'storyEditor.focusBlockKey': '', storySheet: '' });
+  },
+  closeStoryPreviewPop() { this._storyPv = null; this.setData({ storyPreviewPop: { show: false } }); },
+  onStoryPreviewStage(e) {
+    if (!this._storyPv) return;
+    const ds = e.currentTarget.dataset;
+    this._storyPv.stage = STORY_PV_STAGES.some((s) => s[0] === ds.stage) ? ds.stage : this._storyPv.stage;
+    this._storyPv.fail = !!ds.fail;
+    this.setData({ storyPreviewPop: this._storyPvView() });
+  },
+  onStoryPreviewLook(e) {
+    if (!this._storyPv) return;
+    const style = storyThemeLook.styleOf(String(e.currentTarget.dataset.style || ''));
+    if (!style) return;
+    this._storyPv.style = style.value;
+    this.setData({ storyPreviewPop: this._storyPvView() });
+  },
+  onStoryPreviewPalette(e) {
+    if (!this._storyPv) return;
+    const pal = String(e.currentTarget.dataset.pal || '');
+    if (!storyThemeLook.PALETTES.some((p) => p[0] === pal)) return;
+    this._storyPv.palette = pal;
+    this.setData({ storyPreviewPop: this._storyPvView() });
+  },
+  _storyPvView() {
+    const pv = this._storyPv;
+    const chapters = (this.data.formData && this.data.formData.chapters) || [];
+    const chapterIndex = Number(this.data.storyEditor.chapterIndex);
+    const chapter = chapters[chapterIndex] || {};
+    const blocks = chapter.blocks || [];
+    const style = storyThemeLook.styleOf(pv.style) || storyThemeLook.styleOf(storyThemeLook.DEFAULT_STYLE);
+    const palLabel = (storyThemeLook.PALETTES.find((p) => p[0] === pv.palette) || ['DEFAULT', '黑'])[1];
+    const lookClass = 'look--' + style.value.toLowerCase() + ' look-palette--' + String(pv.palette).toLowerCase();
+    const caps = this.data.storyCaps || { open: '', end: '', next: '结束主题' };
+    const byKey = (type) => blocks.find((b) => b && b.type === type && b.key === pv.blockKey) || blocks.find((b) => b && b.type === type);
+    let card = { kick: '', title: '', body: '', meta: '', cta: '', opts: [], mark: '' };
+    if (pv.stage === 'theme') {
+      card = { kick: '城瘾 · 城市剧情', title: String(this.data.formData.name || '').trim() || '未命名主题', body: String(this.data.formData.description || '').trim(), meta: chapters.length + ' 章 · ' + style.label, cta: '开始', opts: [], mark: '' };
+    } else if (pv.stage === 'chStart') {
+      card = { kick: '第 ' + (chapterIndex + 1) + ' 章', title: String(chapter.name || '').trim() || '未命名章节', body: String(caps.open || '').trim(), meta: '', cta: '进入本章', opts: [], mark: '' };
+    } else if (pv.stage === 'chEnd') {
+      card = { kick: '本章完成', title: String(chapter.name || '').trim() || '未命名章节', body: String(caps.end || '').trim(), meta: '', cta: caps.next || '下一章', opts: [], mark: '' };
+    } else if (pv.stage === 'gStart' || pv.stage === 'gEnd') {
+      const nodeBlock = byKey('node');
+      const node = nodeBlock && (chapter.nodes || []).find((n) => n && n._localId === nodeBlock.nodeKey);
+      const tpl = node && node.templateInfo && node.templateInfo.title ? String(node.templateInfo.title) : '';
+      const name = tpl || (node && node.name ? String(node.name) : '') || '未选玩法模板';
+      if (pv.stage === 'gStart') card = { kick: '玩法', title: name, body: node && node.address ? String(node.address) : '', meta: '', cta: '开始', opts: [], mark: '' };
+      else card = { kick: pv.fail ? '失败' : '成功', title: pv.fail ? '再想想' : '完成', body: name === '未选玩法模板' ? '' : name, meta: '', cta: pv.fail ? '再试一次' : '继续', opts: [], mark: pv.fail ? 'close' : 'check' };
+    } else {
+      const branch = byKey('branch');
+      const options = proEditorStory.normalizeBranchOptions(branch ? branch.options : []);
+      card = { kick: '分支任务', title: String((branch && branch.content) || '').trim() || '写一个问题', body: '', meta: '', cta: '', opts: options.map((o, i) => String(o.text || '').trim() || ('选项 ' + 'ABC'[i])), mark: '' };
+    }
+    return {
+      show: true, stage: pv.stage, fail: !!pv.fail, lookClass, styleLabel: style.label, palLabel,
+      stageLabel: (STORY_PV_STAGES.find((s) => s[0] === pv.stage) || STORY_PV_STAGES[0])[1],
+      cover: String(chapter.imgArr || '').split(/[,;]/).filter(Boolean)[0] || String(this.data.formData.imgUrl || ''),
+      card,
+      stages: STORY_PV_STAGES.map((s) => ({ key: s[0], label: s[1], on: s[0] === pv.stage })),
+      looks: storyThemeLook.STYLES.map((s) => ({ value: s.value, label: s.label, sw: STORY_PV_SW[s.value] || '', on: s.value === style.value })),
+      palettes: storyThemeLook.PALETTES.map((p) => ({ value: p[0], label: p[1], cls: 'look--' + style.value.toLowerCase() + ' look-palette--' + p[0].toLowerCase(), on: p[0] === pv.palette })),
+    };
   },
 
   // ⋯ 菜单与把手菜单共用一张 cy-option-sheet(全仓不用系统 ActionSheet)

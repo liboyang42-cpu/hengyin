@@ -450,7 +450,7 @@
     <!-- 顶栏(X Articles 编辑器结构):左 草稿 · 保存状态(真实的 themeSaveState,不写「刚刚」);右 预览 / 完成 / ⋯ -->
     <view class="sx-top">
       <view class="sx-top__state"><text class="sx-top__draft">草稿</text><text wx:if="{{themeSaveLabel}}"> · {{themeSaveLabel}}</text></view>
-      <view class="sx-top__text" bindtap="toggleStoryPreview" aria-role="button" aria-label="{{storyEditor.preview ? '回到编辑' : '预览本章'}}" hover-class="cy-pressed" hover-stay-time="80">{{storyEditor.preview ? '编辑' : '预览'}}</view>
+      <view class="sx-top__text" data-stage="theme" bindtap="openStoryPreviewPop" aria-role="button" aria-label="预览玩家端弹窗" hover-class="cy-pressed" hover-stay-time="80">预览</view>
       <view class="sx-top__pill" bindtap="closeStoryEditor" aria-role="button" aria-label="完成故事流编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
       <view class="sx-top__icon" bindtap="openStoryMore" aria-role="button" aria-label="更多" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="36" /></view>
     </view>
@@ -759,6 +759,47 @@
     <!-- 2026-11-10 r2-create:原底栏「下一步」(打开章节设置)收进顶栏 ⋯ 菜单的「章节设置」;
          X Articles 式编辑器没有底栏,主动作是顶栏「完成」。 -->
     <!-- 插入 ▾ / 表情 / 本章信息:编辑器内的小浮层,关闭键在右上角 -->
+    <!-- 玩家端弹窗预览(编辑器原型 v2 · 6):底是章节封面压暗,中间是弹窗卡(按画面风格着色),底部切阶段 / 风格 / 配色。
+         切风格、配色只影响预览,不改主题的画面风格(见 RESULT 待你决定)。 -->
+    <view class="pvl play {{storyPreviewPop.lookClass}}" wx:if="{{storyPreviewPop.show}}" catchtouchmove="noop">
+      <image wx:if="{{storyPreviewPop.cover}}" class="pvl__scene" src="{{storyPreviewPop.cover}}" mode="aspectFill" aria-hidden="true" />
+      <view class="pvl__dim"></view>
+      <view class="pvl__top">
+        <view class="pvl__x" catchtap="closeStoryPreviewPop" aria-role="button" aria-label="关闭预览" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="36" /></view>
+        <text class="pvl__ttl">{{storyPreviewPop.styleLabel}} · {{storyPreviewPop.stageLabel}}</text>
+      </view>
+      <view class="pvl__mid">
+        <view class="lk-pop pv-card">
+          <view class="pv-card__in">
+            <text class="pv-kick lk-mute">{{storyPreviewPop.card.kick}}</text>
+            <view wx:if="{{storyPreviewPop.card.mark}}" class="pv-mark {{storyPreviewPop.fail ? 'is-bad' : 'is-ok'}}"><cy-icon name="{{storyPreviewPop.card.mark}}" size="56" /></view>
+            <text class="pv-title lk-title">{{storyPreviewPop.card.title}}</text>
+            <text wx:if="{{storyPreviewPop.card.body}}" class="pv-body lk-story">{{storyPreviewPop.card.body}}</text>
+            <text wx:if="{{storyPreviewPop.card.meta}}" class="pv-meta lk-mute">{{storyPreviewPop.card.meta}}</text>
+            <view wx:if="{{storyPreviewPop.card.opts.length}}" class="pv-opts">
+              <view class="lk-btn lk-btn--ghost pv-opt" wx:for="{{storyPreviewPop.card.opts}}" wx:key="index"><text class="pv-opt__k">{{storyAbc[index]}}</text><text>{{item}}</text></view>
+            </view>
+            <view wx:if="{{storyPreviewPop.card.cta}}" class="lk-btn lk-btn--primary pv-go">{{storyPreviewPop.card.cta}}</view>
+          </view>
+        </view>
+      </view>
+      <view class="pvl__seg" wx:if="{{storyPreviewPop.stage === 'gEnd'}}">
+        <view class="lk-chip {{storyPreviewPop.fail ? '' : 'is-on'}}" data-stage="gEnd" catchtap="onStoryPreviewStage" aria-role="button" aria-label="成功" aria-selected="{{!storyPreviewPop.fail}}" hover-class="cy-pressed" hover-stay-time="80">成功</view>
+        <view class="lk-chip {{storyPreviewPop.fail ? 'is-on' : ''}}" data-stage="gEnd" data-fail="1" catchtap="onStoryPreviewStage" aria-role="button" aria-label="失败" aria-selected="{{storyPreviewPop.fail}}" hover-class="cy-pressed" hover-stay-time="80">失败</view>
+      </view>
+      <scroll-view class="pvl__strip" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="pvl__strip-in">
+          <view class="lk-chip {{item.on ? 'is-on' : ''}}" wx:for="{{storyPreviewPop.stages}}" wx:key="key" data-stage="{{item.key}}" catchtap="onStoryPreviewStage" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+      </scroll-view>
+      <view class="pvl__looks">
+        <view class="pvl__look {{item.on ? 'is-on' : ''}}" wx:for="{{storyPreviewPop.looks}}" wx:key="value" data-style="{{item.value}}" catchtap="onStoryPreviewLook" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80"><view class="look-sw {{item.sw}}"></view><text>{{item.label}}</text></view>
+      </view>
+      <view class="pvl__pals">
+        <text class="pvl__palk">主题配色</text>
+        <view class="pvl__pal {{item.cls}} {{item.on ? 'is-on' : ''}}" wx:for="{{storyPreviewPop.palettes}}" wx:key="value" data-pal="{{item.value}}" catchtap="onStoryPreviewPalette" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80"></view>
+      </view>
+    </view>
     <!-- 底部「已移到… / 撤销」条(编辑器原型 v2):移动、插入、删除、拆段后出现 5 秒 -->
     <view class="pending-undo story-undo cy-rise-in" wx:if="{{storyUndo.show}}">
       <text>{{storyUndo.text}}</text>

@@ -1,4 +1,5 @@
 @import "./runtime-editor.wxss";
+@import "./look-tokens.wxss"; /* 游戏内外观变量 --lk-*(与 pages/play/look-tokens.wxss 逐字相同,l-editor-look-tokens-sync 锁住):弹窗预览用 */
 @charset "UTF-8";
 @import "../styles/photo-grid.wxss";
 page{background: var(--cy-bg-card);}
@@ -5341,3 +5342,39 @@ page { background: var(--cy-btn-solid-bg); }
 .sx-br__add { min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; gap: 6rpx; border: 2rpx dashed var(--cy-color-border-strong); border-radius: var(--cy-radius-md); color: var(--cy-color-text-primary); font-size: var(--cy-font-label); font-weight: 600; }
 .sx-br__pv { min-height: var(--cy-btn-h); margin-top: var(--cy-space-3); display: flex; align-items: center; justify-content: center; gap: 6rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); font-size: var(--cy-font-label); font-weight: 600; }
 .sx-br__pad { height: var(--cy-space-6); }
+
+/* ═══════ 玩家端弹窗预览(编辑器原型 v2 · preview.js):主题开始 / 章节开始 / 章节结束 / 玩法开始 / 玩法结束 / 分支选择,按画面风格着色 ═══════ */
+.pvl { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 40; display: flex; flex-direction: column; background: var(--lk-bg); color: var(--lk-ink); overflow: hidden; }
+.pvl__scene { position: absolute; left: 0; right: 0; top: 0; bottom: 0; width: 100%; height: 100%; opacity: .55; }
+.pvl__dim { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: linear-gradient(180deg, rgba(var(--lk-shade-rgb), .35), rgba(var(--lk-shade-rgb), .7)); }
+.pvl__top { position: relative; z-index: 1; flex: 0 0 auto; display: flex; align-items: center; gap: var(--cy-space-2); padding: var(--cy-space-2) var(--cy-space-2); }
+.pvl__x { width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; color: var(--lk-ink); }
+.pvl__ttl { color: var(--lk-mute); font-size: var(--cy-font-caption); font-weight: 600; letter-spacing: .06em; }
+.pvl__mid { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 var(--cy-space-5); }
+.pv-card { width: 100%; max-width: 620rpx; }
+.pv-card__in { padding: var(--cy-space-6) var(--cy-space-5) var(--cy-space-5); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pv-kick { font-size: var(--cy-font-micro); letter-spacing: .14em; font-weight: 700; }
+.pv-title { margin-top: var(--cy-space-2); font-size: var(--cy-font-title); line-height: 1.25; }
+.pv-body { margin-top: var(--cy-space-3); font-size: var(--cy-font-body); line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+.pv-meta { margin-top: var(--cy-space-3); font-size: var(--cy-font-caption); }
+.pv-mark { width: 120rpx; height: 120rpx; margin: var(--cy-space-3) 0 var(--cy-space-1); display: flex; align-items: center; justify-content: center; border-radius: var(--lk-rb); clip-path: var(--lk-cut); }
+.pv-mark.is-ok { background: var(--lk-ok); color: #FFFFFF; } /* ds-ok 成功绿上的白字 */
+.pv-mark.is-bad { background: rgba(var(--lk-ink-rgb), .12); color: var(--lk-ink); border: 1rpx solid rgba(var(--lk-ink-rgb), .3); }
+.pv-opts { width: 100%; margin-top: var(--cy-space-4); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.pv-opt { justify-content: flex-start; text-align: left; }
+.pv-opt__k { flex: none; width: 44rpx; height: 44rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--lk-rb); clip-path: var(--lk-cut); background: var(--lk-ink); color: var(--lk-bg); font-size: var(--cy-font-micro); font-weight: 700; }
+.pv-go { width: 100%; margin-top: var(--cy-space-5); }
+.pvl__seg, .pvl__looks, .pvl__pals { position: relative; z-index: 1; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: var(--cy-space-2); padding: 0 var(--cy-space-4) var(--cy-space-2); }
+.pvl__strip { position: relative; z-index: 1; flex: 0 0 auto; white-space: nowrap; padding: 0 0 var(--cy-space-2); }
+.pvl__strip-in { display: inline-flex; gap: var(--cy-space-2); padding: 0 var(--cy-space-4); }
+.pvl__strip .lk-chip, .pvl__seg .lk-chip { min-height: var(--cy-btn-h); }
+/* 选中的筹码在星尘 / 末世下也要反白:外观文件给 .lk-chip 的玻璃 / 锈底会盖掉 .is-on 的实底(跨线提醒 qx-base) */
+.pvl .lk-chip.is-on { background: var(--lk-ink); background-image: none; color: var(--lk-bg); border-color: var(--lk-ink); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pvl__look { min-height: var(--cy-btn-h); padding: 0 var(--cy-space-2); display: flex; align-items: center; gap: 8rpx; color: var(--lk-mute); font-size: var(--cy-font-caption); }
+.pvl__look.is-on { color: var(--lk-ink); font-weight: 700; }
+.pvl__look .look-sw { width: 28rpx; height: 28rpx; }
+.pvl__pals { padding-bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+.pvl__palk { color: var(--lk-mute); font-size: var(--cy-font-caption); margin-right: 4rpx; }
+.pvl__pal { width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; }
+.pvl__pal::before { content: ''; width: 36rpx; height: 36rpx; border-radius: var(--cy-radius-pill); background: var(--lk-bg); box-shadow: 0 0 0 2rpx rgba(var(--lk-ink-rgb), .35); }
+.pvl__pal.is-on::before { box-shadow: 0 0 0 3rpx var(--lk-a), 0 0 0 6rpx rgba(var(--lk-ink-rgb), .25); }
