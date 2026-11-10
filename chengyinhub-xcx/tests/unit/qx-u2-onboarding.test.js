@@ -68,9 +68,11 @@ test('P4 模式:两种以上才出横向分页与分段进度;只跟随滑动,�
 
 test('P7 战报:叠层卡;只有计分时出 NRC 粗斜体大数字,不计分/未知弱化,不画成 0', () => {
   const view = read('subpackageJourney/pages/report/index.wxml');
-  assert.match(view, /<text class="rp-score__n" wx:if="\{\{report\.scored\}\}">\{\{report\.scoreText\}\}<\/text>/);
-  assert.match(view, /<text class="rp-score__muted" wx:else>\{\{report\.scoreText\}\}<\/text>/);
-  assert.match(view, /rp-stat__v \{\{report\.elapsedText === '未知' \? 'is-muted' : ''\}\}/);
+  // 2026-11-10 qx-s2 staging 合并:战报三格与 r2-finish b3-p7(后一轮业主点名「三格收进一张分组卡」)改的是同一块,取 r2-finish 的
+  // jn-grid--card;u2 叠卡在本页退场。保留本条的业务断言:不计分 / 用时未知弱化显示,不画成 0;分享仍是 ob-footer 白色胶囊。
+  assert.match(view, /<view class="jn-grid jn-grid--card">/);
+  assert.match(view, /jn-stat__v \{\{report\.scored \? '' : 'is-muted'\}\}">\{\{report\.scoreText\}\}/);
+  assert.match(view, /jn-stat__v \{\{report\.elapsedText === '未知' \? 'is-muted' : ''\}\}/);
   assert.match(view, /<view class="jn-footer ob-footer" wx:if="\{\{report\.finished\}\}">[\s\S]*open-type="share"/);
   const css = read('subpackageJourney/style/journey.wxss');
   assert.match(css, /\.rp-score__n \{[^}]*font-weight: 900; font-style: italic;/);

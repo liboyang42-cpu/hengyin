@@ -1,0 +1,76 @@
+<view class="theme-dark st">
+  <cy-nav-bar plain custom-back bind:back="onBack" />
+  <cy-nav-spacer />
+  <view class="st-dots" wx:if="{{state === 'ready'}}" aria-label="第 {{stepIndex + 1}} 步，共 4 步">
+    <view class="st-dot {{index <= stepIndex ? 'is-on' : ''}}" wx:for="{{steps}}" wx:key="*this"></view>
+  </view>
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
+
+  <block wx:else>
+    <!-- 1 总览:名次 / 分数 / 节点 / 用时,全是战报事实;没有的格子不出 -->
+    <view class="st-body st-body--center" wx:if="{{step === 'overview'}}">
+      <view class="st-seal {{report.win ? '' : 'is-plain'}}" aria-hidden="true"><view class="st-seal__ring"></view><view class="st-seal__tick"></view></view>
+      <text class="st-kicker">{{report.result}}</text>
+      <text class="st-title">{{topicName || '本局'}}</text>
+      <text class="st-rank" wx:if="{{report.rankSub}}">本关{{report.rankText}}</text>
+      <view class="st-stats">
+        <view class="st-stat" wx:if="{{report.scored}}"><text class="st-stat__v">{{report.scoreText}}</text><text class="st-stat__l">分数</text></view>
+        <view class="st-stat"><text class="st-stat__v">{{report.nodesText}}</text><text class="st-stat__l">节点</text></view>
+        <view class="st-stat" wx:if="{{report.elapsedText !== '未知'}}"><text class="st-stat__v">{{report.elapsedText}}</text><text class="st-stat__l">用时</text></view>
+      </view>
+    </view>
+
+    <!-- 2 排行榜:本关先给 队内 / 全体 / 队伍,其余在「更多」 -->
+    <view class="st-body" wx:elif="{{step === 'rank'}}">
+      <text class="st-h">{{topicName || '本关'}}</text>
+      <rank-board topic-id="{{report.topicId}}" activity-id="{{report.activityId}}" active="{{step === 'rank'}}" />
+    </view>
+
+    <!-- 3 评价:星级 + 一句话,可跳过;错误红字写在字段下面 -->
+    <view class="st-body st-body--center" wx:elif="{{step === 'rate'}}">
+      <text class="st-title">这一局怎么样？</text>
+      <view class="st-stars" aria-role="radiogroup">
+        <view class="st-star {{item <= stars ? 'is-on' : ''}}" wx:for="{{starList}}" wx:key="*this" data-n="{{item}}" bindtap="pickStar" aria-role="radio" aria-checked="{{item <= stars}}" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="{{item <= stars ? 'star-filled' : 'star'}}" size="56" />
+        </view>
+      </view>
+      <view class="st-field" wx:if="{{stars}}">
+        <textarea class="st-textarea" value="{{review}}" maxlength="{{reviewMax}}" placeholder="喜欢哪一站？" placeholder-class="st-ph" bindinput="onReview" auto-height />
+        <text class="st-count">{{review.length}}/{{reviewMax}}</text>
+      </view>
+      <text class="st-err" wx:if="{{rateError}}">{{rateError}}</text>
+    </view>
+
+    <!-- 4 分享卡:帖文 / 故事;分享、保存图片、视频(基础库支持才出) -->
+    <view class="st-body" wx:else>
+      <view class="st-seg"><cy-tabs variant="segmented" tabs="{{shareTabs}}" active="{{shareKind}}" bind:change="onShareKind" /></view>
+      <view class="st-card st-card--{{shareKind}}">
+        <canvas type="2d" id="share-cv" class="st-cv" aria-role="img" aria-label="分享卡"></canvas>
+      </view>
+      <view class="st-acts">
+        <button class="st-share" open-type="share" aria-label="分享"><cy-btn variant="primary">分享</cy-btn></button>
+        <cy-btn variant="secondary" bindtap="saveCard" disabled="{{!cardReady}}">保存图片</cy-btn>
+        <cy-btn wx:if="{{videoOk}}" variant="secondary" bindtap="shareVideo" disabled="{{!cardReady || videoBusy}}">{{videoBusy ? '正在生成视频' : '分享视频'}}</cy-btn>
+      </view>
+    </view>
+
+    <view class="st-footer">
+      <block wx:if="{{step === 'overview'}}">
+        <cy-btn variant="primary" bindtap="goRank">看排行榜</cy-btn>
+        <view class="st-link" bindtap="done" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view>
+      </block>
+      <block wx:elif="{{step === 'rank'}}">
+        <cy-btn variant="primary" bindtap="next">评价与分享</cy-btn>
+      </block>
+      <block wx:elif="{{step === 'rate'}}">
+        <cy-btn variant="primary" bindtap="submitRate" disabled="{{!stars || rateBusy}}">{{rateBusy ? '正在提交' : '提交'}}</cy-btn>
+        <view class="st-link" bindtap="skipRate" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</view>
+      </block>
+      <block wx:else>
+        <cy-btn variant="secondary" bindtap="done">完成</cy-btn>
+      </block>
+    </view>
+  </block>
+  <view class="st-confetti" wx:if="{{celebrate && step === 'overview'}}"><cy-celebrate event-key="{{celebrate}}" /></view>
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+</view>

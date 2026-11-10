@@ -2115,3 +2115,32 @@ page { background: var(--cy-color-bg-page); }
 .sheet--game .sheet-name{ font-size:var(--cy-type-page-title); margin-top:var(--cy-space-2); }
 .sheet-x{ position:absolute; right:var(--cy-page-x); z-index:3; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%; display:flex; align-items:center; justify-content:center;
   background:var(--cy-color-bg-glass); color:var(--cy-color-text-primary); }
+/* r2-finish s0-b1-run-ending(业主「本局完成应该有庆祝 然后要有动画效果的」):真玩家结局整屏居中,白色印章弹入 + 两圈光环外扩 + 共享彩旗。
+   只用 transform/opacity;减弱动态时印章直接落位、光环不出(.pv-ending--reduced)。 */
+.pv-ending__body{ min-height:100%; display:flex; flex-direction:column; }
+.pv-ending__body--real{ justify-content:center; align-items:center; text-align:center; padding-bottom:calc(env(safe-area-inset-bottom) + 96rpx); box-sizing:border-box; }
+.pv-ending__body--real .life-arc{ align-self:stretch; }
+.pv-ending__body--real .pv-ending__go{ align-self:stretch; }
+.pv-ending__seal{ position:relative; width:184rpx; height:184rpx; margin-bottom:46rpx; border-radius:50%; background:#FFFFFF; /* ds-ok 游玩页单色契约:白印章墨勾 */
+  display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.3) rotate(-20deg); transition:opacity .3s ease, transform .7s cubic-bezier(.3,1.6,.5,1); }
+.pv-ending--in .pv-ending__seal{ opacity:1; transform:none; }
+.pv-ending__tick{ width:64rpx; height:32rpx; margin-top:-14rpx; border-left:12rpx solid #111111; border-bottom:12rpx solid #111111; transform:rotate(-45deg); } /* ds-ok 金底墨勾 */
+.pv-ending__ring{ position:absolute; inset:0; border-radius:50%; border:4rpx solid rgba(255,255,255,.7); opacity:0; } /* ds-ok 白色光环 */
+.pv-ending--in .pv-ending__ring{ animation:pv-ending-ring 1.6s cubic-bezier(.2,.8,.2,1) .35s 2 both; }
+.pv-ending--in .pv-ending__ring--2{ animation-delay:.75s; }
+@keyframes pv-ending-ring{ 0%{ opacity:.9; transform:scale(1); } 100%{ opacity:0; transform:scale(2.4); } }
+.pv-ending--reduced .pv-ending__seal{ opacity:1; transform:none; transition:none; }
+.pv-ending--reduced .pv-ending__ring{ animation:none; display:none; }
+.pv-ending__confetti{ position:absolute; inset:0; z-index:2; pointer-events:none; --cy-motion-celebrate:2200ms; --cy-color-play-accent:#FFFFFF; } /* ds-ok 结局庆祝:彩旗落得慢一点、用白色(游玩页单色契约),看得见 */
+
+/* r2-finish s0-b8-u08-01 完成页收拾:路线卡在时标题行提到最上;卡上已写距离/用时/站数,下面不再重复大数字和这两格;
+   底部按钮落在实底托盘上(原来的黑色光晕盖不住,大数字从按钮下面露出来)。圆角走按钮 token。 */
+.finsheet__top{ padding:0 0 var(--cy-space-4); display:flex; flex-direction:column; align-items:flex-start; gap:12rpx; }
+.finsheet__card + .finsheet__grid .fst--hero, .finsheet__card + .finsheet__grid .fst--dup{ display:none; }
+.finsheet__dock{ position:fixed; z-index:4; left:0; right:0; bottom:0; height:calc(200rpx + env(safe-area-inset-bottom)); background:var(--cy-color-play-story-page); }
+.finsheet__dock--two{ height:calc(323rpx + env(safe-area-inset-bottom)); }
+.finsheet .finsheet__cta{ box-shadow:none; border-radius:var(--cy-comp-btn-radius); }
+.finsheet__settle{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(188rpx + env(safe-area-inset-bottom)); height:104rpx; border-radius:var(--cy-comp-btn-radius);
+  display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; background:var(--cy-color-play-story-text); color:var(--cy-color-play-story-page); }
+.finsheet__settle + .finsheet__cta{ background:var(--cy-color-play-story-surface); color:var(--cy-color-play-story-text); }
+.finsheet__pad{ height:123rpx; }

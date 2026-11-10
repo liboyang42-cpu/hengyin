@@ -18,6 +18,7 @@ const PAL = {
   edgeMint: '#BFF0E6',
   edgeGold: '#FFE3A3',
   confetti: ['#F1C94B', '#FFF4C8', '#7FC8BC', '#EDE6D6', '#E9C47C'],
+  dissolve: ['#F5F5F2', '#C9C9CC', '#4A4A4E', '#303033', '#8E8E93', '#E9C47C'], // r2-finish 完成卡溶解:卡面、字、勾的颜色
   rainbow: ['#FF6BD6', '#FFE36B', '#6BFFD2', '#6B8BFF'],
   print: '#F3EEE2',
   shardBack: '#5A3B0E',

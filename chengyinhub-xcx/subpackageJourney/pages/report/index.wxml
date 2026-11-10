@@ -1,28 +1,23 @@
 <view class="theme-dark jn">
   <cy-nav-bar plain />
   <cy-page-title align="center" title="{{report && report.legacy ? '主题记录' : '本局战报'}}" />
-  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
+  <!-- r2-finish b3-p7-1-2/3(业主「居中 icon可以换一下」「居中 感觉…有点高」):状态屏在剩余高度里居中,图标按状态换 -->
+  <cy-empty wx:if="{{state === 'loading'}}" kind="loading" title="加载中" fill size="lg" />
+  <view class="jn-state" wx:elif="{{state !== 'ready'}}" aria-role="status" aria-live="polite" aria-label="{{stateTitle}}">
+    <view class="jn-state__ic" aria-hidden="true"><cy-icon name="{{stateIcon || 'info'}}" size="56" /></view>
+    <text class="jn-state__t">{{stateTitle}}</text>
+    <view class="jn-state__cta" wx:if="{{stateCta}}" bindtap="onStateCta" aria-role="button" aria-label="{{stateCta}}" hover-class="cy-pressed" hover-stay-time="80">{{stateCta}}</view>
+  </view>
   <block wx:else>
-    <!-- qx-u2 / ref 1：叠层战报卡。分数照 NRC 粗斜体大数字；不计分/未知按原文案弱化显示，不画成 0。 -->
-    <view class="ob-hero rp-hero">
-      <view class="ob-glow"></view>
-      <view class="ob-card rp-card ob-card--back2"></view>
-      <view class="ob-card rp-card ob-card--back1"></view>
-      <view class="ob-card rp-card ob-card--front">
-        <view class="rp-card__top"><text class="jn-pill rp-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text></view>
-        <view class="rp-score">
-          <text class="rp-score__n" wx:if="{{report.scored}}">{{report.scoreText}}</text>
-          <text class="rp-score__muted" wx:else>{{report.scoreText}}</text>
-          <text class="rp-score__l" wx:if="{{report.scored}}">解谜分</text>
-        </view>
-        <view class="rp-stats">
-          <view class="rp-stat"><text class="rp-stat__v {{report.nodesText === '未知' ? 'is-muted' : ''}}">{{report.nodesText}}</text><text class="rp-stat__l">完成节点</text></view>
-          <view class="rp-stat"><text class="rp-stat__v {{report.elapsedText === '未知' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="rp-stat__l">用时</text></view>
-        </view>
-      </view>
+    <!-- qx-s2 合并:qx-u2 的叠层战报卡(P7)与 r2-finish b3-p7 的三格分组卡改的是同一块;按「后一轮业主点名的改动优先」取 r2-finish,u2 的叠卡在本页退场(见 qx-s2/RESULT 待你决定) -->
+    <view class="jn-head">
+      <text class="jn-eyebrow" wx:if="{{eyebrow}}">{{eyebrow}}</text>
+      <text class="jn-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text>
     </view>
-    <view class="ob-copy">
-      <text class="ob-muted" wx:if="{{eyebrow}}">{{eyebrow}}</text>
+    <view class="jn-grid jn-grid--card">
+      <view class="jn-stat"><text class="jn-stat__v">{{report.nodesText}}</text><text class="jn-stat__l">完成节点</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.elapsedText === '未知' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="jn-stat__l">用时</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.scored ? '' : 'is-muted'}}">{{report.scoreText}}</text><text class="jn-stat__l">解谜分</text></view>
     </view>
 
     <view class="jn-sec">
@@ -62,6 +57,7 @@
     </view>
 
     <view class="jn-footer ob-footer" wx:if="{{report.finished}}">
+      <cy-btn class="jn-grow" variant="secondary" bindtap="openSettle">结算</cy-btn>
       <button class="jn-share" open-type="share" aria-label="分享本局"><cy-btn variant="primary">分享</cy-btn></button>
     </view>
     <view class="jn-footer" wx:elif="{{report.inProgress}}">
@@ -71,26 +67,8 @@
 
   <cy-sheet show="{{rankOpen}}" title="榜单" fixed="half" handle bind:close="closeRank">
     <view class="jn-sheet">
-      <view class="jn-tabbar">
-        <view class="jn-tabbar__scope"><cy-tabs variant="chip" tabs="{{rankTabs}}" active="{{rankScope}}" bind:change="onRankScope" /></view>
-        <view class="jn-tabbar__period" wx:if="{{rankScope !== 'team'}}"><cy-tabs variant="chip" tabs="{{[{key:'all',label:'累计'},{key:'week',label:'本周'}]}}" active="{{rankPeriod}}" bind:change="onRankPeriod" /></view>
-      </view>
-      <cy-skeleton wx:if="{{rankState === 'loading'}}" type="list" count="3" />
-      <cy-empty wx:elif="{{rankState === 'error'}}" kind="data" title="{{rankError}}" cta="重试" bind:cta="loadRank" size="sm" />
-      <cy-empty wx:elif="{{rankState === 'empty'}}" kind="empty" title="{{rankScope === 'team' ? '队内还没有名次' : '这张榜还没有人上榜'}}" size="sm" />
-      <view wx:elif="{{rankState === 'ready'}}" class="jn-group">
-        <view class="jn-row">
-          <view class="jn-row__t"><text class="jn-row__b">{{rank.basis}}</text><text class="jn-row__s" wx:if="{{rank.window}}">{{rank.window}}</text></view>
-          <text class="jn-row__v is-strong jn-me" wx:if="{{rankScope !== 'team'}}">{{rank.meText}}</text>
-        </view>
-        <view class="jn-row" wx:for="{{rank.entries}}" wx:key="key">
-          <text class="jn-rank {{item.rank && item.rank <= 3 ? 'is-top' : ''}}">{{item.rank || '—'}}</text>
-          <view class="jn-av"><image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
-          <view class="jn-row__t"><text class="jn-row__b {{item.mine ? 'jn-me' : ''}}">{{item.name}}</text></view>
-          <text class="jn-row__v">{{item.scoreText}}</text>
-        </view>
-        <text class="jn-note" wx:if="{{rank.unattributed}}">{{rank.unattributed}}</text>
-      </view>
+      <rank-board wx:if="{{rankOpen}}" topic-id="{{report.topicId}}" activity-id="{{report.activityId}}" team-id="{{teamId}}"
+        city-code="{{cityCode}}" country-code="{{countryCode}}" club-id="{{clubId}}" active="{{rankOpen}}" />
     </view>
   </cy-sheet>
 
@@ -99,15 +77,20 @@
       <cy-skeleton wx:if="{{memoryState === 'loading'}}" type="list" count="3" />
       <cy-empty wx:elif="{{memoryState === 'error'}}" kind="data" title="{{memoryError}}" cta="重试" bind:cta="loadMemory" size="sm" />
       <cy-empty wx:elif="{{memoryState === 'empty'}}" kind="empty" title="这一局还没有回忆" size="sm" />
+      <!-- r2-finish b3-p8(业主「UI需要优化一下」):本局回忆改成一条时间线 —— 换天写日期,每站一个点,照片跟在那一站下面 -->
       <block wx:elif="{{memoryState === 'ready'}}">
-        <scroll-view class="jn-photos-scroll" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{memory.photos.length}}">
-          <view class="jn-photos"><view class="jn-photo" wx:for="{{memory.photos}}" wx:key="key"><image src="{{item.pic}}" mode="aspectFill" /></view></view>
-        </scroll-view>
-        <view class="jn-group">
-          <view class="jn-row" wx:if="{{memory.participants}}"><view class="jn-row__t"><text class="jn-row__b">{{memory.participants}}</text></view></view>
-          <view class="jn-row" wx:for="{{memory.moments}}" wx:key="key">
-            <view class="jn-row__t"><text class="jn-row__b">{{item.name}}</text><text class="jn-row__s" wx:if="{{item.text}}">{{item.text}}</text></view>
-            <text class="jn-row__v">{{item.at}}</text>
+        <text class="jn-mem-who" wx:if="{{memory.participants}}">{{memory.participants}}</text>
+        <view class="jn-tl">
+          <view class="jn-tl__item" wx:for="{{memory.moments}}" wx:key="key">
+            <text class="jn-tl__day" wx:if="{{item.showDay}}">{{item.day}}</text>
+            <view class="jn-tl__row">
+              <view class="jn-tl__dot" aria-hidden="true"></view>
+              <view class="jn-tl__body">
+                <view class="jn-tl__head"><text class="jn-tl__name">{{item.name}}</text><text class="jn-tl__time">{{item.time}}</text></view>
+                <text class="jn-tl__text" wx:if="{{item.text}}">{{item.text}}</text>
+                <image class="jn-tl__pic" wx:if="{{item.pic}}" src="{{item.pic}}" mode="aspectFill" lazy-load />
+              </view>
+            </view>
           </view>
         </view>
       </block>

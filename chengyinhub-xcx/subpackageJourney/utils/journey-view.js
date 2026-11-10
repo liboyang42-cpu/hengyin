@@ -135,6 +135,7 @@ function rankView(data, requested) {
     entries,
     me,
     meText: me ? '第 ' + me.rank + ' 名' : '暂无名次',
+    hero: me ? rankHero(me.rank, isNum(coverage.rankedMembers) ? coverage.rankedMembers : null) : null,
     basis: data.scoreBasis === 'COMPLETED_NODES' ? '完成节点数' : '',
     window,
     unattributed: isNum(coverage.unattributedRuns) && coverage.unattributedRuns > 0
@@ -157,10 +158,12 @@ function teamRankView(data) {
     scoreText: isNum(m.doneTaskCount) ? String(m.doneTaskCount) : UNKNOWN,
     mine: m.mine === true
   });
+  const mineRanked = ranked.find(m => m.mine === true);
   return {
     entries: ranked.map(row).concat(unranked.map(row)),
     basis: data.rankBasis === 'COMPLETED_TASK_COUNT' ? '完成任务数' : '',
-    hasRank: ranked.length > 0
+    hasRank: ranked.length > 0,
+    hero: mineRanked ? rankHero(mineRanked.rank, ranked.length) : null
   };
 }
 
@@ -172,8 +175,12 @@ function memoryView(data) {
     name: m.name || '节点',
     text: m.fragmentText || '',
     pic: m.picUrl || '',
-    at: dateText(m.checkinTime, true)
+    at: dateText(m.checkinTime, true),
+    // r2-finish P8 时间线:日期只在换天时写一次,行内只写时刻
+    day: dateText(m.checkinTime),
+    time: (dateText(m.checkinTime, true).split(' ')[1] || '')
   }));
+  moments.forEach((m, i) => { m.showDay = !!m.day && (i === 0 || moments[i - 1].day !== m.day); });
   return {
     moments,
     photos: moments.filter(m => m.pic),
@@ -376,6 +383,62 @@ function factLine(facts) {
   return list(facts).filter(f => record(f) && f.v).map(f => (f.k ? f.k + ' ' : '') + f.v).join(' · ');
 }
 
+/* ——— r2-finish 榜单:本关先给少量口径(队内 / 全体 / 队伍),城市、国家、世界、俱乐部收进「更多」 ———
+ * 业主 b3-23-4-3「不用加那么多其实刚开始」;好友榜服务端没有作用域,不出页签(见 RESULT 待你决定)。 */
+function boardTabs(ctx) {
+  const c = record(ctx) ? ctx : {};
+  const all = rankScopes(c);
+  const primary = [];
+  const team = all.find(t => t.key === 'team');
+  const quest = all.find(t => t.key === 'quest');
+  if (team) primary.push({ key: 'team', label: '队内', scopeId: team.scopeId });
+  if (quest) primary.push({ key: 'quest', label: '全体', scopeId: quest.scopeId });
+  if (c.teamBoard === true) primary.push({ key: 'teams', label: '队伍', scopeId: '' });
+  const more = all.filter(t => t.key !== 'team' && t.key !== 'quest').map(t => ({ key: t.key, label: t.label + '榜', scopeId: t.scopeId }));
+  return { primary, more };
+}
+
+// 「前 N%」只在服务端给了上榜总人数时算;总数缺失或被截断就不写百分比。
+// 上榜不足 5 人时百分比没有意义(1 人上榜就是「前 100%」),不写。
+function topPercent(rank, total) {
+  if (!isNum(rank) || rank < 1 || !isNum(total) || total < 5 || rank > total) return '';
+  const pct = Math.max(1, Math.ceil(rank / total * 100));
+  return '前 ' + pct + '%';
+}
+
+// 名次大数字(月桂环):只用服务端名次;没有名次就不出大数字。
+function rankHero(rank, total) {
+  if (!isNum(rank) || rank < 1) return null;
+  return { rank, digits: String(rank).split(''), percent: topPercent(rank, total) };
+}
+
+const TEAM_BOARD_LIMIT = 200;
+// 队伍之间榜:GET /api/orient/team/ranking 的行(按在岗成员现算)。超过服务端上限时不算百分比。
+function teamBoardView(rows) {
+  const list0 = list(rows).filter(r => record(r) && isNum(r.rank));
+  const truncated = list0.length >= TEAM_BOARD_LIMIT;
+  const entries = list0.map(r => ({
+    key: 'team:' + r.teamId,
+    rank: r.rank,
+    name: r.title || '队伍',
+    initial: initial(r.title || '队'),
+    avatar: '',
+    scoreText: isNum(r.teamDoneCount) && isNum(r.totalTasks) ? r.teamDoneCount + '/' + r.totalTasks : (isNum(r.teamDoneCount) ? String(r.teamDoneCount) : UNKNOWN),
+    mine: r.mine === true,
+    active: isNum(r.activeCount) ? r.activeCount : null
+  }));
+  const mine = entries.find(e => e.mine) || null;
+  return {
+    entries,
+    basis: '全队完成任务',
+    hero: mine ? rankHero(mine.rank, truncated ? null : entries.length) : null,
+    stats: mine ? [
+      { key: 'done', label: '全队完成', value: mine.scoreText },
+      { key: 'active', label: '在岗队员', value: mine.active == null ? UNKNOWN : String(mine.active) }
+    ] : []
+  };
+}
+
 function newRequestId(prefix) {
   return String(prefix || 'journey') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
 }
@@ -384,5 +447,6 @@ module.exports = {
   isId, dateText, durationText,
   reportView, rankScopes, rankView, teamRankView, memoryView, choicesView, seatsView,
   landingKind, referralView, giftView, affiliateView, newRequestId, SEAT_ERROR_TEXT,
-  factLine
+  factLine,
+  boardTabs, topPercent, rankHero, teamBoardView
 };

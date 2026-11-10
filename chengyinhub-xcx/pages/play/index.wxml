@@ -439,7 +439,10 @@
 <!-- W-15 试玩末尾的结局卡:只在作者预览出现。默认看兜底那条,chip 切换看每个结局与它的触发条件。
      真实游玩的结局在完成页(finsheet__game-ending),由服务端按本局状态判定。 -->
 <view class="pv-ending {{previewEnding.in ? 'pv-ending--in' : ''}} {{previewEnding.off ? 'pv-ending--' + previewEnding.off : ''}} {{reducedMotion ? 'pv-ending--reduced' : ''}}" wx:if="{{previewEnding.show}}" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-5))">
+  <!-- r2-finish s0-b1-run-ending:真玩家通关结局先有庆祝 —— 金色印章落下 + 两圈光环 + 彩旗;整屏居中。减弱动态时静止落位。 -->
   <scroll-view scroll-y class="pv-ending__scroll" enhanced show-scrollbar="{{false}}">
+  <view class="pv-ending__body {{previewEnding.real ? 'pv-ending__body--real' : ''}}">
+  <view class="pv-ending__seal" wx:if="{{previewEnding.real}}" aria-hidden="true"><view class="pv-ending__ring"></view><view class="pv-ending__ring pv-ending__ring--2"></view><view class="pv-ending__tick"></view></view>
   <text class="pv-ending__k">{{previewEnding.real ? (previewEnding.archive.identity.length ? '这一生的结局' : '本局结局') : '本局结局 · 试玩'}}</text>
   <text class="pv-ending__title">{{previewEnding.list[previewEnding.idx].title}}</text>
   <text class="pv-ending__copy" wx:if="{{previewEnding.list[previewEnding.idx].summary}}">{{previewEnding.list[previewEnding.idx].summary}}</text>
@@ -470,7 +473,9 @@
     <text class="life-arc__walk" wx:if="{{previewEnding.archive.stations.length}}">走过 · {{previewEnding.archive.walkText}}</text>
   </view>
   <view class="pv-ending__go" wx:if="{{previewEnding.real}}" bindtap="continueLifeEnding" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
+  </view>
   </scroll-view>
+  <view class="pv-ending__confetti" wx:if="{{previewEnding.real}}"><cy-celebrate event-key="{{previewEnding.in ? 'run-ending' : ''}}" reduced-motion="{{reducedMotion}}" /></view>
 </view>
 <!-- 开场(原型 game-intro,2026-09-24):故事主题开局先看这一页;点「开始游戏」淡出,接开机与第一道开场门。
      9-22 删掉的是通用起始页(play-intro,带路线骨架),这一页只给故事主题,内容全来自主题本身。 -->
@@ -1296,6 +1301,12 @@
   <!-- 2026-10-28 业主定稿(claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结顺序 —— 地图 → 标题 → 大数字 → 成绩行 → 分组卡 → 一颗按钮 -->
   <!-- 第九轮 m2 第 3 项:路线分享卡(原型 m-card2)。有路线时代替上面的地图盒 -->
   <view class="finsheet__shade" wx:if="{{routeCard.on && !newLifeOS.show}}" style="height:{{chrome.contentTop}}px"></view><view class="finsheet__card" wx:if="{{routeCard.on && !newLifeOS.show}}" style="padding-top:var(--cy-space-2)">
+  <!-- r2-finish s0-b8-u08-01(业主「怎么感觉这么乱呢」):有路线卡时标题行提到最上,卡片在下;卡上已有距离/用时/站数,下面不再重复大数字 -->
+  <view class="finsheet__top">
+    <view class="finsheet__eyebrow" wx:if="{{finishDateLabel}}">{{finishDateLabel}}{{!(allDone || topicCompleted) && topicName ? ' · ' + topicName : ''}}</view>
+    <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
+    <view class="finsheet__result {{finishResult.win ? 'is-win' : ''}}" wx:if="{{finishResult.label}}">{{finishResult.label}}</view>
+  </view>
     <canvas type="2d" id="routecv" class="finsheet__routecv" aria-role="img" aria-label="路线卡"></canvas>
     <view class="finsheet__card-acts" wx:if="{{routeCard.ready}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="saveFinishCard">保存图片</cy-btn>
@@ -1311,7 +1322,7 @@
     <view class="os-map-label" wx:if="{{newLifeOS.show}}">3km 生活圈 · {{newLifeOS.mapAnchors.length}} 个地点</view>
     <view class="finsheet__map-error" wx:if="{{finishSnapError}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>
   </view>
-  <view class="finsheet__head">
+  <view class="finsheet__head" wx:if="{{!routeCard.on || newLifeOS.show}}">
     <view class="finsheet__eyebrow" wx:if="{{finishDateLabel}}">{{finishDateLabel}}{{!(allDone || topicCompleted) && topicName ? ' · ' + topicName : ''}}</view>
     <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
     <view class="finsheet__result {{finishResult.win ? 'is-win' : ''}}" wx:if="{{finishResult.label}}">{{finishResult.label}}</view>
@@ -1319,8 +1330,8 @@
   <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
   <view class="finsheet__grid" wx:if="{{mode!=2}}">
     <view class="fst fst--hero" wx:if="{{doneCount > 0}}"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
-    <view class="fst fst--s" wx:if="{{reviewElapsed}}"><text class="fst__v">{{reviewElapsed}}</text><text class="fst__l">用时</text></view>
-    <view class="fst fst--s" wx:if="{{reviewDistance}}"><text class="fst__v">{{reviewDistance}} km</text><text class="fst__l">距离</text></view>
+    <view class="fst fst--s fst--dup" wx:if="{{reviewElapsed}}"><text class="fst__v">{{reviewElapsed}}</text><text class="fst__l">用时</text></view>
+    <view class="fst fst--s fst--dup" wx:if="{{reviewDistance}}"><text class="fst__v">{{reviewDistance}} km</text><text class="fst__l">距离</text></view>
     <view class="fst fst--s" wx:if="{{finishPuzzleCount}}"><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">解谜分</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>
   </view>
   <view class="finsheet__game-ending" wx:if="{{gameModule.story.ending}}">
@@ -1463,6 +1474,10 @@
       <view><text>查看票价并购票</text><cy-icon name="arrow-right" size="24" /></view>
     </view>
   </view>
+  <!-- r2-finish:底部按钮固定在实底托盘上(内容不再从按钮下面露出来);整局走完时多一颗「查看结算」进结算流程(总览 → 排行榜 → 评价 → 分享) -->
+  <view class="finsheet__pad" wx:if="{{allDone && !isPreview && !isMock && topicId}}"></view>
+  <view class="finsheet__dock {{allDone && !isPreview && !isMock && topicId ? 'finsheet__dock--two' : ''}}"></view>
+  <view class="finsheet__settle" wx:if="{{allDone && !isPreview && !isMock && topicId}}" bindtap="openSettlement" aria-role="button" aria-label="查看结算" hover-class="cy-pressed" hover-stay-time="80">查看结算</view>
   <view class="finsheet__cta" bindtap="closeFinish" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
 </view>
 

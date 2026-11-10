@@ -1,5 +1,15 @@
-<view class="cf cf--{{mode}} {{out ? 'is-out' : ''}}" catchtouchmove="noop" bindtap="onTap" hover-class="cf-tap" hover-stay-time="80" aria-role="{{mode === 'gate' ? 'button' : 'dialog'}}" aria-label="{{mode === 'gate' ? info.title + '，轻点继续' : info.title}}">
+<view class="cf cf--{{mode}} {{out ? 'is-out' : ''}}" catchtouchmove="noop" bindtap="onTap" hover-class="cf-tap" hover-stay-time="80" aria-role="{{mode === 'gate' ? 'button' : 'dialog'}}" aria-label="{{mode === 'gate' ? (endCard ? endCard.kicker : info.title) + '，轻点继续' : info.title}}">
   <canvas type="2d" id="cf" class="cf__fx" aria-hidden="true"></canvas>
+  <!-- r2-finish 章节完成卡(Questo B1 结构):勾 → 第 N 章完成 → 用时 / 本章得分 → 下一站;停留后化成粒子 -->
+  <view class="cf__end {{endIn ? 'is-in' : ''}} {{endOut ? 'is-out' : ''}}" wx:if="{{endCard}}">
+    <view class="cf__badge" aria-hidden="true"><view class="cf__tick"></view></view>
+    <view class="cf__ek">{{endCard.kicker}}</view>
+    <view class="cf__et" wx:if="{{endCard.title}}">{{endCard.title}}</view>
+    <view class="cf__rows" wx:if="{{endCard.rows.length}}">
+      <view class="cf__row" wx:for="{{endCard.rows}}" wx:key="k"><text class="cf__rk">{{item.k}}</text><text class="cf__rv">{{item.v}}</text></view>
+    </view>
+    <view class="cf__next" catchtap="onTap" aria-role="button" aria-label="{{endCard.next ? '下一站:' + endCard.next : '继续'}}" hover-class="cf-pressed" hover-stay-time="80">{{endCard.next ? '下一站：' + endCard.next : '继续'}}</view>
+  </view>
   <view class="cf__copy {{quiet ? 'is-quiet' : ''}}" wx:if="{{copy}}" aria-hidden="true">
     <view class="cf__k"><text wx:for="{{copy.k}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
     <view class="cf__t"><text wx:for="{{copy.t}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
@@ -11,7 +21,7 @@
       </view>
     </view>
   </view>
-  <view class="cf__hint" wx:if="{{mode === 'gate'}}">轻点跳过</view>
+  <view class="cf__hint" wx:if="{{mode === 'gate' && !endCard}}">轻点跳过</view>
   <view class="cf__btns {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'finale'}}">
     <view class="cf__pill cf__pill--s" catchtap="onClose" aria-role="button" aria-label="继续" hover-class="cf-pressed" hover-stay-time="80">继续</view>
     <view class="cf__pill cf__pill--p" catchtap="onSave" aria-role="button" aria-label="保存通关卡" hover-class="cf-pressed" hover-stay-time="80">保存通关卡</view>

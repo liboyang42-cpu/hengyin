@@ -4279,7 +4279,7 @@ Page({
     const cards = (this.data.chapterCards || []).filter(card => !card.opening);
     const index = cards.findIndex(card => String(card.id) === String(chapter.id));
     this._pendingChapterGateKey = key;
-    const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description) }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
+    const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description), elapsed: this._gateElapsed() }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
     const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:先停在「等待放行」屏,放行后才放翻转门
     this.setData({ chapterGate: Object.assign({ show: true, held, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
       total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' }, flip) });
@@ -4288,7 +4288,7 @@ Page({
     if (held) return;   // 放行由带领轮询解开(见 loadTeamProgress),不靠计时自己进正文
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 7800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
+    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 10800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
   },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
@@ -4321,7 +4321,7 @@ Page({
     clearTimeout(this._gateTimer);
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, this.data.chapterGate.endInfo ? 7800 : 4200);
+    }, this.data.chapterGate.endInfo ? 10800 : 4200);
   },
   /** P-08:带领轮询每读到一次进度就对一次 —— 门前(或「返回地图」去了地图上)正在等的那一章放行了就接着进。 */
   _syncChapterHold() {
@@ -9446,6 +9446,23 @@ Page({
   closeFinale() { this.setData({ 'finale.show': false }); },
   saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },
   // qx-b3 P7:战报读同一局(runId=本局路线会话),战报页只读,不补完局不发奖。
+  // r2-finish 章节完成卡的「用时」:本局跑表到此刻;读不到就不出这一行(不写 0)。
+  _gateElapsed() {
+    const sec = typeof this._runElapsedSeconds === 'function' ? this._runElapsedSeconds() : 0;
+    return sec > 0 ? formatElapsed(sec) : '';
+  },
+  // r2-finish 结算流程(总览 → 排行榜 → 评价 → 分享):只在整局走完的真实局出入口;同一套 runId 口径。
+  openSettlement() {
+    if (this.data.isPreview || this.data.isMock || !this.data.allDone) return;
+    const q = [];
+    if (this.data.activityId) q.push('activityId=' + this.data.activityId);
+    if (this.data.topicId) q.push('topicId=' + this.data.topicId);
+    const runId = String((this._routeState || {}).sessionId || '');
+    if (/^[1-9]\d*$/.test(runId)) q.push('runId=' + runId);
+    if (this.data.topicName) q.push('topicName=' + encodeURIComponent(this.data.topicName));
+    if (!q.length) return;
+    wx.navigateTo({ url: '/subpackageJourney/pages/settle/index?' + q.join('&') });
+  },
   openRunReport() {
     if (this.data.isPreview || this.data.isMock) return;
     const q = [];
