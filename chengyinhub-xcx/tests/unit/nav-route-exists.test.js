@@ -193,6 +193,8 @@ const ORPHAN_EXEMPT = new Map([
   ['/pages/merchant/profile/index', '旧商家主页路由壳'],
   // 2026-11-09 qx-b5 §17.2:礼品领取页只从买家分享的领取链接进入(领取码一次性下发),站内不应有入口
   ['/subpackageMember/market/gift/index', '礼品领取深链页，只从购买成功后分享的领取链接进入'],
+  // 2026-11-10 staging 合流(qx-b3 P5/P7):战报分享与席位邀请的落地页,只从 report/seats 页 onShareAppMessage 生成的分享链接(k=r / k=s)进入
+  ['/subpackageJourney/pages/landing/index', '分享落地深链页，只从战报分享(k=r)与席位邀请(k=s)的分享链接进入'],
   ['/pages/publish/topicadd/topicadd', '旧发布路由壳,2026-10 到期删(见 topicadd.js:19)'],
   // 2026-10-22 owner:创建节点玩法去掉「起名字」一步,引导页直接进编辑器;app.json 注册由 C00 撤(CY-HANDOFF #508)
   ['/pages/publish/templateadd/templateadd', '起名页已退役,待 C00 从 app.json 撤注册后删页'],
