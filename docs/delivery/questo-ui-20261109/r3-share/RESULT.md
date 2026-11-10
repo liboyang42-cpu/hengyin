@@ -22,7 +22,7 @@
 ## 门禁
 
 - 单测通过：`r3-share-cards`（新增 4 例）、`qx-a7-share-tint`、`round9-m2b`、`r2-finish-settlement`、`round9-m1-address-share-profile`、`uiux-player-state-adoption-contract`、`topic-share-card-contract`、`roam-session-share-card`。
-- 按文件名挑了一批相关单测（share / settle / journey / asset / action-ledger / title 等，共 682 例）一起跑，有 5 例失败，都在 `action-ledger.test.js` 和 `title-system-owner-contract.test.js`。在 r2-finish 基线工作树上对比这两个文件的结果见下方「基线对比」。
+- 按文件名挑了一批相关单测（share / settle / journey / asset / action-ledger / title 等，共 682 例）一起跑，有 5 例失败，都在 `action-ledger.test.js` 和 `title-system-owner-contract.test.js`，基线上同样失败（见下方「基线对比」），不是本 lane 带来的。
 - 动作台账：用 `build-action-ledger.js --write` 重建，共 5893 条，和基线条数相同。
 - UI 门禁：`node tests/lint/ui-integrity.js` 输出 `UI-GATE-0:PASS`。中途报过 3 个零消费字段（date / when / stops），已在代码里删掉，没有加基线。
 - 主包体积：`mainpkg-size-report.js` 显示本分支 3,244,091 字节，约 2005.4 KiB（< 2048）；基线 3,233,159 字节，约 1998.6 KiB。多出的 10.9 KB 来自路线插画和折行工具（插画已降到半分辨率）。
@@ -30,7 +30,15 @@
 
 ### 基线对比
 
-（见下方补充）
+在 r2-finish 基线（`0073a0b4`）的干净工作树上跑同样两个文件：`action-ledger.test.js` + `title-system-owner-contract.test.js` 共 **6 例失败**，名字如下：
+- R30 章节视频真机门
+- 真实点击与组件事件分母
+- 合并后可达动作 variant
+- release 前重建 inventory
+- 标题盘点
+- myinvite 负控
+
+本分支是 **5 例失败**，就是上面这 6 例里的 5 例（「release 前重建 inventory」这例在本分支通过，因为台账已用工具重建）。也就是说，这些失败是基线本来就有的，本 lane 没有带来新的失败。按 brief，这些不在本 lane 范围内，没有去修；它们和榜单 / 标题盘点等其他 lane 的文件有关。
 
 ## rig
 
