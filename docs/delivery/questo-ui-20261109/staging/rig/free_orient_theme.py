@@ -83,20 +83,46 @@ def main():
     if not tpl_id:
         die("模板未建出", tpl)
     review_pending(atok, tpl_id, "%TEMPLATE%")
+    readback("template", "SELECT id,member_id,status,draft_status,publish_status FROM cms_member_template WHERE id=%s", (tpl_id,))
+    # classic text question (vm=1, the screen that loads the UG-05 hint ladder) with the ladder at the config root
+    qa_title = "人民广场的地铁站共有几条线路换乘？"
+    qa_cfg = {"schemaVersion": 1,
+              "hintFreeUsesPerRun": 1,
+              "hintLadder": [{"level": 1, "type": "TEXT", "payload": "看站厅里的线路图"},
+                             {"level": 2, "type": "LETTER", "cost": {"points": 30}},
+                             {"level": 3, "type": "ANSWER", "cost": {"points": 30}},
+                             {"level": 4, "type": "SKIP"}]}
+    qa = http("POST", "/api/template/publish", token=ptok, json_body={
+        "title": "rig 站台问答 %s" % stamp, "validationMethod": 1, "questionName": qa_title,
+        "questionAnswer": "3", "advancedConfigJson": json.dumps(qa_cfg, ensure_ascii=False),
+        "requestId": "rig-tpl-qa-%s" % stamp})
+    show("template/publish (QA+hintLadder)", json.dumps(qa, ensure_ascii=False)[:240])
+    qa_id = qa.get("data") if isinstance(qa.get("data"), int) else (qa.get("data") or {}).get("id")
+    if not qa_id:
+        die("问答模板未建出", qa)
+    review_pending(atok, qa_id, "%TEMPLATE%")
+    readback("qa template", "SELECT id,status,publish_status FROM cms_member_template WHERE id=%s", (qa_id,))
 
     step("1-2 建期：自营城市定向（productType=1），两站有序，零价")
     stations = [("人民广场站", 121.4737, 31.2304), ("南京东路站", 121.4840, 31.2380)]
+    # one chapter, two ordered stations: the arrival note (§27.3) renders after station 1 inside the same chapter
     chapters = [{
-        "name": "第%d站 %s" % (i + 1, n), "description": "到达%s后完成一次打卡" % n,
+        "name": "第1章 人民广场到南京东路", "description": "两站有序，先到人民广场",
         "schemaVersion": 1, "required": 1, "recruitEnabled": 0,
-        "blocks": [{"type": "text", "content": "到达%s后完成一次打卡" % n}, {"type": "node", "nodeIndex": 0}],
-        "nodes": [{"name": n, "address": "上海市黄浦区%s" % n, "longitude": "%.6f" % lng,
-                   "latitude": "%.6f" % lat, "nodeTime": 20, "templateId": tpl_id}],
-    } for i, (n, lng, lat) in enumerate(stations)]
+        "blocks": [{"type": "text", "content": "从人民广场出发，先到第一站。"}, {"type": "divider"},
+                   {"type": "text", "content": "沿着人流走，留意站名。"}, {"type": "node", "nodeIndex": 0},
+                   {"type": "text", "content": "再往东走，去南京东路。"}, {"type": "node", "nodeIndex": 1}],
+        "nodes": [{"name": n, "address": "上海市黄浦区%s" % n, "longitude": "%.6f" % lng, "clientNodeKey": "st%d" % (k + 1),
+                   "latitude": "%.6f" % lat, "nodeTime": 20, "sortID": k + 1,
+                   "templateId": tpl_id if k == 0 else qa_id} for k, (n, lng, lat) in enumerate(stations)],
+    }]
+    theme = {"schemaVersion": 1, "currentScene": "s1", "scenes": [{"id": "s1", "name": "第一幕", "nodeArrivals": {
+        "client:st1": {"arrivalReading": {"level": 2, "log": "广场的鸽子一齐飞起"}},
+        "client:st2": {"arrivalReading": {"level": 1, "log": "霓虹灯一盏盏亮了"}}}}]}
     dto = {"name": name, "subtitle": "rig", "description": "rig 免费城市定向样板",
            "startDate": d(-1), "endDate": d(60), "saleEndAt": d(45), "categoryIds": "1",
            "productType": 1, "publishMode": "normal", "clubId": CLUB_ID,
-           "chapters": chapters, "tickets": [],
+           "chapters": chapters, "tickets": [], "themeRuntimeConfig": json.dumps(theme, ensure_ascii=False),
            "imgUrl": seed_approved_cover(ex, q, PUBLISHER_MEMBER)}
     r = http("POST", "/api/topic/v2/create", token=ptok, json_body=dto)
     show("POST /api/topic/v2/create", json.dumps(r, ensure_ascii=False)[:240])

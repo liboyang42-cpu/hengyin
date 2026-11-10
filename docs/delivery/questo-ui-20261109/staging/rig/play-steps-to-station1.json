@@ -1,0 +1,1 @@
+[{"wait":1500},{"open":"pages/play/index?topicId=990025"},{"wait":4000},{"tryTap":["开启定位",{"nth":1}]},{"wait":2000},{"tap":"开始游戏"},{"wait":4000},{"scroll":800},{"wait":2000},{"tryTap":"继续探索"},{"wait":2500},{"tryTap":"继续探索"},{"wait":2500}]

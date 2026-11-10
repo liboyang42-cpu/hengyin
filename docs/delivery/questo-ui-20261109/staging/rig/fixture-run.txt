@@ -3,15 +3,19 @@
    publisher/identity                 {"msg": "操作成功", "code": 200, "data": {"registered": true}, "_status": 200}
 
 ──────── 步骤 2:1a 节点玩法模板：到站打卡（POST /api/template/publish，validationMethod=0）
-   template/publish                   {"msg": "操作成功", "code": 200, "data": 6009, "writeReceipt": {"operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-1110000011", "state": "COMPLETED"}, "_status": 200}
-   review 7(TEMPLATE) v0              审核处理成功
+   template/publish                   {"msg": "操作成功", "code": 200, "data": 6022, "writeReceipt": {"operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-1110002944", "state": "COMPLETED"}, "_status": 200}
+   review 27(TEMPLATE) v0             审核处理成功
+   [库回读] template                 ((6022, 9003, 1, 1, 1),)
+   template/publish (QA+hintLadder)   {"msg": "操作成功", "code": 200, "data": 6023, "writeReceipt": {"operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-qa-1110002944", "state": "COMPLETED"}, "_status": 200}
+   review 28(TEMPLATE) v0             审核处理成功
+   [库回读] qa template              ((6023, 1, 1),)
 
 ──────── 步骤 3:1-2 建期：自营城市定向（productType=1），两站有序，零价
-   POST /api/topic/v2/create          {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990018, "auditTaskId": 8, "reviewState": "PENDING", "bundledTemplateIds": [6009], "published": true, "commercialAwaitingReview": false, "commercialNextStep": null, "reviewPassed": false, "c
-   [库回读] topic                    ((990018, 1, 0, 1, 1, 0, None),)
+   POST /api/topic/v2/create          {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990025, "auditTaskId": 29, "reviewState": "PENDING", "bundledTemplateIds": [6022, 6023], "published": true, "commercialAwaitingReview": false, "commercialNextStep": null, "reviewPassed": fa
+   [库回读] topic                    ((990025, 1, 0, 1, 1, 0, None),)
 
 ──────── 步骤 4:3 内容审核（若有待审任务）
-   review 8(TOPIC) v0                 审核处理成功
+   review 29(TOPIC) v0                审核处理成功
    [库回读] status/user_status/lifecycle ((1, 1, 0),)
 
 ──────── 步骤 5:4 SQL 夹具：零价自玩通行证开关（无写口能存 ¥0 自玩）
@@ -19,12 +23,12 @@
 
 ──────── 步骤 6:5-8 玩家：同意 → 参与人 → 报价 → 领取零价通行证
    consents                           操作成功
-   address                            {"msg": "操作成功", "code": 200, "data": {"createBy": null, "createTime": "2026-11-10 08:00:13", "updateBy": null, "updateTime": null, "remark": null, "id": 13, "me
-   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 0.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "ef35a5f04eb8e067d1fa0ba1ccb45472", "memberDiscountYuan": 0.0, "clubMember": false, "prioritySignupEnabled
-   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 76, "registrationNo": "T20261110EF0985C2", "payableAmount": 0.0, "expireTime": "2026-11-10T08:30:13.408+08:00", "expiresAt": "2027-01-10T00:00:00.000+08:00", "paymentType": 0, "regis
-   [库回读] pass                     ((76, 2, 2, 2, datetime.datetime(2027, 1, 10, 0, 0)),)
+   address                            {"msg": "操作成功", "code": 200, "data": {"createBy": null, "createTime": "2026-11-10 08:29:45", "updateBy": null, "updateTime": null, "remark": null, "id": 20, "me
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 0.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "31a3b8c50e792b5763f01f9ce60b5539", "memberDiscountYuan": 0.0, "clubMember": false, "prioritySignupEnabled
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 83, "registrationNo": "T20261110A35C73AA", "payableAmount": 0.0, "expireTime": "2026-11-10T08:59:45.295+08:00", "expiresAt": "2027-01-10T00:00:00.000+08:00", "paymentType": 0, "regis
+   [库回读] pass                     ((83, 2, 2, 2, datetime.datetime(2027, 1, 10, 0, 0)),)
 
 ──────── 步骤 7:9 玩家进入游玩：GET /api/play/nodes
-   play/nodes                         {"msg": "操作成功", "code": 200, "data": {"topicId": 990018, "topicDesc": "rig 免费城市定向样板", "topicName": "城市定向样板 1110000011", "topicCover": "https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109628813&OSSAccessKeyId=rig-dummy&Signature=<redacted>", "topicAudioUrl": null,
+   play/nodes                         {"msg": "操作成功", "code": 200, "data": {"topicId": 990025, "topicDesc": "rig 免费城市定向样板", "topicName": "城市定向样板 1110002944", "topicCover": "https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109630589&OSSAccessKeyId=rig-dummy&Signature=<redacted>", "topicAudioUrl": n
 
-TOPIC_ID=990018
+TOPIC_ID=990025
