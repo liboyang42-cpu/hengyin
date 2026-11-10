@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5995,
+  "controlCount": 5997,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -66235,6 +66235,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -66493,6 +66527,40 @@
             {
               "selector": "cy-btn",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
             }
           ]
         },
@@ -312627,6 +312695,8 @@
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/report/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/coupon-wallet/index",
         "subpackageMember/order/order",
         "subpackageMember/orderinfo/orderinfo",
@@ -312889,6 +312959,32 @@
           "segments": [
             {
               "selector": "cy-report-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
               "index": 0
             },
             {
@@ -313101,6 +313197,8 @@
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/report/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/coupon-wallet/index",
         "subpackageMember/order/order",
         "subpackageMember/orderinfo/orderinfo",
@@ -313363,6 +313461,32 @@
           "segments": [
             {
               "selector": "cy-report-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
               "index": 0
             },
             {
@@ -313575,6 +313699,8 @@
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/report/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/coupon-wallet/index",
         "subpackageMember/order/order",
         "subpackageMember/orderinfo/orderinfo",
@@ -313837,6 +313963,32 @@
           "segments": [
             {
               "selector": "cy-report-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
               "index": 0
             },
             {
@@ -314049,6 +314201,8 @@
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/report/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/coupon-wallet/index",
         "subpackageMember/order/order",
         "subpackageMember/orderinfo/orderinfo",
@@ -314311,6 +314465,32 @@
           "segments": [
             {
               "selector": "cy-report-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
               "index": 0
             },
             {
@@ -438878,7 +439058,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:95"
+        "staticSource": "components/cy/share-card/index.js:100"
       }
     },
     {
@@ -439051,7 +439231,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:148"
+        "staticSource": "components/cy/share-card/index.js:153"
       }
     },
     {
@@ -439246,7 +439426,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:160"
+        "staticSource": "components/cy/share-card/index.js:165"
       }
     },
     {
@@ -439420,7 +439600,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:146"
+        "staticSource": "components/cy/share-card/index.js:151"
       }
     },
     {
@@ -439542,6 +439722,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -469484,6 +469665,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -469522,6 +469737,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -480646,6 +480895,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -510588,6 +510838,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -510626,6 +510910,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -521750,6 +522068,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -551692,6 +552011,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -551730,6 +552083,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -562854,6 +563241,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -592796,6 +593184,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -592834,6 +593256,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -603958,6 +604414,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -633900,6 +634357,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -633938,6 +634429,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -645062,6 +645587,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -675004,6 +675530,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -675042,6 +675602,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -686166,6 +686760,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -716108,6 +716703,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -716146,6 +716775,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -727270,6 +727933,7 @@
         "subpackageB/pages/im/list/index",
         "subpackageJourney/pages/report/index",
         "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
         "subpackageMember/appeal-mine/index",
         "subpackageMember/character/index",
         "subpackageMember/complaint/index",
@@ -757212,6 +757876,40 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
@@ -757250,6 +757948,40 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            },
+            {
+              "selector": "cy-option-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -880365,7 +881097,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:183"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:207"
       }
     },
     {
@@ -880509,7 +881241,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:738"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:764"
       }
     },
     {
@@ -880576,7 +881308,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:179"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:202"
       }
     },
     {
@@ -880643,7 +881375,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:161"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:173"
       }
     },
     {
@@ -880710,7 +881442,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:179"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:202"
       }
     },
     {
@@ -880777,7 +881509,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:169"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:192"
       }
     },
     {
@@ -880845,7 +881577,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:165"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
       }
     },
     {
@@ -880912,7 +881644,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:157"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:169"
       }
     },
     {
@@ -880979,7 +881711,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:360"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:386"
       }
     },
     {
@@ -881046,7 +881778,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:356"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:382"
       }
     },
     {
@@ -881113,7 +881845,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:363"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:389"
       }
     },
     {
@@ -881180,7 +881912,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:423"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:449"
       }
     },
     {
@@ -881247,7 +881979,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:420"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:446"
       }
     },
     {
@@ -881314,7 +882046,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:420"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:446"
       }
     },
     {
@@ -881458,7 +882190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:430"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:456"
       }
     },
     {
@@ -881525,7 +882257,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:389"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:415"
       }
     },
     {
@@ -881669,7 +882401,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:392"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:418"
       }
     },
     {
@@ -881736,7 +882468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:490"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:516"
       }
     },
     {
@@ -881807,7 +882539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:493"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:519"
       }
     },
     {
@@ -881874,7 +882606,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:490"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:516"
       }
     },
     {
@@ -881941,7 +882673,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:784"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:810"
       }
     },
     {
@@ -882008,7 +882740,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:921"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:947"
       }
     },
     {
@@ -882118,7 +882850,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:833"
       }
     },
     {
@@ -882195,7 +882927,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1171"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1197"
       }
     },
     {
@@ -882262,7 +882994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1133"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1159"
       }
     },
     {
@@ -882382,7 +883114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1095"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1121"
       }
     },
     {
@@ -882449,7 +883181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1065"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1091"
       }
     },
     {
@@ -882516,7 +883248,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1056"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1082"
       }
     },
     {
@@ -882583,7 +883315,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1056"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1082"
       }
     },
     {
@@ -882691,7 +883423,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:998"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1024"
       }
     },
     {
@@ -882768,7 +883500,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1171"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1197"
       }
     },
     {
@@ -882835,7 +883567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1133"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1159"
       }
     },
     {
@@ -882994,7 +883726,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1214"
       }
     },
     {
@@ -883104,7 +883836,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:833"
       }
     },
     {
@@ -883657,7 +884389,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:860"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:886"
       }
     },
     {
@@ -883767,7 +884499,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:845"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:871"
       }
     },
     {
@@ -883877,7 +884609,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:833"
       }
     },
     {
@@ -883957,7 +884689,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:1047"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:1073"
       }
     },
     {
@@ -884067,7 +884799,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:807"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:833"
       }
     },
     {
@@ -884134,7 +884866,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:143"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:155"
       }
     },
     {
@@ -884216,7 +884948,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:582"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:608"
       }
     },
     {
@@ -884283,7 +885015,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:352"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:378"
       }
     },
     {
@@ -884351,7 +885083,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -884419,7 +885151,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -884487,7 +885219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -884555,7 +885287,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -884623,7 +885355,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -884694,7 +885426,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:465"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:491"
       }
     },
     {
@@ -884762,7 +885494,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -884830,7 +885562,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/decor/ai-npc/index.js:188"
+        "staticSource": "pages/merchant/decor/ai-npc/index.js:212"
       }
     },
     {
@@ -1223974,7 +1224706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:108"
+        "staticSource": "pages/team/detail/index.js:109"
       }
     },
     {
@@ -1224043,7 +1224775,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:520"
+        "staticSource": "pages/team/detail/index.js:522"
       }
     },
     {
@@ -1224127,7 +1224859,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:109"
+        "staticSource": "pages/team/detail/index.js:110"
       }
     },
     {
@@ -1224260,7 +1224992,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:420"
+        "staticSource": "pages/team/detail/index.js:422"
       }
     },
     {
@@ -1224393,7 +1225125,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:420"
+        "staticSource": "pages/team/detail/index.js:422"
       }
     },
     {
@@ -1224462,7 +1225194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:511"
+        "staticSource": "pages/team/detail/index.js:513"
       }
     },
     {
@@ -1224531,7 +1225263,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:526"
+        "staticSource": "pages/team/detail/index.js:528"
       }
     },
     {
@@ -1224598,7 +1225330,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:148"
+        "staticSource": "pages/team/detail/index.js:149"
       }
     },
     {
@@ -1224665,7 +1225397,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:477"
+        "staticSource": "pages/team/detail/index.js:479"
       }
     },
     {
@@ -1224732,7 +1225464,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:63"
+        "staticSource": "pages/team/detail/index.js:64"
       }
     },
     {
@@ -1224885,7 +1225617,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:535"
+        "staticSource": "pages/team/detail/index.js:537"
       }
     },
     {
@@ -1225039,7 +1225771,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:536"
+        "staticSource": "pages/team/detail/index.js:538"
       }
     },
     {
@@ -1225183,7 +1225915,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:372"
+        "staticSource": "pages/team/detail/index.js:374"
       }
     },
     {
@@ -1225251,7 +1225983,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:540"
+        "staticSource": "pages/team/detail/index.js:542"
       }
     },
     {
@@ -1225405,7 +1226137,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:537"
+        "staticSource": "pages/team/detail/index.js:539"
       }
     },
     {
@@ -1225472,7 +1226204,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:149"
+        "staticSource": "pages/team/detail/index.js:150"
       }
     },
     {
@@ -1225539,7 +1226271,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:499"
+        "staticSource": "pages/team/detail/index.js:501"
       }
     },
     {
@@ -1225616,7 +1226348,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:503"
+        "staticSource": "pages/team/detail/index.js:505"
       }
     },
     {
@@ -1225751,7 +1226483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:425"
+        "staticSource": "pages/team/detail/index.js:427"
       }
     },
     {
@@ -1225818,7 +1226550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:465"
+        "staticSource": "pages/team/detail/index.js:467"
       }
     },
     {
@@ -1225900,7 +1226632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:488"
+        "staticSource": "pages/team/detail/index.js:490"
       }
     },
     {
@@ -1225970,7 +1226702,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:479"
+        "staticSource": "pages/team/detail/index.js:481"
       }
     },
     {
@@ -1226114,7 +1226846,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:438"
+        "staticSource": "pages/team/detail/index.js:440"
       }
     },
     {
@@ -1226247,7 +1226979,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:365"
+        "staticSource": "pages/team/detail/index.js:367"
       }
     },
     {
@@ -1226316,7 +1227048,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:367"
+        "staticSource": "pages/team/detail/index.js:369"
       }
     },
     {
@@ -1226397,7 +1227129,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:107"
+        "staticSource": "pages/team/detail/index.js:108"
       }
     },
     {
@@ -1226541,7 +1227273,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:366"
+        "staticSource": "pages/team/detail/index.js:368"
       }
     },
     {
@@ -1226652,7 +1227384,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:178"
+        "staticSource": "pages/team/join/index.js:180"
       }
     },
     {
@@ -1226719,7 +1227451,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:186"
+        "staticSource": "pages/team/join/index.js:188"
       }
     },
     {
@@ -1226837,7 +1227569,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:187"
+        "staticSource": "pages/team/join/index.js:189"
       }
     },
     {
@@ -1226908,7 +1227640,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:213"
+        "staticSource": "pages/team/join/index.js:215"
       }
     },
     {
@@ -1226978,7 +1227710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:206"
+        "staticSource": "pages/team/join/index.js:208"
       }
     },
     {
@@ -1227096,7 +1227828,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:197"
+        "staticSource": "pages/team/join/index.js:199"
       }
     },
     {
@@ -1227177,7 +1227909,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:68"
+        "staticSource": "pages/team/join/index.js:69"
       }
     },
     {
@@ -1227258,7 +1227990,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:69"
+        "staticSource": "pages/team/join/index.js:70"
       }
     },
     {
@@ -1227342,7 +1228074,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:70"
+        "staticSource": "pages/team/join/index.js:71"
       }
     },
     {
@@ -1284899,8 +1285631,186 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "state",
       "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/components/rank-board/index.js:80"
+      }
+    },
+    {
+      "id": "subpackageJourney/components/rank-board/index.wxml:49:bind:cancel:onMoreCancel:5",
+      "route": "component:subpackageJourney/components/rank-board/index",
+      "hostRoutes": [
+        "subpackageJourney/pages/report/index",
+        "subpackageJourney/pages/settle/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageJourney/components/rank-board/index.wxml",
+        "js": "subpackageJourney/components/rank-board/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-option-sheet",
+        "event": "bind:cancel",
+        "handler": "onMoreCancel",
+        "line": 49,
+        "selectorHint": "cy-option-sheet[bind:cancel]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/components/rank-board/index.js:92"
+      }
+    },
+    {
+      "id": "subpackageJourney/components/rank-board/index.wxml:49:bind:select:onMoreSelect:4",
+      "route": "component:subpackageJourney/components/rank-board/index",
+      "hostRoutes": [
+        "subpackageJourney/pages/report/index",
+        "subpackageJourney/pages/settle/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "rank-board",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageJourney/components/rank-board/index.wxml",
+        "js": "subpackageJourney/components/rank-board/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-option-sheet",
+        "event": "bind:select",
+        "handler": "onMoreSelect",
+        "line": 49,
+        "selectorHint": "cy-option-sheet[bind:select]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
       "baseActionClass": "write",
       "effectClasses": [
         "write",
@@ -1285060,7 +1285970,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/components/rank-board/index.js:80"
+        "staticSource": "subpackageJourney/components/rank-board/index.js:85"
       }
     },
     {
@@ -1285137,7 +1286047,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:100"
+        "staticSource": "subpackageJourney/pages/landing/index.js:124"
       }
     },
     {
@@ -1285340,7 +1286250,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:60"
+        "staticSource": "subpackageJourney/pages/landing/index.js:78"
       }
     },
     {
@@ -1285548,7 +1286458,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:108"
+        "staticSource": "subpackageJourney/pages/landing/index.js:132"
       }
     },
     {
@@ -1285618,7 +1286528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:63"
+        "staticSource": "subpackageJourney/pages/landing/index.js:81"
       }
     },
     {
@@ -1288306,7 +1289216,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:158"
+        "staticSource": "subpackageJourney/pages/settle/index.js:163"
       }
     },
     {
@@ -1288373,7 +1289283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:205"
+        "staticSource": "subpackageJourney/pages/settle/index.js:210"
       }
     },
     {
@@ -1288643,7 +1289553,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:124"
+        "staticSource": "subpackageJourney/pages/settle/index.js:129"
       }
     },
     {
@@ -1288710,7 +1289620,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:129"
+        "staticSource": "subpackageJourney/pages/settle/index.js:134"
       }
     },
     {
@@ -1288777,7 +1289687,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:134"
+        "staticSource": "subpackageJourney/pages/settle/index.js:139"
       }
     },
     {
@@ -1288830,7 +1289740,9 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "subpackageMember/signup/index"
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
@@ -1288913,7 +1289825,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:161"
+        "staticSource": "subpackageJourney/pages/settle/index.js:166"
       }
     },
     {
@@ -1288980,7 +1289892,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:121"
+        "staticSource": "subpackageJourney/pages/settle/index.js:126"
       }
     },
     {
@@ -1289032,7 +1289944,9 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "subpackageMember/signup/index"
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
@@ -1289318,7 +1290232,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:141"
+        "staticSource": "subpackageJourney/pages/settle/index.js:146"
       }
     },
     {
@@ -1289385,7 +1290299,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:135"
+        "staticSource": "subpackageJourney/pages/settle/index.js:140"
       }
     },
     {
@@ -1289437,7 +1290351,9 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "subpackageMember/signup/index"
+        ],
         "apis": [],
         "primaryApis": [],
         "auxiliaryApis": [],
@@ -1348572,7 +1349488,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/gift/index.js:18"
+        "staticSource": "subpackageMember/market/gift/index.js:23"
       }
     },
     {
@@ -1348643,7 +1349559,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/gift/index.js:37"
+        "staticSource": "subpackageMember/market/gift/index.js:42"
       }
     },
     {
@@ -1348713,7 +1349629,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/gift/index.js:44"
+        "staticSource": "subpackageMember/market/gift/index.js:49"
       }
     },
     {

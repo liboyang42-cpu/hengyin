@@ -3,7 +3,7 @@
      数字全部读战报;没有的格子不出。插图用 cy-illus(qx-base 底座的空态同款插图集,分包逐字副本)。 -->
 <wxs module="cnt" src="../../../utils/wxs/count.wxs" />
 <view class="theme-dark st {{reduced ? 'st--reduced' : ''}}">
-  <cy-nav-bar plain custom-back bind:back="onBack" />
+  <cy-nav-bar plain title="结算" custom-back bind:back="onBack" />
   <cy-nav-spacer />
   <view class="st-dots" wx:if="{{state === 'ready'}}" aria-label="第 {{stepIndex + 1}} 步，共 4 步">
     <view class="st-dot {{index <= stepIndex ? 'is-on' : ''}}" wx:for="{{steps}}" wx:key="*this"></view>

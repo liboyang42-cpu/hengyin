@@ -115,9 +115,14 @@ Page({
   // 导航返回:流程内退一步;第一步退出页面。
   onBack() {
     if (this.data.stepIndex > 0) { this._go(STEPS[this.data.stepIndex - 1]); return; }
-    wx.navigateBack({ delta: 1 });
+    this._leave();
   },
-  done() { wx.navigateBack({ delta: 1 }); },
+  done() { this._leave(); },
+  // 结算可由分享 / 卡片直接打开(页栈只有本页):没有上一页时回票夹,不留死胡同(同 play 的 goBackDetail)
+  _leave() {
+    if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 });
+    else wx.reLaunch({ url: '/subpackageMember/signup/index' });
+  },
   goRank() { this._go('rank'); },
 
   // ——— 评价 ———
