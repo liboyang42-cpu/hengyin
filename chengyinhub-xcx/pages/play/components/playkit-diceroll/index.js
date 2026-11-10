@@ -83,9 +83,10 @@ Component({
     'show, diceCount, inline, mode': function (show, diceCount) {
       if (!show) { this._offShake(); return; }
       if (this.data.mode === 'd20') { this._offShake(); return; }
-      /* 内嵌那套在故事流里,不靠摇手机:边走边看故事时误摇一下就掷,那不是玩法是事故。
-         要掷就按那个按钮。整屏那套照旧摇一摇 + 点屏幕。 */
-      if (this.data.inline) this._offShake(); else this._onShake();
+      /* 2026-11-10 业主(round2 待定问题「摇一摇范围」):「掷骰子也可以摇晃的」——
+         内嵌那套也接同一个摇一摇识别器(同阈值、同 900ms 防抖),按钮照旧是没有加速度计时的退路。
+         此前 2026-09-18「走路误摇」的裁决由这次业主批复推翻;隐藏 / 关掉 / 中断后监听一律撤掉。 */
+      this._onShake();
       // 换颗数要把骰子重新摆一遍,但不清掉已经摇出来的结果
       if (!this.data.sum) this._place(diceCount, []);   // 属性 → 内部 count,单向
     },
@@ -172,7 +173,7 @@ Component({
     _sumOf: sumOf,
     _stop() { if (this._timer) { clearTimeout(this._timer); this._timer = null; } },
     _onShake() {
-      if (this._hidden || !this.data.show || this.data.inline || this.data.mode === 'd20') return;
+      if (this._hidden || !this.data.show || this.data.mode === 'd20') return;
       if (this._shakeOn) return;
       this._shakeOn = true;
       const tick = (res) => { if (this._tick === tick && this._shakeOn && !this._hidden && this.data.show) this._shake(res); };

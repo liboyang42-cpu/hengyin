@@ -10,14 +10,16 @@
   </view>
 
   <view class="pv__body">
-    <!-- 赢:一笔画上去的对勾,比直接显示一个静止的勾更像刚判完 -->
-    <!-- 中性判定不画对勾:选的是去向不是答案,对勾读起来就是「答对了」(实走 A35 复核) -->
-    <view class="pv__tick" wx:if="{{kind === 'win' && !neutral}}">
-      <view class="pv__tick-short"></view>
-      <view class="pv__tick-long"></view>
+    <!-- 赢:底座 cy-illus 的「成功」插图弹入(l-kits 2026-11-10,业主:结果要动态插图,不要对勾 / icon);
+         中性判定不画:选的是去向不是答案,成功插图读起来就是「答对了」(实走 A35 复核) -->
+    <view class="pv__art" wx:if="{{kind === 'win' && !neutral}}">
+      <cy-illus wx:if="{{rising}}" name="success" size="{{240}}" reduced-motion="{{reducedMotion}}" />
     </view>
-    <!-- 输:整屏就两个字。规则说明是写给刚失败的人看的,那个时候没人读 -->
-    <view class="pv__word" wx:elif="{{kind !== 'win'}}">{{word}}</view>
+    <!-- 输:「失败」插图 + 两个字。规则说明是写给刚失败的人看的,那个时候没人读 -->
+    <block wx:elif="{{kind !== 'win'}}">
+      <view class="pv__art"><cy-illus wx:if="{{rising}}" name="fail" size="{{200}}" reduced-motion="{{reducedMotion}}" /></view>
+      <view class="pv__word">{{word}}</view>
+    </block>
     <!-- 2026-10-22 玩法模板「结果反馈」:成功 / 失败反馈的文字与配图就落在这一屏(照试玩台 liquidWin 的 txt)。
          没配反馈时和原来一样:赢只有对勾,输只有两个字。 -->
     <view class="pv__text" wx:if="{{text}}">{{text}}</view>

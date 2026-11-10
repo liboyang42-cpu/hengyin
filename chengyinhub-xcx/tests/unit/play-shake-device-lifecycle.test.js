@@ -128,11 +128,18 @@ for (const kind of ['coinflip', 'diceroll']) {
   });
 }
 
-test('dice inline and D20 modes never acquire the shake sensor, including mode changes', () => {
+/* 2026-11-10 l-kits:业主批复「掷骰子也可以摇晃的」—— 内嵌骰子也听摇一摇(同一识别器);D20 仍然不听。 */
+test('dice inline now listens for shakes like the full screen; D20 never acquires the sensor, including mode changes', () => {
   const kit = mount('diceroll', { inline: true });
   kit.change({ show: true });
-  kit.hide(); kit.show();
-  assert.equal(kit.starts.length, 0);
+  assert.equal(kit.starts.length, 1, '内嵌露出时开传感器');
+  assert.equal(kit.listeners.size, 1);
+  [...kit.listeners][0]({ x: 1.4, y: -.8, z: .7 });
+  assert.deepEqual(kit.events, ['roll'], '内嵌摇一下就掷');
+  kit.hide();
+  assert.equal(kit.listeners.size, 0, '隐藏撤监听');
+  kit.show();
+  assert.equal(kit.listeners.size, 1);
   kit.change({ inline: false, mode: 'd20' });
   assert.equal(kit.listeners.size, 0);
   kit.change({ mode: 'd6' });
@@ -141,7 +148,7 @@ test('dice inline and D20 modes never acquire the shake sensor, including mode c
   kit.change({ mode: 'd20' });
   assert.equal(kit.listeners.size, 0);
   old({ x: 1.4, y: -.8, z: .7 });
-  assert.equal(kit.events.length, 0);
+  assert.equal(kit.events.length, 1, 'D20 下失效的旧回调不再掷(只剩开头内嵌那一次)');
   kit.hide(); kit.show();
   assert.equal(kit.listeners.size, 0);
   kit.detach();

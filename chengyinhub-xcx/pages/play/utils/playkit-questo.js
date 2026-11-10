@@ -139,6 +139,18 @@ function accusationKit(view, qaSeg, resolve) {
   const boardImg = typeof board === 'string' ? displayImage(board, r) : displayImage(board && board.img, r);
   const outcome = accusationOutcome(acc.result);
   const terminal = !!(acc.result && acc.result.terminal === true);
+  /* l-kits 2026-11-10(原型 gp-kit-accuse):线索板上的便签 = 本局**已获得**的线索(服务端 view.clues 回读,
+     与背包同一份:名字 + 来源段落的文字 / 图片)。没有已获得线索就没有便签 —— 不编、不画占位。 */
+  const clues = (Array.isArray(view && view.clues) ? view.clues : []).filter((c) => c && (c.id != null)).map((c) => {
+    const blocks = [];
+    (Array.isArray(c.sources) ? c.sources : []).forEach((source) => (Array.isArray(source && source.blocks) ? source.blocks : []).forEach((b) => {
+      if (!b) return;
+      const img = (Array.isArray(b.images) ? b.images : []).map((x) => displayImage(x, r)).filter(Boolean)[0] || '';
+      if (b.text || img) blocks.push({ text: b.text || '', img });
+    }));
+    const first = blocks.find((b) => b.img) || {};
+    return { id: String(c.id) + ':' + (c.scope || ''), name: c.name || '线索', text: blocks.map((b) => b.text).filter(Boolean).join('\n'), img: first.img || '' };
+  });
   /* qa 判完但服务端还没给结论:结算确认中。不拿 passed 推断「指认成功」。 */
   const pending = !acc.result && qa.finished === true;
   return {
@@ -147,6 +159,7 @@ function accusationKit(view, qaSeg, resolve) {
     boardAlt: board && typeof board === 'object' && typeof board.alt === 'string' ? board.alt : '',
     intro: screenBlocks(acc.introScreens, r),
     suspects,
+    clues,
     earlyAllowed: !!(acc.earlyAccuse && acc.earlyAccuse.allowed === true),
     outcome,
     outcomeLabel: OUTCOME_LABEL[outcome] || '',

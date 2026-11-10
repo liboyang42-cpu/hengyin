@@ -1,16 +1,20 @@
-<!-- UG-01 逐字猜词:题面与格子居中,一个词不折断;点格子直接补字(隐藏输入框接键盘),整词作答在下面。判定只在服务端。 -->
+<!-- UG-01 逐字猜词(l-kits 2026-11-10,照 proto/game gp-kit-full「玩法 · 全屏(逐字猜词 · 系统键盘)」):
+     题面与格子整组居中;预填格深一档、当前格描边主色上浮;不画自定义键盘 —— 点格子唤起系统键盘,
+     输入框就在格子下面,输入什么格子就填什么,每填一格弹一下;「提交」固定底部,填满才亮;答对格子依次变绿。
+     判定只在服务端:组件只收集玩家补的字,交 SUBMIT_HANGMAN {slots}。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="g-col hm {{inline ? 'hm--inline' : ''}} {{reducedMotion ? 'pk--reduced' : ''}} {{reducedMotion ? 'hm--reduced' : ''}}">
     <view class="hm__stage">
       <view class="hm__q pk-in" wx:if="{{title}}">{{title}}</view>
 
-      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}">
+      <view class="hm__board pk-in {{solved ? 'is-ok' : ''}} {{verdict === 'no' ? 'is-no' : ''}}" aria-role="group" aria-label="{{solved ? '答案：' + display : '点格子，用系统键盘输入'}}">
         <block wx:for="{{groups}}" wx:key="k" wx:for-item="g">
           <view wx:if="{{g.sep}}" class="hm__sep" aria-hidden="true">{{g.sep}}</view>
           <view wx:else class="hm__word-row">
             <view wx:for="{{g.cells}}" wx:key="i"
-                  class="hm__cell {{item.kind === 'PREFILLED' ? 'is-given' : ''}} {{item.ch && item.kind !== 'PREFILLED' ? 'is-typed' : ''}} {{active === item.i ? 'is-active' : ''}} {{solved ? 'is-ok' : ''}}"
-                  data-i="{{item.i}}" data-kind="{{item.kind}}" bindtap="onPickCell"
+                  class="hm__cell {{item.kind === 'PREFILLED' ? 'is-given' : ''}} {{item.ch && item.kind !== 'PREFILLED' ? 'is-typed' : ''}} {{active === item.i ? 'is-active' : ''}} {{pop === item.i ? 'is-pop' : ''}} {{solved ? 'is-ok' : ''}}"
+                  style="--i:{{item.n < 8 ? item.n : 7}}"
+                  data-i="{{item.i}}" data-kind="{{item.kind}}" data-n="{{item.n}}" bindtap="onPickCell"
                   aria-role="{{item.kind === 'PREFILLED' || solved ? 'text' : 'button'}}"
                   aria-label="第 {{item.i + 1}} 格{{item.ch ? '：' + item.ch : '：空'}}"
                   hover-class="{{item.kind === 'PREFILLED' || solved ? '' : 'hm__press'}}" hover-stay-time="80">{{item.ch || ''}}</view>
@@ -19,16 +23,14 @@
       </view>
 
       <block wx:if="{{!solved}}">
-        <!-- 补字键盘的接收框:不占版面,字直接落在当前格里 -->
-        <input class="hm__ghost" focus="{{active >= 0}}" value="" maxlength="4" bindinput="onCellInput" bindblur="onCellBlur"
-               confirm-type="next" aria-label="{{active >= 0 ? '填写第 ' + (active + 1) + ' 格' : ''}}" />
-        <input class="hm__word {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{word}}" bindinput="onWordInput" confirm-type="done"
-               placeholder="整词作答" placeholder-class="hm__ph" bindconfirm="onSubmit" aria-label="整词作答" />
+        <!-- 系统键盘的接收框就在格子下面:输入什么,格子按顺序填什么 -->
+        <input class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{typedText}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="{{blankCount}}"
+               bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" confirm-type="done" bindconfirm="onSubmit"
+               placeholder="点格子，用系统键盘输入" placeholder-class="hm__ph" aria-label="逐字猜词输入框" />
+        <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? '不对，再想想' : ''}}</view>
       </block>
 
-      <view class="hm__fb {{solved ? 'is-ok' : 'is-no'}}" wx:if="{{solved || verdict === 'no'}}" aria-live="polite">
-        {{solved ? display : '还不对，改一改再交'}}
-      </view>
+      <view class="hm__fb" wx:if="{{solved}}" aria-live="polite">{{display}}</view>
     </view>
   </view>
 

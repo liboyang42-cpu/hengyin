@@ -32,7 +32,24 @@
       </block>
 
       <!-- ② 选项作答。每一条的文案、对错、反馈都在它自己里面 -->
-      <view class="qa__opts {{picGrid ? 'qa__opts--pic' : ''}}" wx:elif="{{mode === 'pick'}}">
+      <!-- ②a 图片选项(l-kits 2026-11-10,照 proto/game gp-kit-embed「玩法 · 嵌入(无框大图)」):
+           一道题 + 四张大图,两列、没有底、没有卡;字母和文案压在图下沿;选中上浮,对 = 描边绿,错 = 描边红 + 红字落在题下。 -->
+      <view class="qa__opts qa__opts--pic" wx:elif="{{mode === 'pick' && picGrid}}">
+        <view class="qa__pic {{item.state}}"
+              wx:for="{{optionList}}" wx:key="k"
+              data-i="{{index}}" bindtap="onPick"
+              aria-disabled="{{finished || passed || submitted}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}{{item.alt && item.alt !== item.t ? '，' + item.alt : ''}}"
+              hover-class="qa__press" hover-stay-time="80">
+          <image wx:if="{{item.img}}" class="qa__pic-img" src="{{item.img}}" mode="aspectFill" aria-hidden="true" binderror="onOptionImgError" data-i="{{index}}" />
+          <view wx:else class="qa__pic-img qa__pic-img--none" aria-hidden="true">{{item.key}}</view>
+          <view class="qa__pic-ring" aria-hidden="true"></view>
+          <view class="qa__pic-lb"><view class="qa__pic-k">{{item.key}}</view><view class="qa__pic-t">{{item.t}}</view></view>
+          <view class="qa__pic-tag" wx:if="{{item.chosen}}">你的选择</view>
+          <view class="qa__pic-tag" wx:if="{{item.answer}}">正确答案</view>
+        </view>
+      </view>
+
+      <view class="qa__opts" wx:elif="{{mode === 'pick'}}">
         <view class="qa__opt {{item.state}} {{index === 0 ? 'qa__opt--first' : ''}}"
               wx:for="{{optionList}}" wx:key="k"
               data-i="{{index}}" bindtap="onPick"
@@ -40,9 +57,6 @@
               hover-class="qa__press" hover-stay-time="80">
           <view class="qa__opt-main pe pe--left" style="--pe-d:1.05s;--pe-i:{{index}}">
             <view class="qa__opt-k">{{item.key}}</view>
-            <!-- UG-02 选项图:服务端给了可显示地址才出;固定比例,选中态不跳。文字仍是主标签 -->
-            <image wx:if="{{item.img}}" class="qa__opt-img" src="{{item.img}}" mode="aspectFill" aria-hidden="true" binderror="onOptionImgError" data-i="{{index}}" />
-            <view wx:elif="{{picGrid}}" class="qa__opt-img qa__opt-img--none" aria-hidden="true">{{item.key}}</view>
             <!-- 这儿原先还有「选项配图」和「选项配音」两个角标。删掉的理由:**商家配不了** ——
                  选项配置只有 {id, label, fb, correct},pickPlayKit 也只过桥 {id, t},
                  img / audio 全链路没有一处产出。留着它只在夹具里演:实测选项 B 空出一个

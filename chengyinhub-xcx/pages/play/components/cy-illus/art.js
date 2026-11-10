@@ -60,4 +60,4 @@ function layers(name, n) {
   var label = n == null || n === '' ? '一' : String(n).replace(/[<>&"']/g, '');
   return { name: key, label: NAMES[key], blob: uri('<path d="' + BLOB[d.b] + '" fill="' + W + '"/>'), fg: uri(d.f.replace('__N__', label)) };
 }
-module.exports = { NAMES: NAMES, LIST: Object.keys(D), layers: layers, has: has };
+module.exports = { NAMES: NAMES, LIST: Object.keys(D), layers: layers, has: has, dedupeAttrs: dedupeAttrs };

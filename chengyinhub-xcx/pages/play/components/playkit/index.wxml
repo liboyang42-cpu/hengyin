@@ -145,7 +145,7 @@
 
 <cy-playkit-accusation wx:elif="{{kit.type === 'accusation'}}" inline="{{inline}}"
   show="{{show}}" title="{{kit.title}}" board-img="{{kit.boardImg}}" board-alt="{{kit.boardAlt}}" intro="{{kit.intro}}"
-  suspect-list="{{kit.suspects}}" outcome="{{kit.outcome}}" outcome-label="{{kit.outcomeLabel}}" pending="{{kit.pending}}"
+  suspect-list="{{kit.suspects}}" clues="{{kit.clues}}" outcome="{{kit.outcome}}" outcome-label="{{kit.outcomeLabel}}" pending="{{kit.pending}}"
   wrong-attempt="{{kit.wrongAttempt}}" retry-note="{{kit.retryNote}}" screen="{{kit.screen}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
