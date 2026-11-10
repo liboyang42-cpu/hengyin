@@ -1,0 +1,10 @@
+-- l-misc rig fixture (HARNESS, rig DB only — never production)
+-- 队伍 601:队长 9004 + 队员 9009,招募中,邀请码是 22 位 base64url 新码形状
+DELETE FROM play_team_member WHERE team_id=601; DELETE FROM play_team WHERE id=601;
+INSERT INTO play_team (id,owner_type,owner_id,leader_member_id,invite_code,title,join_mode,max_members,joined_count,status,expire_time,create_time,update_time)
+VALUES (601,1,990014,9004,'RigLmisc601TeamInvAb_x','周末城门小队',1,4,2,0,NOW() + INTERVAL 2 DAY,NOW(),NOW());
+INSERT INTO play_team_member (team_id,member_id,role,status,apply_message,apply_expire_time,create_time,update_time) VALUES
+ (601,9004,1,1,NULL,NULL,NOW(),NOW()),(601,9009,2,1,NULL,NULL,NOW(),NOW());
+-- 商家老板 9002 加入俱乐部 7001(城瘾跑团),不在 7002
+DELETE FROM club_member WHERE club_id=7001 AND member_id=9002;
+INSERT INTO club_member (club_id,member_id,role,status,join_time,del_flag,review_reason) VALUES (7001,9002,0,1,NOW(),0,'');
