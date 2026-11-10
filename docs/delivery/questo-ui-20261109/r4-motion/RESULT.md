@@ -76,16 +76,18 @@
 | M14 迁移 | fixed | 见二.3 | 11 个 js | 相关单测 787 条通过（`qr-scene-page-parity` 沙箱改为把 `utils/motion.js` 接回震动记录器）；台账重建计数不变 | 真机震动 |
 | IMPACT 其余行 | 未做 | — | — | — | 见待你决定 |
 
-## 四、门禁
+## 四、门禁（最终头 `1b120d7b`，台账 `e5649344` 重建）
 
 | 门禁 | 结果 |
 |---|---|
-| 触碰到的单测 | 地基 12 条;棘轮批 `motion-property-ratchet` / `reduced-motion-coverage-contract` / `theme-look` / `r2-finish-settlement` / `r3-share-cards` / `r2-join` / `qx-u2-onboarding` / `qx-u3-motion` / `qx-b4-team-seats` / `qx-a6-merchant-grow-intro` / `celebration-feedback-contract` / `press-feedback-coverage-contract` 共 83 条通过;触感批(所有含 `vibrateShort` 的单测 + 游玩 / 章节 / 判定 / 提示相关)787 条通过 |
-| `node chengyinhub-xcx/tests/lint/ui-integrity.js` | `UI-GATE-0:PASS`(棘轮批之后跑过一次;最终头的复跑见下一次提交) |
-| 台账 | `build-action-ledger.js --write` 5936 个控件不变;构建器新增触感四档判定后 external 分母回到 367;`action-ledger.test.js` 最终头复跑结果见下一次提交 |
-| 主包 | `mainpkg-size-report.js`:3,297,421 字节 × 0.633 ≈ **2038.3 KiB**(基线 2030.7,+7.6 KiB:token 3.0 KB、motion-spring 3.4 KB、motion.js 2.0 KB、celebrate / morph-success / wizard-morph 小改;< 2048) |
-| keyframes 棘轮 | 实测 146 = 上限 146(集成后是 169) |
-| 小程序全量单测 | 最终头正在跑,结果见下一次提交 |
+| 小程序全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`） | **17150 条，17143 通过，7 失败**。7 条全部是 qx-s2 Cross-lane 已记、lane 自身分支上就红的:`all-page-back-stack-contract`、`component-wxss-selector-lint`、`custom-nav-page-surface-contract`、`no-system-actionsheet-contract`、`no-system-toast-contract`、`page-cleanup-audit`、`press-feedback-resolves-contract`（都是 r2-finish 结算页 / rank-board 与 r2-play 的 toast）。qx-s2 时的另外 3 条（`motion-property-ratchet`、`reduced-motion-coverage-contract`、`theme-look`）本 lane 修绿。 |
+| 触碰到的单测 | 地基 12 条;棘轮批 83 条;触感批 787 条;台账 `action-ledger.test.js` 48/48;沙箱补桩后 `guest-browse-login-on-write` / `merchant-npc-voice-size-contract` / `qx-a7-share-tint` / `nav-theme-surface-contract` 159 条——全部通过 |
+| `node chengyinhub-xcx/tests/lint/ui-integrity.js` | `UI-GATE-0:PASS`（U1–U5、A11Y、Legacy 全 PASS;没有新增基线条目;`fabu` / `play` / `coupon-qr` 行数与基线一致,行锚不动） |
+| 台账 | `build-action-ledger.js --write`:5936 个控件不变;构建器把触感四档按 `vibrateShort` 能力登记后,走 `settle()` 的 5 个 tap 与 3 条事件合同从 state / read / write 归 external（367 → 372、local tap 2612 → 2607、local 事件合同 2861 → 2858），`action-ledger.test.js` 计数按重建实测更新并附日期注释;重建后 `git status` 无 diff |
+| 主包 | `mainpkg-size-report.js`:3,297,650 字节 × 0.633 ≈ **2038.5 KiB**（基线 2030.7,+7.8 KiB:token 3.2 KB、motion-spring 3.4 KB、motion.js 2.0 KB、celebrate / morph-success / wizard-morph 小改;< 2048,余量 9.5 KiB） |
+| keyframes 棘轮 | 实测 146 = 上限 146（集成后是 169） |
+| `scripts/ds-theme-sync-check.sh` / `ds-hardcode-gate.sh` | 一致 / 通过（新增 wxss 行只用 token;唯一字面是彩旗里的白色,带 `ds-ok`） |
+| 后端 | 没有改动,没有跑 Java |
 
 ## 五、rig 与证据怎么来的
 
@@ -104,4 +106,4 @@
 5. **IMPACT 两条无主项**（结算后的「下一个主题」推荐卡、分享的回顾视频）：服务端没有推荐接口、没有视频生成器，按「没有服务端事实就不做」没有动。
 6. **结算第 2 步「自己那行离屏钉在底部」与页签横滑**、第 3 步星星逐颗触感、提示「剩余免费」计数滚动：都是小项，默认留给下一波；如果你要本波补，告诉我优先级。
 
-STATUS: PARTIAL - 代码与证据已齐;全量单测与 UI-GATE-0 在最终头的复跑结果待下一次提交补入
+STATUS: PARTIAL - 动效地基、棘轮回 146、§4 节拍核对与 M14 迁移都已做完并有 rig 帧条;未做的是 M17 到站进度药丸 / 雷达脉冲、开局 CTA 收勾、榜单钉底与横滑、礼品页截图(rig 无夹具),见待你决定;全量单测剩下的 7 条红都是 lane 自身的旧问题
