@@ -34,7 +34,7 @@
 - 动作台账：`build-action-ledger.js --write` 重建为 5877 个控件；`action-ledger`、`action-ledger-handler-sources` 共 75 条全过；没有出现「一个点击两次写入」的新条目。
 - `press-feedback-coverage-contract` 全过（两个提示弹窗的压暗层按规范写 `hover-class="none"`）。
 - `node tests/lint/ui-integrity.js`：`UI-GATE-0:PASS`。
-- 动到的文件相关的 280 余个单测文件（见 PR）重跑：结果写在 PR 说明里。
+- 涉及本次改动文件的 283 个单测文件（游玩页、背包、提示、顶栏、入口卡、入场码、转场、弹球、摇一摇、定位、台账、按压反馈）一起重跑：2770 条通过，0 条失败。
 - 没有新增关键帧（仓库有关键帧只减不增的棘轮）；动效全部是 transition 或复用已有关键帧。
 
 ## 跨 lane
