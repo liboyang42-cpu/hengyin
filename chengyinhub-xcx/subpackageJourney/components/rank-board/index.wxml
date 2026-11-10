@@ -1,8 +1,8 @@
 <view class="rb {{reducedMotion ? 'rb--reduced' : ''}}">
   <view class="rb-bar">
-    <view class="rb-bar__tabs" wx:if="{{tabs.length > 1}}"><cy-tabs variant="segmented" tabs="{{tabs}}" active="{{scope}}" bind:change="onScope" /></view>
+    <view class="rb-bar__tabs {{tabs.length > 1 ? '' : 'is-single'}}" wx:if="{{tabs.length > 1 || moreLabel !== '更多'}}"><cy-tabs variant="segmented" tabs="{{tabs}}" active="{{scope}}" bind:change="onScope" /></view>
     <view class="rb-more {{moreLabel !== '更多' ? 'is-on' : ''}}" wx:if="{{more.length}}" bindtap="onMore" aria-role="button" aria-label="{{moreLabel}}" hover-class="cy-pressed" hover-stay-time="80">
-      <text>{{moreLabel}}</text><cy-icon name="expand" size="24" />
+      <text>{{moreLabel}}</text><view class="rb-more__ic"><cy-icon name="chevron-right" size="24" /></view>
     </view>
   </view>
 

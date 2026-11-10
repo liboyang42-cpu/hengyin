@@ -38,3 +38,5 @@
 .rb-av image { width: 100%; height: 100%; }
 .rb-note { display: block; padding: 20rpx 31rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .rb--reduced .rb-digit__col, .rb--reduced .rb-list { transition: none; }
+.rb-more__ic { display: flex; transform: rotate(90deg); }
+.rb-bar__tabs.is-single { flex: none; margin-right: auto; }

@@ -164,7 +164,8 @@ test('页面与入口：分包注册、战报只读入口、席位释放按钮�
   assert.ok(!/\/release/.test(seatsJs));
   const reportJs = fs.readFileSync(path.join(ROOT, 'subpackageJourney/pages/report/index.js'), 'utf8');
   // 战报页不调用任何写口；分享时才签发推广凭据。
-  assert.ok(!/seat-invitations|attribution\/claim|\/settle|\/complete/.test(reportJs));
+  // r2-finish:「结算」只是跳到结算页(页面路由 pages/settle),不是写口;写口里的 settle 仍然禁止。
+  assert.ok(!/seat-invitations|attribution\/claim|\/api\/[^'"]*settle|\/complete/.test(reportJs));
   assert.match(fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8'), /bindtap="openRunReport"/);
   assert.match(fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-member-order-detail/index.wxml'), 'utf8'), /bindtap="goSeats"/);
   const promoJs = fs.readFileSync(path.join(ROOT, 'subpackageJourney/pages/promo/index.js'), 'utf8');

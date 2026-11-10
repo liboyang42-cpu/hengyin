@@ -175,8 +175,12 @@ function memoryView(data) {
     name: m.name || '节点',
     text: m.fragmentText || '',
     pic: m.picUrl || '',
-    at: dateText(m.checkinTime, true)
+    at: dateText(m.checkinTime, true),
+    // r2-finish P8 时间线:日期只在换天时写一次,行内只写时刻
+    day: dateText(m.checkinTime),
+    time: (dateText(m.checkinTime, true).split(' ')[1] || '')
   }));
+  moments.forEach((m, i) => { m.showDay = !!m.day && (i === 0 || moments[i - 1].day !== m.day); });
   return {
     moments,
     photos: moments.filter(m => m.pic),
