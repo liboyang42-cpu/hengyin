@@ -43,3 +43,11 @@ Ranking = (how often a player sees it × how far it is from "feels like a game")
 - **Order of landing:** r2-visual's token patch (MOTION §2) and the u1/u3 merges go first; rows 1–6 and 10–11 depend on them for sheet surfaces, `morph-success`, and WXS gestures.
 - **Main package:** rows 18, 29 touch main-package pages; they are CSS-only. Everything else lives in subpackages (`pages/play`, `pages/publish`, `subpackageJourney`, `subpackageP3`, `subpackageMember`, `pages/merchant`, `pages/topic`, `pages/activity`).
 - **Evidence:** each row ships with before/after shots at the same state plus a frame strip for its hero moment and one reduced-motion shot (MOTION §5.4).
+
+## Lead self-check of round-2 shots (2026-11-10) — r4-motion must fix these too
+
+1. `r2-play/shots/s0-fixture-play-entry-after.jpg`: still a dark screen with blurred light spots and no story text visible. Verify the entry transition settles on readable story content; re-shoot after settle.
+2. `r2-create/shots/a5d-written-after.jpg`: editor toolbar overflows one row (emoji button clipped against 「插入」 and the word count). Make the toolbar scroll horizontally or move the word count to the top bar.
+3. `r2-create/shots/a5-v3-47-after.jpg`: template picker sheet still leaves a large empty gap above 「确定」 (owner complained about exactly this); 「暂无公共玩法」 reads as helper copy. Size the sheet to content; hide the empty public row.
+4. `r2-kits/shots/b2-ug-04-after.jpg`: 「正常结案」 uses a 🎉 emoji, not the animated success/failure/waiting images the owner asked for.
+5. `r2-play/shots/a1-v3-21-node-after.jpg`: full-screen station is mostly empty above and below the content; add the station cover/arrival info and the MOTION.md station-arrival choreography.
