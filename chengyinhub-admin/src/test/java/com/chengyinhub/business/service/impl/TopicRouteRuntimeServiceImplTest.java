@@ -2211,16 +2211,16 @@ class TopicRouteRuntimeServiceImplTest {
         runtime.state(7L, 10L, null);
         TopicRouteSession run = stored[0];
         String identity = json.readTree(run.getConfigSnapshotJson())
-                .path(com.chengyinhub.business.service.support.SelfPlayHelpRun.FIELD).asText();
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText();
 
-        assertTrue(com.chengyinhub.business.service.support.SelfPlayHelpRun.isIdentity(identity), identity);
+        assertTrue(com.chengyinhub.business.service.support.FirstRunHelpIdentity.isIdentity(identity), identity);
         // 进度/奖励实例不动：自玩局仍是本人 default 正式一局。
         assertEquals("default", run.getPlayInstanceId());
 
         runtime.state(7L, 10L, null);
         runtime.state(7L, 10L, 0L);
         assertEquals(identity, json.readTree(stored[0].getConfigSnapshotJson())
-                .path(com.chengyinhub.business.service.support.SelfPlayHelpRun.FIELD).asText());
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText());
         verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
     }
 
@@ -2235,19 +2235,30 @@ class TopicRouteRuntimeServiceImplTest {
         runtime.state(7L, 10L, null);
 
         assertEquals("default", stored[0].getPlayInstanceId());
-        assertNotNull(com.chengyinhub.business.service.support.SelfPlayHelpRun.read(
+        assertNotNull(com.chengyinhub.business.service.support.FirstRunHelpIdentity.read(
                 json.readTree(stored[0].getConfigSnapshotJson())));
     }
 
+    // ---------------------------------------------------------------- qx-c5 活动场次首局帮助身份
+
     @Test
-    void activitySessionRunIsNotGivenASelfPlayHelpIdentity() throws Exception {
+    void activitySessionFirstRunFreezesOneHelpRunIdentityAndReentryKeepsIt() throws Exception {
         useActivityScope(playableActivity());
 
         runtime.state(7L, 10L, 44L);
+        TopicRouteSession run = stored[0];
+        String identity = json.readTree(run.getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText();
 
-        assertEquals(Long.valueOf(44L), stored[0].getActivityId());
-        assertFalse(json.readTree(stored[0].getConfigSnapshotJson())
-                .has(com.chengyinhub.business.service.support.SelfPlayHelpRun.FIELD));
+        assertEquals(Long.valueOf(44L), run.getActivityId());
+        assertTrue(identity.startsWith(com.chengyinhub.business.service.support.FirstRunHelpIdentity.PREFIX), identity);
+        // 进度/奖励实例不动：活动场次首局仍是本人 default 正式一局。
+        assertEquals("default", run.getPlayInstanceId());
+
+        runtime.state(7L, 10L, 44L);
+        assertEquals(identity, json.readTree(stored[0].getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText());
+        verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
     }
 
     private void useLinearJourneyTopic() {

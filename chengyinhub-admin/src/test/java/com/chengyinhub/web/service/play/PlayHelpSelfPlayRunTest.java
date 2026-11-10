@@ -39,7 +39,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * qx-c4（2026-11-10 owner 定稿「自玩也要能用提示」）：自玩通行证局用建局冻结的
- * {@code selfplay:} 身份走同一条帮助链；旧自玩局、活动场次 default 局、伪造身份仍拒绝。
+ * 身份走同一条帮助链（这里用 c4 已落库的 {@code selfplay:} 形状，验证兼容读取）；旧自玩局、
+ * 带旧 selfplay: 身份的活动场次局、伪造身份仍拒绝。活动场次首局见 {@code PlayHelpActivityFirstRunTest}。
  */
 class PlayHelpSelfPlayRunTest {
 

@@ -556,7 +556,7 @@ public class PlayNodeCompletionApplication {
         if (StringUtils.isNotBlank(persistedCompletionMode)) data.put("completionMode", persistedCompletionMode);
         // UG07：完成回包里带上与只读回执**同源**的明细（base/bonus/扣分/净分 + 积分消费 + 层使用）。
         // 明细完全是既有事实的回放，客户端上报的 score/passed 不参与；没有权威基准就是 NOT_SCORED。
-        // 帮助额度/事实按原局的帮助身份分局:自玩局是建局冻结的 selfplay: 身份,其余局与进度实例相同。
+        // 帮助额度/事实按原局的帮助身份分局:首局是建局冻结的身份,其余局与进度实例相同。
         String helpInstance = helpInstanceOf(originalSession, progressInstance);
         Map<String, Object> helpReceipt = helpReceipt(memberId, node, actId, helpInstance,
                 persistedCompletionMode,
@@ -582,11 +582,11 @@ public class PlayNodeCompletionApplication {
      *
      * <p>基准分判定与 {@code PlayHelpApplication.baseScoreOf} 同源：线性城市定向 + 模板验真方式 1/3。
      */
-    /** 完成回包的成绩明细与 /api/play/help 同一个原局身份:有原局按 {@code SelfPlayHelpRun},无局沿用进度实例。 */
+    /** 完成回包的成绩明细与 /api/play/help 同一个原局身份:有原局按 {@code FirstRunHelpIdentity},无局沿用进度实例。 */
     static String helpInstanceOf(com.chengyinhub.business.domain.TopicRouteSession originalSession,
                                  String progressInstance) {
         if (originalSession == null) return progressInstance;
-        return com.chengyinhub.business.service.support.SelfPlayHelpRun.helpInstance(originalSession,
+        return com.chengyinhub.business.service.support.FirstRunHelpIdentity.helpInstance(originalSession,
                 frozenRoot(originalSession.getConfigSnapshotJson()));
     }
 

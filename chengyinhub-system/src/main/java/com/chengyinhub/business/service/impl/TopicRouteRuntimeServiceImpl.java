@@ -1194,7 +1194,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(revisionBoundSnapshot, revisionHeader);
             snapshot = write(revisionBoundSnapshot);
         }
-        snapshot = stampSelfPlayHelpRun(snapshot, scope.activityId);
+        snapshot = stampFirstRunHelpIdentity(snapshot);
         TopicRouteEngine.State initial = engine.initial(snapshot);
         JourneyRules branchRules = FrozenAttributeDefinitions.rules(validator.readTree(snapshot), scope.topic.getPublishedConfigVersion());
         applyJourneyInitials(branchRules, initial);
@@ -1431,14 +1431,13 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     /**
-     * 自玩局建局时在冻结快照里写入本局的帮助原局身份(与本局冻结内容同一次 insert 落库)。
-     * 进度实例仍是 default —— 首次奖励/旧进度行都按它认本人正式一局;活动场次局不写。
+     * 首局(自玩或活动场次)建局时在冻结快照里写入本局的帮助原局身份(与本局冻结内容同一次 insert 落库)。
+     * 进度实例仍是 default —— 首次奖励/旧进度行都按它认本人正式一局。
      */
-    private String stampSelfPlayHelpRun(String frozenSnapshot, Long activityId) {
-        if (!com.chengyinhub.business.service.support.SelfPlayHelpRun.selfPlay(activityId)) return frozenSnapshot;
+    private String stampFirstRunHelpIdentity(String frozenSnapshot) {
         ObjectNode root = (ObjectNode) validator.readTree(frozenSnapshot);
-        com.chengyinhub.business.service.support.SelfPlayHelpRun.stamp(root, activityId,
-                com.chengyinhub.business.service.support.SelfPlayHelpRun.newIdentity());
+        com.chengyinhub.business.service.support.FirstRunHelpIdentity.stamp(root,
+                com.chengyinhub.business.service.support.FirstRunHelpIdentity.newIdentity());
         return write(root);
     }
 
@@ -1467,7 +1466,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(revisionBoundJourney, journeyRevision);
             frozenSnapshot = write(revisionBoundJourney);
         }
-        frozenSnapshot = stampSelfPlayHelpRun(frozenSnapshot, scope.activityId);
+        frozenSnapshot = stampFirstRunHelpIdentity(frozenSnapshot);
         JsonNode publishedStations = validator.readTree(frozenSnapshot).path("routeStations");
         if (publishedStations.isArray()) {
             liveNodes = new ArrayList<>();

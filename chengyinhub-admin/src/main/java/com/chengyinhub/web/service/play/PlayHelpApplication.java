@@ -254,7 +254,7 @@ public class PlayHelpApplication {
             probe.setTopicId(resolved.scope.topicId());
             probe.setActivityId(resolved.scope.activityId());
             probe.setNodeId(resolved.nodeId);
-            // 进度行按原局的进度实例落(自玩局是 default),帮助身份只用于额度/事实分局。
+            // 进度行按原局的进度实例落(首局是 default),帮助身份只用于额度/事实分局。
             probe.setPlayInstanceId(resolved.session != null
                     ? resolved.session.getPlayInstanceId() : resolved.scope.playInstance());
             java.util.List<com.chengyinhub.business.domain.PlayerNodeProgress> rows =
@@ -462,9 +462,9 @@ public class PlayHelpApplication {
         String routeError = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, topicNode, null);
         if (routeError != null) throw new HelpRefusal(routeError);
 
-        // 原局身份:重玩等非 default 实例原样沿用;自玩局用建局时冻结进快照的 selfplay: 身份。
-        // 旧自玩局(无该身份)与活动场次的 default 局仍然没有帮助身份,照旧拒绝。
-        String playInstance = com.chengyinhub.business.service.support.SelfPlayHelpRun.helpInstance(
+        // 原局身份:重玩等非 default 实例原样沿用;首局(自玩/活动场次)用建局时冻结进快照的身份。
+        // 旧首局(无该身份)仍然没有帮助身份,照旧拒绝。
+        String playInstance = com.chengyinhub.business.service.support.FirstRunHelpIdentity.helpInstance(
                 session, parseSnapshot(session.getConfigSnapshotJson()));
         if (playInstance == null) {
             throw new HelpRefusal("原局身份不可用，请重新进入本局");
