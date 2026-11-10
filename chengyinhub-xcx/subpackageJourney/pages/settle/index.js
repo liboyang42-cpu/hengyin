@@ -1,32 +1,40 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const shareCard = require('../../utils/share-card.js');
+const motion = require('../../../utils/motion.js');
+const { countIn } = require('../../../utils/page-motion.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const app = getApp();
 
-/* r2-finish 结算流程:整局走完后 总览 → 排行榜(队内/全体/队伍) → 评价(星级+文字,可跳过) → 分享卡(帖文/故事,保存图片,视频)。
+/* r2-finish 结算流程 → l-after(2026-11-10)按业主批准的原型改:整局走完后 总览 → 排行榜(导航栏以下的近全屏弹层,只有 全体 / 队内)
+ * → 评价(五星 + 标签片 + 一句话,可跳过)→ 分享(帖文 / 故事卡,底部一行 分享 + 完成)。
  * 只读服务端事实:战报 /api/play/player-journey/report;评价走既有 /api/comment/add(owner_type 1 主题 / 2 场次)。
- * 视频:基础库有 wx.createMediaRecorder + wx.shareVideoMessage 时,把分享卡动画录 3 秒再走微信视频分享;没有就不出按钮。 */
+ * 微信分享卡片图仍用隐藏画布按同一版式画(onShareAppMessage imageUrl);「保存图片 / 分享视频」按业主「底部只有一行:分享 + 完成」撤掉。 */
 
 const STEPS = ['overview', 'rank', 'rate', 'share'];
-const TITLES = { overview: '本局结算', rank: '排行榜', rate: '评价', share: '分享' };
 const MAX_REVIEW = 500;
+// 评价标签片(proto st-rate):点中的随文字一起提交,提交时写在正文前面
+const TAGS = ['故事好', '地点选得好', '谜题有意思', '路太远', '提示不够', '太难了'];
+const ENTER_MS = 34;
+const SCORE_COUNT_AT = 1100;
 
 function landingPath(token) {
   return '/subpackageJourney/pages/landing/index?k=r&t=' + encodeURIComponent(token);
 }
 
-function canRecordVideo() {
-  return typeof wx !== 'undefined' && typeof wx.createMediaRecorder === 'function' && typeof wx.shareVideoMessage === 'function';
+function navTopPx() {
+  const g = (app && app.globalData) || {};
+  return (g.statusBarHeight || 20) + (g.navBarHeight || 44);
 }
 
 Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
-    step: 'overview', stepIndex: 0, title: TITLES.overview, steps: STEPS,
-    report: null, topicName: '', celebrate: '',
-    stars: 0, starList: [1, 2, 3, 4, 5], review: '', reviewMax: MAX_REVIEW, rateBusy: false, rateError: '',
-    shareKind: 'post', shareTabs: [{ key: 'post', label: '帖文' }, { key: 'story', label: '故事' }],
-    cardReady: false, videoOk: false, videoBusy: false, privacyGateShow: false
+    step: 'overview', stepIndex: 0, steps: STEPS, navTop: 64, reduced: false,
+    report: null, topicName: '', ovOn: false, soK: null, rankOn: false,
+    stars: 0, starList: [1, 2, 3, 4, 5], tags: TAGS.map(label => ({ label, on: false })), review: '', reviewMax: MAX_REVIEW, rateBusy: false, rateError: '', thanks: false,
+    shareKind: 'post', shareTabs: [{ key: 'post', label: '帖文' }, { key: 'story', label: '故事' }], shareCard: { kicker: '', title: '', meta: '' },
+    privacyGateShow: false
   },
 
   onLoad(options) {
@@ -36,7 +44,7 @@ Page({
       topicId: view.isId(o.topicId) ? o.topicId : '',
       runId: view.isId(o.runId) ? o.runId : ''
     };
-    this.setData({ topicName: o.topicName ? decodeURIComponent(o.topicName) : '', videoOk: canRecordVideo() });
+    this.setData({ topicName: o.topicName ? decodeURIComponent(o.topicName) : '', navTop: navTopPx(), reduced: !!readReducedMotion() });
     if (!this._query.activityId && !this._query.topicId) {
       this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效' });
       return;
@@ -44,7 +52,13 @@ Page({
     this.reload();
   },
 
-  onUnload() { this._gone = true; if (this._videoTimer) clearTimeout(this._videoTimer); },
+  onUnload() { this._gone = true; this._unloaded = true; this._clearTimers(); },
+  _clearTimers() { (this._timers || []).forEach(clearTimeout); this._timers = []; },
+  _later(fn, ms) {
+    if (typeof setTimeout !== 'function') { fn(); return; }
+    this._timers = this._timers || [];
+    this._timers.push(setTimeout(() => { if (!this._gone) fn(); }, ms));
+  },
 
   reload() {
     const epoch = this._epoch = (this._epoch || 0) + 1;
@@ -64,8 +78,20 @@ Page({
       }
       // 结算只给结束的局;进行中不出结算(去战报看进度)。
       if (!report.finished) { this.setData({ state: 'error', stateKind: 'not-started', stateTitle: '这一局还没结束', stateCta: '' }); return; }
-      this.setData({ state: 'ready', report, celebrate: report.win ? 'settle:' + Date.now() : '' });
+      this.setData({ state: 'ready', report, shareCard: shareCard.cardLines(report, this.data.topicName) });
+      this._enterOverview();
     });
+  },
+
+  // 总览进场:插图先落,字与两格依次升起;分数在卡落定后数上来(只在第一次拿到战报时)
+  _enterOverview() {
+    if (this.data.reduced) { this.setData({ ovOn: true }); return; }
+    this.setData({ ovOn: false });
+    this._later(() => this.setData({ ovOn: true }), ENTER_MS);
+    if (this.data.report && this.data.report.scored && !this._counted) {
+      this._counted = true;
+      this._later(() => countIn(this, 'soK'), SCORE_COUNT_AT);
+    }
   },
 
   onStateCta() {
@@ -76,7 +102,13 @@ Page({
   _go(step) {
     const i = STEPS.indexOf(step);
     if (i < 0) return;
-    this.setData({ step, stepIndex: i, title: TITLES[step] });
+    this.setData({ step, stepIndex: i, thanks: false });
+    if (step === 'overview') this._enterOverview();
+    if (step === 'rank') {
+      // 近全屏弹层从下方升起
+      this.setData({ rankOn: this.data.reduced });
+      if (!this.data.reduced) this._later(() => this.setData({ rankOn: true }), ENTER_MS);
+    }
     if (step === 'share') this._paintCard();
   },
   next() { this._go(STEPS[Math.min(STEPS.length - 1, this.data.stepIndex + 1)]); },
@@ -89,12 +121,26 @@ Page({
   goRank() { this._go('rank'); },
 
   // ——— 评价 ———
-  pickStar(e) { this.setData({ stars: Number(e.currentTarget.dataset.n) || 0, rateError: '' }); },
+  pickStar(e) {
+    const n = Number(e.currentTarget.dataset.n) || 0;
+    this.setData({ stars: n, rateError: '' });
+    motion.haptic({ type: 'light' });
+  },
+  toggleTag(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    if (!this.data.tags[i]) return;
+    this.setData({ ['tags[' + i + '].on']: !this.data.tags[i].on, rateError: '' });
+  },
   onReview(e) { this.setData({ review: String((e.detail && e.detail.value) || '').slice(0, MAX_REVIEW), rateError: '' }); },
   skipRate() { this._go('share'); },
+  _reviewText() {
+    const picked = this.data.tags.filter(t => t.on).map(t => t.label);
+    const text = this.data.review.trim();
+    return [picked.join('，'), text].filter(Boolean).join('。').slice(0, MAX_REVIEW);
+  },
   submitRate() {
     const report = this.data.report || {};
-    const text = this.data.review.trim();
+    const text = this._reviewText();
     if (!this.data.stars) { this.setData({ rateError: '先选星级' }); return; }
     if (!text) { this.setData({ rateError: '写一句再提交' }); return; }
     if (this.data.rateBusy) return;
@@ -104,17 +150,20 @@ Page({
     this.setData({ rateBusy: true, rateError: '' });
     api.rate(app, ownerType, ownerId, this.data.stars, text).then(res => {
       if (this._gone) return;
-      if (api.ok(res)) { this.setData({ rateBusy: false }); this._go('share'); return; }
+      if (api.ok(res)) { this.setData({ rateBusy: false, thanks: true }); motion.haptic({ type: 'medium' }); return; }
       // 服务端原文(内容安全、频控等)照原样显示在字段下面。
       this.setData({ rateBusy: false, rateError: (res && res.msg) || (res && res.netFail ? '网络异常，星级和文字已保留，请重试' : '评价暂时无法提交') });
     });
   },
+  goShare() { this._go('share'); },
 
   // ——— 分享卡 ———
-  onShareKind(e) { this.setData({ shareKind: e.detail.key, cardReady: false }, () => this._paintCard()); },
+  onShareKind(e) { this.setData({ shareKind: e.detail.key }, () => this._paintCard()); },
   _card() { return shareCard.cardLines(this.data.report, this.data.topicName); },
+  // 微信分享卡片图:隐藏画布按同一版式画一张(帖文 / 故事尺寸),onShareAppMessage 用它做 imageUrl
   _paintCard() {
     const kind = this.data.shareKind;
+    this._cardImage = '';
     wx.nextTick(() => {
       this.createSelectorQuery().select('#share-cv').fields({ node: true, size: true }).exec(res => {
         const item = res && res[0];
@@ -130,7 +179,7 @@ Page({
         this._loadLogo(cv).then(logo => {
           if (this._gone || this._cv !== cv) return;
           shareCard.draw(ctx, size.w, size.h, this._card(), 1, logo);
-          this.setData({ cardReady: true });
+          this._cardPainted = true;
         });
       });
     });
@@ -145,55 +194,15 @@ Page({
       img.src = shareCard.LOGO;
     });
   },
+  _cardImageUrl() {
+    if (this._cardImage) return Promise.resolve(this._cardImage);
+    if (!this._cv || !this._cardPainted) return Promise.resolve('');
+    return new Promise(resolve => {
+      wx.canvasToTempFilePath({ canvas: this._cv, success: r => { this._cardImage = r.tempFilePath; resolve(r.tempFilePath); }, fail: () => resolve('') }, this);
+    });
+  },
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
-  saveCard() {
-    if (!this._cv || !this.data.cardReady) return;
-    wx.canvasToTempFilePath({
-      canvas: this._cv,
-      success: r => wx.saveImageToPhotosAlbum({
-        filePath: r.tempFilePath,
-        success: () => wx.showToast({ title: '已存进相册', icon: 'none' }),
-        fail: err => {
-          const msg = String((err && err.errMsg) || '');
-          if (msg.indexOf('auth') >= 0) { wx.openSetting({}); return; }
-          if (msg.indexOf('cancel') < 0) wx.showToast({ title: '存进相册失败，请重试', icon: 'none' });
-        }
-      }),
-      fail: () => wx.showToast({ title: '图片生成失败，请重试', icon: 'none' })
-    }, this);
-  },
-  // 视频分享:把分享卡的入场动画录成 3 秒视频(wx.createMediaRecorder),再走微信视频分享。
-  shareVideo() {
-    if (!this.data.videoOk || this.data.videoBusy || !this._cv) return;
-    const cv = this._cv;
-    const size = shareCard.SIZES[this.data.shareKind];
-    const ctx = cv.getContext('2d');
-    const card = this._card();
-    let recorder;
-    try { recorder = wx.createMediaRecorder(cv, { fps: 30, videoBitsPerSecond: 1500, gop: 12 }); } catch (e) { recorder = null; }
-    if (!recorder) { this.setData({ videoOk: false }); return; }
-    this.setData({ videoBusy: true });
-    const total = 90;
-    let frame = 0;
-    const fail = () => { if (!this._gone) { this.setData({ videoBusy: false }); wx.showToast({ title: '视频生成失败，请重试', icon: 'none' }); } };
-    const tick = () => {
-      if (this._gone) return;
-      if (frame > total) {
-        recorder.stop().then(r => {
-          if (this._gone) return;
-          this.setData({ videoBusy: false });
-          shareCard.draw(ctx, size.w, size.h, card, 1, this._logo);
-          wx.shareVideoMessage({ videoPath: r.tempFilePath, fail: err => { if (String((err && err.errMsg) || '').indexOf('cancel') < 0) fail(); } });
-        }, fail);
-        return;
-      }
-      shareCard.draw(ctx, size.w, size.h, card, Math.min(1, frame / 45), this._logo);
-      frame++;
-      recorder.requestFrame(tick);
-    };
-    recorder.start().then(tick, fail);
-  },
 
   onShareAppMessage() {
     const report = this.data.report || {};
@@ -203,9 +212,11 @@ Page({
     const fallback = '/pages/topic/index/index?id=' + report.topicId;
     return {
       title, path: fallback,
-      promise: api.issueReferral(app, targetType, targetId).then(res => ({
-        title, path: api.ok(res) && res.data && res.data.token ? landingPath(res.data.token) : fallback
-      }))
+      promise: Promise.all([api.issueReferral(app, targetType, targetId), this._cardImageUrl()]).then(([res, imageUrl]) => {
+        const out = { title, path: api.ok(res) && res.data && res.data.token ? landingPath(res.data.token) : fallback };
+        if (imageUrl) out.imageUrl = imageUrl;
+        return out;
+      })
     };
   }
 });

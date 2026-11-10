@@ -9,8 +9,8 @@
     "cy-btn": "/components/cy/btn/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-tabs": "/components/cy/tabs/index",
-    "cy-celebrate": "/components/cy/celebrate/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
-    "rank-board": "/subpackageJourney/components/rank-board/index"
+    "rank-board": "/subpackageJourney/components/rank-board/index",
+    "cy-illus": "/subpackageJourney/components/cy-illus/index"
   }
 }

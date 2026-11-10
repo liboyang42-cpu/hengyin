@@ -1,4 +1,8 @@
-<view class="theme-dark st">
+<!-- l-after(2026-11-10,按业主批准的 proto/game st-overview / st-rank / st-rate / st-share):
+     结算在主题之外,纯玩家黑底白字、整屏居中,与主题外观无关。四步:总览 → 排行榜(导航栏以下的近全屏弹层,只有 全体 / 队内)→ 评价 → 分享(一行 分享 + 完成)。
+     数字全部读战报;没有的格子不出。插图用 cy-illus(qx-base 底座的空态同款插图集,分包逐字副本)。 -->
+<wxs module="cnt" src="../../../utils/wxs/count.wxs" />
+<view class="theme-dark st {{reduced ? 'st--reduced' : ''}}">
   <cy-nav-bar plain custom-back bind:back="onBack" />
   <cy-nav-spacer />
   <view class="st-dots" wx:if="{{state === 'ready'}}" aria-label="第 {{stepIndex + 1}} 步，共 4 步">
@@ -7,56 +11,70 @@
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
 
   <block wx:else>
-    <!-- 1 总览:名次 / 分数 / 节点 / 用时,全是战报事实;没有的格子不出 -->
-    <view class="st-body st-body--center" wx:if="{{step === 'overview'}}">
-      <view class="st-seal {{report.win ? '' : 'is-plain'}}" aria-hidden="true"><view class="st-seal__ring"></view><view class="st-seal__tick"></view></view>
-      <text class="st-kicker">{{report.result}}</text>
-      <text class="st-title">{{topicName || '本局'}}</text>
-      <text class="st-rank" wx:if="{{report.rankSub}}">本关{{report.rankText}}</text>
-      <view class="st-stats">
-        <view class="st-stat" wx:if="{{report.scored}}"><text class="st-stat__v">{{report.scoreText}}</text><text class="st-stat__l">分数</text></view>
-        <view class="st-stat"><text class="st-stat__v">{{report.nodesText}}</text><text class="st-stat__l">节点</text></view>
-        <view class="st-stat" wx:if="{{report.elapsedText !== '未知'}}"><text class="st-stat__v">{{report.elapsedText}}</text><text class="st-stat__l">用时</text></view>
+    <!-- 1 总览:奖杯插图 + 闪光,已通关 / 主题名 / 本关名次 / 两格(分数 · 节点);全是战报事实,没有的格子不出 -->
+    <view class="st-body st-body--center st-ov {{ovOn ? 'is-on' : ''}}" wx:if="{{step === 'overview'}}">
+      <view class="st-hero" aria-hidden="true">
+        <view class="st-glow"></view>
+        <cy-illus name="trophy" size="300" delay="{{300}}" reduced-motion="{{reduced}}" />
+        <view class="st-spk st-spk--a"><cy-illus name="sparkles" size="80" bare delay="{{900}}" reduced-motion="{{reduced}}" /></view>
+        <view class="st-spk st-spk--b"><cy-illus name="sparkles" size="56" bare delay="{{1100}}" reduced-motion="{{reduced}}" /></view>
+      </view>
+      <text class="st-kicker st-rise" style="--i:0">{{report.result}}</text>
+      <text class="st-title st-rise" style="--i:1">{{topicName || '本局'}}</text>
+      <text class="st-rank st-rise" style="--i:2" wx:if="{{report.rankSub}}">本关<text class="st-rank__n">{{report.rankText}}</text></text>
+      <view class="st-two st-rise" style="--i:3">
+        <view class="st-two__c" wx:if="{{report.scored}}"><text class="st-two__v">{{cnt.f(report.scoreText, soK)}}</text><text class="st-two__l">分数</text></view>
+        <view class="st-two__c"><text class="st-two__v">{{report.nodesText}}</text><text class="st-two__l">节点</text></view>
       </view>
     </view>
 
-    <!-- 2 排行榜:本关先给 队内 / 全体 / 队伍,其余在「更多」 -->
-    <view class="st-body" wx:elif="{{step === 'rank'}}">
-      <text class="st-h">{{topicName || '本关'}}</text>
-      <rank-board topic-id="{{report.topicId}}" activity-id="{{report.activityId}}" active="{{step === 'rank'}}" />
+    <!-- 2 排行榜:导航栏以下的近全屏弹层(业主「全屏弹窗 高一点不超过微信导航栏」);口径只留 全体 / 队内 -->
+    <view class="st-rankwrap" wx:elif="{{step === 'rank'}}">
+      <view class="st-panel {{rankOn ? 'is-on' : ''}}" style="top:{{navTop}}px" aria-role="dialog" aria-label="排行榜">
+        <scroll-view scroll-y class="st-panel__sv" enhanced show-scrollbar="{{false}}">
+          <text class="st-h">{{topicName || '本关'}}</text>
+          <rank-board topic-id="{{report.topicId}}" activity-id="{{report.activityId}}" active="{{step === 'rank'}}" preset="settle" />
+          <view class="st-panel__pad"></view>
+        </scroll-view>
+      </view>
     </view>
 
-    <!-- 3 评价:星级 + 一句话,可跳过;错误红字写在字段下面 -->
-    <view class="st-body st-body--center" wx:elif="{{step === 'rate'}}">
+    <!-- 3 评价:五颗金星依次点亮,点星后出标签片;空提交红字写在字段下面 -->
+    <view class="st-body st-body--center st-body--top" wx:elif="{{step === 'rate'}}">
       <text class="st-title">这一局怎么样？</text>
       <view class="st-stars" aria-role="radiogroup">
-        <view class="st-star {{item <= stars ? 'is-on' : ''}}" wx:for="{{starList}}" wx:key="*this" data-n="{{item}}" bindtap="pickStar" aria-role="radio" aria-checked="{{item <= stars}}" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">
-          <cy-icon name="{{item <= stars ? 'star-filled' : 'star'}}" size="56" />
+        <view class="st-star {{item <= stars ? 'is-on' : ''}}" style="--i:{{index}}" wx:for="{{starList}}" wx:key="*this" data-n="{{item}}" bindtap="pickStar" aria-role="radio" aria-checked="{{item <= stars}}" aria-label="{{item}} 星" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="{{item <= stars ? 'star-filled' : 'star'}}" size="64" />
         </view>
       </view>
-      <view class="st-field" wx:if="{{stars}}">
+      <view class="st-tags" wx:if="{{stars}}">
+        <view class="st-tag {{item.on ? 'is-on' : ''}}" style="--i:{{index}}" wx:for="{{tags}}" wx:key="label" data-i="{{index}}" bindtap="toggleTag" aria-role="checkbox" aria-checked="{{item.on}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+      </view>
+      <view class="st-field">
         <textarea class="st-textarea" value="{{review}}" maxlength="{{reviewMax}}" placeholder="喜欢哪一站？" placeholder-class="st-ph" bindinput="onReview" auto-height />
-        <text class="st-count">{{review.length}}/{{reviewMax}}</text>
+        <text class="st-count">{{review.length}} / {{reviewMax}}</text>
       </view>
       <text class="st-err" wx:if="{{rateError}}">{{rateError}}</text>
     </view>
 
-    <!-- 4 分享卡:帖文 / 故事;r3-share 整色卡(与通用分享层同版式);一颗主按钮「分享」,保存图片 / 视频并排在下 -->
-    <view class="st-body" wx:else>
+    <!-- 4 分享:帖文 / 故事 分段;卡片 = 封面淡入底 + 勋章插图 + 已通关 + 主题名 + 节点 / 分 / 名次 + 城瘾;底部一行 分享 + 完成 -->
+    <view class="st-body st-body--share" wx:else>
       <view class="st-seg"><cy-tabs variant="segmented" tabs="{{shareTabs}}" active="{{shareKind}}" bind:change="onShareKind" /></view>
-      <view class="st-card st-card--{{shareKind}}">
-        <canvas type="2d" id="share-cv" class="st-cv" aria-role="img" aria-label="分享卡"></canvas>
-      </view>
-      <view class="st-acts">
-        <button class="st-share" open-type="share" aria-label="分享"><cy-btn variant="primary">分享</cy-btn></button>
-        <view class="st-acts__row">
-          <cy-btn class="st-acts__i" variant="secondary" bindtap="saveCard" disabled="{{!cardReady}}">保存图片</cy-btn>
-          <cy-btn wx:if="{{videoOk}}" class="st-acts__i" variant="secondary" bindtap="shareVideo" disabled="{{!cardReady || videoBusy}}">{{videoBusy ? '正在生成视频' : '分享视频'}}</cy-btn>
+      <view class="st-scard st-scard--{{shareKind}}" aria-role="img" aria-label="分享卡：{{shareCard.title}}">
+        <image wx:if="{{report.cover}}" class="st-scard__bg" src="{{report.cover}}" mode="aspectFill" aria-hidden="true" />
+        <view class="st-scard__in">
+          <cy-illus name="badge" size="160" delay="{{200}}" reduced-motion="{{reduced}}" />
+          <text class="st-scard__k" wx:if="{{shareCard.kicker}}">{{shareCard.kicker}}</text>
+          <text class="st-scard__t">{{shareCard.title}}</text>
+          <text class="st-scard__m" wx:if="{{shareCard.meta}}">{{shareCard.meta}}</text>
         </view>
+        <text class="st-scard__logo">城瘾</text>
       </view>
+      <!-- 微信分享卡片图:同一版式画在隐藏画布上(onShareAppMessage imageUrl),不另出存图按钮 -->
+      <canvas type="2d" id="share-cv" class="st-cv" aria-hidden="true"></canvas>
     </view>
 
-    <view class="st-footer">
+    <view class="st-footer {{step === 'share' ? 'st-footer--row' : ''}}">
       <block wx:if="{{step === 'overview'}}">
         <cy-btn variant="primary" bindtap="goRank">看排行榜</cy-btn>
         <view class="st-link" bindtap="done" aria-role="button" aria-label="完成" hover-class="cy-pressed" hover-stay-time="80">完成</view>
@@ -65,14 +83,25 @@
         <cy-btn variant="primary" bindtap="next">评价与分享</cy-btn>
       </block>
       <block wx:elif="{{step === 'rate'}}">
-        <cy-btn variant="primary" bindtap="submitRate" disabled="{{!stars || rateBusy}}">{{rateBusy ? '正在提交' : '提交'}}</cy-btn>
+        <cy-btn variant="primary" bindtap="submitRate" disabled="{{rateBusy}}">{{rateBusy ? '正在提交' : '提交'}}</cy-btn>
         <view class="st-link" bindtap="skipRate" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</view>
       </block>
       <block wx:else>
-        <cy-btn variant="secondary" bindtap="done">完成</cy-btn>
+        <button class="st-share" open-type="share" aria-label="分享"><cy-btn variant="primary">分享</cy-btn></button>
+        <cy-btn class="st-footer__i" variant="ghost" bindtap="done">完成</cy-btn>
       </block>
     </view>
+
+    <!-- 评价已提交:居中弹窗(proto pop-rated) -->
+    <view class="st-pop" wx:if="{{thanks}}" aria-role="dialog" aria-label="评价已提交">
+      <view class="st-pop__mask"></view>
+      <view class="st-pop__card">
+        <cy-illus name="star" size="180" delay="{{100}}" reduced-motion="{{reduced}}" />
+        <text class="st-pop__t">谢谢</text>
+        <text class="st-pop__s">评价会公开，只显示昵称。</text>
+        <cy-btn variant="primary" bindtap="goShare">去分享</cy-btn>
+      </view>
+    </view>
   </block>
-  <view class="st-confetti" wx:if="{{celebrate && step === 'overview'}}"><cy-celebrate event-key="{{celebrate}}" /></view>
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 </view>
