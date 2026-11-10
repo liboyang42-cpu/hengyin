@@ -592,7 +592,44 @@ function playGetSources() {
     access: java(support + 'PlayNodeAccessService.java'),
     registration: java(support + 'CurrentPlayRegistration.java'),
     preferenceService: java(app + 'PreferencePlayService.java'),
+    giftFact: java('chengyinhub-system/src/main/java/com/chengyinhub/business/domain/GiftPlayFact.java'),
+    giftEligibility: java('chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MarketingGiftPlayEligibility.java'),
+    seatEligibility: java('chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationSeatRecipientEligibility.java'),
+    giftSql: java('chengyinhub-system/src/main/resources/mapper/business/GiftEntitlementMapper.xml'),
+    seatSql: java('chengyinhub-system/src/main/resources/mapper/business/RegistrationSeatInvitationMapper.xml'),
   };
+}
+
+function mapperSelect(xml, id) {
+  const open = `<select id="${id}"`;
+  assert.equal(xml.split(open).length, 2, `必须唯一定位 Mapper 查询 ${id}`);
+  const start = xml.indexOf(open);
+  return xml.slice(start, xml.indexOf('</select>', start));
+}
+
+// 业主 2026-11-09 批准的放宽准入：礼品/席位受让人事实只读，且必须绑定当前会员+同一主题/活动，撤销/取消/过期不放行。
+function assertWidenedAdmissionBinding(s) {
+  const gift = mapperSelect(s.giftSql, 'selectPlayFactsByOwner');
+  for (const clause of ['r.owner_type = #{ownerType}', 'r.owner_id = #{ownerId}', 'g.status in (0, 1)',
+    '(r.member_id = #{memberId} or g.claimed_member_id = #{memberId})']) assert.ok(gift.includes(clause), clause);
+  const seat = mapperSelect(s.seatSql, 'selectClaimedFactsByRecipient');
+  for (const clause of ['where i.status = 1', 'i.invitee_member_id = #{memberId}', 'r.owner_type = #{ownerType}',
+    'r.owner_id = #{ownerId}', 'i.owner_type = r.owner_type and i.owner_id = r.owner_id',
+    'r.registration_status = 2', 'r.payment_status = 2']) assert.ok(seat.includes(clause), clause);
+  assert.match(javaMethod(s.giftFact, 'public boolean claimedBy('),
+    /return Integer\.valueOf\(STATUS_CLAIMED\)\.equals\(status\) && memberId != null\s*&& memberId\.equals\(claimedMemberId\);/);
+  for (const [source, query] of [[s.giftEligibility, 'giftMapper.selectPlayFactsByOwner(memberId, OWNER_TOPIC, ownerId)'],
+    [s.seatEligibility, 'invitations.selectClaimedFactsByRecipient(memberId, ownerType, ownerId)']]) {
+    const facts = javaMethod(source, 'public List<');
+    assert.ok(facts.includes(query), query);
+    assert.match(source, /@Transactional\(readOnly = true\)\s*public List</);
+  }
+  const locked = javaMethod(s.seatEligibility, 'public boolean claimedUnderRegistrationLock(');
+  for (const predicate of ['invitations.selectByIdForUpdate(fact.getInvitationId())', 'row.claimed()',
+    'Objects.equals(row.getRegistrationId(), registration.getId())', 'Objects.equals(row.getInviteeMemberId(), memberId)',
+    'Objects.equals(row.getOwnerType(), registration.getOwnerType())', 'Objects.equals(row.getOwnerId(), registration.getOwnerId())'])
+    assert.ok(locked.includes(predicate), predicate);
+  assert.doesNotMatch(s.giftSql + s.seatSql, /<(?:update|insert|delete) id="(?:selectPlayFactsByOwner|selectClaimedFactsByRecipient)"/);
 }
 
 function javaMethod(source, declaration) {
@@ -694,38 +731,44 @@ function assertPreferenceGetContract(s) {
   assert.match(entry, /return resolveCtx\(memberId, activityId, topicId, node, null\);/);
   const admission = javaMethod(s.access, 'private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node,');
   assert.match(admission, /if \(!activity\.getTopicId\(\)\.equals\(node\.getTopicId\(\)\)\) \{ c\.error = error\("该节点不属于本次活动"\); return c; \}/);
-  // 2026-11-09 qx-b1 对齐 Questo 后端:生产入口改用带礼品/受让席位 eligibility 的重载(本人、本场、成功报名守卫不变)。
   assert.match(admission, /CurrentPlayRegistration\.require\(\s*currentPlayActivityMapper,cmsRegistrationMapper,memberId,2L,actId,registrationId,new Date\(\),false,giftPlayEligibility,seatRecipientEligibility\)/);
   assert.match(admission, /if \(ticket == null\) \{ c\.error = error\("请先报名并完成支付"\); return c; \}/);
   assert.match(admission, /if \(node\.getTopicId\(\) == null \|\| !node\.getTopicId\(\)\.equals\(tId\)\) \{ c\.error = error\("该节点不属于本主题"\); return c; \}/);
   assert.match(admission, /hasRunningSession\(memberId, tId, 0L\)/);
-  for (const port of ['requireToContinue', 'require']) {
-    assert.match(admission, new RegExp(`CurrentPlayRegistration\\.${port}\\(\\s*currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date\\(\\),\\s*(false,)?giftPlayEligibility,seatRecipientEligibility\\)`));
+  for (const [port, paid] of [['requireToContinue', ''], ['require', 'false,']]) {
+    assert.match(admission, new RegExp(`CurrentPlayRegistration\\.${port}\\(\\s*currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,registrationId,new Date\\(\\),\\s*${paid}giftPlayEligibility,seatRecipientEligibility\\)`));
   }
   assert.match(admission, /if \(pass == null\) \{ c\.error = new Failure\(402, "请先购买自玩通行证"\); return c; \}/);
   const registrationArgs = 'CmsActivityMapper activities,CmsRegistrationMapper registrations,\n            Long memberId,long ownerType,Long ownerId,Long requestedId,Date now';
   assert.match(javaMethod(s.registration, `public static CmsRegistration require(${registrationArgs})`),
     /return require\(activities,registrations,memberId,ownerType,ownerId,requestedId,now,false\);/);
-  assert.match(javaMethod(s.registration, `public static CmsRegistration require(${registrationArgs},boolean originallyRequiresPaid,\n            IMarketingGiftPlayEligibility gift,IRegistrationSeatRecipientEligibility seatRecipient)`),
+  const admissionPorts = 'IMarketingGiftPlayEligibility gift,IRegistrationSeatRecipientEligibility seatRecipient)';
+  assert.match(javaMethod(s.registration, `public static CmsRegistration require(${registrationArgs},boolean originallyRequiresPaid,\n            ${admissionPorts}`),
     /return collect\(activities,registrations,memberId,ownerType,ownerId,requestedId,now,originallyRequiresPaid,true,false,gift,seatRecipient\)\.get\(0\);/);
-  assert.match(javaMethod(s.registration, `public static CmsRegistration requireToContinue(${registrationArgs},\n            IMarketingGiftPlayEligibility gift,IRegistrationSeatRecipientEligibility seatRecipient)`),
+  assert.match(javaMethod(s.registration, `public static CmsRegistration requireToContinue(${registrationArgs},\n            ${admissionPorts}`),
     /return collect\(activities,registrations,memberId,ownerType,ownerId,requestedId,now,false,true,true,gift,seatRecipient\)\.get\(0\);/);
   const collect = javaMethod(s.registration, 'private static List<CmsRegistration> collect(');
   inOrder(collect, 'probe.setMemberId(memberId);probe.setOwnerType(ownerType);',
     'probe.setOwnerId(ownerId);probe.setRegistrationStatus(2);',
     'registrations.selectCmsRegistrationByIdForUpdate(snapshot.getId())',
     'if(!currentOwner(current,memberId,ownerType,ownerId)) continue;');
-  // 已付判定抽到 passesValueRules(本人行、礼品领取行、受让席位行共用),规则逐字不变。
-  assert.ok(collect.includes('passesValueRules(current,activity,ownerType,now,originallyRequiresPaid,continuing)'));
   assert.match(javaMethod(s.registration, 'private static boolean passesValueRules('),
     /if\(\(originallyRequiresPaid \|\| Integer\.valueOf\(3\)\.equals\(current\.getPurchaseKind\(\)\)\)\s*&& !Integer\.valueOf\(2\)\.equals\(current\.getPaymentStatus\(\)\)\) return false;/);
-  // 本人归属仍在 currentOwner;范围与成功态抽到 ownedScope(礼品/受让行共用,不判 member_id)。
-  const owner = javaMethod(s.registration, 'public static boolean currentOwner(');
-  assert.ok(owner.includes('memberId.equals(current.getMemberId())'));
-  assert.ok(owner.includes('ownedScope(current,ownerType,ownerId)'));
+  assert.equal(collect.split('if(!passesValueRules(current,activity,ownerType,now,originallyRequiresPaid,continuing)) continue;').length, 4);
+  inOrder(collect, 'Map<Long, GiftPlayFact> giftFacts = giftFacts(gift, memberId, ownerType, ownerId);',
+    'if(fact!=null && fact.withholds(memberId)) continue;',
+    'if(!fact.claimedBy(memberId)) continue;', 'registrations.selectCmsRegistrationById(fact.getRegistrationId())',
+    'if(!ownedScope(current,ownerType,ownerId)) continue;',
+    'seatRecipient.playFacts(memberId,ownerType,ownerId)', '|| !fact.getInviteeMemberId().equals(memberId)) continue;',
+    'registrations.selectCmsRegistrationByIdForUpdate(fact.getRegistrationId())',
+    'if(!ownedScope(current,ownerType,ownerId)\n                    || !seatRecipient.claimedUnderRegistrationLock(fact,memberId,current)) continue;',
+    'if(!Integer.valueOf(2).equals(current.getPaymentStatus())) continue;');
   const scope = javaMethod(s.registration, 'public static boolean ownedScope(');
-  for (const predicate of ['Long.valueOf(ownerType).equals(current.getOwnerType())',
-    'ownerId.equals(current.getOwnerId())', 'Integer.valueOf(2).equals(current.getRegistrationStatus())']) assert.ok(scope.includes(predicate), predicate);
+  for (const predicate of ['Long.valueOf(ownerType).equals(current.getOwnerType())', 'ownerId.equals(current.getOwnerId())',
+    'Integer.valueOf(2).equals(current.getRegistrationStatus())']) assert.ok(scope.includes(predicate), predicate);
+  assertWidenedAdmissionBinding(s);
+  const owner = javaMethod(s.registration, 'public static boolean currentOwner(');
+  for (const predicate of ['memberId.equals(current.getMemberId())', 'ownedScope(current,ownerType,ownerId)']) assert.ok(owner.includes(predicate), predicate);
   assert.match(javaMethod(s.context, 'public String unlockGateError(Long memberId, Long actId, CmsTopicNode node)'),
     /return playNodeAccessService\.unlockGateError\(memberId, actId, nodeScope\(node\)\);/);
   assert.match(javaMethod(s.access, 'public String unlockGateError(Long actor,Long activityId,NodeScope node)'),
@@ -765,6 +808,11 @@ function assertLeaderboardGetContract(s) {
     'regProbe.setOwnerId(actId);', 'regProbe.setRegistrationStatus(2);',
     'cmsRegistrationService.selectCmsRegistrationList(regProbe)', 'if (regs != null && !regs.isEmpty()) return true;',
     'return hasSeatRecipientFact(memberId, 2L, actId);');
+  assert.match(javaMethod(s.facts, 'private boolean hasSeatRecipientFact('),
+    /return !seatRecipientFacts\(memberId, ownerType, ownerId\)\.isEmpty\(\);/);
+  assert.match(javaMethod(s.facts, 'private List<com.chengyinhub.business.domain.SeatRecipientFact> seatRecipientFacts('),
+    /seatRecipientEligibility\.playFacts\(memberId, ownerType, ownerId\);/);
+  assertWidenedAdmissionBinding(s);
   const passEntry = javaMethod(s.facts, 'public CmsRegistration validSelfPlayPass(Long memberId, Long topicId)');
   assert.match(passEntry, /return validSelfPlayPass\(memberId, topicId, null\);/);
   const pass = javaMethod(s.facts, 'public CmsRegistration validSelfPlayPass(Long memberId, Long topicId, Long registrationId)');
@@ -794,6 +842,20 @@ test('玩法 GET 真实身份和实际 owner 守卫被改动时合同必须判�
     [assertPreferenceGetContract, 'access', 'memberId,2L,actId,registrationId,new Date()', '999L,2L,actId,registrationId,new Date()'],
     [assertPreferenceGetContract, 'registration', 'if(!currentOwner(current,memberId,ownerType,ownerId)) continue;', ''],
     [assertPreferenceGetContract, 'registration', 'return collect(activities,registrations,memberId,ownerType,ownerId,requestedId,now,originallyRequiresPaid,true,false,gift,seatRecipient).get(0);', 'return null;'],
+    [assertPreferenceGetContract, 'access', 'new Date(),false,giftPlayEligibility,seatRecipientEligibility', 'new Date(),false,giftPlayEligibility,null'],
+    [assertPreferenceGetContract, 'registration', 'if(!fact.claimedBy(memberId)) continue;', ''],
+    [assertPreferenceGetContract, 'registration', '|| !fact.getInviteeMemberId().equals(memberId)) continue;', ') continue;'],
+    [assertPreferenceGetContract, 'registration', 'if(!ownedScope(current,ownerType,ownerId)\n', 'if(false\n'],
+    [assertPreferenceGetContract, 'giftFact', 'return Integer.valueOf(STATUS_CLAIMED).equals(status) && ', 'return '],
+    [assertPreferenceGetContract, 'giftSql', '(r.member_id = #{memberId} or g.claimed_member_id = #{memberId})', '1 = 1'],
+    [assertPreferenceGetContract, 'giftSql', 'r.owner_id = #{ownerId}', 'r.owner_id is not null'],
+    [assertPreferenceGetContract, 'giftSql', 'g.status in (0, 1)', 'g.status in (0, 1, 2, 3)'],
+    [assertPreferenceGetContract, 'seatSql', 'where i.status = 1', 'where i.status in (1, 2, 3, 4)'],
+    [assertPreferenceGetContract, 'seatSql', 'i.invitee_member_id = #{memberId}', 'i.invitee_member_id is not null'],
+    [assertPreferenceGetContract, 'seatSql', 'r.owner_id = #{ownerId}', 'r.owner_id is not null'],
+    [assertPreferenceGetContract, 'seatEligibility', 'row != null && row.claimed()', 'row != null'],
+    [assertPreferenceGetContract, 'seatEligibility', 'Objects.equals(row.getInviteeMemberId(), memberId)', 'true'],
+    [assertPreferenceGetContract, 'giftEligibility', '@Transactional(readOnly = true)', '@Transactional'],
     [assertPreferenceGetContract, 'access', 'if (p.getStatus() != null && p.getStatus() == 1) return null;', 'return null;'],
     [assertPreferenceGetContract, 'preferenceService', 'if (!completedByMember(memberId, topicId, attempts))', 'if (false)'],
     [assertLeaderboardGetContract, 'controller', 'playPlayerQueryApplication.leaderboard(currentMemberId(),', 'playPlayerQueryApplication.leaderboard(999L,'],
@@ -801,6 +863,9 @@ test('玩法 GET 真实身份和实际 owner 守卫被改动时合同必须判�
     [assertLeaderboardGetContract, 'player', 'if (!playCompletionFacts.isRegistered(memberId, actId)) return error("请先报名并完成支付");', '/* if (!playCompletionFacts.isRegistered(memberId, actId)) return error("请先报名并完成支付"); */'],
     [assertLeaderboardGetContract, 'player', 'playCompletionFacts.validSelfPlayPass(memberId, tId) == null', 'false'],
     [assertLeaderboardGetContract, 'facts', 'regProbe.setOwnerId(actId);', 'regProbe.setOwnerId(999L);'],
+    [assertLeaderboardGetContract, 'facts', 'return hasSeatRecipientFact(memberId, 2L, actId);', 'return hasSeatRecipientFact(999L, 2L, actId);'],
+    [assertLeaderboardGetContract, 'facts', 'seatRecipientEligibility.playFacts(memberId, ownerType, ownerId);', 'seatRecipientEligibility.playFacts(memberId, ownerType, 999L);'],
+    [assertLeaderboardGetContract, 'seatSql', 'r.payment_status = 2', 'r.payment_status in (1, 2)'],
     [assertLeaderboardGetContract, 'facts', 'probe.setMemberId(memberId);\n        probe.setOwnerType(1L); // 1=主题(自玩通行证)', 'probe.setMemberId(999L);\n        probe.setOwnerType(1L); // 1=主题(自玩通行证)'],
   ];
   for (const [check, file, before, after] of mutations) {

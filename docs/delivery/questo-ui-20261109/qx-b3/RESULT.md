@@ -15,7 +15,7 @@
 
 | ID | 状态 | 改了什么 | 文件 | 怎么验证的 | 真机未验 |
 |---|---|---|---|---|---|
-| 首链 P7→P1→P4→P5 | fixed（链路部分为 fixture） | 战报分享会签发推广凭据，落地页 `k=r`；席位页邀请生成 `k=s` 链接；新账号打开后看到玩法模式，领取席位，再「进入本局」回到同一主题的游玩页 | 见下面各行 | rig 实跑：新账号 `e2e-b3-friend` 领到第 2 席（`P4-P5-after-claimed`），然后进入游玩页（`P1-after-enter-run`）。<br>**局的完成事实和 3 人票的支付事实是 SQL fixture 写的**（`rig/seed-b3.sql`）：本基线已停售 rig 自带开售链（「四店固定补偿产品已停止新开售」），chain 走不到真实完局。 | 真实完局→战报；微信分享卡；真实支付 |
+| 首链 P7→P1→P4→P5 | fixed（链路部分为 fixture） | 战报分享会签发推广凭据，落地页 `k=r`；席位页邀请生成 `k=s` 链接；新账号打开后看到玩法模式，领取席位，再「进入本局」回到同一主题的游玩页 | 见下面各行 | rig 实跑：新账号 `e2e-b3-friend` 领到第 2 席（`P4-P5-after-claimed`），然后进入游玩页（`P1-after-enter-run`）。<br>**局的完成事实和 3 人票的支付事实是 SQL fixture 写的**（`rig/seed-b3.sql.txt`）：本基线已停售 rig 自带开售链（「四店固定补偿产品已停止新开售」），chain 走不到真实完局。 | 真实完局→战报；微信分享卡；真实支付 |
 | P7 本局战报 | fixed | 新页 `subpackageJourney/pages/report`，结构照抄游玩完成面板。<br>结果、完成节点、用时、解谜分都读服务端，读不到不补 0：用时显示「未知」，未计分显示「本局不计分」。<br>名次只用服务端 `rank`。显式 runId 读的局与返回不一致就拒绝显示。<br>入口两处：完成面板「本局战报」行；主题记录卡「本局战报」按钮（按 sessionId 重开同一局）。 | `subpackageJourney/pages/report/*`、`subpackageJourney/utils/*`、`pages/play/index.{js,wxml}`、`components/cy/theme-records/*`、`utils/theme-records.js`、`pages/topic/index/index.wxml` | rig 截图：正常 `P7-after`、进行中 `P7-after-in-progress`、别人的局 `P7-after-not-found`、未登录 `P7-after-unauthorized`、入口 `P7-entry-before/after`。<br>入口截图是用 setData 打开完成面板的（HARNESS），点击后进入的是真实战报。单测已覆盖。 | 主题记录卡按钮：rig 里没有主题会话，未走到 |
 | P9 单关与队内榜 | fixed | 战报「名次」打开榜单面板（half 档固定）。<br>单关榜 `scope=quest`，口径写「完成节点数」。<br>只有 `choices` 给出队伍时才出「队内」页签，读 `/api/orient/team/detail`，没完成任务的成员不补名次。 | 同上 | `P9-after` 是真数据，并列名次由服务端排。 | 队内榜：rig 没有组队主题，未走到。<br>队伍之间榜（`/api/orient/team/ranking`）未接，见 needs owner |
 | §23.4 多作用域榜 | fixed | 世界、单关、城市、国家、俱乐部 × 累计/本周。<br>周界直接显示服务端的 `periodStart/periodEnd`（结束排他）。<br>`me.rank` 为空显示「暂无名次」，不显示 0 分名次。<br>服务端返回的作用域和请求的不一致时，不冒充所选榜。<br>缺冻结地理的局写「N 局缺少冻结地理，未计入」。 | 同上 | `S234-after-week/city/world`：城市、国家页签是用 URL 传入的冻结码打开的，rig 数据带 `contentGeography`。 | 见 needs owner：城市、国家、俱乐部码目前没有服务端来源 |
@@ -44,7 +44,7 @@
   - dockerd 改用 mirror.gcr.io，因为 Docker Hub 返回 429；
   - rig 的 `app.py` 透传假的 `CHENGYIN_OSS_*`，否则 `/api/play/nodes` 报「对象存储配置缺失」；
   - 席位邀请那一列的排序规则，见上面的缺陷；
-  - fixture SQL 在 `rig/seed-b3.sql`。
+  - fixture SQL 在 `rig/seed-b3.sql.txt`。
 
 ## needs owner（每项写了已经实现的默认做法）
 
