@@ -850,6 +850,7 @@
       "path": "videobounty",
       "component": "business/videobounty/index",
       "permission": "business:videobounty:review",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
       "controller": "VideoBountyAdminController.java"
     },
     {
@@ -859,6 +860,7 @@
       "path": "content-landing",
       "component": "business/contentlanding/index",
       "permission": "business:contentlanding:review",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
       "controller": "ContentLandingMetadataAdminController.java"
     },
     {
@@ -868,6 +870,7 @@
       "path": "hosttip",
       "component": "business/hosttip/index",
       "permission": "business:hosttip:audit",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
       "controller": "HostTipAdminController.java"
     },
     {
@@ -877,6 +880,7 @@
       "path": "channel-voucher",
       "component": "business/channel/index",
       "permission": "business:marketing:channel:list",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
       "controller": "ChannelVoucherAdminController.java"
     },
     {
@@ -886,6 +890,7 @@
       "path": "revenue",
       "component": "business/revenue/index",
       "permission": "business:revenue:list",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
       "controller": "MarketingRevenueController.java"
     },
     {
@@ -895,6 +900,7 @@
       "path": "ecommerce-payout",
       "component": "business/finance/ecommerce-payout/index",
       "permission": "business:ecommercepayout:query",
+      "source": "chengyinhub-admin/sql/migration_20261110_ecommerce_payout_wiring.sql",
       "controller": "EcommercePayoutAdminController.java"
     }
   ],
@@ -3111,6 +3117,7 @@
         "path": "videobounty",
         "component": "business/videobounty/index",
         "permission": "business:videobounty:review",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
         "controller": "VideoBountyAdminController.java"
       }
     },
@@ -3125,6 +3132,7 @@
         "path": "content-landing",
         "component": "business/contentlanding/index",
         "permission": "business:contentlanding:review",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
         "controller": "ContentLandingMetadataAdminController.java"
       }
     },
@@ -3139,6 +3147,7 @@
         "path": "hosttip",
         "component": "business/hosttip/index",
         "permission": "business:hosttip:audit",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
         "controller": "HostTipAdminController.java"
       }
     },
@@ -3153,6 +3162,7 @@
         "path": "channel-voucher",
         "component": "business/channel/index",
         "permission": "business:marketing:channel:list",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
         "controller": "ChannelVoucherAdminController.java"
       }
     },
@@ -3167,6 +3177,7 @@
         "path": "revenue",
         "component": "business/revenue/index",
         "permission": "business:revenue:list",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
         "controller": "MarketingRevenueController.java"
       }
     },
@@ -3181,6 +3192,7 @@
         "path": "ecommerce-payout",
         "component": "business/finance/ecommerce-payout/index",
         "permission": "business:ecommercepayout:query",
+        "source": "chengyinhub-admin/sql/migration_20261110_ecommerce_payout_wiring.sql",
         "controller": "EcommercePayoutAdminController.java"
       }
     }

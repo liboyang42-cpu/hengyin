@@ -44,11 +44,11 @@
         select <include refid="orderColumns"/> from platform_pass_order where order_no = #{orderNo}
     </select>
 
-    <select id="selectOrderByNoForUpdate" resultMap="orderRow">
+    <select id="selectOrderByNoForUpdate" resultMap="orderRow" useCache="false" flushCache="true">
         select <include refid="orderColumns"/> from platform_pass_order where order_no = #{orderNo} for update
     </select>
 
-    <select id="selectOrderByRefundNoForUpdate" resultMap="orderRow">
+    <select id="selectOrderByRefundNoForUpdate" resultMap="orderRow" useCache="false" flushCache="true">
         select <include refid="orderColumns"/> from platform_pass_order where refund_no = #{refundNo} for update
     </select>
 
@@ -99,7 +99,7 @@
         where id = #{id} and status = 4 and refund_no is not null
     </update>
 
-    <select id="selectLatestValidToForUpdate" resultType="java.util.Date">
+    <select id="selectLatestValidToForUpdate" resultType="java.util.Date" useCache="false" flushCache="true">
         select max(valid_to) from platform_pass_membership
         where member_id = #{memberId} and status = 1 and valid_to &gt; #{now}
         for update
