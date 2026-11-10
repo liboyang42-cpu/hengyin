@@ -54,20 +54,18 @@
       <cy-btn class="jn-grow" variant="primary" bindtap="onGoStart">去起点</cy-btn>
     </view>
 
-    <!-- 邀请半屏:发给微信好友(主路径)+ 已邀请列表(可撤回)。二维码 / 加入码服务端没有,不画 -->
-    <cy-sheet show="{{inviteShow}}" title="邀请同行" bind:close="onCloseInvite">
-      <view class="lb-sheet">
-        <button wx:if="{{inviteToken}}" class="jn-share" open-type="share" aria-label="发给微信好友"><cy-btn variant="primary">发给微信好友</cy-btn></button>
-        <cy-btn wx:elif="{{lobby.canInvite || pendingInvite}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onInvite">{{pendingInvite ? '查询邀请结果' : '发给微信好友'}}</cy-btn>
-        <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
-        <view class="jn-group lb-sheet__list" wx:if="{{lobby.invited.length}}">
-          <view class="jn-row" wx:for="{{lobby.invited}}" wx:key="key">
-            <text class="jn-rank">{{item.no}}</text>
-            <view class="jn-row__t"><text class="jn-row__b">{{item.label}}</text><text class="jn-row__s" wx:if="{{item.expires}}">{{item.expires}}</text></view>
-            <text class="jn-row__v jn-danger-text" wx:if="{{item.canCancel}}" data-id="{{item.invitationId}}" bindtap="onCancel" aria-role="button" aria-label="撤回第{{item.no}}席邀请" hover-class="cy-pressed" hover-stay-time="80">撤回</text>
-          </view>
+    <!-- 已邀请列表(可撤回)留在页面里;邀请本身走统一的 Spotify 式邀请页(cy-share-card kind=invite,l-after) -->
+    <view class="lb-invited" wx:if="{{lobby.showParty && (lobby.invited.length || actionError)}}">
+      <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
+      <view class="jn-group" wx:if="{{lobby.invited.length}}">
+        <view class="jn-row" wx:for="{{lobby.invited}}" wx:key="key">
+          <text class="jn-rank">{{item.no}}</text>
+          <view class="jn-row__t"><text class="jn-row__b">{{item.label}}</text><text class="jn-row__s" wx:if="{{item.expires}}">{{item.expires}}</text></view>
+          <text class="jn-row__v jn-danger-text" wx:if="{{item.canCancel}}" data-id="{{item.invitationId}}" bindtap="onCancel" aria-role="button" aria-label="撤回第{{item.no}}席邀请" hover-class="cy-pressed" hover-stay-time="80">撤回</text>
         </view>
       </view>
-    </cy-sheet>
+    </view>
+    <!-- 邀请同行 = 统一的 Spotify 式邀请页:封面压暗卡 + 邀请人 · 剩余席位 + 码;「发给微信好友」走本页 onShareAppMessage(带席位邀请 token) -->
+    <cy-share-card show="{{inviteShow}}" card="{{inviteCard}}" bind:close="onCloseInvite" />
   </block>
 </view>

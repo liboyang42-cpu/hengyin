@@ -2,6 +2,7 @@ const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const modal = require('../../../utils/modal.js');
 const { resolveTopicCover } = require('../../../utils/topic-share.js');
+const illus = require('../../components/cy-illus/art.js');
 const joinView = require('../../utils/join-view.js');
 const lobby = require('../../utils/lobby-view.js');
 const app = getApp();
@@ -17,7 +18,7 @@ const INVITE_KEY = 'journey-seat-invite:';
 Page({
   data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', seats: null,
     busy: false, actionError: '', inviteToken: '', pendingInvite: false,
-    lobby: null, head: null, me: null, tiles: [], inviteShow: false, playUrl: '' },
+    lobby: null, head: null, me: null, tiles: [], inviteShow: false, inviteCard: null, playUrl: '' },
 
   onLoad(options) {
     this._registrationId = view.isId(options && options.registrationId) ? String(options.registrationId) : '';
@@ -73,11 +74,18 @@ Page({
       } });
   },
 
+  // l-after:邀请同行走统一的 Spotify 式邀请页(cy-share-card kind=invite):主题封面 + 名称、邀请人、还有 N 个席位、信封插图
   onOpenInvite() {
     const l = this.data.lobby;
-    if (!l || (!l.canInvite && !(l.invited || []).length)) return;
-    this.setData({ inviteShow: true });
-    if (!this.data.inviteToken && this.data.lobby.canInvite && !this.data.busy) this.onInvite();
+    if (!l || !l.canInvite) return;
+    const head = this.data.head || {};
+    const me = this.data.me || {};
+    const s = this._summary || {};
+    this.setData({ inviteShow: true, inviteCard: {
+      kind: 'invite', id: String(s.topicId || ''), title: head.name || '一起来玩', cover: head.cover || '',
+      inviter: me.name || '', seatsLeft: l.openCount, art: illus.layers('envelope').fg
+    } });
+    if (!this.data.inviteToken && !this.data.busy) this.onInvite();
   },
   onSeatTap(e) { if (e.currentTarget.dataset.tappable) this.onOpenInvite(); },
   onCloseInvite() { this.setData({ inviteShow: false }); },

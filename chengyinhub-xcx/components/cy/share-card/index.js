@@ -18,6 +18,9 @@ const KINDS = {
   medal: { label: '勋章', colors: ['#5A3D12', '#8E6A26', '#1D1A14', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿) */
   // 第九轮 m1-9:商家主页分享店铺,版式同活动卡(封面 / 店名 / 地址),码是店铺码
   shop: { label: '店铺', colors: ['#5A3426', '#8E6430', '#1E2A24', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿,同活动) */
+  // l-after(2026-11-10,业主批准 proto/game sh-invite):所有邀请(同行席位 / 队伍 / 邀请好友)统一走这一层,
+  // 卡 = 封面压暗 + 眉题 + 大斜体主题名 + 竖向路线点 + 邀请人与剩余席位 + 城瘾 / 码;色块同主题卡
+  invite: { label: '邀请', colors: ['#7A2619', '#B8862F', '#2C2A26', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿,同主题) */
 };
 const CHANNELS = [
   { key: 'moments', label: '朋友圈', icon: 'image' },
@@ -32,22 +35,33 @@ const LOGO = '/images/cy_logo_mark.png';
 const ART = '/components/cy/share-card/route-art.png'; // 没有封面时的上半插画(预览同一张)
 
 /** 卡上的眉题与副信息(纯函数,预览与导出图共用):没有的行不出 */
+// 邀请人一行:「X 邀请你 · 还有 N 个席位」,席位数只在宿主给了数字时写(不补 0)
+function inviterLine(inviter, seatsLeft) {
+  const who = String(inviter || '').trim();
+  const n = Number(seatsLeft);
+  const seats = seatsLeft !== null && seatsLeft !== undefined && seatsLeft !== '' && Number.isFinite(n) && n >= 0 ? ' · 还有 ' + n + ' 个席位' : '';
+  return who ? who + ' 邀请你' + seats : (seats ? seats.slice(3) : '');
+}
+
 function cardText(kind, meta, date, when, stops) {
   const join = (parts) => parts.filter(Boolean).join(' · ');
   if (kind === 'shop') return { eyebrow: '店铺', sub: when };
   if (kind === 'activity') return { eyebrow: '活动', sub: join([date, when]) };
   if (kind === 'medal') return { eyebrow: '勋章', sub: meta };
+  if (kind === 'invite') return { eyebrow: meta || '邀请 · 和我一起走这条路', sub: '' };
   return { eyebrow: meta ? '主题 · ' + meta : '主题', sub: join(stops) };
 }
 
 Component({
   properties: {
     show: { type: Boolean, value: false },
-    // { kind: activity | theme | medal, id, title, meta, cover, date, when, stops: [] }
+    // { kind: activity | theme | medal | shop | invite, id, title, meta, cover, date, when, stops: [],
+    //   invite 另有 inviter(邀请人昵称)、seatsLeft(剩余席位数,没有就不写)、art(宿主 cy-illus 的 data URI,可缺)、qr(宿主已有的码图,给了就不再取主题码) }
     card: { type: Object, value: {} },
   },
   data: {
-    statusBarHeight: 20, kind: 'theme', label: '主题', title: '', meta: '', cover: '', eyebrow: '主题', sub: '',
+    statusBarHeight: 20, kind: 'theme', label: '主题', heading: '分享主题', title: '', meta: '', cover: '', eyebrow: '主题', sub: '',
+    steps: [], inviterText: '', art: '',
     colors: KINDS.theme.colors, colorIndex: 0, bg: KINDS.theme.colors[0], qr: '', channels: CHANNELS,
   },
   observers: {
@@ -61,15 +75,19 @@ Component({
       this._open = (this._open || 0) + 1;
       const stops = (Array.isArray(c.stops) ? c.stops : []).filter(Boolean).slice(0, 5);
       const text = cardText(kind, c.meta || '', c.date || '', c.when || '', stops);
+      const givenQr = kind === 'invite' && c.qr ? (app.getImgUrl ? app.getImgUrl(c.qr) : c.qr) : '';
       this.setData({
         statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
-        kind, label: KINDS[kind].label, title: c.title || KINDS[kind].label,
+        kind, label: KINDS[kind].label, heading: kind === 'invite' ? '邀请好友' : '分享' + KINDS[kind].label, title: c.title || KINDS[kind].label,
         meta: c.meta || '',
         cover: c.cover && app.getImgUrl ? app.getImgUrl(c.cover) : (c.cover || ''),
         eyebrow: text.eyebrow, sub: text.sub,
-        colors: KINDS[kind].colors, colorIndex: 0, bg: KINDS[kind].colors[0], qr: '',
+        steps: kind === 'invite' ? stops.slice(0, 3) : [],
+        inviterText: kind === 'invite' ? inviterLine(c.inviter, c.seatsLeft) : '',
+        art: kind === 'invite' && typeof c.art === 'string' && c.art.indexOf('data:image/svg+xml') === 0 ? c.art : '',
+        colors: KINDS[kind].colors, colorIndex: 0, bg: KINDS[kind].colors[0], qr: givenQr,
       });
-      this._loadCode();
+      if (!givenQr) this._loadCode();
       this._loadTint();
     },
   },
@@ -91,9 +109,9 @@ Component({
       app.sendRequest({ url: '/api/official/events/' + id + '/share-code', method: 'POST', hideLoading: true, success: done });
       return;
     }
-    // 主题出主题码;勋章出首页码(不带 id)
+    // 主题出主题码;邀请带主题 id 时同主题码;勋章 / 不带 id 的邀请出首页码
     app.sendRequest({ url: '/api/topic/share-code', method: 'POST', hideLoading: true,
-      data: kind === 'theme' && /^\d{1,18}$/.test(id) ? { id } : {}, success: done });
+      data: (kind === 'theme' || kind === 'invite') && /^\d{1,18}$/.test(id) ? { id } : {}, success: done });
   },
 
   /* qx-a7 V1-P36(Spotify):第一个色块取封面主色,默认就用它;取不到就保留原四个色块。
@@ -135,6 +153,7 @@ Component({
   },
 
   _shareText() {
+    if (this.data.kind === 'invite') return (this.data.inviterText ? this.data.inviterText + ' · ' : '') + this.data.title + '\n微信搜索「城瘾」小程序';
     return this.data.title + (this.data.meta ? ' · ' + this.data.meta : '') + '\n微信搜索「城瘾」小程序';
   },
 
@@ -199,6 +218,7 @@ Component({
   _exportImage() {
     if (this._image) return Promise.resolve(this._image);
     const d = this.data;
+    if (d.kind === 'invite') return this._exportInvite();
     return this._canvas().then((cv) => Promise.all([this._img(cv, d.cover), this._img(cv, d.qr), this._img(cv, LOGO), this._img(cv, d.cover || d.kind === 'medal' ? '' : ART)]).then(([cover, qr, logo, art]) => {
       const SS = 2;
       cv.width = W * SS; cv.height = H * SS;
@@ -245,6 +265,45 @@ Component({
       g.textAlign = 'left'; g.textBaseline = 'alphabetic';
       g.fillStyle = '#FFFFFF'; g.font = '800 40px sans-serif'; g.fillText('城瘾', 54, H - 54); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       const qs = d.kind === 'shop' ? 172 : 134;
+      if (qr) { g.fillStyle = '#FFFFFF'; round(W - 43 - qs, H - 43 - qs, qs, qs, 16); g.fill(); g.drawImage(qr, W - 35 - qs, H - 35 - qs, qs - 16, qs - 16); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      return new Promise((resolve, reject) => wx.canvasToTempFilePath({
+        canvas: cv, fileType: 'png', destWidth: cv.width, destHeight: cv.height,
+        success: (r) => { this._image = r.tempFilePath; resolve(r.tempFilePath); }, fail: reject,
+      }));
+    }));
+  },
+
+  /** 邀请卡导出图(与预览同版式):封面压暗铺满、眉题、大斜体标题、竖向路线点、邀请人一行、左下字标 + 右下码 */
+  _exportInvite() {
+    const d = this.data;
+    return this._canvas().then((cv) => Promise.all([this._img(cv, d.cover), this._img(cv, d.qr)]).then(([cover, qr]) => {
+      const SS = 2;
+      cv.width = W * SS; cv.height = H * SS;
+      const g = cv.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.scale(SS, SS);
+      const round = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+      const line = (text, maxW) => { let t = String(text || ''); if (g.measureText(t).width <= maxW) return t; while (t.length > 1 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; };
+      g.fillStyle = d.bg; g.fillRect(0, 0, W, H);
+      if (cover) { const s = Math.max(W / cover.width, H / cover.height); g.drawImage(cover, (W - cover.width * s) / 2, (H - cover.height * s) / 2, cover.width * s, cover.height * s); }
+      g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 0, W, H); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '600 32px sans-serif'; g.fillText(line(d.eyebrow, W - 108), 54, 110); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      g.fillStyle = '#FFFFFF'; g.font = 'italic 900 84px sans-serif'; /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      let y = 210;
+      fitRows(d.title, (t) => g.measureText(t).width, W - 108, 2).forEach((r) => { g.fillText(r, 54, y); y += 96; });
+      y += 40;
+      g.font = '600 36px sans-serif';
+      d.steps.forEach((st, i) => {
+        if (i) { g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 3; g.beginPath(); g.moveTo(80, y - 86); g.lineTo(80, y - 50); g.stroke(); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(80, y - 14, 26, 0, Math.PI * 2); g.fill(); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = '#121317'; g.font = '800 28px sans-serif'; g.textAlign = 'center'; g.fillText(String(i + 1), 80, y - 4); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = '#FFFFFF'; g.font = '600 36px sans-serif'; g.textAlign = 'left'; g.fillText(line(st, W - 200), 130, y); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        y += 90;
+      });
+      if (d.inviterText) { g.fillStyle = 'rgba(255,255,255,.85)'; g.font = '34px sans-serif'; g.fillText(line(d.inviterText, W - 108), 54, H - 200); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      g.fillStyle = '#FFFFFF'; g.font = '800 40px sans-serif'; g.fillText('城瘾', 54, H - 54); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      const qs = 150;
       if (qr) { g.fillStyle = '#FFFFFF'; round(W - 43 - qs, H - 43 - qs, qs, qs, 16); g.fill(); g.drawImage(qr, W - 35 - qs, H - 35 - qs, qs - 16, qs - 16); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       return new Promise((resolve, reject) => wx.canvasToTempFilePath({
         canvas: cv, fileType: 'png', destWidth: cv.width, destHeight: cv.height,

@@ -27,6 +27,21 @@
 .sc-medal { position: absolute; left: 0; right: 0; top: 0; height: 434rpx; display: flex; align-items: center; justify-content: center; color: #E9B44C; } /* ds-ok 勋章金 */
 .sc-medal-img { width: 224rpx; height: 224rpx; }
 
+/* l-after 邀请卡:封面压暗铺满(没有封面就是色块),文字左对齐,路线点竖排,邀请人一行,底部字标 + 码 */
+.sc-card--invite .sc-inv-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.sc-card--invite .sc-inv-shade { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, .55); } /* ds-ok 封面压暗,白字可读 */
+.sc-inv { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; padding: 40rpx; box-sizing: border-box; text-align: left; }
+.sc-inv-eb { font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字 */
+.sc-inv-big { margin: 16rpx 0 28rpx; font-size: 64rpx; line-height: 1.05; font-weight: 900; font-style: italic; color: #FFFFFF; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } /* ds-ok 卡片压字;大斜体标题 */
+.sc-inv-line { flex: 1; display: flex; flex-direction: column; }
+.sc-inv-step { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 68rpx; font-size: var(--cy-type-body); font-weight: 600; color: #FFFFFF; } /* ds-ok 卡片压字 */
+.sc-inv-step + .sc-inv-step::before { content: ''; position: absolute; left: 19rpx; top: -28rpx; height: 28rpx; border-left: 3rpx solid rgba(255, 255, 255, .4); } /* ds-ok 路线连线 */
+.sc-inv-dot { flex: none; width: 40rpx; height: 40rpx; border-radius: 50%; background: #FFFFFF; color: #121317; font-size: var(--cy-type-caption); font-weight: 800; line-height: 40rpx; text-align: center; } /* ds-ok 路线点 */
+.sc-inv-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-inv-who { display: flex; align-items: center; gap: 16rpx; margin: 8rpx 0 12rpx; font-size: var(--cy-type-label); color: rgba(255, 255, 255, .85); } /* ds-ok 卡片压字 */
+.sc-inv-art { flex: none; width: 72rpx; height: 72rpx; }
+.sc-qr--inv { width: 112rpx; height: 112rpx; }
+
 .sc-sw { position: relative; flex: none; display: flex; justify-content: center; gap: 0; }
 .sc-swatch { width: 72rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
 .sc-dot { width: 32rpx; height: 32rpx; border-radius: 50%; box-shadow: inset 0 0 0 3rpx rgba(255, 255, 255, .35); transition: transform .2s; } /* ds-ok 色块描边 */

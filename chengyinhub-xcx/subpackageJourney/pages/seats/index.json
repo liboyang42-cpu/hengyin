@@ -8,7 +8,7 @@
     "cy-empty": "/components/cy/empty/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-sheet": "/components/cy/sheet/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-share-card": "/components/cy/share-card/index"
   }
 }

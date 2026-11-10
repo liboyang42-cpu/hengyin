@@ -44,6 +44,8 @@ function lobbyView(seats, raw, me) {
     circles,
     multi: total !== null && total > 1,
     canInvite: !!seats.canInvite,
+    // l-after 邀请卡上的「还有 N 个席位」:只数服务端给出的 AVAILABLE 席位
+    openCount: circles.filter(c => c.kind === 'open').length,
     invited
   };
 }

@@ -4,12 +4,26 @@
 <view wx:if="{{show}}" class="sc" style="--sc-bg:{{bg}};padding-top:{{statusBarHeight}}px;" catchtouchmove="noop">
   <view class="sc-top">
     <view class="sc-x" bindtap="close" aria-role="button" aria-label="关闭分享" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="36" /></view>
-    <text class="sc-h">分享{{label}}</text>
+    <text class="sc-h">{{heading}}</text>
     <view class="sc-sp"></view>
   </view>
 
   <view class="sc-stage">
-    <view class="sc-card sc-card--{{kind}}">
+    <!-- l-after 邀请卡(proto sh-invite):封面压暗铺满,眉题、大斜体主题名、竖向路线点、邀请人 + 剩余席位、城瘾 + 码;卡片完整可见 -->
+    <view class="sc-card sc-card--invite" wx:if="{{kind === 'invite'}}">
+      <image wx:if="{{cover}}" class="sc-inv-bg" src="{{cover}}" mode="aspectFill" aria-hidden="true" />
+      <view class="sc-inv-shade"></view>
+      <view class="sc-inv">
+        <text class="sc-inv-eb">{{eyebrow}}</text>
+        <text class="sc-inv-big">{{title}}</text>
+        <view class="sc-inv-line">
+          <view class="sc-inv-step" wx:for="{{steps}}" wx:key="*this"><text class="sc-inv-dot">{{index + 1}}</text><text class="sc-inv-name">{{item}}</text></view>
+        </view>
+        <view class="sc-inv-who" wx:if="{{inviterText}}"><image wx:if="{{art}}" class="sc-inv-art" src="{{art}}" mode="aspectFit" aria-hidden="true" /><text>{{inviterText}}</text></view>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr sc-qr--inv" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+      </view>
+    </view>
+    <view class="sc-card sc-card--{{kind}}" wx:else>
       <!-- 上半:主题 / 活动 / 店铺是封面(没有就用路线插画);勋章是勋章本身 -->
       <view class="sc-art">
         <block wx:if="{{kind === 'medal'}}">
