@@ -4300,9 +4300,17 @@ page { background: var(--cy-btn-solid-bg); }
 .node-binding__row { display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
 .node-binding__label { font-size: var(--cy-font-label); color: var(--cy-color-text-primary); }
 .node-binding__error { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-status-danger); }
-.node-shared { margin-top: var(--cy-space-3); }
+.node-shared { margin-top: 0; }
 .node-shared__site { display: block; margin-top: var(--cy-space-1); }
-.node-shared__action { max-width: 100%; width: fit-content; height: auto; min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); white-space: normal; }
+.node-shared__row {
+  display: flex; align-items: center; gap: var(--cy-space-2);
+  min-height: var(--cy-btn-h);
+  border-top: 1rpx solid var(--cy-color-border-subtle);
+  color: var(--cy-color-text-tertiary);
+}
+.node-shared__row-t { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.node-shared__row-t.is-link { color: var(--cy-color-status-info); font-weight: 600; }
+.node-shared__row-v { flex: none; font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
 
 /* 10-28 原型 A e-node / e-quest：分组列表用 L1 的 cy-list-group / cy-list-row，这里只补行内输入框和组内的附加内容。 */
 .node-grp__input { flex: 1; min-width: 0; text-align: right; font-size: var(--cy-font-body); color: var(--cy-color-text-primary); }
@@ -4700,9 +4708,15 @@ page { background: var(--cy-btn-solid-bg); }
    ⚠️ scroll-view 横滑必须 white-space: nowrap + inline-block 子项,
    用 flex 会被 scroll-view 的内容宽度算成一屏、滑不动。 */
 .temp-rail {
-  width: 100%;
+  width: auto;
   white-space: nowrap;
 }
+
+/* r2-create(a5-v3-46 业主「可以横向滑动的 可以漏出来右边没有显示完整的正方形 让玩家知道可以滑动」):
+   方卡加宽到一屏两张整 + 第三张露出约四分之一;横滑轨向右出血到屏幕边,露出的那一截贴着屏幕边被截断。 */
+.pop-cont-games .temp-rail { margin-right: calc(-1 * var(--cy-page-x, var(--cy-space-4))); }
+.temp-foot { display: block; }
+.node-sheet__top-spacer { width: var(--cy-btn-h); }
 
 .temp-rail__ul {
   display: inline-block;
@@ -4714,16 +4728,16 @@ page { background: var(--cy-btn-solid-bg); }
 .temp-rail__li {
   display: inline-block;
   vertical-align: top;
-  width: 210rpx;
+  width: 288rpx;
   margin-right: var(--cy-space-2);
   white-space: normal;
 }
 
-.temp-rail__li:last-child { margin-right: 0; }
+.temp-rail__li:last-child { margin-right: var(--cy-space-4); }
 
 .temp-rail__pic {
-  width: 210rpx;
-  height: 210rpx;
+  width: 288rpx;
+  height: 288rpx;
   display: block;
   border-radius: var(--cy-radius-xl);
   background: var(--cy-color-bg-surface-subtle);
@@ -4738,8 +4752,8 @@ page { background: var(--cy-btn-solid-bg); }
   left: 0;
   top: 0;
   z-index: 1;
-  width: 210rpx;
-  height: 210rpx;
+  width: 288rpx;
+  height: 288rpx;
   box-sizing: border-box;
   border-radius: var(--cy-radius-xl);
   box-shadow: inset 0 0 0 4rpx var(--cy-color-selection);
@@ -4759,7 +4773,7 @@ page { background: var(--cy-btn-solid-bg); }
   align-items: center;
   justify-content: center;
 }
-.temp-rail__create-img { width: 128rpx; height: 128rpx; }
+.temp-rail__create-img { width: 160rpx; height: 160rpx; }
 
 .temp-rail__li .item-txt { padding-top: var(--cy-space-1); }
 

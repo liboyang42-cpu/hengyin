@@ -126,7 +126,6 @@ const EXPECTED_NAV_ROUTES = [
   // 2026-11-09 qx-b5:通行证列表/详情、视频悬赏为 cy-nav-bar plain + cy-page-title 标准二级页;礼品领取用导航栏标题
   'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
   'subpackageMember/market/gift/index', 'subpackageA/pages/video-bounty/index',
-  'pages/publish/preset/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/landing/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/report/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
@@ -205,7 +204,6 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   /* 2026-09-22 Phase 0 物品卡实验室页:普通玩家二级页,左对齐大标题「立体藏品卡」由 cy-page-title 出。 */
   /* 2026-09-22 Phase 3 藏品册页:普通玩家二级页,左对齐大标题「藏品册」由 cy-page-title 出。 */
   // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
-  'pages/publish/preset/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/landing/index', 'subpackageJourney/pages/report/index', // 2026-11-10 qx-c3:两页标题改为条件外 cy-page-title(qx-b3 分支同改)
@@ -351,8 +349,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-09 V3-42 −1:时光胶囊 subpackageTools/capsule 先删(custom 导航)⇒ 156;custom 155。
   // 2026-11-10 staging 合流:再叠加 qx-a4 −1(时光胶囊)⇒ 167;custom 166。
   // 2026-11-10 qx-b4 +1(custom 导航):固定玩法预设 pages/publish/preset ⇒ 158;custom 157。
-  assert.equal(rows.length, 167, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 166)
+  // 2026-11-10 r2-create(b4-21):撤掉 pages/publish/preset ⇒ 166;custom 165。
+  assert.equal(rows.length, 166, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 165)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)
