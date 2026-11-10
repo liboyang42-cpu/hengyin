@@ -240,7 +240,7 @@ test('正文插入栏只有玩法图片音频分割线地点，旧相册块仍�
   for (const handler of ['insertStoryGameAt', 'insertStoryTextAt', 'insertStoryImageAt', 'insertStoryAudioAt', 'insertStoryNodeAt', 'toggleStoryInsertMenu']) {
     assert.equal((wxml.match(new RegExp('catchtap="' + handler + '"', 'g')) || []).length, 0)
   }
-  assert.equal((wxml.match(/catchtap="onStoryToolbarInsert"/g) || []).length, 5)
+  assert.equal((wxml.match(/catchtap="onStoryInsertPick"/g) || []).length, 5)
   assert.doesNotMatch(wxml, /class="story-varsheet__hint"/, '变量列表不显示说明小字')
   for (const handler of ['insertStoryDreamAt', 'insertStoryVoiceAt', 'insertStoryOddAt', 'insertStoryRevealAt', 'openStoryVarSheet', 'toggleStoryTextSettings']) {
     assert.ok(!wxml.includes('catchtap="' + handler + '"'))

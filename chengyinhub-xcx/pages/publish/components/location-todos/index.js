@@ -11,9 +11,11 @@ Component({
     scope: { type: String, value: '' },
     chapters: { type: Array, value: [] }
   },
-  data: { view: null, summary: '', open: false, pickShow: false, pickItems: [], rowError: {}, busyKey: '' },
+  data: { view: null, summary: '', open: false, pickShow: false, pickItems: [], rowError: {}, busyKey: '', slots: {} },
   observers: {
-    topicId(id) { if (id) this.load(); }
+    topicId(id) { if (id) this.load(); },
+    // 每一行对应的节点与它当前的地址(编辑器里的真实表单值),替换后立刻跟着变
+    chapters(chapters) { this.setData({ slots: todos.slotNodes(this.data.view, chapters) }); }
   },
   lifetimes: { detached() { this._seq = (this._seq || 0) + 1; } },
   pageLifetimes: { show() { if (this.data.topicId && this._loaded) this.load(); } },
@@ -30,7 +32,7 @@ Component({
           // 读取失败不画「没有待办」:保留上次确认的视图
           if (!res || String(res.code) !== '200') return;
           const view = todos.view(res.data);
-          this.setData({ view, summary: todos.summaryText(view) });
+          this.setData({ view, summary: todos.summaryText(view), slots: todos.slotNodes(view, this.data.chapters) });
         }
       });
     },
@@ -46,13 +48,27 @@ Component({
       this.setData({ pickShow: true, pickItems: nodes.map(n => n.label) });
     },
     closePick() { this.setData({ pickShow: false }); },
+    // 只换这一处的地址:交给编辑器用同一个选点器改该节点的地点,不换绑整个节点
+    replacePlace(e) {
+      const nodeId = e.currentTarget.dataset.node;
+      if (nodeId) this.triggerEvent('replace', { nodeId: String(nodeId) });
+    },
+    // 认领到的同名节点:确认 = 把这一处绑到它(同一条 /binding)
+    confirmPlace(e) {
+      if (this.data.busyKey) return;
+      this._bind(e.currentTarget.dataset.slot, String(e.currentTarget.dataset.node || ''));
+    },
     onPicked(e) {
       const node = this._pickNodes && this._pickNodes[e.detail.index];
       const slotKey = this._pickSlot;
       this.setData({ pickShow: false });
       if (!node || !slotKey) return;
+      this._bind(slotKey, node.id);
+    },
+    _bind(slotKey, nodeId) {
+      if (!slotKey || !nodeId) return;
       const row = (this.data.view.rows || []).find(r => r.slotKey === slotKey);
-      const data = { topicId: this.data.topicId, scope: this.data.scope || '', slotKey, nodeId: node.id };
+      const data = { topicId: this.data.topicId, scope: this.data.scope || '', slotKey, nodeId };
       if (row && row.revision != null) data.expectedRevision = String(row.revision);
       this.setData({ busyKey: slotKey, ['rowError.' + slotKey]: '' });
       app.sendRequest({

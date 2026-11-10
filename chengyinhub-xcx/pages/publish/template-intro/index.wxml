@@ -40,8 +40,7 @@
       <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">
         开始创建
       </cy-btn>
-      <!-- qx-b4 §21:固定玩法预设起一个个人草稿;预设草稿只属于登录本人,商家岗位不出 -->
-      <cy-btn wx:if="{{operationScope !== 'MERCHANT'}}" class="ti-preset" variant="ghost" style="width:100%" disabled="{{navigating}}" bindtap="goPreset">从预设开始</cy-btn>
+      <!-- r2-create(b4-21 业主「这些就是我们的玩法模板啊 就是直接从主题或玩法那点进去配置的」):§21「从预设开始」与预设页撤掉 -->
     </view>
   </view>
 </view>

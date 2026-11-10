@@ -83,11 +83,13 @@ test('V1-P53 设置里有「投诉建议」,打开现成的投诉页(r2 a3-v1-p5
   assert.match(read('utils/scene-registry.js'), /'settings-feedback': \{[^}]*title: '投诉建议'/)
 })
 
-test('V3-38/39 我的项目:状态与标题同一行,状态只写短词(通过)', () => {
+test('V3-38/39 我的项目:卡片照「我的订单」—— 顶行状态靠右,状态只写短词(通过)', () => {
   const wxml = strip(read('subpackageA/pages/myproject/index.wxml'))
-  const rows = wxml.match(/<view class="mp-tit-row">[\s\S]*?<\/view>\s*<cy-badge class="mp-badge"[^>]*\/>\s*<\/view>/g) || []
-  assert.equal(rows.length, 2, '主题卡与模板卡的状态都在标题行')
-  assert.match(wxml, /label="\{\{item\._statusShort\}\}"/)
+  // r2-create(a3-v3-38/39 业主「和我的订单一样」):状态字在顶行右侧,标题单独一行,分隔线下底行
+  const heads = wxml.match(/<view class="mp-head">[\s\S]*?<text class="mp-st mp-st--\{\{item\._stateVariant\}\}">[^<]*<\/text>\s*<\/view>/g) || []
+  assert.equal(heads.length, 2, '主题卡与模板卡的状态都在顶行')
+  assert.match(wxml, /\{\{item\._statusShort\}\}/)
+  assert.match(wxml, /<view class="mp-bot">/)
   assert.doesNotMatch(wxml, /mp-when-row/)
   const { marketView } = require(path.join(ROOT, 'utils/template-market.js'))
   assert.equal(marketView({ draftStatus: 1, status: 1, checkStatus: 1 })._statusShort, '通过')
@@ -96,7 +98,7 @@ test('V3-38/39 我的项目:状态与标题同一行,状态只写短词(通过)'
   assert.equal(marketView({ draftStatus: 0 })._statusShort, '草稿')
   assert.equal(marketView({})._statusShort, '待确认')
   assert.equal(marketView({ draftStatus: 1, status: 1, checkStatus: 1 })._statusText, '个人审核通过', '其它入口的长文案不变')
-  assert.match(read('subpackageA/pages/myproject/index.wxss'), /\.mp-badge \{ flex-shrink: 0;[^}]*white-space: nowrap; \}/)
+  assert.match(read('subpackageA/pages/myproject/index.wxss'), /\.mp-st \{ flex: none; margin-left: auto;[^}]*white-space: nowrap;/)
 })
 
 test('V3-28 探索目标空态用标准两层插画 cy-empty kind="empty"', () => {

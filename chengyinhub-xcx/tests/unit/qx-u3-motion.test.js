@@ -177,9 +177,10 @@ test('五个成功时刻接上 morph,且只在服务端确认成功的分支里�
     assert.ok(settleAt > body.indexOf('this._claimed ='), fn + ':亮勾必须在服务端确认之后')
     assert.ok(body.indexOf('结果还没确认') < settleAt && body.indexOf('领取失败') < settleAt)
   }
+  // 2026-11-10 qx-s2 staging 合并:r2-create(b4-u02,后一轮业主点名)撤掉了模板采用弹层,「应用」直接复制进编辑器;
+  // u3 挂在弹层「确定」上的收勾随弹层退场(见 qx-s2/RESULT 待你决定)。这里只守住:复制失败不进编辑器。
   const tdJs = read('pages/templatedetail/topic-detail/index.js')
-  assert.ok(tdJs.indexOf("morph.settle(that, 'adoptDone'") > tdJs.indexOf('if (!result.ok)'), '/use 只在复制成功后亮勾')
-  assert.match(read('pages/templatedetail/topic-detail/index.wxml'), /morph loading="\{\{ adoptBusy \}\}" done="\{\{ adoptDone \}\}"/)
+  assert.ok(tdJs.indexOf('that._openCopiedDraft(copiedId)') > tdJs.indexOf('if (!result.ok)'), '/use 只在复制成功后进编辑器')
   const fabu = read('pages/publish/fabu/index.js')
   assert.equal((fabu.match(/morph\.settle\(that, 'publishDone'/g) || []).length, 2, '新建与改已有两条发布成功路径')
   assert.ok(fabu.indexOf("morph.settle(that, 'publishDone'") > fabu.indexOf('onSuccess: (resData) =>'))

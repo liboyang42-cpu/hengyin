@@ -5,7 +5,34 @@ const { test, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
 
 const story = require('../../pages/publish/utils/publish/pro-editor-story.js')
-const drag = require('../../pages/publish/utils/publish/story-drag.js')
+const fs = require('node:fs')
+const path = require('node:path')
+const vm = require('node:vm')
+
+// 渲染层拖拽内核是 WXS(ES5 + module.exports),在 node 里按原文件求值来测
+function loadWxs(file) {
+  const module = { exports: {} }
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../..', file), 'utf8'), { module, exports: module.exports, Math, JSON, Number })
+  return module.exports
+}
+const sd = loadWxs('pages/publish/utils/wxs/story-drag.wxs')
+
+// 假的 ownerInstance:列表上挂 data-geo,块记录 setStyle,callMethod 记账,rAF 手动推进
+function fakeOwner(geo, count) {
+  const state = {}
+  const blocks = Array.from({ length: count }, () => ({ style: null, setStyle(s) { this.style = s } }))
+  const calls = []
+  const frames = []
+  return {
+    blocks, calls, frames,
+    getState: () => state,
+    selectComponent: (sel) => sel === '.story-article' ? { getDataset: () => ({ geo: geo ? JSON.stringify(geo) : '' }) } : null,
+    selectAllComponents: (sel) => sel === '.story-block' ? blocks : [],
+    callMethod: (name, arg) => calls.push([name, JSON.parse(JSON.stringify(arg))]), // vm 里建的对象跨 realm,先拷成本地对象
+    requestAnimationFrame: (cb) => frames.push(cb),
+  }
+}
+const touch = (y) => ({ touches: [{ clientY: y }], changedTouches: [{ clientY: y }] })
 
 const copy = (v) => JSON.parse(JSON.stringify(v))
 const apply = (chapter, command) => story.applyStoryCommand({ chapter, pendingMaterials: [] }, command)
@@ -152,18 +179,66 @@ test('拖动不改输入草稿;下标越界整体拒绝', () => {
   assert.throws(() => apply(chapter, { type: 'moveBlock', blockKey: 'p1', index: 2 }), /插入点/)
 })
 
-// ── 拖拽几何 ──────────────────────────────────────────────
-test('拖拽几何:中线越过邻块中点才换位;让位量 = 被拖块高 + 间距;贴边自动滚', () => {
-  const rects = [{ top: 0, height: 40 }, { top: 50, height: 100 }, { top: 160, height: 30 }]
-  assert.equal(drag.targetIndex(rects, 0, 20), 0)
-  assert.equal(drag.targetIndex(rects, 0, 101), 1)
-  assert.equal(drag.targetIndex(rects, 0, 400), 2)
-  assert.equal(drag.targetIndex(rects, 2, -10), 0)
-  assert.deepEqual(drag.shiftFor(rects, 0, 2), [0, -50, -50])
-  assert.deepEqual(drag.shiftFor(rects, 2, 0), [40, 40, 0])
-  assert.equal(drag.edgeScrollStep(300, 100, 600), 0)
-  assert.ok(drag.edgeScrollStep(105, 100, 600) < 0)
-  assert.ok(drag.edgeScrollStep(598, 100, 600) > 0)
+// ── 拖拽内核(WXS,渲染层)────────────────────────────────
+const GEO = { key: 'p1', from: 0, y: 140, st: 0, vt: 100, vb: 700, max: 400, top: [120, 170, 280], h: [40, 100, 30] }
+
+test('WXS 拖拽:被拖块 1:1 跟手、中线越过邻块中点才让位,让位量 = 被拖块高 + 间距', () => {
+  const owner = fakeOwner(GEO, 3)
+  sd.start(touch(140), owner)
+  assert.equal(sd.move(touch(160), owner), false, '拖动中吃掉 touchmove,页面不跟着滚')
+  assert.match(owner.blocks[0].style.transform, /translate3d\(0,20px,0\) scale\(1\.02\)/)
+  assert.equal(owner.blocks[1].style.transform, 'translate3d(0,0px,0)')
+  sd.move(touch(240), owner) // 中线 140+100=240 > 第二块中点 220
+  assert.equal(owner.blocks[1].style.transform, 'translate3d(0,-50px,0)')
+  assert.equal(owner.blocks[2].style.transform, 'translate3d(0,0px,0)')
+  assert.deepEqual(owner.calls.filter((c) => c[0] === 'onStoryDragSlot').map((c) => c[1].target), [1], '跨一格只回调一次(触感)')
+  sd.end(touch(240), owner)
+  assert.deepEqual(owner.calls.pop(), ['onStoryDragDrop', { key: 'p1', from: 0, to: 1, scrollTop: 0 }])
+})
+
+test('WXS 拖拽:往上拖,上面的块整体下移让位', () => {
+  const owner = fakeOwner(Object.assign({}, GEO, { key: 'p3', from: 2, y: 290 }), 3)
+  sd.start(touch(290), owner)
+  sd.move(touch(120), owner)
+  assert.equal(owner.blocks[0].style.transform, 'translate3d(0,40px,0)')
+  assert.equal(owner.blocks[1].style.transform, 'translate3d(0,40px,0)')
+  sd.end(touch(120), owner)
+  assert.equal(owner.calls.pop()[1].to, 0)
+})
+
+test('WXS 拖拽:贴近下沿自动滚屏,滚动量计进位移,不超过最大 scrollTop;逻辑层每两帧收到一次 scrollTop', () => {
+  const owner = fakeOwner(GEO, 3)
+  sd.start(touch(140), owner)
+  sd.move(touch(690), owner)
+  assert.equal(owner.frames.length, 1, '进入边缘区启动 rAF 循环')
+  for (let i = 0; i < 60 && owner.frames.length; i += 1) owner.frames.shift()()
+  const scrolls = owner.calls.filter((c) => c[0] === 'onStoryDragScroll').map((c) => c[1].scrollTop)
+  assert.ok(scrolls.length >= 2)
+  assert.ok(scrolls.every((v, i) => i === 0 || v >= scrolls[i - 1]))
+  assert.ok(scrolls[scrolls.length - 1] <= GEO.max)
+  sd.end(touch(690), owner)
+  const drop = owner.calls.pop()
+  assert.equal(drop[0], 'onStoryDragDrop')
+  assert.ok(drop[1].scrollTop > 0 && drop[1].scrollTop <= GEO.max)
+  assert.equal(drop[1].to, 2)
+})
+
+test('WXS 拖拽:没拿起(无几何)时 touchmove 不拦截;松手只通知逻辑层取消待定的拿起', () => {
+  const owner = fakeOwner(null, 2)
+  sd.start(touch(100), owner)
+  assert.equal(sd.move(touch(130), owner), false)
+  assert.equal(owner.blocks[0].style, null)
+  sd.end(touch(130), owner)
+  assert.deepEqual(owner.calls, [['onStoryTouchRelease', {}]])
+})
+
+test('WXS 拖拽:落下后 epoch 变化 → 清掉所有块的临时 transform', () => {
+  const owner = fakeOwner(GEO, 3)
+  sd.start(touch(140), owner); sd.move(touch(240), owner)
+  sd.reset(2, 1, owner)
+  assert.ok(owner.blocks.every((b) => b.style.transform === 'none'))
+  owner.frames.shift()()
+  assert.ok(owner.blocks.every((b) => Object.keys(b.style).length === 0))
 })
 
 // ── 页面接线 ──────────────────────────────────────────────
@@ -180,7 +255,7 @@ global.wx = {
   createMapContext: () => ({ getCenterLocation: () => {} }), pageScrollTo: () => {}, nextTick: (cb) => cb(),
   vibrateShort: (o) => vibrations.push(o && o.type),
   createSelectorQuery: () => {
-    const q = { selectAll: () => q, select: () => q, boundingClientRect: () => q, exec: (cb) => cb([queryRects, { top: 100, bottom: 700 }]) }
+    const q = { selectAll: () => q, select: () => q, boundingClientRect: () => q, scrollOffset: () => q, exec: (cb) => cb([queryRects, { top: 100, bottom: 700, height: 600 }, { scrollTop: 0, scrollHeight: 600 }]) }
     return q
   },
 }
@@ -235,27 +310,53 @@ test('页面:没有光标时插到文末;音频先落空块', () => {
   assert.deepEqual(blocksOf(page).map((b) => b.type), ['text', 'text', 'audio'])
 })
 
-test('页面:长按拖动段落,拿起和放下各震一次,松手后顺序改变', () => {
+test('页面:长按量一次几何挂到 data-geo,拿起震一次;渲染层回调落点后改顺序,epoch +1', () => {
   const page = openPage()
   queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
-  page.onStoryDragStart({ currentTarget: { dataset: { blockkey: 'p1', index: 0 } }, touches: [{ clientY: 140 }] })
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: {} }, touches: [{ clientY: 140 }] })
   assert.equal(page.data.storyDrag.key, 'p1')
-  page.onStoryDragMove({ touches: [{ clientY: 200 }] })
-  assert.equal(page.data.storyDrag.dy, 60)
-  assert.deepEqual(page.data.storyDrag.shift, [0, -50])
-  page.onStoryDragEnd()
+  const geo = JSON.parse(page.data.storyDrag.geo)
+  assert.deepEqual([geo.from, geo.y, geo.top, geo.h], [0, 140, [120, 170], [40, 40]])
+  const epoch = page.data.storyDrag.epoch
+  page.onStoryDragSlot({ target: 1 })
+  page.onStoryDragDrop({ key: 'p1', from: 0, to: 1, scrollTop: 0 })
   assert.deepEqual(blocksOf(page).map((b) => b.key), ['p2', 'p1'])
-  assert.deepEqual(vibrations, ['light', 'light'])
-  assert.equal(page.data.storyDrag.key, '')
+  assert.deepEqual(vibrations, ['light', 'light', 'medium'])
+  assert.deepEqual([page.data.storyDrag.key, page.data.storyDrag.geo, page.data.storyDrag.epoch], ['', '', epoch + 1])
 })
 
 test('页面:长按原地松手 = 选中该块(显示删除键),不改顺序', () => {
   const page = openPage()
   queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
-  page.onStoryDragStart({ currentTarget: { dataset: { blockkey: 'p2', index: 1 } }, touches: [{ clientY: 190 }] })
-  page.onStoryDragEnd()
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p2', dataset: { blockkey: 'p2', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 190 }] })
+  page.onStoryDragDrop({ key: 'p2', from: 1, to: 1, scrollTop: 0 })
   assert.deepEqual(blocksOf(page).map((b) => b.key), ['p1', 'p2'])
   assert.equal(page.data.storyEditor.selectedBlockKey, 'p2')
+})
+
+test('页面:几何还没量完手就松了 → 不进入拖拽态,按原地松手处理', () => {
+  const page = openPage()
+  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
+  let pending = null
+  const realQuery = wx.createSelectorQuery
+  wx.createSelectorQuery = () => { const q = realQuery(); q.exec = (cb) => { pending = cb }; return q }
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: {} }, touches: [{ clientY: 140 }] })
+  page.onStoryTouchRelease()
+  pending([queryRects, { top: 100, bottom: 700, height: 600 }, { scrollTop: 0, scrollHeight: 600 }])
+  wx.createSelectorQuery = realQuery
+  assert.equal(page.data.storyDrag.key, '')
+  assert.equal(page.data.storyEditor.selectedBlockKey, 'p1')
+})
+
+test('页面:正在输入的段长按留给系统选字;按住把手仍然能拖', () => {
+  const page = openPage()
+  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
+  page._storyFocusKey = 'p1'
+  page.data.storyEditor.kb = 300
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: { blockkey: 'p1' } }, touches: [{ clientY: 140 }] })
+  assert.equal(page.data.storyDrag.key, '')
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: { grip: '1', blockkey: 'p1' } }, touches: [{ clientY: 140 }] })
+  assert.equal(page.data.storyDrag.key, 'p1')
 })
 
 test('页面:保存 payload 与重开后的块顺序一致', () => {
@@ -284,4 +385,49 @@ test('页面:图片先选图上传,回来后插到点插入栏时的光标处(�
   pick(['https://example.com/rain.jpg'])
   assert.deepEqual(blocksOf(page).map((b) => b.type === 'text' ? b.content : b.type), ['雨停', 'image', '了。', '她推开门。'])
   assert.equal(blocksOf(page)[1].url, 'https://example.com/rain.jpg')
+})
+
+// ── r2-create(2026-11-10):段首哨兵 / 退格合并 / 工具栏格式 ─────────────────
+const ZW = '​'
+
+test('页面:非首段输入框值带段首哨兵,收字时去掉哨兵并把光标换回正文坐标', () => {
+  const page = openPage()
+  page.onStoryTextInput(ev({ blockkey: 'p2' }, { value: ZW + '她推开门了。', cursor: 7 }))
+  assert.equal(blocksOf(page)[1].content, '她推开门了。')
+  assert.equal(page._storyTextCursor.index, 6)
+})
+
+test('页面:段首退格(哨兵被删、正文没变)→ 并入上一段,光标落在接缝处', () => {
+  const page = openPage()
+  page.onStoryTextInput(ev({ blockkey: 'p2' }, { value: '她推开门。', cursor: 0 }))
+  assert.deepEqual(blocksOf(page).map((b) => b.content), ['雨停了。她推开门。'])
+  assert.equal(page.data.storyEditor.focusBlockKey, 'p1')
+  assert.equal(page.data.storyEditor.focusCursor, 4)
+})
+
+test('页面:光标落在哨兵前又打了字 → 摘掉哨兵照常收字,不误判成退格', () => {
+  const page = openPage()
+  page.onStoryTextInput(ev({ blockkey: 'p2' }, { value: '「' + ZW + '她推开门。', cursor: 1 }))
+  assert.deepEqual(blocksOf(page).map((b) => b.content), ['雨停了。', '「她推开门。'])
+})
+
+test('页面:B 没有选区时作用于整段,工具栏高亮跟着变;段落样式下拉写进块', () => {
+  const page = openPage()
+  page.onStoryTextBlur(ev({ blockkey: 'p1' }, { value: '雨停了。', cursor: 2 }))
+  page.onStoryMark(ev({ mark: 'bold' }))
+  assert.deepEqual(blocksOf(page)[0].marks, [{ from: 0, to: 4, type: 'bold' }])
+  assert.equal(page.data.storyFmt.bold, true)
+  assert.deepEqual(page.data.storySegs.p1.map((s) => [s.text, s.bold]), [['雨停了。', true]])
+  page.onStoryParaPick({ detail: { value: 1 } })
+  assert.equal(blocksOf(page)[0].style, 'h1')
+  assert.equal(page.data.storyFmt.paraLabel, '标题')
+})
+
+test('页面:字数与封面跟着章节走;没有正文段时点 B 只提示', () => {
+  const page = openPage()
+  assert.equal(page.data.storyWordCount, 9)
+  page.data.formData.chapters[0].blocks = []
+  page._storyCaret = null; page._storyFocusKey = ''
+  page.onStoryMark(ev({ mark: 'bold' }))
+  assert.ok(toasts.includes('先点一段正文'))
 })

@@ -727,16 +727,18 @@ test('编辑结局后，两种新建入口都清空上章身份和设置，连�
   }
 })
 
-test('伏笔配置留在主题详情，正文只有一条顶部插入栏：玩法、图片、音频、分割线、地点', () => {
+test('伏笔配置留在主题详情，正文只有一个「插入 ▾」：图片、音频、玩法、分割线、地点', () => {
   // 2026-11-09 用户:「玩法/图片/音频之类的统一顶部标签 然后添加」—— 取代每个缝里的两处菜单
+  // 2026-11-10 r2-create:对标 X Articles,收进工具栏的「插入 ▾」,插到光标处的逻辑不变(onStoryToolbarInsert)
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
   const topic = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/topic-detail-sheet.wxml'), 'utf8')
   assert.match(topic, /bindtap="openThoughts"/)
   assert.doesNotMatch(wxml, /story-insert__menu/)
-  const bars = [...wxml.matchAll(/<view class="story-toolbar [^"]*"[^>]*>([\s\S]*?)\n\s*<\/view>\n/g)]
-  assert.equal(bars.length, 1)
-  assert.deepEqual([...bars[0][1].matchAll(/data-kind="(\w+)" catchtap="onStoryToolbarInsert"/g)].map(m => m[1]),
-    ['game', 'image', 'audio', 'divider', 'node'])
+  assert.equal((wxml.match(/catchtap="openStoryInsertSheet"/g) || []).length, 1)
+  const menus = [...wxml.matchAll(/<view class="sx-sheet" wx:if="\{\{storySheet === 'insert'\}\}">([\s\S]*?)\n\s*<\/view>\n/g)]
+  assert.equal(menus.length, 1)
+  assert.deepEqual([...menus[0][1].matchAll(/data-kind="(\w+)" catchtap="onStoryInsertPick"/g)].map(m => m[1]),
+    ['image', 'audio', 'game', 'divider', 'node'])
   assert.match(wxml, /bind:change="onToggleNodeGame"/)
 })
 

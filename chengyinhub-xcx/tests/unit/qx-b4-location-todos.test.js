@@ -51,6 +51,29 @@ test('来源修订为空显示「未锁定来源修订」,不补 1;没有合同�
   assert.equal(t.summaryText(warnOnly), '1 项待复核');
 });
 
+test('r2-create:每个已保存节点的当前地址,供地点待办逐个「替换地点」', () => {
+  assert.deepEqual(t.nodePlaces([{ nodes: [{ id: 9, name: '西湖', address: '杭州市西湖区' }, { id: 10, name: '纯线上' }, { id: 11, name: '断桥', latitude: '30.2', longitude: '120.1' }, { name: '未保存', address: 'x' }] }]),
+    { 9: '杭州市西湖区', 11: '断桥' });
+  const fs = require('node:fs');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/components/location-todos/index.wxml'), 'utf8');
+  assert.match(wxml, /bindtap="replacePlace"/);
+  assert.doesNotMatch(wxml, /view\.source|换一个节点/);
+  assert.match(wxml, /bindtap="confirmPlace"/);
+});
+
+test('r2-create:同城沿用后未绑定的地点按同名节点认领;已绑定的用绑定节点;重名不认领', () => {
+  const view = { rows: [{ slotKey: 'a', title: '人民广场站', nodeId: '' }, { slotKey: 'b', title: '南京东路站', nodeId: '12' }, { slotKey: 'c', title: '外滩', nodeId: '' }] };
+  const chapters = [{ nodes: [
+    { id: 11, name: '人民广场站', address: '黄浦区人民大道' },
+    { id: 12, name: '南京东路站', address: '南京东路步行街' },
+    { id: 13, name: '外滩', address: '中山东一路' }, { id: 14, name: '外滩', address: '中山东一路北' }] }];
+  assert.deepEqual(t.slotNodes(view, chapters), {
+    a: { id: '11', place: '黄浦区人民大道', claimed: true },
+    b: { id: '12', place: '南京东路步行街', claimed: false },
+  });
+  assert.deepEqual(t.slotNodes(null, chapters), {});
+});
+
 test('可绑定节点只取已保存且有地点的节点', () => {
   const nodes = t.bindableNodes([{ nodes: [{ id: 9, name: '西湖', address: '杭州市西湖区' }, { name: '未保存', address: 'x' }, { id: 10, name: '纯线上' }] }]);
   assert.deepEqual(nodes, [{ id: '9', label: '西湖 · 杭州市西湖区' }]);

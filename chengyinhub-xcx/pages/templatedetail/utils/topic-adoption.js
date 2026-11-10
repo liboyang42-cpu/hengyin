@@ -67,7 +67,8 @@ function deliveryRows(delivery) {
     { key: 'locale', label: '语言', value: localeText(delivery) },
     { key: 'license', label: '许可', value: licenseText(delivery.license) },
     { key: 'revision', label: '版本', value: revisionText(delivery.revision) }
-  ].map(row => Object.assign(row, { pending: row.value === PENDING || row.value === '待核实' || row.value === '许可信息未提供' }));
+  ].filter(row => row.value !== PENDING && row.value !== '待核实' && row.value !== '许可信息未提供');
+  // r2-create(b4-u02-01):没有权威事实的行直接不画,不再摆一排「待补充 / 待核实」
 }
 
 // §27.1:只把当前发布修订的 id 原样带给 /use;没有修订就不传(旧来源 → 服务端回 null = 未锁定来源修订)。
@@ -81,15 +82,11 @@ const SOURCE_CITY_OF = delivery => {
   return c && /^\d{6}$/.test(String(c)) ? String(c) : '';
 };
 
-// /use 请求:沿用地点 = SAME_CITY;换城市 = NEW_CITY + targetCityCode。来源没有城市事实时不传意图(= 旧版采用)。
+// /use 请求:沿用地点 = SAME_CITY。来源没有城市事实时不传意图(= 旧版采用)。
+// r2-create(b4-u02-02 业主「不需要换城市」):端上不再发 NEW_CITY,地址在编辑器里逐个替换。
 function usePayload(input) {
   const data = { id: String(input.id), scope: input.scope || '' };
-  if (input.intent === 'NEW_CITY') {
-    if (!/^\d{6}$/.test(String(input.targetCityCode || ''))) return { error: '请选择目标城市' };
-    if (input.sourceCityCode && input.sourceCityCode === String(input.targetCityCode)) return { error: '目标城市与原城市相同，请选择沿用地点' };
-    data.bindingIntent = 'NEW_CITY';
-    data.targetCityCode = String(input.targetCityCode);
-  } else if (input.intent === 'SAME_CITY' && input.sourceCityCode) {
+  if (input.intent === 'SAME_CITY' && input.sourceCityCode) {
     data.bindingIntent = 'SAME_CITY';
   }
   if (input.revisionId) data.sourceContentRevisionId = input.revisionId;
@@ -119,22 +116,7 @@ function creditText(data) {
   if (!data || typeof data !== 'object') return '';
   const parts = [];
   if (data.attribution && String(data.attribution).trim()) parts.push(String(data.attribution).trim().slice(0, 40));
-  if (data.aiGenerated === true) parts.push('AI 生成');
-  if (data.sourcePendingConfirmation === true) parts.push('来源待确认');
+  // r2-create(b4-u02-05 业主「不显示「AI 生成」、「来源待确认」」):只留署名
   return parts.join(' · ');
 }
 module.exports.creditText = creditText;
-
-// 换城市选项:与首页手动选城同一份城市名单(utils/index/home-city-location.js),附 GB/T 2260 地级市编码
-// (与原生 region picker level=city 回的 code[1] 同形,如南京 320100)。名单之外的城市暂不提供,见 qx-c3 RESULT needs owner。
-const CITY_CODE = {
-  '北京市': '110100', '上海市': '310100', '广州市': '440100', '深圳市': '440300', '杭州市': '330100',
-  '成都市': '510100', '重庆市': '500100', '武汉市': '420100', '西安市': '610100', '南京市': '320100',
-  '苏州市': '320500', '天津市': '120100', '长沙市': '430100', '郑州市': '410100', '青岛市': '370200',
-  '厦门市': '350200', '昆明市': '530100', '沈阳市': '210100', '济南市': '370100', '合肥市': '340100'
-};
-function adoptCities() {
-  const names = require('../../../utils/index/home-city-location.js').CITY_OPTIONS;
-  return names.filter(name => CITY_CODE[name]).map(name => ({ name, code: CITY_CODE[name] }));
-}
-module.exports.adoptCities = adoptCities;

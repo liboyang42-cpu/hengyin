@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import com.chengyinhub.business.util.ChapterAtmospherePreset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,6 +40,10 @@ final class ChapterFlowCompiler
     private static final String TYPE_IMAGE = "image";
     private static final String TYPE_AUDIO = "audio";
     private static final String TYPE_DIVIDER = "divider";
+    /** 正文段样式 / 段内格式(2026-11-10 r2-create,X Articles 式编辑器):与小程序 story-inline.js 同一份名单与上限。 */
+    private static final Set<String> TEXT_STYLES = new HashSet<>(Arrays.asList("h1", "h2", "quote", "ul", "ol"));
+    private static final Set<String> MARK_TYPES = new HashSet<>(Arrays.asList("bold", "italic", "strike"));
+    private static final int MAX_MARKS_PER_BLOCK = 200;
     /** 梦:一组图 + 每张一句话(预制人生 §3.2)。它是章内块,不改变 description 的首节点截断。 */
     private static final String TYPE_DREAM = "dream";
     private static final String TYPE_MOOD = "mood";
@@ -165,6 +170,10 @@ final class ChapterFlowCompiler
                 {
                     throw invalid(chapterNumber, "只有 node 块可以配置是否需要到达地点");
                 }
+                if ((block.getStyle() != null || block.getMarks() != null) && !TYPE_TEXT.equals(block.getType()))
+                {
+                    throw invalid(chapterNumber, "只有正文段可以设置段落样式或文字格式");
+                }
                 if (TYPE_TEXT.equals(block.getType()))
                 {
                     if (block.getWho() != null && block.getWho().trim().length() > 20)
@@ -181,6 +190,7 @@ final class ChapterFlowCompiler
                     {
                         throw invalid(chapterNumber, "text 块正文超过 5000 字符");
                     }
+                    validateTextFormat(block, narrative, length, chapterNumber);
                     if (!narrative) validatePlainWhen(block, chapterNumber);
                     // R18:叙事块是站点正文,挂在 node 块前后由玩家读;不进章节摘要投影。
                     // 条件正文也不进:摘要是给没开局的人看的,那时谁都没选过任何选项。
@@ -442,6 +452,43 @@ final class ChapterFlowCompiler
         return new CompiledFlow(compiled);
     }
 
+    /**
+     * 正文段样式与段内格式:只允许普通正文段(叙事段、带说话人的台词不挂);样式在白名单内;
+     * 区间落在正文之内、类型在白名单内、条数有上限。content 始终是纯文字,摘要投影不受影响。
+     */
+    private static void validateTextFormat(ChapterBlockDTO block, boolean narrative, int length, int chapterNumber)
+    {
+        boolean speaker = block.getWho() != null && !block.getWho().trim().isEmpty();
+        if ((narrative || speaker) && (block.getStyle() != null || block.getMarks() != null))
+        {
+            throw invalid(chapterNumber, "叙事段和台词不能设置段落样式或文字格式");
+        }
+        if (block.getStyle() != null && !TEXT_STYLES.contains(block.getStyle()))
+        {
+            throw invalid(chapterNumber, "段落样式只允许 h1 / h2 / quote / ul / ol");
+        }
+        if (block.getMarks() == null)
+        {
+            return;
+        }
+        if (block.getMarks().size() > MAX_MARKS_PER_BLOCK)
+        {
+            throw invalid(chapterNumber, "一段里的文字格式最多 " + MAX_MARKS_PER_BLOCK + " 处");
+        }
+        for (ChapterBlockDTO.TextMarkDTO mark : block.getMarks())
+        {
+            if (mark == null || mark.getType() == null || !MARK_TYPES.contains(mark.getType()))
+            {
+                throw invalid(chapterNumber, "文字格式只允许 bold / italic / strike");
+            }
+            if (mark.getFrom() == null || mark.getTo() == null || mark.getFrom() < 0 || mark.getTo() <= mark.getFrom()
+                    || mark.getTo() > length)
+            {
+                throw invalid(chapterNumber, "文字格式的区间超出了这段正文");
+            }
+        }
+    }
+
     /** 复制已物化章节时，物理 nodeId 必须绑定到副本刚插入的节点，不能跨主题沿用源 id。 */
     static String remapMaterializedNodeIds(String blocksJson, Map<Long, Long> nodeIdMap, Long sourceChapterId)
     {
@@ -612,6 +659,20 @@ final class ChapterFlowCompiler
                     if (block.getWho() != null && !block.getWho().trim().isEmpty()) row.put("who", block.getWho().trim());
                     if (block.getLevel() != null) row.put("level", block.getLevel());
                     if (!ChapterNarrativeBlocks.isNarrativeBlock(block) && block.getWhen() != null) row.put("when", block.getWhen());
+                    if (block.getStyle() != null) row.put("style", block.getStyle());
+                    if (block.getMarks() != null && !block.getMarks().isEmpty())
+                    {
+                        List<Map<String, Object>> marks = new ArrayList<>();
+                        for (ChapterBlockDTO.TextMarkDTO mark : block.getMarks())
+                        {
+                            Map<String, Object> one = new LinkedHashMap<>();
+                            one.put("from", mark.getFrom());
+                            one.put("to", mark.getTo());
+                            one.put("type", mark.getType());
+                            marks.add(one);
+                        }
+                        row.put("marks", marks);
+                    }
                     if (ChapterNarrativeBlocks.isNarrativeBlock(block))
                     {
                         Long beatNodeId = nodeIds.get(block.getNodeIndex());

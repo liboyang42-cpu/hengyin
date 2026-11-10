@@ -95,3 +95,20 @@
 
 /* 2026-10-27 业主 M-26:长按操作面板 = 操作列表(图标 + 标题 + 说明),删除行整行红色 */
 .mp-ops-row--danger .mp-ops-sub { color: var(--cy-danger); }
+
+/* r2-create(a3-v3-38/39 业主「和我的订单一样」):卡片照「我的订单」卡 —— 封面顶对齐;顶行左档期/类型、右状态字;
+   标题一行粗体;分隔线下的底行(统计或操作)。数值与订单卡同一套 token。 */
+.mp-card { padding-bottom: 0; }
+.mp-main { align-items: flex-start; padding-bottom: var(--cy-space-3); }
+.mp-head { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 40rpx; }
+.mp-head .mp-when { flex: 1; min-width: 0; margin: 0; }
+.mp-head .mp-type { flex: none; padding: 0 var(--cy-space-1-5); line-height: 34rpx; }
+.mp-st { flex: none; margin-left: auto; font-size: var(--cy-font-caption); font-weight: 600; white-space: nowrap; color: var(--cy-text-secondary); }
+.mp-st--success { color: var(--cy-success); }
+.mp-st--warning { color: var(--cy-gold); }
+.mp-st--info { color: var(--cy-info); }
+.mp-st--danger { color: var(--cy-danger); }
+.mp-body > .mp-tit { margin-top: var(--cy-space-2); font-size: var(--cy-font-title); font-weight: 700; }
+.mp-bot { display: flex; align-items: center; min-height: var(--cy-btn-h); border-top: 2rpx solid var(--cy-border-card); }
+.mp-bot .mp-stat { font-size: var(--cy-font-label); color: var(--cy-text-body); }
+.mp-card .mp-ops { margin-top: 0; padding: var(--cy-space-1) 0; border-top-width: 2rpx; }

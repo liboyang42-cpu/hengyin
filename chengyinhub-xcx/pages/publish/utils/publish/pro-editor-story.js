@@ -3,6 +3,7 @@
 
 var materials = require('./pro-editor-materials.js');
 var storyEnding = require('./story-ending.js');
+var storyInline = require('./story-inline.js');
 var MAX_BLOCKS_PER_CHAPTER = 200;
 
 function clone(input) {
@@ -83,6 +84,15 @@ function textPresentation(block) {
     var level = Number(block.level);
     if (!Number.isInteger(level) || level < 0 || level > 3) throw new Error('文字效果无效');
     result.level = level;
+  }
+  // 段落样式 / 段内 B·I·S(2026-11-10 r2-create):只挂普通正文段,叙事段与台词不挂
+  if (canSplitParagraphs(block)) {
+    if (block.style != null && block.style !== '' && block.style !== 'body') {
+      if (!storyInline.isStyle(block.style)) throw new Error('段落样式无效');
+      result.style = block.style;
+    }
+    var marks = storyInline.normalizeMarks(block.marks, String(block.content == null ? '' : block.content).length);
+    if (marks.length) result.marks = marks;
   }
   return result;
 }
@@ -363,6 +373,8 @@ function toPayloadChapter(source) {
       authored.nodeIndex = nodeIndexes[block._storyNodeKey];
     }
     if (block.type === 'text') {
+      delete authored.style;
+      delete authored.marks;
       return Object.assign(authored, { key: block.key, type: 'text', content: String(block.content == null ? '' : block.content) }, textPresentation(block));
     }
     if (block.type === 'node' && Object.prototype.hasOwnProperty.call(nodeIndexes, block.nodeKey)) {
@@ -476,6 +488,7 @@ function paragraphParts(content, cursor) {
   var lines = text.split('\n');
   var at = Number.isInteger(cursor) && cursor >= 0 && cursor <= text.length ? cursor : text.length;
   var parts = [];
+  var starts = []; // 每段在原文里的起点(段内 B/I/S 区间按它切开)
   var focus = null;
   var offset = 0;
   lines.forEach(function (raw, index) {
@@ -487,6 +500,7 @@ function paragraphParts(content, cursor) {
     chunkText(line).forEach(function (chunk, chunkIndex, chunks) {
       var chunkStart = start + chunkIndex * 5000;
       parts.push(chunk);
+      starts.push(chunkStart);
       if (!focus && at >= chunkStart && (at <= chunkStart + chunk.length || chunkIndex === chunks.length - 1 && at <= start + raw.length)) {
         focus = { part: parts.length - 1, cursor: Math.min(chunk.length, at - chunkStart) };
       }
@@ -504,7 +518,7 @@ function paragraphParts(content, cursor) {
     }
     focus = lastKept < parts.length ? { part: lastKept, cursor: 0 } : { part: parts.length - 1, cursor: parts[parts.length - 1].length };
   }
-  return { parts: parts, focusPart: focus.part, focusCursor: focus.cursor };
+  return { parts: parts, starts: starts, focusPart: focus.part, focusCursor: focus.cursor };
 }
 
 // 能按段拆开的只有普通正文:节点叙事段(beat)要贴着站点,带说话人(who)的段拆开后
@@ -608,8 +622,11 @@ function applyStoryCommand(input, command) {
     if (splitIndex < 0) throw new Error('未找到要编辑的文字块');
     var splitBlock = draft.chapter.blocks[splitIndex];
     var nextContent = String(command.content == null ? '' : command.content);
+    // 段内 B/I/S 跟着文字走:先按「改了哪一截」平移,拆段时再按各段起点切开
+    var followedMarks = storyInline.remapMarks(splitBlock.marks, splitBlock.content, nextContent);
     if (!canSplitParagraphs(splitBlock) || (newlineCount(nextContent) <= newlineCount(splitBlock.content) && nextContent.length <= 5000)) {
       splitBlock.content = nextContent;
+      if (followedMarks.length) splitBlock.marks = followedMarks; else delete splitBlock.marks;
       synchronizeChapter(draft.chapter);
       return { draft: draft, focusBlockKey: splitBlock.key, focusCursor: Number.isInteger(command.cursor) ? command.cursor : nextContent.length };
     }
@@ -620,7 +637,12 @@ function applyStoryCommand(input, command) {
     var paragraphs = plan.parts.map(function (part, index) {
       var key = index === 0 ? splitBlock.key : freshBlockKey(draft.chapter.blocks, paraKeys[index - 1]);
       if (index > 0 && paraKeys.indexOf(key) !== index - 1) throw new Error('内容块标识无效或重复');
-      return Object.assign(clone(splitBlock), { key: key, content: part });
+      var para = Object.assign(clone(splitBlock), { key: key, content: part });
+      var partMarks = storyInline.sliceMarks(followedMarks, plan.starts[index], plan.starts[index] + part.length);
+      if (partMarks.length) para.marks = partMarks; else delete para.marks;
+      // 标题 / 副标题后回车起的是正文;引用与列表接着用同一样式(与常见编辑器一致)
+      if (index > 0 && (para.style === 'h1' || para.style === 'h2')) delete para.style;
+      return para;
     });
     draft.chapter.blocks.splice.apply(draft.chapter.blocks, [splitIndex, 1].concat(paragraphs));
     synchronizeChapter(draft.chapter);
@@ -879,9 +901,65 @@ function applyStoryCommand(input, command) {
       return item && item.key === command.blockKey && item.type === 'text';
     });
     if (editIndex < 0) throw new Error('未找到要编辑的文字块');
-    draft.chapter.blocks[editIndex].content = String(command.content == null ? '' : command.content);
+    var edited = draft.chapter.blocks[editIndex];
+    var editedContent = String(command.content == null ? '' : command.content);
+    var editedMarks = storyInline.remapMarks(edited.marks, edited.content, editedContent);
+    edited.content = editedContent;
+    if (editedMarks.length) edited.marks = editedMarks; else delete edited.marks;
     synchronizeChapter(draft.chapter);
     return { draft: draft };
+  }
+
+  // 工具栏 B / I / S:选区整段有就去掉、没有就补满;没有选区时作用于整段
+  if (command.type === 'formatText') {
+    var fmtBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey; });
+    if (!canSplitParagraphs(fmtBlock)) throw new Error('只有正文段可以设置文字格式');
+    var fmtText = String(fmtBlock.content == null ? '' : fmtBlock.content);
+    var fmtFrom = Number(command.from);
+    var fmtTo = Number(command.to);
+    if (!(Number.isInteger(fmtFrom) && Number.isInteger(fmtTo) && fmtTo > fmtFrom)) { fmtFrom = 0; fmtTo = fmtText.length; }
+    if (!fmtText.length) throw new Error('先写几个字');
+    var toggled = storyInline.toggleMark(fmtBlock.marks, fmtFrom, fmtTo, command.mark, fmtText.length);
+    if (toggled.length) fmtBlock.marks = toggled; else delete fmtBlock.marks;
+    return { draft: draft, from: fmtFrom, to: fmtTo };
+  }
+
+  // 段落样式:正文 / 标题 / 副标题 / 引用 / 项目列表 / 编号列表(再点一次同一个回到正文)
+  if (command.type === 'setParagraphStyle') {
+    var styleBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey; });
+    if (!canSplitParagraphs(styleBlock)) throw new Error('只有正文段可以设置段落样式');
+    var nextStyle = command.style === 'body' ? '' : command.style;
+    if (nextStyle && !storyInline.isStyle(nextStyle)) throw new Error('段落样式无效');
+    if (command.toggle && styleBlock.style === nextStyle) nextStyle = '';
+    if (nextStyle) styleBlock.style = nextStyle; else delete styleBlock.style;
+    return { draft: draft, style: nextStyle };
+  }
+
+  // 段首退格:并入上一段(上一段也是正文段时);上一段是图片/卡片等时,空段直接收掉、非空段只选中上一块
+  if (command.type === 'mergeParagraphUp') {
+    var mergeIndex = draft.chapter.blocks.findIndex(function (item) { return item && item.key === command.blockKey; });
+    if (mergeIndex <= 0) return { draft: draft, merged: false };
+    var current = draft.chapter.blocks[mergeIndex];
+    var above = draft.chapter.blocks[mergeIndex - 1];
+    if (!canSplitParagraphs(current)) return { draft: draft, merged: false };
+    var currentText = String(current.content == null ? '' : current.content);
+    if (canSplitParagraphs(above)) {
+      var aboveText = String(above.content == null ? '' : above.content);
+      if (aboveText.length + currentText.length > 5000) throw new Error('合并后超过 5000 字');
+      var joined = storyInline.concatMarks(storyInline.normalizeMarks(above.marks, aboveText.length), aboveText.length,
+        storyInline.normalizeMarks(current.marks, currentText.length), currentText.length);
+      above.content = aboveText + currentText;
+      if (joined.length) above.marks = joined; else delete above.marks;
+      draft.chapter.blocks.splice(mergeIndex, 1);
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, merged: true, focusBlockKey: above.key, focusCursor: aboveText.length };
+    }
+    if (!currentText.trim()) {
+      draft.chapter.blocks.splice(mergeIndex, 1);
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, merged: false, removed: true, selectBlockKey: above.key };
+    }
+    return { draft: draft, merged: false, selectBlockKey: above.key };
   }
 
   if (command.type === 'editNode') {
@@ -951,6 +1029,7 @@ module.exports = {
   insertVarAt: insertVarAt,
   varInsertIndex: varInsertIndex,
   paragraphParts: paragraphParts,
+  STORY_STYLES: storyInline.STYLES,
   canSplitParagraphs: canSplitParagraphs,
   caretInsertCommand: caretInsertCommand,
   DREAM_MAX_IMAGES: DREAM_MAX_IMAGES,

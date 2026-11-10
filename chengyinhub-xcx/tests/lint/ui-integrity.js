@@ -813,6 +813,23 @@ function jsReferencesMethod(source, name) {
   return references.length > 1;
 }
 
+// WXS 响应事件(渲染层)经 ownerInstance.callMethod('name') 调回逻辑层:这同样是 WXML 上的真实绑定
+// (catchtouchmove="{{wxsModule.move}}" → wxs → callMethod),不是孤儿。只认页面 WXML 引入的 .wxs
+// (src 引用或内联 <wxs>)里写死的字面量方法名。2026-11-10 r2-create 故事流拖拽首次用到。
+function wxsCallMethodNames(wxmlFile, wxml) {
+  const names = new Set();
+  const sources = [];
+  for (const match of wxml.matchAll(/<wxs\b[^>]*\bsrc\s*=\s*['"]([^'"]+)['"][^>]*>/g)) {
+    const rel = /\.wxs$/.test(match[1]) ? match[1] : match[1] + '.wxs';
+    try { sources.push(fs.readFileSync(path.resolve(path.dirname(wxmlFile), rel), 'utf8')); } catch (e) { /* 缺文件由 U2 报 */ }
+  }
+  for (const match of wxml.matchAll(/<wxs\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/wxs>/g)) sources.push(match[1]);
+  for (const code of sources) {
+    for (const call of code.matchAll(/\.callMethod\(\s*['"]([A-Za-z_$][\w$]*)['"]/g)) names.add(call[1]);
+  }
+  return names;
+}
+
 function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
   const violations = [];
   const candidates = [];
@@ -848,6 +865,7 @@ function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
       const names = binding.value.match(/[A-Za-z_$][\w$]*/g) || [];
       names.forEach((name) => bound.add(name));
     }
+    wxsCallMethodNames(wxmlFile, wxml).forEach((name) => bound.add(name));
     for (const name of new Set(extractHandlerNames(file))) {
       if (!HANDLER_LIKE_RE.test(name) || PAGE_LIFECYCLES.has(name) || bound.has(name)
           || jsReferencesMethod(jsScope, name)) continue;
