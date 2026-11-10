@@ -37,5 +37,6 @@ test('页面:封面上传带回素材编号,「素材来源」行只在有编号
   assert.match(js, /mapResult: function \(data\) \{ return \{ url: data\.url, assetId: data\.assetId \}; \}/)
   assert.match(js, /url: '\/api\/media\/asset\/' \+ assetId \+ '\/provenance', method: 'PUT'/)
   assert.match(wxml, /<view class="cg-prov-row" wx:if="\{\{coverProvenance\.assetId\}\}" bindtap="openProvenance"/)
-  assert.match(wxml, /class="cg-prov__close" bindtap="closeProvenance"/)
+  assert.match(wxml, /class="cg-prov__close" bindtap="cgDismiss" data-close="closeProvenance"/)
+  assert.match(wxml, /bind:change="pickProvenanceType"/)
 })

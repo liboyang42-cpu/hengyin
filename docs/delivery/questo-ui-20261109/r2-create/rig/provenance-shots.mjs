@@ -21,7 +21,7 @@ if (tag === 'after') {
   try {
     await w.tap('素材来源'); await sleep(900); await w.shot('provenance-sheet-after');
     await w.tap('保存', { exact: true }); await sleep(600); await w.shot('provenance-error-after');
-    await w.tap('原创'); await sleep(300);
+    await w.eval(`getCurrentPages().slice(-1)[0].pickProvenanceType({ detail: { value: 0 } })`); await sleep(300); // 来源下拉选「原创」
     await w.eval(`(() => { const p = getCurrentPages().slice(-1)[0]; p.setData({ 'provenanceSheet.licenseNote': '本人拍摄', 'provenanceSheet.attribution': '商家老板' }); })()`);
     await w.tap('保存', { exact: true }); await sleep(2500);
     await w.shot('provenance-saved-after');

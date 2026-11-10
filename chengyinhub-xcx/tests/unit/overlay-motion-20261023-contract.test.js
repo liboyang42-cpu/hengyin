@@ -239,7 +239,7 @@ test('④ 收尾:漫游主题半屏 / 附近的人 / 模板编辑器 / 游玩工
   const temp = read('pages/publish/temp/index.wxml')
   const masks = temp.match(/class="cg-mask[^"]*"[^>]*bindtap="cgDismiss"/g) || []
   // 2026-10-28 L4:多一张「添加加值 / 添加代价」半屏(checkSheet),同样走 cgDismiss
-  assert.equal(masks.length, 11, '11 个页面自绘半屏的遮罩都走 cgDismiss')
+  assert.equal(masks.length, 12, '12 个页面自绘半屏的遮罩都走 cgDismiss')  // 2026-11-10 r2-create:素材来源声明半屏 +1
   assert.doesNotMatch(temp, /class="cg-mask[^"]*"[^>]*bindtap="close/, '遮罩不再直接一帧关闭')
   const tw = strip(read('pages/publish/temp/index.wxss'))
   assert.match(tw, /\.cg-sheet \{[^}]*animation: cy-rise var\(--cy-motion-sheet-in\) var\(--cy-ease-standard\);/)

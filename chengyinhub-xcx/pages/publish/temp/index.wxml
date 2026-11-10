@@ -1635,12 +1635,12 @@
   </view>
 
   <!-- ============ 素材来源声明 sheet(r2-create)============ -->
-  <view class="cg-mask" wx:if="{{ provenanceSheet.show }}" bindtap="closeProvenance" hover-class="none"></view>
-  <view class="cg-sheet cg-prov" wx:if="{{ provenanceSheet.show }}">
+  <view class="cg-mask {{cgOut === 'prov' ? 'is-out' : ''}}" wx:if="{{ provenanceSheet.show }}" bindtap="cgDismiss" data-close="closeProvenance" data-out="prov" hover-class="none"></view>
+  <view class="cg-sheet cg-prov {{cgOut === 'prov' ? 'is-out' : ''}}" wx:if="{{ provenanceSheet.show }}">
     <view class="cg-sheet-bar"></view>
-    <view class="cg-prov__head"><text class="cg-prov__title">素材来源</text><view class="cg-prov__close" bindtap="closeProvenance" aria-role="button" aria-label="关闭素材来源" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
-    <view class="cg-prov__opt {{ provenanceSheet.sourceType === item.value ? 'is-on' : '' }}" wx:for="{{ provenanceTypes }}" wx:key="value" data-type="{{ item.value }}" bindtap="pickProvenanceType" aria-role="radio" aria-checked="{{ provenanceSheet.sourceType === item.value }}" aria-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="cg-prov__opt-t">{{ item.label }}</text><view class="cg-prov__dot" aria-hidden="true"></view>
+    <view class="cg-prov__head"><text class="cg-prov__title">素材来源</text><view class="cg-prov__close" bindtap="cgDismiss" data-close="closeProvenance" data-out="prov" aria-role="button" aria-label="关闭素材来源" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
+    <view class="cg-prov__field"><text class="cg-prov__k">来源</text>
+      <cy-dropdown class="cg-prov__dd" portal="{{false}}" range="{{ provenanceTypes }}" range-key="label" value="{{ opt.idx(provenanceTypes, provenanceSheet.sourceType, 'value') }}" bind:change="pickProvenanceType"><view class="cg-pick {{ provenanceSheet.sourceType ? '' : 'empty' }}"><text>{{ provenanceSheet.sourceType ? opt.label(provenanceTypes, provenanceSheet.sourceType, 'value') : '请选择' }}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
     </view>
     <view class="cg-prov__field"><text class="cg-prov__k">署名</text><input class="cg-prov__input" value="{{ provenanceSheet.attribution }}" data-field="attribution" bindinput="onProvenanceInput" maxlength="255" placeholder="作者或来源" /></view>
     <view class="cg-prov__field"><text class="cg-prov__k">授权说明</text><input class="cg-prov__input" value="{{ provenanceSheet.licenseNote }}" data-field="licenseNote" bindinput="onProvenanceInput" maxlength="2000" placeholder="本人拍摄 / 授权协议" /></view>

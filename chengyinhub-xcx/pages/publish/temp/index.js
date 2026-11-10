@@ -2245,7 +2245,8 @@ Page({
     this.setData({ 'provenanceSheet.show': false });
   },
   pickProvenanceType: function (e) {
-    this.setData({ 'provenanceSheet.sourceType': e.currentTarget.dataset.type, 'provenanceSheet.error': '' });
+    var item = PROVENANCE_TYPES[Number(e && e.detail && e.detail.value)];
+    if (item) this.setData({ 'provenanceSheet.sourceType': item.value, 'provenanceSheet.error': '' });
   },
   onProvenanceInput: function (e) {
     var field = e.currentTarget.dataset.field;
