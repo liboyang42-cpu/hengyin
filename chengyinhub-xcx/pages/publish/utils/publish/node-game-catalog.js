@@ -105,7 +105,6 @@ const form = (key, label, gameKey) => ({ key, label, gameKey });
 const BASE_GAMES = [
   { key: 'choice', label: '选项问答', category: '问答', icon: 'check', forms: [form('text', '文字选项', 'qaPick'), form('image', '图片选项', 'pricePair'), form('taste', '闭眼盲品', 'blindTaste'), form('reveal', '到期揭晓', 'predict')] },
   { key: 'text', label: '文字问答', category: '问答', icon: 'edit', gameKey: 'qaText' },
-  { key: 'hangman', label: '逐字猜词', category: '问答', icon: 'edit', gameKey: 'hangman' },
   { key: 'photo', label: '拍照', category: '问答', icon: 'camera', forms: [form('checkin', '拍照打卡', 'qaShot'), form('review', '拍照审核', 'photoCheck'), form('card', '拍物成卡', 'objectCard')] },
   { key: 'random', label: '随机结果', category: '互动', icon: 'gift', forms: [form('coin', '抛硬币', 'coin'), form('dice', '掷骰子', 'dice'), form('cards', '翻卡', 'random')] },
   { key: 'check', label: 'D20', category: '挑战', icon: 'star', forms: [form('tier', '三档难度', 'check'), form('d20', 'D20 加值', 'd20')] },
@@ -116,8 +115,13 @@ const BASE_GAMES = [
   { key: 'bingo', label: '九宫格', category: '互动', icon: 'filter', disabled: true, reason: '在主题里配置' },
   ...['steps', 'react', 'shake', 'quiet', 'compass', 'shout', 'countdown', 'stopwatch', 'typeIn'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '挑战', gameKey: key })),
 ];
+/* r2 b2-x-cat(主人:「不是这种啊 不是表单吗」):逐字猜词不单独占一枚标签,在文字问答的表单里切换。
+   选择器里它记在「文字问答」那一枚上;换回整词作答也在表单里。 */
+const PICKER_ALIAS = { hangman: 'qaText' };
+function pickerKey(key) { return PICKER_ALIAS[key] || key; }
 const PICKER_GROUPS = CATEGORIES.slice(1).map(title => ({ title, items: BASE_GAMES.filter(item => item.category === title) }));
-function selection(key) {
+function selection(rawKey) {
+  const key = pickerKey(rawKey);
   for (const base of BASE_GAMES) {
     const choice = (base.forms || []).find(item => item.gameKey === key);
     if (choice || base.gameKey === key) return { baseKey: base.key, formKey: choice ? choice.key : '', forms: base.forms || [] };
@@ -304,4 +308,4 @@ function applyToConfig(advanced, key, options) {
   return next;
 }
 
-module.exports = { BASE_GAMES, CATEGORIES, selection, GROUPS, MODIFIERS, PICKER_GROUPS, ALL, GAME_SECTIONS, ENCOUNTER_SECTIONS, PLAYKIT_SECTIONS, TIMED_GAMES, supportsTimer, findGame, detectGame, applyToConfig, dropStaleTimer };
+module.exports = { BASE_GAMES, PICKER_ALIAS, pickerKey, CATEGORIES, selection, GROUPS, MODIFIERS, PICKER_GROUPS, ALL, GAME_SECTIONS, ENCOUNTER_SECTIONS, PLAYKIT_SECTIONS, TIMED_GAMES, supportsTimer, findGame, detectGame, applyToConfig, dropStaleTimer };

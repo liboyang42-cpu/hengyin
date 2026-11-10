@@ -1689,12 +1689,25 @@ page {
 /* Questo 新玩法作者配置(questo-author.js):沿用 cg-cfg / cg-adv 行,只补格子与红字错误 */
 .cg-qz-line { display: flex; align-items: center; gap: var(--cy-space-2); }
 .cg-qz-line .cg-cfg-input { flex: 1; min-width: 0; }
-.cg-qz-key { flex: 0 0 34%; }
 .cg-qz-err { margin-top: 8rpx; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
-.cg-qz-tag { align-self: flex-start; display: inline-block; margin: var(--cy-space-2) 0; padding: 4rpx 16rpx; border-radius: var(--cy-radius-pill);
-  background: var(--cy-color-bg-surface-subtle); font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.cg-qz-cells { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: var(--cy-space-2); }
-.cg-qz-cell { width: 88rpx; height: 88rpx; line-height: 88rpx; text-align: center; border-radius: var(--cy-radius-sm);
-  background: var(--cy-color-bg-surface-subtle); font-weight: 700; color: var(--cy-color-text-tertiary); }
-.cg-qz-cell.is-given { background: var(--cy-color-text-primary); color: var(--cy-color-bg-surface); }
-.cg-qz-cell.is-sep { background: transparent; color: var(--cy-color-text-secondary); }
+.cg-qz-cells { display: flex; flex-wrap: wrap; align-items: center; gap: 20rpx 28rpx; margin: var(--cy-space-2) 0 var(--cy-space-4); }
+/* r2 b2-ug-01:格子缩小;一个词里不换行,词与词之间才换行 */
+.cg-qz-word { display: flex; flex-wrap: nowrap; gap: 8rpx; }
+.cg-qz-cell { width: 56rpx; height: 72rpx; line-height: 72rpx; text-align: center; border-radius: 12rpx;   /* ds-ok 小格圆角按格宽收小 */
+  background: var(--cy-color-bg-surface-subtle); font-weight: 700; color: var(--cy-color-text-tertiary);
+  box-shadow: inset 0 -4rpx 0 var(--cy-color-border-strong); }
+.cg-qz-cell.is-given { background: var(--cy-color-text-primary); color: var(--cy-color-bg-surface); box-shadow: none; }
+.cg-qz-cell.is-sep { width: auto; background: transparent; box-shadow: none; color: var(--cy-color-text-secondary); }
+/* r2 b2-ug-02/03:选项图 / 人物头像与文案同一行 */
+.cg-qz-optrow { display: flex; align-items: center; gap: var(--cy-space-3); }
+.cg-qz-optrow .cg-cfg-input { flex: 1; min-width: 0; }
+.cg-qz-thumb { position: relative; flex: none; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-md); overflow: hidden;
+  background: var(--cy-color-bg-surface-subtle); }
+.cg-qz-thumb--add { display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
+.cg-qz-thumb__img { width: 100%; height: 100%; }
+.cg-qz-thumb__x { position: absolute; top: 0; right: 0; width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center;
+  border-bottom-left-radius: var(--cy-radius-md); background: rgba(0, 0, 0, .45); color: #fff; }   /* ds-ok 图上删除角标,压暗底保证可见 */
+.cg-qz-person { padding: var(--cy-space-4) 0; border-top: 1rpx solid var(--cy-color-border-strong); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.cg-qz-person__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.cg-qz-person__name { font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary); }
+.cg-qz-tm { display: flex; flex-direction: column; gap: 8rpx; }

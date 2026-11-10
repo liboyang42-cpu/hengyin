@@ -10,6 +10,16 @@ const { pickPlayKit, serverAction, serverPayload } = require('../../pages/play/u
 const ROOT = path.resolve(__dirname, '../..')
 const NOW = new Date(2026, 10, 9, 12)
 
+/** 只取组件定义(不跑小程序运行时):拦一次 Component() 调用。 */
+function loadComponent(rel) {
+  let def = null
+  const prev = global.Component
+  global.Component = (d) => { def = d }
+  global.Behavior = global.Behavior || ((b) => b)
+  try { delete require.cache[require.resolve(path.join(ROOT, rel))]; require(path.join(ROOT, rel)) } finally { global.Component = prev }
+  return def
+}
+
 const hangmanSeg = (over) => Object.assign({ length: 7, blankCount: 5, caseSensitive: false, solved: false, display: 'E_____S',
   slots: [{ i: 0, ch: 'E', kind: 'PREFILLED' }, { i: 1, kind: 'BLANK' }, { i: 2, kind: 'BLANK' }, { i: 3, kind: 'BLANK' },
     { i: 4, kind: 'BLANK' }, { i: 5, kind: 'BLANK' }, { i: 6, ch: 'S', kind: 'PREFILLED' }] }, over)
@@ -69,17 +79,13 @@ test('UG-02 选项题 kit 带上图;正确标志与反馈一个都不带', () =>
   assert.ok(kit.options.every((o) => !('correct' in o) && !('fb' in o)))
 })
 
-test('UG-10 谜面变换:只有 MIRROR/REVERSE 生效,未知值按原样', () => {
-  assert.equal(questo.clueMode({ clueTransform: { mode: 'MIRROR' } }), 'MIRROR')
-  assert.equal(questo.clueMode({ clueTransform: { mode: 'REVERSE' } }), 'REVERSE')
-  assert.equal(questo.clueMode({ clueTransform: { mode: 'CYPHER' } }), '')
-  assert.equal(questo.clueMode({}), '')
+test('UG-10 谜面翻转已删除:存量 clueTransform 不再改题面、也不翻转', () => {
+  assert.ok(!('clueMode' in questo))
   const kit = pickPlayKit({ sessionId: 's1', version: 1, clueTransform: { mode: 'MIRROR' }, playKit: { qa: { mode: 'TYPE', title: '题' } } }, NOW)
-  assert.equal(kit.clueMode, 'MIRROR')
-  assert.equal(kit.title, '题', 'REVERSE 由服务端倒好,客户端不二次反转;MIRROR 不改文字')
+  assert.ok(!('clueMode' in kit))
+  assert.equal(kit.title, '题')
   const qaWxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-qa/index.wxml'), 'utf8')
-  assert.ok(/clueMode === 'MIRROR' \? 'qa__q-mirror'/.test(qaWxml), '镜像只翻题面那一层')
-  assert.ok(!/qa__opts[^>]*qa__q-mirror/.test(qaWxml), '选项不翻')
+  assert.ok(!/clueMode|qa__q-mirror/.test(qaWxml))
 })
 
 const accusationView = (over) => Object.assign({ sessionId: 's9', version: 2, nodeId: 7,
@@ -130,10 +136,33 @@ test('§27.9 readyForBase 不是成功;qa 判完但没有结论时显示结算�
   assert.ok(!/readyForBase/.test(src.replace(/\/\/.*$/gm, '')), '指认页不读 readyForBase')
 })
 
-test('UG-03 确认指认走统一弹窗出口,文案写明「这是最终指认」', () => {
+test('UG-03 确认指认走本屏确认层(r2:关闭在右上角),文案写明「这是最终指认」,确认后才交原 optionId', () => {
   const src = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.js'), 'utf8')
-  assert.ok(/modal\.show\(/.test(src) && !/wx\.showModal/.test(src))
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxml'), 'utf8')
+  assert.ok(!/wx\.showModal|modal\.show\(/.test(src), '不用系统弹窗')
   assert.ok(/这是最终指认/.test(src))
+  assert.ok(/class="ac-cf__close"[^>]*bindtap="onConfirmCancel"/.test(wxml), '确认层右上角关闭')
+  assert.ok(!/再想想/.test(wxml), '不再叠第二个取消按钮')
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxss'), 'utf8')
+  assert.ok(/\.ac-cf__panel \{[^}]*background: var\(--cy-comp-sheet-player-bg\)/.test(wxss), '确认层底色走玩家弹层 token')
+})
+
+test('UG-04 结论动图:结案 = 庆祝、失败 = 失败、结算确认中 = 搜查;动图在小分包,按分包异步化引用', () => {
+  const Comp = loadComponent('pages/play/components/playkit-accusation/index.js')
+  assert.equal(Comp.methods._animKind('SOLVED', false), 'success')
+  assert.equal(Comp.methods._animKind('EARLY', false), 'success')
+  assert.equal(Comp.methods._animKind('FAILED', false), 'fail')
+  assert.equal(Comp.methods._animKind('', true), 'search')
+  assert.equal(Comp.methods._animKind('WRONG', false), '')
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.json'), 'utf8'))
+  assert.equal(json.usingComponents['cy-case-anim'], '/subpackageTools/components/case-anim/index')
+  assert.equal(json.componentPlaceholder['cy-case-anim'], 'view')
+  for (const k of ['search', 'success', 'fail']) {
+    for (const ext of ['gif', 'png']) {
+      const size = fs.statSync(path.join(ROOT, 'subpackageTools/components/case-anim/img/' + k + '.' + ext)).size
+      assert.ok(size < 100 * 1024, k + '.' + ext + ' 小于 100KB')
+    }
+  }
 })
 
 test('分发器登记了两屏并把 kit 字段喂给组件', () => {
@@ -143,4 +172,15 @@ test('分发器登记了两屏并把 kit 字段喂给组件', () => {
   assert.equal(json.usingComponents['cy-playkit-accusation'], '/pages/play/components/playkit-accusation/index')
   for (const key of ['slots', 'solved', 'display']) assert.ok(wxml.includes('{{kit.' + key + '}}'), key)
   for (const key of ['suspects', 'outcome', 'outcomeLabel', 'pending', 'screen']) assert.ok(wxml.includes('{{kit.' + key + '}}'), key)
+})
+
+test('UG-01 r2:格子按词分组(长短语不再横向滚走),补字走隐藏输入框不另起一栏', () => {
+  const Comp = loadComponent('pages/play/components/playkit-hangman/index.js')
+  const cells = questo.hangmanSlots({ slots: 'AB C-D'.split('').map((ch, i) => (ch === ' ' || ch === '-') ? { i, ch, kind: 'SEPARATOR' } : { i, kind: 'BLANK' }) })
+  const groups = Comp.methods._groupCells(cells)
+  assert.deepEqual(groups.map((g) => g.sep || g.cells.map((c) => c.i).join(',')), ['0,1', '3', '-', '5'])
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-hangman/index.wxml'), 'utf8')
+  assert.ok(!/scroll-x/.test(wxml), '不再横向滚动')
+  assert.ok(!/placeholder="第 \{\{active/.test(wxml), '不再出「第 N 格」输入栏')
+  assert.ok(/class="hm__ghost"/.test(wxml))
 })

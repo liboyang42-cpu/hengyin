@@ -12,8 +12,13 @@ const advancedGameConfig = require('../../pages/publish/utils/publish/advanced-g
 const { KIT_PRIORITY } = require('../../pages/play/utils/playkit-view.js')
 const ROOT = path.resolve(__dirname, '../..')
 
-test('目录:逐字猜词进作者可选列表,选中即建段并开启,玩家端能还出那一屏', () => {
-  assert.ok(catalog.BASE_GAMES.some((g) => g.gameKey === 'hangman' && g.category === '问答'))
+test('目录:逐字猜词不单独占选择器标签,记在文字问答上;选中即建段并开启,玩家端能还出那一屏', () => {
+  // r2 b2-x-cat(主人「不是这种啊 不是表单吗」):入口在文字问答的表单里切换
+  assert.ok(!catalog.BASE_GAMES.some((g) => g.gameKey === 'hangman'), '选择器不再单列逐字猜词')
+  assert.equal(catalog.pickerKey('hangman'), 'qaText')
+  assert.equal(catalog.selection('hangman').baseKey, 'text')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8')
+  assert.equal((wxml.match(/bindchange="qzHangmanForm"/g) || []).length, 2, '文字问答表单打开、逐字猜词表单关回')
   assert.equal(catalog.findGame('hangman').section, 'hangman')
   assert.ok(catalog.PLAYKIT_SECTIONS.includes('hangman'))
   assert.ok(KIT_PRIORITY.includes('hangman'))
@@ -47,9 +52,15 @@ test('UG-01 就地校验挡服务端必拒的形状;编辑中不先报「还没�
   assert.equal(author.hangmanError({ enabled: true, answer: '城瘾' }), '')
 })
 
-test('UG-02 选项图与替代文字成对', () => {
-  const qa = { enabled: true, mode: 'PICK', options: [{ id: 'a', img: 'https://x/a.png' }, { id: 'b', alt: '只有字' }, { id: 'c', img: 'https://x/c.png', alt: '好' }] }
-  assert.deepEqual(author.optionMediaErrors(qa), { 0: '配了图就要写替代文字', 1: '写了替代文字就要配图' })
+test('UG-02 选项图:图片说明默认取选项文案,不另设一栏;编辑中不报红', () => {
+  const qa = { enabled: true, mode: 'PICK', options: [{ id: 'a', img: 'https://x/a.png' }, { id: 'b', img: 'https://x/b.png', label: '守夜人' }, { id: 'c', img: 'https://x/c.png', alt: '好' }] }
+  assert.deepEqual(author.optionMediaErrors(qa, true), {}, '编辑中不先给红字')
+  assert.deepEqual(author.optionMediaErrors(qa), { 0: '配了图的选项要写文案' })
+  const saved = author.beforeSave({ qa })
+  assert.equal(saved.qa.options[1].alt, '守夜人', '存盘时替代文字取选项文案(服务端要求配图必带 alt)')
+  assert.equal(saved.qa.options[2].alt, '好', '作者原有的说明不覆盖')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8')
+  assert.ok(!/图片替代文字|qzOptionAlt/.test(wxml), '不再单独要作者填替代文字')
 })
 
 test('UG-03 人物与选项一一对应;姓名取选项文案;作者不填正确人物', () => {
@@ -76,16 +87,24 @@ test('UG-03/04 必填:头像、两个结局;允许提前指认时要写记录名
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8')
   assert.ok(/earlyAccuse\.recordAs\}\}" placeholder/.test(wxml), 'recordAs 是输入框')
   assert.ok(!/EARLY_ACCUSATION|EARLY_CLOSURE|correctSuspectId/.test(wxml))
-  assert.ok(wxml.includes('待运行验证'), '运行验证前不给「可发布」绿色状态')
+  assert.ok(!wxml.includes('待运行验证'), 'r2:主人「不用写多余的提示 类似待运行验证这种」')
 })
 
-test('UG-10 谜面呈现:原样不写键,只有三个选项', () => {
-  assert.deepEqual(author.CLUE_MODES.map((m) => m.value), ['STANDARD', 'MIRROR', 'REVERSE'])
+test('UG-10 谜面翻转已删除:作者端不提供,存量配置的试玩也按原样题面', () => {
+  // r2 b2-ug-10 主人:「这是什么 不能这样反转」「删掉这个翻转谜面」
+  assert.ok(!('CLUE_MODES' in author))
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8')
+  assert.ok(!/谜面呈现|qzClue|clueTransform/.test(wxml))
   const kit = preview.buildPreviewKit({ qa: { enabled: true, mode: 'TYPE', title: '钟楼' }, clueTransform: { mode: 'REVERSE' } })
-  assert.equal(kit.title, '楼钟', '试玩按玩家侧规则演倒序')
+  assert.equal(kit.title, '钟楼', '存量 REVERSE 不再倒序')
   const mirror = preview.buildPreviewKit({ qa: { enabled: true, mode: 'TYPE', title: '钟楼' }, clueTransform: { mode: 'MIRROR' } })
   assert.equal(mirror.title, '钟楼')
-  assert.equal(mirror.clueMode, 'MIRROR')
+  assert.ok(!('clueMode' in mirror))
+})
+
+test('UG-01 作者格子按词分组:一个词不折行', () => {
+  const groups = author.hangmanGroups(author.hangmanCells({ enabled: true, answer: 'AB C-D' }))
+  assert.deepEqual(groups.map((g) => g.sep || g.cells.map((c) => c.ch).join('')), ['AB', 'C', '-', 'D'])
 })
 
 test('UG-11 提示阶梯:类型只有六种(无位置类),整局一个免费次数,层号连续,不写宝石/金币', () => {
