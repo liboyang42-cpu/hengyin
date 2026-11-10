@@ -17,7 +17,7 @@
   opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
 .pdim.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .psheet{ position:fixed; left:0; right:0; bottom:0; z-index:70; box-sizing:border-box;
-  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* 2026-11-09 V3-18 纯黑 → 弹层抬升灰(token);圆角原型 28px */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; box-shadow:var(--cy-comp-sheet-player-lift); /* 2026-11-10 r2 顶边高光+投影;2026-11-09 V3-18 纯黑 → 弹层抬升灰(token);圆角原型 28px */
   padding:0 var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); /* ds-ok 原型 padding:0 24px 22px */
   /* ⚠️ 原型 .sheet 自己没有 max-height —— 它靠每屏 s.style.top 定高,内容多就长。
      这里必须分两档,不能一刀 70vh:注册表里 roam-share / roam-task-list / roam-poi-detail /
@@ -118,7 +118,7 @@
 .avs__i:first-child{ margin-left:0; }
 /* 底部按钮排(原型 btnRow + .btn.w / .btn.s) */
 .btnrow{ display:flex; gap:19rpx; margin-top:35rpx; } /* ds-ok 原型 .row gap 10px + btnRow 上 18px */
-.btn2{ display:flex; align-items:center; justify-content:center; height:88rpx; border-radius:999rpx; font-size:var(--cy-type-button); font-weight:700; } /* ds-ok 原型 .btn 46px/15px/700;46px=88rpx 正好压住 44pt 命中区 */
+.btn2{ display:flex; align-items:center; justify-content:center; height:88rpx; border-radius:var(--cy-comp-bottom-btn-radius); font-size:var(--cy-type-button); font-weight:700; } /* ds-ok 原型 .btn 46px/15px/700;46px=88rpx 正好压住 44pt 命中区 */
 .btn2--w{ flex:2; background:#FFFFFF; color:#111111; } /* ds-ok 原型 .btn.w */
 .btn2--s{ flex:1; background:#1A1A1A; color:#FFFFFF; } /* ds-ok 原型 .btn.s */
 .btn2--d{ flex:1; background:#1A1A1A; color:#F87171; } /* ds-ok 原型 .btn.d(危险动作那一档) */

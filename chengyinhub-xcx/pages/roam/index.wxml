@@ -66,10 +66,12 @@
     </block>
 
     <block wx:elif="{{entrySheet=='layers'}}">
-      <view class="entry-layer" data-key="activities" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.activities}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view><view class="entry-layer__copy"><text>附近活动</text><text>封面图片节点</text></view><view class="entry-layer__switch {{entryLayers.activities?'is-on':''}}"><view></view></view></view>
-      <view class="entry-layer" data-key="teams" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.teams}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="tab-club" size="32" /></view><view class="entry-layer__copy"><text>正在招募的队伍</text><text>队长头像与剩余名额</text></view><view class="entry-layer__switch {{entryLayers.teams?'is-on':''}}"><view></view></view></view>
-      <view class="entry-layer" data-key="posts" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.posts}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="image" size="32" /></view><view class="entry-layer__copy"><text>帖文与图片打卡</text><text>公开内容，位置做合并显示</text></view><view class="entry-layer__switch {{entryLayers.posts?'is-on':''}}"><view></view></view></view>
-      <view class="entry-layer__note">公开位置已模糊处理</view>
+      <!-- r2 a2-v3-18 业主「底部不需要公开位置已模糊处理的文字提示 整体UI再优化一下」:三行收进一张分组卡,去掉底部提示 -->
+      <view class="entry-layer-group">
+      <view class="entry-layer" data-key="activities" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.activities}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view><view class="entry-layer__copy"><text>附近活动</text></view><view class="entry-layer__switch {{entryLayers.activities?'is-on':''}}"><view></view></view></view>
+      <view class="entry-layer" data-key="teams" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.teams}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="tab-club" size="32" /></view><view class="entry-layer__copy"><text>正在招募的队伍</text></view><view class="entry-layer__switch {{entryLayers.teams?'is-on':''}}"><view></view></view></view>
+      <view class="entry-layer" data-key="posts" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.posts}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="image" size="32" /></view><view class="entry-layer__copy"><text>帖文与图片打卡</text></view><view class="entry-layer__switch {{entryLayers.posts?'is-on':''}}"><view></view></view></view>
+      </view>
     </block>
 
     <block wx:elif="{{entrySheet=='activity' && entryActivity && entrySheetView=='team' && entryTeam}}">

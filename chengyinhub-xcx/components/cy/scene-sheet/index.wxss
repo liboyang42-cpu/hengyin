@@ -228,6 +228,7 @@
   box-sizing: border-box;
   padding: var(--cy-space-2) var(--cy-comp-sheet-body-pad-x) calc(var(--cy-space-2) + env(safe-area-inset-bottom));
   background: var(--cy-sheet-bg);
+  --cy-comp-btn-radius: var(--cy-comp-bottom-btn-radius); /* 2026-11-10 r2 底部按钮统一圆角 */
 }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。

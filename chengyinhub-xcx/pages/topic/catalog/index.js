@@ -12,6 +12,7 @@ Page({
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     title: '城市目录',
     cityTabs: [],
+    cityPicker: false,
     activeCity: ALL,
     chips: [],
     selected: {},
@@ -105,6 +106,14 @@ Page({
       this.setData({ loadingMore: false, cards,
         hasMore: page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE })
     })
+  },
+
+  // r2 b8-x-p3-01:点顶部城市名弹城市列表(同一份 /filters 城市),选中即切
+  openCityPicker() { if (this.data.cityTabs.length) this.setData({ cityPicker: true }) },
+  closeCityPicker() { this.setData({ cityPicker: false }) },
+  pickCity(e) {
+    this.setData({ cityPicker: false })
+    this.onCity({ detail: { key: e.currentTarget.dataset.key } })
   },
 
   onCity(e) {

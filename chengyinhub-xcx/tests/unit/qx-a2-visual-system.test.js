@@ -17,8 +17,9 @@ const rule = (css, sel) => {
 
 test('V3-18 玩家弹层底 = 抬升灰 #1C1C1E 94%,抓手提亮;手写黑底弹层改读同一 token', () => {
   const tokens = read('style/tokens.wxss')
-  assert.match(tokens, /--cy-comp-sheet-player-glass:\s*rgba\(28, 28, 30, \.94\);/)
-  assert.match(tokens, /--cy-color-sheet-handle:\s*#6E6E73;/)
+  // 2026-11-10 r2-visual:业主仍看不清 → 再抬到 #2C2C2E(.98) + 抓手 #8E8E93(见 r2-visual-tokens.test.js)
+  assert.match(tokens, /--cy-comp-sheet-player-glass:\s*rgba\(44, 44, 46, \.98\);/)
+  assert.match(tokens, /--cy-color-sheet-handle:\s*#8E8E93;/)
   assert.doesNotMatch(tokens, /--cy-color-sheet-handle:\s*#5A5A5A/, '深端抓手不许留旧灰')
 
   const proto = read('style/proto-sheet.wxss')

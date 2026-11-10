@@ -1,0 +1,8 @@
+-- r2-visual rig 夹具(只在一次性测试库 cy_e2e_51 里执行,不进产品代码)
+-- 前置:staging/rig/free_orient_theme.py 建出主题 990014 与玩家 9004 的零价订单 74;seed-walk.py add-players 4 建 990005..990008
+update ums_member set invite_user_id=9004, nickname=elt(id-990004,'小桥','阿岚','林野','周行') where id between 990005 and 990008;
+update club set city='上海' where id=7001; update club set city='杭州' where id=7002;
+update cms_topic set name='外滩夜行', city_code='310100' where id=990014;
+update cms_topic set city_code='310100' where id=990013;
+update cms_topic set img_url=NULL where id in (990013);
+-- 990101 西湖北线(club 7002, 330100)、990102 苏州河慢走(club 7001, 310100):按 990014 整行克隆(列清单用 information_schema 拼,见 r2-visual RESULT)

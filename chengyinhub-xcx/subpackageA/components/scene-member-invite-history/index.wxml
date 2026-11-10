@@ -1,22 +1,17 @@
 <!-- V1-P59 / G-11:pmIn 置 1 先隐着,置 2 后汇总卡、头像、记录行依次上浮(只用过渡,减少动态效果时不触发) -->
 <view class="ir-scene" style="{{pmIn === 1 ? '--pm-i:1;' : (pmIn === 2 ? '--pm-i-d:.36s;--pm-i-s:1;' : '')}}">
-  <view class="ir-summary" wx:if="{{groups.length}}">
-    <view>
-      <text class="ir-summary-label">累计邀请</text>
-      <view class="ir-summary-value"><text>{{total}}</text><text class="ir-summary-unit">人</text></view>
+  <!-- r2 a7-v1-p59 业主「页面设计的不对 参考其他页面怎么做的 参考revolut」:Revolut 邀请页结构 ——
+       顶部直接在页面底上放「已获积分」大数字 + 邀请人数一行(头像叠放),下面一张列表卡,每行头像 / 名字 / 时间 + 右侧状态胶囊。 -->
+  <view class="ir-hero" wx:if="{{groups.length}}">
+    <text class="ir-hero-label">首购奖励积分</text>
+    <text class="ir-hero-value" wx:if="{{rewardReady}}">+{{earnedTotalText}}</text>
+    <text class="ir-hero-value ir-hero-value--pending" wx:else>待同步</text>
+    <view class="ir-hero-row">
       <view class="ir-stack" wx:if="{{stack.length}}" aria-hidden="true">
-        <view class="ir-stack-i" wx:for="{{stack}}" wx:key="id"><cy-avatar size="64" src="{{item.avatar}}" name="{{item.nickname}}" /></view>
+        <view class="ir-stack-i" wx:for="{{stack}}" wx:key="id"><cy-avatar size="56" src="{{item.avatar}}" name="{{item.nickname}}" /></view>
       </view>
+      <text class="ir-hero-meta">已邀请 {{total}} 人<block wx:if="{{rewardReady}}"> · 已到账 {{earnedCount}} 人</block></text>
     </view>
-    <view class="ir-summary-side">
-      <text class="ir-summary-label">首购奖励积分</text>
-      <text class="ir-summary-reward" wx:if="{{rewardReady}}">+{{earnedTotalText}}</text>
-      <text class="ir-summary-reward" wx:else>待同步</text>
-    </view>
-  </view>
-
-  <view class="ir-sync-note" wx:if="{{groups.length && !rewardReady}}" aria-role="status">
-    奖励同步中
   </view>
 
   <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="{{4}}" />
@@ -32,14 +27,14 @@
         <text class="ir-group-total">{{group.rewardText}}</text>
       </view>
       <view class="ir-card">
-        <view class="ir-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="id">
+        <view class="ir-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="id" aria-label="{{item.nickname}} {{item.timeText}} {{item.statusText}}">
           <cy-avatar class="ir-avatar" size="sm" src="{{item.avatar}}" name="{{item.nickname}}" />
           <view class="ir-copy">
             <text class="ir-name ep1">{{item.nickname}}</text>
             <text class="ir-time">{{item.timeText}}</text>
             <text class="ir-status">{{item.statusText}}</text>
           </view>
-          <text class="ir-reward">{{item.rewardText}}</text>
+          <view class="ir-pill"><text class="ir-reward">{{item.rewardText}}</text></view>
         </view>
       </view>
     </view>

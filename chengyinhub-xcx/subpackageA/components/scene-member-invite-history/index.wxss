@@ -5,35 +5,33 @@
   color: var(--cy-color-text-primary);
 }
 
-.ir-summary {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--cy-space-4);
-  padding: var(--cy-space-4);
-  border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg));
-  background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle));
-}
-.ir-summary-label { display: block; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.ir-summary-value { display: flex; align-items: baseline; gap: var(--cy-space-1); margin-top: var(--cy-space-1); font-size: var(--cy-type-data-xl); font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
-.ir-summary-unit { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); font-weight: 500; }
-.ir-summary-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--cy-space-1); }
-.ir-summary-reward { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; font-variant-numeric: tabular-nums; }
-.ir-sync-note { margin-top: var(--cy-space-2); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+/* r2 a7-v1-p59:Revolut 结构 —— 顶部不套卡,直接在页面底上放大数字 */
+.ir-hero { padding: var(--cy-space-2) 0 var(--cy-space-1); }
+.ir-hero-label { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+.ir-hero-value { display: block; margin-top: var(--cy-space-2); color: var(--cy-color-text-primary); font-size: var(--cy-type-data-xl); font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
+.ir-hero-value--pending { color: var(--cy-color-text-secondary); font-size: var(--cy-type-card-title); }
+.ir-hero-row { display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
+.ir-hero-meta { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; }
 
 .ir-group { margin-top: var(--cy-space-5); }
 .ir-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cy-space-3); margin-bottom: var(--cy-space-2); }
 .ir-group-title { color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }
 .ir-group-total { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; }
 .ir-card { overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle)); }
-.ir-row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: calc(var(--cy-space-7) + var(--cy-space-4)); padding: var(--cy-space-3); box-sizing: border-box; }
-.ir-row + .ir-row { margin-top: var(--cy-space-1); }
+.ir-row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 128rpx; padding: var(--cy-space-3) var(--cy-space-4); box-sizing: border-box; }
+/* 行间细分隔线从文字列起,与头像不相交(Revolut 列表) */
+.ir-row { position: relative; }
+.ir-row + .ir-row::before { content: ''; position: absolute; top: 0; right: 0; left: calc(var(--cy-space-4) + 64rpx + var(--cy-space-3)); height: 1rpx; background: var(--cy-color-border-subtle); }
 .ir-avatar { flex: none; }
 .ir-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
-.ir-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 650; }
-.ir-time { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
-.ir-status { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.ir-reward { flex: none; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-weight: 650; font-variant-numeric: tabular-nums; }
+.ir-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 650; }
+/* Revolut 列表行:左列 名字 / 状态;时间放到右侧胶囊下面(绝对定位,源码顺序不变) */
+.ir-copy { padding-right: 200rpx; }
+.ir-time { position: absolute; right: var(--cy-space-4); bottom: var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
+.ir-status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
+/* 右侧状态胶囊:一律中性灰底(奖励未到账不是成功状态,不占成功绿;原合同) */
+.ir-pill { position: absolute; right: var(--cy-space-4); top: var(--cy-space-3); padding: 6rpx var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-status-neutral-soft); color: var(--cy-color-text-secondary); }
+.ir-reward { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-weight: 650; font-variant-numeric: tabular-nums; }
 
 .ir-more,
 .ir-more-error { display: flex; align-items: center; justify-content: center; min-height: var(--cy-btn-h); margin-top: var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
@@ -42,14 +40,14 @@
 .ir-more--loading { color: var(--cy-color-text-tertiary); }
 
 /* V1-P59(IqRophy):汇总卡里叠放的被邀请人头像,后一个压前一个,外圈是卡片底色 */
-.ir-stack { display: flex; align-items: center; margin-top: var(--cy-space-3); }
-.ir-stack-i { flex: none; width: 64rpx; height: 64rpx; padding: 4rpx; border-radius: 50%; background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle)); }
+.ir-stack { display: flex; align-items: center; }
+.ir-stack-i { flex: none; width: 56rpx; height: 56rpx; padding: 4rpx; border-radius: 50%; background: var(--cy-color-bg-page); }
 .ir-stack-i + .ir-stack-i { margin-left: -16rpx; }
 
 /* V1-P59 / G-11 入场(utils/page-motion.js 的 --pm-* 约定):--pm-i 为 1 时先隐着,置 2 后依次上浮;
    只写 translate 与 filter:opacity(),不碰 transform / opacity,静止时过渡时长为 0,按压反馈照常。
    头像从左侧依次叠进来(IqRophy),每月一张记录卡像聊天卡片一张张升起(uixsiam09)。 */
-.ir-summary, .ir-group {
+.ir-hero, .ir-group {
   filter: opacity(calc(1 - var(--pm-i, 0)));
   translate: 0 calc(var(--pm-i, 0) * 40rpx);
   transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
@@ -69,7 +67,7 @@
 .ir-group:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 160ms); }
 .ir-group:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 230ms); }
 @media (prefers-reduced-motion: reduce) {
-  .ir-summary, .ir-group, .ir-stack-i { filter: none; translate: none; transition: none; }
+  .ir-hero, .ir-group, .ir-stack-i { filter: none; translate: none; transition: none; }
 }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。

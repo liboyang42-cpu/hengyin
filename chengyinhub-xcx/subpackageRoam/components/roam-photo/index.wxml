@@ -1,1 +1,2 @@
-<image wx:if="{{name === 'history' || name === 'stamp' || name === 'event'}}" class="roam-photo" src="/subpackageRoam/assets/photos/{{name}}.webp" mode="aspectFill" aria-hidden="true" />
+<image wx:if="{{name === 'event'}}" class="roam-photo" src="/subpackageRoam/assets/photos/event.webp" mode="aspectFill" aria-hidden="true" />
+<view wx:elif="{{name === 'history' || name === 'stamp' || name === 'goals'}}" class="roam-3d" aria-hidden="true"><image class="roam-3d__img roam-3d__img--{{name}}" src="/subpackageRoam/assets/icons/{{name}}.png" mode="aspectFit" /></view>

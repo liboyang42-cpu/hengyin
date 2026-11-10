@@ -2774,7 +2774,8 @@ function buildLedger() {
       // 未被任何 app page（含组件依赖闭包）引用的孤儿组件不属于可操作产品分母。
       if (route.startsWith('component:') && hostRoutes.length === 0) return
       findEventBindings(source).flatMap((binding, bindingIndex) =>
-        eventHandlerNames(binding.value).map(name => ({ binding, bindingIndex, name }))
+        // WXS 响应事件({{模块.函数}},模块在本文件 <wxs> 声明)在视图层执行,不进 JS、无请求无跳转,不是台账动作
+        (binding.wxs ? [] : eventHandlerNames(binding.value)).map(name => ({ binding, bindingIndex, name }))
       ).forEach(({ binding, bindingIndex, name }) => {
         const tag = tags.find((candidate) => candidate.start <= binding.offset && binding.offset <= candidate.end)
         const tagSource = tag ? source.slice(tag.start, tag.end + 1) : ''

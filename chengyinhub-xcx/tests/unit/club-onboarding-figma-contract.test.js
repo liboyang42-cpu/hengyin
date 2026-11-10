@@ -31,8 +31,9 @@ function darkAliasTarget(alias) {
 // 2026-09-06 裁决:四步标题下的副标题(.cc-sub/.ca-sub)整体删除,所以这条改盯
 // 仍然存在的**开场屏副标题**,把「别挑错 alias」这条知识留在活的锚点上。
 test('说明文案用 text/secondary(#B7B7B7)，不是解析成 #919191 的同名 alias', () => {
-  assert.equal(darkAliasTarget('--cy-text-body'), '#B7B7B7', '--cy-text-body 必须仍解析到 text/secondary')
-  assert.equal(darkAliasTarget('--cy-text-secondary'), '#919191', '--cy-text-secondary 仍是历史错位，别当 secondary 用')
+  // 2026-11-10 r2-visual:玩家灰字整体提亮(#B7B7B7→#C7C7C7,#919191→#A8A8A8),别名关系不变
+  assert.equal(darkAliasTarget('--cy-text-body'), '#C7C7C7', '--cy-text-body 必须仍解析到 text/secondary')
+  assert.equal(darkAliasTarget('--cy-text-secondary'), '#A8A8A8', '--cy-text-secondary 仍是历史错位，别当 secondary 用')
 
   const introCss = read('style/wizard-intro.wxss')
   assert.match(introCss, /^\.intro__sub \{[^}]*color:\s*var\(--cy-color-text-secondary\)/ms,

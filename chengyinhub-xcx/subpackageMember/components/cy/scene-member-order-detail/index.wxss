@@ -440,9 +440,10 @@
 .orow:last-child { border-bottom: none; }
 .orow-k {
   flex: none;
-  font-size: var(--cy-font-caption);
-  font-weight: 500;                 /* 稿 11px Medium */
-  color: var(--cy-color-text-tertiary);
+  /* r2 a3-v3-02/03 业主「灰色看不清」:字段名 11px 三级灰 → 12px 二级灰(#C7C7C7,卡底上 ≥10:1) */
+  font-size: var(--cy-font-label);
+  font-weight: 500;
+  color: var(--cy-color-text-secondary);
 }
 .orow-v {
   flex: 1;

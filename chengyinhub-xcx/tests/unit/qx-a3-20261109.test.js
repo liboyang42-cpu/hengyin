@@ -65,7 +65,7 @@ test('V3-37 设置页图标都在主包或本分包内(跨分包图片真机加�
   }
 })
 
-test('V1-P53 设置里有「投诉建议」,打开同一个 settings-feedback 场景', () => {
+test('V1-P53 设置里有「投诉建议」,打开现成的投诉页(r2 a3-v1-p53 不再走手填 ID 的通用场景)', () => {
   const wxml = strip(read('pages/shezhi/shezhi.wxml'))
   assert.match(wxml, /<cy-cell id="settings-feedback"[^>]*title="投诉建议" bind:tap="goFeedback" \/>/)
   global.getApp = () => ({ globalData: {} })
@@ -73,10 +73,13 @@ test('V1-P53 设置里有「投诉建议」,打开同一个 settings-feedback �
   global.Page = cfg => { page = cfg }
   global.wx = new Proxy({}, { get: () => () => ({}) })
   const opened = []
+  const navigated = []
   try { require(path.join(ROOT, 'pages/shezhi/shezhi.js')) } catch (e) { /* 只取 Page 配置 */ }
   assert.ok(page && typeof page.goFeedback === 'function')
+  global.wx = { navigateTo: o => { navigated.push(o.url); if (o.complete) o.complete() } }
   page.goFeedback.call({ openScene: id => opened.push(id) })
-  assert.deepEqual(opened, ['settings-feedback'])
+  assert.deepEqual(opened, [])
+  assert.deepEqual(navigated, ['/subpackageMember/complaint/index'])
   assert.match(read('utils/scene-registry.js'), /'settings-feedback': \{[^}]*title: '投诉建议'/)
 })
 

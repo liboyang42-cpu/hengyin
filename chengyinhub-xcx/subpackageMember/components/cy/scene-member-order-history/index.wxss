@@ -29,6 +29,8 @@
 .orderbox_li_con{overflow: hidden; margin: 0 0 var(--cy-space-3) 0; display: flex; align-items: flex-start; gap: var(--cy-space-3);}
 .orderbox_li_con_tu{ width: 176rpx; height: 176rpx; flex-shrink: 0; overflow: hidden; border-radius: var(--cy-radius-md); background: var(--cy-bg-subtle);}
 .orderbox_li_con_tu .moh-cover{ width: 100%; height: 100%; vertical-align: top;}
+/* r2 a3-v3-22:横图封面 3:2,高度比方图矮,文字列仍顶边对齐 */
+.orderbox_li_con_tu--wide{ width: 216rpx; height: 144rpx;}
 /* 行间距不再用统一 gap:用户要求「标题→日期」和「日期→地点」两档不同,
    改由各行自己的 margin-top 承担(首行 order-mode-line 不带,天然贴顶)。 */
 .orderbox_li_con_info{overflow: hidden; flex: 1; min-width: 0; display: flex; flex-direction: column;}
@@ -72,6 +74,10 @@
    现与 .orderbut2 同源,只保留类名以免动 WXML 条件分支。 */
 .orderbut-play{background:var(--cy-btn-solid-bg); color:var(--cy-btn-solid-fg); box-shadow:none;}
 .orderbut-play .orderbut__visual{background:var(--cy-btn-solid-bg); color:var(--cy-btn-solid-fg);}
+/* r2 a3-v3-22 业主「查看详情按钮感觉太大了」:查看类动作降成次级小药丸(宽随字、矮一档、浅底白字);
+   命中区仍是外壳 88rpx。付款等主动作(.orderbut2 不带 -play)不变。 */
+.orderbut2.orderbut-play{ width: auto; min-width: 0; background: transparent; }
+.orderbut2.orderbut-play .orderbut__visual{ height: 52rpx; line-height: 52rpx; padding: 0 var(--cy-space-3); font-size: var(--cy-font-caption); font-weight: 600; background: var(--cy-color-bg-surface-strong); color: var(--cy-text-title); border-radius: var(--cy-radius-pill); }
 /* 状态词只用颜色区分,不再套底色药丸 */
 .moh-state.order-state-pending_payment{color: var(--cy-danger);}
 .moh-state.order-state-not_started{color: var(--cy-info);}

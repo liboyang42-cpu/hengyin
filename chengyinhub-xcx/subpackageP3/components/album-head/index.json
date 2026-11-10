@@ -1,4 +1,6 @@
 {
   "component": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "album-intro": "/subpackageP3/components/album-intro/index"
+  }
 }
