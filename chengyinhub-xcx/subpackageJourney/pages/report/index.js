@@ -11,7 +11,7 @@ function landingPath(token) {
 
 Page({
   data: {
-    state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
+    state: 'loading', stateTitle: '加载中', stateCta: '',
     report: null, eyebrow: '', registrationId: '',
     stateIcon: '', teamId: '', cityCode: '', countryCode: '', clubId: '',
     rankOpen: false,
@@ -32,7 +32,7 @@ Page({
     this.setData({ registrationId: view.isId(o.registrationId) ? o.registrationId : '',
       cityCode: this._cityCode, countryCode: this._countryCode, clubId: this._clubId });
     if (!this._query.activityId && !this._query.topicId) {
-      this.setData({ state: 'missing', stateKind: 'missing-param', stateIcon: 'route', stateTitle: '链接已失效', stateCta: '' });
+      this.setData({ state: 'missing', stateIcon: 'route', stateTitle: '链接已失效', stateCta: '' });
       return;
     }
     this.reload();
@@ -40,7 +40,7 @@ Page({
 
   reload() {
     const epoch = this._epoch = (this._epoch || 0) + 1;
-    if (this.data.state !== 'ready') this.setData({ state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '' });
+    if (this.data.state !== 'ready') this.setData({ state: 'loading', stateTitle: '加载中', stateCta: '' });
     return api.report(app, this._query).then(res => {
       if (epoch !== this._epoch) return;
       if (!api.ok(res) || !res.data) { this._fail(res); return; }
@@ -56,12 +56,12 @@ Page({
 
   _fail(res) {
     const code = res && (res.httpStatus === 401 || res.code == 401) ? 401 : Number(res && res.code);
-    if (code === 401) { this.setData({ state: 'auth', stateKind: 'no-permission', stateIcon: 'tab-me', stateTitle: '登录后查看战报', stateCta: '登录' }); return; }
+    if (code === 401) { this.setData({ state: 'auth', stateIcon: 'tab-me', stateTitle: '登录后查看战报', stateCta: '登录' }); return; }
     if (res && (res.reasonCode === 'RUN_NOT_FOUND' || res.reasonCode === 'RUN_SCOPE_MISMATCH')) {
-      this.setData({ state: 'gone', stateKind: 'not-found', stateIcon: 'route', stateTitle: '这一局不存在或无权查看', stateCta: '' }); return;
+      this.setData({ state: 'gone', stateIcon: 'route', stateTitle: '这一局不存在或无权查看', stateCta: '' }); return;
     }
-    if (code === 403) { this.setData({ state: 'denied', stateKind: 'no-permission', stateIcon: 'lock', stateTitle: (res && res.msg) || '暂时不能查看', stateCta: '' }); return; }
-    this.setData({ state: 'error', stateKind: 'data', stateIcon: 'warning', stateTitle: '战报暂未加载', stateCta: '重新加载' });
+    if (code === 403) { this.setData({ state: 'denied', stateIcon: 'lock', stateTitle: (res && res.msg) || '暂时不能查看', stateCta: '' }); return; }
+    this.setData({ state: 'error', stateIcon: 'warning', stateTitle: '战报暂未加载', stateCta: '重新加载' });
   },
 
   onStateCta() {

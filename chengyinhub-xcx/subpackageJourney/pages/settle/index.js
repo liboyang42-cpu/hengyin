@@ -24,7 +24,7 @@ Page({
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
     step: 'overview', stepIndex: 0, title: TITLES.overview, steps: STEPS,
     report: null, topicName: '', celebrate: '',
-    stars: 0, starList: [1, 2, 3, 4, 5], review: '', reviewMax: MAX_REVIEW, rateBusy: false, rateError: '', rated: false,
+    stars: 0, starList: [1, 2, 3, 4, 5], review: '', reviewMax: MAX_REVIEW, rateBusy: false, rateError: '',
     shareKind: 'post', shareTabs: [{ key: 'post', label: '帖文' }, { key: 'story', label: '故事' }],
     cardReady: false, videoOk: false, videoBusy: false, privacyGateShow: false
   },
@@ -104,7 +104,7 @@ Page({
     this.setData({ rateBusy: true, rateError: '' });
     api.rate(app, ownerType, ownerId, this.data.stars, text).then(res => {
       if (this._gone) return;
-      if (api.ok(res)) { this.setData({ rateBusy: false, rated: true }); this._go('share'); return; }
+      if (api.ok(res)) { this.setData({ rateBusy: false }); this._go('share'); return; }
       // 服务端原文(内容安全、频控等)照原样显示在字段下面。
       this.setData({ rateBusy: false, rateError: (res && res.msg) || (res && res.netFail ? '网络异常，星级和文字已保留，请重试' : '评价暂时无法提交') });
     });

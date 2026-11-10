@@ -4290,11 +4290,6 @@ Page({
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
     }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 10800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
   },
-  // r2-finish 章节完成卡的「用时」:本局跑表到此刻;读不到就不出这一行(不写 0)。
-  _gateElapsed() {
-    const sec = typeof this._runElapsedSeconds === 'function' ? this._runElapsedSeconds() : 0;
-    return sec > 0 ? formatElapsed(sec) : '';
-  },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
     this._booted = true;
@@ -9451,6 +9446,11 @@ Page({
   closeFinale() { this.setData({ 'finale.show': false }); },
   saveFinale() { this.setData({ 'finale.show': false }, () => this.saveFinishCard()); },
   // qx-b3 P7:战报读同一局(runId=本局路线会话),战报页只读,不补完局不发奖。
+  // r2-finish 章节完成卡的「用时」:本局跑表到此刻;读不到就不出这一行(不写 0)。
+  _gateElapsed() {
+    const sec = typeof this._runElapsedSeconds === 'function' ? this._runElapsedSeconds() : 0;
+    return sec > 0 ? formatElapsed(sec) : '';
+  },
   // r2-finish 结算流程(总览 → 排行榜 → 评价 → 分享):只在整局走完的真实局出入口;同一套 runId 口径。
   openSettlement() {
     if (this.data.isPreview || this.data.isMock || !this.data.allDone) return;
