@@ -28,7 +28,18 @@
 
 ## 门禁
 
-__GATES__
+| 门禁 | 结果 |
+|---|---|
+| `node chengyinhub-xcx/tests/lint/ui-integrity.js`（最终头） | **UI-GATE-0:PASS**（U1–U5、A11Y、Legacy 全 PASS；没有新增任何基线条目。中途报过 4 条基线行号漂移 + 1 条零消费字段，都改代码收掉：票夹筛选常量改成文件尾函数声明、「我的」新 require 并到同一行、同行席位 `pendingInvite` 改实例字段） |
+| `build-route-matrix.js --json` / `build-action-ledger.js --write` | 路由 168（+1 游戏主题库）、控件 5946（底座 5936，+10：主题库筛选 / 卡 / 重试、票夹筛选、结算标签片 / 去分享 / 完成、队伍邀请钮改 bindtap、同行席位撤邀请半屏）；重建后 `git status` 无 diff |
+| `scripts/ds-hardcode-gate.sh`（暂存本分支全部改动） | 通过，exit 0（画布导出图与卡片压字处行尾 `/* ds-ok */`） |
+| keyframes 棘轮 | 本 lane 新增 `@keyframes` 0 个；棘轮上限 146 未改，实测仍 169（与底座相同，qx-base RESULT 已记） |
+| 主包体积 `mainpkg-size-report.js --json` | `mainTotal` 3,293,808 字节 ≈ **2036.1 KiB < 2048**（底座 2030.7；+5.4 KiB 来自 `cy-share-card` 的邀请卡、队伍详情页与 `app.json`；其余新文件全在分包） |
+| 单测 | 新增 `tests/unit/l-after-items.test.js` 7 例通过；本 lane 触及的 43 个单测文件共 480 例：470 通过、10 失败 → 其中 8 条是本 lane 新页 / 新控件带来的冻结计数与正则，已按日期改注后全部通过（台账 tap 2979→2985、事件合同 2957→2961、external 367→366、本地 tap 2612→2619、本地事件 2861→2865；cy-page-title 页面 91→92；路由矩阵 167→168；标题盘点 167→168 / custom 166→167；票夹 F14 正则；店铺分享卡 `wx:else`；r2-finish / r3-share / r3-visual / order-ticket-face 各 1 处）；剩下 2 条（`motion-property-ratchet` 169>146、`reduced-motion-coverage-contract` 的 r3-share / ai-npc / 队伍 / 落地页 keyframes）在底座同一组文件上同样失败（已在底座树实跑对照：127 通过 / 同 2 条失败），不是本 lane 引入 |
+| `cy-illus` 插图 | 25 张物件层解码后全部通过 XML 解析（修前 20 张失败）；Chromium 实渲染 7 张 `naturalWidth` 均为 120 |
+| 没有跑 | `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`（brief 禁止）；Java / 管理端构建（本 lane 不改后端与管理端） |
+
+rig：`claude/cloud-walk-20261101-rig` 工作树 + staging 的 `rig-up-sha-param.diff`、`rig-app-oss-seam.diff`（对象存储占位值，不是凭据）+ club 分支的 `harness-patches.diff`；后端 jar 用底座 `125de3bd` 构建（本 lane 不改后端）；`rig/switch.sh` 切 before / after 包，`rig/shots.sh` 拍照。夹具：staging 的 `free_orient_theme.py` 跑三次（玩家 9004 三张零元票,主题 990014–990016），玩家 9004 在 rig 里真实走完 990014（两站到达、答题「3」,`/api/play/arrive` 与结算接口全是真实返回）。HARNESS 限制：没有对象存储（封面 / 模糊背景 / 主题库封面读不出）、只有鼠标（票夹拖动用 eval 喂页面自己的触摸处理）、个人码接口在 rig 里没返回码图。
 
 ## Cross-lane
 
@@ -47,4 +58,4 @@ __GATES__
 5. **评价的标签片**：既有评论写口要求有文字，**默认做法：点中的标签片拼成文字随正文一起提交**（只点标签不写字也能提交）；要存成结构化标签需要后端加字段。
 6. **邀请页的个人码**：rig 里 `/api/user/player-code` 没有返回码图（截图里右下角空着），产品里码出现在右下白底格；**默认做法：读不到就不画码格，不占位**。
 
-STATUS: __STATUS__
+STATUS: PARTIAL - 代码、单测、门禁、rig 截图全部完成；只差同行席位 / 队伍详情两个邀请入口与榜单「队内」页签的截图（rig 没有多席位票和队伍夹具，接线有单测），以及真机上的插图帧率、分享卡片图与个人码
