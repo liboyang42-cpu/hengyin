@@ -28,12 +28,27 @@ module.exports = { valid: valid };
     <!-- 帖子(默认):2026-10-22 owner —— 商家不再看到其他商家。走查 v2 W2-17:tab 改名「发现」,
          与 pages/talent/list 同一条全站流(/api/club/post/feed scope=all),可点赞、评论;骨架超过 400ms 才出。 -->
     <block wx:if="{{activeTab === 'feed'}}">
+      <!-- r2 a6-w2-17(业主「商家也可以发的」):发帖入口与俱乐部详情同一形态,点开是全站统一的全屏发帖弹窗 -->
+      <view class="post-composer-collapsed" wx:if="{{canCompose}}" bindtap="openComposer"
+            aria-role="button" aria-label="发帖文" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-avatar class="post-composer-me" size="80" src="{{myAvatar || '/images/d_profile.png'}}" name="我" />
+        <view class="post-composer-col">
+          <text class="post-composer-who">{{myNickname || '我的店'}}</text>
+          <text class="post-composer-ph">有什么新鲜好玩的分享吗？</text>
+          <view class="post-composer-tools">
+            <cy-icon class="post-composer-ico" name="image" size="44" />
+            <cy-icon class="post-composer-ico" name="pin-solid" size="44" />
+          </view>
+        </view>
+      </view>
       <cy-skeleton wx:if="{{feedState === 'loading' && feedSlow}}" type="card" count="{{3}}" loading-label="帖文加载中" />
       <cy-error load-failure class="cy-fade-in" wx:elif="{{feedState === 'error'}}" title="帖文加载失败" sub="{{feedError}}" retry="重试" bind:retry="loadFeed" />
       <block wx:elif="{{feed.length}}">
-        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" interactive-actions interactive-club
+        <!-- r2 a6-w2-17:与玩家发现页同一张卡同一套动作(点赞红心、评论、头像「+」关注、分享、点图全屏);
+             转发是俱乐部成员动作,商家不加入俱乐部,不出 -->
+        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
-          bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:club="onPostClub"
+          bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub"
           bind:playdetail="onPostReference" bind:play="onPostReference" />
       </block>
       <cy-empty wx:elif="{{feedState === 'empty'}}" kind="empty" title="{{feedEmptyTitle}}" />
@@ -62,5 +77,6 @@ module.exports = { valid: valid };
     </block>
   </view>
 
+  <cy-post-compose show="{{composerOpen}}" bind:close="closeComposer" bind:published="onComposePublished" />
   <tabBar mode="merchant" activeKey="relation" />
 </view>

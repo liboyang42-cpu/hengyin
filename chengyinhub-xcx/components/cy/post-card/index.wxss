@@ -329,6 +329,9 @@
 .post-card--light .post-card__nick { color: var(--cy-color-text-primary); }
 .post-card--light .post-card__meta { color: var(--cy-color-text-secondary); }
 .post-card--light .post-card__action { color: var(--cy-color-text-primary); }
+/* r2 a6-w2-17(业主「点赞是红色的」):上一条把 is-on 的红/绿也压成了黑,浅色卡面已赞照样红、已转发照样绿 */
+.post-card--light .post-card__action--like.is-on { color: var(--cy-color-status-danger); }
+.post-card--light .post-card__action--repost.is-on { color: var(--cy-color-status-success); }
 .post-card--light .post-card__comment-icon { filter: brightness(0); opacity: 0.62; }
 .post-card--light .post-card__share { color: var(--cy-color-text-primary); }
 .post-card--light .post-card__share-icon { filter: none; }
