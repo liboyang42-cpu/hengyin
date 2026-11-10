@@ -76,7 +76,7 @@
 .ir-row:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 420ms); }
 .ir-row:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 480ms); }
 .ir-row:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 540ms); }
-.ir-row:nth-child(n+5) { transition-delay: calc(var(--pm-i-s, 0) * 600ms); }
+.ir-row:nth-child(5), .ir-row:nth-child(6), .ir-row:nth-child(7), .ir-row:nth-child(8) { transition-delay: calc(var(--pm-i-s, 0) * 600ms); }
 @media (prefers-reduced-motion: reduce) {
   .ir-hero, .ir-group, .ir-stack-i, .ir-row { filter: none; translate: none; transition: none; }
 }
