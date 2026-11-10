@@ -7046,8 +7046,7 @@ Page({
     const precheckOk = !skipLabel && !issues.length;
     this._publishPrecheckOk = precheckOk;
     const passed = this._buildPublishPassed(precheckOk);
-    this.setData({
-      reducedMotion: readReducedMotion(), // qx-u1:侧滑返回在减动效下直接关、不播滑出
+    this.setData({ reducedMotion: readReducedMotion(), // qx-u1:侧滑返回在减动效下直接关、不播滑出
       publishCheck: {
         show: true, blocking: this._withIssueWhere(blocking), advisory, summary, passed, preview: this._buildPublishPreview(blocking),
       },

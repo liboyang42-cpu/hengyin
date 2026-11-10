@@ -94,9 +94,7 @@ Component(withNativeBackGuard({
     // 已卸载后重开 ⇒ 只清标记、gcmd 归零(新节点挂载时视图层不该再收到一条回拉指令)
     show(v) {
       if (!v || !this.data._dragOut) return;
-      this.setData(this.data._render
-        ? { _dragOut: false, _gestureCmd: this.data._gestureCmd + 1 }
-        : { _dragOut: false, _gestureCmd: 0 });
+      this.setData({ _dragOut: false, _gestureCmd: this.data._render ? this.data._gestureCmd + 1 : 0 });
     },
   },
   lifetimes: {
