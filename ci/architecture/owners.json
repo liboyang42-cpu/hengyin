@@ -138,7 +138,8 @@
           "com.chengyinhub.web.controller.api.ApiActivityController",
           "com.chengyinhub.web.controller.api.ApiTemplateController",
           "com.chengyinhub.web.controller.api.ApiAiNpcController",
-          "com.chengyinhub.web.controller.api.ApiAuthorWriteReceiptController"
+          "com.chengyinhub.web.controller.api.ApiAuthorWriteReceiptController",
+          "com.chengyinhub.web.controller.api.ApiPresetController"
         ]
       },
       {
@@ -1782,6 +1783,270 @@
           "com.chengyinhub.business.service.impl.WechatPaymentSdkGateway",
           "com.chengyinhub.business.service.impl.RefundServiceImpl"
         ]
+      },
+      {
+        "id": "Q_CHANNEL_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ChannelOrderVerificationMapper", "com.chengyinhub.business.mapper.ChannelRedemptionMapper", "com.chengyinhub.business.mapper.ChannelRefundVerificationMapper", "com.chengyinhub.business.mapper.ChannelVoucherAccountMapper", "com.chengyinhub.business.mapper.ChannelVoucherMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.ChannelOrderVerificationServiceImpl", "com.chengyinhub.business.service.impl.ChannelRedemptionServiceImpl", "com.chengyinhub.business.service.impl.ChannelRefundServiceImpl", "com.chengyinhub.business.service.impl.ChannelVoucherServiceImpl"]
+      },
+      {
+        "id": "Q_CONTENT_CATALOG_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.CityDiscoveryCatalogMapper", "com.chengyinhub.business.mapper.ContentLandingMetadataMapper", "com.chengyinhub.business.mapper.PublicContentCatalogMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.CityDiscoveryCatalogServiceImpl", "com.chengyinhub.business.service.impl.ContentLandingMetadataServiceImpl", "com.chengyinhub.business.service.impl.PublicContentCatalogServiceImpl"]
+      },
+      {
+        "id": "Q_TOPIC_REVISION_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.CmsTopicContentRevisionMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.TopicContentRevisionServiceImpl"]
+      },
+      {
+        "id": "Q_REVENUE_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.CreatorRevenueLedgerMapper", "com.chengyinhub.business.mapper.MarketingRevenueAllocationLineMapper", "com.chengyinhub.business.mapper.MarketingRevenueAllocationMapper", "com.chengyinhub.business.mapper.MarketingRevenuePostingTaskMapper", "com.chengyinhub.business.mapper.MarketingRevenueRuleMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.CreatorRevenueReadServiceImpl", "com.chengyinhub.business.service.impl.MarketingRevenueAllocationServiceImpl", "com.chengyinhub.business.service.impl.MarketingRevenuePostingServiceImpl", "com.chengyinhub.business.service.impl.MarketingRevenueRuleServiceImpl"]
+      },
+      {
+        "id": "Q_GIFT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.GiftEntitlementMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.GiftEntitlementServiceImpl", "com.chengyinhub.business.service.impl.MarketingGiftPlayEligibility"]
+      },
+      {
+        "id": "Q_HOST_TIP_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.HostTipConfigMapper", "com.chengyinhub.business.mapper.HostTipIntentMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.HostTipServiceImpl"]
+      },
+      {
+        "id": "Q_ATTRIBUTION_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.MarketingAttributionMapper", "com.chengyinhub.business.mapper.MarketingReferralCredentialMapper", "com.chengyinhub.business.mapper.PlayerAffiliateMapper", "com.chengyinhub.business.mapper.ReferralLandingMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.MarketingAttributionServiceImpl", "com.chengyinhub.business.service.impl.PlayerAffiliateServiceImpl", "com.chengyinhub.business.service.impl.ReferralLandingServiceImpl"]
+      },
+      {
+        "id": "Q_PRODUCT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.MarketingExtraSeatMapper", "com.chengyinhub.business.mapper.MarketingProductMapper", "com.chengyinhub.business.mapper.MarketingProductOrderMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.MarketingProductCatalogServiceImpl", "com.chengyinhub.business.service.impl.MarketingProductPurchaseServiceImpl", "com.chengyinhub.business.service.impl.MarketingProductFulfillmentServiceImpl", "com.chengyinhub.business.service.impl.MarketingExtraSeatServiceImpl"]
+      },
+      {
+        "id": "Q_PROMOTION_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.MarketingOfferMapper", "com.chengyinhub.business.mapper.MarketingOrderAdjustmentMapper", "com.chengyinhub.business.mapper.MarketingPromotionMapper", "com.chengyinhub.business.mapper.MarketingPromotionRedemptionMapper", "com.chengyinhub.business.mapper.MarketingPromotionRefundFactMapper", "com.chengyinhub.business.mapper.MarketingTierMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.MarketingPromotionServiceImpl", "com.chengyinhub.business.service.impl.MarketingPromotionConfigServiceImpl"]
+      },
+      {
+        "id": "Q_PLAY_HELP_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.PlayHelpRunQuotaMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.PlayHelpRunQuotaApplication"]
+      },
+      {
+        "id": "Q_POST_GAME_OUTCOME_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.PostGameOutcomeMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.PostGameOutcomeReportServiceImpl"]
+      },
+      {
+        "id": "Q_SEAT_INVITATION_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.RegistrationSeatInvitationMapper", "com.chengyinhub.business.mapper.RegistrationSeatInvitationRequestMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.RegistrationSeatInvitationServiceImpl", "com.chengyinhub.business.service.impl.RegistrationSeatRecipientEligibility"]
+      },
+      {
+        "id": "Q_SCOPED_LEADERBOARD_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.ScopedLeaderboardMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.web.service.play.ScopedLeaderboardApplication", "com.chengyinhub.web.service.play.PlayerRunReportApplication"]
+      },
+      {
+        "id": "Q_VIDEO_BOUNTY_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.VideoBountyAccrualMapper", "com.chengyinhub.business.mapper.VideoBountyEvidenceMapper", "com.chengyinhub.business.mapper.VideoBountySubmissionMapper", "com.chengyinhub.business.mapper.VideoCampaignMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.VideoBountyServiceImpl"]
+      },
+      {
+        "id": "Q_WORKSHOP_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.WorkshopMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.impl.WorkshopService", "com.chengyinhub.business.service.impl.WorkshopAppleOrderAdapter"]
+      },
+      {
+        "id": "Q_CHANNEL",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IChannelOrderVerificationService", "com.chengyinhub.business.service.IChannelRedemptionService", "com.chengyinhub.business.service.IChannelRefundService", "com.chengyinhub.business.service.IChannelVoucherService", "com.chengyinhub.business.service.impl.ChannelMarketingFactReaderImpl", "com.chengyinhub.business.service.impl.ChannelMarketingRefundFactByIdReaderImpl", "com.chengyinhub.business.service.impl.ChannelMarketingRefundFactReaderImpl", "com.chengyinhub.business.service.impl.ChannelOrderVerificationServiceImpl", "com.chengyinhub.business.service.impl.ChannelPurchasePaymentFactReaderImpl", "com.chengyinhub.business.service.impl.ChannelRedemptionServiceImpl", "com.chengyinhub.business.service.impl.ChannelRefundFactStore", "com.chengyinhub.business.service.impl.ChannelRefundServiceImpl", "com.chengyinhub.business.service.impl.ChannelRevenueReversalServiceImpl", "com.chengyinhub.business.service.impl.ChannelVoucherServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiChannelRedemptionController", "com.chengyinhub.web.controller.api.ApiChannelVerificationCallbackController"]
+      },
+      {
+        "id": "Q_CONTENT_CATALOG",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ICityDiscoveryCatalogService", "com.chengyinhub.business.service.IContentLandingMetadataService", "com.chengyinhub.business.service.IPublicContentCatalogService", "com.chengyinhub.business.service.impl.CityDiscoveryCatalogServiceImpl", "com.chengyinhub.business.service.impl.ContentLandingMetadataServiceImpl", "com.chengyinhub.business.service.impl.PublicContentCatalogServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPublicContentCatalogController", "com.chengyinhub.web.controller.api.ApiContentLandingMetadataController"]
+      },
+      {
+        "id": "Q_TOPIC_REVISION",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ITopicContentRevisionService", "com.chengyinhub.business.service.impl.TopicContentRevisionServiceImpl", "com.chengyinhub.business.service.support.TopicDeliveryMetadataProjection", "com.chengyinhub.business.service.support.TopicLocationBindingService"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.ICmsTopicService", "com.chengyinhub.business.service.impl.CmsTopicServiceImpl"]
+      },
+      {
+        "id": "Q_PRESET_DRAFT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.GameplayPresetDraftService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPresetController"]
+      },
+      {
+        "id": "Q_REVENUE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.ICreatorRevenueReadService", "com.chengyinhub.business.service.IMarketingRevenueAllocationService", "com.chengyinhub.business.service.IMarketingRevenuePostingService", "com.chengyinhub.business.service.IMarketingRevenueRuleService", "com.chengyinhub.business.service.impl.CreatorRevenueReadServiceImpl", "com.chengyinhub.business.service.impl.MarketingRevenueAllocationServiceImpl", "com.chengyinhub.business.service.impl.MarketingRevenuePostingServiceImpl", "com.chengyinhub.business.service.impl.MarketingRevenueRefundSettledConsumer", "com.chengyinhub.business.service.impl.MarketingRevenueRuleServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMarketingRevenueController", "com.chengyinhub.business.service.ICmsRegistrationService", "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"]
+      },
+      {
+        "id": "Q_GIFT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IGiftEntitlementService", "com.chengyinhub.business.service.impl.GiftEntitlementServiceImpl", "com.chengyinhub.business.service.impl.MarketingGiftPlayEligibility"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMarketingProductController", "com.chengyinhub.business.service.impl.MarketingProductPurchaseServiceImpl"]
+      },
+      {
+        "id": "Q_PRODUCT",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IMarketingExtraSeatService", "com.chengyinhub.business.service.IMarketingGroupCheckoutService", "com.chengyinhub.business.service.IMarketingPassAccessService", "com.chengyinhub.business.service.IMarketingProductCatalogService", "com.chengyinhub.business.service.IMarketingProductFulfillmentService", "com.chengyinhub.business.service.IMarketingProductPurchaseService", "com.chengyinhub.business.service.impl.MarketingExtraSeatServiceImpl", "com.chengyinhub.business.service.impl.MarketingGroupCheckoutServiceImpl", "com.chengyinhub.business.service.impl.MarketingPassAccessServiceImpl", "com.chengyinhub.business.service.impl.MarketingProductCatalogServiceImpl", "com.chengyinhub.business.service.impl.MarketingProductFulfillmentServiceImpl", "com.chengyinhub.business.service.impl.MarketingProductPurchaseServiceImpl", "com.chengyinhub.business.service.impl.MarketingProductRefundConsumer", "com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMarketingProductController", "com.chengyinhub.web.controller.api.ApiMarketingExtraSeatController", "com.chengyinhub.web.controller.api.ApiMarketingGroupCheckoutController", "com.chengyinhub.business.service.ICmsRegistrationService", "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"]
+      },
+      {
+        "id": "Q_PROMOTION",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IMarketingPromotionConfigService", "com.chengyinhub.business.service.IMarketingPromotionService", "com.chengyinhub.business.service.impl.CouponUsabilityService", "com.chengyinhub.business.service.impl.MarketingPromotionConfigServiceImpl", "com.chengyinhub.business.service.impl.MarketingPromotionRefundSettledConsumer", "com.chengyinhub.business.service.impl.MarketingPromotionServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMarketingPromotionController", "com.chengyinhub.business.service.ICmsRegistrationService", "com.chengyinhub.business.service.impl.CmsRegistrationServiceImpl"]
+      },
+      {
+        "id": "Q_ATTRIBUTION",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IMarketingAttributionService", "com.chengyinhub.business.service.IPlayerAffiliateService", "com.chengyinhub.business.service.IReferralLandingService", "com.chengyinhub.business.service.impl.MarketingAttributionServiceImpl", "com.chengyinhub.business.service.impl.PlayerAffiliateServiceImpl", "com.chengyinhub.business.service.impl.ReferralLandingServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiMarketingAttributionController", "com.chengyinhub.web.controller.api.ApiPlayerAffiliateController", "com.chengyinhub.web.controller.api.ApiReferralLandingController"]
+      },
+      {
+        "id": "Q_HOST_TIP",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IHostTipService", "com.chengyinhub.business.service.impl.HostTipServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiHostTipController"]
+      },
+      {
+        "id": "Q_PLAY_HELP",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.PlayHelpCostApplication", "com.chengyinhub.business.service.support.PlayHelpReceiptReadModel", "com.chengyinhub.business.service.support.PlayHelpRunQuotaApplication"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayHelpController", "com.chengyinhub.web.service.play.PlayHelpApplication"]
+      },
+      {
+        "id": "Q_POST_GAME_OUTCOME",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IPostGameOutcomeReportService", "com.chengyinhub.business.service.impl.PostGameOutcomeReportServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.business.AnalyticsController"]
+      },
+      {
+        "id": "Q_SEAT_INVITATION",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IRegistrationSeatInvitationService", "com.chengyinhub.business.service.impl.RegistrationSeatInvitationServiceImpl", "com.chengyinhub.business.service.impl.RegistrationSeatRecipientEligibility"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationSeatInvitationController", "com.chengyinhub.web.service.play.PlayerJourneySeatsApplication"]
+      },
+      {
+        "id": "Q_VIDEO_BOUNTY",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.IVideoBountyService", "com.chengyinhub.business.service.impl.VideoBountyServiceImpl"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiVideoBountyController"]
+      },
+      {
+        "id": "Q_WORKSHOP",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.impl.WorkshopAppleOrderAdapter", "com.chengyinhub.business.service.impl.WorkshopService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiWorkshopController", "com.chengyinhub.web.controller.api.ApiWorkshopAppleIapController"]
+      },
+      {
+        "id": "Q_CHANNEL_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiChannelRedemptionController", "com.chengyinhub.web.controller.api.ApiChannelVerificationCallbackController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_CONTENT_CATALOG_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiContentLandingMetadataController", "com.chengyinhub.web.controller.api.ApiPublicContentCatalogController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTopicController"]
+      },
+      {
+        "id": "Q_HOST_TIP_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiHostTipController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_ATTRIBUTION_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMarketingAttributionController", "com.chengyinhub.web.controller.api.ApiPlayerAffiliateController", "com.chengyinhub.web.controller.api.ApiReferralLandingController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_PRODUCT_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMarketingExtraSeatController", "com.chengyinhub.web.controller.api.ApiMarketingGroupCheckoutController", "com.chengyinhub.web.controller.api.ApiMarketingProductController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_PROMOTION_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMarketingPromotionController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_REVENUE_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMarketingRevenueController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_PLAY_HELP_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiPlayHelpController", "com.chengyinhub.web.service.play.PlayHelpApplication"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "Q_PLAYER_JOURNEY_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiPlayerJourneyController", "com.chengyinhub.web.service.play.PlayerJourneyChoicesApplication", "com.chengyinhub.web.service.play.PlayerJourneyMemoryApplication", "com.chengyinhub.web.service.play.PlayerJourneySeatsApplication", "com.chengyinhub.web.service.play.PlayerRunReportApplication"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "Q_PLAY_CONTENT_MANIFEST",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.service.play.PlayContentManifestApplication"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "Q_SEAT_INVITATION_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiRegistrationSeatInvitationController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_SCOPED_LEADERBOARD_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiScopedLeaderboardController", "com.chengyinhub.web.service.play.ScopedLeaderboardApplication"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayProgressController"]
+      },
+      {
+        "id": "Q_VIDEO_BOUNTY_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiVideoBountyController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiRegistrationController"]
+      },
+      {
+        "id": "Q_WORKSHOP_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiWorkshopAppleIapController", "com.chengyinhub.web.controller.api.ApiWorkshopController"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTemplateController"]
       }
     ],
     "allowed_directions": [
@@ -2243,7 +2508,67 @@
       ["B_ORDER_CENTER_API", "B_ORDER_CENTER_QUERY"],
       ["B_ORDER_CENTER_QUERY", "B_PAYMENT_FACADE"],
       ["B_ORDER_CENTER_QUERY", "C_REGISTRATION_QUERY_APPLICATION"],
-      ["B_ORDER_CENTER_QUERY", "E_CLM_SHARED_PROOF_PORT"]
+      ["B_ORDER_CENTER_QUERY", "E_CLM_SHARED_PROOF_PORT"],
+      ["B_PAYMENT_ROUTER", "Q_PRODUCT"],
+      ["C_PLAY_NODE_COMPLETION", "Q_PLAY_HELP"],
+      ["D_CONTENT_COPY", "Q_TOPIC_REVISION"],
+      ["D_PUBLICATION", "Q_TOPIC_REVISION"],
+      ["Q_ATTRIBUTION", "Q_ATTRIBUTION_STORAGE"],
+      ["Q_ATTRIBUTION", "Q_CONTENT_CATALOG"],
+      ["Q_ATTRIBUTION", "Q_PRODUCT_STORAGE"],
+      ["Q_ATTRIBUTION_API", "Q_ATTRIBUTION"],
+      ["Q_CHANNEL", "Q_CHANNEL_STORAGE"],
+      ["Q_CHANNEL", "Q_PRODUCT"],
+      ["Q_CHANNEL", "Q_PRODUCT_STORAGE"],
+      ["Q_CHANNEL", "Q_REVENUE_STORAGE"],
+      ["Q_CHANNEL_API", "Q_CHANNEL"],
+      ["Q_CONTENT_CATALOG", "Q_CONTENT_CATALOG_STORAGE"],
+      ["Q_CONTENT_CATALOG", "SHARED_BUSINESS_AUDIT_PORT"],
+      ["Q_CONTENT_CATALOG_API", "Q_CONTENT_CATALOG"],
+      ["Q_GIFT", "Q_GIFT_STORAGE"],
+      ["Q_GIFT", "Q_PRODUCT_STORAGE"],
+      ["Q_HOST_TIP", "E_COMMERCE_SHARED_PROOF_PORT"],
+      ["Q_HOST_TIP", "Q_HOST_TIP_STORAGE"],
+      ["Q_HOST_TIP_API", "Q_HOST_TIP"],
+      ["Q_PLAYER_JOURNEY_API", "C_PLAY_COMPLETION_FACTS"],
+      ["Q_PLAYER_JOURNEY_API", "C_PLAY_NODE_CONTEXT"],
+      ["Q_PLAYER_JOURNEY_API", "Q_SCOPED_LEADERBOARD_STORAGE"],
+      ["Q_PLAYER_JOURNEY_API", "Q_SEAT_INVITATION"],
+      ["Q_PLAY_CONTENT_MANIFEST", "C_PLAY_COMPLETION_FACTS"],
+      ["Q_PLAY_CONTENT_MANIFEST", "C_PLAY_NODE_CONTEXT"],
+      ["Q_PLAY_CONTENT_MANIFEST", "Q_TOPIC_REVISION"],
+      ["Q_PLAY_HELP", "Q_PLAY_HELP_STORAGE"],
+      ["Q_PLAY_HELP_API", "C_PLAY_NODE_COMPLETION"],
+      ["Q_PLAY_HELP_API", "C_PLAY_NODE_CONTEXT"],
+      ["Q_PLAY_HELP_API", "Q_PLAY_HELP"],
+      ["Q_POST_GAME_OUTCOME", "Q_POST_GAME_OUTCOME_STORAGE"],
+      ["Q_PRODUCT", "B_PAYMENT_OUTBOUND_PORT"],
+      ["Q_PRODUCT", "B_VERIFIED_PAYMENT_FACT_DTO"],
+      ["Q_PRODUCT", "B_VERIFIED_PAYMENT_FACT_STORE"],
+      ["Q_PRODUCT", "Q_GIFT"],
+      ["Q_PRODUCT", "Q_GIFT_STORAGE"],
+      ["Q_PRODUCT", "Q_PRODUCT_STORAGE"],
+      ["Q_PRODUCT", "Q_REVENUE"],
+      ["Q_PRODUCT_API", "Q_GIFT"],
+      ["Q_PRODUCT_API", "Q_PRODUCT"],
+      ["Q_PROMOTION", "Q_PROMOTION_STORAGE"],
+      ["Q_PROMOTION_API", "Q_PROMOTION"],
+      ["Q_REVENUE", "Q_ATTRIBUTION_STORAGE"],
+      ["Q_REVENUE", "Q_REVENUE_STORAGE"],
+      ["Q_REVENUE_API", "Q_REVENUE"],
+      ["Q_SCOPED_LEADERBOARD_API", "Q_SCOPED_LEADERBOARD_STORAGE"],
+      ["Q_SEAT_INVITATION", "Q_SEAT_INVITATION_STORAGE"],
+      ["Q_SEAT_INVITATION_API", "Q_SEAT_INVITATION"],
+      ["Q_TOPIC_REVISION", "D_CONTENT_RULES"],
+      ["Q_TOPIC_REVISION", "Q_TOPIC_REVISION_STORAGE"],
+      ["Q_VIDEO_BOUNTY", "Q_ATTRIBUTION"],
+      ["Q_VIDEO_BOUNTY", "Q_VIDEO_BOUNTY_STORAGE"],
+      ["Q_VIDEO_BOUNTY", "SHARED_BUSINESS_AUDIT_PORT"],
+      ["Q_VIDEO_BOUNTY_API", "Q_VIDEO_BOUNTY"],
+      ["Q_WORKSHOP", "B_PAYMENT_FACADE"],
+      ["Q_WORKSHOP", "B_VERIFIED_PAYMENT_FACT_DTO"],
+      ["Q_WORKSHOP", "Q_WORKSHOP_STORAGE"],
+      ["Q_WORKSHOP_API", "Q_WORKSHOP"]
     ],
     "exact_directions": [
       {

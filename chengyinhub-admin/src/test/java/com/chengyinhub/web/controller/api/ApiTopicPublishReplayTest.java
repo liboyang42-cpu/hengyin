@@ -2,6 +2,7 @@ package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IOmsTicketService;
 import com.chengyinhub.business.service.IQuotaService;
@@ -46,6 +47,8 @@ class ApiTopicPublishReplayTest {
         identity = mock(MemberIdentityService.class);
         quota = mock(IQuotaService.class);
         ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+        // 草稿发布口会读库内节点绑定的玩法去复检文字(j5 B1);这里没有绑定玩法
+        ReflectionTestUtils.setField(controller, "cmsTopicNodeService", mock(ICmsTopicNodeService.class));
         ReflectionTestUtils.setField(controller, "omsTicketService", tickets);
         ReflectionTestUtils.setField(controller, "memberIdentityService", identity);
         ReflectionTestUtils.setField(controller, "quotaService", quota);
