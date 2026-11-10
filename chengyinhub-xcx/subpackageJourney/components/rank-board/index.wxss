@@ -12,8 +12,8 @@
 .rb-hero__num { position: relative; display: flex; height: 132rpx; overflow: hidden; }
 .rb-digit { height: 132rpx; overflow: hidden; }
 .rb-digit__col { display: flex; flex-direction: column; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
-.rb-digit__col text { display: block; height: 132rpx; line-height: 132rpx; font-size: 120rpx; font-weight: 800; letter-spacing: -2rpx;
-  font-variant-numeric: tabular-nums; color: var(--cy-color-text-primary); text-align: center; }
+.rb-digit__col text { display: block; height: 132rpx; line-height: 132rpx; font-size: 120rpx; font-weight: 800; letter-spacing: -2rpx; /* ds-ok 月桂大名次字号 */
+  font-variant-numeric: tabular-nums; color: var(--cy-color-text-primary); text-align: center; } /* ds-ok 月桂大名次(参考 team-rank-laurel)*/
 .rb-hero__pct { margin-top: var(--cy-space-1); font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
 .rb-stats { align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
 .rb-stat { display: flex; flex-direction: column; gap: 8rpx; padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-comp-sheet-group-radius);

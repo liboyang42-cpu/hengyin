@@ -40,5 +40,5 @@
 .cf__row + .cf__row { border-top: 1rpx solid rgba(245,245,242,.12); } /* ds-ok 卡内分组线 */
 .cf__rk { color: rgba(245,245,242,.72); } /* ds-ok 原型定值,对 #2C2C2E 对比度 ≥ 4.5 */
 .cf__rv { font-weight: 700; font-variant-numeric: tabular-nums; color: #F5F5F2; } /* ds-ok 原型定值 */
-.cf__next { align-self: stretch; margin-top: 46rpx; min-height: 96rpx; padding: 0 31rpx; border-radius: var(--cy-comp-btn-radius, 46rpx); display: flex; align-items: center; justify-content: center;
+.cf__next { align-self: stretch; margin-top: 46rpx; min-height: 96rpx; padding: 0 31rpx; border-radius: var(--cy-comp-btn-radius); display: flex; align-items: center; justify-content: center;
   background: #E9C47C; color: #111111; font-size: var(--cy-type-body); font-weight: 600; text-align: center; } /* ds-ok 同 .cf__pill--p */
