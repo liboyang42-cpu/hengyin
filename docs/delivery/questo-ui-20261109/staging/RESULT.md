@@ -75,7 +75,15 @@ Staging-only commits on top of the merges:
 
 - **Action ledger:** `build-action-ledger.js --write` gives 5874 controls with no diff. `build-route-matrix.js --json` gives 167 routes with no diff.
 - **`ui-integrity.js`:** `UI-GATE-0:PASS`. U1–U5, A11Y and Legacy all PASS.
-- **Full mini-program suite** (`node --test chengyinhub-xcx/tests/unit/*.test.js`, HEAD `1b086946`): run in progress when this was committed (a container restart killed the first run); result is posted on the PR.
+- **Full mini-program suite** (`node --test chengyinhub-xcx/tests/unit/*.test.js` at `1b086946`): 16966 tests, 16939 pass, **27 fail**. After the two staging fixes in `fix: staging 合流——…hangman / WXSS 通配符`, **26 fail remain, and every one was already red on the base or on its own lane branch.** Each failing file was re-run on the integrate base and on every lane head.
+  - **Base already red (4):** `theme-records-player` ×3, `profile-merchant-about-contract` ×1.
+  - **qx-b5 branch red (14):** `ann-d-funds-member-ui-contract` ×3, `scene-twin-single-source-contract` ×6, `blank-value-display-contract` ×1, `dw29-l6-merchant-audit` ×1, `nav-page-title-spacing-contract` ×2 (Cross-lane 2), `get-auth-matrix-contract` ×1 (shared with b4, Cross-lane 1).
+  - **qx-b4 branch red (4):** `merchant-theme-route-contract`, `picker-unification-contract` (a native `<picker>`), `press-feedback-resolves-contract`, `tandianri-b5-role-contracts` (also red on b5).
+  - **Shared b4 and b5 (1):** `nav-title-unconditional-contract`.
+  - **qx-b3 branch red (2):** `custom-nav-page-surface-contract` (`subpackageJourney/pages/report` has a solid top bar with no title), and `page-cleanup-audit` (also red on b4 and b5: new pages are not in the cleanup manifest).
+  - **Fixed in staging (2):**
+    - `qx-b1-client-capabilities`: b1 asserted that `game.hangman` is never declared. b2's renderer is now in `TYPE_OF`, so b1's design declares it, and the assertion was flipped as b1's RESULT Cross-lane 2 predicted.
+    - `wxss-unsupported-selector-contract`: b3's `.jn-footer > *` in `subpackageJourney/style/journey.wxss`. **WXSS does not compile `*`,** so that subpackage would fail in DevTools. It is replaced with `.jn-footer > .jn-share, .jn-footer > .jn-grow`, and `class="jn-grow"` is added to the three footer `cy-btn`s. The layout is unchanged. Only the ledger's control ids moved; the count stays 5874.
 - **`mvn -q -DskipTests package`:** PASS. Run at `98f838a0` and rebuilt at `d825ac7a` for the rig. No Java, XML or SQL changed after that.
 - **Java tests for classes touched by lanes:**
   - Command: `mvn -pl chengyinhub-admin -am -Dtest=<20 classes> test`.
@@ -183,7 +191,8 @@ These are in `staging/shots/`, 390 × 844 JPEG at q70. They were taken on the st
    - Either the owner confirms the ladder is meant only for activity-session runs, or qx-c1/b1 make self-play runs carry a real play instance.
    - The rig would then need a club-opened session on a `productType=1` topic. `open-session` requires an active cooperation contract.
 4. **qx-b3 and qx-b4 left `title-system-owner-contract` red on their branches**, because their new pages were missing from the title inventory. Fixed in staging at merge 8. These are plain inventory rows, with no judgement involved.
-5. **qx-b3 committed a `.sql` under docs**, which breaks the migration-ledger gate. Renamed in staging, see §1. The b3 branch itself still carries the `.sql`.
+5. **qx-b3, b4 and b5 left more contract tests red on their own branches.** The list is under §3 "Full mini-program suite". Each lane owner should fix them on the lane branch. staging only fixed the WXSS compile breaker and the b1/b2 interaction.
+6. **qx-b3 committed a `.sql` under docs**, which breaks the migration-ledger gate. Renamed in staging, see §1. The b3 branch itself still carries the `.sql`.
 
 ## 8. Needs owner
 
@@ -193,4 +202,4 @@ These are in `staging/shots/`, 390 × 844 JPEG at q70. They were taken on the st
 - **Hint ladder scope (Cross-lane 3).**
   - Default: nothing changed. The client shows the legacy hint row when the server says `enabled=false`.
 
-STATUS: PARTIAL - all 16 lanes merged and gates run (see §3a); rig fixture works and b1 U04-01/U05-03 and b8 U08-01 are now shot on a real run, but b1 hint ladder (server refuses self-play runs), b1 U03-02, a1 album (headless render loop), b4 §26.1, b5 payment states and b6 admin states remain unshot; get-auth-matrix (9 unregistered GETs from b4/b5) and nav-page-title-spacing (b5) stay red pending the lane owners
+STATUS: PARTIAL - all 16 lanes merged; UI gate, package, 485 Java tests and admin build pass; full xcx suite 26 red, all pre-existing on base (4) or on lane branches b3/b4/b5 (22); rig fixture works and b1 U04-01/U05-03 and b8 U08-01 are now shot on a real run, but b1 hint ladder (server refuses self-play runs), b1 U03-02, a1 album (headless render loop), b4 §26.1, b5 payment states and b6 admin states remain unshot; get-auth-matrix (9 unregistered GETs from b4/b5) and nav-page-title-spacing (b5) stay red pending the lane owners

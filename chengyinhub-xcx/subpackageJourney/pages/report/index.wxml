@@ -54,7 +54,7 @@
       <button class="jn-share" open-type="share" aria-label="分享本局"><cy-btn variant="primary">分享</cy-btn></button>
     </view>
     <view class="jn-footer" wx:elif="{{report.inProgress}}">
-      <cy-btn variant="secondary" bindtap="reload">刷新结果</cy-btn>
+      <cy-btn class="jn-grow" variant="secondary" bindtap="reload">刷新结果</cy-btn>
     </view>
   </block>
 

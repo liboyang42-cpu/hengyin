@@ -32,7 +32,7 @@ page { background: var(--cy-bg-page); }
 .jn-me { color: var(--cy-color-status-success); }
 .jn-footer { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 20rpx; padding: 20rpx 38rpx calc(20rpx + env(safe-area-inset-bottom));
   background: var(--cy-bg-page); }
-.jn-footer > * { flex: 1; }
+.jn-footer > .jn-share, .jn-footer > .jn-grow { flex: 1; } /* staging:WXSS 不支持通配符选择器,子项写死类名 */
 .jn-share { display: block; width: 100%; margin: 0; padding: 0; background: none; border: 0; line-height: normal; }
 .jn-share::after { display: none; }
 .jn-err { margin-top: 8rpx; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
