@@ -41,11 +41,21 @@ var D = {
 };
 var NAMES = { clue: '线索', badge: '勋章', stamp: '邮戳 / 延伸任务', key: '钥匙 / 解锁', success: '成功', fail: '失败', wait: '调查中', team: '队伍', seat: '席位', pass: '通行证', points: '积分', seal: '章节印', trophy: '名次', compass: '雷达 / 方向', backpack: '背包', bookmark: '任务', envelope: '邀请', star: '评价', locked: '未解锁', unlocked: '已解锁', hourglass: '等待', gem: '藏品', sparkles: '闪光', question: '提示', rays: '光芒' };
 
-function uri(body) {
+function uri(body) { body = dedupeAttrs(body);
   return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" overflow="visible">' + body + '</svg>');
 }
 function has(name) { return Object.prototype.hasOwnProperty.call(D, name); }
 /** 两层图:blob 底 + figure;未知名字回落「线索」,与原型 img() 一致。n 只用于「章节印」的数字。 */
+// l-after 修正(2026-11-10):原型是 HTML 内联 <svg>,同一标签里「公共属性串 + 覆盖属性」会出现重复属性(如两个 stroke-width),
+// HTML 解析器容忍;但 data URI 的 <image> 走 XML 解析,重复属性是致命错误 → 25 张里 20 张物件层画不出来。
+// 这里按原型意图保留最后一次出现的属性值,再出 data URI。
+function dedupeAttrs(svg) {
+  return svg.replace(/<([a-zA-Z][\w-]*)((?:\s+[\w:-]+="[^"]*")*)\s*(\/?)>/g, function (m, tag, attrs, close) {
+    var seen = {}, order = [];
+    attrs.replace(/([\w:-]+)="([^"]*)"/g, function (_, k, v) { if (!(k in seen)) order.push(k); seen[k] = v; return _; });
+    return '<' + tag + order.map(function (k) { return ' ' + k + '="' + seen[k] + '"'; }).join('') + (close ? '/' : '') + '>';
+  });
+}
 function layers(name, n) {
   var key = has(name) ? name : 'clue', d = D[key];
   var label = n == null || n === '' ? '一' : String(n).replace(/[<>&"']/g, '');

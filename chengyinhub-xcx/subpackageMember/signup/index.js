@@ -18,16 +18,6 @@ const appGlobal = (app && app.globalData) || {};
 // 第十二轮 k2(j1 N1):与 utils/ticket-game.js activityHasGame 同口径(本页由沙箱测试加载,不多加 require)。
 function activityHasGame(a) { return !a || typeof a !== 'object' || Number(a.topicId) > 0 || Number(a.templateId) > 0; }
 
-/* l-after 票夹筛选(proto wl-wallet「票夹 ▾」):全部 / 即将开始(还没通关)/ 已通关,只按服务端 topicCompleted 分;
-   票夹本身仍只放能用的票(业主 2026-10-28),这里不是「可用 / 已用 / 已过期」。 */
-const WAL_FILTERS = [{ key: 'all', label: '票夹' }, { key: 'upcoming', label: '即将开始' }, { key: 'done', label: '已通关' }];
-function filterTickets(list, key) {
-  if (key === 'done') return list.filter(t => t.topicCompleted === true);
-  if (key === 'upcoming') return list.filter(t => t.topicCompleted !== true);
-  return list;
-}
-
-
 Page({
 
   /**
@@ -62,8 +52,7 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景
-    walFilter: 'all', walFilterLabel: '票夹', walPop: false, walFilters: WAL_FILTERS, // l-after:票夹 ▾ 筛选(全部 / 即将开始 / 已通关)
+    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, walFilter: 'all', walFilterLabel: '票夹', walPop: false, walFilters: walFilters(), // v13 卡堆 / 两层模糊背景;l-after:票夹 ▾ 筛选(全部 / 即将开始 / 已通关)
     flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, meAvatar: '', // 2026-10-28 翻面入场码 + 开始游戏;r3-visual 顶栏本人头像(app.getAvatar,没有就不出)
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
@@ -305,8 +294,7 @@ Page({
       seen.add(id); return true;
     }).map(walletCard);
     // 2026-10-28 业主:票夹只放能用的票 —— 待支付、已核验、已取消、已过期都不进票夹
-    this._usable = all.filter(usableTicket);
-    const list = filterTickets(this._usable, this.data.walFilter);
+    this._usable = all.filter(usableTicket); const list = filterTickets(this._usable, this.data.walFilter); // l-after:再按「票夹 ▾」筛选
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
@@ -717,9 +705,9 @@ Page({
   toggleWalFilter() { this.setData({ walPop: !this.data.walPop }); },
   pickWalFilter(e) {
     const key = e.currentTarget.dataset.key;
-    const f = WAL_FILTERS.find(x => x.key === key);
+    const f = walFilters().find(x => x.key === key);
     if (!f) return;
-    this.setData({ walPop: false, walFilter: key, walFilterLabel: f.label, flipped: false, qrState: 'idle', qrUrl: '' });
+    this.setData({ walPop: false, walFilter: key, walFilterLabel: f.title, flipped: false, qrState: 'idle', qrUrl: '' });
     if (this._usable) this.rebuildTicketList();
   },
   goMe() { wx.switchTab({ url: '/pages/member/index/index' }); },
@@ -798,4 +786,13 @@ function usableTicket(item) {
 /* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */
 function __end(page, n, arrive) { setTimeout(() => { page._entering = false; }, 40 + Math.max(arrive ? 320 : 0, (n - 1) * 90) + 900); }
 
+/* l-after 票夹筛选(proto wl-wallet「票夹 ▾」):全部 / 即将开始(还没通关)/ 已通关,只按服务端 topicCompleted 分;
+   票夹本身仍只放能用的票(业主 2026-10-28),这里不是「可用 / 已用 / 已过期」。
+   写成函数声明(提升)放在文件尾,是为了不动 U5 基线锚定的行号(signup/index.js:425)。 */
+function walFilters() { return [{ key: 'all', label: '全部', title: '票夹' }, { key: 'upcoming', label: '即将开始', title: '即将开始' }, { key: 'done', label: '已通关', title: '已通关' }]; }
+function filterTickets(list, key) {
+  if (key === 'done') return list.filter(t => t.topicCompleted === true);
+  if (key === 'upcoming') return list.filter(t => t.topicCompleted !== true);
+  return list;
+}
 if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn, filterTickets };

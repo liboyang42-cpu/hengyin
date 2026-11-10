@@ -235,6 +235,8 @@
 /* ===== l-after 票夹(业主批准 proto/game wl-wallet):「票夹 ▾」筛选弹出、卷页镜面高光 + 卡下倒影 ===== */
 .wl-nav__flt { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8rpx; min-height: 88rpx; color: #fff; } /* ds-ok: 压在用户照片模糊底上,不随主题翻转 */
 .wl-nav__flt .wl-nav__b { flex: none; }
+.wl-nav__chev { display: flex; transform: rotate(90deg); transition: transform var(--cy-motion-fast) var(--cy-ease-out); } /* 右箭头转 90° 当下箭头(与榜单「更多」同做法) */
+.wl-nav__chev.is-open { transform: rotate(-90deg); }
 .wl-pop { position: fixed; left: var(--cy-page-x); z-index: 96; padding: 12rpx; border-radius: var(--cy-radius-md); background: var(--cy-comp-sheet-player-glass, var(--cy-color-bg-elevated)); box-shadow: 0 24rpx 60rpx rgba(0,0,0,.4); /* ds-ok 弹出投影 */
   opacity: 0; transform: translateY(-16rpx); pointer-events: none; transition: opacity var(--cy-motion-fast) ease, transform var(--cy-motion-fast) var(--cy-ease-out); }
 .wl-pop.is-open { opacity: 1; transform: none; pointer-events: auto; }

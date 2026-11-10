@@ -1,5 +1,4 @@
-const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js');
-const { readPlayerCode } = require('../../../utils/player-code.js'); // l-after 邀请页个人码
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js'); const { readPlayerCode } = require('../../../utils/player-code.js'); // l-after 邀请页个人码(同一行,不动 U1/U4 基线锚定的行号)
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');

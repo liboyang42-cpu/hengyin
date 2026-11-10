@@ -18,7 +18,7 @@
   <!-- l-after(业主批准 proto/game wl-wallet):顶上「票夹 ▾」是筛选弹出(全部 / 即将开始 / 已通关,按服务端 topicCompleted 分),右边「+」加票 -->
   <view class="wl-nav" style="top: {{navTop}}px;">
     <view class="wl-nav__flt" bindtap="toggleWalFilter" aria-role="button" aria-expanded="{{walPop}}" aria-label="筛选：{{walFilterLabel}}" hover-class="cy-pressed" hover-stay-time="80">
-      <text aria-role="heading" class="wl-nav__b">{{walFilterLabel}}</text><cy-icon name="chevron-down" size="28" />
+      <text aria-role="heading" class="wl-nav__b">{{walFilterLabel}}</text><view class="wl-nav__chev {{walPop ? 'is-open' : ''}}"><cy-icon name="chevron-right" size="28" /></view>
     </view>
     <view class="wl-nav__add" bindtap="goExplore" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="去探索主题"><cy-icon name="plus" size="32" /></view>
     <view class="wl-nav__me" wx:if="{{meAvatar}}" bindtap="goMe" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="我的"><cy-avatar size="64" src="{{meAvatar}}" /></view>

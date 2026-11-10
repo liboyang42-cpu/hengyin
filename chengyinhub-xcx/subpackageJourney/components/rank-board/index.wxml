@@ -10,7 +10,6 @@
   <view class="rb-hero {{heroOn ? 'is-on' : ''}}" wx:if="{{hero}}">
     <view class="rb-hero__wreath">
       <image class="rb-hero__laurel rb-hero__laurel--l" src="/subpackageJourney/images/laurel.svg" mode="aspectFit" aria-hidden="true" />
-      <image class="rb-hero__laurel rb-hero__laurel--r" src="/subpackageJourney/images/laurel.svg" mode="aspectFit" aria-hidden="true" />
       <view class="rb-hero__num" aria-label="第 {{hero.rank}} 名">
         <view class="rb-digit" wx:for="{{digits}}" wx:key="index" aria-hidden="true">
           <view class="rb-digit__col" style="transform:translateY(-{{item * 10}}%)">
@@ -18,6 +17,7 @@
           </view>
         </view>
       </view>
+      <image class="rb-hero__laurel rb-hero__laurel--r" src="/subpackageJourney/images/laurel.svg" mode="aspectFit" aria-hidden="true" />
     </view>
     <text class="rb-hero__pct" wx:if="{{hero.percent}}">{{hero.percent}}</text>
     <view class="rb-stats" wx:if="{{rank.stats.length}}">

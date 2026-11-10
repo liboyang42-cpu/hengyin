@@ -30,7 +30,7 @@
 
     <!-- 2 排行榜:导航栏以下的近全屏弹层(业主「全屏弹窗 高一点不超过微信导航栏」);口径只留 全体 / 队内 -->
     <view class="st-rankwrap" wx:elif="{{step === 'rank'}}">
-      <view class="st-panel {{rankOn ? 'is-on' : ''}}" style="top:{{navTop}}px" aria-role="dialog" aria-label="排行榜">
+      <view class="st-panel {{rankOn ? 'is-on' : ''}}" style="top:{{navTop + 14}}px" aria-role="dialog" aria-label="排行榜">
         <scroll-view scroll-y class="st-panel__sv" enhanced show-scrollbar="{{false}}">
           <text class="st-h">{{topicName || '本关'}}</text>
           <rank-board topic-id="{{report.topicId}}" activity-id="{{report.activityId}}" active="{{step === 'rank'}}" preset="settle" />

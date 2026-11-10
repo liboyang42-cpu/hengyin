@@ -17,13 +17,13 @@ const INVITE_KEY = 'journey-seat-invite:';
 
 Page({
   data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', seats: null,
-    busy: false, actionError: '', inviteToken: '', pendingInvite: false,
+    busy: false, actionError: '', inviteToken: '',
     lobby: null, head: null, me: null, tiles: [], inviteShow: false, inviteCard: null, playUrl: '' },
 
   onLoad(options) {
     this._registrationId = view.isId(options && options.registrationId) ? String(options.registrationId) : '';
     if (!this._registrationId) { this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效' }); return; }
-    this.setData({ pendingInvite: !!this._pending() });
+    this._pendingInvite = !!this._pending(); // l-after:邀请页不再有「查询邀请结果」钮,待确认状态只在本页逻辑里用
     this.load();
   },
 
@@ -104,11 +104,11 @@ Page({
     api.seatInvite(app, this._registrationId, requestId).then(res => {
       this.setData({ busy: false });
       if (res.netFail || res.code === 'fail' || Number(res.code) >= 500) {
-        this.setData({ pendingInvite: true, actionError: '结果还没确认，请稍后查询' });
+        this._pendingInvite = true; this.setData({ actionError: '结果还没确认，请稍后查询' });
         return;
       }
       this._setPending('');
-      this.setData({ pendingInvite: false });
+      this._pendingInvite = false;
       if (!api.ok(res) || !res.data || !res.data.token) { this.setData({ actionError: res.msg || '邀请失败' }); this.load(); return; }
       this._invite = res.data;
       this.setData({ inviteToken: res.data.token });

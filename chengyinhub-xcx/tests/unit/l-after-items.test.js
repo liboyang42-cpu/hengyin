@@ -29,7 +29,7 @@ test('结算四步(proto st-*):纯黑整屏、奖杯插图、两格只留分数 
   assert.match(wxml, /<cy-illus name="trophy" size="300"/)
   assert.match(wxml, /<view class="st-two__c" wx:if="\{\{report\.scored\}\}">.*分数/)
   assert.doesNotMatch(wxml, /用时|cy-celebrate/, '总览只留 分数 / 节点;结算不再撒彩旗(整局只庆祝一次)')
-  assert.match(wxml, /class="st-panel \{\{rankOn \? 'is-on' : ''\}\}" style="top:\{\{navTop\}\}px"/)
+  assert.match(wxml, /class="st-panel \{\{rankOn \? 'is-on' : ''\}\}" style="top:\{\{navTop \+ 14\}\}px"/)
   assert.match(wxml, /<rank-board [^>]*preset="settle"/)
   assert.match(wxml, /class="st-tag \{\{item\.on \? 'is-on' : ''\}\}"/)
   assert.match(wxml, /class="st-footer \{\{step === 'share' \? 'st-footer--row' : ''\}\}"/)
