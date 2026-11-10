@@ -111,6 +111,11 @@
 .sh.sh--dragging .sh__panel { animation: none; transition: none; }
 /* 甩出去关闭:面板已从手指松开处落到屏外,退场不再从 0 起播 sh-down(否则先闪回原位再落下一次)。遮罩照常淡出。 */
 .sh.sh--drag-out .sh__panel { animation: none; }
+/* 越过最高档往上拽(阻尼)与弹簧回弹时,面板底边会离开屏幕底:用同色外投影往下补一截,不露出底下的页面。
+   平时这一截在屏幕外看不见;inset 短卡四周留边、morph 从触发元素长出,两者不补。 */
+.sh--bottom .sh__panel { box-shadow: 0 320rpx 0 var(--cy-comp-sheet-bg); } /* ds-ok 拖拽越界补底,非装饰阴影 */
+.sh--bottom.sh--inset .sh__panel,
+.sh--bottom.sh--morph .sh__panel { box-shadow: none; }
 .sh__head {
   position: relative;
   display: flex;
