@@ -22,7 +22,7 @@ public class FakeEcomPayoutMapper implements EcomPayoutMapper {
     final List<EcomSubMerchant> subs = new ArrayList<>();
     final Map<String, Long> sellerMembers = new HashMap<>();
     final Map<Long, List<String>> memberSubMchids = new HashMap<>();
-    final List<EcomOrderSeller> trades = new ArrayList<>();
+    public final List<EcomOrderSeller> trades = new ArrayList<>();
     final Map<Long, List<EcomLedgerComponent>> components = new HashMap<>();
     final List<EcomProfitShareOrder> orders = new ArrayList<>();
     final List<EcomProfitShareLine> lines = new ArrayList<>();

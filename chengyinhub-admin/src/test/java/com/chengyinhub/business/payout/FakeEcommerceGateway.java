@@ -13,7 +13,7 @@ public class FakeEcommerceGateway implements EcommercePayGateway {
     ApplymentStatus applyment;
     ShareResult share = new ShareResult("FINISHED", "W1", List.of());
     ShareResult query = new ShareResult("FINISHED", "W1", List.of());
-    String returnResult = "SUCCESS";
+    public String returnResult = "SUCCESS";
     RuntimeException failNext;
     List<ProfitSharePlanner.Receiver> lastReceivers;
 

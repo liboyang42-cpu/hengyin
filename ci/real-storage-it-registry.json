@@ -733,6 +733,14 @@
       "classes": [
         "com.chengyinhub.business.payout.EcomPayoutMapperMySqlIT"
       ]
+    },
+    "launch-l-payout2": {
+      "lineage": "l-payout2 20261110 launch wave: 电商收付通 wired into the existing payment chain (seller-routed order placement, callback facts, refund-time profit-share returns, settlement-time split planning, T+14 partner-portion exclusion)",
+      "registered_source": "d03aa0e53ddec2ff515e61b9aa8de2c233a35832",
+      "note": "EcomPayoutWiringMySqlIT (6): migration_20261110_ecommerce_payout.sql + migration_20261110_ecommerce_payout_wiring.sql applied verbatim on a scratch MySQL 8 schema (sys_job/sys_menu/sys_role_menu stubs with RuoYi columns). Covers paused job + zero-grant menu registration and re-run idempotency, ecom_refund unique/CHECK/CAS, partner-portion SQL across collations, due-split SQL (payable_time/complaint/del_flag), settled-topic plan backfill SQL and the manual replan guard. Source registration only, execution NOT_RUN until dispatched.",
+      "classes": [
+        "com.chengyinhub.business.payout.EcomPayoutWiringMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -2103,6 +2111,14 @@
       ],
       "gates": {},
       "note": "l-payout EcomPayoutMapper.xml + migration on real MySQL/MyBatis; task-owned scratch schema dropped and read back at the end. Source registration 20261110, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.payout.EcomPayoutWiringMySqlIT": {
+      "tests": 6,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "l-payout2 wiring SQL in EcomPayoutMapper.xml + both 20261110 payout migrations on real MySQL/MyBatis; task-owned scratch schema dropped and read back at the end. Source registration 20261110, execution evidence is the dispatched run receipt only."
     }
   }
 }
