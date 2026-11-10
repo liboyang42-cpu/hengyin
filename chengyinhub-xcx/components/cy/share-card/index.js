@@ -4,6 +4,8 @@
 // 渠道只承诺做得到的事:微信好友 = 小程序卡片;朋友圈 / 小红书 = 存卡片图 + 复制文案(平台不能代码发图文,P-8 ④ 已批准);
 // 保存图片 = 存相册;复制文案 = 复制标题与搜索提示(小程序运行时生成不了网页链接);更多 = 系统图片分享菜单。
 // 卡片图用 canvas 2d 按预览同一版式画(预览 = 导出图),码由后端按 scene 永久复用。
+// r3-share(refs4/share-page-cards):每种内容一张整色卡 —— 上半封面 / 勋章,下沿一道弧,城瘾徽标压在弧上,
+// 眉题胶囊 + 两行大标题 + 一行副信息;卡下一颗主按钮「发给微信好友」,其余渠道缩成一排小圆钮。
 const cyToast = require('../../../utils/toast.js');
 const cyModal = require('../../../utils/modal.js');
 const { ALBUM_SAVE, classifyAlbumSaveError } = require('../../../utils/album-save-outcome.js');
@@ -25,6 +27,17 @@ const CHANNELS = [
 ];
 const W = 750;
 const H = 1200;
+const LOGO = '/images/cy_logo_mark.png';
+const ART = '/components/cy/share-card/route-art.png'; // 没有封面时的上半插画(预览同一张)
+
+/** 卡上的眉题与副信息(纯函数,预览与导出图共用):没有的行不出 */
+function cardText(kind, meta, date, when, stops) {
+  const join = (parts) => parts.filter(Boolean).join(' · ');
+  if (kind === 'shop') return { eyebrow: '店铺', sub: when };
+  if (kind === 'activity') return { eyebrow: '活动', sub: join([date, when]) };
+  if (kind === 'medal') return { eyebrow: '勋章', sub: meta };
+  return { eyebrow: meta ? '主题 · ' + meta : '主题', sub: join(stops) };
+}
 
 Component({
   properties: {
@@ -33,7 +46,7 @@ Component({
     card: { type: Object, value: {} },
   },
   data: {
-    statusBarHeight: 20, kind: 'theme', label: '主题', title: '', meta: '', cover: '', date: '', when: '', stops: [],
+    statusBarHeight: 20, kind: 'theme', label: '主题', title: '', meta: '', cover: '', date: '', when: '', stops: [], eyebrow: '主题', sub: '',
     colors: KINDS.theme.colors, colorIndex: 0, bg: KINDS.theme.colors[0], qr: '', channels: CHANNELS,
   },
   observers: {
@@ -45,12 +58,14 @@ Component({
       this._id = String(c.id || '');
       this._image = '';
       this._open = (this._open || 0) + 1;
+      const stops = (Array.isArray(c.stops) ? c.stops : []).filter(Boolean).slice(0, 5);
+      const text = cardText(kind, c.meta || '', c.date || '', c.when || '', stops);
       this.setData({
         statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
         kind, label: KINDS[kind].label, title: c.title || KINDS[kind].label,
         meta: c.meta || '', date: c.date || '', when: c.when || '',
         cover: c.cover && app.getImgUrl ? app.getImgUrl(c.cover) : (c.cover || ''),
-        stops: (Array.isArray(c.stops) ? c.stops : []).filter(Boolean).slice(0, 5),
+        stops, eyebrow: text.eyebrow, sub: text.sub,
         colors: KINDS[kind].colors, colorIndex: 0, bg: KINDS[kind].colors[0], qr: '',
       });
       this._loadCode();
@@ -179,62 +194,64 @@ Component({
     });
   },
 
-  /** 按预览同一版式画:底色满屏,卡片居中偏下,右下小程序码 */
+  /** 按预览同一版式画(卡 560rpx = 导出 750px):整色卡,上半封面 / 勋章,椭圆弧,徽标,眉题胶囊,两行大标题,副信息,右下码 */
   _exportImage() {
     if (this._image) return Promise.resolve(this._image);
     const d = this.data;
-    return this._canvas().then((cv) => Promise.all([this._img(cv, d.cover), this._img(cv, d.qr)]).then(([cover, qr]) => {
+    return this._canvas().then((cv) => Promise.all([this._img(cv, d.cover), this._img(cv, d.qr), this._img(cv, LOGO), this._img(cv, d.cover || d.kind === 'medal' ? '' : ART)]).then(([cover, qr, logo, art]) => {
       const SS = 2;
       cv.width = W * SS; cv.height = H * SS;
       const g = cv.getContext('2d');
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.scale(SS, SS);
-      g.fillStyle = d.bg; g.fillRect(0, 0, W, H);
-      const cx = 95; const cy = 250; const cw = 560; const ch = 820;
       const round = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
-      g.save(); round(cx, cy, cw, ch, 40); g.clip();
-      g.fillStyle = '#1A1B20'; g.fillRect(cx, cy, cw, ch); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       const line = (text, maxW) => { let t = String(text || ''); if (g.measureText(t).width <= maxW) return t; while (t.length > 1 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; };
       const fit = (img, x, y, w, h) => { const s = Math.max(w / img.width, h / img.height); g.drawImage(img, x + (w - img.width * s) / 2, y + (h - img.height * s) / 2, img.width * s, img.height * s); };
-      g.textAlign = 'left';
-      let ty = cy + 70;
-      if (d.kind === 'theme' || d.kind === 'shop') {
-        if (cover) fit(cover, cx, cy, cw, ch);
-        g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(cx, cy, cw, ch); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = 'rgba(255,255,255,.72)'; g.font = '600 24px sans-serif'; g.fillText(line(d.kind === 'shop' ? '店铺' : (d.meta ? '主题 · ' + d.meta : '主题'), cw - 80), cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = '#FFFFFF'; g.font = 'italic 900 64px sans-serif'; g.fillText(line(d.title, cw - 80), cx + 40, ty + 84); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        if (d.kind === 'shop' && d.when) { g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.when.slice(0, 18), cx + 40, ty + 134); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        ty += 160;
-        d.stops.forEach((s, i) => {
-          const y = ty + i * 76;
-          if (i < d.stops.length - 1) { g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(cx + 59, y + 18, 3, 58); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-          g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(cx + 60, y, 20, 0, Math.PI * 2); g.fill(); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-          g.fillStyle = '#121317'; g.font = '800 22px sans-serif'; g.textAlign = 'center'; g.fillText(String(i + 1), cx + 60, y + 8); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-          g.textAlign = 'left'; g.fillStyle = '#FFFFFF'; g.font = '600 28px sans-serif'; g.fillText(s.slice(0, 14), cx + 98, y + 10); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        });
-      } else if (d.kind === 'activity') {
-        if (cover) fit(cover, cx, cy, cw, 420);
-        ty = cy + 480;
-        g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '600 24px sans-serif'; g.fillText(d.label, cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = '#FFFFFF'; g.font = '800 44px sans-serif'; g.fillText(line(d.title, cw - 80), cx + 40, ty + 64); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        if (d.date) { g.font = 'italic 900 72px sans-serif'; g.fillText(d.date, cx + 40, ty + 160); }
-        g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.when.slice(0, 18), cx + 40, ty + 206); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-      } else {
-        g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '600 24px sans-serif'; g.fillText('勋章', cx + 40, ty); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        const mx = cx + cw / 2; const my = cy + 320;
-        const glow = g.createRadialGradient(mx, my, 40, mx, my, 220);
+      const TOP = 620; const mx = W / 2;
+      g.fillStyle = d.bg; g.fillRect(0, 0, W, H);
+      // 上半:封面铺满;勋章是暖光 + 勋章本身;都没有就压暗一档
+      g.save(); g.beginPath(); g.rect(0, 0, W, TOP); g.clip();
+      if (d.kind === 'medal') {
+        const glow = g.createRadialGradient(mx, 290, 30, mx, 290, 270);
         glow.addColorStop(0, 'rgba(255,214,120,.45)'); glow.addColorStop(1, 'rgba(255,214,120,0)'); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.fillStyle = glow; g.fillRect(cx, cy, cw, ch);
-        if (cover) g.drawImage(cover, mx - 130, my - 130, 260, 260);
-        else { g.fillStyle = '#E9B44C'; g.beginPath(); g.arc(mx, my, 120, 0, Math.PI * 2); g.fill(); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.textAlign = 'center'; g.fillStyle = '#FFFFFF'; g.font = '800 48px sans-serif'; g.fillText(line(d.title, cw - 80), mx, my + 210); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        if (d.meta) { g.fillStyle = 'rgba(255,255,255,.7)'; g.font = '26px sans-serif'; g.fillText(d.meta.slice(0, 18), mx, my + 258); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-        g.textAlign = 'left';
-      }
-      g.fillStyle = '#FFFFFF'; g.font = '800 30px sans-serif'; g.fillText('城瘾', cx + 40, cy + ch - 48); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
-      const qs = d.kind === 'shop' ? 168 : 120;
-      if (qr) { g.fillStyle = '#FFFFFF'; round(cx + cw - 40 - qs, cy + ch - 40 - qs, qs, qs, 16); g.fill(); g.drawImage(qr, cx + cw - 32 - qs, cy + ch - 32 - qs, qs - 16, qs - 16); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+        g.fillStyle = glow; g.fillRect(0, 0, W, TOP);
+        if (cover) g.drawImage(cover, mx - 150, 140, 300, 300);
+        else { g.fillStyle = '#E9B44C'; g.beginPath(); g.arc(mx, 290, 130, 0, Math.PI * 2); g.fill(); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      } else if (cover) fit(cover, 0, 0, W, TOP);
+      else { g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(0, 0, W, TOP); if (art) g.drawImage(art, 0, 0, W, TOP); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       g.restore();
+      // 弧:与预览同一椭圆(上沿 y=540,两边落到 620)
+      g.fillStyle = d.bg; g.beginPath(); g.ellipse(mx, 905, 600, 365, 0, 0, Math.PI * 2); g.fill(); g.fillRect(0, 905, W, H - 905);
+      // 徽标
+      g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = 30; g.shadowOffsetY = 12; /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      g.fillStyle = '#FFFFFF'; round(mx - 70, 470, 140, 140, 38); g.fill(); g.restore(); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      if (logo) g.drawImage(logo, mx - 51, 489, 102, 102);
+      // 眉题胶囊
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '600 30px sans-serif';
+      const eb = line(d.eyebrow, W - 160);
+      const ebw = g.measureText(eb).width + 52;
+      g.fillStyle = 'rgba(255,255,255,.16)'; round(mx - ebw / 2, 642, ebw, 58, 29); g.fill(); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      g.fillStyle = 'rgba(255,255,255,.86)'; g.fillText(eb, mx, 671); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      // 两行大标题(按宽度折行,第二行放不下加省略号)
+      g.fillStyle = '#FFFFFF'; g.font = '900 72px sans-serif'; /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      const maxW = W - 108;
+      const rows = [''];
+      let more = false;
+      Array.from(String(d.title || '')).some((ch) => {
+        const i = rows.length - 1;
+        if (rows[i] && g.measureText(rows[i] + ch).width > maxW) { if (i === 1) { more = true; return true; } rows.push(ch); } else rows[i] += ch;
+        return false;
+      });
+      if (more) { let t = rows[1]; while (t.length > 1 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1); rows[1] = t + '…'; }
+      let ty = 776;
+      rows.forEach((r) => { g.fillText(r, mx, ty); ty += 88; });
+      if (d.sub) { g.fillStyle = 'rgba(255,255,255,.78)'; g.font = '32px sans-serif'; g.fillText(line(d.sub, W - 108), mx, ty); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      // 底部:左边字标,右边码
+      g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      g.fillStyle = '#FFFFFF'; g.font = '800 40px sans-serif'; g.fillText('城瘾', 54, H - 54); /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
+      const qs = d.kind === 'shop' ? 172 : 134;
+      if (qr) { g.fillStyle = '#FFFFFF'; round(W - 43 - qs, H - 43 - qs, qs, qs, 16); g.fill(); g.drawImage(qr, W - 35 - qs, H - 35 - qs, qs - 16, qs - 16); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       return new Promise((resolve, reject) => wx.canvasToTempFilePath({
         canvas: cv, fileType: 'png', destWidth: cv.width, destHeight: cv.height,
         success: (r) => { this._image = r.tempFilePath; resolve(r.tempFilePath); }, fail: reject,
