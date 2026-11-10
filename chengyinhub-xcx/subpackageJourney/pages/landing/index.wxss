@@ -15,7 +15,7 @@
 .jl-av__no { font-variant-numeric: tabular-nums; }
 .jl-ring { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2rpx solid var(--cy-color-brand); opacity: 0; transform: scale(1.18); transition: opacity 1.68s ease-out, transform 1.68s ease-out; }
 .jl-ring.is-reset { opacity: .6; transform: scale(.82); transition: none; }
-.jl-link { position: relative; width: 150rpx; height: 8rpx; margin: 0 4rpx; border-radius: 4rpx; background: var(--cy-color-border-subtle); overflow: hidden; }
+.jl-link { position: relative; width: 150rpx; height: 8rpx; margin: 0 4rpx; border-radius: 4rpx; background: var(--cy-color-border-subtle); overflow: hidden; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 .jl-link__dot { position: absolute; top: 0; left: 0; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--cy-color-brand); opacity: 0; transform: translateX(-12rpx); }
 .jl-link__dot.is-run, .jl-link__dot.is-out { transform: translateX(150rpx); transition: transform 1.8s linear, opacity .36s linear; }
 .jl-link__dot.is-run { opacity: 1; }

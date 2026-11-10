@@ -3786,16 +3786,16 @@ page { background: var(--cy-btn-solid-bg); }
 .sx-tool--b { font-weight: 800; }
 .sx-tool--i { font-style: italic; font-family: Georgia, 'Times New Roman', serif; font-weight: 600; }
 .sx-tool--s { text-decoration: line-through; font-weight: 600; }
-.sx-tool--quote { font-size: 44rpx; font-weight: 700; padding-top: 12rpx; }
+.sx-tool--quote { font-size: var(--cy-type-sheet-title); font-weight: 700; padding-top: 12rpx; }
 .sx-tool--ol { font-size: var(--cy-font-label); font-weight: 700; }
 .sx-tool--para, .sx-tool--insert { font-size: var(--cy-font-label); color: var(--cy-color-text-primary); font-weight: 600; white-space: nowrap; }
 .sx-tool--para { min-width: 96rpx; }
 .sx-tool--insert { border-left: 2rpx solid var(--cy-color-border-subtle); border-radius: 0; padding: 0 var(--cy-space-2) 0 var(--cy-space-3); }
-.sx-tool__caret { font-size: 20rpx; color: var(--cy-color-text-tertiary); }
+.sx-tool__caret { font-size: var(--cy-type-micro); color: var(--cy-color-text-tertiary); }
 /* 表情键:CSS 画的笑脸(全站禁止 emoji 充当图标) */
 .sx-smile { position: relative; width: 34rpx; height: 34rpx; box-sizing: border-box; border: 3rpx solid currentColor; border-radius: var(--cy-radius-pill); }
 .sx-smile::before { content: ''; position: absolute; left: 7rpx; right: 7rpx; top: 8rpx; height: 4rpx; background: radial-gradient(circle, currentColor 2rpx, transparent 2.5rpx) left center / 4rpx 4rpx no-repeat, radial-gradient(circle, currentColor 2rpx, transparent 2.5rpx) right center / 4rpx 4rpx no-repeat; }
-.sx-smile::after { content: ''; position: absolute; left: 8rpx; right: 8rpx; bottom: 6rpx; height: 7rpx; border: 3rpx solid currentColor; border-top: 0; border-radius: 0 0 14rpx 14rpx; }
+.sx-smile::after { content: ''; position: absolute; left: 8rpx; right: 8rpx; bottom: 6rpx; height: 7rpx; border: 3rpx solid currentColor; border-top: 0; border-radius: 0 0 14rpx 14rpx; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 
 /* 封面:宽 5:2,空态是浅底 + 图标 + 「添加封面」 */
 .sx-cover {
@@ -3890,7 +3890,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sx-menu__row:last-child { border-bottom: 0; }
 .sx-menu__rule { width: 40rpx; height: 4rpx; border-radius: var(--cy-radius-pill); background: currentColor; }
 .sx-emoji { display: grid; grid-template-columns: repeat(8, 1fr); }
-.sx-emoji__cell { height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; font-size: 44rpx; }
+.sx-emoji__cell { height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-sheet-title); }
 .sx-info__row { min-height: 88rpx; display: flex; align-items: center; justify-content: space-between; color: var(--cy-color-text-secondary); font-size: var(--cy-font-body); border-bottom: 2rpx solid var(--cy-color-border-subtle); }
 .sx-info__row:last-child { border-bottom: 0; }
 .sx-info__val { color: var(--cy-color-text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -5225,7 +5225,7 @@ page { background: var(--cy-btn-solid-bg); }
 .story-split__half:empty { display: none; }
 /* 槽:与被拖的块同高;高度不过渡(棘轮不放布局动画),只让里面那条线淡入 */
 .story-split__slot { position: relative; box-sizing: border-box; margin: 16rpx 0; border-radius: var(--cy-radius-md); background: var(--cy-color-brand-soft); overflow: hidden; }
-.story-split__line { position: absolute; left: 20rpx; right: 20rpx; top: 20rpx; height: 4rpx; border-radius: 2rpx; background: var(--cy-color-brand); opacity: 1; transition: opacity var(--cy-motion-fast) var(--cy-ease-out); }
+.story-split__line { position: absolute; left: 20rpx; right: 20rpx; top: 20rpx; height: 4rpx; border-radius: 2rpx; background: var(--cy-color-brand); opacity: 1; transition: opacity var(--cy-motion-fast) var(--cy-ease-out); } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 .story-undo { z-index: 260; }
 
 /* ═══════ 故事编辑器 · 编辑器原型 v2(l-editor,2026-11-10 业主批准):顶部添加栏 / 章节开始结束卡 / 卡片式块 / 图片组 / 分支任务 ═══════ */
@@ -5320,7 +5320,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sx-il { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--cy-space-2-5); padding: var(--cy-space-2) 0 var(--cy-space-4); }
 .sx-il__opt { min-height: var(--cy-btn-h); display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-2); padding: var(--cy-space-3) var(--cy-space-1); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); }
 .sx-il__pic { width: 112rpx; height: 88rpx; display: grid; gap: 6rpx; }
-.sx-il__c { border-radius: 6rpx; background: var(--cy-color-text-primary); opacity: .85; }
+.sx-il__c { border-radius: 6rpx; background: var(--cy-color-text-primary); opacity: .85; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 .sx-il__pic--1 { grid-template-columns: 1fr; }
 .sx-il__pic--2, .sx-il__pic--4 { grid-template-columns: 1fr 1fr; }
 .sx-il__pic--3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }

@@ -223,7 +223,7 @@ function methods(send) {
       if (!panelState.skip || panelState.busy) return;
       if (panelState.skipPending) return this._helpSkip();
       const c = this._helpCapture();
-      modal.show({ title: '跳过本题', content: '本题记 0 分并标辅助完成', confirmText: '跳过', confirmColor: '#E5484D',
+      modal.show({ title: '跳过本题', content: '本题记 0 分并标辅助完成', confirmText: '跳过', confirmColor: '#E5484D', /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
         success: res => { if (res.confirm && this._helpCurrent(c)) this._helpSkip(); } });
     },
     _helpSkip() {

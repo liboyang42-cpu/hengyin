@@ -42,7 +42,7 @@
   text-align: center;
   box-sizing: border-box;
   border: 1rpx solid rgba(var(--lk-ink-rgb, 255, 255, 255), .2);   /* ds-ok 原型 --lk-line */
-  border-radius: calc(var(--lk-r, 28rpx) / 2);
+  border-radius: calc(var(--lk-r, 28rpx) / 2); /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   clip-path: var(--lk-cut, none);
   background: var(--soft);
   font-family: var(--lk-fm, var(--cy-font-numeric));
