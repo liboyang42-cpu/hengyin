@@ -18368,5 +18368,248 @@
   "data": null,
   "dropped": [],
   "switchKeys": []
+ },
+ "F300": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F301": {
+  "data": {
+   "cityTabs": [
+    {
+     "key": "示例key",
+     "label": "示例label",
+     "field": "示例field",
+     "value": "示例value",
+     "id": 1,
+     "title": "示例title",
+     "cover": "/images/route_city_cover.png",
+     "kind": "示例kind",
+     "meta": "示例meta",
+     "tags": []
+    }
+   ],
+   "chips": [
+    {
+     "key": "示例key",
+     "label": "示例label",
+     "field": "示例field",
+     "value": "示例value",
+     "id": 1,
+     "title": "示例title",
+     "cover": "/images/route_city_cover.png",
+     "kind": "示例kind",
+     "meta": "示例meta",
+     "tags": []
+    }
+   ],
+   "cards": [
+    {
+     "key": "示例key",
+     "label": "示例label",
+     "field": "示例field",
+     "value": "示例value",
+     "id": 1,
+     "title": "示例title",
+     "cover": "/images/route_city_cover.png",
+     "kind": "示例kind",
+     "meta": "示例meta",
+     "tags": []
+    }
+   ],
+   "loading": false,
+   "loadingMore": false,
+   "error": "",
+   "moreError": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "cityTabs",
+   "chips",
+   "cards",
+   "loading",
+   "loadingMore",
+   "error",
+   "moreError"
+  ]
+ },
+ "F302": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F303": {
+  "data": {
+   "pageState": "ready",
+   "errorMessage": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "pageState",
+   "errorMessage"
+  ]
+ },
+ "F304": {
+  "data": {
+   "state": "ready",
+   "products": [
+    {
+     "id": 1,
+     "name": "示例name",
+     "kind": "示例kind",
+     "city": "示例city",
+     "validity": "示例validity",
+     "coverCount": 3,
+     "seats": "示例seats",
+     "price": "69.00",
+     "state": "示例state",
+     "amount": "69.00",
+     "time": "08-05 10:00",
+     "expires": "示例expires"
+    }
+   ],
+   "orders": [
+    {
+     "id": 1,
+     "name": "示例name",
+     "kind": "示例kind",
+     "city": "示例city",
+     "validity": "示例validity",
+     "coverCount": 3,
+     "seats": "示例seats",
+     "price": "69.00",
+     "state": "示例state",
+     "amount": "69.00",
+     "time": "08-05 10:00",
+     "expires": "示例expires"
+    }
+   ],
+   "giftsBought": [
+    {
+     "id": 1,
+     "name": "示例name",
+     "kind": "示例kind",
+     "city": "示例city",
+     "validity": "示例validity",
+     "coverCount": 3,
+     "seats": "示例seats",
+     "price": "69.00",
+     "state": "示例state",
+     "amount": "69.00",
+     "time": "08-05 10:00",
+     "expires": "示例expires"
+    }
+   ],
+   "giftsReceived": [
+    {
+     "id": 1,
+     "name": "示例name",
+     "kind": "示例kind",
+     "city": "示例city",
+     "validity": "示例validity",
+     "coverCount": 3,
+     "seats": "示例seats",
+     "price": "69.00",
+     "state": "示例state",
+     "amount": "69.00",
+     "time": "08-05 10:00",
+     "expires": "示例expires"
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "products",
+   "orders",
+   "giftsBought",
+   "giftsReceived"
+  ]
+ },
+ "F305": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F306": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F307": {
+  "data": {
+   "state": "",
+   "library": [
+    {
+     "on": "示例on",
+     "code": "示例code",
+     "line": "示例line",
+     "price": "69.00",
+     "best": "示例best",
+     "id": 1,
+     "name": "示例name",
+     "cover": "/images/route_city_cover.png",
+     "data": "示例data"
+    }
+   ],
+   "buyError": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "library",
+   "buyError"
+  ]
+ },
+ "F308": {
+  "data": {
+   "state": "",
+   "error": "",
+   "cards": [
+    {
+     "key": "示例key",
+     "label": "示例label",
+     "id": 1,
+     "title": "示例title",
+     "cover": "/images/route_city_cover.png",
+     "free": "示例free",
+     "city": "示例city",
+     "data": "示例data",
+     "tags": []
+    }
+   ]
+  },
+  "dropped": [],
+  "switchKeys": [
+   "state",
+   "error",
+   "cards"
+  ]
+ },
+ "F309": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F310": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F311": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F312": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F313": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
  }
 }
