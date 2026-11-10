@@ -49,7 +49,8 @@
     "cy-theme-records": "/components/cy/theme-records/index",
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-back-guard": "/components/cy/back-guard/index",
-    "cy-look-transition": "/pages/play/components/look-transition/index"
+    "cy-look-transition": "/pages/play/components/look-transition/index",
+    "cy-illus": "/pages/play/components/cy-illus/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",

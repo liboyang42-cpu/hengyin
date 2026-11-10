@@ -28,7 +28,8 @@ function host(data) {
 test('V3-10/53/11:要整屏的玩法内嵌时只放入口卡,其余玩法真内嵌;整屏 kit 不变', () => {
   const coin = kitCard.playKitState({}, { type: 'coinflip' }, true, false)
   // r2-play a1-v3-10-53:入口卡多带类型名与图标(非卡时为空串)
-  assert.deepEqual(coin, { show: false, kit: { type: 'coinflip' }, readyForBase: false, card: false, cardLabel: '', cardIcon: '' })
+  // l-play 2026-11-10:多两个字段 —— pop(分支剧情的入口卡点开是居中弹窗)、cardIllus(没有配图时入口卡上的插图)
+  assert.deepEqual(coin, { show: false, kit: { type: 'coinflip' }, readyForBase: false, card: false, pop: false, cardLabel: '', cardIcon: '', cardIllus: '' })
   for (const type of ['album', 'ballshake', 'reaction', 'countdown']) {
     const s = kitCard.playKitState({}, { type }, true, false)
     assert.equal(s.card, true, type + ' 内嵌时应是入口卡')
@@ -37,7 +38,7 @@ test('V3-10/53/11:要整屏的玩法内嵌时只放入口卡,其余玩法真内�
   // 已经从卡点开的整屏:会话视图刷新不把它收回
   assert.equal(kitCard.playKitState({ card: true, show: true }, { type: 'album' }, true, true).show, true)
   // 作者配了整屏:照旧整屏,不是卡
-  assert.deepEqual(kitCard.playKitState({}, { type: 'album' }, false, false), { show: true, kit: { type: 'album' }, readyForBase: false, card: false, cardLabel: '', cardIcon: '' })
+  assert.deepEqual(kitCard.playKitState({}, { type: 'album' }, false, false), { show: true, kit: { type: 'album' }, readyForBase: false, card: false, pop: false, cardLabel: '', cardIcon: '', cardIllus: '' })
 })
 
 test('V3-10/53/11:入口卡点开整屏;关整屏只收回到卡,能继续就接着走故事', () => {
@@ -67,7 +68,7 @@ test('V3-15:延伸任务收进一行入口 + 半屏,点一行打开那一站;正
   page._pushStoryTasks(items, nodes, [{ type: 'node', nodeId: 1 }], false, '')
   assert.deepEqual(items, [{ kind: 'tasks', count: 1, mood: '' }])
   // r2-play a1-v3-15:任务卡多带序号、站点配图与地址(服务端节点字段,没有就是空串)
-  assert.deepEqual(page.data.storyTasks.rows, [{ nodeId: 101, name: '旧书摊', no: 1, img: '', address: '' }])
+  assert.deepEqual(page.data.storyTasks.rows, [{ nodeId: 101, name: '旧书摊', no: 1, img: '', address: '', desc: '' }])   // l-play:翻页卡多一句说明(节点字段原样,没有为空)
   page.openStoryTasks()
   assert.equal(page.data.storyTasks.show, true)
   page.openStoryTask({ currentTarget: { dataset: { nodeid: 101 } } })
@@ -85,7 +86,7 @@ test('V3-15:延伸任务收进一行入口 + 半屏,点一行打开那一站;正
   assert.doesNotMatch(js, /这一章还没有写下的内容/)
   assert.match(js, /this\._pushStoryTasks\(items, nodes, blocks, readOnly, curMood\);/)
   assert.match(read('pages/play/index.wxml'), /item\.kind === 'tasks'[^>]*bindtap="openStoryTasks"/)
-  assert.match(read('pages/play/play-topbar.wxml'), /show="\{\{storyTasks\.show\}\}"[\s\S]*bindtap="openStoryTask"/)
+  assert.match(read('pages/play/play-topbar.wxml'), /wx:if="\{\{storyTasks\.show\}\}"[\s\S]*catchtap="goExtTask"/ /* l-play 2026-11-10:半屏 → 居中弹窗翻页卡,「去做」= goExtTask → openStoryTask */)
 })
 
 test('V3-10/53:故事流内嵌块不再撑满一屏、不再垫台面底色;滚动对准块内锚点', () => {

@@ -1,0 +1,129 @@
+/* l-play(2026-11-10,业主批准 proto/game 第二组「游玩与阶段弹窗」):主题内阶段弹窗 / 整屏的样式。
+   只读 --lk-* 外观变量与 .lk-* 读者类(qx-base look-tokens.wxss),尺寸按原型 390 宽 px × 2 = rpx。只用过渡,不新增 keyframes。
+   本文件由 index.wxss 在「故事文字动效」段之前引入,所以这里不能出现 animation。 */
+
+/* ===== 居中弹窗壳(proto .gm-pop):压暗 + 居中外观卡,最高 80% 屏高 ===== */
+.lk-popwrap { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: var(--cy-z-modal); display: flex; align-items: center; justify-content: center; padding: 0 40rpx; box-sizing: border-box; }
+.lk-pop-mask { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); } /* ds-ok 原型 .gm-pop .mask */
+.look--stardust .lk-pop-mask { background: rgba(0,0,0,.18); } /* ds-ok 原型:星尘玻璃下面的压暗更轻,星野透过来 */
+.lk-popwrap .lk-pop { width: 100%; max-height: 80vh; display: flex; flex-direction: column; }
+
+/* ===== 玩法开始弹窗(proto pop-kitstart / .kstart) ===== */
+.ks__h { display: flex; align-items: center; justify-content: space-between; padding: 36rpx 36rpx 0; flex: none; }
+.ks__t { font-size: 40rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__x { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--lk-ctl); color: var(--lk-ink); display: flex; align-items: center; justify-content: center; }
+.look--stardust .ks__x { background: rgba(var(--lk-ink-rgb), .16); }
+.ks__b { flex: 1; min-height: 0; padding: 28rpx 36rpx 12rpx; box-sizing: border-box; }
+.ks__cov { display: block; width: 100%; height: 300rpx; border-radius: calc(var(--lk-r) - 4rpx); background: var(--lk-ctl); } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__cov--illus { display: flex; align-items: center; justify-content: center; }
+.look--stardust .ks__cov { -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); } /* ds-ok 原型:星尘封面下沿融进玻璃 */
+.ks__meta { display: flex; flex-wrap: wrap; gap: 16rpx; margin: 24rpx 0 8rpx; }
+.ks__meta .lk-chip { min-height: 56rpx; padding: 0 20rpx; font-size: 24rpx; white-space: nowrap; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__name { font-size: 48rpx; line-height: 1.3; margin: 20rpx 0 8rpx; } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.ks__lede { font-size: 30rpx; line-height: 1.8; }
+.ks__row { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; min-height: 92rpx; margin-top: 16rpx; border-top: 1rpx solid; font-size: 30rpx; color: var(--lk-ink); }
+.ks__v { font-family: var(--lk-fm); font-weight: 700; }
+.ks__seg { display: flex; padding: 6rpx; margin: 24rpx 0 8rpx; border-radius: var(--lk-rb); background: var(--lk-ctl); gap: 4rpx; clip-path: var(--lk-cut); }
+.look--stardust .ks__seg { background: rgba(var(--lk-ink-rgb), .10); }
+.ks__m { flex: 1; min-height: 72rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--lk-rb); clip-path: var(--lk-cut); font-size: 28rpx; font-weight: 600; color: var(--lk-mute); transition: background var(--cy-motion-fast) ease, color var(--cy-motion-fast) ease; }
+.ks__m.is-on { background: var(--lk-ink); color: var(--lk-bg); }
+.ks__f { flex: none; padding: 20rpx 36rpx 36rpx; }
+
+/* ===== 城市定向地点卡(proto gp-place):整屏照片 + 玻璃面板,返回在左上,站序药丸在顶上,没有分享 ===== */
+.sheet.sheet--game .sheet-cover { position: absolute; left: 0; top: 0; right: 0; bottom: 0; height: auto; }
+.sheet.sheet--game .sheet-cover--bare { background: var(--lk-card, var(--cy-comp-sheet-player-elevated)); }
+.sheet--game .sheet-cover image { object-fit: cover; }
+.sheet.sheet--game .cover-fade { height: 100%; background: linear-gradient(180deg, rgba(0,0,0,.3), transparent 30%, transparent 55%, rgba(0,0,0,.35)); } /* ds-ok 原型 .place--v2 .photo::after */
+.sheet.sheet--game .cover-tag { top: calc(var(--sheet-top, 0px) + 112rpx); bottom: auto; left: 40rpx; height: 56rpx; padding: 0 24rpx; display: inline-flex; align-items: center; gap: 12rpx; border: 0; border-radius: var(--lk-rb, var(--cy-radius-pill)); clip-path: var(--lk-cut); background: var(--lk-ink, #FFFFFF); color: var(--lk-bg, #000000); font-family: var(--lk-fm); font-weight: 700; letter-spacing: .04em; } /* ds-ok 回落玩家黑白 */
+.sheet.sheet--game .cover-open { top: calc(var(--sheet-top, 0px) + 112rpx); bottom: auto; right: 40rpx; }
+.sheet.sheet--game .cover-photos { bottom: auto; top: calc(var(--sheet-top, 0px) + 112rpx); }
+.sheet.sheet--game .cover-stamp { bottom: auto; top: calc(var(--sheet-top, 0px) + 184rpx); right: 40rpx; }
+.sheet.sheet--game .sheet-x { left: 24rpx; right: auto; background: rgba(var(--lk-ink-rgb, 255,255,255), .12); color: var(--lk-ink, #FFFFFF); } /* ds-ok 回落白 */
+.sheet.sheet--game .sheet-body { position: relative; z-index: 2; flex: none; margin: auto 28rpx calc(36rpx + env(safe-area-inset-bottom)); padding: 36rpx 36rpx 40rpx; max-height: calc(100vh - var(--sheet-top, 0px) - 220rpx); overflow-y: auto; box-sizing: border-box; }
+.sheet.sheet--game .sheet-body.lk-pop { border-radius: var(--lk-r, var(--cy-radius-xl)); }
+.sheet.sheet--game .sheet-name { margin-top: 8rpx; font-size: 60rpx; line-height: 1.2; font-family: var(--lk-fd); font-weight: var(--lk-fw, 700); letter-spacing: var(--lk-ls); color: var(--lk-ink, #FFFFFF); } /* ds-ok 回落白 */
+.sheet--game .sheet-meta { color: var(--lk-mute, #8A93A0); font-family: var(--lk-fm); font-size: 26rpx; } /* ds-ok 回落原值 */
+.sheet--game .sheet-desc { margin-top: 20rpx; font-size: 28rpx; line-height: 1.65; color: var(--lk-dim, #8A93A0); } /* ds-ok 回落原值 */
+.look--stardust .sheet.sheet--game .sheet-body.lk-pop { color: #FFFFFF; } /* ds-ok 原型:照片上的玻璃字永远白 */
+.look--stardust .sheet--game .sheet-desc, .look--stardust .sheet--game .sheet-meta, .look--stardust .sheet--game .sheet-dist__k { color: rgba(255,255,255,.8); } /* ds-ok 原型 */
+.look--stardust .sheet--game .sheet-name, .look--stardust .sheet--game .sheet-dist__n { color: #FFFFFF; } /* ds-ok 原型 */
+.sheet-dist { display: flex; gap: 36rpx; margin: 24rpx 0 8rpx; }
+.sheet-dist__n { display: block; font-size: 44rpx; font-weight: 700; color: var(--lk-ink, #FFFFFF); } /* ds-ok 回落白 */
+.sheet-dist__k { display: block; margin-top: 2rpx; font-size: 22rpx; letter-spacing: .1em; color: var(--lk-mute, #8A93A0); } /* ds-ok 回落原值 */
+.sheet-kit { display: flex; align-items: center; gap: 24rpx; margin: 16rpx 0 24rpx; padding: 20rpx; transition: transform var(--cy-motion-press) ease; }
+.sheet-kit--press { transform: scale(.98); }
+.look--stardust .sheet-kit { background: rgba(255,255,255,.08); } /* ds-ok 原型 .glass-panel .kitc */
+.sheet-kit__img { flex: none; width: 168rpx; height: 128rpx; border-radius: calc(var(--lk-r) - 8rpx); background: var(--lk-ctl); } /* ds-ok 原型 px×2;圆角随外观 --lk-r */
+.sheet-kit__img--illus { display: flex; align-items: center; justify-content: center; }
+.sheet-kit__copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
+.sheet-kit__t { font-size: 30rpx; font-weight: 600; font-family: var(--lk-fd); color: var(--lk-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet-kit__s { font-size: 24rpx; color: var(--lk-mute); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sheet-row { display: flex; gap: 16rpx; margin-top: 20rpx; }
+.sheet-row > .lk-btn, .sheet-row > .cy-btn, .sheet-row > cy-btn { flex: 1; min-width: 0; }
+.sheet-row .lk-btn--ghost { flex: 0 0 200rpx; }
+.sheet--game .sheet-row cy-btn { margin-top: 0 !important; }
+
+/* ===== 延伸任务翻页卡(proto pop-ext / .flipdeck):一次一张,绕竖轴翻到下一张;圆点 + 右下箭头;「去做」 ===== */
+.xd { height: 820rpx; position: relative; perspective: 2200rpx; }
+.xd__c { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: flex; flex-direction: column; overflow: hidden; backface-visibility: hidden; transform-origin: 50% 50%; transform: rotateY(90deg) translateX(80rpx); opacity: 0; pointer-events: none; transition: transform .52s cubic-bezier(.45,0,.2,1), opacity .4s ease; }
+.xd__c.is-on { transform: none; opacity: 1; pointer-events: auto; z-index: 2; }
+.xd__c.is-out { transform: rotateY(-90deg) translateX(-80rpx); opacity: 0; }
+.xd__c.is-in { transform: none; opacity: 1; z-index: 3; }
+.xd__c--press { opacity: .92; }
+/* 翻页卡会转(transform),MOTION.md:动的元素上不放 backdrop-filter;外层弹窗已是玻璃,卡面用半透明实底 */
+.look--stardust .xd__c { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(var(--lk-ink-rgb), .08); }
+.play--reduced-motion .xd__c { transition: none; }
+.xd__cov { flex: none; position: relative; width: 100%; height: 300rpx; background: var(--lk-ctl); display: flex; align-items: center; justify-content: center; }
+.xd__img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.xd__no { font-size: 56rpx; font-weight: 800; font-family: var(--lk-fm); color: var(--lk-ink); }
+.xd__b { flex: 1; min-height: 0; padding: 24rpx 28rpx 0; display: flex; flex-direction: column; gap: 8rpx; }
+.xd__k { font-size: 22rpx; letter-spacing: .22em; font-family: var(--lk-fm); color: var(--lk-mute); }
+.xd__t { font-size: 36rpx; line-height: 1.3; font-weight: 600; font-family: var(--lk-fd); letter-spacing: var(--lk-ls); color: var(--lk-ink); }
+.xd__p { font-size: 26rpx; line-height: 1.6; color: var(--lk-dim); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.xd__i { display: flex; gap: 28rpx; margin-top: auto; font-size: 24rpx; font-family: var(--lk-fm); color: var(--lk-mute); }
+.xd__i text { color: var(--lk-ink); font-weight: 700; margin-left: 6rpx; }
+.xd__go { margin: 20rpx 28rpx 28rpx; min-height: 84rpx; font-size: 28rpx; }
+.xd__ctl { display: flex; align-items: center; justify-content: space-between; margin: 24rpx 4rpx 0; }
+.xd__dots { display: flex; gap: 12rpx; }
+.xd__dot { width: 32rpx; height: 12rpx; border-radius: 6rpx; background: rgba(var(--lk-ink-rgb), .2); transform: scaleX(.375); transition: transform var(--cy-motion-standard) ease, background var(--cy-motion-standard) ease; } /* ds-ok 原型圆点;当前那颗拉长只动 transform,不动宽度 */
+.xd__dot.is-on { transform: none; background: var(--lk-ink); }
+.xd__arrow { width: 80rpx; height: 80rpx; border-radius: 50%; background: var(--lk-ink); color: var(--lk-bg); display: flex; align-items: center; justify-content: center; clip-path: var(--lk-cut); }
+
+/* ===== 本局完成(proto gp-run-end):整屏泛绿,勋章插图落下 + 光环外扩 + 闪光,「本局完成 · 获得勋章」,底部按钮 ===== */
+.pv-ending--run { background: linear-gradient(180deg, rgba(var(--lk-ok-rgb, 34,197,94), .22), rgba(var(--lk-ok-rgb, 34,197,94), .22)), #000000; } /* ds-ok 原型 .runend:成功绿 22% 叠在玩家黑上 */
+.pv-ending__hero { position: relative; width: 420rpx; height: 400rpx; margin: 0 auto 24rpx; display: flex; align-items: center; justify-content: center; }
+.pv-ending__glow { position: absolute; left: 50%; top: 50%; width: 840rpx; height: 840rpx; margin: -420rpx 0 0 -420rpx; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(var(--lk-ok-rgb, 34,197,94), .55), transparent 70%); opacity: 0; transform: scale(.3); transition: opacity 1.6s ease, transform 1.6s ease; } /* ds-ok 原型 .runend .glow */
+.pv-ending--in .pv-ending__glow { opacity: 1; transform: none; }
+.pv-ending__illus { position: relative; z-index: 1; }
+.pv-ending__spk { position: absolute; }
+.pv-ending__spk--a { right: -20rpx; top: 0; }
+.pv-ending__spk--b { left: -12rpx; top: 180rpx; }
+.pv-ending__ring { position: absolute; left: 50%; top: 50%; width: 280rpx; height: 280rpx; margin: -140rpx 0 0 -140rpx; border-radius: 50%; border: 4rpx solid var(--lk-ok, #22C55E); opacity: .9; transform: scale(.6); pointer-events: none; transition: transform 1.4s ease-out .9s, opacity 1.4s ease-out .9s; } /* ds-ok 回落成功绿 */
+.pv-ending--in .pv-ending__ring { opacity: 0; transform: scale(2.2); }
+.pv-ending--run .pv-ending__k, .pv-ending--run .pv-ending__title, .pv-ending--run .pv-ending__copy { opacity: 0; transform: translateY(36rpx); transition: opacity .6s ease, transform .6s cubic-bezier(.16,1,.3,1); }
+.pv-ending--run .pv-ending__k { transition-delay: 1.1s; } .pv-ending--run .pv-ending__title { transition-delay: 1.3s; } .pv-ending--run .pv-ending__copy { transition-delay: 1.5s; }
+.pv-ending--in .pv-ending__k, .pv-ending--in .pv-ending__title, .pv-ending--in .pv-ending__copy { opacity: 1; transform: none; }
+.pv-ending__rpts { display: inline-flex; align-items: center; gap: 12rpx; margin-top: 28rpx; padding: 12rpx 28rpx; border-radius: var(--cy-radius-pill); background: var(--lk-ok, #22C55E); color: #FFFFFF; font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0; transform: scale(.8); transition: opacity .5s ease 1.9s, transform .5s cubic-bezier(.2,1.4,.5,1) 1.9s; } /* ds-ok 成功绿上的白字 */
+.pv-ending--in .pv-ending__rpts { opacity: 1; transform: none; }
+.pv-ending--run .pv-ending__go { background: var(--lk-ink, #FFFFFF); color: #072B15; } /* ds-ok 原型 .runend .gb--primary:白药丸上的字取泛绿底色 */
+.pv-ending--run .pv-ending__secondary { margin: -16rpx 0 calc(env(safe-area-inset-bottom) + 24rpx); min-height: 80rpx; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6); font-size: 28rpx; } /* ds-ok 文字按钮 */
+.pv-ending--reduced .pv-ending__glow, .pv-ending--reduced .pv-ending__k, .pv-ending--reduced .pv-ending__title, .pv-ending--reduced .pv-ending__copy, .pv-ending--reduced .pv-ending__rpts { transition: none; opacity: 1; transform: none; }
+.pv-ending--reduced .pv-ending__ring { display: none; }
+
+/* ===== 岔路弹窗(proto pop-branch):分支剧情在故事流里是一张入口卡(钥匙插图),点开是居中弹窗,玩法本身仍是 cy-playkit(分支) ===== */
+.lk-popwrap--branch .lk-pop { max-height: 86vh; }
+.bp__h { display: flex; align-items: center; justify-content: space-between; padding: 36rpx 36rpx 0; flex: none; }
+.bp__b { flex: 1; min-height: 0; overflow-y: auto; padding: 8rpx 36rpx 28rpx; box-sizing: border-box; --pk-embed-bg: var(--lk-pop); --pk-embed-ink: var(--lk-ink); --pk-embed-sub: var(--lk-mute); --pk-embed-soft: rgba(var(--lk-ink-rgb), .1); --pk-embed-accent: var(--lk-a); --pk-embed-ok: var(--lk-ok); }
+.chfull__kitcard-illus { flex: none; width: 136rpx; height: 136rpx; display: flex; align-items: center; justify-content: center; }
+
+/* ===== 顶栏进度药丸(proto hud .gpill):N/M 站,底边一条随进度长 ===== */
+.theme-story-hud .theme-hp, .theme-story-hud .theme-bag-entry { white-space: nowrap; flex: none; }
+.theme-gpill { position: relative; flex: none; height: 48rpx; padding: 0 18rpx; display: inline-flex; align-items: center; border-radius: var(--lk-rb, var(--cy-radius-pill)); clip-path: var(--lk-cut); overflow: hidden; background: var(--lk-ink, #FFFFFF); color: var(--lk-bg, #000000); font-size: 22rpx; font-weight: 700; font-family: var(--lk-fm); } /* ds-ok 回落玩家黑白 */
+.theme-gpill__i { position: absolute; left: 0; right: 0; bottom: 0; height: 4rpx; background: var(--lk-a, #FFFFFF); transform-origin: left; transition: transform .9s cubic-bezier(.16,1,.3,1); } /* ds-ok 回落白 */
+.play--reduced-motion .theme-gpill__i { transition: none; }
+
+/* ===== 背包:没有配图的物品 / 线索 / 待领奖励用插图(原型「图标换成统一一套」) ===== */
+.tb-item__illus { position: absolute; left: 0; right: 0; top: 14%; display: flex; justify-content: center; }
+.tb-clue__illus { float: right; margin: 0 0 8rpx 16rpx; }
+.tb-avatar--illus { background: transparent; box-shadow: none; display: flex; align-items: center; justify-content: center; }

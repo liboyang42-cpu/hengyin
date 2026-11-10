@@ -225,8 +225,8 @@ Component({
     },
     /** 粉尘:照片缩到 cols×rows 取色(没有照片时用底色上的灰),每格一粒,延迟按「右上先走」排;每粒 1–2px,带正弦湍流,边飞边淡边变小。 */
     _spawnFineDust() {
-      const W = this._W, S = this._S, h = COVER_H * S, img = this._covers[0];
-      const level = Number((wx.getDeviceInfo ? wx.getDeviceInfo() : {}).benchmarkLevel);
+      const W = this._W || 390, S = this._S || 1, h = COVER_H * S, img = (this._covers || [])[0];
+      const level = Number(((typeof wx !== 'undefined' && wx.getDeviceInfo) ? wx.getDeviceInfo() : {}).benchmarkLevel);
       const cols = level > 0 && level < 20 ? 36 : 56, rows = Math.max(8, Math.round(cols * h / W));
       let px = null;
       if (img) {
