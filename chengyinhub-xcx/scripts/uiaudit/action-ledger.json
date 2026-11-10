@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5881,
+  "controlCount": 5883,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -2006,6 +2006,7 @@
         "subpackageMember/myinvite/myinvite",
         "subpackageMember/order/order",
         "subpackageMember/report-detail/index",
+        "subpackageMember/signup/index",
         "subpackageRoam/nearby/index",
         "subpackageRoam/poi-detail/index"
       ],
@@ -2702,6 +2703,15 @@
             },
             {
               "selector": "cy-avatar.cyt__avatar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-avatar",
               "index": 0
             }
           ]
@@ -1503322,7 +1503332,147 @@
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:28:bind:primary:retryFocus:0",
+      "id": "subpackageMember/signup/index.wxml:20:bindtap:goExplore:0",
+      "route": "subpackageMember/signup/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/signup/index.wxml",
+        "js": "subpackageMember/signup/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goExplore",
+        "line": 20,
+        "selectorHint": ".wl-nav__add",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "去探索主题",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/signup/index.js:707"
+      }
+    },
+    {
+      "id": "subpackageMember/signup/index.wxml:21:bindtap:goMe:1",
+      "route": "subpackageMember/signup/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/signup/index.wxml",
+        "js": "subpackageMember/signup/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goMe",
+        "line": 21,
+        "selectorHint": ".wl-nav__me",
+        "visibleCondition": "{{meAvatar}}",
+        "disabledCondition": null,
+        "ariaLabel": "我的",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/signup/index.js:708"
+      }
+    },
+    {
+      "id": "subpackageMember/signup/index.wxml:34:bind:primary:retryFocus:2",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503345,7 +1503495,7 @@
         "tag": "cy-state-shell",
         "event": "bind:primary",
         "handler": "retryFocus",
-        "line": 28,
+        "line": 34,
         "selectorHint": ".fill-slot",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503438,11 +1503588,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:212"
+        "staticSource": "subpackageMember/signup/index.js:215"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:35:bind:cta:retryWallet:1",
+      "id": "subpackageMember/signup/index.wxml:41:bind:cta:retryWallet:3",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503465,7 +1503615,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "retryWallet",
-        "line": 35,
+        "line": 41,
         "selectorHint": ".fill-slot",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503566,11 +1503716,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:407"
+        "staticSource": "subpackageMember/signup/index.js:410"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:39:bind:primary:loginWallet:2",
+      "id": "subpackageMember/signup/index.wxml:45:bind:primary:loginWallet:4",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503593,7 +1503743,7 @@
         "tag": "cy-state-shell",
         "event": "bind:primary",
         "handler": "loginWallet",
-        "line": 39,
+        "line": 45,
         "selectorHint": ".fill-slot",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503634,11 +1503784,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:413"
+        "staticSource": "subpackageMember/signup/index.js:416"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:47:bindtouchcancel:onDeckEnd:6",
+      "id": "subpackageMember/signup/index.wxml:53:bindtouchcancel:onDeckEnd:8",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503661,7 +1503811,7 @@
         "tag": "view",
         "event": "bindtouchcancel",
         "handler": "onDeckEnd",
-        "line": 47,
+        "line": 53,
         "selectorHint": ".deck",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503746,11 +1503896,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:676"
+        "staticSource": "subpackageMember/signup/index.js:670"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:47:bindtouchend:onDeckEnd:5",
+      "id": "subpackageMember/signup/index.wxml:53:bindtouchend:onDeckEnd:7",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503773,7 +1503923,7 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onDeckEnd",
-        "line": 47,
+        "line": 53,
         "selectorHint": ".deck",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503858,11 +1504008,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:676"
+        "staticSource": "subpackageMember/signup/index.js:670"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:47:bindtouchmove:onDeckMove:4",
+      "id": "subpackageMember/signup/index.wxml:53:bindtouchmove:onDeckMove:6",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503885,7 +1504035,7 @@
         "tag": "view",
         "event": "bindtouchmove",
         "handler": "onDeckMove",
-        "line": 47,
+        "line": 53,
         "selectorHint": ".deck",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503925,11 +1504075,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:657"
+        "staticSource": "subpackageMember/signup/index.js:658"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:47:bindtouchstart:onDeckStart:3",
+      "id": "subpackageMember/signup/index.wxml:53:bindtouchstart:onDeckStart:5",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1503952,7 +1504102,7 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onDeckStart",
-        "line": 47,
+        "line": 53,
         "selectorHint": ".deck",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1503992,11 +1504142,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:650"
+        "staticSource": "subpackageMember/signup/index.js:651"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:50:bindtap:onCardTap:7",
+      "id": "subpackageMember/signup/index.wxml:56:bindtap:onCardTap:9",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1504019,7 +1504169,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCardTap",
-        "line": 50,
+        "line": 56,
         "selectorHint": ".wc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1504104,11 +1504254,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:349"
+        "staticSource": "subpackageMember/signup/index.js:352"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:63:catchtap:retryQr:8",
+      "id": "subpackageMember/signup/index.wxml:70:catchtap:retryQr:10",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1504131,7 +1504281,7 @@
         "tag": "text",
         "event": "catchtap",
         "handler": "retryQr",
-        "line": 63,
+        "line": 70,
         "selectorHint": ".wc__qr-tip",
         "visibleCondition": "{{qrState === 'error'}}",
         "disabledCondition": null,
@@ -1504216,11 +1504366,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:360"
+        "staticSource": "subpackageMember/signup/index.js:363"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:76:bindtap:goMyTeam:9",
+      "id": "subpackageMember/signup/index.wxml:83:bindtap:goMyTeam:11",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1504243,7 +1504393,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMyTeam",
-        "line": 76,
+        "line": 83,
         "selectorHint": ".team-entry",
         "visibleCondition": "{{currentTeam}}",
         "disabledCondition": null,
@@ -1504286,11 +1504436,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:467"
+        "staticSource": "subpackageMember/signup/index.js:470"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:88:bindtap:goTicket:10",
+      "id": "subpackageMember/signup/index.wxml:95:bindtap:goTicket:12",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1504313,7 +1504463,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTicket",
-        "line": 88,
+        "line": 95,
         "selectorHint": ".wl-start",
         "visibleCondition": "{{walletState === 'ready' && ticketList.length && !ticketList[currentSwiperTicket].wNoGame}}",
         "disabledCondition": null,
@@ -1504358,7 +1504508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:326"
+        "staticSource": "subpackageMember/signup/index.js:329"
       }
     },
     {

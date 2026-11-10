@@ -182,9 +182,13 @@
 .signup .ztbg.wbg { top: -77rpx; left: -77rpx; width: calc(100% + 154rpx); height: calc(100% + 154rpx); filter: blur(42rpx) saturate(1.15); transform: scale(1.1); opacity: 0; transition: opacity .8s ease; }
 .signup .ztbg.wbg.vis { opacity: 1; }
 .signup-scrim.wmask { background: linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.35) 35%, rgba(0,0,0,.82) 78%, #050505 100%); } /* ds-ok */
-.wl-nav { position: fixed; left: 0; right: 0; z-index: 95; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; pointer-events: none; }
-.wl-nav__b { font-size: 33rpx; font-weight: 600; color: #fff; } /* ds-ok */
-.deck { position: fixed; left: 50%; top: calc(50vh - 414rpx); width: 577rpx; height: 865rpx; margin-left: -288rpx; z-index: 2; }
+.wl-nav { position: fixed; left: var(--cy-page-x); right: var(--cy-page-x); z-index: 95; height: 88rpx; display: flex; align-items: center; gap: var(--cy-space-3); }
+/* r3-visual:左对齐大标题 + 右侧「+」与本人头像(refs4/ticket-holder-frames 顶栏结构) */
+.wl-nav__b { flex: 1; min-width: 0; font-size: 44rpx; font-weight: 700; letter-spacing: 1rpx; color: #fff; } /* ds-ok: 压在用户照片模糊底上,不随主题翻转 */
+.wl-nav__add { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: #fff; } /* ds-ok */
+.wl-nav__add cy-icon { width: 64rpx; height: 64rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.18); backdrop-filter: blur(20rpx); -webkit-backdrop-filter: blur(20rpx); } /* ds-ok */
+.wl-nav__me { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.deck { position: fixed; left: 50%; top: calc(50vh - 414rpx); top: max(calc(50vh - 414rpx), 290rpx); width: 577rpx; height: 865rpx; margin-left: -288rpx; z-index: 2; }
 .wc { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transform-origin: 50% 0; transition: transform .45s cubic-bezier(.2,.8,.2,1), filter .45s, opacity .3s; } /* ds-ok: v13 动效原型定值 */
 /* 2026-10-28 翻面:卡面放到正反两面上,外层 .wc 只管卡堆位置 */
 .wc__flip { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transform-style: preserve-3d; transition: transform .62s cubic-bezier(.2,.9,.25,1.08); }
@@ -210,6 +214,10 @@
 .signup--go .team-entry { opacity: 0; transition: opacity .2s; }
 .signup--reduced .wc__flip, .signup--reduced .wl-burst, .signup--reduced .deck { transition: none; }
 .deck--still .wc { transition: none; }
+.signup--reduced .wc { transition: none; }
+/* r3-visual 卷页阴影:跟着 --curl(0 → .9)从卷起的那一侧压暗,像书页翻起时背光的一面 */
+.wc__curl { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: var(--curl, 0);
+  background: linear-gradient(var(--curl-a, 90deg), rgba(0,0,0,0) 0%, rgba(0,0,0,.25) 55%, rgba(0,0,0,.65) 100%), linear-gradient(var(--curl-a, 90deg), rgba(255,255,255,0) 70%, rgba(255,255,255,.22) 92%, rgba(255,255,255,0) 100%); } /* ds-ok: 卷页明暗 */
 .wc__go { position: absolute; right: 31rpx; top: 27rpx; width: 62rpx; height: 62rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .wc__go image { width: 27rpx; height: 27rpx; }
 .wc__t { position: absolute; left: 46rpx; right: 46rpx; top: 100rpx; display: flex; flex-direction: column; align-items: center; text-align: center; }

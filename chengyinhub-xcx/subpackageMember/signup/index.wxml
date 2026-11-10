@@ -13,7 +13,13 @@
   <image wx:if="{{wbg[1]}}" src="{{wbg[1]}}" mode="aspectFill" class="ztbg wbg {{wbgOn === 1 ? 'vis' : ''}}" />
   <view class="signup-scrim wmask"></view>
   <cy-nav-bar overlay pill pillDark tint="light" title="" />
-  <view class="wl-nav" style="top: {{navTop - navH}}px; height: {{navH}}px;" aria-role="heading" aria-label="票夹"><text class="wl-nav__b">票夹</text></view>
+  <!-- r3-visual 票夹(refs4/ticket-holder-frames):导航下一行 = 左「票夹」大标题,右「+」去探索拿票、本人头像回「我的」。
+       没有状态筛选:业主 2026-10-28 定票夹只放能用的票、不做「可用 / 已用 / 已过期」切换。 -->
+  <view class="wl-nav" style="top: {{navTop}}px;">
+    <text aria-role="heading" class="wl-nav__b">票夹</text>
+    <view class="wl-nav__add" bindtap="goExplore" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="去探索主题"><cy-icon name="plus" size="32" /></view>
+    <view class="wl-nav__me" wx:if="{{meAvatar}}" bindtap="goMe" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="我的"><cy-avatar size="64" src="{{meAvatar}}" /></view>
+  </view>
 
   <!-- 2026-07-31:优惠券已独立(subpackageMember/coupon),「票夹/优惠券」那层 tab 已删。
        2026-09-09 用户裁决:「路线 / 场次」这层 tab 也删掉,两种票放一起。
@@ -43,7 +49,7 @@
   </view>
 
   <view class="flex-a flex-col main" wx:if="{{walletState === 'ready' && (!focusState || focusState === 'ready')}}" style="padding-top:{{navTop}}px;">
-    <!-- v13 票夹:卡片叠放(后面几张往上错开、缩小、变暗),最前一张跟手拖,甩出去下一张上来;点卡进入 -->
+    <!-- r3-visual 票夹:一次只放一张大卡;左右滑动换票,离开的那张像翻书页一样卷走,下一张从侧边滑进来;点卡翻面出示入场码 -->
     <view class="deck {{deckStill ? 'deck--still' : ''}}" bindtouchstart="onDeckStart" bindtouchmove="onDeckMove" bindtouchend="onDeckEnd" bindtouchcancel="onDeckEnd">
       <!-- 2026-10-28 业主:点卡片翻到背面出示入场码,再点翻回;进游戏改由底部「开始游戏」。
            票夹只放能用的票(已付款、未核验、未过期),卡上不写状态。 -->
@@ -54,6 +60,7 @@
             <view class="wc__go" style="background: {{item.wColor}};"><image src="./icon_go.svg" mode="aspectFit" /></view>
             <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
             <view class="wc__im" wx:if="{{item.wImg}}"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
+            <view class="wc__curl" aria-hidden="true"></view>
           </view>
           <view class="wc__face wc__back" wx:if="{{index === currentSwiperTicket}}">
             <text class="wc__bn ep1">{{item.wTitle}}</text>
@@ -73,7 +80,7 @@
     <!-- 2026-09-04 判定表:「票夹全页没有任何队伍入口」。这一行跟着当前那张票走 ——
          队伍是挂在具体某场/某条路线上的,放在票外面写死一个「我的队伍」会指向别的票。
          没有队伍就整行不出:不摆一个点进去是空的入口。 -->
-    <view class="team-entry" wx:if="{{currentTeam}}" style="top: {{navTop + 4}}px;" bindtap="goMyTeam"
+    <view class="team-entry" wx:if="{{currentTeam}}" style="top: {{navTop + 52}}px;" bindtap="goMyTeam"
       hover-class="cy-pressed" hover-stay-time="80"
       aria-role="button" aria-label="打开我的队伍{{currentTeam.title ? '：' + currentTeam.title : ''}}">
       <view class="team-entry__main">
