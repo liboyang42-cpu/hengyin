@@ -109,7 +109,7 @@ public class PlatformPassService {
         Map<String, Object> holding = new LinkedHashMap<>();
         Map<String, Object> active = row(mapper.selectActiveMembership(memberId, now));
         holding.put("active", active != null);
-        holding.put("validTo", active == null ? null : active.get("valid_to"));
+        holding.put("validTo", active == null ? null : toDate(active.get("valid_to")));
         holding.put("coverageEnd", mapper.selectCoverageEnd(memberId, now));
         return holding;
     }
@@ -159,7 +159,7 @@ public class PlatformPassService {
         Map<String, Object> active = row(mapper.selectActiveMembership(memberId, now));
         if (active == null) return null;
         if (mapper.isOfficialSelfPlayTopic(topicId) <= 0) return null;
-        return new Coverage(num(active.get("id")), (Date) active.get("valid_to"));
+        return new Coverage(num(active.get("id")), toDate(active.get("valid_to")));
     }
 
     /** 与领取的 ¥0 报名行同一事务写入，用于「用过就不能退」。 */
@@ -573,8 +573,8 @@ public class PlatformPassService {
         }
         Map<String, Object> membership = row(mapper.selectMembershipByOrder(orderId));
         if (membership == null || num(membership.get("status")) != 1) return;
-        Date from = (Date) membership.get("valid_from");
-        Date to = (Date) membership.get("valid_to");
+        Date from = toDate(membership.get("valid_from"));
+        Date to = toDate(membership.get("valid_to"));
         Date now = new Date();
         long seconds = Math.max(0, (to.getTime() - Math.max(from.getTime(), now.getTime())) / 1000);
         mapper.revokeMembership(orderId);
@@ -604,12 +604,12 @@ public class PlatformPassService {
             case REFUNDING -> "REFUNDING";
             default -> "PENDING";
         });
-        view.put("paidTime", row.get("paid_time"));
+        view.put("paidTime", toDate(row.get("paid_time")));
         if (status == PAID) {
             Map<String, Object> membership = row(mapper.selectMembershipByOrder(num(row.get("id"))));
             if (membership != null) {
-                view.put("validFrom", membership.get("valid_from"));
-                view.put("validTo", membership.get("valid_to"));
+                view.put("validFrom", toDate(membership.get("valid_from")));
+                view.put("validTo", toDate(membership.get("valid_to")));
             }
         }
         return view;
@@ -671,6 +671,16 @@ public class PlatformPassService {
         if (value instanceof Number n) return n.longValue();
         if (value == null) return null;
         return Long.valueOf(value.toString());
+    }
+
+    /** Map 结果里 DATETIME 列由驱动给 LocalDateTime（真库 IT 实测），统一转回 Date（JVM 默认时区，与写入一致）。 */
+    static Date toDate(Object value) {
+        if (value == null) return null;
+        if (value instanceof Date d) return new Date(d.getTime());
+        if (value instanceof java.time.LocalDateTime t) return Date.from(t.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        if (value instanceof java.time.OffsetDateTime t) return Date.from(t.toInstant());
+        if (value instanceof java.time.Instant t) return Date.from(t);
+        throw new IllegalStateException("无法识别的时间类型: " + value.getClass().getName());
     }
 
     /** MyBatis 查不到返回 null；空行同样视为不存在。 */

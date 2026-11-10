@@ -102,6 +102,12 @@ class PlatformPassMySqlIT {
                 id, "主题" + id, selfPlay, lifecycle, productType, delFlag, "https://example.invalid/" + id + ".jpg");
     }
 
+    private static long ms(Object v) {
+        if (v instanceof java.util.Date d) return d.getTime();
+        if (v instanceof java.time.LocalDateTime t) return t.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        throw new AssertionError("unexpected time type " + v);
+    }
+
     private static JSONObject remote(String orderNo, int status, long fee) {
         JSONObject order = new JSONObject();
         order.put("order_id", orderNo); order.put("status", status); order.put("paid_fee", fee);
@@ -144,9 +150,9 @@ class PlatformPassMySqlIT {
         assertEquals(2, rows.size());
         assertEquals(a, rows.get(0).get("order_no"));
         assertEquals(b, rows.get(1).get("order_no"));
-        assertEquals(((Timestamp) rows.get(0).get("valid_to")).getTime(), ((Timestamp) rows.get(1).get("valid_from")).getTime(),
+        assertEquals(ms(rows.get(0).get("valid_to")), ms(rows.get(1).get("valid_from")),
                 "续买从上一段到期顺延");
-        long monthMs = ((Timestamp) rows.get(0).get("valid_to")).getTime() - ((Timestamp) rows.get(0).get("valid_from")).getTime();
+        long monthMs = ms(rows.get(0).get("valid_to")) - ms(rows.get(0).get("valid_from"));
         assertEquals(30L * 86_400_000L, monthMs);
     }
 
@@ -194,9 +200,9 @@ class PlatformPassMySqlIT {
     void refundRevokesSegmentShiftsLaterOneAndRefundingBlocksCoverage() {
         String first = paidXpay(551L, "MONTH", "it-req-0051");
         String second = paidXpay(551L, "MONTH", "it-req-0052");
-        long secondFromBefore = db.queryForObject(
+        long secondFromBefore = ms(db.queryForObject(
                 "SELECT m.valid_from FROM platform_pass_membership m JOIN platform_pass_order o ON o.id=m.order_id WHERE o.order_no=?",
-                Timestamp.class, second).getTime();
+                Timestamp.class, second));
         when(xpay.refundOrder(anyString(), eq(first), anyString(), anyLong(), anyLong(), anyString(), anyInt()))
                 .thenReturn(JSONObject.of("errcode", 0));
         assertEquals("REFUNDING", service.requestRefund(first, "it-admin", "测试").get("status"));
@@ -207,9 +213,9 @@ class PlatformPassMySqlIT {
         assertEquals(3, db.queryForObject(
                 "SELECT m.status FROM platform_pass_membership m JOIN platform_pass_order o ON o.id=m.order_id WHERE o.order_no=?",
                 Integer.class, first));
-        long secondFromAfter = db.queryForObject(
+        long secondFromAfter = ms(db.queryForObject(
                 "SELECT m.valid_from FROM platform_pass_membership m JOIN platform_pass_order o ON o.id=m.order_id WHERE o.order_no=?",
-                Timestamp.class, second).getTime();
+                Timestamp.class, second));
         assertTrue(secondFromBefore - secondFromAfter > 29L * 86_400_000L, "后一段前移约一个月");
         assertTrue(secondFromAfter <= System.currentTimeMillis() + 1000, "后一段立即生效");
         assertNotNull(service.coverage(551L, OFFICIAL_TOPIC, new Date()), "后一段接上覆盖");

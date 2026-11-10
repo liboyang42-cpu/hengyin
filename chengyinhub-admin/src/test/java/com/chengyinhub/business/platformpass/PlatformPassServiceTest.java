@@ -369,4 +369,21 @@ class PlatformPassServiceTest {
     void libraryIsEmptyWhenDisabled() {
         assertEquals(List.of(), service.library(MEMBER, null, 20).get("rows"));
     }
+
+    @Test
+    void mapRowTimesFromDriverAreNormalisedToDate() {
+        java.time.LocalDateTime t = java.time.LocalDateTime.of(2027, 11, 10, 12, 0);
+        Date d = PlatformPassService.toDate(t);
+        assertEquals(t.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(), d.getTime());
+        assertNull(PlatformPassService.toDate(null));
+        Date now = new Date();
+        assertEquals(now.getTime(), PlatformPassService.toDate(now).getTime());
+        assertThrows(IllegalStateException.class, () -> PlatformPassService.toDate("2027-11-10"));
+        enableAll();
+        Map<String, Object> active = new HashMap<>();
+        active.put("id", 7L); active.put("valid_to", java.time.LocalDateTime.now().plusDays(3));
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(active);
+        when(mapper.isOfficialSelfPlayTopic(5L)).thenReturn(1);
+        assertTrue(service.coverage(MEMBER, 5L, new Date()).validTo().after(new Date()), "驱动给 LocalDateTime 时覆盖段仍可用");
+    }
 }
