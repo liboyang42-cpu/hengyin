@@ -1,11 +1,10 @@
 <view class="theme-dark jn">
   <cy-nav-bar plain />
-  <cy-nav-spacer />
+  <cy-page-title align="center" title="{{report && report.legacy ? '主题记录' : '本局战报'}}" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
     <view class="jn-head">
       <text class="jn-eyebrow" wx:if="{{eyebrow}}">{{eyebrow}}</text>
-      <text class="jn-title">{{report.legacy ? '主题记录' : '本局战报'}}</text>
       <text class="jn-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text>
     </view>
     <view class="jn-grid">

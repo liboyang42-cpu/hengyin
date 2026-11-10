@@ -1,12 +1,11 @@
 <view class="theme-dark jn">
   <cy-nav-bar plain />
-  <cy-nav-spacer />
+  <cy-page-title align="center" title="{{headline}}" />
   <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
   <block wx:else>
     <view class="jn-head">
       <view class="jn-av jn-av--lg" wx:if="{{inviter}}"><image wx:if="{{inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" /><text wx:else>{{inviter.initial}}</text></view>
       <text class="jn-eyebrow jn-gap" wx:if="{{inviter}}">{{inviter.name}}</text>
-      <text class="jn-title">{{headline}}</text>
       <text class="jn-pill" wx:if="{{title}}">{{title}}</text>
     </view>
 

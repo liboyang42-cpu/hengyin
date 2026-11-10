@@ -4,12 +4,12 @@
   "backgroundColor": "#000000",
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
-    "cy-nav-spacer": "/components/cy/nav-spacer/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-tabs": "/components/cy/tabs/index",
-    "cy-skeleton": "/components/cy/skeleton/index"
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-page-title": "/components/cy/page-title/index"
   }
 }

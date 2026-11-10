@@ -229,7 +229,6 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         return revision.getId();
     }
 
-
     /**
      * 采用请求自身的合法性：只看请求参数，不读库、不写行。
      *
