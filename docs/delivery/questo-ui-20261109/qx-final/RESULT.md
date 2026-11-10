@@ -24,6 +24,29 @@
 | 6 | l-editor | `aa90efd8` | `5e93cda2` | COMPLETE | 只有台账冲突，在合并树重建 |
 | 7 | l-misc | `8a741fef` | `a991b10f` | PARTIAL | 队伍详情：保留 l-after 的「邀请队友 → 统一邀请页」，加上 l-misc 的「二维码」按钮(仅在队成员可见)，两个组件都注册。UI baseline：fabu 锚点取 l-editor 的重锚，temp 锚点取 l-misc 的重锚，条数仍是 62，`u4Dynamic keyDigest` 按门禁算法在合并树上重算。台账重建 |
 
+## 一之二、PR 开出后又合入的 l-payout2(不是本 lane 合的)
+
+我开 PR #779 之后，另一个代理(提交人 `Bob (OpenClaw Agent)`)在 18:39 UTC 往 `launch/questo-20261110` 推了合并提交 `69332af6`：「merge: l-payout2 分账接入下单/回调/退款/结算(默认关闭)」。
+
+- **改了什么**：38 个文件，约 3.3k 行。l-payout 的 P-09 已经接入：
+  - 下单按卖家二级商户路由；
+  - 新增回调端点 `/api/registration/ecommerce-callback`、`/api/registration/ecommerce-refund-callback`；
+  - 退款前先回退分账；
+  - T+14 入余额时扣掉微信侧的份额；
+  - 新增定时任务和运营端页面「资金售后 → 电商收付通」；
+  - 新增迁移 `migration_20261110_ecommerce_payout_wiring.sql`。
+  - 详细说明见 `l-payout2/RESULT.md`(STATUS: PARTIAL)。
+- **我没有回退它**，也没有改它的代码。我在合并后的头 `69332af6` 上复核了：
+  - `mvn -q -DskipTests package` 通过；
+  - 管理端 `npm run build:prod` 通过；
+  - 支付和分账相关 Java 测试共 238 条，0 失败：l-payout2 的特征测试、接线测试、定时任务测试，l-payout 原有单测，回调路由，通行证，退款快照，CoopSettlement；
+  - Real Storage IT `launch-l-payout2` **通过**(run 42878206758)；
+  - `payment-intent-correctness` 整批 **通过**(run 42878212631)；
+  - 迁移台账 33 个新迁移，0 个问题。
+  - 另外，run 519 是我误用占位 SHA 触发的，在 SHA 校验步骤失败，没有执行任何测试。
+- **顺带修了一条底座既有红**：`GameplaySupportMatrixTest` 期望客户端玩法目录是 32 行加上服务端独有的 `hangman`。但底座里 qx-b2 已经把逐字猜词加进客户端目录(33 行)，测试一直是红的(l-payout2 的 RESULT 也提到了)。我把断言收紧为「客户端目录 33 行，与服务端矩阵完全一致」，37/37 通过。只改了测试。
+- **需要你确认**：l-payout2 是否属于这次上线(见待你决定 8)。它的开关全部默认关闭；关闭时，特征测试证明下单、回调、退款、T+14 的结果逐字不变。
+
 ## 二、收口修复(小提交)
 
 | ID | 状态 | 改了什么 | 文件 | 怎么验证 | 真机未验 |
@@ -49,7 +72,7 @@
 | 管理端 `npm run build:prod` | 通过(`DONE Build complete`)。用 `npm ci --registry=https://registry.npmjs.org/ --replace-registry-host=registry.npmmirror.com`，lockfile 没改 |
 | 主包体积 `mainpkg-size-report.js --json` | `mainTotal` 3,295,637 字节 × 0.633 ≈ **2037.2 KiB < 2048**(底座 2030.7 KiB，lane 合计 +6.5 KiB) |
 | keyframes 棘轮 | **本波没有新增 `@keyframes`**：非注释 keyframes 从底座的 169 降到 166(三条 lane 删了旧动画)。上限 146 没有改，测试照样是红的(底座本来就红，是 r2 波次留下的，见待你决定 3) |
-| 迁移门禁 | `python3 ci/migration_ledger.py manifest`：32 个新迁移全部进入台账，0 个问题；`ci/test_migration_gates.py`、`ci/test_migration_ledger.py` 共 202 条全部通过 |
+| 迁移门禁 | `python3 ci/migration_ledger.py manifest`：32 个新迁移全部进入台账，0 个问题(合入 l-payout2 后为 33 个，仍是 0 个问题)；`ci/test_migration_gates.py`、`ci/test_migration_ledger.py` 共 202 条全部通过 |
 
 **全量单测失败明细(`a991b10f`，12 条)及处理：**
 
@@ -253,7 +276,7 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 
 ## 七、上线清单(也写在 PR 正文里)
 
-### 迁移(按台账顺序执行，32 个，全部是新文件)
+### 迁移(按台账顺序执行，33 个，全部是新文件)
 
 按 `ci/migration_ledger.py` 的拓扑序(依赖声明在 `ci/migration-dependencies.json`)。必须走 chengyin-db-migrate 的只读预检，并经你确认。
 
@@ -265,37 +288,39 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 | 4 | 90 | `migration_20261109_app_media_provenance.sql` |
 | 5 | 91 | `migration_20261109_play_run_feedback.sql` |
 | 6 | 92 | `migration_20261110_ecommerce_payout.sql` |
-| 7 | 93 | `migration_20261110_platform_pass.sql` |
-| 8 | 226 | `migration_marketing_attribution_20261108.sql` |
-| 9 | 227 | `migration_marketing_product_20261108.sql` |
-| 10 | 228 | `migration_marketing_extra_seat_20261108.sql` |
-| 11 | 229 | `migration_marketing_revenue_allocation_20261108.sql` |
-| 12 | 230 | `migration_marketing_z_channel_voucher_20261108.sql` |
-| 13 | 231 | `migration_marketing_task_registration_20261108.sql` |
-| 14 | 363 | `migration_marketing_redemption_constraint_name_20261108.sql` |
-| 15 | 364 | `migration_marketing_promotion_20261108.sql` |
-| 16 | 381 | `migration_preset_draft_source_20261108.sql` |
-| 17 | 392 | `migration_public_content_catalog_20261108.sql` |
-| 18 | 393 | `migration_public_content_catalog_index_shape_20261109.sql` |
-| 19 | 394 | `migration_public_content_catalog_node_topic_index_20261108.sql` |
-| 20 | 427 | `migration_club_host_reservation_20261109.sql` |
-| 21 | 527 | `migration_topic_location_contract_20261107.sql` |
-| 22 | 569 | `migration_video_bounty_host_tip_20261108.sql` |
-| 23 | 570 | `migration_video_bounty_group_verification_20261108.sql` |
-| 24 | 598 | `migration_20261109_play_help_audit_permission.sql` |
-| 25 | 599 | `migration_20261109_questo_admin_menus.sql` |
-| 26 | 625 | `migration_z_channel_voucher_snapshot_20261109.sql` |
-| 27 | 626 | `migration_z_marketing_revenue_channel_reverse_kind_20261108.sql` |
-| 28 | 627 | `migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql` |
-| 29 | 628 | `migration_z_workshop_apple_iap_20261109.sql` |
-| 30 | 629 | `migration_z_workshop_purchase_20261109.sql` |
-| 31 | 630 | `migration_z_workshop_paid_review_20261109.sql` |
-| 32 | 632 | `migration_zz_questo_collation_align_20261109.sql` |
+| 7 | 93 | `migration_20261110_ecommerce_payout_wiring.sql` |
+| 8 | 94 | `migration_20261110_platform_pass.sql` |
+| 9 | 227 | `migration_marketing_attribution_20261108.sql` |
+| 10 | 228 | `migration_marketing_product_20261108.sql` |
+| 11 | 229 | `migration_marketing_extra_seat_20261108.sql` |
+| 12 | 230 | `migration_marketing_revenue_allocation_20261108.sql` |
+| 13 | 231 | `migration_marketing_z_channel_voucher_20261108.sql` |
+| 14 | 232 | `migration_marketing_task_registration_20261108.sql` |
+| 15 | 364 | `migration_marketing_redemption_constraint_name_20261108.sql` |
+| 16 | 365 | `migration_marketing_promotion_20261108.sql` |
+| 17 | 382 | `migration_preset_draft_source_20261108.sql` |
+| 18 | 393 | `migration_public_content_catalog_20261108.sql` |
+| 19 | 394 | `migration_public_content_catalog_index_shape_20261109.sql` |
+| 20 | 395 | `migration_public_content_catalog_node_topic_index_20261108.sql` |
+| 21 | 428 | `migration_club_host_reservation_20261109.sql` |
+| 22 | 528 | `migration_topic_location_contract_20261107.sql` |
+| 23 | 570 | `migration_video_bounty_host_tip_20261108.sql` |
+| 24 | 571 | `migration_video_bounty_group_verification_20261108.sql` |
+| 25 | 599 | `migration_20261109_play_help_audit_permission.sql` |
+| 26 | 600 | `migration_20261109_questo_admin_menus.sql` |
+| 27 | 626 | `migration_z_channel_voucher_snapshot_20261109.sql` |
+| 28 | 627 | `migration_z_marketing_revenue_channel_reverse_kind_20261108.sql` |
+| 29 | 628 | `migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql` |
+| 30 | 629 | `migration_z_workshop_apple_iap_20261109.sql` |
+| 31 | 630 | `migration_z_workshop_purchase_20261109.sql` |
+| 32 | 631 | `migration_z_workshop_paid_review_20261109.sql` |
+| 33 | 633 | `migration_zz_questo_collation_align_20261109.sql` |
 
 注意：
 - `migration_marketing_task_registration_20261108.sql` 会插入两个 `sys_job`：「渠道退款事实补消费」和「营销收入分配队列消费」，**默认都是暂停状态**。
 - `migration_20261109_questo_admin_menus.sql` 和 `migration_20261109_play_help_audit_permission.sql` 会写后台菜单和权限。
 - `migration_20261110_platform_pass.sql` 写入的两个套餐默认**不上架**。
+- `migration_20261110_ecommerce_payout_wiring.sql`(l-payout2)新增 `ecom_refund` 表、两个**暂停**的定时任务(`ecommercePayoutTask.shareAndRetry()`、`syncOnboarding()`)、后台菜单「资金售后 → 电商收付通」和按钮权限。
 
 ### 配置开关(都在部署配置里，默认关闭)
 
@@ -308,12 +333,12 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 | `platform-pass.xpay.app-key` | 空 | **密钥，只能经环境变量注入** |
 | `platform-pass.xpay.env` | 1(沙箱) | 0 是现网 |
 | `payout.ecommerce.enabled` | false | 电商收付通总开关 |
-| `payout.ecommerce.seller-routing-enabled` | false | 按卖家二级商户下单(P-09 没接入前打开也不生效) |
+| `payout.ecommerce.seller-routing-enabled` | false | 主题门票按卖家二级商户 `sub_mchid` 下单(需要先打开总开关；l-payout2 已接入) |
 | `payout.ecommerce.profit-sharing-enabled` | false | 按账本分账 |
 | `payout.ecommerce.sp-mchid` / `sp-appid` / `platform-receiver-mchid` | 空 | 电商平台商户号、AppID、佣金接收方 |
 | `payout.ecommerce.max-share-percent` | 30 | 分账比例上限，以微信核定为准 |
 | `payout.ecommerce.private-key-path` / `merchant-serial-number` / `api-v3-key` | 空 | **密钥类，只放服务器** |
-| `payout.ecommerce.notify-url` / `refund-notify-url` | 空 | 电商支付和退款通知地址 |
+| `payout.ecommerce.notify-url` / `refund-notify-url` | 空 | 指向 `/prod-api/api/registration/ecommerce-callback` 和 `/ecommerce-refund-callback` |
 | `payout.creator.enabled` / `payout.creator.provider` | false / none | 创作者灵活用工打款 |
 | `marketing.product.cash-enabled` | false | 营销商品现金收款(底座既有) |
 | `workshop.wechat-app-enabled` | false | 工坊 App 微信支付(底座既有) |
@@ -361,7 +386,7 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 
 ### 回滚
 
-- **后端**：重新部署上一版 jar。32 个迁移都是新文件，以新增表、列、索引、菜单、暂停的任务为主。回滚 jar 前，用 chengyin-db-migrate 只读核对各迁移文件头写的「旧 jar 兼容」说明。不要删表，也不要删列(已写入的订单和分账记录要留着对账)。
+- **后端**：重新部署上一版 jar。33 个迁移都是新文件，以新增表、列、索引、菜单、暂停的任务为主。回滚 jar 前，用 chengyin-db-migrate 只读核对各迁移文件头写的「旧 jar 兼容」说明。不要删表，也不要删列(已写入的订单和分账记录要留着对账)。
 - **出问题时**：先把 `platform-pass.*`、`payout.*` 关掉。
 - **通行证已售订单**：用后台整单退款(只限没领取过主题的)。
 - **小程序**：在公众平台把线上版本回退到上一版。
@@ -373,7 +398,8 @@ rig 用的是 `claude/cloud-walk-20261101-rig`，加了 staging 的 `rig-up-sha-
 3. **keyframes 上限 146 和实测 166**：(上限不动，本波没有新增。)红灯由 r2 波次 lane 改成 transition 后消除。
 4. **Gameplay HTTP `personalR5DirectParticipationWithoutMerchantIsRefused` 返回 500**：`master` 上也是红的，不是本 PR 引入的。(没有在本 PR 里修；这个用例的 owner 是玩法 HTTP 原线。)
 5. **底座里的 r3-visual / r3-share / r3-pass**(qx-base 待你决定 1)：(保留，不回退；各 lane 已按原型覆盖同一元素。)
-6. **l-payout 的 P-09**(把电商收付通接入现有下单、回调、退款、T+14 链路)：(没有接入，开关打开也不生效。)这需要支付链路 owner 和你确认后另做。
+6. **l-payout 的 P-09**：PR 开出后已由 l-payout2 接入(见 §一之二)。开关全部默认关闭。打开顺序和微信支付侧的步骤见 `l-payout2/RESULT.md` 第四、五节。
 7. **各 lane 自己的待你决定**原样保留，见 `l-play/`、`l-kits/`、`l-after/`、`l-pass/`、`l-payout/`、`l-editor/`、`l-misc/` 各自的 RESULT.md。
+8. **l-payout2 是否属于这次上线**：它是 PR 开出后由另一个代理合入的，不在 LAUNCH.md 的 lane 列表里。(默认保留，开关全部关闭；我已复核构建、测试和真库 IT。)如果不要，在 PR 分支上 `git revert -m 1 69332af6` 即可，不用改历史。
 
-STATUS: PARTIAL - 七条 lane 都已合入，收口修复已推送。UI-GATE-0、台账和路由矩阵零差异、mvn 打包、改动类 Java 测试、管理端构建、主包 2037.2 KiB 都通过。真库 IT 通过：PlatformPass(UTC 与 Asia/Shanghai)、launch-l-payout、payment-intent-correctness 30/30。草稿 PR #779 已开。还剩三项：小程序全量单测 7 条红灯，都是底座既有、r2 波次留下的；Gameplay HTTP generic-only 1 条失败，master 上同样失败；队伍详情没有在合并后复拍(rig 没有活动场次夹具)。
+STATUS: PARTIAL - 七条 lane 都已合入，收口修复已推送。UI-GATE-0、台账和路由矩阵零差异、mvn 打包、改动类 Java 测试、管理端构建、主包 2037.2 KiB 都通过。真库 IT 通过：PlatformPass(UTC 与 Asia/Shanghai)、launch-l-payout、payment-intent-correctness 30/30。草稿 PR #779 已开。PR 开出后另一个代理合入了 l-payout2，我已在 69332af6 上复核：构建、支付 Java 测试、launch-l-payout2 和 payment-intent 真库 IT 都通过。还剩三项：小程序全量单测 7 条红灯，都是底座既有、r2 波次留下的；Gameplay HTTP generic-only 1 条失败，master 上同样失败；队伍详情没有在合并后复拍(rig 没有活动场次夹具)。
