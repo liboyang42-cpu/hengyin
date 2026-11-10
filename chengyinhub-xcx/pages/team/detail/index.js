@@ -186,6 +186,7 @@ Page({
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id) === context.teamId) {
           const team = res.data.team;
           that._seats = !!(res.data.seats && Number.isSafeInteger(res.data.seats.available));
+          pageMotion.enter(that, 'pmSeats', { once: true });   // 席位圈第一次到齐时错峰入场(team/info 这条路径;定向队伍详情那条在下面)
           that.setData({
             loading: false,
             refreshing: false,

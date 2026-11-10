@@ -56,6 +56,10 @@ const EXTERNAL_METHOD_PATTERN = EXTERNAL_METHODS.join('|')
 //   (那会把 foo.getLocation() 这类同名方法误判成外部能力)。
 const WX_RECEIVER_PATTERN = '(?:wx|_wx)'
 const EXTERNAL_RE = new RegExp(`\\b${WX_RECEIVER_PATTERN}\\.(?:${EXTERNAL_METHOD_PATTERN})\\s*\\(`)
+// 2026-11-10 r4-motion(MOTION.md M14):页面不再直调 wx.vibrateShort,改调 utils/motion.js 的四个具名档位
+//   (hapticTap / hapticConfirm / hapticHit / hapticMiss,裸调或 motion.xxx)。它们内部仍是 wx.vibrateShort,
+//   所以归类不变:带触感的 tap 仍是 external。只认这四个名字,不泛化到任何 haptic*。
+const HAPTIC_HELPER_RE = /\b(?:motion\.)?haptic(?:Tap|Confirm|Hit|Miss)\s*\(/
 // app.sendRequest 内部可能用 wx.login 续期；它是基础设施，不得把所有业务请求传染成 external。
 const APP_EXTERNAL_METHOD_PATTERN = EXTERNAL_METHODS.filter((name) => name !== 'login').join('|')
 const APP_EXTERNAL_RE = new RegExp(`\\b${WX_RECEIVER_PATTERN}\\.(?:${APP_EXTERNAL_METHOD_PATTERN})\\s*\\(`)
@@ -1355,6 +1359,8 @@ function externalCapabilitiesFor(source, externalHelperNames) {
   const body = maskNonCodeSafely(String(source || ''))
   const direct = [...body.matchAll(new RegExp(`\\b${WX_RECEIVER_PATTERN}\\.(${EXTERNAL_METHOD_PATTERN})\\s*\\(`, 'g'))]
     .map((match) => match[1])
+  // M14 的四个触感档位内部就是 wx.vibrateShort,按同一个能力名登记,带触感的控件仍归 external
+  if (HAPTIC_HELPER_RE.test(body)) direct.push('vibrateShort')
   const helpers = [...(externalHelperNames || [])].filter((name) => new RegExp(
     `(?:\\bapp|\\bgetApp\\(\\))\\.\\s*${name.replace(/[$]/g, '\\$&')}\\s*\\(`,
   ).test(body)).map((name) => `app.${name}`)

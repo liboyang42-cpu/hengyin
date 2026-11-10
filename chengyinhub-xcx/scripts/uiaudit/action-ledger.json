@@ -916069,15 +916069,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -916086,12 +916090,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/components/chapter-flip/index.js:172"
@@ -916246,15 +916256,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -916263,12 +916277,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/components/chapter-flip/index.js:172"
@@ -987585,7 +987605,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -987594,7 +987615,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -988383,7 +988405,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -988392,7 +988415,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -988881,7 +988905,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -988890,7 +988915,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -989355,7 +989381,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -989365,7 +989392,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -989864,7 +989892,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -989873,7 +989902,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -990534,7 +990564,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -990544,7 +990575,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -991085,7 +991117,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -991095,7 +991128,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -992671,7 +992705,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -992680,7 +992715,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -993169,7 +993205,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -993178,7 +993215,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -994285,7 +994323,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -994294,7 +994333,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -994892,7 +994932,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "app.chooseImage",
@@ -994902,7 +994943,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -995385,7 +995427,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -995394,7 +995437,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -995516,7 +995560,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -995525,7 +995570,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -995647,7 +995693,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -995656,7 +995703,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -995778,7 +995826,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -995787,7 +995836,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -995912,7 +995962,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -995922,7 +995973,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -996245,7 +996297,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -996254,7 +996307,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -996726,7 +996780,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -996736,7 +996791,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -997210,7 +997266,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "app.chooseImage",
@@ -997220,7 +997277,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -997743,7 +997801,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -997752,7 +997811,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -998241,7 +998301,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -998250,7 +998311,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -998779,7 +998841,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -998788,7 +998851,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -999992,7 +1000056,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1000001,7 +1000066,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1002668,7 +1002734,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1002677,7 +1002744,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1003166,7 +1003234,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1003175,7 +1003244,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1003664,7 +1003734,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1003673,7 +1003744,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1004725,7 +1004797,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1004734,7 +1004807,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1008610,7 +1008684,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1008619,7 +1008694,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1010321,7 +1010397,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1010330,7 +1010407,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1011750,7 +1011828,8 @@
         "requestSubscribeMessage",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1011759,7 +1011838,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1012162,7 +1012242,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1012171,7 +1012252,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1012660,7 +1012742,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1012669,7 +1012752,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1013158,7 +1013242,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1013167,7 +1013252,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1013656,7 +1013742,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1013665,7 +1013752,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1014356,7 +1014444,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1014365,7 +1014454,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1014854,7 +1014944,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1014863,7 +1014954,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1015419,7 +1015511,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1015428,7 +1015521,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1015917,7 +1016011,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1015926,7 +1016021,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1016415,7 +1016511,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1016424,7 +1016521,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1016914,7 +1017012,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1016923,7 +1017022,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1017683,7 +1017783,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1017692,7 +1017793,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1018181,7 +1018283,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1018190,7 +1018293,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1019967,7 +1020071,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1019976,7 +1020081,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1021264,7 +1021370,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1021273,7 +1021380,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1021762,7 +1021870,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1021771,7 +1021880,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1022260,7 +1022370,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1022269,7 +1022380,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1022758,7 +1022870,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1022767,7 +1022880,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1023256,7 +1023370,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1023265,7 +1023380,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1024085,7 +1024201,8 @@
         "requestSubscribeMessage",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1024094,7 +1024211,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1024498,7 +1024616,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1024507,7 +1024626,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1025031,7 +1025151,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1025040,7 +1025161,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1026009,7 +1026131,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1026018,7 +1026141,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1027010,7 +1027134,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1027020,7 +1027145,8 @@
         "scanCode",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1027479,7 +1027605,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1027488,7 +1027615,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1028116,7 +1028244,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1028125,7 +1028254,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1028641,7 +1028771,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1028650,7 +1028781,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1029392,7 +1029524,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1029401,7 +1029534,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1029905,7 +1030039,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1029914,7 +1030049,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1030372,7 +1030508,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1030381,7 +1030518,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1031159,7 +1031297,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1031168,7 +1031307,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1031657,7 +1031797,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1031666,7 +1031807,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1032155,7 +1032297,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1032164,7 +1032307,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1032973,7 +1033117,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1032982,7 +1033127,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1033471,7 +1033617,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1033480,7 +1033627,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1033969,7 +1034117,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1033978,7 +1034127,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1034467,7 +1034617,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1034476,7 +1034627,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1035032,7 +1035184,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1035041,7 +1035194,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1035530,7 +1035684,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1035539,7 +1035694,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1036163,7 +1036319,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1036172,7 +1036329,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1036661,7 +1036819,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1036670,7 +1036829,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1037250,7 +1037410,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1037259,7 +1037420,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1037683,10 +1037845,12 @@
       ],
       "accessBoundary": null,
       "externalCapabilities": [
-        "createInnerAudioContext"
+        "createInnerAudioContext",
+        "vibrateShort"
       ],
       "successCapabilities": [
-        "createInnerAudioContext"
+        "createInnerAudioContext",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [],
@@ -1037820,15 +1037984,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1037837,12 +1038005,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:1473"
@@ -1037887,15 +1038061,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1037904,12 +1038082,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:1487"
@@ -1037954,15 +1038138,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1037971,12 +1038159,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:1487"
@@ -1038094,7 +1038288,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1038103,7 +1038298,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1038832,7 +1039028,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1038841,7 +1039038,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1039852,7 +1040050,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1039861,7 +1040060,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1040417,7 +1040617,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1040426,7 +1040627,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1041059,7 +1041261,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1041068,7 +1041271,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1041691,7 +1041895,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1041700,7 +1041905,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1043297,7 +1043503,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1043306,7 +1043513,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1043977,7 +1044185,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1043986,7 +1044195,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1047097,15 +1047307,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1047114,13 +1047328,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
         "modal-cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/utils/play-help-panel.js:161"
@@ -1047238,7 +1047458,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1047247,7 +1047468,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1049031,7 +1049253,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1049040,7 +1049263,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1051456,7 +1051680,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1051465,7 +1051690,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1052096,7 +1052322,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1052105,7 +1052332,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1052706,7 +1052934,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1052715,7 +1052944,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1053279,7 +1053509,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1053288,7 +1053519,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1053857,7 +1054089,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1053866,7 +1054099,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1054355,7 +1054589,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1054364,7 +1054599,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1054966,7 +1055202,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1054975,7 +1055212,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1055771,7 +1056009,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1055780,7 +1056019,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1056317,7 +1056557,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1056326,7 +1056567,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1056839,7 +1057081,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1056848,7 +1057091,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1057881,7 +1058125,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1057890,7 +1058135,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1058408,7 +1058654,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1058417,7 +1058664,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1059203,7 +1059451,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1059212,7 +1059461,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1060185,7 +1060435,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1060194,7 +1060445,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1060905,7 +1061157,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1060914,7 +1061167,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1061596,7 +1061850,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1061605,7 +1061860,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1062192,7 +1062448,8 @@
         "openSetting",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "createInnerAudioContext",
@@ -1062201,7 +1062458,8 @@
         "login",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [
@@ -1085861,9 +1086119,12 @@
       ],
       "accessBoundary": "owned-resource",
       "externalCapabilities": [
-        "requestSubscribeMessage"
+        "requestSubscribeMessage",
+        "vibrateShort"
       ],
-      "successCapabilities": [],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1085968,9 +1086229,12 @@
       ],
       "accessBoundary": "owned-resource",
       "externalCapabilities": [
-        "requestSubscribeMessage"
+        "requestSubscribeMessage",
+        "vibrateShort"
       ],
-      "successCapabilities": [],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1094690,7 +1094954,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1094698,8 +1094962,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1094723,15 +1094991,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/index.js:8065"
@@ -1094786,7 +1095057,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1094794,8 +1095065,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index",
@@ -1094819,15 +1095094,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/index.js:8065"
@@ -1096543,15 +1096821,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1096560,12 +1096842,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/index.js:2119"
@@ -1100105,7 +1100393,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1100113,8 +1100401,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1100185,15 +1100477,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/index.js:1970"
@@ -1179531,7 +1179826,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1179539,8 +1179834,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [
@@ -1179560,15 +1179859,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "pages/roam/index.js:4581"
@@ -1181853,13 +1182155,15 @@
         "setKeepScreenOn",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "setKeepScreenOn",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [],
@@ -1182431,14 +1182735,16 @@
         "setKeepScreenOn",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "chooseLocation",
         "setKeepScreenOn",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [],
@@ -1182578,14 +1182884,16 @@
         "setKeepScreenOn",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "successCapabilities": [
         "chooseLocation",
         "setKeepScreenOn",
         "startLocationUpdate",
         "startLocationUpdateBackground",
-        "stopLocationUpdate"
+        "stopLocationUpdate",
+        "vibrateShort"
       ],
       "targets": {
         "routes": [],
@@ -1214840,7 +1215148,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:479"
+        "staticSource": "pages/team/detail/index.js:480"
       }
     },
     {
@@ -1215057,7 +1215365,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:416"
+        "staticSource": "pages/team/detail/index.js:417"
       }
     },
     {
@@ -1215190,7 +1215498,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:416"
+        "staticSource": "pages/team/detail/index.js:417"
       }
     },
     {
@@ -1215259,7 +1215567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:470"
+        "staticSource": "pages/team/detail/index.js:471"
       }
     },
     {
@@ -1215328,7 +1215636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:485"
+        "staticSource": "pages/team/detail/index.js:486"
       }
     },
     {
@@ -1215548,7 +1215856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:494"
+        "staticSource": "pages/team/detail/index.js:495"
       }
     },
     {
@@ -1215702,7 +1216010,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:495"
+        "staticSource": "pages/team/detail/index.js:496"
       }
     },
     {
@@ -1215846,7 +1216154,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:368"
+        "staticSource": "pages/team/detail/index.js:369"
       }
     },
     {
@@ -1215914,7 +1216222,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:499"
+        "staticSource": "pages/team/detail/index.js:500"
       }
     },
     {
@@ -1216068,7 +1216376,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:496"
+        "staticSource": "pages/team/detail/index.js:497"
       }
     },
     {
@@ -1216270,7 +1216578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:421"
+        "staticSource": "pages/team/detail/index.js:422"
       }
     },
     {
@@ -1216340,7 +1216648,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:460"
+        "staticSource": "pages/team/detail/index.js:461"
       }
     },
     {
@@ -1216484,7 +1216792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:434"
+        "staticSource": "pages/team/detail/index.js:435"
       }
     },
     {
@@ -1216617,7 +1216925,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:361"
+        "staticSource": "pages/team/detail/index.js:362"
       }
     },
     {
@@ -1216686,7 +1216994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:363"
+        "staticSource": "pages/team/detail/index.js:364"
       }
     },
     {
@@ -1216830,7 +1217138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:362"
+        "staticSource": "pages/team/detail/index.js:363"
       }
     },
     {
@@ -1275287,15 +1275595,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": "{{item.key === activeMode}}"
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1275304,12 +1275616,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageJourney/pages/landing/index.js:109"
@@ -1275557,7 +1275875,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1275566,8 +1275884,12 @@
         "state"
       ],
       "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/activity/detail/index?id=",
@@ -1275711,7 +1276033,7 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
@@ -1275719,8 +1276041,11 @@
         "duplicate-trigger",
         "forbidden-owner"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageJourney/pages/landing/index.js:117"
@@ -1279668,7 +1279993,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1279676,8 +1280001,12 @@
         "state"
       ],
       "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [
@@ -1279817,7 +1280146,7 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
@@ -1279825,8 +1280154,11 @@
         "duplicate-trigger",
         "forbidden-owner"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageJourney/pages/settle/index.js:90"
@@ -1313359,7 +1313691,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1313367,8 +1313699,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1313423,15 +1313759,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:302"
@@ -1313846,7 +1314185,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1313854,8 +1314193,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1313910,15 +1314253,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:303"
@@ -1314187,7 +1314533,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1314195,8 +1314541,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1314251,15 +1314601,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:303"
@@ -1314382,7 +1314735,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1314390,8 +1314743,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1314446,15 +1314803,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/components/cy/scene-qr-coupon/index.js:303"
@@ -1331631,7 +1331991,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1331639,8 +1331999,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1331695,15 +1332059,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/coupon-qr/index.js:423"
@@ -1331818,7 +1332185,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1331826,8 +1332193,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1331882,15 +1332253,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/coupon-qr/index.js:423"
@@ -1331935,7 +1332309,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1331943,8 +1332317,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1331999,15 +1332377,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/coupon-qr/index.js:423"
@@ -1338740,7 +1339121,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "read",
       "effectClasses": [
@@ -1338748,8 +1339129,12 @@
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [
           "pages/privacy/index"
@@ -1338796,15 +1339181,18 @@
         ],
         "writeApis": []
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageMember/market/gift/index.js:23"
@@ -1357325,15 +1357713,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1357342,12 +1357734,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageRoam/citystamp/index.js:348"
@@ -1357392,15 +1357790,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1357409,12 +1357811,18 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageRoam/citystamp/index.js:348"

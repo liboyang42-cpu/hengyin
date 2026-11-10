@@ -1,0 +1,1 @@
+{"name": "M-AINPC-open-reduced", "opts": {"path": "pages/index/index", "identity": "e2e-openid-9002", "agree": true, "settle": 2500}, "setup": [{"eval": "wx.setStorageSync('play_reduced_motion', true)"}, {"wait": 300}], "action": {"open": "pages/merchant/decor/ai-npc/index"}, "frames": 4, "offsets": [100, 400, 900, 2000], "windowMs": 2400, "final": {"dump": 1}}

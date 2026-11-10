@@ -1,0 +1,2 @@
+{"name":"M-SETTLE-RANK-before","opts":{"path":"pages/index/index","identity":"e2e-openid-9004","agree":true,"settle":2500},
+ "setup":[{"open":"subpackageJourney/pages/settle/index?topicId=990014"},{"wait":3500}],"action":{"tap":"看排行榜"},"frames":8,"offsets":[100,250,400,550,700,900,1200,2000],"windowMs":2400,"final":{"dump":1}}
