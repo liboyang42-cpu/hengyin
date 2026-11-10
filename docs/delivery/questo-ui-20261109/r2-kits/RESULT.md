@@ -39,8 +39,8 @@
 ## 检查
 
 - `node --test tests/unit/questo-b2-player.test.js tests/unit/questo-b2-author.test.js`:全部通过。
-- 全量小程序单测 `node --test "tests/unit/*.test.js"`:见 PR 说明里的最终数字。
-- `node chengyinhub-xcx/scripts/uiaudit/build-action-ledger.js --write`:5878 个控件;`action-ledger.test.js` 分母按重建实测更新(tap 2927 → 2928,合计 5875 → 5878)。
+- 全量小程序单测 `node --test "tests/unit/*.test.js"`:16970 个,全部通过,0 失败。
+- `node chengyinhub-xcx/scripts/uiaudit/build-action-ledger.js --write`:5878 个控件;`action-ledger.test.js` 分母按重建实测更新(tap 2927 → 2928、事件合同 2948 → 2950、非外部 tap 2561 → 2562、非外部事件合同 2852 → 2854,合计 5875 → 5878)。
 - `node chengyinhub-xcx/tests/lint/ui-integrity.js`:`UI-GATE-0:PASS`,没有新增基线条目。
 - Java:`mvn -pl chengyinhub-admin -am -Dtest=AdvancedGameHelpWiringTest,ClueTransformSupportTest,AdvancedGameRuntimeServiceImplTest test` 274 个全过。
 - 主包:`mainpkg-size-report.js` 3,233,159 字节 × 0.633 ≈ 1998.6 KiB(与 staging 相同,< 2048 KiB);动图只进 `subpackageTools` 分包。
