@@ -67,7 +67,6 @@ Component({
     nodeId: { type: String, value: '' },
     theme: { type: String, value: 'dark' },       // dark | light
     title: { type: String, value: '' },
-    clueMode: { type: String, value: '' },        // UG-10:'MIRROR' 时只翻题面文字层
     imageUrl: { type: String, value: '' },
     audioUrl: { type: String, value: '' },
     lead: { type: String, value: '' },
@@ -109,6 +108,7 @@ Component({
        会自己触发自己,死循环把运行时打挂 —— 截图跑到第 8 张 DevTools
        直接断连,就是这么来的,而且控制台一条错都没有。 */
     optionList: [],
+    picGrid: false,
     typed: '',
     typeWrong: false,
     hasImage: false,
@@ -172,6 +172,8 @@ Component({
       const isMultiPick = mode === 'pick' && !!multi && !confirmPick;
       this.setData({
         optionList: opts,
+        /* r2 b2-ug-02:有选项配图时改成图卡网格(图在上、字在下),纯文字题仍是细线行 */
+        picGrid: mode === 'pick' && opts.some(o => !!o.img),
         hasImage: !!this.data.imageUrl,
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */

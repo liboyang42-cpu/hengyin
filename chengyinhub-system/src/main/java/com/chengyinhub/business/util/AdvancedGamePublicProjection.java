@@ -130,10 +130,8 @@ public final class AdvancedGamePublicProjection {
             if (config.path("hangman").path("enabled").asBoolean(false)) {
                 safe.set("hangman", HangmanGameplay.safeConfig(config.path("hangman")));
             }
-            // G3 有限谜面变换:只下发模式名(STANDARD 不下发,老客户端零感知)。
-            // 题面本身的倒序在 copyQa 里按同一节处理;镜像只是呈现指令,由客户端翻转文字层。
-            ObjectNode clueTransform = ClueTransformSupport.publicView(config.get("clueTransform"));
-            if (clueTransform != null) safe.set("clueTransform", clueTransform);
+            // G3 谜面变换:2026-11-10 主人裁定删除(「这是什么 不能这样反转」「删掉这个翻转谜面」)。
+            // 存量配置里的 clueTransform 节保留不动,但不再下发、也不再改写题面 —— 玩家永远看原样题面。
             // G2 指认结案:确认前只下发人物卡/引导屏/线索板/是否允许提前指认。
             // 正确人物、correct、winScreen/loseScreen、留痕码、未获证词一律不下发。
             if (AccusationTemplateSupport.isEnabled(config)) {
@@ -364,9 +362,8 @@ public final class AdvancedGamePublicProjection {
         value.put("enabled", on);
         if (!on) return;
         value.put("mode", source.path("mode").asText("TYPE"));
-        // 谜面变换只作用"已经公开的题面":REVERSE 由服务端倒序后下发,MIRROR 原样下发文字、
-        // 由呈现层翻转。答案与反馈永远不走这条管线。
-        String title = ClueTransformSupport.renderPrompt(source.path("title").asText(""), transformSection);
+        // 谜面变换已删除(2026-11-10):transformSection 不再参与,题面原样下发。
+        String title = source.path("title").asText("");
         if (!title.isEmpty()) value.put("title", title);
         putIfText(value, "lead", source);
         putIfText(value, "shotNote", source);

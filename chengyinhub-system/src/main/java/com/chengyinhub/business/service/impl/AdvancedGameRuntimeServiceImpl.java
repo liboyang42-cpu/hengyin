@@ -2932,10 +2932,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("mode", cfg.path("mode").asText("TYPE"));
             // 多选标记只在开启时给:老单选配置的视图形状不变,客户端缺省按单选渲染
             if (cfg.path("multi").asBoolean(false)) value.put("multi", true);
-            // 题面按冻结的谜面变换呈现(REVERSE 服务端倒序、MIRROR 下发文字由呈现层翻转)。
-            // 与公开投影同一条实现,避免两份题面在两处漂开。
-            String prompt = com.chengyinhub.business.util.ClueTransformSupport.renderPrompt(
-                    cfg.path("title").asText(""), config.get("clueTransform"));
+            // 谜面变换已删除(2026-11-10 主人裁定):冻结配置里即使留有 clueTransform,题面也原样给玩家。
+            String prompt = cfg.path("title").asText("");
             if (!prompt.isEmpty()) value.put("title", prompt);
             putText(value, "lead", cfg);
             // 拍照打卡的补充说明:提示词摆屏幕正中,这一句小字在它下面

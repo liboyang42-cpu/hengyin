@@ -405,12 +405,9 @@ function buildSinglePreviewKit(config, opts) {
   return null;
 }
 
-/* UG-10 / UG-03 试玩按玩家侧同一规则演:倒序由服务端给好的串在这里本地倒一次,镜像交给组件翻转;
-   配了指认的单选题演人物卡页(结论与正确人物不在预览里)。 */
+/* UG-03 试玩按玩家侧同一规则演:配了指认的单选题演人物卡页(结论与正确人物不在预览里)。
+   r2 b2-ug-10:谜面翻转已删,存量配置里的 clueTransform 不再影响题面。 */
 function questoPreview(kit, config) {
-  const mode = config.clueTransform && config.clueTransform.mode;
-  if (mode === 'REVERSE') kit.title = Array.from(kit.title || '').reverse().join('');
-  if (mode === 'MIRROR') kit.clueMode = 'MIRROR';
   const acc = config.accusation;
   if (!(acc && acc.enabled && kit.mode === 'pick')) return;
   const byId = {};
