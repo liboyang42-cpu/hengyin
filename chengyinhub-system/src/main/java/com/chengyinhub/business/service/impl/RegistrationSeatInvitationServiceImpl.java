@@ -283,7 +283,7 @@ public class RegistrationSeatInvitationServiceImpl implements IRegistrationSeatI
         }
         if (!row.pending()) throw expiredMessage(row.getStatus());
         if (row.getExpiresAt() == null || !row.getExpiresAt().after(now)) {
-            invitations.transition(row.getId(), RegistrationSeatInvitation.STATUS_PENDING,
+            transitionGuarded(row.getId(), RegistrationSeatInvitation.STATUS_PENDING,
                     RegistrationSeatInvitation.STATUS_EXPIRED, now);
             throw conflict("席位邀请码已过期");
         }
@@ -376,7 +376,7 @@ public class RegistrationSeatInvitationServiceImpl implements IRegistrationSeatI
         if (!Boolean.FALSE.equals(used)) {
             throw conflict("该席位已使用或无法确认未使用，不能释放");
         }
-        if (invitations.transition(row.getId(), RegistrationSeatInvitation.STATUS_CLAIMED,
+        if (transitionGuarded(row.getId(), RegistrationSeatInvitation.STATUS_CLAIMED,
                 RegistrationSeatInvitation.STATUS_RELEASED, now) != 1) {
             throw conflict("邀请状态已变化，请刷新后重试");
         }
@@ -385,6 +385,12 @@ public class RegistrationSeatInvitationServiceImpl implements IRegistrationSeatI
         recordRequest(requestId, callerMemberId, RegistrationSeatInvitationRequestRecord.OP_RELEASE,
                 scope.current.getId(), row.getId(), fingerprint, row.getStatus(), now);
         return view(row, now, false, paid(scope.current));
+    }
+
+    /** 席位邀请状态唯一写入口（claim 走专用 CAS）；迁移表见 SeatInvitationState。 */
+    private int transitionGuarded(Long id, int fromStatus, int toStatus, Date now) {
+        com.chengyinhub.business.domain.enums.SeatInvitationState.requireTransition(fromStatus, toStatus);
+        return invitations.transition(id, fromStatus, toStatus, now);
     }
 
     private SeatInvitationVO ownerTransition(long callerMemberId, SeatInvitationActionRequest request,
@@ -418,7 +424,7 @@ public class RegistrationSeatInvitationServiceImpl implements IRegistrationSeatI
             return view(row, now, false, paid(scope.current));
         }
         if (!Integer.valueOf(fromStatus).equals(row.getStatus())) throw conflict(wrongStateMessage);
-        if (invitations.transition(row.getId(), fromStatus, toStatus, now) != 1) {
+        if (transitionGuarded(row.getId(), fromStatus, toStatus, now) != 1) {
             throw conflict("邀请状态已变化，请刷新后重试");
         }
         row.setStatus(toStatus);
