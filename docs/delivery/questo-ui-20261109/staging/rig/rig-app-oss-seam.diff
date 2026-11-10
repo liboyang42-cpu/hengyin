@@ -1,0 +1,27 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..3cf9a383 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -23,6 +23,12 @@ LOG = RIG_HOME / "out" / "application.log"
+ def env():
+     work = RIG_HOME / "work"
+     e = ca.app_env(dict(os.environ), work)
++    # [SEAM qx-s0] rig-only dummy object-storage config so media URLs can be signed/serialized
++    # (play/nodes, covers). Values are placeholders, not credentials; nothing reaches a real bucket.
++    for k in ("CHENGYIN_OSS_ENDPOINT", "CHENGYIN_OSS_ACCESS_KEY_ID", "CHENGYIN_OSS_ACCESS_KEY_SECRET",
++              "CHENGYIN_OSS_BUCKET_NAME"):
++        if os.environ.get(k):
++            e[k] = os.environ[k]
+     sf = RIG_HOME / "secrets.env"
+     if sf.exists():
+         for line in sf.read_text().splitlines():
+@@ -53,6 +59,9 @@ def start(fail_path=""):
+     # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
+     cmd += ["--spring.profiles.active=druid,local",
+             "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
++    # [SEAM qx-c1] rig-only public base for APPROVED local media (no product config is changed).
++    if os.environ.get("RIG_MEDIA_PUBLIC_BASE_URL"):
++        cmd += ["--app.media.public-base-url=" + os.environ["RIG_MEDIA_PUBLIC_BASE_URL"]]
+     log = open(LOG, "ab")
+     p = subprocess.Popen(cmd, cwd=str(RIG_HOME / "work"), env=env(), stdout=log, stderr=subprocess.STDOUT,
+                          start_new_session=True)
