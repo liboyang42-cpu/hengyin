@@ -18,7 +18,7 @@
       </view>
     </view>
 
-    <view class="ob-copy">
+    <view class="ob-copy {{headRise ? 'cy-rise-in' : ''}}">
       <text class="ob-muted" wx:if="{{factLine}}">{{factLine}}</text>
     </view>
 
@@ -42,7 +42,7 @@
     </view>
 
     <view class="jn-footer jn-footer--stack ob-footer">
-      <cy-btn class="jn-grow" wx:if="{{primary}}" variant="primary" loading="{{busy}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
+      <cy-btn class="jn-grow" wx:if="{{primary}}" variant="primary" morph loading="{{busy}}" done="{{claimDone}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
       <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
       <view class="ob-secondary" bindtap="onBrowse" aria-role="button" aria-label="先逛逛" hover-class="cy-pressed" hover-stay-time="80">先逛逛</view>
     </view>

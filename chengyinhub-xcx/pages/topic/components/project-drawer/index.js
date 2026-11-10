@@ -1,8 +1,11 @@
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js');
+const sheetDepth = require('../../../../behaviors/sheet-depth.js');
 
 // 项目抽屉外壳。只管遮罩、面板、标题与底部动作。
 // 内容由调用方用 slot 填,动作按 key 冒泡回去。
 Component({
+  // 叠层景深由 behaviors/sheet-depth.js 按打开顺序统一判定(_under),页面不再逐个传 under
+  behaviors: [sheetDepth],
   options: { addGlobalClass: true, multipleSlots: false },
   properties: {
     show:    { type: Boolean, value: false },

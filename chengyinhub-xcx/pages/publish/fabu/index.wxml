@@ -746,7 +746,7 @@
     <view class="slopes-tabbar__tabs" wx:if="{{editorPage === 2}}">
       <view class="slopes-tab" data-page="1" bindtap="switchEditorPage" aria-role="button" aria-label="回到创作" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="46" /></view>
     </view>
-    <cy-btn wx:if="{{editorPage === 2}}" variant="primary" class="slopes-tabbar__cta" loading="{{submitting}}" disabled="{{submitting}}" bindtap="openStoryPreview" aria-label="预览主题，填完后可发布"><text>{{submitting ? '发布中...' : '预览'}}</text><cy-icon name="arrow-right" size="28" /></cy-btn>
+    <cy-btn wx:if="{{editorPage === 2}}" variant="primary" class="slopes-tabbar__cta" morph loading="{{submitting}}" done="{{publishDone}}" disabled="{{submitting}}" bindtap="openStoryPreview" aria-label="预览主题，填完后可发布"><text>{{submitting ? '发布中...' : '预览'}}</text><cy-icon name="arrow-right" size="28" /></cy-btn>
     <!-- 2026-09-05 用户裁决:删掉「预览」。它跳玩家端主题详情页(/pages/topic/index/index?id=),
          读的是**服务端已保存的那一版** —— 编辑器里刚写的东西根本不在里面;而且新建、还没
          发布过的主题没有 editingTopicId,点了压根不跳转,只弹一句 toast。一个既看不到当前

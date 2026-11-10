@@ -1,6 +1,7 @@
 const app = getApp();
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
+const sheetDepth = require('../../../behaviors/sheet-depth.js');
 const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 
 /* 2026-10-23 业主定:场景弹窗也要退场动画(原来 wx:if 直连 show,关闭瞬间消失),并按档位定速、
@@ -21,7 +22,7 @@ function onNativeBack(vm) {
 
 Component(withNativeBackGuard({
   options: { multipleSlots: true },
-  behaviors: [exitMotion(250)],
+  behaviors: [exitMotion(250), sheetDepth],
   properties: {
     // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
     backGuard: { type: Boolean, value: true },

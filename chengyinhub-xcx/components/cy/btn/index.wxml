@@ -1,5 +1,8 @@
-<view class="btn {{reducedMotion ? 'btn--reduced-motion' : ''}} btn--{{_v}} {{size ? 'btn--' + size : ''}} {{loading ? 'btn--loading' : ''}}" hover-class="{{(_v === 'disabled' || loading) ? '' : 'btn--press'}}" hover-stay-time="80" aria-role="button" aria-label="{{accessibilityLabel}}" aria-busy="{{loading}}" aria-disabled="{{_v === 'disabled' || loading}}" catchtap="__onTap">
-  <view wx:if="{{loading}}" class="btn__spinner" aria-hidden="true"></view>
-  <text wx:if="{{loading}}" aria-role="status" aria-live="polite">{{loadingLabel || '处理中'}}</text>
+<view class="btn {{reducedMotion ? 'btn--reduced-motion' : ''}} btn--{{_v}} {{size ? 'btn--' + size : ''}} {{loading ? 'btn--loading' : ''}} {{morph ? 'btn--morph' : ''}} {{morph && (loading || done) ? 'btn--morph-on' : ''}}" hover-class="{{(_v === 'disabled' || loading || (morph && done)) ? '' : 'btn--press'}}" hover-stay-time="80" aria-role="button" aria-label="{{accessibilityLabel}}" aria-busy="{{loading}}" aria-disabled="{{_v === 'disabled' || loading || (morph && done)}}" catchtap="__onTap">
+  <view wx:if="{{loading && !morph}}" class="btn__spinner" aria-hidden="true"></view>
+  <text wx:if="{{loading}}" class="{{morph ? 'btn__sr' : ''}}" aria-role="status" aria-live="polite">{{loadingLabel || '处理中'}}</text>
+  <!-- qx-u3 morph:收成圆后中间只剩转圈 / 勾(style/morph-mark.wxss);done 的读屏文字同样只读不显 -->
+  <text wx:if="{{morph && done && !loading}}" class="btn__sr" aria-role="status" aria-live="polite">{{doneLabel}}</text>
+  <view wx:if="{{morph}}" class="cy-mm cy-mm--{{loading ? 'busy' : (done ? 'done' : 'idle')}}" aria-hidden="true"><view class="cy-mm__spin"></view><view class="cy-mm__check"></view></view>
   <slot></slot>
 </view>

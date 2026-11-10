@@ -9,12 +9,16 @@
             data-level="{{item.level}}" bindtap="tapHelpRow" aria-role="button" aria-label="{{item.label}}，{{item.pending ? '结果待确认' : item.action}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="tb-copy">
           <text class="tb-name">{{item.label}}</text>
-          <text class="phl__content" wx:if="{{item.content && item.contentType !== 'IMAGE'}}" user-select>{{item.content}}</text>
-          <image class="phl__img" wx:if="{{item.content && item.contentType === 'IMAGE'}}" src="{{item.content}}" mode="widthFix" aria-role="img" aria-label="图片提示" />
+          <text class="phl__content {{item.fresh ? 'cy-rise-in' : ''}}" wx:if="{{item.content && item.contentType !== 'IMAGE' && helpPanel.doneLevel !== item.level}}" user-select>{{item.content}}</text>
+          <image class="phl__img {{item.fresh ? 'cy-rise-in' : ''}}" wx:if="{{item.content && item.contentType === 'IMAGE' && helpPanel.doneLevel !== item.level}}" src="{{item.content}}" mode="widthFix" aria-role="img" aria-label="图片提示" />
           <text class="tb-purpose" wx:if="{{item.charge}}">{{item.charge}}</text>
           <text class="phl__err" wx:if="{{item.error}}">{{item.error}}</text>
         </view>
-        <text class="ptb__r phl__act phl__act--{{item.state}}">{{item.pending ? '继续核对' : item.action}}</text>
+        <!-- qx-u3 morph:解锁这一层时行尾文字褪掉,原位转圈 → 勾(style/morph-mark.wxss) -->
+        <view class="phl__act-box">
+          <text class="ptb__r phl__act phl__act--{{item.state}} {{(helpPanel.busyLevel === item.level || helpPanel.doneLevel === item.level) ? 'is-morph' : ''}}">{{item.pending ? '继续核对' : item.action}}</text>
+          <view wx:if="{{helpPanel.busyLevel === item.level || helpPanel.doneLevel === item.level}}" class="cy-mm cy-mm--{{helpPanel.busyLevel === item.level ? 'busy' : 'done'}}" aria-hidden="true"><view class="cy-mm__spin"></view><view class="cy-mm__check"></view></view>
+        </view>
       </view>
     </view>
     <view class="tb-group" wx:if="{{helpPanel.skip || helpPanel.skipPending}}">

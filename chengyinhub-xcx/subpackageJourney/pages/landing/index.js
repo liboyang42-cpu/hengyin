@@ -1,5 +1,6 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
+const morph = require('../../../utils/morph-success.js');
 const app = getApp();
 
 /* P1 推荐/赠送/同行落地 + P4 玩法模式 + P5 领取席位。
@@ -21,7 +22,7 @@ Page({
   data: {
     state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
     inviter: null, title: '', modes: [], primary: '', busy: false, actionError: '',
-    headline: '', factLine: '', cardIcon: 'route', modeIndex: 0
+    headline: '', factLine: '', cardIcon: 'route', modeIndex: 0, claimDone: false, headRise: false
   },
 
   onLoad(options) {
@@ -54,6 +55,8 @@ Page({
       else this._renderReferral(view.referralView(res.data), epoch);
     });
   },
+
+  onUnload() { morph.cancel(this); },
 
   onStateCta() { if (this.data.state === 'error') this.load(); },
 
@@ -126,17 +129,18 @@ Page({
     saveRequestId('seat', this._token, requestId);
     this.setData({ busy: true, actionError: '' });
     api.seatClaim(app, this._token, requestId).then(res => {
-      this.setData({ busy: false });
       if (res.netFail || Number(res.code) >= 500 || res.code === 'fail') {
-        this.setData({ primary: '查询领取结果', actionError: '结果还没确认，请稍后查询' });
+        this.setData({ busy: false, primary: '查询领取结果', actionError: '结果还没确认，请稍后查询' });
         return;
       }
       dropRequestId('seat', this._token);
-      if (!api.ok(res) || !res.data) { this.setData({ primary: '', actionError: res.msg || '领取失败' }); return; }
+      if (!api.ok(res) || !res.data) { this.setData({ busy: false, primary: '', actionError: res.msg || '领取失败' }); return; }
       this._claimed = res.data;
+      // qx-u3:服务端确认后按钮先收成勾,停一拍再换成成功标题与「进入本局」(utils/morph-success.js)
+      // qx-s2 合并:沿用 u2 的版式(标题在 cy-page-title、事实在 .ob-copy);u3 的 headRise 浮出改挂到 .ob-copy 事实行
       const facts = [{ k: '席位', v: '第 ' + res.data.seatNo + ' 席' }];
-      this.setData({ headline: '已领取同行席位', factLine: view.factLine(facts),
-        primary: this._activityId || this._topicId ? '进入本局' : '' });
+      morph.settle(this, 'claimDone', () => this.setData({ headline: '已领取同行席位', headRise: morph.holdFor() > 0, factLine: view.factLine(facts),
+        primary: this._activityId || this._topicId ? '进入本局' : '' }), { with: { busy: false } });
     });
   },
 
@@ -145,15 +149,15 @@ Page({
     saveRequestId('gift', this._token, requestId);
     this.setData({ busy: true, actionError: '' });
     api.giftClaim(app, this._token, requestId).then(res => {
-      this.setData({ busy: false });
       if (res.netFail || Number(res.code) >= 500 || res.code === 'fail') {
-        this.setData({ primary: '查询领取结果', actionError: '结果还没确认，请稍后查询' });
+        this.setData({ busy: false, primary: '查询领取结果', actionError: '结果还没确认，请稍后查询' });
         return;
       }
       dropRequestId('gift', this._token);
-      if (!api.ok(res)) { this.setData({ primary: '', actionError: res.msg || '领取失败' }); return; }
+      if (!api.ok(res)) { this.setData({ busy: false, primary: '', actionError: res.msg || '领取失败' }); return; }
       this._claimed = res.data || {};
-      this.setData({ headline: '礼物已领取', primary: view.isId((this._target || {}).id) ? '去看看' : '' });
+      morph.settle(this, 'claimDone', () => this.setData({ headline: '礼物已领取', headRise: morph.holdFor() > 0,
+        primary: view.isId((this._target || {}).id) ? '去看看' : '' }), { with: { busy: false } });
     });
   },
 

@@ -1,6 +1,7 @@
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
 const morphEntrance = require('../../../behaviors/morph-entrance.js');
+const sheetDepth = require('../../../behaviors/sheet-depth.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 const app = getApp();
@@ -31,10 +32,11 @@ function onNativeBack(vm) {
 
 Component(withNativeBackGuard({
   options: { multipleSlots: true },
-  behaviors: [reducedMotionBehavior, exitMotion(250), morphEntrance({ shellSelector: '.sh__panel' })],
+  behaviors: [reducedMotionBehavior, exitMotion(250), morphEntrance({ shellSelector: '.sh__panel' }), sheetDepth],
   properties: {
     // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
     backGuard: { type: Boolean, value: true },
+    // 叠层景深由 behaviors/sheet-depth.js 按打开顺序自动算(_under);stacked 只留给旧调用显式指定
     stacked: { type: Boolean, value: false },
     closeIcon: {type:String,value:'close-sm'},
     closeIconSize: {type:Number,value:44},

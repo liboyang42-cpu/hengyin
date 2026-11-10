@@ -1,5 +1,5 @@
 const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js');
-const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js'); const morph = require('../../../utils/morph-success.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
@@ -527,7 +527,7 @@ Page({
     submitErrorNeedsEdit: false,
     /* 动作结果面板(cy-result-sheet)。loading 不自愈,终态 2s 自收。
        duration=0 表示不自愈 —— 失败原因要留够读的时间。 */
-    resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: 2000 },
+    resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: 2000 }, publishDone: false,
     canUndo: false, // 撤销栈是否非空(控制撤销按钮显隐/置灰)
 
     // 统计信息
@@ -3365,7 +3365,7 @@ Page({
   },
 
   onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
-    this._unloaded = true;
+    this._unloaded = true; morph.cancel(this);
     this._cloudAutosaveEnabled = false;
     this._cancelCloudDraftAutosave();
     this._destroyChapterDurationAudio();
@@ -8055,13 +8055,13 @@ Page({
           // 面板自愈与硬等两个时长各算各的迟早会漂。
           that._resultSheetNext = '/pages/topic/merchantinfo/merchantinfo?topicId='
             + that.data.editingTopicId + (that.data.operationScope ? '&scope=MERCHANT' : '');
-          that.setData({
-            submitting: false, submitError: '',
-            resultSheet: { show: true, kind: 'success', title: pendingReview ? '已提交审核' : '已发布',
+          morph.settle(that, 'publishDone', () => that.setData({ resultSheet: Object.assign({}, that.data.resultSheet, { show: true }) }), { with: {
+            submitting: false, submitError: '', // qx-u3 morph:结果立即写入(面板先不弹),「发布」收成勾停一拍后再弹面板
+            resultSheet: { show: false, kind: 'success', title: pendingReview ? '已提交审核' : '已发布',
               sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
                 : pendingReview ? reviewNextStep : '这份主题的改动已经发布。',
               meta: localChanges ? '草稿仍在本机' : '', why: '', duration: RESULT_SHEET_MS }
-          });
+          } });
           return;
         }
         analytics.track('topic_publish_success', {
@@ -8071,7 +8071,7 @@ Page({
             name: data.name
           }
         });
-        that.setData({ submitting: false, submitError: '' });
+        // qx-u3 morph:submitting 收尾、结果与按钮亮勾在下方 morph.settle 里同一次写入,面板停一拍再弹
         // 发完落到项目主页(主办视图),不是玩家买票页 —— 那页是给买票的人看的,
         // 发布者要的是「谁来接、谁来带团、卖了多少」。招商家和招俱乐部两个入口都在那儿。
         const scopeSuffix = that.data.operationScope ? '&scope=MERCHANT' : '';
@@ -8090,15 +8090,15 @@ Page({
            用户这次的裁决就是不要这个分叉。 */
         const chapterCount = (data.chapters || []).length;
         that._resultSheetNext = projectUrl;
-        that.setData({
-          resultSheet: {
-            show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
+        morph.settle(that, 'publishDone', () => that.setData({ resultSheet: Object.assign({}, that.data.resultSheet, { show: true }) }), { with: {
+          submitting: false, submitError: '', resultSheet: {
+            show: false, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
             sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
               : pendingReview ? reviewNextStep : tid ? '接下来去招商家承接节点、找俱乐部带团。' : '路线已进入你的项目列表。',
             meta: localChanges ? '草稿仍在本机' : chapterCount ? (chapterCount + ' 个章节') : '',
             why: '', duration: RESULT_SHEET_MS,
           }
-        });
+        } });
       },
       onFail: (res) => {
         if (res && res.networkError) {

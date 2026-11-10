@@ -2,6 +2,8 @@
 @media (prefers-reduced-motion: reduce) {
   .btn,
   .btn__spinner,
+  .btn.btn--morph,
+  .cy-mm__spin,
   .search,
   .search__spin,
   .cy-empty-spinner,

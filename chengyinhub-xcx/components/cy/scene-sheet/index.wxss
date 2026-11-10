@@ -156,6 +156,10 @@
   --cy-text-secondary: var(--cy-comp-sheet-merchant-text-tertiary);
   --cy-comp-sheet-bg: var(--cy-comp-sheet-merchant-bg);
 }
+/* 叠层景深(qx-u3):上面又开了一层时缩到 .94、上移 10px、压暗(behaviors/sheet-depth.js 判定)。
+   与 cy-sheet / project-drawer / project-layer 同一组数值;transform 与升起共用同一条 transition。 */
+.ss--in.ss--under .ss__panel { transform: translateY(-10px) scale(.94); transform-origin: 50% 0; filter: brightness(.7); pointer-events: none; }
+.ss--in .ss__panel { transition-property: transform, filter; }
 .ss--reduced-motion .ss__panel,
 .ss--reduced-motion .ss__mask { transition: none; }
 /* 档位定速:full 档在根节点把两条时长换成 full 档,面板与遮罩同档;half 档就是 token 默认 300 / 250 */
@@ -255,3 +259,5 @@
 .ss--page { --cy-motion-sheet-in: var(--cy-motion-sheet-full-in); --cy-motion-sheet-out: var(--cy-motion-sheet-full-out); }
 .ss--page .ss__body { padding-top: var(--cy-space-2); }
 .ss--page.ss--reduced-motion .ss__panel { transition: none; }
+/* page 档面板不能带 transform(见上):被叠住时只压暗 */
+.ss--page.ss--in.ss--under .ss__panel { transform: none; filter: brightness(.7); }
