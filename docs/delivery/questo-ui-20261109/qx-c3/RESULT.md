@@ -17,7 +17,26 @@ Branch `claude/qx-c3-20261110`, based on `origin/integrate/questo-ui-20261110` (
 
 ## Staging
 
-STAGING_PLACEHOLDER
+`staging/questo-review-20261110` is now at `07ce40be`. Merge order:
+
+1. `origin/integrate` `2051ed43`: clean.
+2. c3 `3c8bc27e`: conflict in `TopicContentCopyServiceImpl`. b4's `sameJsonDocument` was kept and c3's duplicate helper removed (see Cross-lane).
+3. b3 `4a267460`: the count tests and the ledger took the staging side and were then re-measured. `title-system-owner` also gained the report and landing pages in the page-title list.
+4. b5 `b47be2a3`: the two count comments were combined and re-measured (`directCount` 122, page-title 92).
+5. b4 `768ead08`: b4's two matrix rows were unioned in; route and title counts stay at the merged-tree 167/166.
+6. `07ce40be`: ledger count numbers re-measured on the merged tree (5875 controls).
+
+No entry was added to the UI-integrity baseline.
+
+| Gate (at `07ce40be`) | Result |
+|---|---|
+| `node --test chengyinhub-xcx/tests/unit/*.test.js` (from the repo root) | **16967 tests, 16967 pass, 0 fail.** The previous staging had 26 fail. |
+| `node chengyinhub-xcx/tests/lint/ui-integrity.js` | `UI-GATE-0:PASS` |
+| `build-action-ledger.js --write` / `build-route-matrix.js --json` | 5875 controls / 167 routes, no diff |
+| `mvn -q -DskipTests package` | PASS |
+| c3 Java tests (listed in item 1) and `PostGameOutcomeMapperMySqlIT` | PASS |
+
+Screenshots were not retaken for the visible changes listed in 2a/2b: the journey title position, the preset page's editor theme, and the city dropdown. The rig run was spent on the HTTP regression.
 
 ## Cross-lane
 
@@ -33,4 +52,4 @@ STAGING_PLACEHOLDER
 3. **Adoption city list** (b4 picker): it is limited to the home page's 20 cities, because no region data or kit region picker exists. Default: those 20 cities, using GB/T 2260 city codes.
 4. **Hint ladder on self-play:** default A (activity-session runs only), per `hint-ladder-self-play.md`.
 
-STATUS_PLACEHOLDER
+STATUS: PARTIAL - all five items done (HTTP regression fixed to master parity 25/26 in CI, lane reds fixed, registry + storage runs green, staging 16967/16967); missing: before/after screenshots for the contract-forced visible changes on b3/b4, and owner decisions on the 4 needs-owner items
