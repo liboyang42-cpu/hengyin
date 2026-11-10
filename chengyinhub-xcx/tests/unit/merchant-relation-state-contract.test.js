@@ -410,3 +410,33 @@ test('合作页模板不含商家目录入口', () => {
   assert.doesNotMatch(view, /cy-merchant-card|goMerchant|merchants/)
   assert.match(view, /<cy-post-card/)
 })
+
+test('l-misc:商家本人所在俱乐部(/api/club/my)的帖文出转发,别的俱乐部帖文与社区帖文不出;读失败不出', async () => {
+  const { page, requests } = createPage()
+  page.onLoad({})
+  await flush()
+  const feedReq = requests.find((r) => r.url === '/api/club/post/feed')
+  const myReq = requests.find((r) => r.url === '/api/club/my')
+  assert.ok(myReq, '成员关系从服务端读')
+  feedReq.success({ code: 200, data: { hasMore: false, rows: [
+    { id: 5, clubId: 3, content: '我在的俱乐部', createTime: '2026-10-21 10:00:00' },
+    { id: 6, clubId: 4, content: '别的俱乐部', createTime: '2026-10-21 09:00:00' },
+  ] } })
+  await flush()
+  assert.equal(page.data.feed[0].canRepost, false, '成员关系没回来之前不出转发')
+  myReq.success({ code: 200, data: { owned: [], joined: [{ id: 3 }] } })
+  assert.equal(page.data.feed.find((r) => r.id === 5).canRepost, true)
+  assert.equal(page.data.feed.find((r) => r.id === 6).canRepost, false)
+  page.onRepostPost({ detail: { postId: 6 } })
+  assert.equal(requests.filter((r) => r.url === '/api/club/post/repost').length, 0, '非本人俱乐部的帖文点不出转发请求')
+  page.onRepostPost({ detail: { postId: 5 } })
+  assert.equal(requests.filter((r) => r.url === '/api/club/post/repost').length, 1)
+
+  const failed = createPage()
+  failed.page.onLoad({})
+  await flush()
+  failed.requests.find((r) => r.url === '/api/club/post/feed').success({ code: 200, data: { hasMore: false, rows: [{ id: 7, clubId: 3, createTime: '2026-10-21 10:00:00' }] } })
+  await flush()
+  failed.requests.find((r) => r.url === '/api/club/my').success({ code: 500 })
+  assert.equal(failed.page.data.feed[0].canRepost, false)
+})

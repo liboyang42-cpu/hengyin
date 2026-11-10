@@ -45,10 +45,10 @@ module.exports = { valid: valid };
       <cy-error load-failure class="cy-fade-in" wx:elif="{{feedState === 'error'}}" title="帖文加载失败" sub="{{feedError}}" retry="重试" bind:retry="loadFeed" />
       <block wx:elif="{{feed.length}}">
         <!-- r2 a6-w2-17:与玩家发现页同一张卡同一套动作(点赞红心、评论、头像「+」关注、分享、点图全屏);
-             转发是俱乐部成员动作,商家不加入俱乐部,不出 -->
-        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share
+             l-misc:商家也可以是俱乐部成员 —— 本人所在俱乐部的帖文出「转发」(canRepost 只来自 /api/club/my) -->
+        <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="feedKey" post="{{item}}" index="{{index}}" light="{{true}}" user-id="{{viewerId}}" interactive-actions interactive-user interactive-club show-follow show-share show-repost="{{item.canRepost}}"
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
-          bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub"
+          bind:detail="onPostTap" bind:comment="onPostTap" bind:like="onLikePost" bind:follow="onFollowPost" bind:user="onPostUser" bind:club="onPostClub" bind:repost="onRepostPost"
           bind:playdetail="onPostReference" bind:play="onPostReference" />
       </block>
       <cy-empty wx:elif="{{feedState === 'empty'}}" kind="empty" title="{{feedEmptyTitle}}" />
