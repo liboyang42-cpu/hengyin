@@ -414,7 +414,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const chapterVideo = require('./chapter-video.js');
 Page({
   ...chapterVideo.methods, ...kitCard.methods(),
@@ -462,11 +462,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data,
+    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -5108,7 +5108,7 @@ Page({
   // ---------- 定位 ----------
   // 游戏可玩且含待完成地点时进页说明用途，拒绝后仍可从原入口重试。
   requestPlayLocation() {
-    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting || this._locationAskedOnce()) return;   // a1-v3-21 一局只问一次
     const that = this;
     // 与加载代际分开；切后台会作废尚未完成的定位回调。
     const epoch = this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;
@@ -5143,7 +5143,7 @@ Page({
               if (current()) that.watchLocation();
             });
           },
-          fail() { unavailable('定位未开启 · 可扫码完成到达'); }
+          fail(err) { unavailable('定位未开启 · 可扫码完成到达'); that._locationGuide(err); }
         });
       },
       fail() { unavailable('定位暂不可用 · 可扫码完成到达'); }
@@ -6020,7 +6020,7 @@ Page({
     if (this._arrivalWriteUnknown) return;
     // 高级玩法已通过:解开本身就是到站证明,直接收尾,不再要定位(第十二轮 k2,业主 2026-11-05)。
     const needsLocation = this._advancedReadyNodeId !== node.nodeId;
-    if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { this.requestPlayLocation(); return; }
+    if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { if (this._locAsked) this._locationDeclinedToast(); else this.requestPlayLocation(); return; }   // a1-v3-21 问过不再弹说明
     this.arrive(node.nodeId, 'arrive');
   },
   onScanArrive() {

@@ -374,6 +374,11 @@ test('真实游玩定位方法在用途弹窗前和取消后均零 GPS，明确�
   dialogs[0].success({ confirm: false })
   assert.equal(locations.length, 0)
   assert.equal(page.data.gpsOk, false)
+  // r2-play a1-v3-21:说明一局只弹一次 —— 取消后再调不再弹,也不取位置;正控换成「新进入这一局」后明确同意
+  page.requestPlayLocation()
+  assert.equal(dialogs.length, 1, 'a declined offer is not repeated in the same run')
+  assert.equal(locations.length, 0)
+  page._locAsked = false
   page.requestPlayLocation()
   dialogs[1].success({ confirm: true })
   assert.equal(locations.length, 1, 'positive control must reach the real SDK caller after consent')

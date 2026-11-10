@@ -37,6 +37,6 @@
   <view class="tb-sheet ptb">
     <view class="tb-close" bindtap="closeStoryTasks" aria-role="button" aria-label="关闭延伸任务" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
     <text class="tb-title">延伸任务</text>
-    <view class="tb-group"><view class="tb-row" wx:for="{{storyTasks.rows}}" wx:key="nodeId" data-nodeid="{{item.nodeId}}" bindtap="openStoryTask" aria-role="button" aria-label="打开{{item.name}}" hover-class="cy-pressed" hover-stay-time="80"><view class="tb-copy"><text class="tb-name">{{item.name}}</text></view><cy-icon class="tb-chevron" name="chevron-right" size="32" /></view></view>
+    <view class="stq"><view class="stq__card" wx:for="{{storyTasks.rows}}" wx:key="nodeId" data-nodeid="{{item.nodeId}}" bindtap="openStoryTask" aria-role="button" aria-label="打开{{item.name}}" hover-class="stq__card--press" hover-stay-time="80"><view class="stq__cover"><image wx:if="{{item.img}}" class="stq__img" src="{{img.first(item.img)}}" mode="aspectFill" lazy-load="true" /><text wx:else class="stq__no">{{item.no}}</text></view><view class="tb-copy"><text class="tb-name">{{item.name}}</text><text class="tb-purpose" wx:if="{{item.address}}">{{item.address}}</text></view><view class="stq__go" aria-hidden="true"><cy-icon name="chevron-right" size="28" /></view></view></view>
   </view>
 </cy-sheet>

@@ -10,3 +10,9 @@
 .phl__chev{flex:none;width:16rpx;height:16rpx;border-right:3rpx solid var(--cy-comp-sheet-player-muted);border-bottom:3rpx solid var(--cy-comp-sheet-player-muted);transform:rotate(45deg);transition:transform .2s ease}
 .phl__chev.is-open{transform:rotate(-135deg)}
 @media (prefers-reduced-motion: reduce){.phl__chev{transition:none}}
+/* a1-v3-21 提示 = 居中弹窗:压暗 + 居中卡片(玩家弹层 token 面 + 发丝描边),最高 80% 屏高,内容多时卡内滚动 */
+.phl-pop{position:fixed;left:0;top:0;right:0;bottom:0;z-index:var(--cy-z-modal);display:flex;align-items:center;justify-content:center;animation:fade var(--cy-motion-sheet-in) var(--cy-ease-standard)}
+.phl-pop-mask{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.62)} /* ds-ok 与站点卡压暗同值 */
+.phl-pop__card{position:relative;width:calc(100% - 2 * var(--cy-page-x));max-height:80vh;box-sizing:border-box;padding:0 var(--cy-space-4);border-radius:var(--cy-radius-xl);background:var(--cy-comp-sheet-player-glass);box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong)}
+.phl-pop .tb-sheet{min-height:0;padding-bottom:var(--cy-space-4)}
+@media (prefers-reduced-motion: reduce){.phl-pop{animation:none}}

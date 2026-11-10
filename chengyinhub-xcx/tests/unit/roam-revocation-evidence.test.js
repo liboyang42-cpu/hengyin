@@ -66,10 +66,12 @@ function harness(noBackground) {
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
   const context = { wx, app, playLocationOwnerSequence: 0, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) },
     playAccuracy: require('../../pages/play/utils/play-accuracy.js'),
-    arrivalReading: require('../../pages/play/utils/arrival-reading.js') }   // qx-b1:定位样本带采样时刻
+    arrivalReading: require('../../pages/play/utils/arrival-reading.js'),   // qx-b1:定位样本带采样时刻
+    locOnce: require('../../pages/play/utils/play-location-once.js') }   // r2-play a1-v3-21:一局只问一次(真实现)
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey
+  Object.assign(h.play, context.locOnce.methods())   // r2-play:requestPlayLocation 的一局一问前置取真实现
   // W8:账号守卫同时核对登录上下文(令牌+换代),捕获函数是守卫的一部分,同样取真实现。
   for (const name of ['_playMember', '_boundPlayOwner', '_capturePlayLoginContext', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', 'requestPlayLocation', 'watchLocation', '_noteLocAccuracy', '_hasGenericProofFlow', '_questArrivalCandidates']) {
     const start = playSource.indexOf('  ' + name + '('); const end = playSource.indexOf('\n  },', start)
