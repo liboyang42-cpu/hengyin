@@ -19,6 +19,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -296,5 +297,32 @@ class TopicLocationBindingServiceTest {
         ServiceException rejected = assertThrows(ServiceException.class,
                 () -> service.bind(stale, OWNER, OWNER));
         assertEquals(Integer.valueOf(409), rejected.getCode());
+    }
+
+    // ------------------------------------------------------------ qx-c1 #5(a) placeCountryCode
+
+    @Test
+    void placeCountryIsWrittenThroughTheContractPortAndNeverDefaulted() {
+        assertNull(TopicLocationContract.placeCountryCode(topic.getContentContractJson()), "never defaulted");
+        java.util.Map<String, Object> view = service.setPlaceCountry(TOPIC_ID, "JP", OWNER, OWNER);
+        assertEquals("JP", view.get("placeCountryCode"));
+        assertEquals("JP", TopicLocationContract.placeCountryCode(topic.getContentContractJson()));
+        assertEquals(1, TopicLocationContract.parse(topic.getContentContractJson()).path("locationSlots").size(),
+                "the rest of the contract is kept");
+        org.mockito.Mockito.verify(guard, org.mockito.Mockito.atLeastOnce()).lockTopicContent(TOPIC_ID);
+        assertNull(service.setPlaceCountry(TOPIC_ID, "", OWNER, OWNER).get("placeCountryCode"), "empty clears");
+        assertNull(TopicLocationContract.placeCountryCode(topic.getContentContractJson()));
+    }
+
+    @Test
+    void placeCountryRejectsNonIsoInputAndStrangers() {
+        for (String bad : new String[]{"jp", "JPN", "J1", "中国"}) {
+            ServiceException refused = assertThrows(ServiceException.class,
+                    () -> service.setPlaceCountry(TOPIC_ID, bad, OWNER, OWNER), bad);
+            assertEquals(400, refused.getCode());
+        }
+        assertEquals(403, assertThrows(ServiceException.class,
+                () -> service.setPlaceCountry(TOPIC_ID, "JP", STRANGER, STRANGER)).getCode());
+        assertNull(TopicLocationContract.placeCountryCode(topic.getContentContractJson()));
     }
 }

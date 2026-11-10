@@ -1,0 +1,13 @@
+open pages/play/index?topicId=990016
+tap [ '开启定位', { nth: 1 } ]
+tap 开始游戏
+tap 继续探索
+tap "开始任务"
+tap "提示"
+EVAL "ok"
+tap "分数明细"
+EVAL "ok"
+TEXT 提示 | 本局剩余免费 0 次 | 文字提示 | 重看 | 首字 | 重看 | 答案 | 30 积分 | 跳过本题 | 分数明细 | 本题解谜分 | 100 | 本题得分 | 100 | 第 1 层 · 文字提示 | 0 积分 | 第 2 层 · 首字 | 免费 | rig 站台问答 1110054240 | 人民广场的地铁站共有几条线路换乘？ | 当前最高 100 解谜分 | 提示 | 提交 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+shot c4-UG-07-score-detail-after
+ERR []
+NET [["GET","/__api/api/play/nodes?topicId=990016",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"topicId\":990016,\"topicDesc\":\"rig 免费城市定向样板\",\"topicName\":\"城市定向样板 1110054240\",\"topicCover\":\"https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109649534&OSSAccessKeyId=rig-dummy&Signature=<redacted>\",\"topicAudioUrl\":null,\"look\":nul"],["GET","/__api/api/play/run-session?topicId=990016",200,"{\"msg\":\"操作成功\",\"code\":200}"],["GET","/__api/api/play/help?runId=3&nodeId=76",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"runId\":3,\"nodeId\":76,\"enabled\":true,\"layers\":[{\"level\":1,\"type\":\"TEXT\",\"usable\":true,\"unlocked\":true,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":null},{\"level\":2,\"type\":\"LETTER\",\"usable\":true,\"unlocked\":true,\"free\":true,\"costPoints\":0,\"freeQuota\":0,\"reason\":nu"],["GET","/__api/api/play/help/receipt?runId=3&nodeId=76",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"scoreState\":\"SCORED\",\"baseScore\":100,\"bonus\":0,\"bonusSource\":\"NONE\",\"helpDeduction\":0,\"skipDeduction\":0,\"netScore\":100,\"pointsCharged\":0,\"skipped\":false,\"assisted\":false,\"levels\":[{\"level\":1,\"type\":\"TEXT\",\"free\":false,\"pointsCharged\":0},{\"level\":2,\"type\":\"LETTER\",\"f"]]

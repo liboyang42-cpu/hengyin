@@ -95,14 +95,17 @@ public class PlayHelpApplication {
     }
 
     private PlayHelpViewVO viewResolved(Resolved resolved) {
-        List<LevelView> layers = resolved.freeUsesPerRun == null
+        // 整局共享 N:剩余次数由 G7 额度账本给出,未使用过时等于冻结的 N;旧局没有整局 N 时为 null。
+        Integer remaining = resolved.freeUsesPerRun == null ? null
+                : playHelpRunQuotaApplication.remainingFreeUses(
+                        resolved.memberId, resolved.scope, resolved.freeUsesPerRun);
+        List<LevelView> layers = remaining == null
                 // 旧局没有整局 N:沿用逐层 freeQuota 的老口径,一字不改。
                 ? PlayHelpUsagePolicy.views(resolved.ladder, unlockedLevels(resolved))
-                // 整局共享 N:剩余次数由 G7 额度账本给出,未使用过时等于冻结的 N。
-                : PlayHelpUsagePolicy.views(resolved.ladder, unlockedLevels(resolved),
-                        playHelpRunQuotaApplication.remainingFreeUses(
-                                resolved.memberId, resolved.scope, resolved.freeUsesPerRun));
-        return new PlayHelpViewVO(resolved.runId, resolved.nodeId, !layers.isEmpty(), List.copyOf(layers));
+                : PlayHelpUsagePolicy.views(resolved.ladder, unlockedLevels(resolved), remaining);
+        // 没有可用层时不给计数器:enabled=false 的旧主题界面保持原样。
+        return new PlayHelpViewVO(resolved.runId, resolved.nodeId, !layers.isEmpty(), List.copyOf(layers),
+                layers.isEmpty() ? null : remaining);
     }
 
     /**
@@ -163,6 +166,99 @@ public class PlayHelpApplication {
     /** 纯高级玩法局的只读成绩明细（没有个人路线进度行，跳过/揭示只看局状态）。 */
     public Map<String, Object> receiptAdvanced(Long actorMemberId, String sessionId, String nodeId) {
         return receiptOf(resolveAdvanced(actorMemberId, sessionId, nodeId));
+    }
+
+    /**
+     * qx-c1 #4(UG-12)后台只读:同一冻结层级 + 同一 {@link PlayHelpReceiptReadModel} 计算,明细与玩家侧一致。
+     * 只读,不写任何行;不做玩家准入闸(局已结束也能看),授权由后台权限 business:playhelp:query 负责。
+     * 返回 {levels:[{level,type,costPoints,freeQuota}], freeUsesPerRun, receipt};不含提示正文、答案与别名。
+     */
+    public Map<String, Object> auditReceipt(TopicRouteSession session, CmsTopicNode topicNode) {
+        if (session == null || session.getId() == null || session.getMemberId() == null || topicNode == null
+                || topicNode.getId() == null || !Objects.equals(topicNode.getTopicId(), session.getTopicId())) {
+            throw new HelpRefusal("节点与原局不一致");
+        }
+        Resolved resolved = frozenResolved(session.getMemberId(), session.getId(), topicNode.getId(), session, topicNode);
+        Map<String, Object> view = new java.util.LinkedHashMap<>();
+        view.put("levels", levelSummary(resolved.specs));
+        view.put("freeUsesPerRun", resolved.freeUsesPerRun);
+        // 逐笔帮助事实:每局每级唯一事实行,receiptId = play_attempt_log.id(申诉核对用)。不带提示正文。
+        List<Map<String, Object>> used = new java.util.ArrayList<>();
+        for (LevelSpec spec : resolved.specs) {
+            String factKey = PlayHelpUsagePolicy.levelFactKey(resolved.memberId, resolved.scopeKey, spec.level());
+            PlayAttemptLog fact = playAttemptLogMapper.selectByIdempotencyKey(factKey);
+            if (fact == null || !Objects.equals(fact.getMemberId(), resolved.memberId)
+                    || !Integer.valueOf(PlayHelpCostApplication.ATTEMPT_TYPE_HELP).equals(fact.getAttemptType())) continue;
+            JsonNode result = null;
+            try { result = fact.getResultJson() == null ? null : objectMapper.readTree(fact.getResultJson()); }
+            catch (com.fasterxml.jackson.core.JsonProcessingException unreadable) { result = null; }
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("receiptId", fact.getId());
+            row.put("level", spec.level());
+            row.put("type", spec.type());
+            row.put("free", result == null || !result.has("free") ? null : result.path("free").asBoolean());
+            row.put("pointsCharged", result == null || !result.has("chargedPoints") ? null : result.path("chargedPoints").asInt());
+            row.put("createTime", fact.getCreatedAt());
+            used.add(row);
+        }
+        view.put("helpLines", used);
+        view.put("receipt", receiptOf(resolved));
+        return view;
+    }
+
+    /**
+     * qx-c1 #4 主题级配置摘要:按冻结快照逐节点列出层数与代价、整局免费次数。只读;不含提示正文。
+     * {@code freeUsesPerRun}: 整数 / null(旧逐层口径);各节点声明冲突时 {@code freeUsesState=CONFLICT}。
+     */
+    public Map<String, Object> auditConfig(String configSnapshotJson) {
+        Map<String, Object> view = new java.util.LinkedHashMap<>();
+        JsonNode snapshot = parseSnapshot(configSnapshotJson);
+        if (snapshot == null || !snapshot.isObject()) {
+            view.put("state", "NO_SNAPSHOT");
+            return view;
+        }
+        java.util.TreeSet<Long> nodeIds = new java.util.TreeSet<>();
+        for (String key : List.of(PlayHelpRunQuotaPolicy.NODE_CONFIGS_KEY, PlayHelpRunQuotaPolicy.NODE_ANSWERS_KEY)) {
+            snapshot.path(key).fieldNames().forEachRemaining(id -> {
+                long parsed = positiveId(id);
+                if (parsed > 0) nodeIds.add(parsed);
+            });
+        }
+        List<Map<String, Object>> nodes = new java.util.ArrayList<>();
+        for (Long nodeId : nodeIds) {
+            JsonNode ladder = frozenLadder(NodeJourneySnapshot.answer(configSnapshotJson, nodeId),
+                    frozenNodeConfig(configSnapshotJson, nodeId));
+            List<LevelSpec> specs = PlayHelpUsagePolicy.levels(ladder);
+            if (specs.isEmpty()) continue;
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("nodeId", nodeId);
+            row.put("layerCount", specs.size());
+            row.put("levels", levelSummary(specs));
+            nodes.add(row);
+        }
+        view.put("state", "OK");
+        try {
+            view.put("freeUsesPerRun", PlayHelpRunQuotaPolicy.runFreeUses(snapshot));
+            view.put("freeUsesState", "OK");
+        } catch (IllegalArgumentException conflict) {
+            view.put("freeUsesPerRun", null);
+            view.put("freeUsesState", "CONFLICT");
+        }
+        view.put("nodes", nodes);
+        return view;
+    }
+
+    private static List<Map<String, Object>> levelSummary(List<LevelSpec> specs) {
+        List<Map<String, Object>> levels = new java.util.ArrayList<>();
+        for (LevelSpec spec : specs) {
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("level", spec.level());
+            row.put("type", spec.type());
+            row.put("costPoints", spec.costPoints());
+            row.put("freeQuota", spec.freeQuota());
+            levels.add(row);
+        }
+        return levels;
     }
 
     private Map<String, Object> receiptOf(Resolved resolved) {
@@ -254,7 +350,9 @@ public class PlayHelpApplication {
             probe.setTopicId(resolved.scope.topicId());
             probe.setActivityId(resolved.scope.activityId());
             probe.setNodeId(resolved.nodeId);
-            probe.setPlayInstanceId(resolved.scope.playInstance());
+            // 进度行按原局的进度实例落(首局是 default),帮助身份只用于额度/事实分局。
+            probe.setPlayInstanceId(resolved.session != null
+                    ? resolved.session.getPlayInstanceId() : resolved.scope.playInstance());
             java.util.List<com.chengyinhub.business.domain.PlayerNodeProgress> rows =
                     playerNodeProgressService.selectPlayerNodeProgressList(probe);
             if (rows == null || rows.isEmpty()) return null;
@@ -460,8 +558,20 @@ public class PlayHelpApplication {
         String routeError = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, topicNode, null);
         if (routeError != null) throw new HelpRefusal(routeError);
 
-        String playInstance = session.getPlayInstanceId();
-        if (StringUtils.isBlank(playInstance) || "default".equalsIgnoreCase(playInstance.trim())) {
+        return frozenResolved(memberId, run, node, session, topicNode);
+    }
+
+    /**
+     * 原局冻结层级/额度/作用域的唯一推导(玩家入口与后台只读审计共用,不另算一套)。
+     * 不做准入闸,调用方负责归属与权限。
+     */
+    private Resolved frozenResolved(long memberId, long run, long node, TopicRouteSession session,
+                                    CmsTopicNode topicNode) {
+        // 原局身份:重玩等非 default 实例原样沿用;首局(自玩/活动场次)用建局时冻结进快照的身份。
+        // 旧首局(无该身份)仍然没有帮助身份,照旧拒绝。
+        String playInstance = com.chengyinhub.business.service.support.FirstRunHelpIdentity.helpInstance(
+                session, parseSnapshot(session.getConfigSnapshotJson()));
+        if (playInstance == null) {
             throw new HelpRefusal("原局身份不可用，请重新进入本局");
         }
         PlayHelpUsagePolicy.Scope scope = new PlayHelpUsagePolicy.Scope(session.getTopicId(),

@@ -454,3 +454,20 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
 /* 第五轮 D:参与人信息必填星号与字段下方红字 */
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
 .participant-err { display: block; margin: var(--cy-space-2) var(--cy-page-x) 0; }
+
+/* §17.5/§17.6/U07-01 报价事实行:沿用 .setly_li 明细行,只补划线与长文本换行 */
+.setly_li_right .price-strike {
+  color: var(--cy-color-text-secondary);
+  text-decoration: line-through;
+}
+.setly_li_right .promo-off {
+  color: var(--cy-color-text-secondary);
+}
+.setly_li_right--text text {
+  text-align: right;
+  word-break: break-all;
+}
+
+/* §27.6 主持预约:沿用明细行;撤销是唯一的危险行,红字 */
+.host-danger { color: var(--cy-color-status-danger); }
+.host-request { display: block; margin: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) 0; }

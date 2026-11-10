@@ -1,7 +1,6 @@
 package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
-import com.chengyinhub.business.util.ClueTransformSupport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -94,18 +93,18 @@ class AdvancedGameHelpWiringTest {
         assertFalse(first.has("correct"), "选项对错不下发");
     }
 
-    /** 倒序只作用题面;MIRROR 保留文字并给呈现指令。 */
+    /** 谜面变换已删除(2026-11-10):存量 REVERSE/MIRROR 配置照存,但玩家投影不带模式、题面原样。 */
     @Test
-    void clueTransformOnlyChangesThePublicPrompt() throws Exception {
+    void clueTransformIsNeverRenderedToPlayers() throws Exception {
         String normalized = validator.validateAndNormalize(config());
         JsonNode safe = mapper.readTree(AdvancedGamePublicProjection.safeConfigJson(normalized));
-        assertEquals("REVERSE", safe.path("clueTransform").path("mode").asText());
-        assertEquals(ClueTransformSupport.reverseGraphemes("谁是真凶"), safe.path("qa").path("title").asText());
+        assertFalse(safe.has("clueTransform"), "模式名不再下发");
+        assertEquals("谁是真凶", safe.path("qa").path("title").asText(), "REVERSE 不再倒序题面");
 
         String mirror = validator.validateAndNormalize(config().replace("\"REVERSE\"", "\"MIRROR\""));
         JsonNode mirrorSafe = mapper.readTree(AdvancedGamePublicProjection.safeConfigJson(mirror));
-        assertEquals("MIRROR", mirrorSafe.path("clueTransform").path("mode").asText());
-        assertEquals("谁是真凶", mirrorSafe.path("qa").path("title").asText(), "镜像由呈现层翻转,服务端不改文字");
+        assertFalse(mirrorSafe.has("clueTransform"), "MIRROR 也不再下发呈现指令");
+        assertEquals("谁是真凶", mirrorSafe.path("qa").path("title").asText());
     }
 
     /** 没有经审核算法与参数的密码类直接拒绝,不由保存端猜一个。 */

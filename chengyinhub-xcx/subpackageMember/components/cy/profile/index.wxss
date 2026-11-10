@@ -997,22 +997,35 @@
 .pc-album-t { font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 40rpx; /* ds-ok: 宋体标题 */ font-weight: 600; }
 .pc-album-arrow { color: #8A8F99; /* ds-ok: 同上 */ }
 .pc-album-row { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
-.pc-pile { position: relative; flex: 1; height: 236rpx; }
-.pc-pile-c { position: absolute; left: 50%; top: 8rpx; width: 124rpx; height: 152rpx; margin-left: -62rpx; border-radius: 16rpx; background: #FFFFFF; /* ds-ok: 白卡 */
-  box-shadow: 0 12rpx 28rpx rgba(40, 52, 90, .14), 0 2rpx 4rpx rgba(40, 52, 90, .08); /* ds-ok: 卡片浮在浅底上 */ display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.pc-pile-c--0 { transform: translateX(-18rpx) rotate(-8deg); }
-.pc-pile-c--1 { transform: translateX(16rpx) rotate(6deg); }
-.pc-pile-img { width: 84%; height: 84%; }
+.pc-pile { position: relative; flex: 1; height: 236rpx; perspective: 640rpx; }
+/* 2026-11-09 V3-34:真 3D —— 叠层放进 preserve-3d 容器,静止时就带俯仰与侧转;三层各有 Z 深度;按下(hover-class)转正浮起,高光扫过 */
+.pc-pile-3d { position: absolute; left: 0; right: 0; top: 0; height: 176rpx; transform-style: preserve-3d;
+  transform: rotateX(var(--pc-rx, 10deg)) rotateY(var(--pc-ry, -12deg)); transition: transform var(--cy-motion-expand) var(--cy-ease-standard); }
+.pc-pile--press { opacity: .96; }
+.pc-pile--press .pc-pile-3d { --pc-rx: 0deg; --pc-ry: 6deg; --pc-sheen: 20%; }
+.pc-pile--press .pc-pile-c--2 { transform: translateZ(28rpx); }
+.pc-pile--press .pc-pile-sheen { -webkit-mask-position: 20% 0; mask-position: 20% 0; }
+.pc-pile-c { position: absolute; left: 50%; top: 8rpx; width: 124rpx; height: 152rpx; margin-left: -62rpx; display: flex; align-items: center; justify-content: center; }
+.pc-pile-c--0 { transform: translate3d(-22rpx, 4rpx, -36rpx) rotate(-8deg); opacity: .4; }
+.pc-pile-c--1 { transform: translate3d(18rpx, 2rpx, -18rpx) rotate(6deg); opacity: .65; }
+.pc-pile-c--2 { transform: translateZ(0); }
+.pc-pile-img { width: 100%; height: 100%; filter: drop-shadow(0 10rpx 14rpx rgba(0, 0, 0, .35)); /* ds-ok: 立体投影 */ }
+/* 镜面高光:同一张图提亮后只露一道斜向光带,形状随图本身(不出方框);跟手时光带随侧转平移 */
+.pc-pile-sheen { position: absolute; left: 0; top: 0; filter: brightness(1.9) saturate(.6); /* ds-ok: 高光层 */
+  -webkit-mask-image: linear-gradient(115deg, transparent 30%, rgba(0, 0, 0, .9) 50%, transparent 70%); mask-image: linear-gradient(115deg, transparent 30%, rgba(0, 0, 0, .9) 50%, transparent 70%); /* ds-ok: 高光遮罩只用透明度 */
+  -webkit-mask-size: 300% 100%; mask-size: 300% 100%; -webkit-mask-position: var(--pc-sheen, 50%) 0; mask-position: var(--pc-sheen, 50%) 0; mix-blend-mode: screen; opacity: .7; transition: -webkit-mask-position var(--cy-motion-expand) var(--cy-ease-standard), mask-position var(--cy-motion-expand) var(--cy-ease-standard); }
+.pc-pile-c--2 { transition: transform var(--cy-motion-expand) var(--cy-ease-standard); }
+.pc-reduced-motion .pc-pile-3d, .pc-reduced-motion .pc-pile-c--2, .pc-reduced-motion .pc-pile-sheen { transition: none; }
 .pc-pile-t { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 2rpx;
   font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 26rpx; /* ds-ok: 宋体名字 */ font-weight: 600; }
 .pc-pile-n { font-family: -apple-system, "PingFang SC", sans-serif; font-size: 22rpx; /* ds-ok: 数量小字 */ font-weight: 500; color: #8A8F99; /* ds-ok: 同上 */ }
 /* P-22(2026-11-02 走查):玩家页是深色,收集册跟上面「总积分排名」同一张卡的底、边、字,不再单独一块浅色纸页。
    三叠小卡与册名保留,只换成深色套件的面、边和无衬线字。 */
-.pc-player .pc-album { margin-top: 0; border-radius: var(--cy-radius-md); padding: var(--cy-space-3-5) 32rpx var(--cy-space-4);
-  background: var(--cy-color-bg-elevated); border: 1rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-primary); }
+/* 2026-11-10 r2 a4-v3-34 业主「收集册底部不需要灰色的底 直接在背景上」:去掉卡底与描边,三叠小卡直接落在页面背景上 */
+.pc-player .pc-album { margin-top: var(--cy-space-2); border-radius: 0; padding: var(--cy-space-2) 0 var(--cy-space-4);
+  background: transparent; border: 0; overflow: visible; color: var(--cy-color-text-primary); }
 .pc-player .pc-album-t { font-family: inherit; font-size: var(--cy-type-label); font-weight: 400; color: var(--cy-color-text-secondary); }
 .pc-player .pc-album-arrow { color: var(--cy-color-text-tertiary); }
-.pc-player .pc-pile-c { background: var(--cy-color-action-secondary-bg); box-shadow: none; border: 1rpx solid var(--cy-color-border-subtle); }
 .pc-player .pc-pile-t { font-family: inherit; font-size: var(--cy-type-label); font-weight: 600; }
 .pc-player .pc-pile-n { font-family: inherit; color: var(--cy-color-text-tertiary); }
 

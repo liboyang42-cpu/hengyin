@@ -1,0 +1,9 @@
+template 6007
+create {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990016, "auditTaskId": 5, "reviewState": "PENDING", "bundledTemplateIds": [6007], "published": true, "commercialAwaitingReview": false, "commercialNe
+[库回读] chapter 43 description='一 · 雨停之后\n她推开咖啡馆的门，铃铛响了一声。\n杯底压着一张纸条。'
+    {"type": "text", "key": "h", "content": "一 · 雨停之后", "style": "h2"}
+    {"type": "text", "key": "p", "content": "她推开咖啡馆的门，铃铛响了一声。", "marks": [{"from": 9, "to": 15, "type": "bold"}, {"from": 0, "to": 3, "type": "strike"}]}
+    {"type": "text", "key": "q", "content": "杯底压着一张纸条。", "style": "quote"}
+    {"type": "node", "key": "n", "nodeId": 72}
+bad style -> {"msg": "第 1 章故事流不合法: 段落样式只允许 h1 / h2 / quote / ul / ol", "code": 400, "_status": 200}
+bad mark  -> {"msg": "第 1 章故事流不合法: 文字格式的区间超出了这段正文", "code": 400, "_status": 200}

@@ -1,0 +1,148 @@
+// 故事流拖拽排序 · 渲染层(WXS)内核(2026-11-10 r2-create)。
+// 思路取自 wxp-ui components/drag(MIT, https://github.com/wxp-ui/wxp-ui):长按交给逻辑层量几何,
+// 之后的 touchmove 只在渲染层跑 —— 被拖块 1:1 跟手、其余块用 transform 让位,不逐帧 setData;
+// 跨过一格才回调一次逻辑层(触感),松手回调一次(真正改顺序)。改写点:块高各不相同,
+// 落点按「被拖块中线 vs 邻块中线」判(与 utils/publish/story-drag.js 同一套几何),贴边自动滚屏。
+// 几何由逻辑层量好后挂在 .story-article 的 data-geo 上(JSON):
+//   { key, from, y, st, vt, vb, max, top:[], h:[] }
+//   y = 长按时手指 clientY;st = 当时 scrollTop;vt/vb = 滚动区上下沿(clientY);max = 最大 scrollTop。
+
+var EDGE = 72;    // 距滚动区上下沿多少 px 内开始自动滚
+var MAX_STEP = 12; // 每帧最多滚多少 px(越深越快)
+
+function geoOf(owner) {
+  var list = owner.selectComponent('.story-article');
+  if (!list) return null;
+  var raw = list.getDataset().geo;
+  if (!raw) return null;
+  var g = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  return g && g.top && g.top.length ? g : null;
+}
+
+function targetOf(g, center) {
+  var target = 0;
+  for (var i = 0; i < g.top.length; i++) {
+    if (i === g.from) continue;
+    if (center > g.top[i] + g.h[i] / 2) target++;
+  }
+  return target;
+}
+
+function slotOf(g) {
+  var from = g.from;
+  var gap = 0;
+  if (from + 1 < g.top.length) gap = g.top[from + 1] - (g.top[from] + g.h[from]);
+  else if (from > 0) gap = g.top[from] - (g.top[from - 1] + g.h[from - 1]);
+  return g.h[from] + Math.max(0, gap);
+}
+
+function stepOf(y, g) {
+  if (y < g.vt + EDGE) return -Math.ceil(MAX_STEP * Math.min(1, (g.vt + EDGE - y) / EDGE));
+  if (y > g.vb - EDGE) return Math.ceil(MAX_STEP * Math.min(1, (y - (g.vb - EDGE)) / EDGE));
+  return 0;
+}
+
+function paint(owner, st) {
+  var g = st.g;
+  var dy = st.y - g.y + st.scroll;
+  var center = g.top[g.from] + g.h[g.from] / 2 + dy;
+  var target = targetOf(g, center);
+  var slot = slotOf(g);
+  var blocks = owner.selectAllComponents('.story-block');
+  for (var i = 0; i < blocks.length; i++) {
+    if (i === g.from) {
+      blocks[i].setStyle({ transform: 'translate3d(0,' + dy + 'px,0) scale(1.02)', transition: 'none', 'z-index': 5 });
+      continue;
+    }
+    var shift = 0;
+    if (target > g.from && i > g.from && i <= target) shift = -slot;
+    if (target < g.from && i >= target && i < g.from) shift = slot;
+    blocks[i].setStyle({ transform: 'translate3d(0,' + shift + 'px,0)' });
+  }
+  if (target !== st.target) {
+    st.target = target;
+    owner.callMethod('onStoryDragSlot', { target: target });
+  }
+}
+
+function tick(owner) {
+  var st = owner.getState();
+  if (!st.g || !st.auto) return;
+  var step = stepOf(st.y, st.g);
+  var base = st.g.st;
+  var next = Math.max(-base, Math.min(st.g.max - base, st.scroll + step));
+  if (!step || next === st.scroll) { st.auto = false; return; }
+  st.scroll = next;
+  st.frames = (st.frames || 0) + 1;
+  // 逻辑层滚动约 30 次/秒就够,每两帧报一次
+  if (st.frames % 2 === 0) owner.callMethod('onStoryDragScroll', { scrollTop: base + st.scroll });
+  paint(owner, st);
+  owner.requestAnimationFrame(function () { tick(owner); });
+}
+
+function start(e, owner) {
+  var st = owner.getState();
+  var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+  if (!t) return;
+  st.g = null;
+  st.y = t.clientY;
+}
+
+function move(e, owner) {
+  var st = owner.getState();
+  var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+  if (!t) return false;
+  if (!st.g) {
+    var g = geoOf(owner);
+    if (!g) return false;
+    st.g = g;
+    st.scroll = 0;
+    st.target = g.from;
+    st.auto = false;
+    st.frames = 0;
+  }
+  st.y = t.clientY;
+  paint(owner, st);
+  if (!st.auto && stepOf(st.y, st.g)) {
+    st.auto = true;
+    owner.requestAnimationFrame(function () { tick(owner); });
+  }
+  return false;
+}
+
+function end(e, owner) {
+  var st = owner.getState();
+  if (!st.g) {
+    // 长按后没动就松手:几何可能已经挂上了,照常交回逻辑层(原地松手 = 选中)
+    var g = geoOf(owner);
+    if (g) owner.callMethod('onStoryDragDrop', { key: g.key, from: g.from, to: g.from, scrollTop: g.st });
+    else owner.callMethod('onStoryTouchRelease', {}); // 长按已触发、几何还没量完就松手:让逻辑层取消这次拿起
+    return;
+  }
+  var res = { key: st.g.key, from: st.g.from, to: st.target, scrollTop: st.g.st + st.scroll };
+  st.auto = false;
+  st.g = null;
+  owner.callMethod('onStoryDragDrop', res);
+  return false;
+}
+
+// 逻辑层改完顺序后 epoch +1:清掉所有块上的临时 transform。先无过渡归位,下一帧再撤掉内联样式,
+// 免得新顺序的块从旧位置「滑回来」。
+function reset(epoch, old, owner) {
+  if (!owner || epoch === old) return;
+  var blocks = owner.selectAllComponents('.story-block');
+  for (var i = 0; i < blocks.length; i++) blocks[i].setStyle({ transform: 'none', transition: 'none' });
+  owner.requestAnimationFrame(function () {
+    var again = owner.selectAllComponents('.story-block');
+    for (var j = 0; j < again.length; j++) again[j].setStyle({});
+  });
+}
+
+module.exports = {
+  start: start,
+  move: move,
+  end: end,
+  reset: reset,
+  EDGE: EDGE,
+  MAX_STEP: MAX_STEP,
+};

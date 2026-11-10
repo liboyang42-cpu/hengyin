@@ -1,0 +1,36 @@
+<!-- U02-03 地点待办:入口一行 + full 档弹层(每个地点:看什么 / 怎么做 / 看不到时 + 当前绑定状态) -->
+<view wx:if="{{view}}" class="lt-entry" bindtap="openSheet" aria-role="button" aria-label="地点待办" hover-class="cy-pressed" hover-stay-time="80">
+  <cy-icon name="pin" size="32" />
+  <text class="lt-entry__t">地点待办</text>
+  <text class="lt-entry__v {{view.blockingCount ? 'is-bad' : ''}}">{{summary || view.rows.length + ' 个地点'}}</text>
+  <cy-icon name="chevron-right" size="24" />
+</view>
+<!-- root-portal 把弹层挂到页面根:编辑器底栏 z-index 在页面根层,组件内的 fixed 弹层会被它压住 -->
+<root-portal enable="{{true}}" wx:if="{{view}}">
+<cy-sheet show="{{open}}" title="地点待办" fixed="full" handle bind:close="closeSheet" bind:requestclose="closeSheet">
+  <!-- r2-create(b4-u02-03 业主「有点乱 替换地点…不是整个节点需要替换」):每个地点一行 = 名称 + 当前地址 + 状态,
+       行内「替换地点」只换这一处的地址(编辑器选点器),不再整节点换绑;同城沿用后未绑定的地点按同名节点认领,
+       「确认地点」把这一处绑到它;认领不到的才「选择节点」。
+       b4-u02-04「不需要换城市」:来源模板编号 / 修订 / 换城采用这一行删掉(编号是系统信息,不给作者看)。 -->
+  <view class="lt">
+    <view class="lt-row" wx:for="{{view.rows}}" wx:key="slotKey">
+      <view class="lt-row__main">
+        <view class="lt-row__hd">
+          <text class="lt-row__t ep1">{{item.title}}</text>
+          <text class="lt-tag lt-tag--bad" wx:if="{{item.blocking}}">挡住发布</text>
+          <text class="lt-tag" wx:elif="{{item.warn}}">待复核</text>
+        </view>
+        <text class="lt-row__addr ep1" wx:if="{{slots[item.slotKey]}}">{{slots[item.slotKey].place}}</text>
+        <text class="lt-row__st {{item.blocking ? 'is-bad' : ''}}">{{item.statusText}}</text>
+      </view>
+      <view class="lt-acts" wx:if="{{slots[item.slotKey]}}">
+        <view class="lt-act lt-act--ghost" data-node="{{slots[item.slotKey].id}}" bindtap="replacePlace" aria-role="button" aria-label="替换{{item.title}}的地点" hover-class="cy-pressed" hover-stay-time="80">替换地点</view>
+        <view class="lt-act" wx:if="{{slots[item.slotKey].claimed}}" data-slot="{{item.slotKey}}" data-node="{{slots[item.slotKey].id}}" bindtap="confirmPlace" aria-role="button" aria-label="确认{{item.title}}的地点" aria-busy="{{busyKey === item.slotKey}}" hover-class="cy-pressed" hover-stay-time="80">{{busyKey === item.slotKey ? '确认中…' : '确认地点'}}</view>
+      </view>
+      <view class="lt-act" wx:else data-slot="{{item.slotKey}}" bindtap="pickNode" aria-role="button" aria-label="为{{item.title}}选择节点" aria-busy="{{busyKey === item.slotKey}}" hover-class="cy-pressed" hover-stay-time="80">{{busyKey === item.slotKey ? '绑定中…' : '选择节点'}}</view>
+      <text class="lt-err" wx:if="{{rowError[item.slotKey]}}" aria-role="alert">{{rowError[item.slotKey]}}</text>
+    </view>
+  </view>
+</cy-sheet>
+<cy-option-sheet show="{{pickShow}}" title="选择节点" items="{{pickItems}}" immediate bind:select="onPicked" bind:cancel="closePick" />
+</root-portal>

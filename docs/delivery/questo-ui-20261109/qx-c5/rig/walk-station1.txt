@@ -1,0 +1,13 @@
+open pages/play/index?topicId=990015&activityId=15
+tap [ '开启定位', { nth: 1 } ]
+tap 开始游戏
+tap 继续探索
+tap 我已到达此站
+TEXT 到场 1/1 人 · 第1章 人民广场到南京东路 | 队长带队中 | N | 1.3km | 城市定向样板 1110061753 · 第1章 人民广场到南京东路 | 沿着人流走，留意站名。 | 广场的鸽子一齐飞起 | 再往东走，去南京东路。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+shot c5-station1-arrived
+skip 继续
+skip 下一站
+TEXT 到场 1/1 人 · 第1章 人民广场到南京东路 | 队长带队中 | N | 0m | 城市定向样板 1110061753 · 第1章 人民广场到南京东路 | 沿着人流走，留意站名。 | 广场的鸽子一齐飞起 | 再往东走，去南京东路。 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+shot c5-station2
+ERR []
+NET [["GET","/__api/api/play/nodes?activityId=15",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"topicId\":990015,\"topicDesc\":\"rig 免费城市定向样板\",\"topicName\":\"城市定向样板 1110061753\",\"topicCover\":\"https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109651939&OSSAccessKeyId=rig-dummy&Signature=<redacted>\",\"topicAudioUrl\":null,\"look\":nul"],["GET","/__api/api/play/run-session?activityId=15",200,"{\"msg\":\"操作成功\",\"code\":200}"],["POST","/__api/api/play/arrive",200,"{\"msg\":\"已到达，打卡成功\",\"code\":200,\"data\":{\"nodeId\":73,\"firstTime\":true,\"done\":1,\"total\":2,\"completed\":false,\"routeState\":{\"attributes\":[],\"routeMode\":\"LINEAR\",\"sessionId\":1,\"status\":\"ACTIVE\",\"currentNodeId\":74,\"recommendedNodeId\":74,\"version\":1,\"nodeStates\":{\"73\":\"COMPLETED\",\"74\":\"PLAYABLE\"},\"decisionLog"],["GET","/__api/api/play/nodes?activityId=15",200,"{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"topicId\":990015,\"topicDesc\":\"rig 免费城市定向样板\",\"topicName\":\"城市定向样板 1110061753\",\"topicCover\":\"https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109651959&OSSAccessKeyId=rig-dummy&Signature=<redacted>\",\"topicAudioUrl\":null,\"look\":null,"],["GET","/__api/api/play/run-session?activityId=15",200,"{\"msg\":\"操作成功\",\"code\":200}"]]

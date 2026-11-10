@@ -22,9 +22,7 @@
       <text wx:if="{{expiry}}" class="voucher__exp">{{expiry}}</text>
     </view>
     <view wx:if="{{seatCount > 1}}" class="seat-choice__switch" bindtap="changeSeat" aria-role="button" aria-label="重新选择席位" hover-class="cy-pressed">重新选择席位</view>
-    <view class="voucher__acts">
-      <view class="voucher__back" bindtap="close" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
-    </view>
+    <!-- V3-17(2026-11-06 业主):左下不再有返回钮,关闭走半屏右上角的 × 与下拉 -->
   </block>
 
 </view>

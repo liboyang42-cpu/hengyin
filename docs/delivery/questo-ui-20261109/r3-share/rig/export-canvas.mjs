@@ -1,0 +1,13 @@
+import { launch } from '/root/rig/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs';
+import fs from 'node:fs';
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const w = await launch({ path: 'pages/topic/index/index?id=990014', identity: 'e2e-openid-9004', agree: true });
+await sleep(2500);
+await w.eval('getCurrentPages().slice(-1)[0].openShareCard()');
+await sleep(2500);
+await w.tap('保存图片');
+await sleep(3000);
+const url = await w.eval(`(()=>{const all=[];const walk=(r)=>{r.querySelectorAll('*').forEach(e=>{if(e.tagName==='CANVAS')all.push(e);if(e.shadowRoot)walk(e.shadowRoot)})};walk(document);const c=all.find(c=>c.width===1500);return c?c.toDataURL('image/jpeg',0.7):('canvases:'+all.map(c=>c.width+'x'+c.height).join(','))})()`);
+if (url.startsWith('data:')) { fs.writeFileSync(process.argv[2], Buffer.from(url.split(',')[1], 'base64')); console.log('saved'); } else console.log(url);
+console.log(w.errors());
+await w.browser.close();

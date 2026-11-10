@@ -2333,9 +2333,9 @@ Component({
   },
   goMyJoin: function () { wx.navigateTo({ url: '/subpackageMember/mycanyu/mycanyu' }); },
   goGrowthCenter: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/index/index', complete: () => { this._navigating = false; } }); },
-  goWall: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index', complete: () => { this._navigating = false; } }); },
-  goAlbum: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index', complete: () => { this._navigating = false; } }); },
-  goObjectCards: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index', complete: () => { this._navigating = false; } }); },
+  goWall: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index?from=profile', complete: () => { this._navigating = false; } }); },
+  goAlbum: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index?from=profile', complete: () => { this._navigating = false; } }); },
+  goObjectCards: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index?from=profile', complete: () => { this._navigating = false; } }); },
   // 当前权益里可点的行(收益提现→提现页;承接原 role/center 对赚钱角色 role!==player 的提现入口,按 withdrawable 权限门控)
   onBenefitTap: function (e) {
     var ds = e.currentTarget.dataset;
@@ -2345,6 +2345,10 @@ Component({
   goEarnings: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' + (this.data.isMerchantView ? '?theme=merchant' : ''), complete: () => { this._navigating = false; } }); }, // 2026-10-30 业主:商家主页进账户收益是浅色
   goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
+  // §17.1/P6 通行证与礼品记录(qx-b5)
+  goPasses: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/market/passes/index', complete: () => { this._navigating = false; } }); },
+  // §18 A/B 视频悬赏作者端(qx-b5)
+  goVideoBounty: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/video-bounty/index', complete: () => { this._navigating = false; } }); },
   goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
   // 帖文第三轮:帖文卡的点正文 / 点评论进详情,点赞走原来的 creativesquare 点赞(type=1);数据下标来自卡片事件
   onPostCardDetail: function (e) {

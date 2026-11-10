@@ -2932,10 +2932,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("mode", cfg.path("mode").asText("TYPE"));
             // 多选标记只在开启时给:老单选配置的视图形状不变,客户端缺省按单选渲染
             if (cfg.path("multi").asBoolean(false)) value.put("multi", true);
-            // 题面按冻结的谜面变换呈现(REVERSE 服务端倒序、MIRROR 下发文字由呈现层翻转)。
-            // 与公开投影同一条实现,避免两份题面在两处漂开。
-            String prompt = com.chengyinhub.business.util.ClueTransformSupport.renderPrompt(
-                    cfg.path("title").asText(""), config.get("clueTransform"));
+            // 谜面变换已删除(2026-11-10 主人裁定):冻结配置里即使留有 clueTransform,题面也原样给玩家。
+            String prompt = cfg.path("title").asText("");
             if (!prompt.isEmpty()) value.put("title", prompt);
             putText(value, "lead", cfg);
             // 拍照打卡的补充说明:提示词摆屏幕正中,这一句小字在它下面
@@ -2948,7 +2946,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 item.put("id", option.path("id").asText(""));
                 item.put("label", option.path("label").asText(""));
                 // 图片选项:只有 id/label/img/alt;correct、fb、effects 一个都不下发。
-                item.putAll(com.chengyinhub.business.service.support.QaOptionMediaSupport.media(option));
+                // img 投影成与其它玩法媒体同一形态的可访问地址(只认已审核通过的资产);不可见则 img/alt 都不下发。
+                Map<String, String> media = com.chengyinhub.business.service.support.QaOptionMediaSupport.media(option);
+                String shown = media.isEmpty() ? "" : playMediaUrl(media.get("img"), actorMemberId);
+                if (!shown.isEmpty()) {
+                    item.put("img", shown);
+                    if (media.containsKey("alt")) item.put("alt", media.get("alt"));
+                }
                 options.add(item);
             }
             value.put("options", options);
@@ -3872,6 +3876,23 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * <p>证词是否可见由既有条件事实判定:{@code clue.h_*} 在本局变量里 ≥1 才算已获得,
      * 复用 {@link ITopicRouteRuntimeService#conditionPasses} 的原条件引擎,不新增一套线索表。
      */
+    /**
+     * qx-c1 #3: runtime play media (QA option img, suspect avatar, corkboard) use the same reviewed-media resolver as
+     * other play media; registered assets must be APPROVED. Without the resolver (unit wiring) nothing is shown rather
+     * than a raw {@code media-asset:} reference.
+     */
+    String playMediaUrl(String reference, Long viewerMemberId) {
+        if (reference == null || reference.trim().isEmpty()) return "";
+        if (mediaReferences == null) return reference.trim().matches("media-asset:[1-9][0-9]{0,18}") ? "" : reference.trim();
+        try {
+            String shown = mediaReferences.publishedPlayUrl(reference.trim(), viewerMemberId);
+            return shown == null ? "" : shown.trim();
+        } catch (RuntimeException unresolvable) {
+            // 一张图解析不出可访问地址(发布地址未配置/存储事实不可用)只让这张图不显示,不让整局视图失败。
+            return "";
+        }
+    }
+
     private Map<String, Object> accusationView(JsonNode config, ObjectNode state,
             Long memberId, Long topicId, Long activityId) {
         java.util.function.Predicate<String> obtained = key -> {
@@ -3885,7 +3906,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             }
         };
         Map<String, Object> view = objectMapper.convertValue(
-                AccusationTemplateSupport.publicView(config, null, obtained),
+                AccusationTemplateSupport.publicView(config, reference -> playMediaUrl(reference, memberId), obtained),
                 new TypeReference<Map<String, Object>>() {});
         JsonNode decided = state.path("accusation");
         if (decided.isObject()) {

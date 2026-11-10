@@ -1,7 +1,10 @@
 // 工作台叠层:与 project-drawer 同一套面板,只是顶端比下一层低一点;展示组件,返回从 bind:back 冒泡。
 const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js');
+const sheetDepth = require('../../../../behaviors/sheet-depth.js');
 
 Component({
+  // 叠层景深由 behaviors/sheet-depth.js 按打开顺序统一判定(_under),页面不再逐个传 under
+  behaviors: [sheetDepth],
   options: { multipleSlots: true, addGlobalClass: true },
   properties: {
     show:  { type: Boolean, value: false },

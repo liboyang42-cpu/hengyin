@@ -19,8 +19,8 @@ test('R5选择器仅基础玩法，附加规则三项可编辑且多人只读', 
   };
   page._setFormState = page.setData;
   const items = catalog.PICKER_GROUPS.flatMap(group => group.items);
-  assert.equal(new Set(items.map(item => item.key)).size, 23);
-  assert.equal(catalog.ALL.length, 33);
+  assert.equal(new Set(items.map(item => item.key)).size, 23); // r2 b2-x-cat:逐字猜词并入文字问答的表单
+  assert.equal(catalog.ALL.length, 34);
   page.data.advanced = catalog.applyToConfig(config.defaultConfig(), 'qaText');
   page.data.gameKey = 'qaText'; page.data.timerAvailable = true;
   page.data.formData.validationMethod = 1;

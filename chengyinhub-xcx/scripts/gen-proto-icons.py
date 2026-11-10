@@ -7,6 +7,8 @@
 path data 逐字搬,一笔不改;只做两件事:
   ① 原型写的是 currentColor —— background-image 里继承不了,所以把用色烤进每个类。
      同一枚图标出现在两种色位时,各给一个类,而不是留一个继承不到的 currentColor。
+     例外:用色写成 'currentColor' 的那几枚改走 mask —— 图形当遮罩、底色取 currentColor,
+     于是跟宿主的 color 走(2026-11-09 V3-19:扫码烤成 #1A1A1A 放进暗色抽屉行就看不见了)。
   ② 尺寸交给用它的地方,这里只画图形。
 
 用法:python3 scripts/gen-proto-icons.py <原型 HTML 路径>
@@ -36,11 +38,22 @@ WANT = [
     ('cam',      'IC.cam',       '#1A1A1A', '三键右「拍照」'),
     ('play',     'IC.play',      '#FFFFFF', '三键中「继续」—— 绿底圆钮上是白色'),
     ('qr',       'IC.qr',        '#1A1A1A', '三键左「核销」—— 白底圆钮上是深色'),
-    ('scan',     'IC.scan',      '#1A1A1A', '三键右「扫码」'),
+    ('scan',     'IC.scan',      'currentColor', '「扫码」—— 跟宿主文字色走(2026-11-09 V3-19 业主「扫码没有icon」:烤死 #1A1A1A 在暗面上看不见)'),
     ('scan2',    'IC.scan',      '#8A93A0', '同一枚扫码,出现在抽屉行里是灰色'),
     ('pause',    'LIT.pause',    '#FFFFFF', '三键中「暂停」—— 橙底圆钮上是白色'),
     ('expand',   'LIT.expand',   '#7A8496', '读数卡右上那枚展开钮(原型 dcard 里的 EX)'),
 ]
+
+# 2026-11-09 V3-30 业主「icon 普遍偏右下角…里面没有居中的感觉」:逐枚渲染量了 alpha 外接框,
+# 偏离画布中心 ≥1.5% 的改 viewBox 起点(图形一笔不动,只平移取景),不在使用处补偏移。
+# 三角形(play)按质心居中;成对方向箭头(back / chevron-right / slide-arrow)贴边对齐是有意的,不动。
+OPTICAL_ORIGIN = {
+    'track': (-1.1, 0),
+    'stamp': (0, 2.8),
+    'settle': (0, 0.8),
+    'bell': (0, 0.5),
+    'play': (0.63, 0),
+}
 
 # IC / DIC 之外的两枚:原型没把它们收进图标集,是写在用它的地方的字面量。
 # 这里照样从 HTML 里抓,不手抄 —— 抓不到就报错,别默默少一枚。
@@ -74,12 +87,19 @@ def main(path):
         '.pic{ display:block; background-repeat:no-repeat; background-position:center; background-size:100% 100%; }',
     ]
     for cls, src, color, note in WANT:
-        svg = ico[src].replace('currentColor', color)
+        masked = color == 'currentColor'
+        svg = ico[src].replace('currentColor', '#000' if masked else color)
+        if cls in OPTICAL_ORIGIN:
+            svg = re.sub(r'viewBox=(["\'])0 0 ', lambda m: 'viewBox=%s%s %s ' % ((m.group(1),) + OPTICAL_ORIGIN[cls]), svg, count=1)
         if 'xmlns' not in svg:
             svg = svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ', 1)
         enc = urllib.parse.quote(svg, safe="/:=<>?\"' ").replace('"', "'").replace('#', '%23')
         lines.append('/* %s(原型 %s) */' % (note, src))
-        lines.append('.pic--%s{ background-image:url("data:image/svg+xml,%s"); }' % (cls, enc))
+        if masked:
+            url = 'url("data:image/svg+xml,%s")' % enc
+            lines.append('.pic--%s{ background-color:currentColor; -webkit-mask:%s center/100%% 100%% no-repeat; mask:%s center/100%% 100%% no-repeat; }' % (cls, url, url))
+        else:
+            lines.append('.pic--%s{ background-image:url("data:image/svg+xml,%s"); }' % (cls, enc))
     out = pathlib.Path(__file__).resolve().parent.parent / 'style' / 'proto-icons.wxss'
     io.open(out, 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
     print('写了 %d 枚 → %s' % (len(WANT), out))

@@ -1435,7 +1435,7 @@ page {
 .cg-pv-inline-scroll { position:absolute; inset:0; height:100%; padding-top:var(--cg-pv-inline-top); box-sizing:border-box;
   background:#000000; color:var(--cy-color-text-inverse); } /* ds-ok #000 = 玩家暗色 --cy-color-bg-page(故事流 .chfull 的底)。本分包是浅色主题,令牌在这里解析成浅灰,只能写死 */
 /* 与玩家故事流 pages/play/index.wxss 的 .chfull__kit 逐条一致(契约测试钉着)。 */
-.cg-pv-inline-kit { margin:0 var(--cy-page-x); --pe-unfold:1; --pk-card-h:1000rpx; --pk-card-h-tall:1200rpx; --pk-card-radius:var(--cy-radius-lg); --pk-card-pad:56rpx 44rpx 48rpx; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 同 .chfull__kit */
+.cg-pv-inline-kit { margin:0 var(--cy-page-x); --pe-unfold:1; --pk-card-h:auto; --pk-card-h-tall:auto; --pk-card-radius:0; --pk-card-pad:var(--cy-space-5) 0 0; --pk-card-bg:transparent; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 同 .chfull__kit */
 /* 2026-09-23 用户:题目和作答放到页面中间(与玩家故事流内嵌玩法同一口径) */
 .cg-pv-inline-kit { min-height:calc(100vh - var(--cg-pv-inline-top) - 300rpx); display:flex; flex-direction:column; }
 /* 2026-10-23 复查:用上下 auto 外边距居中,不用 justify-content:center —— 内容比容器高时(D20 掷出后多一条难度线)
@@ -1685,3 +1685,44 @@ page {
 .cg-ios-sheet { background: var(--cy-color-bg-page); }
 .cg-ios-sheet .cg-edit-head { background: var(--cy-color-bg-page); }
 .cg-edit-head__done.is-ghost { background: transparent; }
+
+/* Questo 新玩法作者配置(questo-author.js):沿用 cg-cfg / cg-adv 行,只补格子与红字错误 */
+.cg-qz-line { display: flex; align-items: center; gap: var(--cy-space-2); }
+.cg-qz-line .cg-cfg-input { flex: 1; min-width: 0; }
+.cg-qz-err { margin-top: 8rpx; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
+.cg-qz-cells { display: flex; flex-wrap: wrap; align-items: center; gap: 20rpx 28rpx; margin: var(--cy-space-2) 0 var(--cy-space-4); }
+/* r2 b2-ug-01:格子缩小;一个词里不换行,词与词之间才换行 */
+.cg-qz-word { display: flex; flex-wrap: nowrap; gap: 8rpx; }
+.cg-qz-cell { width: 56rpx; height: 72rpx; line-height: 72rpx; text-align: center; border-radius: 12rpx;   /* ds-ok 小格圆角按格宽收小 */
+  background: var(--cy-color-bg-surface-subtle); font-weight: 700; color: var(--cy-color-text-tertiary);
+  box-shadow: inset 0 -4rpx 0 var(--cy-color-border-strong); }
+.cg-qz-cell.is-given { background: var(--cy-color-text-primary); color: var(--cy-color-bg-surface); box-shadow: none; }
+.cg-qz-cell.is-sep { width: auto; background: transparent; box-shadow: none; color: var(--cy-color-text-secondary); }
+/* r2 b2-ug-02/03:选项图 / 人物头像与文案同一行 */
+.cg-qz-optrow { display: flex; align-items: center; gap: var(--cy-space-3); }
+.cg-qz-optrow .cg-cfg-input { flex: 1; min-width: 0; }
+.cg-qz-thumb { position: relative; flex: none; width: 112rpx; height: 112rpx; border-radius: var(--cy-radius-md); overflow: hidden;
+  background: var(--cy-color-bg-surface-subtle); }
+.cg-qz-thumb--add { display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
+.cg-qz-thumb__img { width: 100%; height: 100%; }
+.cg-qz-thumb__x { position: absolute; top: 0; right: 0; width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center;
+  border-bottom-left-radius: var(--cy-radius-md); background: rgba(0, 0, 0, .45); color: #fff; }   /* ds-ok 图上删除角标,压暗底保证可见 */
+.cg-qz-person { padding: var(--cy-space-4) 0; border-top: 1rpx solid var(--cy-color-border-strong); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.cg-qz-person__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.cg-qz-person__name { font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary); }
+.cg-qz-tm { display: flex; flex-direction: column; gap: 8rpx; }
+
+/* r2-create:封面素材来源声明 —— 封面卡下一行 + 一张小弹层(peek 档),关闭在右上角,保存钉底 */
+.cg-prov-row { display: flex; align-items: center; gap: var(--cy-space-2); min-height: var(--cy-btn-h); padding: 0 var(--cy-space-4); border-top: 1rpx solid var(--cy-border-line); color: var(--cy-text-tertiary); }
+.cg-prov-row__k { flex: 1; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov-row__v { font-size: var(--cy-font-label); color: var(--cy-text-title); }
+.cg-prov-row__v.is-empty { color: var(--cy-color-text-secondary); }
+.cg-prov__head { display: flex; align-items: center; justify-content: space-between; min-height: var(--cy-btn-h); }
+.cg-prov__title { font-size: var(--cy-comp-sheet-title-size); font-weight: 700; color: var(--cy-text-title); }
+.cg-prov__close { width: var(--cy-btn-h); height: var(--cy-btn-h); margin-right: calc(-1 * var(--cy-space-2)); display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
+.cg-prov__field { display: flex; align-items: center; gap: var(--cy-space-3); min-height: var(--cy-btn-h); border-bottom: 1rpx solid var(--cy-border-line); }
+.cg-prov__k { flex: none; width: 140rpx; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov__input { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-text-title); }
+.cg-prov__err { display: block; padding-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-color-status-danger-on-interactive); }
+.cg-prov__foot { padding-top: var(--cy-space-4); }
+.cg-prov__dd { flex: 1; min-width: 0; }

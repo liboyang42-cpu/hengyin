@@ -22,6 +22,11 @@
   padding: var(--cy-space-3) var(--cy-page-x) var(--cy-space-1-5);   /* 上 12pt / 下 6pt / 左右 16pt */
   box-sizing: border-box;
   border-bottom: 1rpx solid var(--cy-color-border-subtle);
+  /* 2026-11-09 V3-23/24/32 业主「字体大小要和 x 或者 threads 一样…似乎没有固定」:整张卡一套字族,
+     字号三档钉死 —— 正文 / 昵称 15pt(30rpx)、元信息与计数 13pt(26rpx)。 */
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --pc-type-body: calc(30rpx * var(--cy-type-scale));   /* 15pt */
+  --pc-type-meta: calc(26rpx * var(--cy-type-scale));   /* 13pt */
 }
 /* Roam(isCompletionShare)/ Template(hasPlayCover):头像 40pt */
 /* 帖文第三轮:四种帖文同一条左栏,不再按 variant 换头像大小 */
@@ -106,8 +111,8 @@
   min-width: 0;
   overflow: hidden;
   flex-shrink: 1;
-  font-size: var(--cy-font-subtitle);   /* 32rpx = 16pt */
-  font-weight: 500;                     /* 稿 Medium(原 Bold) */
+  font-size: var(--pc-type-body);       /* 15pt(V3-23:原 16pt) */
+  font-weight: 600;                     /* semibold,同 X / Threads */
   color: var(--cy-color-text-primary);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -126,9 +131,9 @@
 }
 .post-card__badge--notice { border-color: var(--cy-color-status-warning); color: var(--cy-color-status-warning); }
 .post-card__meta {
-  margin-top: 6rpx;                     /* Who 竖排间距 3pt */
+  margin-top: 2rpx;                     /* Who 竖排间距 1pt(字号收小后行距自带) */
   overflow: hidden;
-  font-size: var(--cy-font-label);      /* 24rpx = 12pt */
+  font-size: var(--pc-type-meta);       /* 13pt(V3-23:原 12pt) */
   color: var(--cy-color-text-tertiary);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -165,10 +170,10 @@
   -webkit-line-clamp: 6;               /* 帖文第三轮:最多 6 行,超出才「展开」 */
   white-space: pre-wrap;
   color: var(--cy-color-text-primary);
-  font-size: var(--cy-font-subtitle);   /* 30rpx 一档(15pt) */
-  /* 稿行高 22pt @ 字号 14pt。写比例不写 44rpx —— 用户把微信字号调大时 --cy-type-scale 会放大
+  font-size: var(--pc-type-body);       /* 15pt(V3-23:原 --cy-font-subtitle 实为 32rpx = 16pt) */
+  /* Threads / X 正文 15pt 配 ~21pt 行高。写比例不写 rpx —— 用户把微信字号调大时 --cy-type-scale 会放大
    * font-size,固定 rpx 行高会把第二行切掉。 */
-  line-height: 1.571;
+  line-height: 1.4;
 }
 .post-card__text--expanded { display: block; overflow: visible; -webkit-line-clamp: unset; white-space: pre-wrap; }
 .post-card__link { color: var(--cy-info); }
@@ -242,26 +247,29 @@
 .post-card__action-text.is-down { transform: translateY(-100%); }
 .post-card__action-text.is-roll { transform: translateY(0); transition: transform 280ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .post-card__burst, .post-card__bigheart { display: none; } .post-card__action-text.is-up, .post-card__action-text.is-down { transform: none; } }
-.post-card__action-text { font-size: var(--cy-font-label); font-weight: 400; color: currentColor; font-variant-numeric: tabular-nums; }
+.post-card__action-text { font-size: var(--pc-type-meta); font-weight: 400; color: currentColor; font-variant-numeric: tabular-nums; }
 /* 矢量图标随 currentColor 走,不再需要 brightness/invert 兜暗端 —— 同 .post-card__share-icon。 */
 .post-card__comment-icon { color: currentColor; }
 .post-card__share {
-  width: 88rpx;
   min-width: 88rpx;
   min-height: 88rpx;
   flex: none;
-  /* 帖文第三轮:分享跟在转发后面靠左排,不再甩到最右 */
-  padding: 0;
-  margin: 0 0 0 var(--cy-space-1);
+  /* 帖文第三轮:分享跟在转发后面靠左排,不再甩到最右。
+   * 2026-11-09 V3-23/24/32 业主「转发按钮的位置不对」:原来是 88 宽居中 + 左外距 4pt,图标比前三个各往右多出 ~16rpx。
+   * 现在与 .post-card__action 同一个盒:左右内距 18rpx、无外距、图标盒 44rpx、靠左。 */
+  padding: 0 18rpx;
+  margin: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border: 0;
   background: transparent;
   color: var(--cy-color-text-primary);
 }
+/* 两级选择器压过微信内置 wx-button:not([size=mini]) { width:184px }(同 .post-card__follow 那条教训) */
+.post-card__actions .post-card__share { width: auto; }
 .post-card__share::after { border: none; }
-.post-card__share-icon { width: 40rpx; height: 40rpx; filter: invert(1); }
+.post-card__share-icon { width: 44rpx; height: 44rpx; filter: invert(1); }
 /* r2-shared:按压与全局 .cy-pressed 同值(.88 / .98);原 .78 / .985 是本组件独有的一档。 */
 .cy-pressed { opacity: .88; transform: scale(.98); }
 
@@ -321,6 +329,9 @@
 .post-card--light .post-card__nick { color: var(--cy-color-text-primary); }
 .post-card--light .post-card__meta { color: var(--cy-color-text-secondary); }
 .post-card--light .post-card__action { color: var(--cy-color-text-primary); }
+/* r2 a6-w2-17(业主「点赞是红色的」):上一条把 is-on 的红/绿也压成了黑,浅色卡面已赞照样红、已转发照样绿 */
+.post-card--light .post-card__action--like.is-on { color: var(--cy-color-status-danger); }
+.post-card--light .post-card__action--repost.is-on { color: var(--cy-color-status-success); }
 .post-card--light .post-card__comment-icon { filter: brightness(0); opacity: 0.62; }
 .post-card--light .post-card__share { color: var(--cy-color-text-primary); }
 .post-card--light .post-card__share-icon { filter: none; }

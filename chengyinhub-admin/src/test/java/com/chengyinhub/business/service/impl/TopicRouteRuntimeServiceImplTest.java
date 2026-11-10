@@ -2204,6 +2204,63 @@ class TopicRouteRuntimeServiceImplTest {
         assertEquals(Integer.valueOf(TopicRouteSession.STATUS_RUNNING), stored[0].getStatus());
     }
 
+    // ---------------------------------------------------------------- qx-c4 自玩局帮助身份
+
+    @Test
+    void selfPlayRunFreezesOneHelpRunIdentityAtStartAndReentryKeepsIt() throws Exception {
+        runtime.state(7L, 10L, null);
+        TopicRouteSession run = stored[0];
+        String identity = json.readTree(run.getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText();
+
+        assertTrue(com.chengyinhub.business.service.support.FirstRunHelpIdentity.isIdentity(identity), identity);
+        // 进度/奖励实例不动：自玩局仍是本人 default 正式一局。
+        assertEquals("default", run.getPlayInstanceId());
+
+        runtime.state(7L, 10L, null);
+        runtime.state(7L, 10L, 0L);
+        assertEquals(identity, json.readTree(stored[0].getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText());
+        verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
+    }
+
+    @Test
+    void selfPlayLinearJourneyRunAlsoCarriesTheHelpRunIdentity() throws Exception {
+        useLinearJourneyTopic();
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        topic.setPublishedRouteGraphJson(runtime.freezePublication(topic, null));
+        topic.setJourneyRulesJson(null);
+
+        runtime.state(7L, 10L, null);
+
+        assertEquals("default", stored[0].getPlayInstanceId());
+        assertNotNull(com.chengyinhub.business.service.support.FirstRunHelpIdentity.read(
+                json.readTree(stored[0].getConfigSnapshotJson())));
+    }
+
+    // ---------------------------------------------------------------- qx-c5 活动场次首局帮助身份
+
+    @Test
+    void activitySessionFirstRunFreezesOneHelpRunIdentityAndReentryKeepsIt() throws Exception {
+        useActivityScope(playableActivity());
+
+        runtime.state(7L, 10L, 44L);
+        TopicRouteSession run = stored[0];
+        String identity = json.readTree(run.getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText();
+
+        assertEquals(Long.valueOf(44L), run.getActivityId());
+        assertTrue(identity.startsWith(com.chengyinhub.business.service.support.FirstRunHelpIdentity.PREFIX), identity);
+        // 进度/奖励实例不动：活动场次首局仍是本人 default 正式一局。
+        assertEquals("default", run.getPlayInstanceId());
+
+        runtime.state(7L, 10L, 44L);
+        assertEquals(identity, json.readTree(stored[0].getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText());
+        verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
+    }
+
     private void useLinearJourneyTopic() {
         CmsTopic topic = topicMapper.selectCmsTopicById(10L);
         topic.setRouteMode("LINEAR");

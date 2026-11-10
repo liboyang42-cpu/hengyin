@@ -173,6 +173,10 @@ Page({
     }
   },
 
+  // qx-b3 P2:玩家推广中心(只读本人归因与分配明细)
+  goPromo() {
+    wx.navigateTo({ url: '/subpackageJourney/pages/promo/index' });
+  },
   goMylike() {
     wx.navigateTo({ url: '/pages/mylike/mylike' });
   },
@@ -214,6 +218,13 @@ Page({
     this.openScene('settings-deregister');
   },
 
+  // r2 a3-v1-p53 业主「UI样式需要优化一下」:通用场景弹层里让玩家手填「报名记录 ID」、列表标题是「—」,
+  // 而受理口必须带主题。改开现成的投诉页(选可投诉的主题 → 类型 → 内容,读 /api/coop/complaint/topics,与受理口同一判据)。
+  goFeedback() {
+    if (this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/subpackageMember/complaint/index', complete: () => { this._navigating = false; } });
+  },
   goAppeals() {
     wx.navigateTo({ url: '/subpackageMember/appeal-mine/index' });
   },

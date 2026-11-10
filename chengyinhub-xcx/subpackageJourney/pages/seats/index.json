@@ -1,0 +1,14 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-page-title": "/components/cy/page-title/index",
+    "cy-empty": "/components/cy/empty/index",
+    "cy-btn": "/components/cy/btn/index",
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-sheet": "/components/cy/sheet/index",
+    "cy-icon": "/components/cy/icon/index"
+  }
+}

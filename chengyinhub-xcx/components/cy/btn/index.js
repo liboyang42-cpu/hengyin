@@ -12,17 +12,24 @@ Component({
     size: { type: String, value: '' },     // '' 标准(--cy-btn-h) | sm 小(--cy-btn-h-sm)
     loadingLabel: { type: String, value: '处理中' },
     loading: { type: Boolean, value: false },  // 提交转圈(替代原生 <button loading>);loading 时压掉按压反馈
+    /* qx-u3 成功 morph(ref3):morph 打开后,loading = 药丸收成圆 + 转圈,done = 圆里弹出勾 + 一圈脉冲。
+       只给「一次成功时刻」的按钮用(领取 / 采用 / 解锁 / 发布);不传 morph 的按钮 loading 行为不变。
+       done 期间点击一律吞掉;停留多久、何时换回药丸由页面 utils/morph-success.js 管。 */
+    morph: { type: Boolean, value: false },
+    done: { type: Boolean, value: false },
+    doneLabel: { type: String, value: '已完成' },
     disabled: { type: Boolean, value: false }, // 禁用:视觉置灰 + 组件内拦截点击;被拦时补发 disabledtap 供页面挂引导提示
     accessibilityLabel: { type: String, value: '' }, // 纯图标/动态文案调用方显式覆盖；普通文字按钮由可见文本提供名称
   },
   data: { _v: 'primary' },
   observers: {
-    'variant, disabled': function (variant, disabled) {
+    'variant, disabled, morph, loading': function (variant, disabled, morph, loading) {
       // 主行动统一反色中性白(文档2 批1 清紫方向 + 用户"按钮白不紫")。
       // 2026-08-05:accent(品牌紫渐变)按规范真源 §2.1 废止,样式块已删。这里把它
       // 一并映射到 primary —— 只删样式不改映射的话,漏改的调用点会落到一个没有
       // 背景的 .btn--accent 上,变成透明按钮,比留着紫色更糟。
-      if (disabled) { this.setData({ _v: 'disabled' }); return; }
+      // morph 收圆转圈期间保持原色(页面常同时传 disabled=busy 防重入;灰圆看着像失败)。拦点击仍由 loading 负责。
+      if (disabled && !(morph && loading)) { this.setData({ _v: 'disabled' }); return; }
       const retired = { accent: 'primary', blue: 'primary', black: 'primary', red: 'danger' };
       const v = variant || 'primary';
       this.setData({ _v: retired[v] || v });
@@ -36,7 +43,7 @@ Component({
     // ⚠️ 只收编"视觉禁用但仍可点"的拦截;disabled/loading 经 setData 异步传播,拦不住
     // 同一连击窗口的重入——防重复提交仍靠页面同步守卫(isPaying/submitting),勿删。
     __onTap: function (e) {
-      if (this.data.loading) return;
+      if (this.data.loading || (this.data.morph && this.data.done)) return;
       if (this.data._v === 'disabled') {
         this.triggerEvent('disabledtap', e.detail);
         return;

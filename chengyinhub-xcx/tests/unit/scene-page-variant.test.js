@@ -27,7 +27,8 @@ test('page 档:没有遮罩和把手,普通导航栏 + 大标题,导航返回与
   assert.match(wxml, /<view wx:if="\{\{variant !== 'page'\}\}" class="ss__mask"/)
   // 2026-10-28 p92:bare 档(订单详情 Figma 578:2298)= 封面头铺到顶,overlay 导航、无页标题;其余 page 档不变
   assert.match(wxml, /<block wx:if="\{\{variant === 'page'\}\}">\s*<cy-nav-bar wx:if="\{\{bare\}\}" overlay tint="light" custom-back bind:back="onPageBack" \/>\s*<cy-nav-bar wx:else plain custom-back bind:back="onPageBack" \/>\s*<cy-page-title wx:if="\{\{!bare\}\}" title="\{\{title\}\}" \/>/)
-  assert.match(wxml, /<view class="ss__head" wx:else>/)
+  // 2026-11-10 qx-u1:头部带上起拖的触摸绑定(half / full),仍是 page 档之外的 wx:else 分支
+  assert.match(wxml, /<view class="ss__head" wx:else[\s>]/)
   const wxss = read('components/cy/scene-sheet/index.wxss')
   assert.match(wxss, /\.ss--page \.ss__panel \{[^}]*height: 100%;[^}]*border-radius: 0;[^}]*transform: none;/)
   const json = JSON.parse(read('components/cy/scene-sheet/index.json'))

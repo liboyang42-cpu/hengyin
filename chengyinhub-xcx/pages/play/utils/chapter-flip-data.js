@@ -25,7 +25,7 @@ function goldFace(cover, topicName) { return { cover: firstImg(cover), style: 'g
  * 章节开场:cards 是不含序章的章节卡,chapterId 是正要打开的那章。
  * 上一章在本局里玩过(至少一个节点完成)才先出「上一章完成」那一屏。
  */
-function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc }) {
+function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, elapsed }) {
   const list = (cards || []).filter((c) => c && !c.opening);
   const idx = list.findIndex((c) => String(c.id) === String(chapterId));
   const cur = idx >= 0 ? list[idx] : null;
@@ -36,12 +36,22 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc })
   let endInfo = null;
   if (prev && prevDone > 0) {
     const puzzle = summarizePuzzleScores(prevNodes);
+    // r2-finish 章节完成卡(Questo B1 结构):第 N 章完成 → 用时 / 本章得分 → 「下一站:…」。
+    // 用时是本局到此刻的跑表(读不到就整行不出),本章得分只在本章有计分题时出;下一站 = 这一章第一个没完成的节点。
+    const curNodes = cur ? chapterNodes(nodes, cur.id) : [];
+    const nextNode = curNodes.find((n) => !n.done) || null;
     endInfo = {
       number: pad2(idx),
-      kicker: '第 ' + idx + ' 章 · 完成',
+      kicker: '第 ' + idx + ' 章完成',
       title: prev.title || '',
       desc: '',
       stats: [{ v: prevDone + '/' + prevNodes.length, k: '坐标' }].concat(puzzle.count ? [{ v: String(puzzle.score), k: '解谜分' }] : []),
+      rows: [
+        elapsed ? { k: '用时', v: String(elapsed) } : null,
+        puzzle.count ? { k: '本章得分', v: String(puzzle.score) } : null,
+        { k: '坐标', v: prevDone + '/' + prevNodes.length },
+      ].filter(Boolean),
+      next: nextNode && nextNode.name ? String(nextNode.name) : '',
     };
   }
   const n = cur && cur.nodeCount ? cur.nodeCount : chapterNodes(nodes, cur && cur.id).length;

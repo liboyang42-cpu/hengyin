@@ -17,8 +17,10 @@ test('k2 j1 N1:有来源主题或玩法模板才算有游戏;读不到活动按�
   assert.equal(ticketHasGame({ ownerType: 2, cmsActivity: { topicId: 0, templateId: 0 } }), false);
 });
 
-test('k2 j1 N1:订单页主按钮与票夹「开始游戏」都按 ticketHasGame 收', () => {
-  assert.match(read('subpackageMember/components/cy/scene-member-order-detail/index.js'), /playQuery\(value\) && ticketHasGame\(value\)\) return 'play'/);
+test('k2 j1 N1:订单页「查看记录」与票夹「开始游戏」都按 ticketHasGame 收(V3-03 订单页不再出开始游戏)', () => {
+  const order = read('subpackageMember/components/cy/scene-member-order-detail/index.js');
+  assert.match(order, /playQuery\(value\) && ticketHasGame\(value\)\) return 'record'/);
+  assert.doesNotMatch(order, /return 'play'/);
   const wxml = read('subpackageMember/signup/index.wxml');
   assert.match(wxml, /class="wl-start[^"]*"[^>]*wx:if="\{\{walletState === 'ready' && ticketList\.length && !ticketList\[currentSwiperTicket\]\.wNoGame\}\}"/);
   const js = read('subpackageMember/signup/index.js');

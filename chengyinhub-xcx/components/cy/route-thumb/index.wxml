@@ -1,5 +1,13 @@
-<!-- 漫游轨迹地图缩略(2026-10-31 业主批准 P-7):686×360rpx 深灰底,轨迹亮紫,起点空心、终点白色实心,店铺四色打点;没有轨迹只画一个点。 -->
-<view class="rc__map">
+<!-- 漫游轨迹地图卡(2026-10-31 业主批准 P-7 示意图;2026-11-09 V3-40 有坐标时换真实底图):686×360rpx。 -->
+<view class="rc__map" wx:if="{{geo}}">
+  <map class="rc__real" longitude="{{geo.center.longitude}}" latitude="{{geo.center.latitude}}" scale="{{geo.scale}}"
+       include-points="{{geo.include}}" polyline="{{geo.polyline}}" circles="{{geo.circles}}"
+       enable-scroll="{{false}}" enable-zoom="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
+       show-location="{{false}}" enable-poi="{{false}}" show-compass="{{false}}" show-scale="{{false}}"
+       subkey="{{subkey}}" layer-style="{{layerStyle}}" aria-hidden="true"></map>
+  <view class="rc__hit"></view>
+</view>
+<view class="rc__map" wx:else>
   <view class="rc__seg" wx:for="{{route.segs}}" wx:for-item="seg" wx:key="i" style="left:{{seg.x}}rpx;top:{{seg.y}}rpx;width:{{seg.len}}rpx;transform:rotate({{seg.deg}}deg);"></view>
   <view class="rc__poi rc__poi--{{dot.tone}}" wx:for="{{route.dots}}" wx:for-item="dot" wx:key="i" style="left:{{dot.x}}rpx;top:{{dot.y}}rpx;"></view>
   <view class="rc__pin rc__pin--start" wx:if="{{route.start}}" style="left:{{route.start.x}}rpx;top:{{route.start.y}}rpx;"></view>

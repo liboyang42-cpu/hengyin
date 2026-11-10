@@ -58,7 +58,8 @@
     <view class="tu-bar" wx:if="{{item.pct >= 0}}"><view class="tu-bar__f" style="width:{{item.pct || 0}}%"></view></view>
     <text class="gl-m">{{item.startDate}} – {{item.endDateExclusive}} · {{item.metricText}}</text>
   </view>
-  <view class="tu-empty" wx:if="{{!busy && !rows.length && !error}}"><text class="tu-empty__t">还没有探索目标</text></view>
+  <!-- V3-28(2026-11-09 业主「空态的状态我们不是这样的」):换成标准两层插画空态 -->
+  <view class="gl-empty" wx:if="{{!busy && !rows.length && !error}}"><cy-empty kind="empty" size="lg" title="还没有探索目标" /></view>
   <view class="tu-more" wx:if="{{hasMore && !busy}}" bindtap="nextPage" aria-role="button" aria-label="读取更多目标" hover-class="cy-pressed" hover-stay-time="80">读取更多</view>
 
   <view class="tu-fab" wx:if="{{!creating}}" bindtap="toggleCreate" aria-role="button" aria-label="定一个新目标" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="46" /></view>

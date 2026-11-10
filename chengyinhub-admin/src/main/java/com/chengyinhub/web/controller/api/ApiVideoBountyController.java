@@ -45,6 +45,17 @@ public class ApiVideoBountyController extends BaseController
         this.bountyService = bountyService;
     }
 
+    /**
+     * 可投稿的悬赏活动(作者侧活动选择)。只列进行中的活动,只回 campaignKey/title/description/windowDays;
+     * 费率、封顶、预算、归属与兑付标记一个都不下发。空列表 = 暂无进行中的悬赏。
+     */
+    @Operation(summary = "进行中的悬赏活动(作者选择用)")
+    @GetMapping("/campaign/list")
+    public AjaxResult listOpenCampaigns() {
+        requireAppMemberId();
+        return success(bountyService.listOpenCampaigns());
+    }
+
     @Operation(summary = "投稿:同一视频不可重复投稿,跨平台搬运需同一原视频分组")
     @PostMapping("/submission")
     public AjaxResult submit(@RequestBody(required = false) VideoBountySubmitRequest request) {

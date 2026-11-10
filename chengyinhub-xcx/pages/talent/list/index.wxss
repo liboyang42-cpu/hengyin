@@ -325,3 +325,17 @@ page { background: var(--cy-bg-card); }
 .club-grid .club-card:nth-child(7) { transition-delay: calc(var(--pm-c-s, 0) * 180ms), calc(var(--pm-c-s, 0) * 180ms), 0s, 0s; }
 .club-grid .club-card:nth-child(8) { transition-delay: calc(var(--pm-c-s, 0) * 210ms), calc(var(--pm-c-s, 0) * 210ms), 0s, 0s; }
 .club-grid .club-card:nth-child(n+9) { transition-delay: calc(var(--pm-c-s, 0) * 240ms), calc(var(--pm-c-s, 0) * 240ms), 0s, 0s; }
+
+/* r2-store 通票入口卡(玩家深色域,令牌取色;本页底色是 --cy-bg-card,卡面抬一层,票根缺口取本页底色) */
+.store-card { position: relative; display: flex; align-items: center; gap: var(--cy-space-4); margin: var(--cy-space-4) var(--cy-page-x); padding: var(--cy-space-5) var(--cy-space-5); border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface-strong); }
+.store-card::before, .store-card::after { content: ""; position: absolute; top: 50%; width: 28rpx; height: 28rpx; margin-top: -14rpx; border-radius: 50%; background: var(--cy-bg-card); }
+.store-card::before { left: -14rpx; }
+.store-card::after { right: -14rpx; }
+.store-card__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.store-card__t { font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-color-text-primary); }
+.store-card__m { font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
+.store-card__tags { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 4rpx; }
+.store-card__tag { max-width: 220rpx; padding: 2rpx 14rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-interactive); font-size: var(--cy-font-micro); color: var(--cy-color-text-secondary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.store-card__side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 12rpx; }
+.store-card__p { font-size: var(--cy-font-numeric, 36rpx); font-weight: 800; color: var(--cy-color-text-primary); }
+.store-card__go { min-height: 64rpx; line-height: 64rpx; padding: 0 28rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-size: var(--cy-font-caption); font-weight: 600; }

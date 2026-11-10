@@ -157,11 +157,36 @@ class GameplayPresetCatalogContractTest {
         partial.remove("timerSeconds");
         partial.remove("question");
 
-        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+        GameplayPresetDraftService.MissingFieldsException refused = assertThrows(
+                GameplayPresetDraftService.MissingFieldsException.class,
                 () -> harness.service.create(AUTHOR, "author", preset.presetKey(), partial));
-        assertTrue(refused.getMessage().contains("timerSeconds"), refused.getMessage());
-        assertTrue(refused.getMessage().contains("question"), "缺失项必须一次列全：" + refused.getMessage());
+        List<String> keys = refused.getRequiredFields().stream().map(row -> row.get("key")).toList();
+        assertTrue(keys.contains("timerSeconds"), keys.toString());
+        assertTrue(keys.contains("question"), "缺失项必须一次列全：" + keys);
+        refused.getRequiredFields().forEach(row -> assertFalse(row.get("label").isBlank(), row.toString()));
         assertTrue(harness.drafts.isEmpty(), "被拒的创建不得写出任何草稿");
+    }
+
+    /**
+     * qx-c1 #9：缺得多时旧的长消息超过 120 字被 UserSafeMessage 压成「系统繁忙」。
+     * 现在消息短且固定，清单走 data.requiredFields，经真实 AjaxResult 掩码后仍完整可读。
+     */
+    @Test
+    void missingFieldsSurviveTheUserSafeMaskAsAStructuredList() {
+        Harness harness = new Harness();
+        GameplayPresetCatalog.Preset preset = GameplayPresetCatalog.shared().require("T08-multi-clue-investigation");
+        GameplayPresetDraftService.MissingFieldsException refused = assertThrows(
+                GameplayPresetDraftService.MissingFieldsException.class,
+                () -> harness.service.create(AUTHOR, "author", preset.presetKey(), Map.of()));
+        assertEquals(preset.fields().size(), refused.getRequiredFields().size(), "全部声明字段一次列全");
+        com.chengyinhub.common.core.domain.AjaxResult result =
+                com.chengyinhub.web.controller.api.ApiPresetControllerAccess.missingFields(refused);
+        assertEquals(GameplayPresetDraftService.MissingFieldsException.MESSAGE, result.get("msg"));
+        assertFalse(String.valueOf(result.get("msg")).contains("系统繁忙"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        assertEquals("PRESET_FIELDS_REQUIRED", data.get("code"));
+        assertEquals(refused.getRequiredFields(), data.get("requiredFields"));
     }
 
     /**

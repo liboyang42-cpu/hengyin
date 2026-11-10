@@ -10,3 +10,6 @@
 .rc__pin--start { background: #15171C; border: 6rpx solid #FFFFFF; } /* ds-ok P-7 起点空心 */
 .rc__pin--end { background: #FFFFFF; border: 4rpx solid #15171C; } /* ds-ok P-7 终点实心 */
 .rc__pin--only { left: 50%; top: 50%; background: #8C88FF; border: 6rpx solid #15171C; } /* ds-ok P-7 没有轨迹:只画一个点 */
+/* 2026-11-09 V3-40:真实底图铺满卡片上半;盖一层透明点击层,点卡片仍走外层 openSession(原生地图不吞点击、不能拖) */
+.rc__real { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.rc__hit { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }

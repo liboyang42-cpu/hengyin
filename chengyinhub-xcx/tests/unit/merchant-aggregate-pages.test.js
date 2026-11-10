@@ -371,7 +371,7 @@ test('商家一级导航保持五格且关系域对用户显示为合作', () =>
     ['workbench', '工作台'],
     ['marketing', '营销'],
     ['template', '模板'],
-    ['relation', '合作'],
+    ['relation', '发现'],
     ['mine', '我的'],
   ]);
 });

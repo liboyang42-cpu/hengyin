@@ -1,0 +1,4 @@
+{"name":"U-use-before","opts":{"path":"pages/index/index","identity":"e2e-openid-9003","agree":true},"open":"/pages/templatedetail/topic-detail/index?id=990015",
+ "latency":{"match":"/topic-template/use","ms":500},
+ "setup":[{"wait":2500}],
+ "action":{"tap":"应用"},"frames":8,"offsets":[0,150,300,450,600,800,1100,1500],"windowMs":1700}

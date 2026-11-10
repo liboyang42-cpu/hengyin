@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 157,
+    "routes": 167,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -282,6 +282,19 @@
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageA/pages/video-bounty/index",
+      "pkg": "subpackageA",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "topicId"
+      ],
       "hasJs": true,
       "hasWxml": true
     },
@@ -798,6 +811,30 @@
       "dataKeys": [
         "toId",
         "topicId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/catalog/index",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/topic/catalog/detail",
+      "pkg": "pages/topic",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
       ],
       "hasJs": true,
       "hasWxml": true
@@ -1728,6 +1765,41 @@
       "hasWxml": true
     },
     {
+      "pagePath": "subpackageMember/market/passes/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/market/pass/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/market/gift/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "subpackageRoam/citynode-code/index",
       "pkg": "subpackageRoam",
       "tabBar": false,
@@ -1838,17 +1910,6 @@
       "hasWxml": true
     },
     {
-      "pagePath": "subpackageTools/capsule/index",
-      "pkg": "subpackageTools",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": true,
-      "needsData": false,
-      "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
       "pagePath": "subpackageTools/monthly-recap/index",
       "pkg": "subpackageTools",
       "tabBar": false,
@@ -1919,6 +1980,66 @@
     {
       "pagePath": "pages/deregister/index",
       "pkg": "pages/deregister",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageJourney/pages/report/index",
+      "pkg": "subpackageJourney",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageJourney/pages/landing/index",
+      "pkg": "subpackageJourney",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "aid",
+        "tid"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageJourney/pages/seats/index",
+      "pkg": "subpackageJourney",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "registrationId"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageJourney/pages/promo/index",
+      "pkg": "subpackageJourney",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageJourney/pages/settle/index",
+      "pkg": "subpackageJourney",
       "tabBar": false,
       "role": "player",
       "needsLogin": false,

@@ -99,11 +99,27 @@
         <text class="orow-k">合计</text>
         <text class="orow-v">{{money.amount2(info.payableAmount)}}</text>
       </view>
-      <view class="orow" wx:if="{{info.refundAmountShown}}">
+      <!-- U07-04:有退款进度块时金额只在那里按阶段写,这里不再出一个看似已到账的「退款」行 -->
+      <view class="orow" wx:if="{{info.refundAmountShown && !info.settleView.show}}">
         <text class="orow-k">退款</text>
         <text class="orow-v">{{money.amount2(info.refundAmountShown)}}</text>
       </view>
     </view>
+
+    <!-- U07-04 退款进度:阶段、分项、已退/有效票数;只在有退款事实时出现 -->
+    <block wx:if="{{info.settleView.show}}">
+      <view class="sec-title">退款进度</view>
+      <view class="ocard">
+        <view class="orow">
+          <text class="orow-k">进度</text>
+          <text class="orow-v settle-stage settle-stage--{{info.settleView.stageTone}}">{{info.settleView.stage}}</text>
+        </view>
+        <view class="orow" wx:for="{{info.settleView.rows}}" wx:key="key">
+          <text class="orow-k">{{item.label}}</text>
+          <text class="orow-v">{{item.value}}</text>
+        </view>
+      </view>
+    </block>
 
     <!-- 「和队友一起出发」原来插在状态卡和订单明细之间,打断稿的顺序;2026-09-15 挪到支付明细之后 -->
     <cy-card class="order-card team-order-card" wx:if="{{info.teamOpen}}">
@@ -181,6 +197,17 @@
       <view class="orow" wx:if="{{info.transactionId}}">
         <text class="orow-k">微信交易单号</text>
         <text class="orow-v">{{info.transactionId}}</text>
+      </view>
+    </view>
+    </block>
+
+    <!-- qx-b3 P5:已付多人票的同行席位;数量与状态都在席位页读服务端 -->
+    <block wx:if="{{info.paymentStatus == 2 && info.registrationStatus == 2 && info.orderNum > 1}}">
+    <view class="sec-title">同行席位</view>
+    <view class="ocard">
+      <view class="orow" bindtap="goSeats" aria-role="button" aria-label="管理同行席位" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="orow-k">管理席位</text>
+        <text class="orow-v orow-v--link">{{info.orderNum}} 人票</text>
       </view>
     </view>
     </block>
@@ -318,8 +345,8 @@
     <view class="bp-cta-bar" wx:if="{{primaryCta === 'pay'}}">
       <view class="primary-cta" bindtap="payOrder" aria-role="button" aria-label="去支付" hover-class="cy-pressed" hover-stay-time="80">{{paying ? '支付中...' : '去支付'}}</view>
     </view>
-    <view class="bp-cta-bar" wx:elif="{{primaryCta === 'play' || primaryCta === 'record'}}">
-      <view class="primary-cta" bindtap="startPlay" aria-role="button" aria-label="{{primaryCta === 'record' ? '查看记录' : '开始游戏'}}" hover-class="cy-pressed" hover-stay-time="80">{{primaryCta === 'record' ? '查看记录' : '开始游戏'}}</view>
+    <view class="bp-cta-bar" wx:elif="{{primaryCta === 'record'}}">
+      <view class="primary-cta" bindtap="startPlay" aria-role="button" aria-label="查看记录" hover-class="cy-pressed" hover-stay-time="80">查看记录</view>
     </view>
   <!-- 队伍人数选择(2026-09-02 由 wx.showActionSheet 收编)。放在 ready 闸内:
        .detail 的直属子节点必须受 loadState 闸控制,失败态不该还挂着一个弹层。 -->

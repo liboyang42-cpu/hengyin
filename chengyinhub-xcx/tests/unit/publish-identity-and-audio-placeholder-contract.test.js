@@ -102,12 +102,11 @@ test('章节承接只在自由探索开放；城市定向旧误选仍可关闭�
   ]) assert.equal(!!visible({ productType }, editable, scope, { recruitEnabled: enabled }), expected)
 })
 
-test('商家的票务页没有自玩票整段(稿 M11)', () => {
-  const idx = STEP3.indexOf('<view class="pd-section-title">自玩票</view>')
-  assert.ok(idx > 0, '自玩票段不见了')
-  const guard = STEP3.slice(Math.max(0, idx - 400), idx)
-  assert.match(guard, /operationScope !== 'MERCHANT'/,
-    '自玩票段没有身份闸 —— 商家发的是自由探索、卖的是承接位，这一段对它没有意义')
+// r2-join a5-v3-29(2026-11-10 业主):自玩票是平台官方玩家会员,不是发布者开的票 ——
+// 票务页对任何发布者(含商家)都不再出现自玩票整段与其开关。
+test('发布者票务页没有自玩票整段(业主 a5-v3-29)', () => {
+  assert.equal(STEP3.indexOf('<view class="pd-section-title">自玩票</view>'), -1, '票务页仍出现自玩票段')
+  assert.doesNotMatch(STEP3, /onSelfPlayToggle|开放自玩票/, '票务页仍有自玩票开关')
 })
 
 // ── 商家承接的身份闸,判据本身也要有合同 ─────────────────

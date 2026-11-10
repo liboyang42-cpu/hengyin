@@ -107,8 +107,9 @@ test('★问答的选项照试玩台 .qaopt(2026-10-23 用户:「回到试玩台
   assert.ok(/\.qa__opts \{[^}]*background: transparent/.test(s), '选项外面没有卡')
   assert.ok(/\.qa__opt \{[^}]*border-bottom: 1rpx solid var\(--soft\)/.test(s), '行与行之间是细线')
   assert.ok(/\.qa__opt--first \{[^}]*border-top: 1rpx solid var\(--soft\)/.test(s), '第一行上面也有一道线')
-  assert.equal(/\.qa__opt \{[^}]*border-radius/.test(s), false, '单行不许有圆角 —— 那又变回一颗颗按钮')
-  assert.equal(/\.qa__opt\.is-(right|wrong) \{[^}]*background/.test(s), false, '对错只染字，不铺整行色块')
+  /* r2 b2-ug-02:选项配了图时是另一种版式(.qa__opts--pic 图卡网格),细线文字行的判据只管纯文字行 */
+  assert.equal(/(?<!--pic )\.qa__opt \{[^}]*border-radius/.test(s), false, '单行不许有圆角 —— 那又变回一颗颗按钮')
+  assert.equal(/(?<!--pic )\.qa__opt\.is-(right|wrong) \{[^}]*background/.test(s), false, '对错只染字，不铺整行色块')
   assert.ok(/\.qa__opt\.is-right::after \{ background: var\(--ok\)/.test(s), '尾巴方块跟着对错变色')
   assert.ok(/\.qa__input \{[\s\S]{0,400}?background: transparent/.test(s),
     '答案框不能是灰盒子 —— 盒子把「写答案」变成「填表格」')

@@ -225,7 +225,7 @@ const CONTRACTS = {
   },
   B44: {
     sources: ['subpackageA/pages/myproject/index.js', 'subpackageA/pages/myproject/index.wxml'],
-    paths: ['typeTab', 'tplList[].id', 'tplList[].title', 'tplList[].imgUrl', 'tplList[]._stateVariant', 'tplList[]._statusText', 'tplList[].marketPublishStatus', 'tplList[]._marketText', 'tplList[]._canToggleMarket', 'tplList[]._marketActionText', 'tplLoaded', 'tplLoading', 'tplErrorMsg'],
+    paths: ['typeTab', 'tplList[].id', 'tplList[].title', 'tplList[].imgUrl', 'tplList[]._stateVariant', 'tplList[]._statusShort', 'tplList[].marketPublishStatus', 'tplList[]._marketText', 'tplList[]._canToggleMarket', 'tplList[]._marketActionText', 'tplLoaded', 'tplLoading', 'tplErrorMsg'],
     equals: { typeTab: 'template', tplLoaded: true, tplLoading: false, tplErrorMsg: '' },
   },
   B68: {

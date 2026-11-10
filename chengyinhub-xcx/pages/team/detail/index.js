@@ -1,3 +1,4 @@
+const teamSeats = require('../utils/team-seats.js');
 const cyToast = require('../../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
@@ -29,6 +30,7 @@ Page({
     navBarHeight: app.globalData.navBarHeight,
     commandRecovery: null, recoveryShown: false, commandReject: null,
     applicants: [], applicantsState: '',
+    seatChips: [], openSeats: [], inviteText: '',
     board: null,
     boardState: '',
     boardMessage: '',
@@ -181,6 +183,7 @@ Page({
         if (fromPull) wx.stopPullDownRefresh();
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id) === context.teamId) {
           const team = res.data.team;
+          that._seats = !!(res.data.seats && Number.isSafeInteger(res.data.seats.available));
           that.setData({
             loading: false,
             refreshing: false,
@@ -192,6 +195,10 @@ Page({
             statusText: STATUS_TEXT[team.status] || '状态未知',
             expireText: that.formatTime(team.expireTime),
             joinModePublic: team.joinMode == 2,
+            // U06-01:席位与邀请期限只回放服务端投影;缺字段整行不画
+            seatChips: teamSeats.seatChips(res.data.seats),
+            openSeats: teamSeats.openSeats(team, res.data.seats),
+            inviteText: teamSeats.inviteText(res.data.invite),
             error: '',
             errorSub: ''
           });
@@ -314,6 +321,7 @@ Page({
         this.setData({ members: d.members.map(m => ({ memberId: exactId(m.memberId),
           memberName: m.name || '城瘾玩家', memberAvatar: m.avatar || '', role: m.role })),
           'team.joinedCount': d.threshold.activeCount,
+          openSeats: this._seats ? this.data.openSeats : teamSeats.openSeats(Object.assign({}, this.data.team, { joinedCount: d.threshold.activeCount }), null),
           teamTitle: teamTitleOf(this.data.team, d.members.map(m => ({ name: m.name, role: m.role }))),
           joined: true, leader: self.role == null ? this.data.leader : self.role == 1 });
         // Only project server completion facts; never infer team completion from member counts.

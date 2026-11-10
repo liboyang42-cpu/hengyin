@@ -1,0 +1,4 @@
+{"name":"U03-02-publish-after","opts":{"path":"pages/index/index","identity":"e2e-openid-9003","agree":true},"open":"/pages/publish/fabu/index?id=990017",
+ "latency":{"match":"/api/topic/v2/update","ms":900},
+ "setup":[{"wait":3500},{"tap":"下一步"},{"wait":1500},{"tap":"预览"},{"wait":2000}],
+ "action":{"tapSel":".sp-done"},"frames":8,"offsets":[0,300,600,900,1200,1500,1900,2600],"windowMs":2800}

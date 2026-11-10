@@ -190,7 +190,9 @@ button.david_tk_con_tgb{border: 2rpx dashed var(--cy-border-line); width:100%; h
 .rv-bg__img { width: 110%; height: 110%; margin: -5%; filter: blur(40rpx); transform: scale(1.06); }
 .rv-bg__fade { position: absolute; left: 0; right: 0; top: 0; bottom: 0;
   background: linear-gradient(180deg, rgba(0, 0, 0, .35) 0%, rgba(0, 0, 0, .45) 55%, var(--cy-bg-page) 100%); } /* ds-ok: 背景图上的压暗渐层,落到页面底色 */
-.rv-bg-btn { position: absolute; right: var(--cy-page-x); top: 470rpx; z-index: 2; height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill);
+/* 命中区 88rpx,可见药丸 56rpx */
+.rv-bg-hit { margin-top: var(--cy-space-1); min-height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.rv-bg-btn { height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill);
   display: flex; align-items: center; gap: var(--cy-space-1-5); font-size: var(--cy-font-caption); color: #ffffff; /* ds-ok: 压在照片上的常量白 */
   background: rgba(0, 0, 0, .38); /* ds-ok: 照片上的半透明底 */ }
 .rv-head { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding-top: var(--cy-space-4); }

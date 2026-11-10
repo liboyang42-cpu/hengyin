@@ -4,30 +4,61 @@
     <text class="ck__title">确认订单</text>
   </view>
   <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="ck__body" style="top: {{topInset}}px;">
-    <text class="ck__sec">参与人信息</text>
+    <!-- 1 主题头 -->
+    <view class="ck__head">
+      <image wx:if="{{cover}}" class="ck__hero" src="{{cover}}" mode="aspectFill" />
+      <text class="ck__name">{{name}}</text>
+      <view class="ck__pills" wx:if="{{view.pills.length || placeText}}">
+        <text class="ck__pill" wx:for="{{view.pills}}" wx:key="*this">{{item}}</text>
+        <text class="ck__pill" wx:if="{{placeText}}">{{placeText}}</text>
+      </view>
+    </view>
+
+    <!-- 2 单次购买(默认选中) -->
+    <view class="ck__opt is-sel" aria-role="radio" aria-checked="true" aria-label="{{view.single.title}} {{view.single.price}}">
+      <view class="ck__opt-top">
+        <view class="ck__dot is-on"></view>
+        <text class="ck__opt-t">{{view.single.title}}</text>
+        <view class="ck__opt-p">
+          <text class="ck__strike" wx:if="{{view.single.strike}}">{{view.single.strike}}</text>
+          <text class="ck__price {{view.loading ? 'is-dim' : ''}}">{{view.single.price}}</text>
+        </view>
+      </view>
+      <text class="ck__opt-l" wx:if="{{view.single.line}}">{{view.single.line}}</text>
+    </view>
+
+    <!-- 3 城市通票:只列覆盖本主题的在售商品,点进原通行证详情页 -->
+    <view wx:for="{{view.passes}}" wx:key="id" class="ck__opt ck__ticket" bindtap="onPass" data-id="{{item.id}}"
+          aria-role="button" aria-label="{{item.name}} {{item.price}}" hover-class="ck-pressed" hover-stay-time="80">
+      <view class="ck__opt-top">
+        <view class="ck__dot"></view>
+        <text class="ck__opt-t">{{item.name}}</text>
+        <view class="ck__opt-p"><text class="ck__price">{{item.price}}</text><cy-icon class="ck__more" name="chevron-right" size="28" /></view>
+      </view>
+      <text class="ck__opt-l" wx:if="{{item.meta}}">{{item.meta}}</text>
+    </view>
+
+    <!-- 参与人(建单必填) -->
     <view class="ck__card ck__who" bindtap="onProfile" aria-role="button" aria-label="修改参与人信息" hover-class="ck-pressed" hover-stay-time="80">
+      <text class="ck__k">参与人</text>
       <view wx:if="{{profileName}}" class="ck__who-main"><text class="ck__who-n">{{profileName}}</text><text class="ck__who-p">{{profilePhone}}</text></view>
       <text wx:else class="ck__who-miss">补全姓名和手机号</text>
       <cy-icon class="ck__more" name="chevron-right" size="28" />
     </view>
 
-    <text class="ck__sec">主题信息</text>
-    <view class="ck__card ck__item">
-      <image wx:if="{{cover}}" class="ck__cover" src="{{cover}}" mode="aspectFill" />
-      <view class="ck__item-tx">
-        <text class="ck__item-n">{{name}}</text>
-        <text class="ck__item-s" wx:if="{{validText}}">时间</text><text class="ck__item-v" wx:if="{{validText}}">{{validText}}</text>
-        <text class="ck__item-s" wx:if="{{placeText}}">地点</text><text class="ck__item-v" wx:if="{{placeText}}">{{placeText}}</text>
-      </view>
+    <!-- 7 明细 -->
+    <view class="ck__card ck__rows" wx:if="{{view.bill.length}}">
+      <view class="ck__row" wx:for="{{view.bill}}" wx:key="key"><text class="ck__k">{{item.k}}</text><text class="ck__v {{item.minus ? 'is-minus' : ''}}">{{item.v}}</text></view>
+      <view class="ck__row ck__row--sum"><text class="ck__k ck__k--sum">合计</text><text class="ck__v ck__v--sum">{{view.totalText}}</text></view>
+    </view>
+    <view class="ck__refused" wx:if="{{view.refused}}" aria-role="alert">{{view.refusal}}</view>
+
+    <!-- 8 信任行:只放服务端/建单口径能保证的事实 -->
+    <view class="ck__trust" wx:if="{{view.trust.length}}">
+      <view class="ck__trust-i" wx:for="{{view.trust}}" wx:key="key"><cy-icon name="{{item.icon}}" size="36" /><text>{{item.label}}</text></view>
     </view>
 
-    <text class="ck__sec">费用明细</text>
-    <view class="ck__card ck__rows">
-      <view class="ck__row"><text class="ck__k">票种</text><text class="ck__v">自玩通行证</text></view>
-      <view class="ck__row"><text class="ck__k">订单金额</text><text class="ck__v">{{priceText}}</text></view>
-      <view class="ck__row ck__row--sum"><text class="ck__k ck__k--sum">合计</text><text class="ck__v ck__v--sum">{{priceText}}</text></view>
-    </view>
-
+    <!-- 10 单独同意(个保法第 23 条,建单必需) -->
     <view class="ck__consent">
       <cy-consent-check checked="{{consentChecked}}" text="同意将姓名、手机号提供给主办方，用于报名核验" bind:change="onConsent" />
       <text class="ck__hint" wx:if="{{consentHint}}">{{consentHint}}</text>
@@ -38,8 +69,9 @@
     </view>
     <view class="ck__pad"></view>
   </scroll-view>
+  <!-- 11 底栏:合计 + 支付,随报价实时更新 -->
   <view class="ck__bar">
-    <view class="ck__sum"><text class="ck__sum-k">合计</text><text class="ck__sum-v">{{priceText}}</text></view>
-    <view class="ck__pay {{loading ? 'is-busy' : ''}}" bindtap="onPay" aria-role="button" aria-label="{{free ? '免费领取' : '立即支付'}}" hover-class="ck-pressed" hover-stay-time="80">{{loading ? '处理中…' : (free ? '免费领取' : '立即支付')}}</view>
+    <view class="ck__sum"><text class="ck__sum-v">{{view.totalText}}</text><text class="ck__sum-k">1 人</text></view>
+    <view class="ck__pay {{loading || view.loading ? 'is-busy' : ''}} {{view.refused ? 'is-off' : ''}}" bindtap="onPay" aria-role="button" aria-disabled="{{view.refused}}" aria-label="{{view.payLabel}}" hover-class="ck-pressed" hover-stay-time="80">{{loading ? '处理中…' : view.payLabel}}</view>
   </view>
 </view>

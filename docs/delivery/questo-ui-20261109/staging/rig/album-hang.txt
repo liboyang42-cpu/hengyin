@@ -1,0 +1,41 @@
+# a1 V3-11 album: headless rig probe (prefers-reduced-motion=reduce, then default), 2026-11-10T00:27:11Z
+# preview data from qx-a1/rig/gen.js album; after the 2nd scroll the page main thread stops answering; Debugger.pause stack:
+00:26:14 scroll 0
+00:26:17 eval
+00:26:17 {"album":"{\"show\":false,\"cur\":0,\"title\":\"\",\"images\":[]}","paras":"text,text,text,text,game"}
+00:26:17 shot
+00:26:17 ok
+00:26:17 scroll 1
+00:26:20 eval
+00:26:28 "EVAL-TIMEOUT"
+00:26:28 shot
+00:26:34 SHOT-TIMEOUT
+00:26:34 pausing
+PAUSED
+  at rootScope  203
+  at Instance.__render  663
+  at Instance.__setProps  711
+  at updateEl  331
+  at patchChildren  282
+  at updateEl  336
+  at patchChildren  282
+  at Instance.__render  665
+  at (anon)  655
+00:26:50 scroll 0
+00:26:53 eval
+00:26:53 {"album":"{\"show\":false,\"cur\":0,\"title\":\"\",\"images\":[]}","paras":"text,text,text,text,game"}
+00:26:53 shot
+00:26:53 ok
+00:26:53 scroll 1
+00:26:57 eval
+00:27:05 "EVAL-TIMEOUT"
+00:27:05 shot
+00:27:11 SHOT-TIMEOUT
+00:27:11 pausing
+PAUSED
+  at renderOne  261
+  at renderNodes  219
+  at renderOne  263
+  at renderNodes  219
+  at Instance.__render  663
+  at (anon)  655

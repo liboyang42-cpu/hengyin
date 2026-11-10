@@ -16,7 +16,7 @@
   align-items: stretch;
   padding: var(--pk-card-pad, calc(env(safe-area-inset-top) + 180rpx) 44rpx 200rpx);
   box-sizing: border-box;
-  background: #0B0B0C;                                   /* ds-ok 原型 .g-walk */
+  background: var(--pk-card-bg, #0B0B0C);                /* ds-ok 原型 .g-walk;内嵌透明(V3-10/53) */
   color: #F2F2F2;                                        /* ds-ok */
 }
 .wk__h { font-size: var(--cy-type-display); font-weight: 900; }           /* ds-ok 原型 26px */

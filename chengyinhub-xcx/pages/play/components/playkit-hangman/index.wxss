@@ -1,0 +1,80 @@
+@import "/pages/play/style/play-surface.wxss";
+
+/* cy-playkit-hangman · 逐字猜词(UG-01,r2 改版)。问答暗版皮肤;整屏居中,格子缩小、按词换行。 */
+.hm { color: var(--ink); }
+/* 整屏档:题面 + 格子 + 作答框作为一组,在按钮之上的区域里上下居中 */
+.hm__stage {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 160rpx;                 /* ds-ok 让出底部按钮,视觉中心不压到按钮上 */
+  box-sizing: border-box;
+}
+.hm--inline .hm__stage { padding-bottom: 0; }
+.hm__q { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; text-align: center; }
+/* 格子板:词组之间可换行,一个词里不换行 */
+.hm__board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 24rpx 28rpx;
+  margin-top: var(--cy-space-5);
+  max-width: 100%;
+}
+.hm__word-row { display: flex; flex-wrap: nowrap; gap: 10rpx; }
+.hm__cell {
+  flex: none;
+  width: 60rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 14rpx;                   /* ds-ok 小格的圆角,按格宽收小 */
+  background: var(--soft);
+  font-family: var(--cy-font-numeric);
+  font-size: var(--cy-type-body);
+  font-weight: 800;
+  color: var(--ink);
+  box-shadow: inset 0 -4rpx 0 var(--sub);
+  transition: box-shadow .2s ease, background .2s ease, transform .2s ease;
+}
+.hm__cell.is-given { background: transparent; box-shadow: inset 0 0 0 2rpx var(--soft); color: var(--sub); }
+.hm__cell.is-typed { box-shadow: inset 0 -4rpx 0 var(--ink); }
+.hm__cell.is-active { box-shadow: inset 0 0 0 4rpx var(--ink); transform: translateY(-4rpx); }
+.hm__cell.is-ok { box-shadow: inset 0 -4rpx 0 var(--ok); color: var(--ok); }
+.hm__sep { font-size: var(--cy-type-body); font-weight: 800; color: var(--sub); }
+.hm__press { opacity: .88; }
+/* 补字接收框:只接键盘,不占版面 */
+.hm__ghost { position: absolute; left: 0; top: 0; width: 2rpx; height: 2rpx; opacity: 0; }
+.hm__word {
+  width: 520rpx;
+  max-width: 100%;
+  height: 96rpx;
+  margin-top: var(--cy-space-6);
+  padding: 0 24rpx;
+  box-sizing: border-box;
+  border-radius: 48rpx;                   /* ds-ok 输入胶囊 = 高度一半 */
+  background: var(--soft);
+  text-align: center;
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+  color: var(--ink);
+}
+.hm__word.is-wrong { box-shadow: inset 0 0 0 2rpx var(--accent); }
+.hm__ph { color: var(--sub); font-weight: 600; }
+.hm__fb {
+  margin-top: var(--cy-space-4);
+  padding: var(--cy-space-3) var(--cy-space-5);
+  border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+  text-align: center;
+  word-break: break-all;
+}
+.hm__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 成功色软底,与排序同源 */
+.hm__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
+.hm--reduced .hm__cell { transition: none; }
+.hm__q, .hm__board, .hm__word, .hm__fb { flex-shrink: 0; }

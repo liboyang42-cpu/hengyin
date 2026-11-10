@@ -1,0 +1,25 @@
+   [库回读] reused topic             ((990015, 1, 0, 1, 1),)
+
+──────── 步骤 1:3b 主题层零价 guided 票种模板（后台 POST /business/ticket，同 chain_merchant_club；open-session 复制到场次）
+   business/ticket PUT signupDeadline {"msg": "操作成功", "code": 200, "_status": 200}
+   [库回读] 主题票                      ((75, '零价场次票', 'guided', Decimal('0.00'), datetime.datetime(2026, 11, 9, 10, 0), datetime.datetime(2026, 11, 13, 6, 19, 5), datetime.datetime(2026, 11, 12, 6, 19, 5)),)
+
+──────── 步骤 2:4 俱乐部开一场（POST /api/club/open-session，club 7001 是主题所属俱乐部 ⇒ clubOwned，不需要合作单）
+   open-session 2026-11-10 14:24      {"msg": "开团成功", "code": 200, "data": {"activityId": 15}, "_status": 200}
+   [库回读] activity                 ((15, 990015, 7001, 1, datetime.datetime(2026, 11, 10, 14, 24), datetime.datetime(2026, 11, 10, 23, 59, 59)),)
+   [库回读] 场次票                      ((77, Decimal('0.00')),)
+
+──────── 步骤 3:5-8 玩家：同意 → 参与人 → 报价 → 报名本场（ownerType=2）
+   consents                           操作成功
+   address                            操作成功
+   club/join                          {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   [库回读] club_member              ((7001, 9004, 1),)
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 0.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "edab588eddf74d9a4776072a403ed202", "memberDiscountYuan": 0.0, "clubMember": true, "prioritySignupEnabled"
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 74, "registrationNo": "A20261110180F40D5", "payableAmount": 0.0, "expireTime": "2026-11-10T14:49:06.320+08:00", "expiresAt": null, "paymentType": 1, "registrationIds": [74]}, "_statu
+   [库回读] registration             ((74, 2, 2, 2, 15),)
+
+──────── 步骤 4:9 等到集合时间后玩家进入游玩：GET /api/play/nodes?activityId=
+   play/nodes                         {"msg": "操作成功", "code": 200, "data": {"topicId": 990015, "topicDesc": "rig 免费城市定向样板", "topicName": "城市定向样板 1110061753", "topicCover": "https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109651551&OSSAccessKeyId=rig-dummy&Signature=<redacted>", "topicAudioUrl": nul
+
+TOPIC_ID=990015
+ACTIVITY_ID=15

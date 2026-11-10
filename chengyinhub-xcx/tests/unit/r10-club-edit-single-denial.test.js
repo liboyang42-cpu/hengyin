@@ -26,5 +26,6 @@ test('编辑深链:守卫报 deny 后不再渲染编辑场景', () => {
 
 test('守卫每次判定后都把 state 报给页面', () => {
   const js = fs.readFileSync(path.join(root, 'components/cy/access-gate/index.js'), 'utf8')
-  assert.match(js, /triggerEvent\('state', \{ state: that\.data\.state \}\)/)
+  // 2026-11-09 qx-a6:放行时多带已归一的岗位权限 access(店铺参谋经营优化卡按它显隐),state 照旧每次都报
+  assert.match(js, /triggerEvent\('state', \{ state: that\.data\.state, access: /)
 })

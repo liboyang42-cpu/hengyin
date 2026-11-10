@@ -1,0 +1,46 @@
+<!-- UG-05..09 提示阶梯(play-help-panel.js):只在服务端下发可用层时出现;沿用案件册同一套半屏与行样式。 -->
+<!-- a1-v3-21(2026-11-10 业主「提示应该是弹窗 不是背包」):提示是居中弹窗,不再是和背包同款的底部半屏;内容与行为不变,关闭在右上角 -->
+<view class="phl-pop" wx:if="{{helpPanel.show}}">
+  <view class="phl-pop-mask" bindtap="closeHelpPanel" catchtouchmove="noop" hover-class="none" aria-role="button" aria-label="关闭提示"></view>
+  <scroll-view class="phl-pop__card" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="tb-sheet ptb phl">
+    <view class="tb-close" bindtap="closeHelpPanel" aria-role="button" aria-label="关闭提示" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+    <text class="tb-title">提示</text>
+    <text class="phl__left" wx:if="{{helpPanel.freeLeft !== null}}">本局剩余免费 {{helpPanel.freeLeft}} 次</text>
+    <view class="tb-group" wx:if="{{helpPanel.rows.length}}">
+      <view class="tb-row phl__row {{item.state === 'gated' || item.state === 'unavailable' ? 'is-off' : ''}}" wx:for="{{helpPanel.rows}}" wx:key="level"
+            data-level="{{item.level}}" bindtap="tapHelpRow" aria-role="button" aria-label="{{item.label}}，{{item.pending ? '结果待确认' : item.action}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tb-copy">
+          <text class="tb-name">{{item.label}}</text>
+          <text class="phl__content {{item.fresh ? 'cy-rise-in' : ''}}" wx:if="{{item.content && item.contentType !== 'IMAGE' && helpPanel.doneLevel !== item.level}}" user-select>{{item.content}}</text>
+          <image class="phl__img {{item.fresh ? 'cy-rise-in' : ''}}" wx:if="{{item.content && item.contentType === 'IMAGE' && helpPanel.doneLevel !== item.level}}" src="{{item.content}}" mode="widthFix" aria-role="img" aria-label="图片提示" />
+          <text class="tb-purpose" wx:if="{{item.charge}}">{{item.charge}}</text>
+          <text class="phl__err" wx:if="{{item.error}}">{{item.error}}</text>
+        </view>
+        <!-- qx-u3 morph:解锁这一层时行尾文字褪掉,原位转圈 → 勾(style/morph-mark.wxss) -->
+        <view class="phl__act-box">
+          <text class="ptb__r phl__act phl__act--{{item.state}} {{(helpPanel.busyLevel === item.level || helpPanel.doneLevel === item.level) ? 'is-morph' : ''}}">{{item.pending ? '继续核对' : item.action}}</text>
+          <view wx:if="{{helpPanel.busyLevel === item.level || helpPanel.doneLevel === item.level}}" class="cy-mm cy-mm--{{helpPanel.busyLevel === item.level ? 'busy' : 'done'}}" aria-hidden="true"><view class="cy-mm__spin"></view><view class="cy-mm__check"></view></view>
+        </view>
+      </view>
+    </view>
+    <view class="tb-group" wx:if="{{helpPanel.skip || helpPanel.skipPending}}">
+      <view class="tb-row phl__row" bindtap="tapHelpSkip" aria-role="button" aria-label="跳过本题" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tb-copy"><text class="tb-name phl__danger">跳过本题</text></view>
+        <text class="ptb__r">{{helpPanel.skipPending ? '继续核对' : ''}}</text>
+      </view>
+    </view>
+    <text class="phl__err" wx:if="{{helpPanel.notice}}">{{helpPanel.notice}}</text>
+    <view class="tb-group">
+      <view class="tb-row phl__row" bindtap="toggleHelpReceipt" aria-role="button" aria-label="分数明细" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="tb-copy"><text class="tb-name">分数明细</text></view>
+        <view class="phl__chev {{helpPanel.receiptOpen ? 'is-open' : ''}}"></view>
+      </view>
+      <block wx:if="{{helpPanel.receiptOpen}}">
+        <view class="tb-row" wx:for="{{helpPanel.receipt.lines}}" wx:key="k"><view class="tb-copy"><text class="tb-purpose">{{item.k}}</text></view><text class="ptb__r">{{item.v}}</text></view>
+        <view class="tb-row" wx:if="{{helpPanel.receiptError}}"><text class="tb-purpose">{{helpPanel.receiptError}}</text></view>
+      </block>
+    </view>
+  </view>
+  </scroll-view>
+</view>

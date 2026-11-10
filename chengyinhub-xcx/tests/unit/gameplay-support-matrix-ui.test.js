@@ -207,7 +207,6 @@ test('旧主题纯效果模板在所有站点选择列表可用；通用主题�
   for (const key of ['publicSupportReasons', 'draftSupportReasons', 'mineSupportReasons']) {
     assert.equal(p.data[key][8], '', key);
   }
-  assert.equal(p.data.storySupportReasons.estimate, '');
   assert.equal(p.data.nodeSupportReason, '');
   p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: {
     runtimeScope: 'TEAM', worldMode: 'WORLD_SHARED', quests: [{ nodeId: 12 }]
@@ -217,7 +216,6 @@ test('旧主题纯效果模板在所有站点选择列表可用；通用主题�
   p.data.nodesForm.id = 12;
   p._refreshSupportMatrix();
   assert.equal(p.data.publicSupportReasons[8], '这种玩法暂时无法确认是否完成');
-  assert.equal(p.data.storySupportReasons.profile, '这种玩法暂时无法确认是否完成');
 });
 
 test('旧主题原有效果引用 VALUE 槽时列表、选用与发布检查口径一致', () => {
@@ -268,7 +266,7 @@ test('站点结算上下文需要真实通用范围及任务或设施引用，�
       p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: { runtimeScope, ...rule } });
       p._refreshSupportMatrix();
       const settled = ['PLAYER', 'TEAM'].includes(runtimeScope);
-      assert.equal(p.data.supportNodeSettled, settled, runtimeScope + '/' + Object.keys(rule)[0]);
+      assert.equal(p._nodeSupportContext().settled, settled, runtimeScope + '/' + Object.keys(rule)[0]);
       assert.equal(p.data.publicSupportReasons[8], settled ? '这种玩法暂时无法确认是否完成' : '');
     }
   }
@@ -276,7 +274,7 @@ test('站点结算上下文需要真实通用范围及任务或设施引用，�
     runtimeScope: 'TEAM', worldMode: 'WORLD_SHARED', plans: [{ operationNodeId: 11 }]
   } });
   p._refreshSupportMatrix();
-  assert.equal(p.data.supportNodeSettled, false, '仅表决站点不是任务或设施');
+  assert.equal(p._nodeSupportContext().settled, false, '仅表决站点不是任务或设施');
   assert.equal(p._nodeSupportContext().vote, true);
   p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: {
     runtimeScope: 'PLAYER', plans: [{ operationNodeId: 11 }]
@@ -285,12 +283,12 @@ test('站点结算上下文需要真实通用范围及任务或设施引用，�
   p.data.formData.themeRuntimeConfig = JSON.stringify({ gameplayRuntime: {
     survival: { zeroChallenge: { challengeNodeId: 11, alternativeNodeIds: [12] } }
   } });
-  p._refreshSupportMatrix(); assert.equal(p.data.supportNodeChallenge, true);
+  p._refreshSupportMatrix(); assert.equal(p._nodeSupportContext().challenge, true);
   assert.equal(p._templateSupportReason(tpl({ scan: { enabled: true } }, 4)), '这种玩法不能用作归零挑战');
   p.data.nodesForm.id = 12;
-  p._refreshSupportMatrix(); assert.equal(p.data.supportNodeChallenge, true);
+  p._refreshSupportMatrix(); assert.equal(p._nodeSupportContext().challenge, true);
   p.data.nodesForm.id = 13;
-  p._refreshSupportMatrix(); assert.equal(p.data.supportNodeChallenge, false);
+  p._refreshSupportMatrix(); assert.equal(p._nodeSupportContext().challenge, false);
 });
 
 test('归零挑战目录按服务端类型筛选，拒绝扫码/拍照/旧题；传感器必须有高级客观题备选', () => {

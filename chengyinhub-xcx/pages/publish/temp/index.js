@@ -18,6 +18,8 @@ const QA_TRIES = [{ key: 0, label: '不限次数' }, { key: 1, label: '1 次' },
 const QA_REVEAL = [{ key: false, label: '不亮出答案' }, { key: true, label: '亮出正确答案' }];
 const QA_FB_IMG_MAX = 3;
 let app = getApp();
+const provenance = require('../utils/publish/media-provenance.js');
+const PROVENANCE_TYPES = provenance.TYPES;
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000;
 const { TOPIC_EDITOR_SWITCH_COLOR } = require('../../../utils/play-visual-tokens.js');
@@ -33,7 +35,7 @@ const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const templateTools = require('../utils/publish/template-tools.js');
-const r5Editor = require('./r5-editor.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
+const r5Editor = require('./r5-editor.js'); const questoAuthor = require('./questo-author.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
 const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -200,7 +202,7 @@ function noPreviewTip(section) {
 }
 
 Page({
-  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods,
+  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods, ...questoAuthor.methods,
   MODULE_DEFS: MODULE_DEFS,
 
   _supportMatrix: null,
@@ -208,6 +210,10 @@ Page({
   _toolSummaries: templateTools.summaries({}),
   data: {
     creatorLoginRequired: false,
+    // 封面素材来源声明(r2-create):assetId 只来自本次上传回包;label = 已声明的来源中文名
+    coverProvenance: { assetId: '', label: '' },
+    provenanceSheet: { show: false, sourceType: '', attribution: '', licenseNote: '', error: '', saving: false },
+    provenanceTypes: PROVENANCE_TYPES,
     qaAnswerModes: QA_ANSWER_MODES, qaTriesOptions: QA_TRIES, qaRevealOptions: QA_REVEAL, qaFbImgMax: QA_FB_IMG_MAX,
     ...r5Editor.data, ...checkSection.data, ...afterSection.data,
     operationScope: '',
@@ -374,7 +380,7 @@ Page({
 
     // 通用底部选择器
     pickerSheet: { open: false, key: '', title: '', options: [] },
-    qaAnswerError: '',
+    qaAnswerError: '', qzHintTypes: questoAuthor.HINT_TYPES, ...questoAuthor.view(advancedGameConfig.defaultConfig()), // Questo 新玩法作者配置(questo-author.js)
     segmentOn: {}, segmentAddOptions: [], clueContent: {},
 
     // 校验滚动(scroll-view 内)
@@ -1540,7 +1546,7 @@ Page({
       this._refreshSupportMatrix();
       this._refreshOutcomeContract();
       this._syncCheckDerived();   // 开关玩法段 / 改次数都会改变「能放宽什么」
-      this._syncQaAnswerError();
+      this._syncQaAnswerError(); this._syncQuesto();
       this._syncSegments();
       this._syncClueContent();
       this.refreshPreviewState();
@@ -2210,12 +2216,66 @@ Page({
   uploadPic: function (e) {
     var that = this;
     app.chooseImage(function (res) {
-      that._setFormState({ 'formData.imgUrl': res[0] });
+      var picked = res && res[0];
+      var url = picked && typeof picked === 'object' ? picked.url : picked;
+      var assetId = picked && typeof picked === 'object' ? provenance.assetIdOf(picked.assetId) : '';
+      that._setFormState({ 'formData.imgUrl': url });
+      // 素材来源声明挂在这次上传的素材上:只有本次上传拿到了素材编号才能声明(旧封面只有地址,不出这一行)
+      that._provenanceDraft = null;
+      that.setData({ coverProvenance: { assetId: assetId, label: '' } });
       if (that.data.coverMediaUnusable) that.setData({ coverMediaUnusable: false });
-    }, 1, { crop: true, cropScale: '16:9' });
+    }, 1, { crop: true, cropScale: '16:9', mapResult: function (data) { return { url: data.url, assetId: data.assetId }; } });
   },
   clearCover: function () {
     this._setFormState({ 'formData.imgUrl': '' });
+    this._provenanceDraft = null;
+    this.setData({ coverProvenance: { assetId: '', label: '' } });
+  },
+
+  // ===== 素材来源声明(r2-create:业主「放到模板配置里」)=====
+  // 作者在模板配置里给自己刚上传的封面声明来源:PUT /api/media/asset/{id}/provenance(服务端校验归属与字段)。
+  openProvenance: function () {
+    var cp = this.data.coverProvenance || {};
+    if (!cp.assetId) return;
+    var draft = this._provenanceDraft || {};
+    this.setData({ provenanceSheet: { show: true, sourceType: draft.sourceType || '', attribution: draft.attribution || '', licenseNote: draft.licenseNote || '', error: '', saving: false } });
+  },
+  closeProvenance: function () {
+    if (this.data.provenanceSheet.saving) return;
+    this.setData({ 'provenanceSheet.show': false });
+  },
+  pickProvenanceType: function (e) {
+    var item = PROVENANCE_TYPES[Number(e && e.detail && e.detail.value)];
+    if (item) this.setData({ 'provenanceSheet.sourceType': item.value, 'provenanceSheet.error': '' });
+  },
+  onProvenanceInput: function (e) {
+    var field = e.currentTarget.dataset.field;
+    if (field === 'attribution') this.setData({ 'provenanceSheet.attribution': e.detail.value, 'provenanceSheet.error': '' });
+    else if (field === 'licenseNote') this.setData({ 'provenanceSheet.licenseNote': e.detail.value, 'provenanceSheet.error': '' });
+  },
+  saveProvenance: function () {
+    var sheet = this.data.provenanceSheet;
+    var assetId = (this.data.coverProvenance || {}).assetId;
+    if (sheet.saving || !assetId) return;
+    var built = provenance.payload(sheet);
+    if (built.error) { this.setData({ 'provenanceSheet.error': built.error }); return; }
+    var that = this;
+    this.setData({ 'provenanceSheet.saving': true, 'provenanceSheet.error': '' });
+    app.sendRequest({
+      url: '/api/media/asset/' + assetId + '/provenance', method: 'PUT', hideLoading: true, autoErrorToast: false,
+      data: JSON.stringify(built.data), header: { 'Content-Type': 'application/json' },
+      success: function (res) {
+        if (!res || String(res.code) !== '200') {
+          that.setData({ 'provenanceSheet.saving': false, 'provenanceSheet.error': (res && res.msg) || '保存失败' });
+          return;
+        }
+        that._provenanceDraft = built.data;
+        that.setData({ 'provenanceSheet.saving': false, 'provenanceSheet.show': false, 'coverProvenance.label': provenance.label(built.data.sourceType) });
+      },
+      fail: function () {
+        that.setData({ 'provenanceSheet.saving': false, 'provenanceSheet.error': '网络不稳定，请重试' });
+      }
+    });
   },
 
   // ===== 模块增删 =====
@@ -2925,7 +2985,9 @@ Page({
       this.exitPage();
       return;
     }
-    if (this.data.pickerSheet && this.data.pickerSheet.open) {
+    if (this.data.provenanceSheet && this.data.provenanceSheet.show) {
+      this.closeProvenance();
+    } else if (this.data.pickerSheet && this.data.pickerSheet.open) {
       this.closePickerSheet();
     } else if (this.data.checkSheet.show) { this.closeCheckSheet();
     } else if (this.data.afterEditor.show) { this.closeAfterSheet();
@@ -3160,10 +3222,10 @@ Page({
     }
 
     const advancedOpts = this._advancedValidateOpts();
-    const advancedError = advancedGameConfig.validate(this.data.advanced, advancedOpts);
+    const advancedModel = questoAuthor.beforeSave(this.data.advanced), advancedError = advancedGameConfig.validate(advancedModel, advancedOpts); // Questo 新键存盘前收口(人物与选项对齐、空可选键不写)
     formData.advancedConfigJson = advancedError
-      ? JSON.stringify(this.data.advanced)
-      : advancedGameConfig.serializeChanges(this.data.advanced, formData.advancedConfigJson, advancedOpts);
+      ? JSON.stringify(advancedModel)
+      : advancedGameConfig.serializeChanges(advancedModel, formData.advancedConfigJson, advancedOpts);
 
     const clearFields = templateAuthorFields.clearFields(this._loadedAuthorFields, formData);
     if (clearFields.length) formData.clearFields = clearFields;
@@ -3184,7 +3246,7 @@ Page({
     // 标题(草稿也校验)
     if (!f.title || !f.title.trim()) errors.title = '请填写玩法标题';
     const advancedError = advancedGameConfig.validate(this.data.advanced, this._advancedValidateOpts());
-    if (advancedError) errors.advanced = advancedError;
+    if (advancedError) errors.advanced = advancedError; else if (questoAuthor.hasErrors(this.data.advanced)) errors.advanced = questoAuthor.hasErrors(this.data.advanced);
     const outcome = this._refreshOutcomeContract();
     if (outcome.errors.length) errors.advanced = outcome.errors[0].message;
     if (draft) return errors;
@@ -3282,7 +3344,7 @@ Page({
 
   validateForm: function (formData, draft) {
     if (this.data.editorLoading || this.data.loadError) return false;
-    const errors = this._collectValidationErrors(draft);
+    const errors = this._collectValidationErrors(draft); this._qzSaveError(); // 保存后就地提示连「还没填」一起报
     this._refreshSupportMatrix();
     if (this.data.supportError) errors.advanced = this.data.supportError;
     if (this.data.supportMatrixLoading && (supportMatrix.generic(this.data.advanced) || supportMatrix.effectOnly(this.data.advanced)

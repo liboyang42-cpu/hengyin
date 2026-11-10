@@ -424,6 +424,9 @@
   padding: 0 var(--cy-space-4);
   border-radius: var(--cy-radius-xl);   /* 稿 r18 = 36rpx;xl(40)最近,lg(32)比稿方 2px */
   background: var(--cy-color-bg-surface);
+  /* V3-02:卡后面直接接 cy-card(权益/报名与客服)时原来零间距连成一块;补同 .order-card 的卡距。
+     后面接 .sec-title 时与它的 margin-top 折叠,原间距不变。 */
+  margin-bottom: var(--cy-scene-card-gap, var(--cy-space-3));
 }
 .orow {
   display: flex;
@@ -437,9 +440,10 @@
 .orow:last-child { border-bottom: none; }
 .orow-k {
   flex: none;
-  font-size: var(--cy-font-caption);
-  font-weight: 500;                 /* 稿 11px Medium */
-  color: var(--cy-color-text-tertiary);
+  /* r2 a3-v3-02/03 业主「灰色看不清」:字段名 11px 三级灰 → 12px 二级灰(#C7C7C7,卡底上 ≥10:1) */
+  font-size: var(--cy-font-label);
+  font-weight: 500;
+  color: var(--cy-color-text-secondary);
 }
 .orow-v {
   flex: 1;
@@ -529,3 +533,8 @@
 .hero-text { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (40ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (40ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 .sec-title { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (100ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (100ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 .ocard { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (120ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (120ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+
+/* U07-04 退款进度:沿用 .ocard/.orow;只给阶段一个语义色,不新起卡片样式 */
+.settle-stage--pending { color: var(--cy-color-status-warning); }
+.settle-stage--done { color: var(--cy-color-text-primary); }
+.settle-stage--muted { color: var(--cy-color-text-secondary); }

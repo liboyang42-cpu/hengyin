@@ -92,14 +92,21 @@
     on duplicate key update order_no=order_no
   </insert>
   <select id="lockOrder" useCache="false" flushCache="true" resultType="java.util.HashMap">select * from workshop_order where order_no=#{orderNo} for update</select>
-  <select id="lockLicenseForDraft" useCache="false" flushCache="true" resultType="java.util.HashMap">
-    select o.*,coalesce(i.buyer_id,l.buyer_id) as installation_owner,cast(m.member_id as signed) as draft_owner,
-      coalesce(i.command_json,l.command_json) as installation_command
+  <!-- Druid wall rejects the alias-scoped lock clause (OF o): lock only the license order row by its unique order_no; the subquery rows are not locked. -->
+  <select id="lockLicenseOrderForDraft" useCache="false" flushCache="true" resultType="java.util.HashMap">
+    select * from workshop_order where order_no=(
+      select coalesce(i.order_no,l.order_no) from cms_member_template m
+      left join workshop_install i on i.draft_id=m.id
+      left join workshop_draft_lineage l on l.draft_id=m.id
+      where m.id=#{draftId}) for update
+  </select>
+  <select id="licenseInstallationForDraft" useCache="false" flushCache="true" resultType="java.util.HashMap">
+    select coalesce(i.order_no,l.order_no) as order_no,coalesce(i.buyer_id,l.buyer_id) as installation_owner,
+      cast(m.member_id as signed) as draft_owner,coalesce(i.command_json,l.command_json) as installation_command
     from cms_member_template m
     left join workshop_install i on i.draft_id=m.id
     left join workshop_draft_lineage l on l.draft_id=m.id
-    inner join workshop_order o on o.order_no=coalesce(i.order_no,l.order_no)
-    where m.id=#{draftId} for update of o
+    where m.id=#{draftId}
   </select>
   <insert id="inheritDraft">
     insert into workshop_draft_lineage(draft_id,buyer_id,order_no,command_json,parent_draft_id)

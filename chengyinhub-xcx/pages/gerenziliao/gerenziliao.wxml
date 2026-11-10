@@ -21,9 +21,6 @@
   <image class="rv-bg__img" src="{{heroImg}}" mode="aspectFill" />
   <view class="rv-bg__fade"></view>
 </view>
-<view class="rv-bg-btn" bindtap="changeHeroBg" aria-role="button" aria-label="更换背景" hover-class="cy-pressed" hover-stay-time="80">
-  <cy-icon name="image" size="30" /><text>更换背景</text>
-</view>
 <view class="rv-head">
   <!-- 第九轮 m1-9:头像走微信头像选择器(用微信头像 / 相册 / 拍照),选完照旧裁剪、上传、审核 -->
   <button class="rv-ava rv-ava--btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80">
@@ -34,6 +31,10 @@
   <text class="rv-name">{{userInfo.name || '城瘾玩家'}}</text>
   <!-- 只有未通过时才提示;审核中新头像直接显示,不再写「复核中」 -->
   <text wx:if="{{avatarReviewText}}" class="rv-review" aria-role="status">{{avatarReviewText}}</text>
+  <!-- V3-33(2026-11-09 业主「这个要居中 看起来不对称」):更换背景从右侧悬浮挪到名字下方,随头像一列居中 -->
+  <view class="rv-bg-hit" bindtap="changeHeroBg" aria-role="button" aria-label="更换背景" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="rv-bg-btn"><cy-icon name="image" size="30" /><text>更换背景</text></view>
+  </view>
 </view>
 <view class="rv-group">
   <view class="rv-row" bindtap="openPop4" aria-role="button" aria-label="编辑昵称" hover-class="cy-pressed" hover-stay-time="80">

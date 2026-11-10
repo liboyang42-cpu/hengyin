@@ -30,6 +30,8 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/merchant/decor/ai-npc/index.wxml',
   // 2026-10-28 p86:快速配置 —— 「快速配置」在 cy-nav-bar 居中,正文首屏是问句 + 兴趣气泡
   'pages/publish/simple/index.wxml',
+  // 2026-11-10 qx-b5(qx-c3 归类):领取礼品 —— 「领取礼品」在 cy-nav-bar 居中,正文是整屏 cy-empty 结果态 + 底部按钮,没有 L1 大标题行。
+  'subpackageMember/market/gift/index.wxml',
   // 2026-09-05 漫游·附近的局:全屏地图页,nav overlay 居中标题,正文是地图 + 抽屉,没有 L1 大标题行。
   'subpackageRoam/nearby/index.wxml',
   // 2026-09-02 剧情与玩法(Figma J1-A/B/C):标题只在 cy-nav-bar 居中,不挂 cy-page-title。
@@ -78,6 +80,9 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/publish/template-intro/index.wxml',
   'subpackageRoam/citynode-code/index.wxml',
   'pages/search2/result/index.wxml',
+  // 2026-11-09 qx-b8:公开目录照抄 search2/result,城市名/「城市目录」在 cy-nav-bar 居中;落地详情是封面头 + 作品名承担标题。
+  'pages/topic/catalog/index.wxml',
+  'pages/topic/catalog/detail.wxml',
   'pages/square/detail/index.wxml',
   'pages/templatedetail/templatedetail.wxml',
   'pages/templatedetail/topic-preview/index.wxml', // 2026-10-28 卡堆预览：封面卡堆 + 主题名承担标题，导航只留返回
@@ -509,7 +514,13 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-10-28 +4:原型 C 的我的申诉(照抄我的举报)与发票详情、发票抬头、抬头编辑(X5 拆页),均为 cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 85 → 89。
   // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:master 89 叠加本线营销消息页(P-55)与账户收益分析页(G-9)两页 ⇒ 89 → 91(实测)。
   // 2026-10-30 收集册:集邮册、藏品册不再用 cy-page-title(标题由 album-head 给,见 NAV_WITHOUT_L1_TITLE) ⇒ 91 → 89。
-  assert.equal(files.length, 89, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  // 2026-11-09 qx-b4 +1:固定玩法预设页(pages/publish/preset),cy-nav-bar + 共享 cy-page-title 标准二级页 ⇒ 89 → 90。
+  // 2026-11-09 V3-42:时光胶囊页先删 ⇒ 89 → 88。
+  // 2026-11-10 staging 合流:qx-b4 +1 与 qx-a4 −1 叠加 ⇒ 89。
+  // 2026-11-10 qx-b5 +3:通行证列表 / 通行证详情 / 视频悬赏,均为 cy-nav-bar + 共享 cy-page-title 二级页 ⇒ 89 → 92。
+  // 2026-11-10 qx-c3 staging 重建:b5 +3 叠加,合并树实测 92。
+  // 2026-11-10 r2-create(b4-21):撤掉预设页 pages/publish/preset ⇒ 91。
+  assert.equal(files.length, 91, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {

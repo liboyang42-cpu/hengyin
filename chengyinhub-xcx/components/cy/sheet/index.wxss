@@ -49,6 +49,7 @@
   --cy-text-body: var(--cy-comp-sheet-role-text-secondary);
   --cy-text-secondary: var(--cy-comp-sheet-role-muted);
   background: var(--cy-comp-sheet-bg);
+  box-shadow: var(--cy-comp-sheet-role-lift); /* 2026-11-10 r2 玩家弹层顶边高光 + 向上投影;商家档为 none */
   /* 玻璃模糊;安卓部分 webview 不支持 backdrop-filter 时自动忽略,
    * 面板退回上面的半透明深底,不会变成透明白板。 */
   backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
@@ -92,7 +93,7 @@
   width: var(--cy-comp-sheet-handle-w, 64rpx);
   height: var(--cy-comp-sheet-handle-h, 8rpx);
   border-radius: var(--cy-radius-pill);
-  background: var(--cy-comp-sheet-handle-bg, var(--cy-border-line));
+  background: var(--cy-comp-sheet-handle-bg, var(--cy-color-sheet-handle));
   margin: var(--cy-comp-sheet-handle-mt, 16rpx) auto var(--cy-comp-sheet-handle-mb, 8rpx);
 }
 /* 2026-09-01:抓手热区。横条本身只有 8rpx 高,直接当热区拖不住。
@@ -105,18 +106,17 @@
   position: absolute;
   left: 0; right: 0; top: -12rpx; bottom: -20rpx;
 }
-/* 位移由根节点的 --sh-drag-y 继承下来,不写进 .sh__panel 的行内 style ——
-   那个 style 表达式被 sheet-morph-contract 逐字锁着(morph 起点变换靠它)。
-   transform 在「跟随」和「吸附」两态都要在场,否则松手瞬间声明消失 = 直接跳回,吸附不会播。 */
-.sh.sh--dragging .sh__panel,
-.sh.sh--snap .sh__panel { transform: translate3d(0, var(--sh-drag-y, 0px), 0); }
-/* 跟随:同时顶掉 animation 与 transition,否则面板落在手指后面。
+/* 拖拽(qx-u1):位移由视图层(utils/wxs/gesture.wxs)直接写在 .sh__panel 的行内 transform 上,吸附 / 弹回的过渡也由它写。
+   拖拽期间根上挂 .sh--dragging:顶掉进场关键帧与 morph 过渡,否则面板落在手指后面。
    写 .sh.sh--dragging 是为了压过 .sh--closing / .sh--morph 那两条同级规则。 */
 .sh.sh--dragging .sh__panel { animation: none; transition: none; }
-/* 吸附:松手没过阈值时 --sh-drag-y 被清空,变量回落到 0px,这条过渡把它送回去。 */
-.sh.sh--snap .sh__panel { transition: transform var(--cy-motion-standard) var(--cy-ease-out); }
-/* 减动效:吸附直出终帧(跟随本身是直接操作、不是动画,照常保留)。 */
-.sh.sh--reduced-motion.sh--snap .sh__panel { transition: none; }
+/* 甩出去关闭:面板已从手指松开处落到屏外,退场不再从 0 起播 sh-down(否则先闪回原位再落下一次)。遮罩照常淡出。 */
+.sh.sh--drag-out .sh__panel { animation: none; }
+/* 越过最高档往上拽(阻尼)与弹簧回弹时,面板底边会离开屏幕底:用同色外投影往下补一截,不露出底下的页面。
+   平时这一截在屏幕外看不见;inset 短卡四周留边、morph 从触发元素长出,两者不补。 */
+.sh--bottom .sh__panel { box-shadow: 0 320rpx 0 var(--cy-comp-sheet-bg); } /* ds-ok 拖拽越界补底,非装饰阴影 */
+.sh--bottom.sh--inset .sh__panel,
+.sh--bottom.sh--morph .sh__panel { box-shadow: none; }
 .sh__head {
   position: relative;
   display: flex;
@@ -298,6 +298,7 @@
 }
 
 /* 底部固定 CTA:贴底、让出安全区,键盘顶起时不被遮 */
+.sh__footer { --cy-comp-btn-radius: var(--cy-comp-bottom-btn-radius); } /* 2026-11-10 r2 底部按钮统一圆角 */
 .sh--full .sh__footer {
   flex: none;
   padding: var(--cy-space-2) 0 calc(env(safe-area-inset-bottom) + var(--cy-space-2));
@@ -420,7 +421,12 @@
   border-radius: var(--cy-comp-sheet-radius);
 }
 
-.sh--stacked .sh__panel{transform:translateY(-22rpx) scale(.96);transform-origin:bottom center;filter:brightness(.76);pointer-events:none}
+/* 叠层景深(qx-u3,ref3「Stacked cards」):上面又开了一层时,这一层缩到 .94、上移 10px、压暗,
+   露出顶边。由 behaviors/sheet-depth.js 按打开顺序统一判定(_under),页面不再逐个传 stacked。
+   与 project-drawer / project-layer / cy-scene-sheet 同一组数值;只走 transition,减动效直接到位。 */
+.sh__panel { transition: transform var(--cy-motion-sheet-in) var(--cy-ease-standard), filter var(--cy-motion-sheet-in) var(--cy-ease-standard); }
+.sh.sh--stacked .sh__panel { transform: translateY(-10px) scale(.94); transform-origin: 50% 0; filter: brightness(.7); pointer-events: none; }
+.sh--reduced-motion .sh__panel { transition: none; }
 
 /* 底部变体:面板固定头/脚,只让 .sh__body(scroll-view)滚动;长内容不再带着整块面板滚,
  * 也不会在滚到头时把手势交给底下的页面。has-footer 的同款规则在上面,这里补无 footer 的情形。 */

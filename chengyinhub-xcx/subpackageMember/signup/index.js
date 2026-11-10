@@ -5,7 +5,7 @@ const QR_RETRY_MS = 5000;
 const { passExpiryText, passDaysLeft } = require('../../utils/ticket-expiry.js');
 const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
-function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
+function myAvatar() { try { return typeof app.getAvatar === 'function' ? (app.getAvatar() || '') : ''; } catch (e) { return ''; } } function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
 function exactRegistrationId(value) {
   if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : '';
   if (typeof value !== 'string' || !/^\d+$/.test(value)) return '';
@@ -53,7 +53,7 @@ Page({
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
     currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景
-    flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, // 2026-10-28 翻面入场码 + 开始游戏
+    flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, meAvatar: '', // 2026-10-28 翻面入场码 + 开始游戏;r3-visual 顶栏本人头像(app.getAvatar,没有就不出)
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     focusState: '',
@@ -92,7 +92,7 @@ Page({
     // 两条支线的原料。data 里没有它们,所以在这里立好,别让后面的 concat 撞上 undefined
     that._topic = { list: [], state: 'loading', err: '' };
     that._activity = { list: [], state: 'loading', err: '' };
-    that.setData({ reduced: reducedMotionOn() });
+    that.setData({ reduced: reducedMotionOn(), meAvatar: myAvatar() });
 
     that.getActivityList()
     that.getTopicList()
@@ -102,7 +102,7 @@ Page({
   },
 
   onShow() {
-    this._lightStart();
+    this._lightStart(); if (this.data.meAvatar !== myAvatar()) this.setData({ meAvatar: myAvatar() });
     // onLoad 已发首批请求；只有隐藏后返回才重读服务端票状态。
     const ownerChanged = this._walletOwner !== walletOwner();
     if ((!this._refreshOnShow && !ownerChanged) || this._unloaded) return;
@@ -601,18 +601,23 @@ Page({
     })
   },
 
-  /* ===== v13 票夹卡堆(业主 2026-10-22「和 HTML 一模一样」) =====
-     卡片叠放:后面的卡往上错开、缩小、变暗;最前一张跟手拖(任意方向,带一点倾斜),
-     后面的卡跟着往前挪;松手越过阈值或甩得够快就按手指方向飞出去,下一张上来;点卡进入。 */
-  _deckPose(r) { return DECK_POSE[Math.min(r, DECK_POSE.length - 1)]; },
-  _deckLay(front) {
-    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
-    const poses = list.map((_, i) => {
-      const r = (i - cur + n) % n;
-      if (r === 0 && front) return front;
-      const p = this._deckPose(r);
-      return 'transform: translate(0px,' + p.y + 'px) scale(' + p.s + '); filter: brightness(' + p.b + '); opacity: ' + p.o + '; z-index: ' + (30 - r) + ';';
-    });
+  /* ===== r3-visual 票夹(refs4/ticket-holder-frames):一次一张大卡,左右翻页 =====
+     当前那张居中;往左拖 = 下一张,当前卡绕左边缘像书页一样卷起(rotateY + 卷页阴影 --curl),
+     下一张从右边跟着手指滑进来;往右拖 = 上一张,镜像。松手越过阈值或甩得够快就翻过去,否则弹回。
+     只动 transform / opacity;减少动态效果时直接换卡、不卷页。 */
+  _cardW() {
+    if (this._cw) return this._cw;
+    let ww = 390;
+    try { const info = (wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()) || {}; if (info.windowWidth > 0) ww = info.windowWidth; } catch (e) { /* 用 390 兜底 */ }
+    this._cw = Math.round(577 * ww / 750);
+    return this._cw;
+  },
+  _deckLay() {
+    const list = this.data.ticketList || [], cur = this.data.currentSwiperTicket;
+    const origin = this._origin || '50% 50%';
+    const poses = list.map((_, i) => i === cur
+      ? 'transform: perspective(1400px) translate3d(0px,0px,0px) rotateY(0deg) scale(1); transform-origin: ' + origin + '; opacity: 1; z-index: 30; --curl: 0;'
+      : 'transform: perspective(1400px) translate3d(' + (this._cardW() + 40) + 'px,0px,0px) rotateY(0deg) scale(.92); transform-origin: 50% 50%; opacity: 0; z-index: 10; --curl: 0;');
     this.setData({ deckPoses: poses });
   },
   _bgTo(src) {
@@ -621,28 +626,21 @@ Page({
     this.setData({ ['wbg[' + on + ']']: src, wbgOn: on });
   },
 
-  /* 进页 / 新卡到账:其余卡从下面依次升上来;新到的那张从右上方斜着落到最前 */
+  /* 进页:当前那张从下面升上来;新卡到账(arrive):从右上方斜着落进来 */
   _playEnter(arrive) {
     const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
     if (!n || reducedMotionOn()) return this._deckLay();
-    const from = list.map((_, i) => {
-      const r = (i - cur + n) % n;
-      return (arrive && r === 0 ? 'transform: translate(40px,-720px) rotate(-12deg) scale(1.15);' : 'transform: translate(0px,560px) scale(.9);') + 'z-index: ' + (30 - r) + '; transition: none;';
-    });
-    this._entering = true; this.setData({ deckPoses: from, deckStill: true }); __end(this, n, arrive);
+    this._deckLay();
+    const from = arrive ? 'transform: translate(40px,-720px) rotate(-12deg) scale(1.15);' : 'transform: translate(0px,560px) scale(.9);';
+    this._entering = true; this.setData({ ['deckPoses[' + cur + ']']: from + 'z-index: 30; transition: none;', deckStill: true }); __end(this, 1, arrive);
     setTimeout(() => {
       if (this._unloaded) return;
       this.setData({ deckStill: false });
-      const order = list.map((_, i) => (i - cur + n) % n);
-      order.forEach((r, i) => {
-        const delay = arrive && r === 0 ? 320 : (n - 1 - r) * 90;
-        setTimeout(() => {
-          if (this._unloaded) return;
-          const p = this._deckPose(r);
-          const ease = arrive && r === 0 ? 'transition: transform .78s cubic-bezier(.2,.9,.25,1.08);' : 'transition: transform .7s cubic-bezier(.2,.9,.25,1.08);';
-          this.setData({ ['deckPoses[' + i + ']']: 'transform: translate(0px,' + p.y + 'px) scale(' + p.s + '); filter: brightness(' + p.b + '); opacity: ' + p.o + '; z-index: ' + (30 - r) + ';' + ease });
-        }, delay);
-      });
+      setTimeout(() => {
+        if (this._unloaded) return;
+        const ease = arrive ? 'transition: transform .78s cubic-bezier(.2,.9,.25,1.08);' : 'transition: transform .7s cubic-bezier(.2,.9,.25,1.08);';
+        this.setData({ ['deckPoses[' + cur + ']']: 'transform: perspective(1400px) translate3d(0px,0px,0px) rotateY(0deg) scale(1); transform-origin: 50% 50%; opacity: 1; z-index: 30; --curl: 0;' + ease });
+      }, arrive ? 320 : 0);
     }, 40);
   },
   _playArrive() { this._playEnter(true); },
@@ -650,7 +648,7 @@ Page({
   onDeckStart(e) {
     const t = e.touches && e.touches[0];
     if (!t || this._throwing || (this.data.ticketList || []).length === 0) return;
-    this._drag = { x: t.clientX, y: t.clientY, lx: t.clientX, ly: t.clientY, t: Date.now(), vx: 0, vy: 0, dx: 0, dy: 0, at: 0 };
+    this._drag = { x: t.clientX, y: t.clientY, lx: t.clientX, t: Date.now(), vx: 0, dx: 0, dy: 0, at: 0 };
     this._moved = false;
     this.setData({ deckStill: true });
   },
@@ -658,48 +656,53 @@ Page({
     const d = this._drag, t = e.touches && e.touches[0];
     if (!d || !t) return;
     const now = Date.now(), dt = Math.max(1, now - d.t);
-    d.vx = (t.clientX - d.lx) / dt; d.vy = (t.clientY - d.ly) / dt; d.lx = t.clientX; d.ly = t.clientY; d.t = now;
+    d.vx = (t.clientX - d.lx) / dt; d.lx = t.clientX; d.t = now;
     d.dx = t.clientX - d.x; d.dy = t.clientY - d.y;
     if (now - d.at < 16) return;
     d.at = now;
-    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
-    const pr = Math.min(1, Math.hypot(d.dx, d.dy) / 220);
-    const lerp = (a, b) => a + (b - a) * pr;
-    const poses = list.map((_, i) => {
-      const r = (i - cur + n) % n;
-      if (r === 0) return 'transform: translate(' + d.dx + 'px,' + d.dy + 'px) rotate(' + (d.dx * 0.06).toFixed(2) + 'deg); z-index: 30;';
-      const a = this._deckPose(r), b = this._deckPose(r - 1);
-      return 'transform: translate(0px,' + lerp(a.y, b.y) + 'px) scale(' + lerp(a.s, b.s) + '); filter: brightness(' + lerp(a.b, b.b) + '); opacity: ' + lerp(a.o, b.o) + '; z-index: ' + (30 - r) + ';';
-    });
-    this.setData({ deckPoses: poses });
+    const list = this.data.ticketList || [], n = list.length;
+    if (n < 2 || reducedMotionOn()) return;
+    this.setData({ deckPoses: pagePoses(n, this.data.currentSwiperTicket, d.dx, this._cardW()) });
   },
   onDeckEnd() {
     const d = this._drag;
     this._drag = null;
     if (!d) return;
     this.setData({ deckStill: false });
-    const list = this.data.ticketList || [], n = list.length;
-    const dist = Math.hypot(d.dx, d.dy), sp = Math.hypot(d.vx, d.vy);
+    const list = this.data.ticketList || [], n = list.length, W = this._cardW();
+    const dist = Math.hypot(d.dx, d.dy);
     this._moved = dist >= 8;
-    if (dist < 8 || n < 2 || !(dist > 90 || sp > 0.6)) return this._deckLay();
-    const fx = d.dx + d.vx * 80, fy = d.dy + d.vy * 80, L = Math.hypot(fx, fy) || 1;
-    const out = 'transform: translate(' + (fx / L * 620) + 'px,' + (fy / L * 620) + 'px) rotate(' + (fx / L * 20) + 'deg); opacity: 0; z-index: 40; transition: transform .5s cubic-bezier(.2,.7,.3,1), opacity .3s .18s;';
-    const thrown = this.data.currentSwiperTicket;
-    const next = (thrown + 1) % n;
+    const turn = pageTurn(n, d.dx, d.vx);
+    if (!turn) { this._origin = d.dx < 0 ? '0% 50%' : '100% 50%'; this._deckLay(); return this._settle(); }
+    const leaving = this.data.currentSwiperTicket;
+    const next = (leaving + turn + n) % n;
+    // 离开的那张整页卷走(下一张:绕左边缘;上一张:绕右边缘),新的一张从侧边滑到正中
+    const out = turn > 0
+      ? 'transform: perspective(1400px) translate3d(' + (-W * 0.35) + 'px,0px,0px) rotateY(-110deg) scale(1); transform-origin: 0% 50%; opacity: 0; z-index: 40; --curl: .9; transition: transform .5s cubic-bezier(.3,.6,.3,1), opacity .2s linear .3s;'
+      : 'transform: perspective(1400px) translate3d(' + (W * 0.35) + 'px,0px,0px) rotateY(110deg) scale(1); transform-origin: 100% 50%; opacity: 0; z-index: 40; --curl: .9; --curl-a: 270deg; transition: transform .5s cubic-bezier(.3,.6,.3,1), opacity .2s linear .3s;';
     this._throwing = true;
     this._clearQrTimer(); this._qrFor = '';
     this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' }); this._showQrIfNoGame();
+    this._origin = '';
     this._deckLay();
-    this.setData({ ['deckPoses[' + thrown + ']']: out });
+    this.setData({ ['deckPoses[' + leaving + ']']: out });
     this._bgTo(list[next] && list[next].wImg);
     this.syncCurrentTeam && this.syncCurrentTeam();
+    this._settle();
+  },
+  /* 翻页 / 弹回的过渡走完后,无过渡地归位(清掉卷页轴心),再放开下一次拖动 */
+  _settle() {
+    this._throwing = true;
     setTimeout(() => {
       if (this._unloaded) return;
+      this._origin = '';
       this.setData({ deckStill: true });
       this._deckLay();
       setTimeout(() => { if (!this._unloaded) this.setData({ deckStill: false }); this._throwing = false; }, 50);
     }, 520);
   },
+  goExplore() { wx.switchTab({ url: '/pages/index/index' }); },
+  goMe() { wx.switchTab({ url: '/pages/member/index/index' }); },
 })
 
 // 与 utils/motion-preference.js 同一组存储键(玩家「减少动态效果」开关);内联读取,不为一个布尔值多挂一个依赖
@@ -711,8 +714,32 @@ function reducedMotionOn() {
   } catch (e) { return false; }
 }
 
-// v13 卡堆每一层的位置:往上错开 / 缩小 / 变暗,第 4 张以后藏在最后
-const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
+/* r3-visual 翻页姿态(纯函数,单测直接跑):dx < 0 往下一张、dx > 0 往上一张。
+   当前卡绕外侧边缘卷起(最多 70°)并跟手平移三成,卷页阴影 --curl 跟着加深;
+   目标卡从对侧一整卡宽外跟着手指滑进来(缩放 .92 → 1)。其余卡藏在右侧。 */
+function pagePoses(n, cur, dx, W) {
+  const p = Math.min(1, Math.abs(dx) / W);
+  const step = dx < 0 ? 1 : -1;
+  const target = (cur + step + n) % n;
+  const side = dx < 0 ? 1 : -1;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    if (i === cur) {
+      out.push('transform: perspective(1400px) translate3d(' + (dx * 0.3).toFixed(1) + 'px,0px,0px) rotateY(' + (-side * p * 70).toFixed(1) + 'deg) scale(1); transform-origin: ' + (side > 0 ? '0% 50%' : '100% 50%') + '; opacity: 1; z-index: 30; --curl: ' + (p * 0.8).toFixed(3) + '; --curl-a: ' + (side > 0 ? '90deg' : '270deg') + ';');
+    } else if (i === target) {
+      out.push('transform: perspective(1400px) translate3d(' + (side * (W + 40) + dx).toFixed(1) + 'px,0px,0px) rotateY(0deg) scale(' + (0.92 + 0.08 * p).toFixed(3) + '); transform-origin: 50% 50%; opacity: 1; z-index: 20; --curl: 0;');
+    } else {
+      out.push('transform: perspective(1400px) translate3d(' + (W + 40) + 'px,0px,0px) rotateY(0deg) scale(.92); transform-origin: 50% 50%; opacity: 0; z-index: 10; --curl: 0;');
+    }
+  }
+  return out;
+}
+/* 松手判定:不到两张不翻;拖过 80px 或甩速 > .5px/ms 就翻,返回 +1 下一张 / -1 上一张 / 0 弹回 */
+function pageTurn(n, dx, vx) {
+  if (n < 2) return 0;
+  if (Math.abs(dx) > 80 || (Math.abs(dx) > 8 && Math.abs(vx) > 0.5)) return dx < 0 ? 1 : -1;
+  return 0;
+}
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
 function walletCard(item) {
   // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
@@ -749,3 +776,5 @@ function usableTicket(item) {
 
 /* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */
 function __end(page, n, arrive) { setTimeout(() => { page._entering = false; }, 40 + Math.max(arrive ? 320 : 0, (n - 1) * 90) + 900); }
+
+if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn };

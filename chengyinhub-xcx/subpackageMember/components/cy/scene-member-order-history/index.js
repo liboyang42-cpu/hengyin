@@ -83,6 +83,8 @@ Component({
     theme: { type: String, value: 'player' },
   },
   data: {
+    // r2 a3-v3-22:主题图是横图时封面改横版(按图片实际宽高判断,只在本机生效,不改数据)
+    wideCover: {},
     activeTab: '0',
     orderTabs: [
       { key: '0', label: '全部' },
@@ -294,6 +296,15 @@ Component({
       }
       this.setData({ page_no: 1 })
       this.getList(false, true)
+    },
+
+    // r2 a3-v3-22 业主「如果主题图片是横图就可以把正方形的图改成横着的」:宽 ≥ 1.25 倍高才算横图
+    onCoverLoad(e) {
+      const id = e.currentTarget.dataset.id
+      const w = e.detail && e.detail.width
+      const h = e.detail && e.detail.height
+      if (!id || !w || !h || this.data.wideCover[id]) return
+      if (w >= h * 1.25) this.setData({ ['wideCover.' + id]: true })
     },
 
     // 唯一与宿主形态相关的分支:场景里推 H10 子层,页面壳里由壳自己 navigateTo。

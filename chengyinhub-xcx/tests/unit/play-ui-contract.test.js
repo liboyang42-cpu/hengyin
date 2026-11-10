@@ -321,7 +321,8 @@ test('完成页明确显示通关状态并保留照片邮票', () => {
   // 避免有人把回落删掉、让接口一挂完成页就不说自己完成没完成。
   // 2026-10-27:服务端按主题规则(主线 N 站)判了通关时(topicCompleted)同样写「已通关」,不因选做站没走完写成「本章完成」
   // 2026-10-28 完成页改版(业主定稿):标签只说本章完成 / 已通关,「你已完成第 N 个主题」进城市探索卡的里程碑标题
-  assert.match(playWxml, /class="finsheet__result \{\{allDone \|\| topicCompleted \? 'is-win' : ''\}\}">\{\{allDone \|\| topicCompleted \? '已通关' : \(finishChapterDone \? '本章完成' : '已结束'\)\}\}/)  // R11 g1(j4 F8)
+  // 2026-11-09 qx-b8 U08-01:通关以服务端战报 completionKind / 到达回执 completed 为准;战报读不到且本地站点全完成时结果未知,不写词
+  assert.match(playWxml, /class="finsheet__result \{\{finishResult\.win \? 'is-win' : ''\}\}" wx:if="\{\{finishResult\.label\}\}">\{\{finishResult\.label\}\}/)  // R11 g1(j4 F8)
   assert.match(playWxml, /class="finish-milestone__head">\s*<text>\{\{milestone\.title\}\}<\/text>/)
   assert.match(playWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finishPhotos\}\}"/)
   assert.match(roamWxml, /class="finish-stamps"[\s\S]*?wx:for="\{\{finish\.photos\}\}"/)
@@ -373,6 +374,11 @@ test('真实游玩定位方法在用途弹窗前和取消后均零 GPS，明确�
   dialogs[0].success({ confirm: false })
   assert.equal(locations.length, 0)
   assert.equal(page.data.gpsOk, false)
+  // r2-play a1-v3-21:说明一局只弹一次 —— 取消后再调不再弹,也不取位置;正控换成「新进入这一局」后明确同意
+  page.requestPlayLocation()
+  assert.equal(dialogs.length, 1, 'a declined offer is not repeated in the same run')
+  assert.equal(locations.length, 0)
+  page._locAsked = false
   page.requestPlayLocation()
   dialogs[1].success({ confirm: true })
   assert.equal(locations.length, 1, 'positive control must reach the real SDK caller after consent')

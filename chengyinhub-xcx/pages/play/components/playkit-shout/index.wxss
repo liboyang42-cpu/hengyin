@@ -14,13 +14,13 @@
   align-items: center;
   justify-content: center;
   gap: 40rpx;                                                       /* ds-ok 原型 20px */
-  padding: 112rpx 56rpx 68rpx;                                      /* ds-ok 原型 56px 28px 34px */
+  padding: var(--pk-card-pad, 112rpx 56rpx 68rpx);                  /* ds-ok 原型 56px 28px 34px;内嵌由故事流给 */
   text-align: center;
   transition: background var(--cy-dur) linear;
-  background: linear-gradient(180deg, #0d1512, #050a08);            /* ds-ok */
+  background: var(--pk-card-bg, linear-gradient(180deg, #0d1512, #050a08));   /* ds-ok 内嵌透明(V3-10/53) */
 }
 /* 过线:整屏透出绿 —— 人在喊的时候不会盯数字,余光里的颜色才是反馈 */
-.sh--on { background: linear-gradient(180deg, #0d1f16, #050a08); }  /* ds-ok */
+.sh--on { background: var(--pk-card-bg, linear-gradient(180deg, #0d1f16, #050a08)); }  /* ds-ok 内嵌透明 */
 
 .sh__k {
   font-size: var(--cy-type-label);

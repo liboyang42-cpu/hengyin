@@ -2,6 +2,7 @@ const { applyPreviewAction } = require('../../../../utils/game-preview-action.js
 const toast = require('../../../../utils/toast.js');
 const { id, integer } = require('../../../../utils/orient-score-view.js');
 const photoPending = require('../../utils/advanced-photo-pending.js');
+const clientCapabilities = require('../../utils/client-capabilities.js');
 const app = getApp();
 const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
 const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
@@ -149,11 +150,17 @@ Component({
           if (this.currentRequestContext(context, false)) this.setData({ loading: false, unknown: true, error: '照片原局暂时无法读取，请稍后核对' });
         });
       }
-      this.request('/api/play/advanced/start', 'POST', scope).then(res => {
+      // §27.2:开局 JSON 带本端真实能力声明;缺必需能力时服务端沿原错误信封拒绝,不在本地删内容或跳关。
+      this.request('/api/play/advanced/start', 'POST', Object.assign({}, scope, clientCapabilities.declaration())).then(res => {
         if (!this.currentRequestContext(context, false)) return;
         if (res.code == 200 || res.code == '200') this.hydrate(res.data || {});
         else this.setData({ error: safeUserMessage(res, '高级玩法启动失败') });
-      }).catch(() => { if (this.currentRequestContext(context, false)) this.setData({ error: '网络错误，请重试' }); })
+      }).catch((res) => {
+        if (!this.currentRequestContext(context, false)) return;
+        // 409 能力不足也走 successStatusAbnormal:是确定拒绝,给服务端原话,不说成网络错误。
+        const unsupported = clientCapabilities.unsupportedNotice(res);
+        this.setData({ error: unsupported ? safeUserMessage(res, unsupported) : '网络错误，请重试' });
+      })
         .finally(() => { if (this.currentRequestContext(context, false)) this.setData({ loading: false }); });
     },
     /** 把服务端权威视图抛给页面:v5.1 新玩法的壳是独立 sheet,套不进本面板(sheet 套 sheet),

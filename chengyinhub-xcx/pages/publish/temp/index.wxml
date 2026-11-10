@@ -75,6 +75,12 @@
         <view class="cg-hero-c1">上传玩法封面</view>
       </view>
       <view class="cg-cover-unusable" wx:if="{{coverMediaUnusable}}" bindtap="uploadPic" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="原封面暂不可用，点按重新上传">原封面暂不可用，点按重新上传</view>
+      <!-- r2-create(业主「放到模板配置里」):本次上传的封面可声明素材来源,声明写在素材上(服务端校验归属) -->
+      <view class="cg-prov-row" wx:if="{{coverProvenance.assetId}}" bindtap="openProvenance" aria-role="button" aria-label="素材来源" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="cg-prov-row__k">素材来源</text>
+        <text class="cg-prov-row__v {{coverProvenance.label ? '' : 'is-empty'}}">{{coverProvenance.label || '未声明'}}</text>
+        <cy-icon name="chevron-right" size="28" />
+      </view>
       <view class="cg-hero-body">
         <view class="cg-title-row">
           <text class="req" aria-hidden="true">*</text>
@@ -366,8 +372,16 @@
     </block>
 
     <block wx:if="{{advanced.qa.mode === 'TYPE'}}">
+    <view class="cg-rw-line" wx:if="{{gameKey === 'qaText'}}"><view class="cg-rw-meta"><view class="cg-rw-name">逐字猜词</view></view><cy-switch checked="{{false}}" bindchange="qzHangmanForm" accessibility-label="逐字猜词" /></view>
     <view class="cg-cfg-label">正确答案 <text class="req" wx:if="{{!formData.originalTemplateId}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.answerText}}" placeholder="可填多个，用、分隔" data-section="qa" data-field="answerText" bindinput="onAdvancedField" />
+    <view class="cg-cfg-label">其他可接受写法</view>
+    <view class="cg-qz-line" wx:for="{{advanced.answerPolicy.acceptedAliases}}" wx:key="index">
+      <input class="cg-cfg-input" value="{{item}}" placeholder="例如 一九三七" data-index="{{index}}" bindinput="qzAlias" />
+      <view class="cg-adv-del" data-index="{{index}}" bindtap="qzAliasDel" aria-role="button" aria-label="删除写法 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+    </view>
+    <view class="cg-qz-err" wx:if="{{qzAliasError}}">{{qzAliasError}}</view>
+    <view class="cg-adv-add" bindtap="qzAliasAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
     </block>
 
     <block wx:elif="{{advanced.qa.mode === 'PICK'}}">
@@ -392,7 +406,16 @@
         <text>选项 {{qi + 1}}</text>
         <view class="cg-adv-del" data-path="qa.options" data-index="{{qi}}" bindtap="removeAdvancedRow" aria-role="button" aria-label="删除选项 {{qi + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
       </view>
-      <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
+      <!-- UG-02 r2:选项图与文案并排一行;图片说明默认取选项文案,不另设一栏 -->
+      <view class="cg-qz-optrow">
+        <view class="cg-qz-thumb" wx:if="{{item.img}}">
+          <image class="cg-qz-thumb__img" src="{{item.img}}" mode="aspectFill" />
+          <view class="cg-qz-thumb__x" data-index="{{qi}}" catchtap="qzOptionImgDel" aria-role="button" aria-label="删除选项 {{qi + 1}} 的图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="20" /></view>
+        </view>
+        <view class="cg-qz-thumb cg-qz-thumb--add" wx:else data-index="{{qi}}" bindtap="qzOptionImg" aria-role="button" aria-label="给选项 {{qi + 1}} 配图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /></view>
+        <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
+      </view>
+      <view class="cg-qz-err" wx:if="{{qzOptionErrors[qi]}}">{{qzOptionErrors[qi]}}</view>
       <view class="cg-qa-fb">
         <view class="cg-cfg-label">选中后的反馈</view>
         <textarea class="cg-cfg-textarea" value="{{item.fb}}" placeholder="选了它之后玩家看到的文字" maxlength="120" data-path="qa.options" data-index="{{qi}}" data-field="fb" bindinput="updateAdvancedRow" />
@@ -417,12 +440,78 @@
     </view>
     <cy-inline-error kind="error" class="cg-inline-error" wx:if="{{advanced.qa.judge !== false && qaAnswerError}}" title="{{qaAnswerError}}" />
     <view class="cg-adv-add" wx:if="{{advanced.qa.options.length < 4}}" data-path="qa.options" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
+    <block wx:if="{{advanced.qa.judge !== false && !advanced.qa.multi}}">
+    <view class="cg-qa-sec">指认结案</view>
+    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">把选项做成人物指认</view></view><cy-switch checked="{{qzAccusationOn}}" bindchange="qzAccusationToggle" accessibility-label="把选项做成人物指认" /></view>
+    <block wx:if="{{qzAccusationOn}}">
+      <!-- UG-03 r2:人物卡 = 头像与姓名/身份同一行;证词整行写,解锁线索在它下面 -->
+      <view class="cg-qz-person" wx:for="{{qzSuspects}}" wx:key="id" wx:for-item="sp" wx:for-index="si">
+        <view class="cg-qz-optrow">
+          <view class="cg-qz-thumb" wx:if="{{sp.avatar}}" data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="更换{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qz-thumb__img" src="{{sp.avatar}}" mode="aspectFill" /></view>
+          <view class="cg-qz-thumb cg-qz-thumb--add" wx:else data-index="{{si}}" bindtap="qzSuspectAvatar" aria-role="button" aria-label="上传{{sp.name}}的头像" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /></view>
+          <view class="cg-qz-person__main">
+            <view class="cg-qz-person__name">{{sp.name || ('选项 ' + (si + 1))}}</view>
+            <input class="cg-cfg-input" value="{{sp.identity}}" placeholder="身份" data-index="{{si}}" bindinput="qzSuspectIdentity" />
+          </view>
+        </view>
+        <view class="cg-qz-tm" wx:for="{{sp.testimony}}" wx:key="index" wx:for-item="tm" wx:for-index="ti">
+          <view class="cg-qz-line">
+            <input class="cg-cfg-input" value="{{tm.text}}" placeholder="证词" data-index="{{si}}" data-row="{{ti}}" data-field="text" bindinput="qzTestimonyField" />
+            <view class="cg-adv-del" data-index="{{si}}" data-row="{{ti}}" bindtap="qzTestimonyDel" aria-role="button" aria-label="删除证词 {{ti + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+          </view>
+          <input class="cg-cfg-input cg-qz-key" value="{{tm.key}}" placeholder="拿到哪条线索后显示" data-index="{{si}}" data-row="{{ti}}" data-field="key" bindinput="qzTestimonyField" />
+        </view>
+        <view class="cg-adv-add" data-index="{{si}}" bindtap="qzTestimonyAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加证词</view>
+      </view>
+      <view class="cg-cfg-label">线索板</view>
+      <view class="cg-qmedia cg-qmedia--one cg-qa-imgs">
+        <view class="cg-qmedia-slot" wx:if="{{advanced.accusation.corkboardImage}}"><image class="cg-qmedia-img" src="{{advanced.accusation.corkboardImage}}" mode="aspectFill" />
+          <view class="cg-qmedia-x" catchtap="qzBoardDel" aria-role="button" aria-label="删除线索板" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-qmedia-x__glyph"><cy-icon name="close-sm" size="24" /></view></view></view>
+        <view class="cg-qmedia-add" wx:else bindtap="qzBoardImg" aria-role="button" aria-label="上传线索板" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">线索板</text></view>
+      </view>
+      <view class="cg-cfg-label">指认正确的结局 <text class="req" aria-hidden="true">*</text></view>
+      <textarea class="cg-cfg-textarea" value="{{advanced.accusation.winScreen}}" placeholder="玩家指认正确后看到的结局" data-field="winScreen" bindinput="qzAccusationText" />
+      <view class="cg-cfg-label">指认错误的结局 <text class="req" aria-hidden="true">*</text></view>
+      <textarea class="cg-cfg-textarea" value="{{advanced.accusation.loseScreen}}" placeholder="机会用完仍指认错误时看到的结局" data-field="loseScreen" bindinput="qzAccusationText" />
+      <view class="cg-rw-line cg-qz-early"><view class="cg-rw-meta"><view class="cg-rw-name">允许提前指认</view></view><cy-switch checked="{{advanced.accusation.earlyAccuse.allowed}}" bindchange="qzEarlyToggle" accessibility-label="允许提前指认" /></view>
+      <input wx:if="{{advanced.accusation.earlyAccuse.allowed}}" class="cg-cfg-input" value="{{advanced.accusation.earlyAccuse.recordAs}}" placeholder="提前结案的记录名" bindinput="qzEarlyRecord" />
+      <view class="cg-qz-err" wx:if="{{qzAccusationError}}">{{qzAccusationError}}</view>
+    </block>
+    </block>
     </block>
 
     <view class="cg-adv-grid" wx:if="{{advanced.qa.mode !== 'PICK'}}">
     <view><view class="cg-cfg-label">次数上限</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.maxTries}}" placeholder="0 表示不限" data-section="qa" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
     <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
+      </view>
+    </view>
+    <view class="cg-gcfg" wx:if="{{gameSection === 'hangman'}}">
+      <view class="cg-adv-body">
+    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">逐字猜词</view></view><cy-switch checked="{{true}}" bindchange="qzHangmanForm" accessibility-label="逐字猜词" /></view>
+    <view class="cg-cfg-label">答案 <text class="req" aria-hidden="true">*</text></view>
+    <input class="cg-cfg-input" value="{{advanced.hangman.answer}}" maxlength="40" placeholder="例如 ENDLESS" bindinput="qzHangmanAnswer" />
+    <block wx:if="{{qzHangmanCells.length}}">
+    <view class="cg-cfg-label">格子</view>
+    <view class="cg-qz-cells">
+      <block wx:for="{{qzHangmanGroups}}" wx:key="k" wx:for-item="g">
+        <view wx:if="{{g.sep}}" class="cg-qz-cell is-sep" aria-hidden="true">{{g.sep}}</view>
+        <view wx:else class="cg-qz-word">
+          <view wx:for="{{g.cells}}" wx:key="i" class="cg-qz-cell {{item.given ? 'is-given' : ''}}"
+                data-index="{{item.i}}" bindtap="qzHangmanCell" aria-role="button"
+                aria-label="第 {{item.i + 1}} 格 {{item.ch}}{{item.given ? '，已给出' : '，玩家补'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.given ? item.ch : ''}}</view>
+        </view>
+      </block>
+    </view>
+    </block>
+    <view class="cg-qz-err" wx:if="{{qzHangmanError}}">{{qzHangmanError}}</view>
+    <view class="cg-cfg-label">其他可接受写法</view>
+    <view class="cg-qz-line" wx:for="{{advanced.hangman.aliases}}" wx:key="index">
+      <input class="cg-cfg-input" value="{{item}}" placeholder="例如 NICOLAS AND PERNELLE" data-index="{{index}}" bindinput="qzHangmanAlias" />
+      <view class="cg-adv-del" data-index="{{index}}" bindtap="qzHangmanDelAlias" aria-role="button" aria-label="删除写法 {{index + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+    </view>
+    <view class="cg-adv-add" wx:if="{{!(advanced.hangman.aliases.length >= 10)}}" bindtap="qzHangmanAddAlias" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加写法</view>
+    <view class="cg-rw-line"><view class="cg-rw-meta"><view class="cg-rw-name">区分大小写</view></view><cy-switch checked="{{advanced.hangman.caseSensitive}}" bindchange="qzHangmanCase" accessibility-label="区分大小写" /></view>
       </view>
     </view>
     <view class="cg-gcfg" wx:if="{{gameSection === 'predict'}}">
@@ -1140,26 +1229,6 @@
       maxlength="50" placeholder="告诉玩家要拍什么，例如:与这棵古树合影" placeholder-class="cg-ph" />
     </cy-card>
 
-    <!-- 提示(并入完成方式;text/choice/gps 可开关) -->
-    <view class="cg-hint-wrap" wx:if="{{ !advanced.qa.enabled && methodSupportsHint }}">
-    <view class="cg-sw-row">
-      <view class="cg-hint-head">
-        <view class="cg-hint-emoji"><cy-icon name="info" size="32" /></view>
-        <view>
-          <view class="cg-sw-label">提示</view>
-        </view>
-      </view>
-      <cy-switch checked="{{ hintEnabled }}" bindchange="onHintEnabledChange" />
-    </view>
-    <view class="cg-hint-fields" wx:if="{{ hintEnabled }}">
-      <input class="cg-cfg-input" value="{{ formData.hint1 }}" bindinput="onHint1Change"
-        placeholder="一级提示，如:留意脚下的石板" placeholder-class="cg-ph" />
-      <input class="cg-cfg-input" value="{{ formData.hint2 }}" bindinput="onHint2Change"
-        placeholder="二级提示(可选),更明确的引导" placeholder-class="cg-ph" />
-      <input class="cg-cfg-input" value="{{ formData.answerReveal }}" bindinput="onAnswerRevealChange"
-        placeholder="备用答案，卡住时直接给出" placeholder-class="cg-ph" />
-    </view>
-    </view>
     <!-- 结果反馈(2026-10-22 主人定稿):先写清三步,下面成功反馈 / 失败反馈各一个开关,打开才出现编辑。
          文字与配图写在 outcomeRules.pass / fail 的 reply / images;消耗与效果仍在同一行结果里,从「消耗与效果」进去改。 -->
     <block wx:if="{{r5Editor.afterRows.length}}">
@@ -1196,6 +1265,53 @@
       </block>
       <view class="cg-cfg-label cg-r5-gap">效果作用于</view>
       <cy-dropdown topic-editor columns="{{2}}" range="{{effectScopeOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(effectScopeOptions, advanced.interactionRules.targetScope || 'OWNER')}}" bind:change="pickEffectScope"><view class="cg-pick">{{opt.label(effectScopeOptions, advanced.interactionRules.targetScope || 'OWNER')}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+    </view>
+    </block>
+    <!-- 提示(旧一级/二级/备用答案;UG-11 起挪到结果反馈下方,与新提示阶梯不同时生效) -->
+    <view class="cg-hint-wrap" wx:if="{{ !advanced.qa.enabled && methodSupportsHint && !qzHintOn }}">
+    <view class="cg-sw-row">
+      <view class="cg-hint-head">
+        <view class="cg-hint-emoji"><cy-icon name="info" size="32" /></view>
+        <view>
+          <view class="cg-sw-label">提示</view>
+        </view>
+      </view>
+      <cy-switch checked="{{ hintEnabled }}" bindchange="onHintEnabledChange" />
+    </view>
+    <view class="cg-hint-fields" wx:if="{{ hintEnabled }}">
+      <input class="cg-cfg-input" value="{{ formData.hint1 }}" bindinput="onHint1Change"
+        placeholder="一级提示，如:留意脚下的石板" placeholder-class="cg-ph" />
+      <input class="cg-cfg-input" value="{{ formData.hint2 }}" bindinput="onHint2Change"
+        placeholder="二级提示(可选),更明确的引导" placeholder-class="cg-ph" />
+      <input class="cg-cfg-input" value="{{ formData.answerReveal }}" bindinput="onAnswerRevealChange"
+        placeholder="备用答案，卡住时直接给出" placeholder-class="cg-ph" />
+    </view>
+    </view>
+    <!-- UG-11 提示:成功反馈 / 失败反馈 / 提示 三段顺序;整局免费次数一个输入框,每层只有类型、内容、积分 -->
+    <block wx:if="{{gameSection}}">
+    <view class="cg-sec" id="sec-hint"><text class="cg-sec__t">提示</text></view>
+    <view class="cg-gcfg">
+      <view class="cg-rw-line cg-line"><view class="cg-rw-name">本题启用提示</view><cy-switch checked="{{qzHintOn}}" bindchange="qzHintToggle" accessibility-label="本题启用提示" /></view>
+      <block wx:if="{{qzHintOn}}">
+        <view class="cg-cfg-label">整局免费次数</view>
+        <input class="cg-cfg-input" type="number" value="{{advanced.hintFreeUsesPerRun}}" placeholder="0" bindinput="qzHintQuota" />
+        <view class="cg-qz-err" wx:if="{{qzHintQuotaError}}">{{qzHintQuotaError}}</view>
+        <view class="cg-adv-repeat" wx:for="{{qzHintRows}}" wx:key="i">
+          <view class="cg-adv-repeat-head"><text>第 {{index + 1}} 层</text><view class="cg-adv-del" data-index="{{index}}" bindtap="qzHintDel" aria-role="button" aria-label="删除第 {{index + 1}} 层" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
+          <view class="cg-two cg-qa-pair">
+            <view class="cg-col"><view class="cg-cfg-label">类型</view><cy-dropdown topic-editor columns="{{3}}" range="{{qzHintTypes}}" range-key="label" value="{{item.typeIndex}}" data-index="{{index}}" bind:change="qzHintType"><view class="cg-pick">{{opt.label(qzHintTypes, item.type, 'value')}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
+            <view class="cg-col"><view class="cg-cfg-label">消耗积分</view><input class="cg-cfg-input" type="number" value="{{item.points}}" placeholder="0 表示免费" data-index="{{index}}" bindinput="qzHintPoints" /></view>
+          </view>
+          <textarea wx:if="{{item.type === 'TEXT' || item.type === 'ANSWER'}}" class="cg-cfg-textarea" value="{{item.payload}}" maxlength="500" placeholder="{{item.type === 'TEXT' ? '提示文字' : '揭晓时的文字(可不填)'}}" data-index="{{index}}" bindinput="qzHintPayload" />
+          <input wx:elif="{{item.type === 'LETTER'}}" class="cg-cfg-input" type="number" value="{{item.payload}}" placeholder="揭示第几个字(不填为第 1 个)" data-index="{{index}}" bindinput="qzHintPayload" />
+          <view wx:elif="{{item.type === 'IMAGE'}}" class="cg-qmedia cg-qmedia--one cg-qa-imgs">
+            <view class="cg-qmedia-slot" wx:if="{{item.payload}}" data-index="{{index}}" bindtap="qzHintImg" aria-role="button" aria-label="更换第 {{index + 1}} 层提示图片" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qmedia-img" src="{{item.payload}}" mode="aspectFill" /></view>
+            <view class="cg-qmedia-add" wx:else data-index="{{index}}" bindtap="qzHintImg" aria-role="button" aria-label="上传第 {{index + 1}} 层提示图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text class="cg-qmedia-t">提示图</text></view>
+          </view>
+          <view class="cg-qz-err" wx:if="{{item.error}}">{{item.error}}</view>
+        </view>
+        <view class="cg-adv-add" wx:if="{{qzHintRows.length < 6}}" bindtap="qzHintAdd" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一层</view>
+      </block>
     </view>
     </block>
     <view class="cg-gcfg" wx:if="{{advanced.branch.enabled || (!r5Editor.nextDisabledReason && gameSection && !lockedGames.branch)}}">
@@ -1525,6 +1641,20 @@
       <text class="cg-pv-navn">{{ pvStep + 1 }} / {{ pvSteps.length }}</text>
       <view class="cg-pv-navbtn {{ pvStep >= pvSteps.length - 1 ? 'is-off' : '' }}" bindtap="pvNext" aria-role="button" aria-label="下一步" aria-disabled="{{ pvStep >= pvSteps.length - 1 }}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="40" /></view>
     </view>
+  </view>
+
+  <!-- ============ 素材来源声明 sheet(r2-create)============ -->
+  <view class="cg-mask {{cgOut === 'prov' ? 'is-out' : ''}}" wx:if="{{ provenanceSheet.show }}" bindtap="cgDismiss" data-close="closeProvenance" data-out="prov" hover-class="none"></view>
+  <view class="cg-sheet cg-prov {{cgOut === 'prov' ? 'is-out' : ''}}" wx:if="{{ provenanceSheet.show }}">
+    <view class="cg-sheet-bar"></view>
+    <view class="cg-prov__head"><text class="cg-prov__title">素材来源</text><view class="cg-prov__close" bindtap="cgDismiss" data-close="closeProvenance" data-out="prov" aria-role="button" aria-label="关闭素材来源" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
+    <view class="cg-prov__field"><text class="cg-prov__k">来源</text>
+      <cy-dropdown class="cg-prov__dd" portal="{{false}}" range="{{ provenanceTypes }}" range-key="label" value="{{ opt.idx(provenanceTypes, provenanceSheet.sourceType, 'value') }}" bind:change="pickProvenanceType"><view class="cg-pick {{ provenanceSheet.sourceType ? '' : 'empty' }}"><text>{{ provenanceSheet.sourceType ? opt.label(provenanceTypes, provenanceSheet.sourceType, 'value') : '请选择' }}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+    </view>
+    <view class="cg-prov__field"><text class="cg-prov__k">署名</text><input class="cg-prov__input" value="{{ provenanceSheet.attribution }}" data-field="attribution" bindinput="onProvenanceInput" maxlength="255" placeholder="作者或来源" /></view>
+    <view class="cg-prov__field"><text class="cg-prov__k">授权说明</text><input class="cg-prov__input" value="{{ provenanceSheet.licenseNote }}" data-field="licenseNote" bindinput="onProvenanceInput" maxlength="2000" placeholder="本人拍摄 / 授权协议" /></view>
+    <text class="cg-prov__err" wx:if="{{ provenanceSheet.error }}" aria-role="alert">{{ provenanceSheet.error }}</text>
+    <view class="cg-prov__foot"><cy-btn variant="primary" style="display:block;width:100%" loading="{{ provenanceSheet.saving }}" disabled="{{ provenanceSheet.saving }}" bindtap="saveProvenance">保存</cy-btn></view>
   </view>
 
   <!-- ============ 添加模块 sheet ============ -->
@@ -1955,7 +2085,7 @@
        返回键/侧滑先关最上层浮层再谈退页。表达式覆盖本页全部浮层且无排斥项,
        浮层间切换时保持为真,不产生误触发竞态;backGuardOff 用于返回键消费后重挂。 -->
   <page-container
-    show="{{!backGuardOff && (previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}"
+    show="{{!backGuardOff && (previewVisible || provenanceSheet.show || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}"
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />

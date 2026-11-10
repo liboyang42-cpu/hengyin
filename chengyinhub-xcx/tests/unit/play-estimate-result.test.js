@@ -67,9 +67,11 @@ test('P-09 第三轮:内嵌玩法块的上内边距至少到故事流顶部渐�
   const fade = wxss.match(/\.chfull__scroll\{[^}]*mask-image:linear-gradient\(to bottom, transparent 0, transparent 220rpx, #000 (\d+)rpx\)/)
   assert.ok(fade, '故事流顶部渐隐还在')
   assert.match(wxss, new RegExp('\\.chfull\\{[^}]*--chfull-fade-end:' + fade[1] + 'rpx;'), '变量与遮罩终点同一个数')
-  const kits = wxml.match(/class="chfull__kit" style="[^"]*"/g)
-  assert.equal(kits.length, 2)
-  kits.forEach((k) => assert.match(k, /padding-top:max\(var\(--chfull-fade-end\), calc\(/))
+  // V3-10/53(2026-11-06 业主「只是把之前的全屏缩小了」):块不再垫一屏高的上内边距,
+  // 让位改由块内锚点承担 —— 对准锚点时题干仍落在渐隐结束处之下
+  const anchors = wxml.match(/class="chfull__kit-anchor" id="[^"]*" style="[^"]*"/g)
+  assert.equal(anchors.length, 2)
+  anchors.forEach((k) => assert.match(k, /top:calc\(0px - max\(var\(--chfull-fade-end\), calc\(/))
 })
 
 test('P-09 第三轮:交过之后滚筒收矮,只留中间那个数', () => {
@@ -84,5 +86,5 @@ test('P-09 第三轮:交过之后滚筒收矮,只留中间那个数', () => {
   // 故事流内嵌时上内边距变大(避开渐隐),滚筒同时矮 120rpx,「就这个数」不被挤出一屏
   assert.match(css, /height: var\(--pk-es-reel-h, 980rpx\);/)
   const page = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')
-  assert.match(page, /item\.kind === 'kit'\}\}" class="chfull__kit" style="[^"]*;--pk-es-reel-h:860rpx;--pk-es-q-display:none"/)
+  assert.match(page, /item\.kind === 'kit'\}\}" class="chfull__kit" style="[^"]*--pk-es-reel-h:860rpx;--pk-es-q-display:none"/)
 })

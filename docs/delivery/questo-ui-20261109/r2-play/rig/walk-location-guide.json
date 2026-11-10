@@ -1,0 +1,1 @@
+[{"wait":1500},{"open":"pages/play/index?topicId=990014"},{"wait":4000},{"tryTap":"先用扫码"},{"wait":1500},{"eval":"getCurrentPages().slice(-1)[0]._locationGuide({errMsg:\"getLocation:fail auth deny\"})"},{"wait":1200},{"shot":"a1-v3-21-location-guide-after"}]

@@ -51,6 +51,9 @@ const buildOptions = (list) => (list || []).map((o, i) => ({
   // 服务端给的那一份 id 要带着走:判定按 id 认,下标在它那边没有意义
   id: o.id || '',
   t: o.t || ('选项 ' + (KEYS[i] || i + 1)),
+  // UG-02:选项图与替代文字(pickPlayKit 已滤掉不可显示的引用);加载失败时降级为纯文字
+  img: o.img || '',
+  alt: o.alt || '',
   state: '',
 }));
 
@@ -105,6 +108,7 @@ Component({
        会自己触发自己,死循环把运行时打挂 —— 截图跑到第 8 张 DevTools
        直接断连,就是这么来的,而且控制台一条错都没有。 */
     optionList: [],
+    picGrid: false,
     typed: '',
     typeWrong: false,
     hasImage: false,
@@ -168,6 +172,8 @@ Component({
       const isMultiPick = mode === 'pick' && !!multi && !confirmPick;
       this.setData({
         optionList: opts,
+        /* r2 b2-ug-02:有选项配图时改成图卡网格(图在上、字在下),纯文字题仍是细线行 */
+        picGrid: mode === 'pick' && opts.some(o => !!o.img),
         hasImage: !!this.data.imageUrl,
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
@@ -201,6 +207,12 @@ Component({
     },
   },
   methods: {
+    /** 选项图读不出来:只撤这一张图,文字照旧 —— 不显示破图(UG-02)。 */
+    onOptionImgError(e) {
+      const i = Number(e.currentTarget.dataset.i);
+      if (!(this.data.optionList[i] && this.data.optionList[i].img)) return;
+      this.setData({ ['optionList[' + i + '].img']: '' });
+    },
     _qaContext() {
       // 只读的异步快照，不创建/写回 observer 监听的组件属性。
       return Object.freeze({ epoch: this._qaEpoch || 0,

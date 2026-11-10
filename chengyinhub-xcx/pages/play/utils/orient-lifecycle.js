@@ -2,6 +2,7 @@
 // Lifecycle writes are separate from the local display clock and reward settlement.
 const { id, integer, precise, settled, sameScope } = require('../../../utils/orient-score-view.js');
 const modal = require('../../../utils/modal.js');
+const clientCapabilities = require('./client-capabilities.js');
 const BASE = '/api/play/orient/session';
 const PHASES = { PREPARED: '待开始', RUNNING: '进行中', FINISHED: '已完成', ABANDONED: '已放弃', DISQUALIFIED: '已取消资格' };
 const ok = body => body && Number(body.code) === 200;
@@ -125,6 +126,8 @@ function methods(send) {
       const payload = action === 'prepare' ? { topicId: c.topicId, activityId: c.activityId }
         : { sessionId: row.sessionId };
       if (action === 'start') payload.ackConfigVersion = row.configVersion;
+      // §27.2:准备/开赛声明本端真实能力;随原请求一起落盘,重查原请求时不换声明。
+      if (action === 'prepare' || action === 'start') Object.assign(payload, clientCapabilities.declaration());
       if (action === 'task') payload.taskId = taskId;
       payload.idempotencyKey = key;
       const pending = { owner: c.owner, topicId: c.topicId, activityId: c.activityId, action, key, payload };
@@ -144,7 +147,8 @@ function methods(send) {
         // Explicit precondition rejections have no write; transport/5xx/conflict remain UNKNOWN.
         if (body && Number(body.code) >= 400 && Number(body.code) < 500 && ['ORIENT_SESSION_DISABLED', 'ORIENT_ACK_REQUIRED', 'ORIENT_SESSION_TERMINAL',
           'ORIENT_PRODUCT_TYPE_UNSUPPORTED', 'ORIENT_TEAM_UNSUPPORTED', 'ORIENT_BAD_REQUEST',
-          'ORIENT_TASK_EVIDENCE_MISSING', 'ORIENT_SESSION_NOT_STARTED', 'ORIENT_TASK_NOT_FOUND'].includes(body.err)) {
+          'ORIENT_TASK_EVIDENCE_MISSING', 'ORIENT_SESSION_NOT_STARTED', 'ORIENT_TASK_NOT_FOUND',
+          clientCapabilities.UNSUPPORTED].includes(body.err)) {
           if (!this._orientClear(c, pending)) { unknown(); return; }
           this._orientSet({ busy: false, pending: false, notice: body.msg || '本次操作未执行，请重新查询对局' });
           return;

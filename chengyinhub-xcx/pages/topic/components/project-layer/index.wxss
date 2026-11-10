@@ -13,7 +13,7 @@
 }
 .ly-mask--3 { z-index: calc(var(--cy-z-sheet) + 4); }
 .ly--3 { top: calc(var(--cy-layer-top, 69px) + 48rpx); z-index: calc(var(--cy-z-sheet) + 5); }
-.ly--under { transform: scale(.94); transform-origin: 50% 0; filter: brightness(.7); }
+.ly--under { transform: translateY(-10px) scale(.94); transform-origin: 50% 0; filter: brightness(.7); pointer-events: none; }  /* qx-u3:与 cy-sheet / cy-scene-sheet 同一组景深 */
 .ly-grab { flex: none; height: 32rpx; display: flex; align-items: center; justify-content: center; }
 .ly-grab::after { content: ""; width: 72rpx; height: 10rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-border-strong); }
 .ly-head { flex: none; display: flex; align-items: center; padding: 0 var(--cy-space-2) var(--cy-space-1); }

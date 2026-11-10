@@ -16,3 +16,5 @@
 .gl-step__l { display: block; margin-top: 8rpx; text-align: center; font-size: var(--cy-type-body); color: var(--cy-comp-sheet-player-text-secondary); }
 .gl-row__top { display: flex; align-items: center; justify-content: space-between; gap: 15rpx; }
 .gl-row__t { font-size: var(--cy-type-button); font-weight: 700; }
+/* V3-28:空态与标准页一致,插画在「我的目标」下方的余白里居中 */
+.gl-empty { padding-top: var(--cy-space-8); }

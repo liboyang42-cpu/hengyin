@@ -38,7 +38,8 @@
         "pages/infomationdetail/infomationdetail",
         "pages/assetcenter/income-detail/income-detail",
         "pages/assetcenter/earnings/index",
-        "pages/assetcenter/analysis/index"
+        "pages/assetcenter/analysis/index",
+        "pages/video-bounty/index"
       ]
     },
     {
@@ -105,7 +106,9 @@
         "merchantinfo/merchantinfo",
         "merchantapply/index",
         "pricing/index",
-        "pricing/partner/index"
+        "pricing/partner/index",
+        "catalog/index",
+        "catalog/detail"
       ]
     },
     {
@@ -266,7 +269,10 @@
         "appeal-mine/index",
         "signup/index",
         "tixian/tixian",
-        "tixianjilu/tixianjilu"
+        "tixianjilu/tixianjilu",
+        "market/passes/index",
+        "market/pass/index",
+        "market/gift/index"
       ]
     },
     {
@@ -288,7 +294,6 @@
       "root": "subpackageTools",
       "name": "subpackageTools",
       "pages": [
-        "capsule/index",
         "monthly-recap/index",
         "exploration-goals/index",
         "anniversary/index",
@@ -314,6 +319,17 @@
       "name": "subpackageDeregister",
       "pages": [
         "index"
+      ]
+    },
+    {
+      "root": "subpackageJourney",
+      "name": "subpackageJourney",
+      "pages": [
+        "pages/report/index",
+        "pages/landing/index",
+        "pages/seats/index",
+        "pages/promo/index",
+        "pages/settle/index"
       ]
     },
     {

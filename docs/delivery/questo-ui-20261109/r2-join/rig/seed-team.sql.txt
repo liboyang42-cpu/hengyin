@@ -1,0 +1,7 @@
+-- r2-join rig fixture (HARNESS, rig DB only): team 501 like qx-b4 (members 9004 leader + 9009, pending applicant 9001)
+DELETE FROM play_team_member WHERE team_id=501; DELETE FROM play_team WHERE id=501;
+INSERT INTO play_team (id,owner_type,owner_id,leader_member_id,invite_code,title,join_mode,max_members,joined_count,status,expire_time,create_time,update_time)
+VALUES (501,1,990014,9004,'RIGR2J501','周末城门小队',1,4,2,0,NOW() + INTERVAL 2 DAY,NOW(),NOW());
+INSERT INTO play_team_member (team_id,member_id,role,status,apply_message,apply_expire_time,create_time,update_time) VALUES
+ (501,9004,1,1,NULL,NULL,NOW(),NOW()),(501,9009,2,1,NULL,NULL,NOW(),NOW()),
+ (501,9001,2,0,'一起玩吧',NOW() + INTERVAL 1 DAY,NOW(),NOW());

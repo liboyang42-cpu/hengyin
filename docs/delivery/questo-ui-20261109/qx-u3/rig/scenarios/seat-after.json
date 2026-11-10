@@ -1,0 +1,4 @@
+{"name":"P5-seat-after","opts":{"path":"pages/index/index","identity":"e2e-openid-9009","agree":true},"open":"/subpackageJourney/pages/landing/index?k=s&t=rig-seat-invite-token&tid=990014",
+ "stub":{"match":"/seat-invitations/claim","ms":500,"body":{"code":200,"msg":"操作成功","data":{"seatNo":2}}},
+ "setup":[{"wait":2500}],
+ "action":{"tap":"领取席位"},"frames":8,"offsets":[0,150,300,450,600,800,1100,1500],"windowMs":1700}

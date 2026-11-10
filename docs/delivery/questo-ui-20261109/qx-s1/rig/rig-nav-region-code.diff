@@ -1,0 +1,16 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+index 5f970336..039c4f74 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/nav.js
+@@ -343,7 +343,10 @@ MP.pickerSeam = function (el) {
+     var def = p.value || (mode === 'date' ? new Date().toISOString().slice(0, 10) : mode === 'time' ? '12:00' : '');
+     var v = window.prompt ? null : null; // headless: use MP.nextPickerValue set by the driver
+     var val = MP.nextPickerValue != null ? MP.nextPickerValue : def; MP.nextPickerValue = null;
+-    MP.fire(el, 'change', { value: mode === 'region' ? (Array.isArray(val) ? val : ['上海市', '上海市', '黄浦区']) : val });
++    // [SEAM qx-s1, same as qx-b4] WeChat's region picker also returns detail.code (adcodes); the driver sets MP.nextPickerCode.
++    var code = MP.nextPickerCode || null; MP.nextPickerCode = null;
++    MP.fire(el, 'change', mode === 'region' && code ? { value: Array.isArray(val) ? val : ['上海市', '上海市', '黄浦区'], code: code }
++      : { value: mode === 'region' ? (Array.isArray(val) ? val : ['上海市', '上海市', '黄浦区']) : val });
+   }
+ };
+ })();

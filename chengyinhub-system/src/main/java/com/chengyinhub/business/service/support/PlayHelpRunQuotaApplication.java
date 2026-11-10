@@ -336,19 +336,56 @@ public class PlayHelpRunQuotaApplication {
         if (scope.kind() == PlayHelpUsagePolicy.RunKind.ADVANCED_GAME) {
             return requireAdvancedOwner(memberId, scope);
         }
+        boolean firstRun = FirstRunHelpIdentity.isIdentity(scope.playInstance());
         TopicRouteSession session;
         try {
-            session = sessions.selectByOwner(activityId(scope), scope.topicId(), memberId, scope.playInstance());
+            // 首局(自玩/活动场次):帮助身份冻结在本人该场次 default 首局的快照里,按该局行核验,不靠实例列直查。
+            session = sessions.selectByOwner(activityId(scope), scope.topicId(), memberId,
+                    firstRun ? FirstRunHelpIdentity.progressInstance() : scope.playInstance());
         } catch (RuntimeException unavailable) {
             throw new PlayHelpRunQuotaException(REASON_STATE_UNAVAILABLE, "本局状态暂时不可用,请重试", unavailable);
         }
         if (session == null) {
             throw new PlayHelpRunQuotaException(REASON_SCOPE_FORBIDDEN, "原局不存在或无权访问");
         }
+        if (firstRun && !scope.playInstance().equals(firstRunIdentity(session, scope))) {
+            // 别人的、旧的(无身份)、别的场次或已被重开的首局:与不存在同文案。
+            throw new PlayHelpRunQuotaException(REASON_SCOPE_FORBIDDEN, "原局不存在或无权访问");
+        }
+        if (firstRun) requireNotSharedTeamRun(memberId, scope);
         if (!Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) {
             throw new PlayHelpRunQuotaException(REASON_SCOPE_CLOSED, "本局已结束，不能使用帮助");
         }
         return null;
+    }
+
+    private String firstRunIdentity(TopicRouteSession session, PlayHelpUsagePolicy.Scope scope) {
+        long sessionActivity = session.getActivityId() == null ? 0L : session.getActivityId();
+        if (sessionActivity != activityId(scope) || !scope.topicId().equals(session.getTopicId())
+                || session.getConfigSnapshotJson() == null) return null;
+        try {
+            return FirstRunHelpIdentity.helpInstance(session, json.readTree(session.getConfigSnapshotJson()));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException broken) {
+            throw new PlayHelpRunQuotaException(REASON_STATE_UNAVAILABLE, "本局状态暂时不可用,请重试", broken);
+        }
+    }
+
+    /**
+     * 队伍共享局(场次已开共享路线)的免费 N 只能走 {@code /api/play/help/shared} 的同队共池;
+     * 本人个人首局身份不能在这里另开一份个人池,否则同一场次会出现"队池 + 个人池"两份免费次数。
+     * 规格 §25.1:个人局按个人范围,团队局按服务端核实的同一团队局身份。
+     */
+    private void requireNotSharedTeamRun(long memberId, PlayHelpUsagePolicy.Scope scope) {
+        if (FirstRunHelpIdentity.selfPlay(scope.activityId()) || sharedRuns == null) return;
+        JsonNode shared;
+        try {
+            shared = sharedRuns.sharedRouteSnapshot(memberId, scope.topicId(), scope.activityId(), null);
+        } catch (RuntimeException unavailable) {
+            throw new PlayHelpRunQuotaException(REASON_STATE_UNAVAILABLE, "本局状态暂时不可用,请重试", unavailable);
+        }
+        if (shared != null) {
+            throw new PlayHelpRunQuotaException(REASON_SCOPE_FORBIDDEN, "队伍共享局请使用本场共享命令");
+        }
     }
 
     /**

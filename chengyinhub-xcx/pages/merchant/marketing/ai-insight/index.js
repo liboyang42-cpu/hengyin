@@ -1,5 +1,6 @@
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const { visibleGrowTips, growTipUrl } = require('../../utils/grow-tips.js');
 const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp, chinaParts } = require('../../../../utils/datetime.js');
 const { failureStatus, retryLogin, recoverReadSession } = require('../../../../utils/session/login-reload.js');
@@ -73,6 +74,7 @@ Page({
     generatedAt: '',
     storeName: '', greetWord: '你好', // 页头问候「早上好，店名」(2026-10-30 D05:按时段换问候语)
     storeLogo: '',        // 页头店铺头像(商家 Logo)
+    growTips: [],         // W2-15 经营优化卡:守卫放行后按岗位权限挑(pages/merchant/utils/grow-tips.js)
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
     metricCards: [],      // 核销率 / 复购率两张小卡:比率 + 说明行 + 分段胶囊进度条
@@ -726,6 +728,16 @@ Page({
   },
 
   goCoopCenter() { wx.navigateTo({ url: COOP_CENTER_ROUTE }); },
+
+  // W2-15:守卫(access/me)放行时附带归一后的岗位权限,经营优化卡按它显隐;其余状态一张不出
+  onGateState(e) {
+    const access = e && e.detail && e.detail.state === 'allow' ? e.detail.access : null;
+    this.setData({ growTips: visibleGrowTips(access) });
+  },
+  goGrowTip(e) {
+    const url = growTipUrl((e.currentTarget.dataset || {}).key);
+    if (url) wx.navigateTo({ url });
+  },
 
   // 2026-10-30 D05(业主:头像要同步、招呼语换一句话):问候语按北京时间时段;品牌中心刚换的 Logo / 店名先盖上,接口回读兜底。
   _syncGreeting() {

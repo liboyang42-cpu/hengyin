@@ -1,0 +1,28 @@
+<!-- 收集册打开过场两段:① r2 邮票落图钉、路线连起来;② r3 环装卡堆(refs4/album-ring-stack-frames)——
+     三段(勋章 / 邮票 / 藏品)各一张彩色卡穿在一个环上,箭头翻到下一张(卡绕环翻过去),点卡进那一段,右上角关。 -->
+<view wx:if="{{show}}" class="ai {{land ? 'is-land' : ''}} {{ring ? 'is-ring' : ''}} {{out ? 'is-out' : ''}}" catchtouchmove="noop" aria-hidden="{{!ring}}" style="--nav-top: {{navTop}}px;">
+  <view class="ai__stamps" catchtap="toRing" hover-class="ai--press" hover-stay-time="80" aria-hidden="true">
+    <view class="ai__route"></view>
+    <view class="ai__stamp ai__stamp--0"><view class="ai__pin"></view><image class="ai__img" src="/subpackageP3/images/album-intro/medal.png" mode="aspectFit" /></view>
+    <view class="ai__stamp ai__stamp--1"><view class="ai__pin"></view><image class="ai__img" src="/subpackageP3/images/album-intro/stamp.png" mode="aspectFit" /></view>
+    <view class="ai__stamp ai__stamp--2"><view class="ai__pin"></view><image class="ai__img" src="/subpackageP3/images/album-intro/object.png" mode="aspectFit" /></view>
+  </view>
+  <view class="ar" wx:if="{{ring}}">
+    <view class="ar__x" catchtap="close" hover-class="ai--press" hover-stay-time="80" aria-role="button" aria-label="关闭"><cy-icon name="close" size="36" /></view>
+    <view class="ar__h-wrap" aria-role="heading" aria-label="{{pages[idx].label}}">
+      <text wx:for="{{pages}}" wx:key="key" class="ar__h {{index === idx ? 'is-on' : ''}}" aria-hidden="true">{{item.label}}</text>
+    </view>
+    <view class="ar__stack {{still ? 'is-still' : ''}}">
+      <view wx:for="{{pages}}" wx:key="key" class="ar__card ar__card--{{item.key}} ar__card--r{{(index - idx + 3) % 3}} {{flip === index ? 'is-flip' : ''}}"
+            catchtap="enter" data-key="{{item.key}}" hover-class="ar__card--press" hover-stay-time="80" aria-role="button" aria-label="打开{{item.label}}" aria-hidden="{{index !== idx}}">
+        <view class="ar__hole"></view>
+        <image class="ar__img" src="/subpackageP3/images/album-intro/{{item.key}}.png" mode="aspectFit" />
+      </view>
+      <view class="ar__ring" aria-hidden="true"></view>
+    </view>
+    <view class="ar__foot">
+      <view class="ar__dots" aria-hidden="true"><view wx:for="{{pages}}" wx:key="key" class="ar__dot {{index === idx ? 'is-on' : ''}}"></view></view>
+      <view class="ar__next" catchtap="next" hover-class="ai--press" hover-stay-time="80" aria-role="button" aria-label="下一页"><cy-icon name="arrow-right" size="36" /></view>
+    </view>
+  </view>
+</view>

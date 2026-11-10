@@ -8,6 +8,7 @@ const NOISE = '░▒▓█▚▞■□';
 const LOGO_SRC = '/images/cy_logo_mark.png';
 const CARD_AT_MS = 3000;                  // 炸开后多久立起通关卡(标题、合计、两枚按钮)
 const CONFETTI_AFTER_CARD_MS = 2400;      // g20:卡立起来之后彩纸再撒多久
+const END_HOLD_MS = 5200;                 // r2-finish:章节完成卡停多久自己溶解(点「下一站」可提前)
 
 function chars(text) { return Array.from(String(text || '')); }
 
@@ -19,7 +20,7 @@ Component({
     info: { type: Object, value: {} },              // 这一章 / 通关:{ kicker, title, desc, stats:[{v,k}] }
     reducedMotion: { type: Boolean, value: false },
   },
-  data: { copy: null, quiet: false, cta: false, out: false },
+  data: { copy: null, quiet: false, cta: false, out: false, endCard: null, endIn: false, endOut: false },
   lifetimes: {
     ready() {
       this.createSelectorQuery().select('#cf').fields({ node: true, size: true }).exec((res) => {
@@ -59,7 +60,7 @@ Component({
       this._tiles = []; this._sparks = []; this._shards = []; this._waves = []; this._confetti = [];
       this._rot = 0; this._turn = null; this._scene = { a: 0, k: 0.86, from: 0, t0: 0, show: false };
       this._shineT = 0; this._flash = 0; this._flare = 0; this._shakeT = 0; this._confettiUntil = 0;
-      this._art = []; this._sprites = [];
+      this._art = []; this._sprites = []; this._dust = [];
     },
     _off(w, h) { return wx.createOffscreenCanvas({ type: '2d', width: w, height: h }); },
 
@@ -101,11 +102,14 @@ Component({
     _gate() {
       const end = this.data.endInfo;
       if (end && end.number) {
+        // r2-finish:上一章完成 = Questo B1 结构的完成卡(勾 → 第 N 章完成 → 用时/本章得分 → 下一站),
+        // 停一会儿(或点「下一站」)后整张卡化成粒子散开(refs2/chapter-end-dissolve-frames),再升起下一章的三棱锥。
         this._stage = 'end';
         this._rot = 0;
-        this._at(() => this._assemble({ text: end.number }), 250);
-        this._decode(end, 700);
-        this._at(() => this._toFlip(true), 3000);
+        this.setData({ endCard: { kicker: end.kicker || '', title: end.title || '', rows: end.rows || [], next: end.next || '' } });
+        this._at(() => this.setData({ endIn: true }), 40);
+        // 停留时长不随减弱动态归零:完成卡要看得到;减弱动态只去掉溶解动画本身。
+        (this._timers = this._timers || []).push(setTimeout(() => { if (!this._gone) this._dissolve(); }, END_HOLD_MS));
       } else {
         this._rot = 120;
         this._toFlip(false);
@@ -163,11 +167,51 @@ Component({
       this.setData({ out: true });
       this._at(() => this.triggerEvent('continue'), 320);
     },
-    /** 点任意处:章节完成页 → 立刻翻到下一章;下一章 → 进正文。通关过场中途不响应,等按钮出来。 */
+    /** 点任意处:章节完成页 → 立刻溶解并翻到下一章;下一章 → 进正文。通关过场中途不响应,等按钮出来。 */
     onTap() {
       if (this.data.mode !== 'gate') return;
-      if (this._stage === 'end') { (this._timers || []).forEach(clearTimeout); this._timers = []; this._toFlip(true); return; }
+      if (this._stage === 'end') { (this._timers || []).forEach(clearTimeout); this._timers = []; this._dissolve(); return; }
+      if (this._stage === 'dissolve') return;
       this._continue();
+    },
+    /** 完成卡化成粒子:按卡片实际位置撒点,从左往右依次脱落、向右上飘散并淡出;卡片本身同步淡掉。减弱动态时直接切。 */
+    _dissolve() {
+      if (this._stage !== 'end' || this._gone) return;
+      this._stage = 'dissolve';
+      const go = () => { this._stage = 'end-done'; this.setData({ endCard: null }); this._toFlip(true); };
+      if (this.data.reducedMotion) { go(); return; }
+      this.createSelectorQuery().select('.cf__end').boundingClientRect().exec((res) => {
+        const r = res && res[0];
+        if (this._gone) return;
+        if (r && r.width > 0) this._spawnDust(r);
+        this.setData({ endOut: true });
+        this._at(go, 620);
+      });
+    },
+    _spawnDust(r) {
+      const n = Math.min(1600, Math.round(r.width * r.height / 70));
+      const now = Date.now();
+      for (let i = 0; i < n; i++) {
+        const x = r.left + Math.random() * r.width, y = r.top + Math.random() * r.height;
+        const fx = (x - r.left) / r.width;
+        this._dust.push({
+          x, y, vx: 0.6 + Math.random() * 2.4, vy: -0.4 - Math.random() * 1.6,
+          born: now + fx * 420 + Math.random() * 160, life: 0, max: 50 + Math.random() * 50,
+          s: 0.8 + Math.random() * 1.8, c: E.PAL.dissolve[i % E.PAL.dissolve.length]
+        });
+      }
+    },
+    _drawDust(ctx, now) {
+      if (!this._dust.length) return;
+      this._dust = this._dust.filter((p) => {
+        if (now < p.born) { ctx.globalAlpha = 0.9; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.s, p.s); return true; }
+        p.life++; if (p.life > p.max) return false;
+        p.vx += (Math.random() - 0.45) * 0.3; p.vy += (Math.random() - 0.55) * 0.2;
+        p.x += p.vx; p.y += p.vy;
+        ctx.globalAlpha = Math.max(0, 1 - p.life / p.max);
+        ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.s, p.s);
+        return true;
+      });
     },
     onSave() { this.triggerEvent('save'); },
     onClose() { this.triggerEvent('continue'); },
@@ -374,6 +418,7 @@ Component({
       this._drawShards(ctx);
       this._drawWaves(ctx);
       this._drawParticles(ctx, now);
+      this._drawDust(ctx, now);
       if (this._flash) { const f = 1 - (now - this._flash) / 700; if (f > 0) { ctx.globalAlpha = 0.9 * f; ctx.fillStyle = E.PAL.flashTint; ctx.fillRect(0, 0, W, H); } else this._flash = 0; }
       ctx.globalAlpha = 1;
     },

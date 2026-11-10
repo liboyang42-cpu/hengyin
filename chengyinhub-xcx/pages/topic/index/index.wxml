@@ -534,11 +534,11 @@
   </view>
 
   <cy-self-play-checkout show="{{selfPlayCheckoutShow}}" top-inset="{{statusBarHeight + navBarHeight}}"
-    cover="{{checkout.cover}}" name="{{info.name}}" valid-text="{{checkout.validText}}" place-text="{{checkout.placeText}}"
-    price-text="{{checkout.priceText}}" free="{{checkout.free}}" profile-name="{{checkout.profileName}}" profile-phone="{{checkout.profilePhone}}"
+    cover="{{checkout.cover}}" name="{{info.name}}" place-text="{{checkout.placeText}}"
+    view="{{checkout.view}}" profile-name="{{checkout.profileName}}" profile-phone="{{checkout.profilePhone}}"
     consent-checked="{{selfPlayConsentChecked}}" consent-hint="{{selfPlayConsentHint}}" consent-error="{{selfPlayConsentError}}"
     loading="{{selfPlayConfirmLoading}}"
-    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pay="onSelfPlayConfirm" />
+    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" />
 
   <cy-pass-reveal show="{{reveal.show}}" cover="{{reveal.cover}}" name="{{reveal.name}}" kind-text="{{reveal.kindText}}"
     until-text="{{reveal.untilText}}" days-text="{{reveal.daysText}}" duration-line="{{reveal.line}}" reduced-motion="{{reducedMotion}}"
@@ -572,6 +572,6 @@
   bind:consentchange="onResultConsentChange" bind:consentretry="onResultConsentRetry"
   bind:close="onResultSheetClose" />
 
-<view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
+<view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:report="openThemeRunReport" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
 
 <cy-share-card show="{{shareCard.show}}" card="{{shareCard.card}}" bind:close="onShareCardClose" />

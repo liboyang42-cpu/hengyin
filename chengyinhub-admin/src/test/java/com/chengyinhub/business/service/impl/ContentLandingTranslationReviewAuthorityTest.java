@@ -296,6 +296,46 @@ class ContentLandingTranslationReviewAuthorityTest {
 
     // ------------------------------------------------------------------ helpers
 
+    // ------------------------------------------------------------------ 审校台只读详情
+
+    @Test
+    void reviewDetailReturnsTranslationTextAndVersionWithoutWriting() {
+        ContentLandingMetadata row = new ContentLandingMetadata();
+        row.setTopicId(TOPIC_ID);
+        row.setSourceLocale("zh-CN");
+        when(metadata.selectByTopicId(TOPIC_ID)).thenReturn(row);
+        ContentLandingTranslation en = new ContentLandingTranslation();
+        en.setTopicId(TOPIC_ID);
+        en.setLocale("en");
+        en.setTitle("Old town walk");
+        en.setTranslationState("PENDING");
+        en.setRowVersion(3L);
+        java.util.List<ContentLandingTranslation> rows = new ArrayList<>();
+        rows.add(en);
+        when(metadata.selectTranslationsByTopicId(TOPIC_ID)).thenReturn(rows);
+
+        com.chengyinhub.business.domain.vo.ContentLandingMetadataVO vo = service.reviewDetail(TOPIC_ID);
+
+        assertEquals(1, vo.getTranslations().size());
+        assertEquals("Old town walk", vo.getTranslations().get(0).getTitle());
+        assertEquals("PENDING", vo.getTranslations().get(0).getTranslationState());
+        assertEquals(Long.valueOf(3L), vo.getTranslations().get(0).getRowVersion());
+        verify(metadata, never()).updateTranslationVersioned(any(), anyLong(), any());
+        verify(audits, never()).insertBusinessAuditEvent(any());
+    }
+
+    @Test
+    void reviewDetailRejectsTopicThatIsNotPublic() {
+        CmsTopic hidden = publicTopic();
+        hidden.setUserStatus(0);
+        when(topics.selectCmsTopicById(TOPIC_ID)).thenReturn(hidden);
+
+        ServiceException rejection = assertThrows(ServiceException.class, () -> service.reviewDetail(TOPIC_ID));
+
+        assertEquals(Integer.valueOf(409), rejection.getCode());
+        verify(metadata, never()).selectTranslationsByTopicId(anyLong());
+    }
+
     private CmsTopic publicTopic() {
         CmsTopic topic = new CmsTopic();
         topic.setId(TOPIC_ID);

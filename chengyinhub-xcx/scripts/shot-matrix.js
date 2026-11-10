@@ -289,7 +289,7 @@ const RAW = [
   ['B38', 'B38-infodetail-loading.png', '/subpackageA/pages/infomationdetail/infomationdetail?id=1', 'player', 'loading', { loading: true }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
   ['B39', 'B39-infodetail-badparam.png', '/subpackageA/pages/infomationdetail/infomationdetail', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B43', 'B43-myproject-topic.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'topic', projectState: 'ready', loading: false, loaded: true, ownerChips: [], stateIndex: 0, pendingSummary: { total: 0, rejected: 0, draft: 0, pending: 0 }, capped: false, list: [{ id: 1, title: '城市线索路线', cover: IMG, bizType: 'topic', projectTypeText: '主题', _stateVariant: 'active', stateText: '进行中', ownerType: 'merchant', signupCount: 3, viewCount: 28 }] }, undefined, TABS3, 'setData', 'P0', '', 'Tab 统一；项目卡重设计'],
-  ['B44', 'B44-myproject-template.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'template', loading: false, loaded: true, projectState: 'ready', projectErrorMsg: '', tplList: [{ id: 11, title: '老建筑年份线索', imgUrl: IMG, _stateVariant: 'success', _statusText: '个人审核通过', marketPublishStatus: 1, _marketText: '广场已上架', _canToggleMarket: true, _marketActionText: '从广场下架', _marketPublishTarget: 0, _canSubmitMarket: false, useNum: 8, duration: 30 }], tplLoaded: true, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: '.mp-card', min: 1 }, 'setData', 'P1', '', '模板 Tab 使用页面真实 typeTab/tplList/tplLoaded 状态，不再注入已删除的 activeTab'],
+  ['B44', 'B44-myproject-template.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'template', loading: false, loaded: true, projectState: 'ready', projectErrorMsg: '', tplList: [{ id: 11, title: '老建筑年份线索', imgUrl: IMG, _stateVariant: 'success', _statusText: '个人审核通过', _statusShort: '通过', marketPublishStatus: 1, _marketText: '广场已上架', _canToggleMarket: true, _marketActionText: '从广场下架', _marketPublishTarget: 0, _canSubmitMarket: false, useNum: 8, duration: 30 }], tplLoaded: true, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: '.mp-card', min: 1 }, 'setData', 'P1', '', '模板 Tab 使用页面真实 typeTab/tplList/tplLoaded 状态，不再注入已删除的 activeTab'],
   ['B45', 'B45-template-intro.png', '/pages/publish/template-intro/index', 'player', 'normal', { cards: [{ title: '经典定向', catName: '定向', imgUrl: IMG, accent: '#E8590C' }] }, undefined, TITLE, 'setData', 'P0', '', '品类语义色已批准保留彩色'],
   ['B47', 'B47-topicadd-init.png', '/pages/publish/topicadd/topicadd', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '被验对象已退役:PR #685 把 topicadd 降级成纯重定向壳(wxml 只剩一行注释),没有可拍的界面。它现在唯一该被验的是「转得对不对」,已由 tests/unit/topicadd-shell-redirect-contract.test.js 接管(4 条:必须 redirectTo 不能 navigateTo、三参数原样透传、无参转裸 fabu、onLoad 不传参不炸,负控双向验过)。截图证明不了跳转,单测能。', '已退役,见 blocked 原因'],
   ['B48', 'B48-fabu-step1.png', '/pages/publish/fabu/index', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '', '★.rs-num--accent 仍消费紫 token --cy-route'],
@@ -560,7 +560,6 @@ const RAW = [
   //   瞬时态,截图对不上,由各自的纯算法单测覆盖。
   // 2026-10-15 漫游上线新增 6 条路由:我的队伍 + 漫游护照 5 个工具页(fixture 用页面真实 data 字段)
   ['F96', 'F96-my-teams-approved.png', '/subpackageRoam/my-teams/index', 'player', 'normal', { loading: false, mineError: false, tab: 'mine', stats: [{ k: '已通过', v: 1 }, { k: '审核中', v: 0 }, { k: '带队', v: 0 }, { k: '未通过', v: 0 }], groups: [{ key: 'ok', title: '已通过', rows: [{ key: 'j1', teamId: 1, name: '一起出发的玩家队伍', avatars: [{ k: 0, src: '/images/d_profile.png' }, { k: 1, src: '/images/d_profile.png' }], members: '已组 2/4', sub: '10/20 10:00 开始', badge: '已通过', tone: 'ok', action: { text: '进入队伍', kind: 'primary', act: 'enter' } }] }] }, undefined, { selector: '.mt-card', min: 1 }, 'setData', 'P1', '', '我的队伍:Memoji 头像叠层 + 已通过分组。'],
-  ['F97', 'F97-capsule-list.png', '/subpackageTools/capsule/index', 'player', 'normal', { status: 'ready', busy: false, composing: false, items: [{ id: '1', state: 'LOCKED', createdText: '2026-10-15', unlockText: '2026-11-14', daysLeft: 30 }, { id: '2', state: 'OPEN', createdText: '2025-10-14', unlockText: '2026-10-14', daysLeft: 0 }] }, undefined, { selector: '.cp-card', min: 2 }, 'setData', 'P1', '', '时光胶囊:封存中倒计时卡 + 已到开启日卡。'],
   ['F98', 'F98-monthly-recap.png', '/subpackageTools/monthly-recap/index', 'player', 'normal', { monthLabel: '2026 年 10 月', isCurrentMonth: true, counts: { routes: 5, places: 4, stamps: 2 }, kindIndex: 0 }, undefined, { selector: '.mr-month', min: 1 }, 'setData', 'P1', '', '月度回顾:月份切换、三项读数。'],
   ['F99', 'F99-exploration-goals.png', '/subpackageTools/exploration-goals/index', 'player', 'normal', { busy: false, creating: false, rows: [{ id: '1', metric: 'DISTINCT_ROUTES', target: 5, progress: 2, state: 'ACTIVE', stateText: '进行中', metricText: '不同路线数', unit: '条路线', badge: 'tu-badge--wait', progressText: '2 / ', pct: 40, startDate: '2026-10-15', endDateExclusive: '2026-11-01' }] }, undefined, { selector: '.gl-row', min: 1 }, 'setData', 'P1', '', '探索目标:进行中目标卡与进度条。'],
   ['F100', 'F100-anniversary.png', '/subpackageTools/anniversary/index', 'player', 'normal', { busy: false, dateLabel: '10.15', rows: [{ id: '1', topicId: '1', title: '外滩夜行', yearsAgo: 1, completedText: '2025-10-15 14:00' }] }, undefined, { selector: '.an-card', min: 1 }, 'setData', 'P1', '', '那年今日:往年同日完成记录卡。'],
@@ -585,6 +584,8 @@ const RAW = [
   ['F83a', 'F83a-playkit-photocheck-card.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'photocheck', title: '捡一件东西', shotNote: '拍到一件金属的东西', maxTries: 3, fallback: 'retake', tries: 1, passed: true, flagged: false, degraded: false, lastReason: '', lastUrl: IMG, mode: 'CARD', cardTitle: '一枚弹壳', cardStyle: 'foil', card: { frames: [IMG], generating: false, title: '一枚弹壳', caption: '放在窗台上的时候是斜的', cardStyle: 'foil' } } }, undefined, { selector: 'cy-spin-card', min: 1 }, 'setData', 'P1', '', '拍物成卡 · 判过当场看到卡(契约 §10.2):卡只跟「真判过 + 回包真带回这张卡」同屏。模拟器没有加速度计,这一格只验三层卡壳渲染得出来;「倾斜跟不跟手」与 F89/F90 同口径归真机录屏。', 'cy-playkit'],
   ['F84', 'F84-playkit-note.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'note', title: '写一句留给下一个人', prompt: '你看到窗外什么', maxLength: 40, presets: ['天是灰的', '有人在等红灯'], previous: [{ text: '灯一直红着', at: '2026-09-16 20:00' }], mine: '', done: false } }, undefined, { selector: 'cy-playkit-note', min: 1 }, 'setData', 'P1', '', '留言:前面的人写过什么、预设短句与输入框同屏。', 'cy-playkit'],
   ['F85', 'F85-playkit-typein.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'typein', title: '打出这行字', target: 'hello world', seconds: 10, caseSensitive: false, tries: 0, attempts: 0, passed: false } }, undefined, { selector: 'cy-playkit-typein', min: 1 }, 'setData', 'P1', '', '限时打字:目标文本是明牌,限时由台面截止时刻钉死。', 'cy-playkit'],
+  ['F103', 'F103-playkit-hangman.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'hangman', title: '', slots: [{ i: 0, kind: 'PREFILLED', ch: 'E' }, { i: 1, kind: 'BLANK', ch: '' }, { i: 2, kind: 'BLANK', ch: '' }, { i: 3, kind: 'BLANK', ch: '' }, { i: 4, kind: 'BLANK', ch: '' }, { i: 5, kind: 'BLANK', ch: '' }, { i: 6, kind: 'PREFILLED', ch: 'S' }], solved: false, display: '' } }, undefined, { selector: 'cy-playkit-hangman', min: 1 }, 'setData', 'P1', '', '逐字猜词:预填格、待补格与整词作答同屏(UG-01)。', 'cy-playkit'],
+  ['F104', 'F104-playkit-accusation.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'accusation', title: '谁拿走了钟楼的钥匙?', boardImg: '', boardAlt: '', intro: [], suspects: [{ id: 'A', name: '古董店老板', identity: '钟楼对面', avatar: '', testimony: [{ key: 'clue.a', text: '那晚十点我在店里盘点。' }] }, { id: 'B', name: '守夜人', identity: '钟楼值班', avatar: '', testimony: [] }], outcome: '', outcomeLabel: '', pending: false, wrongAttempt: false, retryNote: '', screen: [] } }, undefined, { selector: 'cy-playkit-accusation', min: 1 }, 'setData', 'P1', '', '指认结案:人物卡、已获证词与二次确认按钮同屏(UG-03)。', 'cy-playkit'],
   // 2026-09-20 R3 推理类三玩法填充态；玩家判定仍以服务端整体回执为准。
   ['F86', 'F86-playkit-sort.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'sort', prompt: '把林舟的陈述按他说话的顺序排好', items: [{ id: 's2', label: '说明原声只授权在展厅播放' }, { id: 's1', label: '承认删掉了那一分钟录音' }, { id: 's3', label: '请求更正展签「从未存在」' }], maxAttempts: 2, attempts: 1, finished: false, passed: false, lastCorrect: false } }, undefined, { selector: 'cy-playkit-sort', min: 1 }, 'setData', 'P1', '', '排序:服务端给出的打乱项可用按钮调整顺序，不强迫玩家只靠拖拽。', 'cy-playkit'],
   ['F87', 'F87-playkit-match.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'match', prompt: '每份材料能回答哪个问题', left: [{ id: 'l1', label: '签收联 071' }, { id: 'l2', label: '原声录音' }, { id: 'l3', label: '合照 P-02' }], right: [{ id: 'r2', label: '码头原本叫什么' }, { id: 'r1', label: '是谁来拿走了东西' }, { id: 'r3', label: '那天还有谁在场' }], attempts: 1, passed: false, lastCorrect: false } }, undefined, { selector: 'cy-playkit-match', min: 1 }, 'setData', 'P1', '', '连线:左右点选配对，以相同序号角标表达对应关系。', 'cy-playkit'],
@@ -666,11 +667,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-28 并 master(#658 后)合流 integrate/devfix-20261027:本线 F201(营销消息页)与 D33A(账户收益分析页)两行叠加 master,自检实测 total 353、P1 203、actionable 329(P1 196)、D 52、setData 186、real-data 44。
 // 2026-10-29 走查 l2-roam V-08 第二轮删除「动态」二级页 pages/square/list:A05–A09 五行退场,total 353→348、P0 140→139、P1 203→199、actionable 329→324(P0 131→130、P1 196→192)、A 53→48、setData 186→183、identity+setData 116→115、real-data 44→43;blocked 与已验 fixture 不变。
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
+// 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 const STATS = {
-  "total": 350,
+  "total": 349,
   "byPriority": {
     "P0": 139,
-    "P1": 201,
+    "P1": 200,
     "P2": 10
   },
   "blockedByPriority": {
@@ -680,9 +682,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 194,
+    "P1": 193,
     "P2": 2,
-    "total": 326
+    "total": 325
   },
   "blocked": 24,
   "domains": {
@@ -691,10 +693,10 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 96
+    "F": 95
   },
   "control": {
-    "setData": 184,
+    "setData": 183,
     "identity+setData": 115,
     "real-data": 44,
     "real-device": 7

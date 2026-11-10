@@ -165,7 +165,7 @@ test('点地址开地图:各页面都走 utils/open-address.js', () => {
     'pages/publish/simple/index.js',
     'pages/topic/components/cy/chapter-node-form/index.js', 'pages/play/components/playkit-dailysign/index.js',
     'subpackageMember/components/cy/scene-member-order-history/index.js', 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js',
-    'subpackageRoam/components/roam-city-guide/index.js', 'subpackageRoam/nearby/index.js', 'subpackageRoam/official-route/index.js',
+    'subpackageRoam/nearby/index.js', 'subpackageRoam/official-route/index.js',
     'subpackageB/pages/im/chat/index.js', 'components/cy/merchant-card/index.js',
   ]
   files.forEach((f) => assert.match(read(f), /require\('[./]+utils\/open-address\.js'\)/, f))

@@ -142,15 +142,27 @@ public class ApiPresetController extends BaseController {
                     body, () -> createGameplayDraftOnce(body, actor));
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
+        } catch (GameplayPresetDraftService.MissingFieldsException missing) {
+            return missingFields(missing);
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
+    }
+
+    /** 与发布问题同形：短消息 + data.code + data.requiredFields，客户端逐项标红，不再依赖长消息。 */
+    static AjaxResult missingFields(GameplayPresetDraftService.MissingFieldsException missing) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("code", GameplayPresetDraftService.MissingFieldsException.CODE);
+        data.put("requiredFields", missing.getRequiredFields());
+        return AjaxResult.error(missing.getMessage(), data);
     }
 
     private AjaxResult createGameplayDraftOnce(GameplayPresetDraftCommand command, Long actor) {
         try {
             return success(presetDraftService.create(actor, getAppUserName(),
                     command.getPresetKey(), command.getFields()));
+        } catch (GameplayPresetDraftService.MissingFieldsException missing) {
+            return missingFields(missing);
         } catch (IllegalArgumentException e) {
             // 预设不存在、字段没填全、字段值越界都在这里：原样把作者要补的东西说清楚。
             return error(e.getMessage());

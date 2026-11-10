@@ -27,3 +27,12 @@
 
 /* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
 .rel-item { filter: opacity(calc(1 - var(--pm-q, 0))); translate: 0 calc(var(--pm-q, 0) * 31rpx); transition: filter var(--pm-q-d, 0s) ease, translate var(--pm-q-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-q-s, 0) * min(var(--pmi, 0), 8) * 30ms), calc(var(--pm-q-s, 0) * min(var(--pmi, 0), 8) * 30ms), 0s, 0s; }
+
+/* r2 a6-w2-17:商家发帖入口,与俱乐部详情发帖入口(Figma 285:395)同一形态 */
+.post-composer-collapsed { display: flex; align-items: flex-start; gap: var(--cy-space-3); padding: 26rpx var(--cy-page-x); border-bottom: 1rpx solid var(--cy-color-border-subtle); } /* ds-ok: py13 = 26rpx,同俱乐部详情 */
+.post-composer-me { flex: none; }
+.post-composer-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-legacy-4); }
+.post-composer-who { font-size: var(--cy-type-card-title); font-weight: 500; color: var(--cy-color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
+.post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
+.post-composer-ico { flex: none; color: var(--cy-color-text-primary); }

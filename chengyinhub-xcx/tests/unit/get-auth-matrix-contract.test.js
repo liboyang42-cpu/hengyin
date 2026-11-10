@@ -35,6 +35,24 @@ const PLAY_PLAYER_QUERY_APPLICATION = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // 2026-11-10 qx-b5(qx-c3 补登,按服务端实际守卫;以下路径均不在 SecurityConfig 放行清单,落 anyRequest().authenticated()):
+  //   报名页促销目录 ApiMarketingPromotionController /catalog:requireAppMemberId,按场次回目录并带本人可用性。
+  ['pages/activity/baoming/baoming.js', "url: '/api/marketing/promotions/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
+  //   收益明细分佣(cy-revenue-allocations 组件) ApiMarketingRevenueController /author/mine:listByAuthor(requireAppMemberId),只回本人分项。
+  ['subpackageA/components/revenue-allocations/index.js', "url: '/api/marketing/revenue/author/mine'", 'required', 'member', 'self-account'],
+  //   视频悬赏 get() 只服务 /submission/mine 与 /accrual/mine,ApiVideoBountyController 均按 requireAppMemberId 本人过滤。
+  ['subpackageA/pages/video-bounty/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
+  //   通行证详情 ApiMarketingProductController /{productId}:catalogService.detail,无会员维度;/orders 按 requireAppMemberId 本人。
+  ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/' + encodeURIComponent(this._id)", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/orders'", 'required', 'member', 'self-account'],
+  // 2026-11-10 r2-store:主题结账层列覆盖本主题的通票、发现页通票入口卡,同通行证列表一个在售目录端点(需登录)。
+  ['pages/topic/index/index.js', "url: '/api/marketing/product/list'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/talent/list/index.js', "url: '/api/marketing/product/list'", 'required', 'member', 'global-authenticated-read'],
+  //   通行证列表 get() 服务 /list(listSellable,无会员维度)与 /orders、/gifts/bought、/gifts/received(均 requireAppMemberId 本人);
+  //   同一调用点按其中最严的本人档登记,四个端点都必须登录。
+  ['subpackageMember/market/passes/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
+  //   ApiWorkshopController /capabilities:平台能力开关,无会员维度。
+  ['subpackageMember/market/passes/index.js', "url: '/api/workshop/capabilities'", 'required', 'member', 'global-authenticated-read'],
   // 原写入回执仅按登录态actor读取，operation和requestId不接受会员ID。
   ['utils/author-write-recovery.js', "url: '/api/author-write/receipt'", 'required', 'member', 'self-account'],
   // Team board reads retain authenticated access; detail additionally enforces active team membership.
@@ -129,6 +147,9 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
   // R29C:只读登录会员的原会话快照，服务端逐项校验会话/会员/场次/主题及历史可读性。
   ['pages/play/index.js', "req('/api/play/history'", 'required', 'member', 'current-session'],
+  // qx-b1 UG-05/07:提示阶梯层级与只读分数明细。服务端按 topic_route_session.id 解析原局并校验本人、主题与节点,不含正文。
+  ['pages/play/index.js', "req('/api/play/help', 'GET'", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/help/receipt', 'GET'", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
      行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
   ['pages/play/index.js', "req('/api/play/nodes', 'GET', params).then((res) => { // 补拉", 'required', 'member', 'current-session'],
@@ -192,6 +213,8 @@ const MATRIX = [
   // 2026-10-28 p74:附近 3km 为空时 20km 兜底,同端点同权限档
   ['pages/roam/index.js', "req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-11-09 V3-35:入口地图目录地点图钉,同 /api/roam/pois 权限档
+  ['pages/roam/index.js', "req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }", 'required', 'member', 'global-read+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/roam/badge/shop-streak'", 'required', 'member', 'global-authenticated-read'],
   ['pages/merchant/customer/index.js', 'loadSavedSegments() {', 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
   ['pages/shezhi/components/marketing-consent/index.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
@@ -280,6 +303,13 @@ const MATRIX = [
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/backpack'", 'required', 'member', 'current-session'],
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取。只认登录本人,服务端再核这一场已付费、作者没关(ApiPlayTeamController /trail/state)。
   ['pages/play/index.js', "req('/api/team/trail/state', 'GET'", 'required', 'member', 'current-session'],
+  // 2026-11-09 qx-b8 U08-01:完成页结果词读本局战报。ApiPlayerJourneyController /report 只取登录会员,
+  //   PlayerRunReportApplication 按本人报名/路线会话校验 runId 归属(非本人局 403「无权查看该局」),只读不建局不发奖。
+  ['pages/play/index.js', "req('/api/play/player-journey/report', 'GET'", 'required', 'member', 'current-session'],
+  // 2026-11-10 qx-c3 为 qx-b4 补登(按服务端实际守卫):两者都不在 SecurityConfig 放行清单,落 anyRequest().authenticated()。
+  //   预设库 ApiPresetController /gameplay/list 只回平台自带声明(GameplayPresetCatalog.publicView,无会员维度);
+  //   素材署名 ApiMediaAssetController /attribution 经 AppMediaReferenceGuard.publicAttribution 只回已审核/官方素材的公开来源视图,不按本人过滤。
+  ['pages/templatedetail/topic-detail/index.js', "url: '/api/media/asset/attribution'", 'required', 'member', 'global-authenticated-read'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -437,7 +467,13 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-03 第九轮 m-rain:漫游地图天气氛围一处匿名 GET /api/map/weather(已入 MATRIX),110 → 111。
   // 2026-11-04 第九轮 m-card:漫游地点卡读节点评分一处 GET /api/city/nodes/{id}(与据点详情同一接口,已入 MATRIX),111 → 112。
   // 2026-11-04 第十一轮 g3 p1 F-7:参与详情探一次本人角色卡(同 GET /api/play/character,本人账号、只读),只在主题真有角色属性时摆入口,112 → 113。
-  assert.equal(directCount, 113, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-10 staging 合流(qx-b1..b8):各线已入 MATRIX 的直接 GET 合计,合并树实测 113 → 122。
+  // 2026-11-10 qx-b5(qx-c3 补登):报名促销目录、收益分佣、视频悬赏、通行证详情两处、通行证列表两处,均已按服务端守卫入 MATRIX,113 → 120。
+  // 2026-11-10 qx-c3 staging 重建:b4/b5 各自补登的行均已在 MATRIX,合并树实测仍 122。
+  // 2026-11-10 qx-b4(qx-c3 补登):固定玩法预设库一处、模板详情素材署名一处,均已按服务端守卫入 MATRIX,113 → 115。
+  // 2026-11-10 r2-store:主题结账层与发现页各读一次在售通票目录(已入 MATRIX),122 → 124。  
+  // 2026-11-10 qx-s2 staging 合并树:r2-create(b4-21)撤掉预设页,qx-b4 的「固定玩法预设库」一处直接 GET 随页退场,124 → 123(实测)。
+  assert.equal(directCount, 123, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -449,7 +485,12 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-30 #686 故事流顶栏:案件册两处 + 各站奖励一处 req 包装 GET(本人本局,已逐条入 MATRIX),41 → 44。
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
   // R29C:原会话历史 GET /api/play/history 一处，按登录会员与原会话归属只读，45 → 46。
-  assert.equal(wrapperCount, 46, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // qx-b1:提示阶梯 GET /api/play/help 与 /api/play/help/receipt 两处(本人原局,已入 MATRIX),46 → 48。
+  // 2026-11-09 qx-b8 U08-01:完成页本局战报 GET /api/play/player-journey/report 一处(本人本局,已入 MATRIX),46 → 47。
+  // 2026-11-10 staging 合流:qx-b1 +2 与 qx-b8 +1 叠加,46 → 49。
+  // 2026-11-09 V3-35:漫游入口地图把目录地点画成图钉,另读一次 /api/roam/pois(与地图页同端点同权限档),46 → 47。
+  // 2026-11-10 staging 合流:再叠加 qx-a4 +1,49 → 50。
+  assert.equal(wrapperCount, 50, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

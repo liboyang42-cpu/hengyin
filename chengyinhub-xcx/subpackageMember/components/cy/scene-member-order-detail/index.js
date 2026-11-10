@@ -7,6 +7,7 @@ const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/orde
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
 const subscribe = require('../../../../utils/subscribe.js');
 const refundAmount = require('../../../utils/order-refund-amount.js');
+const { settlementView } = require('../../../utils/order-settlement-view.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 const { failureStatus } = require('../../../../utils/session/login-reload.js');
 const { reader, sameReader } = require('../../../../utils/user-character.js');
@@ -178,13 +179,11 @@ function toCompletionView(vo) {
 
 // V-20:订单详情不再放「查看票夹」。待支付是「去支付」;
 // F-06(j2):已付、还能玩的票是「开始游戏」,直接进 play(与票夹「开始游戏」同一目标),不绕票夹。
-const PLAYABLE_STATES = ['not_started', 'in_progress', 'non_refundable'];
 const { ticketHasGame } = require('../../../../utils/ticket-game.js');   // 第十二轮 k2(j1 N1):没有游戏的场次票不出「开始游戏」
 function resolvePrimaryCta(info) {
   const value = info || {};
   if (value.orderStateKey === 'pending_payment') return 'pay';
-  if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
-    && PLAYABLE_STATES.indexOf(value.orderStateKey) >= 0 && playQuery(value) && ticketHasGame(value)) return 'play';
+  // V3-03(2026-11-09 业主):「订单这里不需要有开始游戏按钮 开始游戏只从票夹那进去」⇒ 不再出 'play'。
   if (Number(value.registrationStatus) === 2 && Number(value.paymentStatus) === 2
     && value.orderStateKey === 'completed' && resolveExploreOrder(value) && playQuery(value) && ticketHasGame(value)) return 'record';
   return '';
@@ -434,6 +433,7 @@ Component({
         hideLoading: true, autoErrorToast: false, success: settle, fail: function () { settle(null); },
         successStatusAbnormal: function () { settle(null); } });
     },
+    goSeats() { const id = this.data.info && this.data.info.id; if (id) this._leave('/subpackageJourney/pages/seats/index?registrationId=' + id); },
     goInvoiceApply() { this._leave('/subpackageMember/invoice-apply/index'); },
     goInvoiceDetail() {
       const id = this.data.invoiceRow && this.data.invoiceRow.applicationId;
@@ -536,6 +536,8 @@ Component({
     /* V-20 业主 2026-10-29:订单详情不再放「查看票夹」,原 goSignInfo 出口随按钮一起删除。 */
 
     startPlay() {
+      // V3-03:订单页只剩「查看记录」能进 play;开始游戏只从票夹进
+      if (this.data.primaryCta !== 'record') return;
       const info = this.data.info || {};
       const query = playQuery(info);
       if (!query || this._playNavigating) return;
@@ -979,6 +981,8 @@ Component({
             }
             info.canRequestRefund = canRequestOrderRefund(info);
             info.refundAmountShown = refundAmount.refundedAmount(info);
+            // U07-04:退款阶段与分项只读服务端 settlementSummary;受理不写到账、未知不写 0
+            info.settleView = settlementView(info.settlementSummary);
             const isTopicOrder = Number(info.ownerType) === 1;
             // purchaseKind 非空时权威；仅存量 NULL 单回落到明确 chapterId，权益延迟到达时可补正类型。
             const isExploreOrder = resolveExploreOrder(info);

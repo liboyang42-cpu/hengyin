@@ -1,0 +1,3 @@
+{"name":"STACK-after","opts":{"path":"pages/index/index","identity":"e2e-openid-9003","agree":true},"open":"/pages/publish/fabu/index?id=990017",
+ "setup":[{"wait":3500},{"tap":"主题详情"},{"wait":1500}],
+ "action":{"tap":["选择",{"exact":true}]},"frames":6,"offsets":[0,80,160,240,360,800],"windowMs":1000}

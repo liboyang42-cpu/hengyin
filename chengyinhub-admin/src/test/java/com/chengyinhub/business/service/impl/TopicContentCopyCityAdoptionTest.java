@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -345,6 +346,33 @@ class TopicContentCopyCityAdoptionTest {
     }
 
     @Test
+    void mysqlNormalizedPublishedHeadStillMatchesItsRevision() throws Exception {
+        // MySQL JSON 列读回是规范化文本(键按长度重排、逗号冒号后加空格);语义相同仍是同一份发布内容
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode tree = json.readTree(currentRevision.getSnapshotJson());
+        java.util.TreeMap<String, Object> reordered = new java.util.TreeMap<>(java.util.Comparator.reverseOrder());
+        tree.fields().forEachRemaining(e -> reordered.put(e.getKey(), e.getValue()));
+        String normalized = json.writeValueAsString(reordered).replace(",\"", ", \"").replace("\":", "\": ");
+        assertNotEquals(currentRevision.getSnapshotJson(), normalized);
+        original.setPublishedRouteGraphJson(normalized);
+        copy(Map.of("copyType", 2, "memberId", 200L, "bindingIntent", "NEW_CITY",
+                "targetCityCode", "320100", "sourceContentRevisionId", "9001"));
+        assertEquals("9001", TopicLocationContract.summary(persisted.get().getContentContractJson())
+                .get("sourceContentRevisionId"));
+    }
+
+    @Test
+    void sameJsonDocumentRejectsDifferentContentAndUnreadableText() {
+        assertTrue(TopicContentCopyServiceImpl.sameJsonDocument("{\"a\":1,\"b\":[1,2]}", "{\"b\": [1, 2], \"a\": 1}"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument("{\"a\":1}", "{\"a\": 2}"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument("{\"b\":[1,2]}", "{\"b\": [2, 1]}"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument("{\"a\":1}", "not json"));
+        assertFalse(TopicContentCopyServiceImpl.sameJsonDocument(null, "{}"));
+    }
+
+    @Test
     void unavailableOrTamperedPublishedSnapshotIsRejectedBeforeCopyWrites() {
         wireRevisionAdoption();
         publishRevision(9001L);
@@ -354,6 +382,65 @@ class TopicContentCopyCityAdoptionTest {
         currentRevision.setContentSha256("not-the-stored-hash");
         assertThrows(IllegalArgumentException.class, () -> copy(Map.of("copyType", 2, "memberId", 200L)));
         assertNoCopyWrites("发布头或真实内容hash不一致");
+    }
+
+    /**
+     * qx-c3:cms_topic.published_route_graph_json 是 MySQL JSON 列,读回时键序/空白被服务器重排;
+     * 修订行 snapshot_json 是 longtext 原文。同一份发布按字节比永远不等,真库上每次整主题采用都被拒
+     * (GenericGameplayHttpE2eIT 的 save-as 500)。按 JSON 语义比较才对;内容不同仍须拒绝。
+     */
+    @Test
+    void publishedHeadReserializedByTheJsonColumnStillMatchesItsRevision() throws Exception {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        JsonNode tree = json.readTree(currentRevision.getSnapshotJson());
+        String reserialized = mysqlJsonColumnForm(tree);
+        assertFalse(reserialized.equals(currentRevision.getSnapshotJson()), "变异未生效:读回形态必须与原文字节不同");
+        assertEquals(tree, json.readTree(reserialized));
+        original.setPublishedRouteGraphJson(reserialized);
+        copy(Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001"));
+        assertEquals("9001", TopicLocationContract.summary(persisted.get().getContentContractJson())
+                .get("sourceContentRevisionId"));
+    }
+
+    @Test
+    void reserializedButDifferentPublishedHeadIsStillRefused() throws Exception {
+        wireRevisionAdoption();
+        publishRevision(9001L);
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode changed =
+                (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(currentRevision.getSnapshotJson());
+        changed.put("tamperedByQxC3", true);
+        original.setPublishedRouteGraphJson(mysqlJsonColumnForm(changed));
+        assertThrows(IllegalArgumentException.class, () -> copy(
+                Map.of("copyType", 2, "memberId", 200L, "sourceContentRevisionId", "9001")));
+        assertNoCopyWrites("发布头与修订语义不同");
+    }
+
+    /** MySQL JSON 列的读回形态:对象键按(长度,字典序)重排,冒号/逗号后带一个空格。 */
+    private static String mysqlJsonColumnForm(JsonNode node) {
+        if (node.isObject()) {
+            java.util.List<String> keys = new java.util.ArrayList<>();
+            node.fieldNames().forEachRemaining(keys::add);
+            keys.sort(java.util.Comparator.comparingInt(String::length).thenComparing(java.util.Comparator.naturalOrder()));
+            StringBuilder out = new StringBuilder("{");
+            for (int i = 0; i < keys.size(); i++) {
+                if (i > 0) out.append(", ");
+                out.append(com.fasterxml.jackson.databind.node.TextNode.valueOf(keys.get(i))).append(": ")
+                        .append(mysqlJsonColumnForm(node.get(keys.get(i))));
+            }
+            return out.append('}').toString();
+        }
+        if (node.isArray()) {
+            StringBuilder out = new StringBuilder("[");
+            for (int i = 0; i < node.size(); i++) {
+                if (i > 0) out.append(", ");
+                out.append(mysqlJsonColumnForm(node.get(i)));
+            }
+            return out.append(']').toString();
+        }
+        return node.toString();
     }
 
     @Test

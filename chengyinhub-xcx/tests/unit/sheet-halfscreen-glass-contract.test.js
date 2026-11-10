@@ -108,7 +108,9 @@ test('--cy-comp-sheet-blur token 必须在 tokens.wxss 定义', () => {
   assert.match(read('style/tokens.wxss'), /--cy-comp-sheet-blur:\s*\d+rpx/, '缺 --cy-comp-sheet-blur token 定义')
   // 2026-09-03 Brand Handbook 410-121 §③「深色阶去蓝紫」:30 → 28,拿掉最后一点蓝相。
   // 钉的仍是同一件事(深端玻璃底不许退回实底/不许换色),只是把值追平了新的真源。
-  assert.match(read('style/tokens.wxss'), /--cy-comp-sheet-player-glass:\s*rgba\(28, 28, 28, \.82\)/, '缺钉死深端的玻璃底 token')
+  assert.match(read('style/tokens.wxss'), /--cy-comp-sheet-player-glass:\s*rgba\(44, 44, 46, \.98\)/, '缺钉死深端的玻璃底 token')
+  // 2026-11-10 r2:业主「弹窗不能是黑色的」「灰色的弹窗看起来还是看不太清」→ 抬到 #2C2C2E 实底 + 顶边高光/投影
+  // 2026-11-09 V3-18:.82 叠在遮罩后的黑页上读作纯黑,业主要「稍微透明的灰色」(Revolut 抬升灰 #1C1C1E ≈94%)
 })
 
 test('负控:白名单外出现 full、面板退回实底/丢模糊都必须判红', () => {

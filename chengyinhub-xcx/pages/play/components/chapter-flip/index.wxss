@@ -22,3 +22,23 @@
 .cf-pressed { opacity: .8; }
 .cf--finale { z-index: 320; }   /* 盖在通关勋章页(300)之上,播完关掉才露出它 */
 .cf-tap { opacity: .96; }
+/* r2-finish 章节完成卡(Questo B1 结构,我们自己的深色样式):卡片居中,底部「下一站」;停留后化成粒子散开 */
+.cf__end { position: absolute; left: var(--cy-page-x, 38rpx); right: var(--cy-page-x, 38rpx); top: 50%; transform: translateY(-46%) scale(.96); opacity: 0;
+  display: flex; flex-direction: column; align-items: center; padding: 64rpx 38rpx 38rpx; border-radius: var(--cy-radius-xl); box-sizing: border-box;
+  background: #303033; border: 1rpx solid rgba(245,245,242,.14); box-shadow: 0 24rpx 80rpx rgba(0,0,0,.5); /* ds-ok 卡面比底色 #1F1F21 抬高一档 + 卡沿与投影(规则 1:弹层要看得清) */
+  transition: opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
+.cf__end.is-in { opacity: 1; transform: translateY(-50%) scale(1); }
+.cf__end.is-out { opacity: 0; transform: translateY(-50%) translateX(24rpx); transition: opacity .5s ease .1s, transform .6s ease; }
+.cf__badge { width: 150rpx; height: 150rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #E9C47C; box-shadow: 0 0 0 10rpx rgba(233,196,124,.18); transform: scale(.4); transition: transform .6s cubic-bezier(.3,1.6,.5,1) .15s; } /* ds-ok 同 .cf__pill--p 金色 */
+.cf__end.is-in .cf__badge { transform: scale(1); }
+.cf__tick { width: 54rpx; height: 28rpx; margin-top: -12rpx; border-left: 10rpx solid #111111; border-bottom: 10rpx solid #111111; transform: rotate(-45deg); } /* ds-ok 同 .cf__pill--p 字色 */
+.cf__ek { margin-top: 31rpx; font-size: var(--cy-type-label); letter-spacing: .12em; color: #E9C47C; } /* ds-ok 金色眉标 */
+.cf__et { margin-top: 12rpx; font-size: var(--cy-type-sheet-title); font-weight: 700; text-align: center; color: #F5F5F2; } /* ds-ok 原型定值 */
+.cf__rows { align-self: stretch; margin-top: 38rpx; border-radius: var(--cy-radius-lg); border: 1rpx solid rgba(245,245,242,.12); overflow: hidden; } /* ds-ok 卡内分组线 */
+.cf__row { display: flex; align-items: center; justify-content: space-between; min-height: 92rpx; padding: 0 31rpx; font-size: var(--cy-type-body); }
+.cf__row + .cf__row { border-top: 1rpx solid rgba(245,245,242,.12); } /* ds-ok 卡内分组线 */
+.cf__rk { color: rgba(245,245,242,.72); } /* ds-ok 原型定值,对 #2C2C2E 对比度 ≥ 4.5 */
+.cf__rv { font-weight: 700; font-variant-numeric: tabular-nums; color: #F5F5F2; } /* ds-ok 原型定值 */
+.cf__next { align-self: stretch; margin-top: 46rpx; min-height: 96rpx; padding: 0 31rpx; border-radius: var(--cy-comp-btn-radius); display: flex; align-items: center; justify-content: center;
+  background: #E9C47C; color: #111111; font-size: var(--cy-type-body); font-weight: 600; text-align: center; } /* ds-ok 同 .cf__pill--p */

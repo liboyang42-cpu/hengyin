@@ -301,7 +301,15 @@ public class TopicWorkspaceDTO {
         private Integer checkStatus;
         private Integer userStatus;
         private String reason;
+        /** 编辑版配置版本；null 表示未知，不当 0。 */
+        private Long configVersion;
+        /** 当前公开版配置版本；null 表示尚未公开发布。 */
+        private Long publishedConfigVersion;
 
+        public Long getConfigVersion() { return configVersion; }
+        public void setConfigVersion(Long configVersion) { this.configVersion = configVersion; }
+        public Long getPublishedConfigVersion() { return publishedConfigVersion; }
+        public void setPublishedConfigVersion(Long publishedConfigVersion) { this.publishedConfigVersion = publishedConfigVersion; }
         public Integer getCheckStatus() { return checkStatus; }
         public void setCheckStatus(Integer checkStatus) { this.checkStatus = checkStatus; }
         public Integer getUserStatus() { return userStatus; }

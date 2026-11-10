@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const XCX = require('node:path').resolve(__dirname, '../..');
+const xcx = (file) => require('node:path').join(XCX, file);
 const records = require('../../utils/theme-records.js');
 const fixture = require('./fixtures/theme-records.json');
 function page(responder, play = true, clearResponder = () => ({code:200})) {
@@ -88,8 +90,8 @@ test('仍进行中的历史行不能请求结果卡；历史读取失败保留�
   assert.ok(instance.data.themeRecordsError);
 });
 test('玩家两入口使用同一模块和独立列表/卡片，所有交互有按压反馈',()=>{
-  for(const file of ['pages/play/index.js','pages/topic/index/index.js']) assert.match(fs.readFileSync(file,'utf8'),/themeRecords\.methods/);
-  const markup=fs.readFileSync('components/cy/theme-records/index.wxml','utf8');
+  for(const file of ['pages/play/index.js','pages/topic/index/index.js']) assert.match(fs.readFileSync(xcx(file),'utf8'),/themeRecords\.methods/);
+  const markup=fs.readFileSync(xcx('components/cy/theme-records/index.wxml'),'utf8');
   for(const tag of markup.match(/<[^>]+bind(?:tap|:close)=[^>]+>/g)||[]) if(tag.includes('bindtap')) assert.match(tag,/hover-class="cy-pressed"/);
   assert.doesNotMatch(markup,/服务器|expectedVersion|runtimeScope/);
 });
@@ -148,7 +150,7 @@ test('两入口的混入处理器都定位到实际模块定义，不留下台�
   const path=require('node:path');
   const {extractOwnHandlerEntries}=require('../../scripts/lib/xcx-scan.js');
   for(const file of ['pages/play/index.js','pages/topic/index/index.js']) {
-    const entries=extractOwnHandlerEntries(path.resolve(file));
+    const entries=extractOwnHandlerEntries(xcx(file));
     for(const name of ['openThemeHistory','loadMoreThemeHistory','openThemeResultCard','replayThemeSession','checkThemeReplay']) {
       const entry=entries.find(item=>item.name===name);
       assert.ok(entry && entry.line>0 && entry.file.endsWith('/utils/theme-records.js'),file+':'+name);
@@ -177,7 +179,7 @@ test('主题详情真实历史请求失败进入错误面板，重试成功清�
       const retry = instance.loadMoreThemeHistory(); requests.at(-1).success({ code: 200, data: [] });
       assert.equal(await retry, true); assert.equal(instance.data.themeRecordsError, '');
     }
-    assert.match(fs.readFileSync('pages/topic/index/index.wxml', 'utf8'), /error="{{themeRecordsError}}"/);
+    assert.match(fs.readFileSync(xcx('pages/topic/index/index.wxml'), 'utf8'), /error="{{themeRecordsError}}"/);
   } finally {
     delete require.cache[modulePath]; Object.assign(global, previous);
   }

@@ -23,6 +23,16 @@ function methods(req, playPage) {
         themeCardSessionId: 0, themeRecordsState: null, themeRecordsBusy: false, themeRecordsError: '' });
       return this.loadMoreThemeHistory();
     },
+    // qx-b3 P7:历史局按 sessionId 重开同一局战报(只读)。
+    openThemeRunReport() {
+      const runId = String(this.data.themeCardSessionId || '');
+      const topicId = String(this.data.topicId || this.data.id || '');
+      if (!/^[1-9]\d*$/.test(runId) || !/^[1-9]\d*$/.test(topicId)) return false;
+      const activityId = String(this.data.activityId || '');
+      wx.navigateTo({ url: '/subpackageJourney/pages/report/index?topicId=' + topicId + (/^[1-9]\d*$/.test(activityId) ? '&activityId=' + activityId : '')
+        + '&runId=' + runId + (this.data.topicName ? '&topicName=' + encodeURIComponent(this.data.topicName) : '') });
+      return true;
+    },
     closeThemeHistory() {
       this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
       this.setData({ themeHistoryOpen: false, themeRecordsBusy: false });
