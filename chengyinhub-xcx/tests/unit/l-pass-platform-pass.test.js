@@ -163,3 +163,17 @@ test('页面:新页在分包、插图用分包副本、新样式不加 keyframes
   assert.match(ok, /r\.state === 'paid'\) \{ this\._celebrate/);
   assert.match(fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.wxss'), 'utf8'), /\.ok\.is-reduced/);
 });
+
+test('cy-illus 每张图层都是合法 XML:同一标签无重复属性(data URI 按 XML 解析,重复属性整张不显示)', () => {
+  const art = require('../../pages/play/components/cy-illus/art.js');
+  for (const name of art.LIST) {
+    const l = art.layers(name);
+    for (const k of ['blob', 'fg']) {
+      const svg = decodeURIComponent(l[k].replace(/^data:image\/svg\+xml;charset=utf8,/, ''));
+      for (const tag of svg.match(/<[a-zA-Z]+(?:\s+[a-zA-Z:-]+="[^"]*")*\s*\/?>/g) || []) {
+        const names = (tag.match(/\s([a-zA-Z:-]+)="/g) || []).map((x) => x.trim());
+        assert.equal(new Set(names).size, names.length, name + '.' + k + ' 重复属性: ' + tag.slice(0, 80));
+      }
+    }
+  }
+});

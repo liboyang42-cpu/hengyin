@@ -41,8 +41,17 @@ var D = {
 };
 var NAMES = { clue: '线索', badge: '勋章', stamp: '邮戳 / 延伸任务', key: '钥匙 / 解锁', success: '成功', fail: '失败', wait: '调查中', team: '队伍', seat: '席位', pass: '通行证', points: '积分', seal: '章节印', trophy: '名次', compass: '雷达 / 方向', backpack: '背包', bookmark: '任务', envelope: '邀请', star: '评价', locked: '未解锁', unlocked: '已解锁', hourglass: '等待', gem: '藏品', sparkles: '闪光', question: '提示', rays: '光芒' };
 
+// 原型里这些 SVG 是内联在 HTML 里的:同一标签重复的属性(如共用描边串 S 后又写一次 stroke-width)按 HTML 规则「先写的生效」。
+// 做成 data URI 后按 XML 解析,重复属性直接判为坏图、整张不显示(rig 实测上层物件全空)。这里按 HTML 同一规则只留第一次出现的属性。
+function dedupeAttrs(svg) {
+  return svg.replace(/<([a-zA-Z]+)((?:\s+[a-zA-Z:-]+="[^"]*")*)(\s*\/?)>/g, function (m, tag, attrs, end) {
+    var seen = {}, kept = '';
+    attrs.replace(/\s+([a-zA-Z:-]+)="([^"]*)"/g, function (a, k) { if (!seen[k]) { seen[k] = 1; kept += a; } return a; });
+    return '<' + tag + kept + end + '>';
+  });
+}
 function uri(body) {
-  return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" overflow="visible">' + body + '</svg>');
+  return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(dedupeAttrs('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" overflow="visible">' + body + '</svg>'));
 }
 function has(name) { return Object.prototype.hasOwnProperty.call(D, name); }
 /** 两层图:blob 底 + figure;未知名字回落「线索」,与原型 img() 一致。n 只用于「章节印」的数字。 */

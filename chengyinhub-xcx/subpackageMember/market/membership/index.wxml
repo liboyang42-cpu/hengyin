@@ -2,7 +2,7 @@
 <view class="theme-dark pp"><cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <view class="pp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
-    <cy-nav-bar overlay scrolled="{{scrolled}}" tint="dark" custom-back title="通行证" bind:back="goBack" />
+    <cy-nav-bar overlay scrolled="{{scrolled}}" tint="light" custom-back title="通行证" bind:back="goBack" />
     <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
     <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
     <cy-empty wx:elif="{{!view.enabled}}" fill class="cy-fill-state" size="lg" kind="empty" title="通行证暂未开放" />
@@ -46,13 +46,13 @@
 
   <!-- ps-success:服务端订单 PAID 才出现。钥匙飞入 → 锁打开 → 积分币弹出 → 文案与封面升起。只用过渡。 -->
   <view class="ok {{ok.show ? 'is-show' : ''}} {{ok.step >= 1 ? 's1' : ''}} {{ok.step >= 2 ? 's2' : ''}} {{ok.step >= 3 ? 's3' : ''}} {{reduced ? 'is-reduced' : ''}}" wx:if="{{ok.mounted}}" aria-hidden="{{!ok.show}}">
-    <text class="ok__skip" style="top: {{statusBarHeight + 12}}px;" bindtap="goLibrary" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</text>
+    <text class="ok__skip" style="top: {{statusBarHeight + navBarHeight + 8}}px;" bindtap="goLibrary" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</text>
     <view class="ok__scene">
       <view class="ok__lock">
-        <view class="ok__lk"><cy-illus name="locked" size="280" bare loop="{{false}}" /></view>
-        <view class="ok__unl"><cy-illus name="unlocked" size="280" bare loop="{{false}}" /></view>
+        <view class="ok__lk"><cy-illus name="locked" size="280" loop="{{false}}" /></view>
+        <view class="ok__unl"><cy-illus name="unlocked" size="280" loop="{{false}}" /></view>
       </view>
-      <view class="ok__keyfly"><cy-illus name="key" size="300" bare loop="{{false}}" /></view>
+      <view class="ok__keyfly"><cy-illus name="key" size="300" loop="{{false}}" /></view>
       <view class="ok__coin ok__coin--{{index}}" wx:for="{{[0,1,2,3]}}" wx:key="*this"><cy-illus name="points" size="88" bare loop="{{false}}" /></view>
     </view>
     <view class="ok__copy">

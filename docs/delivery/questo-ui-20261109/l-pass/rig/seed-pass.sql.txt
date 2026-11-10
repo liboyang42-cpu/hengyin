@@ -1,0 +1,22 @@
+-- l-pass rig fixture (HARNESS, rig DB cy_e2e_51 only; never production, not product code).
+-- 1) put both plans on sale (migration ships them OFF) and give them rig-only virtual-payment product ids
+UPDATE platform_pass_plan SET status=1, xpay_product_id=CONCAT('rig_', LOWER(plan_code));
+-- 2) official (CONTENT=PLATFORM), self-play, selling themes for the library; covers are the repo's own art served by the rig web server
+DELETE FROM product_role WHERE topic_id BETWEEN 990101 AND 990106;
+DELETE FROM cms_topic WHERE id BETWEEN 990101 AND 990106;
+INSERT INTO cms_topic (id,name,self_play,self_play_price,lifecycle,product_type,del_flag,total_time,address_name,img_url) VALUES
+ (990101,'老城三封信',1,68.00,3,1,0,3600,'外滩源','http://127.0.0.1:8097/mp/pages/templatedetail/art/covers/topic/treasure-hunter.jpg'),
+ (990102,'夜航灯',1,58.00,3,1,0,3000,'北外滩','http://127.0.0.1:8097/mp/pages/templatedetail/art/covers/topic/old-movie.jpg'),
+ (990103,'弄堂三封电报',1,48.00,3,2,0,4200,'弄堂','http://127.0.0.1:8097/mp/pages/templatedetail/art/covers/topic/time-pollution.jpg'),
+ (990104,'老街灯笼铺',1,48.00,4,2,0,3000,'豫园','http://127.0.0.1:8097/mp/pages/templatedetail/art/covers/topic/flavor-tour.jpg'),
+ (990105,'北外滩夜巡',1,68.00,3,1,0,3600,'北外滩','http://127.0.0.1:8097/mp/pages/templatedetail/art/covers/topic/apocalypse-broadcast.jpg'),
+ (990106,'玻璃图书馆',1,58.00,3,1,0,2400,'外滩源','http://127.0.0.1:8097/mp/pages/templatedetail/art/covers/topic/midlife-day.jpg');
+INSERT INTO product_role (topic_id,slot,entity_type,entity_id,status)
+ SELECT id,'CONTENT','PLATFORM',NULL,1 FROM cms_topic WHERE id BETWEEN 990101 AND 990106;
+-- 3) holder state for 9004 (rig only): one paid MONTH order + its 30-day segment, standing in for a verified payment.
+--    The rig's E2E pay stub (scripts/e2e/E2eWechatPayStub) only routes CLM / registration callbacks, so a PPO callback cannot
+--    complete in the rig; the production router path is covered by PlatformPassRouteTest / PlatformPassServiceTest / PlatformPassMySqlIT.
+INSERT INTO platform_pass_order (order_no,member_id,request_id,request_fingerprint,plan_id,plan_code,price_fen,valid_days,channel,status,transaction_id,paid_time)
+SELECT 'PPORIGFIXTURE0000000000000000001',9004,'rig-fixture-0001',REPEAT('0',64),id,plan_code,price_fen,valid_days,'JSAPI',1,'RIG-FIXTURE',NOW() FROM platform_pass_plan WHERE plan_code='MONTH';
+INSERT INTO platform_pass_membership (member_id,order_id,valid_from,valid_to,status)
+SELECT 9004,id,NOW(),NOW() + INTERVAL 30 DAY,1 FROM platform_pass_order WHERE order_no='PPORIGFIXTURE0000000000000000001';
