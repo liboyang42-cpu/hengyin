@@ -1,12 +1,12 @@
 <!-- §21 固定玩法预设:列表 → 填写 → 已建草稿。结构照队伍详情页(team-page:标题 + 卡片 + 行) -->
-<view class="pp theme-dark" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<view class="pp theme-topic-editor" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar back />
 
+  <cy-page-title title="{{stage === 'list' ? '从预设开始' : (stage === 'form' ? preset.title : '草稿已建好')}}" safe-top="{{false}}" flush="{{true}}" />
   <block wx:if="{{stage === 'list'}}">
-    <cy-page-title title="从预设开始" safe-top="{{false}}" flush="{{true}}" />
     <cy-skeleton wx:if="{{loading}}" type="list" count="4" loading-label="正在读取预设" />
     <cy-inline-error wx:elif="{{loadError}}" load-failure title="预设没有读到" sub="{{loadError}}" action="重试" bind:action="load" />
     <cy-empty wx:elif="{{!rows.length}}" kind="empty" title="暂无预设" />
@@ -23,7 +23,6 @@
   </block>
 
   <block wx:elif="{{stage === 'form'}}">
-    <cy-page-title title="{{preset.title}}" safe-top="{{false}}" flush="{{true}}" />
     <view class="pp-card">
       <view class="pp-field" wx:for="{{form}}" wx:key="key" wx:for-item="f">
         <text class="pp-label">{{f.label}}</text>
@@ -67,7 +66,6 @@
   </block>
 
   <block wx:else>
-    <cy-page-title title="草稿已建好" safe-top="{{false}}" flush="{{true}}" />
     <view class="pp-sec" wx:if="{{todos.length}}">还要自己做</view>
     <view class="pp-card" wx:if="{{todos.length}}">
       <view class="pp-todo" wx:for="{{todos}}" wx:key="*this"><text class="pp-todo__no">{{index + 1}}</text><text class="pp-todo__t">{{item}}</text></view>

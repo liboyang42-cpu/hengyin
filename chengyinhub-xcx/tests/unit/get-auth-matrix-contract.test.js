@@ -303,6 +303,11 @@ const MATRIX = [
   // 2026-11-09 qx-b8 U08-01:完成页结果词读本局战报。ApiPlayerJourneyController /report 只取登录会员,
   //   PlayerRunReportApplication 按本人报名/路线会话校验 runId 归属(非本人局 403「无权查看该局」),只读不建局不发奖。
   ['pages/play/index.js', "req('/api/play/player-journey/report', 'GET'", 'required', 'member', 'current-session'],
+  // 2026-11-10 qx-c3 为 qx-b4 补登(按服务端实际守卫):两者都不在 SecurityConfig 放行清单,落 anyRequest().authenticated()。
+  //   预设库 ApiPresetController /gameplay/list 只回平台自带声明(GameplayPresetCatalog.publicView,无会员维度);
+  //   素材署名 ApiMediaAssetController /attribution 经 AppMediaReferenceGuard.publicAttribution 只回已审核/官方素材的公开来源视图,不按本人过滤。
+  ['pages/publish/preset/index.js', "url: '/api/preset/gameplay/list'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/templatedetail/topic-detail/index.js', "url: '/api/media/asset/attribution'", 'required', 'member', 'global-authenticated-read'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -463,6 +468,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 staging 合流(qx-b1..b8):各线已入 MATRIX 的直接 GET 合计,合并树实测 113 → 122。
   // 2026-11-10 qx-b5(qx-c3 补登):报名促销目录、收益分佣、视频悬赏、通行证详情两处、通行证列表两处,均已按服务端守卫入 MATRIX,113 → 120。
   // 2026-11-10 qx-c3 staging 重建:b4/b5 各自补登的行均已在 MATRIX,合并树实测仍 122。
+  // 2026-11-10 qx-b4(qx-c3 补登):固定玩法预设库一处、模板详情素材署名一处,均已按服务端守卫入 MATRIX,113 → 115。
   assert.equal(directCount, 122, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。

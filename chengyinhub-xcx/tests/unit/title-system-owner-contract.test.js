@@ -350,6 +350,7 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 staging 合流:qx-b4/b5/b8 等各线新页叠加,合并树实测 168;custom 167。
   // 2026-11-09 V3-42 −1:时光胶囊 subpackageTools/capsule 先删(custom 导航)⇒ 156;custom 155。
   // 2026-11-10 staging 合流:再叠加 qx-a4 −1(时光胶囊)⇒ 167;custom 166。
+  // 2026-11-10 qx-b4 +1(custom 导航):固定玩法预设 pages/publish/preset ⇒ 158;custom 157。
   assert.equal(rows.length, 167, '注册页面盘点数量发生漂移,需重新核对标题规范')
   assert.equal(rows.filter((row) => row.custom).length, 166)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),

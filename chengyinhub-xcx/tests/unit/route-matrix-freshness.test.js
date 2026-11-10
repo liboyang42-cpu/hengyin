@@ -54,6 +54,7 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-11-10 staging 合流:各线新页叠加,build-route-matrix.js --json 重建实测 168。
   // 2026-11-09 V3-42:时光胶囊页先删 ⇒ 156(build-route-matrix.js --json 重建)。
   // 2026-11-10 staging 合流:再叠加 qx-a4 −1(时光胶囊)⇒ 167。
+  // 2026-11-10 qx-b4:固定玩法预设 pages/publish/preset ⇒ 158(build-route-matrix.js --json 重建)。
   assert.equal(current.routes.length, 167)
   assert.equal(matrix.counts.routes, 167)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
