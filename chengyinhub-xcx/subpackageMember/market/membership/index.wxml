@@ -1,0 +1,68 @@
+<!-- l-pass 通行证(我的 → 通行证与礼品 → 通行证)。原型 proto/game ps-pass + ps-success。数字只读服务端。 -->
+<view class="theme-dark pp"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <view class="pp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar overlay scrolled="{{scrolled}}" tint="light" custom-back title="通行证" bind:back="goBack" />
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+    <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
+    <cy-empty wx:elif="{{!view.enabled}}" fill class="cy-fill-state" size="lg" kind="empty" title="通行证暂未开放" />
+    <view wx:else class="pp__body">
+      <view class="pp__hero">
+        <view class="pp__art">
+          <cy-illus name="pass" size="300" />
+          <view class="pp__key"><cy-illus name="key" size="140" delay="500" bare /></view>
+        </view>
+        <view class="pp__cnt" wx:if="{{view.count !== null}}"><text class="pp__cnt-n">{{view.count}}</text><text class="pp__cnt-u">个主题 全部可玩</text></view>
+        <text class="pp__until" wx:if="{{view.active && view.untilText}}">有效期至 {{view.untilText}}</text>
+      </view>
+
+      <view class="pp__plans" wx:if="{{view.plans.length}}" aria-role="radiogroup">
+        <view wx:for="{{view.plans}}" wx:key="code" class="pp__plan {{item.on ? 'is-on' : ''}}" data-code="{{item.code}}" bindtap="onPlan"
+              aria-role="radio" aria-checked="{{item.on}}" aria-label="{{item.line}} {{item.price}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="pp__rib" wx:if="{{item.best}}">最划算</text>
+          <text class="pp__plan-p">{{item.price}}</text>
+          <text class="pp__plan-l">{{item.line}}</text>
+        </view>
+      </view>
+      <view class="pp__pill {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
+      <text class="pp__terms" wx:if="{{view.terms}}">{{view.terms}}</text>
+      <text class="pp__err" wx:if="{{buyError}}" aria-role="alert">{{buyError}}</text>
+
+      <block wx:if="{{library.length}}">
+        <text class="pp__sec">可玩主题库</text>
+        <view class="pp__lib">
+          <view wx:for="{{library}}" wx:key="id" wx:if="{{index < 4}}" class="pp__it" data-id="{{item.id}}" bindtap="openTopic" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+            <image class="pp__it-cv" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load />
+            <text class="pp__it-z">¥0</text>
+            <text class="pp__it-n">{{item.name}}</text>
+            <text class="pp__it-d" wx:if="{{item.data}}">{{item.data}}</text>
+          </view>
+        </view>
+        <view class="pp__more" bindtap="goLibrary" aria-role="button" aria-label="进入游戏主题库" hover-class="cy-pressed" hover-stay-time="80"><text>进入游戏主题库</text><cy-icon name="chevron-right" size="28" /></view>
+      </block>
+      <view class="pp__pad"></view>
+    </view>
+  </view>
+
+  <!-- ps-success:服务端订单 PAID 才出现。钥匙飞入 → 锁打开 → 积分币弹出 → 文案与封面升起。只用过渡。 -->
+  <view class="ok {{ok.show ? 'is-show' : ''}} {{ok.step >= 1 ? 's1' : ''}} {{ok.step >= 2 ? 's2' : ''}} {{ok.step >= 3 ? 's3' : ''}} {{reduced ? 'is-reduced' : ''}}" wx:if="{{ok.mounted}}" aria-hidden="{{!ok.show}}">
+    <text class="ok__skip" style="top: {{statusBarHeight + navBarHeight + 8}}px;" bindtap="goLibrary" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</text>
+    <view class="ok__scene">
+      <view class="ok__lock">
+        <view class="ok__lk"><cy-illus name="locked" size="280" loop="{{false}}" /></view>
+        <view class="ok__unl"><cy-illus name="unlocked" size="280" loop="{{false}}" /></view>
+      </view>
+      <view class="ok__keyfly"><cy-illus name="key" size="300" loop="{{false}}" /></view>
+      <view class="ok__coin ok__coin--{{index}}" wx:for="{{[0,1,2,3]}}" wx:key="*this"><cy-illus name="points" size="88" bare loop="{{false}}" /></view>
+    </view>
+    <view class="ok__copy">
+      <text class="ok__k">通行证 · 已开通</text>
+      <text class="ok__t" wx:if="{{view.count !== null}}">{{view.count}} 个主题，全部可玩</text>
+      <text class="ok__s" wx:if="{{ok.untilText}}">到 {{ok.untilText}} · 价格都是 ¥0</text>
+      <view class="ok__thumbs" wx:if="{{library.length}}">
+        <image wx:for="{{library}}" wx:key="id" wx:if="{{index < 5 && item.cover}}" class="ok__th" style="transition-delay: {{index * 80}}ms;" src="{{item.cover}}" mode="aspectFill" />
+      </view>
+    </view>
+    <view class="ok__foot"><view class="ok__pill" bindtap="goLibrary" aria-role="button" aria-label="进入可玩主题库" hover-class="cy-pressed" hover-stay-time="80">进入可玩主题库</view></view>
+  </view>
+</view>

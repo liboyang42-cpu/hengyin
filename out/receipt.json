@@ -1,0 +1,47 @@
+{
+  "batch": "marketing-db-acceptance",
+  "class": "com.chengyinhub.business.it.PlatformPassMySqlIT",
+  "expected_tests": 7,
+  "layer": "REAL_STORAGE",
+  "not_covered": [
+    "runtime HTTP with real identities",
+    "device or business acceptance",
+    "integrated cross-branch candidate",
+    "migration execution on a persistent database",
+    "merge or deployment"
+  ],
+  "precheck": {
+    "candidate": {
+      "committed_at": "2026-11-10T15:13:01+00:00",
+      "sha": "455633229205c94c5c5f8e2cd7917e19edcc042c",
+      "subject": "feat: l-pass 通行证后端——套餐/订单/有效期/领取四表、JSAPI 与虚拟支付双渠道、持有者自玩票 ¥0 报价与领取"
+    },
+    "declared_tests": 7,
+    "java_version": "21",
+    "jdk": "21",
+    "nested": [],
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PlatformPassMySqlIT.java",
+    "source_gates": [
+      {
+        "matches": "1",
+        "named": "CHENGYIN_MARKETING_DB_IT_APPROVED"
+      }
+    ]
+  },
+  "problems": [],
+  "registered_source": "147754ba8740abf208bda75cf86ed5901cac4c02",
+  "registered_source_match": false,
+  "schema": "CY-REAL-STORAGE-IT-RECEIPT-20261019",
+  "source_sha": "455633229205c94c5c5f8e2cd7917e19edcc042c",
+  "timezone": "UTC",
+  "verdict": "INCOMPLETE",
+  "workflow": {
+    "job": null,
+    "repository": null,
+    "run_attempt": "1",
+    "run_id": "0",
+    "run_url": "https://github.com//actions/runs/0",
+    "workflow_ref": null,
+    "workflow_sha": null
+  }
+}

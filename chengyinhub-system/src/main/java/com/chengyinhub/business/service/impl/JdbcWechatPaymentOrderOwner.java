@@ -38,6 +38,11 @@ public class JdbcWechatPaymentOrderOwner implements WechatPaymentOrderOwner {
                     + "CASE WHEN status=0 AND pay_mode=1 AND total_cash_amount IS NOT NULL AND total_cash_amount>0"
                     + " THEN 1 ELSE 0 END AS payable "
                     + "FROM marketing_product_order WHERE order_no=? FOR UPDATE";
+        } else if (businessNo.startsWith("PPO")) {
+            // 通行证（平台会员）JSAPI 单。只认 JSAPI 渠道的待支付行；虚拟支付单不走微信支付商户号。
+            type = "PLATFORM_PASS"; cents = true;
+            sql = "SELECT id,price_fen AS amount,CASE WHEN status=0 AND channel='JSAPI' THEN 1 ELSE 0 END AS payable "
+                    + "FROM platform_pass_order WHERE order_no=? FOR UPDATE";
         } else {
             type = "REGISTRATION";
             sql = "SELECT id,wechat_payment_amount AS amount,CASE WHEN payment_status=1 AND registration_status=1 THEN 1 ELSE 0 END AS payable FROM cms_registration WHERE registration_no=? FOR UPDATE";

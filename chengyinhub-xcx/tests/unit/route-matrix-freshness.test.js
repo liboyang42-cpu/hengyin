@@ -57,9 +57,10 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-11-10 qx-b4:固定玩法预设 pages/publish/preset ⇒ 158(build-route-matrix.js --json 重建)。
   // 2026-11-10 r2-create(b4-21):撤掉 pages/publish/preset ⇒ 166。
   // 2026-11-10 qx-s2 staging 合并树:r2-finish 新增 subpackageJourney/pages/settle(+1,168)再叠 r2-create 撤掉 preset(−1)⇒ 167(build-route-matrix 实测)。
-  // 2026-11-10 l-after:+1 游戏主题库 subpackageMember/market/library ⇒ 168(build-route-matrix.js --json 重建)。
-  assert.equal(current.routes.length, 168)
-  assert.equal(matrix.counts.routes, 168)
+  // 2026-11-10 qx-final:l-after 与 l-pass 各自新增了同一页 market/library,合并后只算一次,取 l-pass 的计数。
+  // 2026-11-10 l-pass:通行证页 subpackageMember/market/membership、游戏主题库 market/library +2 ⇒ 169(build-route-matrix.js --json 重建)。
+  assert.equal(current.routes.length, 169)
+  assert.equal(matrix.counts.routes, 169)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)

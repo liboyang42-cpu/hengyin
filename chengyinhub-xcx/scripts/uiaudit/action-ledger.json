@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5971,
+  "controlCount": 5979,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -51,6 +51,7 @@
         "subpackageMember/coupon/coupon",
         "subpackageMember/free-explore/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -444,6 +445,15 @@
         },
         {
           "route": "subpackageMember/market/gift/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -664,6 +674,7 @@
         "subpackageMember/coupon/coupon",
         "subpackageMember/free-explore/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -1057,6 +1068,15 @@
         },
         {
           "route": "subpackageMember/market/gift/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-access-gate",
@@ -3167,6 +3187,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -75441,6 +75462,142 @@
           ]
         },
         {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/market/pass/index",
           "segments": [
             {
@@ -92644,6 +92801,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -106987,6 +107145,40 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -152830,6 +153022,7 @@
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
         "subpackageMember/market/library/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -158800,6 +158993,37 @@
           ]
         },
         {
+          "route": "subpackageMember/market/library/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-empty.cy-fill-state",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/market/pass/index",
           "segments": [
             {
@@ -160416,6 +160640,7 @@
         "subpackageMember/invoice-title-edit/index",
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -166089,6 +166314,15 @@
         },
         {
           "route": "subpackageMember/invoice/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-error",
@@ -167623,6 +167857,7 @@
         "subpackageMember/invoice-title-edit/index",
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -173296,6 +173531,15 @@
         },
         {
           "route": "subpackageMember/invoice/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-error",
@@ -174830,6 +175074,7 @@
         "subpackageMember/invoice-title-edit/index",
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -180503,6 +180748,15 @@
         },
         {
           "route": "subpackageMember/invoice/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-error",
@@ -281716,6 +281970,7 @@
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
         "subpackageMember/market/library/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -292646,6 +292901,15 @@
         },
         {
           "route": "subpackageMember/market/library/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -295124,6 +295388,7 @@
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
         "subpackageMember/market/library/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -308707,6 +308972,19 @@
         },
         {
           "route": "subpackageMember/market/library/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -323633,6 +323911,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -334954,6 +335233,32 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -337671,6 +337976,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -348992,6 +349298,32 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -351709,6 +352041,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -363030,6 +363363,32 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -365747,6 +366106,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -377068,6 +377428,32 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -379785,6 +380171,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -391106,6 +391493,32 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -437023,6 +437436,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -470999,6 +471413,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -477971,6 +478453,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -511947,6 +512430,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -518919,6 +519470,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -552895,6 +553447,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -559867,6 +560487,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -593843,6 +594464,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -600815,6 +601504,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -634791,6 +635481,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -641763,6 +642521,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -675739,6 +676498,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -682711,6 +683538,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -716687,6 +717515,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -723659,6 +724555,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -757635,6 +758532,74 @@
           "segments": [
             {
               "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-access-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-error",
               "index": 0
             },
             {
@@ -774317,6 +775282,7 @@
         "subpackageMember/invoice-titles/index",
         "subpackageMember/invoice/index",
         "subpackageMember/market/gift/index",
+        "subpackageMember/market/membership/index",
         "subpackageMember/market/pass/index",
         "subpackageMember/market/passes/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -775450,6 +776416,15 @@
         },
         {
           "route": "subpackageMember/market/gift/index",
+          "segments": [
+            {
+              "selector": "#cy-toast",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
           "segments": [
             {
               "selector": "#cy-toast",
@@ -1233479,7 +1234454,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:31:bindtap:onPass:1",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:34:bindtap:onPass:1",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1233514,7 +1234489,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPass",
-        "line": 31,
+        "line": 34,
         "selectorHint": ".ck__opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1233559,7 +1234534,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:42:bindtap:onProfile:2",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:45:bindtap:onProfile:2",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1233594,7 +1234569,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProfile",
-        "line": 42,
+        "line": 45,
         "selectorHint": ".ck__card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1233639,7 +1234614,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:63:bind:change:onConsent:3",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:66:bind:change:onConsent:3",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1233674,7 +1234649,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onConsent",
-        "line": 63,
+        "line": 66,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1233719,7 +1234694,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:67:bindtap:onPay:4",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:70:bindtap:onPay:4",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1233754,7 +1234729,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onPay",
-        "line": 67,
+        "line": 70,
         "selectorHint": ".ck__err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1233799,7 +1234774,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:75:bindtap:onPay:5",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:78:bindtap:onPay:5",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1233834,7 +1234809,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPay",
-        "line": 75,
+        "line": 78,
         "selectorHint": ".ck__pay",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1343979,11 +1344954,11 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
-          "/api/public-catalog/list",
+          "/api/platform-pass/library",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/public-catalog/list"
+          "/api/platform-pass/library"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1344004,8 +1344979,8 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/public-catalog/list",
-            "method": "POST",
+            "url": "/api/platform-pass/library",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1344029,11 +1345004,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:40"
+        "staticSource": "subpackageMember/market/library/index.js:28"
       }
     },
     {
-      "id": "subpackageMember/market/library/index.wxml:13:bindtap:openTopic:3",
+      "id": "subpackageMember/market/library/index.wxml:14:bindtap:openTopic:3",
       "route": "subpackageMember/market/library/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1344056,7 +1345031,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 13,
+        "line": 14,
         "selectorHint": ".photo-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1344099,7 +1345074,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:74"
+        "staticSource": "subpackageMember/market/library/index.js:55"
       }
     },
     {
@@ -1344169,116 +1345144,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:80"
-      }
-    },
-    {
-      "id": "subpackageMember/market/library/index.wxml:35:bindtap:loadMore:4",
-      "route": "subpackageMember/market/library/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/market/library/index.wxml",
-        "js": "subpackageMember/market/library/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "loadMore",
-        "line": 35,
-        "selectorHint": ".lb-more",
-        "visibleCondition": "{{moreState === 'error'}}",
-        "disabledCondition": null,
-        "ariaLabel": "加载更多失败，重试",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/public-catalog/list",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/public-catalog/list"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/public-catalog/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:54"
+        "staticSource": "subpackageMember/market/library/index.js:61"
       }
     },
     {
@@ -1344337,11 +1345203,11 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
-          "/api/public-catalog/list",
+          "/api/platform-pass/library",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/public-catalog/list"
+          "/api/platform-pass/library"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1344362,8 +1345228,8 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/public-catalog/list",
-            "method": "POST",
+            "url": "/api/platform-pass/library",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1344387,7 +1345253,688 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:68"
+        "staticSource": "subpackageMember/market/library/index.js:49"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:20:bindtap:onPlan:2",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPlan",
+        "line": 20,
+        "selectorHint": ".pp__plan",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.line}} {{item.price}}",
+        "ariaRole": "radio",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": "{{item.on}}"
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:71"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:27:bindtap:onBuy:3",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/platform-pass/orders",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/platform-pass/orders/{param}/pay",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "jsapi-paid": [
+          {
+            "urlTemplate": "/api/platform-pass/orders",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/platform-pass/orders/{param}/pay",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "xpay-paid": [
+          {
+            "urlTemplate": "/api/platform-pass/orders",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/platform-pass/orders/{param}/pay",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/platform-pass/orders/{param}/confirm",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "order-refused": [
+          {
+            "urlTemplate": "/api/platform-pass/orders",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestPayment"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onBuy",
+        "line": 27,
+        "selectorHint": ".pp__pill",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{view.buyLabel}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{view.buyOff}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "requestPayment",
+        "login"
+      ],
+      "successCapabilities": [
+        "requestPayment",
+        "login"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/platform-pass/orders",
+          "/api/platform-pass/orders/{param}",
+          "/api/platform-pass/orders/{param}/confirm",
+          "/api/platform-pass/orders/{param}/pay"
+        ],
+        "primaryApis": [
+          "/api/platform-pass/orders",
+          "/api/platform-pass/orders/{param}",
+          "/api/platform-pass/orders/{param}/confirm",
+          "/api/platform-pass/orders/{param}/pay"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/platform-pass/orders",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/platform-pass/orders/{param}/pay",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/platform-pass/orders/{param}/confirm",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/platform-pass/orders/{param}",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/platform-pass/orders",
+          "/api/platform-pass/orders/{param}/confirm",
+          "/api/platform-pass/orders/{param}/pay"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:76"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:34:bindtap:openTopic:4",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openTopic",
+        "line": 34,
+        "selectorHint": ".pp__it",
+        "visibleCondition": "{{index < 4}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.name}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:100"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:41:bindtap:goLibrary:5",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goLibrary",
+        "line": 41,
+        "selectorHint": ".pp__more",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "进入游戏主题库",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/library/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:106"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:49:bindtap:goLibrary:6",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "goLibrary",
+        "line": 49,
+        "selectorHint": ".ok__skip",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "跳过",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/library/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:106"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:5:bind:back:goBack:0",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "goBack",
+        "line": 5,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:112"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:66:bindtap:goLibrary:7",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goLibrary",
+        "line": 66,
+        "selectorHint": ".ok__pill",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "进入可玩主题库",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/library/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:106"
+      }
+    },
+    {
+      "id": "subpackageMember/market/membership/index.wxml:7:bind:retry:load:1",
+      "route": "subpackageMember/market/membership/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/membership/index.wxml",
+        "js": "subpackageMember/market/membership/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "load",
+        "line": 7,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{state === 'error'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/platform-pass",
+          "/api/platform-pass/library"
+        ],
+        "primaryApis": [
+          "/api/platform-pass",
+          "/api/platform-pass/library"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/platform-pass",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/platform-pass/library",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/membership/index.js:57"
       }
     },
     {
@@ -1345113,7 +1346660,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:54"
+        "staticSource": "subpackageMember/market/passes/index.js:75"
       }
     },
     {
@@ -1345180,7 +1346727,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:101"
+        "staticSource": "subpackageMember/market/passes/index.js:122"
       }
     },
     {
@@ -1345286,11 +1346833,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:71"
+        "staticSource": "subpackageMember/market/passes/index.js:92"
       }
     },
     {
-      "id": "subpackageMember/market/passes/index.wxml:20:bindtap:openProduct:4",
+      "id": "subpackageMember/market/passes/index.wxml:20:bindtap:goMembership:4",
+      "route": "subpackageMember/market/passes/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/passes/index.wxml",
+        "js": "subpackageMember/market/passes/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goMembership",
+        "line": 20,
+        "selectorHint": ".mk-member",
+        "visibleCondition": "{{member}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "通行证 {{member.side}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/membership/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/passes/index.js:60"
+      }
+    },
+    {
+      "id": "subpackageMember/market/passes/index.wxml:26:bindtap:openProduct:5",
       "route": "subpackageMember/market/passes/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1345313,7 +1346930,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openProduct",
-        "line": 20,
+        "line": 26,
         "selectorHint": ".mk-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1345356,11 +1346973,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:105"
+        "staticSource": "subpackageMember/market/passes/index.js:126"
       }
     },
     {
-      "id": "subpackageMember/market/passes/index.wxml:35:bindtap:goLibrary:5",
+      "id": "subpackageMember/market/passes/index.wxml:41:bindtap:goLibrary:6",
       "route": "subpackageMember/market/passes/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1345383,9 +1347000,9 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goLibrary",
-        "line": 35,
+        "line": 41,
         "selectorHint": ".mk-row",
-        "visibleCondition": "{{tab === 'shop' && state === 'ready'}}",
+        "visibleCondition": "{{tab === 'shop' && state === 'ready' && member}}",
         "disabledCondition": null,
         "ariaLabel": "进入游戏主题库",
         "ariaLabelExpression": null,
@@ -1345426,7 +1347043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:112"
+        "staticSource": "subpackageMember/market/passes/index.js:133"
       }
     },
     {
@@ -1345496,7 +1347113,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:117"
+        "staticSource": "subpackageMember/market/passes/index.js:138"
       }
     },
     {

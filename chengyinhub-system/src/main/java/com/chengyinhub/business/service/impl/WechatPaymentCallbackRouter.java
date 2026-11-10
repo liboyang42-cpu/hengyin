@@ -30,6 +30,13 @@ public class WechatPaymentCallbackRouter {
     private final WechatRefundCallbackOwner registrationRefund;
 
     private final WorkshopWechatPaymentOrderAdapter workshop;
+    /** 通行证（PPO / RPP 号段）。可选注入：缺失时号段仍被认领并回 FAIL，绝不落到 registration 兜底。 */
+    private com.chengyinhub.business.platformpass.PlatformPassService platformPass;
+
+    @Autowired(required = false)
+    public void setPlatformPass(com.chengyinhub.business.platformpass.PlatformPassService platformPass) {
+        this.platformPass = platformPass;
+    }
 
     public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
             ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
@@ -66,6 +73,8 @@ public class WechatPaymentCallbackRouter {
                                 && marketingProducts.handlePaidOrder(facts.get("out_trade_no"), paid(facts),
                                         cents(facts), facts.get("transaction_id"),
                                         verifiedPaymentReference(facts)))),
+                new Owner("platform-pass", no -> no != null && no.startsWith("PPO"),
+                        facts -> ack(paid(facts) && platformPass != null && platformPass.handleJsapiPaid(facts))),
                 new Owner("workshop", no -> no != null && no.startsWith("WKO"),
                         facts -> ack(workshop != null && workshop.handlePaidOrder(facts))),
                 new Owner("registration", no -> no != null && registration != null && registration.getByRegistrationNo(no) != null, facts ->
@@ -101,6 +110,7 @@ public class WechatPaymentCallbackRouter {
     public boolean refund(Map<String, String> facts) {
         String no = facts.get("outRefundNo");
         if (no != null && no.startsWith("RWKO")) return workshop != null && workshop.handleRefund(facts);
+        if (no != null && no.startsWith("RPP")) return platformPass != null && platformPass.handleJsapiRefund(facts);
         return no != null && no.startsWith("RDEP") ? depositRefund.apply(facts) : registrationRefund.apply(facts);
     }
 

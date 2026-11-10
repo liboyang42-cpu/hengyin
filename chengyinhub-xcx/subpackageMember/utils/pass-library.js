@@ -50,8 +50,34 @@ function libraryCard(row) {
   }
 }
 
+/* qx-final 合并:页面改读 l-pass 的 GET /api/platform-pass/library(行字段 topicId / name / imgUrl / productType / totalTime / addressName),
+ * 卡片仍是上面的俱乐部式卡;「¥0 可玩」= 响应级 covered === true(服务端判定),其余一律不出价签。 */
+function passQuery(kindKey) {
+  const k = kindByKey(kindKey)
+  return k.productType ? { limit: 100, productType: Number(k.productType) } : { limit: 100 }
+}
+function passLibraryCard(row, covered) {
+  if (!row || typeof row !== 'object' || row.topicId == null || row.topicId === '' || !row.name) return null
+  const pt = Number(row.productType)
+  const kind = pt === 1 ? '城市定向' : (pt === 2 ? '自由探索' : '')
+  const city = row.addressName ? String(row.addressName) : ''
+  return {
+    id: String(row.topicId),
+    title: String(row.name),
+    cover: row.imgUrl || '',
+    city,
+    kind,
+    data: [kind, minutesText(row.totalTime)].filter(Boolean).join(' · '),
+    free: covered === true,
+    tags: [kind, city].filter(Boolean)
+  }
+}
+function passLibraryList(rows, covered) {
+  return (Array.isArray(rows) ? rows : []).map((r) => passLibraryCard(r, covered)).filter(Boolean)
+}
+
 function libraryList(rows) {
   return (Array.isArray(rows) ? rows : []).map(libraryCard).filter(Boolean)
 }
 
-module.exports = { KINDS, PAGE_SIZE, kindByKey, query, coveredByPass, libraryCard, libraryList, readPage: catalog.readPage }
+module.exports = { KINDS, PAGE_SIZE, kindByKey, query, coveredByPass, libraryCard, libraryList, passQuery, passLibraryCard, passLibraryList, readPage: catalog.readPage }

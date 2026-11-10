@@ -17,6 +17,4 @@
 .lb-card__bottom { align-items: flex-end; gap: 16rpx; }
 .lb-card__tags { display: flex; flex: 1; flex-wrap: wrap; gap: 12rpx; min-width: 0; }
 .lb-card__tag { padding: 6rpx 14rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-photo-card-tag-glass); color: var(--cy-comp-photo-card-muted); font-size: var(--cy-type-caption); line-height: 28rpx; }
-.lb-more { padding: 8rpx 0 24rpx; }
-.lb-more--err { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 @media (prefers-reduced-motion: reduce) { .lb-card { transition: none; filter: none; translate: none; } .lb-kind { transition: none; } }

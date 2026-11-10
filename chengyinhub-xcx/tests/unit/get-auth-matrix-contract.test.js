@@ -35,6 +35,13 @@ const PLAY_PLAYER_QUERY_APPLICATION = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // 2026-11-10 l-pass 通行证(ApiPlatformPassController,不在 SecurityConfig 放行清单,落 anyRequest().authenticated();
+  //   requireMemberId 只取登录态):概览 = 在售套餐 + 本人有效期;主题库 = 官方开放自玩主题(无会员维度)+ 本人是否覆盖;
+  //   订单详情按订单号 + 本人归属,他人订单回「订单不存在」。
+  ['subpackageMember/market/membership/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
+  ['subpackageMember/market/library/index.js', "url: '/api/platform-pass/library'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/market/passes/index.js', "url: '/api/platform-pass'", 'required', 'member', 'self-account'],
+  ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + orderNo, method: 'GET'", 'required', 'member', 'self-account'],
   // 2026-11-10 qx-b5(qx-c3 补登,按服务端实际守卫;以下路径均不在 SecurityConfig 放行清单,落 anyRequest().authenticated()):
   //   报名页促销目录 ApiMarketingPromotionController /catalog:requireAppMemberId,按场次回目录并带本人可用性。
   ['pages/activity/baoming/baoming.js', "url: '/api/marketing/promotions/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
@@ -473,7 +480,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 qx-b4(qx-c3 补登):固定玩法预设库一处、模板详情素材署名一处,均已按服务端守卫入 MATRIX,113 → 115。
   // 2026-11-10 r2-store:主题结账层与发现页各读一次在售通票目录(已入 MATRIX),122 → 124。  
   // 2026-11-10 qx-s2 staging 合并树:r2-create(b4-21)撤掉预设页,qx-b4 的「固定玩法预设库」一处直接 GET 随页退场,124 → 123(实测)。
-  assert.equal(directCount, 123, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
+  // 2026-11-10 l-pass:通行证页概览/主题库读取、游戏主题库、通行证与礼品入口卡、开通后订单轮询四处直接 GET(已入 MATRIX),123 → 127。
+  assert.equal(directCount, 127, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
