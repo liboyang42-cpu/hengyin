@@ -136,6 +136,41 @@ function purchaseView(quote) {
   return out;
 }
 
+/**
+ * r2-join:后端提示原样显示,但去掉给开发看的内部编号(如「topicId=990014」「orderNo: x」),
+ * 不改写其余文字。去完为空就退回通用原因。
+ */
+function playerText(msg) {
+  if (typeof msg !== 'string') return '';
+  const out = msg
+    .replace(/[\s,，;；(（]*\b[A-Za-z]*(?:Id|ID|No|Key|Code)\s*[=:：]\s*[\w-]+[)）]?/g, '')
+    .replace(/[\s,，;；:：]+$/, '')
+    .trim();
+  return out;
+}
+
+/**
+ * r2-join 结算摘要:只列报价里真实存在的支付方式和金额。
+ * 现金与积分是服务端给的两种独立方式(不是叠加抵扣);现金关闭时那一行写原因,不出金额按钮。
+ */
+function checkoutRows(quote, card) {
+  const rows = [];
+  if (!quote || typeof quote !== 'object') {
+    if (card && card.price) rows.push({ key: 'price', k: '价格', v: card.price });
+    return rows;
+  }
+  const modes = Array.isArray(quote.availablePayModes) ? quote.availablePayModes.map(Number) : [];
+  if (isNum(quote.totalCashAmount)) {
+    const cashOn = modes.indexOf(PAY_MODE.CASH) >= 0;
+    rows.push({ key: 'cash', k: '现金', v: '¥' + Number(quote.totalCashAmount).toFixed(2),
+      note: !cashOn && quote.cashUnavailableReason ? reasonText(quote.cashUnavailableReason) : '', off: !cashOn });
+  }
+  if (isNum(quote.totalPointsAmount) && modes.indexOf(PAY_MODE.POINTS) >= 0) {
+    rows.push({ key: 'points', k: '积分兑换', v: Number(quote.totalPointsAmount) + ' 积分' });
+  }
+  return rows;
+}
+
 /** 下单请求:只回传服务端报价;金额不由客户端提交。 */
 function orderRequest(productId, quote, payMode, fulfillmentKind, requestId) {
   return {
@@ -232,6 +267,8 @@ function workshopReasonText(code) {
 }
 
 module.exports = {
+  playerText,
+  checkoutRows,
   workshopReasonText,
   KIND_TEXT, PAY_MODE, FULFILLMENT, ROUTE,
   validityText, priceText, productCard, purchaseView, orderRequest,

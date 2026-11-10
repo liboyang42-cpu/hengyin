@@ -28,7 +28,10 @@ test('弱化行只拼服务端事实,没有值的事实不出;没有事实就没
 
 test('P1 落地:叠卡 hero + 共享页标题 + 白药丸主按钮 + 文字次要动作;没有封面字段就不画封面', () => {
   const view = read('subpackageJourney/pages/landing/index.wxml');
-  assert.match(view, /class="ob-hero"[\s\S]*ob-card--back2[\s\S]*ob-card--back1[\s\S]*ob-card--front/);
+  // 2026-11-10 qx-s2 staging 合并:落地页正文与 r2-join b3-p1-5(后一轮业主点名「同行」结构 + 怎么玩模式卡)改的是同一块,
+  // 取 r2-join 的 jl-duo / jl-tiles;u2 在本页保留的是共享页标题、白药丸主按钮(ob-footer)与「先逛逛」文字次要动作。
+  assert.match(view, /class="jl-duo"/);
+  assert.match(view, /class="jn-footer jn-footer--stack ob-footer"/);
   assert.doesNotMatch(view, /<image[^>]*cover/i, '落地读口没有封面字段,不拿别处的图冒充');
   assert.match(view, /<cy-page-title align="center" title="\{\{headline\}\}" \/>/, '标题合同:页标题走共享 cy-page-title,正文不再重复大标题');
   assert.doesNotMatch(view, /ob-title/);
@@ -48,22 +51,19 @@ test('P1 落地:领取后标题与事实行同步更新;次要动作只回首页
   page._kind = 'seat';
   page._renderSeat(1);
   assert.equal(page.data.headline, '朋友邀请你同行');
-  assert.equal(page.data.factLine, '');
+  assert.deepEqual(page.data.facts, []);
   assert.equal(page.data.primary, '领取席位');
 });
 
-test('P4 模式:两种以上才出横向分页与分段进度;只跟随滑动,不提交模式', () => {
+test('P4 模式:只读展示,切换不提交模式', () => {
+  // 2026-11-10 qx-s2 staging 合并:u2 的横向分页 swiper 由 r2-join 的「怎么玩」模式卡(onMode)取代;保留「切换不发请求」这条业务断言。
   const view = read('subpackageJourney/pages/landing/index.wxml');
-  assert.match(view, /<swiper wx:if="\{\{modes\.length > 1\}\}"[^>]*bindchange="onModeChange"/);
-  assert.match(view, /class="ob-progress" wx:if="\{\{modes\.length > 1\}\}"/);
-  assert.match(view, /wx:else class="ob-single"/);
-  const page = loadPage('subpackageJourney/pages/landing/index.js');
-  page.onModeChange({ detail: { current: 1 } });
-  assert.equal(page.data.modeIndex, 1);
-  page.onModeChange({ detail: { current: 'x' } });
-  assert.equal(page.data.modeIndex, 1);
+  assert.doesNotMatch(view, /<swiper/);
+  assert.match(view, /class="jl-tiles"/);
   const js = read('subpackageJourney/pages/landing/index.js');
-  assert.doesNotMatch(js.slice(js.indexOf('onModeChange'), js.indexOf('onBrowse')), /api\.|request/, '翻页不发请求');
+  const body = js.slice(js.indexOf('onMode(e)'), js.indexOf('onPrimary()'));
+  assert.ok(body.length > 0);
+  assert.doesNotMatch(body, /api\.|request/, '切换模式不发请求');
 });
 
 test('P7 战报:叠层卡;只有计分时出 NRC 粗斜体大数字,不计分/未知弱化,不画成 0', () => {

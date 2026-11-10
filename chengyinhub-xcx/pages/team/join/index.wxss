@@ -1,6 +1,19 @@
 @import "../team.wxss";
 
-/* U06-01 邀请期限:与成员/加入方式同一张卡,下方一行 */
-.tj-invite { display: flex; align-items: center; justify-content: space-between; margin-top: var(--cy-space-3); padding-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-border-line); }
-.tj-invite .team-meta-key { margin-top: 0; }
-.tj-invite__v { font-size: var(--cy-font-body); font-weight: 700; }
+/* U06-01 加入页(r2-join):席位圈依次弹入;事实两栏;邀请到期一行 */
+.tj-head { padding-bottom: var(--cy-space-4); }
+.tj-card { padding: var(--cy-space-4); }
+.tj-seats { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); padding-bottom: var(--cy-space-4); margin-bottom: var(--cy-space-3); border-bottom: 1rpx solid var(--cy-border-line); }
+.tj-seat { width: 88rpx; height: 88rpx; box-sizing: border-box; border-radius: 50%; border: 3rpx dashed var(--cy-text-secondary); display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary);
+  animation: tj-seat-in 360ms cubic-bezier(.3,1.3,.5,1) both; }
+.tj-seat.is-on { border: 0; background: var(--cy-brand-soft); color: var(--cy-brand); }
+.tj-facts { display: flex; gap: var(--cy-space-4); }
+.tj-fact { flex: 1; min-width: 0; }
+.tj-fact__v { display: block; font-size: var(--cy-font-subtitle); font-weight: 800; font-variant-numeric: tabular-nums; }
+.tj-invite { display: flex; align-items: center; gap: var(--cy-space-1-5); margin-top: var(--cy-space-3); padding-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-border-line); color: var(--cy-text-secondary); }
+.tj-invite__v { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
+.tj-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; padding: var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); background: var(--cy-bg-page); }
+.tj-hint { padding: 0 0 var(--cy-space-2); text-align: center; }
+.tj-actions { margin-top: 0; }
+@keyframes tj-seat-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .tj-seat { animation: none; } }

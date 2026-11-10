@@ -5,9 +5,14 @@
   <cy-modal-host id="cy-modal-host" />
   <view class="gf__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar title="领取礼品" plain custom-back bind:back="goBack" />
-    <cy-empty wx:if="{{state === 'ready'}}" fill size="lg" kind="empty" title="好友送你一份通行证" />
-    <cy-empty wx:elif="{{state === 'claimed'}}" fill size="lg" kind="success" title="已领取" />
-    <cy-empty wx:elif="{{state === 'failed'}}" fill size="lg" kind="error" title="{{reason}}" />
+    <!-- r2-join:领取态用礼物图标(不再用通用空态插画/警告三角),整块居中 -->
+    <view class="gf-hero {{state === 'failed' ? 'is-off' : ''}} {{state === 'claimed' ? 'is-done' : ''}}" aria-role="status">
+      <view class="gf-hero__badge">
+        <view class="gf-hero__glow" wx:if="{{state === 'ready' || state === 'unknown'}}"></view>
+        <cy-icon name="{{state === 'claimed' ? 'check' : 'gift'}}" size="72" />
+      </view>
+      <text class="gf-hero__title">{{state === 'claimed' ? '已领取' : state === 'failed' ? reason : '好友送你一份通行证'}}</text>
+    </view>
     <view class="gf__bar" wx:if="{{state === 'ready' || state === 'claimed' || state === 'unknown'}}">
       <view class="gf__note" wx:if="{{state === 'unknown'}}">结果待确认，再点一次查询原结果</view>
       <cy-btn wx:if="{{state !== 'claimed'}}" variant="primary" loading="{{claiming}}" disabled="{{claiming}}" bindtap="claim">领取</cy-btn>

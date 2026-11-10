@@ -22,6 +22,7 @@ Page({
     forTabs: [{ key: 'self', label: '自己用' }, { key: 'gift', label: '送给好友' }],
     forGift: false,
     buy: { state: 'unavailable', reason: '', payModes: [] },
+    checkout: [],
     buying: false,
     buyingMode: 0,
     buyError: '',
@@ -58,7 +59,7 @@ Page({
     const seq = (this._quoteSeq = (this._quoteSeq || 0) + 1)
     const fulfillmentKind = this.data.forGift ? mv.FULFILLMENT.GIFT : mv.FULFILLMENT.SELF
     this._quote = null
-    this.setData({ buy: { state: 'loading', reason: '', payModes: [] }, buyError: '' })
+    this.setData({ buy: { state: 'loading', reason: '', payModes: [] }, buyError: '', checkout: mv.checkoutRows(null, this.data.card) })
     app.sendRequest({
       url: '/api/marketing/product/quote', method: 'POST', header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ productId: Number(this._id), quantity: 1, fulfillmentKind }),
@@ -68,7 +69,7 @@ Page({
         if (isBizOk(res) && res.data) {
           if (!this._quote || this._quote.quoteSign !== res.data.quoteSign) this._reqId = null
           this._quote = res.data
-          this.setData({ buy: mv.purchaseView(res.data) })
+          this.setData({ buy: mv.purchaseView(res.data), checkout: mv.checkoutRows(res.data, this.data.card) })
         } else {
           // 报价被拒:只说原因,不出购买按钮(加座/渠道关闭等走这里)
           const checkout = res && res.checkout
@@ -111,7 +112,8 @@ Page({
         if (isBizOk(res) && res.data) { this._afterOrder(res.data); return }
         const code = res && res.reasonCode
         // 有 reasonCode 按码说;没有码时原样显示后端提示,不改写
-        this.setData({ buying: false, buyError: code ? mv.reasonText(code) : ((res && res.msg) || mv.reasonText(null)) })
+        // r2-join:去掉给开发看的内部编号(topicId=…),其余原文不改
+        this.setData({ buying: false, buyError: code ? mv.reasonText(code) : (mv.playerText(res && res.msg) || mv.reasonText(null)) })
         if (code === 'QUOTE_EXPIRED' || code === 'QUOTE_STALE') this.quote()
       },
       // 结果未知:保留同一 requestId,再点即原样重发,由服务端重放原单

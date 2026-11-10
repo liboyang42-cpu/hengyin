@@ -16,7 +16,7 @@ Page({
     joining: false,
     joinError: '',
     ticketRequired: false,
-    inviteText: '',
+    inviteText: '', joinedSeats: [], openSeats: [],
     joinHint: '',
     error: '',
     errorKind: 'network',
@@ -128,6 +128,8 @@ Page({
             joined: !!res.data.joined,
             // U06-01:邀请期限与入队阻塞码只作提示;末席与票仍由 /join 回包裁决
             inviteText: teamSeats.inviteText(res.data.invite),
+            joinedSeats: teamSeats.joinedSeats(res.data.team),
+            openSeats: teamSeats.openSeats(res.data.team, res.data.seats),
             joinHint: teamSeats.blockerText(res.data.viewer, 'join').text,
             ticketRequired: that.data.ticketRequired || teamSeats.blockerText(res.data.viewer, 'join').code === 'TICKET_REQUIRED',
             error: '',

@@ -1,0 +1,9 @@
+-- r2-join rig fixture (HARNESS, rig DB only): one author allocation for 9004 so the 分佣 tab appears
+DELETE FROM marketing_revenue_allocation_line WHERE allocation_id=99501; DELETE FROM marketing_revenue_allocation WHERE id=99501; DELETE FROM marketing_revenue_rule WHERE id=99501;
+INSERT INTO marketing_revenue_rule (id,rule_key,version,scenario,currency,author_base_rate,platform_base_rate,referral_rate,referral_funding_side,contract_ref,payee_member_id,hold_days,status,create_time)
+VALUES (99501,'rig-r2j',1,1,'CNY',0.1,0.9,0,0,NULL,NULL,7,0,NOW());
+INSERT INTO marketing_revenue_allocation (id,order_type,order_id,allocation_key,rule_id,rule_key,rule_version,scenario,author_member_id,contract_ref,owner_type,owner_id,currency,paid_fen,payment_fact_hash,
+ original_amount_fen,discount_fen,point_deduct_fen,tax_fen,payment_fee_fen,channel_commission_fen,fee_basis_ref,net_fen,referral_funding_side,status,settleable_at,reversed_fen,snapshot_hash,create_time,update_time)
+VALUES (99501,1,99501,'registration:99501',99501,'rig-r2j',1,1,9004,'rig',1,990014,'CNY',5900,REPEAT('a',64),5900,0,0,0,0,0,'rig',5900,0,1,NOW() + INTERVAL 6 DAY,0,REPEAT('b',64),NOW(),NOW());
+INSERT INTO marketing_revenue_allocation_line (allocation_id,entry_type,line_role,recipient_member_id,funding_side,basis_fen,rate,amount_fen,currency,entry_key,create_time)
+VALUES (99501,1,'author',9004,0,5900,0.1,590,'CNY','rig-r2j-author',NOW());

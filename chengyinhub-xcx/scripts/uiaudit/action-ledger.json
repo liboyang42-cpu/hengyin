@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5907,
+  "controlCount": 5904,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -157717,7 +157717,7 @@
           "route": "subpackageA/pages/video-bounty/index",
           "segments": [
             {
-              "selector": "cy-empty.cy-fill-state",
+              "selector": "cy-empty.vb-empty",
               "index": 0
             }
           ]
@@ -157726,7 +157726,7 @@
           "route": "subpackageA/pages/video-bounty/index",
           "segments": [
             {
-              "selector": "cy-empty.cy-fill-state",
+              "selector": "cy-empty.vb-empty",
               "index": 1
             }
           ]
@@ -158872,33 +158872,6 @@
             {
               "selector": "cy-empty",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/market/gift/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/market/gift/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/market/gift/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 2
             }
           ]
         },
@@ -1078687,7 +1078660,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8789"
+        "staticSource": "pages/publish/fabu/index.js:8781"
       }
     },
     {
@@ -1078754,7 +1078727,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6457"
+        "staticSource": "pages/publish/fabu/index.js:6449"
       }
     },
     {
@@ -1078917,7 +1078890,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6481"
+        "staticSource": "pages/publish/fabu/index.js:6473"
       }
     },
     {
@@ -1079015,7 +1078988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6481"
+        "staticSource": "pages/publish/fabu/index.js:6473"
       }
     },
     {
@@ -1079082,7 +1079055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6457"
+        "staticSource": "pages/publish/fabu/index.js:6449"
       }
     },
     {
@@ -1079283,7 +1079256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6446"
+        "staticSource": "pages/publish/fabu/index.js:6438"
       }
     },
     {
@@ -1079350,7 +1079323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6427"
+        "staticSource": "pages/publish/fabu/index.js:6419"
       }
     },
     {
@@ -1081500,7 +1081473,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7661"
+        "staticSource": "pages/publish/fabu/index.js:7653"
       }
     },
     {
@@ -1081768,7 +1081741,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7551"
+        "staticSource": "pages/publish/fabu/index.js:7543"
       }
     },
     {
@@ -1081835,7 +1081808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7567"
+        "staticSource": "pages/publish/fabu/index.js:7559"
       }
     },
     {
@@ -1081902,7 +1081875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7575"
+        "staticSource": "pages/publish/fabu/index.js:7567"
       }
     },
     {
@@ -1081969,7 +1081942,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7575"
+        "staticSource": "pages/publish/fabu/index.js:7567"
       }
     },
     {
@@ -1082036,7 +1082009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7575"
+        "staticSource": "pages/publish/fabu/index.js:7567"
       }
     },
     {
@@ -1082916,7 +1082889,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7303"
+        "staticSource": "pages/publish/fabu/index.js:7295"
       }
     },
     {
@@ -1083065,7 +1083038,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7215"
+        "staticSource": "pages/publish/fabu/index.js:7207"
       }
     },
     {
@@ -1083214,7 +1083187,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7215"
+        "staticSource": "pages/publish/fabu/index.js:7207"
       }
     },
     {
@@ -1083282,7 +1083255,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6854"
+        "staticSource": "pages/publish/fabu/index.js:6846"
       }
     },
     {
@@ -1083364,7 +1083337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6831"
+        "staticSource": "pages/publish/fabu/index.js:6823"
       }
     },
     {
@@ -1083497,7 +1083470,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6837"
+        "staticSource": "pages/publish/fabu/index.js:6829"
       }
     },
     {
@@ -1083646,7 +1083619,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7215"
+        "staticSource": "pages/publish/fabu/index.js:7207"
       }
     },
     {
@@ -1083780,7 +1083753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6859"
+        "staticSource": "pages/publish/fabu/index.js:6851"
       }
     },
     {
@@ -1083847,7 +1083820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6859"
+        "staticSource": "pages/publish/fabu/index.js:6851"
       }
     },
     {
@@ -1083914,7 +1083887,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7288"
+        "staticSource": "pages/publish/fabu/index.js:7280"
       }
     },
     {
@@ -1084004,7 +1083977,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7241"
+        "staticSource": "pages/publish/fabu/index.js:7233"
       }
     },
     {
@@ -1084109,7 +1084082,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7126"
+        "staticSource": "pages/publish/fabu/index.js:7118"
       }
     },
     {
@@ -1084216,7 +1084189,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7126"
+        "staticSource": "pages/publish/fabu/index.js:7118"
       }
     },
     {
@@ -1084283,7 +1084256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6864"
+        "staticSource": "pages/publish/fabu/index.js:6856"
       }
     },
     {
@@ -1084350,7 +1084323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6864"
+        "staticSource": "pages/publish/fabu/index.js:6856"
       }
     },
     {
@@ -1084499,7 +1084472,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7215"
+        "staticSource": "pages/publish/fabu/index.js:7207"
       }
     },
     {
@@ -1084648,7 +1084621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7215"
+        "staticSource": "pages/publish/fabu/index.js:7207"
       }
     },
     {
@@ -1084797,7 +1084770,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7215"
+        "staticSource": "pages/publish/fabu/index.js:7207"
       }
     },
     {
@@ -1085134,7 +1085107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8539"
+        "staticSource": "pages/publish/fabu/index.js:8531"
       }
     },
     {
@@ -1087668,7 +1087641,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7429"
+        "staticSource": "pages/publish/fabu/index.js:7421"
       }
     },
     {
@@ -1087735,7 +1087708,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7429"
+        "staticSource": "pages/publish/fabu/index.js:7421"
       }
     },
     {
@@ -1087802,7 +1087775,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7447"
+        "staticSource": "pages/publish/fabu/index.js:7439"
       }
     },
     {
@@ -1087869,7 +1087842,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7438"
+        "staticSource": "pages/publish/fabu/index.js:7430"
       }
     },
     {
@@ -1087936,7 +1087909,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7438"
+        "staticSource": "pages/publish/fabu/index.js:7430"
       }
     },
     {
@@ -1088003,7 +1087976,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7475"
+        "staticSource": "pages/publish/fabu/index.js:7467"
       }
     },
     {
@@ -1088070,7 +1088043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7670"
+        "staticSource": "pages/publish/fabu/index.js:7662"
       }
     },
     {
@@ -1088137,7 +1088110,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7670"
+        "staticSource": "pages/publish/fabu/index.js:7662"
       }
     },
     {
@@ -1088204,7 +1088177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7703"
+        "staticSource": "pages/publish/fabu/index.js:7695"
       }
     },
     {
@@ -1088434,7 +1088407,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7639"
+        "staticSource": "pages/publish/fabu/index.js:7631"
       }
     },
     {
@@ -1088532,7 +1088505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7639"
+        "staticSource": "pages/publish/fabu/index.js:7631"
       }
     },
     {
@@ -1088649,7 +1088622,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7659"
+        "staticSource": "pages/publish/fabu/index.js:7651"
       }
     },
     {
@@ -1088758,7 +1088731,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7609"
+        "staticSource": "pages/publish/fabu/index.js:7601"
       }
     },
     {
@@ -1088825,7 +1088798,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7671"
+        "staticSource": "pages/publish/fabu/index.js:7663"
       }
     },
     {
@@ -1088892,7 +1088865,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7671"
+        "staticSource": "pages/publish/fabu/index.js:7663"
       }
     },
     {
@@ -1088959,7 +1088932,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7671"
+        "staticSource": "pages/publish/fabu/index.js:7663"
       }
     },
     {
@@ -1089026,7 +1088999,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7671"
+        "staticSource": "pages/publish/fabu/index.js:7663"
       }
     },
     {
@@ -1089093,7 +1089066,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7671"
+        "staticSource": "pages/publish/fabu/index.js:7663"
       }
     },
     {
@@ -1089160,7 +1089133,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7696"
+        "staticSource": "pages/publish/fabu/index.js:7688"
       }
     },
     {
@@ -1090495,7 +1090468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7414"
+        "staticSource": "pages/publish/fabu/index.js:7406"
       }
     },
     {
@@ -1092737,7 +1092710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8547"
+        "staticSource": "pages/publish/fabu/index.js:8539"
       }
     },
     {
@@ -1092831,7 +1092804,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7724"
+        "staticSource": "pages/publish/fabu/index.js:7716"
       }
     },
     {
@@ -1092927,7 +1092900,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7724"
+        "staticSource": "pages/publish/fabu/index.js:7716"
       }
     },
     {
@@ -1092994,7 +1092967,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8567"
+        "staticSource": "pages/publish/fabu/index.js:8559"
       }
     },
     {
@@ -1093062,7 +1093035,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9267"
+        "staticSource": "pages/publish/fabu/index.js:9259"
       }
     },
     {
@@ -1093220,7 +1093193,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9267"
+        "staticSource": "pages/publish/fabu/index.js:9259"
       }
     },
     {
@@ -1097606,7 +1097579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9267"
+        "staticSource": "pages/publish/fabu/index.js:9259"
       }
     },
     {
@@ -1098532,7 +1098505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7186"
+        "staticSource": "pages/publish/fabu/index.js:7178"
       }
     },
     {
@@ -1098628,7 +1098601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8249"
+        "staticSource": "pages/publish/fabu/index.js:8241"
       }
     },
     {
@@ -1098726,7 +1098699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8249"
+        "staticSource": "pages/publish/fabu/index.js:8241"
       }
     },
     {
@@ -1099061,7 +1099034,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8695"
+        "staticSource": "pages/publish/fabu/index.js:8687"
       }
     },
     {
@@ -1099129,7 +1099102,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9267"
+        "staticSource": "pages/publish/fabu/index.js:9259"
       }
     },
     {
@@ -1099196,7 +1099169,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8695"
+        "staticSource": "pages/publish/fabu/index.js:8687"
       }
     },
     {
@@ -1099263,7 +1099236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8649"
+        "staticSource": "pages/publish/fabu/index.js:8641"
       }
     },
     {
@@ -1099330,7 +1099303,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8702"
+        "staticSource": "pages/publish/fabu/index.js:8694"
       }
     },
     {
@@ -1099464,7 +1099437,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9294"
+        "staticSource": "pages/publish/fabu/index.js:9286"
       }
     },
     {
@@ -1099632,7 +1099605,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8789"
+        "staticSource": "pages/publish/fabu/index.js:8781"
       }
     },
     {
@@ -1099952,7 +1099925,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9427"
+        "staticSource": "pages/publish/fabu/index.js:9419"
       }
     },
     {
@@ -1100070,7 +1100043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9244"
+        "staticSource": "pages/publish/fabu/index.js:9236"
       }
     },
     {
@@ -1100187,7 +1100160,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9269"
+        "staticSource": "pages/publish/fabu/index.js:9261"
       }
     },
     {
@@ -1100315,7 +1100288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9052"
+        "staticSource": "pages/publish/fabu/index.js:9044"
       }
     },
     {
@@ -1100400,7 +1100373,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9040"
+        "staticSource": "pages/publish/fabu/index.js:9032"
       }
     },
     {
@@ -1100467,7 +1100440,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9121"
+        "staticSource": "pages/publish/fabu/index.js:9113"
       }
     },
     {
@@ -1100710,7 +1100683,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6336"
+        "staticSource": "pages/publish/fabu/index.js:6328"
       }
     },
     {
@@ -1101191,7 +1101164,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8961"
+        "staticSource": "pages/publish/fabu/index.js:8953"
       }
     },
     {
@@ -1101308,7 +1101281,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9344"
+        "staticSource": "pages/publish/fabu/index.js:9336"
       }
     },
     {
@@ -1101480,7 +1101453,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8762"
+        "staticSource": "pages/publish/fabu/index.js:8754"
       }
     },
     {
@@ -1101562,7 +1101535,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8762"
+        "staticSource": "pages/publish/fabu/index.js:8754"
       }
     },
     {
@@ -1101698,7 +1101671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9306"
+        "staticSource": "pages/publish/fabu/index.js:9298"
       }
     },
     {
@@ -1101780,7 +1101753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8762"
+        "staticSource": "pages/publish/fabu/index.js:8754"
       }
     },
     {
@@ -1104479,7 +1104452,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8632"
+        "staticSource": "pages/publish/fabu/index.js:8624"
       }
     },
     {
@@ -1104613,7 +1104586,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8638"
+        "staticSource": "pages/publish/fabu/index.js:8630"
       }
     },
     {
@@ -1104680,7 +1104653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8629"
+        "staticSource": "pages/publish/fabu/index.js:8621"
       }
     },
     {
@@ -1106808,7 +1106781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7204"
+        "staticSource": "pages/publish/fabu/index.js:7196"
       }
     },
     {
@@ -1107478,7 +1107451,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7204"
+        "staticSource": "pages/publish/fabu/index.js:7196"
       }
     },
     {
@@ -1108197,254 +1108170,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:330:bindchange:onSelfPlayToggle:29",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/step3.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-switch",
-        "event": "bindchange",
-        "handler": "onSelfPlayToggle",
-        "line": 330,
-        "selectorHint": "cy-switch[bindchange]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/publisher/identity",
-          "/api/publisher/identity/status"
-        ],
-        "primaryApis": [
-          "/api/publisher/identity",
-          "/api/publisher/identity/status"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/publisher/identity",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/publisher/identity/status",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6150"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/step3.wxml:337:bindinput:onSelfPlayPriceInput:30",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/step3.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onSelfPlayPriceInput",
-        "line": 337,
-        "selectorHint": ".tk-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/publisher/identity",
-          "/api/publisher/identity/status"
-        ],
-        "primaryApis": [
-          "/api/publisher/identity",
-          "/api/publisher/identity/status"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/publisher/identity",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/publisher/identity/status",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6153"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/step3.wxml:341:bindinput:onSelfPlayQuotaInput:31",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/step3.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onSelfPlayQuotaInput",
-        "line": 341,
-        "selectorHint": ".tk-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6156"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/step3.wxml:351:bindtap:onReqLeftTap:32",
+      "id": "pages/publish/fabu/step3.wxml:325:bindtap:onReqLeftTap:29",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108467,7 +1108193,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReqLeftTap",
-        "line": 351,
+        "line": 325,
         "selectorHint": ".req-left",
         "visibleCondition": "{{ticketMissing.identity}}",
         "disabledCondition": null,
@@ -1108507,11 +1108233,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7204"
+        "staticSource": "pages/publish/fabu/index.js:7196"
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:356:bindinput:onIdentityFieldInput:33",
+      "id": "pages/publish/fabu/step3.wxml:330:bindinput:onIdentityFieldInput:30",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108534,7 +1108260,7 @@
         "tag": "cy-field",
         "event": "bindinput",
         "handler": "onIdentityFieldInput",
-        "line": 356,
+        "line": 330,
         "selectorHint": "cy-field[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1108597,11 +1108323,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7275"
+        "staticSource": "pages/publish/fabu/index.js:7267"
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:359:bindinput:onIdentityFieldInput:34",
+      "id": "pages/publish/fabu/step3.wxml:333:bindinput:onIdentityFieldInput:31",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108624,7 +1108350,7 @@
         "tag": "cy-field",
         "event": "bindinput",
         "handler": "onIdentityFieldInput",
-        "line": 359,
+        "line": 333,
         "selectorHint": "cy-field[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1108687,11 +1108413,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7275"
+        "staticSource": "pages/publish/fabu/index.js:7267"
       }
     },
     {
-      "id": "pages/publish/fabu/step3.wxml:361:bind:change:onIdentityConsent:35",
+      "id": "pages/publish/fabu/step3.wxml:335:bind:change:onIdentityConsent:32",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108714,7 +1108440,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onIdentityConsent",
-        "line": 361,
+        "line": 335,
         "selectorHint": ".pc-identity__consent",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1108777,7 +1108503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7280"
+        "staticSource": "pages/publish/fabu/index.js:7272"
       }
     },
     {
@@ -1116010,7 +1115736,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7418"
+        "staticSource": "pages/publish/fabu/index.js:7410"
       }
     },
     {
@@ -1212350,7 +1212076,160 @@
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:103:bind:action:retryBoard:10",
+      "id": "pages/team/detail/index.wxml:104:bindtap:kick:9",
+      "route": "pages/team/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/team/detail/index.wxml",
+        "js": "pages/team/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "cy-danger-confirm",
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "kick",
+        "line": 104,
+        "selectorHint": ".team-member-op",
+        "visibleCondition": "{{leader && item.role != 1}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "移出队员 {{item.memberName || '城瘾玩家'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/team/detail/index.js:476"
+      }
+    },
+    {
+      "id": "pages/team/detail/index.wxml:11:bindtap:cancelCommand:2",
+      "route": "pages/team/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/team/detail/index.wxml",
+        "js": "pages/team/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "cancelCommand",
+        "line": 11,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{commandRecovery.busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/team/command/cancel"
+        ],
+        "primaryApis": [
+          "/api/team/command/cancel"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/team/command/cancel",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/team/command/cancel"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/team/detail/index.js:102"
+      }
+    },
+    {
+      "id": "pages/team/detail/index.wxml:115:bind:action:retryBoard:10",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1212373,7 +1212252,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryBoard",
-        "line": 103,
+        "line": 115,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{boardState === 'error' || boardState === 'login'}}",
         "disabledCondition": null,
@@ -1212479,95 +1212358,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:410"
+        "staticSource": "pages/team/detail/index.js:413"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:11:bindtap:cancelCommand:2",
-      "route": "pages/team/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/team/detail/index.wxml",
-        "js": "pages/team/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "cancelCommand",
-        "line": 11,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": "{{commandRecovery.busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/team/command/cancel"
-        ],
-        "primaryApis": [
-          "/api/team/command/cancel"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/team/command/cancel",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/team/command/cancel"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/team/detail/index.js:102"
-      }
-    },
-    {
-      "id": "pages/team/detail/index.wxml:121:bind:action:retryBoard:11",
+      "id": "pages/team/detail/index.wxml:133:bind:action:retryBoard:11",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1212590,7 +1212385,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryBoard",
-        "line": 121,
+        "line": 133,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{rankingState === 'error'}}",
         "disabledCondition": null,
@@ -1212696,11 +1212491,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:410"
+        "staticSource": "pages/team/detail/index.js:413"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:134:bindtap:quit:12",
+      "id": "pages/team/detail/index.wxml:146:bindtap:quit:12",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1212723,7 +1212518,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "quit",
-        "line": 134,
+        "line": 146,
         "selectorHint": ".team-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1212765,11 +1212560,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:464"
+        "staticSource": "pages/team/detail/index.js:467"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:136:bindtap:disband:13",
+      "id": "pages/team/detail/index.wxml:148:bindtap:disband:13",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1212792,7 +1212587,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "disband",
-        "line": 136,
+        "line": 148,
         "selectorHint": ".team-action",
         "visibleCondition": "{{leader}}",
         "disabledCondition": null,
@@ -1212834,11 +1212629,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:479"
+        "staticSource": "pages/team/detail/index.js:482"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:139:bindtap:openReport:14",
+      "id": "pages/team/detail/index.wxml:151:bindtap:openReport:14",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1212861,7 +1212656,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openReport",
-        "line": 139,
+        "line": 151,
         "selectorHint": ".team-note",
         "visibleCondition": "{{!leader}}",
         "disabledCondition": null,
@@ -1212905,7 +1212700,7 @@
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:146:bind:confirm:onConfirmQuit:15",
+      "id": "pages/team/detail/index.wxml:158:bind:confirm:onConfirmQuit:15",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1212928,7 +1212723,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 146,
+        "line": 158,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213054,11 +1212849,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:488"
+        "staticSource": "pages/team/detail/index.js:491"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:147:bind:confirm:onConfirmKick:16",
+      "id": "pages/team/detail/index.wxml:159:bind:confirm:onConfirmKick:16",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213081,7 +1212876,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmKick",
-        "line": 147,
+        "line": 159,
         "selectorHint": "#dcKick",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213208,11 +1213003,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:489"
+        "staticSource": "pages/team/detail/index.js:492"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:148:bind:confirm:onConfirmReject:17",
+      "id": "pages/team/detail/index.wxml:160:bind:confirm:onConfirmReject:17",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213235,7 +1213030,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmReject",
-        "line": 148,
+        "line": 160,
         "selectorHint": "#dcReject",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213352,11 +1213147,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:362"
+        "staticSource": "pages/team/detail/index.js:365"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:149:bind:alt:onDisbandAlt:19",
+      "id": "pages/team/detail/index.wxml:161:bind:alt:onDisbandAlt:19",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213379,7 +1213174,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDisbandAlt",
-        "line": 149,
+        "line": 161,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213420,11 +1213215,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:493"
+        "staticSource": "pages/team/detail/index.js:496"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:149:bind:confirm:onConfirmDisband:18",
+      "id": "pages/team/detail/index.wxml:161:bind:confirm:onConfirmDisband:18",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213447,7 +1213242,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDisband",
-        "line": 149,
+        "line": 161,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213574,11 +1213369,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:490"
+        "staticSource": "pages/team/detail/index.js:493"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:150:bind:close:closeReport:20",
+      "id": "pages/team/detail/index.wxml:162:bind:close:closeReport:20",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213601,7 +1213396,7 @@
         "tag": "team-report-sheet",
         "event": "bind:close",
         "handler": "closeReport",
-        "line": 150,
+        "line": 162,
         "selectorHint": "team-report-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1213776,11 +1213571,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:415"
+        "staticSource": "pages/team/detail/index.js:418"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:44:bindtap:goJoin:4",
+      "id": "pages/team/detail/index.wxml:56:bindtap:goJoin:4",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213803,7 +1213598,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goJoin",
-        "line": 44,
+        "line": 56,
         "selectorHint": ".team-action",
         "visibleCondition": "{{!joined}}",
         "disabledCondition": null,
@@ -1213846,11 +1213641,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:454"
+        "staticSource": "pages/team/detail/index.js:457"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:56:bindchange:onJoinModeChange:5",
+      "id": "pages/team/detail/index.wxml:68:bindchange:onJoinModeChange:5",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1213873,7 +1213668,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onJoinModeChange",
-        "line": 56,
+        "line": 68,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": "{{joinModeSaving}}",
@@ -1213990,11 +1213785,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:428"
+        "staticSource": "pages/team/detail/index.js:431"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:64:bind:action:retryApplicants:6",
+      "id": "pages/team/detail/index.wxml:76:bind:action:retryApplicants:6",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1214017,7 +1213812,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryApplicants",
-        "line": 64,
+        "line": 76,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{applicantsState === 'error'}}",
         "disabledCondition": null,
@@ -1214123,11 +1213918,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:355"
+        "staticSource": "pages/team/detail/index.js:358"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:74:bindtap:rejectApplicant:7",
+      "id": "pages/team/detail/index.wxml:86:bindtap:rejectApplicant:7",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1214150,7 +1213945,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "rejectApplicant",
-        "line": 74,
+        "line": 86,
         "selectorHint": ".team-member-op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214192,11 +1213987,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:357"
+        "staticSource": "pages/team/detail/index.js:360"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:76:bindtap:approveApplicant:8",
+      "id": "pages/team/detail/index.wxml:88:bindtap:approveApplicant:8",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1214219,7 +1214014,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "approveApplicant",
-        "line": 76,
+        "line": 88,
         "selectorHint": ".team-member-op",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1214336,7 +1214131,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:356"
+        "staticSource": "pages/team/detail/index.js:359"
       }
     },
     {
@@ -1214418,75 +1214213,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/team/detail/index.js:100"
-      }
-    },
-    {
-      "id": "pages/team/detail/index.wxml:92:bindtap:kick:9",
-      "route": "pages/team/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/team/detail/index.wxml",
-        "js": "pages/team/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": "cy-danger-confirm",
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "kick",
-        "line": 92,
-        "selectorHint": ".team-member-op",
-        "visibleCondition": "{{leader && item.role != 1}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "移出队员 {{item.memberName || '城瘾玩家'}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/team/detail/index.js:473"
       }
     },
     {
@@ -1214597,11 +1214323,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:168"
+        "staticSource": "pages/team/join/index.js:170"
       }
     },
     {
-      "id": "pages/team/join/index.wxml:40:bindtap:goDetail:4",
+      "id": "pages/team/join/index.wxml:45:bindtap:goDetail:4",
       "route": "pages/team/join/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1214624,7 +1214350,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goDetail",
-        "line": 40,
+        "line": 45,
         "selectorHint": ".team-action",
         "visibleCondition": "{{joined}}",
         "disabledCondition": null,
@@ -1214668,11 +1214394,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:192"
+        "staticSource": "pages/team/join/index.js:194"
       }
     },
     {
-      "id": "pages/team/join/index.wxml:42:bindtap:goBuyTicket:5",
+      "id": "pages/team/join/index.wxml:47:bindtap:goBuyTicket:5",
       "route": "pages/team/join/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1214695,7 +1214421,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goBuyTicket",
-        "line": 42,
+        "line": 47,
         "selectorHint": ".team-action",
         "visibleCondition": "{{team.status == 0 && ticketRequired && team.ownerType == 2}}",
         "disabledCondition": null,
@@ -1214738,11 +1214464,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:185"
+        "staticSource": "pages/team/join/index.js:187"
       }
     },
     {
-      "id": "pages/team/join/index.wxml:44:bindtap:join:6",
+      "id": "pages/team/join/index.wxml:49:bindtap:join:6",
       "route": "pages/team/join/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1214765,7 +1214491,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "join",
-        "line": 44,
+        "line": 49,
         "selectorHint": ".team-action",
         "visibleCondition": "{{team.status == 0}}",
         "disabledCondition": null,
@@ -1214856,7 +1214582,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/join/index.js:176"
+        "staticSource": "pages/team/join/index.js:178"
       }
     },
     {
@@ -1265898,7 +1265624,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:11:bind:change:onPlatform:1",
+      "id": "subpackageA/pages/video-bounty/index.wxml:12:bind:change:onPlatform:1",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1265921,7 +1265647,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onPlatform",
-        "line": 11,
+        "line": 12,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1265965,7 +1265691,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:13:bindinput:onUrl:2",
+      "id": "subpackageA/pages/video-bounty/index.wxml:15:bindinput:onUrl:2",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1265988,7 +1265714,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onUrl",
-        "line": 13,
+        "line": 15,
         "selectorHint": ".vb-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266032,7 +1265758,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:15:bindinput:onGroup:3",
+      "id": "subpackageA/pages/video-bounty/index.wxml:17:bindinput:onGroup:3",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266055,7 +1265781,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onGroup",
-        "line": 15,
+        "line": 17,
         "selectorHint": ".vb-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266099,7 +1265825,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:17:bindtap:submit:4",
+      "id": "subpackageA/pages/video-bounty/index.wxml:19:bindtap:submit:4",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266122,7 +1265848,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submit",
-        "line": 17,
+        "line": 19,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -1266198,7 +1265924,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:19:bind:change:onTab:5",
+      "id": "subpackageA/pages/video-bounty/index.wxml:22:bind:change:onTab:5",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266221,7 +1265947,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onTab",
-        "line": 19,
+        "line": 22,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1266265,7 +1265991,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:22:bind:retry:load:6",
+      "id": "subpackageA/pages/video-bounty/index.wxml:25:bind:retry:load:6",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266288,7 +1266014,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 22,
+        "line": 25,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{subs.state === 'error'}}",
         "disabledCondition": null,
@@ -1266355,7 +1266081,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:33:bindtap:appeal:7",
+      "id": "subpackageA/pages/video-bounty/index.wxml:36:bindtap:appeal:7",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266378,7 +1266104,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "appeal",
-        "line": 33,
+        "line": 36,
         "selectorHint": ".vb-act",
         "visibleCondition": "{{item.canAppeal}}",
         "disabledCondition": null,
@@ -1266454,7 +1266180,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:34:bindtap:cancel:8",
+      "id": "subpackageA/pages/video-bounty/index.wxml:37:bindtap:cancel:8",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266477,7 +1266203,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "cancel",
-        "line": 34,
+        "line": 37,
         "selectorHint": ".vb-act",
         "visibleCondition": "{{item.canCancel}}",
         "disabledCondition": null,
@@ -1266554,7 +1266280,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/video-bounty/index.wxml:41:bind:retry:load:9",
+      "id": "subpackageA/pages/video-bounty/index.wxml:44:bind:retry:load:9",
       "route": "subpackageA/pages/video-bounty/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1266577,7 +1266303,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 41,
+        "line": 44,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{accruals.state === 'error'}}",
         "disabledCondition": null,
@@ -1273008,7 +1272734,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:27:bindchange:onModeChange:1",
+      "id": "subpackageJourney/pages/landing/index.wxml:32:bindtap:onMode:1",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1273028,33 +1272754,37 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "swiper",
-        "event": "bindchange",
-        "handler": "onModeChange",
-        "line": 27,
-        "selectorHint": ".ob-swiper",
-        "visibleCondition": "{{modes.length > 1}}",
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onMode",
+        "line": 32,
+        "selectorHint": ".jl-tile",
+        "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{item.name}}",
         "ariaRole": null,
-        "ariaRoleExpression": null,
+        "ariaRoleExpression": "{{tiles.length > 1 ? 'radio' : 'text'}}",
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
-        "ariaCheckedExpression": null
+        "ariaCheckedExpression": "{{item.key === activeMode}}"
       },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
+      "actionClass": "external",
+      "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "vibrateShort"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -1273063,15 +1272793,21 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:64"
+        "staticSource": "subpackageJourney/pages/landing/index.js:99"
       }
     },
     {
@@ -1273274,11 +1273010,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:61"
+        "staticSource": "subpackageJourney/pages/landing/index.js:59"
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:45:bindtap:onPrimary:2",
+      "id": "subpackageJourney/pages/landing/index.wxml:58:bindtap:onPrimary:2",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1273301,7 +1273037,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onPrimary",
-        "line": 45,
+        "line": 58,
         "selectorHint": ".jn-grow",
         "visibleCondition": "{{primary}}",
         "disabledCondition": "{{busy}}",
@@ -1273486,7 +1273222,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:47:bindtap:onBrowse:3",
+      "id": "subpackageJourney/pages/landing/index.wxml:60:bindtap:onBrowse:3",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1273509,7 +1273245,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onBrowse",
-        "line": 47,
+        "line": 60,
         "selectorHint": ".ob-secondary",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1273552,7 +1273288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:70"
+        "staticSource": "subpackageJourney/pages/landing/index.js:62"
       }
     },
     {
@@ -1335435,7 +1335171,7 @@
       }
     },
     {
-      "id": "subpackageMember/market/gift/index.wxml:13:bindtap:claim:1",
+      "id": "subpackageMember/market/gift/index.wxml:18:bindtap:claim:1",
       "route": "subpackageMember/market/gift/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1335458,7 +1335194,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "claim",
-        "line": 13,
+        "line": 18,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{state !== 'claimed'}}",
         "disabledCondition": "{{claiming}}",
@@ -1335544,7 +1335280,7 @@
       }
     },
     {
-      "id": "subpackageMember/market/gift/index.wxml:14:bindtap:goOrder:2",
+      "id": "subpackageMember/market/gift/index.wxml:19:bindtap:goOrder:2",
       "route": "subpackageMember/market/gift/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1335567,7 +1335303,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goOrder",
-        "line": 14,
+        "line": 19,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1335685,7 +1335421,7 @@
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:25:bind:change:onFor:2",
+      "id": "subpackageMember/market/pass/index.wxml:24:bind:change:onFor:2",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1335708,7 +1335444,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onFor",
-        "line": 25,
+        "line": 24,
         "selectorHint": ".mp-for",
         "visibleCondition": "{{card.giftAllowed}}",
         "disabledCondition": null,
@@ -1335790,11 +1335526,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:86"
+        "staticSource": "subpackageMember/market/pass/index.js:87"
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:31:bindtap:goCheckout:3",
+      "id": "subpackageMember/market/pass/index.wxml:38:bindtap:goCheckout:3",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1335817,7 +1335553,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goCheckout",
-        "line": 31,
+        "line": 38,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{buy.state === 'checkout'}}",
         "disabledCondition": null,
@@ -1335860,11 +1335596,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:163"
+        "staticSource": "subpackageMember/market/pass/index.js:165"
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:35:bindtap:onBuy:4",
+      "id": "subpackageMember/market/pass/index.wxml:42:bindtap:onBuy:4",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1335889,7 +1335625,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onBuy",
-        "line": 35,
+        "line": 42,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{buying}}",
@@ -1336009,11 +1335745,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:93"
+        "staticSource": "subpackageMember/market/pass/index.js:94"
       }
     },
     {
-      "id": "subpackageMember/market/pass/index.wxml:41:bind:close:closeGiftSheet:5",
+      "id": "subpackageMember/market/pass/index.wxml:48:bind:close:closeGiftSheet:5",
       "route": "subpackageMember/market/pass/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1336036,7 +1335772,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeGiftSheet",
-        "line": 41,
+        "line": 48,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1336080,7 +1335816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:170"
+        "staticSource": "subpackageMember/market/pass/index.js:172"
       }
     },
     {
@@ -1336150,7 +1335886,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:179"
+        "staticSource": "subpackageMember/market/pass/index.js:181"
       }
     },
     {
@@ -1336266,7 +1336002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass/index.js:34"
+        "staticSource": "subpackageMember/market/pass/index.js:35"
       }
     },
     {

@@ -7,20 +7,23 @@
     <cy-nav-bar plain custom-back bind:back="goBack" />
     <cy-page-title title="视频悬赏" safe-top="{{false}}" />
     <view class="vb__body">
-      <view class="vb-form" wx:if="{{campaignKey && topicId}}">
-        <cy-tabs variant="chip" tabs="{{platforms}}" active="{{form.platform}}" bind:change="onPlatform" />
-        <text class="vb-field__err" wx:if="{{fieldError.field === 'platform'}}">{{fieldError.text}}</text>
+      <!-- r2-join S18A:只做版式整理(输入框与卡同层、去掉提示性占位、空态居中不撑高),上方样式等业主参考图 -->
+      <block wx:if="{{campaignKey && topicId}}">
+      <cy-tabs variant="chip" tabs="{{platforms}}" active="{{form.platform}}" bind:change="onPlatform" />
+      <text class="vb-field__err" wx:if="{{fieldError.field === 'platform'}}">{{fieldError.text}}</text>
+      <view class="vb-form">
         <input class="vb-input" placeholder="视频页链接" value="{{form.sourceUrl}}" bindinput="onUrl" maxlength="512" />
         <text class="vb-field__err" wx:if="{{fieldError.field === 'sourceUrl'}}">{{fieldError.text}}</text>
-        <input class="vb-input" placeholder="同一原视频分组（选填，仅建议值）" value="{{form.originGroupKey}}" bindinput="onGroup" maxlength="64" />
+        <input class="vb-input" placeholder="原视频分组（选填）" value="{{form.originGroupKey}}" bindinput="onGroup" maxlength="64" />
         <cy-inline-error wx:if="{{submitError}}" kind="data" title="{{submitError}}" />
         <cy-btn variant="primary" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">提交投稿</cy-btn>
       </view>
+      </block>
       <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
       <block wx:if="{{tab === 'subs'}}">
         <cy-skeleton wx:if="{{subs.state === 'loading'}}" type="list" count="2" />
         <cy-error wx:elif="{{subs.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
-        <cy-empty wx:elif="{{subs.state === 'empty'}}" fill class="cy-fill-state" size="lg" kind="empty" title="还没有投稿" />
+        <cy-empty wx:elif="{{subs.state === 'empty'}}" class="vb-empty" kind="empty" title="还没有投稿" />
         <view class="vb-group" wx:else>
           <view class="vb-row" wx:for="{{subs.rows}}" wx:key="id">
             <view class="vb-row__main">
@@ -39,7 +42,7 @@
       <block wx:else>
         <cy-skeleton wx:if="{{accruals.state === 'loading'}}" type="list" count="2" />
         <cy-error wx:elif="{{accruals.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
-        <cy-empty wx:elif="{{accruals.state === 'empty'}}" fill class="cy-fill-state" size="lg" kind="empty" title="还没有应计记录" />
+        <cy-empty wx:elif="{{accruals.state === 'empty'}}" class="vb-empty" kind="empty" title="还没有应计记录" />
         <view class="vb-group" wx:else>
           <view class="vb-row" wx:for="{{accruals.rows}}" wx:key="key">
             <view class="vb-row__main">
