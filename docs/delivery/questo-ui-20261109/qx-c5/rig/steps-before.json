@@ -1,0 +1,1 @@
+[{"wait": 1500}, {"open": "pages/play/index?topicId=990015&activityId=15"}, {"wait": 4500}, {"tryTap": ["开启定位", {"nth": 1}]}, {"wait": 2000}, {"tryTap": "开始游戏"}, {"wait": 3000}, {"scroll": 800}, {"wait": 2000}, {"tryTap": "继续探索"}, {"tap": "开始任务"}, {"wait": 4000}, {"tap": "提示"}, {"wait": 3000}, {"wait": 1000}, {"dump": 1}, {"shot": "c5-UG-05-ladder-before"}]

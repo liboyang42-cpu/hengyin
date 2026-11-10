@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -700,6 +701,129 @@ class PlayHelpRunQuotaApplicationTest {
         assertEquals(PlayHelpRunQuotaApplication.REASON_SCOPE_CLOSED,
                 assertThrows(PlayHelpRunQuotaApplication.PlayHelpRunQuotaException.class,
                         () -> application.use(MEMBER, selfScope(SELF_A, NODE_A), 1, 2, 0, 30, "req-c")).code());
+    }
+
+    // ---------------------------------------------------------------- qx-c5 活动场次首局帮助身份
+
+    private static final String RUN_A = "firstrun:2c7f1e0a-6b3d-4e55-8f21-9a0c4d7e1b01";
+    private static final String RUN_B = "firstrun:9e3d5b77-1a2c-4f60-8d4e-0b6a2f9c3d02";
+
+    private static TopicRouteSession activityFirstRun(long member, String identity, int status) {
+        TopicRouteSession session = selfPlayRun(identity, status);
+        session.setActivityId(ACTIVITY);
+        session.setMemberId(member);
+        return session;
+    }
+
+    private static PlayHelpUsagePolicy.Scope activityScope(String identity, long nodeId) {
+        return new PlayHelpUsagePolicy.Scope(TOPIC, ACTIVITY, nodeId, identity);
+    }
+
+    @Test
+    void activityFirstRunIdentityIsVerifiedAgainstTheMembersOwnRunForThatActivity() {
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default"))
+                .thenReturn(activityFirstRun(MEMBER, RUN_A, TopicRouteSession.STATUS_RUNNING));
+
+        PlayHelpRunQuotaApplication.QuotaOutcome outcome = application.use(MEMBER, activityScope(RUN_A, NODE_A), 1,
+                2, 0, 30, "req-act-1");
+
+        assertTrue(outcome.freeUseConsumed());
+        assertEquals(1, outcome.remainingFreeUses());
+        assertEquals(1, quotas.used(MEMBER, TOPIC, ACTIVITY, RUN_A));
+        // 按本人该场次 default 首局行核验；从不拿身份去直查实例列，也不查自玩局。
+        verify(sessions, never()).selectByOwner(anyLong(), anyLong(), anyLong(), eq(RUN_A));
+        verify(sessions, never()).selectByOwner(eq(0L), anyLong(), anyLong(), anyString());
+        // 个人首局：先确认该场次不是队伍共享局。
+        verify(sharedRuns).sharedRouteSnapshot(MEMBER, TOPIC, ACTIVITY, null);
+    }
+
+    @Test
+    void reenteringTheSameActivityRunKeepsOnePool() {
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default"))
+                .thenReturn(activityFirstRun(MEMBER, RUN_A, TopicRouteSession.STATUS_RUNNING));
+        application.use(MEMBER, activityScope(RUN_A, NODE_A), 1, 1, 0, 30, "req-a");
+        // 重进同一局：同一行同一身份，额度不重开；同 requestId 重放不二次消耗。
+        application.use(MEMBER, activityScope(RUN_A, NODE_A), 1, 1, 0, 30, "req-a");
+        assertEquals(0, application.remainingFreeUses(MEMBER, activityScope(RUN_A, NODE_B), 1));
+        assertEquals(1, quotas.used(MEMBER, TOPIC, ACTIVITY, RUN_A));
+    }
+
+    @Test
+    void anotherMembersActivityRunIdentityCannotBeSpent() {
+        // B 拿 A 的身份：按 B 本人查到的是 B 自己的局（身份不同）或查不到，都与不存在同文案。
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER + 1, "default"))
+                .thenReturn(activityFirstRun(MEMBER + 1, RUN_B, TopicRouteSession.STATUS_RUNNING));
+        assertForbidden(MEMBER + 1, activityScope(RUN_A, NODE_A));
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER + 2, "default")).thenReturn(null);
+        assertForbidden(MEMBER + 2, activityScope(RUN_A, NODE_A));
+
+        assertEquals(0, quotas.writeCount);
+        assertTrue(attempts.byKey.isEmpty());
+        verify(cost, never()).use(anyLong(), anyString(), anyInt(), anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void activityIdentityIsNotPortableAcrossActivitiesOrToSelfPlay() {
+        // 拿 A 场次首局身份去报自玩作用域：本人自玩局里冻结的是另一身份 / 没有自玩局。
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default")).thenReturn(null);
+        assertForbidden(MEMBER, selfScope(RUN_A, NODE_A));
+        // 返回行与作用域场次不一致（防御映射错位）：拒绝。
+        TopicRouteSession wrongActivity = activityFirstRun(MEMBER, RUN_A, TopicRouteSession.STATUS_RUNNING);
+        wrongActivity.setActivityId(ACTIVITY + 1);
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default")).thenReturn(wrongActivity);
+        assertForbidden(MEMBER, activityScope(RUN_A, NODE_A));
+        assertEquals(0, quotas.writeCount);
+    }
+
+    @Test
+    void oldActivityRunWithoutIdentityIsForbidden() {
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default"))
+                .thenReturn(activityFirstRun(MEMBER, null, TopicRouteSession.STATUS_RUNNING));
+        assertForbidden(MEMBER, activityScope(RUN_A, NODE_A));
+        assertEquals(0, quotas.writeCount);
+    }
+
+    @Test
+    void teamMembersInAPersonalActivityKeepSeparatePerPlayerPools() {
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default"))
+                .thenReturn(activityFirstRun(MEMBER, RUN_A, TopicRouteSession.STATUS_RUNNING));
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER + 1, "default"))
+                .thenReturn(activityFirstRun(MEMBER + 1, RUN_B, TopicRouteSession.STATUS_RUNNING));
+
+        application.use(MEMBER, activityScope(RUN_A, NODE_A), 1, 1, 0, 30, "req-a");
+        // A 用尽不影响 B；两份池按各自会员与各自身份落行。
+        assertEquals(0, application.remainingFreeUses(MEMBER, activityScope(RUN_A, NODE_B), 1));
+        assertEquals(1, application.remainingFreeUses(MEMBER + 1, activityScope(RUN_B, NODE_A), 1));
+        assertEquals(1, quotas.used(MEMBER, TOPIC, ACTIVITY, RUN_A));
+        assertEquals(0, quotas.used(MEMBER + 1, TOPIC, ACTIVITY, RUN_B));
+    }
+
+    @Test
+    void sharedTeamActivityRefusesThePersonalFirstRunPool() {
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default"))
+                .thenReturn(activityFirstRun(MEMBER, RUN_A, TopicRouteSession.STATUS_RUNNING));
+        when(sharedRuns.sharedRouteSnapshot(MEMBER, TOPIC, ACTIVITY, null)).thenReturn(
+                JSON.createObjectNode().put("gameSessionId", 808L).put("teamId", 77L));
+
+        PlayHelpRunQuotaApplication.PlayHelpRunQuotaException refused = assertThrows(
+                PlayHelpRunQuotaApplication.PlayHelpRunQuotaException.class,
+                () -> application.use(MEMBER, activityScope(RUN_A, NODE_A), 1, 2, 0, 30, "req-team"));
+        assertEquals(PlayHelpRunQuotaApplication.REASON_SCOPE_FORBIDDEN, refused.code());
+        assertEquals("队伍共享局请使用本场共享命令", refused.getMessage());
+        assertThrows(PlayHelpRunQuotaApplication.PlayHelpRunQuotaException.class,
+                () -> application.remainingFreeUses(MEMBER, activityScope(RUN_A, NODE_A), 2));
+        assertEquals(0, quotas.writeCount);
+        assertTrue(attempts.byKey.isEmpty());
+        verify(cost, never()).use(anyLong(), anyString(), anyInt(), anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void selfPlayFirstRunNeverConsultsTheSharedTeamRun() {
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(RUN_A, TopicRouteSession.STATUS_RUNNING));
+        application.use(MEMBER, selfScope(RUN_A, NODE_A), 1, 1, 0, 30, "req-self-new");
+        assertEquals(1, quotas.used(MEMBER, TOPIC, 0L, RUN_A));
+        verify(sharedRuns, never()).sharedRouteSnapshot(anyLong(), anyLong(), any(), any());
     }
 
     private void assertForbidden(long member, PlayHelpUsagePolicy.Scope scope) {

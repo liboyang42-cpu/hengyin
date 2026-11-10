@@ -1,0 +1,3 @@
+arrive {"msg": "已到集合点", "code": 200, "_status": 200}
+start  {"msg": "出发!", "code": 200, "_status": 200}
+   [库回读] activity lead            ((15, 1, datetime.datetime(2026, 11, 10, 14, 24)),)
