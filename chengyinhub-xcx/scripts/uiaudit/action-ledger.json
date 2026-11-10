@@ -65009,7 +65009,7 @@
           "route": "subpackageJourney/pages/landing/index",
           "segments": [
             {
-              "selector": "cy-btn",
+              "selector": "cy-btn.jn-grow",
               "index": 0
             }
           ]
@@ -65019,7 +65019,16 @@
           "segments": [
             {
               "selector": "cy-btn",
-              "index": 1
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/report/index",
+          "segments": [
+            {
+              "selector": "cy-btn.jn-grow",
+              "index": 0
             }
           ]
         },
@@ -65047,15 +65056,6 @@
             {
               "selector": "cy-btn",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/report/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 3
             }
           ]
         },
@@ -65147,6 +65147,15 @@
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
+              "selector": "cy-btn.jn-grow",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
               "selector": "cy-btn",
               "index": 0
             }
@@ -65167,15 +65176,6 @@
             {
               "selector": "cy-btn",
               "index": 2
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/seats/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 3
             }
           ]
         },
@@ -1406123,7 +1406123,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/landing/index.wxml:27:bindtap:onPrimary:1",
+      "id": "subpackageJourney/pages/landing/index.wxml:26:bindtap:onPrimary:1",
       "route": "subpackageJourney/pages/landing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1406146,8 +1406146,8 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "onPrimary",
-        "line": 27,
-        "selectorHint": "cy-btn[bindtap]",
+        "line": 26,
+        "selectorHint": ".jn-grow",
         "visibleCondition": "{{primary}}",
         "disabledCondition": "{{busy}}",
         "ariaLabel": null,
@@ -1406689,7 +1406689,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:19:bindtap:openRank:1",
+      "id": "subpackageJourney/pages/report/index.wxml:18:bindtap:openRank:1",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1406712,7 +1406712,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openRank",
-        "line": 19,
+        "line": 18,
         "selectorHint": ".jn-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1406876,7 +1406876,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:32:bindtap:openMemory:2",
+      "id": "subpackageJourney/pages/report/index.wxml:31:bindtap:openMemory:2",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1406899,7 +1406899,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openMemory",
-        "line": 32,
+        "line": 31,
         "selectorHint": ".jn-row",
         "visibleCondition": "{{!report.legacy && report.runId}}",
         "disabledCondition": null,
@@ -1407063,7 +1407063,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:36:bindtap:openSeats:3",
+      "id": "subpackageJourney/pages/report/index.wxml:35:bindtap:openSeats:3",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1407086,7 +1407086,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openSeats",
-        "line": 36,
+        "line": 35,
         "selectorHint": ".jn-row",
         "visibleCondition": "{{registrationId}}",
         "disabledCondition": null,
@@ -1407320,7 +1407320,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:57:bindtap:reload:4",
+      "id": "subpackageJourney/pages/report/index.wxml:56:bindtap:reload:4",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1407343,8 +1407343,8 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reload",
-        "line": 57,
-        "selectorHint": "cy-btn[bindtap]",
+        "line": 56,
+        "selectorHint": ".jn-grow",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1407507,7 +1407507,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:61:bind:close:closeRank:5",
+      "id": "subpackageJourney/pages/report/index.wxml:60:bind:close:closeRank:5",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1407530,7 +1407530,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeRank",
-        "line": 61,
+        "line": 60,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1407574,7 +1407574,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:64:bind:change:onRankScope:6",
+      "id": "subpackageJourney/pages/report/index.wxml:63:bind:change:onRankScope:6",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1407597,7 +1407597,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onRankScope",
-        "line": 64,
+        "line": 63,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1407761,7 +1407761,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:65:bind:change:onRankPeriod:7",
+      "id": "subpackageJourney/pages/report/index.wxml:64:bind:change:onRankPeriod:7",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1407784,7 +1407784,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onRankPeriod",
-        "line": 65,
+        "line": 64,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1407948,7 +1407948,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:68:bind:cta:loadRank:8",
+      "id": "subpackageJourney/pages/report/index.wxml:67:bind:cta:loadRank:8",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1407971,7 +1407971,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadRank",
-        "line": 68,
+        "line": 67,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{rankState === 'error'}}",
         "disabledCondition": null,
@@ -1408135,7 +1408135,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:86:bind:close:closeMemory:9",
+      "id": "subpackageJourney/pages/report/index.wxml:85:bind:close:closeMemory:9",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1408158,7 +1408158,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMemory",
-        "line": 86,
+        "line": 85,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1408202,7 +1408202,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/report/index.wxml:89:bind:cta:loadMemory:10",
+      "id": "subpackageJourney/pages/report/index.wxml:88:bind:cta:loadMemory:10",
       "route": "subpackageJourney/pages/report/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1408225,7 +1408225,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "loadMemory",
-        "line": 89,
+        "line": 88,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{memoryState === 'error'}}",
         "disabledCondition": null,
@@ -1408601,7 +1408601,7 @@
         "event": "bindtap",
         "handler": "onInvite",
         "line": 25,
-        "selectorHint": "cy-btn[bindtap]",
+        "selectorHint": ".jn-grow",
         "visibleCondition": null,
         "disabledCondition": "{{busy}}",
         "ariaLabel": null,

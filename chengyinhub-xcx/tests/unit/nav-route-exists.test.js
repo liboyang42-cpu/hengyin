@@ -200,6 +200,8 @@ const ORPHAN_EXEMPT = new Map([
   ['/pages/play/circle/index', '退役兼容壳:圈层 2026-08-29 退役，旧分享保底,2026-12-31 到期删(见 circle/index.js 顶部排期)'],
   // 2026-10-19 移植共享基线 366b846f:基线把「官方线路」入口放在旧漫游入口地图上,master 漫游改版后该屏已删,
   // 入口位置待产品拍板(候选:漫游护照玩法卡);接上后从这里删掉。详情页由列表页跳转,不在豁免内。
+  // 2026-11-10 staging 合流(qx-b3 P5/P7):战报分享与席位邀请的落地页,只从 report/seats 页 onShareAppMessage 生成的分享链接(k=r / k=s)进入
+  ['/subpackageJourney/pages/landing/index', '分享落地深链页，只从战报分享(k=r)与席位邀请(k=s)的分享链接进入'],
   ['/subpackageRoam/official-routes/index', '待拍板:官方线路列表页入口随 master 漫游改版消失，接线位置待产品决定'],
   // 2026-09-22 Phase 0 立体藏品卡闸口页:走查用的实验室页,站内不给入口(卡好不好看还没拍板),
   // 真机录屏与截图矩阵 F89 都靠编译模式直达。Phase 1/2 把 objectCard 接进玩法后从这里删掉。
