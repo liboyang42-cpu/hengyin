@@ -576,7 +576,9 @@ public class PlatformPassService {
         Date from = toDate(membership.get("valid_from"));
         Date to = toDate(membership.get("valid_to"));
         Date now = new Date();
-        long seconds = Math.max(0, (to.getTime() - Math.max(from.getTime(), now.getTime())) / 1000);
+        // 向上取整到秒:后一段起点不晚于现在,避免退款后出现不到 1 秒的无覆盖空档(真库 IT 实测)。
+        long remainingMs = Math.max(0, to.getTime() - Math.max(from.getTime(), now.getTime()));
+        long seconds = (remainingMs + 999) / 1000;
         mapper.revokeMembership(orderId);
         if (seconds > 0) mapper.shiftLaterMemberships(num(order.get("member_id")), to, seconds);
     }

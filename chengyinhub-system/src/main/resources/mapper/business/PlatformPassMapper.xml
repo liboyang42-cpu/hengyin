@@ -2,6 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chengyinhub.business.platformpass.mapper.PlatformPassMapper">
 
+    <!-- 时间列显式按 java.util.Date 取(走 getTimestamp,按连接时区换成真实时刻);
+         Map 结果默认是 LocalDateTime(墙上时间),JVM 时区与连接时区不同时会差几个小时(真库 IT 实测)。 -->
+    <resultMap id="orderRow" type="java.util.LinkedHashMap" autoMapping="true">
+        <result column="paid_time" property="paid_time" javaType="java.util.Date"/>
+        <result column="refund_requested_time" property="refund_requested_time" javaType="java.util.Date"/>
+        <result column="refunded_time" property="refunded_time" javaType="java.util.Date"/>
+        <result column="cancel_time" property="cancel_time" javaType="java.util.Date"/>
+        <result column="create_time" property="create_time" javaType="java.util.Date"/>
+    </resultMap>
+    <resultMap id="membershipRow" type="java.util.LinkedHashMap" autoMapping="true">
+        <result column="valid_from" property="valid_from" javaType="java.util.Date"/>
+        <result column="valid_to" property="valid_to" javaType="java.util.Date"/>
+    </resultMap>
+
     <sql id="orderColumns">
         id, order_no, member_id, request_id, request_fingerprint, plan_id, plan_code, price_fen, valid_days,
         channel, status, payment_fact_id, payment_fact_hash, transaction_id, xpay_env, paid_time,
@@ -26,24 +40,24 @@
             #{price_fen}, #{valid_days}, #{channel}, 0)
     </insert>
 
-    <select id="selectOrderByNo" resultType="java.util.LinkedHashMap">
+    <select id="selectOrderByNo" resultMap="orderRow">
         select <include refid="orderColumns"/> from platform_pass_order where order_no = #{orderNo}
     </select>
 
-    <select id="selectOrderByNoForUpdate" resultType="java.util.LinkedHashMap">
+    <select id="selectOrderByNoForUpdate" resultMap="orderRow">
         select <include refid="orderColumns"/> from platform_pass_order where order_no = #{orderNo} for update
     </select>
 
-    <select id="selectOrderByRefundNoForUpdate" resultType="java.util.LinkedHashMap">
+    <select id="selectOrderByRefundNoForUpdate" resultMap="orderRow">
         select <include refid="orderColumns"/> from platform_pass_order where refund_no = #{refundNo} for update
     </select>
 
-    <select id="selectOrderByMemberRequest" resultType="java.util.LinkedHashMap">
+    <select id="selectOrderByMemberRequest" resultMap="orderRow">
         select <include refid="orderColumns"/> from platform_pass_order
         where member_id = #{memberId} and request_id = #{requestId}
     </select>
 
-    <select id="selectOrdersByMember" resultType="java.util.LinkedHashMap">
+    <select id="selectOrdersByMember" resultMap="orderRow">
         select <include refid="orderColumns"/> from platform_pass_order
         where member_id = #{memberId} order by id desc limit #{limit}
     </select>
@@ -96,12 +110,12 @@
         values (#{member_id}, #{order_id}, #{valid_from}, #{valid_to}, 1)
     </insert>
 
-    <select id="selectMembershipByOrder" resultType="java.util.LinkedHashMap">
+    <select id="selectMembershipByOrder" resultMap="membershipRow">
         select id, member_id, order_id, valid_from, valid_to, status
         from platform_pass_membership where order_id = #{orderId}
     </select>
 
-    <select id="selectActiveMembership" resultType="java.util.LinkedHashMap">
+    <select id="selectActiveMembership" resultMap="membershipRow">
         select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status
         from platform_pass_membership m
         join platform_pass_order o on o.id = m.order_id and o.status = 1
