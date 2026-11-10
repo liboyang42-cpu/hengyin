@@ -25,3 +25,6 @@ page { background: var(--cy-color-bg-page); }
 .mk-balance__k { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
 .mk-balance__v { font-size: var(--cy-font-display, 56rpx); font-weight: 800; font-variant-numeric: tabular-nums; }
 .mk-balance__go { display: flex; align-items: center; gap: 4rpx; min-height: 88rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+
+/* l-after:主题库入口行(单行卡) */
+.mk-row--go { margin-top: var(--cy-space-4); border-radius: var(--cy-comp-sheet-group-radius); background: var(--cy-comp-sheet-group-bg); }

@@ -108,6 +108,12 @@ Page({
     this._navigating = true
     wx.navigateTo({ url: '/subpackageMember/market/pass/index?id=' + encodeURIComponent(id), complete: () => { this._navigating = false } })
   },
+  // l-after:整页游戏主题库(一行一张俱乐部式卡)
+  goLibrary() {
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({ url: '/subpackageMember/market/library/index', complete: () => { this._navigating = false } })
+  },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
     else wx.switchTab({ url: '/pages/member/index/index' })

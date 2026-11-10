@@ -30,7 +30,7 @@ Page({
     navBarHeight: app.globalData.navBarHeight,
     commandRecovery: null, recoveryShown: false, commandReject: null,
     applicants: [], applicantsState: '',
-    seatChips: [], openSeats: [], inviteText: '',
+    seatChips: [], openSeats: [], inviteText: '', inviteShow: false, inviteCard: null,
     board: null,
     boardState: '',
     boardMessage: '',
@@ -453,6 +453,21 @@ Page({
     const pad = n => n < 10 ? '0' + n : String(n);
     return (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
   },
+
+  // l-after:邀请队友 = 统一的 Spotify 式邀请页(队名 + 还有 N 个席位);码由 l-misc 的按邀请码生成小程序码接口补上,这里先不画码
+  openInvite() {
+    if (!this.data.team || !this.data.team.inviteCode) {
+      cyToast('邀请已失效');
+      return;
+    }
+    const t = this.data.team;
+    const open = Array.isArray(this.data.openSeats) ? this.data.openSeats.length : null;
+    // 邀请人写队长昵称(服务端 members 里 role 1 的那位);读不到就不写
+    const lead = (this.data.members || []).find(m => m && Number(m.role) === 1) || null;
+    const inviter = lead ? String(lead.nickname || lead.nickName || '').trim() : '';
+    this.setData({ inviteShow: true, inviteCard: { kind: 'invite', id: '', title: t.title || '来和我一起组队出发', cover: t.coverUrl || t.topicCover || '', meta: '邀请 · 来和我一起组队出发', inviter, seatsLeft: open } });
+  },
+  closeInvite() { this.setData({ inviteShow: false }); },
 
   goJoin() {
     if (!this.data.team || !this.data.team.inviteCode) {

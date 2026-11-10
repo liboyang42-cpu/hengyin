@@ -47,7 +47,7 @@ function dedupeAttrs(svg) {
   return svg.replace(/<([a-zA-Z][\w-]*)((?:\s+[\w:-]+="[^"]*")*)\s*(\/?)>/g, function (m, tag, attrs, close) {
     var seen = {}, out = '';
     attrs.replace(/\s+([\w:-]+)="([^"]*)"/g, function (am, k, v) { if (!seen[k]) { seen[k] = 1; out += ' ' + k + '="' + v + '"'; } return am; });
-    return '<' + tag + out + (close ? ' /' : '') + '>';
+    return '<' + tag + out + (close ? '/' : '') + '>';
   });
 }
 function uri(body) {

@@ -1,0 +1,4 @@
+<view class="il il--{{kind}} il-in--{{enter}} il-idle--{{idleKind}} {{on ? 'is-on' : ''}} {{idle ? 'is-idle' : ''}} {{reduced ? 'is-reduced' : ''}}" style="width:{{size}}rpx;height:{{size}}rpx" aria-role="img" aria-label="{{label}}">
+  <image wx:if="{{!bare}}" class="il__bl" src="{{blob}}" mode="aspectFit"></image>
+  <image class="il__fg" src="{{fg}}" mode="aspectFit"></image>
+</view>

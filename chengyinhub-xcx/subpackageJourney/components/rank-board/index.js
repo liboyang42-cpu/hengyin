@@ -3,11 +3,19 @@
 const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+const motion = require('../../../utils/motion.js');
 const app = getApp();
+
+// M13:月桂弹入两帧后开始;名次 120ms 后滚,滚动 520ms(--cy-motion-roll),落定时轻震
+const HERO_ENTER_MS = 34;
+const ROLL_DELAY_MS = 120;
+const ROLL_MS = 520;
 
 /* r2-finish 榜单(战报面板与结算页共用)。
  * 本关口径:队内(服务端给了队伍) / 全体(单关榜) / 队伍(队伍之间榜,服务端有队伍才出);
- * 城市、国家、世界、俱乐部收进「更多」。名次、上榜人数、队伍进度全读服务端;读不到不写 0。 */
+ * 城市、国家、世界、俱乐部收进「更多」。名次、上榜人数、队伍进度全读服务端;读不到不写 0。
+ * l-after(2026-11-10,proto st-rank):preset="settle" 时只留 全体 / 队内(业主「不用这么多榜单」),不探队伍榜、没有「更多」;
+ * 月桂 M13:两枝从 .6 弹到 1,名次 120ms 后滚上来,滚完轻震一下(减少动态效果直接落位、不震)。 */
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
@@ -17,11 +25,12 @@ Component({
     cityCode: { type: String, value: '' },
     countryCode: { type: String, value: '' },
     clubId: { type: String, value: '' },
-    active: { type: Boolean, value: false }
+    active: { type: Boolean, value: false },
+    preset: { type: String, value: '' }
   },
   data: {
     tabs: [], more: [], scope: '', moreLabel: '更多', period: 'all',
-    state: '', error: '', rank: null, hero: null, digits: []
+    state: '', error: '', rank: null, hero: null, digits: [], heroOn: false
   },
   observers: {
     'topicId, activityId, teamId, cityCode, countryCode, clubId': function () { if (!this._attached) return; this._rebuild(); this._probeTeams(); },
@@ -29,15 +38,20 @@ Component({
   },
   lifetimes: {
     attached() { this._attached = true; this._rebuild(); this._probeTeams(); },
-    detached() { if (this._rollTimer) clearTimeout(this._rollTimer); this._epoch = (this._epoch || 0) + 1; }
+    detached() { if (this._rollTimer) clearTimeout(this._rollTimer); if (this._landTimer) clearTimeout(this._landTimer); if (this._heroTimer) clearTimeout(this._heroTimer); this._epoch = (this._epoch || 0) + 1; }
   },
   methods: {
     _ctx() {
       const d = this.data;
       return { topicId: d.topicId, cityCode: d.cityCode, countryCode: d.countryCode, clubId: d.clubId, teamId: d.teamId, teamBoard: this._teamBoard === true };
     },
+    _settle() { return this.data.preset === 'settle'; },
     _rebuild() {
-      const t = view.boardTabs(this._ctx());
+      const t0 = view.boardTabs(this._ctx());
+      // 结算弹层只给 全体 / 队内(全体在前),没有「更多」
+      const t = this._settle()
+        ? { primary: ['quest', 'team'].map(k => t0.primary.find(x => x.key === k)).filter(Boolean), more: [] }
+        : t0;
       const keys = t.primary.concat(t.more).map(x => x.key);
       // 有队伍先看队内,否则看全体;当前口径仍可用就不跳。
       const scope = keys.indexOf(this.data.scope) >= 0 ? this.data.scope : (t.primary[0] ? t.primary[0].key : (t.more[0] ? t.more[0].key : ''));
@@ -48,6 +62,7 @@ Component({
     },
     // 队伍之间榜:服务端有队伍(主题开着队伍看板、本关有队)才出「队伍」页签。
     _probeTeams() {
+      if (this._settle()) return;
       const ownerType = view.isId(this.data.activityId) ? 2 : 1;
       const ownerId = ownerType === 2 ? this.data.activityId : this.data.topicId;
       if (!view.isId(ownerId)) return;
@@ -80,10 +95,18 @@ Component({
     _show(rank, state) {
       const hero = rank && rank.hero ? rank.hero : null;
       if (this._rollTimer) { clearTimeout(this._rollTimer); this._rollTimer = null; }
+      if (this._landTimer) { clearTimeout(this._landTimer); this._landTimer = null; }
+      if (this._heroTimer) { clearTimeout(this._heroTimer); this._heroTimer = null; }
       const prev = this.data.digits || [];
-      const start = hero && !this.data.reducedMotion && prev.length !== hero.digits.length ? hero.digits.map(() => '0') : null;
-      this.setData({ rank, state, hero, digits: start || (hero ? hero.digits : []) });
-      if (start) this._rollTimer = setTimeout(() => { this._rollTimer = null; if (this.data.hero === hero || (this.data.hero && hero && this.data.hero.rank === hero.rank)) this.setData({ digits: hero.digits }); }, 60);
+      const reduced = this.data.reducedMotion;
+      const start = hero && !reduced && prev.length !== hero.digits.length ? hero.digits.map(() => '0') : null;
+      const firstHero = !!hero && !this.data.hero;
+      this.setData({ rank, state, hero, digits: start || (hero ? hero.digits : []), heroOn: !!hero && (reduced || !firstHero) });
+      if (firstHero && !reduced) this._heroTimer = setTimeout(() => { this._heroTimer = null; this.setData({ heroOn: true }); }, HERO_ENTER_MS);
+      if (start) {
+        this._rollTimer = setTimeout(() => { this._rollTimer = null; if (this.data.hero === hero || (this.data.hero && hero && this.data.hero.rank === hero.rank)) this.setData({ digits: hero.digits }); }, ROLL_DELAY_MS);
+        this._landTimer = setTimeout(() => { this._landTimer = null; motion.haptic({ type: 'light' }); }, ROLL_DELAY_MS + ROLL_MS);
+      }
     },
     load() {
       const scope = this.data.scope;

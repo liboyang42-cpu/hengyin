@@ -131,6 +131,7 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageJourney/pages/report/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/settle/index', // 2026-11-10 qx-s2 staging 合流:r2-finish 结算流程页(custom 导航 + cy-nav-bar plain,不挂 cy-page-title)补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageMember/market/library/index', // 2026-11-10 l-after:游戏主题库(custom 导航 + cy-nav-bar plain + cy-page-title 标准二级页)
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
@@ -207,6 +208,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  'subpackageMember/market/library/index', // 2026-11-10 l-after:游戏主题库,左对齐大标题由 cy-page-title 出
   'subpackageJourney/pages/landing/index', 'subpackageJourney/pages/report/index', // 2026-11-10 qx-c3:两页标题改为条件外 cy-page-title(qx-b3 分支同改)
 ]
 
@@ -352,8 +354,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 qx-b4 +1(custom 导航):固定玩法预设 pages/publish/preset ⇒ 158;custom 157。
   // 2026-11-10 r2-create(b4-21):撤掉 pages/publish/preset ⇒ 166;custom 165。
   // 2026-11-10 qx-s2 staging 合并树:r2-finish 结算页 settle +1(custom)叠加 r2-create 撤 preset −1 ⇒ 167;custom 166。
-  assert.equal(rows.length, 167, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 166)
+  // 2026-11-10 l-after:+1 游戏主题库 subpackageMember/market/library(custom 导航 + cy-nav-bar plain + cy-page-title)⇒ 168;custom 167。
+  assert.equal(rows.length, 168, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 167) // 2026-11-10 l-after:游戏主题库是 custom 导航页 ⇒ 166 → 167
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

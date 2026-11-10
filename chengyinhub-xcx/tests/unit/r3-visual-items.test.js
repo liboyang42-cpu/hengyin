@@ -41,12 +41,15 @@ test('r3 票夹:松手阈值 —— 80px 或快甩才翻,单张不翻', () => {
   assert.equal(pageTurn(1, -200, -2), 0)
 })
 
-test('r3 票夹顶栏:左「票夹」+「+」去探索 + 本人头像(没有就不出);无状态筛选', () => {
+test('r3 票夹顶栏:左「票夹 ▾」+「+」去探索 + 本人头像(没有就不出);筛选只按 topicCompleted 分', () => {
   const wxml = read('subpackageMember/signup/index.wxml')
   assert.match(wxml, /class="wl-nav__add" bindtap="goExplore"/)
   assert.match(wxml, /class="wl-nav__me" wx:if="\{\{meAvatar\}\}" bindtap="goMe"/)
   assert.match(wxml, /class="wc__curl" aria-hidden="true"/)
-  assert.doesNotMatch(wxml, /wl-tab|即将开始|wl-filter/)
+  // 2026-11-10 l-after(业主批准 proto/game wl-wallet):「票夹 ▾」弹出 全部 / 即将开始 / 已通关;不是「可用 / 已用 / 已过期」
+  assert.match(wxml, /class="wl-nav__flt" bindtap="toggleWalFilter"/)
+  assert.match(wxml, /class="wc__spec" aria-hidden="true"/, '卷页镜面高光带')
+  assert.doesNotMatch(wxml, /wl-tab|wl-filter|wl-status/)
   const js = read('subpackageMember/signup/index.js')
   assert.match(js, /goExplore\(\) \{ wx\.switchTab\(\{ url: '\/pages\/index\/index' \}\); \}/)
   assert.match(js, /goMe\(\) \{ wx\.switchTab\(\{ url: '\/pages\/member\/index\/index' \}\); \}/)
