@@ -263,3 +263,8 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 第十轮 f1 p2 F-3 �
 
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-11-05 _fillPeerName POST /api/im/conversations 只补链接缺失的昵称；失败保留「对话」标题，不清消息、不禁用发送、不报成功；viewGuard 与本人会话检查淘汰旧凭据/旧页面回包，本页只读一次，重进可再读。该调用单独审核，不增加既有条目或冻结基线。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # B04 项目管理菜单 /api/project/home 编辑资格读取：同账号/scope 与 opsSeq 仍有效时，业务、网络、异常状态失败均由 failed 显式 toast 精确原因；服务端 host.canEdit===true 前禁止编辑，关闭通道 toast 避免重复或旧账号提示；myproject-activity-edit-sold 覆盖失败与迟到回包。
+
+chengyinhub-xcx/pages/merchant/payout-account/index.js 2  # 2026-11-10 l-payout 商家收款账户页两路只读(/api/merchant/access/me 经营身份、/api/merchant/payout-account 进件状态):业务/网络失败都落页内 pageState=error + errorMessage + 重试,无财务读权限落 no-permission;下拉刷新失败且已有数据时只 toast「刷新失败」保留旧数据;seq 丢弃迟到回包。通用 toast 会与页内错误态双弹。qx-final 补登记。
+chengyinhub-xcx/pages/topic/catalog/detail.js 1  # 2026-11-09 qx-b8 公开目录作品详情 /api/public-catalog/info:settle 把成功/下架/失败分成 ok/gone/error 三态落页,失败写页内错误文案(网络或服务端原话)并收起分享入口;seq 丢弃迟到回包。通用 toast 会与页内错误态双弹。qx-final 补登记。
+chengyinhub-xcx/pages/merchant/relation/index.js 1  # 2026-11-10 l-misc 商家发现页 /api/club/my 成员关系背景读取:只决定本人所在俱乐部帖文卡是否出「转发」;读失败按「未加入」处理,不出转发(服务端可见性与参与闸照旧),帖文流本身不受影响、页面没有可给的重试动作,通用 toast 会把背景读失败报成页面出错。qx-final 补登记。
+chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 2026-11-10 l-after 统一邀请页个人码 /api/user/player-code 背景读取:读不到就不画码格(不占位、不写假码),卡片其余内容与「发给微信好友」照常可用;_playerCodeLoading 防重入,下次打开邀请页再读。通用 toast 会盖在邀请卡上把可选装饰报成失败。qx-final 补登记。
