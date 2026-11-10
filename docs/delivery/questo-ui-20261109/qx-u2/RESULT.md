@@ -42,4 +42,6 @@ Ref 1 was applied only to the screens LANES.md names. Everything else on those p
 - Fixture: qx-s0's `staging/rig/free_orient_theme.py` (topic 990014, a free self-play pass for 9004, run 1 in progress). `rig/probe.py` reads the real choices and report and issues the referral token. `rig/team_mode.py` is the P4 attempt above, and it was reverted.
 - Shots are 390 × 844 JPEG q70.
 
+- **Re-shot after the staging merge (2026-11-10 07:5x UTC).** The rig was rebuilt on staging `07ce40be` (fresh DB, same fixture, topic 990014 again, new referral token). `P1-*`, `P4-*` and `P7-*` before shots are the staging bundle and after shots this branch's merged tree; the W2-16 shots are from the first run (that page is untouched by the merge).
+
 STATUS: PARTIAL - P4 multi-mode pager (server only offers SHARED_TEAM on club activity sessions) and P7 scored/finished state (fixture run unscored, in progress) are not shot; 4 owner defaults listed under needs owner
