@@ -11,21 +11,10 @@
 <cy-page-title title="收益明细" />
 <view class="id-page-body">
   <!-- §19/§27.10:分佣是营销分配投影,与上面的收益明细是两条账,不相加;只在服务端有本人分项时出现 -->
-  <cy-tabs wx:if="{{!merchantView && rev.state !== 'hidden'}}" class="id-tabs" variant="segmented" tabs="{{revTabs}}" active="{{revTab}}" bind:change="onRevTab" />
-  <cy-scene-asset-income-detail wx:if="{{revTab === 'income'}}" id="incomeDetail" surface="page" theme="{{merchantView ? 'merchant' : 'player'}}" />
-  <block wx:else>
-    <cy-error wx:if="{{rev.state === 'error'}}" title="收益暂不可用" retry="重试" bind:retry="loadRevenue" />
-    <view class="rv-card" wx:for="{{rev.rows}}" wx:key="key">
-      <view class="rv-card__head">
-        <text class="rv-card__title">{{item.title}}</text>
-        <text class="rv-card__status rv-card__status--{{item.statusCode}}">{{item.status}}</text>
-      </view>
-      <text class="rv-card__when" wx:if="{{item.when}}">{{item.when}}</text>
-      <view class="rv-line" wx:for="{{item.items}}" wx:for-item="line" wx:key="key">
-        <text class="rv-line__k">{{line.label}}</text>
-        <text class="rv-line__v {{line.reverse ? 'is-reverse' : ''}}">{{line.value}}</text>
-      </view>
-    </view>
+  <cy-tabs wx:if="{{!merchantView && revState !== 'hidden'}}" class="id-tabs" variant="segmented" tabs="{{revTabs}}" active="{{revTab}}" bind:change="onRevTab" />
+  <block wx:if="{{revTab === 'income'}}">
+    <cy-scene-asset-income-detail id="incomeDetail" surface="page" theme="{{merchantView ? 'merchant' : 'player'}}" />
   </block>
+  <cy-revenue-allocations wx:if="{{!merchantView}}" active="{{revTab === 'revenue'}}" bind:state="onRevState" />
 </view>
 </view>

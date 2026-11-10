@@ -254,7 +254,7 @@
       "pkg": "subpackageA",
       "tabBar": false,
       "role": "player",
-      "needsLogin": true,
+      "needsLogin": false,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,
