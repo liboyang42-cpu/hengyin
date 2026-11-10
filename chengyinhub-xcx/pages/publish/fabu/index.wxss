@@ -5212,3 +5212,8 @@ page { background: var(--cy-btn-solid-bg); }
 @media (prefers-reduced-motion: reduce) { .sp-pop__panel, .sp-pop__mask { transition: none; } }
 
 .chapter-media-error { display: block; color: var(--cy-danger); font-size: var(--cy-font-caption); margin-top: var(--cy-space-2); }
+
+/* r2-create(a5-v3-29 业主「发布者实名看起来怎么还是没有对齐 标题不应该是在下面白色边缘的页边距吗」):
+   票务页(第 2 页)区块标题的左沿对齐下面白卡的左沿 —— 页容器已经留了页边距,标题不再额外缩进 38rpx。
+   只作用于票务页容器 .gen-page;编辑态(is-ticket-editing 页容器零内距)仍走上面那条 space-4。 */
+.slopes-info-page.gen-page:not(.is-ticket-editing) .pd-section-title { padding-left: 0; padding-right: 0; }
