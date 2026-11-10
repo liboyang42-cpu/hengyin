@@ -3868,6 +3868,17 @@ Page({
         } else if (b.type === 'reveal' && b.content) {
           const lines = String(b.content).split(/\n+/).map((x) => applyStoryVars(x.trim(), vars)).filter(Boolean);
           if (lines.length) items.push({ kind: 'reveal', who: String(b.who || ''), lines, mood: curMood, odd: curOdd });
+        } else if (b.type === 'gallery') {
+          // 图片组(2026-11-10 l-editor,编辑器原型 v2):作者按 1–4 格版式配的一组图。这里先按每张一段图落地
+          // (与 image 块同一个渲染分支,layout / altText 原样带着);主题内的整组网格由 l-play 接手。
+          (b.images || []).filter((im) => im && im.url).forEach((im, i) => {
+            items.push({ kind: 'image', text: '', url: String(im.url), altText: i === 0 && typeof b.altText === 'string' ? b.altText.trim() : '', mood: curMood, odd: curOdd });
+          });
+        } else if (b.type === 'branch') {
+          // 分支任务(l-editor):问题 + 2–3 条分支与去向(continue / end / chapter:N)。玩家端的分支选择弹窗归 l-play;
+          // 接上之前不产出 item(items 必须与 .chfull__para 一一对应),也不把问题当正文显示 —— 不画点不动的选项。
+        } else if (b.type === 'cap') {
+          // 章节开始 / 结束卡的话(l-editor):open 开场白 / end 结语,给章节开始 / 结束弹窗(l-play)读;正文流里不出现。
         } else if (b.type === 'divider') {
           items.push({ kind: 'divider', text: '', mood: curMood, odd: curOdd });   // 作者分割线:一条细线,仍占一个 .chfull__para
         } else if (b.type === 'odd') {

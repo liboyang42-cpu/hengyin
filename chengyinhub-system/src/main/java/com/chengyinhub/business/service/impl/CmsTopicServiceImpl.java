@@ -2221,7 +2221,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (chapter.getBlocks() != null) for (com.chengyinhub.business.domain.dto.ChapterBlockDTO block : chapter.getBlocks()) {
                 if ("image".equals(block.getType()) || "audio".equals(block.getType()))
                     block.setUrl(mediaPublicationGuard.requireMedia(owner, block.getUrl(), publish));
-                if ("dream".equals(block.getType()) && block.getImages() != null)
+                if (("dream".equals(block.getType()) || "gallery".equals(block.getType())) && block.getImages() != null)
                     for (com.chengyinhub.business.domain.dto.ChapterBlockDTO.DreamImageDTO image : block.getImages())
                         image.setUrl(mediaPublicationGuard.requireMedia(owner, image.getUrl(), publish));
             }

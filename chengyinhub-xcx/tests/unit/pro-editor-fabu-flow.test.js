@@ -727,18 +727,18 @@ test('编辑结局后，两种新建入口都清空上章身份和设置，连�
   }
 })
 
-test('伏笔配置留在主题详情，正文只有一个「插入 ▾」：图片、音频、玩法、分割线、地点', () => {
+test('伏笔配置留在主题详情,正文只有顶部「添加」栏:段落 / 图片 / 音频 / 玩法 / 分支 / 分割线', () => {
   // 2026-11-09 用户:「玩法/图片/音频之类的统一顶部标签 然后添加」—— 取代每个缝里的两处菜单
-  // 2026-11-10 r2-create:对标 X Articles,收进工具栏的「插入 ▾」,插到光标处的逻辑不变(onStoryToolbarInsert)
+  // 2026-11-10 l-editor:按业主批准的编辑器原型,顶部添加栏六项,没有 B/I/S 等格式工具,也没有「插入 ▾」
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.wxml'), 'utf8')
+  const js = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.js'), 'utf8')
   const topic = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/topic-detail-sheet.wxml'), 'utf8')
   assert.match(topic, /bindtap="openThoughts"/)
   assert.doesNotMatch(wxml, /story-insert__menu/)
-  assert.equal((wxml.match(/catchtap="openStoryInsertSheet"/g) || []).length, 1)
-  const menus = [...wxml.matchAll(/<view class="sx-sheet" wx:if="\{\{storySheet === 'insert'\}\}">([\s\S]*?)\n\s*<\/view>\n/g)]
-  assert.equal(menus.length, 1)
-  assert.deepEqual([...menus[0][1].matchAll(/data-kind="(\w+)" catchtap="onStoryInsertPick"/g)].map(m => m[1]),
-    ['image', 'audio', 'game', 'divider', 'node'])
+  assert.doesNotMatch(wxml, /openStoryInsertSheet|onStoryInsertPick|onStoryMark|onStoryParaPick|openStoryEmoji/)
+  assert.equal((wxml.match(/catchtap="onStoryAdd"/g) || []).length, 1)
+  assert.deepEqual([...js.matchAll(/\{ kind: '(\w+)', label: '([^']+)'/g)].map((m) => [m[1], m[2]]),
+    [['text', '段落'], ['gallery', '图片'], ['audio', '音频'], ['node', '玩法'], ['branch', '分支'], ['divider', '分割线']])
   assert.match(wxml, /bind:change="onToggleNodeGame"/)
 })
 
