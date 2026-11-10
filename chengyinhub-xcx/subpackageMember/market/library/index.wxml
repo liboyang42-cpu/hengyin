@@ -1,0 +1,37 @@
+<!-- l-after 游戏主题库(业主批准 proto/game ps-library):玩家深色;一行一张俱乐部式卡;筛选 全部 / 城市定向 / 自由探索;标题不写数量 -->
+<view class="theme-dark lb" style="--pm-x:{{pm}};">
+  <cy-nav-bar plain custom-back bind:back="goBack" />
+  <cy-page-title title="游戏主题库" />
+  <view class="lb-kinds" aria-role="tablist">
+    <view class="lb-kind {{kind === item.key ? 'is-on' : ''}}" wx:for="{{kinds}}" wx:key="key" data-key="{{item.key}}" bindtap="onKind"
+          aria-role="tab" aria-selected="{{kind === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+  </view>
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+  <cy-empty wx:elif="{{state === 'error'}}" kind="data" title="{{error}}" cta="重试" bind:cta="reload" fill size="lg" />
+  <cy-empty wx:elif="{{!cards.length}}" kind="empty" title="这一类还没有主题" fill size="lg" />
+  <view wx:else class="lb-list">
+    <view class="photo-card lb-card" wx:for="{{cards}}" wx:key="id" style="--i:{{index < 8 ? index : 7}}" data-id="{{item.id}}" bindtap="openTopic"
+          aria-role="button" aria-label="查看主题：{{item.title}}" hover-class="photo-card--pressed" hover-stay-time="80">
+      <image class="photo-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+      <view class="photo-card__gradient lb-card__gradient" aria-hidden="true"></view>
+      <view class="photo-card__top">
+        <view class="photo-card__logo lb-card__logo"><text>城</text></view>
+        <!-- 价签只在服务端给了通行证覆盖事实时出 -->
+        <text class="lb-card__free" wx:if="{{item.free}}">¥0 可玩</text>
+        <view class="photo-card__fill"></view>
+        <view class="lb-card__city" wx:if="{{item.city}}"><image class="photo-card__icon" src="/images/cards/pin.svg" /><text>{{item.city}}</text></view>
+      </view>
+      <view class="photo-card__space"></view>
+      <view class="photo-card__body">
+        <text class="photo-card__name">{{item.title}}</text>
+        <view class="photo-card__detail lb-card__data" wx:if="{{item.data}}"><text>{{item.data}}</text></view>
+        <view class="photo-card__bottom lb-card__bottom">
+          <view class="lb-card__tags"><text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="lb-card__tag">{{tag}}</text></view>
+          <image class="photo-card__arrow" src="/images/cards/chevron.svg" aria-hidden="true" />
+        </view>
+      </view>
+    </view>
+    <view class="lb-more" wx:if="{{moreState === 'loading'}}"><cy-skeleton type="list" count="1" /></view>
+    <view class="lb-more lb-more--err" wx:elif="{{moreState === 'error'}}" bindtap="loadMore" aria-role="button" aria-label="加载更多失败，重试" hover-class="cy-pressed" hover-stay-time="80">加载失败，点一下重试</view>
+  </view>
+</view>

@@ -1,0 +1,22 @@
+@import "/style/photo-card.wxss";
+/* l-after 游戏主题库:一行一张俱乐部式卡(来源 components/cy/club-card + style/photo-card),底部四段黑渐变;列表首屏错开升起(M2) */
+.lb { min-height: 100vh; box-sizing: border-box; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
+.lb-kinds { display: flex; gap: 16rpx; padding: 8rpx var(--cy-page-x) 28rpx; }
+.lb-kind { min-height: 64rpx; padding: 0 28rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; font-size: var(--cy-type-label); font-weight: 600;
+  background: var(--cy-comp-sheet-group-bg); color: var(--cy-color-text-secondary); transition: background-color var(--cy-motion-micro, 100ms) ease, color var(--cy-motion-micro, 100ms) ease; }
+.lb-kind.is-on { background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); }
+.lb-list { display: flex; flex-direction: column; gap: 24rpx; padding: 0 var(--cy-page-x); }
+.lb-card { min-height: 428rpx; filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx);
+  transition: filter var(--cy-motion-slow) var(--cy-ease-page-rise) calc(min(var(--i, 0), 8) * var(--cy-motion-stagger, 40ms)), translate var(--cy-motion-slow) var(--cy-ease-page-rise) calc(min(var(--i, 0), 8) * var(--cy-motion-stagger, 40ms)); }
+.lb .lb-card { --pm-l: var(--pm-x, 0); }
+.lb-card__gradient { background: linear-gradient(180deg, rgba(0,0,0,.24) 0%, rgba(0,0,0,.14) 32%, rgba(0,0,0,.7) 60%, rgba(0,0,0,.94) 100%); } /* ds-ok 仅图片装饰遮罩:与俱乐部卡 .cc__gradient 同四段 */
+.lb-card__logo { background: #FFFFFF; color: #111111; font-size: var(--cy-type-label); font-weight: 900; } /* ds-ok 卡上的「城」标(白底墨字) */
+.lb-card__free { padding: 6rpx 14rpx; border-radius: var(--cy-radius-md); background: #CDFF71; color: #121213; font-size: var(--cy-type-caption); font-weight: 800; line-height: 28rpx; } /* ds-ok 柠檬绿 ¥0 价签(proto) */
+.lb-card__city { display: flex; align-items: center; gap: 8rpx; font-size: var(--cy-type-label); line-height: 30rpx; color: var(--cy-color-photo-card-city-fg); }
+.lb-card__data { gap: 10rpx; color: var(--cy-color-photo-card-data-fg); }
+.lb-card__bottom { align-items: flex-end; gap: 16rpx; }
+.lb-card__tags { display: flex; flex: 1; flex-wrap: wrap; gap: 12rpx; min-width: 0; }
+.lb-card__tag { padding: 6rpx 14rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-photo-card-tag-glass); color: var(--cy-comp-photo-card-muted); font-size: var(--cy-type-caption); line-height: 28rpx; }
+.lb-more { padding: 8rpx 0 24rpx; }
+.lb-more--err { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+@media (prefers-reduced-motion: reduce) { .lb-card { transition: none; filter: none; translate: none; } .lb-kind { transition: none; } }

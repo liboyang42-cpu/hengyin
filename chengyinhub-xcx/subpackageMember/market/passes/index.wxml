@@ -31,6 +31,11 @@
           </view>
         </view>
       </block>
+      <!-- l-after(proto ps-pass「进入游戏主题库 ›」):整页主题库在分包 market/library -->
+      <view class="mk-row mk-row--go" wx:if="{{tab === 'shop' && state === 'ready'}}" bindtap="goLibrary" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="进入游戏主题库">
+        <view class="mk-row__main"><text class="mk-row__title">游戏主题库</text></view>
+        <cy-icon name="chevron-right" size="28" />
+      </view>
       <!-- §20.2 兑换码 / U07-03 已购模板:渠道未开通,入口保留但只写不可用原因,不可点 -->
       <view class="mk-group mk-gated" wx:if="{{tab === 'shop' && state === 'ready'}}">
         <view class="mk-row" aria-disabled="true">
