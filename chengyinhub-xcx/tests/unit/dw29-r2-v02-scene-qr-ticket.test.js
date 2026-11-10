@@ -35,7 +35,8 @@ test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计�
   assert.doesNotMatch(xml, /Code :|countdown|城瘾活动入场码|出示扫码核销|现在核销|bigqr|长期开放/)
   const css = read('pages/play/components/scene-qr-ticket/index.wxss')
   const wallet = read('subpackageMember/signup/index.wxss')
-  for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {'], ['.voucher__exp {', '.wc__exp {']]) {
+  // r2-play a1-v3-17(业主「不需要有白色的底…直接放上二维码」):外层白卡去掉,到期行写在深色弹层上,改用弹层 token 色,不再与票夹白卡同值;码块仍同值
+  for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {']]) {
     const body = (src, sel) => src.slice(src.indexOf(sel) + sel.length, src.indexOf('}', src.indexOf(sel)))
     assert.equal(body(css, mine), body(wallet, theirs), mine + ' 与票夹同值')
   }
