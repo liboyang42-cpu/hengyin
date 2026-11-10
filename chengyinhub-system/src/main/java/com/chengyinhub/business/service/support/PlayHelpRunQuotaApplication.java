@@ -336,19 +336,35 @@ public class PlayHelpRunQuotaApplication {
         if (scope.kind() == PlayHelpUsagePolicy.RunKind.ADVANCED_GAME) {
             return requireAdvancedOwner(memberId, scope);
         }
+        boolean selfPlayRun = SelfPlayHelpRun.isIdentity(scope.playInstance());
         TopicRouteSession session;
         try {
-            session = sessions.selectByOwner(activityId(scope), scope.topicId(), memberId, scope.playInstance());
+            // 自玩局:帮助身份冻结在本人 default 自玩局的快照里,按该局行核验,不靠实例列直查。
+            session = sessions.selectByOwner(activityId(scope), scope.topicId(), memberId,
+                    selfPlayRun ? SelfPlayHelpRun.progressInstance() : scope.playInstance());
         } catch (RuntimeException unavailable) {
             throw new PlayHelpRunQuotaException(REASON_STATE_UNAVAILABLE, "本局状态暂时不可用,请重试", unavailable);
         }
         if (session == null) {
             throw new PlayHelpRunQuotaException(REASON_SCOPE_FORBIDDEN, "原局不存在或无权访问");
         }
+        if (selfPlayRun && !scope.playInstance().equals(selfPlayIdentity(session))) {
+            // 别人的、旧的(无身份)或已被重开的自玩局:与不存在同文案。
+            throw new PlayHelpRunQuotaException(REASON_SCOPE_FORBIDDEN, "原局不存在或无权访问");
+        }
         if (!Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) {
             throw new PlayHelpRunQuotaException(REASON_SCOPE_CLOSED, "本局已结束，不能使用帮助");
         }
         return null;
+    }
+
+    private String selfPlayIdentity(TopicRouteSession session) {
+        if (!SelfPlayHelpRun.selfPlay(session.getActivityId()) || session.getConfigSnapshotJson() == null) return null;
+        try {
+            return SelfPlayHelpRun.helpInstance(session, json.readTree(session.getConfigSnapshotJson()));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException broken) {
+            throw new PlayHelpRunQuotaException(REASON_STATE_UNAVAILABLE, "本局状态暂时不可用,请重试", broken);
+        }
     }
 
     /**

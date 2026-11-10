@@ -612,6 +612,102 @@ class PlayHelpRunQuotaApplicationTest {
 
     // ------------------------------------------------------------------ fixtures
 
+    // ---------------------------------------------------------------- qx-c4 自玩局帮助身份
+
+    private static final String SELF_A = "selfplay:0b0e6f53-2f1d-4c4a-9a51-3c1b9f7f0a01";
+    private static final String SELF_B = "selfplay:7d5c2a10-8e44-4f0b-b2a6-55e0c7d9e102";
+
+    private static TopicRouteSession selfPlayRun(String identity, int status) {
+        TopicRouteSession session = new TopicRouteSession();
+        session.setId(601L);
+        session.setTopicId(TOPIC);
+        session.setActivityId(0L);
+        session.setMemberId(MEMBER);
+        session.setPlayInstanceId("default");
+        session.setStatus(status);
+        session.setConfigSnapshotJson(identity == null ? "{\"nodeAnswers\":{}}"
+                : "{\"nodeAnswers\":{},\"helpRunInstance\":\"" + identity + "\"}");
+        return session;
+    }
+
+    private static PlayHelpUsagePolicy.Scope selfScope(String identity, long nodeId) {
+        return new PlayHelpUsagePolicy.Scope(TOPIC, null, nodeId, identity);
+    }
+
+    @Test
+    void selfPlayIdentityIsVerifiedAgainstTheMembersOwnDefaultSelfPlayRun() {
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(SELF_A, TopicRouteSession.STATUS_RUNNING));
+
+        PlayHelpRunQuotaApplication.QuotaOutcome outcome = application.use(MEMBER, selfScope(SELF_A, NODE_A), 1,
+                2, 0, 30, "req-self-1");
+
+        assertTrue(outcome.freeUseConsumed());
+        assertEquals(1, outcome.remainingFreeUses());
+        assertEquals(1, quotas.used(MEMBER, TOPIC, 0L, SELF_A));
+        // 按本人 default 自玩局行核验；从不拿 selfplay: 身份去直查实例列。
+        verify(sessions, never()).selectByOwner(anyLong(), anyLong(), anyLong(), eq(SELF_A));
+    }
+
+    @Test
+    void eachSelfPlayRunHasItsOwnQuotaPool() {
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(SELF_A, TopicRouteSession.STATUS_RUNNING));
+        application.use(MEMBER, selfScope(SELF_A, NODE_A), 1, 1, 0, 30, "req-a");
+        assertEquals(0, application.remainingFreeUses(MEMBER, selfScope(SELF_A, NODE_B), 1));
+
+        // 另一局（另一份冻结身份）：额度从冻结 N 重新开始，不继承上一局。
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(SELF_B, TopicRouteSession.STATUS_RUNNING));
+        assertEquals(1, application.remainingFreeUses(MEMBER, selfScope(SELF_B, NODE_A), 1));
+        assertEquals(1, quotas.used(MEMBER, TOPIC, 0L, SELF_A));
+        assertEquals(0, quotas.used(MEMBER, TOPIC, 0L, SELF_B));
+        // 旧局身份不再是本人当前自玩局：拒绝，不能回头花旧池。
+        assertEquals(PlayHelpRunQuotaApplication.REASON_SCOPE_FORBIDDEN,
+                assertThrows(PlayHelpRunQuotaApplication.PlayHelpRunQuotaException.class,
+                        () -> application.use(MEMBER, selfScope(SELF_A, NODE_B), 2, 1, 0, 30, "req-old")).code());
+    }
+
+    @Test
+    void forgedLegacyOrForeignSelfPlayIdentityIsForbiddenBeforeAnyWrite() {
+        // 伪造：身份与本人自玩局冻结的不一致。
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(SELF_B, TopicRouteSession.STATUS_RUNNING));
+        assertForbidden(MEMBER, selfScope(SELF_A, NODE_A));
+        // 旧自玩局：快照里没有身份。
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(null, TopicRouteSession.STATUS_RUNNING));
+        assertForbidden(MEMBER, selfScope(SELF_A, NODE_A));
+        // 别人的局：按本人查不到。
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER + 1, "default")).thenReturn(null);
+        assertForbidden(MEMBER + 1, selfScope(SELF_A, NODE_A));
+        // 活动场次的 default 局即使快照里被塞了身份也不认。
+        TopicRouteSession activityRun = selfPlayRun(SELF_A, TopicRouteSession.STATUS_RUNNING);
+        activityRun.setActivityId(ACTIVITY);
+        when(sessions.selectByOwner(ACTIVITY, TOPIC, MEMBER, "default")).thenReturn(activityRun);
+        assertForbidden(MEMBER, new PlayHelpUsagePolicy.Scope(TOPIC, ACTIVITY, NODE_A, SELF_A));
+
+        assertEquals(0, quotas.writeCount);
+        assertTrue(attempts.byKey.isEmpty());
+        verify(cost, never()).use(anyLong(), anyString(), anyInt(), anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void finishedSelfPlayRunIsClosed() {
+        when(sessions.selectByOwner(0L, TOPIC, MEMBER, "default"))
+                .thenReturn(selfPlayRun(SELF_A, TopicRouteSession.STATUS_COMPLETED));
+
+        assertEquals(PlayHelpRunQuotaApplication.REASON_SCOPE_CLOSED,
+                assertThrows(PlayHelpRunQuotaApplication.PlayHelpRunQuotaException.class,
+                        () -> application.use(MEMBER, selfScope(SELF_A, NODE_A), 1, 2, 0, 30, "req-c")).code());
+    }
+
+    private void assertForbidden(long member, PlayHelpUsagePolicy.Scope scope) {
+        assertEquals(PlayHelpRunQuotaApplication.REASON_SCOPE_FORBIDDEN,
+                assertThrows(PlayHelpRunQuotaApplication.PlayHelpRunQuotaException.class,
+                        () -> application.use(member, scope, 1, 2, 0, 30, "req-f")).code());
+    }
+
     private static PlayHelpUsagePolicy.Scope scope(long nodeId) {
         return new PlayHelpUsagePolicy.Scope(TOPIC, ACTIVITY, nodeId, INSTANCE);
     }
