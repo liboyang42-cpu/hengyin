@@ -329,7 +329,8 @@
         "pages/report/index",
         "pages/landing/index",
         "pages/seats/index",
-        "pages/promo/index"
+        "pages/promo/index",
+        "pages/settle/index"
       ]
     },
     {

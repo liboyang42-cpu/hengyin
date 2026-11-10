@@ -390,8 +390,9 @@ function boardTabs(ctx) {
 }
 
 // 「前 N%」只在服务端给了上榜总人数时算;总数缺失或被截断就不写百分比。
+// 上榜不足 5 人时百分比没有意义(1 人上榜就是「前 100%」),不写。
 function topPercent(rank, total) {
-  if (!isNum(rank) || rank < 1 || !isNum(total) || total < 1 || rank > total) return '';
+  if (!isNum(rank) || rank < 1 || !isNum(total) || total < 5 || rank > total) return '';
   const pct = Math.max(1, Math.ceil(rank / total * 100));
   return '前 ' + pct + '%';
 }

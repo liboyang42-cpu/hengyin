@@ -157,7 +157,7 @@ test('P2 推广中心：金额未知不补 0；多币种不合计；无提现通
 test('页面与入口：分包注册、战报只读入口、席位释放按钮不存在', () => {
   const app = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
   const sub = app.subPackages.find(s => s.root === 'subpackageJourney');
-  assert.deepEqual(sub.pages, ['pages/report/index', 'pages/landing/index', 'pages/seats/index', 'pages/promo/index']);
+  assert.deepEqual(sub.pages, ['pages/report/index', 'pages/landing/index', 'pages/seats/index', 'pages/promo/index', 'pages/settle/index']);
   const seatsWxml = fs.readFileSync(path.join(ROOT, 'subpackageJourney/pages/seats/index.wxml'), 'utf8');
   assert.ok(!/释放|release/i.test(seatsWxml));
   const seatsJs = fs.readFileSync(path.join(ROOT, 'subpackageJourney/pages/seats/index.js'), 'utf8');

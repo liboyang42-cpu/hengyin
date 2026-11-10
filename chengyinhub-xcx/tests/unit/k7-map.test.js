@@ -152,7 +152,7 @@ test('N9:整行大数字只给「点亮坐标」/「玩法完成」,用时不再
   assert.match(css, /\.finsheet \.fst--hero \.fst__v\{ font-size:216rpx;/);
   const wxml = read('pages/play/index.wxml');
   assert.match(wxml, /<view class="fst fst--hero" wx:if="\{\{doneCount > 0\}\}">/);
-  assert.match(wxml, /<view class="fst fst--s" wx:if="\{\{reviewElapsed\}\}">/);
+  assert.match(wxml, /<view class="fst fst--s fst--dup" wx:if="\{\{reviewElapsed\}\}">/);  // r2-finish:有路线卡时这一格与卡上重复,用 fst--dup 收起
 });
 
 test('F14:附近活动卡、读数卡和店名贴纸的字跟手机字号走', () => {

@@ -1,0 +1,45 @@
+<view class="rb {{reducedMotion ? 'rb--reduced' : ''}}">
+  <view class="rb-bar">
+    <view class="rb-bar__tabs" wx:if="{{tabs.length > 1}}"><cy-tabs variant="segmented" tabs="{{tabs}}" active="{{scope}}" bind:change="onScope" /></view>
+    <view class="rb-more {{moreLabel !== '更多' ? 'is-on' : ''}}" wx:if="{{more.length}}" bindtap="onMore" aria-role="button" aria-label="{{moreLabel}}" hover-class="cy-pressed" hover-stay-time="80">
+      <text>{{moreLabel}}</text><cy-icon name="expand" size="24" />
+    </view>
+  </view>
+
+  <view class="rb-hero" wx:if="{{hero}}">
+    <view class="rb-hero__wreath">
+      <image class="rb-hero__laurel" src="/subpackageJourney/images/laurel.svg" mode="aspectFit" aria-hidden="true" />
+      <view class="rb-hero__num" aria-label="第 {{hero.rank}} 名">
+        <view class="rb-digit" wx:for="{{digits}}" wx:key="index" aria-hidden="true">
+          <view class="rb-digit__col" style="transform:translateY(-{{item * 10}}%)">
+            <text>0</text><text>1</text><text>2</text><text>3</text><text>4</text><text>5</text><text>6</text><text>7</text><text>8</text><text>9</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <text class="rb-hero__pct" wx:if="{{hero.percent}}">{{hero.percent}}</text>
+    <view class="rb-stats" wx:if="{{rank.stats.length}}">
+      <view class="rb-stat" wx:for="{{rank.stats}}" wx:key="key"><text class="rb-stat__l">{{item.label}}</text><text class="rb-stat__v">{{item.value}}</text></view>
+    </view>
+  </view>
+
+  <view class="rb-period" wx:if="{{scope !== 'team' && scope !== 'teams'}}">
+    <cy-tabs variant="segmented" tabs="{{[{key:'all',label:'累计'},{key:'week',label:'本周'}]}}" active="{{period}}" bind:change="onPeriod" />
+  </view>
+
+  <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+  <cy-empty wx:elif="{{state === 'error'}}" kind="data" title="{{error}}" cta="重试" bind:cta="load" size="sm" />
+  <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="{{scope === 'team' ? '队内还没有名次' : '这张榜还没有人上榜'}}" size="sm" />
+  <view wx:elif="{{rank}}" class="rb-list {{state === 'refresh' ? 'is-busy' : ''}}">
+    <view class="rb-row rb-row--head" wx:if="{{rank.basis || rank.window}}">
+      <text class="rb-row__b">{{rank.basis}}</text><text class="rb-row__s" wx:if="{{rank.window}}">{{rank.window}}</text>
+    </view>
+    <view class="rb-row {{item.mine ? 'is-me' : ''}}" wx:for="{{rank.entries}}" wx:key="key">
+      <text class="rb-rank {{item.rank && item.rank <= 3 ? 'is-top' : ''}}">{{item.rank || '—'}}</text>
+      <view class="rb-av"><image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
+      <text class="rb-row__b rb-grow">{{item.name}}</text>
+      <text class="rb-row__v">{{item.scoreText}}</text>
+    </view>
+    <text class="rb-note" wx:if="{{rank.unattributed}}">{{rank.unattributed}}</text>
+  </view>
+</view>

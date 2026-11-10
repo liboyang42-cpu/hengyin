@@ -1,0 +1,16 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-nav-spacer": "/components/cy/nav-spacer/index",
+    "cy-empty": "/components/cy/empty/index",
+    "cy-btn": "/components/cy/btn/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-tabs": "/components/cy/tabs/index",
+    "cy-celebrate": "/components/cy/celebrate/index",
+    "cy-privacy-gate": "/components/cy/privacy-gate/index",
+    "rank-board": "/subpackageJourney/components/rank-board/index"
+  }
+}

@@ -2103,3 +2103,15 @@ page { background: var(--cy-color-bg-page); }
 .pv-ending--reduced .pv-ending__seal{ opacity:1; transform:none; transition:none; }
 .pv-ending--reduced .pv-ending__ring{ animation:none; display:none; }
 .pv-ending__confetti{ position:absolute; inset:0; z-index:2; pointer-events:none; --cy-motion-celebrate:2200ms; --cy-color-play-accent:#E9C47C; } /* ds-ok 结局庆祝:彩旗落得慢一点、用印章金,看得见 */
+
+/* r2-finish s0-b8-u08-01 完成页收拾:路线卡在时标题行提到最上;卡上已写距离/用时/站数,下面不再重复大数字和这两格;
+   底部按钮落在实底托盘上(原来的黑色光晕盖不住,大数字从按钮下面露出来)。圆角走按钮 token。 */
+.finsheet__top{ padding:var(--cy-space-2) 38rpx 0; display:flex; flex-direction:column; align-items:flex-start; gap:12rpx; }
+.finsheet__card + .finsheet__grid .fst--hero, .finsheet__card + .finsheet__grid .fst--dup{ display:none; }
+.finsheet__dock{ position:fixed; z-index:4; left:0; right:0; bottom:0; height:calc(200rpx + env(safe-area-inset-bottom)); background:var(--cy-color-play-story-page); }
+.finsheet__dock--two{ height:calc(323rpx + env(safe-area-inset-bottom)); }
+.finsheet .finsheet__cta{ box-shadow:none; border-radius:var(--cy-comp-btn-radius); }
+.finsheet__settle{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(188rpx + env(safe-area-inset-bottom)); height:104rpx; border-radius:var(--cy-comp-btn-radius);
+  display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; background:var(--cy-color-play-story-text); color:var(--cy-color-play-story-page); }
+.finsheet__settle + .finsheet__cta{ background:var(--cy-color-play-story-surface); color:var(--cy-color-play-story-text); }
+.finsheet__pad{ height:123rpx; }
