@@ -33,9 +33,9 @@
 | 门禁 | 结果 |
 |---|---|
 | 本 lane 相关单测 `node --test tests/unit/{questo-b2-player,l-kits-20261110,play-shake-device-lifecycle,playkit-present-inline-contract,play-qa-choice-feedback,playkit-fidelity-contract,tg3-qa-shared-instance-contract,play-qa-recovery-contract,play-qa-completed-handoff,playkit-typography-token-contract,playkit-qa-authored-outcome-p10,gameplay-feedback-images-bgm,r12-k8-play-fixes,launch-look-tokens-illus,press-feedback-coverage-contract,action-ledger}.test.js` | 全部通过（见下「全量」） |
-| 小程序全量单测（仓库根 `node --test "chengyinhub-xcx/tests/unit/*.test.js"`） | __FULL__ |
+| 小程序全量单测（仓库根 `node --test "chengyinhub-xcx/tests/unit/*.test.js"`） | **17150 个测试,17139 通过,11 失败**。其中 10 条与底座 / qx-s2 §六列出的既有失败完全相同(根栈安全审计、组件选择器限制、自定义导航标题、keyframes 棘轮、系统 ActionSheet、系统 toast、page cleanup audit、hover-class 可解析、减少动态效果覆盖、故事文字动效 —— 在未改动的 `/root/base` 底座工作树上逐一复跑确认),不是本 lane 引入;第 11 条是 `action-ledger` 的分母,跑全量时台账分母尚未同步,随后按重建实测改好、单跑通过(见下一行)。本 lane 新增 / 改写的测试全部通过。 |
 | `node chengyinhub-xcx/tests/lint/ui-integrity.js` | **UI-GATE-0:PASS**（U2 / U3 / U4 / U5 / A11Y / Legacy 全 PASS；没有新增 baseline 条目。途中 U4 曾报一处动态 setData，已改成字面量） |
-| `build-action-ledger.js --write` | __LEDGER__ |
+| `build-action-ledger.js --write` | `ACTION-LEDGER WRITE PASS: 5943 controls`(底座 5936);`action-ledger.test.js` 分母按重建实测同步:tap 2979 → 2984、事件合同 2957 → 2959、非外部 tap 2612 → 2617、非外部事件合同 2861 → 2863,总数 5936 → 5943,均带日期注释;`inventoryMatchesCurrent` 为真(release 前重建 inventory 通过) |
 | `scripts/ds-hardcode-gate.sh`（暂存区模式） | 通过，0 行报警（色值行都带 `ds-ok`，字号全是 `--cy-type-*`） |
 | `motion-property-ratchet` | `@keyframes` 实测 169（与底座相同，本 lane +0；上限 146 本来就是红的，见 qx-base 待你决定 2）；`transition: all` 0 |
 | `reduced-motion-coverage-contract` | 本 lane 文件零缺口（失败清单与底座完全相同：share-card / ai-npc / team / journey / gift，均非本 lane） |
@@ -57,4 +57,4 @@
 4. **掷骰子摇一摇推翻旧裁决。** 2026-09-18 你说过故事流里内嵌的骰子不要摇（走路误摇），第二轮又批「掷骰子也可以摇晃的」。**已实现的默认**：按第二轮，内嵌也摇；阈值与整屏 / 抛硬币相同，不另调灵敏度。
 5. **翻页卡的手势。** 原型只有点按（卡片 / 箭头 / 再想想），没有左右滑。**已实现的默认**：只做点按；要滑动翻页需要接 u1 的 `gesture.wxs`，另起一项。
 
-STATUS: __STATUS__
+STATUS: COMPLETE
