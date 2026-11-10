@@ -36,6 +36,43 @@ function bindableNodes(chapters) {
   return out;
 }
 
+// 节点 id → 当前地址(没有地址的节点不收):地点待办每行显示「现在绑在哪」,并据此给「替换地点」
+function nodePlaces(chapters) {
+  const out = {};
+  (Array.isArray(chapters) ? chapters : []).forEach(c => {
+    (c && Array.isArray(c.nodes) ? c.nodes : []).forEach(n => {
+      const id = n && n.id != null ? String(n.id) : '';
+      if (!/^[1-9]\d*$/.test(id)) return;
+      const place = text(n.address) || text(n.name);
+      if (place && (text(n.address) || text(n.latitude) && text(n.longitude))) out[id] = place;
+    });
+  });
+  return out;
+}
+
+// 每个地点待办行对应的编辑器节点:已绑定的用绑定的 nodeId;同城沿用后还没绑定的,按同名节点认领(唯一才算)。
+// 返回 { slotKey: { id, place } },place 是节点当前地址(没有地址就不认领)。
+function slotNodes(view, chapters) {
+  const out = {};
+  if (!view || !Array.isArray(view.rows)) return out;
+  const places = nodePlaces(chapters);
+  const byName = {};
+  (Array.isArray(chapters) ? chapters : []).forEach(c => {
+    (c && Array.isArray(c.nodes) ? c.nodes : []).forEach(n => {
+      const id = n && n.id != null ? String(n.id) : '';
+      const name = text(n && n.name);
+      if (!/^[1-9]\d*$/.test(id) || !name || !places[id]) return;
+      (byName[name] = byName[name] || []).push(id);
+    });
+  });
+  view.rows.forEach(row => {
+    let id = row.nodeId && places[row.nodeId] ? row.nodeId : '';
+    if (!id && byName[row.title] && byName[row.title].length === 1) id = byName[row.title][0];
+    if (id) out[row.slotKey] = { id, place: places[id], claimed: !row.nodeId };
+  });
+  return out;
+}
+
 function view(data) {
   if (!data || typeof data !== 'object') return null;
   const contract = data.contract && typeof data.contract === 'object' ? data.contract : {};
@@ -87,4 +124,4 @@ function summaryText(v) {
   return v.rows.every(r => r.bound) ? '已全部绑定' : '';
 }
 
-module.exports = { view, summaryText, bindableNodes, STATUS_TEXT };
+module.exports = { view, summaryText, bindableNodes, nodePlaces, slotNodes, STATUS_TEXT };

@@ -34,7 +34,8 @@
     "d20-settings": "/pages/publish/components/d20-settings/index",
     "start-prep": "/pages/publish/components/start-prep/index",
     "cy-stepper": "/pages/publish/components/stepper/index",
-    "cy-look-preview": "/pages/publish/components/look-preview/index"
+    "cy-look-preview": "/pages/publish/components/look-preview/index",
+    "cy-option-sheet": "/components/cy/option-sheet/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",

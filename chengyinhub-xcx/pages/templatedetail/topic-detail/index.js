@@ -89,16 +89,7 @@ Page({
     medalImg: '',
     deliveryRows: [],
     // U02-02:采用方式弹层(沿用原地点 / 换一个城市)
-    adoptShow: false,
-    adoptIntent: '',
-    adoptCityName: '',
-    adoptCityCode: '',
-    adoptCities: adoption.adoptCities(),
-    adoptCityIndex: -1,
-    adoptRebind: 0,
-    adoptError: '',
-    adoptBusy: false,
-    adoptUnknown: false
+    adoptBusy: false
   },
 
   onLoad(options) {
@@ -204,8 +195,9 @@ Page({
     wx.previewImage({ current: url, urls: this.data.gallery.map(function (g) { return g.img; }) });
   },
 
-  // 「应用」= 整包复制成我的草稿,进主题配置。U02-02:来源有真实地点时先选「沿用原地点 / 换一个城市」;
-  // 纯线上内容(没有地点事实)没有可换的城市,直接按旧版采用。
+  // 「应用」= 整包复制成我的草稿,进主题配置。
+  // r2-create(b4-u02-02/04 业主:「不需要选择城市 就是配置的时候需要选择地址就好了」「不需要换城市」):
+  // 不再弹「沿用原地点 / 换一个城市」,一律沿用原地点采用;作者在编辑器的「地点待办」里逐个替换地址。
   useTemplate() {
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return; // 游客写前登录
     if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
@@ -213,41 +205,18 @@ Page({
     // 第十二轮 k9(p3 N6):本页已经复制出一份草稿,从编辑器回来再点「应用」就回到那一份,不再每点一次多一份草稿
     if (this._copiedId) { this._openCopiedDraft(this._copiedId); return; }
     const loc = this._delivery && this._delivery.locationRequirement;
-    if (!loc || loc.physicalPlaceRequired !== true || !adoption.sourceCityOf(this._delivery)) { this._submitUse(''); return; }
-    const n = Number(loc.stationWithAddressCount);
-    this.setData({ adoptShow: true, adoptError: '', adoptRebind: Number.isSafeInteger(n) && n > 0 ? n : 0 });
-  },
-
-  closeAdopt() { if (!this.data.adoptBusy) this.setData({ adoptShow: false }); },
-
-  pickSameCity() { if (!this.data.adoptBusy && !this.data.adoptUnknown) this.setData({ adoptIntent: 'SAME_CITY', adoptError: '' }); },
-
-  // 原生地区选择器 level=city:code[1] 是 6 位城市 adcode,与服务端 targetCityCode 同口径
-  onAdoptCity(e) {
-    if (this.data.adoptBusy || this.data.adoptUnknown) return;
-    const idx = Number(e && e.detail && e.detail.value);
-    const city = this.data.adoptCities[idx] || null;
-    const code = city ? city.code : '';
-    this.setData({ adoptIntent: 'NEW_CITY', adoptCityCode: code, adoptCityName: city ? city.name : '', adoptCityIndex: city ? idx : -1,
-      adoptError: /^\d{6}$/.test(code) ? '' : '没有读到这个城市的编码，请重新选择' });
-  },
-
-  confirmAdopt() {
-    if (this.data.adoptBusy) return;
-    if (this.data.adoptUnknown) { wx.navigateTo({ url: '/subpackageA/pages/myproject/index' }); return; }
-    if (!this.data.adoptIntent) { this.setData({ adoptError: '请选择沿用原地点或换一个城市' }); return; }
-    this._submitUse(this.data.adoptIntent);
+    const placed = !!(loc && loc.physicalPlaceRequired === true && adoption.sourceCityOf(this._delivery));
+    this._submitUse(placed ? 'SAME_CITY' : '');
   },
 
   _submitUse(intent) {
     // 后端每次调用都整包复制出新草稿,连点两下就是两份:在途时挡住
     if (this._using) { cyToast('正在配置，请稍候'); return; }
-    const built = adoption.usePayload({ id: this._id, scope: this._scope, intent, targetCityCode: this.data.adoptCityCode,
+    const built = adoption.usePayload({ id: this._id, scope: this._scope, intent,
       sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) });
-    if (built.error) { this.setData({ adoptError: built.error }); return; }
     const that = this;
     this._using = true;
-    this.setData({ adoptBusy: true, adoptError: '' });
+    this.setData({ adoptBusy: true });
     app.sendRequest({
       url: '/api/template/topic-template/use',
       method: 'POST',
@@ -257,22 +226,22 @@ Page({
         if (that._unloaded) return; // 复制回包晚于离开本页:不再把用户拉去编辑器
         const result = adoption.useResult(res);
         if (!result.ok) {
-          // 服务端明确拒绝:原文写在选项下面,保留已选的采用方式
-          if (that.data.adoptShow) that.setData({ adoptBusy: false, adoptError: result.message || '使用模板失败' });
-          else { that.setData({ adoptBusy: false }); cyToast(result.message || '使用模板失败'); }
+          // 服务端明确拒绝:原文提示
+          that.setData({ adoptBusy: false });
+          cyToast(result.message || '使用模板失败');
           return;
         }
         const copiedId = result.topicId;
         that._copiedId = copiedId;
-        that.setData({ adoptBusy: false, adoptShow: false });
+        that.setData({ adoptBusy: false });
         that._openCopiedDraft(copiedId);
       },
       fail() {
         that._using = false;
         if (that._unloaded) return;
-        // 结果未知:/use 没有请求号可查,不自动重发(会多复制一份);保留所选方式,去我的草稿核对
-        if (that.data.adoptShow) that.setData({ adoptBusy: false, adoptUnknown: true, adoptError: '采用结果未确认' });
-        else { that.setData({ adoptBusy: false }); cyToast('网络错误，请重试'); }
+        // 网络失败:不自动重发,由用户再点一次(与改版前一致)
+        that.setData({ adoptBusy: false });
+        cyToast('网络错误，请重试');
       }
     });
   },

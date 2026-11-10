@@ -155,7 +155,7 @@
     <!-- 第 1 页 · 创作:章节与节点。剧情已移入章节弹窗(§4.5),这里只留状态标记。 -->
     <block wx:if="{{editorPage === 1}}">
       <!-- qx-b4 U02-03:模板采用来的主题才有地点合同;没有合同组件自己不渲染 -->
-      <location-todos wx:if="{{editingTopicId}}" topic-id="{{editingTopicId}}" scope="{{operationScope}}" chapters="{{formData.chapters}}" />
+      <location-todos wx:if="{{editingTopicId}}" topic-id="{{editingTopicId}}" scope="{{operationScope}}" chapters="{{formData.chapters}}" bind:replace="onLocationTodoReplace" />
       <view class="slopes-section" id="routeSection">
         <view class="slopes-section-hd">
           <text class="slopes-section-tit">章节</text>
@@ -467,7 +467,7 @@
           <view class="sx-tool sx-tool--quote {{storyFmt.style === 'quote' ? 'is-on' : ''}}" data-style="quote" catchtap="onStoryBlockStyle" aria-role="button" aria-label="引用" hover-class="cy-pressed" hover-stay-time="80">“</view>
           <view class="sx-tool {{storyFmt.style === 'ul' ? 'is-on' : ''}}" data-style="ul" catchtap="onStoryBlockStyle" aria-role="button" aria-label="项目列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="32" /></view>
           <view class="sx-tool sx-tool--ol {{storyFmt.style === 'ol' ? 'is-on' : ''}}" data-style="ol" catchtap="onStoryBlockStyle" aria-role="button" aria-label="编号列表" hover-class="cy-pressed" hover-stay-time="80">1.</view>
-          <view class="sx-tool" catchtap="openStoryEmoji" aria-role="button" aria-label="表情" hover-class="cy-pressed" hover-stay-time="80">☺</view>
+          <view class="sx-tool" catchtap="openStoryEmoji" aria-role="button" aria-label="表情" hover-class="cy-pressed" hover-stay-time="80"><view class="sx-smile"></view></view>
           <view class="sx-tool" catchtap="openStoryInfo" aria-role="button" aria-label="本章信息" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="info" size="32" /></view>
         </view>
       </scroll-view>
@@ -502,7 +502,7 @@
           <view class="story-text-block sx-para sx-para--{{block.style || 'body'}} {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}}" wx:if="{{block.type === 'text'}}">
             <text class="sx-para__bullet" wx:if="{{block.style === 'ul'}}">•</text>
             <text class="sx-para__bullet sx-para__bullet--num" wx:if="{{block.style === 'ol'}}">{{storyListNo[blockIndex]}}.</text>
-            <view class="sx-rich" wx:if="{{storyEditor.preview || (block.marks && block.marks.length && storyEditor.focusBlockKey !== block.key && storyLiveKey !== block.key)}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'onStoryRichTap'}}">
+            <view class="sx-rich" wx:if="{{storyEditor.preview || (block.marks && block.marks.length && storyEditor.focusBlockKey !== block.key && storyLiveKey !== block.key)}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'onStoryRichTap'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
               <text wx:for="{{storySegs[block.key]}}" wx:key="index" wx:for-item="seg" class="sx-seg {{seg.bold ? 'is-b' : ''}} {{seg.italic ? 'is-i' : ''}} {{seg.strike ? 'is-s' : ''}}">{{seg.text}}</text>
             </view>
             <textarea
@@ -721,7 +721,8 @@
     <!-- 2026-11-10 r2-create:原底栏「下一步」(打开章节设置)收进顶栏 ⋯ 菜单的「章节设置」;
          X Articles 式编辑器没有底栏,主动作是顶栏「完成」。 -->
     <!-- 插入 ▾ / 表情 / 本章信息:编辑器内的小浮层,关闭键在右上角 -->
-    <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop"></view>
+    <cy-option-sheet show="{{storyOptions.show}}" title="{{storyOptions.title}}" items="{{storyOptions.items}}" immediate bind:select="onStoryOptionPick" bind:cancel="closeStoryOptions" />
+    <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop" hover-class="none"></view>
     <view class="sx-sheet" wx:if="{{storySheet === 'insert'}}">
       <view class="sx-sheet__head"><text class="sx-sheet__tit">插入</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
       <view class="sx-menu__row" data-kind="image" catchtap="onStoryInsertPick" aria-role="button" aria-label="插入图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text>图片</text></view>

@@ -3791,6 +3791,10 @@ page { background: var(--cy-btn-solid-bg); }
 .sx-tool--para { min-width: 96rpx; }
 .sx-tool--insert { border-left: 2rpx solid var(--cy-color-border-subtle); border-radius: 0; padding: 0 var(--cy-space-2) 0 var(--cy-space-3); }
 .sx-tool__caret { font-size: 20rpx; color: var(--cy-color-text-tertiary); }
+/* 表情键:CSS 画的笑脸(全站禁止 emoji 充当图标) */
+.sx-smile { position: relative; width: 34rpx; height: 34rpx; box-sizing: border-box; border: 3rpx solid currentColor; border-radius: var(--cy-radius-pill); }
+.sx-smile::before { content: ''; position: absolute; left: 7rpx; right: 7rpx; top: 8rpx; height: 4rpx; background: radial-gradient(circle, currentColor 2rpx, transparent 2.5rpx) left center / 4rpx 4rpx no-repeat, radial-gradient(circle, currentColor 2rpx, transparent 2.5rpx) right center / 4rpx 4rpx no-repeat; }
+.sx-smile::after { content: ''; position: absolute; left: 8rpx; right: 8rpx; bottom: 6rpx; height: 7rpx; border: 3rpx solid currentColor; border-top: 0; border-radius: 0 0 14rpx 14rpx; }
 
 /* 封面:宽 5:2,空态是浅底 + 图标 + 「添加封面」 */
 .sx-cover {

@@ -138,15 +138,15 @@
       <view class="xb-caps" wx:else>
         <view class="xb-caprow"><text class="xb-caprow-k">—</text></view>
       </view>
-      <!-- U02-01 采用条件:只读 contentDelivery;没有权威事实写「待补充 / 待核实」,不补结论 -->
+      <!-- U02-01 采用条件:只读 contentDelivery;r2-create(业主「UI需要优化一下」)只画有权威事实的行,没有事实的行不出现 -->
       <block wx:if="{{ deliveryRows.length }}">
         <view class="xb-block td-cond-hd">
-          <view class="xb-section-title"><cy-icon name="list" size="30" /><text>采用条件</text></view>
+          <view class="xb-section-title"><text>采用条件</text></view>
         </view>
         <view class="xb-caps td-cond">
           <view class="xb-caprow" wx:for="{{ deliveryRows }}" wx:key="key">
             <text class="xb-caprow-k">{{ item.label }}</text>
-            <text class="td-cond-v {{ item.pending ? 'is-pending' : '' }}">{{ item.value }}</text>
+            <text class="td-cond-v">{{ item.value }}</text>
           </view>
         </view>
       </block>
@@ -156,25 +156,4 @@
   </scroll-view>
 </view>
 
-<!-- U02-02 采用方式:沿用原地点 / 换一个城市(原生地区选择到城市级)。错误写在选项下,不弹窗 -->
-<cy-sheet show="{{ adoptShow }}" title="应用模板" handle footer bind:close="closeAdopt" bind:requestclose="closeAdopt">
-  <view class="ad">
-    <view class="ad-row {{ adoptIntent === 'SAME_CITY' ? 'is-on' : '' }}" bindtap="pickSameCity" aria-role="radio" aria-checked="{{ adoptIntent === 'SAME_CITY' }}" aria-label="沿用原地点" hover-class="cy-pressed" hover-stay-time="80">
-      <text class="ad-label">沿用原地点</text>
-      <view class="ad-dot" aria-hidden="true"></view>
-    </view>
-    <cy-dropdown mode="selector" range="{{ adoptCities }}" range-key="name" value="{{ adoptCityIndex }}" disabled="{{ adoptBusy || adoptUnknown }}" bind:change="onAdoptCity" aria-label="换一个城市">
-      <view class="ad-row {{ adoptIntent === 'NEW_CITY' ? 'is-on' : '' }}" aria-role="radio" aria-checked="{{ adoptIntent === 'NEW_CITY' }}" aria-label="换一个城市" hover-class="cy-pressed" hover-stay-time="80">
-        <text class="ad-label">换一个城市</text>
-        <text class="ad-city ep1" wx:if="{{ adoptCityName }}">{{ adoptCityName }}</text>
-        <view class="ad-dot" aria-hidden="true"></view>
-      </view>
-    </cy-dropdown>
-    <view class="ad-rebind" wx:if="{{ adoptIntent === 'NEW_CITY' && adoptRebind }}">需重新绑定 {{ adoptRebind }} 个地点</view>
-    <text class="ad-err" wx:if="{{ adoptError }}" aria-role="alert">{{ adoptError }}</text>
-  </view>
-  <view slot="footer">
-    <cy-btn variant="primary" loading="{{ adoptBusy }}" disabled="{{ adoptBusy }}" bindtap="confirmAdopt">{{ adoptUnknown ? '查看我的草稿' : '确定' }}</cy-btn>
-  </view>
-</cy-sheet>
 </view>

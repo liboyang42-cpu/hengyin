@@ -334,6 +334,7 @@ Page({
     storyCover: '',
     storyAuthor: { name: '', avatar: '', initial: '' },
     storySheet: '',
+    storyOptions: { show: false, title: '', items: [] },
     storyEmojis: STORY_EMOJIS,
     storyInfoRows: [],
     storyLiveKey: '',
@@ -1955,14 +1956,28 @@ Page({
     this.setData({ 'storyEditor.preview': preview, 'storyEditor.focusBlockKey': '', 'storyEditor.selectedBlockKey': '', 'storyEditor.kb': 0, storySheet: '', storyScrollTop: 0 });
   },
 
+  // ⋯ 菜单与把手菜单共用一张 cy-option-sheet(全仓不用系统 ActionSheet)
   openStoryMore() {
-    wx.showActionSheet({
-      itemList: ['章节设置', '退出编辑'],
-      success: (res) => {
-        if (res.tapIndex === 0) this.openChapterSettingsFromStory({ currentTarget: { dataset: { index: this.data.storyEditor.chapterIndex } } });
-        else if (res.tapIndex === 1) this.closeStoryEditor();
-      },
-    });
+    this._storyOptionsFor = { kind: 'more', items: ['章节设置', '退出编辑'] };
+    this.setData({ storyOptions: { show: true, title: '', items: this._storyOptionsFor.items } });
+  },
+
+  closeStoryOptions() {
+    this._storyOptionsFor = null;
+    this.setData({ 'storyOptions.show': false });
+  },
+
+  onStoryOptionPick(e) {
+    const ctx = this._storyOptionsFor;
+    const pick = ctx && ctx.items[Number(e && e.detail && e.detail.index)];
+    this.closeStoryOptions();
+    if (!pick) return;
+    if (ctx.kind === 'more') {
+      if (pick === '章节设置') this.openChapterSettingsFromStory({ currentTarget: { dataset: { index: this.data.storyEditor.chapterIndex } } });
+      else this.closeStoryEditor();
+      return;
+    }
+    this._storyGripAction(ctx.blockKey, pick);
   },
 
   openStoryInsertSheet() { this.setData({ storySheet: 'insert' }); },
@@ -2191,32 +2206,33 @@ Page({
     const blockKey = e.currentTarget.dataset.blockkey;
     const index = this._storyBlockIndex(blockKey);
     const blocks = (this._storyChapter() || {}).blocks || [];
-    const block = blocks[index];
-    if (!block) return;
+    if (!blocks[index]) return;
     const items = [];
     if (index > 0) items.push('上移');
     if (index < blocks.length - 1) items.push('下移');
     items.push('删除');
-    wx.showActionSheet({
-      itemList: items,
-      success: (res) => {
-        const pick = items[res.tapIndex];
-        const ev = { currentTarget: { dataset: { blockkey: blockKey } } };
-        if (pick === '删除') {
-          if (block.type === 'text') this.removeStoryText(ev);
-          else if (block.type === 'node') this.removeStoryNode(ev);
-          else this.removeStoryMedia(ev);
-          return;
-        }
-        try {
-          this._pushUndo();
-          this._storyCommand({ type: 'moveBlock', blockKey, index: pick === '上移' ? index - 1 : index + 1 });
-          if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
-        } catch (error) {
-          cyToast(app.getRequestErrorMessage(error, '移动失败'));
-        }
-      },
-    });
+    this._storyOptionsFor = { kind: 'grip', blockKey, items };
+    this.setData({ storyOptions: { show: true, title: '', items } });
+  },
+
+  _storyGripAction(blockKey, pick) {
+    const index = this._storyBlockIndex(blockKey);
+    const block = ((this._storyChapter() || {}).blocks || [])[index];
+    if (!block) return;
+    const ev = { currentTarget: { dataset: { blockkey: blockKey } } };
+    if (pick === '删除') {
+      if (block.type === 'text') this.removeStoryText(ev);
+      else if (block.type === 'node') this.removeStoryNode(ev);
+      else this.removeStoryMedia(ev);
+      return;
+    }
+    try {
+      this._pushUndo();
+      this._storyCommand({ type: 'moveBlock', blockKey, index: pick === '上移' ? index - 1 : index + 1 });
+      if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+    } catch (error) {
+      cyToast(app.getRequestErrorMessage(error, '移动失败'));
+    }
   },
 
 
@@ -2772,6 +2788,22 @@ Page({
       const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
       that._commitInlineNodeAt(ci, ni, { imgUrl: next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
+  },
+
+  // 地点待办「替换地点」(r2-create b4-u02-03):只换这个节点的地址,沿用同一个选点器
+  onLocationTodoReplace(e) {
+    const nodeId = String((e && e.detail && e.detail.nodeId) || '');
+    const chapters = this.data.formData.chapters || [];
+    for (let c = 0; c < chapters.length; c += 1) {
+      const nodes = (chapters[c] && chapters[c].nodes) || [];
+      for (let n = 0; n < nodes.length; n += 1) {
+        if (nodes[n] && String(nodes[n].id) === nodeId) {
+          this.pickNodeLocation({ currentTarget: { dataset: { chapterindex: c, nodeindex: n } } });
+          return;
+        }
+      }
+    }
+    cyToast('没有找到这个地点对应的节点');
   },
 
   pickNodeLocation(e) {
