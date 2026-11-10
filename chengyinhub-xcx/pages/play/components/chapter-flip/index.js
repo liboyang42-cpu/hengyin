@@ -1,5 +1,9 @@
 // 章节翻转过场(2026-10-28 业主定稿原型 claude.ai/artifact/KKQJxLNAL3JSb5pYDF1xtb)。
-// gate:上一章做完时先由星点拼出方块章节号 + 本章成绩,再升起三棱锥转到这一章那面;没有上一章就直接出三棱锥。
+// gate(l-play 2026-11-10,按业主批准的 proto/game gp-chapter-start / gp-chapter-end):
+//   上一章做完 → 整屏「第 N 章完成」:本章照片渐入底色、星点锁成方块章节号、成功插图、三格数据滚上来、底部「下一站」;
+//   点「下一站」(或停留后)照片与文字化成细粉尘往右上吹散,方块炸回星点,下一章的整屏浮现、星点再锁成下一个章节号。
+//   章节开始 → 星点飞拢锁成金色方块章节号,章眉 / 章名 / 数据逐字解码,底部「读下去」;点它数字炸散回星点,交回正文。
+//   三棱锥不再用于章节门(业主「没有再画立方体」),只留给通关。
 // finale:文字全部隐去 → 三棱锥越转越快、停在金色面 → 炸成碎片 + 银色方块波 → 方块拼成银色城瘾标志 → 才出主题名、合计与按钮。
 const E = require('./engine');
 
@@ -8,9 +12,22 @@ const NOISE = '░▒▓█▚▞■□';
 const LOGO_SRC = '/images/cy_logo_mark.png';
 const CARD_AT_MS = 3000;                  // 炸开后多久立起通关卡(标题、合计、两枚按钮)
 const CONFETTI_AFTER_CARD_MS = 2400;      // g20:卡立起来之后彩纸再撒多久
-const END_HOLD_MS = 5200;                 // r2-finish:章节完成卡停多久自己溶解(点「下一站」可提前)
+const END_HOLD_MS = 5200;                 // r2-finish:章节完成屏停多久自己溶解(点「下一站」可提前)
+const START_AUTO_MS = 3600;               // 2026-09-24 业主:章节门不必每章都点,停一下自己进;「读下去」可提前
+const DUST_MS = 1300;                     // l-play:细粉尘吹散时长(refs2/chapter-end-dissolve)
+const COVER_H = 330;                      // 完成屏顶部照片高度(390 宽稿 px,与 .cf__cover 同值)
+const STAT_ROLL_MS = 900;                 // 三格数据滚上来
 
 function chars(text) { return Array.from(String(text || '')); }
+/** 数据格怎么滚:纯整数从 0 滚;mm:ss 按秒滚;a/b 只滚 a;别的(例如「—」)不滚,直接写。 */
+function statStart(v) { return statAt(v, 0); }
+function statAt(v, e) {
+  let m;
+  if ((m = /^(\d+)$/.exec(v))) return String(Math.round(Number(m[1]) * e));
+  if ((m = /^(\d+):(\d{2})$/.exec(v))) { const sec = Math.round((Number(m[1]) * 60 + Number(m[2])) * e); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
+  if ((m = /^(\d+)\/(\d+)$/.exec(v))) return Math.round(Number(m[1]) * e) + '/' + m[2];
+  return v;
+}
 
 Component({
   properties: {
@@ -20,7 +37,7 @@ Component({
     info: { type: Object, value: {} },              // 这一章 / 通关:{ kicker, title, desc, stats:[{v,k}] }
     reducedMotion: { type: Boolean, value: false },
   },
-  data: { copy: null, quiet: false, cta: false, out: false, endCard: null, endIn: false, endOut: false },
+  data: { copy: null, quiet: false, cta: false, out: false, endCard: null, endIn: false, endOut: false, endStats: [], start: false, startIn: false },
   lifetimes: {
     ready() {
       this.createSelectorQuery().select('#cf').fields({ node: true, size: true }).exec((res) => {
@@ -48,6 +65,7 @@ Component({
     _clear() {
       (this._timers || []).forEach(clearTimeout); this._timers = [];
       clearInterval(this._decodeTimer); this._decodeTimer = 0;
+      clearInterval(this._statTimer); this._statTimer = 0;
       if (this._cv && this._raf) this._cv.cancelAnimationFrame(this._raf);
       this._raf = 0;
     },
@@ -60,7 +78,7 @@ Component({
       this._tiles = []; this._sparks = []; this._shards = []; this._waves = []; this._confetti = [];
       this._rot = 0; this._turn = null; this._scene = { a: 0, k: 0.86, from: 0, t0: 0, show: false };
       this._shineT = 0; this._flash = 0; this._flare = 0; this._shakeT = 0; this._confettiUntil = 0;
-      this._art = []; this._sprites = []; this._dust = [];
+      this._art = []; this._sprites = []; this._dust = []; this._fine = []; this._covers = [];
     },
     _off(w, h) { return wx.createOffscreenCanvas({ type: '2d', width: w, height: h }); },
 
@@ -86,7 +104,7 @@ Component({
         const host = this._off(4, 4);
         if (!f.cover) { render(null); return; }
         const img = host.createImage();
-        img.onload = () => render(img);
+        img.onload = () => { this._covers[i] = img; render(img); };
         img.onerror = () => render(null);
         img.src = f.cover;
         // 线刻面上漂浮的老照片:这一章节点自己的照片,最多 3 张
@@ -102,31 +120,47 @@ Component({
     _gate() {
       const end = this.data.endInfo;
       if (end && end.number) {
-        // r2-finish:上一章完成 = Questo B1 结构的完成卡(勾 → 第 N 章完成 → 用时/本章得分 → 下一站),
-        // 停一会儿(或点「下一站」)后整张卡化成粒子散开(refs2/chapter-end-dissolve-frames),再升起下一章的三棱锥。
+        // 上一章完成 = 整屏(照片 + 方块章节号 + 成功插图 + 三格数据 + 下一站),停一会儿(或点「下一站」)后化成粉尘,再浮现下一章开场。
         this._stage = 'end';
         this._rot = 0;
-        this.setData({ endCard: { kicker: end.kicker || '', title: end.title || '', rows: end.rows || [], next: end.next || '' } });
+        const rows = (end.rows || []).slice(0, 3);
+        this.setData({
+          endCard: { kicker: end.kicker || '', title: end.title || '', cover: end.cover || '', next: end.next || '' },
+          endStats: rows.map((r) => ({ k: r.k, v: String(r.v), shown: this.data.reducedMotion ? String(r.v) : statStart(String(r.v)) })),
+        });
         this._at(() => this.setData({ endIn: true }), 40);
-        // 停留时长不随减弱动态归零:完成卡要看得到;减弱动态只去掉溶解动画本身。
+        if (this._ctx) this._assemble({ text: end.number, top: 96 * this._S });
+        this._at(() => this._rollStats(), 600);
+        // 停留时长不随减弱动态归零:完成屏要看得到;减弱动态只去掉溶解动画本身。
         (this._timers = this._timers || []).push(setTimeout(() => { if (!this._gone) this._dissolve(); }, END_HOLD_MS));
       } else {
-        this._rot = 120;
-        this._toFlip(false);
+        this._toStart(false);
       }
     },
-    _toFlip(fromEnd) {
-      if (this._stage === 'flip' || this._gone) return;
-      this._stage = 'flip';
-      if (fromEnd) {
-        this._scatter();
-        this._at(() => this._showScene(), 140);
-        this._at(() => this._turnTo(120, 640, E.easeInOutBack), 520);
-      } else {
-        this._showScene();
-      }
-      this._decode(this.data.info, fromEnd ? 700 : 300);
-      this._at(() => this._continue(), fromEnd ? 3600 : 3000);
+    /** 章节开始屏:星点锁成方块章节号(序章没有数字),章眉 / 章名 / 说明 / 数据逐字解码,「读下去」亮起;停一下自己进。 */
+    _toStart(fromEnd) {
+      if (this._stage === 'start' || this._gone) return;
+      this._stage = 'start';
+      const info = this.data.info || {};
+      if (this._ctx && info.number) this._assemble({ text: info.number, top: 150 * this._S });
+      this.setData({ start: true });
+      this._at(() => this.setData({ startIn: true }), 40);
+      this._decode(info, fromEnd ? 500 : 300);
+      this._at(() => this.setData({ cta: true }), fromEnd ? 1100 : 900);
+      this._at(() => this._continue(), fromEnd ? START_AUTO_MS + 300 : START_AUTO_MS);
+    },
+    /** 三格数据滚上来(只滚拿得到的真读数;mm:ss 按秒滚,a/b 只滚 a;其余直接写)。 */
+    _rollStats() {
+      const stats = this.data.endStats || [];
+      if (this.data.reducedMotion || !stats.length) return;
+      const t0 = Date.now();
+      clearInterval(this._statTimer);
+      this._statTimer = setInterval(() => {
+        if (this._gone) { clearInterval(this._statTimer); return; }
+        const p = E.clamp01((Date.now() - t0) / STAT_ROLL_MS), e = E.easeOutCubic(p);
+        this.setData({ endStats: stats.map((s) => Object.assign({}, s, { shown: statAt(s.v, e) })) });
+        if (p >= 1) { clearInterval(this._statTimer); this._statTimer = 0; }
+      }, 40);
     },
     _finale() {
       this._stage = 'finale';
@@ -160,58 +194,74 @@ Component({
       this._at(() => this._assembleLogo(false), 700);
       this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); }, CARD_AT_MS);
     },
+    /** 「读下去」/ 点任意处:方块炸散回星点,整屏淡出,交回正文(通关过场不走这里)。 */
     _continue() {
       if (this._left || this.data.mode !== 'gate') return;
       this._left = true;
-      this._clear();
+      (this._timers || []).forEach(clearTimeout); this._timers = [];
+      clearInterval(this._decodeTimer); this._decodeTimer = 0;
+      this._scatter();
       this.setData({ out: true });
-      this._at(() => this.triggerEvent('continue'), 320);
+      this._at(() => this.triggerEvent('continue'), 420);
     },
-    /** 点任意处:章节完成页 → 立刻溶解并翻到下一章;下一章 → 进正文。通关过场中途不响应,等按钮出来。 */
+    /** 点任意处:章节完成屏 → 立刻吹散并浮现下一章开场;开场屏 → 进正文。通关过场中途不响应,等按钮出来。 */
     onTap() {
       if (this.data.mode !== 'gate') return;
       if (this._stage === 'end') { (this._timers || []).forEach(clearTimeout); this._timers = []; this._dissolve(); return; }
       if (this._stage === 'dissolve') return;
       this._continue();
     },
-    /** 完成卡化成粒子:按卡片实际位置撒点,从左往右依次脱落、向右上飘散并淡出;卡片本身同步淡掉。减弱动态时直接切。 */
+    /** 完成屏化成细粉尘:照片按像素取色成 1–2px 的粉尘,从右上角开始、带湍流往右上吹散;文字同步吹走;方块炸回星点。减弱动态时直接切。 */
     _dissolve() {
       if (this._stage !== 'end' || this._gone) return;
       this._stage = 'dissolve';
-      const go = () => { this._stage = 'end-done'; this.setData({ endCard: null }); this._toFlip(true); };
+      clearInterval(this._statTimer); this._statTimer = 0;
+      const go = () => { this._stage = 'end-done'; this.setData({ endCard: null, endOut: false, endStats: [] }); this._toStart(true); };
       if (this.data.reducedMotion) { go(); return; }
-      this.createSelectorQuery().select('.cf__end').boundingClientRect().exec((res) => {
-        const r = res && res[0];
-        if (this._gone) return;
-        if (r && r.width > 0) this._spawnDust(r);
-        this.setData({ endOut: true });
-        this._at(go, 620);
-      });
+      this._spawnFineDust();
+      this._scatter();
+      this.setData({ endOut: true });
+      this._at(go, 1100);
     },
-    _spawnDust(r) {
-      const n = Math.min(1600, Math.round(r.width * r.height / 70));
-      const now = Date.now();
-      for (let i = 0; i < n; i++) {
-        const x = r.left + Math.random() * r.width, y = r.top + Math.random() * r.height;
-        const fx = (x - r.left) / r.width;
-        this._dust.push({
-          x, y, vx: 0.6 + Math.random() * 2.4, vy: -0.4 - Math.random() * 1.6,
-          born: now + fx * 420 + Math.random() * 160, life: 0, max: 50 + Math.random() * 50,
-          s: 0.8 + Math.random() * 1.8, c: E.PAL.dissolve[i % E.PAL.dissolve.length]
-        });
+    /** 粉尘:照片缩到 cols×rows 取色(没有照片时用底色上的灰),每格一粒,延迟按「右上先走」排;每粒 1–2px,带正弦湍流,边飞边淡边变小。 */
+    _spawnFineDust() {
+      const W = this._W || 390, S = this._S || 1, h = COVER_H * S, img = (this._covers || [])[0];
+      const level = Number(((typeof wx !== 'undefined' && wx.getDeviceInfo) ? wx.getDeviceInfo() : {}).benchmarkLevel);
+      const cols = level > 0 && level < 20 ? 36 : 56, rows = Math.max(8, Math.round(cols * h / W));
+      let px = null;
+      if (img) {
+        try {
+          const oc = this._off(cols, rows), g = oc.getContext('2d');
+          const sc = Math.max(cols / img.width, rows / img.height);
+          g.drawImage(img, (cols - img.width * sc) / 2, (rows - img.height * sc) / 2, img.width * sc, img.height * sc);
+          px = g.getImageData(0, 0, cols, rows).data;
+        } catch (e) { px = null; }
       }
+      const cw = W / cols, ch = h / rows, now = Date.now(), P = [];
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+        if (Math.random() < 0.35) continue;
+        const q = (j * cols + i) * 4;
+        const col = px ? 'rgb(' + px[q] + ',' + px[q + 1] + ',' + px[q + 2] + ')' : E.PAL.dissolve[(i + j) % E.PAL.dissolve.length];
+        P.push({ x: i * cw + Math.random() * cw, y: j * ch + Math.random() * ch, c: col, seed: Math.random() * 6.28, sp: 0.6 + Math.random() * 1.4,
+          born: now + (1 - i / cols) * 420 + (j / rows) * 300 + Math.random() * 160, s: (0.9 + Math.random() * 1.3) * S });
+      }
+      this._fine = P;
     },
-    _drawDust(ctx, now) {
-      if (!this._dust.length) return;
-      this._dust = this._dust.filter((p) => {
-        if (now < p.born) { ctx.globalAlpha = 0.9; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.s, p.s); return true; }
-        p.life++; if (p.life > p.max) return false;
-        p.vx += (Math.random() - 0.45) * 0.3; p.vy += (Math.random() - 0.55) * 0.2;
-        p.x += p.vx; p.y += p.vy;
-        ctx.globalAlpha = Math.max(0, 1 - p.life / p.max);
-        ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.s, p.s);
+    _drawFineDust(ctx, now) {
+      if (!this._fine.length) return;
+      this._fine = this._fine.filter((p) => {
+        const t = (now - p.born) / DUST_MS;
+        if (t < 0) { ctx.globalAlpha = 1; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.s, p.s); return true; }
+        if (t > 1) return false;
+        const e = 1 - Math.pow(1 - t, 2), el = now - p.born;
+        const wob = Math.sin(p.seed + el / 180) * 6 * t * this._S;
+        const dx = (26 + p.sp * 60) * e * this._S + wob, dy = -(14 + p.sp * 40) * e * this._S + Math.cos(p.seed * 2 + el / 220) * 5 * t * this._S;
+        ctx.globalAlpha = Math.max(0, 1 - t * 1.05); ctx.fillStyle = p.c;
+        const s = p.s * (1 - t * 0.5);
+        ctx.fillRect(p.x + dx, p.y + dy, s, s);
         return true;
       });
+      ctx.globalAlpha = 1;
     },
     onSave() { this.triggerEvent('save'); },
     onClose() { this.triggerEvent('continue'); },
@@ -418,7 +468,7 @@ Component({
       this._drawShards(ctx);
       this._drawWaves(ctx);
       this._drawParticles(ctx, now);
-      this._drawDust(ctx, now);
+      this._drawFineDust(ctx, now);
       if (this._flash) { const f = 1 - (now - this._flash) / 700; if (f > 0) { ctx.globalAlpha = 0.9 * f; ctx.fillStyle = E.PAL.flashTint; ctx.fillRect(0, 0, W, H); } else this._flash = 0; }
       ctx.globalAlpha = 1;
     },

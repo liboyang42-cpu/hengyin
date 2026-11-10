@@ -1,3 +1,15 @@
+// l-play:没有配图的物品按名字挑一张插图(cy-illus;认不出就用「藏品」),只是看法,不改物品数据
+function illusFor(name) {
+  const n = String(name || '');
+  if (/钥|匙|锁/.test(n)) return 'key';
+  if (/信|邮|函|票根/.test(n)) return 'envelope';
+  if (/票|证|卡/.test(n)) return 'pass';
+  if (/图|盘|针|罗/.test(n)) return 'compass';
+  if (/书|卷|账|簿|签|页/.test(n)) return 'bookmark';
+  if (/币|分|钱|金/.test(n)) return 'points';
+  if (/线索|笔记|纸/.test(n)) return 'clue';
+  return 'gem';
+}
 const sessionClient = require('../../../utils/game-session-client.js');
 const toast = require('../../../utils/toast.js');
 const gameplay = require('./theme-gameplay.js');
@@ -29,7 +41,7 @@ function present(view, nodes) {
   const claimOnly = rewards.ended(view);
   const items = contents.filter(i => i.kind === 'ITEM').map(i => Object.assign({}, i, {
     name: i.name || gameplay.valueName(i.id, view),
-    statLabel: gameplay.valueName(i.statKey || i.stat, view), initial: String(i.name || gameplay.valueName(i.id, view)).slice(0, 1),
+    statLabel: gameplay.valueName(i.statKey || i.stat, view), initial: String(i.name || gameplay.valueName(i.id, view)).slice(0, 1), illus: illusFor(i.name || gameplay.valueName(i.id, view)),
     effectText: i.stat || i.statKey ? gameplay.valueName(i.statKey || i.stat, view) + ' ' + (i.delta > 0 ? '+' : '') + i.delta : i.content || '随身物资',
     canUse: !claimOnly && !i.wear && !i.worn && !!(i.stat || i.statKey) && (view.scope !== 'TEAM' || (view.availableActions || []).includes('ITEM_USE')),
     canDiscard: !claimOnly && view.allowDiscard === true && (view.scope !== 'TEAM' || (view.availableActions || []).includes('ITEM_DISCARD')),

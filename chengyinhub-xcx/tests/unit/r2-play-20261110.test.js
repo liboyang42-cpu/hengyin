@@ -102,10 +102,13 @@ test('a1-v3-13-14 标题居中;左上地图放大时顶部数据行让开,收回
 
 test('a1-v3-15 延伸任务:入口行带旗标与计数徽章;半屏每站一张任务卡(配图或序号 + 地址)', () => {
   assert.match(read('pages/play/index.wxml'), /class="chfull__tasks"[^>]*hover-class="chfull__tasks--press"[^>]*><view class="chfull__tasks-ico"/)
+  // l-play 2026-11-10(业主第二轮「改成弹窗」「翻页卡」,proto pop-ext):半屏列表改成居中弹窗里的翻页卡,一次一张,仍是每站一张(配图或序号 + 地址)
   const sheet = read('pages/play/play-topbar.wxml')
-  assert.match(sheet, /class="stq__card" wx:for="\{\{storyTasks\.rows\}\}"/)
-  assert.match(sheet, /<text wx:else class="stq__no">\{\{item\.no\}\}<\/text>/)
-  assert.match(sheet, /wx:if="\{\{item\.address\}\}">\{\{item\.address\}\}/)
+  assert.doesNotMatch(sheet, /<cy-sheet show="\{\{storyTasks\.show\}\}"/)
+  assert.match(sheet, /<view class="lk-popwrap" wx:if="\{\{storyTasks\.show\}\}"/)
+  assert.match(sheet, /class="xd__c lk-card stq__card [^"]*" wx:for="\{\{storyTasks\.rows\}\}"/)
+  assert.match(sheet, /<text wx:else class="xd__no stq__no">\{\{item\.no\}\}<\/text>/)
+  assert.match(sheet, /wx:if="\{\{item\.address\}\}">地点<text>\{\{item\.address\}\}/)
 })
 
 test('a1-v3-16 背包:装载空格是灰方块;随身物品一行两格,空格灰方块至少两行', () => {
