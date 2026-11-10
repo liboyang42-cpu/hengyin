@@ -125,3 +125,58 @@ test('r3 收集册切段:新的一段从切换方向滑进来(via=l/r),减少动
   assert.equal(run('r', true).length, 0)
   assert.equal(run('', false).length, 0)
 })
+
+function loadInvite() {
+  const P = path.join(root, 'subpackageA/components/scene-member-invite-history/index.js')
+  delete require.cache[P]
+  global.getApp = () => ({ getPageSize: () => 20 })
+  global.Component = () => {}
+  global.wx = { getStorageSync: () => '', getSystemInfoSync: () => ({}) }
+  return require(P)
+}
+
+test('r3 分享赚积分:余额与到账只取积分流水真实行;最新一条是邀请奖励才从 current 数到 after', () => {
+  const { earnFacts } = loadInvite()
+  const rows = [
+    { id: 61, eventType: 5, eventId: 9008, currentPoints: 70, afterPoints: 180, changePoints: 110, createTime: '2026-11-10 17:53:25' },
+    { id: 58, eventType: 3, eventId: 76, currentPoints: 50, afterPoints: 70, changePoints: 20 },
+  ]
+  const f = earnFacts(rows, [{ id: 9008, nickname: '阿岚', avatar: 'a.png' }])
+  assert.deepEqual(f.balance, { from: 70, to: 180 })
+  assert.equal(f.latest.points, '110')
+  assert.equal(f.latest.nickname, '阿岚')
+  const other = earnFacts([{ id: 70, eventType: 3, currentPoints: 180, afterPoints: 200, changePoints: 20 }].concat(rows), [])
+  assert.deepEqual(other.balance, { from: 200, to: 200 }, '最新一条不是邀请奖励:余额静止')
+  assert.equal(other.latest.nickname, '', '找不到被邀请人就不写名字')
+  const none = earnFacts([{ id: 1, eventType: 3, changePoints: 20 }], [])
+  assert.equal(none.balance, null, '读不到 afterPoints 不出余额,不写 0')
+  assert.equal(none.latest, null, '没有到账的邀请奖励就没有到账卡')
+  assert.deepEqual(earnFacts(null, null), { balance: null, latest: null })
+})
+
+test('r3 分享赚积分:数字滚动最后一定落在真实值,减少动态效果直接落值', async () => {
+  const { countUp } = loadInvite()
+  const seen = []
+  const ctx = { setData(p) { seen.push(p.v) } }
+  countUp(ctx, 'v', 70, 180, 140, false)
+  await new Promise(r => setTimeout(r, 260))
+  assert.equal(seen[0], '70')
+  assert.equal(seen[seen.length - 1], '180')
+  for (let i = 1; i < seen.length; i++) assert.ok(Number(seen[i]) >= Number(seen[i - 1]), '只往上数')
+  const fast = []
+  countUp({ setData(p) { fast.push(p.v) } }, 'v', 0, 110, 900, true)
+  assert.deepEqual(fast, ['110'])
+})
+
+test('r3 分享赚积分界面:到账卡只在有到账时出;勾只在到位(s3)后弹出;只动 transform/opacity;奖励胶囊仍中性', () => {
+  const wxml = read('subpackageA/components/scene-member-invite-history/index.wxml')
+  assert.match(wxml, /class="ir-earn ir-earn--s\{\{earnStage\}\}" wx:if="\{\{latest && groups\.length\}\}"/)
+  assert.match(wxml, /class="ir-bal" wx:if="\{\{balanceText\}\}"/)
+  const wxss = read('subpackageA/components/scene-member-invite-history/index.wxss')
+  assert.match(wxss, /\.ir-earn--s3 \.ir-earn-ok \{ transform: scale\(1\); \}/)
+  assert.doesNotMatch(wxss, /@keyframes|animation:/)
+  const earn = wxss.slice(wxss.indexOf('r3-visual 分享赚积分'))
+  assert.doesNotMatch(earn, /transition:[^;]*\b(width|height|left|top|right|bottom|margin)\b/)
+  assert.match(wxss, /\.ir-row:nth-child\(2\) \{ transition-delay/, '记录行逐行错开浮上来')
+  assert.doesNotMatch(wxss.match(/\.ir-reward \{[^}]*\}/)[0], /success/)
+})

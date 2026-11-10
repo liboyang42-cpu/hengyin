@@ -66,11 +66,48 @@
 .ir-group:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 90ms); }
 .ir-group:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 160ms); }
 .ir-group:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 230ms); }
+/* r3-visual 加载过渡(refs4/load-tab-transition-frames):骨架之后每月卡里的行再一行行错开浮上来 */
+.ir-row {
+  filter: opacity(calc(1 - var(--pm-i, 0)));
+  translate: 0 calc(var(--pm-i, 0) * 24rpx);
+  transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
+  transition-delay: calc(var(--pm-i-s, 0) * 360ms);
+}
+.ir-row:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 420ms); }
+.ir-row:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 480ms); }
+.ir-row:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 540ms); }
+.ir-row:nth-child(n+5) { transition-delay: calc(var(--pm-i-s, 0) * 600ms); }
 @media (prefers-reduced-motion: reduce) {
-  .ir-hero, .ir-group, .ir-stack-i { filter: none; translate: none; transition: none; }
+  .ir-hero, .ir-group, .ir-stack-i, .ir-row { filter: none; translate: none; transition: none; }
 }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+/* ===== r3-visual 分享赚积分(refs4/share-earn-credits-frames) ===== */
+.ir-hero-top { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); }
+/* 余额胶囊:数字滚动用等宽数字,宽度不跳 */
+.ir-bal { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-action-secondary-bg); }
+.ir-bal-dot { width: 20rpx; height: 20rpx; border-radius: 50%; background: var(--cy-color-medal-gold); }
+.ir-bal-n { color: var(--cy-color-text-primary); font-size: var(--cy-type-label); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* 最新到账卡:s1 扫描(头像框 + 扫描线)→ s2 金额浮现 → s3 上滑到位 + 打勾。只动 transform / opacity */
+.ir-earn { position: relative; display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-5); padding: var(--cy-space-4); border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle));
+  transform: translateY(0); transition: transform 420ms cubic-bezier(.2, 1.2, .4, 1); }
+.ir-earn--s1, .ir-earn--s2 { transform: translateY(32rpx); }
+.ir-earn-scan { position: relative; flex: none; width: 88rpx; height: 88rpx; border-radius: 50%; overflow: hidden; }
+.ir-earn-beam { position: absolute; left: 0; right: 0; top: 0; height: 6rpx; background: var(--cy-color-status-success); box-shadow: 0 0 16rpx var(--cy-color-status-success); opacity: 0; transform: translateY(0); }
+.ir-earn--s1 .ir-earn-beam { opacity: 1; transform: translateY(82rpx); transition: transform 480ms ease-in-out; }
+.ir-earn-ok { position: absolute; right: 0; bottom: 0; width: 40rpx; height: 40rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-status-success); color: #FFFFFF; /* ds-ok: 勾 */
+  transform: scale(0); transition: transform 260ms cubic-bezier(.2, 1.6, .4, 1); }
+.ir-earn--s3 .ir-earn-ok { transform: scale(1); }
+.ir-earn-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
+.ir-earn-amt { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 750; font-variant-numeric: tabular-nums;
+  opacity: 1; transform: scale(1); transition: transform 360ms cubic-bezier(.2, 1.3, .4, 1), opacity 240ms linear; }
+.ir-earn--s1 .ir-earn-amt { opacity: 0; transform: scale(.6); }
+.ir-earn-sub { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
+.ir-earn-time { position: absolute; right: var(--cy-space-4); top: var(--cy-space-4); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .ir-earn, .ir-earn-amt, .ir-earn-ok, .ir-earn-beam { transition: none; }
+}

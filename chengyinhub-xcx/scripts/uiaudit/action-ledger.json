@@ -2544,6 +2544,19 @@
           ]
         },
         {
+          "route": "subpackageA/pages/assetcenter/earnings/index",
+          "segments": [
+            {
+              "selector": "cy-scene-member-invite-history",
+              "index": 0
+            },
+            {
+              "selector": "cy-avatar",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageB/pages/im/chat/index",
           "segments": [
             {
@@ -2652,6 +2665,19 @@
             {
               "selector": "cy-avatar",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/myinvite/myinvite",
+          "segments": [
+            {
+              "selector": "#inviteHistory",
+              "index": 0
+            },
+            {
+              "selector": "cy-avatar",
+              "index": 1
             }
           ]
         },
@@ -1418481,7 +1418507,7 @@
       }
     },
     {
-      "id": "subpackageA/components/scene-member-invite-history/index.wxml:19:bind:retry:retry:0",
+      "id": "subpackageA/components/scene-member-invite-history/index.wxml:38:bind:retry:retry:0",
       "route": "component:subpackageA/components/scene-member-invite-history/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1418526,7 +1418552,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retry",
-        "line": 19,
+        "line": 38,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{loadErr && !groups.length}}",
         "loadFailureCondition": "{{!authRequired && !accessDenied}}",
@@ -1418590,11 +1418616,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:277"
+        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:344"
       }
     },
     {
-      "id": "subpackageA/components/scene-member-invite-history/index.wxml:42:bindtap:loadMore:1",
+      "id": "subpackageA/components/scene-member-invite-history/index.wxml:61:bindtap:loadMore:1",
       "route": "component:subpackageA/components/scene-member-invite-history/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1418639,7 +1418665,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 42,
+        "line": 61,
         "selectorHint": ".ir-more",
         "visibleCondition": "{{hasMore && !loading && !loadMoreError}}",
         "disabledCondition": null,
@@ -1418702,11 +1418728,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:278"
+        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:345"
       }
     },
     {
-      "id": "subpackageA/components/scene-member-invite-history/index.wxml:44:bindtap:loadMore:2",
+      "id": "subpackageA/components/scene-member-invite-history/index.wxml:63:bindtap:loadMore:2",
       "route": "component:subpackageA/components/scene-member-invite-history/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1418751,7 +1418777,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 44,
+        "line": 63,
         "selectorHint": ".ir-more",
         "visibleCondition": "{{loadMoreError && groups.length && !loading}}",
         "disabledCondition": null,
@@ -1418814,7 +1418840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:278"
+        "staticSource": "subpackageA/components/scene-member-invite-history/index.js:345"
       }
     },
     {
