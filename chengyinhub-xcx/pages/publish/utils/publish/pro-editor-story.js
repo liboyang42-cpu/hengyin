@@ -54,6 +54,76 @@ function isThoughtType(type) {
   return type === 'thought';
 }
 
+// ── 编辑器原型 v2(2026-11-10 l-editor,业主批准)三种块 ──
+// 图片组 gallery:点「图片」先选版式(1 单图 / 2 双图 / 3 三图 / 4 四图),再逐格选图;整组是一个块,
+// 拖动时整组一起走。编辑中允许有空格(还没选图),出 payload 时只带已选的图;一张都没有的组不落库。
+// 说明文字放 altText(与 image 块同一个字段,玩家端可读、读屏可读)。
+var GALLERY_MAX_LAYOUT = 4;
+function isGalleryType(type) { return type === 'gallery'; }
+function galleryLayoutOf(raw) {
+  var n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= GALLERY_MAX_LAYOUT ? n : 1;
+}
+function normalizeGalleryImages(images, layout) {
+  var out = [];
+  (Array.isArray(images) ? images : []).forEach(function (item) {
+    var url = String(item && item.url == null ? '' : item.url).trim();
+    if (url) out.push({ url: url });
+  });
+  return out.slice(0, layout);
+}
+// 分支任务 branch:一个问题 + 2 至 3 条分支,每条写去向(continue 继续本章 / end 结束本章 / chapter:N 跳到第 N 章)。
+// 与服务端 ChapterFlowCompiler 同一份上限与去向语法。
+var BRANCH_MIN_OPTIONS = 2;
+var BRANCH_MAX_OPTIONS = 3;
+var BRANCH_MAX_QUESTION = 200;
+var BRANCH_MAX_OPTION_TEXT = 40;
+var BRANCH_TO = /^(continue|end|chapter:[1-9][0-9]{0,2})$/;
+function isBranchType(type) { return type === 'branch'; }
+function normalizeBranchOptions(options) {
+  var list = (Array.isArray(options) ? options : []).map(function (item) {
+    var to = String(item && item.to == null ? 'continue' : item.to).trim();
+    return { text: String(item && item.text == null ? '' : item.text), to: BRANCH_TO.test(to) ? to : 'continue' };
+  });
+  while (list.length < BRANCH_MIN_OPTIONS) list.push({ text: '', to: 'continue' });
+  return list.slice(0, BRANCH_MAX_OPTIONS);
+}
+// 章节开始 / 结束卡 cap:开场白(open)与结语(end)。它们在编辑器里是固定在首尾、不参与拖动的两张卡,
+// 所以不放进 blocks 数组,而是挂在章节的 _capOpen / _capEnd 上;出 payload 时再还原成本章第一个 / 最后一个块。
+var CAP_MAX_LENGTH = 500;
+var CAP_KEYS = { open: 'cap-open', end: 'cap-end' };
+function isCapType(type) { return type === 'cap'; }
+function liftCapBlocks(chapter) {
+  if (!Array.isArray(chapter.blocks)) return;
+  var kept = [];
+  chapter.blocks.forEach(function (block) {
+    if (!block || !isCapType(block.type)) { kept.push(block); return; }
+    var text = String(block.content == null ? '' : block.content);
+    if (block.cap === 'open') chapter._capOpen = text;
+    else if (block.cap === 'end') chapter._capEnd = text;
+  });
+  chapter.blocks = kept;
+}
+function capPayloadBlock(kind, text) {
+  var content = String(text == null ? '' : text);
+  if (!content.trim()) return null;
+  if (content.trim().length > CAP_MAX_LENGTH) throw new Error((kind === 'open' ? '开场白' : '结语') + '不能超过 ' + CAP_MAX_LENGTH + ' 字');
+  return { key: CAP_KEYS[kind], type: 'cap', cap: kind, content: content.trim() };
+}
+// 句子边界:拖到一段正文中间时,槽只落在句末(。!?;… 或换行之后),不会把一句话劈成两半。
+var SENTENCE_END = /[。!?！？;；…]+|\n/g;
+function sentenceBoundaries(text) {
+  var out = [];
+  var src = String(text == null ? '' : text);
+  var m;
+  SENTENCE_END.lastIndex = 0;
+  while ((m = SENTENCE_END.exec(src))) {
+    var end = m.index + m[0].length;
+    if (end > 0 && end < src.length) out.push(end);
+  }
+  return out;
+}
+
 // 《预制人生》两种表现块(2026-09-23):内心声音 voice{who,content} 与越往后越不正常 odd{level}。
 // 与 mood 同一条口径:不进 description,形状由这张表统一清洗(物化 / 存盘 / 插入三处共用)。
 var VOICE_NAMES = ['规矩', '窗外', '心', '精密', '咔哒'];
@@ -286,8 +356,20 @@ function materializeChapter(source, makeKey) {
     return synchronizeChapter(chapter);
   }
 
+  liftCapBlocks(chapter);
   chapter.blocks = chapter.blocks.map(function (sourceBlock) {
     var block = sourceBlock || {};
+    if (isGalleryType(block.type)) {
+      var galleryLayout = galleryLayoutOf(block.layout);
+      var gallery = Object.assign({}, block, { key: block.key || keyFactory(), type: 'gallery', layout: galleryLayout, images: normalizeGalleryImages(block.images, galleryLayout) });
+      delete gallery.altText;
+      var galleryAlt = mediaAltTextOf(block);
+      if (galleryAlt) gallery.altText = galleryAlt;
+      return gallery;
+    }
+    if (isBranchType(block.type)) {
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'branch', content: String(block.content == null ? '' : block.content), options: normalizeBranchOptions(block.options) });
+    }
     if (block.type === 'text') {
       return Object.assign({}, block, {
         key: block.key || keyFactory(),
@@ -355,9 +437,12 @@ function toPayloadChapter(source) {
   chapter.nodes = orderedNodes(chapter);
   var nodeIndexes = {};
   chapter.nodes.forEach(function (node, index) { nodeIndexes[node._localId] = index; });
+  liftCapBlocks(chapter);
   chapter.blocks = (chapter.blocks || []).filter(function (block) {
     // 还没选文件的空音频块只是编辑器里的占位,没有任何内容可上送 —— 不落库,也不报错。
     if (isMediaType(block.type) && !String(block.url == null ? '' : block.url).trim()) return false;
+    // 一张图都还没选的图片组同理:只是编辑器里的空格子,不落库
+    if (isGalleryType(block.type) && !normalizeGalleryImages(block.images, galleryLayoutOf(block.layout)).length) return false;
     // 一张图都还没加的梦块同理:空壳不落库
     if (isDreamType(block.type) && !normalizeDreamImages(block.images).length) {
       if (block.title != null) throw new Error('相册至少添加 1 张照片');
@@ -380,6 +465,27 @@ function toPayloadChapter(source) {
     if (block.type === 'node' && Object.prototype.hasOwnProperty.call(nodeIndexes, block.nodeKey)) {
       return Object.assign(authored, { key: block.key, type: 'node', nodeIndex: nodeIndexes[block.nodeKey] },
         block.locationRequired === false ? { locationRequired: false } : {});
+    }
+    if (isGalleryType(block.type)) {
+      var payloadLayout = galleryLayoutOf(block.layout);
+      var galleryPayload = Object.assign(authored, { type: 'gallery', key: block.key, layout: payloadLayout, images: normalizeGalleryImages(block.images, payloadLayout) });
+      delete galleryPayload.altText;
+      var galleryCaption = mediaAltTextOf(block).trim();
+      if (galleryCaption.length > MEDIA_ALT_TEXT_MAX) throw new Error('图片说明不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
+      if (galleryCaption) galleryPayload.altText = galleryCaption;
+      return galleryPayload;
+    }
+    if (isBranchType(block.type)) {
+      var question = String(block.content == null ? '' : block.content).trim();
+      if (!question) throw new Error('分支任务要写一个问题');
+      if (question.length > BRANCH_MAX_QUESTION) throw new Error('分支问题不能超过 ' + BRANCH_MAX_QUESTION + ' 字');
+      var options = normalizeBranchOptions(block.options).map(function (item) {
+        var text = String(item.text == null ? '' : item.text).trim();
+        if (!text) throw new Error('每条分支都要写玩家看到的选项');
+        if (text.length > BRANCH_MAX_OPTION_TEXT) throw new Error('分支选项不能超过 ' + BRANCH_MAX_OPTION_TEXT + ' 字');
+        return { text: text, to: item.to };
+      });
+      return Object.assign(authored, { type: 'branch', key: block.key, content: question, options: options });
     }
     if (isDreamType(block.type)) {
       // 契约 §3.2 的块形状带 key:后端 ChapterBlockReadSupport 原样透传,
@@ -405,6 +511,11 @@ function toPayloadChapter(source) {
     }
     throw new Error('节点块引用已失效');
   });
+  // 章节开始 / 结束卡:开场白还原成第一个块,结语还原成最后一个块(服务端按位置校验)
+  var openCap = capPayloadBlock('open', chapter._capOpen);
+  var endCap = capPayloadBlock('end', chapter._capEnd);
+  if (openCap) chapter.blocks.unshift(openCap);
+  if (endCap) chapter.blocks.push(endCap);
   chapter.nodes = chapter.nodes.map(stripLocalFields);
   // 结局章(2026-09-24):界面形状 → ChapterDTO.ending({fallback:true} 或 {when:[...]});没开就不带
   var ending = storyEnding.chapterEndingPayload(chapter.ending, chapter.name);
@@ -706,8 +817,22 @@ function applyStoryCommand(input, command) {
   if (command.type === 'insertMediaAt') {
     if (draft.chapter.blocks.length >= MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
     if (!isMediaType(command.mediaType) && !isDreamType(command.mediaType) && !isMoodType(command.mediaType) && !isThoughtType(command.mediaType)
+      && !isGalleryType(command.mediaType) && !isBranchType(command.mediaType)
       && !PLAIN_BLOCKS[command.mediaType]) throw new Error('不支持的媒体块类型');
     var mediaAt = insertionIndex(draft.chapter.blocks, command.index);
+    // 图片组:先按版式落一组空格,再逐格选图(与梦块同一条「先落块再配」的规矩)
+    if (isGalleryType(command.mediaType)) {
+      var newLayout = galleryLayoutOf(command.layout);
+      draft.chapter.blocks.splice(mediaAt, 0, { key: command.blockKey, type: 'gallery', layout: newLayout, images: normalizeGalleryImages(command.images, newLayout) });
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, insertedBlockKey: command.blockKey };
+    }
+    // 分支任务:落一个问题 + 两条空分支,作者在分支弹窗里填
+    if (isBranchType(command.mediaType)) {
+      draft.chapter.blocks.splice(mediaAt, 0, { key: command.blockKey, type: 'branch', content: String(command.content == null ? '' : command.content), options: normalizeBranchOptions(command.options) });
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, insertedBlockKey: command.blockKey };
+    }
     if (PLAIN_BLOCKS[command.mediaType]) {
       draft.chapter.blocks.splice(mediaAt, 0, Object.assign({ key: command.blockKey, type: command.mediaType }, PLAIN_BLOCKS[command.mediaType](command)));
       synchronizeChapter(draft.chapter);
@@ -877,7 +1002,7 @@ function applyStoryCommand(input, command) {
     var mediaIndex = draft.chapter.blocks.findIndex(function (item) {
       // 非文字 / 非节点的块都从这里删(氛围、伏笔、内心声音、异常以前漏了,点叉号只弹「未找到」)
       return item && item.key === command.blockKey && (isMediaType(item.type) || isDreamType(item.type)
-        || isMoodType(item.type) || isThoughtType(item.type) || !!PLAIN_BLOCKS[item.type]);
+        || isMoodType(item.type) || isThoughtType(item.type) || isGalleryType(item.type) || isBranchType(item.type) || !!PLAIN_BLOCKS[item.type]);
     });
     if (mediaIndex < 0) throw new Error('未找到要删除的媒体块');
     draft.chapter.blocks.splice(mediaIndex, 1);
@@ -1004,6 +1129,126 @@ function applyStoryCommand(input, command) {
     };
   }
 
+  // ── 图片组:往某一格放图 / 拿掉一格 / 改说明 ──
+  if (command.type === 'fillGalleryCell') {
+    var cellBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isGalleryType(item.type); });
+    if (!cellBlock) throw new Error('未找到要配图的图片组');
+    var cellUrl = String(command.url == null ? '' : command.url).trim();
+    if (!cellUrl) throw new Error('媒体块缺少地址');
+    var cellLayout = galleryLayoutOf(cellBlock.layout);
+    var cellIndex = Number(command.index);
+    var cells = normalizeGalleryImages(cellBlock.images, cellLayout);
+    if (!Number.isInteger(cellIndex) || cellIndex < 0 || cellIndex >= cellLayout) throw new Error('图片组这一格不存在');
+    if (cellIndex < cells.length) cells[cellIndex] = { url: cellUrl };
+    else cells.push({ url: cellUrl });
+    cellBlock.layout = cellLayout;
+    cellBlock.images = cells;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+  if (command.type === 'removeGalleryImage') {
+    var dropBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isGalleryType(item.type); });
+    if (!dropBlock) throw new Error('未找到要改的图片组');
+    var dropCells = normalizeGalleryImages(dropBlock.images, galleryLayoutOf(dropBlock.layout));
+    var dropIndex = Number(command.index);
+    if (!Number.isInteger(dropIndex) || dropIndex < 0 || dropIndex >= dropCells.length) throw new Error('图片组这一格没有图');
+    dropCells.splice(dropIndex, 1);
+    dropBlock.images = dropCells;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+  if (command.type === 'editGalleryCaption') {
+    var capBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isGalleryType(item.type); });
+    if (!capBlock) throw new Error('未找到要改的图片组');
+    var caption = String(command.altText == null ? '' : command.altText);
+    if (caption.trim().length > MEDIA_ALT_TEXT_MAX) throw new Error('图片说明不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
+    if (caption) capBlock.altText = caption; else delete capBlock.altText;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  // ── 分支任务:改问题 / 改某条分支的文字或去向 / 加一条 / 删一条 ──
+  if (command.type === 'updateBranch') {
+    var branchBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isBranchType(item.type); });
+    if (!branchBlock) throw new Error('未找到要编辑的分支任务');
+    if (command.content != null) {
+      var nextQuestion = String(command.content);
+      if (nextQuestion.trim().length > BRANCH_MAX_QUESTION) throw new Error('分支问题不能超过 ' + BRANCH_MAX_QUESTION + ' 字');
+      branchBlock.content = nextQuestion;
+    }
+    var nextOptions = normalizeBranchOptions(branchBlock.options);
+    if (command.option) {
+      var optionIndex = Number(command.option.index);
+      if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= nextOptions.length) throw new Error('这条分支不存在');
+      if (command.option.text != null) {
+        var optionText = String(command.option.text);
+        if (optionText.trim().length > BRANCH_MAX_OPTION_TEXT) throw new Error('分支选项不能超过 ' + BRANCH_MAX_OPTION_TEXT + ' 字');
+        nextOptions[optionIndex].text = optionText;
+      }
+      if (command.option.to != null) {
+        var optionTo = String(command.option.to).trim();
+        if (!BRANCH_TO.test(optionTo)) throw new Error('分支去向无效');
+        nextOptions[optionIndex].to = optionTo;
+      }
+    }
+    if (command.addOption) {
+      if (nextOptions.length >= BRANCH_MAX_OPTIONS) throw new Error('最多 ' + BRANCH_MAX_OPTIONS + ' 条分支');
+      nextOptions.push({ text: '', to: 'continue' });
+    }
+    if (command.removeOption != null) {
+      var removeAt = Number(command.removeOption);
+      if (nextOptions.length <= BRANCH_MIN_OPTIONS) throw new Error('至少 ' + BRANCH_MIN_OPTIONS + ' 条分支');
+      if (!Number.isInteger(removeAt) || removeAt < 0 || removeAt >= nextOptions.length) throw new Error('这条分支不存在');
+      nextOptions.splice(removeAt, 1);
+    }
+    branchBlock.options = nextOptions;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  // ── 章节开始 / 结束卡的话:只改章节上的 _capOpen / _capEnd,不碰块流 ──
+  if (command.type === 'setChapterCap') {
+    if (command.cap !== 'open' && command.cap !== 'end') throw new Error('章节卡位只能是 open / end');
+    var capText = String(command.content == null ? '' : command.content);
+    if (capText.trim().length > CAP_MAX_LENGTH) throw new Error((command.cap === 'open' ? '开场白' : '结语') + '不能超过 ' + CAP_MAX_LENGTH + ' 字');
+    if (command.cap === 'open') draft.chapter._capOpen = capText; else draft.chapter._capEnd = capText;
+    return { draft: draft };
+  }
+
+  // ── 拖到一段正文中间:在句子边界把这段拆成两段,被拖的块落在中间 ──
+  if (command.type === 'moveBlockInto') {
+    var intoFrom = draft.chapter.blocks.findIndex(function (block) { return block && block.key === command.blockKey; });
+    if (intoFrom < 0) throw new Error('未找到要移动的内容块');
+    var moving = draft.chapter.blocks[intoFrom];
+    if (hasNarrativeBeat(moving) || (moving.type === 'node' && draft.chapter.blocks.some(function (block) { return block && hasNarrativeBeat(block); }))) {
+      throw new Error('节点叙事段需保持站点前后位置，请使用节点叙事编辑');
+    }
+    var intoTarget = draft.chapter.blocks.findIndex(function (block) { return block && block.key === command.targetKey; });
+    if (intoTarget < 0 || intoTarget === intoFrom) throw new Error('未找到要插入的段落');
+    var host = draft.chapter.blocks[intoTarget];
+    if (!canSplitParagraphs(host)) throw new Error('这一段不能从中间拆开');
+    var hostText = String(host.content == null ? '' : host.content);
+    var at = Number(command.at);
+    if (sentenceBoundaries(hostText).indexOf(at) < 0) throw new Error('只能插在句子之间');
+    if (draft.chapter.blocks.length + 1 > MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
+    var tailKey = freshBlockKey(draft.chapter.blocks, command.tailKey);
+    bindNarrativeNodes(draft.chapter);
+    var hostMarks = storyInline.normalizeMarks(host.marks, hostText.length);
+    var headMarks = storyInline.sliceMarks(hostMarks, 0, at);
+    var tailMarks = storyInline.sliceMarks(hostMarks, at, hostText.length);
+    var tailText = hostText.slice(at).replace(/^\n/, '');
+    var tail = Object.assign(clone(host), { key: tailKey, content: tailText });
+    if (tailMarks.length) tail.marks = tailMarks; else delete tail.marks;
+    if (tail.style === 'h1' || tail.style === 'h2') delete tail.style;
+    host.content = hostText.slice(0, at);
+    if (headMarks.length) host.marks = headMarks; else delete host.marks;
+    draft.chapter.blocks.splice(intoFrom, 1);
+    var hostIndex = draft.chapter.blocks.findIndex(function (block) { return block && block.key === host.key; });
+    draft.chapter.blocks.splice(hostIndex + 1, 0, moving, tail);
+    synchronizeChapter(draft.chapter);
+    return { draft: draft, hostIndex: hostIndex, tailKey: tailKey };
+  }
+
   if (command.type === 'removeText') {
     var textIndex = draft.chapter.blocks.findIndex(function (item) {
       return item && item.key === command.blockKey && item.type === 'text';
@@ -1032,6 +1277,13 @@ module.exports = {
   STORY_STYLES: storyInline.STYLES,
   canSplitParagraphs: canSplitParagraphs,
   caretInsertCommand: caretInsertCommand,
+  sentenceBoundaries: sentenceBoundaries,
+  galleryLayoutOf: galleryLayoutOf,
+  normalizeGalleryImages: normalizeGalleryImages,
+  normalizeBranchOptions: normalizeBranchOptions,
+  GALLERY_MAX_LAYOUT: GALLERY_MAX_LAYOUT,
+  BRANCH_MAX_OPTIONS: BRANCH_MAX_OPTIONS,
+  CAP_MAX_LENGTH: CAP_MAX_LENGTH,
   DREAM_MAX_IMAGES: DREAM_MAX_IMAGES,
   MEDIA_ALT_TEXT_MAX: MEDIA_ALT_TEXT_MAX,
 };

@@ -238,7 +238,7 @@ public class AppMediaPublicationGuard {
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> child = fields.next();
                 String childPath = path.isEmpty() ? child.getKey() : path + "." + child.getKey();
-                if ("images".equals(child.getKey()) && "dream".equals(value.path("type").asText())) childPath = "blocks.images";
+                if ("images".equals(child.getKey()) && ("dream".equals(value.path("type").asText()) || "gallery".equals(value.path("type").asText()))) childPath = "blocks.images";
                 boolean blockMedia = "url".equals(child.getKey()) && ("image".equals(value.path("type").asText())
                         || "audio".equals(value.path("type").asText()) || path.endsWith("blocks.images"));
                 safe.set(child.getKey(), requireTree(owner, child.getValue(), blockMedia ? "imageUrl" : childPath, publish, inherited));
