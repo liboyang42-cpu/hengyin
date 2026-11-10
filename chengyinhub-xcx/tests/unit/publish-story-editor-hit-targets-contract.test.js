@@ -24,17 +24,18 @@ function assertContract(overrides = {}) {
   const wxml = overrides.wxml === undefined ? fs.readFileSync(WXML, 'utf8') : overrides.wxml
   const wxss = overrides.wxss === undefined ? fs.readFileSync(WXSS, 'utf8') : overrides.wxss
 
-  for (const selector of ['.story-editor__back', '.story-editor__done', '.story-toolbar__item', '.node-pill', '.node-sheet__done']) {
+  // 2026-11-10 r2-create:故事流顶栏 / 工具栏 / 插入菜单换成 X Articles 式(.sx-*)
+  for (const selector of ['.sx-top__text', '.sx-top__pill', '.sx-tool', '.sx-menu__row', '.node-pill', '.node-sheet__done']) {
     assert.match(rule(wxss, selector), /(min-)?height:\s*var\(--cy-btn-h\)/, `${selector} 高度不足 44px`)
   }
-  for (const selector of ['.story-block-x', '.pd-round-back', '.modal-close']) {
+  for (const selector of ['.story-block-x', '.sx-top__icon', '.sx-sheet__close', '.pd-round-back', '.modal-close']) {
     const cssRule = rule(wxss, selector)
     assert.match(cssRule, /width:\s*var\(--cy-btn-h\)/, `${selector} 宽度不足 44px`)
     assert.match(cssRule, /height:\s*var\(--cy-btn-h\)/, `${selector} 高度不足 44px`)
   }
 
   for (const label of [
-    '退出故事流编辑器', '完成故事流编辑', '插入玩法', '插入图片', '插入音频', '插入分割线', '插入地点', '在文末继续写',
+    '更多', '完成故事流编辑', '加粗', '斜体', '删除线', '段落样式', '引用', '项目列表', '编号列表', '表情', '插入', '本章信息', '拖动或移动这一块', '插入玩法', '插入图片', '插入音频', '插入分割线', '插入地点', '在文末继续写',
     '删除文字块', '删除图片块', '删除节点块', '关闭叙事编辑器',
     // 10-28 原型 A e-node：地点、玩法模板两行改用 L1 cy-list-row，可读名称由组件按「名称 + 当前值」生成。
     '完成玩法模板选择', '完成节点编辑', '确认创作模式',

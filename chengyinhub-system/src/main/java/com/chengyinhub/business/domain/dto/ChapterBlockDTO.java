@@ -87,6 +87,39 @@ public class ChapterBlockDTO implements Serializable
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
+    @Schema(description = "正文段样式；仅普通 text 块：h1 标题 / h2 副标题 / quote 引用 / ul 项目列表 / ol 编号列表，缺省为正文", example = "h1")
+    private String style;
+
+    @Schema(description = "正文段内格式区间；仅普通 text 块。content 仍是纯文字，区间 [from,to) 按字符下标")
+    private List<TextMarkDTO> marks;
+
+    public String getStyle() { return style; }
+    public void setStyle(String style) { this.style = style; }
+    public List<TextMarkDTO> getMarks() { return marks; }
+    public void setMarks(List<TextMarkDTO> marks) { this.marks = marks; }
+
+    /** 段内一段格式:bold / italic / strike,区间左闭右开。 */
+    public static class TextMarkDTO implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Schema(description = "起点（含）")
+        private Integer from;
+
+        @Schema(description = "终点（不含）")
+        private Integer to;
+
+        @Schema(description = "bold / italic / strike")
+        private String type;
+
+        public Integer getFrom() { return from; }
+        public void setFrom(Integer from) { this.from = from; }
+        public Integer getTo() { return to; }
+        public void setTo(Integer to) { this.to = to; }
+        public String getType() { return type; }
+        public void setType(String type) { this.type = type; }
+    }
+
 
     /** 梦块里的一张图:url 必填,line 是配在它旁边的一句话。 */
     public static class DreamImageDTO implements Serializable
