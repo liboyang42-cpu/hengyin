@@ -2,6 +2,7 @@ const api = require('../../utils/journey-api.js');
 const view = require('../../utils/journey-view.js');
 const modal = require('../../../utils/modal.js');
 const { resolveTopicCover } = require('../../../utils/topic-share.js');
+const illus = require('../../components/cy-illus/art.js');
 const joinView = require('../../utils/join-view.js');
 const lobby = require('../../utils/lobby-view.js');
 const app = getApp();
@@ -16,13 +17,13 @@ const INVITE_KEY = 'journey-seat-invite:';
 
 Page({
   data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', seats: null,
-    busy: false, actionError: '', inviteToken: '', pendingInvite: false,
-    lobby: null, head: null, me: null, tiles: [], inviteShow: false, playUrl: '' },
+    busy: false, actionError: '', inviteToken: '',
+    lobby: null, head: null, me: null, tiles: [], inviteShow: false, inviteCard: null, playUrl: '' },
 
   onLoad(options) {
     this._registrationId = view.isId(options && options.registrationId) ? String(options.registrationId) : '';
     if (!this._registrationId) { this.setData({ state: 'missing', stateKind: 'missing-param', stateTitle: '链接已失效' }); return; }
-    this.setData({ pendingInvite: !!this._pending() });
+    this._pendingInvite = !!this._pending(); // l-after:邀请页不再有「查询邀请结果」钮,待确认状态只在本页逻辑里用
     this.load();
   },
 
@@ -73,11 +74,18 @@ Page({
       } });
   },
 
+  // l-after:邀请同行走统一的 Spotify 式邀请页(cy-share-card kind=invite):主题封面 + 名称、邀请人、还有 N 个席位、信封插图
   onOpenInvite() {
     const l = this.data.lobby;
-    if (!l || (!l.canInvite && !(l.invited || []).length)) return;
-    this.setData({ inviteShow: true });
-    if (!this.data.inviteToken && this.data.lobby.canInvite && !this.data.busy) this.onInvite();
+    if (!l || !l.canInvite) return;
+    const head = this.data.head || {};
+    const me = this.data.me || {};
+    const s = this._summary || {};
+    this.setData({ inviteShow: true, inviteCard: {
+      kind: 'invite', id: String(s.topicId || ''), title: head.name || '一起来玩', cover: head.cover || '',
+      inviter: me.name || '', seatsLeft: l.openCount, art: illus.layers('envelope').fg
+    } });
+    if (!this.data.inviteToken && !this.data.busy) this.onInvite();
   },
   onSeatTap(e) { if (e.currentTarget.dataset.tappable) this.onOpenInvite(); },
   onCloseInvite() { this.setData({ inviteShow: false }); },
@@ -96,11 +104,11 @@ Page({
     api.seatInvite(app, this._registrationId, requestId).then(res => {
       this.setData({ busy: false });
       if (res.netFail || res.code === 'fail' || Number(res.code) >= 500) {
-        this.setData({ pendingInvite: true, actionError: '结果还没确认，请稍后查询' });
+        this._pendingInvite = true; this.setData({ actionError: '结果还没确认，请稍后查询' });
         return;
       }
       this._setPending('');
-      this.setData({ pendingInvite: false });
+      this._pendingInvite = false;
       if (!api.ok(res) || !res.data || !res.data.token) { this.setData({ actionError: res.msg || '邀请失败' }); this.load(); return; }
       this._invite = res.data;
       this.setData({ inviteToken: res.data.token });

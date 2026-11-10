@@ -9,7 +9,8 @@ const read = (f) => fs.readFileSync(path.join(__dirname, '../..', f), 'utf8')
 test('补充第 4 项:店铺分享卡用店铺照片铺满,右下是放大的店铺码,不再是一块空色', () => {
   // r3-share 改版:四种卡同一版式(class 带 kind),店铺照片铺满上半、店铺码仍比别的卡大
   const wxml = read('components/cy/share-card/index.wxml')
-  assert.match(wxml, /<view class="sc-card sc-card--\{\{kind\}\}">/)
+  // 2026-11-10 l-after:邀请卡(kind=invite)单独一支 wx:if 在前,其余四种卡仍共用这一张(wx:else)
+  assert.match(wxml, /<view class="sc-card sc-card--\{\{kind\}\}" wx:else>/)
   assert.match(wxml, /<image class="sc-cover" wx:elif="\{\{cover\}\}" src="\{\{cover\}\}" mode="aspectFill" \/>/)
   assert.match(read('components/cy/share-card/index.wxss'), /\.sc-card--shop \.sc-qr \{ width: 128rpx; height: 128rpx; \}/)
   const js = read('components/cy/share-card/index.js')

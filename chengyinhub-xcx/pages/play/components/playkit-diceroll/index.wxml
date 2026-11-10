@@ -4,8 +4,9 @@
 
 <!-- ★ 内嵌版(契约 §1.5,diceRoll 例外,2026-09-18 用户点名两种写法都保留):
      故事流里直接掷。这是**另一套构图**,不是把整屏那版等比缩小 ——
-     没有四边贴死、没有摇一摇(走在路上会误触发)、没有「一颗/两颗」切换,
-     一排骰子 + 一个按钮就是全部。判定仍走服务端 ROLL_DICE,这里只发请求。 -->
+     没有四边贴死、没有「一颗/两颗」切换,一排骰子 + 一个按钮就是全部。
+     2026-11-10 业主:「掷骰子也可以摇晃的」—— 内嵌也听摇一摇(与整屏同一识别器),按钮是没有加速度计时的退路。
+     判定仍走服务端 ROLL_DICE,这里只发请求。 -->
 <cy-play-stage wx:if="{{mode === 'd20'}}" id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="g-col d20">
     <view class="d20__content">
@@ -51,7 +52,7 @@
       <text class="dzi__sub">{{sub}}</text>
     </view>
     <view class="dzi__roll" bindtap="onRoll"
-          aria-role="button" aria-label="掷一次骰子" hover-class="dzi__roll--press" hover-stay-time="60">{{rolling ? '掷出去了…' : '掷一次'}}</view>
+          aria-role="button" aria-label="摇一摇手机，或点这里掷一次" hover-class="dzi__roll--press" hover-stay-time="60">{{rolling ? '掷出去了…' : '掷一次'}}</view>
   </view>
 </cy-play-stage>
 

@@ -206,9 +206,10 @@ test('★diceRoll 两套呈现都在:整屏(摇一摇)与内嵌(故事流里直�
   assert.equal(/--pk-top/.test(inlineBlock[0]), false,
     '内嵌版照搬了整屏的 --pk-top 让位假设')
   assert.match(wxss, /\.dz\s*\{[^}]*position:\s*absolute/, '整屏那套的几何被改掉了')
-  // 内嵌不靠摇手机(走在路上会误触发);整屏照旧摇
-  assert.match(js, /if \(this\.data\.inline\) this\._offShake\(\); else this\._onShake\(\);/,
-    '内嵌版没有关掉摇一摇监听，或整屏版不再监听')
+  // 2026-11-10 业主批复「掷骰子也可以摇晃的」:内嵌与整屏都听同一个识别器(play-shake-device-lifecycle 测生命周期);D20 仍不听
+  assert.match(js, /if \(this\.data\.mode === 'd20'\) \{ this\._offShake\(\); return; \}[\s\S]{0,400}?this\._onShake\(\);/,
+    '内嵌版 / 整屏版不再听摇一摇,或 D20 听了')
+  assert.doesNotMatch(js, /if \(this\.data\.inline\) this\._offShake\(\)/, '内嵌版又把摇一摇关掉了')
   // 分发器要把 inline 属性转给 diceroll(别的 kit 不需要这个属性)
   assert.match(dispatcherWxml, /cy-playkit-diceroll[\s\S]*?inline="\{\{inline\}\}"/,
     '分发器没有把 inline 转给 diceroll')

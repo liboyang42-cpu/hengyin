@@ -3,6 +3,7 @@ const app = getApp()
 const cyToast = require('../../../utils/toast.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
+const pp = require('../../utils/platform-pass.js')
 
 const TABS = [
   { key: 'shop', label: '可购买' },
@@ -32,6 +33,7 @@ Page({
     giftsBought: [],
     giftsReceived: [],
     workshopReason: '',
+    member: null, // l-pass 通行证入口;服务端未开放为 null,不出
     pointBalance: null // r2-store:/api/user/info.point;读不到为 null,整卡不出(不写 0)
   },
   onLoad(options) {
@@ -40,6 +42,25 @@ Page({
     this.load()
     this.loadWorkshop()
     this.loadPoints()
+    this.loadMember()
+  },
+  // l-pass:通行证入口只看服务端 enabled;有效期 / 可玩主题数只写服务端给的值
+  loadMember() {
+    app.sendRequest({
+      url: '/api/platform-pass', method: 'GET', hideLoading: true, autoErrorToast: false,
+      success: (res) => {
+        const d = isBizOk(res) && res.data
+        if (!d || d.enabled !== true) { this.setData({ member: null }); return }
+        const v = pp.passView(d, '', pp.platformOf(wx))
+        const side = v.active && v.untilText ? '有效期至 ' + v.untilText : (v.count !== null ? v.count + ' 个主题全部可玩' : '')
+        this.setData({ member: { side } })
+      }
+    })
+  },
+  goMembership() {
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({ url: '/subpackageMember/market/membership/index', complete: () => { this._navigating = false } })
   },
   // r2-store 积分余额卡:只读服务端余额;积分只能挣、不卖,这里不出充值包
   loadPoints() {
@@ -66,7 +87,7 @@ Page({
       }
     })
   },
-  onShow() { if (this._loaded) { this.load(true); this.loadPoints() } },
+  onShow() { if (this._loaded) { this.load(true); this.loadPoints(); this.loadMember() } },
   onPullDownRefresh() { this.load(true) },
   load(quiet) {
     const seq = (this._seq = (this._seq || 0) + 1)
@@ -107,6 +128,12 @@ Page({
     if (!id || this._navigating) return
     this._navigating = true
     wx.navigateTo({ url: '/subpackageMember/market/pass/index?id=' + encodeURIComponent(id), complete: () => { this._navigating = false } })
+  },
+  // l-after:整页游戏主题库(一行一张俱乐部式卡)
+  goLibrary() {
+    if (this._navigating) return
+    this._navigating = true
+    wx.navigateTo({ url: '/subpackageMember/market/library/index', complete: () => { this._navigating = false } })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()

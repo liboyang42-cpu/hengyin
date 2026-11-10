@@ -1,0 +1,34 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/pay.py b/docs/delivery/cloud-walk-20261101/rig/pay.py
+index 3e4228a23..02da7d78b 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/pay.py
++++ b/docs/delivery/cloud-walk-20261101/rig/pay.py
+@@ -23,7 +23,29 @@ with contextlib.redirect_stdout(io.StringIO()):
+ from chain_lib import http, q  # noqa: E402
+ 
+ 
++def pay_platform_pass(member):
++    # [SEAM l-pass] newest pending JSAPI 通行证 order of this member, through the same real callback path.
++    rows = q("SELECT id,order_no,price_fen FROM platform_pass_order WHERE member_id=%s AND status=0 AND channel='JSAPI' "
++             "AND create_time > NOW() - INTERVAL 10 MINUTE ORDER BY id DESC LIMIT 1", (member,))
++    if not rows:
++        return None
++    oid, ono, fen = rows[0]
++    txn = "RIG-PPO-TXN-%d" % oid
++    with contextlib.redirect_stdout(io.StringIO()):
++        fact = cp.store_trusted_payment_fact(ono, txn, int(fen))
++        cb = http("POST", "/api/registration/callback", json_body=dict(fact, **{
++            "out_trade_no": ono, "transaction_id": txn, "trade_state": "SUCCESS", "total": int(fen)}))
++    after = q("SELECT status,transaction_id FROM platform_pass_order WHERE id=%s", (oid,))[0]
++    ok = cb.get("_status") == 204 and after[1] == txn and int(after[0]) == 1
++    return {"ok": ok, "platformPassOrder": ono, "totalFen": int(fen), "callbackStatus": cb.get("_status"),
++            "readback": [str(x) for x in after], "callbackBody": str(cb.get("_raw", ""))[:200]}
++
++
+ def pay(member=None, reg_no=None):
++    if member and not reg_no:
++        pp = pay_platform_pass(member)
++        if pp is not None:
++            return pp
+     if reg_no:
+         rows = q("SELECT id,registration_no,COALESCE(wechat_payment_amount,payable_amount),payment_status FROM cms_registration "
+                  "WHERE registration_no=%s", (reg_no,))

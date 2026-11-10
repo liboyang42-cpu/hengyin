@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261110_platform_pass": [],
     "20261109_play_help_audit_permission": ["20261013_admin_role_page_grants", "20261016_admin_role_payee_separation_forward"],
     "20261109_play_run_feedback": [],
     "20261110_ecommerce_payout": [],

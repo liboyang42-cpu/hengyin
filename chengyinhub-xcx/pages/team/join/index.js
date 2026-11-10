@@ -1,4 +1,5 @@
 const teamSeats = require('../utils/team-seats.js');
+const { normalizeJoinCode } = require('../utils/team-invite-qr.js');
 const toast = require('../../../utils/toast.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
@@ -21,7 +22,9 @@ Page({
     error: '',
     errorKind: 'network',
     errorSub: '',
-    errorAction: '重新加载'
+    errorAction: '重新加载',
+    // l-misc:从「我的队伍 · 加入码」进来(?entry=code)时先手输加入码
+    codeEntry: false, codeInput: '', codeError: ''
   },
 
   onLoad(options) {
@@ -29,6 +32,7 @@ Page({
     this._hidden = false;
     this.inviteCode = String(options.code || '');
     this.legacyTeamId = String(options.teamId || '');
+    this.codeEntry = !this.inviteCode && !this.legacyTeamId && options.entry === 'code';
     this._openRecovery();
     this.load();
   },
@@ -87,6 +91,10 @@ Page({
       this.setData({ team: null, joined: false, joining: false, joinError: '' });
     }
     this._reader = reader(app);
+    if (!this.inviteCode && this.codeEntry) {
+      this.setData({ loading: false, refreshing: false, codeEntry: true });
+      return;
+    }
     if (!this.inviteCode) {
       this.setData({
         loading: false,
@@ -172,6 +180,17 @@ Page({
       wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } });
       return;
     }
+    this.load();
+  },
+
+  onCodeInput(e) { this.setData({ codeInput: (e.detail && e.detail.value) || '', codeError: '' }); },
+  submitCode() {
+    const code = normalizeJoinCode(this.data.codeInput);
+    if (!code) { this.setData({ codeError: '加入码不对，检查一下再输' }); return; }
+    this.inviteCode = code;
+    this.codeEntry = false;
+    this.setData({ codeEntry: false, codeError: '' });
+    this._openRecovery();
     this.load();
   },
 

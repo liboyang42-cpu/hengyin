@@ -44,6 +44,7 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, e
       number: pad2(idx),
       kicker: '第 ' + idx + ' 章完成',
       title: prev.title || '',
+      cover: firstImg(prev.cover),   // l-play:完成整屏顶部的本章照片(没有就只留底色)
       desc: '',
       stats: [{ v: prevDone + '/' + prevNodes.length, k: '坐标' }].concat(puzzle.count ? [{ v: String(puzzle.score), k: '解谜分' }] : []),
       rows: [
@@ -56,6 +57,7 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, e
   }
   const n = cur && cur.nodeCount ? cur.nodeCount : chapterNodes(nodes, cur && cur.id).length;
   const info = {
+    number: idx < 0 ? '' : pad2(idx + 1),   // l-play:开场屏星点锁成的方块章节号(序章 / 找不到的章不出数字)
     kicker: idx < 0 ? '' : '第 ' + (idx + 1) + ' 章 / 共 ' + Math.max(list.length, 1) + ' 章',
     title: (cur && cur.title) || '',
     desc: desc || '',

@@ -6,15 +6,23 @@
 .rb-more { flex: none; display: flex; align-items: center; gap: 6rpx; min-height: 88rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill);
   font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); background: var(--cy-comp-sheet-group-bg); }
 .rb-more.is-on { color: var(--cy-color-text-primary); }
+/* l-after(proto st-rank .lau2 / MOTION M13):两枝细茎小叶月桂(images/laurel.svg,右枝镜像)从 .6 弹到 1,
+   中间 168rpx 等宽数字按位滚动(--cy-motion-roll / --cy-ease-roll),「前 N%」滚完后升起 */
 .rb-hero { display: flex; flex-direction: column; align-items: center; padding-top: var(--cy-space-2); }
-.rb-hero__wreath { position: relative; width: 440rpx; height: 200rpx; display: flex; align-items: center; justify-content: center; }
-.rb-hero__laurel { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .9; }
-.rb-hero__num { position: relative; display: flex; height: 132rpx; overflow: hidden; }
-.rb-digit { height: 132rpx; overflow: hidden; }
-.rb-digit__col { display: flex; flex-direction: column; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
-.rb-digit__col text { display: block; height: 132rpx; line-height: 132rpx; font-size: 120rpx; font-weight: 800; letter-spacing: -2rpx; /* ds-ok 月桂大名次字号 */
+.rb-hero__wreath { position: relative; display: flex; align-items: center; justify-content: center; gap: 8rpx; height: 240rpx; }
+.rb-hero__laurel { flex: none; width: 96rpx; height: 220rpx; opacity: 0; transform: scale(.6);
+  transition: transform var(--cy-motion-reveal, 450ms) var(--cy-ease-spring), opacity var(--cy-motion-fast) ease; }
+.rb-hero__laurel--r { transform: scale(.6) scaleX(-1); }
+.rb-hero.is-on .rb-hero__laurel { opacity: 1; transform: none; }
+.rb-hero.is-on .rb-hero__laurel--r { transform: scaleX(-1); }
+.rb-hero__num { position: relative; display: flex; height: 168rpx; margin: 0 16rpx; overflow: hidden; }
+.rb-digit { height: 168rpx; overflow: hidden; }
+.rb-digit__col { display: flex; flex-direction: column; transition: transform var(--cy-motion-roll, 520ms) var(--cy-ease-roll, cubic-bezier(.2, .9, .2, 1)); }
+.rb-digit__col text { display: block; height: 168rpx; line-height: 168rpx; font-size: 168rpx; font-weight: 800; letter-spacing: -.04em; /* ds-ok 月桂大名次字号(proto 84px) */
   font-variant-numeric: tabular-nums; color: var(--cy-color-text-primary); text-align: center; } /* ds-ok 月桂大名次(参考 team-rank-laurel)*/
-.rb-hero__pct { margin-top: var(--cy-space-1); font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+.rb-hero__pct { margin-top: var(--cy-space-1); font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); opacity: 0; transform: translateY(16rpx);
+  transition: opacity var(--cy-motion-standard) ease 640ms, transform var(--cy-motion-standard) var(--cy-ease-settle, cubic-bezier(.16, 1, .3, 1)) 640ms; }
+.rb-hero.is-on .rb-hero__pct { opacity: 1; transform: none; }
 .rb-stats { align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
 .rb-stat { display: flex; flex-direction: column; gap: 8rpx; padding: var(--cy-space-3) var(--cy-space-4); border-radius: var(--cy-comp-sheet-group-radius);
   background: var(--cy-color-bg-glass); border: 1rpx solid var(--cy-comp-sheet-group-line); }
@@ -37,6 +45,8 @@
   background: var(--cy-color-bg-elevated); font-size: var(--cy-type-label); font-weight: 600; }
 .rb-av image { width: 100%; height: 100%; }
 .rb-note { display: block; padding: 20rpx 31rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.rb--reduced .rb-digit__col, .rb--reduced .rb-list { transition: none; }
+.rb--reduced .rb-digit__col, .rb--reduced .rb-list, .rb--reduced .rb-hero__laurel, .rb--reduced .rb-hero__pct { transition: none; }
+.rb--reduced .rb-hero__laurel, .rb--reduced .rb-hero__pct { opacity: 1; transform: none; }
+.rb--reduced .rb-hero__laurel--r { transform: scaleX(-1); }
 .rb-more__ic { display: flex; transform: rotate(90deg); }
 .rb-bar__tabs.is-single { flex: none; margin-right: auto; }

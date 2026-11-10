@@ -1,4 +1,4 @@
-const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js');
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js'); const { readPlayerCode } = require('../../../utils/player-code.js'); // l-after 邀请页个人码(同一行,不动 U1/U4 基线锚定的行号)
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');
@@ -423,7 +423,7 @@ Component({
     reportTargetType: '',
     reportTargetId: '',
     reportTitle: '举报',
-    correctionShow: false, shopShareShow: false, shopShareCard: null,
+    correctionShow: false, shopShareShow: false, shopShareCard: null, inviteShow: false, inviteCard: null,
     correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
@@ -2341,7 +2341,25 @@ Component({
     var ds = e.currentTarget.dataset;
     if (ds.route && ds.unlocked) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: ds.route, complete: () => { this._navigating = false; } }); }
   },
-  goInvite: function () { this.openScene('share-invite'); },
+  // l-after:邀请好友走统一的 Spotify 式邀请页(cy-share-card kind=invite),码是本人个人码(/api/user/player-code);
+  // 「发给微信好友」走宿主页 onShareAppMessage → getSharePayload(inviteShow 时带 inviter 落首页)
+  goInvite: function () {
+    var nick = (this.data.userInfo && this.data.userInfo.nickname) || '';
+    this.setData({ inviteShow: true, inviteCard: { kind: 'invite', id: '', title: '一起探索城市里的新玩法', meta: '邀请 · 城瘾', inviter: nick, qr: this._playerCode || '' } });
+    if (this._playerCode || this._playerCodeLoading) return;
+    var that = this;
+    this._playerCodeLoading = true;
+    app.sendRequest({ url: '/api/user/player-code', method: 'POST', hideLoading: true, silentError: true,
+      success: function (res) {
+        that._playerCodeLoading = false;
+        var src = readPlayerCode(res);
+        if (!src) return;
+        that._playerCode = src;
+        if (that.data.inviteShow) that.setData({ 'inviteCard.qr': src });
+      },
+      fail: function () { that._playerCodeLoading = false; } });
+  },
+  closeInvite: function () { this.setData({ inviteShow: false }); },
   goEarnings: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' + (this.data.isMerchantView ? '?theme=merchant' : ''), complete: () => { this._navigating = false; } }); }, // 2026-10-30 业主:商家主页进账户收益是浅色
   goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
@@ -2431,7 +2449,8 @@ Component({
   },
 
   getSharePayload: function (res) {
-    if (res.from === 'button' && res.target && res.target.dataset && res.target.dataset.shareKind === 'invite') {
+    var ds = (res.from === 'button' && res.target && res.target.dataset) || {};
+    if (ds.shareKind === 'invite' || (ds.shareKind === 'card' && this.data.inviteShow)) {
       return {
         title: '一起探索城市里的新玩法',
         path: '/pages/index/index?inviter=' + app.getUserID()

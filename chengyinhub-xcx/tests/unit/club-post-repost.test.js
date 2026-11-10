@@ -148,7 +148,7 @@ test('切换:业务失败回滚并原样显示后端提示;网络失败回滚;�
   assert.equal(repost.toggleRepost({ page, listKey: 'feed', postId: 404, app: { sendRequest: () => assert.fail() }, toast: () => {} }), false)
 })
 
-test('接入:俱乐部详情 / 俱乐部 tab 能转发,商家合作页只显示转发条目;列表 key 用 feedKey', () => {
+test('接入:俱乐部详情 / 俱乐部 tab 能转发,商家发现页只在本人所在俱乐部的帖文出转发;列表 key 用 feedKey', () => {
   const detail = read('pages/club/detail/index.wxml')
   assert.match(detail, /wx:for="\{\{posts\}\}" wx:key="feedKey"/)
   assert.match(detail, /<cy-post-card[^>]*show-repost[^>]*bind:repost="onRepostPost"/)
@@ -164,7 +164,9 @@ test('接入:俱乐部详情 / 俱乐部 tab 能转发,商家合作页只显示�
 
   const relation = read('pages/merchant/relation/index.wxml')
   assert.match(relation, /<cy-post-card[^>]*wx:key="feedKey"/)
-  assert.doesNotMatch(relation, /show-repost/)
+  // l-misc(业主「商家不是也可以是俱乐部成员吗」):只有本人所在俱乐部(/api/club/my)的帖文出转发
+  assert.match(relation, /show-repost="\{\{item\.canRepost\}\}"[^>]*bind:repost="onRepostPost"/)
+  assert.match(read('pages/merchant/relation/index.js'), /if \(!row \|\| !row\.canRepost\) return;\s*clubPostRepost\.toggleRepost\(\{ page: this, listKey: 'feed'/)
   // 走查 v2 W2-17:商家「发现」与玩家发现页同一条全站流(只出原帖),映射同一份 discover-feed
   assert.match(read('pages/merchant/relation/index.js'), /res\.data\.rows\.map\(discoverFeed\.normalizeClubPost\)/)
 })

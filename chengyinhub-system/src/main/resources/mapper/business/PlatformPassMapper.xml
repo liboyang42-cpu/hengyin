@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.platformpass.mapper.PlatformPassMapper">
+
+    <!-- 时间列显式按 java.util.Date 取(走 getTimestamp,按连接时区换成真实时刻);
+         Map 结果默认是 LocalDateTime(墙上时间),JVM 时区与连接时区不同时会差几个小时(真库 IT 实测)。 -->
+    <resultMap id="orderRow" type="java.util.LinkedHashMap" autoMapping="true">
+        <result column="paid_time" property="paid_time" javaType="java.util.Date"/>
+        <result column="refund_requested_time" property="refund_requested_time" javaType="java.util.Date"/>
+        <result column="refunded_time" property="refunded_time" javaType="java.util.Date"/>
+        <result column="cancel_time" property="cancel_time" javaType="java.util.Date"/>
+        <result column="create_time" property="create_time" javaType="java.util.Date"/>
+    </resultMap>
+    <resultMap id="membershipRow" type="java.util.LinkedHashMap" autoMapping="true">
+        <result column="valid_from" property="valid_from" javaType="java.util.Date"/>
+        <result column="valid_to" property="valid_to" javaType="java.util.Date"/>
+    </resultMap>
+
+    <sql id="orderColumns">
+        id, order_no, member_id, request_id, request_fingerprint, plan_id, plan_code, price_fen, valid_days,
+        channel, status, payment_fact_id, payment_fact_hash, transaction_id, xpay_env, paid_time,
+        refund_no, refund_reason, refund_requested_time, refund_fact_id, refund_fact_hash, refunded_time,
+        cancel_time, create_time
+    </sql>
+
+    <select id="selectOnSalePlans" resultType="java.util.LinkedHashMap">
+        select id, plan_code, title, price_fen, valid_days, xpay_product_id, sort
+        from platform_pass_plan where status = 1 order by sort, id
+    </select>
+
+    <select id="selectPlanByCode" resultType="java.util.LinkedHashMap">
+        select id, plan_code, title, price_fen, valid_days, xpay_product_id, status
+        from platform_pass_plan where plan_code = #{planCode}
+    </select>
+
+    <insert id="insertOrder" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into platform_pass_order (order_no, member_id, request_id, request_fingerprint, plan_id, plan_code,
+            price_fen, valid_days, channel, status)
+        values (#{order_no}, #{member_id}, #{request_id}, #{request_fingerprint}, #{plan_id}, #{plan_code},
+            #{price_fen}, #{valid_days}, #{channel}, 0)
+    </insert>
+
+    <select id="selectOrderByNo" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order where order_no = #{orderNo}
+    </select>
+
+    <select id="selectOrderByNoForUpdate" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order where order_no = #{orderNo} for update
+    </select>
+
+    <select id="selectOrderByRefundNoForUpdate" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order where refund_no = #{refundNo} for update
+    </select>
+
+    <select id="selectOrderByMemberRequest" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order
+        where member_id = #{memberId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectOrdersByMember" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order
+        where member_id = #{memberId} order by id desc limit #{limit}
+    </select>
+
+    <update id="markJsapiPaid">
+        update platform_pass_order
+        set status = 1, payment_fact_id = #{factId}, payment_fact_hash = #{factHash},
+            transaction_id = #{transactionId}, paid_time = #{paidTime}
+        where id = #{id} and status in (0, 2) and channel = 'JSAPI'
+    </update>
+
+    <update id="markXpayPaid">
+        update platform_pass_order
+        set status = 1, transaction_id = #{wxOrderId}, xpay_env = #{env}, paid_time = #{paidTime}
+        where id = #{id} and status in (0, 2) and channel = 'XPAY'
+    </update>
+
+    <update id="markCancelled">
+        update platform_pass_order set status = 2, cancel_time = #{cancelTime}
+        where id = #{id} and member_id = #{memberId} and status = 0
+    </update>
+
+    <update id="markRefundRequested">
+        update platform_pass_order
+        set status = 4, refund_no = #{refundNo}, refund_reason = #{reason}, refund_requested_by = #{operator},
+            refund_requested_time = #{requestedTime}
+        where id = #{id} and status = 1 and refund_no is null
+    </update>
+
+    <update id="markRefundRolledBack">
+        update platform_pass_order set status = 1, refund_no = null, refund_reason = null,
+            refund_requested_by = null, refund_requested_time = null
+        where id = #{id} and status = 4 and refund_no = #{refundNo}
+    </update>
+
+    <update id="markRefunded">
+        update platform_pass_order
+        set status = 3, refund_fact_id = #{factId}, refund_fact_hash = #{factHash}, refunded_time = #{refundedTime}
+        where id = #{id} and status = 4 and refund_no is not null
+    </update>
+
+    <select id="selectLatestValidToForUpdate" resultType="java.util.Date">
+        select max(valid_to) from platform_pass_membership
+        where member_id = #{memberId} and status = 1 and valid_to &gt; #{now}
+        for update
+    </select>
+
+    <insert id="insertMembership" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into platform_pass_membership (member_id, order_id, valid_from, valid_to, status)
+        values (#{member_id}, #{order_id}, #{valid_from}, #{valid_to}, 1)
+    </insert>
+
+    <select id="selectMembershipByOrder" resultMap="membershipRow">
+        select id, member_id, order_id, valid_from, valid_to, status
+        from platform_pass_membership where order_id = #{orderId}
+    </select>
+
+    <select id="selectActiveMembership" resultMap="membershipRow">
+        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status
+        from platform_pass_membership m
+        join platform_pass_order o on o.id = m.order_id and o.status = 1
+        where m.member_id = #{memberId} and m.status = 1 and m.valid_from &lt;= #{now} and m.valid_to &gt; #{now}
+        order by m.valid_from limit 1
+    </select>
+
+    <select id="selectCoverageEnd" resultType="java.util.Date">
+        select max(m.valid_to) from platform_pass_membership m
+        join platform_pass_order o on o.id = m.order_id and o.status = 1
+        where m.member_id = #{memberId} and m.status = 1 and m.valid_to &gt; #{now}
+    </select>
+
+    <update id="revokeMembership">
+        update platform_pass_membership set status = 3 where order_id = #{orderId} and status = 1
+    </update>
+
+    <update id="shiftLaterMemberships">
+        update platform_pass_membership
+        set valid_from = date_sub(valid_from, interval #{seconds} second),
+            valid_to = date_sub(valid_to, interval #{seconds} second)
+        where member_id = #{memberId} and status = 1 and valid_from &gt;= #{after}
+    </update>
+
+    <insert id="insertClaim" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into platform_pass_claim (membership_id, member_id, topic_id, registration_id)
+        values (#{membership_id}, #{member_id}, #{topic_id}, #{registration_id})
+    </insert>
+
+    <select id="countClaimsByMembership" resultType="int">
+        select count(*) from platform_pass_claim where membership_id = #{membershipId}
+    </select>
+
+    <sql id="officialSelfPlayTopic">
+        t.del_flag = 0 and t.self_play = 1 and t.lifecycle in (3, 4)
+        and exists (
+            select 1 from product_role content_role
+            where content_role.topic_id = t.id and content_role.slot = 'CONTENT'
+              and content_role.status = 1 and content_role.entity_type = 'PLATFORM'
+        )
+    </sql>
+
+    <select id="isOfficialSelfPlayTopic" resultType="int">
+        select count(*) from cms_topic t where t.id = #{topicId} and <include refid="officialSelfPlayTopic"/>
+    </select>
+
+    <select id="selectLibrary" resultType="java.util.LinkedHashMap">
+        select t.id, t.name, t.img_url, t.product_type, t.total_time, t.location_count, t.address_name
+        from cms_topic t
+        where <include refid="officialSelfPlayTopic"/>
+        <if test="productType != null">and t.product_type = #{productType}</if>
+        order by t.id desc
+        limit #{limit}
+    </select>
+
+    <select id="countLibrary" resultType="int">
+        select count(*) from cms_topic t where <include refid="officialSelfPlayTopic"/>
+    </select>
+</mapper>

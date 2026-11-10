@@ -22,6 +22,14 @@
     <view class="team-refresh-state">
       <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认邀请状态…</text>
     </view>
+  <view wx:if="{{codeEntry}}" class="tj-code">
+    <cy-field label="加入码" value="{{codeInput}}" placeholder="粘贴队长给的加入码" maxlength="{{40}}" clearable
+              error="{{!!codeError}}" error-text="{{codeError}}" bind:input="onCodeInput" />
+    <view class="team-actions">
+      <view class="team-action primary {{codeInput ? '' : 'disabled'}}" bindtap="submitCode"
+            aria-role="button" aria-label="用加入码查找队伍" aria-disabled="{{!codeInput}}" hover-class="cy-pressed" hover-stay-time="80">下一步</view>
+    </view>
+  </view>
   <block wx:if="{{team}}">
     <view class="team-head tj-head">
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>

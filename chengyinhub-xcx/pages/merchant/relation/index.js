@@ -8,6 +8,7 @@ const { firstCategoryName } = require('../../../utils/category-icon.js');
 // 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
 const discoverFeed = require('../../../utils/discover-feed.js');
 const postFeedActions = require('../../../utils/post-feed-actions.js'); const toast = require('../../../utils/toast.js');
+const clubPostRepost = require('../../../utils/club-post-repost.js');
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const FEED_PAGE_SIZE = 20;
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
@@ -16,6 +17,26 @@ function textOrDash(value, fallback) {
   if (value === null || value === undefined || value === '') return fallback || '—';
   if (typeof value === 'string' || typeof value === 'number') return String(value);
   return fallback || '—';
+}
+
+/** /api/club/my → { 俱乐部 id: true }(本人创建 + 已加入)。 */
+function memberClubIds(data) {
+  const ids = {};
+  [data.owned, data.joined].forEach(function (list) {
+    (Array.isArray(list) ? list : []).forEach(function (club) {
+      if (club && hasPositiveId(club.id)) ids[String(club.id)] = true;
+    });
+  });
+  return ids;
+}
+
+/** 只有本人所在俱乐部的俱乐部帖文可转发;社区帖文没有转发。 */
+function markRepostable(rows, clubIds) {
+  const ids = clubIds || {};
+  return (rows || []).map(function (row) {
+    if (!row || row.source === 'community') return row;
+    return Object.assign({}, row, { canRepost: !!(row.clubId != null && ids[String(row.clubId)]) });
+  });
 }
 
 function assetUrl(value) {
@@ -273,15 +294,45 @@ Page({
         // 发帖入口跟着服务端开关:社区写开着才出(app.canUseCommunity(true)),读开着才合社区帖文
         that.setData({ canCompose: typeof app.canUseCommunity === 'function' && app.canUseCommunity(true) });
         that._feedMerger = discoverFeed.createFeedMerger(that._feedSources());
+        that._loadMemberClubs(ctx);
       }
       return that._feedMerger.take(FEED_PAGE_SIZE);
     }).then(function (page) {
       if (!page || !that._feedCurrent(ctx)) return;
       that._feedFinish(ctx);
       that._feedHasMore = page.hasMore;
-      const feed = more ? that.data.feed.concat(page.rows) : page.rows;
+      const rows = markRepostable(page.rows, that._memberClubIds);
+      const feed = more ? that.data.feed.concat(rows) : rows;
       that.setData({ feed: feed, feedState: feed.length ? 'ready' : 'empty', feedSlow: false, feedError: '' });
     }, function (res) { that._onFeedFail(ctx, res); });
+  },
+
+  // l-misc(业主「商家不是也可以是俱乐部成员吗」):商家本人创建或加入的俱乐部,帖文卡出「转发」。
+  // 成员关系只认服务端 /api/club/my(owned + joined);读失败就当没有,不出转发,不影响帖文流本身。
+  // 不挡帖文流:先按已知成员关系出卡,回包到了再给本轮的卡补上转发。
+  _loadMemberClubs(ctx) {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/club/my', method: 'POST', data: JSON.stringify({}),
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        if (that._destroyed || ctx.requestId !== that._feedRequestId) return;
+        const ok = res && (res.code == 200 || res.code == '200') && isRecord(res.data);
+        that._memberClubIds = ok ? memberClubIds(res.data) : {};
+        if (that.data.feed && that.data.feed.length) that.setData({ feed: markRepostable(that.data.feed, that._memberClubIds) });
+      },
+      // 读不到成员关系:不出转发(按未加入处理),帖文流本身照常
+      fail() { if (!that._destroyed && ctx.requestId === that._feedRequestId) that._memberClubIds = {}; },
+    });
+  },
+
+  onRepostPost(e) {
+    const postId = e.detail && e.detail.postId;
+    if (postId == null) return;
+    const row = (this.data.feed || []).find(function (r) { return r && r.source !== 'community' && String(r.id) === String(postId); });
+    if (!row || !row.canRepost) return;
+    clubPostRepost.toggleRepost({ page: this, listKey: 'feed', postId: postId, app: app, toast: toast });
   },
 
   _feedCurrent(ctx) { return !!ctx && !this._destroyed && !ctx.done && ctx.requestId === this._feedRequestId; },

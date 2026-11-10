@@ -10,16 +10,27 @@
     <view bindtap="close" aria-role="button" aria-label="返回" hover-class="cy-pressed">返回</view>
   </view>
   <block wx:else>
-    <!-- V-02(2026-10-29 业主):与票夹背面同一版式 —— 只有标题 + 码(码心城瘾 logo)，7 天内到期才写「N 天内过期」。 -->
+    <!-- V-02(2026-10-29 业主):与票夹背面同一版式 —— 只有标题 + 码(码心城瘾 logo)，7 天内到期才写「N 天内过期」。
+         l-play(业主「可以的 但二维码可以大一点的」,proto gp-qr,来源票夹 .wc__flip):一张票卡,码生成好后自动绕竖轴翻到背面,背面是更大的入场码(600rpx 白块);点一下翻回正面。 -->
+    <view class="voucher__flip {{flipped ? 'is-back' : ''}} {{reduced ? 'is-reduced' : ''}}" bindtap="toggleFlip" aria-role="button" aria-label="{{flipped ? '翻回正面' : '翻到入场码'}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="voucher__in">
+    <view class="voucher__face voucher__front" aria-hidden="{{flipped}}">
+      <image wx:if="{{cover}}" class="voucher__cover" src="{{cover}}" mode="aspectFill" />
+      <view class="voucher__cap"><text class="voucher__cap-k">入场码</text><text wx:if="{{title}}" class="voucher__cap-t">{{title}}</text><text wx:if="{{expiry}}" class="voucher__cap-s">{{expiry}}</text></view>
+    </view>
+    <view class="voucher__face voucher__rear" aria-hidden="{{!flipped}}">
     <view class="voucher__card">
       <text wx:if="{{title}}" class="voucher__title ep1">{{title}}</text>
       <view class="voucher__qr">
-        <cy-dot-qr wx:if="{{state === 'ready'}}" src="{{qr}}" size="{{360}}" />
+        <cy-dot-qr wx:if="{{state === 'ready'}}" src="{{qr}}" size="{{540}}" />
         <text wx:else class="voucher__qr-tip">生成中…</text>
       </view>
       <text wx:if="{{seatNo}}" class="voucher__exp">第 {{seatNo}} 席</text>
       <text wx:if="{{seatVerified}}" class="voucher__exp">此席已核销，请勿重复提供权益</text>
       <text wx:if="{{expiry}}" class="voucher__exp">{{expiry}}</text>
+    </view>
+    </view>
+    </view>
     </view>
     <view wx:if="{{seatCount > 1}}" class="seat-choice__switch" bindtap="changeSeat" aria-role="button" aria-label="重新选择席位" hover-class="cy-pressed">重新选择席位</view>
     <!-- V3-17(2026-11-06 业主):左下不再有返回钮,关闭走半屏右上角的 × 与下拉 -->

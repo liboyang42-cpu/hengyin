@@ -376,7 +376,7 @@ public final class ContentManifestProjection {
                 String type = text(block, "type");
                 if (URL_BLOCK_TYPES.contains(type)) {
                     put(prefix + ":block:" + blockKey + ":url", text(block, "url"), scope, text(block, "altText"));
-                } else if ("dream".equals(type)) {
+                } else if ("dream".equals(type) || "gallery".equals(type)) {
                     int imageIndex = 0;
                     for (JsonNode image : block.path("images")) {
                         put(prefix + ":block:" + blockKey + ":image[" + imageIndex + "]",

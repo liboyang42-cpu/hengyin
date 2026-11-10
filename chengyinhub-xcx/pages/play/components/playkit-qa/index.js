@@ -269,6 +269,11 @@ Component({
       if (this.data.ctaDisabled) return;
       // 单选:选了哪条就报哪条,对错由服务端回 —— 正确答案不在客户端
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      /* l-kits 2026-11-10 图片选项(原型 gp-kit-embed):点下去这张先上浮、其余变淡,等服务端判;
+         这只是「我选了它」的即时反馈,不是对错 —— 对错由 settle() 按服务端回执重写。 */
+      if (this.data.picGrid) {
+        this.setData({ optionList: this.data.optionList.map((o, at) => Object.assign({}, o, { state: at === i ? 'is-on' : 'is-dim' })) });
+      }
       this.triggerEvent('submit', { mode: 'pick', index: i, optionId: picked.id || '' });
     },
     /** 多选的提交:报勾中的全部 id。一个都没勾时按钮是灰的,这里再兜一道。 */
@@ -362,7 +367,8 @@ Component({
           }
           if (i === d.index) return Object.assign({}, o, { state: 'is-wrong' });
           if (reveal && i === answerIndex) return Object.assign({}, o, { state: 'is-right' });
-          return o;
+          // 图片选项点选时变淡的其余几张在判错后回到原样,还能再选(原型答错 2.4s 后复位,这里随回执即复位)
+          return o.state === 'is-dim' ? Object.assign({}, o, { state: '' }) : o;
         }) : this.data.optionList,
         ctaLabel: pick ? '知道了' : (exhausted ? this.data.ctaLabel : '再试一次'),
         ctaDisabled: exhausted,

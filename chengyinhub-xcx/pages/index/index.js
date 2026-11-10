@@ -11,7 +11,7 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, parseTeamScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
 const { buildActivityShare } = require('../../utils/activity-share.js'); const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
@@ -372,10 +372,10 @@ Page({
       return true;
     }
     const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene); // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
-    const shopId = !activityId && (parseShopScene(options && options.scene) || parseShopScene(app.pendingDoorScene)); // 第九轮 m1-9:店铺码 → 商家主页
-    if (activityId || shopId) {
+    const shopId = !activityId && (parseShopScene(options && options.scene) || parseShopScene(app.pendingDoorScene)); const teamInvite = !activityId && !shopId && (parseTeamScene(options && options.scene) || parseTeamScene(app.pendingDoorScene)); // 第九轮 m1-9:店铺码 → 商家主页;l-misc:队伍码 → 加入页(能否加入由 /api/team/info、/join 裁决)
+    if (activityId || shopId || teamInvite) {
       app.pendingDoorScene = null;
-      const path = activityId ? '/pages/activity/official-detail/index?id=' + activityId : '/pages/userinfo/userinfo?userId=' + shopId + '&tab=about';
+      const path = activityId ? '/pages/activity/official-detail/index?id=' + activityId : (shopId ? '/pages/userinfo/userinfo?userId=' + shopId + '&tab=about' : '/pages/team/join/index?code=' + encodeURIComponent(teamInvite));
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }

@@ -62,6 +62,19 @@ final class ChapterFlowCompiler
     static final int MAX_REVEAL_WHO = 20;
     /** 念头 key 的格式与 JourneyRulesValidator.THOUGHT_KEY 一致;存在性这层校验不了(见下)。 */
     private static final Pattern THOUGHT_KEY = Pattern.compile("^[a-z][a-z0-9_]{0,31}$");
+    /** 图片组(2026-11-10 l-editor,编辑器原型 v2):1–4 格的一组图,整组是一个块;说明文字放 altText。 */
+    private static final String TYPE_GALLERY = "gallery";
+    private static final int MAX_GALLERY_LAYOUT = 4;
+    /** 分支任务:一个问题 + 2 至 3 条分支,每条写去向(continue / end / chapter:N)。表现块,不进 description。 */
+    private static final String TYPE_BRANCH = "branch";
+    private static final int MIN_BRANCH_OPTIONS = 2;
+    private static final int MAX_BRANCH_OPTIONS = 3;
+    private static final int MAX_BRANCH_QUESTION = 200;
+    private static final int MAX_BRANCH_OPTION_TEXT = 40;
+    private static final Pattern BRANCH_TO = Pattern.compile("^(continue|end|chapter:[1-9][0-9]{0,2})$");
+    /** 章节开始 / 结束卡的话:open 开场白(只能是第一个块)、end 结语(只能是最后一个块)。玩家进章 / 完章弹窗读它,不进 description。 */
+    private static final String TYPE_CAP = "cap";
+    private static final int MAX_CAP_LENGTH = 500;
     private static final int MIN_DREAM_IMAGES = 1;
     private static final int MAX_DREAM_IMAGES = 6;
     private static final int MAX_DREAM_LINE = 80;
@@ -207,6 +220,74 @@ final class ChapterFlowCompiler
                         hasProjectedText = true;
                     }
                 }
+                else if (TYPE_GALLERY.equals(block.getType()))
+                {
+                    /* 图片组:和 image / dream 同一条口径 —— 不进 description,不改变「首个节点之前」的判定。 */
+                    if (block.getContent() != null || block.getNodeIndex() != null || block.getUrl() != null
+                            || block.getTitle() != null || block.getOptions() != null || block.getCap() != null)
+                        throw invalid(chapterNumber, "gallery 块只能带版式、图片与说明");
+                    Integer layout = block.getLayout();
+                    if (layout == null || layout < 1 || layout > MAX_GALLERY_LAYOUT)
+                        throw invalid(chapterNumber, "图片组版式只能是 1 至 " + MAX_GALLERY_LAYOUT + " 格");
+                    List<ChapterBlockDTO.DreamImageDTO> cells = block.getImages();
+                    if (cells == null || cells.isEmpty() || cells.size() > layout)
+                        throw invalid(chapterNumber, "图片组要配 1 至 " + layout + " 张图");
+                    for (ChapterBlockDTO.DreamImageDTO cell : cells)
+                    {
+                        if (cell == null || cell.getUrl() == null || cell.getUrl().trim().isEmpty())
+                            throw invalid(chapterNumber, "图片组的每张图都要有 url");
+                        if (cell.getUrl().length() > MAX_URL_LENGTH)
+                            throw invalid(chapterNumber, "图片组图片 url 超过 " + MAX_URL_LENGTH + " 字符");
+                        if (cell.getLine() != null)
+                            throw invalid(chapterNumber, "图片组的图不单配一句话,说明写在 altText");
+                    }
+                    if (block.getAltText() != null && block.getAltText().length() > 2000)
+                        throw invalid(chapterNumber, "图片组说明最多 2000 字");
+                }
+                else if (TYPE_BRANCH.equals(block.getType()))
+                {
+                    /* 分支任务:问题 + 2 至 3 条分支。去向在这一层只校验形状;「跳到第 N 章」是否存在由发布闸按章数兜。 */
+                    if (block.getNodeIndex() != null || block.getUrl() != null || block.getImages() != null
+                            || block.getLayout() != null || block.getCap() != null)
+                        throw invalid(chapterNumber, "branch 块只能带问题与分支");
+                    String question = block.getContent() == null ? "" : block.getContent().trim();
+                    if (question.isEmpty() || question.length() > MAX_BRANCH_QUESTION)
+                        throw invalid(chapterNumber, "分支任务要写一个问题,最多 " + MAX_BRANCH_QUESTION + " 字");
+                    List<ChapterBlockDTO.BranchOptionDTO> options = block.getOptions();
+                    if (options == null || options.size() < MIN_BRANCH_OPTIONS || options.size() > MAX_BRANCH_OPTIONS)
+                        throw invalid(chapterNumber, "分支任务要有 " + MIN_BRANCH_OPTIONS + " 至 " + MAX_BRANCH_OPTIONS + " 条分支");
+                    for (ChapterBlockDTO.BranchOptionDTO option : options)
+                    {
+                        String text = option == null || option.getText() == null ? "" : option.getText().trim();
+                        if (text.isEmpty() || text.length() > MAX_BRANCH_OPTION_TEXT)
+                            throw invalid(chapterNumber, "每条分支要写玩家看到的选项,最多 " + MAX_BRANCH_OPTION_TEXT + " 字");
+                        String to = option.getTo() == null ? "" : option.getTo().trim();
+                        if (!BRANCH_TO.matcher(to).matches())
+                            throw invalid(chapterNumber, "分支去向只能是 continue / end / chapter:N:" + option.getTo());
+                        if (to.startsWith("chapter:") && Integer.parseInt(to.substring(8)) > chapters.size())
+                            throw invalid(chapterNumber, "分支去向指向了不存在的章:" + to);
+                    }
+                }
+                else if (TYPE_CAP.equals(block.getType()))
+                {
+                    /* 章节开始 / 结束卡:固定在首尾的两张卡,不参与排序;各最多一张。不进 description。 */
+                    if (block.getNodeIndex() != null || block.getUrl() != null || block.getImages() != null
+                            || block.getOptions() != null || block.getLayout() != null || block.getWhen() != null)
+                        throw invalid(chapterNumber, "cap 块只能带卡位与正文");
+                    String capKind = block.getCap() == null ? "" : block.getCap().trim();
+                    String capText = block.getContent() == null ? "" : block.getContent().trim();
+                    if (capText.isEmpty() || capText.length() > MAX_CAP_LENGTH)
+                        throw invalid(chapterNumber, "章节卡的话要写内容,最多 " + MAX_CAP_LENGTH + " 字");
+                    if ("open".equals(capKind))
+                    {
+                        if (blockIndex != 0) throw invalid(chapterNumber, "开场白只能是本章第一个块");
+                    }
+                    else if ("end".equals(capKind))
+                    {
+                        if (blockIndex != chapter.getBlocks().size() - 1) throw invalid(chapterNumber, "结语只能是本章最后一个块");
+                    }
+                    else throw invalid(chapterNumber, "章节卡位只能是 open / end:" + block.getCap());
+                }
                 else if (TYPE_DIVIDER.equals(block.getType()))
                 {
                     if (block.getContent() != null || block.getNodeIndex() != null || block.getUrl() != null
@@ -214,7 +295,7 @@ final class ChapterFlowCompiler
                             || block.getBeat() != null || block.getField() != null || block.getQid() != null
                             || block.getNpcId() != null || block.getWhen() != null || block.getClaimLater() != null
                             || block.getMood() != null || block.getThoughtKey() != null || block.getWho() != null
-                            || block.getLevel() != null)
+                            || block.getLevel() != null || block.getLayout() != null || block.getOptions() != null || block.getCap() != null)
                         throw invalid(chapterNumber, "分割线块只能携带类型与内容块标识");
                 }
                 else if (TYPE_NODE.equals(block.getType()))
@@ -428,7 +509,7 @@ final class ChapterFlowCompiler
                 }
                 else
                 {
-                    throw invalid(chapterNumber, "块类型只允许 text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider");
+                    throw invalid(chapterNumber, "块类型只允许 text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider / gallery / branch / cap");
                 }
             }
 
@@ -730,6 +811,37 @@ final class ChapterFlowCompiler
                     {
                         row.put("title", block.getTitle().trim());
                     }
+                }
+                else if (TYPE_GALLERY.equals(block.getType()))
+                {
+                    row.put("layout", block.getLayout());
+                    List<Map<String, Object>> cells = new ArrayList<>();
+                    for (ChapterBlockDTO.DreamImageDTO cell : block.getImages())
+                    {
+                        Map<String, Object> one = new LinkedHashMap<>();
+                        one.put("url", cell.getUrl());
+                        cells.add(one);
+                    }
+                    row.put("images", cells);
+                    if (block.getAltText() != null && !block.getAltText().trim().isEmpty()) row.put("altText", block.getAltText().trim());
+                }
+                else if (TYPE_BRANCH.equals(block.getType()))
+                {
+                    row.put("content", block.getContent().trim());
+                    List<Map<String, Object>> options = new ArrayList<>();
+                    for (ChapterBlockDTO.BranchOptionDTO option : block.getOptions())
+                    {
+                        Map<String, Object> one = new LinkedHashMap<>();
+                        one.put("text", option.getText().trim());
+                        one.put("to", option.getTo().trim());
+                        options.add(one);
+                    }
+                    row.put("options", options);
+                }
+                else if (TYPE_CAP.equals(block.getType()))
+                {
+                    row.put("cap", block.getCap().trim());
+                    row.put("content", block.getContent().trim());
                 }
                 else if (TYPE_DIVIDER.equals(block.getType()))
                 {

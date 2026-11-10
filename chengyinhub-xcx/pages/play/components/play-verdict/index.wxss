@@ -91,35 +91,9 @@
 }
 .pv--on .pv__body { opacity: 1; }
 
-/* 对勾用两根条画,不用 SVG:小程序里 stroke-dasharray 动画要外挂 svg,
-   而这一下只需要「短臂先落、长臂再扫出去」两段。 */
-.pv__tick {
-  position: relative;
-  width: 152rpx;
-  height: 152rpx;
-  transform: rotate(-45deg);
-}
-.pv__tick-short, .pv__tick-long {
-  position: absolute;
-  background: #fff;                       /* ds-ok 整屏色块上的判定符号必须是纯白,不随主题翻转 */
-  border-radius: 6rpx;  /* ds-ok 判定屏的水面与判定符号,逐值照原型 */
-}
-/* 一次性的两笔:短臂先落、长臂再扫出去。用 transition 不用 keyframes ——
-   keyframes 从 0 重启,而这两笔只画一次,transition 由 .pv--on 触发就够。 */
-.pv__tick-short {
-  left: 26rpx; bottom: 30rpx;
-  width: 12rpx; height: 60rpx;
-  transform: scaleY(0); transform-origin: 50% 100%;
-  transition: transform .16s ease-out .58s;
-}
-.pv__tick-long {
-  left: 26rpx; bottom: 30rpx;
-  width: 126rpx; height: 12rpx;
-  transform: scaleX(0); transform-origin: 0 50%;
-  transition: transform .26s cubic-bezier(.2, .8, .2, 1) .72s;
-}
-.pv--on .pv__tick-short { transform: scaleY(1); }
-.pv--on .pv__tick-long  { transform: scaleX(1); }
+/* 判定插图(l-kits 2026-11-10):底座 cy-illus 自带进场 / 待机,这里只留位置;
+   rising 为真才挂上,进场就跟着液面一起来(wx:if 重挂 = 重播)。 */
+.pv__art { display: flex; align-items: center; justify-content: center; min-height: 240rpx; }
 
 /* 失败:两个字,别的什么都没有 */
 .pv__word {
@@ -143,8 +117,6 @@
 .pv--reduced .pv__wave { animation: none; }
 .pv--reduced .pv__bubble { animation: none; display: none; }
 .pv--reduced .pv__body { transition: none; opacity: 1; }
-.pv--reduced .pv__tick-short { transform: scaleY(1); transition: none; }
-.pv--reduced .pv__tick-long  { transform: scaleX(1); transition: none; }
 
 /* 结果反馈配图与「继续」(2026-10-22):图最多 3 张一行排开;独立弹出时整屏可点 */
 /* 压过玩法台面(台面走 --cy-z-sheet);判定屏是全屏结果,与居中弹窗同档 */
@@ -164,7 +136,6 @@
 .pv--closable .pv__wave--a, .pv--closable.pv--fail .pv__wave--a { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-page) 30rpx, transparent 31rpx); }
 .pv--closable .pv__wave--b, .pv--closable.pv--fail .pv__wave--b { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-bg-page) 22rpx, transparent 23rpx); }
 .pv--closable .pv__bubble { display: none; }
-.pv--closable .pv__tick-short, .pv--closable .pv__tick-long { background: var(--cy-color-status-success); }
 .pv--closable .pv__word { color: var(--cy-color-status-danger); }
 .pv--closable .pv__text { color: var(--cy-color-text-primary); }
 .pv--closable .pv__img { background: var(--cy-color-bg-surface); }

@@ -127,17 +127,21 @@ const EXPECTED_NAV_ROUTES = [
   // 2026-11-09 qx-b5:通行证列表/详情、视频悬赏为 cy-nav-bar plain + cy-page-title 标准二级页;礼品领取用导航栏标题
   'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
   'subpackageMember/market/gift/index', 'subpackageA/pages/video-bounty/index',
+  // 2026-11-10 l-pass:通行证页(overlay cy-nav-bar 标题,不挂 cy-page-title)、游戏主题库(cy-nav-bar plain + cy-page-title)
+  'subpackageMember/market/membership/index', 'subpackageMember/market/library/index',
   'subpackageJourney/pages/landing/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/report/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/settle/index', // 2026-11-10 qx-s2 staging 合流:r2-finish 结算流程页(custom 导航 + cy-nav-bar plain,不挂 cy-page-title)补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  // 2026-11-10 qx-final:l-after 也新增了同一页 market/library,已在上面 l-pass 行登记,此处去重
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-11-09 qx-b5:通行证列表/详情、视频悬赏挂 cy-page-title(礼品领取不挂)
   'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
   'subpackageA/pages/video-bounty/index',
+  'subpackageMember/market/library/index', // 2026-11-10 l-pass 游戏主题库
   // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
   'subpackageMember/character/index',
   'subpackageMember/invoice/index',
@@ -209,6 +213,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
+  // 2026-11-10 qx-final:l-after 的 market/library 已在 l-pass 行登记,去重
   'subpackageJourney/pages/landing/index', 'subpackageJourney/pages/report/index', // 2026-11-10 qx-c3:两页标题改为条件外 cy-page-title(qx-b3 分支同改)
 ]
 
@@ -354,9 +359,12 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 qx-b4 +1(custom 导航):固定玩法预设 pages/publish/preset ⇒ 158;custom 157。
   // 2026-11-10 r2-create(b4-21):撤掉 pages/publish/preset ⇒ 166;custom 165。
   // 2026-11-10 qx-s2 staging 合并树:r2-finish 结算页 settle +1(custom)叠加 r2-create 撤 preset −1 ⇒ 167;custom 166。
+  // 2026-11-10 qx-final:l-after 与 l-pass 各自新增了同一页 market/library,合并后只算一次,取 l-pass 的计数。
+  // 2026-11-10 l-pass +2(均 custom 导航):通行证页 market/membership、游戏主题库 market/library ⇒ 169;custom 168。
   // 2026-11-10 l-payout +1(custom 导航):商家收款账户 ⇒ 168;custom 167。
-  assert.equal(rows.length, 168, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 167)
+  // 2026-11-10 qx-final 合入 l-payout:商家收款账户 pages/merchant/payout-account +1,叠加在 l-pass/l-after 合并计数之上。
+  assert.equal(rows.length, 170, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 169)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

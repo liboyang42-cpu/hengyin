@@ -1,0 +1,12 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-page-title": "/components/cy/page-title/index",
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-empty": "/components/cy/empty/index"
+  }
+}

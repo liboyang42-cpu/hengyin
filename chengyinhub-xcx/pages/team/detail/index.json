@@ -16,7 +16,9 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-btn": "/components/cy/btn/index",
-    "cy-icon": "/components/cy/icon/index"
+    "cy-icon": "/components/cy/icon/index",
+    "cy-share-card": "/components/cy/share-card/index",
+    "cy-sheet": "/components/cy/sheet/index"
   },
   "componentPlaceholder": {
     "team-report-sheet": "view"

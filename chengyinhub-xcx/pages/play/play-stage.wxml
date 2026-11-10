@@ -1,0 +1,29 @@
+<!-- l-play(2026-11-10,业主批准 proto/game 第二组):主题内阶段弹窗。全部读 --lk-* 外观变量(qx-base look-tokens.wxss),方法在 utils/play-stage-pops.js。 -->
+<!-- 玩法开始弹窗(proto pop-kitstart):封面 · 模板 / 地点标签 · 名字 · 一句说明 · 绑定地点 · 嵌入 / 全屏 · 开始。地点卡进来的只有整屏一种,不出分段。 -->
+<view class="lk-popwrap" wx:if="{{kitStart.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="玩法">
+  <view class="lk-pop-mask" bindtap="closeKitStart" hover-class="none" aria-role="button" aria-label="关闭"></view>
+  <view class="lk-pop ks">
+    <view class="ks__h"><text class="ks__t lk-title">玩法</text><view class="ks__x" bindtap="closeKitStart" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view></view>
+    <scroll-view class="ks__b" scroll-y enhanced show-scrollbar="{{false}}">
+      <image wx:if="{{kitStart.cover}}" class="ks__cov" src="{{img.first(kitStart.cover)}}" mode="aspectFill" />
+      <view wx:else class="ks__cov ks__cov--illus"><cy-illus name="clue" size="200" reduced-motion="{{reducedMotion}}" /></view>
+      <view class="ks__meta" wx:if="{{kitStart.type || kitStart.place}}"><text class="lk-chip" wx:if="{{kitStart.type}}">模板 · {{kitStart.type}}</text><text class="lk-chip" wx:if="{{kitStart.place}}">地点 · {{kitStart.place}}</text></view>
+      <view class="ks__name lk-title">{{kitStart.title}}</view>
+      <view class="ks__lede lk-dim lk-story" wx:if="{{kitStart.lede}}">{{kitStart.lede}}</view>
+      <view class="ks__row lk-line" wx:if="{{kitStart.place}}"><text>绑定地点</text><text class="ks__v">{{kitStart.place}}{{kitStart.arrived ? ' · 已到' : ''}}</text></view>
+      <view class="ks__seg" wx:if="{{kitStart.modes}}" aria-role="radiogroup" aria-label="怎么玩">
+        <view class="ks__m {{kitStart.mode === 'embed' ? 'is-on' : ''}}" data-mode="embed" bindtap="pickKitMode" aria-role="radio" aria-checked="{{kitStart.mode === 'embed'}}" aria-label="嵌入故事流" hover-class="cy-pressed" hover-stay-time="80">嵌入故事流</view>
+        <view class="ks__m {{kitStart.mode === 'full' ? 'is-on' : ''}}" data-mode="full" bindtap="pickKitMode" aria-role="radio" aria-checked="{{kitStart.mode === 'full'}}" aria-label="全屏" hover-class="cy-pressed" hover-stay-time="80">全屏</view>
+      </view>
+    </scroll-view>
+    <view class="ks__f"><view class="lk-btn lk-btn--primary" bindtap="confirmKitStart" aria-role="button" aria-label="开始" hover-class="cy-pressed" hover-stay-time="80">开始</view></view>
+  </view>
+</view>
+<!-- 岔路弹窗(proto pop-branch):分支剧情在故事流里是一张入口卡(钥匙插图),点开在这张居中弹窗里选;玩法本身仍是 cy-playkit(分支),只换了容器,提交链不变 -->
+<view class="lk-popwrap lk-popwrap--branch" wx:if="{{playKit.show && playKit.pop}}" catchtouchmove="noop" aria-role="dialog" aria-label="{{playKit.kit.title || '岔路'}}">
+  <view class="lk-pop-mask" hover-class="none"></view>
+  <view class="lk-pop bp">
+    <view class="bp__h"><text class="ks__t lk-title">{{advancedPlay.node.name || playKit.kit.title || '岔路'}}</text><view class="ks__x" bindtap="closePlayKit" aria-role="button" aria-label="先不选，回到故事" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view></view>
+    <view class="bp__b chfull__kit"><cy-playkit kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" /></view>
+  </view>
+</view>

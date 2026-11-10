@@ -152,7 +152,7 @@ const PLAY_STORY_CARD = Object.freeze({
 // S9 暗色底图配置已抽到 utils/map-style.js(roam 页共用同一份,避免只改一页导致半暗半亮)。
 // 接入文档见 components/cy/free-map/DARK_MAP.md。
 const { playerMapStyle, configured: mapStyleConfigured } = require('../../utils/map-style.js');
-const MAP_DARK = playerMapStyle(); const kitCard = require('./utils/story-kit-card.js'); /* V3-10/53/11/15 入口卡整屏 + 延伸任务半屏 */
+const MAP_DARK = playerMapStyle(); const kitCard = require('./utils/story-kit-card.js'); const stagePops = require('./utils/play-stage-pops.js'); /* V3-10/53/11/15 入口卡整屏 + 延伸任务半屏;l-play 玩法开始弹窗 / 延伸任务翻页卡 / 完成屏奖励 */
 const storyScene = require('./utils/story-scene.js'); const themeLook = require('./utils/theme-look.js'); const lookFx = require('./utils/look-fx.js'); /* 主题画面风格:风格层粒子 + 转场 + 故事字体 */
 const lifeArchive = require('./utils/life-archive.js');
 const storyResume = require('./utils/story-resume.js');
@@ -417,7 +417,7 @@ const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const chapterVideo = require('./chapter-video.js');
 Page({
-  ...chapterVideo.methods, ...kitCard.methods(),
+  ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
   ...journeyCheckRecovery.methods(req),
   ...orientLifecycle.methods((url, method, data) => {
     const header = { 'content-type': 'application/x-www-form-urlencoded' };
@@ -466,7 +466,7 @@ Page({
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data,
+    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -3868,6 +3868,17 @@ Page({
         } else if (b.type === 'reveal' && b.content) {
           const lines = String(b.content).split(/\n+/).map((x) => applyStoryVars(x.trim(), vars)).filter(Boolean);
           if (lines.length) items.push({ kind: 'reveal', who: String(b.who || ''), lines, mood: curMood, odd: curOdd });
+        } else if (b.type === 'gallery') {
+          // 图片组(2026-11-10 l-editor,编辑器原型 v2):作者按 1–4 格版式配的一组图。这里先按每张一段图落地
+          // (与 image 块同一个渲染分支,layout / altText 原样带着);主题内的整组网格由 l-play 接手。
+          (b.images || []).filter((im) => im && im.url).forEach((im, i) => {
+            items.push({ kind: 'image', text: '', url: String(im.url), altText: i === 0 && typeof b.altText === 'string' ? b.altText.trim() : '', mood: curMood, odd: curOdd });
+          });
+        } else if (b.type === 'branch') {
+          // 分支任务(l-editor):问题 + 2–3 条分支与去向(continue / end / chapter:N)。玩家端的分支选择弹窗归 l-play;
+          // 接上之前不产出 item(items 必须与 .chfull__para 一一对应),也不把问题当正文显示 —— 不画点不动的选项。
+        } else if (b.type === 'cap') {
+          // 章节开始 / 结束卡的话(l-editor):open 开场白 / end 结语,给章节开始 / 结束弹窗(l-play)读;正文流里不出现。
         } else if (b.type === 'divider') {
           items.push({ kind: 'divider', text: '', mood: curMood, odd: curOdd });   // 作者分割线:一条细线,仍占一个 .chfull__para
         } else if (b.type === 'odd') {
@@ -4302,7 +4313,7 @@ Page({
   /** 结局卡入场:先挂上(透明),下一拍再加 in,让各段依次浮上来;减弱动态直接落定。 */
   _showEnding(ending) {
     const reduced = !!this.data.reducedMotion;
-    this.setData({ previewEnding: Object.assign(ending, { in: reduced, off: '' }) }, () => {
+    this.setData({ previewEnding: Object.assign(ending, ending.real ? this._endingReward() : {}, { in: reduced, off: '' }) }, () => { /* l-play:真结局带上这一局真夺到的勋章 */
       if (!reduced) this._fxTimers = (this._fxTimers || []).concat(setTimeout(() => this.setData({ 'previewEnding.in': true }), 30));
     });
   },
@@ -5901,7 +5912,7 @@ Page({
       // 简介只是重复标题(如「结语 · 1945年以后」配「1945年以后」)时不再写一遍
       description: node.description && String(node.name || '').indexOf(String(node.description).trim()) >= 0 ? '' : node.description,
       cardHook: node.cardHook || ''
-    });
+    }, this._sheetFacts(node)); /* l-play:地点卡玻璃面板的距离 / 步行 / 开放,只写拿得到的 */
     this.setData({
       'sheet.show': true, sheetOut: false, 'sheet.node': sheetNode,
       'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站'
@@ -7620,7 +7631,7 @@ Page({
     // 填了一半的草稿按「账号 + 局 + 站」存本地(建档 / 留言组件自取);试玩不存
     if (kit.type === 'profile') this._profileNodeId = String(active.node.nodeId);
     if ((kit.type === 'profile' || kit.type === 'note') && !this.data.isPreview && !this.data.isMock) kit.draftKey = storyResume.draftKey(this._runSessionScope(), active.node.nodeId);
-    this.setData({ playKit: kitCard.playKitState(this.data.playKit, kit, inline, ready) });   // V3-10/53/11:要整屏的玩法在流里只放入口卡
+    this.setData({ playKit: kitCard.playKitState(this.data.playKit, kit, inline, ready, this._kitStartFull === String(active.node.nodeId)) });   // V3-10/53/11:要整屏的玩法在流里只放入口卡;l-play:玩法开始弹窗选了「全屏」就整屏开
     if (advanceStory) {
       const nodeId = String(active.node.nodeId);
       setTimeout(() => {

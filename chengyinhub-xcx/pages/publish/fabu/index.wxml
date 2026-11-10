@@ -450,45 +450,35 @@
     <!-- 顶栏(X Articles 编辑器结构):左 草稿 · 保存状态(真实的 themeSaveState,不写「刚刚」);右 预览 / 完成 / ⋯ -->
     <view class="sx-top">
       <view class="sx-top__state"><text class="sx-top__draft">草稿</text><text wx:if="{{themeSaveLabel}}"> · {{themeSaveLabel}}</text></view>
-      <view class="sx-top__text" bindtap="toggleStoryPreview" aria-role="button" aria-label="{{storyEditor.preview ? '回到编辑' : '预览本章'}}" hover-class="cy-pressed" hover-stay-time="80">{{storyEditor.preview ? '编辑' : '预览'}}</view>
+      <view class="sx-top__text" data-stage="theme" bindtap="openStoryPreviewPop" aria-role="button" aria-label="预览玩家端弹窗" hover-class="cy-pressed" hover-stay-time="80">预览</view>
       <view class="sx-top__pill" bindtap="closeStoryEditor" aria-role="button" aria-label="完成故事流编辑" hover-class="cy-pressed" hover-stay-time="80">完成</view>
       <view class="sx-top__icon" bindtap="openStoryMore" aria-role="button" aria-label="更多" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="36" /></view>
     </view>
-    <!-- 工具栏:B I S · 段落样式 · 引用 · 列表 · 编号 · 表情 · 插入▾ · 信息,右端字数。输入时贴到键盘上沿 -->
-    <view class="sx-tools {{storyEditor.kb > 0 ? 'is-docked' : ''}}" wx:if="{{!storyEditor.preview}}" style="{{storyEditor.kb > 0 ? 'bottom:' + storyEditor.kb + 'px' : ''}}">
-      <scroll-view class="sx-tools__scroll" scroll-x enhanced show-scrollbar="{{false}}">
-        <view class="sx-tools__row">
-          <view class="sx-tool sx-tool--b {{storyFmt.bold ? 'is-on' : ''}}" data-mark="bold" catchtap="onStoryMark" aria-role="button" aria-label="加粗" hover-class="cy-pressed" hover-stay-time="80">B</view>
-          <view class="sx-tool sx-tool--i {{storyFmt.italic ? 'is-on' : ''}}" data-mark="italic" catchtap="onStoryMark" aria-role="button" aria-label="斜体" hover-class="cy-pressed" hover-stay-time="80">I</view>
-          <view class="sx-tool sx-tool--s {{storyFmt.strike ? 'is-on' : ''}}" data-mark="strike" catchtap="onStoryMark" aria-role="button" aria-label="删除线" hover-class="cy-pressed" hover-stay-time="80">S</view>
-          <view class="sx-tools__sep"></view>
-          <cy-dropdown topic-editor="{{true}}" range="{{storyParaOptions}}" range-key="label" bind:change="onStoryParaPick">
-            <view class="sx-tool sx-tool--para" aria-role="button" aria-label="段落样式" hover-class="cy-pressed" hover-stay-time="80"><text>{{storyFmt.paraLabel}}</text><text class="sx-tool__caret">▾</text></view>
-          </cy-dropdown>
-          <view class="sx-tool sx-tool--quote {{storyFmt.style === 'quote' ? 'is-on' : ''}}" data-style="quote" catchtap="onStoryBlockStyle" aria-role="button" aria-label="引用" hover-class="cy-pressed" hover-stay-time="80">“</view>
-          <view class="sx-tool {{storyFmt.style === 'ul' ? 'is-on' : ''}}" data-style="ul" catchtap="onStoryBlockStyle" aria-role="button" aria-label="项目列表" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="list" size="32" /></view>
-          <view class="sx-tool sx-tool--ol {{storyFmt.style === 'ol' ? 'is-on' : ''}}" data-style="ol" catchtap="onStoryBlockStyle" aria-role="button" aria-label="编号列表" hover-class="cy-pressed" hover-stay-time="80">1.</view>
-          <view class="sx-tool" catchtap="openStoryEmoji" aria-role="button" aria-label="表情" hover-class="cy-pressed" hover-stay-time="80"><view class="sx-smile"></view></view>
-          <view class="sx-tool" catchtap="openStoryInfo" aria-role="button" aria-label="本章信息" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="info" size="32" /></view>
-        </view>
-      </scroll-view>
-      <!-- 「插入 ▾」是最常用的一颗,钉在右端不随工具栏横滑 -->
-      <view class="sx-tool sx-tool--insert" catchtap="openStoryInsertSheet" aria-role="button" aria-label="插入" hover-class="cy-pressed" hover-stay-time="80"><text>插入</text><text class="sx-tool__caret">▾</text></view>
-      <text class="sx-tools__count">{{storyWordCount}} 字</text>
+    <!-- 顶部「添加」栏(编辑器原型 v2,业主 2026-11-10 批准):段落 / 图片 / 音频 / 玩法 / 分支 / 分割线。
+         没有 B/I/S 等格式工具;「玩法」只指配置好的模板(节点弹窗里选模板与地点);「图片」= 图片组(先选版式再逐格选图)。 -->
+    <view class="sx-add" wx:if="{{!storyEditor.preview}}">
+      <view class="sx-add__i" wx:for="{{storyAddItems}}" wx:key="kind" data-kind="{{item.kind}}" catchtap="onStoryAdd" aria-role="button" aria-label="添加{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon wx:if="{{item.icon}}" name="{{item.icon}}" size="36" />
+        <view wx:else class="sx-add__rule"></view>
+        <text class="sx-add__t">{{item.label}}</text>
+      </view>
     </view>
     <scroll-view class="story-editor__scroll" scroll-y="{{!storyDrag.key}}" enhanced show-scrollbar="{{false}}" scroll-top="{{storyScrollTop}}" bindscroll="onStoryScroll" style="{{storyEditor.kb > 0 ? 'padding-bottom:' + (storyEditor.kb + 56) + 'px' : ''}}">
-      <!-- 封面 5:2 → 章节 imgArr 第一张(玩家端章节卡已在用它当封面) -->
-      <view class="sx-cover {{storyCover ? 'has-img' : ''}}" bindtap="{{storyEditor.preview ? '' : 'pickStoryCover'}}" aria-role="button" aria-label="{{storyCover ? '更换封面' : '添加封面'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        <image wx:if="{{storyCover}}" class="sx-cover__img" src="{{storyCover}}" mode="aspectFill" />
-        <view wx:else class="sx-cover__empty"><cy-icon name="image" size="40" /><text>添加封面</text></view>
-        <view class="sx-cover__x" wx:if="{{storyCover && !storyEditor.preview}}" catchtap="removeStoryCover" aria-role="button" aria-label="移除封面" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="28" /></view>
-      </view>
-      <textarea wx:if="{{!storyEditor.preview}}" class="sx-title" value="{{formData.chapters[storyEditor.chapterIndex].name}}" bindinput="onStoryChapterNameInput" maxlength="30" auto-height placeholder="添加标题" placeholder-class="sx-title__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" />
-      <view wx:else class="sx-title sx-title--read">{{formData.chapters[storyEditor.chapterIndex].name}}</view>
-      <view class="sx-author" wx:if="{{storyAuthor.name}}">
-        <image wx:if="{{storyAuthor.avatar}}" class="sx-author__avatar" src="{{storyAuthor.avatar}}" mode="aspectFill" />
-        <view wx:else class="sx-author__avatar sx-author__avatar--blank">{{storyAuthor.initial}}</view>
-        <text class="sx-author__name">{{storyAuthor.name}}</text>
+      <!-- 章节开始卡(编辑器原型 v2):固定在最前、不参与拖动 —— 封面(章节 imgArr 第一张)+ 章节名 + 开场白,右下「预览弹窗」 -->
+      <view class="ed-cap ed-cap--start">
+        <view class="ed-cap__cover {{storyCover ? 'has-img' : ''}}" bindtap="{{storyEditor.preview ? '' : 'pickStoryCover'}}" aria-role="button" aria-label="{{storyCover ? '更换封面' : '添加封面'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+          <image wx:if="{{storyCover}}" class="ed-cap__img" src="{{storyCover}}" mode="aspectFill" />
+          <view wx:else class="ed-cap__empty"><cy-icon name="image" size="40" /><text>添加封面</text></view>
+          <text class="ed-cap__tag">章节开始</text>
+          <view class="ed-cap__x" wx:if="{{storyCover && !storyEditor.preview}}" catchtap="removeStoryCover" aria-role="button" aria-label="移除封面" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="28" /></view>
+          <view class="ed-cap__pv" data-stage="chStart" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览章节开始弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="28" /><text>预览弹窗</text></view>
+        </view>
+        <view class="ed-cap__body">
+          <textarea wx:if="{{!storyEditor.preview}}" class="ed-cap__name" value="{{formData.chapters[storyEditor.chapterIndex].name}}" bindinput="onStoryChapterNameInput" maxlength="30" auto-height placeholder="章节名称" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" />
+          <view wx:else class="ed-cap__name ed-cap__name--read">{{formData.chapters[storyEditor.chapterIndex].name}}</view>
+          <view wx:if="{{!storyEditor.preview}}" class="ed-cap__ta"><textarea class="ed-cap__ta-in" value="{{storyCaps.open}}" data-cap="open" bindinput="onStoryCapInput" maxlength="500" auto-height placeholder="开场白:玩家进入本章先看到的话" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
+          <view wx:elif="{{storyCaps.open}}" class="ed-cap__ta ed-cap__ta--read">{{storyCaps.open}}</view>
+        </view>
       </view>
       <view class="story-editor__pending" wx:if="{{storyPendingMaterialLocalId}}">待编排节点已选，请把光标放到要插入的位置，再点「地点」</view>
       <view class="story-editor__rail story-article {{storyDrag.key ? 'is-dragging' : ''}} {{storyEditor.preview ? 'is-preview' : ''}}" data-geo="{{storyDrag.geo}}" change:epoch="{{sd.reset}}" epoch="{{storyDrag.epoch}}">
@@ -497,13 +487,19 @@
           wx:key="key"
           wx:for-item="block"
           wx:for-index="blockIndex">
-          <view class="story-block {{storyDrag.key === block.key ? 'is-lifted' : ''}}" id="sb-{{block.key}}" data-blockkey="{{block.key}}" data-index="{{blockIndex}}"
+          <view class="story-block {{storyDrag.key === block.key ? 'is-lifted' : ''}} {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}} {{block.type === 'divider' ? 'is-divider' : ''}}" id="sb-{{block.key}}" data-blockkey="{{block.key}}" data-index="{{blockIndex}}"
                 bindlongpress="{{storyEditor.preview ? '' : 'onStoryDragArm'}}" bindtouchstart="{{sd.start}}" catchtouchmove="{{storyDrag.key ? sd.move : ''}}" bindtouchend="{{sd.end}}" bindtouchcancel="{{sd.end}}">
           <view class="story-grip" wx:if="{{!storyEditor.preview}}" data-grip="1" data-blockkey="{{block.key}}" data-index="{{blockIndex}}" catchtap="onStoryGripTap" aria-role="button" aria-label="拖动或移动这一块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-grip__dots"></view></view>
           <view class="story-text-block sx-para sx-para--{{block.style || 'body'}} {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}}" wx:if="{{block.type === 'text'}}">
             <text class="sx-para__bullet" wx:if="{{block.style === 'ul'}}">•</text>
             <text class="sx-para__bullet sx-para__bullet--num" wx:if="{{block.style === 'ol'}}">{{storyListNo[blockIndex]}}.</text>
-            <view class="sx-rich" wx:if="{{storyEditor.preview || (block.marks && block.marks.length && storyEditor.focusBlockKey !== block.key && storyLiveKey !== block.key)}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'onStoryRichTap'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+            <!-- 拖进段落中间(l-editor):这一段临时显示成「上半 · 槽 · 下半」,槽的高度 = 被拖的块;松手就在这里拆段 -->
+            <view class="story-split" wx:if="{{storyDrag.split && storyDrag.split.key === block.key}}">
+              <text class="story-split__half">{{storyDrag.split.a}}</text>
+              <view class="story-split__slot" style="height: {{storyDrag.split.h}}px"><view class="story-split__line"></view></view>
+              <text class="story-split__half">{{storyDrag.split.b}}</text>
+            </view>
+            <view class="sx-rich" wx:elif="{{storyEditor.preview || (block.marks && block.marks.length && storyEditor.focusBlockKey !== block.key && storyLiveKey !== block.key)}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'onStoryRichTap'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
               <text wx:for="{{storySegs[block.key]}}" wx:key="index" wx:for-item="seg" class="sx-seg {{seg.bold ? 'is-b' : ''}} {{seg.italic ? 'is-i' : ''}} {{seg.strike ? 'is-s' : ''}}">{{seg.text}}</text>
             </view>
             <textarea
@@ -534,6 +530,35 @@
                 data-blockkey="{{block.key}}">
             <image class="story-media-block__img" src="{{block.url}}" mode="widthFix" lazy-load="true" />
             <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除图片块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
+          </view>
+
+          <!-- 图片组(编辑器原型 v2):版式 1–4 格,整组一个块;点格选图,已有图的格再点一次换图;说明写在 altText -->
+          <view class="story-gallery" wx:elif="{{block.type === 'gallery'}}" data-blockkey="{{block.key}}">
+            <view class="story-gallery__grid story-gallery__grid--{{block.layout}}">
+              <block wx:for="{{storyGalleryCells[block.key]}}" wx:key="index" wx:for-item="cell" wx:for-index="cellIndex">
+                <view wx:if="{{cell}}" class="story-gallery__cell story-gallery__cell--img" data-blockkey="{{block.key}}" data-index="{{cellIndex}}" catchtap="fillStoryGalleryCell" aria-role="button" aria-label="换这一格的图" hover-class="cy-pressed" hover-stay-time="80"><image class="story-gallery__img" src="{{cell}}" mode="aspectFill" lazy-load="true" /></view>
+                <view wx:else class="story-gallery__cell story-gallery__cell--empty" data-blockkey="{{block.key}}" data-index="{{cellIndex}}" catchtap="fillStoryGalleryCell" aria-role="button" aria-label="选图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="40" /><text>选图</text></view>
+              </block>
+            </view>
+            <input wx:if="{{!storyEditor.preview}}" class="story-gallery__cap" value="{{block.altText || ''}}" placeholder="图片说明" placeholder-class="ed-cap__ph" data-blockkey="{{block.key}}" bindinput="onStoryGalleryCaptionInput" maxlength="200" aria-label="图片说明" />
+            <text wx:elif="{{block.altText}}" class="story-gallery__cap story-gallery__cap--read">{{block.altText}}</text>
+            <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除图片组" hover-class="cy-pressed" hover-stay-time="80"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
+          </view>
+
+          <!-- 分支任务(编辑器原型 v2):问题 + 2 到 3 条分支,每条写去向;点卡打开分支弹窗编辑 -->
+          <view class="story-branch" wx:elif="{{block.type === 'branch'}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'openStoryBranch'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+            <view class="story-branch__head">
+              <cy-icon name="turn-right" size="28" /><text class="story-branch__tag">分支任务</text>
+              <text class="story-branch__act" wx:if="{{!storyEditor.preview}}">编辑</text>
+              <view class="story-branch__act" data-stage="branch" data-blockkey="{{block.key}}" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览分支弹窗" hover-class="cy-pressed" hover-stay-time="80">预览</view>
+            </view>
+            <text class="story-branch__q {{block.content ? '' : 'is-ph'}}">{{block.content || '写一个问题'}}</text>
+            <view class="story-branch__opt" wx:for="{{block.options}}" wx:key="index" wx:for-item="opt" wx:for-index="optIndex">
+              <text class="story-branch__k">{{storyAbc[optIndex]}}</text>
+              <text class="story-branch__t {{opt.text ? '' : 'is-ph'}}">{{opt.text || '选项'}}</text>
+              <text class="story-branch__to">{{storyBranchToLabel[opt.to] || opt.to}}</text>
+            </view>
+            <view class="story-block-x" wx:if="{{storyEditor.selectedBlockKey === block.key}}" data-blockkey="{{block.key}}" catchtap="removeStoryMedia" aria-role="button" aria-label="删除分支任务" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true"><view class="story-block-x__glyph"><cy-icon name="close" size="36" /></view></view>
           </view>
 
           <!-- 音频块(2026-09-06 用户裁决恢复,与章节级背景旁白并存)。
@@ -700,6 +725,18 @@
           <text class="story-tail__placeholder" wx:if="{{!formData.chapters[storyEditor.chapterIndex].blocks.length}}">开始撰写</text>
         </view>
       </view>
+      <!-- 章节结束卡(编辑器原型 v2):固定在最后、不参与拖动 —— 结语 + 去向(由章节顺序派生:下一章 / 结束主题),右上「预览弹窗」 -->
+      <view class="ed-cap ed-cap--end">
+        <view class="ed-cap__head">
+          <text class="ed-cap__tag ed-cap__tag--end">章节结束</text>
+          <view class="ed-cap__pv ed-cap__pv--flat" data-stage="chEnd" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览章节结束弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="28" /><text>预览弹窗</text></view>
+        </view>
+        <view class="ed-cap__body">
+          <view wx:if="{{!storyEditor.preview}}" class="ed-cap__ta"><textarea class="ed-cap__ta-in" value="{{storyCaps.end}}" data-cap="end" bindinput="onStoryCapInput" maxlength="500" auto-height placeholder="结语:本章完成时弹窗里的话" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
+          <view wx:elif="{{storyCaps.end}}" class="ed-cap__ta ed-cap__ta--read">{{storyCaps.end}}</view>
+          <view class="ed-cap__row"><text class="ed-cap__k">去向</text><view class="ed-chip is-on">{{storyCaps.next}}</view></view>
+        </view>
+      </view>
       <view class="story-editor__bottom"></view>
     </scroll-view>
     <!-- 插入变量列表(契约 §3.1):键来自主题里各节点玩法模板的建档题(question.key)
@@ -722,25 +759,86 @@
     <!-- 2026-11-10 r2-create:原底栏「下一步」(打开章节设置)收进顶栏 ⋯ 菜单的「章节设置」;
          X Articles 式编辑器没有底栏,主动作是顶栏「完成」。 -->
     <!-- 插入 ▾ / 表情 / 本章信息:编辑器内的小浮层,关闭键在右上角 -->
-    <cy-option-sheet show="{{storyOptions.show}}" title="{{storyOptions.title}}" items="{{storyOptions.items}}" immediate bind:select="onStoryOptionPick" bind:cancel="closeStoryOptions" />
-    <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop" hover-class="none"></view>
-    <view class="sx-sheet" wx:if="{{storySheet === 'insert'}}">
-      <view class="sx-sheet__head"><text class="sx-sheet__tit">插入</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
-      <view class="sx-menu__row" data-kind="image" catchtap="onStoryInsertPick" aria-role="button" aria-label="插入图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="image" size="40" /><text>图片</text></view>
-      <view class="sx-menu__row" data-kind="audio" catchtap="onStoryInsertPick" aria-role="button" aria-label="插入音频" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="play" size="40" /><text>音频</text></view>
-      <view class="sx-menu__row" data-kind="game" catchtap="onStoryInsertPick" aria-role="button" aria-label="插入玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="tab-explore" size="40" /><text>玩法</text></view>
-      <view class="sx-menu__row" data-kind="divider" catchtap="onStoryInsertPick" aria-role="button" aria-label="插入分割线" hover-class="cy-pressed" hover-stay-time="80"><view class="sx-menu__rule"></view><text>分割线</text></view>
-      <view class="sx-menu__row" wx:if="{{!formData.chapters[storyEditor.chapterIndex].opening}}" data-kind="node" catchtap="onStoryInsertPick" aria-role="button" aria-label="插入地点" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="pin" size="40" /><text>地点</text></view>
-    </view>
-    <view class="sx-sheet" wx:if="{{storySheet === 'emoji'}}">
-      <view class="sx-sheet__head"><text class="sx-sheet__tit">表情</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
-      <view class="sx-emoji">
-        <view class="sx-emoji__cell" wx:for="{{storyEmojis}}" wx:key="*this" data-emoji="{{item}}" catchtap="onStoryEmojiPick" aria-role="button" aria-label="插入 {{item}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
+    <!-- 玩家端弹窗预览(编辑器原型 v2 · 6):底是章节封面压暗,中间是弹窗卡(按画面风格着色),底部切阶段 / 风格 / 配色。
+         切风格、配色只影响预览,不改主题的画面风格(见 RESULT 待你决定)。 -->
+    <view class="pvl play {{storyPreviewPop.lookClass}}" wx:if="{{storyPreviewPop.show}}" catchtouchmove="noop">
+      <image wx:if="{{storyPreviewPop.cover}}" class="pvl__scene" src="{{storyPreviewPop.cover}}" mode="aspectFill" aria-hidden="true" />
+      <view class="pvl__dim"></view>
+      <view class="pvl__top">
+        <view class="pvl__x" catchtap="closeStoryPreviewPop" aria-role="button" aria-label="关闭预览" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="36" /></view>
+        <text class="pvl__ttl">{{storyPreviewPop.styleLabel}} · {{storyPreviewPop.stageLabel}}</text>
+      </view>
+      <view class="pvl__mid">
+        <view class="lk-pop pv-card">
+          <view class="pv-card__in">
+            <text class="pv-kick lk-mute">{{storyPreviewPop.card.kick}}</text>
+            <view wx:if="{{storyPreviewPop.card.mark}}" class="pv-mark {{storyPreviewPop.fail ? 'is-bad' : 'is-ok'}}"><cy-icon name="{{storyPreviewPop.card.mark}}" size="56" /></view>
+            <text class="pv-title lk-title">{{storyPreviewPop.card.title}}</text>
+            <text wx:if="{{storyPreviewPop.card.body}}" class="pv-body lk-story">{{storyPreviewPop.card.body}}</text>
+            <text wx:if="{{storyPreviewPop.card.meta}}" class="pv-meta lk-mute">{{storyPreviewPop.card.meta}}</text>
+            <view wx:if="{{storyPreviewPop.card.opts.length}}" class="pv-opts">
+              <view class="lk-btn lk-btn--ghost pv-opt" wx:for="{{storyPreviewPop.card.opts}}" wx:key="index"><text class="pv-opt__k">{{storyAbc[index]}}</text><text>{{item}}</text></view>
+            </view>
+            <view wx:if="{{storyPreviewPop.card.cta}}" class="lk-btn lk-btn--primary pv-go">{{storyPreviewPop.card.cta}}</view>
+          </view>
+        </view>
+      </view>
+      <view class="pvl__seg" wx:if="{{storyPreviewPop.stage === 'gEnd'}}">
+        <view class="lk-chip {{storyPreviewPop.fail ? '' : 'is-on'}}" data-stage="gEnd" catchtap="onStoryPreviewStage" aria-role="button" aria-label="成功" aria-selected="{{!storyPreviewPop.fail}}" hover-class="cy-pressed" hover-stay-time="80">成功</view>
+        <view class="lk-chip {{storyPreviewPop.fail ? 'is-on' : ''}}" data-stage="gEnd" data-fail="1" catchtap="onStoryPreviewStage" aria-role="button" aria-label="失败" aria-selected="{{storyPreviewPop.fail}}" hover-class="cy-pressed" hover-stay-time="80">失败</view>
+      </view>
+      <scroll-view class="pvl__strip" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="pvl__strip-in">
+          <view class="lk-chip {{item.on ? 'is-on' : ''}}" wx:for="{{storyPreviewPop.stages}}" wx:key="key" data-stage="{{item.key}}" catchtap="onStoryPreviewStage" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+        </view>
+      </scroll-view>
+      <view class="pvl__looks">
+        <view class="pvl__look {{item.on ? 'is-on' : ''}}" wx:for="{{storyPreviewPop.looks}}" wx:key="value" data-style="{{item.value}}" catchtap="onStoryPreviewLook" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80"><view class="look-sw {{item.sw}}"></view><text>{{item.label}}</text></view>
+      </view>
+      <view class="pvl__pals">
+        <text class="pvl__palk">主题配色</text>
+        <view class="pvl__pal {{item.cls}} {{item.on ? 'is-on' : ''}}" wx:for="{{storyPreviewPop.palettes}}" wx:key="value" data-pal="{{item.value}}" catchtap="onStoryPreviewPalette" aria-role="button" aria-label="{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80"></view>
       </view>
     </view>
-    <view class="sx-sheet" wx:if="{{storySheet === 'info'}}">
-      <view class="sx-sheet__head"><text class="sx-sheet__tit">本章</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
-      <view class="sx-info__row" wx:for="{{storyInfoRows}}" wx:key="label"><text>{{item.label}}</text><text class="sx-info__val">{{item.value}}</text></view>
+    <!-- 底部「已移到… / 撤销」条(编辑器原型 v2):移动、插入、删除、拆段后出现 5 秒 -->
+    <view class="pending-undo story-undo cy-rise-in" wx:if="{{storyUndo.show}}">
+      <text>{{storyUndo.text}}</text>
+      <text class="pending-undo__action" wx:if="{{storyUndo.canUndo}}" bindtap="undoStoryStep" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
+    </view>
+    <cy-option-sheet show="{{storyOptions.show}}" title="{{storyOptions.title}}" items="{{storyOptions.items}}" immediate bind:select="onStoryOptionPick" bind:cancel="closeStoryOptions" />
+    <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop" hover-class="none"></view>
+    <!-- 图片组版式(编辑器原型 v2 · 4c):单图 / 双图 / 三图 / 四图,选完落一组空格再逐格选图 -->
+    <view class="sx-sheet" wx:if="{{storySheet === 'gallery'}}">
+      <view class="sx-sheet__head"><text class="sx-sheet__tit">图片</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
+      <view class="sx-il">
+        <view class="sx-il__opt" wx:for="{{storyGalleryLayouts}}" wx:key="n" data-n="{{item.n}}" catchtap="onStoryGalleryLayout" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="sx-il__pic sx-il__pic--{{item.n}}"><view class="sx-il__c" wx:for="{{item.cells}}" wx:key="*this"></view></view>
+          <text class="sx-il__t">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+    <!-- 分支任务编辑(编辑器原型 v2 · 5):问题;2 到 3 条分支,每条写去向;底部可预览玩家看到的分支弹窗 -->
+    <view class="sx-sheet sx-sheet--tall" wx:if="{{storySheet === 'branch'}}">
+      <view class="sx-sheet__head"><text class="sx-sheet__tit">分支任务</text><view class="sx-sheet__close" catchtap="closeStorySheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="32" /></view></view>
+      <scroll-view class="sx-br" scroll-y enhanced show-scrollbar="{{false}}">
+        <text class="sx-br__k">问题</text>
+        <view class="sx-br__ta"><textarea class="ed-cap__ta-in" value="{{storyBranch.content}}" bindinput="onStoryBranchQuestion" maxlength="200" auto-height placeholder="玩家在分支点看到的问题" placeholder-class="ed-cap__ph" show-confirm-bar="{{false}}" disable-default-padding="{{true}}" /></view>
+        <text class="sx-br__k">分支</text>
+        <view class="sx-br__opt" wx:for="{{storyBranch.options}}" wx:key="index" wx:for-item="opt" wx:for-index="optIndex">
+          <view class="sx-br__line">
+            <text class="story-branch__k">{{storyAbc[optIndex]}}</text>
+            <input class="sx-br__in" value="{{opt.text}}" data-i="{{optIndex}}" bindinput="onStoryBranchOptionText" maxlength="40" placeholder="玩家看到的选项" placeholder-class="ed-cap__ph" aria-label="第 {{optIndex + 1}} 条分支" />
+            <view class="sx-br__x" wx:if="{{storyBranch.options.length > 2}}" data-i="{{optIndex}}" catchtap="removeStoryBranchOption" aria-role="button" aria-label="删除这条分支" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+          </view>
+          <view class="sx-br__tos">
+            <text class="sx-br__tok">去向</text>
+            <view class="ed-chip {{opt.to === item.value ? 'is-on' : ''}}" wx:for="{{storyBranchTos}}" wx:key="value" data-i="{{optIndex}}" data-to="{{item.value}}" catchtap="onStoryBranchTo" aria-role="button" aria-label="{{item.label}}" aria-selected="{{opt.to === item.value}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+          </view>
+        </view>
+        <view class="sx-br__add" wx:if="{{storyBranch.options.length < 3}}" catchtap="addStoryBranchOption" aria-role="button" aria-label="添加分支" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="32" /><text>添加分支</text></view>
+        <view class="sx-br__pv" data-stage="branch" data-blockkey="{{storyBranch.blockKey}}" catchtap="openStoryPreviewPop" aria-role="button" aria-label="预览分支弹窗" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="discover-shop" size="28" /><text>预览玩家看到的分支弹窗</text></view>
+        <view class="sx-br__pad"></view>
+      </scroll-view>
     </view>
     </view>
   </view>
@@ -991,28 +1089,24 @@
            从零配置只走「我的模板」第一张「自己建一个」。 -->
       <cy-inline-error wx:if="{{templateAdoptionError}}" kind="error" title="{{templateAdoptionError}}" action="查看我的玩法" bind:action="inspectAdoptedTemplates" />
       <view class="temp-seg">
-        <text class="temp-seg__tit">公共玩法库</text>
+        <text class="temp-seg__tit">公共模板</text>
         <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>
-        <text class="temp-seg__sub" wx:elif="{{publicTempState === 'ready' && !publicTempList.length}}">暂无公共玩法</text>
+        <text class="temp-seg__sub" wx:elif="{{publicTempState === 'ready' && !publicTempList.length}}">暂无公共模板</text>
       </view>
-      <cy-inline-error wx:if="{{publicTempState === 'error'}}" kind="network" title="公共玩法库加载失败" action="重试" bind:action="getPublicTempList" />
-      <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{publicTempList.length}}">
-        <view class="temp-rail__ul">
-          <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'public' ? 'is-on' : ''}}" wx:for="{{publicTempList}}" wx:key="id" data-item="{{item}}" data-source="public" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="item">
-              <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'public'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
-              <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
-              <view class="item-txt">
-                <view class="tit ep1">{{item.title}}</view><text wx:if="{{publicSupportReasons[item.id]}}" class="node-card__value">{{publicSupportReasons[item.id]}}（通用结算）</text>
-                <view class="david_mbxi">
-                  <view class="david_mbxi_li">{{ item.players || '--' }}</view>
-                  <view class="david_mbxi_li">{{ item.duration === 0 ? 0 : (item.duration || '--') }}分钟</view>
-                </view>
-              </view>
-            </view>
+      <cy-inline-error wx:if="{{publicTempState === 'error'}}" kind="network" title="公共模板加载失败" action="重试" bind:action="getPublicTempList" />
+      <!-- l-editor(编辑器原型 v2 · 4):模板选择改成列表,一行一个模板(图 / 名 / 人数·时长 / 来源 / 勾);
+           公共模板 → 我的模板(第一行「自己建一个」),不再横滑卡 -->
+      <view class="pk-list" wx:if="{{publicTempList.length}}">
+        <view class="pk-row {{selectedTempId === item.id && selectedTempSource === 'public' ? 'is-on' : ''}}" wx:for="{{publicTempList}}" wx:key="id" data-item="{{item}}" data-source="public" bindtap="selectTemp" aria-role="button" aria-label="选用{{item.title}}" aria-selected="{{selectedTempId === item.id && selectedTempSource === 'public'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pk-row__pic" />
+          <view class="pk-row__m">
+            <text class="pk-row__t ep1">{{item.title}}</text>
+            <text class="pk-row__i ep1">{{item.players || '--'}} · {{item.duration === 0 ? 0 : (item.duration || '--')}}分钟{{publicSupportReasons[item.id] ? ' · ' + publicSupportReasons[item.id] + '（通用结算）' : ''}}</text>
           </view>
+          <text class="pk-row__mode">公共</text>
+          <view class="pk-row__ck"><cy-icon name="check" size="24" /></view>
         </view>
-      </scroll-view>
+      </view>
 
       <!-- 我的故事玩法草稿(W-10):从这里配过、存成草稿的玩法。「我的模板」只列已发布的,
            不单列的话绑定一丢就选不回来。 -->
@@ -1020,46 +1114,39 @@
         <view class="temp-seg">
           <text class="temp-seg__tit">我的故事玩法草稿</text>
         </view>
-        <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}">
-          <view class="temp-rail__ul">
-            <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{storyDraftList}}" wx:key="id" data-item="{{item}}" data-source="mine" aria-role="button" aria-label="选用{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="item">
-                <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
-                <image wx:if="{{item.imgUrl}}" lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
-                <view wx:else class="temp-rail__pic"></view>
-                <view class="item-txt"><view class="tit ep1">{{item.title}}</view><text wx:if="{{draftSupportReasons[item.id]}}" class="node-card__value">{{draftSupportReasons[item.id]}}（通用结算）</text></view>
-              </view>
+        <view class="pk-list">
+          <view class="pk-row {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{storyDraftList}}" wx:key="id" data-item="{{item}}" data-source="mine" bindtap="selectTemp" aria-role="button" aria-label="选用{{item.title}}" aria-selected="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <image wx:if="{{item.imgUrl}}" lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pk-row__pic" />
+            <view wx:else class="pk-row__pic pk-row__pic--blank"><cy-icon name="image" size="28" /></view>
+            <view class="pk-row__m">
+              <text class="pk-row__t ep1">{{item.title}}</text>
+              <text class="pk-row__i ep1" wx:if="{{draftSupportReasons[item.id]}}">{{draftSupportReasons[item.id]}}（通用结算）</text>
             </view>
+            <text class="pk-row__mode">草稿</text>
+            <view class="pk-row__ck"><cy-icon name="check" size="24" /></view>
           </view>
-        </scroll-view>
+        </view>
       </block>
       <view class="temp-seg">
         <text class="temp-seg__tit">我的模板</text>
       </view>
-      <!-- V3-47:「自己建一个」是「我的模板」第一张卡,与其他卡同一套样式 -->
-      <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}">
-        <view class="temp-rail__ul">
-          <view class="temp-rail__li temp-rail__li--create" bindtap="onCreateGame" aria-role="button" aria-label="自己建一个" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="item">
-              <view class="temp-rail__pic temp-rail__pic--create"><image class="temp-rail__create-img" src="/images/publish-quick/interaction.png" mode="aspectFit" /></view>
-              <view class="item-txt"><view class="tit ep1">自己建一个</view></view>
-            </view>
-          </view>
-          <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" data-source="mine" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="item">
-              <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
-              <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
-              <view class="item-txt">
-                <view class="tit ep1">{{item.title}}</view><text wx:if="{{mineSupportReasons[item.id]}}" class="node-card__value">{{mineSupportReasons[item.id]}}（通用结算）</text>
-                <view class="david_mbxi">
-                  <view class="david_mbxi_li">{{ item.players || '--' }}</view>
-                  <view class="david_mbxi_li">{{ item.duration === 0 ? 0 : (item.duration || '--') }}分钟</view>
-                </view>
-              </view>
-            </view>
-          </view>
+      <view class="pk-list">
+        <!-- V3-47:「自己建一个」是「我的模板」第一行,打开原来的玩法模板表单 -->
+        <view class="pk-row pk-row--new" bindtap="onCreateGame" aria-role="button" aria-label="自己建一个" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="pk-row__pic pk-row__pic--new"><cy-icon name="plus" size="40" /></view>
+          <view class="pk-row__m"><text class="pk-row__t">自己建一个</text></view>
+          <cy-icon name="chevron-right" size="28" />
         </view>
-      </scroll-view>
+        <view class="pk-row {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" data-source="mine" bindtap="selectTemp" aria-role="button" aria-label="选用{{item.title}}" aria-selected="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pk-row__pic" />
+          <view class="pk-row__m">
+            <text class="pk-row__t ep1">{{item.title}}</text>
+            <text class="pk-row__i ep1">{{item.players || '--'}} · {{item.duration === 0 ? 0 : (item.duration || '--')}}分钟{{mineSupportReasons[item.id] ? ' · ' + mineSupportReasons[item.id] + '（通用结算）' : ''}}</text>
+          </view>
+          <text class="pk-row__mode">我的</text>
+          <view class="pk-row__ck"><cy-icon name="check" size="24" /></view>
+        </view>
+      </view>
 
     </view>
   </view>

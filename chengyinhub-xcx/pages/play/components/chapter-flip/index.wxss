@@ -1,9 +1,16 @@
-/* 章节翻转过场:业主 2026-10-28 定稿原型(claude.ai/artifact/KKQJxLNAL3JSb5pYDF1xtb)的定值,390 宽稿按 1.923rpx/px 移植。玩家侧固定深色。 */
+/* 章节翻转过场:业主 2026-10-28 定稿原型(claude.ai/artifact/KKQJxLNAL3JSb5pYDF1xtb)的定值,390 宽稿按 1.923rpx/px 移植。
+   l-play 2026-11-10:章节门(开场 / 完成)跟主题外观 --lk-*(qx-base look-tokens.wxss),没有外观时回落原型深色;通关仍是原型深色。 */
 .cf { position: fixed; inset: 0; z-index: 130; background: #1F1F21; color: #F5F5F2; opacity: 1; transition: opacity .32s ease; } /* ds-ok 原型定值 */
+.cf--gate { background: var(--lk-bg, #1F1F21); color: var(--lk-ink, #F5F5F2); } /* ds-ok 回落原型定值 */
+.cf--gate .cf__k, .cf--gate .cf__d, .cf--gate .cf__sk { color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 回落原型定值 */
+.cf--gate .cf__t { font-family: var(--lk-fd, inherit); letter-spacing: var(--lk-ls, .04em); }
 .cf.is-out { opacity: 0; }
 .cf__fx { position: absolute; inset: 0; width: 100%; height: 100%; }
 .cf__copy { position: absolute; left: 46rpx; right: 46rpx; top: calc(33.3vh + 45vw); display: flex; flex-direction: column; align-items: center; gap: 19rpx; text-align: center; transition: opacity .25s ease; }
 .cf__copy.is-quiet { opacity: 0; }
+/* 章节开场:方块章节号占 150–400px(画布),文字从 430px 起;整块随 is-in 升起 */
+.cf--gate .cf__copy { top: 830rpx; opacity: 0; transform: translateY(40rpx); transition: opacity .7s ease, transform .9s cubic-bezier(.16,1,.3,1); }
+.cf--gate .cf__copy.is-in { opacity: 1; transform: none; }
 .cf__k { min-height: 31rpx; font-size: 23rpx; letter-spacing: .32em; color: rgba(245,245,242,.56); } /* ds-ok 原型定值 */
 .cf__t { min-height: 65rpx; font-size: 50rpx; font-weight: 700; letter-spacing: .04em; } /* ds-ok 原型定值 */
 .cf__d { max-width: 577rpx; min-height: 42rpx; font-size: 27rpx; line-height: 1.6; color: rgba(245,245,242,.56); } /* ds-ok 原型定值 */
@@ -13,7 +20,6 @@
 .cf__sk { font-size: 23rpx; color: rgba(245,245,242,.56); } /* ds-ok 原型定值 */
 .cf__c { white-space: pre; }
 .cf__c.is-n { filter: blur(3rpx); opacity: .55; }
-.cf__hint { position: absolute; left: 0; right: 0; bottom: calc(60rpx + env(safe-area-inset-bottom)); text-align: center; font-size: 24rpx; color: rgba(245,245,242,.4); } /* ds-ok 原型定值 */
 .cf__btns { position: absolute; left: 31rpx; right: 31rpx; bottom: calc(58rpx + env(safe-area-inset-bottom)); display: flex; gap: 19rpx; opacity: 0; transform: translateY(24rpx); transition: opacity .4s ease, transform .4s ease; pointer-events: none; }
 .cf__btns.is-on { opacity: 1; transform: none; pointer-events: auto; }
 .cf__pill { flex: 1; height: 92rpx; border-radius: 46rpx; display: flex; align-items: center; justify-content: center; font-size: 29rpx; font-weight: 600; } /* ds-ok 原型定值 */
@@ -22,23 +28,33 @@
 .cf-pressed { opacity: .8; }
 .cf--finale { z-index: 320; }   /* 盖在通关勋章页(300)之上,播完关掉才露出它 */
 .cf-tap { opacity: .96; }
-/* r2-finish 章节完成卡(Questo B1 结构,我们自己的深色样式):卡片居中,底部「下一站」;停留后化成粒子散开 */
-.cf__end { position: absolute; left: var(--cy-page-x, 38rpx); right: var(--cy-page-x, 38rpx); top: 50%; transform: translateY(-46%) scale(.96); opacity: 0;
-  display: flex; flex-direction: column; align-items: center; padding: 64rpx 38rpx 38rpx; border-radius: var(--cy-radius-xl); box-sizing: border-box;
-  background: #303033; border: 1rpx solid rgba(245,245,242,.14); box-shadow: 0 24rpx 80rpx rgba(0,0,0,.5); /* ds-ok 卡面比底色 #1F1F21 抬高一档 + 卡沿与投影(规则 1:弹层要看得清) */
-  transition: opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
-.cf__end.is-in { opacity: 1; transform: translateY(-50%) scale(1); }
-.cf__end.is-out { opacity: 0; transform: translateY(-50%) translateX(24rpx); transition: opacity .5s ease .1s, transform .6s ease; }
-.cf__badge { width: 150rpx; height: 150rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: #E9C47C; box-shadow: 0 0 0 10rpx rgba(233,196,124,.18); transform: scale(.4); transition: transform .6s cubic-bezier(.3,1.6,.5,1) .15s; } /* ds-ok 同 .cf__pill--p 金色 */
-.cf__end.is-in .cf__badge { transform: scale(1); }
-.cf__tick { width: 54rpx; height: 28rpx; margin-top: -12rpx; border-left: 10rpx solid #111111; border-bottom: 10rpx solid #111111; transform: rotate(-45deg); } /* ds-ok 同 .cf__pill--p 字色 */
-.cf__ek { margin-top: 31rpx; font-size: var(--cy-type-label); letter-spacing: .12em; color: #E9C47C; } /* ds-ok 金色眉标 */
-.cf__et { margin-top: 12rpx; font-size: var(--cy-type-sheet-title); font-weight: 700; text-align: center; color: #F5F5F2; } /* ds-ok 原型定值 */
-.cf__rows { align-self: stretch; margin-top: 38rpx; border-radius: var(--cy-radius-lg); border: 1rpx solid rgba(245,245,242,.12); overflow: hidden; } /* ds-ok 卡内分组线 */
-.cf__row { display: flex; align-items: center; justify-content: space-between; min-height: 92rpx; padding: 0 31rpx; font-size: var(--cy-type-body); }
-.cf__row + .cf__row { border-top: 1rpx solid rgba(245,245,242,.12); } /* ds-ok 卡内分组线 */
-.cf__rk { color: rgba(245,245,242,.72); } /* ds-ok 原型定值,对 #2C2C2E 对比度 ≥ 4.5 */
-.cf__rv { font-weight: 700; font-variant-numeric: tabular-nums; color: #F5F5F2; } /* ds-ok 原型定值 */
-.cf__next { align-self: stretch; margin-top: 46rpx; min-height: 96rpx; padding: 0 31rpx; border-radius: var(--cy-comp-btn-radius); display: flex; align-items: center; justify-content: center;
-  background: #E9C47C; color: #111111; font-size: var(--cy-type-body); font-weight: 600; text-align: center; } /* ds-ok 同 .cf__pill--p */
+/* ===== l-play 章节完成整屏(proto gp-chapter-end;没有卡片) =====
+   顶部照片 330px 渐入底色,方块章节号在画布上压在照片上(96px 起),成功插图 + 文字 + 三格数据在 380px 起,底部「下一站」。
+   吹散:照片当帧隐去(粉尘在画布上接着飞),文字往右上吹走(位移 + 模糊 + 淡出)。 */
+.cf__end { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease; }
+.cf__end.is-in { opacity: 1; }
+.cf__cover { position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 660rpx; opacity: .55; }
+.cf__end.is-out .cf__cover { opacity: 0; transition: none; }
+.cf__fade { position: absolute; left: 0; right: 0; top: 0; height: 680rpx; background: linear-gradient(180deg, rgba(var(--lk-bg-rgb, 31,31,33), .3), var(--lk-bg, #1F1F21)); } /* ds-ok 回落原型底色 */
+.cf__body { position: absolute; left: 56rpx; right: 56rpx; top: 760rpx; display: flex; flex-direction: column; align-items: center; text-align: center; transition: opacity .9s ease, filter .9s ease, transform .9s ease; }
+.cf__end.is-out .cf__body, .cf__end.is-out .cf__foot { opacity: 0; filter: blur(16rpx); transform: translate(80rpx, -60rpx); }
+.cf__ok { position: relative; height: 240rpx; margin: -80rpx auto 20rpx; display: flex; justify-content: center; }
+.cf__spk { position: absolute; }
+.cf__spk--a { right: calc(50% - 220rpx); top: -16rpx; }
+.cf__spk--b { left: calc(50% - 208rpx); top: 100rpx; }
+.cf__ek { font-size: 23rpx; letter-spacing: .22em; color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 回落原型定值 */
+.cf__et { margin-top: 16rpx; font-size: 64rpx; line-height: 1.2; font-weight: var(--lk-fw, 700); font-family: var(--lk-fd, inherit); letter-spacing: var(--lk-ls, .04em); color: var(--lk-ink, #F5F5F2); } /* ds-ok 回落原型定值 */
+.cf__stats2 { display: flex; justify-content: center; gap: 52rpx; margin-top: 36rpx; }
+.cf__st { display: flex; flex-direction: column; align-items: center; gap: 6rpx; min-width: 120rpx; }
+.cf__sv { font-size: 52rpx; font-weight: 700; font-family: var(--lk-fm, inherit); font-variant-numeric: tabular-nums; color: var(--lk-ink, #F5F5F2); } /* ds-ok 回落原型定值 */
+.cf__sl { font-size: 23rpx; letter-spacing: .14em; color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 回落原型定值 */
+/* 底部按钮(开场「读下去」/ 完成「下一站」):外观按钮(--lk-ink 底 --lk-bg 字,圆角 / 切角随外观),按下微缩 */
+.cf__foot { position: absolute; left: 40rpx; right: 40rpx; bottom: calc(68rpx + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 20rpx; transition: opacity .5s ease, transform .5s ease, filter .9s ease; }
+.cf__foot--start { opacity: 0; transform: translateY(24rpx); pointer-events: none; }
+.cf__foot--start.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.cf__btn { min-height: 100rpx; padding: 0 40rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: var(--lk-rb, 50rpx); clip-path: var(--lk-cut, none); /* ds-ok 圆角随外观,回落原型药丸 */
+  background: var(--lk-ink, #F5F5F2); color: var(--lk-bg, #1F1F21); font-size: 32rpx; font-weight: 600; letter-spacing: .04em; transition: transform 80ms ease; } /* ds-ok 回落原型定值 */
+.cf-pressed .cf__btn, .cf__btn.cf-pressed { transform: scale(.97); opacity: 1; }
+/* 减少动态效果:文字直接落位,吹散不做位移 */
+.cf--reduced .cf__copy, .cf--reduced .cf__foot--start, .cf--reduced .cf__end { transition: none; opacity: 1; transform: none; }
+.cf--reduced .cf__end.is-out .cf__body, .cf--reduced .cf__end.is-out .cf__foot { transform: none; filter: none; }

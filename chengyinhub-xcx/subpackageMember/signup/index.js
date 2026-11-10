@@ -52,7 +52,7 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景
+    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, navH: appGlobal.navBarHeight || 44, walFilter: 'all', walFilterLabel: '票夹', walPop: false, walFilters: walFilters(), // v13 卡堆 / 两层模糊背景;l-after:票夹 ▾ 筛选(全部 / 即将开始 / 已通关)
     flipped: false, qrState: 'idle', qrUrl: '', entering: false, startLit: false, reduced: false, meAvatar: '', // 2026-10-28 翻面入场码 + 开始游戏;r3-visual 顶栏本人头像(app.getAvatar,没有就不出)
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
@@ -294,7 +294,7 @@ Page({
       seen.add(id); return true;
     }).map(walletCard);
     // 2026-10-28 业主:票夹只放能用的票 —— 待支付、已核验、已取消、已过期都不进票夹
-    const list = all.filter(usableTicket);
+    this._usable = all.filter(usableTicket); const list = filterTickets(this._usable, this.data.walFilter); // l-after:再按「票夹 ▾」筛选
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
@@ -678,8 +678,8 @@ Page({
     const next = (leaving + turn + n) % n;
     // 离开的那张整页卷走(下一张:绕左边缘;上一张:绕右边缘),新的一张从侧边滑到正中
     const out = turn > 0
-      ? 'transform: perspective(1400px) translate3d(' + (-W * 0.35) + 'px,0px,0px) rotateY(-110deg) scale(1); transform-origin: 0% 50%; opacity: 0; z-index: 40; --curl: .9; transition: transform .5s cubic-bezier(.3,.6,.3,1), opacity .2s linear .3s;'
-      : 'transform: perspective(1400px) translate3d(' + (W * 0.35) + 'px,0px,0px) rotateY(110deg) scale(1); transform-origin: 100% 50%; opacity: 0; z-index: 40; --curl: .9; --curl-a: 270deg; transition: transform .5s cubic-bezier(.3,.6,.3,1), opacity .2s linear .3s;';
+      ? 'transform: perspective(1400px) translate3d(' + (-W * 0.35) + 'px,0px,0px) rotateY(-110deg) skewY(-4deg) scale(1); transform-origin: 0% 50%; opacity: 0; z-index: 40; --curl: .9; --spec: 1; --sx: -20%; transition: transform .5s cubic-bezier(.3,.6,.3,1), opacity .2s linear .3s;'
+      : 'transform: perspective(1400px) translate3d(' + (W * 0.35) + 'px,0px,0px) rotateY(110deg) skewY(4deg) scale(1); transform-origin: 100% 50%; opacity: 0; z-index: 40; --curl: .9; --curl-a: 270deg; --spec: 1; --sx: -20%; transition: transform .5s cubic-bezier(.3,.6,.3,1), opacity .2s linear .3s;';
     this._throwing = true;
     this._clearQrTimer(); this._qrFor = '';
     this.setData({ currentSwiperTicket: next, flipped: false, qrState: 'idle', qrUrl: '' }); this._showQrIfNoGame();
@@ -702,6 +702,14 @@ Page({
     }, 520);
   },
   goExplore() { wx.switchTab({ url: '/pages/index/index' }); },
+  toggleWalFilter() { this.setData({ walPop: !this.data.walPop }); },
+  pickWalFilter(e) {
+    const key = e.currentTarget.dataset.key;
+    const f = walFilters().find(x => x.key === key);
+    if (!f) return;
+    this.setData({ walPop: false, walFilter: key, walFilterLabel: f.title, flipped: false, qrState: 'idle', qrUrl: '' });
+    if (this._usable) this.rebuildTicketList();
+  },
   goMe() { wx.switchTab({ url: '/pages/member/index/index' }); },
 })
 
@@ -725,7 +733,8 @@ function pagePoses(n, cur, dx, W) {
   const out = [];
   for (let i = 0; i < n; i++) {
     if (i === cur) {
-      out.push('transform: perspective(1400px) translate3d(' + (dx * 0.3).toFixed(1) + 'px,0px,0px) rotateY(' + (-side * p * 70).toFixed(1) + 'deg) scale(1); transform-origin: ' + (side > 0 ? '0% 50%' : '100% 50%') + '; opacity: 1; z-index: 30; --curl: ' + (p * 0.8).toFixed(3) + '; --curl-a: ' + (side > 0 ? '90deg' : '270deg') + ';');
+      // l-after 镜面(proto wal3):卷起时一道高光带跟着手指从右往左扫(--sx 110% → −20%),卷面微微斜切(skewY)
+      out.push('transform: perspective(1400px) translate3d(' + (dx * 0.3).toFixed(1) + 'px,0px,0px) rotateY(' + (-side * p * 70).toFixed(1) + 'deg) skewY(' + (-side * p * 4).toFixed(1) + 'deg) scale(1); transform-origin: ' + (side > 0 ? '0% 50%' : '100% 50%') + '; opacity: 1; z-index: 30; --curl: ' + (p * 0.8).toFixed(3) + '; --curl-a: ' + (side > 0 ? '90deg' : '270deg') + '; --spec: ' + Math.min(1, p * 1.5).toFixed(3) + '; --sx: ' + (110 - p * 130).toFixed(1) + '%;');
     } else if (i === target) {
       out.push('transform: perspective(1400px) translate3d(' + (side * (W + 40) + dx).toFixed(1) + 'px,0px,0px) rotateY(0deg) scale(' + (0.92 + 0.08 * p).toFixed(3) + '); transform-origin: 50% 50%; opacity: 1; z-index: 20; --curl: 0;');
     } else {
@@ -777,4 +786,13 @@ function usableTicket(item) {
 /* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */
 function __end(page, n, arrive) { setTimeout(() => { page._entering = false; }, 40 + Math.max(arrive ? 320 : 0, (n - 1) * 90) + 900); }
 
-if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn };
+/* l-after 票夹筛选(proto wl-wallet「票夹 ▾」):全部 / 即将开始(还没通关)/ 已通关,只按服务端 topicCompleted 分;
+   票夹本身仍只放能用的票(业主 2026-10-28),这里不是「可用 / 已用 / 已过期」。
+   写成函数声明(提升)放在文件尾,是为了不动 U5 基线锚定的行号(signup/index.js:425)。 */
+function walFilters() { return [{ key: 'all', label: '全部', title: '票夹' }, { key: 'upcoming', label: '即将开始', title: '即将开始' }, { key: 'done', label: '已通关', title: '已通关' }]; }
+function filterTickets(list, key) {
+  if (key === 'done') return list.filter(t => t.topicCompleted === true);
+  if (key === 'upcoming') return list.filter(t => t.topicCompleted !== true);
+  return list;
+}
+if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn, filterTickets };

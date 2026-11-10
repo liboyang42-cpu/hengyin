@@ -92,7 +92,8 @@ test('店铺码 scene sh.<会员ID>:识别、进待处理、首页转商家主�
   assert.equal(door.captureDoorScene({ scene: 1001, query: { scene: 'sh.201' } }, null), null)
   const index = read('pages/index/index.js')
   assert.match(index, /const shopId = !activityId && \(parseShopScene\(options && options\.scene\) \|\| parseShopScene\(app\.pendingDoorScene\)\);/)
-  assert.match(index, /: '\/pages\/userinfo\/userinfo\?userId=' \+ shopId \+ '&tab=about';/)
+  // l-misc:队伍码排在店铺码之后,店铺码落点不变
+  assert.match(index, /shopId \? '\/pages\/userinfo\/userinfo\?userId=' \+ shopId \+ '&tab=about' :/)
 })
 
 test('商家主页:分享按钮开通用分享层(店铺卡 + 店铺码),好友分享落商家主页', () => {

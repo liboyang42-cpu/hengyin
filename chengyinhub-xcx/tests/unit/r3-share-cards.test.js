@@ -85,5 +85,8 @@ test('结算分享卡:同一版式,只画服务端事实;徽标缺失时照样�
   assert.equal(card.LOGO, '/images/cy_logo_mark.png')
   const page = read('subpackageJourney/pages/settle/index.js')
   assert.match(page, /shareCard\.draw\(ctx, size\.w, size\.h, this\._card\(\), 1, logo\);/)
-  assert.match(page, /shareCard\.draw\(ctx, size\.w, size\.h, card, Math\.min\(1, frame \/ 45\), this\._logo\);/)
+  // 2026-11-10 l-after:视频录制随「分享视频」按钮一起撤掉(业主原型 st-share 底部只有 分享 + 完成);
+  // 画布只给微信分享卡片图(onShareAppMessage imageUrl)。
+  assert.doesNotMatch(page, /createMediaRecorder|shareVideoMessage/)
+  assert.match(page, /if \(imageUrl\) out\.imageUrl = imageUrl;/)
 })

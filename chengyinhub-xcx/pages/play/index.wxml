@@ -6,6 +6,7 @@
   <include src="play-overlays.wxml" />
   <include src="play-topbar.wxml" />
   <include src="play-help.wxml" />
+  <include src="play-stage.wxml" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <wxs src="../../utils/wxs/img.wxs" module="img" />
@@ -82,7 +83,7 @@
      卡头那个展开钮打开。上面是章节标题,中间那块(稿上 390×473 实线框)只放正文:
      一次一段、居中,向上滑时字从小变大 + 渐显,滑走的渐隐 —— 与旅程手记(Tesseract)同一套观感。
      下面三格读数与三键栏沿用运行栈,不另做一套。 -->
-<view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}} {{lookOn ? chapter.atmosphereClass : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || playKit.show || (advancedPlay.show && !playKit.kit && !(journeyCheck.show && journeyCheck.present === 'inline'))}}">
+<view class="chfull {{storyChat ? 'is-chat' : ''}} {{navMap ? 'is-navmap' : ''}} {{lookLit ? 'is-lit' : ''}} {{lookOn ? chapter.atmosphereClass : ''}}" wx:if="{{chapterFull}}" hidden="{{screen === 'gamePlay' || album.show || (playKit.show && !playKit.pop) || (advancedPlay.show && !playKit.kit && !(journeyCheck.show && journeyCheck.present === 'inline'))}}">
   <!-- P-09 第四轮(业主):猜数字的题目和返回、微信胶囊在同一行(返回右边、胶囊左边,最多两行),不再单独一行压在圆钮下面 -->
   <view class="fx-story__hd {{advancedPlay.show && playKit.kit && !playKit.card ? 'is-kit' : ''}} {{advancedPlay.show && playKit.kit.type === 'estimate' ? 'is-kitq' : ''}}" style="{{advancedPlay.show && playKit.kit.type === 'estimate' ? 'padding-top:' + chrome.kitTop + 'px;padding-right:' + chrome.actionRight + 'px' : 'padding-top:' + chrome.contentTop + 'px'}}">
     <!-- P-09(2026-11-02 业主):整屏玩法在场时不显示左上地图与主题标题,换成返回;题目由玩法自己写在屏上 -->
@@ -112,7 +113,7 @@
     <view class="radar__fold" wx:if="{{navMap}}" style="top:calc({{chrome.contentTop}}px + 216rpx)" catchtap="foldNavMap" aria-role="button" aria-label="收起成罗盘" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="24" /></view>
     <view class="fx-story__t theme-chapter-nav {{isPreview ? 'theme-chapter-nav--preview' : ''}}" style="top:{{chrome.actionTop}}px">{{topicName && topicName !== chapter.name ? topicName + ' · ' : ''}}{{chapter.name}}</view>
     <view class="hud2">
-    <view class="theme-story-hud"><view class="theme-hp" wx:if="{{themeBag.hpEnabled}}"><view class="theme-heart"><cy-icon name="heart-filled" size="36" /></view><text>{{themeBag.names.hp}} {{themeBag.hp}}<text class="theme-max">/{{themeBag.hpMax}}</text></text></view><view class="theme-challenge-entry" wx:if="{{themeBag.awaitingChallenge || zeroHpView}}" bindtap="openThemeGameplay" aria-role="button" aria-label="{{themeBag.names.hp}}已归零，打开恢复状态" hover-class="cy-pressed" hover-stay-time="80">{{zeroHpView.title || '归零挑战'}}</view><view class="theme-bag-entry" wx:if="{{themeBag.inventoryEnabled}}" bindtap="openThemeBackpack" aria-role="button" aria-label="打开背包" hover-class="cy-pressed" hover-stay-time="80"><view class="theme-bag-icon"></view><text wx:if="{{themeBag.capacity > 0 && (themeBag.used > 0 || themeBag.items.length || themeBag.clues.length)}}">{{themeBag.used}}/{{themeBag.capacity}}</text></view></view>
+    <view class="theme-story-hud"><view class="theme-hp" wx:if="{{themeBag.hpEnabled}}"><view class="theme-heart"><cy-icon name="heart-filled" size="36" /></view><text>{{themeBag.names.hp}} {{themeBag.hp}}<text class="theme-max">/{{themeBag.hpMax}}</text></text></view><view class="theme-challenge-entry" wx:if="{{themeBag.awaitingChallenge || zeroHpView}}" bindtap="openThemeGameplay" aria-role="button" aria-label="{{themeBag.names.hp}}已归零，打开恢复状态" hover-class="cy-pressed" hover-stay-time="80">{{zeroHpView.title || '归零挑战'}}</view><view class="theme-bag-entry" wx:if="{{themeBag.inventoryEnabled}}" bindtap="openThemeBackpack" aria-role="button" aria-label="打开背包" hover-class="cy-pressed" hover-stay-time="80"><view class="theme-bag-icon"></view><text wx:if="{{themeBag.capacity > 0 && (themeBag.used > 0 || themeBag.items.length || themeBag.clues.length)}}">{{themeBag.used}}/{{themeBag.capacity}}</text></view><view class="theme-gpill lk-num" wx:if="{{total > 0}}" aria-label="第 {{doneCount}} / {{total}} 站">{{doneCount}}/{{total}}<view class="theme-gpill__i" style="transform:scaleX({{doneCount / total}})"></view></view></view><!-- l-play 顶栏进度药丸(proto hud .gpill) -->
     <!-- 文档二 L5 A4:第二行 —— 头像 + 前 3 项属性(主题开着 d20 才有);点开全屏角色卡 -->
     <view class="hud2-line" wx:if="{{hudChar}}" bindtap="onHudCharTap" aria-role="button" aria-label="{{hudChar.state === 'error' ? '属性暂时没有读到，轻点重试' : '我的角色'}}" hover-class="cy-pressed" hover-stay-time="80">
       <block wx:if="{{hudChar.state === 'ok'}}">
@@ -225,13 +226,13 @@
         </view>
         <!-- 2026-09-24 用户:故事流的卡片要居中,不写「故事玩法」。图标 / 名字 / 动作竖排居中,与居中的正文同一条中线。
              内嵌玩法(auto)不出动作钮:读到就直接铺开成玩法本身,这张卡只是铺开前那一瞬的占位。 -->
-        <view wx:elif="{{item.kind === 'game'}}" class="chfull__game-cue" data-nodeid="{{item.nodeId}}" bindtap="startStoryGame"
+        <view wx:elif="{{item.kind === 'game'}}" class="chfull__game-cue" data-nodeid="{{item.nodeId}}" data-origin="story" bindtap="openKitStart"
               aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="chfull__fsentry-title">{{item.text}}</view>
         </view>
         <view wx:elif="{{item.kind === 'kit'}}" class="chfull__kit" style="--pk-es-reel-h:860rpx;--pk-es-q-display:none">
           <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
-          <view wx:if="{{playKit.card}}" class="chfull__kitcard" bindtap="expandPlayKit" aria-role="button" aria-label="打开{{playKit.cardLabel ? playKit.cardLabel + '，' : ''}}{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="chfull__kitcard--press" hover-stay-time="80"><view class="chfull__kitcard-cover"><image wx:if="{{advancedPlay.node.imgUrl}}" class="chfull__kitcard-img" src="{{img.first(advancedPlay.node.imgUrl)}}" mode="aspectFill" lazy-load="true" /><cy-icon wx:else name="{{playKit.cardIcon || 'play'}}" size="44" /></view>
+          <view wx:if="{{playKit.card}}" class="chfull__kitcard" data-origin="card" bindtap="openKitStart" aria-role="button" aria-label="打开{{playKit.cardLabel ? playKit.cardLabel + '，' : ''}}{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}" hover-class="chfull__kitcard--press" hover-stay-time="80"><view class="chfull__kitcard-cover"><image wx:if="{{advancedPlay.node.imgUrl}}" class="chfull__kitcard-img" src="{{img.first(advancedPlay.node.imgUrl)}}" mode="aspectFill" lazy-load="true" /><view wx:else class="chfull__kitcard-illus"><cy-illus name="{{playKit.cardIllus || 'clue'}}" size="110" reduced-motion="{{reducedMotion}}" /></view></view>
             <view class="chfull__kitcard-copy"><text class="chfull__kitcard-type" wx:if="{{playKit.cardLabel}}">{{playKit.cardLabel}}</text><text class="chfull__kitcard-title">{{advancedPlay.node.name || playKit.kit.title || playKit.kit.kicker || '玩法'}}</text></view>
             <view class="chfull__kitcard-play" aria-hidden="true"><view class="chfull__kitcard-tri"></view></view>
           </view>
@@ -438,14 +439,17 @@
 
 <!-- W-15 试玩末尾的结局卡:只在作者预览出现。默认看兜底那条,chip 切换看每个结局与它的触发条件。
      真实游玩的结局在完成页(finsheet__game-ending),由服务端按本局状态判定。 -->
-<view class="pv-ending {{previewEnding.in ? 'pv-ending--in' : ''}} {{previewEnding.off ? 'pv-ending--' + previewEnding.off : ''}} {{reducedMotion ? 'pv-ending--reduced' : ''}}" wx:if="{{previewEnding.show}}" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-5))">
+<view class="pv-ending {{previewEnding.in ? 'pv-ending--in' : ''}} {{previewEnding.off ? 'pv-ending--' + previewEnding.off : ''}} {{reducedMotion ? 'pv-ending--reduced' : ''}} {{previewEnding.real ? 'pv-ending--run' : ''}}" wx:if="{{previewEnding.show}}" style="padding-top:calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-5))">
   <!-- r2-finish s0-b1-run-ending:真玩家通关结局先有庆祝 —— 金色印章落下 + 两圈光环 + 彩旗;整屏居中。减弱动态时静止落位。 -->
   <scroll-view scroll-y class="pv-ending__scroll" enhanced show-scrollbar="{{false}}">
   <view class="pv-ending__body {{previewEnding.real ? 'pv-ending__body--real' : ''}}">
-  <view class="pv-ending__seal" wx:if="{{previewEnding.real}}" aria-hidden="true"><view class="pv-ending__ring"></view><view class="pv-ending__ring pv-ending__ring--2"></view><view class="pv-ending__tick"></view></view>
-  <text class="pv-ending__k">{{previewEnding.real ? (previewEnding.archive.identity.length ? '这一生的结局' : '本局结局') : '本局结局 · 试玩'}}</text>
-  <text class="pv-ending__title">{{previewEnding.list[previewEnding.idx].title}}</text>
-  <text class="pv-ending__copy" wx:if="{{previewEnding.list[previewEnding.idx].summary}}">{{previewEnding.list[previewEnding.idx].summary}}</text>
+  <!-- l-play 本局完成(proto gp-run-end,业主「应该是绿色的 不应该是对勾 应该是动画 获得了什么线索或勋章之类的」):整屏泛绿,勋章 / 成功插图落下 + 光环 + 闪光;
+       「获得勋章」与勋章名只在这一局真夺到勋章时写(_wonMedals,与完成页勋章堆同口径),没有就只说「本局完成」 -->
+  <view class="pv-ending__hero" wx:if="{{previewEnding.real}}" aria-hidden="true"><view class="pv-ending__glow"></view><view class="pv-ending__illus"><cy-illus name="{{previewEnding.reward ? 'badge' : 'success'}}" size="340" delay="{{400}}" reduced-motion="{{reducedMotion}}" /><view class="pv-ending__spk pv-ending__spk--a"><cy-illus name="sparkles" size="80" bare="{{true}}" delay="{{1000}}" reduced-motion="{{reducedMotion}}" /></view><view class="pv-ending__spk pv-ending__spk--b"><cy-illus name="sparkles" size="60" bare="{{true}}" delay="{{1200}}" reduced-motion="{{reducedMotion}}" /></view><view class="pv-ending__ring"></view></view></view>
+  <text class="pv-ending__k">{{previewEnding.real ? (previewEnding.reward ? '本局完成 · 获得勋章' : (previewEnding.archive.identity.length ? '这一生的结局' : '本局完成')) : '本局结局 · 试玩'}}</text>
+  <text class="pv-ending__title">{{previewEnding.real && previewEnding.reward ? previewEnding.reward.name : previewEnding.list[previewEnding.idx].title}}</text>
+  <text class="pv-ending__copy" wx:if="{{previewEnding.real && previewEnding.reward}}">{{previewEnding.list[previewEnding.idx].title}}{{previewEnding.list[previewEnding.idx].summary ? ' · ' + previewEnding.list[previewEnding.idx].summary : ''}}</text>
+  <text class="pv-ending__copy" wx:elif="{{previewEnding.list[previewEnding.idx].summary}}">{{previewEnding.list[previewEnding.idx].summary}}</text>
   <text class="pv-ending__cond" wx:if="{{!previewEnding.real}}">触发:{{previewEnding.list[previewEnding.idx].cond}}</text>
   <view class="pv-ending__chips" wx:if="{{!previewEnding.real && previewEnding.list.length > 1}}">
     <view wx:for="{{previewEnding.list}}" wx:key="code" class="pv-ending__chip {{index === previewEnding.idx ? 'is-on' : ''}}"
@@ -1012,7 +1016,7 @@
 
 <!-- ===================== C. 节点详情卡 ===================== a1-v3-21(业主「节点游戏进入不是弹窗」):城市定向的站点整屏打开,关闭在右上角(胶囊下方);自由探索的店卡不变 -->
 <view class="mask {{chapterFull ? 'mask--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}" bindtap="closeSheet" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{mode!=2 ? 'sheet--game' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}"><view class="sheet-x" wx:if="{{mode!=2}}" style="top:{{chrome.contentTop}}px" bindtap="closeSheet" aria-role="button" aria-label="关闭{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
+<view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{mode!=2 ? 'sheet--game' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}"><view class="sheet-x" wx:if="{{mode!=2}}" style="top:{{chrome.contentTop}}px" bindtap="closeSheet" aria-role="button" aria-label="返回，关闭{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="32" /></view>
   <view class="sheet-cover {{sheet.node.imgUrl ? '' : 'sheet-cover--bare'}}" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{sheet.node.imgUrl}}" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill"></image>
     
@@ -1027,11 +1031,13 @@
     <view class="cover-fade"></view>
     <view class="cover-stamp" wx:if="{{sheet.node.done}}"><cy-icon name="check" size="28" /></view>
   </view>
-  <view class="sheet-body">
+  <view class="sheet-body {{mode!=2 ? 'lk-pop sheet-glass' : ''}}">
     <view class="sheet-grab"></view>
     <view class="sheet-name serif">{{sheet.node.name}}</view>
     <view class="sheet-meta">{{sheet.node.metaLine}}</view>
     <view class="sheet-desc serif" wx:if="{{sheet.node.description}}">{{sheet.node.description}}</view>
+    <!-- l-play 地点卡(proto gp-place):三个数字只写拿得到的 —— 距离(有定位 / 上一站才算)、步行分钟、开放时段 -->
+    <view class="sheet-dist" wx:if="{{mode!=2 && (sheet.node.distText || sheet.node.hoursText)}}"><view wx:if="{{sheet.node.distText}}"><text class="sheet-dist__n lk-num">{{sheet.node.distText}}</text><text class="sheet-dist__k">距离</text></view><view wx:if="{{sheet.node.walkText}}"><text class="sheet-dist__n lk-num">{{sheet.node.walkText}}</text><text class="sheet-dist__k">分钟步行</text></view><view wx:if="{{sheet.node.hoursText}}"><text class="sheet-dist__n lk-num">{{sheet.node.hoursText}}</text><text class="sheet-dist__k">开放</text></view></view>
 
     <view class="place-hook" wx:if="{{mode==2 && sheet.node.cardHook}}">
       <text class="place-hook__npc">小瘾说</text>
@@ -1048,6 +1054,17 @@
     </block>
     <!-- 有节点玩法 → 开始任务 -->
     <block wx:elif="{{sheet.node.hasGame}}">
+      <!-- l-play 城市定向:这一站绑定的那一个玩法是一张横卡(封面 · 名字 · 类型),点开先看玩法开始弹窗;底部「导航」「开始任务」一排 -->
+      <block wx:if="{{mode!=2}}">
+        <view class="sheet-kit lk-card" data-origin="sheet" bindtap="openKitStart" aria-role="button" aria-label="玩法 {{sheet.node.gameTitle}}" hover-class="sheet-kit--press" hover-stay-time="80">
+          <image wx:if="{{sheet.node.imgUrl}}" class="sheet-kit__img" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill" />
+          <view wx:else class="sheet-kit__img sheet-kit__img--illus"><cy-illus name="clue" size="96" reduced-motion="{{reducedMotion}}" /></view>
+          <view class="sheet-kit__copy"><text class="sheet-kit__t">{{sheet.node.gameTitle}}</text><text class="sheet-kit__s" wx:if="{{sheet.node.gameLede}}">{{sheet.node.gameLede}}</text></view>
+          <cy-illus name="key" size="80" bare="{{true}}" reduced-motion="{{reducedMotion}}" />
+        </view>
+        <view class="sheet-row"><view class="lk-btn lk-btn--ghost" wx:if="{{sheet.node.lat && sheet.node.lng}}" bindtap="sheetNav" aria-role="button" aria-label="导航到{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</view><view class="lk-btn lk-btn--primary" data-origin="sheet" bindtap="openKitStart" aria-role="button" aria-label="开始任务" hover-class="cy-pressed" hover-stay-time="80">开始任务</view></view>
+      </block>
+      <block wx:else>
       <view class="game-card">
         <view class="g1 serif">{{sheet.node.gameTitle}}</view>
         <view class="g2" wx:if="{{sheet.node.gameLede}}">{{sheet.node.gameLede}}</view>
@@ -1056,11 +1073,13 @@
         <view class="g3" wx:if="{{sheet.node.rule}}">{{sheet.node.rule}}</view>
       </view>
       <cy-btn variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="startGame">开始任务</cy-btn>
+      </block>
     </block>
     <!-- 无模板 → 读文字,到达即完成 -->
     <block wx:else>
+      <view class="{{mode!=2 ? 'sheet-row' : ''}}"><view class="lk-btn lk-btn--ghost" wx:if="{{mode!=2 && sheet.node.lat && sheet.node.lng}}" bindtap="sheetNav" aria-role="button" aria-label="导航到{{sheet.node.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</view>
       <cy-btn wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="reverifyGuardArrival">我已到达此站</cy-btn>
-      <cy-btn wx:elif="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onScanArrive">扫码到达</cy-btn><cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : (gpsOk ? '我已到达此站' : '开启定位'))}}</cy-btn>
+      <cy-btn wx:elif="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}" variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onScanArrive">扫码到达</cy-btn><cy-btn wx:else variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="onSheetGoTap">{{mode==2 ? '去这家' : (!sheet.node.lat ? '开始' : (gpsOk ? '到了' : '开启定位'))}}</cy-btn></view>
       <!-- 文档二 L5 B T-34 / X8:到站被拦 —— 同一行一句话 + 一个动作 -->
       <block wx:if="{{mode!=2 && guardAppealView && guardAppealView.reference.nodeId == sheet.node.nodeId && guardAppealView.command}}">
         <view class="sheet-note" wx:if="{{guardAppealView.state === 'FOUND' && guardAppealView.result.canReverify}}">申诉已通过，请在本节点重新确认到达</view>
@@ -1699,7 +1718,7 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-    <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" title="{{sceneCurrent.params.title}}" until="{{sceneCurrent.params.until}}" bind:close="backScene" bind:redeemed="onTicketRedeemed" />
+    <cy-scene-qr-ticket registration-id="{{sceneCurrent.params.registrationId}}" title="{{sceneCurrent.params.title}}" until="{{sceneCurrent.params.until}}" cover="{{topicCover}}" bind:close="backScene" bind:redeemed="onTicketRedeemed" />
 </view>
 </view>
 <view class="play-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-stamp-album'}}" catchtouchmove="blockSceneTouch">
@@ -1734,7 +1753,7 @@
 <view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="none"></view>
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
-<cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show}}" bind:kitaction="onPlayKitAction" />
+<cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show && !playKit.pop}}" bind:kitaction="onPlayKitAction" /><!-- l-play:分支剧情在居中弹窗里(play-stage.wxml),不盖整屏 -->
 <cy-play-verdict show="{{r5Verdict.show}}" kind="{{r5Verdict.kind}}" text="{{r5Verdict.text}}" images="{{r5Verdict.images}}" closable="{{true}}" bind:close="closeR5Verdict" />
 
 <!-- R14 旅程检定(入口在 encounter.allowedActions,与 playKit 是两套;

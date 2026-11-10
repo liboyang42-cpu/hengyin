@@ -16,7 +16,9 @@
       <view wx:for="{{pages}}" wx:key="key" class="ar__card ar__card--{{item.key}} ar__card--r{{(index - idx + 3) % 3}} {{flip === index ? 'is-flip' : ''}}"
             catchtap="enter" data-key="{{item.key}}" hover-class="ar__card--press" hover-stay-time="80" aria-role="button" aria-label="打开{{item.label}}" aria-hidden="{{index !== idx}}">
         <view class="ar__hole"></view>
-        <image class="ar__img" src="/subpackageP3/images/album-intro/{{item.key}}.png" mode="aspectFit" />
+        <!-- l-after(业主批准 proto/game al-album):卡上的图换成空态同款插图集(勋章 / 邮票 / 藏品),左下角段名 -->
+        <view class="ar__il"><cy-illus wx:if="{{ring}}" name="{{item.illus}}" size="300" delay="{{index === idx ? 120 : 0}}" reduced-motion="{{false}}" /></view>
+        <text class="ar__lb" aria-hidden="true">{{item.label}}</text>
       </view>
       <view class="ar__ring" aria-hidden="true"></view>
     </view>

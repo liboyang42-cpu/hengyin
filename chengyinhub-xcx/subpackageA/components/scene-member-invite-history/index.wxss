@@ -18,20 +18,20 @@
 .ir-group-title { color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }
 .ir-group-total { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; }
 .ir-card { overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle)); }
-.ir-row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 128rpx; padding: var(--cy-space-3) var(--cy-space-4); box-sizing: border-box; }
+.ir-row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 152rpx; padding: var(--cy-space-4); box-sizing: border-box; } /* l-misc(业主「列表看起来更小」):行高、头像与字号对齐其它列表页 */
 /* 行间细分隔线从文字列起,与头像不相交(Revolut 列表) */
 .ir-row { position: relative; }
-.ir-row + .ir-row::before { content: ''; position: absolute; top: 0; right: 0; left: calc(var(--cy-space-4) + 64rpx + var(--cy-space-3)); height: 1rpx; background: var(--cy-color-border-subtle); }
+.ir-row + .ir-row::before { content: ''; position: absolute; top: 0; right: 0; left: calc(var(--cy-space-4) + 88rpx + var(--cy-space-3)); height: 1rpx; background: var(--cy-color-border-subtle); }
 .ir-avatar { flex: none; }
 .ir-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
 .ir-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 650; }
 /* Revolut 列表行:左列 名字 / 状态;时间放到右侧胶囊下面(绝对定位,源码顺序不变) */
 .ir-copy { padding-right: 200rpx; }
-.ir-time { position: absolute; right: var(--cy-space-4); bottom: var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
-.ir-status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
+.ir-time { position: absolute; right: var(--cy-space-4); bottom: var(--cy-space-4); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
+.ir-status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
 /* 右侧状态胶囊:一律中性灰底(奖励未到账不是成功状态,不占成功绿;原合同) */
-.ir-pill { position: absolute; right: var(--cy-space-4); top: var(--cy-space-3); padding: 6rpx var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-status-neutral-soft); color: var(--cy-color-text-secondary); }
-.ir-reward { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-weight: 650; font-variant-numeric: tabular-nums; }
+.ir-pill { position: absolute; right: var(--cy-space-4); top: var(--cy-space-4); padding: 6rpx var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-status-neutral-soft); color: var(--cy-color-text-secondary); }
+.ir-reward { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-weight: 650; font-variant-numeric: tabular-nums; }
 
 .ir-more,
 .ir-more-error { display: flex; align-items: center; justify-content: center; min-height: var(--cy-btn-h); margin-top: var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }

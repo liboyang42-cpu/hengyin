@@ -2,6 +2,7 @@
 /* 我的队伍:深色,NRC 斜体读数 + Revolut 分组卡。卡/徽色与地图 P6 同一套(mt-badge 色值) */
 page { background: var(--cy-color-bg-page); }
 .mt { min-height: 100vh; padding-bottom: calc(80rpx + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); color: var(--cy-comp-sheet-player-text); }
+.mt-acts { display: flex; align-items: center; gap: var(--cy-space-2); }
 .mt-map { min-height: 72rpx; padding: 0 27rpx; border-radius: var(--cy-radius-pill); background: var(--cy-comp-sheet-player-elevated); display: flex; align-items: center; gap: 10rpx; font-size: var(--cy-type-body); font-weight: 600; }
 .mt-stats { display: flex; padding: 15rpx 31rpx 0; }
 .mt-stat { flex: 1; display: flex; flex-direction: column; }

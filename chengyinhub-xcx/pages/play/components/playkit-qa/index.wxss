@@ -185,32 +185,55 @@
 .qa__input { transition: border-color .2s ease; }
 .qa__input--wrong { border-bottom-color: var(--cy-color-status-danger); }
 
-/* UG-02 选项图:固定 4:3 小图,选中态位移不改尺寸 */
-.qa__opt-img { flex: none; width: 128rpx; height: 96rpx; border-radius: var(--cy-radius-sm); background: var(--soft); }
-/* r2 b2-ug-02 图卡网格:两列方图卡,图在上、字母+文案在下;选中描边,对/错染描边与字 */
-.qa__opts--pic { display: flex; flex-wrap: wrap; justify-content: center; gap: 24rpx; }
-.qa__opts--pic .qa__opt {
-  width: calc((100% - 24rpx) / 2);
-  padding: 16rpx 16rpx 24rpx;
-  border: none;
-  border-radius: var(--cy-radius-lg);
+/* ===== 图片选项(l-kits 2026-11-10,照 proto/game page.css .imgopts--bare / .imgopt,px × 2 = rpx) =====
+ * 没有底、没有卡:图就是选项。字母 + 文案压在图下沿的渐变上(图上的字永远白,不随外观翻转);
+ * 描边是一层 ::after 盖在图上(opacity / 颜色切换,不过渡 box-shadow);选中上浮 6rpx、图放大 1.04;
+ * 对 = 描边绿(--ok),错 = 描边红(--accent)+ 图压暗;其余变淡。圆角 / 切角读主题外观 --lk-r / --lk-cut,没有外观时落回 DS 圆角。 */
+.qa__opts--pic { display: flex; flex-wrap: wrap; justify-content: space-between; row-gap: 24rpx; }  /* ds-ok 原型 gap 12px */
+.qa__pic {
+  position: relative;
+  width: calc(50% - 12rpx);               /* ds-ok 两列,列距 24rpx */
+  aspect-ratio: 1 / 1.1;                  /* ds-ok 原型 .imgopts--bare .imgopt */
+  border-radius: var(--lk-r, var(--cy-radius-lg));
+  clip-path: var(--lk-cut, none);
+  overflow: hidden;
   background: var(--soft);
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  transition: box-shadow .18s ease, transform .18s ease, opacity .22s ease;
+  box-shadow: 0 28rpx 60rpx rgba(0, 0, 0, .35);   /* ds-ok 原型 0 14px 30px */
+  transition: transform var(--cy-motion-standard) var(--cy-ease-spring-soft, cubic-bezier(.34, 1.3, .64, 1)), opacity var(--cy-motion-standard) ease;
 }
-.qa__opts--pic .qa__opt::after { display: none; }
-.qa__opts--pic .qa__opt-main { flex-wrap: wrap; align-items: baseline; gap: 16rpx 12rpx; }
-.qa__opts--pic .qa__opt.is-on .qa__opt-main,
-.qa__opts--pic .qa__opt.is-right .qa__opt-main,
-.qa__opts--pic .qa__opt.is-wrong .qa__opt-main { transform: none; }
-.qa__opts--pic .qa__opt-img { order: -1; width: 100%; height: 280rpx; border-radius: var(--cy-radius-md); background: var(--bg); }
-.qa__opts--pic .qa__opt-img--none { display: flex; align-items: center; justify-content: center; font-family: var(--cy-font-numeric);
-  font-size: var(--cy-type-sheet-title); font-weight: 800; color: var(--sub); }
-.qa__opts--pic .qa__opt-t { color: var(--ink); font-size: var(--cy-type-body); font-weight: 700; }
-.qa__opts--pic .qa__opt.is-on    { box-shadow: inset 0 0 0 4rpx var(--ink); transform: translateY(-4rpx); }
-.qa__opts--pic .qa__opt.is-right { box-shadow: inset 0 0 0 4rpx var(--ok); }
-.qa__opts--pic .qa__opt.is-wrong { box-shadow: inset 0 0 0 4rpx var(--accent); }
-.qa__opts--pic .qa__opt-tag { margin-top: 8rpx; }
-.qa--reduced .qa__opts--pic .qa__opt { transition: none; }
+.qa__pic-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transition: transform .5s ease; }   /* ds-ok 原型 img .5s */
+.qa__pic-img--none { display: flex; align-items: center; justify-content: center; font-family: var(--cy-font-numeric); font-size: var(--cy-type-display); font-weight: 800; color: var(--sub); }
+.qa__pic-ring { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border: 4rpx solid var(--ink); border-radius: inherit; opacity: 0; pointer-events: none; transition: opacity var(--cy-motion-fast) ease; }
+.qa__pic-lb {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 56rpx 20rpx 20rpx;              /* ds-ok 原型 28px 10px 10px */
+  background: linear-gradient(transparent, rgba(0, 0, 0, .72));   /* ds-ok 图上的渐变底 */
+  color: #fff;                             /* ds-ok 图上的字永远白 */
+  font-size: var(--cy-type-body);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.qa__pic-k {
+  flex: none; width: 40rpx; height: 40rpx; border-radius: 50%;   /* ds-ok 原型 20px 圆 */
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .22);    /* ds-ok 图上的字母圆 */
+  font-family: var(--cy-font-numeric); font-size: var(--cy-type-label); font-weight: 700;
+}
+.qa__pic-t { flex: 1; min-width: 0; }
+.qa__pic-tag {
+  position: absolute; left: 16rpx; top: 16rpx;
+  padding: 6rpx 14rpx; border-radius: var(--cy-radius-pill);
+  background: rgba(0, 0, 0, .55); color: #fff;   /* ds-ok 图上的角标 */
+  font-size: var(--cy-type-label); font-weight: 600;
+}
+.qa__pic.is-on { transform: translateY(-6rpx); }                  /* ds-ok 原型 -3px */
+.qa__pic.is-on .qa__pic-ring { opacity: 1; }
+.qa__pic.is-on .qa__pic-img { transform: scale(1.04); }
+.qa__pic.is-right .qa__pic-ring { opacity: 1; border-color: var(--ok); }
+.qa__pic.is-wrong .qa__pic-ring { opacity: 1; border-color: var(--accent); }
+.qa__pic.is-wrong { opacity: .75; }
+.qa__pic.is-dim { opacity: .4; }
+.qa--reduced .qa__pic, .qa--reduced .qa__pic-img, .qa--reduced .qa__pic-ring { transition: none; }
+.qa--reduced .qa__pic.is-on { transform: none; }
+.qa--reduced .qa__pic.is-on .qa__pic-img { transform: none; }

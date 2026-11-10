@@ -7,7 +7,7 @@
     <cy-nav-bar plain custom-back bind:back="goBack" />
     <cy-page-title title="通行证" safe-top="{{false}}" />
     <view class="mk__body">
-      <!-- r2-store 积分余额卡(STRUCTURE 票夹结构):余额只读服务端,点进原积分明细;平台会员卡服务端未上线,不出 -->
+      <!-- r2-store 积分余额卡(STRUCTURE 票夹结构):余额只读服务端,点进原积分明细;通行证(平台会员)卡在可购买分段顶部,服务端未开放时不出 -->
       <view class="mk-balance" wx:if="{{pointBalance !== null}}" bindtap="goPoints" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="积分 {{pointBalance}}，查看积分记录">
         <view class="mk-balance__main"><text class="mk-balance__k">积分</text><text class="mk-balance__v">{{pointBalance}}</text></view>
         <view class="mk-balance__go"><text>积分记录</text><cy-icon name="chevron-right" size="28" /></view>
@@ -16,6 +16,12 @@
       <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
       <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
       <block wx:elif="{{tab === 'shop'}}">
+        <!-- l-pass 通行证(平台会员):服务端 enabled 才出;点进通行证页购买 -->
+        <view class="mk-member" wx:if="{{member}}" bindtap="goMembership" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="通行证 {{member.side}}">
+          <text class="mk-member__t">通行证</text>
+          <text class="mk-member__s" wx:if="{{member.side}}">{{member.side}}</text>
+          <cy-icon name="chevron-right" size="28" />
+        </view>
         <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!products.length}}" kind="empty" title="暂无在售通行证" />
         <view class="mk-card" wx:for="{{products}}" wx:key="id" bindtap="openProduct" data-id="{{item.id}}"
               hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.name}}">
@@ -31,6 +37,11 @@
           </view>
         </view>
       </block>
+      <!-- l-after(proto ps-pass「进入游戏主题库 ›」):整页主题库在分包 market/library;qx-final:主题库读通行证接口,只在服务端开放通行证(member)时出 -->
+      <view class="mk-row mk-row--go" wx:if="{{tab === 'shop' && state === 'ready' && member}}" bindtap="goLibrary" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="进入游戏主题库">
+        <view class="mk-row__main"><text class="mk-row__title">游戏主题库</text></view>
+        <cy-icon name="chevron-right" size="28" />
+      </view>
       <!-- §20.2 兑换码 / U07-03 已购模板:渠道未开通,入口保留但只写不可用原因,不可点 -->
       <view class="mk-group mk-gated" wx:if="{{tab === 'shop' && state === 'ready'}}">
         <view class="mk-row" aria-disabled="true">
