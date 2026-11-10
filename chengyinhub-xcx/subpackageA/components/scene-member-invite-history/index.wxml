@@ -47,7 +47,7 @@
       </view>
       <view class="ir-card">
         <view class="ir-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="id" aria-label="{{item.nickname}} {{item.timeText}} {{item.statusText}}">
-          <cy-avatar class="ir-avatar" size="sm" src="{{item.avatar}}" name="{{item.nickname}}" />
+          <cy-avatar class="ir-avatar" size="md" src="{{item.avatar}}" name="{{item.nickname}}" />
           <view class="ir-copy">
             <text class="ir-name ep1">{{item.nickname}}</text>
             <text class="ir-time">{{item.timeText}}</text>

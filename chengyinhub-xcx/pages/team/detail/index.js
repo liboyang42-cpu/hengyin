@@ -1,4 +1,5 @@
 const teamSeats = require('../utils/team-seats.js');
+const inviteQr = require('../utils/team-invite-qr.js');
 const cyToast = require('../../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
@@ -52,7 +53,9 @@ Page({
     errorSub: '',
     errorAction: '重新加载',
     reportShow: false,
-    reportTeamId: ''
+    reportTeamId: '',
+    // l-misc:队伍小程序码 + 加入码弹层。state: loading | ready(码 + 加入码)| code(微信不可用,只给加入码)| error
+    qrSheet: { show: false, state: '', qr: '', code: '', message: '' }
   },
 
   onLoad(options) {
@@ -475,6 +478,28 @@ Page({
       return;
     }
     wx.navigateTo({ url: '/pages/team/join/index?code=' + encodeURIComponent(this.data.team.inviteCode) });
+  },
+
+  // l-misc 队伍小程序码:只有在队成员、招募中才给入口;码与加入码都以服务端 /api/team/invite-qrcode 回包为准。
+  openInviteQr() {
+    if (!this.teamId || !this.data.joined) return;
+    const context = { teamId: this.teamId, reader: reader(app) };
+    const epoch = this._qrEpoch = (this._qrEpoch || 0) + 1;
+    this.setData({ qrSheet: { show: true, state: 'loading', qr: '', code: '', message: '' } });
+    inviteQr.load(app, requestId(this.teamId), (view) => {
+      if (epoch !== this._qrEpoch || this._hidden || this._disposed || context.teamId !== this.teamId
+          || !sameReader(app, context.reader) || !this.data.qrSheet.show) return;
+      this.setData({ qrSheet: Object.assign({ show: true }, view) });
+    });
+  },
+  closeInviteQr() {
+    this._qrEpoch = (this._qrEpoch || 0) + 1;
+    this.setData({ 'qrSheet.show': false });
+  },
+  copyJoinCode() {
+    const code = this.data.qrSheet && this.data.qrSheet.code;
+    if (!code) return;
+    wx.setClipboardData({ data: code, success() { cyToast('加入码已复制'); } });
   },
 
   // 三段式第一段:三个危险动作都先过确认弹窗。文案(含后果与「此操作不可撤销」)

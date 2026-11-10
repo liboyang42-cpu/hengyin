@@ -15,8 +15,11 @@ import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.business.service.IPlayTeamService;
+import com.chengyinhub.business.service.IPlayerWxacodeService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -34,7 +37,10 @@ import java.util.Map;
 @Service
 public class PlayTeamServiceImpl implements IPlayTeamService {
 
+    private static final Logger log = LoggerFactory.getLogger(PlayTeamServiceImpl.class);
     private static final SecureRandom INVITE_RANDOM = new SecureRandom();
+    static final String QR_READY = "READY";
+    static final String QR_UNAVAILABLE = "UNAVAILABLE";
     static final long APPLY_TTL_MILLIS = 24L * 60 * 60 * 1000;
     static final int NEARBY_DEFAULT_RADIUS_M = 3000;
     /** 走查 P-38(业主):附近地图「全部」= 所有距离;结果仍按距离由近到远截断条数,半径上限只防坐标溢出(NEARBY_LIMIT)。 */
@@ -59,6 +65,8 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     private IUmsMemberService umsMemberService;
     @Autowired
     private IAuditTaskService auditTaskService;
+    @Autowired
+    private IPlayerWxacodeService playerWxacodeService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -676,6 +684,56 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    @Override
+    public Map<String, Object> inviteQrcode(Long teamId, Long memberId) {
+        requireMember(memberId);
+        PlayTeam team = requireTeam(teamId, false);
+        // 与 info 同一口径:只有本队在队成员看得到邀请码;邀请已过招募窗口不再出码。
+        if (teamMapper.selectActiveMember(team.getId(), memberId) == null) {
+            throw new IllegalArgumentException("无权查看该队伍");
+        }
+        String inviteCode = trimToNull(team.getInviteCode());
+        if (inviteCode == null || !inviteAvailable(team)) throw new IllegalArgumentException("邀请已失效");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("teamId", team.getId());
+        result.put("inviteCode", inviteCode);
+        String scene = teamScene(inviteCode);
+        String url = null;
+        if (scene != null) {
+            try {
+                url = playerWxacodeService.getOrCreateScene(scene);
+            } catch (RuntimeException e) {
+                // 微信接口 / 频控 / 存储不可用:降级为只给加入码。不回传内部原因。
+                log.warn("队伍小程序码不可用,降级为加入码,teamId={},exceptionType={}",
+                        team.getId(), e.getClass().getSimpleName());
+                url = null;
+            }
+        }
+        boolean ready = url != null && !url.trim().isEmpty();
+        result.put("qrState", ready ? QR_READY : QR_UNAVAILABLE);
+        if (ready) result.put("qrcodeUrl", url);
+        return result;
+    }
+
+    /**
+     * 小程序码 scene 最长 32 字符,放不下「前缀 + 32 位十六进制旧码」,所以两种码分开编码:
+     * 新码(22 位 base64url,newInviteCode)→ {@code tm.<码>};
+     * 迁移回填的旧码(32 位小写十六进制)→ {@code th.<同 16 字节的 base64url>},小程序落地页还原成十六进制。
+     * 其它形状不出码(返回 null),页面降级为加入码。
+     */
+    static String teamScene(String inviteCode) {
+        if (inviteCode == null) return null;
+        if (inviteCode.matches("[A-Za-z0-9_-]{22}")) return "tm." + inviteCode;
+        if (inviteCode.matches("[0-9a-f]{32}")) {
+            byte[] bytes = new byte[16];
+            for (int i = 0; i < 16; i++) {
+                bytes[i] = (byte) Integer.parseInt(inviteCode.substring(i * 2, i * 2 + 2), 16);
+            }
+            return "th." + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        }
+        return null;
     }
 
     private boolean inviteAvailable(PlayTeam team) {

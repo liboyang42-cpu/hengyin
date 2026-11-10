@@ -77,7 +77,7 @@ function assertTeamCompliance(sources) {
 // 页面合法 require 了纯函数 utils/user-character.js 与 utils/team-event-command.js(只读入参,不碰 wx):
 // 按页面目录解析,只放行这两个真模块,其余仍 unexpected require。
 // 第七轮 C 第 3 项:分享卡固定插画常量 utils/roam-menu-share.js 也是纯常量模块。
-const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js'), path.join(ROOT, 'utils/roam-menu-share.js'), path.join(ROOT, 'utils/team-applicant-rows.js'), path.join(ROOT, 'utils/datetime.js'), path.join(ROOT, 'pages/team/utils/team-seats.js')]) // qx-b4:席位纯函数
+const PURE_MODULES = new Set([path.join(ROOT, 'utils/user-character.js'), path.join(ROOT, 'utils/team-event-command.js'), path.join(ROOT, 'utils/roam-menu-share.js'), path.join(ROOT, 'utils/team-applicant-rows.js'), path.join(ROOT, 'utils/datetime.js'), path.join(ROOT, 'pages/team/utils/team-seats.js'), path.join(ROOT, 'pages/team/utils/team-invite-qr.js')]) // qx-b4:席位纯函数;l-misc:队伍码回包投影
 function teamPageRequire(relative) {
   return (request) => {
     const resolved = path.resolve(ROOT, path.dirname(relative), request)

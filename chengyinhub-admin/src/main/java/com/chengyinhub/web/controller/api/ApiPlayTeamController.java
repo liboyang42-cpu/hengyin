@@ -240,6 +240,23 @@ public class ApiPlayTeamController extends BaseController {
         }
     }
 
+    /**
+     * 队伍小程序码(l-misc,2026-11-10 业主批准):在队成员取本队邀请的小程序码,scene 由邀请码编码,
+     * 扫码落地 pages/index/index 再转加入页。码按 scene 永久复用(PlayerWxacodeService 缓存对象 key,读时现签)。
+     * 微信接口不可用时 qrState=UNAVAILABLE,只给加入码;无权 / 邀请失效照常拒绝。
+     */
+    @Operation(summary = "队伍邀请小程序码(仅本队成员)")
+    @PostMapping("/invite-qrcode")
+    @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
+    public AjaxResult inviteQrcode(@RequestBody(required = false) Map<String, Object> body) {
+        try {
+            Long teamId = body == null ? 0L : Convert.toLong(body.get("teamId"), 0L);
+            return AjaxResult.success(playTeamService.inviteQrcode(teamId, memberId()));
+        } catch (RuntimeException e) {
+            return fail(e);
+        }
+    }
+
     @Operation(summary = "我的队伍")
     @PostMapping("/my")
     public AjaxResult my() {
