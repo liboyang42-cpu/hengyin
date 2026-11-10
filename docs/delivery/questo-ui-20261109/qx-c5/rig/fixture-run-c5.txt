@@ -1,0 +1,15 @@
+
+──────── 步骤 1:0 发布者实名（真实入口，同 chain_platform）
+   publisher/identity                 {"msg": "操作成功", "code": 200, "data": {"registered": true}, "_status": 200}
+
+──────── 步骤 2:1a 节点玩法模板：到站打卡（POST /api/template/publish，validationMethod=0）
+   template/publish                   {"msg": "操作成功", "code": 200, "data": 6009, "writeReceipt": {"state": "COMPLETED", "operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-1110061810"}, "_status": 200}
+   review 7(TEMPLATE) v0              审核处理成功
+   [库回读] template                 ((6009, 9003, 1, 1, 1),)
+   template/publish (QA+hintLadder)   {"msg": "操作成功", "code": 200, "data": 6010, "writeReceipt": {"state": "COMPLETED", "operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-qa-1110061810"}, "_status": 200}
+   review 8(TEMPLATE) v0              审核处理成功
+   [库回读] qa template              ((6010, 1, 1),)
+
+──────── 步骤 3:1-2 建期：自营城市定向（productType=1），两站有序，零价
+   POST /api/topic/v2/create          {"msg": "同时上架的主题已达上限（2），请先下架其他主题或保存为草稿", "code": 400, "_status": 200}
+   ✗ 建期未返回 topicId :: {"msg": "同时上架的主题已达上限（2），请先下架其他主题或保存为草稿", "code": 400, "_status": 200}

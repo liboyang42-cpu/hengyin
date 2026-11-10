@@ -1,0 +1,6 @@
+save-as {"msg": "已另存为主题模板", "code": 200, "data": {"templateId": 990016}, "_status": 200}
+   [库回读] template topic           ((990016, 1, 1, 9003),)
+   [库回读] pending audit            ()
+info.contentDelivery {"revision": null, "requiredCapabilities": null, "locationRequirement": {"stationCount": 2, "stationWithAddressCount": 2, "stationWithScanCheckpointCount": 2, "rtlStationCount": 2, "cityCode": null, "physicalPlaceRequired": true}, "operatingRequirements": null, "operatingRequirementsVisibility": "NOT_PROVIDED", "evidence": null, "license": {"status": "UNKNOWN", "unavailableReason": "SALE_SNAPSHOT_MISSING", "assetRef": null, "owner": null, "licensedEntity": null, "channels": null, "validFrom": null, "validTo": null, "editingRight": null}, "runtimeSupport": {"capabilities": null, "platformExecution": "UNKNOWN", "platformExecutionReason": "NO_PLATFORM_RUNTIME_MATRIX"}, "sourceLocale": "zh-CN", "translationStatus": "SINGLE_LOCALE", "translations": []}
+info.msg 操作成功
+TEMPLATE_ID=990016

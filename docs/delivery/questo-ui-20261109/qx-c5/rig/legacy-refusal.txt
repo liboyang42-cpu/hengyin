@@ -1,0 +1,2 @@
+RIG-DB-ONLY json_remove on run     1
+legacy activity run GET help       {"msg": "原局身份不可用，请重新进入本局", "code": 400, "_status": 200}
