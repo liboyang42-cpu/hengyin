@@ -5378,3 +5378,18 @@ page { background: var(--cy-btn-solid-bg); }
 .pvl__pal { width: var(--cy-btn-h); height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; }
 .pvl__pal::before { content: ''; width: 36rpx; height: 36rpx; border-radius: var(--cy-radius-pill); background: var(--lk-bg); box-shadow: 0 0 0 2rpx rgba(var(--lk-ink-rgb), .35); }
 .pvl__pal.is-on::before { box-shadow: 0 0 0 3rpx var(--lk-a), 0 0 0 6rpx rgba(var(--lk-ink-rgb), .25); }
+
+/* ═══════ 玩法模板选择 · 列表式(编辑器原型 v2 · 4,l-editor):一行一个模板,不再横滑卡 ═══════ */
+.pk-list { margin: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); overflow: hidden; }
+.pk-row { position: relative; min-height: 120rpx; padding: var(--cy-space-2) var(--cy-space-3); display: flex; align-items: center; gap: var(--cy-space-3); }
+.pk-row + .pk-row::before { content: ''; position: absolute; left: var(--cy-space-3); right: 0; top: 0; height: 2rpx; background: var(--cy-color-border-subtle); }
+.pk-row.is-on { background: var(--cy-color-bg-surface-subtle); }
+.pk-row__pic { flex: none; width: 88rpx; height: 88rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); }
+.pk-row__pic--blank, .pk-row__pic--new { display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
+.pk-row__pic--new { color: var(--cy-color-text-primary); }
+.pk-row__m { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.pk-row__t { color: var(--cy-color-text-primary); font-size: var(--cy-font-label); font-weight: 600; }
+.pk-row__i { color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
+.pk-row__mode { flex: none; padding: 4rpx 12rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-font-micro); }
+.pk-row__ck { flex: none; width: 44rpx; height: 44rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); border: 3rpx solid var(--cy-color-border-strong); color: transparent; }
+.pk-row.is-on .pk-row__ck { background: var(--cy-color-text-primary); border-color: var(--cy-color-text-primary); color: var(--cy-color-text-inverse); }

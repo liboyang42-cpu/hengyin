@@ -1089,28 +1089,24 @@
            从零配置只走「我的模板」第一张「自己建一个」。 -->
       <cy-inline-error wx:if="{{templateAdoptionError}}" kind="error" title="{{templateAdoptionError}}" action="查看我的玩法" bind:action="inspectAdoptedTemplates" />
       <view class="temp-seg">
-        <text class="temp-seg__tit">公共玩法库</text>
+        <text class="temp-seg__tit">公共模板</text>
         <text class="temp-seg__sub" wx:if="{{publicTempState === 'loading'}}">加载中…</text>
-        <text class="temp-seg__sub" wx:elif="{{publicTempState === 'ready' && !publicTempList.length}}">暂无公共玩法</text>
+        <text class="temp-seg__sub" wx:elif="{{publicTempState === 'ready' && !publicTempList.length}}">暂无公共模板</text>
       </view>
-      <cy-inline-error wx:if="{{publicTempState === 'error'}}" kind="network" title="公共玩法库加载失败" action="重试" bind:action="getPublicTempList" />
-      <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{publicTempList.length}}">
-        <view class="temp-rail__ul">
-          <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'public' ? 'is-on' : ''}}" wx:for="{{publicTempList}}" wx:key="id" data-item="{{item}}" data-source="public" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="item">
-              <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'public'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
-              <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
-              <view class="item-txt">
-                <view class="tit ep1">{{item.title}}</view><text wx:if="{{publicSupportReasons[item.id]}}" class="node-card__value">{{publicSupportReasons[item.id]}}（通用结算）</text>
-                <view class="david_mbxi">
-                  <view class="david_mbxi_li">{{ item.players || '--' }}</view>
-                  <view class="david_mbxi_li">{{ item.duration === 0 ? 0 : (item.duration || '--') }}分钟</view>
-                </view>
-              </view>
-            </view>
+      <cy-inline-error wx:if="{{publicTempState === 'error'}}" kind="network" title="公共模板加载失败" action="重试" bind:action="getPublicTempList" />
+      <!-- l-editor(编辑器原型 v2 · 4):模板选择改成列表,一行一个模板(图 / 名 / 人数·时长 / 来源 / 勾);
+           公共模板 → 我的模板(第一行「自己建一个」),不再横滑卡 -->
+      <view class="pk-list" wx:if="{{publicTempList.length}}">
+        <view class="pk-row {{selectedTempId === item.id && selectedTempSource === 'public' ? 'is-on' : ''}}" wx:for="{{publicTempList}}" wx:key="id" data-item="{{item}}" data-source="public" bindtap="selectTemp" aria-role="button" aria-label="选用{{item.title}}" aria-selected="{{selectedTempId === item.id && selectedTempSource === 'public'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pk-row__pic" />
+          <view class="pk-row__m">
+            <text class="pk-row__t ep1">{{item.title}}</text>
+            <text class="pk-row__i ep1">{{item.players || '--'}} · {{item.duration === 0 ? 0 : (item.duration || '--')}}分钟{{publicSupportReasons[item.id] ? ' · ' + publicSupportReasons[item.id] + '（通用结算）' : ''}}</text>
           </view>
+          <text class="pk-row__mode">公共</text>
+          <view class="pk-row__ck"><cy-icon name="check" size="24" /></view>
         </view>
-      </scroll-view>
+      </view>
 
       <!-- 我的故事玩法草稿(W-10):从这里配过、存成草稿的玩法。「我的模板」只列已发布的,
            不单列的话绑定一丢就选不回来。 -->
@@ -1118,46 +1114,39 @@
         <view class="temp-seg">
           <text class="temp-seg__tit">我的故事玩法草稿</text>
         </view>
-        <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}">
-          <view class="temp-rail__ul">
-            <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{storyDraftList}}" wx:key="id" data-item="{{item}}" data-source="mine" aria-role="button" aria-label="选用{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="item">
-                <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
-                <image wx:if="{{item.imgUrl}}" lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
-                <view wx:else class="temp-rail__pic"></view>
-                <view class="item-txt"><view class="tit ep1">{{item.title}}</view><text wx:if="{{draftSupportReasons[item.id]}}" class="node-card__value">{{draftSupportReasons[item.id]}}（通用结算）</text></view>
-              </view>
+        <view class="pk-list">
+          <view class="pk-row {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{storyDraftList}}" wx:key="id" data-item="{{item}}" data-source="mine" bindtap="selectTemp" aria-role="button" aria-label="选用{{item.title}}" aria-selected="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <image wx:if="{{item.imgUrl}}" lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pk-row__pic" />
+            <view wx:else class="pk-row__pic pk-row__pic--blank"><cy-icon name="image" size="28" /></view>
+            <view class="pk-row__m">
+              <text class="pk-row__t ep1">{{item.title}}</text>
+              <text class="pk-row__i ep1" wx:if="{{draftSupportReasons[item.id]}}">{{draftSupportReasons[item.id]}}（通用结算）</text>
             </view>
+            <text class="pk-row__mode">草稿</text>
+            <view class="pk-row__ck"><cy-icon name="check" size="24" /></view>
           </view>
-        </scroll-view>
+        </view>
       </block>
       <view class="temp-seg">
         <text class="temp-seg__tit">我的模板</text>
       </view>
-      <!-- V3-47:「自己建一个」是「我的模板」第一张卡,与其他卡同一套样式 -->
-      <scroll-view class="temp-rail" scroll-x enhanced show-scrollbar="{{false}}">
-        <view class="temp-rail__ul">
-          <view class="temp-rail__li temp-rail__li--create" bindtap="onCreateGame" aria-role="button" aria-label="自己建一个" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="item">
-              <view class="temp-rail__pic temp-rail__pic--create"><image class="temp-rail__create-img" src="/images/publish-quick/interaction.png" mode="aspectFit" /></view>
-              <view class="item-txt"><view class="tit ep1">自己建一个</view></view>
-            </view>
-          </view>
-          <view bindtap="selectTemp" class="temp-rail__li {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" data-source="mine" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="item">
-              <view wx:if="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" class="temp-rail__sel" aria-hidden="true"><view class="mode-opt__mark is-on temp-rail__mark"></view></view>
-              <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="temp-rail__pic" />
-              <view class="item-txt">
-                <view class="tit ep1">{{item.title}}</view><text wx:if="{{mineSupportReasons[item.id]}}" class="node-card__value">{{mineSupportReasons[item.id]}}（通用结算）</text>
-                <view class="david_mbxi">
-                  <view class="david_mbxi_li">{{ item.players || '--' }}</view>
-                  <view class="david_mbxi_li">{{ item.duration === 0 ? 0 : (item.duration || '--') }}分钟</view>
-                </view>
-              </view>
-            </view>
-          </view>
+      <view class="pk-list">
+        <!-- V3-47:「自己建一个」是「我的模板」第一行,打开原来的玩法模板表单 -->
+        <view class="pk-row pk-row--new" bindtap="onCreateGame" aria-role="button" aria-label="自己建一个" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="pk-row__pic pk-row__pic--new"><cy-icon name="plus" size="40" /></view>
+          <view class="pk-row__m"><text class="pk-row__t">自己建一个</text></view>
+          <cy-icon name="chevron-right" size="28" />
         </view>
-      </scroll-view>
+        <view class="pk-row {{selectedTempId === item.id && selectedTempSource === 'mine' ? 'is-on' : ''}}" wx:for="{{tempList}}" wx:key="id" data-item="{{item}}" data-source="mine" bindtap="selectTemp" aria-role="button" aria-label="选用{{item.title}}" aria-selected="{{selectedTempId === item.id && selectedTempSource === 'mine'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <image lazy-load="true" src="{{item.imgUrl}}" mode="aspectFill" class="pk-row__pic" />
+          <view class="pk-row__m">
+            <text class="pk-row__t ep1">{{item.title}}</text>
+            <text class="pk-row__i ep1">{{item.players || '--'}} · {{item.duration === 0 ? 0 : (item.duration || '--')}}分钟{{mineSupportReasons[item.id] ? ' · ' + mineSupportReasons[item.id] + '（通用结算）' : ''}}</text>
+          </view>
+          <text class="pk-row__mode">我的</text>
+          <view class="pk-row__ck"><cy-icon name="check" size="24" /></view>
+        </view>
+      </view>
 
     </view>
   </view>
