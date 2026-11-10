@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5873,
+  "controlCount": 5882,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -66054,6 +66054,24 @@
             {
               "selector": "cy-btn",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 4
             }
           ]
         },
@@ -465946,6 +465964,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -506779,6 +506815,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -547619,6 +547673,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -588451,6 +588523,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -629291,6 +629381,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -670123,6 +670231,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -710964,6 +711090,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -751797,6 +751941,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -792638,6 +792800,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -833471,6 +833651,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -874312,6 +874510,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -915145,6 +915361,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -1370838,6 +1371072,140 @@
       }
     },
     {
+      "id": "pages/talent/list/index.wxml:107:catchtap:removeClubMember:24",
+      "route": "pages/talent/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/talent/list/index.wxml",
+        "js": "pages/talent/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "removeClubMember",
+        "line": 107,
+        "selectorHint": ".club-member-remove",
+        "visibleCondition": "{{!item.isOwner}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "移除{{item.nickname || '该成员'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/home",
+          "/api/club/list",
+          "/api/club/members",
+          "/api/club/remove-member",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/home",
+          "/api/club/list",
+          "/api/club/members",
+          "/api/club/remove-member"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/home",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/members",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/remove-member",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/talent/list/index.js:711"
+      }
+    },
+    {
       "id": "pages/talent/list/index.wxml:13:bindtap:onMsgTap:0",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
@@ -1370904,7 +1371272,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:547"
+        "staticSource": "pages/talent/list/index.js:565"
       }
     },
     {
@@ -1371081,11 +1371449,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:76"
+        "staticSource": "pages/talent/list/index.js:78"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:32:bind:retry:retryFeed:2",
+      "id": "pages/talent/list/index.wxml:32:bindtap:goStore:2",
+      "route": "pages/talent/list/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/talent/list/index.wxml",
+        "js": "pages/talent/list/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goStore",
+        "line": 32,
+        "selectorHint": ".store-card",
+        "visibleCondition": "{{storeCard}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{storeCard.title}} {{storeCard.price}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/passes/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/talent/list/index.js:131"
+      }
+    },
+    {
+      "id": "pages/talent/list/index.wxml:41:bind:retry:retryFeed:3",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371166,7 +1371604,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryFeed",
-        "line": 32,
+        "line": 41,
         "selectorHint": ".feed-state",
         "visibleCondition": "{{feedState === 'error'}}",
         "loadFailureCondition": "{{!feedLoginRequired}}",
@@ -1371275,11 +1371713,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:153"
+        "staticSource": "pages/talent/list/index.js:170"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:club:onPostClub:8",
+      "id": "pages/talent/list/index.wxml:48:bind:club:onPostClub:9",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371302,7 +1371740,7 @@
         "tag": "cy-post-card",
         "event": "bind:club",
         "handler": "onPostClub",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371345,11 +1371783,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:252"
+        "staticSource": "pages/talent/list/index.js:269"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:comment:onPostTap:4",
+      "id": "pages/talent/list/index.wxml:48:bind:comment:onPostTap:5",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371372,7 +1371810,7 @@
         "tag": "cy-post-card",
         "event": "bind:comment",
         "handler": "onPostTap",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371416,11 +1371854,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:204"
+        "staticSource": "pages/talent/list/index.js:221"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:detail:onPostTap:3",
+      "id": "pages/talent/list/index.wxml:48:bind:detail:onPostTap:4",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371443,7 +1371881,7 @@
         "tag": "cy-post-card",
         "event": "bind:detail",
         "handler": "onPostTap",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371487,11 +1371925,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:204"
+        "staticSource": "pages/talent/list/index.js:221"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:follow:onFollowPost:6",
+      "id": "pages/talent/list/index.wxml:48:bind:follow:onFollowPost:7",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371520,7 +1371958,7 @@
         "tag": "cy-post-card",
         "event": "bind:follow",
         "handler": "onFollowPost",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371577,11 +1372015,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:242"
+        "staticSource": "pages/talent/list/index.js:259"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:like:onLikePost:5:variant:club-post",
+      "id": "pages/talent/list/index.wxml:48:bind:like:onLikePost:6:variant:club-post",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371618,7 +1372056,7 @@
         "tag": "cy-post-card",
         "event": "bind:like",
         "handler": "onLikePost",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371675,11 +1372113,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:237"
+        "staticSource": "pages/talent/list/index.js:254"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:like:onLikePost:5:variant:community-post",
+      "id": "pages/talent/list/index.wxml:48:bind:like:onLikePost:6:variant:community-post",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371716,7 +1372154,7 @@
         "tag": "cy-post-card",
         "event": "bind:like",
         "handler": "onLikePost",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371773,11 +1372211,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:237"
+        "staticSource": "pages/talent/list/index.js:254"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:repost:onRepostPost:9",
+      "id": "pages/talent/list/index.wxml:48:bind:repost:onRepostPost:10",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371800,7 +1372238,7 @@
         "tag": "cy-post-card",
         "event": "bind:repost",
         "handler": "onRepostPost",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371862,11 +1372300,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:229"
+        "staticSource": "pages/talent/list/index.js:246"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:39:bind:user:onPostUser:7",
+      "id": "pages/talent/list/index.wxml:48:bind:user:onPostUser:8",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371889,7 +1372327,7 @@
         "tag": "cy-post-card",
         "event": "bind:user",
         "handler": "onPostUser",
-        "line": 39,
+        "line": 48,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1371932,11 +1372370,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:247"
+        "staticSource": "pages/talent/list/index.js:264"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:40:bind:play:onPostReferencePlay:11",
+      "id": "pages/talent/list/index.wxml:49:bind:play:onPostReferencePlay:12",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1371959,7 +1372397,7 @@
         "tag": "cy-post-card",
         "event": "bind:play",
         "handler": "onPostReferencePlay",
-        "line": 40,
+        "line": 49,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372004,11 +1372442,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:222"
+        "staticSource": "pages/talent/list/index.js:239"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:40:bind:playdetail:onPostReference:10",
+      "id": "pages/talent/list/index.wxml:49:bind:playdetail:onPostReference:11",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372031,7 +1372469,7 @@
         "tag": "cy-post-card",
         "event": "bind:playdetail",
         "handler": "onPostReference",
-        "line": 40,
+        "line": 49,
         "selectorHint": ".cy-fade-in",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372076,11 +1372514,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:216"
+        "staticSource": "pages/talent/list/index.js:233"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:52:bindtap:onClubApply:12",
+      "id": "pages/talent/list/index.wxml:61:bindtap:onClubApply:13",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372103,7 +1372541,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onClubApply",
-        "line": 52,
+        "line": 61,
         "selectorHint": ".club-create-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372158,11 +1372596,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:590"
+        "staticSource": "pages/talent/list/index.js:608"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:59:bind:retry:retryClubs:13",
+      "id": "pages/talent/list/index.wxml:68:bind:retry:retryClubs:14",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372185,7 +1372623,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "retryClubs",
-        "line": 59,
+        "line": 68,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{clubsError && clubsState !== 'stale-error'}}",
         "loadFailureCondition": "{{!clubsLoginRequired && !clubsPermissionDenied}}",
@@ -1372276,11 +1372714,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:498"
+        "staticSource": "pages/talent/list/index.js:516"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:72:bind:action:onClubCardAction:16",
+      "id": "pages/talent/list/index.wxml:81:bind:action:onClubCardAction:17",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372303,7 +1372741,7 @@
         "tag": "cy-club-card",
         "event": "bind:action",
         "handler": "onClubCardAction",
-        "line": 72,
+        "line": 81,
         "selectorHint": ".club-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372414,11 +1372852,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:596"
+        "staticSource": "pages/talent/list/index.js:614"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:72:bind:tap:goClubDetail:15",
+      "id": "pages/talent/list/index.wxml:81:bind:tap:goClubDetail:16",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372441,7 +1372879,7 @@
         "tag": "cy-club-card",
         "event": "bind:tap",
         "handler": "goClubDetail",
-        "line": 72,
+        "line": 81,
         "selectorHint": ".club-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372484,11 +1372922,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:580"
+        "staticSource": "pages/talent/list/index.js:598"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:74:bind:action:onClubCardAction:18",
+      "id": "pages/talent/list/index.wxml:83:bind:action:onClubCardAction:19",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372511,7 +1372949,7 @@
         "tag": "cy-club-card",
         "event": "bind:action",
         "handler": "onClubCardAction",
-        "line": 74,
+        "line": 83,
         "selectorHint": ".club-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372622,11 +1373060,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:596"
+        "staticSource": "pages/talent/list/index.js:614"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:74:bind:tap:goClubDetail:17",
+      "id": "pages/talent/list/index.wxml:83:bind:tap:goClubDetail:18",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372649,7 +1373087,7 @@
         "tag": "cy-club-card",
         "event": "bind:tap",
         "handler": "goClubDetail",
-        "line": 74,
+        "line": 83,
         "selectorHint": ".club-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372692,11 +1373130,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:580"
+        "staticSource": "pages/talent/list/index.js:598"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:77:bind:action:onClubCardAction:20",
+      "id": "pages/talent/list/index.wxml:86:bind:action:onClubCardAction:21",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372719,7 +1373157,7 @@
         "tag": "cy-club-card",
         "event": "bind:action",
         "handler": "onClubCardAction",
-        "line": 77,
+        "line": 86,
         "selectorHint": ".club-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372830,11 +1373268,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:596"
+        "staticSource": "pages/talent/list/index.js:614"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:77:bind:tap:goClubDetail:19",
+      "id": "pages/talent/list/index.wxml:86:bind:tap:goClubDetail:20",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372857,7 +1373295,7 @@
         "tag": "cy-club-card",
         "event": "bind:tap",
         "handler": "goClubDetail",
-        "line": 77,
+        "line": 86,
         "selectorHint": ".club-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372900,11 +1373338,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:580"
+        "staticSource": "pages/talent/list/index.js:598"
       }
     },
     {
-      "id": "pages/talent/list/index.wxml:84:bind:close:closeClubManage:21",
+      "id": "pages/talent/list/index.wxml:93:bind:close:closeClubManage:22",
       "route": "pages/talent/list/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1372927,7 +1373365,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeClubManage",
-        "line": 84,
+        "line": 93,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1372967,141 +1373405,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/talent/list/index.js:621"
-      }
-    },
-    {
-      "id": "pages/talent/list/index.wxml:98:catchtap:removeClubMember:23",
-      "route": "pages/talent/list/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/talent/list/index.wxml",
-        "js": "pages/talent/list/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "removeClubMember",
-        "line": 98,
-        "selectorHint": ".club-member-remove",
-        "visibleCondition": "{{!item.isOwner}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "移除{{item.nickname || '该成员'}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/home",
-          "/api/club/list",
-          "/api/club/members",
-          "/api/club/remove-member",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/home",
-          "/api/club/list",
-          "/api/club/members",
-          "/api/club/remove-member"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/home",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/club/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/club/members",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/club/remove-member",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/talent/list/index.js:693"
+        "staticSource": "pages/talent/list/index.js:639"
       }
     },
     {
@@ -1387045,11 +1387349,171 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
+        "staticSource": "pages/topic/components/cy/self-play-checkout/index.js:22"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:31:bindtap:onPass:1",
+      "route": "component:pages/topic/components/cy/self-play-checkout/index",
+      "hostRoutes": [
+        "pages/topic/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/index/index",
+          "segments": [
+            {
+              "selector": "cy-self-play-checkout",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/self-play-checkout/index.wxml",
+        "js": "pages/topic/components/cy/self-play-checkout/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onPass",
+        "line": 31,
+        "selectorHint": ".ck__opt",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.name}} {{item.price}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/components/cy/self-play-checkout/index.js:24"
+      }
+    },
+    {
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:42:bindtap:onProfile:2",
+      "route": "component:pages/topic/components/cy/self-play-checkout/index",
+      "hostRoutes": [
+        "pages/topic/index/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/topic/index/index",
+          "segments": [
+            {
+              "selector": "cy-self-play-checkout",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/topic/components/cy/self-play-checkout/index.wxml",
+        "js": "pages/topic/components/cy/self-play-checkout/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onProfile",
+        "line": 42,
+        "selectorHint": ".ck__card",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "修改参与人信息",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
         "staticSource": "pages/topic/components/cy/self-play-checkout/index.js:23"
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:32:bind:change:onConsent:2",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:63:bind:change:onConsent:3",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1387084,7 +1387548,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onConsent",
-        "line": 32,
+        "line": 63,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1387129,7 +1387593,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:36:bindtap:onPay:3",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:67:bindtap:onPay:4",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1387164,7 +1387628,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onPay",
-        "line": 36,
+        "line": 67,
         "selectorHint": ".ck__err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1387209,7 +1387673,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:43:bindtap:onPay:4",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:75:bindtap:onPay:5",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1387244,16 +1387708,16 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPay",
-        "line": 43,
+        "line": 75,
         "selectorHint": ".ck__pay",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{free ? '免费领取' : '立即支付'}}",
+        "ariaLabelExpression": "{{view.payLabel}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{view.refused}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1387286,86 +1387750,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/topic/components/cy/self-play-checkout/index.js:26"
-      }
-    },
-    {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:8:bindtap:onProfile:1",
-      "route": "component:pages/topic/components/cy/self-play-checkout/index",
-      "hostRoutes": [
-        "pages/topic/index/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-self-play-checkout",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/topic/components/cy/self-play-checkout/index.wxml",
-        "js": "pages/topic/components/cy/self-play-checkout/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onProfile",
-        "line": 8,
-        "selectorHint": ".ck__card",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "修改参与人信息",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/topic/components/cy/self-play-checkout/index.js:24"
       }
     },
     {
@@ -1399849,7 +1400233,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1151"
+        "staticSource": "pages/topic/index/index.js:1181"
       }
     },
     {
@@ -1399921,7 +1400305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:606"
+        "staticSource": "pages/topic/index/index.js:607"
       }
     },
     {
@@ -1400032,7 +1400416,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:643"
+        "staticSource": "pages/topic/index/index.js:644"
       }
     },
     {
@@ -1400099,7 +1400483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:631"
+        "staticSource": "pages/topic/index/index.js:632"
       }
     },
     {
@@ -1400209,7 +1400593,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1297"
+        "staticSource": "pages/topic/index/index.js:1327"
       }
     },
     {
@@ -1400322,7 +1400706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1269"
+        "staticSource": "pages/topic/index/index.js:1299"
       }
     },
     {
@@ -1400392,7 +1400776,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1151"
+        "staticSource": "pages/topic/index/index.js:1181"
       }
     },
     {
@@ -1400501,7 +1400885,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:397"
+        "staticSource": "pages/topic/index/index.js:398"
       }
     },
     {
@@ -1400572,7 +1400956,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:760"
+        "staticSource": "pages/topic/index/index.js:761"
       }
     },
     {
@@ -1400681,7 +1401065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:712"
+        "staticSource": "pages/topic/index/index.js:713"
       }
     },
     {
@@ -1400751,7 +1401135,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:886"
+        "staticSource": "pages/topic/index/index.js:916"
       }
     },
     {
@@ -1400822,7 +1401206,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1225"
+        "staticSource": "pages/topic/index/index.js:1255"
       }
     },
     {
@@ -1400893,7 +1401277,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1021"
+        "staticSource": "pages/topic/index/index.js:1051"
       }
     },
     {
@@ -1400963,7 +1401347,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1158"
+        "staticSource": "pages/topic/index/index.js:1188"
       }
     },
     {
@@ -1401033,7 +1401417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:751"
+        "staticSource": "pages/topic/index/index.js:752"
       }
     },
     {
@@ -1401100,7 +1401484,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1877"
+        "staticSource": "pages/topic/index/index.js:1907"
       }
     },
     {
@@ -1401241,7 +1401625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2233"
+        "staticSource": "pages/topic/index/index.js:2263"
       }
     },
     {
@@ -1401308,7 +1401692,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1877"
+        "staticSource": "pages/topic/index/index.js:1907"
       }
     },
     {
@@ -1401378,7 +1401762,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1151"
+        "staticSource": "pages/topic/index/index.js:1181"
       }
     },
     {
@@ -1401448,7 +1401832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:916"
+        "staticSource": "pages/topic/index/index.js:946"
       }
     },
     {
@@ -1401519,7 +1401903,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1225"
+        "staticSource": "pages/topic/index/index.js:1255"
       }
     },
     {
@@ -1401586,7 +1401970,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:765"
+        "staticSource": "pages/topic/index/index.js:766"
       }
     },
     {
@@ -1401653,7 +1402037,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:767"
+        "staticSource": "pages/topic/index/index.js:768"
       }
     },
     {
@@ -1401723,7 +1402107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1158"
+        "staticSource": "pages/topic/index/index.js:1188"
       }
     },
     {
@@ -1401794,7 +1402178,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1484"
+        "staticSource": "pages/topic/index/index.js:1514"
       }
     },
     {
@@ -1401864,7 +1402248,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1561"
+        "staticSource": "pages/topic/index/index.js:1591"
       }
     },
     {
@@ -1401931,7 +1402315,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:569"
+        "staticSource": "pages/topic/index/index.js:570"
       }
     },
     {
@@ -1401999,7 +1402383,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2097"
+        "staticSource": "pages/topic/index/index.js:2127"
       }
     },
     {
@@ -1402070,7 +1402454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:760"
+        "staticSource": "pages/topic/index/index.js:761"
       }
     },
     {
@@ -1402140,7 +1402524,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1158"
+        "staticSource": "pages/topic/index/index.js:1188"
       }
     },
     {
@@ -1402217,7 +1402601,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:893"
+        "staticSource": "pages/topic/index/index.js:923"
       }
     },
     {
@@ -1402284,7 +1402668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:718"
+        "staticSource": "pages/topic/index/index.js:719"
       }
     },
     {
@@ -1402351,7 +1402735,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:719"
+        "staticSource": "pages/topic/index/index.js:720"
       }
     },
     {
@@ -1402462,7 +1402846,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:724"
+        "staticSource": "pages/topic/index/index.js:725"
       }
     },
     {
@@ -1402529,7 +1402913,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1884"
+        "staticSource": "pages/topic/index/index.js:1914"
       }
     },
     {
@@ -1402596,7 +1402980,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1928"
+        "staticSource": "pages/topic/index/index.js:1958"
       }
     },
     {
@@ -1402663,7 +1403047,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2077"
+        "staticSource": "pages/topic/index/index.js:2107"
       }
     },
     {
@@ -1402740,7 +1403124,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1919"
+        "staticSource": "pages/topic/index/index.js:1949"
       }
     },
     {
@@ -1402807,7 +1403191,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1909"
+        "staticSource": "pages/topic/index/index.js:1939"
       }
     },
     {
@@ -1402928,7 +1403312,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1895"
+        "staticSource": "pages/topic/index/index.js:1925"
       }
     },
     {
@@ -1402998,7 +1403382,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1151"
+        "staticSource": "pages/topic/index/index.js:1181"
       }
     },
     {
@@ -1403148,7 +1403532,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1163"
+        "staticSource": "pages/topic/index/index.js:1193"
       }
     },
     {
@@ -1403215,7 +1403599,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1515"
+        "staticSource": "pages/topic/index/index.js:1545"
       }
     },
     {
@@ -1403283,7 +1403667,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:568"
+        "staticSource": "pages/topic/index/index.js:569"
       }
     },
     {
@@ -1403350,7 +1403734,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1515"
+        "staticSource": "pages/topic/index/index.js:1545"
       }
     },
     {
@@ -1403417,7 +1403801,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:570"
+        "staticSource": "pages/topic/index/index.js:571"
       }
     },
     {
@@ -1403459,10 +1403843,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "navigation",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "navigation",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "navigation",
         "state"
       ],
@@ -1403471,24 +1403856,71 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
+          "pages/privacy/index",
           "pages/topic/pricing/index?topicId="
         ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/product/list",
+          "/api/registration/quote",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/product/list",
+          "/api/registration/quote"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/quote",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:572"
+        "staticSource": "pages/topic/index/index.js:573"
       }
     },
     {
@@ -1403555,7 +1403987,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:821"
+        "staticSource": "pages/topic/index/index.js:851"
       }
     },
     {
@@ -1403622,11 +1404054,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1509"
+        "staticSource": "pages/topic/index/index.js:1539"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:541:bind:pay:onSelfPlayConfirm:58",
+      "id": "pages/topic/index/index.wxml:541:bind:pass:onCheckoutPass:58",
+      "route": "pages/topic/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/topic/index/index.wxml",
+        "js": "pages/topic/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-self-play-checkout",
+        "event": "bind:pass",
+        "handler": "onCheckoutPass",
+        "line": 541,
+        "selectorHint": "cy-self-play-checkout[bind:pass]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/market/pass/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/topic/index/index.js:844"
+      }
+    },
+    {
+      "id": "pages/topic/index/index.wxml:541:bind:pay:onSelfPlayConfirm:59",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1403767,7 +1404269,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1524"
+        "staticSource": "pages/topic/index/index.js:1554"
       }
     },
     {
@@ -1403838,11 +1404340,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:826"
+        "staticSource": "pages/topic/index/index.js:856"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:545:bind:play:onRevealPlay:60",
+      "id": "pages/topic/index/index.wxml:545:bind:play:onRevealPlay:61",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1403924,11 +1404426,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:860"
+        "staticSource": "pages/topic/index/index.js:890"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:545:bind:wallet:onRevealWallet:59",
+      "id": "pages/topic/index/index.wxml:545:bind:wallet:onRevealWallet:60",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404010,11 +1404512,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:859"
+        "staticSource": "pages/topic/index/index.js:889"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:548:bindtap:onHeroCta:61",
+      "id": "pages/topic/index/index.wxml:548:bindtap:onHeroCta:62",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404082,11 +1404584,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:606"
+        "staticSource": "pages/topic/index/index.js:607"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:549:bindtap:toggleFav:62",
+      "id": "pages/topic/index/index.wxml:549:bindtap:toggleFav:63",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404193,11 +1404695,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:643"
+        "staticSource": "pages/topic/index/index.js:644"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:552:bind:cancel:onClubSheetCancel:64",
+      "id": "pages/topic/index/index.wxml:552:bind:cancel:onClubSheetCancel:65",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404260,11 +1404762,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1323"
+        "staticSource": "pages/topic/index/index.js:1353"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:552:bind:select:onClubSheetSelect:63",
+      "id": "pages/topic/index/index.wxml:552:bind:select:onClubSheetSelect:64",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404374,11 +1404876,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1325"
+        "staticSource": "pages/topic/index/index.js:1355"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:554:bind:cancel:onReportReasonCancel:66",
+      "id": "pages/topic/index/index.wxml:554:bind:cancel:onReportReasonCancel:67",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404442,11 +1404944,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2370"
+        "staticSource": "pages/topic/index/index.js:2400"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:554:bind:select:onReportReasonSelect:65",
+      "id": "pages/topic/index/index.wxml:554:bind:select:onReportReasonSelect:66",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404510,11 +1405012,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2369"
+        "staticSource": "pages/topic/index/index.js:2399"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:562:bind:close:closeSessionPicker:67",
+      "id": "pages/topic/index/index.wxml:562:bind:close:closeSessionPicker:68",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404577,11 +1405079,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1253"
+        "staticSource": "pages/topic/index/index.js:1283"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:563:bind:confirm:onSessionPicked:68",
+      "id": "pages/topic/index/index.wxml:563:bind:confirm:onSessionPicked:69",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404649,11 +1405151,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1256"
+        "staticSource": "pages/topic/index/index.js:1286"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:572:bind:consentchange:onResultConsentChange:69",
+      "id": "pages/topic/index/index.wxml:572:bind:consentchange:onResultConsentChange:70",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404737,11 +1405239,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1829"
+        "staticSource": "pages/topic/index/index.js:1859"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:572:bind:consentretry:onResultConsentRetry:70",
+      "id": "pages/topic/index/index.wxml:572:bind:consentretry:onResultConsentRetry:71",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404825,11 +1405327,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1842"
+        "staticSource": "pages/topic/index/index.js:1872"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:573:bind:close:onResultSheetClose:71",
+      "id": "pages/topic/index/index.wxml:573:bind:close:onResultSheetClose:72",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404898,11 +1405400,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1864"
+        "staticSource": "pages/topic/index/index.js:1894"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:checkreplay:checkThemeReplay:78",
+      "id": "pages/topic/index/index.wxml:575:bind:checkreplay:checkThemeReplay:79",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1404986,7 +1405488,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:closecard:closeThemeResultCard:75",
+      "id": "pages/topic/index/index.wxml:575:bind:closecard:closeThemeResultCard:76",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405053,7 +1405555,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:closehistory:closeThemeHistory:72",
+      "id": "pages/topic/index/index.wxml:575:bind:closehistory:closeThemeHistory:73",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405120,7 +1405622,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:morehistory:loadMoreThemeHistory:73",
+      "id": "pages/topic/index/index.wxml:575:bind:morehistory:loadMoreThemeHistory:74",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405202,7 +1405704,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:opencard:openThemeRecordCard:74",
+      "id": "pages/topic/index/index.wxml:575:bind:opencard:openThemeRecordCard:75",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405288,11 +1405790,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:102"
+        "staticSource": "pages/topic/index/index.js:103"
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:replay:replayThemeSession:76:variant:theme-replay",
+      "id": "pages/topic/index/index.wxml:575:bind:replay:replayThemeSession:77:variant:theme-replay",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405519,7 +1406021,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:report:openThemeRunReport:77",
+      "id": "pages/topic/index/index.wxml:575:bind:report:openThemeRunReport:78",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405589,7 +1406091,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:575:bind:retrycard:retryThemeResultCard:79",
+      "id": "pages/topic/index/index.wxml:575:bind:retrycard:retryThemeResultCard:80",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405679,7 +1406181,7 @@
       }
     },
     {
-      "id": "pages/topic/index/index.wxml:577:bind:close:onShareCardClose:80",
+      "id": "pages/topic/index/index.wxml:577:bind:close:onShareCardClose:81",
       "route": "pages/topic/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1405742,7 +1406244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:639"
+        "staticSource": "pages/topic/index/index.js:640"
       }
     },
     {
@@ -1405851,7 +1406353,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:397"
+        "staticSource": "pages/topic/index/index.js:398"
       }
     },
     {
@@ -1405918,7 +1406420,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:641"
+        "staticSource": "pages/topic/index/index.js:642"
       }
     },
     {
@@ -1405985,7 +1406487,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1043"
+        "staticSource": "pages/topic/index/index.js:1073"
       }
     },
     {
@@ -1406053,7 +1406555,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1036"
+        "staticSource": "pages/topic/index/index.js:1066"
       }
     },
     {
@@ -1406120,7 +1406622,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:925"
+        "staticSource": "pages/topic/index/index.js:955"
       }
     },
     {
@@ -1406187,7 +1406689,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:409"
+        "staticSource": "pages/topic/index/index.js:410"
       }
     },
     {
@@ -1406254,7 +1406756,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:567"
+        "staticSource": "pages/topic/index/index.js:568"
       }
     },
     {
@@ -1432883,7 +1433385,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:92"
+        "staticSource": "subpackageJourney/pages/landing/index.js:93"
       }
     },
     {
@@ -1433070,7 +1433572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:55"
+        "staticSource": "subpackageJourney/pages/landing/index.js:56"
       }
     },
     {
@@ -1433262,7 +1433764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:100"
+        "staticSource": "subpackageJourney/pages/landing/index.js:101"
       }
     },
     {
@@ -1435153,7 +1435655,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/seats/index.wxml:19:bindtap:onCancel:1",
+      "id": "subpackageJourney/pages/seats/index.wxml:12:bindtap:onEditMe:1",
       "route": "subpackageJourney/pages/seats/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1435171,17 +1435673,87 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": "wx.showModal",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onEditMe",
+        "line": 12,
+        "selectorHint": ".jn-group",
+        "visibleCondition": "{{me && me.name}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "以 {{me.name}} 身份游玩，编辑",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/gerenziliao/gerenziliao"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:84"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:24:bindtap:onOpenInvite:2",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
       "control": {
         "tag": "text",
         "event": "bindtap",
-        "handler": "onCancel",
-        "line": 19,
-        "selectorHint": ".jn-row__v",
-        "visibleCondition": "{{item.canCancel}}",
+        "handler": "onOpenInvite",
+        "line": 24,
+        "selectorHint": ".lb-link",
+        "visibleCondition": "{{lobby.canInvite || lobby.invited.length}}",
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "撤销第{{item.no}}席邀请",
+        "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1435202,8 +1435774,14 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
         "apis": [
+          "/api/config/features",
+          "/api/login/code",
           "/api/marketing/affiliate/summary",
           "/api/marketing/product/gifts/claim",
           "/api/marketing/referral/token",
@@ -1435217,7 +1435795,10 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
         "primaryApis": [
           "/api/marketing/affiliate/summary",
@@ -1435233,10 +1435814,28 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
         "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/marketing/affiliate/summary",
             "method": "GET",
@@ -1435320,191 +1435919,21 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:61"
-      }
-    },
-    {
-      "id": "subpackageJourney/pages/seats/index.wxml:25:bindtap:onInvite:2",
-      "route": "subpackageJourney/pages/seats/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageJourney/pages/seats/index.wxml",
-        "js": "subpackageJourney/pages/seats/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "onInvite",
-        "line": 25,
-        "selectorHint": ".jn-grow",
-        "visibleCondition": null,
-        "disabledCondition": "{{busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/marketing/affiliate/summary",
-          "/api/marketing/product/gifts/claim",
-          "/api/marketing/referral/token",
-          "/api/orient/team/detail",
-          "/api/play/player-journey/choices",
-          "/api/play/player-journey/memory",
-          "/api/play/player-journey/report",
-          "/api/play/player-journey/seats",
-          "/api/play/seat-invitations/",
-          "/api/play/seat-invitations/claim",
-          "/api/play/seat-invitations/invite",
-          "/api/rank/list",
-          "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
-        ],
-        "primaryApis": [
-          "/api/marketing/affiliate/summary",
-          "/api/marketing/product/gifts/claim",
-          "/api/marketing/referral/token",
-          "/api/orient/team/detail",
-          "/api/play/player-journey/choices",
-          "/api/play/player-journey/memory",
-          "/api/play/player-journey/report",
-          "/api/play/player-journey/seats",
-          "/api/play/seat-invitations/",
-          "/api/play/seat-invitations/claim",
-          "/api/play/seat-invitations/invite",
-          "/api/rank/list",
-          "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/marketing/affiliate/summary",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
           },
           {
-            "url": "/api/marketing/product/gifts/claim",
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
           {
-            "url": "/api/marketing/referral/token",
+            "url": "/api/topic/info-to-user",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
           {
-            "url": "/api/orient/team/detail",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/choices",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/memory",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/report",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/seats",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/seat-invitations/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/seat-invitations/claim",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/seat-invitations/invite",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/rank/list",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/referral/landing/gift",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/referral/landing/referral",
+            "url": "/api/user/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1435524,7 +1435953,239 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:41"
+        "staticSource": "subpackageJourney/pages/seats/index.js:76"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:28:bindtap:onSeatTap:3",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onSeatTap",
+        "line": 28,
+        "selectorHint": ".lb-seat",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "第{{item.no}}席 {{item.label}}",
+        "ariaRole": null,
+        "ariaRoleExpression": "{{item.tappable ? 'button' : 'text'}}",
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/affiliate/summary",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/gifts/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/referral/token",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/team/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/choices",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/memory",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/seats",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/rank/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/gift",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/referral",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:82"
       }
     },
     {
@@ -1435577,8 +1436238,14 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
         "apis": [
+          "/api/config/features",
+          "/api/login/code",
           "/api/marketing/affiliate/summary",
           "/api/marketing/product/gifts/claim",
           "/api/marketing/referral/token",
@@ -1435592,7 +1436259,10 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
         "primaryApis": [
           "/api/marketing/affiliate/summary",
@@ -1435608,10 +1436278,28 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
         "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/marketing/affiliate/summary",
             "method": "GET",
@@ -1435695,6 +1436383,24 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
         "writeApis": []
@@ -1435711,7 +1436417,607 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:25"
+        "staticSource": "subpackageJourney/pages/seats/index.js:32"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:54:bindtap:onGoStart:4",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onGoStart",
+        "line": 54,
+        "selectorHint": ".jn-grow",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:85"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:58:bind:close:onCloseInvite:5",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "onCloseInvite",
+        "line": 58,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:83"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:61:bindtap:onInvite:6",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onInvite",
+        "line": 61,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{lobby.canInvite || pendingInvite}}",
+        "disabledCondition": "{{busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/affiliate/summary",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/gifts/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/referral/token",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/team/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/choices",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/memory",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/seats",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/rank/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/gift",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/referral",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:91"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:67:bindtap:onCancel:7",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "onCancel",
+        "line": 67,
+        "selectorHint": ".jn-row__v",
+        "visibleCondition": "{{item.canCancel}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "撤回第{{item.no}}席邀请",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/affiliate/summary",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/gifts/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/referral/token",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/team/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/choices",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/memory",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/seats",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/rank/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/gift",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/referral",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:111"
       }
     },
     {
@@ -1495015,7 +1496321,77 @@
       }
     },
     {
-      "id": "subpackageMember/market/passes/index.wxml:10:bind:change:onTab:1",
+      "id": "subpackageMember/market/passes/index.wxml:11:bindtap:goPoints:1",
+      "route": "subpackageMember/market/passes/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/market/passes/index.wxml",
+        "js": "subpackageMember/market/passes/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goPoints",
+        "line": 11,
+        "selectorHint": ".mk-balance",
+        "visibleCondition": "{{pointBalance !== null}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "积分 {{pointBalance}}，查看积分记录",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/points-history/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/market/passes/index.js:54"
+      }
+    },
+    {
+      "id": "subpackageMember/market/passes/index.wxml:15:bind:change:onTab:2",
       "route": "subpackageMember/market/passes/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1495038,7 +1496414,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onTab",
-        "line": 10,
+        "line": 15,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1495078,11 +1496454,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:84"
+        "staticSource": "subpackageMember/market/passes/index.js:101"
       }
     },
     {
-      "id": "subpackageMember/market/passes/index.wxml:12:bind:retry:load:2",
+      "id": "subpackageMember/market/passes/index.wxml:17:bind:retry:load:3",
       "route": "subpackageMember/market/passes/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1495105,7 +1496481,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 12,
+        "line": 17,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{state === 'error'}}",
         "disabledCondition": null,
@@ -1495184,11 +1496560,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:54"
+        "staticSource": "subpackageMember/market/passes/index.js:71"
       }
     },
     {
-      "id": "subpackageMember/market/passes/index.wxml:15:bindtap:openProduct:3",
+      "id": "subpackageMember/market/passes/index.wxml:20:bindtap:openProduct:4",
       "route": "subpackageMember/market/passes/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1495211,7 +1496587,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openProduct",
-        "line": 15,
+        "line": 20,
         "selectorHint": ".mk-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1495254,7 +1496630,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:88"
+        "staticSource": "subpackageMember/market/passes/index.js:105"
       }
     },
     {
@@ -1495324,7 +1496700,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:94"
+        "staticSource": "subpackageMember/market/passes/index.js:111"
       }
     },
     {

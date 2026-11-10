@@ -30,6 +30,7 @@ const contentReport = require('../utils/content-report.js');
 const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const motion = require('../utils/topic-motion.js');
+const { checkoutView } = require('../utils/checkout-view.js');
 const KB_MS = 3600;          // 封面每张停留时长
 const DOCK_MS = 620;         // 价格/收藏停靠动画时长(慢-快-慢)
 
@@ -130,7 +131,7 @@ Page({
     teams: { rows: [], need: 0 },
     prep: { show: false }, prepShow: false, prepBusy: false,
     progress: { total: 0, done: 0, labels: [] },
-    selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', validText: '', placeText: '', priceText: '', free: false, profileName: '', profilePhone: '' },
+    selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', placeText: '', view: checkoutView({}), profileName: '', profilePhone: '' },
     reveal: { show: false, cover: '', name: '', kindText: '', untilText: '', daysText: '', line: '' },
     id: 0,
     is_join: 0,
@@ -800,7 +801,7 @@ Page({
     const win = motion.passWindow({ topicEnd: info.endDate });
     const p = this._signupParts || this._signupProfile || {};
     const phone = String(p.phone || '');
-    const price = Number(info.selfPlayPrice);
+    this._checkoutFacts = { info, win, quoteState: 'loading', quote: null, refusal: '', products: null };
     this.setData({
       selfPlayConfirmShow: false,
       selfPlayCheckoutShow: true,
@@ -808,14 +809,43 @@ Page({
       selfPlayConsentError: '',
       checkout: {
         cover: (this.data.coverImages && this.data.coverImages[0]) || info.imgUrl || '',
-        validText: win.line.split(' · ')[0],
         placeText: (info.venue && info.venue.name) || '',
-        priceText: (info.selfPlayPrice === undefined || info.selfPlayPrice === null || info.selfPlayPrice === '') ? '—' : '¥' + info.selfPlayPrice,
-        free: !(price > 0),
+        view: checkoutView(this._checkoutFacts),
         profileName: p.realName || '',
         profilePhone: phone.length >= 7 ? phone.slice(0, 3) + '****' + phone.slice(-4) : phone,
       },
     });
+    this._loadCheckoutFacts(info.id || this.data.id);
+  },
+
+  /* r2-store:结账层只读两样服务端事实 —— 报价(价格/减免/退款)与覆盖本主题的在售通票。
+     只读,不建单、不改支付;建单仍由 onSelfPlayConfirm 原链路完成。 */
+  _loadCheckoutFacts(topicId) {
+    const seq = (this._checkoutSeq = (this._checkoutSeq || 0) + 1);
+    const facts = this._checkoutFacts;
+    const render = () => { if (seq === this._checkoutSeq && !this._unloaded) this.setData({ 'checkout.view': checkoutView(facts) }); };
+    app.sendRequest({ url: '/api/registration/quote', method: 'POST', hideLoading: true, autoErrorToast: false,
+      header: { 'content-type': 'application/json' },
+      data: { ownerType: 1, ownerId: Number(topicId) },
+      success: (res) => {
+        if (res && String(res.code) === '200' && res.data) { facts.quoteState = 'ready'; facts.quote = res.data; }
+        else { facts.quoteState = 'refused'; facts.refusal = res && res.msg; }
+        render();
+      },
+      successStatusAbnormal: (res) => { facts.quoteState = 'refused'; facts.refusal = res && res.msg; render(); },
+      fail: () => { facts.quoteState = 'failed'; render(); },
+    });
+    app.sendRequest({ url: '/api/marketing/product/list', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { limit: 50 },
+      success: (res) => { if (res && String(res.code) === '200' && Array.isArray(res.data)) { facts.products = res.data; render(); } },
+    });
+  },
+
+  onCheckoutPass(e) {
+    const id = e && e.detail && e.detail.id;
+    if (!id || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/subpackageMember/market/pass/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
   onCheckoutBack() {
