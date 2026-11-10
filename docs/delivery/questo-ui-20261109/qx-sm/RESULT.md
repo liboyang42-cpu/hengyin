@@ -15,13 +15,14 @@
 | SM-3 审核单写入口检查 | 完成 | 新增两项检查：只有登记过的 6 条 Mapper 语句能写 `audit_task.status`，写「已撤销」时必须带未结条件；Mapper 里每个 `status in (...)` 都必须等于未结集合 `0, 3` | `AuditTaskStateMachineTest.java` | 6 例全部通过 | 低。以后新增写入口需要先登记 |
 | SM-4 席位邀请状态机 | 完成 | 新增 `SeatInvitationState` 枚举。3 处通用 `transition` 调用统一走 `transitionGuarded`，迁移表外的组合直接拒绝。现有 4 条迁移（0→1、0→2、0→3、1→4）都在表内，行为不变 | `SeatInvitationState.java`、`RegistrationSeatInvitationServiceImpl.java` | 原有 `RegistrationSeatInvitationServiceTest` 改动前后都是 18/18 通过；新增 `SeatInvitationStateMachineTest` 5 例通过（覆盖非法迁移，并检查通用写入口只出现一次、Mapper 写状态都带旧态条件） | 低。不碰报名支付和退款 |
 | SM-5 小程序状态机工具 | 完成 | 新增 `createStatusMachine`，只负责展示和本地守卫；未知状态码一律视为未知，不猜成已知态 | `chengyinhub-xcx/utils/state-machine.js` | `node --test tests/unit/qx-sm-state-machine.test.js` | 低。主包约增加 3 KiB |
-| SM-6 协作邀约状态统一 | 完成 | 新增 `coop-invite-status.js` 作为唯一状态表。`coop-invite-view.js` 的 `STATUS_LABEL` 和 `INVITE_BADGE`、俱乐部详情页的 `RECEIVED_STATUS_TEXT` 都从它派生，文案和徽章逐字不变。另加检查，禁止在别处再手写这张表 | `utils/coop-invite-status.js`、`utils/coop-invite-view.js`、`pages/club/detail/index.js` | 特征测试先在原代码上通过（覆盖 0–5、字符串码、null 和未知码），改后原样通过；相关单测见下方；ui-integrity 结果见下方 | 低。界面像素不变 |
+| SM-6 协作邀约状态统一 | 完成 | 新增 `coop-invite-status.js` 作为唯一状态表。`coop-invite-view.js` 的 `STATUS_LABEL` 和 `INVITE_BADGE`、俱乐部详情页的 `RECEIVED_STATUS_TEXT` 都从它派生，文案和徽章逐字不变。另加检查，禁止在别处再手写这张表 | `utils/coop-invite-status.js`、`utils/coop-invite-view.js`、`pages/club/detail/index.js` | 特征测试先在原代码上通过（覆盖 0–5、字符串码、null 和未知码），改后原样通过；引用协作邀约或俱乐部详情的 133 个单测文件共 1796 例全部通过；`UI-GATE-0:PASS` | 低。界面像素不变 |
 
 ## 验证汇总
 
 - 后端：`mvn -q -pl chengyinhub-admin test -Dtest='Audit*Test,*Audit*Test,…,AuditTaskState*Test,RegistrationSeatInvitation*Test,SeatInvitationStateMachineTest'`。除需要 MySQL 的 `AuditReportLaneMyBatisTest`（5 例）外全部通过。
-- 小程序：`node --test tests/unit/qx-sm-*.test.js` 共 7 例通过；与协作邀约和俱乐部详情相关的单测结果见下方。
-- `node tests/lint/ui-integrity.js --warn-as-error`：见下方。
+- 小程序：`node --test tests/unit/qx-sm-*.test.js` 共 7 例通过；引用协作邀约或俱乐部详情的 133 个单测文件共 1796 例，0 失败。
+- `node tests/lint/ui-integrity.js --warn-as-error`：改动前后都是 `UI-GATE-0:PASS`。
+- 主包：`mainpkg-size-report` 显示压缩前合计 3162KB，按 0.633 折算约 2001 KiB，低于 2048 KiB。本线约增加 2 KiB，余量偏紧，请留意。
 - 没有改数据库结构，没有改已有 migration，没有改支付、退款或结算的结果，也没有放宽权限或归属校验。
 
 ## 待你决定
@@ -36,3 +37,5 @@
 ## 跨线
 
 - 没有依赖其他线。俱乐部详情页 `pages/club/detail/index.js` 只改了一行常量和一行 require；如果其他线也改了这个文件，合并时注意。
+
+STATUS: 完成（草稿 PR 待审；6 项待你决定）
