@@ -125,10 +125,24 @@ Page({
         cv.width = size.w * dpr; cv.height = size.h * dpr;
         const ctx = cv.getContext('2d');
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        shareCard.draw(ctx, size.w, size.h, this._card(), 1);
         this._cv = cv;
-        this.setData({ cardReady: true });
+        // r3-share:徽标图读到再画;读不到也照样出卡(只少徽标里的标)
+        this._loadLogo(cv).then(logo => {
+          if (this._gone || this._cv !== cv) return;
+          shareCard.draw(ctx, size.w, size.h, this._card(), 1, logo);
+          this.setData({ cardReady: true });
+        });
       });
+    });
+  },
+  _loadLogo(cv) {
+    if (this._logo && this._logoCv === cv) return Promise.resolve(this._logo);
+    return new Promise(resolve => {
+      let img;
+      try { img = cv.createImage(); } catch (e) { resolve(null); return; }
+      img.onload = () => { this._logo = img; this._logoCv = cv; resolve(img); };
+      img.onerror = () => resolve(null);
+      img.src = shareCard.LOGO;
     });
   },
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
@@ -169,12 +183,12 @@ Page({
         recorder.stop().then(r => {
           if (this._gone) return;
           this.setData({ videoBusy: false });
-          shareCard.draw(ctx, size.w, size.h, card, 1);
+          shareCard.draw(ctx, size.w, size.h, card, 1, this._logo);
           wx.shareVideoMessage({ videoPath: r.tempFilePath, fail: err => { if (String((err && err.errMsg) || '').indexOf('cancel') < 0) fail(); } });
         }, fail);
         return;
       }
-      shareCard.draw(ctx, size.w, size.h, card, Math.min(1, frame / 45));
+      shareCard.draw(ctx, size.w, size.h, card, Math.min(1, frame / 45), this._logo);
       frame++;
       recorder.requestFrame(tick);
     };
