@@ -136,33 +136,100 @@ test('§27.9 readyForBase 不是成功;qa 判完但没有结论时显示结算�
   assert.ok(!/readyForBase/.test(src.replace(/\/\/.*$/gm, '')), '指认页不读 readyForBase')
 })
 
-test('UG-03 确认指认走本屏确认层(r2:关闭在右上角),文案写明「这是最终指认」,确认后才交原 optionId', () => {
+test('UG-03 l-kits 2026-11-10:确认是居中弹窗(原型 pop-accuse),文案写明「这是最终指认」,「再想想」关掉,确认后才交原 optionId', () => {
   const src = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.js'), 'utf8')
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxml'), 'utf8')
   assert.ok(!/wx\.showModal|modal\.show\(/.test(src), '不用系统弹窗')
   assert.ok(/这是最终指认/.test(src))
-  assert.ok(/class="ac-cf__close"[^>]*bindtap="onConfirmCancel"/.test(wxml), '确认层右上角关闭')
-  assert.ok(!/再想想/.test(wxml), '不再叠第二个取消按钮')
+  assert.match(wxml, /class="ac-cf__btn" bindtap="onConfirmGo"/, '弹窗里「确认指认」才交')
+  assert.match(wxml, /class="ac-cf__text" bindtap="onConfirmCancel"[^>]*>再想想</, '弹窗里「再想想」关掉(原型 close:false,没有右上角 ×)')
+  assert.ok(!/ac-cf__close/.test(wxml), '居中弹窗不再有右上角关闭')
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxss'), 'utf8')
-  assert.ok(/\.ac-cf__panel \{[^}]*background: var\(--cy-comp-sheet-player-bg\)/.test(wxss), '确认层底色走玩家弹层 token')
+  assert.match(wxss, /\.ac-cf__panel \{[^}]*background: var\(--lk-pop, var\(--cy-comp-sheet-player-bg\)\)/, '弹窗底色读主题外观 --lk-pop,没有外观时落回玩家弹层 token')
+  assert.match(wxss, /\.ac-cf \{ position: fixed;[^}]*align-items: center; justify-content: center;/, '居中')
+  // 组件实例:指认走当前这张翻页卡;确认前不发事件,取消不发事件
+  const Comp = loadComponent('pages/play/components/playkit-accusation/index.js')
+  const events = []
+  const inst = { data: Object.assign({}, Comp.data, { suspects: [{ id: 'A', name: '古董店老板' }, { id: 'B', name: '守夜人' }], cur: 1, reducedMotion: true }),
+    setData(p) { Object.assign(this.data, p) }, triggerEvent(n, d) { events.push([n, d]) } }
+  Object.assign(inst, Comp.methods)
+  inst.onConfirm()
+  assert.equal(inst.data.confirmOpen, true)
+  assert.equal(inst.data.confirmText, '这是最终指认：守夜人')
+  assert.deepEqual(events, [])
+  inst.onConfirmCancel()
+  assert.equal(inst.data.confirmOpen, false)
+  inst.onConfirm(); inst.onConfirmGo()
+  assert.deepEqual(events, [['submit', { optionId: 'B' }]], '交的是当前这张卡的人,原 SUBMIT_QA optionId')
 })
 
-test('UG-04 结论动图:结案 = 庆祝、失败 = 失败、结算确认中 = 搜查;动图在小分包,按分包异步化引用', () => {
+test('UG-03 l-kits:嫌疑人翻页卡一次一张,「再想想」/ 箭头 / 点卡翻到下一张,底部「指认 X」跟着当前这张', () => {
+  const Comp = loadComponent('pages/play/components/playkit-accusation/index.js')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxml'), 'utf8')
+  assert.match(wxml, /class="ac__fcard \{\{index === cur \? 'is-on' : ''\}\} \{\{index === outIdx \? 'is-out' : ''\}\} \{\{index === inIdx \? 'is-in' : ''\}\}"[^>]*bindtap="onFlipNext"/, '点卡翻页')
+  assert.match(wxml, /class="ac__arrow" bindtap="onFlipNext"/, '右下角箭头翻页')
+  assert.match(wxml, /class="ac__ghost" bindtap="onFlipNext"[^>]*>再想想</, '「再想想」= 翻到下一位')
+  assert.match(wxml, /class="g-btn ac__go" bindtap="onConfirm"[^>]*>指认 \{\{suspects\[cur\]\.name\}\}</, '「指认 X」跟当前这张')
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxss'), 'utf8')
+  assert.match(wxss, /\.ac__fcard \{[^}]*transform: rotateY\(90deg\) translateX\(80rpx\); opacity: 0;/, '绕竖轴翻(原型 .fcard)')
+  assert.match(wxss, /\.ac__fcard\.is-out \{ transform: rotateY\(-90deg\) translateX\(-80rpx\); opacity: 0;/)
+  assert.doesNotMatch(wxss, /@keyframes/, '翻页只用过渡,不新增关键帧')
+  assert.match(wxss, /\.ac--reduced \.ac__fcard\.is-out, \.ac--reduced \.ac__fcard\.is-in \{ transform: none; \}/, '减少动态效果不翻')
+  const inst = { data: Object.assign({}, Comp.data, { suspects: [{ id: 'A' }, { id: 'B' }, { id: 'C' }], cur: 0, reducedMotion: true }),
+    setData(p) { Object.assign(this.data, p) }, triggerEvent() {} }
+  Object.assign(inst, Comp.methods)
+  inst.onFlipNext()
+  assert.deepEqual([inst.data.outIdx, inst.data.inIdx], [0, 1], '当前翻出、下一张翻进')
+  inst.onFlipNext()
+  assert.equal(inst.data.outIdx, 0, '翻页中再点不叠加')
+  return new Promise((resolve) => setTimeout(() => {
+    assert.deepEqual([inst.data.cur, inst.data.outIdx, inst.data.inIdx], [1, -1, -1], '翻完才换当前')
+    inst.onFlipNext()
+    setTimeout(() => { inst.onFlipNext(); setTimeout(() => { assert.equal(inst.data.cur, 0, '到头回第一张'); resolve() }, 30) }, 30)
+  }, 30))
+})
+
+test('UG-03 l-kits:线索板的便签只画服务端回读的已获得线索(view.clues),点开看图 + 一句描述;没有线索就没有便签', () => {
+  const kit = pickPlayKit(accusationView({ clues: [
+    { id: 7, name: '侧门没有锁', scope: 'TEAM', sources: [{ title: '邮政大楼', blocks: [{ text: '侧门的锁芯里有新的划痕。', images: ['https://cdn.example/a.jpg', 'media-asset:1'] }] }] },
+    { id: 8, name: '', sources: [] },
+    null,
+  ] }), NOW)
+  assert.deepEqual(kit.clues, [
+    { id: '7:TEAM', name: '侧门没有锁', text: '侧门的锁芯里有新的划痕。', img: 'https://cdn.example/a.jpg' },
+    { id: '8:', name: '线索', text: '', img: '' },
+  ])
+  assert.deepEqual(pickPlayKit(accusationView(), NOW).clues, [])
+  const Comp = loadComponent('pages/play/components/playkit-accusation/index.js')
+  const pins = Comp.methods._pinsOf(kit.clues)
+  assert.equal(pins.length, 2)
+  assert.ok(pins.every((p) => typeof p.x === 'number' && typeof p.rot === 'number'))
+  assert.equal(Comp.methods._pinsOf(new Array(9).fill({ id: 'x' })).length, 6, '最多画 6 张便签')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxml'), 'utf8')
+  assert.match(wxml, /class="ac__pin" wx:for="\{\{pins\}\}"[^>]*bindtap="onOpenClue"/, '便签可点')
+  assert.match(wxml, /wx:if="\{\{clueOpen >= 0\}\}"/, '线索弹窗')
+  assert.match(wxml, /class="ac__board pk-in" wx:if="\{\{boardImg \|\| pins\.length\}\}"/, '没有板图也没有线索就不画板')
+  const dispatcher = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit/index.wxml'), 'utf8')
+  assert.ok(dispatcher.includes('clues="{{kit.clues}}"'))
+})
+
+test('UG-04 l-kits:结论整屏用 cy-illus 插图(结案 = 成功、失败 = 失败、结算确认中 = 调查中),Noto 动图随 case-anim 退场', () => {
   const Comp = loadComponent('pages/play/components/playkit-accusation/index.js')
   assert.equal(Comp.methods._animKind('SOLVED', false), 'success')
   assert.equal(Comp.methods._animKind('EARLY', false), 'success')
   assert.equal(Comp.methods._animKind('FAILED', false), 'fail')
-  assert.equal(Comp.methods._animKind('', true), 'search')
+  assert.equal(Comp.methods._animKind('', true), 'wait')
   assert.equal(Comp.methods._animKind('WRONG', false), '')
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.json'), 'utf8'))
-  assert.equal(json.usingComponents['cy-case-anim'], '/subpackageTools/components/case-anim/index')
-  assert.equal(json.componentPlaceholder['cy-case-anim'], 'view')
-  for (const k of ['search', 'success', 'fail']) {
-    for (const ext of ['gif', 'png']) {
-      const size = fs.statSync(path.join(ROOT, 'subpackageTools/components/case-anim/img/' + k + '.' + ext)).size
-      assert.ok(size < 100 * 1024, k + '.' + ext + ' 小于 100KB')
-    }
-  }
+  assert.equal(json.usingComponents['cy-illus'], '/pages/play/components/cy-illus/index')
+  assert.ok(!json.usingComponents['cy-case-anim'] && !json.componentPlaceholder, 'case-anim 不再引用')
+  assert.ok(!fs.existsSync(path.join(ROOT, 'subpackageTools/components/case-anim')), 'Noto 动图目录已删(业主:不要那种 icon)')
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxml'), 'utf8')
+  assert.match(wxml, /<cy-illus wx:if="\{\{illus\}\}" name="\{\{illus\}\}" size="\{\{300\}\}" reduced-motion="\{\{reducedMotion\}\}" \/>/)
+  assert.match(wxml, /class="ac__end-btn" bindtap="onClose"/, '整屏档「继续」')
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-accusation/index.wxss'), 'utf8')
+  assert.match(wxss, /\.ac--full \.ac__end \{ position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: var\(--cy-z-modal\); \}/, '整屏档盖住台面')
+  assert.match(wxss, /\.ac--reduced \.ac__vt, \.ac--reduced \.ac__vs, \.ac--reduced \.ac__end-img, \.ac--reduced \.ac__end-btn \{ opacity: 1; transform: none; \}/, '减少动态效果直接终态')
 })
 
 test('分发器登记了两屏并把 kit 字段喂给组件', () => {

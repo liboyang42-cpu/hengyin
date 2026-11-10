@@ -1,64 +1,88 @@
-<!-- UG-03/04 指认结案(r2 改版):线索板 → 人物卡(选中其余变淡)→ 证词 → 「指认 某某」→ 本屏确认层(右上角关闭)。
-     结论屏居中:动图 + 结论字 + 结局段。结论只读服务端 accusation.result。 -->
+<!-- UG-03/04 指认结案(l-kits 2026-11-10,照 proto/game gp-kit-accuse「玩法 · 判案(线索可开 · 翻页嫌疑人)」):
+     线索板上的便签都能点开(图 + 一句描述);嫌疑人是翻页卡,一次一张(照片 + 头像字 + 名字 + 身份 + 证词),
+     点右下箭头或「再想想」绕竖轴翻到下一张,底部「指认 X」跟着当前这张变;确认是居中弹窗;
+     结果整屏:正常结案 / 指认失败 / 结算确认中,插图用 cy-illus(成功 / 失败 / 调查中),结论只读服务端 accusation.result。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="g-col ac {{inline ? 'ac--inline' : 'ac--full'}} {{reducedMotion ? 'pk--reduced' : ''}} {{reducedMotion ? 'ac--reduced' : ''}}">
-    <!-- 结论 / 结算确认中:整屏居中 -->
-    <view wx:if="{{(outcome && outcome !== 'WRONG') || pending}}" class="ac__end">
-      <cy-case-anim wx:if="{{anim}}" class="ac__anim" kind="{{anim}}" size="{{240}}" />
-      <view class="ac__verdict ac__verdict--{{outcome || 'PENDING'}}" aria-live="polite">{{pending ? '结算确认中' : outcomeLabel}}</view>
+    <!-- 结论 / 结算确认中:整屏(整屏档 fixed;内嵌档在流里占一块) -->
+    <view wx:if="{{(outcome && outcome !== 'WRONG') || pending}}" class="ac__end {{endOn ? 'is-on' : ''}} {{outcome === 'FAILED' ? 'ac__end--bad' : ''}}">
+      <view class="ac__end-art">
+        <view class="ac__glow" wx:if="{{illus === 'success'}}" aria-hidden="true"></view>
+        <cy-illus wx:if="{{illus}}" name="{{illus}}" size="{{300}}" reduced-motion="{{reducedMotion}}" />
+      </view>
+      <view class="ac__vt" aria-live="polite">{{pending ? '结算确认中' : outcomeLabel}}</view>
       <block wx:for="{{screen}}" wx:key="index">
         <image wx:if="{{item.kind === 'img'}}" class="ac__end-img" src="{{item.img}}" mode="aspectFill" aria-role="img" aria-label="{{item.alt || '结局配图'}}" />
-        <view wx:else class="ac__end-text">{{item.text}}</view>
+        <view wx:else class="ac__vs">{{item.text}}</view>
       </block>
+      <view wx:if="{{!pending && !inline}}" class="ac__end-btn" bindtap="onClose"
+            aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">继续</view>
     </view>
     <block wx:else>
       <view class="ac__q pk-in" wx:if="{{title}}">{{title}}</view>
-      <image wx:if="{{boardImg}}" class="ac__board pk-in" src="{{boardImg}}" mode="aspectFill" aria-role="img" aria-label="{{boardAlt || '线索板'}}" />
+
+      <!-- 线索板:板图(作者配)+ 已获得线索的便签(服务端 view.clues),点便签看详情 -->
+      <view class="ac__board pk-in" wx:if="{{boardImg || pins.length}}" aria-role="group" aria-label="{{boardAlt || '线索板'}}">
+        <image wx:if="{{boardImg}}" class="ac__board-img" src="{{boardImg}}" mode="aspectFill" aria-hidden="true" />
+        <view class="ac__pin" wx:for="{{pins}}" wx:key="id" style="left:{{item.x}}rpx;top:{{item.y}}rpx;--rot:{{item.rot}}deg"
+              data-i="{{index}}" bindtap="onOpenClue" aria-role="button" aria-label="线索：{{item.name}}" hover-class="ac__pin--press" hover-stay-time="80">{{item.name}}</view>
+      </view>
       <view class="ac__intro" wx:for="{{intro}}" wx:key="index" wx:if="{{item.kind === 'text'}}">{{item.text}}</view>
 
-      <view class="ac__grid ac__grid--{{suspects.length >= 3 && suspects.length !== 4 ? 3 : 2}} {{selected ? 'has-pick' : ''}}">
-        <view wx:for="{{suspects}}" wx:key="id" class="ac__card {{selected === item.id ? 'is-pick' : ''}}"
-              data-id="{{item.id}}" bindtap="onPick"
-              aria-role="button" aria-label="{{item.name}}{{item.identity ? '，' + item.identity : ''}}{{selected === item.id ? '，已选中' : ''}}"
-              hover-class="ac__press" hover-stay-time="80">
-          <view class="ac__ava">
-            <image wx:if="{{item.avatar}}" class="ac__ava-img" src="{{item.avatar}}" mode="aspectFill" aria-hidden="true" />
-            <view wx:else class="ac__ava-img ac__ava-img--empty" aria-hidden="true">{{item.initial}}</view>
-            <view class="ac__check" wx:if="{{selected === item.id}}" aria-hidden="true"><cy-icon name="check" size="24" /></view>
+      <!-- 嫌疑人翻页卡:一次一张;点卡片 / 右下箭头 / 「再想想」翻到下一张 -->
+      <view class="ac__deck" wx:if="{{suspects.length}}">
+        <view wx:for="{{suspects}}" wx:key="id"
+              class="ac__fcard {{index === cur ? 'is-on' : ''}} {{index === outIdx ? 'is-out' : ''}} {{index === inIdx ? 'is-in' : ''}}"
+              data-i="{{index}}" bindtap="onFlipNext" aria-role="button" aria-hidden="{{index !== cur}}"
+              aria-label="{{item.name}}{{item.identity ? '，' + item.identity : ''}}，第 {{index + 1}} / {{suspects.length}} 位，点一下看下一位">
+          <image wx:if="{{item.avatar}}" class="ac__cov" src="{{item.avatar}}" mode="aspectFill" aria-hidden="true" />
+          <view wx:else class="ac__cov ac__cov--none" aria-hidden="true">{{item.initial}}</view>
+          <view class="ac__fbody">
+            <view class="ac__av" aria-hidden="true">{{item.initial}}</view>
+            <view class="ac__name">{{item.name}}</view>
+            <view class="ac__role" wx:if="{{item.identity}}">{{item.identity}}</view>
+            <view class="ac__testi" wx:for="{{item.testimony}}" wx:for-item="t" wx:key="key">「{{t.text}}」</view>
           </view>
-          <view class="ac__name">{{item.name}}</view>
-          <view class="ac__id" wx:if="{{item.identity}}">{{item.identity}}</view>
         </view>
       </view>
-
-      <view class="ac__file" wx:if="{{dossier && dossier.testimony.length}}" aria-live="polite">
-        <view class="ac__file-row" wx:for="{{dossier.testimony}}" wx:key="key">“{{item.text}}”</view>
+      <view class="ac__ctl" wx:if="{{suspects.length > 1}}">
+        <view class="ac__dots" aria-hidden="true"><view class="ac__dot {{index === cur ? 'is-on' : ''}}" wx:for="{{suspects}}" wx:key="id"></view></view>
+        <view class="ac__arrow" bindtap="onFlipNext" aria-role="button" aria-label="下一位" hover-class="ac__press" hover-stay-time="80"><cy-icon name="chevron-right" size="32" /></view>
       </view>
 
-      <view class="ac__fb" wx:if="{{wrongAttempt}}" aria-live="polite">{{retryNote || '还不是这个人，继续调查'}}</view>
+      <view class="ac__err {{wrongAttempt ? 'is-show' : ''}}" aria-live="polite">{{wrongAttempt ? (retryNote || '还不是这个人，继续调查') : ''}}</view>
     </block>
   </view>
 
-  <view wx:if="{{outcome && outcome !== 'WRONG' && !inline}}" class="g-btn" bindtap="onClose"
-        aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">继续</view>
-  <view wx:elif="{{(!outcome || outcome === 'WRONG') && !pending}}" class="ac__bar {{inline ? '' : 'ac__bar--full'}}">
-    <view class="g-btn ac__go {{selected ? '' : 'g-btn--disabled'}}" bindtap="onConfirm" aria-role="button"
-          aria-label="{{dossier ? '指认' + dossier.name : '确认指认'}}" aria-disabled="{{!selected}}"
-          hover-class="g-btn--press" hover-stay-time="80">{{dossier ? '指认 ' + dossier.name : '确认指认'}}</view>
+  <view wx:if="{{(!outcome || outcome === 'WRONG') && !pending && suspects.length}}" class="ac__bar {{inline ? '' : 'ac__bar--full'}}">
+    <view wx:if="{{suspects.length > 1}}" class="ac__ghost" bindtap="onFlipNext" aria-role="button" aria-label="再想想，看下一位" hover-class="g-btn--press" hover-stay-time="80">再想想</view>
+    <view class="g-btn ac__go" bindtap="onConfirm" aria-role="button" aria-label="指认{{suspects[cur].name}}" hover-class="g-btn--press" hover-stay-time="80">指认 {{suspects[cur].name}}</view>
   </view>
 
-  <!-- 确认层:玩家域弹层底色走 sheet 角色 token;关闭在右上角,没有第二个「取消」按钮 -->
-  <view class="ac-cf" wx:if="{{confirmOpen}}" catchtouchmove="noop">
-    <view class="ac-cf__mask" aria-hidden="true"></view>
-    <view class="ac-cf__panel" role="dialog">
-      <view class="ac-cf__close" bindtap="onConfirmCancel" aria-role="button" aria-label="关闭" hover-class="ac__press" hover-stay-time="80"><view class="ac-cf__glyph"><cy-icon name="close-sm" size="40" /></view></view>
-      <view class="ac-cf__ava">
-        <image wx:if="{{dossier.avatar}}" class="ac__ava-img" src="{{dossier.avatar}}" mode="aspectFill" aria-hidden="true" />
-        <view wx:else class="ac__ava-img ac__ava-img--empty" aria-hidden="true">{{dossier.initial}}</view>
+  <!-- 确认:居中弹窗(原型 pop-accuse),「确认指认」才交原 SUBMIT_QA 的 optionId;「再想想」关掉 -->
+  <view class="ac-cf {{cfOn ? 'is-on' : ''}}" wx:if="{{confirmOpen}}" catchtouchmove="noop">
+    <view class="ac-cf__mask" bindtap="onConfirmCancel" aria-hidden="true"></view>
+    <view class="ac-cf__panel" aria-role="dialog" aria-label="{{confirmText}}">
+      <view class="ac-cf__ava" aria-hidden="true">
+        <image wx:if="{{suspects[cur].avatar}}" class="ac-cf__ava-img" src="{{suspects[cur].avatar}}" mode="aspectFill" />
+        <block wx:else>{{suspects[cur].initial}}</block>
       </view>
       <view class="ac-cf__title">{{confirmText}}</view>
-      <view class="ac-cf__id" wx:if="{{dossier.identity}}">{{dossier.identity}}</view>
+      <view class="ac-cf__sub">{{suspects[cur].identity ? suspects[cur].identity + ' · ' : ''}}指认后不能更改</view>
       <view class="ac-cf__btn" bindtap="onConfirmGo" aria-role="button" aria-label="确认指认" hover-class="g-btn--press" hover-stay-time="80">确认指认</view>
+      <view class="ac-cf__text" bindtap="onConfirmCancel" aria-role="button" aria-label="再想想" hover-class="ac__press" hover-stay-time="80">再想想</view>
+    </view>
+  </view>
+
+  <!-- 线索详情:居中弹窗(原型 pop-clue):图 + 名字 + 一句描述;「收起」(线索已在背包里,这里只是看一眼) -->
+  <view class="ac-cf ac-cl {{cfOn ? 'is-on' : ''}}" wx:if="{{clueOpen >= 0}}" catchtouchmove="noop">
+    <view class="ac-cf__mask" bindtap="onCloseClue" aria-hidden="true"></view>
+    <view class="ac-cf__panel ac-cl__panel" aria-role="dialog" aria-label="线索：{{pins[clueOpen].name}}">
+      <view class="ac-cl__h">线索</view>
+      <image wx:if="{{pins[clueOpen].img}}" class="ac-cl__img" src="{{pins[clueOpen].img}}" mode="aspectFill" aria-hidden="true" />
+      <view class="ac-cl__t">{{pins[clueOpen].name}}</view>
+      <view class="ac-cl__p" wx:if="{{pins[clueOpen].text}}">{{pins[clueOpen].text}}</view>
+      <view class="ac-cf__ghost" bindtap="onCloseClue" aria-role="button" aria-label="收起" hover-class="g-btn--press" hover-stay-time="80">收起</view>
     </view>
   </view>
 </cy-play-stage>

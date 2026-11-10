@@ -73,7 +73,7 @@
   background: var(--soft);
   text-align: center;
   font-family: var(--lk-fm, var(--cy-font-numeric));
-  font-size: 36rpx;                        /* ds-ok 原型 18px */
+  font-size: var(--cy-type-section-title);   /* ds-ok 原型 18px */
   font-weight: 600;
   letter-spacing: .3em;
   color: var(--ink);
