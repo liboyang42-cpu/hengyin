@@ -1194,6 +1194,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(revisionBoundSnapshot, revisionHeader);
             snapshot = write(revisionBoundSnapshot);
         }
+        snapshot = stampSelfPlayHelpRun(snapshot, scope.activityId);
         TopicRouteEngine.State initial = engine.initial(snapshot);
         JourneyRules branchRules = FrozenAttributeDefinitions.rules(validator.readTree(snapshot), scope.topic.getPublishedConfigVersion());
         applyJourneyInitials(branchRules, initial);
@@ -1430,6 +1431,18 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     /**
+     * 自玩局建局时在冻结快照里写入本局的帮助原局身份(与本局冻结内容同一次 insert 落库)。
+     * 进度实例仍是 default —— 首次奖励/旧进度行都按它认本人正式一局;活动场次局不写。
+     */
+    private String stampSelfPlayHelpRun(String frozenSnapshot, Long activityId) {
+        if (!com.chengyinhub.business.service.support.SelfPlayHelpRun.selfPlay(activityId)) return frozenSnapshot;
+        ObjectNode root = (ObjectNode) validator.readTree(frozenSnapshot);
+        com.chengyinhub.business.service.support.SelfPlayHelpRun.stamp(root, activityId,
+                com.chengyinhub.business.service.support.SelfPlayHelpRun.newIdentity());
+        return write(root);
+    }
+
+    /**
      * 线性主题的旅程局:合成一份没有边的快照(engine.advance 不参与线性推进),
      * completedNodeIds 用既有完成事实播种,免得建局前已通关的玩家从通关列表里消失。
      */
@@ -1454,6 +1467,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             com.chengyinhub.business.service.support.TopicContentRevisionHeader.bind(revisionBoundJourney, journeyRevision);
             frozenSnapshot = write(revisionBoundJourney);
         }
+        frozenSnapshot = stampSelfPlayHelpRun(frozenSnapshot, scope.activityId);
         JsonNode publishedStations = validator.readTree(frozenSnapshot).path("routeStations");
         if (publishedStations.isArray()) {
             liveNodes = new ArrayList<>();
