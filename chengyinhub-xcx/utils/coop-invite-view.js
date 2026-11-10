@@ -8,12 +8,14 @@
  * 前端不自己判条件 —— 再判一次只会两边不一致。
  */
 const { toTimestamp } = require('./datetime');
+const { COOP_INVITE_STATUS } = require('./coop-invite-status.js');
 
 const TYPE_LABEL = ['主题发布者 → 商家', '商家 → 俱乐部', '商家 → 商家承接节点'];
 const PARTY_LABEL = { merchant: '商家', club: '俱乐部', talent: '主题发布者', official: '平台' };
-const STATUS_LABEL = ['待确认', '已接受', '已拒绝', '已取消', '已顶替', '已过期'];
+// 状态文案与徽章的唯一真源是 coop-invite-status 状态机;这里只派生旧数组导出,下标访问行为不变。
 // 稿 261:277 / 261:349 状态徽章:tone 决定底色字色,icon 走 cy-icon。取消/顶替/过期共用灰调。
-const INVITE_BADGE = ['pending:clock', 'accepted:check', 'rejected:warning', 'muted:close-sm', 'muted:close-sm', 'muted:close-sm'];
+const STATUS_LABEL = COOP_INVITE_STATUS.toArray('label');
+const INVITE_BADGE = COOP_INVITE_STATUS.toArray('badge');
 function badgeOf(spec) {
   const parts = String(spec || 'muted:close-sm').split(':');
   return { badgeTone: parts[0], badgeIcon: parts[1] };
