@@ -39,8 +39,10 @@ test('大厅页:无二维码/加入码/释放;关闭在半屏标题栏;不新增
   const dir = path.join(__dirname, '../../subpackageJourney/pages/seats');
   const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
   assert.ok(!/二维码|加入码|释放/.test(wxml.replace(/<!--[\s\S]*?-->/g, '')));
-  assert.match(wxml, /<cy-sheet show="\{\{inviteShow\}\}" title="邀请同行"/);
-  assert.match(wxml, /open-type="share"/);
+  // 2026-11-10 qx-final:l-after 把所有邀请统一成 Spotify 式邀请页(业主批准 proto sh-invite),
+  // 「邀请同行」半屏换成 cy-share-card;「发给微信好友」的 open-type="share" 在组件里。
+  assert.match(wxml, /<cy-share-card show="\{\{inviteShow\}\}" card="\{\{inviteCard\}\}"/);
+  assert.match(fs.readFileSync(path.join(__dirname, '../../components/cy/share-card/index.wxml'), 'utf8'), /open-type="share"/);
   const wxss = fs.readFileSync(path.join(dir, 'index.wxss'), 'utf8');
   assert.ok(!/@keyframes/.test(wxss));
 });

@@ -18,7 +18,10 @@ const INVITE_KEY = 'journey-seat-invite:';
 Page({
   data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', seats: null,
     busy: false, actionError: '', inviteToken: '',
-    lobby: null, head: null, me: null, tiles: [], inviteShow: false, inviteCard: null, playUrl: '' },
+    lobby: null, head: null, me: null, tiles: [], inviteShow: false, inviteCard: null, playUrl: '', privacyGateShow: false },
+
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   onLoad(options) {
     this._registrationId = view.isId(options && options.registrationId) ? String(options.registrationId) : '';

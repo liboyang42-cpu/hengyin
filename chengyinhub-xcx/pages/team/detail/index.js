@@ -27,6 +27,7 @@ function teamTitleOf(team, members) {
 
 Page({
   data: {
+    privacyGateShow: false,
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
     commandRecovery: null, recoveryShown: false, commandReject: null,
@@ -57,6 +58,9 @@ Page({
     // l-misc:队伍小程序码 + 加入码弹层。state: loading | ready(码 + 加入码)| code(微信不可用,只给加入码)| error
     qrSheet: { show: false, state: '', qr: '', code: '', message: '' }
   },
+
+  showPrivacyGate() { this.setData({ privacyGateShow: true }); },
+  onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   onLoad(options) {
     this._hidden = false;

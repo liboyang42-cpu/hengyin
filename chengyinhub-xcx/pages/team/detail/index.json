@@ -3,6 +3,7 @@
   "navigationBarTitleText": "队伍详情",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-inline-error": "/components/cy/inline-error/index",

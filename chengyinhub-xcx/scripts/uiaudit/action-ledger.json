@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5993,
+  "controlCount": 5995,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1325,10 +1325,12 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-wallet/index",
@@ -1711,6 +1713,19 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -1772,6 +1787,19 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -53748,6 +53776,32 @@
           "route": "pages/team/detail/index",
           "segments": [
             {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.pg__action",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
               "selector": "cy-state-shell",
               "index": 0
             },
@@ -66276,6 +66330,32 @@
         {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.pg__action",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
             {
               "selector": "cy-btn",
               "index": 0
@@ -289912,6 +289992,158 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/team/join/index",
           "segments": [
             {
@@ -291918,6 +292150,158 @@
             {
               "selector": "cy-nav-bar",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
             }
           ]
         },
@@ -305253,6 +305637,190 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/team/join/index",
           "segments": [
             {
@@ -307759,6 +308327,190 @@
             {
               "selector": "cy-nav-bar",
               "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            },
+            {
+              "selector": "cy-nav-bar",
+              "index": 1
             },
             {
               "selector": "cy-offline-banner",
@@ -316984,10 +317736,12 @@
         "pages/roam/index",
         "pages/searchmap/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -317189,6 +317943,15 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -317217,6 +317980,15 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -317393,10 +318165,12 @@
         "pages/roam/index",
         "pages/searchmap/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -317598,6 +318372,15 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -317626,6 +318409,15 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -317815,10 +318607,12 @@
         "pages/roam/index",
         "pages/searchmap/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -318020,6 +318814,15 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -318048,6 +318851,15 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -318224,10 +319036,12 @@
         "pages/roam/index",
         "pages/searchmap/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -318429,6 +319243,15 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -318457,6 +319280,15 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -318663,10 +319495,12 @@
         "pages/roam/index",
         "pages/searchmap/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -318868,6 +319702,15 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -318896,6 +319739,15 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -319114,10 +319966,12 @@
         "pages/roam/index",
         "pages/searchmap/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/mycanyu/mycanyu",
@@ -319319,6 +320173,15 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -319347,6 +320210,15 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -398738,12 +399610,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -401493,6 +402367,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -402153,6 +403087,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -403393,12 +404387,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -406148,6 +407144,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -406808,6 +407864,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -408048,12 +409164,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -410803,6 +411921,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -411463,6 +412641,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -412703,12 +413941,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -415458,6 +416698,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -416118,6 +417418,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -417358,12 +418718,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -420113,6 +421475,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -420773,6 +422195,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -422013,12 +423495,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -424768,6 +426252,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -425428,6 +426972,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -426668,12 +428272,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -429423,6 +431029,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -430083,6 +431749,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -431323,12 +433049,14 @@
         "pages/searchmap/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
+        "pages/team/detail/index",
         "pages/topic/index/index",
         "pages/topic/merchantinfo/merchantinfo",
         "pages/userinfo/userinfo",
         "subpackageA/pages/assetcenter/earnings/index",
         "subpackageA/pages/infomation/infomation",
         "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
         "subpackageJourney/pages/settle/index",
         "subpackageMember/character/index",
         "subpackageMember/coupon-qr/index",
@@ -434078,6 +435806,66 @@
           ]
         },
         {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "pages/topic/index/index",
           "segments": [
             {
@@ -434738,6 +436526,66 @@
         },
         {
           "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-agreement-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
           "segments": [
             {
               "selector": "cy-privacy-gate",
@@ -1222126,7 +1223974,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:104"
+        "staticSource": "pages/team/detail/index.js:108"
       }
     },
     {
@@ -1222195,7 +1224043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:516"
+        "staticSource": "pages/team/detail/index.js:520"
       }
     },
     {
@@ -1222279,7 +1224127,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:105"
+        "staticSource": "pages/team/detail/index.js:109"
       }
     },
     {
@@ -1222412,7 +1224260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:416"
+        "staticSource": "pages/team/detail/index.js:420"
       }
     },
     {
@@ -1222545,7 +1224393,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:416"
+        "staticSource": "pages/team/detail/index.js:420"
       }
     },
     {
@@ -1222614,7 +1224462,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:507"
+        "staticSource": "pages/team/detail/index.js:511"
       }
     },
     {
@@ -1222683,7 +1224531,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:522"
+        "staticSource": "pages/team/detail/index.js:526"
       }
     },
     {
@@ -1222750,7 +1224598,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:144"
+        "staticSource": "pages/team/detail/index.js:148"
       }
     },
     {
@@ -1222817,11 +1224665,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:473"
+        "staticSource": "pages/team/detail/index.js:477"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:162:bind:confirm:onConfirmQuit:18",
+      "id": "pages/team/detail/index.wxml:160:bind:settled:onPrivacyGateSettled:18",
+      "route": "pages/team/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/team/detail/index.wxml",
+        "js": "pages/team/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-privacy-gate",
+        "event": "bind:settled",
+        "handler": "onPrivacyGateSettled",
+        "line": 160,
+        "selectorHint": "cy-privacy-gate[bind:settled]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/team/detail/index.js:63"
+      }
+    },
+    {
+      "id": "pages/team/detail/index.wxml:164:bind:confirm:onConfirmQuit:19",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222844,7 +1224759,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 162,
+        "line": 164,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1222970,11 +1224885,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:531"
+        "staticSource": "pages/team/detail/index.js:535"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:163:bind:confirm:onConfirmKick:19",
+      "id": "pages/team/detail/index.wxml:165:bind:confirm:onConfirmKick:20",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1222997,7 +1224912,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmKick",
-        "line": 163,
+        "line": 165,
         "selectorHint": "#dcKick",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223124,11 +1225039,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:532"
+        "staticSource": "pages/team/detail/index.js:536"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:164:bind:confirm:onConfirmReject:20",
+      "id": "pages/team/detail/index.wxml:166:bind:confirm:onConfirmReject:21",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223151,7 +1225066,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmReject",
-        "line": 164,
+        "line": 166,
         "selectorHint": "#dcReject",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223268,11 +1225183,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:368"
+        "staticSource": "pages/team/detail/index.js:372"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:165:bind:alt:onDisbandAlt:22",
+      "id": "pages/team/detail/index.wxml:167:bind:alt:onDisbandAlt:23",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223295,7 +1225210,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onDisbandAlt",
-        "line": 165,
+        "line": 167,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223336,11 +1225251,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:536"
+        "staticSource": "pages/team/detail/index.js:540"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:165:bind:confirm:onConfirmDisband:21",
+      "id": "pages/team/detail/index.wxml:167:bind:confirm:onConfirmDisband:22",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223363,7 +1225278,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDisband",
-        "line": 165,
+        "line": 167,
         "selectorHint": "#dcDisband",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223490,11 +1225405,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:533"
+        "staticSource": "pages/team/detail/index.js:537"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:166:bind:close:closeReport:23",
+      "id": "pages/team/detail/index.wxml:168:bind:close:closeReport:24",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223517,7 +1225432,7 @@
         "tag": "team-report-sheet",
         "event": "bind:close",
         "handler": "closeReport",
-        "line": 166,
+        "line": 168,
         "selectorHint": "team-report-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223557,11 +1225472,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:145"
+        "staticSource": "pages/team/detail/index.js:149"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:168:bind:close:closeInviteQr:24",
+      "id": "pages/team/detail/index.wxml:170:bind:close:closeInviteQr:25",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223584,7 +1225499,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeInviteQr",
-        "line": 168,
+        "line": 170,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1223624,11 +1225539,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:495"
+        "staticSource": "pages/team/detail/index.js:499"
       }
     },
     {
-      "id": "pages/team/detail/index.wxml:173:bindtap:copyJoinCode:25",
+      "id": "pages/team/detail/index.wxml:175:bindtap:copyJoinCode:26",
       "route": "pages/team/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1223651,7 +1225566,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyJoinCode",
-        "line": 173,
+        "line": 175,
         "selectorHint": ".tm-qr__code",
         "visibleCondition": "{{qrSheet.code}}",
         "disabledCondition": null,
@@ -1223701,7 +1225616,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:499"
+        "staticSource": "pages/team/detail/index.js:503"
       }
     },
     {
@@ -1223836,7 +1225751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:421"
+        "staticSource": "pages/team/detail/index.js:425"
       }
     },
     {
@@ -1223903,7 +1225818,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:461"
+        "staticSource": "pages/team/detail/index.js:465"
       }
     },
     {
@@ -1223985,7 +1225900,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:484"
+        "staticSource": "pages/team/detail/index.js:488"
       }
     },
     {
@@ -1224055,7 +1225970,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:475"
+        "staticSource": "pages/team/detail/index.js:479"
       }
     },
     {
@@ -1224199,7 +1226114,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:434"
+        "staticSource": "pages/team/detail/index.js:438"
       }
     },
     {
@@ -1224332,7 +1226247,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:361"
+        "staticSource": "pages/team/detail/index.js:365"
       }
     },
     {
@@ -1224401,7 +1226316,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:363"
+        "staticSource": "pages/team/detail/index.js:367"
       }
     },
     {
@@ -1224482,7 +1226397,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:103"
+        "staticSource": "pages/team/detail/index.js:107"
       }
     },
     {
@@ -1224626,7 +1226541,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/team/detail/index.js:362"
+        "staticSource": "pages/team/detail/index.js:366"
       }
     },
     {
@@ -1285129,7 +1287044,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:92"
+        "staticSource": "subpackageJourney/pages/seats/index.js:95"
       }
     },
     {
@@ -1285377,7 +1287292,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:78"
+        "staticSource": "subpackageJourney/pages/seats/index.js:81"
       }
     },
     {
@@ -1285625,7 +1287540,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:90"
+        "staticSource": "subpackageJourney/pages/seats/index.js:93"
       }
     },
     {
@@ -1285873,7 +1287788,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:33"
+        "staticSource": "subpackageJourney/pages/seats/index.js:36"
       }
     },
     {
@@ -1285941,7 +1287856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:93"
+        "staticSource": "subpackageJourney/pages/seats/index.js:96"
       }
     },
     {
@@ -1286190,7 +1288105,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:119"
+        "staticSource": "subpackageJourney/pages/seats/index.js:122"
       }
     },
     {
@@ -1286257,7 +1288172,74 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:91"
+        "staticSource": "subpackageJourney/pages/seats/index.js:94"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:71:bind:settled:onPrivacyGateSettled:7",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-privacy-gate",
+        "event": "bind:settled",
+        "handler": "onPrivacyGateSettled",
+        "line": 71,
+        "selectorHint": "cy-privacy-gate[bind:settled]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:24"
       }
     },
     {

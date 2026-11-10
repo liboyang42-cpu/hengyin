@@ -3,6 +3,7 @@
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "usingComponents": {
+    "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-page-title": "/components/cy/page-title/index",
     "cy-empty": "/components/cy/empty/index",
