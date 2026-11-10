@@ -401,7 +401,17 @@ test('negative control:小程序侧不得存在改票源归因的写接口(归�
     .concat(listFiles(path.join(ROOT, 'components')))
     .concat(listFiles(path.join(ROOT, 'utils')))
   const banned = /\/api\/[a-z0-9/-]*(ticket-source|source-club|attribution)/i
-  const offenders = files.filter((f) => banned.test(fs.readFileSync(f, 'utf8')))
+  // 2026-11-10 qx-c3 逐条核过服务端后只豁免两条精确路径(needs owner 记录在 qx-c3 RESULT),其余 attribution 路径照禁:
+  //   · GET /api/media/asset/attribution:素材署名只读(AppMediaReferenceGuard.publicAttribution),与票源归因无关;
+  //   · POST /api/marketing/attribution/claim:营销推广凭据认领,MarketingAttributionServiceImpl.claim 校验订单归属与窗口,
+  //     每单只写一次(已有行 ⇒ 回放或 409),写的是 marketing_attribution,不改报名单票源。
+  const REVIEWED = [/\/api\/media\/asset\/attribution(?![a-z0-9/-])/gi, /\/api\/marketing\/attribution\/claim(?![a-z0-9/-])/gi]
+  const strip = (src) => REVIEWED.reduce((s, re) => s.replace(re, ''), src)
+  assert.ok(banned.test(strip("url: '/api/registration/ticket-source/update'")), '负控:票源改口路径必须仍被拦')
+  assert.ok(banned.test(strip("url: '/api/marketing/attribution/rebind'")), '负控:营销归因改绑路径必须仍被拦')
+  assert.ok(banned.test(strip("url: '/api/marketing/attribution/claim/update'")), '负控:豁免只到精确路径为止')
+  assert.ok(banned.test(strip("url: '/api/media/asset/attribution/rebind'")), '负控:豁免只到精确路径为止')
+  const offenders = files.filter((f) => banned.test(strip(fs.readFileSync(f, 'utf8'))))
   assert.deepEqual(offenders, [],
     '归因只在建单时随请求体带一次，之后由 freezeTicketSourceOnPayment 冻死，不得再有改口')
 })

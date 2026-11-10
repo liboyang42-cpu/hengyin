@@ -163,13 +163,13 @@
       <text class="ad-label">沿用原地点</text>
       <view class="ad-dot" aria-hidden="true"></view>
     </view>
-    <picker mode="region" level="city" disabled="{{ adoptBusy || adoptUnknown }}" bindchange="onAdoptCity">
+    <cy-dropdown mode="selector" range="{{ adoptCities }}" range-key="name" value="{{ adoptCityIndex }}" disabled="{{ adoptBusy || adoptUnknown }}" bind:change="onAdoptCity" aria-label="换一个城市">
       <view class="ad-row {{ adoptIntent === 'NEW_CITY' ? 'is-on' : '' }}" aria-role="radio" aria-checked="{{ adoptIntent === 'NEW_CITY' }}" aria-label="换一个城市" hover-class="cy-pressed" hover-stay-time="80">
         <text class="ad-label">换一个城市</text>
         <text class="ad-city ep1" wx:if="{{ adoptCityName }}">{{ adoptCityName }}</text>
         <view class="ad-dot" aria-hidden="true"></view>
       </view>
-    </picker>
+    </cy-dropdown>
     <view class="ad-rebind" wx:if="{{ adoptIntent === 'NEW_CITY' && adoptRebind }}">需重新绑定 {{ adoptRebind }} 个地点</view>
     <text class="ad-err" wx:if="{{ adoptError }}" aria-role="alert">{{ adoptError }}</text>
   </view>

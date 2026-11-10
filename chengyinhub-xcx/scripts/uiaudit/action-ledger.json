@@ -136014,6 +136014,7 @@
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/roam/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
@@ -138041,6 +138042,24 @@
               "selector": "cy-roam-city-guide",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -138570,6 +138589,7 @@
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/roam/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
@@ -140597,6 +140617,24 @@
               "selector": "cy-roam-city-guide",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -141125,6 +141163,7 @@
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/roam/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
@@ -143152,6 +143191,24 @@
               "selector": "cy-roam-city-guide",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -143681,6 +143738,7 @@
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/roam/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
@@ -145708,6 +145766,24 @@
               "selector": "cy-roam-city-guide",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -146236,6 +146312,7 @@
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/roam/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
@@ -148263,6 +148340,24 @@
               "selector": "cy-roam-city-guide",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -148791,6 +148886,7 @@
         "pages/publish/fabu/index",
         "pages/publish/temp/index",
         "pages/roam/index",
+        "pages/templatedetail/topic-detail/index",
         "pages/topic/merchantinfo/merchantinfo",
         "subpackageTools/anniversary/index",
         "subpackageTools/capsule/index",
@@ -150818,6 +150914,24 @@
               "selector": "cy-roam-city-guide",
               "index": 0
             },
+            {
+              "selector": "cy-dropdown",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
+            {
+              "selector": "cy-dropdown",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/templatedetail/topic-detail/index",
+          "segments": [
             {
               "selector": "cy-dropdown",
               "index": 1
@@ -1260391,7 +1260505,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:30:bindblur:onTextDone:3",
+      "id": "pages/publish/preset/index.wxml:29:bindblur:onTextDone:3",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260414,7 +1260528,7 @@
         "tag": "input",
         "event": "bindblur",
         "handler": "onTextDone",
-        "line": 30,
+        "line": 29,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'text'}}",
         "disabledCondition": null,
@@ -1260458,7 +1260572,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:30:bindinput:onText:2",
+      "id": "pages/publish/preset/index.wxml:29:bindinput:onText:2",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260481,7 +1260595,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onText",
-        "line": 30,
+        "line": 29,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'text'}}",
         "disabledCondition": null,
@@ -1260525,7 +1260639,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:31:bindblur:onTextDone:5",
+      "id": "pages/publish/preset/index.wxml:30:bindblur:onTextDone:5",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260548,7 +1260662,7 @@
         "tag": "input",
         "event": "bindblur",
         "handler": "onTextDone",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'number'}}",
         "disabledCondition": null,
@@ -1260592,7 +1260706,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:31:bindinput:onText:4",
+      "id": "pages/publish/preset/index.wxml:30:bindinput:onText:4",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260615,7 +1260729,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onText",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".pp-input",
         "visibleCondition": "{{f.kind === 'number'}}",
         "disabledCondition": null,
@@ -1260659,7 +1260773,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:33:bindtap:onChoice:6",
+      "id": "pages/publish/preset/index.wxml:32:bindtap:onChoice:6",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260682,7 +1260796,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChoice",
-        "line": 33,
+        "line": 32,
         "selectorHint": ".pp-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1260726,7 +1260840,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:42:bindtap:onMove:7",
+      "id": "pages/publish/preset/index.wxml:41:bindtap:onMove:7",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260749,7 +1260863,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMove",
-        "line": 42,
+        "line": 41,
         "selectorHint": ".pp-mv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1260803,7 +1260917,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:43:bindtap:onMove:8",
+      "id": "pages/publish/preset/index.wxml:42:bindtap:onMove:8",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260826,7 +1260940,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onMove",
-        "line": 43,
+        "line": 42,
         "selectorHint": ".pp-mv",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1260880,7 +1260994,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:50:bindtap:onBin:9",
+      "id": "pages/publish/preset/index.wxml:49:bindtap:onBin:9",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260903,7 +1261017,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onBin",
-        "line": 50,
+        "line": 49,
         "selectorHint": ".pp-seg__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1260947,7 +1261061,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:64:bindtap:backToList:10",
+      "id": "pages/publish/preset/index.wxml:63:bindtap:backToList:10",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1260970,7 +1261084,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "backToList",
-        "line": 64,
+        "line": 63,
         "selectorHint": ".pp-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1261014,7 +1261128,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:65:bindtap:submit:11",
+      "id": "pages/publish/preset/index.wxml:64:bindtap:submit:11",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1261037,7 +1261151,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submit",
-        "line": 65,
+        "line": 64,
         "selectorHint": ".pp-btn-main",
         "visibleCondition": null,
         "disabledCondition": "{{submitting}}",
@@ -1261124,7 +1261238,7 @@
       }
     },
     {
-      "id": "pages/publish/preset/index.wxml:76:bindtap:openDraft:12",
+      "id": "pages/publish/preset/index.wxml:74:bindtap:openDraft:12",
       "route": "pages/publish/preset/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1261147,7 +1261261,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "openDraft",
-        "line": 76,
+        "line": 74,
         "selectorHint": ".pp-btn-main",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1358160,7 +1358274,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:219"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
       }
     },
     {
@@ -1358227,7 +1358341,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:219"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
       }
     },
     {
@@ -1358294,11 +1358408,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:221"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:223"
       }
     },
     {
-      "id": "pages/templatedetail/topic-detail/index.wxml:166:bindchange:onAdoptCity:8",
+      "id": "pages/templatedetail/topic-detail/index.wxml:166:bind:change:onAdoptCity:8",
       "route": "pages/templatedetail/topic-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1358318,14 +1358432,14 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "picker",
-        "event": "bindchange",
+        "tag": "cy-dropdown",
+        "event": "bind:change",
         "handler": "onAdoptCity",
         "line": 166,
-        "selectorHint": "picker[bindchange]",
+        "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{ adoptBusy || adoptUnknown }}",
-        "ariaLabel": null,
+        "ariaLabel": "换一个城市",
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
@@ -1358361,7 +1358475,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:224"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:226"
       }
     },
     {
@@ -1358474,7 +1358588,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:232"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:235"
       }
     },
     {
@@ -1358544,7 +1358658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:192"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:194"
       }
     },
     {
@@ -1358655,7 +1358769,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:207"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:209"
       }
     },
     {
@@ -1358722,7 +1358836,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:194"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:196"
       }
     },
     {
@@ -1358799,7 +1358913,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:199"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:201"
       }
     },
     {
