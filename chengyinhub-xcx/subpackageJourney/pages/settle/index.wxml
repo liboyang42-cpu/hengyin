@@ -41,7 +41,7 @@
       <text class="st-err" wx:if="{{rateError}}">{{rateError}}</text>
     </view>
 
-    <!-- 4 分享卡:帖文 / 故事;分享、保存图片、视频(基础库支持才出) -->
+    <!-- 4 分享卡:帖文 / 故事;r3-share 整色卡(与通用分享层同版式);一颗主按钮「分享」,保存图片 / 视频并排在下 -->
     <view class="st-body" wx:else>
       <view class="st-seg"><cy-tabs variant="segmented" tabs="{{shareTabs}}" active="{{shareKind}}" bind:change="onShareKind" /></view>
       <view class="st-card st-card--{{shareKind}}">
@@ -49,8 +49,10 @@
       </view>
       <view class="st-acts">
         <button class="st-share" open-type="share" aria-label="分享"><cy-btn variant="primary">分享</cy-btn></button>
-        <cy-btn variant="secondary" bindtap="saveCard" disabled="{{!cardReady}}">保存图片</cy-btn>
-        <cy-btn wx:if="{{videoOk}}" variant="secondary" bindtap="shareVideo" disabled="{{!cardReady || videoBusy}}">{{videoBusy ? '正在生成视频' : '分享视频'}}</cy-btn>
+        <view class="st-acts__row">
+          <cy-btn class="st-acts__i" variant="secondary" bindtap="saveCard" disabled="{{!cardReady}}">保存图片</cy-btn>
+          <cy-btn wx:if="{{videoOk}}" class="st-acts__i" variant="secondary" bindtap="shareVideo" disabled="{{!cardReady || videoBusy}}">{{videoBusy ? '正在生成视频' : '分享视频'}}</cy-btn>
+        </view>
       </view>
     </view>
 

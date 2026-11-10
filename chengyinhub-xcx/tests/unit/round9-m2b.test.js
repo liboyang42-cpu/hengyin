@@ -7,12 +7,14 @@ const path = require('path')
 const read = (f) => fs.readFileSync(path.join(__dirname, '../..', f), 'utf8')
 
 test('补充第 4 项:店铺分享卡用店铺照片铺满,右下是放大的店铺码,不再是一块空色', () => {
+  // r3-share 改版:四种卡同一版式(class 带 kind),店铺照片铺满上半、店铺码仍比别的卡大
   const wxml = read('components/cy/share-card/index.wxml')
-  assert.match(wxml, /class="sc-card sc-card--theme \{\{kind === 'shop' \? 'sc-card--shop' : ''\}\}" wx:elif="\{\{kind === 'theme' \|\| kind === 'shop'\}\}"/)
-  assert.match(wxml, /<view class="sc-card sc-card--act" wx:if="\{\{kind === 'activity'\}\}">/)
-  assert.match(read('components/cy/share-card/index.wxss'), /\.sc-card--shop \.sc-qr \{ width: 168rpx; height: 168rpx; \}/)
+  assert.match(wxml, /<view class="sc-card sc-card--\{\{kind\}\}">/)
+  assert.match(wxml, /<image class="sc-cover" wx:elif="\{\{cover\}\}" src="\{\{cover\}\}" mode="aspectFill" \/>/)
+  assert.match(read('components/cy/share-card/index.wxss'), /\.sc-card--shop \.sc-qr \{ width: 128rpx; height: 128rpx; \}/)
   const js = read('components/cy/share-card/index.js')
-  assert.match(js, /if \(d\.kind === 'theme' \|\| d\.kind === 'shop'\) \{\s*if \(cover\) fit\(cover, cx, cy, cw, ch\);/)
+  assert.match(js, /\} else if \(cover\) fit\(cover, 0, 0, W, TOP\);/)
+  assert.match(js, /const qs = d\.kind === 'shop' \? 172 : 134;/)
   const profile = read('subpackageMember/components/cy/profile/index.js')
   assert.match(profile, /cover: String\(m\.coverImage \|\| \(this\.data\.merchantGallery \|\| \[\]\)\[0\] \|\| m\.logo \|\| m\.avatar \|\| ''\)/)
 })

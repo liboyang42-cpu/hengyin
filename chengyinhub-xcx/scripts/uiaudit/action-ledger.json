@@ -66148,6 +66148,24 @@
           "route": "subpackageJourney/pages/settle/index",
           "segments": [
             {
+              "selector": "cy-btn.st-acts__i",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "cy-btn.st-acts__i",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
               "selector": "cy-btn",
               "index": 0
             }
@@ -66177,24 +66195,6 @@
             {
               "selector": "cy-btn",
               "index": 11
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/settle/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 12
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/settle/index",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 13
             }
           ]
         },
@@ -436729,263 +436729,7 @@
       }
     },
     {
-      "id": "components/cy/share-card/index.wxml:3:catchtouchmove:noop:0",
-      "route": "component:components/cy/share-card/index",
-      "hostRoutes": [
-        "pages/activity/official-detail/index",
-        "pages/member/index/index",
-        "pages/roam/index",
-        "pages/topic/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/activity/official-detail/index",
-          "segments": [
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/share-card/index.wxml",
-        "js": "components/cy/share-card/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchmove",
-        "handler": "noop",
-        "line": 3,
-        "selectorHint": ".sc",
-        "visibleCondition": "{{show}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:61"
-      }
-    },
-    {
-      "id": "components/cy/share-card/index.wxml:5:bindtap:close:1",
-      "route": "component:components/cy/share-card/index",
-      "hostRoutes": [
-        "pages/activity/official-detail/index",
-        "pages/member/index/index",
-        "pages/roam/index",
-        "pages/topic/index/index",
-        "pages/userinfo/userinfo"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/activity/official-detail/index",
-          "segments": [
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "cy-share-card",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/share-card/index.wxml",
-        "js": "components/cy/share-card/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "close",
-        "line": 5,
-        "selectorHint": ".sc-x",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭分享",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:112"
-      }
-    },
-    {
-      "id": "components/cy/share-card/index.wxml:50:bindtap:pickColor:2",
+      "id": "components/cy/share-card/index.wxml:36:bindtap:pickColor:2",
       "route": "component:components/cy/share-card/index",
       "hostRoutes": [
         "pages/activity/official-detail/index",
@@ -437068,7 +436812,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickColor",
-        "line": 50,
+        "line": 36,
         "selectorHint": ".sc-swatch",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -437108,11 +436852,139 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:114"
+        "staticSource": "components/cy/share-card/index.js:130"
       }
     },
     {
-      "id": "components/cy/share-card/index.wxml:55:bindtap:onChannel:3",
+      "id": "components/cy/share-card/index.wxml:4:catchtouchmove:noop:0",
+      "route": "component:components/cy/share-card/index",
+      "hostRoutes": [
+        "pages/activity/official-detail/index",
+        "pages/member/index/index",
+        "pages/roam/index",
+        "pages/topic/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/activity/official-detail/index",
+          "segments": [
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/index/index",
+          "segments": [
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/share-card/index.wxml",
+        "js": "components/cy/share-card/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "noop",
+        "line": 4,
+        "selectorHint": ".sc",
+        "visibleCondition": "{{show}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/share-card/index.js:77"
+      }
+    },
+    {
+      "id": "components/cy/share-card/index.wxml:42:bindtap:onChannel:3",
       "route": "component:components/cy/share-card/index",
       "hostRoutes": [
         "pages/activity/official-detail/index",
@@ -437200,7 +437072,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChannel",
-        "line": 55,
+        "line": 42,
         "selectorHint": ".sc-ch-i",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -437257,7 +437129,135 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/share-card/index.js:125"
+        "staticSource": "components/cy/share-card/index.js:141"
+      }
+    },
+    {
+      "id": "components/cy/share-card/index.wxml:6:bindtap:close:1",
+      "route": "component:components/cy/share-card/index",
+      "hostRoutes": [
+        "pages/activity/official-detail/index",
+        "pages/member/index/index",
+        "pages/roam/index",
+        "pages/topic/index/index",
+        "pages/userinfo/userinfo"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/activity/official-detail/index",
+          "segments": [
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/index/index",
+          "segments": [
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "cy-share-card",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/share-card/index.wxml",
+        "js": "components/cy/share-card/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "close",
+        "line": 6,
+        "selectorHint": ".sc-x",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭分享",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/share-card/index.js:128"
       }
     },
     {
@@ -1275792,7 +1275792,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:52:bindtap:saveCard:5",
+      "id": "subpackageJourney/pages/settle/index.wxml:53:bindtap:saveCard:5",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1275820,8 +1275820,8 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveCard",
-        "line": 52,
-        "selectorHint": "cy-btn[bindtap]",
+        "line": 53,
+        "selectorHint": ".st-acts__i",
         "visibleCondition": null,
         "disabledCondition": "{{!cardReady}}",
         "ariaLabel": null,
@@ -1275875,11 +1275875,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:136"
+        "staticSource": "subpackageJourney/pages/settle/index.js:150"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:53:bindtap:shareVideo:6",
+      "id": "subpackageJourney/pages/settle/index.wxml:54:bindtap:shareVideo:6",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1275902,8 +1275902,8 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "shareVideo",
-        "line": 53,
-        "selectorHint": "cy-btn[bindtap]",
+        "line": 54,
+        "selectorHint": ".st-acts__i",
         "visibleCondition": "{{videoOk}}",
         "disabledCondition": "{{!cardReady || videoBusy}}",
         "ariaLabel": null,
@@ -1275942,11 +1275942,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:153"
+        "staticSource": "subpackageJourney/pages/settle/index.js:167"
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:59:bindtap:goRank:7",
+      "id": "subpackageJourney/pages/settle/index.wxml:61:bindtap:goRank:7",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1275969,7 +1275969,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goRank",
-        "line": 59,
+        "line": 61,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1276013,7 +1276013,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:60:bindtap:done:8",
+      "id": "subpackageJourney/pages/settle/index.wxml:62:bindtap:done:8",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1276036,7 +1276036,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "done",
-        "line": 60,
+        "line": 62,
         "selectorHint": ".st-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1276081,7 +1276081,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:63:bindtap:next:9",
+      "id": "subpackageJourney/pages/settle/index.wxml:65:bindtap:next:9",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1276104,7 +1276104,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "next",
-        "line": 63,
+        "line": 65,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1276148,7 +1276148,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:66:bindtap:submitRate:10",
+      "id": "subpackageJourney/pages/settle/index.wxml:68:bindtap:submitRate:10",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1276171,7 +1276171,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitRate",
-        "line": 66,
+        "line": 68,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!stars || rateBusy}}",
@@ -1276351,7 +1276351,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:67:bindtap:skipRate:11",
+      "id": "subpackageJourney/pages/settle/index.wxml:69:bindtap:skipRate:11",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1276374,7 +1276374,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "skipRate",
-        "line": 67,
+        "line": 69,
         "selectorHint": ".st-link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1276621,7 +1276621,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:70:bindtap:done:12",
+      "id": "subpackageJourney/pages/settle/index.wxml:72:bindtap:done:12",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1276644,7 +1276644,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "done",
-        "line": 70,
+        "line": 72,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1276689,7 +1276689,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/settle/index.wxml:75:bind:settled:onPrivacyGateSettled:13",
+      "id": "subpackageJourney/pages/settle/index.wxml:77:bind:settled:onPrivacyGateSettled:13",
       "route": "subpackageJourney/pages/settle/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1276712,7 +1276712,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 75,
+        "line": 77,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1276752,7 +1276752,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/settle/index.js:135"
+        "staticSource": "subpackageJourney/pages/settle/index.js:149"
       }
     },
     {
