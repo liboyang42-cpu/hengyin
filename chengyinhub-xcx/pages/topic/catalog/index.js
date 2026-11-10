@@ -19,7 +19,6 @@ Page({
     cards: [],
     loading: true,
     loadingMore: false,
-    hasMore: false,
     error: '',
     moreError: ''
   },
@@ -70,7 +69,8 @@ Page({
   reload(done) {
     const seq = this._listSeq = (this._listSeq || 0) + 1
     this._pageNum = 1
-    this.setData({ loading: true, error: '', moreError: '', hasMore: false })
+    this._hasMore = false // 只给 loadMore 判断,不渲染
+    this.setData({ loading: true, error: '', moreError: '' })
     this.post('/api/public-catalog/list', catalog.buildQuery(this.data.selected, { pageNum: 1, pageSize: PAGE_SIZE }),
       (patch) => { if (seq === this._listSeq) this.setData({ loading: false, error: patch.error }) }).then((res) => {
       if (seq !== this._listSeq) { if (typeof done === 'function') done(); return }
@@ -80,17 +80,15 @@ Page({
         this.setData({ loading: false, error: res.netFail ? '网络异常，请重试' : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '目录加载失败')) || '目录加载失败') })
       } else {
         const cards = catalog.cardList(page.rows)
-        this.setData({
-          loading: false, cards,
-          hasMore: page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE
-        })
+        this._hasMore = page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE
+        this.setData({ loading: false, cards })
       }
       if (typeof done === 'function') done()
     })
   },
 
   loadMore() {
-    if (this.data.loading || this.data.loadingMore || !this.data.hasMore) return
+    if (this.data.loading || this.data.loadingMore || !this._hasMore) return
     const seq = this._listSeq
     const next = (this._pageNum || 1) + 1
     this.setData({ loadingMore: true, moreError: '' })
@@ -103,8 +101,8 @@ Page({
       const seen = {}
       this.data.cards.forEach((c) => { seen[c.id] = true })
       const cards = this.data.cards.concat(catalog.cardList(page.rows).filter((c) => !seen[c.id]))
-      this.setData({ loadingMore: false, cards,
-        hasMore: page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE })
+      this._hasMore = page.total != null && cards.length < page.total && page.rows.length >= PAGE_SIZE
+      this.setData({ loadingMore: false, cards })
     })
   },
 

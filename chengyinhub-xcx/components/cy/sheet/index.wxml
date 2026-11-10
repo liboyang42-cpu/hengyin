@@ -9,7 +9,7 @@
           catchtouchstart="{{gs.sheetStart}}" catchtouchmove="{{gs.sheetMove}}"
           catchtouchend="{{gs.sheetEnd}}" catchtouchcancel="{{gs.sheetEnd}}"
           data-panel=".sh__panel" data-root=".sh" data-dragcls="sh--dragging" data-off="{{_closing}}"
-          data-blocked="{{!maskClosable || dirty}}" data-rm="{{reducedMotion}}" data-wh="{{_winH}}"
+          data-blocked="{{!maskClosable || dirty}}" data-rm="{{reducedMotion}}" data-whsel=".sh__mask"
           aria-label="向下拖动关闭当前面板">
       <view class="sh__handle"></view>
     </view>
@@ -34,7 +34,7 @@
           bindtouchstart="{{gs.sheetStart}}" catchtouchmove="{{gs.sheetMove}}"
           bindtouchend="{{gs.sheetEnd}}" bindtouchcancel="{{gs.sheetEnd}}"
           data-panel=".sh__panel" data-root=".sh" data-dragcls="sh--dragging" data-off="{{_closing}}"
-          data-blocked="{{!maskClosable || dirty}}" data-rm="{{reducedMotion}}" data-wh="{{_winH}}">
+          data-blocked="{{!maskClosable || dirty}}" data-rm="{{reducedMotion}}" data-whsel=".sh__mask">
       <view class="sh__title {{closable ? 'sh__title--closable' : ''}}">{{title}}</view>
       <view class="sh__close" wx:if="{{closable}}" bindtap="onClose" data-testid="sheet-close" aria-role="button" aria-label="{{closeLabel}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{closeIcon}}" size="{{closeIconSize}}" /></view>
     </view>

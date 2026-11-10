@@ -24,7 +24,7 @@ Component({
     loop: { type: Boolean, value: true },    // 待机往复
     reducedMotion: { type: null, value: null }, // 宿主已知时传入;不传则读系统 + 应用内开关
   },
-  data: { kind: 'clue', label: '', blob: '', fg: '', on: false, idle: false, reduced: false, enter: 'pop', idleKind: 'float' },
+  data: { kind: 'clue', blob: '', fg: '', on: false, idle: false, reduced: false, enter: 'pop', idleKind: 'float' },
   lifetimes: {
     attached() { this._paint(); this._start(); },
     detached() { this._stop(); },
@@ -36,7 +36,7 @@ Component({
   methods: {
     _paint() {
       const l = art.layers(this.properties.name, this.properties.n);
-      this.setData({ kind: l.name, label: l.label, blob: l.blob, fg: l.fg, enter: ENTER[l.name] || 'pop', idleKind: IDLE[l.name] || 'float' });
+      this.setData({ kind: l.name, blob: l.blob, fg: l.fg, enter: ENTER[l.name] || 'pop', idleKind: IDLE[l.name] || 'float' });
     },
     _isReduced() {
       const r = this.properties.reducedMotion;

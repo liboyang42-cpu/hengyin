@@ -61,7 +61,7 @@ Component({
     card: { type: Object, value: {} },
   },
   data: {
-    statusBarHeight: 20, kind: 'theme', label: '主题', heading: '分享主题', title: '', meta: '', cover: '', eyebrow: '主题', sub: '',
+    statusBarHeight: 20, kind: 'theme', heading: '分享主题', title: '', cover: '', eyebrow: '主题', sub: '',
     steps: [], inviterText: '', art: '',
     colors: KINDS.theme.colors, colorIndex: 0, bg: KINDS.theme.colors[0], qr: '', channels: CHANNELS,
   },
@@ -77,11 +77,11 @@ Component({
       const stops = (Array.isArray(c.stops) ? c.stops : []).filter(Boolean).slice(0, 5);
       const text = cardText(kind, c.meta || '', c.date || '', c.when || '', stops);
       const givenQr = kind === 'invite' && c.qr ? (app.getImgUrl ? app.getImgUrl(c.qr) : c.qr) : '';
+      this._meta = c.meta || ''; // 只给复制文案用,不渲染
       enter(this, 'scIn');
       this.setData({
         statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
-        kind, label: KINDS[kind].label, heading: kind === 'invite' ? '邀请好友' : '分享' + KINDS[kind].label, title: c.title || KINDS[kind].label,
-        meta: c.meta || '',
+        kind, heading: kind === 'invite' ? '邀请好友' : '分享' + KINDS[kind].label, title: c.title || KINDS[kind].label,
         cover: c.cover && app.getImgUrl ? app.getImgUrl(c.cover) : (c.cover || ''),
         eyebrow: text.eyebrow, sub: text.sub,
         steps: kind === 'invite' ? stops.slice(0, 3) : [],
@@ -159,7 +159,7 @@ Component({
 
   _shareText() {
     if (this.data.kind === 'invite') return (this.data.inviterText ? this.data.inviterText + ' · ' : '') + this.data.title + '\n微信搜索「城瘾」小程序';
-    return this.data.title + (this.data.meta ? ' · ' + this.data.meta : '') + '\n微信搜索「城瘾」小程序';
+    return this.data.title + (this._meta ? ' · ' + this._meta : '') + '\n微信搜索「城瘾」小程序';
   },
 
   onChannel(e) {
