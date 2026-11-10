@@ -10,6 +10,7 @@ const cyToast = require('../../../utils/toast.js');
 const cyModal = require('../../../utils/modal.js');
 const { ALBUM_SAVE, classifyAlbumSaveError } = require('../../../utils/album-save-outcome.js');
 const { tintFromPixels } = require('../../../utils/share-tint.js');
+const { fitRows } = require('../../../utils/share-lines.js');
 
 const KINDS = {
   activity: { label: '活动', colors: ['#5A3426', '#8E6430', '#1E2A24', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿) */
@@ -46,7 +47,7 @@ Component({
     card: { type: Object, value: {} },
   },
   data: {
-    statusBarHeight: 20, kind: 'theme', label: '主题', title: '', meta: '', cover: '', date: '', when: '', stops: [], eyebrow: '主题', sub: '',
+    statusBarHeight: 20, kind: 'theme', label: '主题', title: '', meta: '', cover: '', eyebrow: '主题', sub: '',
     colors: KINDS.theme.colors, colorIndex: 0, bg: KINDS.theme.colors[0], qr: '', channels: CHANNELS,
   },
   observers: {
@@ -63,9 +64,9 @@ Component({
       this.setData({
         statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
         kind, label: KINDS[kind].label, title: c.title || KINDS[kind].label,
-        meta: c.meta || '', date: c.date || '', when: c.when || '',
+        meta: c.meta || '',
         cover: c.cover && app.getImgUrl ? app.getImgUrl(c.cover) : (c.cover || ''),
-        stops, eyebrow: text.eyebrow, sub: text.sub,
+        eyebrow: text.eyebrow, sub: text.sub,
         colors: KINDS[kind].colors, colorIndex: 0, bg: KINDS[kind].colors[0], qr: '',
       });
       this._loadCode();
@@ -236,14 +237,7 @@ Component({
       // 两行大标题(按宽度折行,第二行放不下加省略号)
       g.fillStyle = '#FFFFFF'; g.font = '900 72px sans-serif'; /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */
       const maxW = W - 108;
-      const rows = [''];
-      let more = false;
-      Array.from(String(d.title || '')).some((ch) => {
-        const i = rows.length - 1;
-        if (rows[i] && g.measureText(rows[i] + ch).width > maxW) { if (i === 1) { more = true; return true; } rows.push(ch); } else rows[i] += ch;
-        return false;
-      });
-      if (more) { let t = rows[1]; while (t.length > 1 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1); rows[1] = t + '…'; }
+      const rows = fitRows(d.title, (t) => g.measureText(t).width, maxW, 2);
       let ty = 776;
       rows.forEach((r) => { g.fillText(r, mx, ty); ty += 88; });
       if (d.sub) { g.fillStyle = 'rgba(255,255,255,.78)'; g.font = '32px sans-serif'; g.fillText(line(d.sub, W - 108), mx, ty); } /* ds-ok canvas 导出图(画布读不到 CSS token,与预览同色) */

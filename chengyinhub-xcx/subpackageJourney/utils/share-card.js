@@ -1,5 +1,7 @@
 'use strict';
 
+const { fitRows } = require('../../utils/share-lines.js');
+
 /* r2-finish 结算分享卡:只画服务端事实(主题名、结果、节点、分数、名次);没有的行不画。
  * 帖文 4:5、故事 9:16。纯函数 cardLines 可单测;draw 在 2d canvas 上画一帧(t=0..1 时为动画帧,供视频录制)。 */
 
@@ -29,19 +31,6 @@ function rrect(ctx, x, y, w, h, r) {
 }
 
 function clamp01(v) { return Math.max(0, Math.min(1, v)); }
-
-// 两行折行,第二行放不下加省略号
-function twoLines(ctx, text, maxW) {
-  const rows = [''];
-  let more = false;
-  Array.from(text || '').some((ch) => {
-    const i = rows.length - 1;
-    if (rows[i] && ctx.measureText(rows[i] + ch).width > maxW) { if (i === 1) { more = true; return true; } rows.push(ch); } else rows[i] += ch;
-    return false;
-  });
-  if (more) { let t = rows[1]; while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1); rows[1] = t + '…'; }
-  return rows.filter(Boolean);
-}
 
 function draw(ctx, w, h, card, t, logo) {
   const p = t == null ? 1 : clamp01(t);
@@ -83,16 +72,16 @@ function draw(ctx, w, h, card, t, logo) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   let y = by + base / 2 + w * 0.06 + rise;
   if (card.kicker) {
-    ctx.font = '600 ' + Math.round(w * 0.04) + 'px sans-serif';
-    const cw = ctx.measureText(card.kicker).width + w * 0.07; const ch = w * 0.077;
+    ctx.font = '600 ' + Math.round(w * 0.045) + 'px sans-serif';
+    const cw = ctx.measureText(card.kicker).width + w * 0.07; const ch = w * 0.085;
     ctx.fillStyle = 'rgba(255,255,255,.16)'; rrect(ctx, cx - cw / 2, y, cw, ch, ch / 2); ctx.fill(); /* ds-ok 分享图画面色,导出图片不随主题 */
     ctx.fillStyle = 'rgba(255,255,255,.86)'; ctx.fillText(card.kicker, cx, y + ch / 2); /* ds-ok 分享图画面色,导出图片不随主题 */
     y += ch + w * 0.045;
   }
   const fs = Math.round(w * 0.085);
   ctx.fillStyle = '#FFFFFF'; ctx.font = '900 ' + fs + 'px sans-serif'; /* ds-ok 分享图画面色,导出图片不随主题 */
-  twoLines(ctx, card.title, w * 0.84).forEach((ln) => { ctx.fillText(ln, cx, y + fs * 0.6); y += fs * 1.22; });
-  if (card.meta) { ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.font = Math.round(w * 0.042) + 'px sans-serif'; ctx.fillText(card.meta, cx, y + w * 0.04); } /* ds-ok 分享图画面色,导出图片不随主题 */
+  fitRows(card.title, (x) => ctx.measureText(x).width, w * 0.84, 2).forEach((ln) => { ctx.fillText(ln, cx, y + fs * 0.6); y += fs * 1.22; });
+  if (card.meta) { ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.font = Math.round(w * 0.05) + 'px sans-serif'; ctx.fillText(card.meta, cx, y + w * 0.045); } /* ds-ok 分享图画面色,导出图片不随主题 */
   ctx.globalAlpha = 1;
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#FFFFFF'; ctx.font = '800 ' + Math.round(w * 0.05) + 'px sans-serif'; ctx.fillText('城瘾', cx, h - w * 0.06); /* ds-ok 分享图画面色,导出图片不随主题 */

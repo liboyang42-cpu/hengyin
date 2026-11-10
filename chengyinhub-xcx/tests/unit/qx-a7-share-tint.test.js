@@ -54,7 +54,7 @@ test('分享层:导出图标题与眉题按宽度截断加省略号,不再按字
   const js = read('components/cy/share-card/index.js')
   assert.doesNotMatch(js, /d\.title\.slice\(/)
   // r3-share 改版:四种卡同一版式,标题按宽度折两行、第二行放不下加省略号;眉题胶囊按宽度截断
-  assert.match(js, /if \(more\) \{ let t = rows\[1\]; while \(t\.length > 1 && g\.measureText\(t \+ '…'\)\.width > maxW\)/)
+  assert.match(js, /const rows = fitRows\(d\.title, \(t\) => g\.measureText\(t\)\.width, maxW, 2\);/)
   assert.match(js, /const eb = line\(d\.eyebrow, W - 160\);/)
   assert.match(js, /if \(kind === 'shop'\) return \{ eyebrow: '店铺'/)
   assert.match(read('components/cy/share-card/index.wxss'), /\.sc-eb \{[^}]*white-space: nowrap; overflow: hidden; text-overflow: ellipsis;/)
