@@ -4,8 +4,7 @@
 const cyModal = require('../../utils/modal.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
-const motion = require('../../utils/motion.js');
-const pageMotion = require('../../utils/page-motion.js');   // r4-motion:HUD 行入场(MOTION.md 4.1)
+const motion = require('../../utils/motion.js'); const pageMotion = require('../../utils/page-motion.js'); // r4-motion:HUD 行入场(MOTION.md 4.1)
 const app = getApp();
 const discoverNav = require('../../utils/discover-nav.js');
 const bgTracker = require('../../utils/location/bg-tracker.js');
@@ -524,8 +523,7 @@ Page({
     // 导航态顶部条的第二行。⚠️ 全部是「预计」:没有导航 SDK,只能按直线距离 + 步行速度估。
     navMeta: { km: '0.0', dur: '—', eta: '—' },
     chapter: { idxLabel: '第一章', name: '', description: '', cover: '', mileage: '', timeText: '', atmospherePreset: 'DEFAULT', atmosphereClass: 'atmosphere--default' },
-    previewEnding: { show: false, list: [], idx: 0 },
-    pmHud: 0,   // r4-motion:HUD 行入场(page-motion --pm 变量)
+    previewEnding: { show: false, list: [], idx: 0 }, pmHud: 0,   // pmHud:r4-motion HUD 行入场(page-motion --pm 变量)
     bootStage: '',   // 开局「开机」动画的阶段(on/line/open/fade),空 = 不显示   // W-15 试玩末尾的结局卡(只在预览出现)
     chapterCards: [], /* 横滑章节卡(buildChapterCards) */ lookClass: themeLook.lookClass(null), lookTransition: themeLook.resolveTransition(null), /* 主题画面风格(/api/play/nodes 的 look) */
     // mode2(自由探索)首屏:卡包 → 六宫格。动画标志位只驱动 WXSS class,不参与业务判定。
@@ -3907,8 +3905,7 @@ Page({
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
     this._pushStoryTasks(items, nodes, blocks, readOnly, curMood);   // V3-15:故事流只放故事,没写内容不再补一句系统提示;延伸任务收进一行入口
     if (!readOnly && claims.length) this._claimThoughts(claims);
-    audioSession.keepAwake('chapterFull', true);
-    pageMotion.enter(this, 'pmHud', { once: true });   // MOTION.md 4.1:故事屏第一次亮起时 HUD 行(生命值 / 背包 → 角色属性)从上方错峰落下,刷新不重播
+    audioSession.keepAwake('chapterFull', true); pageMotion.enter(this, 'pmHud', { once: true }); // MOTION.md 4.1:故事屏第一次亮起时 HUD 行(生命值 / 背包 → 角色属性)从上方错峰落下,刷新不重播
     this.setData({
       chapterFull: true,
       chapterParas: items.map((item, i) => Object.assign({
@@ -7185,7 +7182,8 @@ Page({
     }
     const node = nodes.find((n) => n.nodeId === nodeId) || {};
     const score = Number(data && (data.xp != null ? data.xp : data.score));
-    // M14(MOTION.md 4.2):到站 = 一次 confirm(medium);原来的双震收成一下。彩蛋 tap / 券 hit 分级不动
+    // M14(MOTION.md 4.2):到站 = 一次 confirm(medium);原来的双震收成一下。
+    // 彩蛋 tap / 券 hit 分级不动
     motion.hapticConfirm();
     // 飞字(双轨文案:探索值升等级,区别于可抵现积分)
     if (Number.isFinite(score) && score > 0 && data.firstTime !== false) {
