@@ -2,6 +2,8 @@
 
 BRIEF.md and ROUND2.md (global rules) stay binding. Each design lane here **stacks on a round-2 lane**: it waits for that lane's `RESULT.md` to have a `STATUS: ` line, branches from its branch, and opens a draft PR into it. RESULT.md in Simplified Chinese, shots under `r3-<lane>/shots/`, last line STATUS.
 
+**Motion system (binding for every design lane from now on): `MOTION.md`** (tokens, primitives M1–M18, per-moment timelines, package/gate rules — no new `@keyframes`: the ratchet is fixed at 146). **`IMPACT.md`** ranks the 30 highest-impact page changes and names the owning lane; do the rows for your lane. Re-fetch the brief branch before you start coding.
+
 All references are in `refs4/`. Look at every frame. Copy motion and structure, keep 城瘾 styling (dark player, `--cy-*` tokens); never copy names, art or copy. Respect reduced motion; transforms/opacity first; `canvas type="2d"` only where needed; keep the main package < 2048 KiB.
 
 Interaction-pattern sites the owner named (React web libraries; patterns only, nothing to install): **uiarc.dev** (morph select that grows into a list, elastic slider that stretches past its ends, toast stack that fans, kanban cards that lift/tilt/spring) and **detentui.com** (region wheel, upload, rewind inputs).
