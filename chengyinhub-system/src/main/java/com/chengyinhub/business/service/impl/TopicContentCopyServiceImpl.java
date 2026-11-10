@@ -207,7 +207,7 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
                 || StringUtils.isBlank(frozen)
                 || !Objects.equals(revision.getContentSha256(),
                     com.chengyinhub.business.service.support.CanonicalDigest.sha256Hex(frozen))
-                || !Objects.equals(frozen, source.getPublishedRouteGraphJson())) {
+                || !sameJsonDocument(frozen, source.getPublishedRouteGraphJson())) {
             throw new IllegalArgumentException("来源修订与当前发布快照不一致");
         }
         try {
@@ -888,5 +888,23 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
         private final Map<Long, Long> oldToNew = new LinkedHashMap<Long, Long>();
         /** 与本次复制同一 fence 下读到的来源节点，供地点要求推导与绑定重映射使用。 */
         private List<CmsTopicNode> sourceNodes = Collections.emptyList();
+    }
+
+    /**
+     * 发布头 {@code published_route_graph_json} 是 MySQL JSON 列:读回的是库规范化后的文本(键重排、加空格),
+     * 与修订里逐字保存的 snapshot 永远不会逐字相等。这里按 JSON 文档语义比较(同键同值同顺序数组),
+     * 内容一处不同仍判不一致;任一侧解析失败一律当不一致,不放宽。
+     */
+    static boolean sameJsonDocument(String frozen, String published) {
+        if (frozen == null || published == null) return false;
+        if (frozen.equals(published)) return true;
+        try {
+            ObjectMapper json = new ObjectMapper();
+            JsonNode left = json.readTree(frozen);
+            JsonNode right = json.readTree(published);
+            return left != null && right != null && !left.isMissingNode() && left.equals(right);
+        } catch (Exception unreadable) {
+            return false;
+        }
     }
 }

@@ -122,6 +122,8 @@ const EXPECTED_NAV_ROUTES = [
   /* 2026-09-22 Phase 0 物品卡实验室页:custom 导航 + cy-nav-bar,顶栏只有返回钮。 */
   /* 2026-09-22 Phase 3 藏品册页:同上,custom 导航 + cy-nav-bar。 */
   'subpackageP3/pages/object-cards/index/index',
+  // 2026-11-10 qx-b4(qx-c3 补登):固定玩法预设 pages/publish/preset,custom 导航 + cy-nav-bar + 无条件 cy-page-title
+  'pages/publish/preset/index',
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
@@ -194,6 +196,8 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   /* 2026-09-22 Phase 0 物品卡实验室页:普通玩家二级页,左对齐大标题「立体藏品卡」由 cy-page-title 出。 */
   /* 2026-09-22 Phase 3 藏品册页:普通玩家二级页,左对齐大标题「藏品册」由 cy-page-title 出。 */
   // 2026-10-30 业主定稿 P-3:集邮册、藏品册成了「收集册」两段,大标题由 album-head 组件给,不再用 cy-page-title。
+  // 2026-11-10 qx-b4(qx-c3 补登):固定玩法预设 pages/publish/preset,custom 导航 + cy-nav-bar + 无条件 cy-page-title
+  'pages/publish/preset/index',
 ]
 
 // 2026-09-03 入职流重做:apply 与 create 统一成 cy-nav-bar + cy-h1 的向导形态,
@@ -330,8 +334,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-30 V-24 +1:主题模板详情 topic-detail(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 158;custom 157。
   // 2026-10-29 −1:「动态」二级页 pages/square/list 删除(custom 导航)⇒ 157 → 156;custom 156 → 155。
   // 2026-10-31 dw29 发布集成:两边叠加(topic-detail +1、square/list −1)⇒ 157;custom 156。
-  assert.equal(rows.length, 157, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 156)
+  // 2026-11-10 qx-b4 +1(custom 导航):固定玩法预设 pages/publish/preset ⇒ 158;custom 157。
+  assert.equal(rows.length, 158, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 157)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

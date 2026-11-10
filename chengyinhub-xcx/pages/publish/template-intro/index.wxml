@@ -40,6 +40,8 @@
       <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">
         开始创建
       </cy-btn>
+      <!-- qx-b4 §21:固定玩法预设起一个个人草稿;预设草稿只属于登录本人,商家岗位不出 -->
+      <cy-btn wx:if="{{operationScope !== 'MERCHANT'}}" class="ti-preset" variant="ghost" style="width:100%" disabled="{{navigating}}" bindtap="goPreset">从预设开始</cy-btn>
     </view>
   </view>
 </view>

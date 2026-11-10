@@ -104,6 +104,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/publish/activity/index` | 否 | `chengyinhub-xcx/pages/merchant/decor/index.js:902` | KEEP |
 | `pages/publish/topicadd/topicadd` | 否 | 无直接源引用；兼容契约/外发历史待确认 | UNSURE |
 | `pages/publish/template-intro/index` | 否 | `chengyinhub-xcx/components/cy/publish-sheet/index.js:84` | KEEP |
+| `pages/publish/preset/index` | 否 | `chengyinhub-xcx/pages/publish/template-intro/index.js:289` | KEEP |
 | `pages/club/apply/index` | 否 | `chengyinhub-xcx/pages/club/create/index.js:184` | KEEP |
 | `pages/club/badges/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2377` | KEEP |
 | `pages/club/create/index` | 否 | `chengyinhub-xcx/pages/club/apply/index.js:370` | KEEP |

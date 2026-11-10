@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "location-todos": "/pages/publish/components/location-todos/index",
     "cy-list-group": "/pages/publish/components/list-group/index",
     "cy-list-row": "/pages/publish/components/list-row/index",
     "cy-sheet-nav": "/pages/publish/components/sheet-nav/index",

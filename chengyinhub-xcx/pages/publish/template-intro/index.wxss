@@ -77,6 +77,7 @@ page { background: var(--cy-color-bg-page); }
 /* 主 CTA:通栏,严格走黑白系(--cy-btn-solid-*,暗端=白底黑字);圆圈从它后面、屏幕底边外进屏 */
 .ti-cta { position: relative; z-index: 2; padding-top: var(--cy-space-4); animation: ti-rise var(--cy-motion-slow) var(--cy-ease-out) var(--cy-motion-slow) both; }
 .ti-cta > cy-inline-error { display: block; margin-bottom: var(--cy-space-2); }
+.ti-preset { display: block; margin-top: var(--cy-space-2); }
 
 /* 换页染色 */
 .ti-wash {

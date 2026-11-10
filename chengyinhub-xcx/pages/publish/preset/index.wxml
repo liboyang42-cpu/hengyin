@@ -1,0 +1,77 @@
+<!-- §21 固定玩法预设:列表 → 填写 → 已建草稿。结构照队伍详情页(team-page:标题 + 卡片 + 行) -->
+<view class="pp theme-topic-editor" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar back />
+
+  <cy-page-title title="{{stage === 'list' ? '从预设开始' : (stage === 'form' ? preset.title : '草稿已建好')}}" safe-top="{{false}}" flush="{{true}}" />
+  <block wx:if="{{stage === 'list'}}">
+    <cy-skeleton wx:if="{{loading}}" type="list" count="4" loading-label="正在读取预设" />
+    <cy-inline-error wx:elif="{{loadError}}" load-failure title="预设没有读到" sub="{{loadError}}" action="重试" bind:action="load" />
+    <cy-empty wx:elif="{{!rows.length}}" kind="empty" title="暂无预设" />
+    <view wx:else class="pp-card">
+      <view class="pp-row" wx:for="{{rows}}" wx:key="presetKey" data-key="{{item.presetKey}}" bindtap="openPreset"
+            aria-role="button" aria-label="{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="pp-row__main">
+          <text class="pp-row__t">{{item.title}}</text>
+          <text class="pp-row__d ep2">{{item.purpose}}</text>
+        </view>
+        <cy-icon name="chevron-right" size="28" />
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{stage === 'form'}}">
+    <view class="pp-card">
+      <view class="pp-field" wx:for="{{form}}" wx:key="key" wx:for-item="f">
+        <text class="pp-label">{{f.label}}</text>
+        <input wx:if="{{f.kind === 'text'}}" class="pp-input {{f.missing ? 'is-bad' : ''}}" value="{{f.value}}" maxlength="{{f.maxLength}}" data-key="{{f.key}}" bindinput="onText" bindblur="onTextDone" placeholder="待填" aria-label="{{f.label}}" />
+        <input wx:elif="{{f.kind === 'number'}}" class="pp-input {{f.missing ? 'is-bad' : ''}}" type="number" value="{{f.value}}" data-key="{{f.key}}" bindinput="onText" bindblur="onTextDone" placeholder="{{f.hint || '待填'}}" aria-label="{{f.label}}" />
+        <view wx:elif="{{f.kind === 'choice'}}" class="pp-opts">
+          <view class="pp-opt {{o.on ? 'is-on' : ''}}" wx:for="{{f.options}}" wx:for-item="o" wx:key="id" data-key="{{f.key}}" data-id="{{o.id}}" bindtap="onChoice"
+                aria-role="radio" aria-checked="{{o.on}}" aria-label="{{o.label}}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="pp-opt__t ep1">{{o.label}}</text><view class="pp-dot" aria-hidden="true"></view>
+          </view>
+        </view>
+        <view wx:elif="{{f.kind === 'order'}}" class="pp-opts">
+          <view class="pp-ord" wx:for="{{f.items}}" wx:for-item="o" wx:for-index="i" wx:key="id">
+            <text class="pp-ord__no">{{i + 1}}</text>
+            <text class="pp-opt__t ep1">{{o.label}}</text>
+            <view class="pp-mv {{i === 0 ? 'is-off' : ''}}" data-key="{{f.key}}" data-index="{{i}}" data-delta="-1" bindtap="onMove" aria-role="button" aria-label="上移 {{o.label}}" aria-disabled="{{i === 0}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="collapse" size="28" /></view>
+            <view class="pp-mv {{i === f.items.length - 1 ? 'is-off' : ''}}" data-key="{{f.key}}" data-index="{{i}}" data-delta="1" bindtap="onMove" aria-role="button" aria-label="下移 {{o.label}}" aria-disabled="{{i === f.items.length - 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="expand" size="28" /></view>
+          </view>
+        </view>
+        <view wx:elif="{{f.kind === 'bin_map'}}" class="pp-opts">
+          <view class="pp-bin" wx:for="{{f.items}}" wx:for-item="o" wx:key="id">
+            <text class="pp-opt__t ep1">{{o.label}}</text>
+            <view class="pp-seg">
+              <view class="pp-seg__b {{b.on ? 'is-on' : ''}}" wx:for="{{o.bins}}" wx:for-item="b" wx:key="id" data-key="{{f.key}}" data-item="{{o.id}}" data-bin="{{b.id}}" bindtap="onBin"
+                    aria-role="radio" aria-checked="{{b.on}}" aria-label="{{o.label}} 归 {{b.label}}" hover-class="cy-pressed" hover-stay-time="80">{{b.label}}</view>
+            </view>
+          </view>
+        </view>
+        <text class="pp-miss" wx:if="{{f.missing}}">必填</text>
+      </view>
+    </view>
+    <view class="pp-sec" wx:if="{{todos.length}}">还要自己做</view>
+    <view class="pp-card" wx:if="{{todos.length}}">
+      <view class="pp-todo" wx:for="{{todos}}" wx:key="*this"><text class="pp-todo__no">{{index + 1}}</text><text class="pp-todo__t">{{item}}</text></view>
+    </view>
+    <text class="pp-err" wx:if="{{submitError}}" aria-role="alert">{{submitError}}</text>
+    <view class="pp-actions">
+      <view class="pp-btn secondary" bindtap="backToList" aria-role="button" aria-label="换一个预设" hover-class="cy-pressed" hover-stay-time="80">换一个</view>
+      <cy-btn class="pp-btn-main" variant="primary" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">{{unknown ? '查询原请求' : '建草稿'}}</cy-btn>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="pp-sec" wx:if="{{todos.length}}">还要自己做</view>
+    <view class="pp-card" wx:if="{{todos.length}}">
+      <view class="pp-todo" wx:for="{{todos}}" wx:key="*this"><text class="pp-todo__no">{{index + 1}}</text><text class="pp-todo__t">{{item}}</text></view>
+    </view>
+    <view class="pp-actions">
+      <cy-btn class="pp-btn-main" variant="primary" bindtap="openDraft">去编辑草稿</cy-btn>
+    </view>
+  </block>
+</view>

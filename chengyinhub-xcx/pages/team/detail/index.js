@@ -1,3 +1,4 @@
+const teamSeats = require('../utils/team-seats.js');
 const cyToast = require('../../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
@@ -29,6 +30,7 @@ Page({
     navBarHeight: app.globalData.navBarHeight,
     commandRecovery: null, recoveryShown: false, commandReject: null,
     applicants: [], applicantsState: '',
+    seatRows: [], inviteText: '',
     board: null,
     boardState: '',
     boardMessage: '',
@@ -192,6 +194,9 @@ Page({
             statusText: STATUS_TEXT[team.status] || '状态未知',
             expireText: that.formatTime(team.expireTime),
             joinModePublic: team.joinMode == 2,
+            // U06-01:席位与邀请期限只回放服务端投影;缺字段整行不画
+            seatRows: teamSeats.seatRows(res.data.seats),
+            inviteText: teamSeats.inviteText(res.data.invite),
             error: '',
             errorSub: ''
           });

@@ -23,3 +23,21 @@
 .cap-stop__do { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); }
 .cap-stop__dur { display: flex; align-items: center; gap: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
 .td-medal-img { width: 112rpx; height: 112rpx; flex: none; }
+
+/* U02-01 采用条件:沿用能力 tab 的 xb-caps 行,值是一句事实;待补充用三级字色 */
+.xb-block.td-cond-hd { padding-top: var(--cy-space-6); padding-bottom: 0; }
+.xb-caps.td-cond { margin-top: 0; }
+.td-cond-v { flex: 1; min-width: 0; font-size: var(--cy-font-body); line-height: 56rpx; color: var(--cy-text-title); }
+.td-cond-v.is-pending { color: var(--cy-text-tertiary); }
+
+/* U02-02 采用方式:照 cy-option-sheet 平列表(行高 56、发丝线、右侧单选圆点) */
+.ad { display: block; }
+.ad-row { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 112rpx; box-sizing: border-box; border-bottom: 1rpx solid var(--cy-comp-sheet-role-divider); }
+.ad-label { flex: 1; min-width: 0; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.ad-city { max-width: 300rpx; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+.ad-dot { flex: none; display: flex; align-items: center; justify-content: center; width: 40rpx; height: 40rpx; border-radius: var(--cy-radius-pill); box-sizing: border-box; border: 2rpx solid var(--cy-color-border-strong); }
+.ad-row.is-on .ad-dot { border-color: var(--cy-color-text-primary); background: var(--cy-color-text-primary); }
+.ad-row.is-on .ad-dot::after { content: ''; width: var(--cy-space-1-5); height: var(--cy-space-1-5); border-radius: var(--cy-radius-pill); background: var(--cy-color-text-inverse); }
+.ad-rebind { padding: var(--cy-space-3) 0 0; font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
+.ad-err { display: block; padding: var(--cy-space-2) 0 0; font-size: var(--cy-font-label); color: var(--cy-color-status-danger-on-interactive); }
+.td-credit { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
