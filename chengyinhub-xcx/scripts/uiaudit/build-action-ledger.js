@@ -470,12 +470,20 @@ const ACTION_VARIANTS = new Map([
       apis: ['/api/creativesquare/like'], writeApis: ['/api/creativesquare/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
       requiredRequests: [{ urlTemplate: '/api/creativesquare/like', method: 'POST', kind: 'write' }] },
   ]],
-  // 2026-11-09 qx-a6 W2-17:商家「发现」只读全站俱乐部帖文流(scope=all),点赞只会打俱乐部帖文接口。
+  // 2026-11-09 qx-a6 W2-17:商家「发现」读全站俱乐部帖文流(scope=all)。
+  // 2026-11-10 r2-merchant a6-w2-17:改与玩家发现页同一套合流(俱乐部帖文 + 社区帖文),点赞按帖子来源只打其中一个接口;
+  // 关注只打 /api/user/follow/action —— 与 talent/list 同口径。
   ['pages/merchant/relation/index.js:onLikePost', [
     { id: 'club-post', handler: 'onLikePost', predicate: { postSource: 'club' },
       apis: ['/api/club/post/like'], writeApis: ['/api/club/post/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
       requiredRequests: [{ urlTemplate: '/api/club/post/like', method: 'POST', kind: 'write' }] },
+    { id: 'community-post', handler: 'onLikePost', predicate: { postSource: 'community' },
+      apis: ['/api/creativesquare/like'], writeApis: ['/api/creativesquare/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/creativesquare/like', method: 'POST', kind: 'write' }] },
   ]],
+  ['pages/merchant/relation/index.js:onFollowPost', [{ id: null, handler: 'onFollowPost',
+    apis: ['/api/user/follow/action'], writeApis: ['/api/user/follow/action'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/user/follow/action', method: 'POST', kind: 'write' }] }]],
   ['pages/talent/list/index.js:onFollowPost', [{ id: null, handler: 'onFollowPost',
     apis: ['/api/user/follow/action'], writeApis: ['/api/user/follow/action'], effectClasses: ['write', 'state'], externalCapabilities: [],
     requiredRequests: [{ urlTemplate: '/api/user/follow/action', method: 'POST', kind: 'write' }] }]],

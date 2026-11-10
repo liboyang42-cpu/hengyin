@@ -8,6 +8,7 @@ const { firstCategoryName } = require('../../../utils/category-icon.js');
 // 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
 const discoverFeed = require('../../../utils/discover-feed.js');
 const postFeedActions = require('../../../utils/post-feed-actions.js'); const toast = require('../../../utils/toast.js');
+const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const FEED_PAGE_SIZE = 20;
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 
@@ -92,6 +93,12 @@ Page({
     feedSlow: false,     // 加载超过 400ms 才显示骨架,避免闪屏
     feedError: '',
     feedEmptyTitle: '还没有帖文',
+    // r2 a6-w2-17:商家也能发帖(社区写开关开着才出入口)
+    canCompose: false,
+    composerOpen: false,
+    myAvatar: '',
+    myNickname: '',
+    viewerId: '',
     // W2-17:全站流空态只写标题,不再有「合作过的俱乐部」副行
     // 从项目详情「找俱乐部」进来时带着主题:一路带到俱乐部主页,
     // 在那儿发起合作时主题已经定了,不用再选一遍
@@ -110,6 +117,9 @@ Page({
       statusBarHeight: sys.statusBarHeight || 20,
       navBarHeight: (getApp().globalData && getApp().globalData.navBarHeight) || 44,
       activeTab: (options && options.tab === 'club') ? 'club' : 'feed',
+      viewerId: String(app.getUserID() || ''),
+      myAvatar: (app.getAvatar && app.getAvatar()) || '',
+      myNickname: (app.getNickname && app.getNickname()) || '',
       topicId: (options && options.topicId) || '',
       topicName: (options && options.topicName) ? decodeURIComponent(options.topicName) : '',
     });
@@ -235,14 +245,17 @@ Page({
     });
   },
 
-  // 走查 v2 W2-17(业主):「合作」改「发现」,帖文看全站 —— 与玩家发现页同一条 scope=all 全站流,商家可点赞、评论。
-  // 回到本页(如从俱乐部返回)不重拉也不换 tab;有旧内容时刷新失败保留旧内容。loadMore 时 beforeId 取上一页最后一条。
+  // 走查 v2 W2-17(业主):「合作」改「发现」,帖文看全站。
+  // r2 a6-w2-17(业主「这里也应该是正常的帖文样式啊 … 商家也可以发的」):与玩家发现页(pages/talent/list)
+  // 同一条流 —— 俱乐部帖文 + 社区帖文按发布时间合成(utils/discover-feed.createFeedMerger),同一张卡同一套动作。
+  // 回到本页(如从俱乐部返回)不重拉也不换 tab;有旧内容时刷新失败保留旧内容;翻页失败不出错误文案。
   loadFeed(loadMore) {
     if (this._destroyed || this._feedLoading) return;
     const that = this, more = loadMore === true;
+    if (more && (!this._feedMerger || !this._feedHasMore)) return;
     const hasSnapshot = more || ['ready', 'empty', 'stale-error'].indexOf(this.data.feedState) >= 0;
-    const requestId = (this._feedRequestId || 0) + 1;
-    this._feedRequestId = requestId;
+    if (!more) this._feedRequestId = (this._feedRequestId || 0) + 1;
+    const ctx = { requestId: this._feedRequestId, more: more, hasSnapshot: hasSnapshot, done: false };
     this._feedLoading = true;
     if (!hasSnapshot) {
       this.setData({ feedState: 'loading', feedSlow: false, feedError: '' });
@@ -250,47 +263,106 @@ Page({
         if (that._feedLoading && !that._destroyed) that.setData({ feedSlow: true });
       }, 400);
     }
-    function isCurrent() { return !that._destroyed && requestId === that._feedRequestId; }
-    function finish() { clearTimeout(that._feedSlowTimer); that._feedLoading = false; }
-    function fail(res) {
-      if (!isCurrent()) return;
-      finish();
-      if (more) return;   // 翻页失败不出错误文案,游标不动,下次触底重试(与玩家发现页同口径)
-      that.setData({ feedState: hasSnapshot ? 'stale-error' : 'error', feedSlow: false,
-        feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试') });
+    this._feedCtx = ctx;
+    // 与玩家发现页同一道闸:社区开关还没读到时先读一次(app.loadFeatureFlags),再决定合不合社区帖文、出不出发帖入口
+    const gate = !more && typeof app.canUseCommunity === 'function' && !app.canUseCommunity(false)
+      && typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : Promise.resolve();
+    Promise.resolve(gate).then(function () {
+      if (!that._feedCurrent(ctx)) return null;
+      if (!more) {
+        // 发帖入口跟着服务端开关:社区写开着才出(app.canUseCommunity(true)),读开着才合社区帖文
+        that.setData({ canCompose: typeof app.canUseCommunity === 'function' && app.canUseCommunity(true) });
+        that._feedMerger = discoverFeed.createFeedMerger(that._feedSources());
+      }
+      return that._feedMerger.take(FEED_PAGE_SIZE);
+    }).then(function (page) {
+      if (!page || !that._feedCurrent(ctx)) return;
+      that._feedFinish(ctx);
+      that._feedHasMore = page.hasMore;
+      const feed = more ? that.data.feed.concat(page.rows) : page.rows;
+      that.setData({ feed: feed, feedState: feed.length ? 'ready' : 'empty', feedSlow: false, feedError: '' });
+    }, function (res) { that._onFeedFail(ctx, res); });
+  },
+
+  _feedCurrent(ctx) { return !!ctx && !this._destroyed && !ctx.done && ctx.requestId === this._feedRequestId; },
+  _feedFinish(ctx) { ctx.done = true; clearTimeout(this._feedSlowTimer); this._feedLoading = false; },
+
+  // 两路请求的 fail 与合流的 reject 都汇到这里,同一轮只落一次。首屏/刷新失败落 feedState=error/stale-error
+  // + feedError(页面 cy-error 呈现并给重试);翻页失败不出错误文案,没取到的那一路保留游标,下次触底重试。
+  _onFeedFail(ctx, res) {
+    if (!this._feedCurrent(ctx)) return;
+    this._feedFinish(ctx);
+    if (ctx.more) return;
+    this.setData({ feedState: ctx.hasSnapshot ? 'stale-error' : 'error', feedSlow: false,
+      feedError: app.getRequestErrorMessage(res, '帖文加载失败，请重试') });
+  },
+
+  _feedSources() {
+    const that = this;
+    const sources = [{ fetch: function (beforeId) {
+      return new Promise(function (resolve, reject) {
+        const body = { scope: 'all', limit: FEED_PAGE_SIZE };
+        if (beforeId) body.beforeId = beforeId;
+        app.sendRequest({
+          hideLoading: true, silentError: true,
+          url: '/api/club/post/feed', method: 'POST',
+          data: JSON.stringify(body),
+          header: { 'Content-Type': 'application/json' },
+          success(res) {
+            if (!res || (res.code != 200 && res.code != '200') || !isRecord(res.data) || !isRecordList(res.data.rows)
+                || typeof res.data.hasMore !== 'boolean') return reject(res);
+            const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
+            resolve({ rows: rows, hasMore: res.data.hasMore, cursor: rows.length ? rows[rows.length - 1].id : beforeId });
+          },
+          fail(res) { that._onFeedFail(that._feedCtx, res); reject(res); },
+        });
+      });
+    } }];
+    if (typeof app.canUseCommunity === 'function' && app.canUseCommunity(false)) {
+      sources.push({ fetch: function (pageNum) {
+        const page = pageNum || 1;
+        return new Promise(function (resolve, reject) {
+          community.request({
+            hideLoading: true, silentError: true,
+            url: '/api/creativesquare/list', method: 'POST',
+            auth: app.getUserID() > 0,
+            data: { is_my: 0, user_id: 0, pageNum: page, pageSize: FEED_PAGE_SIZE },
+            success(res) {
+              if (!res || res.code != 200 || !isRecord(res.data) || !isRecordList(res.data.rows)) return reject(res);
+              resolve({ rows: res.data.rows.map(discoverFeed.normalizeCommunityPost), hasMore: res.data.hasMore === true, cursor: page + 1 });
+            },
+            fail(res) { that._onFeedFail(that._feedCtx, res); reject(res); },
+          });
+        });
+      } });
     }
-    const body = { scope: 'all', limit: FEED_PAGE_SIZE };
-    if (more && this._feedCursor) body.beforeId = this._feedCursor;
-    app.sendRequest({
-      hideLoading: true, silentError: true,
-      url: '/api/club/post/feed', method: 'POST',
-      data: JSON.stringify(body),
-      header: { 'Content-Type': 'application/json' },
-      success(res) {
-        if (!isCurrent()) return;
-        if (!res || (res.code != 200 && res.code != '200') || !isRecord(res.data) || !isRecordList(res.data.rows)
-            || typeof res.data.hasMore !== 'boolean') return fail(res);
-        const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
-        finish();
-        that._feedHasMore = res.data.hasMore;
-        if (rows.length) that._feedCursor = rows[rows.length - 1].id;
-        const feed = more ? that.data.feed.concat(rows) : rows;
-        that.setData({ feed: feed, feedState: feed.length ? 'ready' : 'empty', feedSlow: false, feedError: '' });
-      },
-      fail,
-    });
+    return sources;
   },
 
   onReachBottom() {
     if (this.data.activeTab === 'feed' && this._feedHasMore) this.loadFeed(true);
   },
 
-  // 点赞与玩家发现页同一套(utils/post-feed-actions):先改卡面,失败回滚并原样显示后端提示
+  // 点赞与玩家发现页同一套(utils/post-feed-actions):先改卡面,失败回滚并原样显示后端提示;已赞红心由卡片组件上色
   onLikePost(e) {
     postFeedActions.toggleLike({ page: this, listKey: 'feed', index: e.detail && e.detail.index, app: app, toast: toast, apply: (next) => this.setData({ feed: next }) });
   },
 
+  onFollowPost(e) {
+    postFeedActions.follow({ page: this, listKey: 'feed', index: e.detail && e.detail.index, app: app, toast: toast, apply: (next) => this.setData({ feed: next }) });
+  },
+
+  onPostUser(e) {
+    const memberId = e.detail && e.detail.memberId;
+    if (memberId) wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId });
+  },
+
   onPostTap(e) {
+    const post = this.data.feed[e.detail && e.detail.index];
+    if (post && post.source === 'community') {
+      if (post.id) wx.navigateTo({ url: '/pages/square/detail/index?id=' + post.id });
+      return;
+    }
     const clubId = e.detail && e.detail.clubId;
     const postId = e.detail && e.detail.postId;
     if (clubId && postId) wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId + '&postId=' + postId + '&scope=MERCHANT' });
@@ -305,6 +377,28 @@ Page({
     const post = this.data.feed[e.detail && e.detail.index];
     if (!post || !post.sportTopicId) return this.onPostTap(e);
     wx.navigateTo({ url: '/pages/topic/index/index?id=' + post.sportTopicId });
+  },
+
+  // 商家发帖:全站统一的全屏发帖弹窗(cy-post-compose 社区模式,发到 /api/creativesquare/action),
+  // 和玩家同一个组件、同一套草稿 / 单飞 / 审核;发布成功回读帖文流
+  openComposer() {
+    if (!this.data.canCompose) return;
+    this.setData({ composerOpen: true, myAvatar: (app.getAvatar && app.getAvatar()) || '', myNickname: (app.getNickname && app.getNickname()) || '' });
+  },
+  closeComposer() { this.setData({ composerOpen: false }); },
+  onComposePublished() {
+    this.setData({ composerOpen: false });
+    this.loadFeed();
+  },
+
+  onShareAppMessage(res) {
+    const dataset = res && res.target && res.target.dataset;
+    if (res && res.from === 'button' && dataset && dataset.postId) {
+      return dataset.clubId
+        ? { title: '城瘾俱乐部帖文', path: '/pages/club/detail/index?id=' + dataset.clubId + '&postId=' + dataset.postId }
+        : { title: '城瘾帖文', path: '/pages/square/detail/index?id=' + dataset.postId };
+    }
+    return { title: '城瘾', path: '/pages/index/index' };
   },
 
   applyLoadError(res, status) {

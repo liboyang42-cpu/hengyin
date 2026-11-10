@@ -91,13 +91,14 @@ Page({
     editing: false,
     introVisible: false,
     introStep: 0,
-    // W2-16:城瘾 logo 拆成六块积木(pages/merchant/images/logo-blocks,按定稿原型 p6 的切法渲染),每步一种排布
-    logoBlocks: ['l', 't', 'b', 'i1', 'i2', 'i3'],
+    // r2 a6-w2-16(业主「不是之前说用上一版吗 不要用积木的这个啦」「每一个阶段是不一样的动图 要和ai店铺角色和文字匹配」):
+    // 回到 R12 定稿那一版(每步两个 3D 物件),每步一种动效,和这一步的话对上:
+    // 分身 = 店铺升起 + 星光闪 · 打招呼 = 挥手 + 气泡冒出 · 菜单 = 餐盘落下 + 闹钟摆动 · 起名选性格 = 名牌翻出 + 面具换脸
     introSteps: [
-      { key: 'avatar', t: '它是你的店在城瘾里的分身', s: '出现在漫游地图和店铺主页上，替你招呼路过的玩家' },
-      { key: 'greet', t: '玩家路过，它先打招呼', s: '按你写的招呼语和性格说话' },
-      { key: 'menu', t: '菜单和营业时间它都答得上', s: '读的是你门店资料里的内容' },
-      { key: 'persona', t: '起个名字、选个性格就能用', s: '温柔、可爱、毒舌，随时可改' },
+      { key: 'avatar', a: 'convenience_store', b: 'sparkles', t: '它是你的店在城瘾里的分身', s: '出现在漫游地图和店铺主页上，替你招呼路过的玩家' },
+      { key: 'greet', a: 'waving_hand', b: 'speech_balloon', t: '玩家路过，它先打招呼', s: '按你写的招呼语和性格说话' },
+      { key: 'menu', a: 'fork_and_knife_with_plate', b: 'alarm_clock', t: '菜单和营业时间它都答得上', s: '读的是你门店资料里的内容' },
+      { key: 'persona', a: 'name_badge', b: 'performing_arts', t: '起个名字、选个性格就能用', s: '温柔、可爱、毒舌，随时可改' },
     ],
     // M-28:麦克风权限被拒后,引导去设置页打开 scope.record
     voiceNeedSetting: false,

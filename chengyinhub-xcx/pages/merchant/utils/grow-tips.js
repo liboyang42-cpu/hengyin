@@ -7,17 +7,17 @@
 const IMG = '/pages/merchant/images/grow/';
 
 const GROW_TIPS = [
-  { key: 'coop', title: '承接一条主题路线', sub: '玩家按路线来店打卡', cover: IMG + 'old-movie.jpg', icon: IMG + 'round_pushpin.png', cta: '去看看', permission: '', url: '/pages/merchant/coop-center/index' },
-  { key: 'node', title: '把门店设成打卡点', sub: '漫游地图上出现你的店', cover: IMG + 'flavor-tour.jpg', icon: IMG + 'convenience_store.png', cta: '去设置', permission: 'canManageCoop', url: '/pages/merchant/citynode/index' },
-  { key: 'coupon', title: '发一张到店券', sub: '新客到店核销，带回头客', cover: IMG + 'midlife-day.jpg', icon: IMG + 'admission_tickets.png', cta: '去发券', permission: 'canManageCoupons', url: '/subpackageMember/coupon/coupon?scope=MERCHANT' },
-  { key: 'npc', title: '让 AI 店铺角色招呼客人', sub: '玩家路过时打招呼、介绍菜单', cover: IMG + 'treasure-hunter.jpg', icon: IMG + 'busts_in_silhouette.png', cta: '去配置', permission: 'canWriteProfile', url: '/pages/merchant/decor/ai-npc/index' },
+  { key: 'coop', title: '承接一条主题路线', sub: '玩家按路线来店打卡', cover: IMG + 'old-movie.jpg', cta: '去看看', permission: '', url: '/pages/merchant/coop-center/index' },
+  { key: 'node', title: '把门店设成打卡点', sub: '漫游地图上出现你的店', cover: IMG + 'flavor-tour.jpg', cta: '去设置', permission: 'canManageCoop', url: '/pages/merchant/citynode/index' },
+  { key: 'coupon', title: '发一张到店券', sub: '新客到店核销，带回头客', cover: IMG + 'midlife-day.jpg', cta: '去发券', permission: 'canManageCoupons', url: '/subpackageMember/coupon/coupon?scope=MERCHANT' },
+  { key: 'npc', title: '让 AI 店铺角色招呼客人', sub: '玩家路过时打招呼、介绍菜单', cover: IMG + 'treasure-hunter.jpg', cta: '去配置', permission: 'canWriteProfile', url: '/pages/merchant/decor/ai-npc/index' },
 ];
 
 // access 为空(守卫还没放行 / 读失败)时一张都不出:没确认身份就不画动作入口。
 function visibleGrowTips(access) {
   if (!access || access.active !== true) return [];
   return GROW_TIPS.filter((tip) => !tip.permission || access[tip.permission] === true)
-    .map((tip) => ({ key: tip.key, title: tip.title, sub: tip.sub, cover: tip.cover, icon: tip.icon, cta: tip.cta }));
+    .map((tip) => ({ key: tip.key, title: tip.title, sub: tip.sub, cover: tip.cover, cta: tip.cta }));
 }
 
 function growTipUrl(key) {

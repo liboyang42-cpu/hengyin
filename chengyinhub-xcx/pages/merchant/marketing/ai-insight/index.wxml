@@ -252,22 +252,24 @@
          只出当前岗位能做的那几张(growTips 由守卫放行时的权限挑出)。 -->
     <block wx:if="{{growTips.length}}">
       <view class="sec-head mi-in" style="transition-delay: 540ms;"><text class="sec-title">经营优化</text></view>
-      <view class="grow mi-in" style="transition-delay: 540ms;">
-        <view class="grow-card" wx:for="{{growTips}}" wx:key="key" bindtap="goGrowTip" data-key="{{item.key}}"
-              hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.title}}，{{item.cta}}">
-          <view class="grow-cv">
-            <image class="grow-img" src="{{item.cover}}" mode="aspectFill" lazy-load />
-            <image class="grow-ic" src="{{item.icon}}" mode="aspectFit" />
-          </view>
-          <view class="grow-b">
-            <view class="grow-tx">
-              <text class="grow-t">{{item.title}}</text>
-              <text class="grow-s">{{item.sub}}</text>
+      <!-- r2 a6-w2-15(业主「不是横着滑动的吗 而且没有这种3d logo的」):横滑卡,右边露出下一张;不叠 3D 图标 -->
+      <scroll-view class="tscroll mi-in" style="transition-delay: 540ms;" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="trow">
+          <view class="grow-card" wx:for="{{growTips}}" wx:key="key" bindtap="goGrowTip" data-key="{{item.key}}"
+                hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.title}}，{{item.cta}}">
+            <view class="grow-cv">
+              <image class="grow-img" src="{{item.cover}}" mode="aspectFill" lazy-load />
             </view>
-            <view class="grow-go">{{item.cta}}</view>
+            <view class="grow-b">
+              <view class="grow-tx">
+                <text class="grow-t">{{item.title}}</text>
+                <text class="grow-s">{{item.sub}}</text>
+              </view>
+              <view class="grow-go">{{item.cta}}</view>
+            </view>
           </view>
         </view>
-      </view>
+      </scroll-view>
     </block>
   </view>
 

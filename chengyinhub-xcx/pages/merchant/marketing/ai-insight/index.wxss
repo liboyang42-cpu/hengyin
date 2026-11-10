@@ -553,11 +553,10 @@
 .ai-note { display: block; }
 
 /* ===== 走查 v2 W2-15 经营优化:带图卡(封面 + 3D 图标),圆角与投影沿用推荐主题卡 ===== */
-.grow { display: flex; flex-direction: column; gap: var(--cy-space-3); }
-.grow-card { border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--cy-bg-card); box-shadow: var(--cy-shadow-card); }
-.grow-cv { position: relative; height: 264rpx; }
+/* r2 a6-w2-15:横滑,卡宽 560rpx,右边露出下一张;在 .trow 里不换行 */
+.grow-card { flex: none; width: 560rpx; white-space: normal; border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--cy-bg-card); box-shadow: var(--cy-shadow-card); }
+.grow-cv { position: relative; height: 280rpx; }
 .grow-img { width: 100%; height: 100%; display: block; }
-.grow-ic { position: absolute; right: var(--cy-space-4); bottom: -20rpx; width: 144rpx; height: 144rpx; }
 .grow-b { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-4); }
 .grow-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
 .grow-t { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }

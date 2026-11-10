@@ -113,8 +113,9 @@
       </block>
     </view>
   </scroll-view>
-  <!-- 走查 v2 R12 / W2-16:第一次进入的四步介绍(qx-u2 加了顶栏返回/进度/跳过与左右滑)。图是城瘾 logo —— 六块积木:散开 → 靠拢 → 拼成 logo → logo 说「嗨」。
-       ✕ 和「知道了」都算看过,之后不再弹。 -->
+  <!-- 走查 v2 R12:第一次进入的四步介绍。每步两个 AI 角色相关的 3D 物件(店铺分身 + 星光 → 挥手 + 对话 → 菜单 + 闹钟 → 名牌 + 性格面具),
+       r2 a6-w2-16:回到这一版(不用 logo 积木),每步一种动效(ni-o--k 加步号),和这一步的话对上。✕ 和「知道了」都算看过,之后不再弹。
+       qx-s2 合并:舞台取 r2-merchant(业主 a6-w2-16 要回上一版),qx-u2 的顶栏(返回 / 分段进度 / 跳过)与左右滑保留。 -->
   <cy-sheet show="{{introVisible}}" inset bind:close="dismissIntro">
     <view class="ni">
       <!-- qx-u2 / ref 1：顶栏 = 圆形返回 · 分段进度 · 跳过；舞台左右滑动翻页。 -->
@@ -123,12 +124,12 @@
         <view class="ni-dots" aria-hidden="true"><view class="ni-dot {{index === introStep ? 'ni-dot--on' : ''}}" wx:for="{{introSteps}}" wx:key="key"></view></view>
         <view class="ni-skip {{introStep < introSteps.length - 1 ? '' : 'is-off'}}" bindtap="dismissIntro" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</view>
       </view>
-      <view class="ni-stage ni-stage--s{{introStep}}" aria-hidden="true" bindtouchstart="onIntroTouchStart" bindtouchend="onIntroTouchEnd">
-        <view class="ni-glow ni-glow--0"></view>
-        <view class="ni-logo">
-          <image class="ni-lp ni-lp--{{item}}" wx:for="{{logoBlocks}}" wx:key="*this" src="/pages/merchant/images/logo-blocks/{{item}}.png" mode="aspectFit" />
-          <view class="ni-hi"><text>嗨</text></view>
-        </view>
+      <view class="ni-stage" aria-hidden="true" bindtouchstart="onIntroTouchStart" bindtouchend="onIntroTouchEnd">
+        <view class="ni-glow ni-glow--{{introStep}}"></view>
+        <block wx:for="{{introSteps}}" wx:key="key">
+          <image class="ni-o ni-o--k{{index}} {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.a}}.png" mode="aspectFit" />
+          <image class="ni-o ni-o--sm ni-o--k{{index}} {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.b}}.png" mode="aspectFit" />
+        </block>
       </view>
       <text class="ni-t">{{introSteps[introStep].t}}<text class="ni-period">.</text></text>
       <text class="ni-s">{{introSteps[introStep].s}}</text>
