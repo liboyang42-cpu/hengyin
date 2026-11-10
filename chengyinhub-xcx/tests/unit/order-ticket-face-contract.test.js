@@ -52,7 +52,7 @@ function assertWalletContract(wxml, wxss, json) {
   /* 2026-10-22 业主:票夹标题放回顶栏居中。仍是悬浮(overlay)导航 —— 不长出实底导航条。 */
   assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light" title=""\s*\/>/,
     '全屏主题图上只保留悬浮导航(返回),不得重新长出实底导航条')
-  assert.match(wxml, /class="wl-nav__b">票夹</, 'v13:顶栏居中写「票夹」+「N 张可用」')
+  assert.match(wxml, /class="wl-nav__b">票夹</, 'r3-visual:导航下一行左对齐写「票夹」(refs4/ticket-holder-frames)')
   assert.match(wxss, /\.signup \.ztbg\s*\{[^}]*pointer-events:\s*none/s)
   assert.match(wxss, /\.davidwu\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*1/s,
     '加载/失败/空态必须浮在主题背景之上')

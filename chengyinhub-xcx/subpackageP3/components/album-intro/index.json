@@ -1,4 +1,6 @@
 {
   "component": true,
-  "usingComponents": {}
+  "usingComponents": {
+    "cy-icon": "/components/cy/icon/index"
+  }
 }

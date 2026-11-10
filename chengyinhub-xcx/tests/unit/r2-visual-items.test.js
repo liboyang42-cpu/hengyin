@@ -90,7 +90,7 @@ test('V3-34 台账/绑定门禁:本文件声明过的 wxs 模块调用打 wxs �
 })
 
 test('a4-v3-27 收集册打开过场:只在从「我的」进入时播,减少动态效果不播,只动 transform/opacity', () => {
-  assert.match(read('subpackageP3/components/album-head/index.wxml'), /^<album-intro \/>$/m)
+  assert.match(read('subpackageP3/components/album-head/index.wxml'), /^<album-intro active="\{\{active\}\}" \/>$/m)
   const prof = read('subpackageMember/components/cy/profile/index.js')
   for (const r of ['badge-wall', 'stamp-album', 'object-cards']) assert.match(prof, new RegExp(r + "/index/index\\?from=profile'"))
   const wxss = read('subpackageP3/components/album-intro/index.wxss')
