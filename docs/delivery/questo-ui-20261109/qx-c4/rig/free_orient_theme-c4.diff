@@ -1,0 +1,11 @@
+--- /root/rigdiffs/free_orient_theme.py	2026-11-10 05:33:40.581131710 +0000
++++ /root/rigdiffs/free_orient_theme_c4.py	2026-11-10 05:42:39.909163769 +0000
+@@ -94,7 +94,7 @@
+                              {"level": 4, "type": "SKIP"}]}
+     qa = http("POST", "/api/template/publish", token=ptok, json_body={
+         "title": "rig 站台问答 %s" % stamp, "validationMethod": 1, "questionName": qa_title,
+-        "questionAnswer": "3", "advancedConfigJson": json.dumps(qa_cfg, ensure_ascii=False),
++        "questionAnswer": "Line 3", "advancedConfigJson": json.dumps(qa_cfg, ensure_ascii=False),
+         "requestId": "rig-tpl-qa-%s" % stamp})
+     show("template/publish (QA+hintLadder)", json.dumps(qa, ensure_ascii=False)[:240])
+     qa_id = qa.get("data") if isinstance(qa.get("data"), int) else (qa.get("data") or {}).get("id")
