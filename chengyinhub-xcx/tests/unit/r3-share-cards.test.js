@@ -59,7 +59,13 @@ test('分享层版式:整色卡 + 封面 / 插画 + 弧 + 徽标 + 两行标题;
   assert.match(wxss, /\.sc-big \{[^}]*-webkit-line-clamp: 2;/)
   assert.match(wxss, /\.sc-primary \{[^}]*border-radius: var\(--cy-comp-btn-radius\)/)
   // 动效只用 transform / opacity,并尊重减弱动态
-  assert.match(wxss, /@media \(prefers-reduced-motion: reduce\) \{ \.sc-card, \.sc-badge, \.sc-in \{ animation: none; \}/)
+  // qx-green:进场改为 transition(MOTION.md 不新增 @keyframes):sc--pre 是起点,减弱动态时直接到位
+  assert.doesNotMatch(wxss, /@keyframes|animation:/)
+  assert.match(wxss, /\.sc--pre \.sc-card \{ opacity: 0; transform: translateY\(48rpx\) scale\(\.96\); transition: none; \}/)
+  assert.match(wxss, /\.sc--pre \.sc-badge \{ opacity: 0; transform: scale\(\.4\); transition: none; \}/)
+  assert.match(wxss, /\.sc--pre \.sc-in \{ opacity: 0; transform: translateY\(24rpx\); transition: none; \}/)
+  assert.match(wxss, /@media \(prefers-reduced-motion: reduce\) \{ \.sc \.sc-card, \.sc \.sc-badge, \.sc \.sc-in \{ opacity: 1; transform: none; \}/)
+  assert.match(wxml, /class="sc \{\{scIn === 1 \? 'sc--pre' : ''\}\}"/)
   // 导出图与预览同一椭圆弧与徽标
   const js = read('components/cy/share-card/index.js')
   assert.match(js, /g\.ellipse\(mx, 905, 600, 365, 0, 0, Math\.PI \* 2\)/)

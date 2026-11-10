@@ -59,4 +59,41 @@ function countMoney(page, key) {
   countIn(page, key, { duration: 1300, ease: easeInOutCubic });
 }
 
-module.exports = { enter, countIn, countMoney };
+/* 分段 / 循环动效用 transition 一段段重放(MOTION.md:不新增 @keyframes)。
+ * frames:[[值, 停留毫秒], …],依次把 data[key] 设成各值;样式按值挂类,每段由该类的 transition 补间。
+ * options.delay 首段前等待;options.times 播几遍(缺省一直循环,直到 stop() 或页面卸载);
+ * options.rest:开播前与减少动态效果时停的值(缺省取第一帧)。返回 stop()。 */
+// 循环计时器不该拖住测试进程(Node 有 unref;小程序计时器返回数字,无此方法)
+function later(fn, ms) {
+  const t = setTimeout(fn, ms);
+  if (t && typeof t.unref === 'function') t.unref();
+  return t;
+}
+
+function beats(page, key, frames, options) {
+  const opts = options || {};
+  const timer = '_' + key + 'Beat';
+  const stop = () => { if (page) { clearTimeout(page[timer]); page[timer] = null; } };
+  if (!page || typeof page.setData !== 'function' || !frames || !frames.length) return stop;
+  stop();
+  page.setData({ [key]: 'rest' in opts ? opts.rest : frames[0][0] });
+  if (!hasTimers() || reduced(page)) return stop;
+  const alive = () => !page._unloaded && !page._detached;
+  let i = 0;
+  let round = 0;
+  const tick = () => {
+    if (!alive()) return;
+    if (i === frames.length) {
+      i = 0;
+      round += 1;
+      if (opts.times && round >= opts.times) return;
+    }
+    const frame = frames[i++];
+    page.setData({ [key]: frame[0] });
+    page[timer] = later(tick, frame[1]);
+  };
+  page[timer] = later(tick, opts.delay || 0);
+  return stop;
+}
+
+module.exports = { enter, countIn, countMoney, beats };

@@ -11,6 +11,7 @@ const cyModal = require('../../../utils/modal.js');
 const { ALBUM_SAVE, classifyAlbumSaveError } = require('../../../utils/album-save-outcome.js');
 const { tintFromPixels } = require('../../../utils/share-tint.js');
 const { fitRows } = require('../../../utils/share-lines.js');
+const { enter } = require('../../../utils/page-motion.js');
 
 const KINDS = {
   activity: { label: '活动', colors: ['#5A3426', '#8E6430', '#1E2A24', '#121317'] }, /* ds-ok P-8 分享卡底色色块(业主批准稿) */
@@ -76,6 +77,7 @@ Component({
       const stops = (Array.isArray(c.stops) ? c.stops : []).filter(Boolean).slice(0, 5);
       const text = cardText(kind, c.meta || '', c.date || '', c.when || '', stops);
       const givenQr = kind === 'invite' && c.qr ? (app.getImgUrl ? app.getImgUrl(c.qr) : c.qr) : '';
+      enter(this, 'scIn');
       this.setData({
         statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 20,
         kind, label: KINDS[kind].label, heading: kind === 'invite' ? '邀请好友' : '分享' + KINDS[kind].label, title: c.title || KINDS[kind].label,
@@ -90,6 +92,9 @@ Component({
       if (!givenQr) this._loadCode();
       this._loadTint();
     },
+  },
+  lifetimes: {
+    detached() { this._detached = true; },
   },
   methods: {
   noop() {},

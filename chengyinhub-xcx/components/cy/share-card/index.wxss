@@ -7,14 +7,14 @@
 .sc-h { flex: 1; text-align: center; font-size: var(--cy-type-card-title); font-weight: 700; }
 .sc-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 16rpx 0; }
 
-.sc-card { position: relative; flex: none; width: 560rpx; height: 896rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--sc-bg); box-shadow: 0 32rpx 80rpx rgba(0, 0, 0, .45), inset 0 0 0 2rpx rgba(255, 255, 255, .08); transition: background .3s; animation: sc-rise .42s cubic-bezier(.2, .8, .2, 1) both; } /* ds-ok P-8 整色卡投影 */
+.sc-card { position: relative; flex: none; width: 560rpx; height: 896rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--sc-bg); box-shadow: 0 32rpx 80rpx rgba(0, 0, 0, .45), inset 0 0 0 2rpx rgba(255, 255, 255, .08); transition: background .3s, opacity .42s cubic-bezier(.2, .8, .2, 1), transform .42s cubic-bezier(.2, .8, .2, 1); } /* ds-ok P-8 整色卡投影 */
 .sc-art { position: absolute; left: 0; top: 0; width: 560rpx; height: 463rpx; background: rgba(0, 0, 0, .22); overflow: hidden; } /* ds-ok 无封面时的上半压暗 */
 .sc-cover { display: block; width: 560rpx; height: 463rpx; }
 /* 弧:椭圆上沿压住封面下沿,两边比中间低(导出图同一椭圆) */
 .sc-arc { position: absolute; left: -168rpx; top: 403rpx; width: 896rpx; height: 545rpx; border-radius: 50%; background: var(--sc-bg); transition: background .3s; }
-.sc-badge { position: absolute; left: 228rpx; top: 351rpx; width: 104rpx; height: 104rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; background: #FFFFFF; box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, .35); animation: sc-pop .5s cubic-bezier(.3, 1.5, .5, 1) .18s both; } /* ds-ok 徽标白底 */
+.sc-badge { position: absolute; left: 228rpx; top: 351rpx; width: 104rpx; height: 104rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; background: #FFFFFF; box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, .35); transition: opacity .5s cubic-bezier(.3, 1.5, .5, 1) .18s, transform .5s cubic-bezier(.3, 1.5, .5, 1) .18s; } /* ds-ok 徽标白底 */
 .sc-badge-img { width: 76rpx; height: 76rpx; }
-.sc-in { position: absolute; left: 0; right: 0; top: 479rpx; bottom: 0; display: flex; flex-direction: column; align-items: center; padding: 0 40rpx 32rpx; box-sizing: border-box; text-align: center; animation: sc-up .42s ease-out .24s both; }
+.sc-in { position: absolute; left: 0; right: 0; top: 479rpx; bottom: 0; display: flex; flex-direction: column; align-items: center; padding: 0 40rpx 32rpx; box-sizing: border-box; text-align: center; transition: opacity .42s ease-out .24s, transform .42s ease-out .24s; }
 .sc-eb { max-width: 100%; box-sizing: border-box; padding: 0 20rpx; line-height: 44rpx; border-radius: var(--cy-radius-pill); background: rgba(255, 255, 255, .16); font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .86); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字;一行,与导出图同(qx-a7) */
 .sc-big { margin-top: 24rpx; max-width: 100%; font-size: 54rpx; line-height: 66rpx; font-weight: 900; color: #FFFFFF; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: break-word; } /* ds-ok 卡片压字;两行大标题 */
 .sc-m { margin-top: 16rpx; max-width: 100%; font-size: var(--cy-type-body); line-height: 36rpx; color: rgba(255, 255, 255, .78); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字 */
@@ -56,7 +56,8 @@
 .sc-cv { position: fixed; left: -9999rpx; top: 0; width: 750px; height: 1200px; }
 .cy-pressed { opacity: .88; }
 
-@keyframes sc-rise { from { opacity: 0; transform: translateY(48rpx) scale(.96); } to { opacity: 1; transform: none; } }
-@keyframes sc-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
-@keyframes sc-up { from { opacity: 0; transform: translateY(24rpx); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .sc-card, .sc-badge, .sc-in { animation: none; } .sc, .sc-card, .sc-arc, .sc-dot { transition: none; } }
+/* 打开即进场:enter(scIn) 先挂 sc--pre(各自起点、无过渡),34ms 后撤掉 —— 卡片上浮、徽标弹出、文字随后浮上(只用 transition,不占 keyframes) */
+.sc--pre .sc-card { opacity: 0; transform: translateY(48rpx) scale(.96); transition: none; }
+.sc--pre .sc-badge { opacity: 0; transform: scale(.4); transition: none; }
+.sc--pre .sc-in { opacity: 0; transform: translateY(24rpx); transition: none; }
+@media (prefers-reduced-motion: reduce) { .sc .sc-card, .sc .sc-badge, .sc .sc-in { opacity: 1; transform: none; } .sc, .sc .sc-card, .sc .sc-badge, .sc .sc-in, .sc-arc, .sc-dot { transition: none; } }
