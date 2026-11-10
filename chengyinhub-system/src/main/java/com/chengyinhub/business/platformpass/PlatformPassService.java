@@ -66,7 +66,11 @@ public class PlatformPassService {
     private final PlatformPassMapper mapper;
     private final PlatformPassProperties properties;
     private final TransactionTemplate tx;
-    @Autowired(required = false) private WechatPaymentOperations wechatPay;
+    // 与营销商品同一做法:直接用 SDK 网关(它不依赖回调路由)。WechatPaymentOperations 有门面和网关两个实现,
+    // 按类型注入会歧义;注入门面 IWechatPayService 又会形成 门面→路由→报名→通行证→门面 的循环依赖(隔离启动探针实测)。
+    @Autowired(required = false)
+    @org.springframework.beans.factory.annotation.Qualifier("wechatPaymentSdkGateway")
+    private WechatPaymentOperations wechatPay;
     @Autowired(required = false) private WechatVerifiedPaymentFactService verifiedFacts;
     @Autowired(required = false) private XpayGateway xpay;
     @Autowired(required = false) private IWeChatMiniSessionService miniSessions;
