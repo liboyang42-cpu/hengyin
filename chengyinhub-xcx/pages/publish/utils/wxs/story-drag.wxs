@@ -1,14 +1,20 @@
-// 故事流拖拽排序 · 渲染层(WXS)内核(2026-11-10 r2-create)。
+// 故事流拖拽排序 · 渲染层(WXS)内核(2026-11-10 r2-create;l-editor 按业主批准的编辑器原型加「拖进段落中间拆段」)。
 // 思路取自 wxp-ui components/drag(MIT, https://github.com/wxp-ui/wxp-ui):长按交给逻辑层量几何,
 // 之后的 touchmove 只在渲染层跑 —— 被拖块 1:1 跟手、其余块用 transform 让位,不逐帧 setData;
 // 跨过一格才回调一次逻辑层(触感),松手回调一次(真正改顺序)。改写点:块高各不相同,
 // 落点按「被拖块中线 vs 邻块中线」判(与 utils/publish/story-drag.js 同一套几何),贴边自动滚屏。
+// l-editor:手指落在一段正文中间(上下各留 12px 边),槽改为插进句子之间 —— 渲染层按手指在段内的高度比例
+// 估出字符下标,再就近取逻辑层给的句子边界(bounds);换了落点才回调一次 onStoryDragSplit,逻辑层把那一段
+// 临时渲染成「上半 · 槽 · 下半」。离开段落就回调 index:-1 复原。松手时把 split 一起交回,逻辑层按它拆段落。
 // 几何由逻辑层量好后挂在 .story-article 的 data-geo 上(JSON):
-//   { key, from, y, st, vt, vb, max, top:[], h:[] }
+//   { key, from, y, st, vt, vb, max, top:[], h:[], kind:[], len:[], bounds:[[]] }
 //   y = 长按时手指 clientY;st = 当时 scrollTop;vt/vb = 滚动区上下沿(clientY);max = 最大 scrollTop。
+//   kind[i] = 'p' 表示第 i 块是可以从中间拆开的正文段;len[i] 字数;bounds[i] 句子边界(字符下标)。
 
 var EDGE = 72;    // 距滚动区上下沿多少 px 内开始自动滚
 var MAX_STEP = 12; // 每帧最多滚多少 px(越深越快)
+var SPLIT_PAD = 12; // 段落上下各留这么多 px 不算「中间」(靠边 = 插到段前 / 段后)
+var SPLIT_MIN_H = 44; // 太矮的段(一行)不拆
 
 function geoOf(owner) {
   var list = owner.selectComponent('.story-article');
@@ -19,21 +25,62 @@ function geoOf(owner) {
   return g && g.top && g.top.length ? g : null;
 }
 
-function targetOf(g, center) {
-  var target = 0;
-  for (var i = 0; i < g.top.length; i++) {
-    if (i === g.from) continue;
-    if (center > g.top[i] + g.h[i] / 2) target++;
-  }
-  return target;
-}
-
 function slotOf(g) {
   var from = g.from;
   var gap = 0;
   if (from + 1 < g.top.length) gap = g.top[from + 1] - (g.top[from] + g.h[from]);
   else if (from > 0) gap = g.top[from] - (g.top[from - 1] + g.h[from - 1]);
   return g.h[from] + Math.max(0, gap);
+}
+
+// 拆段时那一段里临时插进去的槽有多高:被拖块的高度 + 上下边距(与 WXSS .story-split__slot 对齐)
+function splitSlotOf(g) {
+  return g.h[g.from] + 16;
+}
+
+// 拆段态下第 j 块实际比量时下移了多少(槽把后面的块都顶下去了)
+function shiftOf(st, j) {
+  return st.split && j > st.split.i ? splitSlotOf(st.g) : 0;
+}
+
+function targetOf(g, st, center) {
+  var target = 0;
+  for (var i = 0; i < g.top.length; i++) {
+    if (i === g.from) continue;
+    if (center > g.top[i] + shiftOf(st, i) + g.h[i] / 2) target++;
+  }
+  return target;
+}
+
+function nearestBound(bounds, off) {
+  var best = bounds[0];
+  for (var i = 1; i < bounds.length; i++) if (Math.abs(bounds[i] - off) < Math.abs(best - off)) best = bounds[i];
+  return best;
+}
+
+// 手指落在哪一段的中间:返回 { i, at } 或 null
+function splitOf(g, st, fy) {
+  if (!g.kind) return null;
+  var slotH = splitSlotOf(g);
+  for (var i = 0; i < g.top.length; i++) {
+    if (i === g.from || g.kind[i] !== 'p' || g.h[i] <= SPLIT_MIN_H) continue;
+    var bounds = g.bounds && g.bounds[i];
+    if (!bounds || !bounds.length) continue;
+    var top = g.top[i] + shiftOf(st, i);
+    var open = st.split && st.split.i === i; // 这一段此刻已经被拆开:中间多了一个槽
+    var bottom = top + g.h[i] + (open ? slotH : 0);
+    if (fy <= top + SPLIT_PAD || fy >= bottom - SPLIT_PAD) continue;
+    var y = fy - top;
+    if (open) {
+      // 槽大致在 at 对应的高度;手指在槽下方时把槽的高度扣掉再折算字数
+      var slotTop = g.h[i] * (st.split.at / Math.max(1, g.len[i]));
+      if (y > slotTop + slotH) y -= slotH;
+      else if (y > slotTop) y = slotTop;
+    }
+    var off = Math.round(y / g.h[i] * (g.len ? g.len[i] : 0));
+    return { i: i, at: nearestBound(bounds, off) };
+  }
+  return null;
 }
 
 function stepOf(y, g) {
@@ -45,8 +92,10 @@ function stepOf(y, g) {
 function paint(owner, st) {
   var g = st.g;
   var dy = st.y - g.y + st.scroll;
+  var fy = g.y + dy; // 手指在量几何时那个坐标系里的位置
   var center = g.top[g.from] + g.h[g.from] / 2 + dy;
-  var target = targetOf(g, center);
+  var split = splitOf(g, st, fy);
+  var target = split ? g.from : targetOf(g, st, center);
   var slot = slotOf(g);
   var blocks = owner.selectAllComponents('.story-block');
   for (var i = 0; i < blocks.length; i++) {
@@ -55,9 +104,24 @@ function paint(owner, st) {
       continue;
     }
     var shift = 0;
-    if (target > g.from && i > g.from && i <= target) shift = -slot;
-    if (target < g.from && i >= target && i < g.from) shift = slot;
+    if (!split) {
+      if (target > g.from && i > g.from && i <= target) shift = -slot;
+      if (target < g.from && i >= target && i < g.from) shift = slot;
+    }
     blocks[i].setStyle({ transform: 'translate3d(0,' + shift + 'px,0)' });
+  }
+  var hadSplit = st.split;
+  if (split) {
+    if (!hadSplit || hadSplit.i !== split.i || hadSplit.at !== split.at) {
+      st.split = split;
+      st.target = g.from;
+      owner.callMethod('onStoryDragSplit', { index: split.i, at: split.at, h: g.h[g.from] });
+    }
+    return;
+  }
+  if (hadSplit) {
+    st.split = null;
+    owner.callMethod('onStoryDragSplit', { index: -1 });
   }
   if (target !== st.target) {
     st.target = target;
@@ -85,6 +149,7 @@ function start(e, owner) {
   var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
   if (!t) return;
   st.g = null;
+  st.split = null;
   st.y = t.clientY;
 }
 
@@ -98,6 +163,7 @@ function move(e, owner) {
     st.g = g;
     st.scroll = 0;
     st.target = g.from;
+    st.split = null;
     st.auto = false;
     st.frames = 0;
   }
@@ -120,8 +186,10 @@ function end(e, owner) {
     return;
   }
   var res = { key: st.g.key, from: st.g.from, to: st.target, scrollTop: st.g.st + st.scroll };
+  if (st.split) res.split = { index: st.split.i, at: st.split.at };
   st.auto = false;
   st.g = null;
+  st.split = null;
   owner.callMethod('onStoryDragDrop', res);
   return false;
 }
@@ -145,4 +213,6 @@ module.exports = {
   reset: reset,
   EDGE: EDGE,
   MAX_STEP: MAX_STEP,
+  SPLIT_PAD: SPLIT_PAD,
+  SPLIT_MIN_H: SPLIT_MIN_H,
 };

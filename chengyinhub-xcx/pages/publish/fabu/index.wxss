@@ -5217,3 +5217,12 @@ page { background: var(--cy-btn-solid-bg); }
    票务页(第 2 页)区块标题的左沿对齐下面白卡的左沿 —— 页容器已经留了页边距,标题不再额外缩进 38rpx。
    只作用于票务页容器 .gen-page;编辑态(is-ticket-editing 页容器零内距)仍走上面那条 space-4。 */
 .slopes-info-page.gen-page:not(.is-ticket-editing) .pd-section-title { padding-left: 0; padding-right: 0; }
+
+/* ── 拖进段落中间(l-editor,2026-11-10 编辑器原型 v2):那一段临时显示成「上半 · 槽 · 下半」 ── */
+.story-split { display: block; }
+.story-split__half { display: block; color: var(--cy-color-text-primary); font-size: var(--cy-font-body); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.story-split__half:empty { display: none; }
+/* 槽:与被拖的块同高;高度不过渡(棘轮不放布局动画),只让里面那条线淡入 */
+.story-split__slot { position: relative; box-sizing: border-box; margin: 16rpx 0; border-radius: var(--cy-radius-md); background: var(--cy-color-brand-soft); overflow: hidden; }
+.story-split__line { position: absolute; left: 20rpx; right: 20rpx; top: 20rpx; height: 4rpx; border-radius: 2rpx; background: var(--cy-color-brand); opacity: 1; transition: opacity var(--cy-motion-fast) var(--cy-ease-out); }
+.story-undo { z-index: 260; }

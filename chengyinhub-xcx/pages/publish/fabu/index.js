@@ -322,7 +322,8 @@ Page({
     storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
     // 拖拽:key = 被拿起的块;geo = 长按时量好的几何(JSON,挂在列表 data-geo 上给 WXS 读);
     // epoch 每次落下 +1,WXS 的 change:epoch 据此清掉临时 transform。逐帧位移全在渲染层(utils/wxs/story-drag.wxs)。
-    storyDrag: { key: '', geo: '', epoch: 0 },
+    storyDrag: { key: '', geo: '', epoch: 0, split: null },
+    storyUndo: { show: false, text: '', canUndo: false },
     storyScrollTop: 0,
     // X Articles 式工具栏 / 封面 / 作者行(2026-11-10 r2-create)
     zw: STORY_SENTINEL,
@@ -1290,7 +1291,8 @@ Page({
       storyWhenOptions: when.storyWhenOptions,
       storyWhenLabelOf: when.storyWhenLabelOf,
       storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
-      storyDrag: { key: '', geo: '', epoch: (this.data.storyDrag && this.data.storyDrag.epoch) || 0 },
+      storyDrag: { key: '', geo: '', epoch: (this.data.storyDrag && this.data.storyDrag.epoch) || 0, split: null },
+      storyUndo: { show: false, text: '', canUndo: false },
       storyFmt: { bold: false, italic: false, strike: false, style: '', paraLabel: '正文' },
       storyAuthor: { name: nickname, avatar: String((app.getAvatar && app.getAvatar()) || ''), initial: nickname.slice(0, 1) },
       storySheet: '',
@@ -1355,7 +1357,8 @@ Page({
     }
     this.setData({
       storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
-      storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1 },
+      storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1, split: null },
+      storyUndo: { show: false, text: '', canUndo: false },
       storyVarSheet: { show: false, blockKey: '', keys: [] },
       storySheet: '',
       pendingInsertAt: null,
@@ -2142,9 +2145,16 @@ Page({
         if (!rects[from]) return;
         const scrollTop = Number.isFinite(offset.scrollTop) ? offset.scrollTop : startScroll;
         const max = Math.max(0, (Number(offset.scrollHeight) || 0) - (Number(area.height) || (area.bottom - area.top) || 0));
+        // 拖进段落拆段(l-editor):每块是不是可以从中间拆开的正文段、字数、句子边界,一并交给渲染层
+        const blocks = (this._storyChapter() || {}).blocks || [];
+        const bounds = blocks.map((b) => (b && b.type === 'text' && proEditorStory.canSplitParagraphs(b) && b.key !== blockKey)
+          ? proEditorStory.sentenceBoundaries(b.content) : []);
         const geo = {
           key: blockKey, from, y: startY, st: scrollTop, vt: area.top, vb: area.bottom, max,
           top: rects.map((r) => Math.round(r.top)), h: rects.map((r) => Math.round(r.height)),
+          kind: bounds.map((list) => (list.length ? 'p' : '')),
+          len: blocks.map((b) => String((b && b.content) || '').length),
+          bounds,
         };
         if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
         if (arming.released) { // 量完之前手已经松开:等于原地松手
@@ -2153,7 +2163,7 @@ Page({
         }
         this._storyDragSlotAt = 0;
         this.setData({
-          storyDrag: { key: blockKey, geo: JSON.stringify(geo), epoch: this.data.storyDrag.epoch },
+          storyDrag: { key: blockKey, geo: JSON.stringify(geo), epoch: this.data.storyDrag.epoch, split: null },
           'storyEditor.selectedBlockKey': '',
           'storyEditor.insertMenuAt': -1,
         });
@@ -2172,6 +2182,26 @@ Page({
     if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
   },
 
+  // 拖到一段正文中间:渲染层算好「第几块 · 第几个字之后」,这里把那一段临时渲染成「上半 · 槽 · 下半」;
+  // index:-1 = 手指离开了段落中间,复原。换一次落点才来一次,不逐帧。
+  onStoryDragSplit(arg) {
+    const split = arg || {};
+    if (!this.data.storyDrag.key) return;
+    const index = Number(split.index);
+    const blocks = (this._storyChapter() || {}).blocks || [];
+    const host = blocks[index];
+    if (!(index >= 0) || !host || host.type !== 'text') {
+      if (this.data.storyDrag.split) this.setData({ 'storyDrag.split': null });
+      return;
+    }
+    const text = String(host.content == null ? '' : host.content);
+    const at = Number(split.at);
+    const current = this.data.storyDrag.split;
+    if (current && current.key === host.key && current.at === at) return;
+    this.setData({ 'storyDrag.split': { key: host.key, at, a: text.slice(0, at), b: text.slice(at), h: Math.max(0, Number(split.h) || 0) } });
+    this.onStoryDragSlot();
+  },
+
   // 贴边自动滚屏:渲染层每两帧报一次目标 scrollTop
   onStoryDragScroll(arg) {
     const top = Math.max(0, Number(arg && arg.scrollTop) || 0);
@@ -2183,18 +2213,30 @@ Page({
     const drag = arg || {};
     const key = this.data.storyDrag.key;
     if (!key || drag.key !== key) return;
-    const reset = { key: '', geo: '', epoch: this.data.storyDrag.epoch + 1 };
+    const reset = { key: '', geo: '', epoch: this.data.storyDrag.epoch + 1, split: null };
     if (Number.isFinite(Number(drag.scrollTop))) this._storyScrollNow = Number(drag.scrollTop);
     const scrollTop = this._storyScrollNow || 0;
     if (wx.vibrateShort) wx.vibrateShort({ type: 'medium' });
-    if (drag.to === drag.from || !Number.isInteger(drag.to)) {
+    const split = drag.split && Number.isInteger(Number(drag.split.index)) && Number(drag.split.index) >= 0 ? drag.split : null;
+    if (!split && (drag.to === drag.from || !Number.isInteger(drag.to))) {
       // 原地松手 = 选中(显示删除键),与改版前「长按选中」一致
       this.setData({ storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
       return;
     }
     try {
       this._pushUndo();
-      this._storyCommand({ type: 'moveBlock', blockKey: key, index: drag.to }, { storyDrag: reset, storyScrollTop: scrollTop });
+      if (split) {
+        // 拖进段落中间:在句子之间把那一段拆成两段,被拖的块落在中间
+        const blocks = (this._storyChapter() || {}).blocks || [];
+        const host = blocks[Number(split.index)];
+        if (!host) throw new Error('未找到要插入的段落');
+        const result = this._storyCommand({ type: 'moveBlockInto', blockKey: key, targetKey: host.key, at: Number(split.at), tailKey: this._genLocalId() },
+          { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
+        this._storyUndoBar('已插到第 ' + (result.hostIndex + 1) + ' 段中间,段落拆成两段');
+        return;
+      }
+      this._storyCommand({ type: 'moveBlock', blockKey: key, index: drag.to }, { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
+      this._storyUndoBar('已移到第 ' + (drag.to + 1) + ' 位');
     } catch (error) {
       this.setData({ storyDrag: reset, storyScrollTop: scrollTop });
       cyToast(app.getRequestErrorMessage(error, '移动失败'));
@@ -2235,6 +2277,24 @@ Page({
     }
   },
 
+
+  // 底部「已移到… / 撤销」条(编辑器原型 v2):每次移动、插入、删除、拆段后出现 5 秒,点撤销回到上一步。
+  // 撤销走页面共用的 _undoStack(上限 UNDO_CAP = 20 步),所以调用方先 _pushUndo 再改。
+  _storyUndoBar(text, canUndo) {
+    clearTimeout(this._storyUndoTimer);
+    this.setData({ storyUndo: { show: true, text: String(text || ''), canUndo: canUndo !== false && !!(this._undoStack && this._undoStack.length) } });
+    this._storyUndoTimer = setTimeout(() => { if (!this._unloaded) this.setData({ 'storyUndo.show': false }); }, 5000);
+  },
+  undoStoryStep() {
+    if (!this._undoStack || !this._undoStack.length) return;
+    this.undo();
+    const chapter = this._storyChapter();
+    this.setData(Object.assign({
+      storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1, split: null },
+      'storyEditor.focusBlockKey': '', 'storyEditor.selectedBlockKey': '',
+    }, chapter ? this._storyDerived(chapter) : {}));
+    this._storyUndoBar('已撤销', false);
+  },
 
   /**
    * 打开「插入变量」列表(契约 §3.1)。可用键跟着主题里各节点的玩法模板走

@@ -503,7 +503,13 @@
           <view class="story-text-block sx-para sx-para--{{block.style || 'body'}} {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}}" wx:if="{{block.type === 'text'}}">
             <text class="sx-para__bullet" wx:if="{{block.style === 'ul'}}">•</text>
             <text class="sx-para__bullet sx-para__bullet--num" wx:if="{{block.style === 'ol'}}">{{storyListNo[blockIndex]}}.</text>
-            <view class="sx-rich" wx:if="{{storyEditor.preview || (block.marks && block.marks.length && storyEditor.focusBlockKey !== block.key && storyLiveKey !== block.key)}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'onStoryRichTap'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+            <!-- 拖进段落中间(l-editor):这一段临时显示成「上半 · 槽 · 下半」,槽的高度 = 被拖的块;松手就在这里拆段 -->
+            <view class="story-split" wx:if="{{storyDrag.split && storyDrag.split.key === block.key}}">
+              <text class="story-split__half">{{storyDrag.split.a}}</text>
+              <view class="story-split__slot" style="height: {{storyDrag.split.h}}px"><view class="story-split__line"></view></view>
+              <text class="story-split__half">{{storyDrag.split.b}}</text>
+            </view>
+            <view class="sx-rich" wx:elif="{{storyEditor.preview || (block.marks && block.marks.length && storyEditor.focusBlockKey !== block.key && storyLiveKey !== block.key)}}" data-blockkey="{{block.key}}" bindtap="{{storyEditor.preview ? '' : 'onStoryRichTap'}}" hover-class="{{storyEditor.preview ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
               <text wx:for="{{storySegs[block.key]}}" wx:key="index" wx:for-item="seg" class="sx-seg {{seg.bold ? 'is-b' : ''}} {{seg.italic ? 'is-i' : ''}} {{seg.strike ? 'is-s' : ''}}">{{seg.text}}</text>
             </view>
             <textarea
@@ -722,6 +728,11 @@
     <!-- 2026-11-10 r2-create:原底栏「下一步」(打开章节设置)收进顶栏 ⋯ 菜单的「章节设置」;
          X Articles 式编辑器没有底栏,主动作是顶栏「完成」。 -->
     <!-- 插入 ▾ / 表情 / 本章信息:编辑器内的小浮层,关闭键在右上角 -->
+    <!-- 底部「已移到… / 撤销」条(编辑器原型 v2):移动、插入、删除、拆段后出现 5 秒 -->
+    <view class="pending-undo story-undo cy-rise-in" wx:if="{{storyUndo.show}}">
+      <text>{{storyUndo.text}}</text>
+      <text class="pending-undo__action" wx:if="{{storyUndo.canUndo}}" bindtap="undoStoryStep" hover-class="cy-pressed" hover-stay-time="80">撤销</text>
+    </view>
     <cy-option-sheet show="{{storyOptions.show}}" title="{{storyOptions.title}}" items="{{storyOptions.items}}" immediate bind:select="onStoryOptionPick" bind:cancel="closeStoryOptions" />
     <view class="sx-sheet-mask" wx:if="{{storySheet}}" catchtap="closeStorySheet" catchtouchmove="noop" hover-class="none"></view>
     <view class="sx-sheet" wx:if="{{storySheet === 'insert'}}">
