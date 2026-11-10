@@ -25,7 +25,7 @@
 /* r2-finish 章节完成卡(Questo B1 结构,我们自己的深色样式):卡片居中,底部「下一站」;停留后化成粒子散开 */
 .cf__end { position: absolute; left: var(--cy-page-x, 38rpx); right: var(--cy-page-x, 38rpx); top: 50%; transform: translateY(-46%) scale(.96); opacity: 0;
   display: flex; flex-direction: column; align-items: center; padding: 64rpx 38rpx 38rpx; border-radius: var(--cy-radius-xl); box-sizing: border-box;
-  background: var(--cy-color-play-story-surface, #2C2C2E); border: 1rpx solid rgba(245,245,242,.1); box-shadow: 0 24rpx 80rpx rgba(0,0,0,.45); /* ds-ok 卡沿与投影,原型深色 */
+  background: #303033; border: 1rpx solid rgba(245,245,242,.14); box-shadow: 0 24rpx 80rpx rgba(0,0,0,.5); /* ds-ok 卡面比底色 #1F1F21 抬高一档 + 卡沿与投影(规则 1:弹层要看得清) */
   transition: opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
 .cf__end.is-in { opacity: 1; transform: translateY(-50%) scale(1); }
 .cf__end.is-out { opacity: 0; transform: translateY(-50%) translateX(24rpx); transition: opacity .5s ease .1s, transform .6s ease; }

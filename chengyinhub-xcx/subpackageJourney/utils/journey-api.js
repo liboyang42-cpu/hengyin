@@ -3,13 +3,13 @@
 /* 玩家闭环读写入口：只包一层 Promise，不改原请求客户端的登录、重试与错误处理。
  * 写请求的 requestId 由调用方生成并保留；超时只查原状态，不换号重发。 */
 
-// 这些后端 POST 都是 @RequestBody JSON；请求客户端对 POST 默认表单编码，必须显式带 JSON 头。
+// 这些后端 POST 大多是 @RequestBody JSON(评论 /api/comment/add 是表单参数,传 form)；请求客户端对 POST 默认表单编码，必须显式带 JSON 头。
 const JSON_HEADER = { 'content-type': 'application/json' };
 
-function call(app, url, method, data, silent) {
+function call(app, url, method, data, silent, form) {
   return new Promise(resolve => {
     app.sendRequest({
-      url, method, data, header: method === 'POST' ? JSON_HEADER : undefined,
+      url, method, data, header: method === 'POST' && !form ? JSON_HEADER : undefined,
       hideLoading: true, silentError: silent !== false, autoErrorToast: false,
       success: body => resolve(Object.assign({ httpStatus: 200 }, body || {})),
       successStatusAbnormal: (body, status) => resolve(Object.assign({}, body || {}, { httpStatus: status, code: (body && body.code) || status })),
@@ -39,6 +39,8 @@ module.exports = {
   seats: (app, registrationId) => call(app, '/api/play/player-journey/seats', 'GET', { registrationId }),
   rank: (app, p) => call(app, '/api/rank/list', 'GET', idQuery(p)),
   teamDetail: (app, teamId) => call(app, '/api/orient/team/detail', 'GET', { teamId }),
+  teamRanking: (app, ownerType, ownerId) => call(app, '/api/orient/team/ranking', 'GET', { ownerType, ownerId }),
+  rate: (app, ownerType, ownerId, rating, contents) => call(app, '/api/comment/add', 'POST', { owner_type: ownerType, owner_id: ownerId, rating, contents, reply_id: 0 }, false, true),
   referral: (app, token) => call(app, '/api/referral/landing/referral', 'POST', { token }),
   gift: (app, token) => call(app, '/api/referral/landing/gift', 'POST', { token }),
   issueReferral: (app, targetType, targetId) => call(app, '/api/marketing/referral/token', 'POST', { targetType, targetId }, false),
