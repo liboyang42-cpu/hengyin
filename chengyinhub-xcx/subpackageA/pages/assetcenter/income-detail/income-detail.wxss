@@ -13,3 +13,5 @@ page { min-height: 100vh; display: flex; flex-direction: column; }
    flex:1 让列表吃到「标题下方到屏幕底部」的剩余空间(空态的 fill 靠这条)。 */
 .id-page-body { flex: 1; min-height: 0; display: flex; flex-direction: column;
   padding: 0 var(--cy-page-x) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
+
+.id-tabs { margin-bottom: var(--cy-space-3); }

@@ -35,6 +35,12 @@
           </view>
           <view class="divider"></view>
         </block>
+        <!-- §18 C 主持小费:收款通道未开通(prepare 501 CHANNEL_NOT_ENABLED),只写不可用,不出开关与比例 -->
+        <view class="row" aria-disabled="true">
+          <view class="row-text"><text class="row-title">主持小费</text></view>
+          <text class="row-value">暂不可开通</text>
+        </view>
+        <view class="divider"></view>
 
         <view class="row" wx:if="{{cancellationState === 'loading' || cancellationState === 'submitting'}}">
           <view class="row-text">

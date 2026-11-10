@@ -59,6 +59,7 @@ function loadActivityDetailPage(wx) {
       if (request.endsWith('scene-entry.js')) return { openScene() {} }
       if (request.endsWith('identity-policy.js')) return { isMerchantView() { return false } }
       if (request.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
+      if (request.endsWith('commerce/referral.js')) return { capture() {}, sharePathPromise() { return Promise.resolve({}) } }
       throw new Error(`unexpected dependency: ${request}`)
     },
   }, { filename })

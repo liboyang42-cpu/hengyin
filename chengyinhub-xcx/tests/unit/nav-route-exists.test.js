@@ -191,6 +191,8 @@ const ORPHAN_EXEMPT = new Map([
   // 本页留着当历史路由壳(旧分享链接/旧扫码仍会落到它):唯一动作已改成弹平台客服微信。
   ['/pages/coop/withdraw/index', '旧提现入口路由壳，唯一动作改为弹平台客服微信'],
   ['/pages/merchant/profile/index', '旧商家主页路由壳'],
+  // 2026-11-09 qx-b5 §17.2:礼品领取页只从买家分享的领取链接进入(领取码一次性下发),站内不应有入口
+  ['/subpackageMember/market/gift/index', '礼品领取深链页，只从购买成功后分享的领取链接进入'],
   ['/pages/publish/topicadd/topicadd', '旧发布路由壳,2026-10 到期删(见 topicadd.js:19)'],
   // 2026-10-22 owner:创建节点玩法去掉「起名字」一步,引导页直接进编辑器;app.json 注册由 C00 撤(CY-HANDOFF #508)
   ['/pages/publish/templateadd/templateadd', '起名页已退役,待 C00 从 app.json 撤注册后删页'],

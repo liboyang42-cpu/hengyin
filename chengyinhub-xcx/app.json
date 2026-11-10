@@ -38,7 +38,8 @@
         "pages/infomationdetail/infomationdetail",
         "pages/assetcenter/income-detail/income-detail",
         "pages/assetcenter/earnings/index",
-        "pages/assetcenter/analysis/index"
+        "pages/assetcenter/analysis/index",
+        "pages/video-bounty/index"
       ]
     },
     {
@@ -266,7 +267,10 @@
         "appeal-mine/index",
         "signup/index",
         "tixian/tixian",
-        "tixianjilu/tixianjilu"
+        "tixianjilu/tixianjilu",
+        "market/passes/index",
+        "market/pass/index",
+        "market/gift/index"
       ]
     },
     {

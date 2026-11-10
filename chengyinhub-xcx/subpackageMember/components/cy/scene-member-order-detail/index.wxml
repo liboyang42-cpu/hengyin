@@ -99,11 +99,27 @@
         <text class="orow-k">合计</text>
         <text class="orow-v">{{money.amount2(info.payableAmount)}}</text>
       </view>
-      <view class="orow" wx:if="{{info.refundAmountShown}}">
+      <!-- U07-04:有退款进度块时金额只在那里按阶段写,这里不再出一个看似已到账的「退款」行 -->
+      <view class="orow" wx:if="{{info.refundAmountShown && !info.settleView.show}}">
         <text class="orow-k">退款</text>
         <text class="orow-v">{{money.amount2(info.refundAmountShown)}}</text>
       </view>
     </view>
+
+    <!-- U07-04 退款进度:阶段、分项、已退/有效票数;只在有退款事实时出现 -->
+    <block wx:if="{{info.settleView.show}}">
+      <view class="sec-title">退款进度</view>
+      <view class="ocard">
+        <view class="orow">
+          <text class="orow-k">进度</text>
+          <text class="orow-v settle-stage settle-stage--{{info.settleView.stageTone}}">{{info.settleView.stage}}</text>
+        </view>
+        <view class="orow" wx:for="{{info.settleView.rows}}" wx:key="key">
+          <text class="orow-k">{{item.label}}</text>
+          <text class="orow-v">{{item.value}}</text>
+        </view>
+      </view>
+    </block>
 
     <!-- 「和队友一起出发」原来插在状态卡和订单明细之间,打断稿的顺序;2026-09-15 挪到支付明细之后 -->
     <cy-card class="order-card team-order-card" wx:if="{{info.teamOpen}}">

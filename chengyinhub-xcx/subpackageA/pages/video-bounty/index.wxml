@@ -1,0 +1,55 @@
+<!-- §18 A/B 视频悬赏(作者端)。结构沿积分明细页;投稿表单只在运营下发的活动链接里出现 -->
+<view class="theme-dark vb"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="vb__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="视频悬赏" safe-top="{{false}}" />
+    <view class="vb__body">
+      <view class="vb-form" wx:if="{{campaignKey && topicId}}">
+        <cy-tabs variant="chip" tabs="{{platforms}}" active="{{form.platform}}" bind:change="onPlatform" />
+        <text class="vb-field__err" wx:if="{{fieldError.field === 'platform'}}">{{fieldError.text}}</text>
+        <input class="vb-input" placeholder="视频页链接" value="{{form.sourceUrl}}" bindinput="onUrl" maxlength="512" />
+        <text class="vb-field__err" wx:if="{{fieldError.field === 'sourceUrl'}}">{{fieldError.text}}</text>
+        <input class="vb-input" placeholder="同一原视频分组（选填，仅建议值）" value="{{form.originGroupKey}}" bindinput="onGroup" maxlength="64" />
+        <cy-inline-error wx:if="{{submitError}}" kind="data" title="{{submitError}}" />
+        <cy-btn variant="primary" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">提交投稿</cy-btn>
+      </view>
+      <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
+      <block wx:if="{{tab === 'subs'}}">
+        <cy-skeleton wx:if="{{subs.state === 'loading'}}" type="list" count="2" />
+        <cy-error wx:elif="{{subs.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
+        <cy-empty wx:elif="{{subs.state === 'empty'}}" fill class="cy-fill-state" size="lg" kind="empty" title="还没有投稿" />
+        <view class="vb-group" wx:else>
+          <view class="vb-row" wx:for="{{subs.rows}}" wx:key="id">
+            <view class="vb-row__main">
+              <text class="vb-row__title">{{item.title}} · {{item.status}}</text>
+              <text class="vb-row__sub vb-row__url" wx:if="{{item.url}}">{{item.url}}</text>
+              <text class="vb-row__sub" wx:if="{{item.window}}">{{item.window}}</text>
+              <text class="vb-row__sub" wx:if="{{item.note}}">{{item.note}}</text>
+            </view>
+            <view class="vb-row__acts">
+              <text class="vb-act" wx:if="{{item.canAppeal}}" data-id="{{item.id}}" bindtap="appeal" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">申诉</text>
+              <text class="vb-act vb-act--danger" wx:if="{{item.canCancel}}" data-id="{{item.id}}" bindtap="cancel" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">取消投稿</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      <block wx:else>
+        <cy-skeleton wx:if="{{accruals.state === 'loading'}}" type="list" count="2" />
+        <cy-error wx:elif="{{accruals.state === 'error'}}" title="读取失败" retry="重试" bind:retry="load" />
+        <cy-empty wx:elif="{{accruals.state === 'empty'}}" fill class="cy-fill-state" size="lg" kind="empty" title="还没有应计记录" />
+        <view class="vb-group" wx:else>
+          <view class="vb-row" wx:for="{{accruals.rows}}" wx:key="key">
+            <view class="vb-row__main">
+              <text class="vb-row__title">{{item.amount}}</text>
+              <text class="vb-row__sub">有效播放 {{item.views}} · 同组合计 {{item.groupViews}}</text>
+            </view>
+            <text class="vb-row__sub">{{item.state}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-error": "/components/cy/error/index"
+  }
+}
