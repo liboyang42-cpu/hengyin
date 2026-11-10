@@ -123,7 +123,13 @@ class OrderCenterQueryApplicationTest {
         assertSnapshot(controllerDetail("REG123"), "REGISTRATION", "11", "REG123", "12.30", "已支付");
         verify(reader).selectCmsRegistrationById(11L); verifyNoMoreInteractions(reader);
         verify(activities).selectCmsActivityById(81L); verifyNoMoreInteractions(activities);
-        verify(refunds).selectRefundList(any()); verifyNoMoreInteractions(refunds);
+        // 两次都是只读、限本人报名退款:本报名最新退款单 + 订单级结算汇总(U07-04/05)。
+        org.mockito.ArgumentCaptor<RefundApplication> refundQueries = org.mockito.ArgumentCaptor.forClass(RefundApplication.class);
+        verify(refunds, times(2)).selectRefundList(refundQueries.capture()); verifyNoMoreInteractions(refunds);
+        for (RefundApplication query : refundQueries.getAllValues()) {
+            assertEquals(7L, query.getMemberId()); assertEquals("registration", query.getSourceType());
+        }
+        assertEquals(11L, refundQueries.getAllValues().get(0).getSourceId());
         verify(payment).resolveBusinessOrderNo("REG123"); verifyNoMoreInteractions(payment);
     }
 

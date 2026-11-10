@@ -43,6 +43,11 @@ public static final class InvalidArgument extends IllegalArgumentException {
         }
 
         public Issues getData() { return data; }
+
+        /** getMessage() 仍是给作者的人话;toString() 接上被包装拒绝自己的工程诊断(如 GameplaySupportMatrix.Refusal 的节点/玩法 key/原因码)。 */
+        @Override public String toString() {
+            return getCause() == null ? super.toString() : super.toString() + " <- " + getCause();
+        }
     }
 
 public static final class InvalidContent extends RuntimeException {
