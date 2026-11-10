@@ -7046,7 +7046,7 @@ Page({
     const precheckOk = !skipLabel && !issues.length;
     this._publishPrecheckOk = precheckOk;
     const passed = this._buildPublishPassed(precheckOk);
-    this.setData({
+    this.setData({ reducedMotion: readReducedMotion(), // qx-u1:侧滑返回在减动效下直接关、不播滑出
       publishCheck: {
         show: true, blocking: this._withIssueWhere(blocking), advisory, summary, passed, preview: this._buildPublishPreview(blocking),
       },
@@ -7075,7 +7075,7 @@ Page({
   _showBackendPublishIssue(issue) {
     const check = this.buildPublishCheck();
     const blocking = [issue].concat(check.blocking);
-    this.setData({ publishCheck: { show: true, blocking: this._withIssueWhere(blocking),
+    this.setData({ reducedMotion: readReducedMotion(), publishCheck: { show: true, blocking: this._withIssueWhere(blocking),
       advisory: check.advisory, summary: this._buildPublishSummary(),
       passed: this._buildPublishPassed(false), preview: this._buildPublishPreview(blocking) },
       storyPop: { show: false, anchor: '' } });

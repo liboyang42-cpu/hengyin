@@ -1,3 +1,4 @@
+<wxs module="gs" src="../../../utils/wxs/gesture.wxs" />
 <wxs module="zh">
   // R5 HP 归零面板：按 key（或指定字段）反查下标 / 显示名；has 判断备选节点是否已选
   var idx = function (list, key, field) { var f = field || 'key'; for (var i = 0; i < (list || []).length; i++) { if (list[i][f] === key) return i; } return -1; };
@@ -1368,7 +1369,10 @@
   <!-- P-9(2026-10-31 业主批准):主页面浅色,与专业主题编辑器同一套;封面 / 标题 / 详情 / 票务 / 主题设置 /
        发布后的合作 / 画面风格 / 剧情都在主页面上,每一行点了回到编辑器里那一项。只有「看剧情」用弹窗(也是浅色)。
        挡住发布的问题列在封面下面,写清在哪里,「去修改」直接定位;票务行 / 章节行同步标红。 -->
-  <view class="sp" style="padding-top: {{statusBarHeight + navBarHeight}}px; box-sizing: border-box;" wx:if="{{publishCheck.show}}" catchtouchmove="noop">
+  <!-- qx-u1:左缘侧滑返回 = 左上 ✕ 同一出口(closePublishCheck),跟手在视图层(utils/wxs/gesture.wxs) -->
+  <view class="sp" style="padding-top: {{statusBarHeight + navBarHeight}}px; box-sizing: border-box;" wx:if="{{publishCheck.show}}"
+        bindtouchstart="{{gs.edgeStart}}" catchtouchmove="{{gs.edgeMove}}" bindtouchend="{{gs.edgeEnd}}" bindtouchcancel="{{gs.edgeEnd}}"
+        bindtransitionend="{{gs.edgeSettle}}" data-glayer="1" data-close="closePublishCheck" data-rm="{{reducedMotion}}">
     <scroll-view class="sp-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="sp-hero">
         <image wx:if="{{publishCheck.preview.cover}}" class="sp-hero__img" src="{{publishCheck.preview.cover}}" mode="aspectFill" />

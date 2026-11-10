@@ -1,6 +1,9 @@
 const modal = require('../../../../utils/modal.js');
+const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 
 Component({
+  // qx-u1:侧滑返回读减动效(直接关、不播滑出)
+  behaviors: [reducedMotionBehavior],
   properties: {
     show: { type: Boolean, value: false, observer(value) {
       this._shownAt = value ? Date.now() : 0;

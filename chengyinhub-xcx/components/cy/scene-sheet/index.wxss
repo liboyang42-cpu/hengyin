@@ -57,7 +57,8 @@
   backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
   -webkit-backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
-  box-shadow: var(--cy-sheet-inset-shadow);
+  /* qx-u1:第二层是拖拽越界(阻尼 / 弹簧回弹)时往下补的同色底,平时在屏幕外。page 档下面整条覆盖成 none。 */
+  box-shadow: var(--cy-sheet-inset-shadow), 0 320rpx 0 var(--cy-sheet-bg); /* ds-ok 拖拽越界补底 */
   /* 2026-10-23:进出场改 transition(见 index.js 头注释)。起点态在屏外,挂上 .ss--in 才升起;
      退场摘掉 .ss--in 落回屏外。时长读按档位重定义过的 --cy-motion-sheet-in / -out,曲线慢快慢(业主 09-06 定)。 */
   transform: translateY(100%);

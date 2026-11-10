@@ -1526,6 +1526,9 @@ function eventHandlerNames(value) {
   const classified = classifyBinding(value)
   if (classified.kind === 'identifier') return [classified.name]
   if (classified.kind === 'empty') return []
+  // qx-u1(2026-11-10):`{{模块.函数}}` 是 WXS 事件处理器(微信只允许 WXS 函数以这种形式绑定),在视图层跑手势,
+  // 自身不发请求;它经 callMethod 调到的关闭方法已由同一出口的 ✕ / 收起按钮登记。所以不产生逻辑层 handler。
+  if (/^\{\{\s*[A-Za-z_$][\w$]*\.[A-Za-z_$][\w$]*\s*\}\}$/.test(value)) return []
   const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
   if (!match) throw new Error(`无法静态解析事件绑定: ${value}`)
   return [...new Set([match[2], match[4]])]
