@@ -75,7 +75,7 @@ Staging-only commits on top of the merges:
 
 - **Action ledger:** `build-action-ledger.js --write` gives 5874 controls with no diff. `build-route-matrix.js --json` gives 167 routes with no diff.
 - **`ui-integrity.js`:** `UI-GATE-0:PASS`. U1–U5, A11Y and Legacy all PASS.
-- **Full mini-program suite** (`node --test chengyinhub-xcx/tests/unit/*.test.js` at `1b086946`): 16966 tests, 16939 pass, **27 fail**. After the two staging fixes in `fix: staging 合流——…hangman / WXSS 通配符`, **26 fail remain, and every one was already red on the base or on its own lane branch.** Each failing file was re-run on the integrate base and on every lane head.
+- **Full mini-program suite** (`node --test chengyinhub-xcx/tests/unit/*.test.js` at `1b086946`): 16966 tests, 16939 pass, **27 fail**. After the two staging fixes in `cb8b1d1a`, **26 fail remain, and every one was already red on the base or on its own lane branch.** Each failing file was re-run on the integrate base and on every lane head.
   - **Base already red (4):** `theme-records-player` ×3, `profile-merchant-about-contract` ×1.
   - **qx-b5 branch red (14):** `ann-d-funds-member-ui-contract` ×3, `scene-twin-single-source-contract` ×6, `blank-value-display-contract` ×1, `dw29-l6-merchant-audit` ×1, `nav-page-title-spacing-contract` ×2 (Cross-lane 2), `get-auth-matrix-contract` ×1 (shared with b4, Cross-lane 1).
   - **qx-b4 branch red (4):** `merchant-theme-route-contract`, `picker-unification-contract` (a native `<picker>`), `press-feedback-resolves-contract`, `tandianri-b5-role-contracts` (also red on b5).
