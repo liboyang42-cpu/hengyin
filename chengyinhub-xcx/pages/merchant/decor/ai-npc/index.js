@@ -243,9 +243,9 @@ Page({
     merchantTheme.merchantPageRestore();
   },
   onUnload() {
+    this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
     this._unloaded = true;
     if (this._niStop) this._niStop();
-    this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
     this._voicePageEpoch = (this._voicePageEpoch || 0) + 1;
     // Retire only this page generation's in-memory confirmation; durable UNKNOWN identities stay intact.
     this._voiceConfirming = false;

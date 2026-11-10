@@ -70,6 +70,9 @@ function loadPage(options = {}) {
     if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
     // 2026-10-27 M-28/G-7:漫游落点只显示到路名(纯函数,无副作用)
     if (id.endsWith('address-short.js')) return require('../../pages/merchant/utils/address-short.js')
+    // qx-green:首次介绍的分段动效(只 setData 动效标记)与应用内「减少动态效果」读取
+    if (id.endsWith('page-motion.js')) return require('../../utils/page-motion.js')
+    if (id.endsWith('motion-preference.js')) return require('../../utils/motion-preference.js')
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {
