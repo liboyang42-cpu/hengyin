@@ -386,7 +386,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-11-09 qx-a5:发布菜单二级(快速配置/专业手动/返回)−3、新建故事玩法预览/配置两颗 −2、我的模板「自己建一个」卡 +1,tap 2876 → 2872(重建实测)。
   // 2026-11-09 qx-a6:店铺参谋经营优化卡 tap +1;守卫 bind:state、发现帖文卡 bind:like / bind:comment 事件合同 +3。
   assert.equal(ledger.controls.filter(item => item.interactionMode === 'tap').length, 2928)  /* 2026-11-10 r2-kits:指认确认层右上角关闭、逐字猜词表单开关两处与指认按钮合一,重建实测 2927 → 2928。 */  /* 2026-11-09 qx-a4(入口地图地点弹层按漫游红线 R4 不唤起外部导航,地址行不再可点,再 −1):漫游城市清单组件与入口、勋章墙/时光胶囊方卡、时光胶囊页退场,重建实测 tap 2876 → 2854、事件合同 2875 → 2871、合计 5751 → 5725。 */ // qx-b1:提示入口、提示行、跳过、明细、改去替代站 +6 tap
-  assert.equal(ledger.controls.filter(item => item.interactionMode === 'event-contract').length, 2948)  /* 2026-11-10 qx-c3 staging 重建(合入 c3/b3/b4/b5 新头)后实测 2947 → 2948。 */  // 2026-11-09 qx-b8 +3 事件合同(城市 cy-tabs change、读失败 cy-error retry、详情 cy-footer-bar primarytap),2875 → 2878
+  assert.equal(ledger.controls.filter(item => item.interactionMode === 'event-contract').length, 2950)  /* 2026-11-10 r2-kits:文字问答 / 逐字猜词表单的切换开关 bindchange +2,重建实测 2948 → 2950。 */  /* 2026-11-10 qx-c3 staging 重建(合入 c3/b3/b4/b5 新头)后实测 2947 → 2948。 */  // 2026-11-09 qx-b8 +3 事件合同(城市 cy-tabs change、读失败 cy-error retry、详情 cy-footer-bar primarytap),2875 → 2878
   assert.equal(ledger.controls.filter(item => item.interactionMode === 'tap' && item.actionClass === 'external').length, 366)  /* 2026-11-09 qx-a4:城市清单「复制地址 / 复制来源链接」与时光胶囊「选照片」三枚外部 tap 退场,352 → 349。 */  // qx-a1 延伸任务行打开地点卡 +1
   // 2026-09-13逐项映射：漫游恢复/继续+2 tap，copyRecap真实剪贴板归external，local tap净+1。
   // 邀约恢复+2、漫游retry+1、订单orderchanged+1，local事件净+4；草稿据点拒绝独立variant再+1 tap，总3971。

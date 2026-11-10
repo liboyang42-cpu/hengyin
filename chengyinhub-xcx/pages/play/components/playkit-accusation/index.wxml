@@ -51,7 +51,7 @@
   <view class="ac-cf" wx:if="{{confirmOpen}}" catchtouchmove="noop">
     <view class="ac-cf__mask" aria-hidden="true"></view>
     <view class="ac-cf__panel" role="dialog">
-      <view class="ac-cf__close" bindtap="onConfirmCancel" aria-role="button" aria-label="关闭" hover-class="ac__press" hover-stay-time="80"><cy-icon name="close-sm" size="40" /></view>
+      <view class="ac-cf__close" bindtap="onConfirmCancel" aria-role="button" aria-label="关闭" hover-class="ac__press" hover-stay-time="80"><view class="ac-cf__glyph"><cy-icon name="close-sm" size="40" /></view></view>
       <view class="ac-cf__ava">
         <image wx:if="{{dossier.avatar}}" class="ac__ava-img" src="{{dossier.avatar}}" mode="aspectFill" aria-hidden="true" />
         <view wx:else class="ac__ava-img ac__ava-img--empty" aria-hidden="true">{{dossier.initial}}</view>
