@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5877,
+  "controlCount": 5882,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -66054,6 +66054,24 @@
             {
               "selector": "cy-btn",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 4
             }
           ]
         },
@@ -465946,6 +465964,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -506779,6 +506815,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -547619,6 +547673,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -588451,6 +588523,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -629291,6 +629381,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -670123,6 +670231,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -710964,6 +711090,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -751797,6 +751941,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -792638,6 +792800,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -833471,6 +833651,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -874312,6 +874510,24 @@
           ]
         },
         {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/appeal-mine/index",
           "segments": [
             {
@@ -915145,6 +915361,24 @@
             {
               "selector": "cy-sheet",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-sheet",
+              "index": 1
             }
           ]
         },
@@ -1433151,7 +1433385,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:92"
+        "staticSource": "subpackageJourney/pages/landing/index.js:93"
       }
     },
     {
@@ -1433338,7 +1433572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:55"
+        "staticSource": "subpackageJourney/pages/landing/index.js:56"
       }
     },
     {
@@ -1433530,7 +1433764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/landing/index.js:100"
+        "staticSource": "subpackageJourney/pages/landing/index.js:101"
       }
     },
     {
@@ -1435421,7 +1435655,7 @@
       }
     },
     {
-      "id": "subpackageJourney/pages/seats/index.wxml:19:bindtap:onCancel:1",
+      "id": "subpackageJourney/pages/seats/index.wxml:12:bindtap:onEditMe:1",
       "route": "subpackageJourney/pages/seats/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1435439,17 +1435673,87 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": "wx.showModal",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onEditMe",
+        "line": 12,
+        "selectorHint": ".jn-group",
+        "visibleCondition": "{{me && me.name}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "以 {{me.name}} 身份游玩，编辑",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/gerenziliao/gerenziliao"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:84"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:24:bindtap:onOpenInvite:2",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
       "control": {
         "tag": "text",
         "event": "bindtap",
-        "handler": "onCancel",
-        "line": 19,
-        "selectorHint": ".jn-row__v",
-        "visibleCondition": "{{item.canCancel}}",
+        "handler": "onOpenInvite",
+        "line": 24,
+        "selectorHint": ".lb-link",
+        "visibleCondition": "{{lobby.canInvite || lobby.invited.length}}",
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "撤销第{{item.no}}席邀请",
+        "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1435470,8 +1435774,14 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
         "apis": [
+          "/api/config/features",
+          "/api/login/code",
           "/api/marketing/affiliate/summary",
           "/api/marketing/product/gifts/claim",
           "/api/marketing/referral/token",
@@ -1435485,7 +1435795,10 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
         "primaryApis": [
           "/api/marketing/affiliate/summary",
@@ -1435501,10 +1435814,28 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
         "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/marketing/affiliate/summary",
             "method": "GET",
@@ -1435588,191 +1435919,21 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:61"
-      }
-    },
-    {
-      "id": "subpackageJourney/pages/seats/index.wxml:25:bindtap:onInvite:2",
-      "route": "subpackageJourney/pages/seats/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageJourney/pages/seats/index.wxml",
-        "js": "subpackageJourney/pages/seats/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "onInvite",
-        "line": 25,
-        "selectorHint": ".jn-grow",
-        "visibleCondition": null,
-        "disabledCondition": "{{busy}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/marketing/affiliate/summary",
-          "/api/marketing/product/gifts/claim",
-          "/api/marketing/referral/token",
-          "/api/orient/team/detail",
-          "/api/play/player-journey/choices",
-          "/api/play/player-journey/memory",
-          "/api/play/player-journey/report",
-          "/api/play/player-journey/seats",
-          "/api/play/seat-invitations/",
-          "/api/play/seat-invitations/claim",
-          "/api/play/seat-invitations/invite",
-          "/api/rank/list",
-          "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
-        ],
-        "primaryApis": [
-          "/api/marketing/affiliate/summary",
-          "/api/marketing/product/gifts/claim",
-          "/api/marketing/referral/token",
-          "/api/orient/team/detail",
-          "/api/play/player-journey/choices",
-          "/api/play/player-journey/memory",
-          "/api/play/player-journey/report",
-          "/api/play/player-journey/seats",
-          "/api/play/seat-invitations/",
-          "/api/play/seat-invitations/claim",
-          "/api/play/seat-invitations/invite",
-          "/api/rank/list",
-          "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/marketing/affiliate/summary",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
           },
           {
-            "url": "/api/marketing/product/gifts/claim",
+            "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
           {
-            "url": "/api/marketing/referral/token",
+            "url": "/api/topic/info-to-user",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
           {
-            "url": "/api/orient/team/detail",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/choices",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/memory",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/report",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/seats",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/seat-invitations/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/seat-invitations/claim",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/seat-invitations/invite",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/rank/list",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/referral/landing/gift",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/referral/landing/referral",
+            "url": "/api/user/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1435792,7 +1435953,239 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:41"
+        "staticSource": "subpackageJourney/pages/seats/index.js:76"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:28:bindtap:onSeatTap:3",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onSeatTap",
+        "line": 28,
+        "selectorHint": ".lb-seat",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "第{{item.no}}席 {{item.label}}",
+        "ariaRole": null,
+        "ariaRoleExpression": "{{item.tappable ? 'button' : 'text'}}",
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/affiliate/summary",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/gifts/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/referral/token",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/team/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/choices",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/memory",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/seats",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/rank/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/gift",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/referral",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:82"
       }
     },
     {
@@ -1435845,8 +1436238,14 @@
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
         "apis": [
+          "/api/config/features",
+          "/api/login/code",
           "/api/marketing/affiliate/summary",
           "/api/marketing/product/gifts/claim",
           "/api/marketing/referral/token",
@@ -1435860,7 +1436259,10 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
         "primaryApis": [
           "/api/marketing/affiliate/summary",
@@ -1435876,10 +1436278,28 @@
           "/api/play/seat-invitations/invite",
           "/api/rank/list",
           "/api/referral/landing/gift",
-          "/api/referral/landing/referral"
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
         ],
-        "auxiliaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
         "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/marketing/affiliate/summary",
             "method": "GET",
@@ -1435963,6 +1436383,24 @@
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
           }
         ],
         "writeApis": []
@@ -1435979,7 +1436417,607 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageJourney/pages/seats/index.js:25"
+        "staticSource": "subpackageJourney/pages/seats/index.js:32"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:54:bindtap:onGoStart:4",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onGoStart",
+        "line": 54,
+        "selectorHint": ".jn-grow",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:85"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:58:bind:close:onCloseInvite:5",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "onCloseInvite",
+        "line": 58,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:83"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:61:bindtap:onInvite:6",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onInvite",
+        "line": 61,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{lobby.canInvite || pendingInvite}}",
+        "disabledCondition": "{{busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/affiliate/summary",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/gifts/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/referral/token",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/team/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/choices",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/memory",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/seats",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/rank/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/gift",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/referral",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:91"
+      }
+    },
+    {
+      "id": "subpackageJourney/pages/seats/index.wxml:67:bindtap:onCancel:7",
+      "route": "subpackageJourney/pages/seats/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageJourney/pages/seats/index.wxml",
+        "js": "subpackageJourney/pages/seats/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "onCancel",
+        "line": 67,
+        "selectorHint": ".jn-row__v",
+        "visibleCondition": "{{item.canCancel}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "撤回第{{item.no}}席邀请",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/play/index?activityId=",
+          "pages/play/index?topicId=",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/role/info",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/marketing/affiliate/summary",
+          "/api/marketing/product/gifts/claim",
+          "/api/marketing/referral/token",
+          "/api/orient/team/detail",
+          "/api/play/player-journey/choices",
+          "/api/play/player-journey/memory",
+          "/api/play/player-journey/report",
+          "/api/play/player-journey/seats",
+          "/api/play/seat-invitations/",
+          "/api/play/seat-invitations/claim",
+          "/api/play/seat-invitations/invite",
+          "/api/rank/list",
+          "/api/referral/landing/gift",
+          "/api/referral/landing/referral",
+          "/api/topic/info-to-user",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/affiliate/summary",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/product/gifts/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/marketing/referral/token",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/orient/team/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/choices",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/memory",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/report",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/player-journey/seats",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/claim",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/seat-invitations/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/rank/list",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/gift",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/referral/landing/referral",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/topic/info-to-user",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageJourney/pages/seats/index.js:111"
       }
     },
     {
