@@ -530,8 +530,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         Long taskId = findOrCreateOpenTask(bizType, bizId, reporterId, SOURCE_REPORT, "NORMAL", snapshot);
         if (AuditTask.BIZ_HANGOUT.equals(bizType) || AuditTask.BIZ_TEAM.equals(bizType)) {
             AuditTask locked = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
-            if (locked == null || (!AuditTask.STATUS_PENDING.equals(locked.getStatus())
-                    && !AuditTask.STATUS_ESCALATED.equals(locked.getStatus()))) {
+            if (locked == null || !com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(locked.getStatus())) {
                 throw new ServiceException("该轮举报已处理，请重新提交举报");
             }
         }
@@ -660,8 +659,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private void escalateOpenRisk(Long taskId, String candidateRisk) {
         if (!riskEscalationEnabled || taskId == null) return;
         AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
-        if (task == null || !(AuditTask.STATUS_PENDING.equals(task.getStatus())
-                || AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
+        if (task == null || !com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(task.getStatus())) {
             return;
         }
         int reporters = auditTaskMapper.countOpenReportersByBiz(task.getBizType(), task.getBizId());
@@ -711,8 +709,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         q.setBizType(bizType);
         q.setBizId(bizId);
         for (AuditTask existing : auditTaskMapper.selectAuditTaskList(q)) {
-            if ((AuditTask.STATUS_PENDING.equals(existing.getStatus())
-                    || AuditTask.STATUS_ESCALATED.equals(existing.getStatus()))
+            if (com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(existing.getStatus())
                     && (!split || SOURCE_REPORT.equals(existing.getSourceType()) == reportLane)) {
                 return existing.getId();
             }
@@ -1818,8 +1815,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         boolean open = false;
         if (tasks != null) {
             for (AuditTask task : tasks) {
-                if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
-                        || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) open = true;
+                if (com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(task.getStatus()) && !task.isOpenReport()) open = true;
                 AuditTask safe = applicantTask(task);
                 if (!memberId.equals(task.getSubmitterId())) safe.setSubmitterId(null);
                 List<AuditRecord> timeline = applicantTimeline(listAuditRecords(task.getId()));
@@ -3015,17 +3011,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return "{\"status\":" + status + ",\"version\":" + version + "}";
     }
 
+    /** 裁决迁移表唯一真源在 AuditTaskState；此处只做委托。 */
     private boolean canTransition(Integer from, Integer to) {
-        if (AuditTask.STATUS_PENDING.equals(from)) {
-            return AuditTask.STATUS_APPROVED.equals(to)
-                    || AuditTask.STATUS_REJECTED.equals(to)
-                    || AuditTask.STATUS_ESCALATED.equals(to);
-        }
-        if (AuditTask.STATUS_ESCALATED.equals(from)) {
-            return AuditTask.STATUS_APPROVED.equals(to)
-                    || AuditTask.STATUS_REJECTED.equals(to);
-        }
-        return false;
+        return com.chengyinhub.business.domain.enums.AuditTaskState.canReviewTransition(from, to);
     }
 
     private String statusToAction(Integer status) {

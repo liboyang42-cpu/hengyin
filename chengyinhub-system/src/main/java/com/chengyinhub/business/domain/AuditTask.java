@@ -10,6 +10,7 @@ import java.util.Date;
 public class AuditTask extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
+    /** 值域与迁移表见 {@link com.chengyinhub.business.domain.enums.AuditTaskState}；常量须与其 code 一致（测试守住）。 */
     public static final Integer STATUS_PENDING = 0;
     public static final Integer STATUS_APPROVED = 1;
     public static final Integer STATUS_REJECTED = 2;
@@ -34,7 +35,7 @@ public class AuditTask extends BaseEntity {
     /** 独立槽里未结(待审/升级)的举报单 —— 不属于内容审核槽,不挡作者编辑/重提、也不吸收内容审核。 */
     public boolean isOpenReport() {
         return isReportLane(getBizType(), getSourceType())
-                && (STATUS_PENDING.equals(getStatus()) || STATUS_ESCALATED.equals(getStatus()));
+                && com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(getStatus());
     }
 
     /** 内容举报 bizType(对齐既有 submit 约定·大写);软封口径:SQUARE/COMMENT 用 status(下2/复1),CLUB_POST(_COMMENT) 用 del_flag(下2/复0),IM 用 status(BLOCKED/NORMAL) */
