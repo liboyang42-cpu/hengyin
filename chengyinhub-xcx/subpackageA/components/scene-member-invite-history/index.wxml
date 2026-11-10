@@ -14,7 +14,7 @@
       <view class="ir-stack" wx:if="{{stack.length}}" aria-hidden="true">
         <view class="ir-stack-i" wx:for="{{stack}}" wx:key="id"><cy-avatar size="56" src="{{item.avatar}}" name="{{item.nickname}}" /></view>
       </view>
-      <text class="ir-hero-meta">已邀请 {{total}} 人<block wx:if="{{rewardReady}}"> · 已到账 {{earnedCount}} 人</block></text>
+      <text class="ir-hero-meta">已邀请 {{total || 0}} 人<block wx:if="{{rewardReady}}"> · 已到账 {{earnedCount || 0}} 人</block></text>
     </view>
   </view>
 

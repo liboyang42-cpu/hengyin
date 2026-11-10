@@ -207,7 +207,7 @@
     <view class="ocard">
       <view class="orow" bindtap="goSeats" aria-role="button" aria-label="管理同行席位" hover-class="cy-pressed" hover-stay-time="80">
         <text class="orow-k">管理席位</text>
-        <text class="orow-v orow-v--link">{{info.orderNum}} 人票</text>
+        <text class="orow-v orow-v--link">{{info.orderNum || 0}} 人票</text>
       </view>
     </view>
     </block>

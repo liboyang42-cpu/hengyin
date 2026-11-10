@@ -10,9 +10,9 @@
   <view class="rb-hero {{heroOn ? 'is-on' : ''}}" wx:if="{{hero}}">
     <view class="rb-hero__wreath">
       <image class="rb-hero__laurel rb-hero__laurel--l" src="/subpackageJourney/images/laurel.svg" mode="aspectFit" aria-hidden="true" />
-      <view class="rb-hero__num" aria-label="第 {{hero.rank}} 名">
+      <view class="rb-hero__num" aria-label="第 {{hero.rank || '—'}} 名">
         <view class="rb-digit" wx:for="{{digits}}" wx:key="index" aria-hidden="true">
-          <view class="rb-digit__col" style="transform:translateY(-{{item * 10}}%)">
+          <view class="rb-digit__col" style="transform:translateY(-{{(item * 10) || 0}}%)">
             <text class="rb-digit__n">0</text><text class="rb-digit__n">1</text><text class="rb-digit__n">2</text><text class="rb-digit__n">3</text><text class="rb-digit__n">4</text><text class="rb-digit__n">5</text><text class="rb-digit__n">6</text><text class="rb-digit__n">7</text><text class="rb-digit__n">8</text><text class="rb-digit__n">9</text>
           </view>
         </view>

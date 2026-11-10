@@ -32,7 +32,7 @@
           <text class="mk-card__name">{{item.name}}</text>
           <text class="mk-card__meta" wx:if="{{item.validity}}">{{item.validity}}</text>
           <view class="mk-card__foot">
-            <text class="mk-card__cover" wx:if="{{item.coverCount}}">含 {{item.coverCount}} 个作品{{item.seats ? ' · ' + item.seats : ''}}</text>
+            <text class="mk-card__cover" wx:if="{{item.coverCount}}">含 {{item.coverCount || 0}} 个作品{{item.seats ? ' · ' + item.seats : ''}}</text>
             <text class="mk-card__price" wx:if="{{item.price}}">{{item.price}}</text>
           </view>
         </view>

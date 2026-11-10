@@ -49,3 +49,12 @@ test('beats:减少动态效果时只停在 rest,不起计时器', (t) => {
   t.mock.timers.tick(10000)
   assert.deepEqual(page.log.map((d) => d.g), [1])
 })
+
+test('游戏主题库的公开目录口:subpackageMember 用本分包逐字副本(分包不互引),与 pages/topic 原件一字不差', () => {
+  const fs = require('node:fs')
+  const root = path.join(__dirname, '../..')
+  const canonical = fs.readFileSync(path.join(root, 'pages/topic/utils/public-catalog.js'), 'utf8')
+  const copy = fs.readFileSync(path.join(root, 'subpackageMember/utils/public-catalog.js'), 'utf8')
+  assert.equal(copy, canonical, '改 pages/topic/utils/public-catalog.js 时同步副本')
+  assert.match(fs.readFileSync(path.join(root, 'subpackageMember/utils/pass-library.js'), 'utf8'), /require\('\.\/public-catalog\.js'\)/)
+})
