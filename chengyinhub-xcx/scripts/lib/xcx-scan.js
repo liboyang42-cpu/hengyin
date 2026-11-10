@@ -557,15 +557,32 @@ function maskWxmlComments(source) {
 
 const EVENT_ATTR_RE = /((?:capture-)?(?:bind|catch)(?::)?[a-zA-Z][\w-]*)\s*=\s*"([^"]*)"/g;
 
+// 本文件里 <wxs module="x"> 声明过的模块名。
+function wxsModuleNames(source) {
+  const names = new Set();
+  for (const m of maskWxmlComments(source).matchAll(/<wxs\b[^>]*\bmodule\s*=\s*["']([A-Za-z_$][\w$]*)["']/g)) names.add(m[1]);
+  return names;
+}
+
+// 2026-11-10 r2-visual(V3-34 跟手倾斜):`bindtouchmove="{{tilt.move}}"` 是 WXS 响应事件,
+// 由视图层直接执行,不进页面 JS、不发请求、不跳页 —— 不是 JS handler 绑定。
+// 只认「本文件声明过的 wxs 模块 . 函数名」这一种形状,打上 wxs 标记交给各门禁跳过;
+// 其它 {{...}} 表达式仍按原规则处理(台账照旧 fail closed)。
+const WXS_CALL_RE = /^\{\{\s*([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\s*\}\}$/;
+
 function findEventBindings(source) {
   const scannable = maskWxmlComments(source);
+  const modules = wxsModuleNames(source);
   const bindings = [];
   let m;
   EVENT_ATTR_RE.lastIndex = 0;
   while ((m = EVENT_ATTR_RE.exec(scannable))) {
     const attrName = m[1];
     const value = m[2].trim();
-    bindings.push({ attrName, value, offset: m.index, line: lineNumber(scannable, m.index) });
+    const binding = { attrName, value, offset: m.index, line: lineNumber(scannable, m.index) };
+    const call = WXS_CALL_RE.exec(value);
+    if (call && modules.has(call[1])) binding.wxs = { module: call[1], fn: call[2] };
+    bindings.push(binding);
   }
   return bindings;
 }
@@ -951,6 +968,7 @@ module.exports = {
   resolveRequireFile,
   maskWxmlComments,
   findEventBindings,
+  wxsModuleNames,
   classifyBinding,
   scanTags,
   identifiersIn,

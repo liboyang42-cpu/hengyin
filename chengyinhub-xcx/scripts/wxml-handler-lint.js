@@ -51,7 +51,8 @@ function lintRepo(root) {
     if (!jsHandlerCache.has(jsFile)) jsHandlerCache.set(jsFile, new Set(S.extractHandlerNames(jsFile)));
     const handlerSet = jsHandlerCache.get(jsFile);
     owned.forEach((wxmlFile) => {
-      S.findEventBindings(fs.readFileSync(wxmlFile, 'utf8')).forEach(({ attrName, value, line }) => {
+      S.findEventBindings(fs.readFileSync(wxmlFile, 'utf8')).forEach(({ attrName, value, line, wxs }) => {
+        if (wxs) return; // WXS 响应事件:视图层执行,不对应页面 JS handler
         const cls = S.classifyBinding(value);
         if (cls.kind === 'identifier') {
           checkedBindingCount += 1;
