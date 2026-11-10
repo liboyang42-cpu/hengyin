@@ -1,0 +1,90 @@
+/* 原型外壳(不属于任何小程序页面)。手机内的样式全部来自 cy.css(master WXSS 转出)。 */
+:root{--sh-bg:#ECECEF;--sh-panel:#fff;--sh-ink:#17181A;--sh-sub:#6B6F76;--sh-line:#E1E2E6;--sh-hi:#F3F4F6;--mk:#FF5A1F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sh-bg:#101113;--sh-panel:#18191C;--sh-ink:#F1F2F4;--sh-sub:#9A9EA6;--sh-line:#2A2C31;--sh-hi:#222428}}
+:root[data-theme="dark"]{--sh-bg:#101113;--sh-panel:#18191C;--sh-ink:#F1F2F4;--sh-sub:#9A9EA6;--sh-line:#2A2C31;--sh-hi:#222428}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--sh-bg);color:var(--sh-ink);font:13px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif;overflow:hidden}
+.shx{display:grid;grid-template-columns:240px 1fr 340px;height:100vh}
+.sh-l,.sh-r{background:var(--sh-panel);overflow:auto}
+.sh-l{border-right:1px solid var(--sh-line);padding:14px 0 40px}
+.sh-r{border-left:1px solid var(--sh-line);padding:16px 18px 40px}
+.sh-l h1{font-size:15px;margin:0 16px 2px}.sh-l a.home{display:block;margin:0 16px 10px;color:var(--sh-sub);font-size:12px;text-decoration:none}
+.sh-g{margin:14px 0 2px;padding:0 16px;font-size:11px;font-weight:700;color:var(--sh-sub)}
+.sh-i{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:5px 14px 5px 20px;cursor:pointer;border-left:3px solid transparent}
+.sh-i:hover{background:var(--sh-hi)}.sh-i.on{background:var(--sh-hi);border-left-color:var(--mk);font-weight:600}
+.sh-c{display:flex;flex-direction:column;min-width:0}
+.sh-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--sh-line);background:var(--sh-panel);flex-wrap:wrap}
+.sh-bar .ttl{font-weight:700;font-size:14px;margin-right:auto}
+.tg{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;font-size:12px;color:var(--sh-sub)}
+.tg input{display:none}.tg i{width:32px;height:18px;border-radius:9px;background:#B9BCC3;position:relative;transition:.2s}
+.tg i:after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.2s}
+.tg input:checked+i{background:var(--mk)}.tg input:checked+i:after{left:16px}
+.seg{display:inline-flex;border:1px solid var(--sh-line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--sh-panel);color:var(--sh-sub);font:inherit;font-size:12px;padding:3px 10px;cursor:pointer}
+.seg button.on{background:var(--sh-ink);color:var(--sh-panel)}
+.sh-stage{flex:1;position:relative;overflow:hidden}
+.sh-fit{position:absolute;left:50%;top:50%;transform-origin:center center}
+.sh-r h2{font-size:16px;margin:0 0 4px}.sh-r .src{font:11.5px/1.5 ui-monospace,Menlo,monospace;color:var(--sh-sub);word-break:break-all;margin:0 0 12px}
+.sh-r h3{font-size:12px;color:var(--sh-sub);margin:16px 0 6px}
+.sh-r ol{margin:0;padding-left:0;list-style:none}.sh-r li{margin:0 0 10px;display:grid;grid-template-columns:22px 1fr;gap:6px;cursor:pointer}
+.sh-r li b.n{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--mk);color:#fff;font:700 10px/18px -apple-system,sans-serif;justify-content:center}
+.sh-r li.hl{background:var(--sh-hi);border-radius:6px}
+.sh-r .none{color:var(--sh-sub)}
+.sh-r code{font:11.5px ui-monospace,Menlo,monospace;background:var(--sh-hi);padding:1px 4px;border-radius:4px}
+
+/* 手机 */
+.phone{width:390px;height:844px;border-radius:54px;background:#000;position:relative;box-shadow:0 0 0 11px #1B1B1D,0 0 0 12px #3A3A3D,0 30px 60px rgba(0,0,0,.35)}
+.viewport{position:absolute;inset:0;border-radius:54px;overflow:hidden;transform:translateZ(0);background:#000}
+.island{position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;border-radius:20px;background:#000;z-index:9800;pointer-events:none}
+.sbar{position:absolute;left:0;right:0;top:0;height:47px;z-index:9790;pointer-events:none;display:flex;align-items:center;justify-content:space-between;padding:4px 30px 0 44px;font:600 16px/1 -apple-system,"SF Pro Text","PingFang SC",sans-serif;color:#fff}
+.sbar .ic{display:flex;gap:6px;align-items:center}
+.cap{position:absolute;right:7px;top:51px;width:87px;height:32px;border-radius:16px;z-index:9790;display:flex;align-items:center;pointer-events:none;border:.5px solid rgba(255,255,255,.28);background:rgba(0,0,0,.18)}
+.cap .d{flex:1;display:flex;align-items:center;justify-content:center;gap:3px}.cap .d i{width:5.5px;height:5.5px;border-radius:50%;background:#fff}.cap .d i:nth-child(2){width:7px;height:7px}
+.cap .sep{width:.5px;height:19px;background:rgba(255,255,255,.3)}.cap .o{flex:1;display:flex;align-items:center;justify-content:center}
+.cap .o b{width:17px;height:17px;border-radius:50%;border:2.4px solid #fff;display:flex;align-items:center;justify-content:center}.cap .o b:after{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+.homebar{position:absolute;left:50%;bottom:8px;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#fff;z-index:9790;pointer-events:none;opacity:.9}
+.phone.lt .sbar{color:#000}.phone.lt .cap{border-color:rgba(0,0,0,.12);background:rgba(255,255,255,.6)}
+.phone.lt .cap .d i,.phone.lt .cap .o b:after{background:#000}.phone.lt .cap .o b{border-color:#000}.phone.lt .homebar{background:#000}
+
+/* 屏 */
+.scr{position:absolute;inset:0;display:none;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Noto Sans CJK SC",sans-serif;-webkit-font-smoothing:antialiased;background:var(--cy-color-bg-page)}
+.scr.on{display:block}
+.scr .sv{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scr .sv::-webkit-scrollbar,.scr scroll-view::-webkit-scrollbar{display:none}
+:where(.scr) view{display:block}:where(.scr) text{display:inline}:where(.scr) scroll-view{display:block;scrollbar-width:none}
+:where(.scr) scroll-view[scroll-x]{overflow-x:auto;overflow-y:hidden;white-space:nowrap}
+:where(.scr) scroll-view[scroll-y]{overflow-y:auto}
+:where(.scr) img{display:inline-block;max-width:none}
+:where(.scr) input,:where(.scr) textarea{font:inherit;color:inherit;background:transparent;border:0;outline:0;width:100%;padding:0;resize:none}
+:where(.scr) button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer}
+.scr [data-go],.scr [data-back],.scr [data-sheet],.scr [data-close],.scr [data-toast],.scr [data-act],.scr [data-tab]{cursor:pointer}
+.scr .notes{display:none}
+[hidden]{display:none!important}
+/* 微信原生导航占位(自定义导航页用) */
+.wx-nav{position:absolute;left:0;right:0;top:0;height:87px;padding-top:47px;z-index:60;display:flex;align-items:center}
+.wx-nav .bk{width:44px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--cy-color-text-primary)}
+.wx-nav .tt{position:absolute;left:96px;right:96px;bottom:0;height:40px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:var(--cy-color-text-primary)}
+
+/* iOS sheet:peek 30% / half 60% / full 80% */
+.ios-sheet{position:absolute;inset:0;z-index:9000;display:none}
+.ios-sheet.open{display:block}
+.ios-sheet .mask{position:absolute;inset:0;background:rgba(0,0,0,.42);animation:fadeIn .2s}
+.ios-sheet .panel{position:absolute;left:0;right:0;bottom:0;border-radius:14px 14px 0 0;overflow:hidden;background:var(--cy-color-bg-elevated);color:var(--cy-color-text-primary);display:flex;flex-direction:column;animation:up .28s cubic-bezier(.2,.8,.2,1);transition:height .28s cubic-bezier(.2,.8,.2,1)}
+.ios-sheet[data-detent="peek"] .panel{height:30%}.ios-sheet[data-detent="half"] .panel{height:60%}.ios-sheet[data-detent="full"] .panel{height:80%}
+.ios-sheet .grab{flex:none;height:20px;display:flex;align-items:center;justify-content:center;cursor:ns-resize}
+.ios-sheet .grab:after{content:"";width:36px;height:5px;border-radius:3px;background:var(--cy-color-sheet-handle,#5A5A5A)}
+.ios-sheet .body{flex:1;overflow:auto;scrollbar-width:none}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* toast */
+.wx-toast{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);z-index:9600;background:rgba(17,17,17,.86);color:#fff;border-radius:8px;padding:12px 16px;font-size:15px;line-height:1.4;max-width:260px;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.wx-toast.show{opacity:1}
+
+/* 改动标注:小号数字圆点,「显示改动」开关控制 */
+.mk-dot{position:absolute;z-index:9700;width:17px;height:17px;border-radius:50%;background:var(--mk);color:#fff;font:700 10px/17px -apple-system,"PingFang SC",sans-serif;text-align:center;box-shadow:0 0 0 1.5px #fff,0 1px 3px rgba(0,0,0,.4);pointer-events:auto;cursor:pointer;transform:translate(-50%,-50%)}
+body:not(.mk) .mk-dot{display:none}
+body.mk [data-mk].mk-hl{outline:2px solid var(--mk);outline-offset:1px}
+/* 组件样式隔离:小程序里 style/components.wxss 的 .cy-tabs__item--on::after(全局)进不了 cy-tabs 组件,浏览器里会漏进来 */
+.c-tabs .cy-tabs--chip .cy-tabs__item::after{width:auto;height:auto;background:none;transform:none}
