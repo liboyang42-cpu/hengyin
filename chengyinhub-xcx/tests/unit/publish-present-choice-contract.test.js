@@ -23,7 +23,7 @@ const ALL_SECTIONS = ['qa', 'branch', 'predict', 'pricePair', 'random', 'profile
   'estimate', 'diyName', 'typeIn', 'dailySign', 'slowTask', 'musicCorner', 'timeWindow', 'diceRoll',
   'hangman',
   'reaction', 'ballShake', 'countdown', 'stopwatch', 'coinFlip', 'hiddenObject', 'scan', 'steps',
-  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album', 'hangman']
+  'compass', 'shout', 'blindTaste', 'silentOrder', 'sort', 'match', 'classify', 'compare', 'photoCheck', 'album']
 const DICE = 'diceRoll'
 
 test('★默认表:每个玩法段默认内嵌,没有任何段被锁在整屏', () => {
