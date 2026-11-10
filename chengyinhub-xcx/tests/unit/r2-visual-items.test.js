@@ -86,7 +86,8 @@ test('V3-34 台账/绑定门禁:本文件声明过的 wxs 模块调用打 wxs �
   const bad = S.findEventBindings('<view bindtouchmove="{{tilt.move}}"></view>')
   assert.equal(bad[0].wxs, undefined, '未声明的模块不放行')
   const ledger = read('scripts/uiaudit/build-action-ledger.js')
-  assert.match(ledger, /\(binding\.wxs \? \[\] : eventHandlerNames\(binding\.value\)\)/)
+  // 2026-11-10 qx-s2 staging 合并:r2-create 给 eventHandlerNames 加了第二参 wxsModules(条件式 WXS 绑定),binding.wxs 判定照旧在前
+  assert.match(ledger, /\(binding\.wxs \? \[\] : eventHandlerNames\(binding\.value(, wxsModules)?\)\)/)
 })
 
 test('a4-v3-27 收集册打开过场:只在从「我的」进入时播,减少动态效果不播,只动 transform/opacity', () => {

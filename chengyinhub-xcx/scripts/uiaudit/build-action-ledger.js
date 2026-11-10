@@ -1538,9 +1538,9 @@ function eventHandlerNames(value, wxsModules) {
   const classified = classifyBinding(value)
   if (classified.kind === 'identifier') return [classified.name]
   if (classified.kind === 'empty') return []
-  // qx-u1(2026-11-10):`{{模块.函数}}` 是 WXS 事件处理器(微信只允许 WXS 函数以这种形式绑定),在视图层跑手势,
-  // 自身不发请求;它经 callMethod 调到的关闭方法已由同一出口的 ✕ / 收起按钮登记。所以不产生逻辑层 handler。
-  if (/^\{\{\s*[A-Za-z_$][\w$]*\.[A-Za-z_$][\w$]*\s*\}\}$/.test(value)) return []
+  // qx-u1(2026-11-10):`{{模块.函数}}` 是 WXS 事件处理器,在视图层跑手势,自身不发请求;它经 callMethod 调到的关闭方法已由同一出口的 ✕ / 收起按钮登记。
+  // 2026-11-10 qx-s2 合并:u1 原先对任意 `{{a.b}}` 直接放行,与 r2-create「只有本 WXML 声明过的 wxs 模块才放行、未声明的显式失败」相抵;
+  // 改由下方 wxsModules 分支统一放行(u1 的 gs.* 绑定所在 WXML 都声明了 <wxs module="gs">),台账条数不变。
   const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
   if (match) return [...new Set([match[2], match[4]])]
   const half = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(?:(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])\3|(['"])\4\s*:\s*(['"])([A-Za-z_$][\w$]*)\5)\s*\}\}$/.exec(value)

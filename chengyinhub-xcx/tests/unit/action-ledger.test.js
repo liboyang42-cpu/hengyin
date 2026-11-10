@@ -158,7 +158,8 @@ test('R30 切换章节只关闭视频，选择章节仍保留真实旁白的真�
     expandHandlerBody('onPickChapter', stopped, null, { modules: true }), helpers), 'external')
   for (const controls of [ledger.controls, readCurrentLedger().controls]) {
     const tools = controls.find(item => item.id === 'pages/play/index.wxml:321:bindtap:openStackOrChaptersFromTools:51')
-    const pick = controls.find(item => item.id === 'pages/play/index.wxml:525:bindtap:onPickChapter:76')
+    // 2026-11-10 qx-s2 staging 合并树:play/index.wxml 各线增行后选章行 525 → 530(仅行号位移,同一 bindtap 与序号)
+    const pick = controls.find(item => item.id === 'pages/play/index.wxml:530:bindtap:onPickChapter:76')
     assert.ok(tools)
     assert.equal(tools.actionClass, 'state')
     assert.deepEqual(tools.externalCapabilities, [])
