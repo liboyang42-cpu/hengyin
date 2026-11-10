@@ -77,7 +77,9 @@ test('翻转门组件不再认识 held,底部仍是「轻点跳过」', () => {
   const w = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8')
   assert.doesNotMatch(w, /held|等队长放行/)
   // r2-finish:章节完成卡在场时底部是「下一站」按钮,不再叠一行「轻点跳过」
-  assert.match(w, /<view class="cf__hint" wx:if="\{\{mode === 'gate' && !endCard\}\}">轻点跳过<\/view>/)
+  // l-play 2026-11-10(业主批准 proto gp-chapter-start):开场屏底部是「读下去」按钮(点它方块炸散),不再是一行「轻点跳过」
+  assert.match(w, /<view class="cf__foot cf__foot--start \{\{cta \? 'is-on' : ''\}\}" wx:if="\{\{mode === 'gate' && start\}\}"><view class="cf__btn" catchtap="onTap"[^>]*aria-label="读下去"/)
+  assert.doesNotMatch(w, /轻点跳过/)
 })
 
 test('放行:收起等待屏、换上翻转门,门不发 continue 时按原兜底计时进正文;仍被挡时兜底不进', () => {
