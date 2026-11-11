@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "kind": "f-release-migration-set",
-  "candidateHead": "52193cc26cc80830f5a8f9b021d1a80ef0d64024",
-  "headMigrationCount": 640,
+  "candidateHead": "fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2",
+  "headMigrationCount": 641,
   "productionAppliedState": "UNKNOWN",
   "baseline": {
     "pack": "docs/delivery/release-closeout-20261029/release-migration-pack.json",
@@ -146,7 +146,8 @@
       "20261110_ecommerce_payout_wiring",
       "20261111_ecommerce_combine",
       "marketing_task_registration_20261108",
-      "o14_reco_search_jobs_20261022"
+      "o14_reco_search_jobs_20261022",
+      "zzz_committed_official_notice_job_reregister_20261111"
     ],
     "4_OWNER_DATA_PRE": [
       "20261027_user_invoice_processing_backfill",
@@ -1155,7 +1156,7 @@
       "phase": "PRE_DEPLOY",
       "note": "营销归因 2 表",
       "packPhase": null,
-      "rerun": "幂等",
+      "rerun": "APPLIED 时必须跳过",
       "migrationId": "marketing_attribution_20261108",
       "path": "chengyinhub-admin/sql/migration_marketing_attribution_20261108.sql",
       "sha256": "63eedef2fc086d97f4579cf5b7041d36897f0ad9d820c81a94581e0720984ac3",
@@ -1171,7 +1172,7 @@
       "phase": "PRE_DEPLOY",
       "note": "营销商品/礼品 5 表",
       "packPhase": null,
-      "rerun": "幂等",
+      "rerun": "APPLIED 时必须跳过",
       "migrationId": "marketing_product_20261108",
       "path": "chengyinhub-admin/sql/migration_marketing_product_20261108.sql",
       "sha256": "2287a5be21592f8942467e79191175572d8af69a38f32a61fa37bcd314b058aa",
@@ -1205,7 +1206,7 @@
       "phase": "PRE_DEPLOY",
       "note": "收入分配 4 表",
       "packPhase": null,
-      "rerun": "幂等",
+      "rerun": "APPLIED 时必须跳过",
       "migrationId": "marketing_revenue_allocation_20261108",
       "path": "chengyinhub-admin/sql/migration_marketing_revenue_allocation_20261108.sql",
       "sha256": "8717990a778f42620bbc9bf809e64275e0c4013ecee0353c7c04c287b5100592",
@@ -1221,7 +1222,7 @@
       "phase": "PRE_DEPLOY",
       "note": "渠道兑换码 5 表",
       "packPhase": null,
-      "rerun": "幂等",
+      "rerun": "APPLIED 时必须跳过",
       "migrationId": "marketing_z_channel_voucher_20261108",
       "path": "chengyinhub-admin/sql/migration_marketing_z_channel_voucher_20261108.sql",
       "sha256": "35440a069680d562c9f1d23322f6a432a6080b6f0c56de532f0bc9b7ba303cc1",
@@ -2253,7 +2254,7 @@
       "phase": "PRE_DEPLOY",
       "note": "视频悬赏 + 主持小费 6 表",
       "packPhase": null,
-      "rerun": "幂等",
+      "rerun": "APPLIED 时必须跳过",
       "migrationId": "video_bounty_host_tip_20261108",
       "path": "chengyinhub-admin/sql/migration_video_bounty_host_tip_20261108.sql",
       "sha256": "773a0119578cf773f43450c7a25e7c32c3afac0ced70e0f140b52438f2c72e0e",
@@ -2800,6 +2801,24 @@
         "#43 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE `workshop_apple_notification` DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci, MODIFY COLUMN `signed_"
       ],
       "step": 155
+    },
+    {
+      "source": "launch 波次（master 2bb81143 之后）",
+      "class": "必须",
+      "phase": "POST_DEPLOY",
+      "note": "f-rehearsal 修正：按 invoke_target 判重补登记暂停的 committedOfficialNoticeTask 任务（正常路径空操作；jar 回滚后前滚时恢复该任务，原 step 11 是单次执行不能重跑）",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "zzz_committed_official_notice_job_reregister_20261111",
+      "path": "chengyinhub-admin/sql/migration_zzz_committed_official_notice_job_reregister_20261111.sql",
+      "sha256": "e8a58381bb89409bd4f1cb8f90e32b9bb9ea5d28e3adab5c5985fff74a624576",
+      "order": 639,
+      "dependsOn": [
+        "20261024_d_committed_official_notice_wx"
+      ],
+      "idempotency": "IDEMPOTENT_STATIC",
+      "destructiveStatements": [],
+      "step": 156
     }
   ]
 }

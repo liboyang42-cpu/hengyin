@@ -8,7 +8,7 @@
 
 | 文件 | 用途 |
 |---|---|
-| `MIGRATIONS.md` | 155 个迁移的逐项清单：执行序、类别（必须 / 可选 / 需业主授权 / 不执行）、阶段、重跑规则 |
+| `MIGRATIONS.md` | 156 个迁移的逐项清单：执行序、类别（必须 / 可选 / 需业主授权 / 不执行）、阶段、重跑规则 |
 | `release-precheck.sql` | 只读预检，每个迁移一条 SELECT，判出 APPLIED / NEEDED / PARTIAL 等状态 |
 | `release-migrations.json` | 上面两份的机器版本 |
 | `release-manifest.json` | `ci/release_manifest.py manifest` 对候选头的输出：源码树、小程序导出身份、全部 640 个迁移的哈希（生产状态一律 UNKNOWN） |
@@ -22,10 +22,10 @@
 
 | 项 | 值 |
 |---|---|
-| 候选头（写这份清单时） | `52193cc26cc80830f5a8f9b021d1a80ef0d64024`（`launch/questo-20261110`，含 l-payout3 与 f-* 六条修复线；qx-final3 重算，原为 `2256f79e`） |
+| 候选头（写这份清单时） | `52193cc26cc80830f5a8f9b021d1a80ef0d64024`（`launch/questo-20261110`，含 l-payout3 与 f-* 六条修复线；qx-final3 重算，原为 `2256f79e`）。f-rehearsal 增补 step 156 后，`MIGRATIONS.md` / `release-*.json` / `release-precheck.sql` 按 `fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2` 重算 |
 | 最终 SHA | PR #779 合入 `master` 后的合并提交。**jar 和小程序必须都用这一个 SHA**（审计 B-4「0.1 版本对齐」） |
 | 生产参考基线 | 10-29 发布包的基线 `19408d49`（Merge #452）。10-22、10-28、10-29 三个包都**没有**在生产确认执行过，所以这次的发布集把它们全部算进来 |
-| 迁移发布集 | 155 项 = 10-29 包 88 项 + 10-29 之后 67 项（其中 launch 波次 38 项）。必须 102、可选 29、需业主授权 20、不执行 4 |
+| 迁移发布集 | 156 项 = 10-29 包 88 项 + 10-29 之后 68 项（其中 launch 波次 39 项）。必须 103、可选 29、需业主授权 20、不执行 4（f-rehearsal 增补 step 156，见第 6 节） |
 | 迁移执行序 | 候选头上 `ci/migration_ledger.py` 的全量拓扑序，依赖来自 `ci/migration-dependencies.json` |
 
 **最终 SHA 定下来以后，先重算一次发布集**，确认合并没有带进新迁移：
@@ -77,7 +77,7 @@ diff <(grep -v '候选' docs/delivery/questo-ui-20261109/f-release/MIGRATIONS.md
 
 每个文件都走 **chengyin-db-migrate** skill：只读预检 → 展示文件和状态 → 你确认 → 执行 → 回读，留回执。按 `MIGRATIONS.md`「执行轮次」表的 step 顺序。任何一步报错或断言为假就**立即停**，存输出，重跑预检，不要跳过往下走。
 
-- **第 1 轮 `1_PRE_REQUIRED`（102 项里的 98 项）**：新 jar 直接读写这些表和列。不跑完不能上新 jar。
+- **第 1 轮 `1_PRE_REQUIRED`（103 项里的 98 项；另 5 项必须项在第 3 轮）**：新 jar 直接读写这些表和列。不跑完不能上新 jar。
 - **第 2 轮 `2_PRE_OPTIONAL`（28 项）**：新 jar 在缺失时能容忍（多是开关种子、菜单、可选索引）。建议同一个窗口里跑完。审计 B-6 说的「D1 积分配置是可选项」就是这里的 `migration_20261023_points_value_config_seed.sql`。
 
 这一段要特别注意的几项：
@@ -159,7 +159,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
 
 ## 6 新 jar 健康之后的迁移（第 3 轮 `3_POST_DEPLOY`）
 
-这 5 项只往 `sys_job` 插**暂停**的任务（或随之建表），必须等包含对应 bean 的新 jar 起来再跑：
+这 6 项只往 `sys_job` 插**暂停**的任务（或随之建表），必须等包含对应 bean 的新 jar 起来再跑：
 
 | step | 文件 | 插入的任务 |
 |---|---|---|
@@ -168,6 +168,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
 | 52 | `migration_20261111_ecommerce_combine.sql` | 不插任务；只建 6 张合单表，按依赖跟在 49 后面 |
 | 68 | `migration_marketing_task_registration_20261108.sql` | `channelRefundConsumptionTask.run()`、`marketingRevenuePostingTask.run()` |
 | 93 | `migration_o14_reco_search_jobs_20261022.sql` | `recommendationScoreDailyTask.run()`、`contentSearchProjectionTask.refresh()`（10-29 包原排在 jar 前，这里挪到 jar 后，理由同上） |
+| 156 | `migration_zzz_committed_official_notice_job_reregister_20261111.sql` | `committedOfficialNoticeTask.deliverPending()`（f-rehearsal 增补）。正常路径是空操作：step 11 已登记该行。它的用处在第 12 节：jar 回滚后再前滚时补回这条任务，因为 step 11 是单次执行项，不能重跑 |
 
 - 任务插入后全部保持**暂停**。启用按 `chengyinhub-xcx/docs/发版checklist.md` 的 C-1：先确认 bean 在新 jar 里，启用后跨一个 cron 周期看日志，没有 bean-not-found 再继续。
 - 电商、营销分配、渠道退款三类任务，在对应资金开关打开之前**不要启用**。
@@ -228,7 +229,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
 
 ## 9 开发者工具上传（和 jar 同一个 SHA）
 
-- ☐ 干净检出**最终 SHA**，只用 `chengyinhub-xcx/` 目录。核对它的 tree hash 和 `app.json` 的 blob 与 `ci/release_manifest.py manifest --commit <最终 SHA>` 输出里的 `miniProgram.treeHash`、`appJsonBlob` 一致（候选头上分别是 `68c2c2bb…`、`bdcdb7d2…`，合并后会变，以最终 SHA 的输出为准）。
+- ☐ 干净检出**最终 SHA**，只用 `chengyinhub-xcx/` 目录。核对它的 tree hash 和 `app.json` 的 blob 与 `ci/release_manifest.py manifest --commit <最终 SHA>` 输出里的 `miniProgram.treeHash`、`appJsonBlob` 一致（f-rehearsal 重算的候选头 `fa7fc0ef` 上分别是 `467b2a40…`、`ee546466…`，合并后会变，以最终 SHA 的输出为准）。
 - ☐ 复制一份**上传拷贝**，对它跑深色地图样式脚本（仓库本身永远是空 key）：
   `CY_MAP_SUBKEY=… CY_MAP_STYLE_BLACK=… CY_MAP_STYLE_WHITE=… CY_MAP_STYLE_PAPER=… CY_MAP_STYLE_2077=… node scripts/release-map-style.js --dir <上传拷贝> --require`
   （四个序号取腾讯位置服务控制台里绑到这个 key 的样式序号；说明见 `components/cy/free-map/DARK_MAP.md`）。
@@ -301,8 +302,9 @@ bash scripts/production-preflight.sh --service <你的服务名>
     - `contentSafetyRecheckTask.run()`、`sensitiveContentRescanTask.run()`
     - `ecommercePayoutTask.shareAndRetry()`、`ecommercePayoutTask.syncOnboarding()`
     - `channelRefundConsumptionTask.run()`、`marketingRevenuePostingTask.run()`
-    - 以及旧 jar 里没有的这几个：`committedOfficialNoticeTask.deliverPending()`、`recommendationScoreDailyTask.run()`、`contentSearchProjectionTask.refresh()`、`imNotificationDeliveryTask.deliverPending()`、`roamRewardDeliveryTask.run()`
-  - 删之前先用 `SELECT job_id, invoke_target, status FROM sys_job WHERE invoke_target IN (...)` 读一遍。再次前滚到新 jar 后，重跑对应迁移即可恢复（暂停态）。
+    - 以及旧 jar 里没有的这几个：`committedOfficialNoticeTask.deliverPending()`、`recommendationScoreDailyTask.run()`、`contentSearchProjectionTask.refresh()`
+    - **不要删** `imNotificationDeliveryTask.deliverPending()`、`roamRewardDeliveryTask.run()`：这两个 bean 在生产基线 `19408d49` 里就有，任务行也由更早的 `migration_20261013_b_im_notification_intent.sql`、`migration_20261013_roam_reward_delivery.sql` 插入（step 140 只是按 invoke_target 判重补登记）。删掉会丢掉生产上可能已启用的任务配置，前滚重跑 step 140 只会补回暂停态（f-rehearsal 核对）
+  - 删之前先用 `SELECT job_id, invoke_target, status FROM sys_job WHERE invoke_target IN (...)` 读一遍。再次前滚到新 jar 后，重跑对应迁移即可恢复（暂停态）：step 36、49、68、93 和 **step 156**。**不要重跑 step 11**（`migration_20261024_d_committed_official_notice_wx.sql`）：它先建表，重跑在建表处报 1050 停下，任务行回不来；它的任务行由 step 156 补登记。启用过的任务恢复后是暂停态，需要按第 6 节重新启用（f-rehearsal 实测）。
 - **不要删表、删列**：已写入的订单、分账、提现事实要留着对账。迁移文件头里的 `DROP` 和反向 UPDATE 不会自动执行；要撤销就另写前向迁移，经你批准再执行。
 - **数据迁移回滚**：只用各文件头写好的回滚语句，例如测试主题下架只恢复本迁移改过的行。
 - **不要**把旧的全库备份直接覆盖到已经有新业务数据的库上。

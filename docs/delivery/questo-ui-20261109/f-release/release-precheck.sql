@@ -1,5 +1,5 @@
 -- =====================================================================================
--- f-release 只读预检（候选 52193cc26cc80830f5a8f9b021d1a80ef0d64024）
+-- f-release 只读预检（候选 fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2）
 -- 每个发布迁移一条 SELECT，返回 step / migration_id / release_class / phase / status。
 -- 只读：全部是 SELECT（information_schema 与业务表），生成器逐句校验，无写入、无 SET、无 PREPARE。
 -- 不含任何主机、端口、账号；由业主用只读账号执行（建议先 SET SESSION TRANSACTION READ ONLY，不在本文件里）。
@@ -264,6 +264,7 @@ FROM (SELECT
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'user_invoice_title_receipt'), 3) AS c0) AS n7;
 
 -- [24] migration_20261027_template_adoption_receipt.sql · 必须 · PRE_DEPLOY
+-- 也接受 20261107_template_adoption_inherited_config_hash 落地后的形状（f-rehearsal：否则全部执行后重跑预检会误判 CONFLICT）
 SELECT 24 AS exec_order, '20261027_template_adoption_receipt' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
@@ -271,6 +272,8 @@ SELECT 24 AS exec_order, '20261027_template_adoption_receipt' AS migration_id,
 FROM (SELECT
     IFNULL((SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN COUNT(*) = 12 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',ordinal_position,column_name,column_type,is_nullable,IFNULL(column_default,'~')),256),16),16,10) AS UNSIGNED)) = 11451000278466319056
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 8511979612919902689 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'template_adoption_receipt')
+       THEN 1 WHEN COUNT(*) = 13 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',ordinal_position,column_name,column_type,is_nullable,IFNULL(column_default,'~')),256),16),16,10) AS UNSIGNED)) = 15081007648298938700
+       AND (SELECT COUNT(*) = 6 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 7132261291781051820 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'template_adoption_receipt')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'template_adoption_receipt'), 3) AS c0) AS n8;
 
 -- [25] migration_20261027_user_invoice_processing_backfill.sql · 需业主授权 · PRE_DEPLOY
@@ -1616,4 +1619,10 @@ SELECT 155 AS step, 'zz_questo_collation_align_20261109' AS migration_id, '必�
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '这些表里隐式 utf8mb4_0900_ai_ci 的列数为 0（38 张表）' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 0 FROM information_schema.columns WHERE table_schema = DATABASE() AND collation_name = 'utf8mb4_0900_ai_ci' AND table_name IN ('cms_registration_seat_invitation', 'cms_registration_seat_invitation_request', 'cms_topic_content_revision', 'content_landing_metadata', 'content_landing_translation', 'gift_entitlement', 'host_tip_config', 'host_tip_intent', 'marketing_attribution', 'marketing_channel_order_verification', 'marketing_channel_redemption', 'marketing_channel_refund_verification', 'marketing_channel_voucher', 'marketing_channel_voucher_account', 'marketing_offer', 'marketing_offer_item', 'marketing_order_adjustment', 'marketing_product', 'marketing_product_item', 'marketing_product_order', 'marketing_product_order_line', 'marketing_promotion', 'marketing_promotion_redemption', 'marketing_promotion_refund_fact', 'marketing_referral_credential', 'marketing_revenue_allocation', 'marketing_revenue_allocation_line', 'marketing_revenue_posting_task', 'marketing_revenue_rule', 'marketing_tier', 'play_help_run_quota', 'video_bounty_accrual', 'video_bounty_campaign', 'video_bounty_evidence', 'video_bounty_submission', 'workshop_apple_notification', 'workshop_apple_original', 'workshop_apple_transaction')), 0)) AS present, 1 AS expected) x;
+
+-- [156] migration_zzz_committed_official_notice_job_reregister_20261111.sql · 必须 · POST_DEPLOY
+SELECT 156 AS step, 'zzz_committed_official_notice_job_reregister_20261111' AS migration_id, '必须' AS release_class, 'POST_DEPLOY' AS phase,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT(present, '/', expected) AS objects_present, '定时任务 committedOfficialNoticeTask.deliverPending()' AS detail
+FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'committedOfficialNoticeTask.deliverPending()'), 0)) AS present, 1 AS expected) x;
 
