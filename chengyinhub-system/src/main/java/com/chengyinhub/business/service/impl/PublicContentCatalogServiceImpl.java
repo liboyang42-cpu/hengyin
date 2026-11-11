@@ -40,6 +40,8 @@ import java.util.Set;
 public class PublicContentCatalogServiceImpl implements IPublicContentCatalogService {
 
     static final int PREVIEW_DEFAULT_STOPS = 3;
+    /** 与 TopicSaleFinalizationServiceImpl / 小程序章节卡同一占位口径。 */
+    static final String UNNAMED_CHAPTER = "未命名章节";
     /** 列表摘要兜底长度：作者没写公开摘要时截 description，不外泄全文。 */
     static final int SUMMARY_FALLBACK_LENGTH = 120;
 
@@ -443,10 +445,15 @@ public class PublicContentCatalogServiceImpl implements IPublicContentCatalogSer
 
     private List<String> chapterNames(Long topicId) {
         // 章节名一次取回(标题很短)；正文 blocks 不在这条查询里。
+        // name 为 NULL 时 MyBatis 对这一整行返回 null map：不能 row.get，按既有「未命名章节」口径占位，章节数不丢。
         List<String> names = new ArrayList<String>();
         for (Map<String, Object> row : nullToEmpty(catalogMapper.selectChapterNames(topicId))) {
-            Object name = row.get("chapterName");
-            if (name != null && !String.valueOf(name).trim().isEmpty()) names.add(String.valueOf(name));
+            Object name = row == null ? null : row.get("chapterName");
+            if (name == null) {
+                names.add(UNNAMED_CHAPTER);
+            } else if (!String.valueOf(name).trim().isEmpty()) {
+                names.add(String.valueOf(name));
+            }
         }
         return names;
     }

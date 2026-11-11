@@ -291,6 +291,21 @@ class PublicContentCatalogServiceTest {
     // ---------------------------------------------------------------- 预览与隐私
 
     @Test
+    void chapterWithNullNameKeepsItsSlotWithUnnamedLabelInsteadOfNpe() {
+        // MyBatis 对「唯一一列 name 为 NULL」的行返回 null map(f-rehearsal 冒烟 /info 500 的复现)。
+        PublicContentCatalogRow row = row(1L, "A", null, null);
+        when(mapper.selectCatalogItemById(eq(1L), any())).thenReturn(row);
+        when(mapper.selectChapterNames(eq(1L))).thenReturn(Arrays.<Map<String, Object>>asList(
+                mapOf("chapterName", "第一章"), null, mapOf("chapterName", null)));
+        when(mapper.selectFirstChapter(eq(1L))).thenReturn(mapOf("chapterId", 5L, "chapterName", "第一章"));
+        when(mapper.selectPreviewStops(eq(1L), anyInt())).thenReturn(new ArrayList<Map<String, Object>>());
+
+        PublicContentCatalogDetailVO detail = service.detail(1L, "zh-CN");
+
+        assertEquals(Arrays.asList("第一章", "未命名章节", "未命名章节"), detail.getChapterNames());
+    }
+
+    @Test
     void previewContainsOnlyFirstChapterHooksAndNeverAnswersOrFragments() throws Exception {
         PublicContentCatalogRow row = row(1L, "A", null, null);
         when(mapper.selectCatalogItemById(eq(1L), any())).thenReturn(row);
