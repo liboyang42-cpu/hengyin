@@ -1,0 +1,39 @@
+<!doctype html><meta charset="utf-8"><title>bake</title>
+<style>body{margin:0;background:#000}#vp{position:relative;width:390px;height:844px}.scr{position:relative;width:390px;height:844px}</style>
+<div id="vp"></div>
+<section class="scr on" id="ky"><canvas id="kyCv" width="780" height="1688"></canvas></section>
+<script src="three.min.js"></script><script src="glass3d.js"></script><script src="key3d.js"></script>
+<script>
+// 玻璃图标:同一场景绕 Y 轴一圈 n 帧,拼成 cols 列的网格雪碧图(原型 G3.sprite 的网格版)
+window.bakeIcon = function (name, n, px, cols, q) {
+  // 用原型自己的渲染器(PMREM 影棚贴图绑在它上面;另起渲染器会丢反光,整套发灰)
+  var r2 = G3.ensure(), T = G3.T, s = G3.scene(name), obj = s.userData.obj;
+  r2.setPixelRatio(1); r2.setSize(px, px, false); r2.setScissorTest(false); r2.setClearColor(0, 0);
+  var cam = new T.PerspectiveCamera(26, 1, .1, 50); cam.position.set(0, 0, 6.0); cam.lookAt(0, 0, 0);
+  var rows = Math.ceil(n / cols), sheet = document.createElement('canvas'); sheet.width = cols * px; sheet.height = rows * px; var g = sheet.getContext('2d');
+  for (var i = 0; i < n; i++) { obj.scale.setScalar(1); obj.rotation.x = .12 + Math.sin(i / n * Math.PI * 2) * .04; obj.position.y = 0; obj.rotation.y = Math.sin(i / n * Math.PI * 2) * .55; r2.clear(); r2.render(s, cam); g.drawImage(r2.domElement, (i % cols) * px, Math.floor(i / cols) * px); }
+  return { url: sheet.toDataURL('image/webp', q), cols: cols, rows: rows };
+};
+// 钥匙开场:KEYB.build 一次;frames = [{t, idle?}];每帧按 60fps 子步推进 tick(碎片 / 方块自转按调用次数累加),最后一帧上屏
+var KS = null, lastT = 0;
+window.keyInit = function () { if (!KS) { KS = KEYB.build(document.getElementById('ky')); lastT = 0; } return !!KS; };
+function stepTo(t) { var from = lastT; var steps = Math.max(1, Math.round((t - from) / 16.7)); for (var k = 1; k <= steps; k++) KEYB.tick(KS, from + (t - from) * k / steps); lastT = t; }
+// 待机:整转结束后的姿态(t=10800 之后),用自己的周期函数取代 tick 里的非周期摆动,保证首尾相接
+var TI = 6000;
+function idleAt(ph) {
+  KEYB.tick(KS, 10800); var S = KS, a = ph * 6.283, k = S.key;
+  k.rotation.y = Math.sin(a) * .16; k.rotation.x = Math.sin(a * 2) * .05; k.position.y = S.KC.y + Math.sin(a * 2) * .035;
+  S.cubes.forEach(function (c) { var u = c.userData, n = Math.max(1, Math.round(Math.abs(u.sp) * TI / 1000 / 6.283)), ang = u.ph + (u.sp < 0 ? -1 : 1) * a * n;
+    var ox = Math.cos(ang) * u.R, oz = Math.sin(ang) * u.R * .55, oy = Math.sin(ang + u.tilt) * u.R * .45; c.position.set(S.KC.x + ox, S.KC.y + oy, S.KC.z + oz);
+    c.rotation.x = u.rv.x * .5 + Math.sin(a + u.ph) * .4; c.rotation.y = u.rv.y * .5 + Math.cos(a * 2 + u.ph) * .3; });
+  S.rim.intensity = .5; S.rim2.intensity = 0; S.r.render(S.sc, S.cam);
+}
+// 把 canvas 顶部 cropH(设计 px)裁下来,缩到 scale 倍,贴进网格
+window.bakeKey = function (frames, cropH, scale, cols, q) {
+  keyInit(); var cv = document.getElementById('kyCv'), fw = Math.round(390 * scale), fh = Math.round(cropH * scale), rows = Math.ceil(frames.length / cols);
+  var sheet = document.createElement('canvas'); sheet.width = cols * fw; sheet.height = rows * fh; var g = sheet.getContext('2d');
+  frames.forEach(function (f, i) { if (f.idle != null) idleAt(f.idle); else stepTo(f.t); g.drawImage(cv, 0, 0, 780, cropH * 2, (i % cols) * fw, Math.floor(i / cols) * fh, fw, fh); });
+  return { url: sheet.toDataURL('image/webp', q), cols: cols, rows: rows, fw: fw, fh: fh };
+};
+window.keyReset = function () { if (KS) { try { KS.r.dispose(); } catch (e) {} } KS = null; lastT = 0; };
+</script>

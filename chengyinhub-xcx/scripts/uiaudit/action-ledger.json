@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6007,
+  "controlCount": 6009,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -153689,6 +153689,7 @@
         "subpackageP3/pages/growthcenter/leaderboard/index",
         "subpackageP3/pages/object-cards/index/index",
         "subpackageP3/pages/stamp-album/index/index",
+        "subpackagePass/reveal/index",
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/history/index",
         "subpackageRoam/my-teams/index",
@@ -159666,6 +159667,15 @@
           ]
         },
         {
+          "route": "subpackageMember/market/library/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 3
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/market/membership/index",
           "segments": [
             {
@@ -159684,6 +159694,15 @@
             {
               "selector": "cy-empty.cy-fill-state",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/market/membership/index",
+          "segments": [
+            {
+              "selector": "cy-empty.cy-fill-state",
+              "index": 1
             }
           ]
         },
@@ -160313,6 +160332,15 @@
           "segments": [
             {
               "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackagePass/reveal/index",
+          "segments": [
+            {
+              "selector": "cy-empty.cy-fill-state",
               "index": 0
             }
           ]
@@ -283124,6 +283152,7 @@
         "subpackageP3/pages/object-cards/index/index",
         "subpackageP3/pages/stamp-album/index/index",
         "subpackageP3/pages/stamp-camera/index/index",
+        "subpackagePass/reveal/index",
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/history/index",
@@ -295143,6 +295172,15 @@
             {
               "selector": "cy-nav-bar",
               "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackagePass/reveal/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
             }
           ]
         },
@@ -296856,6 +296894,7 @@
         "subpackageP3/pages/object-cards/index/index",
         "subpackageP3/pages/stamp-album/index/index",
         "subpackageP3/pages/stamp-camera/index/index",
+        "subpackagePass/reveal/index",
         "subpackageRoam/citynode-code/index",
         "subpackageRoam/citystamp/index",
         "subpackageRoam/history/index",
@@ -311820,6 +311859,19 @@
             {
               "selector": "cy-nav-bar",
               "index": 1
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackagePass/reveal/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
             },
             {
               "selector": "cy-offline-banner",
@@ -924383,7 +924435,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:208"
+        "staticSource": "pages/play/components/chapter-flip/index.js:219"
       }
     },
     {
@@ -924472,7 +924524,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:64"
+        "staticSource": "pages/play/components/chapter-flip/index.js:73"
       }
     },
     {
@@ -924560,7 +924612,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:208"
+        "staticSource": "pages/play/components/chapter-flip/index.js:219"
       }
     },
     {
@@ -924648,7 +924700,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:208"
+        "staticSource": "pages/play/components/chapter-flip/index.js:219"
       }
     },
     {
@@ -924737,7 +924789,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:267"
+        "staticSource": "pages/play/components/chapter-flip/index.js:278"
       }
     },
     {
@@ -924826,7 +924878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:266"
+        "staticSource": "pages/play/components/chapter-flip/index.js:277"
       }
     },
     {
@@ -1353704,11 +1353756,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:28"
+        "staticSource": "subpackageMember/market/library/index.js:34"
       }
     },
     {
-      "id": "subpackageMember/market/library/index.wxml:14:bindtap:openTopic:3",
+      "id": "subpackageMember/market/library/index.wxml:15:bindtap:openTopic:3",
       "route": "subpackageMember/market/library/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1353731,7 +1353783,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 14,
+        "line": 15,
         "selectorHint": ".photo-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1353774,7 +1353826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:55"
+        "staticSource": "subpackageMember/market/library/index.js:62"
       }
     },
     {
@@ -1353844,7 +1353896,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:61"
+        "staticSource": "subpackageMember/market/library/index.js:68"
       }
     },
     {
@@ -1353953,11 +1354005,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:49"
+        "staticSource": "subpackageMember/market/library/index.js:56"
       }
     },
     {
-      "id": "subpackageMember/market/membership/index.wxml:20:bindtap:onPlan:2",
+      "id": "subpackageMember/market/membership/index.wxml:23:bindtap:onPlan:2",
       "route": "subpackageMember/market/membership/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1353980,7 +1354032,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPlan",
-        "line": 20,
+        "line": 23,
         "selectorHint": ".pp__plan",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1354020,11 +1354072,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:70"
+        "staticSource": "subpackageMember/market/membership/index.js:76"
       }
     },
     {
-      "id": "subpackageMember/market/membership/index.wxml:27:bindtap:onBuy:3",
+      "id": "subpackageMember/market/membership/index.wxml:30:bindtap:onBuy:3",
       "route": "subpackageMember/market/membership/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1354097,7 +1354149,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onBuy",
-        "line": 27,
+        "line": 30,
         "selectorHint": ".pp__pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1354191,11 +1354243,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:76"
+        "staticSource": "subpackageMember/market/membership/index.js:82"
       }
     },
     {
-      "id": "subpackageMember/market/membership/index.wxml:34:bindtap:openTopic:4",
+      "id": "subpackageMember/market/membership/index.wxml:37:bindtap:openTopic:4",
       "route": "subpackageMember/market/membership/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1354218,7 +1354270,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 34,
+        "line": 37,
         "selectorHint": ".pp__it",
         "visibleCondition": "{{index < 4}}",
         "disabledCondition": null,
@@ -1354261,11 +1354313,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:100"
+        "staticSource": "subpackageMember/market/membership/index.js:104"
       }
     },
     {
-      "id": "subpackageMember/market/membership/index.wxml:41:bindtap:goLibrary:5",
+      "id": "subpackageMember/market/membership/index.wxml:44:bindtap:goLibrary:5",
       "route": "subpackageMember/market/membership/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1354288,7 +1354340,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goLibrary",
-        "line": 41,
+        "line": 44,
         "selectorHint": ".pp__more",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1354307,8 +1354359,7 @@
       "interactionMode": "tap",
       "baseActionClass": "navigation",
       "effectClasses": [
-        "navigation",
-        "state"
+        "navigation"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -1354323,7 +1354374,7 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
       "requiredBranches": [
         "success",
         "error"
@@ -1354332,82 +1354383,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:106"
+        "staticSource": "subpackageMember/market/membership/index.js:110"
       }
     },
     {
-      "id": "subpackageMember/market/membership/index.wxml:49:bindtap:goLibrary:6",
-      "route": "subpackageMember/market/membership/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/market/membership/index.wxml",
-        "js": "subpackageMember/market/membership/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "goLibrary",
-        "line": 49,
-        "selectorHint": ".ok__skip",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "跳过",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageMember/market/library/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:106"
-      }
-    },
-    {
-      "id": "subpackageMember/market/membership/index.wxml:5:bind:back:goBack:0",
+      "id": "subpackageMember/market/membership/index.wxml:6:bind:back:goBack:0",
       "route": "subpackageMember/market/membership/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1354430,7 +1354410,7 @@
         "tag": "cy-nav-bar",
         "event": "bind:back",
         "handler": "goBack",
-        "line": 5,
+        "line": 6,
         "selectorHint": "cy-nav-bar[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1354473,82 +1354453,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:112"
+        "staticSource": "subpackageMember/market/membership/index.js:115"
       }
     },
     {
-      "id": "subpackageMember/market/membership/index.wxml:66:bindtap:goLibrary:7",
-      "route": "subpackageMember/market/membership/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageMember/market/membership/index.wxml",
-        "js": "subpackageMember/market/membership/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goLibrary",
-        "line": 66,
-        "selectorHint": ".ok__pill",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "进入可玩主题库",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "subpackageMember/market/library/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:106"
-      }
-    },
-    {
-      "id": "subpackageMember/market/membership/index.wxml:7:bind:retry:load:1",
+      "id": "subpackageMember/market/membership/index.wxml:8:bind:retry:load:1",
       "route": "subpackageMember/market/membership/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1354571,7 +1354480,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "load",
-        "line": 7,
+        "line": 8,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{state === 'error'}}",
         "disabledCondition": null,
@@ -1354634,7 +1354543,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:56"
+        "staticSource": "subpackageMember/market/membership/index.js:62"
       }
     },
     {
@@ -1355360,7 +1355269,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:75"
+        "staticSource": "subpackageMember/market/passes/index.js:81"
       }
     },
     {
@@ -1355427,7 +1355336,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:122"
+        "staticSource": "subpackageMember/market/passes/index.js:128"
       }
     },
     {
@@ -1355533,7 +1355442,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:92"
+        "staticSource": "subpackageMember/market/passes/index.js:98"
       }
     },
     {
@@ -1355586,7 +1355495,7 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "subpackageMember/market/membership/index"
+          "subpackagePass/reveal/index"
         ],
         "apis": [],
         "primaryApis": [],
@@ -1355603,7 +1355512,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:60"
+        "staticSource": "subpackageMember/market/passes/index.js:65"
       }
     },
     {
@@ -1355673,7 +1355582,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:126"
+        "staticSource": "subpackageMember/market/passes/index.js:132"
       }
     },
     {
@@ -1355743,7 +1355652,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:133"
+        "staticSource": "subpackageMember/market/passes/index.js:139"
       }
     },
     {
@@ -1355813,7 +1355722,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/passes/index.js:138"
+        "staticSource": "subpackageMember/market/passes/index.js:144"
       }
     },
     {
@@ -1371655,6 +1371564,279 @@
       "evidence": {
         "status": "pending",
         "staticSource": "subpackageP3/pages/stamp-camera/index/index.js:33"
+      }
+    },
+    {
+      "id": "subpackagePass/reveal/index.wxml:15:bindtap:onSkip:2",
+      "route": "subpackagePass/reveal/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackagePass/reveal/index.wxml",
+        "js": "subpackagePass/reveal/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "onSkip",
+        "line": 15,
+        "selectorHint": ".ky__skip",
+        "visibleCondition": "{{full && !idleOn}}",
+        "disabledCondition": null,
+        "ariaLabel": "跳过",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackagePass/reveal/index.js:85"
+      }
+    },
+    {
+      "id": "subpackagePass/reveal/index.wxml:20:bindtap:onStart:3",
+      "route": "subpackagePass/reveal/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackagePass/reveal/index.wxml",
+        "js": "subpackagePass/reveal/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onStart",
+        "line": 20,
+        "selectorHint": ".ky__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{copy.btn}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackagePass/reveal/index.js:86"
+      }
+    },
+    {
+      "id": "subpackagePass/reveal/index.wxml:3:bind:back:goBack:0",
+      "route": "subpackagePass/reveal/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackagePass/reveal/index.wxml",
+        "js": "subpackagePass/reveal/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "goBack",
+        "line": 3,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/member/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackagePass/reveal/index.js:94"
+      }
+    },
+    {
+      "id": "subpackagePass/reveal/index.wxml:8:bind:end:onIntroEnd:1",
+      "route": "subpackagePass/reveal/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackagePass/reveal/index.wxml",
+        "js": "subpackagePass/reveal/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-frames",
+        "event": "bind:end",
+        "handler": "onIntroEnd",
+        "line": 8,
+        "selectorHint": "cy-frames[bind:end]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackagePass/reveal/index.js:84"
       }
     },
     {

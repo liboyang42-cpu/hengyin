@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 170,
+    "routes": 171,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -2105,6 +2105,17 @@
         "code",
         "teamId"
       ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackagePass/reveal/index",
+      "pkg": "subpackagePass",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
       "hasJs": true,
       "hasWxml": true
     }

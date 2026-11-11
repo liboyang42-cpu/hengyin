@@ -1,0 +1,11 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "通行证",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#0A0908",
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-empty": "/components/cy/empty/index",
+    "cy-frames": "/subpackagePass/components/cy-frames/index"
+  }
+}

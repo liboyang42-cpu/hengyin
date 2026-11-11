@@ -1,0 +1,3 @@
+<view class="fr {{on ? 'is-on' : ''}} {{reduced ? 'fr--reduced' : ''}} fr--{{enter}}" style="width: {{w}}rpx; height: {{h}}rpx;" aria-hidden="true">
+  <image wx:for="{{slots}}" wx:key="si" class="fr__img {{item.cur ? 'is-cur' : ''}}" src="{{item.src}}" style="width: {{item.w}}rpx; height: {{item.h}}rpx; {{item.cur ? 'transform: ' + pos + ';' : ''}}" mode="scaleToFill" />
+</view>
