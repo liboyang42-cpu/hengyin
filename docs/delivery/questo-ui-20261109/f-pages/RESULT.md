@@ -1,6 +1,6 @@
 # f-pages 结果
 
-- 分支 `claude/f-pages-20261111`，从 `origin/launch/questo-20261110` 切出；中途合入 launch 最新头 `afa90ffd5`（f-compliance、f-money、f-release），冲突只在 `ci/migration-dependencies.json`，两边条目都保留。
+- 分支 `claude/f-pages-20261111`，从 `origin/launch/questo-20261110` 切出；中途两次合入 launch 最新头：`afa90ffd5`（f-compliance、f-money、f-release）和 `e01a45ded`（l-icons、l-iconsB），冲突只在 `ci/migration-dependencies.json`，两边条目都保留。
 - 草稿 PR 指向 `launch/questo-20261110`，没有合并，也没有标记 ready。
 - 截图都在 `shots/`，390 宽、JPEG q70。`<ID>-before.jpg` 用 launch 底座 `afa90ffd5` 打包，`<ID>-after.jpg` 用本分支打包。两边用同一个后端（launch 底座的 jar）、同一份 rig 库，步骤也相同（`rig/shots.sh`）。
 
@@ -22,9 +22,9 @@
 
 ## 门禁
 
-- 小程序全量单测：见文末。合入 launch 后先出现 13 条失败和 4 条取消，都是本线引入的问题，已全部修复：V-24 回退、漫游重置字段被注释吞掉、分享卡根节点 class 合同、收藏卡负控、成功 toast 棘轮、GET 矩阵两处登记、护照读取桩、台账计数、U1 锚点。
+- 小程序全量单测：合入 launch `e01a45ded` 后的合并树 **17264 / 17264 通过**（0 失败 0 取消）。合入 launch 后先出现 13 条失败和 4 条取消，都是本线引入的问题，已全部修复：V-24 回退、漫游重置字段被注释吞掉、分享卡根节点 class 合同、收藏卡负控、成功 toast 棘轮、GET 矩阵两处登记、护照读取桩、台账计数、U1 锚点。
 - `ui-integrity --warn-as-error`：**UI-GATE-0:PASS**。没有新增登记，u1Variable 9、u4Dynamic 62、u5Silent 42 条数不变。roam 17 条、profile 3 条已有锚点只是行号变了：用 difflib 对照 launch 底座逐行映射，并核对调用行文字完全相同，然后按门禁的 `baselineKeyDigest` 重算 keyDigest。
-- 动作台账：已重建，`--check` PASS。控件数 6007 → 6021：tap +6（openComposer、onLiveCardTap、openReviewSheet、goNode、nodeUnfavorite、locatePublishIssue），事件合同 +8（码图 load/error ×2、发帖 close/published、评价半屏 close、据点页签 cta）。
+- 动作台账：已重建，`--check` PASS。控件数 6007 → 6021（再合入 l-icons / l-iconsB 后，合并树为 6010 → 6024）：tap +6（openComposer、onLiveCardTap、openReviewSheet、goNode、nodeUnfavorite、locatePublishIssue），事件合同 +8（码图 load/error ×2、发帖 close/published、评价半屏 close、据点页签 cta）。
 - 主包：`mainpkg-size-report --json` 的 `mainTotal` 是 3,305,151 字节，×0.633 约 **2043.1 KiB，小于 2048**。底座是 2039.1 KiB，本线增加约 4 KiB（roam 页、我的收藏、分享卡、cy-sheet 一个属性）。
 - Java：`ProductRoleRevenueShareGuardTest` 5/5。
 - 迁移：`migration-layout-check.sh`、`migration-safety-check.sh` 通过。
