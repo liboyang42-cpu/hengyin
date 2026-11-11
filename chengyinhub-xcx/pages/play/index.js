@@ -613,7 +613,7 @@ Page({
     sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null },
     // 剧情两段式的第二段(全屏叙事页)。内容由 openStory 从既有节点数据取,不新增接口。
     story: { show: false, title: '', step: '', cover: '', text: '' },
-    focusAnchor: '', nextChapterText: '',
+    focusAnchor: '',
     // P0 碎片翻卡(mode2 完成节点即翻出该节点碎片)
     frag: { show: false, text: '', step: '' },
     // M2 夜间提示(自玩 22:00–06:00):后端回执带 nightWarning 时在完成结果时刻出一句
@@ -8372,7 +8372,7 @@ Page({
          劈不开(「此刻」「前路未知」)就整句当左格、标题回落到节点名。
          正文只取第一段并夹一行:全文仍在点进去那件半屏里,这儿是目录不是正文。 */
       const parts = String(seg.label || '').split(' · ');
-      seg.kvK = parts[0] || '';
+      seg.kvK = parts.length > 1 ? parts[0] : (seg.label === n.name ? '未到' : parts[0] || '');   // x-fix2 P-9:节点名不再塞进左格
       seg.kvT = history ? history.name || '' : parts.length > 1 ? parts.slice(1).join(' · ') : (n.name || '');
       seg.kvS = String((seg.paras && seg.paras[0]) || '').slice(0, 40);
       return seg;
@@ -8397,9 +8397,9 @@ Page({
           kvS: String(paras[0] || '').slice(0, 40),
         };
       });
+    // x-fix2 P-9:手记末尾不再配下一章提示这类说明句(业主:不要辅助说明)
     this.setData({
       journalCards: cards.concat(historyCards),
-      nextChapterText: this.data.allDone ? '你已写满本章。翻过这一页，新的街巷正在等你。' : '走完本章坐标，下一章的扉页才会在流的尽头显形。'
     });
   },
   /* ⚠️ onJournalTouchMove / onJournalScroll(滚动沉降:越靠屏幕中央越清晰)

@@ -39,7 +39,7 @@ function buildMilestone(count) {
   return {
     count: n,
     // 称号式一句话(副文案),对应参考图的 You are now a "..."
-    title: n > 0 ? ('你已完成第 ' + n + ' 个主题') : '你的第一个主题正在路上',
+    title: n > 0 ? ('你已完成第 ' + n + ' 个主题') : '第一个主题还没完成',   // x-fix2 P-10
     tiers: tiers,
     next: nextValue == null ? null : { value: nextValue, remaining: nextValue - n },
     progress: Math.max(0, Math.min(100, progress)),

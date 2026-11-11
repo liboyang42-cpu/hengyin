@@ -125,3 +125,25 @@ test('M-2 勋章墙加载失败:按全站口径留空白遮罩,但收集册页�
   const oc = read('subpackageP3/pages/object-cards/index/index.wxss')
   assert.match(oc, /\.alb-light \.oc-gather::before \{[^}]*stroke%3D%22%23F2F2F4%22/)
 })
+
+test('P-9 旅程手记:不再有说明句,左格不塞节点名;P-10 里程碑文案不再「距 1 个还差 1 个」', () => {
+  const wxml = read('pages/play/index.wxml')
+  assert.doesNotMatch(wxml, /这一趟自动记下来的|nextChapterText/)
+  assert.match(wxml, /<view class="sheet-meta">\{\{chapter\.name\}\}<\/view>/)
+  const js = read('pages/play/index.js')
+  assert.doesNotMatch(js, /走完本章坐标|nextChapterText/)
+  assert.match(js, /seg\.kvK = parts\.length > 1 \? parts\[0\] : \(seg\.label === n\.name \? '未到' : parts\[0\] \|\| ''\);/)
+  assert.match(read('pages/play/index.wxss'), /\.jkv__k\{[^}]*white-space:nowrap; overflow:hidden; text-overflow:ellipsis;/)
+  const { buildMilestone } = require('../../pages/play/utils/play-milestone.js')
+  assert.equal(buildMilestone(0).title, '第一个主题还没完成')
+  assert.doesNotMatch(wxml, /距 \{\{milestone\.next\.value\}\} 个还差/)
+  assert.match(wxml, /'下一档 ' \+ milestone\.next\.value \+ ' 个主题'/)
+})
+
+test('P-11 首页城市定位确认是一句陈述,不再是长问句(合规要点:精确位置 / 发送给城瘾以确定首页城市 / 不用于附近排序 保留)', () => {
+  for (const f of ['pages/index/index.js', 'pages/privacy/index.js']) {
+    const s = read(f)
+    assert.match(s, /content: '使用精确位置并发送给城瘾以确定首页城市，之后进入首页自动定位，不用于附近排序。'/, f)
+    assert.doesNotMatch(s, /附近排序吗？/, f)
+  }
+})

@@ -381,7 +381,7 @@
         </view>
         <view class="drow" bindtap="openJournalFromTools" aria-role="button" aria-label="旅程手记" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--journal"></view>
-          <view class="dcopy"><text class="dt">旅程手记</text><text class="ds">这一趟自动记下来的</text></view>
+          <view class="dcopy"><text class="dt">旅程手记</text></view>
           <view class="darr"></view>
         </view>
         <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="onLocationRowTap" aria-role="button" aria-label="自动记录足迹{{gpsOk ? '，已开启' : '，定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -416,7 +416,7 @@
         </view>
         <view class="drow" bindtap="openJournalFromTools" aria-role="button" aria-label="旅程手记" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--journal"></view>
-          <view class="dcopy"><text class="dt">旅程手记</text><text class="ds">这一趟自动记下来的</text></view>
+          <view class="dcopy"><text class="dt">旅程手记</text></view>
           <view class="darr"></view>
         </view>
         </block>
@@ -1310,7 +1310,7 @@
     <view class="jkv" wx:for="{{journeyAttributes}}" wx:key="key">
       <text class="jkv__k">{{item.label}}</text><view class="jkv__copy"><text class="jkv__t">{{item.value}}</text></view>
     </view>
-    <view class="sheet-meta">{{chapter.name}} · 这一趟自动记下来的</view>
+    <view class="sheet-meta">{{chapter.name}}</view>
     <view wx:for="{{journalCards}}" wx:key="key" class="jkv {{item.locked ? 'is-locked' : ''}}"
           data-id="{{item.nodeId}}" data-step="{{item.label}}" bindtap="{{item.locked ? 'noop' : 'openStory'}}"
           aria-role="{{item.locked ? 'text' : 'button'}}" aria-label="{{item.locked ? item.label : ('展开' + item.label)}}"
@@ -1319,7 +1319,6 @@
       <view class="jkv__copy"><text class="jkv__t">{{item.kvT}}</text><text class="jkv__s">{{item.kvS}}</text></view>
       <view class="jkv__go" wx:if="{{!item.locked}}"></view>
     </view>
-    <view class="mini">{{nextChapterText}}</view>
   </view>
 </view>
 </block>
@@ -1391,7 +1390,7 @@
       <view class="finish-milestone" wx:if="{{milestone}}">
       <view class="finish-milestone__head">
         <text>{{milestone.title}}</text>
-        <text wx:if="{{milestone.next}}">距 {{milestone.next.value}} 个还差 {{milestone.next.remaining}} 个</text>
+        <text wx:if="{{milestone.next}}">{{milestone.next.remaining === milestone.next.value ? '下一档 ' + milestone.next.value + ' 个主题' : '再完成 ' + milestone.next.remaining + ' 个到 ' + milestone.next.value + ' 个'}}</text>
         <text wx:else>已到达当前最高里程碑</text>
       </view>
       <view class="finish-milestone__rail">
