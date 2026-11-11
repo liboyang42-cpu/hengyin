@@ -25,7 +25,7 @@ OLD_JAR_SOURCE = "19408d49172c1d8fd16ec012f4498ff8ea584a37"
 DEPLOY = REPO / "docs/delivery/questo-ui-20261109/f-release/DEPLOY.md"
 SQL = REPO / "chengyinhub-admin/sql"
 JOB_MIGRATIONS = [  # 插入新 jar 才有的 bean 任务的发布集迁移（rounds 1/3）
-    "migration_20261024_d_committed_official_notice_wx.sql",
+    "migration_zzz_committed_official_notice_job_reregister_20261111.sql",  # 不是 step 11（单次执行，见 DEPLOY 第 12 节）
     "migration_20261104_content_safety_jobs_post_deploy.sql",
     "migration_20261110_ecommerce_payout_wiring.sql",
     "migration_marketing_task_registration_20261108.sql",

@@ -1,14 +1,14 @@
-# 发布迁移清单（f-release，候选 `52193cc2`）
+# 发布迁移清单（f-release，候选 `fa7fc0ef`）
 
 由 `gen_release_set.py` 生成，勿手改。生产执行状态一律 **UNKNOWN**，以 `release-precheck.sql` 的结果为准。
 
 | 项 | 值 |
 |---|---|
-| 候选头 | `52193cc26cc80830f5a8f9b021d1a80ef0d64024` |
+| 候选头 | `fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2` |
 | 生产参考基线 | 10-29 发布包基线 `19408d49`（Merge #452）；10-22、10-28、10-29 三个包都没有在生产确认执行 |
-| 发布集 | 155 项 = 10-29 包 88 项 + 10-29 之后 67 项（其中 launch 波次 38 项） |
-| 候选头全量迁移数 | 640（执行序 order 取自其拓扑序） |
-| 必须 / 可选 / 需业主授权 / 不执行 | 102 / 29 / 20 / 4 |
+| 发布集 | 156 项 = 10-29 包 88 项 + 10-29 之后 68 项（其中 launch 波次 39 项） |
+| 候选头全量迁移数 | 641（执行序 order 取自其拓扑序） |
+| 必须 / 可选 / 需业主授权 / 不执行 | 103 / 29 / 20 / 4 |
 
 ## 执行轮次
 
@@ -16,7 +16,7 @@
 |---|---|---|---|
 | 1_PRE_REQUIRED | 部署 jar 前 | 98 | 4、7、9、11、13、14、15、16、17、18、19、20、21、22、23、24、26、27、28、29、30、32、33、34、35、38、40、42、43、44、45、46、47、48、50、51、53、54、58、59、63、64、65、66、67、69、70、71、72、74、78、79、80、83、86、88、90、91、94、95、98、100、101、102、105、106、108、109、113、114、115、116、117、118、119、120、123、129、130、131、134、135、138、139、141、142、143、144、145、146、147、148、149、151、152、153、154、155 |
 | 2_PRE_OPTIONAL | 部署 jar 前（可选，建议同批） | 28 | 1、2、3、5、6、8、10、31、55、60、61、62、73、76、77、81、82、85、89、92、96、97、104、122、128、132、133、136 |
-| 3_POST_DEPLOY | 新 jar 健康后 | 5 | 36、49、52、68、93 |
+| 3_POST_DEPLOY | 新 jar 健康后 | 6 | 36、49、52、68、93、156 |
 | 4_OWNER_DATA_PRE | 业主逐项授权后（jar 前后均可，开对应功能前） | 18 | 25、37、41、56、57、75、84、103、107、110、111、112、121、124、125、126、127、137 |
 | 5_OWNER_DATA_POST | 业主授权后，且新 jar 健康后 | 2 | 39、140 |
 
@@ -86,11 +86,11 @@
 | 60 | 157 | `migration_club_welcome_note_20261022.sql` | 可选 | PRE_DEPLOY | APPLIED 时必须跳过 | 10-29 发布包（未确认执行） | — | club 增加 welcome_note VARCHAR(600) NULL DEFAULT NULL；代码独立读取，旧行保持默认欢迎文案 |
 | 61 | 190 | `migration_doc2_f3_bundle_ledger_20261022.sql` | 可选 | PRE_DEPLOY | 幂等 | 10-29 发布包（未确认执行） | — | 新表 explore_bundle_order/grant/unit/reservation/waiver/exit_case（F3 套票台账；ledger-enabled 默认关） |
 | 62 | 191 | `migration_doc2_f3_refund_hold_20261026.sql` | 可选 | PRE_DEPLOY | 幂等 | 10-29 发布包（未确认执行） | — | 新表 explore_bundle_refund_hold（F3 履约冻结；本 SHA 主代码尚无读写方） |
-| 63 | 230 | `migration_marketing_attribution_20261108.sql` | 必须 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | — | 营销归因 2 表 |
-| 64 | 231 | `migration_marketing_product_20261108.sql` | 必须 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | — | 营销商品/礼品 5 表 |
+| 63 | 230 | `migration_marketing_attribution_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | — | 营销归因 2 表 |
+| 64 | 231 | `migration_marketing_product_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | — | 营销商品/礼品 5 表 |
 | 65 | 232 | `migration_marketing_extra_seat_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | 64 | 加座：放宽 CHECK 到 (1,2,3) + 索引 |
-| 66 | 233 | `migration_marketing_revenue_allocation_20261108.sql` | 必须 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | — | 收入分配 4 表 |
-| 67 | 234 | `migration_marketing_z_channel_voucher_20261108.sql` | 必须 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | 64 | 渠道兑换码 5 表 |
+| 66 | 233 | `migration_marketing_revenue_allocation_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | — | 收入分配 4 表 |
+| 67 | 234 | `migration_marketing_z_channel_voucher_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | 64 | 渠道兑换码 5 表 |
 | 68 | 235 | `migration_marketing_task_registration_20261108.sql` | 必须 | POST_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | 66、67 | 两条暂停的 sys_job（渠道退款补消费、收入分配队列）；纯 sys_job，放新 jar 之后 |
 | 69 | 238 | `migration_20261023_cash_withdraw_fund_fact.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | 10-29 发布包（未确认执行） | — | 新表 member_cash_withdraw_fund_fact（提现资金事实，只追加）+ 触发器 cash_fund_fact_no_update / cash_fund_fact_no_delete；FK 指向 member_cash_withdraw |
 | 70 | 239 | `migration_20261024_cash_withdraw_transfer_intent.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | 10-29 发布包（未确认执行） | 69 | 新表 member_cash_withdraw_transfer_intent（提现扣款/转账原始身份；CashWithdrawTransferIntentMapper 读写） |
@@ -152,7 +152,7 @@
 | 126 | 562 | `migration_20261030_merchant_game_covers_to_oss.sql` | 需业主授权 | PRE_DEPLOY | 幂等 | 10-29 之后的 master | — | 平台商家玩法封面 URL 改指 OSS（先确认 OSS 上对象已存在） |
 | 127 | 566 | `migration_20261111_rule_seed_split_steps.sql` | 需业主授权 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | — | 官方模板种子规则改成一步一行（f-pages P-41；只改仍是种子原文的行） |
 | 128 | 574 | `migration_verification_review_evidence_20261022.sql` | 可选 | PRE_DEPLOY | 幂等 | 10-29 发布包（未确认执行） | — | 新表 verification_review_evidence（F4 复核补材料） |
-| 129 | 575 | `migration_video_bounty_host_tip_20261108.sql` | 必须 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | — | 视频悬赏 + 主持小费 6 表 |
+| 129 | 575 | `migration_video_bounty_host_tip_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | — | 视频悬赏 + 主持小费 6 表 |
 | 130 | 576 | `migration_video_bounty_group_verification_20261108.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | 129 | video_bounty_submission.verified_group_key + 索引 |
 | 131 | 579 | `migration_20261025_coop_order_station_fulfillment.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | 10-29 发布包（未确认执行） | 117 | coop_invite 加 supply_station_id + 索引 + CHECK + FK；新表 coop_order_station_fulfillment（6 FK）+ 两个不可改触发器 |
 | 132 | 580 | `migration_w8_refund_fulfillment_recovery_20261026.sql` | 可选 | PRE_DEPLOY | 幂等 | 10-29 发布包（未确认执行） | — | refund_application 加 fulfillment_sync_queue_at（DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)）与索引 idx_refund_fulfillment_recovery（本 SHA 主代码尚无读写方） |
@@ -179,3 +179,4 @@
 | 153 | 635 | `migration_z_workshop_purchase_20261109.sql` | 必须 | PRE_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | — | 工坊购买 3 表 |
 | 154 | 636 | `migration_z_workshop_paid_review_20261109.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | 153 | 工坊付费审核：workshop_version/order 加列与唯一键 + 2 表 |
 | 155 | 638 | `migration_zz_questo_collation_align_20261109.sql` | 必须 | PRE_DEPLOY | APPLIED 时必须跳过 | launch 波次（master 2bb81143 之后） | 43、44、45、63、65、64、95、94、66、67、99、100、130、129、149、150、151、152、154 | Questo 新表隐式 0900_ai_ci 字符列改到 utf8mb4_general_ci（修 1267 排序规则冲突） |
+| 156 | 639 | `migration_zzz_committed_official_notice_job_reregister_20261111.sql` | 必须 | POST_DEPLOY | 幂等 | launch 波次（master 2bb81143 之后） | 11 | f-rehearsal 修正：按 invoke_target 判重补登记暂停的 committedOfficialNoticeTask 任务（正常路径空操作；jar 回滚后前滚时恢复该任务，原 step 11 是单次执行不能重跑） |
