@@ -160,4 +160,7 @@ Gameplay HTTP generic-only 第 5 次重跑也是 apt 故障(见上)。
 
 f-play2(含 f-money2 / f-money3)合入后(`25b8ad033`)，真库 IT `FreeExploreSelfPlayPriceGateMySqlIT.sameRowWithAFreeSelfPlayPassesThisGateAndReachesTheExistingSaleChecks` 报 ClassCastException(Boolean 不能转 Number)。原因：`cms_topic.lifecycle` 是 TINYINT(1)，Connector/J 默认把它映射成 Boolean，值 2 读出来是 true。本线在 #787 上按整数读取原值修复(`96e770693`，断言仍精确等于 2)，并触发了 launch-f-money3 批次。lead 同时在 launch 用 CAST 修了同一处(`865b6992d`)，#787 同步后取 launch 版本，又只剩本文档。在合并树上本地复核：小程序各静态子门禁、台账、路由矩阵、危险动作门禁都通过。
 
-STATUS: PARTIAL - 本线负责的代码修复已全部进 launch；#779 当前的 HTTP / 静态门红是 runner apt 域名解析故障，待重跑；仍需你拍板的是 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项
+
+`ed9e3406b` 上「Migration safety gate」红：`ci/test_prelaunch_business_seeds.py` 校验 `ci/prelaunch-seed-provenance.json` 里登记的种子源文件哈希，f-money2(`bc02b5125`)改了 `scripts/e2e/seed_fixtures.py` 没同步登记。本线逐行审阅了那 31 行改动：俱乐部 owner 补 club 角色、玩家二号加入 7001、cms_setting 与活动结算默认费率行，全部是固定 E2E 夹具 id 的幂等插入，没有主机或密钥。审阅后按源文件重绑哈希(`70fd8a83b`，在 #787 上)。本地复核：该步骤的 4 个测试文件共 43 个用例全部通过。
+
+STATUS: PARTIAL - 「Migration safety gate」的种子来源哈希已在 #787(`70fd8a83b`)修好，待 lead 合入；#779 其余红：runner apt 域名解析故障(待重跑)、gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者，后两项要你拍板
