@@ -149,4 +149,12 @@ lead 随后在 launch 合入了等价修复(`181e222f3`、`4cf14763e`)，包括 
 
 截至 15:26(UTC)，GitHub 托管 runner 解析 Ubuntu apt 源(azure.archive / archive / security.ubuntu.com)仍然失败，持续约一个半小时。Gameplay HTTP generic-only 在 `4cf14763e` 上的 run 43037545384 已经跑了 5 次(第 5 次由本线 15:18 触发)，每次都是 82 个 Python 前置检查通过、装 redis-server / ripgrep 时红，Java 用例一次也没开跑。小程序静态门在 `4cf14763e` 和 `44a97d84c`(只改了 qx-final2 的文档)上同样卡在装 ripgrep。本线不再追加重跑，等基础设施恢复后统一重跑即可；在同一棵树上本地复核，静态门和小程序单测全部通过。
 
+
+#779 当前头 `17de18de5`(在 `4cf14763e` 之后只改了文档)的 CI(run 43048412744)：31 个 job，27 个通过，20 个小程序单测分片全绿。4 个红：
+- Backend tests：「Check private Mapper compiled references」这一步红，就是第四节第 2 条的架构 / 存储端口 finding，需要你在 owners.json 上批准；
+- Fast gates：架构门红，同上；
+- Mini program static gates：装 ripgrep 时 apt 域名解析失败，基础设施故障；
+- Mini program static checks：上一项的汇总。
+Gameplay HTTP generic-only 第 5 次重跑也是 apt 故障(见上)。
+
 STATUS: PARTIAL - 本线负责的代码修复已全部进 launch；#779 当前的 HTTP / 静态门红是 runner apt 域名解析故障，待重跑；仍需你拍板的是 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项
