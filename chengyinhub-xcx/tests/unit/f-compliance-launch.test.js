@@ -87,7 +87,8 @@ test('AI 对话记录:导出复制文本;清除走危险确认 + 原删除接口
   const del = requests[1];
   assert.equal(del.url, '/api/ai/npc/chat/data/delete');
   assert.equal(del.method, 'POST');
-  assert.deepEqual(Object.keys(del.data), ['requestId']);
+  assert.deepEqual(Object.keys(JSON.parse(del.data)), ['requestId']);
+  assert.equal(del.header['Content-Type'], 'application/json');
   del.success({ code: 200, data: { deleted: 3 } });
   assert.equal(h.dc.doneText, '已清除 3 条对话');
 });

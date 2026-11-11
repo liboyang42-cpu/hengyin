@@ -82,7 +82,7 @@
         <cy-card wx:for="{{detail.exitCases}}" wx:key="id"><text class="bundle-note">{{item.text}}</text></cy-card>
         <cy-btn variant="secondary" bindtap="loadQuote">查看可退金额</cy-btn>
         <cy-card wx:if="{{quote}}">
-          <text class="bundle-title">可退 ¥{{quote.amount}}</text>
+          <text class="bundle-title">可退金额 {{quote.amount}} 元</text>
           <text class="bundle-note">{{quote.reason}}</text>
           <text class="bundle-note">{{quote.notice}}</text>
         </cy-card>

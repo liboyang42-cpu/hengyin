@@ -60,7 +60,8 @@ Component({
         validResult: data => !!data && typeof data.deleted === 'number' && Number.isSafeInteger(data.deleted) && data.deleted >= 0,
         send: (intent, callbacks) => app.sendRequest({
           ...callbacks,
-          url: '/api/ai/npc/chat/data/delete', method: 'POST', data: intent.body,
+          url: '/api/ai/npc/chat/data/delete', method: 'POST', data: JSON.stringify(intent.body),
+          header: { 'Content-Type': 'application/json' },
           hideLoading: true, autoErrorToast: false,
         }),
         onSuccess: (res) => {

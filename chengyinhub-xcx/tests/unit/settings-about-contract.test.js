@@ -61,6 +61,7 @@ function loadAboutPage(script, version = '9.8.7') {
     require: (id) => {
       if (String(id).includes('identity-policy')) return { isMerchantView: () => false }
       if (String(id).includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} }
+      if (String(id).includes('aigc-label')) return { filingNo: () => '' }
       throw new Error('unexpected require: ' + id)
     },
     wx: {
