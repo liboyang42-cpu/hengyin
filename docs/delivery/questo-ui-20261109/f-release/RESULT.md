@@ -16,7 +16,7 @@
 | FR-1 发布迁移清单 | 已完成 | 生成本候选的发布迁移集，共 151 项：10-29 发布包 88 项（生产从未确认执行，所以全部算进来）加上 10-29 之后的 63 项，其中 34 项来自 launch 波次。按候选头的台账拓扑序排列。每项标了类别：必须 100、可选 28、需业主授权 19、不执行 4。还标了阶段（jar 前 / jar 后）、重跑规则、来源和集内依赖，并排成五个执行轮次 | `f-release/MIGRATIONS.md`、`release-migrations.json`、`gen_release_set.py` | `gen_release_set.py --check` 重新生成后与提交的文件逐字一致。脚本复用 `ci/release_manifest.migration_diff` 和 `migrations_at`，有四道校验：10-29 包里每个文件在候选头上哈希不变；10-29 之后没有被修改或删除的迁移；63 个新迁移都有人工标注，不多也不少；五个轮次不违反任何集内依赖 | — |
 | FR-2 每文件只读预检 | 已完成 | 每个迁移一条 SELECT，返回 step、类别、阶段和状态（APPLIED / NEEDED / PARTIAL…）。<br>- 88 项原样复用 10-29 预检里已在 MySQL 8.0 演练中钉住指纹的主分类块。<br>- 63 项新迁移：按它要建的表、列、索引、菜单行、定时任务、配置键逐个查 `information_schema` 和对应系统表。<br>- 数据类迁移复用迁移文件自身的只读断言。<br>- CHECK 约束改名或放宽、排序规则对齐三类单独写判定 | `f-release/release-precheck.sql` | 生成器逐句校验：只能是 SELECT，没有写语句、会话变量或临时表。用 sqlglot（MySQL 方言）解析：152 条语句全部是 `Select`。没有连库执行过 | 没在真实 MySQL 上跑过（本机按 AGENTS.md 不起 MySQL，云端会话也连不到测试 VPS） |
 | FR-3 release-manifest | 已完成 | 用仓库现有的 `ci/release_manifest.py manifest` 对候选头生成清单。内容包括源码树、后端模块、按 SHA 查 CI 的命令、小程序导出身份（tree hash `68c2c2bb…`，`app.json` blob `bdcdb7d2…`），以及全部 636 个迁移的哈希。生产状态一律 UNKNOWN | `f-release/release-manifest.json` | 脚本只读 git 对象。`scripts/release-manifest.sh` 需要本地 jar 才能跑，本机不允许构建 Java，所以没用它；它内部调用的也是同一个台账逻辑 | — |
-| FR-4 台账登记 | 已完成 | 把新预检文件登记为 `AUXILIARY_NOT_EXECUTED`，和 10-22、10-28、10-29 三份预检同档。不登记的话，迁移台账门禁会把它判成 `UNMANAGED_SQL_LOCATION` | `ci/migration_ledger.py`（加 1 行） | 提交后在本分支头上跑 `python3 ci/migration_ledger.py manifest`，0 个问题；跑 `ci/test_migration_ledger.py`、`ci/test_migration_gates.py`、`ci/test_release_manifest.py`，结果见第三节 | — |
+| FR-4 台账登记 | 已完成 | 把新预检文件登记为 `AUXILIARY_NOT_EXECUTED`，和 10-22、10-28、10-29 三份预检同档。不登记的话，迁移台账门禁会把它判成 `UNMANAGED_SQL_LOCATION` | `ci/migration_ledger.py`（加 1 行） | 登记前实测门禁报 `UNMANAGED_SQL_LOCATION`；登记并提交后 `migration_ledger.py manifest` 0 个问题，相关单测全部通过（见第三节） | — |
 | FR-5 部署步骤 | 已完成 | 业主按顺序操作的完整步骤：<br>- 备份、预检、jar 前两轮迁移；<br>- 应用机配置按名字核对：AppSecret、OSS、Redis、腾讯地图、深色地图 subkey、ALARM_WEBHOOK、审核回调 token、支付回调，以及资金和通行证开关的默认值；<br>- jar 与小程序用同一个 SHA；<br>- jar 后迁移、需授权的数据迁移；<br>- 剧情字体上传 OSS、CORS 和 downloadFile 域名；<br>- 开发者工具上传、真机冒烟清单（二维码、地图、游玩、支付、退款）、提审、回滚 | `f-release/DEPLOY.md` | 配置名都从代码里核对过：`application.yml`、`@Value`、`PlatformPassProperties`、`FileOssUploadUtils`、`scripts/production-preflight.sh`、`release-map-style.js`、`ApiContentSecurityController` | 全部步骤都要业主在真机和生产上执行 |
 | FR-6 基线 schema 快照 | 没有重新生成 | `sql/base_schema_20260818.sql` 是钉住来源的结构快照。它的来源记录在 `scripts/e2e/source_provenance_20260818.json` 和 `base_schema_20260818_migrations.json`，CI 用它从零建库，再按台账叠加快照之后的迁移。重新生成它需要一个真实 MySQL 先跑完全部迁移再导出，本机不允许起 MySQL，这个会话也连不到测试 VPS。另外，改它会改变所有 lane 的 CI 建库起点，超出本线范围 | — | — | — |
 
@@ -52,8 +52,9 @@
 |---|---|
 | `python3 docs/delivery/questo-ui-20261109/f-release/gen_release_set.py --check` | `OK 151 项，产物一致` |
 | sqlglot（MySQL 方言）解析 `release-precheck.sql` | 152 条，全部 `Select` |
-| `python3 ci/migration_ledger.py manifest --root . --target-commit <本分支头>` | 见提交后补记（下一行） |
-| `python3 ci/test_migration_ledger.py`、`python3 ci/test_migration_gates.py`、`python3 -m unittest ci/test_release_manifest.py` | 见提交后补记 |
+| `python3 ci/migration_ledger.py manifest --root . --target-commit 047b0e3e…`（本分支第一个提交） | 退出码 0，636 个迁移，0 个问题 |
+| `python3 ci/test_migration_ledger.py`、`python3 ci/test_migration_gates.py`、`python3 -m unittest ci/test_release_manifest.py` | 56、146、16 个测试，全部 OK |
+| `bash ci/migration-safety-check.sh` | 迁移安全门禁：通过 |
 | `python3 ci/forbidden_hosts_gate.py` | 通过（没有命中黑名单的 IPv4） |
 
 ## 待你决定
