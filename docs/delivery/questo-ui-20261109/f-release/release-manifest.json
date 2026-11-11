@@ -3,8 +3,8 @@
   "generatedFrom": "ci/release_manifest.py (git objects only; no DB/host access)",
   "public": {
     "repo": "liboyang42-cpu/hengyin",
-    "commit": "52193cc26cc80830f5a8f9b021d1a80ef0d64024",
-    "tree": "b27758ced65c1ed0d61950ba501d2fa93e07a815"
+    "commit": "8dd648bd6acb5d3fce1c5a8ae14ec03050499bea",
+    "tree": "85c48f813800d0f29105b0bbefc1af520f85ec10"
   },
   "backend": {
     "modules": [
@@ -18,7 +18,7 @@
   },
   "ci": {
     "repo": "liboyang42-cpu/hengyin",
-    "lookupCommand": "gh run list --repo liboyang42-cpu/hengyin --commit 52193cc26cc80830f5a8f9b021d1a80ef0d64024 --limit 100 --json databaseId,workflowName,event,status,conclusion,headSha,url",
+    "lookupCommand": "gh run list --repo liboyang42-cpu/hengyin --commit 8dd648bd6acb5d3fce1c5a8ae14ec03050499bea --limit 100 --json databaseId,workflowName,event,status,conclusion,headSha,url",
     "expectedWorkflows": [
       ".github/workflows/backend-jar.yml",
       ".github/workflows/chain-acceptance.yml",
@@ -38,7 +38,7 @@
       ".github/workflows/upload-template-cover-preview.yml"
     ],
     "jarWorkflow": ".github/workflows/backend-jar.yml",
-    "jarArtefactName": "backend-jar-52193cc26cc80830f5a8f9b021d1a80ef0d64024",
+    "jarArtefactName": "backend-jar-8dd648bd6acb5d3fce1c5a8ae14ec03050499bea",
     "lookup": {
       "status": "NOT_LOOKED_UP",
       "runs": []
@@ -49,7 +49,7 @@
     "bytes": "TO_FILL_FROM_CI_ARTEFACT",
     "sha256": "TO_FILL_FROM_CI_ARTEFACT",
     "embeddedGitCommitId": "TO_FILL_FROM_CI_ARTEFACT",
-    "embeddedGitCommitIdMustEqual": "52193cc26cc80830f5a8f9b021d1a80ef0d64024",
+    "embeddedGitCommitIdMustEqual": "8dd648bd6acb5d3fce1c5a8ae14ec03050499bea",
     "privateUpload": {
       "location": "OWNER_INPUT_REQUIRED",
       "deployed": false
@@ -57,8 +57,8 @@
   },
   "miniProgram": {
     "path": "chengyinhub-xcx",
-    "treeHash": "d2fa945ef63d05698df9445685154be1f5f33ec2",
-    "fileCount": 5142,
+    "treeHash": "8e3abc387da3e5b57dfdf1dde3fee7fe26dec29c",
+    "fileCount": 5144,
     "appJsonBlob": "ee546466ecb479dc2339743249b3ba7b7aea1d83",
     "projectConfigBlob": "1fb9bd87e64b6b8e63a75111b05a17a266cf4861",
     "files": [
@@ -7254,8 +7254,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/play/index.wxml",
-        "blob": "826407b44c75a190c44946fcbff436d313490c14",
-        "bytes": 180756
+        "blob": "d28a6fd001872e440cb62e2644cf3a87ec2b6849",
+        "bytes": 181259
       },
       {
         "path": "chengyinhub-xcx/pages/play/index.wxss",
@@ -8304,8 +8304,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/publish/fabu/index.js",
-        "blob": "a822ccaadd49abecc2e901c0b996806ef2f87a08",
-        "bytes": 492658
+        "blob": "ea99c42f9cf6127d62fe1fffe91c8ba46b1a8146",
+        "bytes": 492857
       },
       {
         "path": "chengyinhub-xcx/pages/publish/fabu/index.json",
@@ -8569,8 +8569,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/publish/simple/index.js",
-        "blob": "8d7a70d03d474e77fcae069f0417b06d115c0bb7",
-        "bytes": 47460
+        "blob": "26df27ac2eaea8bbce3d1827886e6988ff162d63",
+        "bytes": 47616
       },
       {
         "path": "chengyinhub-xcx/pages/publish/simple/index.json",
@@ -9424,8 +9424,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/square/detail/index.wxml",
-        "blob": "8ab356dd6fdb126ea70a39c74dd4c5acfd672bf5",
-        "bytes": 15829
+        "blob": "e48d75c20e26047a26d6f7518c318f0d71f72c81",
+        "bytes": 15888
       },
       {
         "path": "chengyinhub-xcx/pages/square/detail/index.wxss",
@@ -11039,8 +11039,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/topic/pricing/index.js",
-        "blob": "c61c3311440f70f10b383d464767e03c9299219d",
-        "bytes": 16732
+        "blob": "c6d1c1503c5e0d6d4a1430e647fcbb0a329ea841",
+        "bytes": 17276
       },
       {
         "path": "chengyinhub-xcx/pages/topic/pricing/index.json",
@@ -11049,8 +11049,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/topic/pricing/index.wxml",
-        "blob": "3d39a3441fe95e78115606faf18482188c411b05",
-        "bytes": 6568
+        "blob": "d59d99075d03afa575be5ddd7216b8e4105cc9c7",
+        "bytes": 6684
       },
       {
         "path": "chengyinhub-xcx/pages/topic/pricing/index.wxss",
@@ -11369,8 +11369,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/fixtures.json",
-        "blob": "1ada5f28496e36b734e85ff17ac6541ff6ffe3e6",
-        "bytes": 419851
+        "blob": "905c5f3a3100ef3d016e54dcffd4f18134d1ec2d",
+        "bytes": 419918
       },
       {
         "path": "chengyinhub-xcx/scripts/gen-proto-icons.py",
@@ -11559,8 +11559,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
-        "blob": "5eafe990bf474567a58e3a7947726a48d091a7a7",
-        "bytes": 37140013
+        "blob": "fd6dcff45e988372917863696cb262fefdebee46",
+        "bytes": 37140203
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/action-runtime.js",
@@ -11584,8 +11584,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/build-route-matrix.js",
-        "blob": "7923c3042fd432aa6a6b63454d88c22c1c7a978a",
-        "bytes": 14385
+        "blob": "66faf55c29303cd5ce0f4dd9040bed18d17d061d",
+        "bytes": 14676
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/coverage-exemptions.json",
@@ -11634,8 +11634,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/weak-anchor-baseline.json",
-        "blob": "57b6b6ffee4ce13c2f9eb9188c9dd1f1308d6d5a",
-        "bytes": 2588
+        "blob": "0343de61b385748b381df80e6f9987f9ced656f4",
+        "bytes": 2540
       },
       {
         "path": "chengyinhub-xcx/scripts/undefined-token-gate.js",
@@ -15324,8 +15324,8 @@
       },
       {
         "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
-        "blob": "6809cd67b40d4af81b1a3689916e3e08c86c77e8",
-        "bytes": 254782
+        "blob": "95d9888ed1c169dd3794210833dbc7c9ed0cd28e",
+        "bytes": 255500
       },
       {
         "path": "chengyinhub-xcx/tests/lint/ui-integrity.js",
@@ -15404,8 +15404,8 @@
       },
       {
         "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
-        "blob": "a59382f0ceca91f7be19fe08e840bb3c4a61cf9e",
-        "bytes": 236749
+        "blob": "d38eaaefd0a7a26660866a0a7807a0c393ecc8c1",
+        "bytes": 237079
       },
       {
         "path": "chengyinhub-xcx/tests/unit/action-runtime.test.js",
@@ -17618,6 +17618,11 @@
         "bytes": 3433
       },
       {
+        "path": "chengyinhub-xcx/tests/unit/f-money3-free-explore-self-play.test.js",
+        "blob": "d36413b4da0888ed386d88fe6014b440c19460f2",
+        "bytes": 4094
+      },
+      {
         "path": "chengyinhub-xcx/tests/unit/f-pages-dead-pages-entries.test.js",
         "blob": "48d6eaa7eefe4307994849c9639a740d74045939",
         "bytes": 5729
@@ -17646,6 +17651,11 @@
         "path": "chengyinhub-xcx/tests/unit/f-play-20261111.test.js",
         "blob": "28c05a9e134822e74bc6376c4125aeff490f8116",
         "bytes": 11831
+      },
+      {
+        "path": "chengyinhub-xcx/tests/unit/f-play2-20261111.test.js",
+        "blob": "3e0f156cc2c9ba736b895473f1495b76d6bf7fba",
+        "bytes": 1946
       },
       {
         "path": "chengyinhub-xcx/tests/unit/f21-merchant-recruitment-gap-contract.test.js",
@@ -21804,8 +21814,8 @@
       },
       {
         "path": "chengyinhub-xcx/tests/unit/publisher-free-identity-contract.test.js",
-        "blob": "edcfa2155292a1a694834b489edd279d128e963b",
-        "bytes": 8944
+        "blob": "b0f75e143c90844a1034b927f79cae6555370a7f",
+        "bytes": 9094
       },
       {
         "path": "chengyinhub-xcx/tests/unit/publisher-identity-contract.test.js",
@@ -23454,13 +23464,13 @@
       },
       {
         "path": "chengyinhub-xcx/tests/unit/simple-ai-v2-guards.test.js",
-        "blob": "ae73bcc44a39f0f79dce18ede66da9735eadc6a1",
-        "bytes": 51169
+        "blob": "d49a40cdc7ee1fb9e1a17493a61225d4e6bb20e4",
+        "bytes": 51216
       },
       {
         "path": "chengyinhub-xcx/tests/unit/simple-ai.test.js",
-        "blob": "ea83d7e79cc3f281f2c9782ec293de58def541f6",
-        "bytes": 8972
+        "blob": "b4c34e4eef808288a9ae7cad7f65f267ccd94e7e",
+        "bytes": 8978
       },
       {
         "path": "chengyinhub-xcx/tests/unit/simple-preset-source-contract.test.js",
@@ -25782,7 +25792,7 @@
   "migrations": {
     "directory": "chengyinhub-admin/sql",
     "ordering": "explicit-dependencies-then-path-bytewise (ci/migration-dependencies.json)",
-    "count": 640,
+    "count": 641,
     "appliedStateSource": "未知;只能由 owner 经 chengyin-db-migrate 只读预检回填,本脚本永不判定",
     "items": [
       {
@@ -33602,13 +33612,26 @@
         "applied": "UNKNOWN"
       },
       {
+        "migrationId": "zzz_committed_official_notice_job_reregister_20261111",
+        "explicitManaged": false,
+        "path": "chengyinhub-admin/sql/migration_zzz_committed_official_notice_job_reregister_20261111.sql",
+        "sha256": "e8a58381bb89409bd4f1cb8f90e32b9bb9ea5d28e3adab5c5985fff74a624576",
+        "gitBlob": "a88e5ae067cd248aec020705ef278c6a9229a578",
+        "bytes": 2448,
+        "order": 639,
+        "dependsOn": [
+          "20261024_d_committed_official_notice_wx"
+        ],
+        "applied": "UNKNOWN"
+      },
+      {
         "migrationId": "seed_preset_demo",
         "explicitManaged": true,
         "path": "chengyinhub-admin/sql/seed_preset_demo.sql",
         "sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
         "gitBlob": "8bb3d26732e26d4958c4543f47c412517abf978e",
         "bytes": 6882,
-        "order": 639,
+        "order": 640,
         "dependsOn": [
           "preset_route"
         ],
@@ -33621,7 +33644,7 @@
         "sha256": "886bf11c3464b4ab820e953893b0536f2eb77c9096e3be637c6d2a2acbe98226",
         "gitBlob": "41087c126c249915c7a75fa15e4a016cab715c8d",
         "bytes": 1837,
-        "order": 640,
+        "order": 641,
         "dependsOn": [],
         "applied": "UNKNOWN"
       }

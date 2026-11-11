@@ -1,6 +1,10 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.domain.dto.PublicCatalogQuery;
+import com.chengyinhub.business.domain.dto.PublicContentCatalogRow;
+import com.chengyinhub.business.domain.vo.PublicContentCatalogDetailVO;
+import com.chengyinhub.business.mapper.PublicContentCatalogMapper;
+import com.chengyinhub.business.service.impl.PublicContentCatalogServiceImpl;
 import com.chengyinhub.business.domain.vo.PublicCatalogFilterOptionsVO;
 import com.chengyinhub.business.service.ICityDiscoveryCatalogService;
 import com.chengyinhub.business.service.IPublicContentCatalogService;
@@ -12,13 +16,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -97,6 +107,35 @@ class ApiPublicContentCatalogControllerTest {
         AjaxResult result = controller.info("9", "en");
 
         assertEquals(404, result.get(AjaxResult.CODE_TAG));
+    }
+
+    @Test
+    void infoReturns200WhenAChapterNameIsNull() {
+        // 真实服务 + 映射器桩：章节 name 为 NULL 时映射器给出 null 行，/info 仍应 200(f-rehearsal 冒烟曾 500)。
+        PublicContentCatalogMapper mapper = mock(PublicContentCatalogMapper.class);
+        PublicContentCatalogServiceImpl realService = new PublicContentCatalogServiceImpl();
+        ReflectionTestUtils.setField(realService, "catalogMapper", mapper);
+        ReflectionTestUtils.setField(controller, "catalogService", realService);
+        PublicContentCatalogRow row = new PublicContentCatalogRow();
+        row.setId(7L);
+        row.setCityCode("310100");
+        row.setName("A");
+        row.setLifecycle(3);
+        row.setSaleEndAt(new Date(System.currentTimeMillis() + 86_400_000L));
+        when(mapper.selectCatalogItemById(eq(7L), any())).thenReturn(row);
+        when(mapper.selectChapterNames(eq(7L))).thenReturn(Collections.<Map<String, Object>>singletonList(null));
+        when(mapper.selectPreviewStops(eq(7L), anyInt())).thenReturn(new ArrayList<Map<String, Object>>());
+        when(mapper.selectChapterCounts(anyList())).thenReturn(new ArrayList<Map<String, Object>>());
+        when(mapper.selectTicketAggregates(anyList())).thenReturn(new ArrayList<Map<String, Object>>());
+        when(mapper.selectSaleRevisions(anyList())).thenReturn(new ArrayList<Map<String, Object>>());
+        when(mapper.selectApprovedLocales(anyList())).thenReturn(new ArrayList<Map<String, Object>>());
+        when(mapper.selectCityNames(anyList())).thenReturn(new ArrayList<Map<String, Object>>());
+
+        AjaxResult result = controller.info("7", null);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        PublicContentCatalogDetailVO detail = (PublicContentCatalogDetailVO) result.get(AjaxResult.DATA_TAG);
+        assertEquals(Collections.singletonList("未命名章节"), detail.getChapterNames());
     }
 
     @Test

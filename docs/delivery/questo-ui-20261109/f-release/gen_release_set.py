@@ -72,6 +72,7 @@ NEW_META = {
     "20261110_ecommerce_payout": (REQUIRED, PRE, "电商收付通 6 表（开关默认关）", None),
     "20261110_ecommerce_payout_wiring": (REQUIRED, POST, "ecom_refund 表 + 两条暂停 sys_job（ecommercePayoutTask）+ 菜单；含 sys_job，放新 jar 之后（开关关时新 jar 不读本表）", None),
     "20261110_platform_pass": (REQUIRED, PRE, "通行证 4 表 + 两个未上架套餐（开关默认关）", None),
+    "zzz_committed_official_notice_job_reregister_20261111": (REQUIRED, POST, "f-rehearsal 修正：按 invoke_target 判重补登记暂停的 committedOfficialNoticeTask 任务（正常路径空操作；jar 回滚后前滚时恢复该任务，原 step 11 是单次执行不能重跑）", None),
     "20261111_ecommerce_combine": (REQUIRED, POST, "合单支付 6 表（开关默认关）；依赖 ecommerce_payout_wiring，随它放新 jar 之后", None),
     "20261111_ai_generation_log_retention_index": (REQUIRED, PRE, "ai_generation_log 加 create_time 索引（f-compliance P0-10 留存清理按时间分批删，缺索引会全表扫）", None),
     "20261111_aigc_filing_config_seed": (REQUIRED, PRE, "sys_config 新增空值键 aigc.algorithm.filing-no（备案号公示位，空值不显示；拿到备案号后运营在后台填）", "READBACK"),
@@ -139,6 +140,23 @@ EXTRA_CHECKS = {
     "zz_questo_collation_align_20261109": [
         "(SELECT COUNT(*) = 0 FROM information_schema.columns WHERE table_schema = DATABASE()"
         " AND collation_name = 'utf8mb4_0900_ai_ci' AND table_name IN (%s))"],
+}
+
+# 台账判「幂等」、但文件第一句是「目标对象必须都不存在」的前置断言（JSON_EXTRACT 故意报 3141）的迁移：
+# 重跑必然在前置断言处报错停下（不改任何状态）。f-rehearsal 第二遍实测，所以标成「APPLIED 时必须跳过」。
+PREFLIGHT_SINGLE_APPLY = {
+    "marketing_attribution_20261108", "marketing_product_20261108", "marketing_revenue_allocation_20261108",
+    "marketing_z_channel_voucher_20261108", "video_bounty_host_tip_20261108",
+}
+
+# 10-29 包分类块钉的是「建表后」的精确列/索引指纹；同一发布集里后续迁移再给这张表加列/索引后，旧指纹会把
+# 已应用误判成 CONFLICT（f-rehearsal 在 MySQL 8.0 演练中发现）。这里为这类表追加「后续迁移落地后」的第二个指纹，
+# 两个形状之一完全吻合即 APPLIED，其余形状仍判 CONFLICT。指纹取自演练库按发布集执行后的 information_schema。
+# 表名 -> (列数, 列指纹, 索引行数, 索引指纹, 追加形状来源)
+PACK_POST_SHAPES = {
+    "20261027_template_adoption_receipt": (
+        "template_adoption_receipt", 13, 15081007648298938700, 6, 7132261291781051820,
+        "20261107_template_adoption_inherited_config_hash"),
 }
 
 FORBIDDEN = re.compile(r"\b(INSERT|UPDATE|DELETE|REPLACE|CREATE|ALTER|DROP|TRUNCATE|RENAME|GRANT|REVOKE|SET|PREPARE|EXECUTE|CALL|LOCK|HANDLER|LOAD|COMMIT|ROLLBACK|START)\b", re.I)
@@ -253,7 +271,12 @@ def build(head):
     all_items = migrations_at(str(ROOT), head_sha)
     by_path = {m["path"]: m for m in all_items}
     rows = []
+    diff = migration_diff(str(ROOT), PACK_SOURCE, head_sha)
+    # qx-final6 起 pack 契约也收录了 10-29 之后的新增项（供隔离演练）；这些项仍按 NEW_META 标注，此处只取原 10-29 包。
+    added_since_pack = {c["migrationId"] for c in diff["changes"]}
     for m in pack["migrations"]:
+        if m["migrationId"] in added_since_pack:
+            continue
         now = by_path.get(m["path"])
         if not now or now["sha256"] != m["sha256"]:
             raise SystemExit("10-29 包内迁移在候选头上缺失或内容变化: %s" % m["path"])
@@ -271,7 +294,6 @@ def build(head):
         rows.append({"source": "10-29 发布包（未确认执行）", "class": cls, "phase": phase, "note": note, "rerun": rerun,
                      "packPhase": m["phase"], "migrationId": now["migrationId"], "path": now["path"],
                      "sha256": now["sha256"], "order": now["order"], "dependsOn": now["dependsOn"]})
-    diff = migration_diff(str(ROOT), PACK_SOURCE, head_sha)
     if any(c["change"] != "ADDED" for c in diff["changes"]):
         raise SystemExit("10-29 之后有迁移被修改或删除: %s" % [c["path"] for c in diff["changes"] if c["change"] != "ADDED"])
     since_master = {c["path"] for c in migration_diff(str(ROOT), MASTER_BRIEF_BASE, head_sha)["changes"]}
@@ -283,7 +305,8 @@ def build(head):
         cls, phase, note, _ = NEW_META[c["migrationId"]]
         rows.append({"source": "launch 波次（master 2bb81143 之后）" if c["path"] in since_master else "10-29 之后的 master",
                      "class": cls, "phase": phase, "note": note, "packPhase": None,
-                     "rerun": "永不执行" if cls == SKIP else ("APPLIED 时必须跳过" if c["idempotency"] == "NEEDS_REVIEW" else "幂等"),
+                     "rerun": "永不执行" if cls == SKIP else ("APPLIED 时必须跳过" if c["idempotency"] == "NEEDS_REVIEW"
+                                                       or c["migrationId"] in PREFLIGHT_SINGLE_APPLY else "幂等"),
                      "migrationId": c["migrationId"], "path": c["path"], "sha256": c["sha256"],
                      "order": c["order"], "dependsOn": c["dependsOn"],
                      "idempotency": c["idempotency"], "destructiveStatements": c["destructiveStatements"]})
@@ -358,6 +381,18 @@ def render_precheck(head_sha, rows):
         if r["packPhase"] is not None:
             block = re.sub(r"^SELECT \d+ AS exec_order", "SELECT %d AS exec_order" % r["step"],
                            blocks[r["migrationId"]], count=1)
+            if r["migrationId"] in PACK_POST_SHAPES:
+                table, cols, col_fp, idx, idx_fp, source = PACK_POST_SHAPES[r["migrationId"]]
+                alt = ("THEN 1 WHEN COUNT(*) = %d AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',ordinal_position,"
+                       "column_name,column_type,is_nullable,IFNULL(column_default,'~')),256),16),16,10) AS UNSIGNED)) = %d\n"
+                       "       AND (SELECT COUNT(*) = %d AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,"
+                       "seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = %d FROM information_schema.statistics "
+                       "WHERE table_schema = DATABASE() AND table_name = '%s')\n"
+                       "       THEN 1 ELSE 2 END" % (cols, col_fp, idx, idx_fp, table))
+                if block.count("THEN 1 ELSE 2 END") != 1:
+                    raise SystemExit("追加形状只支持单表分类块: %s" % r["migrationId"])
+                block = block.replace("THEN 1 ELSE 2 END", alt)
+                out.append("-- 也接受 %s 落地后的形状（f-rehearsal：否则全部执行后重跑预检会误判 CONFLICT）" % source)
             out.append(block.rstrip() + ";")
         else:
             text = (ROOT / r["path"]).read_text(encoding="utf-8")

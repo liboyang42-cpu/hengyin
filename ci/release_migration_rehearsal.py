@@ -244,12 +244,37 @@ SINGLE_APPLY = frozenset({
     "npc_voice_confirmed_attempt_20261024",
     "npc_voice_enrollment_intent_20261024",
     "photo_check_intent_20261023",
+    # 10-29 之后进入发布集（f-release「APPLIED 时必须跳过」46 项中的新增 21 项，f-rehearsal 原样重跑已证实拒绝且不改库）。
+    "20261029_activity_cancellation_receipt",
+    "20261029_topic_cancellation_receipt",
+    "20261107_template_adoption_inherited_config_hash",
+    "20261108_topic_content_revision",
+    "20261109_play_help_audit_permission",
+    "20261110_ecommerce_payout_wiring",
+    "club_host_reservation_20261109",
+    "marketing_attribution_20261108",
+    "marketing_extra_seat_20261108",
+    "marketing_product_20261108",
+    "marketing_revenue_allocation_20261108",
+    "marketing_z_channel_voucher_20261108",
+    "preset_draft_source_20261108",
+    "public_content_catalog_node_topic_index_20261108",
+    "video_bounty_group_verification_20261108",
+    "video_bounty_host_tip_20261108",
+    "x12_topic_look_20261029",
+    "z_channel_voucher_snapshot_20261109",
+    "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
+    "z_workshop_paid_review_20261109",
+    "zz_questo_collation_align_20261109",
 })
 
 # 已被替代、永不执行的迁移 -> 替代者（与 scripts/e2e/build_schema.py 的 REPLACED_UNAPPLIED 选择一致）。
 REPLACED_UNAPPLIED = {
     "20261024_c_before_start_notice_typed": "20261024_g_before_start_notice_metadata_v2",
     "20261026_official_broadcast_delivery": "20261028_official_broadcast_protocol_union",
+    # 10-29 之后：原文件断言把两列唯一索引数成 1 行，由 *_index_shape_20261109 逐字替代（f-release 不执行项）。
+    "public_content_catalog_20261108": "public_content_catalog_index_shape_20261109",
+    "z_marketing_revenue_channel_reverse_kind_20261108": "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
 }
 
 
