@@ -95,7 +95,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* ===== v13 地图(业主 2026-10-22「和 HTML 一模一样」) ===== */
 /* ds-ok: 本段颜色/尺寸逐项照 v13 原型取值 */
 .mt-chip { height: 65rpx; padding: 0 25rpx; margin-right: 15rpx; border-radius: 33rpx; gap: 12rpx; font-size: 25rpx; font-weight: 400; color: #fff; background: rgba(28,28,30,.88); box-shadow: inset 0 0 0 1rpx rgba(255,255,255,.1); } /* ds-ok */
-.mt-chip.is-on { background: #fff; color: #000; font-weight: 600; } /* ds-ok */
+.mt-chip.is-on { background: #fff; color: #000; font-weight: 600; box-shadow: 0 4rpx 16rpx rgba(0,0,0,.32), inset 0 0 0 1rpx rgba(0,0,0,.08); } /* ds-ok;x-fix2 P-16:白胶囊压在浅色地图上要有落影,不然像字浮在图上 */
 .mt-chip__caret { width: 10rpx; height: 10rpx; border: 0; border-right: 4rpx solid currentColor; border-bottom: 4rpx solid currentColor; transform: translateY(-3rpx) rotate(45deg); opacity: 1; transition: transform .2s; }
 .mt-chip__caret.is-up { transform: translateY(3rpx) rotate(225deg); }
 .mdd-mask { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; }

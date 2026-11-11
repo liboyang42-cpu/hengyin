@@ -147,3 +147,24 @@ test('P-11 首页城市定位确认是一句陈述,不再是长问句(合规要�
     assert.doesNotMatch(s, /附近排序吗？/, f)
   }
 })
+
+test('P-13/P-15/P-16/P-18/ME-4 玩家侧小项', () => {
+  // P-13 通行证未开放 / 商家:不摆筛选条
+  assert.match(read('subpackageMember/market/library/index.wxml'), /<view class="lb-kinds" wx:if="\{\{state !== 'off' && state !== 'merchant'\}\}"/)
+  // P-15 投诉建议有自己的图标,不再和 AI 对话记录重复
+  const sz = read('pages/shezhi/shezhi.wxml')
+  const icon = (id) => (sz.match(new RegExp('id="' + id + '"[^>]*icon="([^"]+)"')) || [])[1]
+  assert.equal(icon('settings-feedback'), '/pages/shezhi/images/icon_lc_megaphone.svg')
+  assert.notEqual(icon('settings-feedback'), icon('settings-ai-chat-records'))
+  assert.ok(fs.existsSync(path.join(ROOT, 'pages/shezhi/images/icon_lc_megaphone.svg')))
+  // P-16 选中的筛选胶囊在浅色地图上有落影
+  assert.match(read('subpackageRoam/nearby/index.wxss'), /\.mt-chip\.is-on \{ background: #fff; color: #000; font-weight: 600; box-shadow: 0 4rpx 16rpx/)
+  // P-18 没封面的票卡放插画,不留空
+  const sw = read('subpackageMember/signup/index.wxml')
+  assert.match(sw, /<view class="wc__im wc__im--illus" wx:else aria-hidden="true"><cy-illus /)
+  assert.equal(JSON.parse(read('subpackageMember/signup/index.json')).usingComponents['cy-illus'], '/subpackageMember/components/cy-illus/index')
+  // ME-4 底栏玻璃不透明度够,不渲染模糊时字也不透上来
+  const tb = read('components/tabBar/index.wxss')
+  assert.match(tb, /--tabbar-glass: rgba\(255, 255, 255, 0\.78\)/)
+  assert.match(tb, /--tabbar-glass: rgba\(28, 28, 30, 0\.82\)/)
+})
