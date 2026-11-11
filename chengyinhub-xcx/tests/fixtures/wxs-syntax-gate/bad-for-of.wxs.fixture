@@ -1,0 +1,2 @@
+function f(a) { var s = 0; for (var x of a) s += x; return s; }
+module.exports = { f: f };

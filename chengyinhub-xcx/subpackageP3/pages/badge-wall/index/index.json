@@ -1,9 +1,9 @@
 {
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "black",
+  "navigationBarTextStyle": "white",
   "navigationBarTitleText": "勋章墙",
-  "backgroundColor": "#ffffff",
-  "backgroundTextStyle": "dark",
+  "backgroundColor": "#000000",
+  "backgroundTextStyle": "light",
   "disableScroll": true,
   "usingComponents": {
     "cy-icon": "/components/cy/icon/index",

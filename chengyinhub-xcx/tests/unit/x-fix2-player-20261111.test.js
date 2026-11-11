@@ -31,8 +31,71 @@ test('P-2 确认订单/购买弹层:不再把门票写成「通行证」;没有�
   assert.equal(m.buyOptions({ selfPlay: 1, selfPlayPrice: 9 })[0].name, '自玩门票')
   assert.deepEqual(m.buyOptions({ selfPlay: 0, activityList: [] }), [], '城市定向无场次:没有票种')
   const js = read('pages/topic/index/index.js')
-  assert.match(js, /if \(!opt\) return; \/\/ x-fix2 P-2/)
+  assert.match(js, /if \(!opt\) return; if \(opt\.kind === 'pass'\)/)
   const visible = noComments(read('pages/topic/index/index.wxml'))
   assert.doesNotMatch(visible, /自玩通行证|主题通行证/)
   assert.doesNotMatch(read('pages/topic/components/cy/pass-reveal/index.js'), /value: '自玩通行证'/)
+})
+
+test('L-1 收集册(勋章/邮票/藏品)玩家侧一律深色:不再挂 theme-light 逃生口,状态栏白字', () => {
+  for (const p of ['badge-wall', 'stamp-album', 'object-cards']) {
+    const base = 'subpackageP3/pages/' + p + '/index/index'
+    assert.doesNotMatch(noComments(read(base + '.wxml')), /theme-light/, p)
+    assert.doesNotMatch(read(base + '.wxss'), /^\.theme-light /m, p)
+    const json = JSON.parse(read(base + '.json'))
+    assert.equal(json.navigationBarTextStyle, 'white', p)
+    assert.notEqual(String(json.backgroundColor).toLowerCase(), '#ffffff', p)
+  }
+  assert.doesNotMatch(read('subpackageP3/components/album-aura/index.wxss'), /#FAFBFD/i)
+  assert.doesNotMatch(read('subpackageP3/components/album-intro/index.wxss'), /#FAFBFD/i)
+  assert.doesNotMatch(read('subpackageP3/pages/object-cards/index/index.wxss'), /#FAFBFD/i)
+})
+
+test('M-2 勋章墙:单枚图片失败只降级这一枚(徽记/星标),重新载入时清空', () => {
+  const wxml = read('subpackageP3/pages/badge-wall/index/index.wxml')
+  assert.match(wxml, /wx:if="\{\{item\.iconUrl && !iconBroken\[item\._idx\]\}\}"[^>]*binderror="onIconError"/)
+  assert.match(wxml, /<cy-icon wx:else name="star" size="64" \/>/)
+  const js = read('subpackageP3/pages/badge-wall/index/index.js')
+  assert.match(js, /badges: list, iconBroken: \{\},/)
+  // 行为:把 onIconError 拿出来跑一次
+  const src = js.match(/  onIconError\(e\) \{[\s\S]*?\n  \},/)[0]
+  const fn = new Function('return {' + src + '}')().onIconError
+  const page = { data: { iconBroken: {} }, setData(d) { for (const k of Object.keys(d)) { const [, i] = k.split('.'); this.data.iconBroken[i] = d[k] } } }
+  fn.call(page, { currentTarget: { dataset: { idx: 3 } } })
+  assert.deepEqual(page.data.iconBroken, { 3: true })
+  fn.call(page, { currentTarget: { dataset: {} } })
+  assert.deepEqual(page.data.iconBroken, { 3: true })
+})
+
+test('P-3/P-4 游玩工具菜单:我的权益按商家计数;各站奖励有图标和箭头', () => {
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /<text class="dt">我的权益<\/text><text class="ds">\{\{merchantCount\}\} 家 · 已核销 \{\{merchantDoneCount\}\} 家<\/text>/)
+  assert.doesNotMatch(wxml, /\{\{total\}\} 家 · 已核销/)
+  assert.match(wxml, /aria-label="各站奖励"[^>]*><view class="dic pic pic--gift"><\/view><view class="dcopy"><text class="dt">各站奖励<\/text><\/view><view class="darr"><\/view><\/view>/)
+  const js = read('pages/play/index.js')
+  assert.match(js, /const merchantDoneCount = new Set\(visibleNodes\.filter\(\(node\) => Number\(node\.merchantId\) > 0 && node\.done\)/)
+  assert.match(js, /merchantCount, merchantDoneCount, seatTiles/)
+})
+
+test('P-5/P-7 站点卡:营业态缺失时不留孤零零的圆点;有角标时章节名下移', () => {
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /<block wx:elif="\{\{hero\.node\.openText\}\}">\s*<view class="fx-tile__dot"/)
+  assert.match(wxml, /class="fx-tile__tags \{\{item\.crowded \|\| item\.statusText \? 'fx-tile__tags--below' : ''\}\}"/)
+  assert.match(read('pages/play/index.wxss'), /\.fx-tile__tags--below\{ top:68rpx; \}/)
+})
+
+test('P-6 卡包首屏与故事开场都有返回', () => {
+  const wxml = read('pages/play/index.wxml')
+  const backs = wxml.match(/<view class="play-back"[^>]*bindtap="goBackDetail"[^>]*aria-label="返回"/g) || []
+  assert.equal(backs.length, 2)
+  assert.match(wxml, /class="play-back" wx:if="\{\{!packOpen && !isPreview\}\}"/)
+  assert.match(read('pages/play/index.js'), /goBackDetail\(\) \{/)
+})
+
+test('P-8 地点卡大字「开放」只放时段,说明文字不挤进数字位', () => {
+  const { sheetFacts } = require('../../pages/play/utils/play-stage-pops.js')
+  assert.equal(sheetFacts({ businessTime: '10:00-22:00' }, '').hoursText, '10–22')
+  assert.equal(sheetFacts({ businessTime: '09:30 至 21:30' }, '').hoursText, '09:30–21:30')
+  assert.equal(sheetFacts({ businessTime: '公共区域观察；以现场通行和开放时间为准' }, '').hoursText, '')
+  assert.equal(sheetFacts({ businessTime: '00:00-23:59' }, '').hoursText, '')
 })

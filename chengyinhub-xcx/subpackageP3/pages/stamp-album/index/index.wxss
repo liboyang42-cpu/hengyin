@@ -65,7 +65,7 @@
 .al-item:nth-child(n+13) { transition-delay: calc(var(--pm-s-s, 0) * 480ms), calc(var(--pm-s-s, 0) * 480ms); }
 
 /* ===== 2026-10-30 收集册 · 邮票(业主定稿 P-3)===== */
-.theme-light .al-root { background: transparent; position: relative; z-index: 1; }
+.alb-light .al-root { background: transparent; position: relative; z-index: 1; }
 .al-head { margin: 0 calc(-1 * var(--cy-space-4)); }
 /* 邮票:白边 + 齿孔(白边上一圈半圆缺口,透出底色);投影跟着齿孔走用 drop-shadow */
 .al-item { padding: 12rpx; box-sizing: border-box; box-shadow: none;
@@ -73,7 +73,7 @@
   filter: drop-shadow(0 6rpx 10rpx rgba(40, 52, 90, .18)); /* ds-ok: 浅底上的落影 */ transition: opacity .2s ease; }
 .al-item.is-away { opacity: 0; }
 /* 齿孔只该在白边上:照片没到之前中间先是白底,不露出一格格孔 */
-.theme-light .al-img { background: #ffffff; /* ds-ok: 邮票纸面 */ }
+.alb-light .al-img { background: #ffffff; /* ds-ok: 邮票纸面 */ }
 .al-fly { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 60; background: transparent; } /* 整屏浮层:底色由里面的 veil 渐显压暗 */
 .al-fly__veil { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(12, 12, 14, .5); /* ds-ok: 压暗底 */ opacity: 0; transition: opacity .4s ease; }
 .al-fly.is-on .al-fly__veil { opacity: 1; }

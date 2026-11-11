@@ -34,7 +34,7 @@ function velocity(prev, prevT, cur, curT) {
 function detentOffsets(levels, panelH, winH) {
   var out = [0];
   if (!levels || !(panelH > 0) || !(winH > 0)) return out;
-  var list = String(levels).split(',');
+  var list = ('' + levels).split(',');
   for (var i = 0; i < list.length; i++) {
     var r = LEVEL_RATIO[list[i].trim()];
     if (!r) continue;
@@ -92,7 +92,7 @@ function measure(inst, key, fallback) {
     var n = cs ? parseFloat(cs[key]) : 0;
     if (n > 0) return n;
   }
-  return Number(fallback) || 0;
+  return (fallback * 1) || 0;
 }
 
 function px(n) { return Math.round(n * 10) / 10; }

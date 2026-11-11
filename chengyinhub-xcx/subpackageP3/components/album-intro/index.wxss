@@ -1,7 +1,7 @@
 :host { display: block; }
-/* 整屏过场:底色与收集册 album-aura 同一组浅色(收集册是浅色域) */
+/* 整屏过场:底色与收集册 album-aura 同一张玩家深色底(x-fix2 L-1) */
 .ai { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 90; overflow: hidden;
-  background: radial-gradient(90% 60% at 15% 30%, #CFE0FF 0, rgba(207, 224, 255, 0) 70%), radial-gradient(80% 60% at 90% 80%, #CDEFEB 0, rgba(205, 239, 235, 0) 70%), #FAFBFD; /* ds-ok: 同 album-aura 收集册浅色底 */
+  background: radial-gradient(90% 60% at 15% 30%, rgba(207, 224, 255, .14) 0, rgba(207, 224, 255, 0) 70%), radial-gradient(80% 60% at 90% 80%, rgba(205, 239, 235, .12) 0, rgba(205, 239, 235, 0) 70%), #000000; /* ds-ok: 收集册玩家深色底 */
   transition: opacity 360ms var(--cy-ease-out); }
 .ai.is-out { opacity: 0; }
 .ai--press { opacity: .7; }
@@ -10,7 +10,7 @@
 .ai.is-ring .ai__route { opacity: 0; transition: opacity 240ms linear; }
 /* 路线:虚线从第一枚画到第三枚(scaleX 从左展开) */
 .ai__route { position: absolute; left: 170rpx; top: 640rpx; width: 450rpx; height: 6rpx; border-radius: 3rpx; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
-  background: repeating-linear-gradient(90deg, #1B1D22 0 14rpx, transparent 14rpx 26rpx); /* ds-ok: 路线墨色虚线 */
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .7) 0 14rpx, transparent 14rpx 26rpx); /* ds-ok: 路线墨色虚线 */
   transform-origin: 0 50%; transform: rotate(14deg) scaleX(0); opacity: .55;
   transition: transform 520ms var(--cy-ease-out) 560ms; }
 .ai.is-land .ai__route { transform: rotate(14deg) scaleX(1); }
@@ -41,10 +41,10 @@
 /* ===== r3 环装卡堆(refs4/album-ring-stack-frames) ===== */
 .ar { position: absolute; left: 0; top: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 320ms var(--cy-ease-out); }
 .ai.is-ring .ar { opacity: 1; }
-.ar__x { position: absolute; right: 16rpx; top: calc(var(--nav-top) + 8rpx); width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: #1B1D22; } /* ds-ok: 浅色收集册墨色 */
+.ar__x { position: absolute; right: 16rpx; top: calc(var(--nav-top) + 8rpx); width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: #F2F2F4; } /* ds-ok: 深色收集册浅字 */
 /* 每页一句宋体大标题,换页时上一句往上淡出、下一句从下面升上来 */
 .ar__h-wrap { position: absolute; left: var(--cy-page-x); right: 120rpx; top: calc(var(--nav-top) + 24rpx); height: 120rpx; }
-.ar__h { position: absolute; left: 0; top: 0; font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 80rpx; /* ds-ok: 宋体大标题 */ font-weight: 600; line-height: 1.2; color: #1B1D22; /* ds-ok: 墨色 */
+.ar__h { position: absolute; left: 0; top: 0; font-family: "Songti SC", "STSong", "Noto Serif SC", serif; font-size: 80rpx; /* ds-ok: 宋体大标题 */ font-weight: 600; line-height: 1.2; color: #F2F2F4; /* ds-ok: 深底浅字 */
   opacity: 0; transform: translateY(28rpx); transition: transform 420ms var(--cy-ease-out), opacity 300ms linear; }
 .ar__h.is-on { opacity: 1; transform: translateY(0); transition-delay: 160ms; }
 /* 卡堆:正面一张,后两张往右下错开、各转一点角,像穿在同一个环上的一摞卡 */
@@ -65,7 +65,7 @@
 .ar__card--press { opacity: .92; }
 .ar__il { width: 300rpx; height: 300rpx; display: flex; align-items: center; justify-content: center; }
 .ar__lb { position: absolute; left: 40rpx; bottom: 36rpx; font-size: var(--cy-type-label); font-weight: 700; letter-spacing: .12em; color: #1B1D22; } /* ds-ok: 彩卡上的墨色段名 */
-.ar__hole { position: absolute; left: 30rpx; top: 38rpx; width: 28rpx; height: 28rpx; border-radius: 50%; background: #FAFBFD; box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, .25); } /* ds-ok: 打孔 */
+.ar__hole { position: absolute; left: 30rpx; top: 38rpx; width: 28rpx; height: 28rpx; border-radius: 50%; background: #000000; box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, .25); } /* ds-ok: 打孔 */
 .ar__ring { position: absolute; left: -22rpx; top: 6rpx; z-index: 5; width: 92rpx; height: 92rpx; border-radius: 50%; box-sizing: border-box; pointer-events: none;
   border: 10rpx solid #B9BEC7; border-right-color: transparent; transform: rotate(-30deg); /* ds-ok: 金属环 */
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, .12); } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */

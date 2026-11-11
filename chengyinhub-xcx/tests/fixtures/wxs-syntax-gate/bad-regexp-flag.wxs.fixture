@@ -1,0 +1,2 @@
+var r = getRegExp('a', 'y');
+module.exports = { r: r };
