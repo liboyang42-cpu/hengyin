@@ -99,3 +99,22 @@ test('P-8 地点卡大字「开放」只放时段,说明文字不挤进数字位
   assert.equal(sheetFacts({ businessTime: '公共区域观察；以现场通行和开放时间为准' }, '').hoursText, '')
   assert.equal(sheetFacts({ businessTime: '00:00-23:59' }, '').hoursText, '')
 })
+
+test('L-3 章节号 / 章节印字形取样失败时退回内置点阵数字与「章」字点阵,不再只剩两圈橙点', () => {
+  const src = read('pages/play/components/chapter-flip/index.js')
+  const block = src.match(/const DIGITS = [\s\S]*?\nfunction digitPoints[\s\S]*?\n}\n/)[0]
+  const digitPoints = new Function(block + '; return digitPoints;')()
+  const pts = digitPoints('01', 330, 260, 11)
+  assert.ok(pts.length > 20, '两位数字应落出足够多的点')
+  for (const p of pts) { assert.ok(p.x >= 0 && p.x < 330 && p.y >= 0 && p.y < 260); assert.equal(p.x % 11, 0); assert.ok(p.row >= 0 && p.row < 1) }
+  const xs = pts.map((p) => p.x)
+  assert.ok(Math.min(...xs) > 0 && Math.max(...xs) < 330 - 11, '居中,不贴边')
+  assert.deepEqual(digitPoints('', 330, 260, 11), [])
+  assert.match(src, /if \(!grid\.length && dots\) grid = digitPoints\(text, w, h, cell\);/)
+  assert.match(src, /\} catch \(e\) \{ mask = null; \}/)
+  assert.match(src, /if \(!glyph\.length\) glyph = glyphPoints\(SEAL_GLYPH, box, SEAL\.cell\);/)
+  const gblock = src.match(/const SEAL_GLYPH = [\s\S]*?\nfunction glyphPoints[\s\S]*?\n}\n/)[0]
+  const g = new Function(gblock + '; return glyphPoints(SEAL_GLYPH, 100, 7);')()
+  assert.ok(g.length > 40)
+  for (const p of g) assert.ok(p.x >= 0 && p.x < 100 && p.y >= 0 && p.y < 100)
+})
