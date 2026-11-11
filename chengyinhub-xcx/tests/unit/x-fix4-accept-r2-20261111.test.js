@@ -91,3 +91,9 @@ test('N-14 夜城霓虹参数(青粉/红青)真的改 --lk-a/--lk-b;显式配色
     assert.match(t, /\.look--cyber\.look-neon--red_cyan\.look-palette--default, \.look--cyber\.look-neon--red_cyan \.atmosphere--default \{ --lk-a:#FF2E4C;/)
   }
 })
+
+test('L2-2 通行证页:平台通行证在售时不再写「暂无在售通行证」,入口上列方案价格', () => {
+  const wxml = read('subpackageMember/market/passes/index.wxml')
+  assert.match(wxml, /wx:if="\{\{!products\.length && !member\}\}" kind="empty" title="暂无在售通行证"/)
+  assert.match(read('subpackageMember/market/passes/index.js'), /planSide = \(v\.plans \|\| \[\]\)\.map\(\(c\) => c\.price\)/)
+})
