@@ -342,6 +342,13 @@
         "detail/index",
         "join/index"
       ]
+    },
+    {
+      "root": "subpackagePass",
+      "name": "subpackagePass",
+      "pages": [
+        "reveal/index"
+      ]
     }
   ],
   "preloadRule": {

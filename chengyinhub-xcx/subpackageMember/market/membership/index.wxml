@@ -1,16 +1,19 @@
-<!-- l-pass 通行证(我的 → 通行证与礼品 → 通行证)。原型 proto/game ps-pass + ps-success。数字只读服务端。 -->
+<!-- l-pass 通行证(我的 → 通行证与礼品 → 通行证)。原型 proto/game ps-pass。数字只读服务端。
+     l-icons 2026-11-11:开通成功的 ps-success 层换成 subpackagePass/reveal 的钥匙开场(完整版);英雄区的插图换成 3D 玻璃序列帧;页面本身不做玻璃。 -->
 <view class="theme-dark pp"><cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <view class="pp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar overlay scrolled="{{scrolled}}" tint="light" custom-back title="通行证" bind:back="goBack" />
     <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
     <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
+    <cy-empty wx:elif="{{state === 'merchant'}}" fill class="cy-fill-state" size="lg" kind="empty" title="商家账号没有通行证" />
     <cy-empty wx:elif="{{!view.enabled}}" fill class="cy-fill-state" size="lg" kind="empty" title="通行证暂未开放" />
     <view wx:else class="pp__body">
       <view class="pp__hero">
         <view class="pp__art">
-          <cy-illus name="pass" size="300" />
-          <view class="pp__key"><cy-illus name="key" size="140" delay="500" bare /></view>
+          <!-- l-icons:通行证是奖励时刻,用 3D 玻璃序列帧(proto/icons A 风格烤帧);页面其余仍是普通玩家样式,不做玻璃 -->
+          <cy-frames sheets="{{[{ src: '/subpackageMember/images/frames/glass-pass.webp', n: 24 }]}}" cols="{{6}}" fw="{{112}}" fh="{{112}}" w="{{300}}" h="{{300}}" fps="{{10}}" reduced-motion="{{reduced}}" />
+          <view class="pp__key"><cy-frames sheets="{{[{ src: '/subpackageMember/images/frames/glass-key.webp', n: 24 }]}}" cols="{{6}}" fw="{{112}}" fh="{{112}}" w="{{140}}" h="{{140}}" fps="{{10}}" delay="{{500}}" reduced-motion="{{reduced}}" /></view>
         </view>
         <view class="pp__cnt" wx:if="{{view.count !== null}}"><text class="pp__cnt-n">{{view.count}}</text><text class="pp__cnt-u">个主题 全部可玩</text></view>
         <text class="pp__until" wx:if="{{view.active && view.untilText}}">有效期至 {{view.untilText}}</text>
@@ -44,25 +47,4 @@
     </view>
   </view>
 
-  <!-- ps-success:服务端订单 PAID 才出现。钥匙飞入 → 锁打开 → 积分币弹出 → 文案与封面升起。只用过渡。 -->
-  <view class="ok {{ok.show ? 'is-show' : ''}} {{ok.step >= 1 ? 's1' : ''}} {{ok.step >= 2 ? 's2' : ''}} {{ok.step >= 3 ? 's3' : ''}} {{reduced ? 'is-reduced' : ''}}" wx:if="{{ok.mounted}}" aria-hidden="{{!ok.show}}">
-    <text class="ok__skip" style="top: {{statusBarHeight + navBarHeight + 8}}px;" bindtap="goLibrary" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</text>
-    <view class="ok__scene">
-      <view class="ok__lock">
-        <view class="ok__lk"><cy-illus name="locked" size="280" loop="{{false}}" /></view>
-        <view class="ok__unl"><cy-illus name="unlocked" size="280" loop="{{false}}" /></view>
-      </view>
-      <view class="ok__keyfly"><cy-illus name="key" size="300" loop="{{false}}" /></view>
-      <view class="ok__coin ok__coin--{{index}}" wx:for="{{[0,1,2,3]}}" wx:key="*this"><cy-illus name="points" size="88" bare loop="{{false}}" /></view>
-    </view>
-    <view class="ok__copy">
-      <text class="ok__k">通行证 · 已开通</text>
-      <text class="ok__t" wx:if="{{view.count !== null}}">{{view.count}} 个主题，全部可玩</text>
-      <text class="ok__s" wx:if="{{ok.untilText}}">到 {{ok.untilText}} · 价格都是 ¥0</text>
-      <view class="ok__thumbs" wx:if="{{library.length}}">
-        <image wx:for="{{library}}" wx:key="id" wx:if="{{index < 5 && item.cover}}" class="ok__th" style="transition-delay: {{index * 80}}ms;" src="{{item.cover}}" mode="aspectFill" />
-      </view>
-    </view>
-    <view class="ok__foot"><view class="ok__pill" bindtap="goLibrary" aria-role="button" aria-label="进入可玩主题库" hover-class="cy-pressed" hover-stay-time="80">进入可玩主题库</view></view>
-  </view>
 </view>
