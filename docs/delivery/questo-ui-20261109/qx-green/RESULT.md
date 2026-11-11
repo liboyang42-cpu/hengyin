@@ -107,4 +107,7 @@ f-compliance 合入后 Funds MySQL IT 也变红：`RoamLocationRetentionMySqlIT.
 
 其余都通过：20 个小程序单测分片、小程序静态门、小程序静态检查汇总、迁移安全门、迁移布局门、后台构建、后台 E2E 契约门、SBOM 依赖扫描、变更区域检测。另外 Mini followup focused regression(`2195cdfc7`)也通过。Funds MySQL IT 不在 ci.yml 里，单独在本分支手动触发(run 42985977206，`2195cdfc7`)：两个 job 都是 **success**。真库 IT 跑了 754 个，0 失败、0 错误、0 跳过，门禁回读通过；f-compliance 合入后变红的 `RoamLocationRetentionMySqlIT` 已转绿。
 
+
+lead 后来直接在 launch 提交了 `afa90ffd5`，把留存 IT 和危险动作登记的修法换成等价的写法合进去，但漏了套票可退金额的单位兜底。本线把 #787 同步到 `afa90ffd5`，冲突的两个文件都取 launch 版本，所以 #787 现在只差一行：`subpackageMember/free-explore/index.wxml` 第 85 行。本地复核：在 launch 头上跑 `ui-theme-unit-lint.js --units`，报「free-explore/index.wxml:85 {{quote.amount}} 后紧跟单位 元，必须用 || 提供兜底」；加上本行修复后，门禁通过。
+
 STATUS: PARTIAL - 原有的 7 个小程序红单测和 Gameplay HTTP 用例都已修好，f-compliance 合入后新出的小程序静态门红和 Funds MySQL IT 红也在草稿 PR #787 修好(Funds 真库 IT 754/754 通过，0 跳过)；#787 的全量 CI 31 个 job 里 28 个通过；还剩 gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者两项，都要你在受信策略或白名单上拍板，本线不改
