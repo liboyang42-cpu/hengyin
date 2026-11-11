@@ -146,4 +146,7 @@ lead 随后在 launch 合入了等价修复(`181e222f3`、`4cf14763e`)，包括 
 
 #779 在 `eb272ae74` 和 `4cf14763e` 上，Gameplay HTTP generic-only 和小程序静态门红，都是 runner 的 apt 域名解析失败造成的(装 redis-server / ripgrep 时报「Temporary failure resolving archive.ubuntu.com」)。HTTP 任务的 82 个 Python 前置检查已通过，红在 Java 用例开始之前；静态门也是在装工具时就红了。属于基础设施故障，不是代码问题。本线安排约 30 分钟后对这两个 run 各重跑一次失败的 job。
 
+
+截至 15:26(UTC)，GitHub 托管 runner 解析 Ubuntu apt 源(azure.archive / archive / security.ubuntu.com)仍然失败，持续约一个半小时。Gameplay HTTP generic-only 在 `4cf14763e` 上的 run 43037545384 已经跑了 5 次(第 5 次由本线 15:18 触发)，每次都是 82 个 Python 前置检查通过、装 redis-server / ripgrep 时红，Java 用例一次也没开跑。小程序静态门在 `4cf14763e` 和 `44a97d84c`(只改了 qx-final2 的文档)上同样卡在装 ripgrep。本线不再追加重跑，等基础设施恢复后统一重跑即可；在同一棵树上本地复核，静态门和小程序单测全部通过。
+
 STATUS: PARTIAL - 本线负责的代码修复已全部进 launch；#779 当前的 HTTP / 静态门红是 runner apt 域名解析故障，待重跑；仍需你拍板的是 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项
