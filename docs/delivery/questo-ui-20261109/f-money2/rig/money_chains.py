@@ -258,6 +258,9 @@ def main():
                     f.step("提交分账", http("POST", "/business/ecommerce-payout/profit-share/submit", token=atok))
                     f.step("同步分账", http("POST", "/business/ecommerce-payout/profit-share/sync", token=atok))
                     f.step("分账任务（T+14 定时）", run_job(atok, "ecommercePayoutTask.shareAndRetry()"))
+                    f.step("分账单（退款前回读）", None, rows=[list(map(str, r)) for r in q(
+                        "SELECT o.out_trade_no,o.state,o.manual_reason,o.shared_fen,COUNT(l.id) FROM ecom_profit_share_order o "
+                        "LEFT JOIN ecom_profit_share_line l ON l.share_order_id=o.id GROUP BY o.id ORDER BY o.id")])
                 f.step("结算后主理人清退", http("POST", "/api/registration/cancel-by-owner", token=otok, form={"id": reg}))
                 refund_notify(f, reg)
                 f.step("退款对账任务", run_job(atok, "refundReconcileTask.reconcile()"))
