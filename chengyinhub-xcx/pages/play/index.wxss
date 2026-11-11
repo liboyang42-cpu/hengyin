@@ -1871,6 +1871,12 @@ page { background: var(--cy-color-bg-page); }
   padding:0 46rpx calc(env(safe-area-inset-bottom) + 48rpx); display:flex; flex-direction:column;
   background:var(--atmo-bg, #000000); opacity:1; transition:opacity .4s ease; } /* ds-ok 跟着所选画面风格的默认章节底色(星尘=纯黑) */
 .st-intro--out{ opacity:0; }
+/* f-play 顶部缺图:原型 gp-start 的 gm-bg —— 封面 .55 透明、轻模糊、去饱和,上下两端退到底色,标题压在上面读得清 */
+.st-intro__bg{ position:absolute; left:0; right:0; top:0; bottom:0; overflow:hidden; pointer-events:none; }
+.st-intro__im{ position:absolute; left:-4%; top:-4%; width:108%; height:108%; opacity:.55; filter:blur(4rpx) saturate(.5); } /* ds-ok 原型 gp-start 封面 opacity .55 / blur 2px / saturate .5 */
+.st-intro__bg::after{ content:""; position:absolute; left:0; right:0; top:0; bottom:0;
+  background:linear-gradient(180deg, var(--atmo-bg, #000000) 0%, transparent 30%, transparent 50%, var(--atmo-bg, #000000) 92%); } /* ds-ok 原型 gm-bg::after 同一组断点 */
+.st-intro__body, .st-intro__go{ position:relative; }
 .st-intro__body{ flex:1; display:flex; flex-direction:column; justify-content:center; }
 .st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:var(--atmo-muted, rgba(255,255,255,.6)); } /* ds-ok 同 .pv-ending__k */
 .st-intro__t{ margin-top:23rpx; font-size:80rpx; font-weight:800; line-height:1.15; color:var(--atmo-text, #FFFFFF); } /* ds-ok 原型开场大标题 */

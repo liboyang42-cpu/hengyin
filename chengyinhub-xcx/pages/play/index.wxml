@@ -485,6 +485,8 @@
 <!-- 开场(原型 game-intro,2026-09-24):故事主题开局先看这一页;点「开始游戏」淡出,接开机与第一道开场门。
      9-22 删掉的是通用起始页(play-intro,带路线骨架),这一页只给故事主题,内容全来自主题本身。 -->
 <view class="st-intro atmosphere--default {{storyIntro.out ? 'st-intro--out' : ''}}" wx:if="{{storyIntro.show}}">
+  <!-- f-play 顶部缺图:原型 gp-start 标题卡后面压着主题封面(半透明、轻模糊、去饱和);主题封面优先,没有退回章节封面链,都缺不渲染 -->
+  <view class="st-intro__bg" wx:if="{{topicCover || chapter.cover}}" aria-hidden="true"><image class="st-intro__im" src="{{topicCover || chapter.cover}}" mode="aspectFill" /></view>
   <view class="st-intro__body">
     <text class="st-intro__k">城瘾 · {{modeLabel}}{{topicAiGenerated ? ' · AI 生成' : ''}}</text>
     <text class="st-intro__t">{{storyIntro.title}}</text>
