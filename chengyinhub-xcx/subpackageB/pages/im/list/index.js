@@ -10,8 +10,7 @@ const roleViewFilter = require('../../../../utils/transport/role-view-filter.js'
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const subscribe = require('../../../../utils/subscribe.js');
 const discoverNav = require('../../../../utils/discover-nav.js');
-const { reader, sameReader } = require('../../../../utils/user-character.js');
-const identitySync = require('../../../../utils/identity-sync.js'); // G-5:头像/名称改完,会话快照随之重拉
+const { reader, sameReader } = require('../../../../utils/user-character.js'); const identitySync = require('../../../../utils/identity-sync.js'); // G-5:头像/名称改完,会话快照随之重拉
 const app = getApp();
 
 Page({
@@ -53,9 +52,7 @@ Page({
     const capsuleRightGap = cap && cap.left ? Math.round((sys.windowWidth || 375) - cap.left + 12) : 96;
     this.setData({ statusBarHeight: statusBarHeight, navBarHeight: navBarHeight, capsuleRightGap: capsuleRightGap });
     // 左滑面板总宽 = 3 × 120rpx = 360rpx;rpx→px 换算随屏宽变,不能写死 px(P1-1:大屏机型上曾被写死值压掉)
-    this._openPx = Math.round(360 * ((sys.windowWidth || 375) / 750));
-    this._identityEpoch = identitySync.identityEpoch();
-    this._offIdentity = identitySync.onIdentityChange(() => { this._identityEpoch = -1; });
+    this._openPx = Math.round(360 * ((sys.windowWidth || 375) / 750)); this._identityEpoch = identitySync.identityEpoch(); this._offIdentity = identitySync.onIdentityChange(() => { this._identityEpoch = -1; });
     this._syncViewTheme();
     this.loadConversations();
     this.loadInvites();
@@ -65,15 +62,8 @@ Page({
     this._hidden = false;
     this._navigating = false; // 从聊天页返回时刷新未读/最后一条;兜底清跳转中标记
     this._syncViewTheme();
-    this._syncCommunityEntry();
-    // G-5:身份广播过(epoch 变了)⇒ 丢掉已确认的会话快照整表重拉,不保留旧头像/旧名称
-    const identityEpoch = identitySync.identityEpoch();
-    const identityDirty = this._identityEpoch !== identityEpoch;
-    this._identityEpoch = identityEpoch;
-    if (identityDirty && this.data.loaded) {
-      this.loadConversations(false);
-      this.loadInvites();
-    } else if (this.data.loaded || resumed || this._conversationReader && !sameReader(app, this._conversationReader)) {
+    this._syncCommunityEntry(); const identityDirty = this._identityEpoch !== identitySync.identityEpoch(); this._identityEpoch = identitySync.identityEpoch(); // G-5:身份广播过 ⇒ 丢掉已确认的会话快照整表重拉
+    if (identityDirty && this.data.loaded) { this.loadConversations(false); this.loadInvites(); } else if (this.data.loaded || resumed || this._conversationReader && !sameReader(app, this._conversationReader)) {
       this.loadConversations(true);
       this.loadInvites();
     }

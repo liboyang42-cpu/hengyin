@@ -1,6 +1,4 @@
-const reportSheet = require('../utils/community-report-sheet.js');
-const { isMerchantView } = require('../../../utils/roleGuard.js');
-const merchantTheme = require('../../../utils/merchant-theme.js'); // M-35:商家从「发现」点进帖文是浅色
+const reportSheet = require('../utils/community-report-sheet.js'); const { isMerchantView } = require('../../../utils/roleGuard.js'); const merchantTheme = require('../../../utils/merchant-theme.js'); // M-35:商家从「发现」点进帖文是浅色
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
@@ -27,8 +25,7 @@ const { buildSquareShare } = require('../utils/square-share.js');
 const GONE_POST_MSG = /^(内容不存在|已删除|审核中|数据不存在|参数不合规|帖文不存在)/;
 
 Page({
-  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
-    if (this.data.merchantView) merchantTheme.merchantPageRestore(); },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; if (this.data.merchantView) merchantTheme.merchantPageRestore(); },
   /**
    * 页面的初始数据
    */
@@ -402,8 +399,7 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad(options) {
-    if (this.data.merchantView !== isMerchantView()) this.setData({ merchantView: isMerchantView() });
+  onLoad(options) { if (this.data.merchantView !== isMerchantView()) this.setData({ merchantView: isMerchantView() });
     this._pageReader = reader(app);
     this._unloaded = false;
     this._accountEpoch = (this._accountEpoch || 0) + 1;

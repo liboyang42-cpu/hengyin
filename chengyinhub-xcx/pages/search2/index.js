@@ -1,6 +1,4 @@
-const toast = require('../../utils/toast.js');
-const { isMerchantView } = require('../../utils/roleGuard.js');
-const merchantTheme = require('../../utils/merchant-theme.js'); // M-35:商家从工作台进搜索是浅色
+const toast = require('../../utils/toast.js'); const { isMerchantView } = require('../../utils/roleGuard.js'); const merchantTheme = require('../../utils/merchant-theme.js'); // M-35:商家从工作台进搜索是浅色
 const app = getApp();
 const { isRecordList } = require('../../utils/response-shape.js');
 const { HISTORY_MAX, normalizeSearchHistory, searchHistoryStorageKey } = require('./utils/search-history.js');
