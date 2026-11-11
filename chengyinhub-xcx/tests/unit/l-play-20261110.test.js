@@ -130,8 +130,9 @@ test('cy-illus 修:物件层 SVG 不再有重复属性(XML 不合法 → 图片�
       assert.equal(new Set(names).size, names.length, name + ' 的 <' + m[1] + '> 有重复属性')
     }
   }
+  // l-iconsB:钥匙换成风格 B v2,宝石描边原型写成 LN + ' stroke-width="3.5"',HTML 取第一个 4.5
   const key = decodeURIComponent(art.layers('key').fg)
-  assert.match(key, /<path d="M28 34c3-5 8-8 14-8" fill="none" stroke="#121213" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" ?\/>/, '重复的 stroke 取第一个(与原型 HTML 渲染一致)')
+  assert.match(key, /<path d="M40 26l12 12-12 16-12-16z" fill="none" stroke="#121213" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" ?\/>/, '重复的 stroke-width 取第一个(与原型 HTML 渲染一致)')
 })
 
 test('地点卡数字只写拿得到的;玩法类型名认得出才写;翻页循环', () => {
