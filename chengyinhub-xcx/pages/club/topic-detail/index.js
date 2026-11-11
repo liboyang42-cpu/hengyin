@@ -403,7 +403,7 @@ Page({
         name: raw.name || raw.title || '',
         cover: resolveTopicCover(raw) || raw.cover || raw.coverUrl || '',
         merchantLogo: raw.merchantLogo || '',
-        dateRange: this.formatRange(raw.startDate, raw.endDate),
+        dateRange: this.headerDateRange(raw),
         // C-27:没有任何商家信息的主题(纯城市定向)不再默认写「玩家可到店核销」
         verifyModeText: raw.verifyModeText || (raw.merchantLogo ? '玩家可到店核销' : ''),
         chips: this.buildChips(raw, stats),
@@ -423,6 +423,9 @@ Page({
       .filter(function (a) { return !!a.id; });
     this.startDirector();
     this.maybeEnterDirector(raw);
+    // x-fix5 R3-3:maybeEnterDirector 可能刚选定了唯一一场,头部日期随之换成这一场的日期
+    const headerDate = this.headerDateRange(raw);
+    if (headerDate !== (this.data.topic || {}).dateRange) this.setData({ 'topic.dateRange': headerDate });
     this.syncOpsTime();
   },
 
@@ -708,6 +711,20 @@ Page({
     if (raw.startedAt || raw.status === 'running') return raw.selfPublished ? 'selfrun' : 'running';
     if (raw.preparingAt || raw.status === 'preparing') return 'preparing';
     return 'confirmed';
+  },
+
+  // x-fix5 R3-3:导演台是一场具体场次的页面,头部日期读这一场的 startDate(与「集合时间」同源),
+  // 不再写主题的起止日(主题 10月31日 — 10月31日 而本场在 11月12日)。没选定场次或场次没日期时仍是主题日期。
+  headerDateRange(raw) {
+    const id = this._directorActivityId;
+    const list = Array.isArray(raw && raw.activityList) ? raw.activityList : [];
+    const hit = id ? list.find(function (a) { return positiveId(a && a.id) === id; }) : null;
+    if (hit && hit.startDate) {
+      const one = this.formatRange(hit.startDate, '');
+      const two = hit.endDate ? this.formatRange('', hit.endDate) : '';
+      return two && two !== one ? one + ' – ' + two : one;
+    }
+    return this.formatRange(raw.startDate, raw.endDate);
   },
 
   formatRange(start, end) {

@@ -153,7 +153,12 @@ public class ApiGameSessionController extends BaseController {
     @GetMapping("/shared/control")
     public AjaxResult sharedControl(String activityId) {
         try { return success(runtimeService.sharedControlView(actor("CLUB"), Convert.toLong(activityId, 0L))); }
-        catch (GameSessionException e) { return gameError(e); }
+        catch (GameSessionException e) {
+            // x-fix5 R3-4:非共享场次本来就没有共享控制台,这是「没有」而不是服务出错 —— 回 200 + 空,
+            // 不再回 500 让客户端控制台报错。权限等其它拒绝原因仍原样走 gameError。
+            if ("GAME_ACTION_UNSUPPORTED".equals(e.getErrorCode())) return success();
+            return gameError(e);
+        }
         catch (RuntimeException e) { return internalError("sharedControl", e); }
     }
 

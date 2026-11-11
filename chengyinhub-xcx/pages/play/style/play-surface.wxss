@@ -79,8 +79,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 56rpx;                               /* ds-ok 原型 28px:正好是这个高度的胶囊 */
-  background: #FFF;                                   /* ds-ok 玩法屏主按钮:六个皮肤上都是白 */
-  color: #111114;                                     /* ds-ok 同上 */
+  background: var(--lk-a, #FFF);                      /* ds-ok 玩法屏主按钮:无外观时六个皮肤上都是白;R3-2 主题内取外观强调色 */
+  color: var(--lk-bg, #111114);                       /* ds-ok 同上,字取外观底色 */
   font-size: var(--cy-type-button);
   font-weight: 800;
   /* 浅色皮肤上白底会糊进背景 —— 内描边和投影一起把它托起来。

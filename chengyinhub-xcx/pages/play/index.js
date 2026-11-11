@@ -604,7 +604,7 @@ Page({
     // 手记
     /* 半屏进场用的开关(原型 .sheet 的 @keyframes up 在这儿是 transition)。 */
     sceneIn: false,
-    showJournal: false, journalDot: false, journalCards: [], sessionToolsOpen: false,
+    showJournal: false, journalMulti: false, journalDot: false, journalCards: [], sessionToolsOpen: false,
     /* 自由探索有两种看法(2026-09-10 用户裁决):这一页默认是卡包,
        点「N 家商户」旁边那枚地图钮换成地图模式(原型 x-run)。同一批商户,两种排布。 */
     // 2026-09-22 地图模式已删,本字段恒 false;它还留着只因为 .fx / .pbar 的 wx:if 仍引用,
@@ -8397,9 +8397,23 @@ Page({
           kvS: String(paras[0] || '').slice(0, 40),
         };
       });
+    // x-fix5 R3-5:多章主题里手记按章分组 —— 每章第一站前出该章的标题,不再把所有站都写在当前章名下。
+    // 只有一章(或节点没有章号)时保持原样:顶上一条当前章名。
+    const chapterTitle = {};
+    (this.data.chapterCards || []).forEach((c) => { if (c && c.id != null) chapterTitle[String(c.id)] = [c.meta, c.title].filter(Boolean).join(' · '); });
+    const nodeChapter = {};
+    order.forEach((n) => { if (n.chapterId != null) nodeChapter[String(n.nodeId)] = String(n.chapterId); });
+    const ids = Object.keys(nodeChapter).map((k) => nodeChapter[k]);
+    const multi = new Set(ids).size > 1 && ids.length === order.length;
+    let prevChapter = null;
+    if (multi) cards.forEach((seg) => {
+      const cid = nodeChapter[String(seg.nodeId)];
+      if (cid !== prevChapter) { seg.chapterHead = chapterTitle[cid] || ''; prevChapter = cid; }
+    });
     // x-fix2 P-9:手记末尾不再配下一章提示这类说明句(业主:不要辅助说明)
     this.setData({
       journalCards: cards.concat(historyCards),
+      journalMulti: multi,
     });
   },
   /* ⚠️ onJournalTouchMove / onJournalScroll(滚动沉降:越靠屏幕中央越清晰)

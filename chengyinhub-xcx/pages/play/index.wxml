@@ -316,7 +316,7 @@
         <!-- 本局读数:原来是故事流顶部的 .chfull__stats 三格,重排版后顶栏只留罗盘/标题/两钮,
              读数收进菜单。三个数与口径一字未改(章节数 / 已完成 / 还有游戏数)。 -->
         <view class="drow drow--static" wx:if="{{mode!=2}}" aria-role="text" aria-label="本局读数">
-          <view class="dic pic pic--route"></view>
+          <view class="dic pic pic--info"></view>
           <view class="dcopy">
             <text class="dt">本局读数</text>
             <text class="ds">章节 {{chapterCount}} · 已完成 {{doneCount}} · 还有游戏 {{remainingGameCount}}</text>
@@ -342,11 +342,11 @@
         <!-- 「一局」保留(2026-09-22 用户裁决),从底栏中键转移过来:点=开始/暂停,长按=结束。 -->
         <!-- ⚠️ 计时必须挂 touchstart:onRunHoldStart 自带 180ms「算点击还是长按」的判定,
              接到 bindlongpress 上会叠加微信自己的 350ms,进度要半秒多才开始涨。 -->
-        <view class="drow drow--hold" wx:if="{{mode!=2}}" bindtap="onRunToggleFromTools"
+        <view class="drow drow--hold" wx:if="{{mode!=2 && !allDone}}" bindtap="onRunToggleFromTools"
               bindtouchstart="onRunHoldStart" bindtouchend="onRunHoldEnd" bindtouchcancel="onRunHoldEnd"
               aria-role="button" aria-label="{{runState === 'running' ? '暂停这一局' : '开始这一局'}}{{runState === 'idle' ? '' : '，长按结束本次'}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="drow__hold" wx:if="{{runHoldPct > 0}}" style="width:{{runHoldPct}}%"></view>
-          <view class="dic pic pic--route"></view>
+          <view class="dic pic {{runState === 'running' ? 'pic--pause' : 'pic--play'}}"></view>
           <view class="dcopy"><text class="dt">{{runState === 'running' ? '暂停这一局' : '开始这一局'}}</text><text class="ds" wx:if="{{runState !== 'idle'}}">{{runHoldPct > 0 ? (runHoldLeft > 0 ? '还有 ' + runHoldLeft + ' 站未完成 · 松开取消' : '松开取消') : '长按结束这一局'}}</text></view>
           <view class="darr"></view>
         </view>
@@ -1310,8 +1310,10 @@
     <view class="jkv" wx:for="{{journeyAttributes}}" wx:key="key">
       <text class="jkv__k">{{item.label}}</text><view class="jkv__copy"><text class="jkv__t">{{item.value}}</text></view>
     </view>
-    <view class="sheet-meta">{{chapter.name}}</view>
-    <view wx:for="{{journalCards}}" wx:key="key" class="jkv {{item.locked ? 'is-locked' : ''}}"
+    <view class="sheet-meta" wx:if="{{!journalMulti}}">{{chapter.name}}</view>
+    <block wx:for="{{journalCards}}" wx:key="key">
+    <view class="sheet-meta" wx:if="{{item.chapterHead}}">{{item.chapterHead}}</view>
+    <view class="jkv {{item.locked ? 'is-locked' : ''}}"
           data-id="{{item.nodeId}}" data-step="{{item.label}}" bindtap="{{item.locked ? 'noop' : 'openStory'}}"
           aria-role="{{item.locked ? 'text' : 'button'}}" aria-label="{{item.locked ? item.label : ('展开' + item.label)}}"
           hover-class="{{item.locked ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
@@ -1319,6 +1321,7 @@
       <view class="jkv__copy"><text class="jkv__t">{{item.kvT}}</text><text class="jkv__s">{{item.kvS}}</text></view>
       <view class="jkv__go" wx:if="{{!item.locked}}"></view>
     </view>
+    </block>
   </view>
 </view>
 </block>

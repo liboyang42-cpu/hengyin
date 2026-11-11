@@ -59,6 +59,15 @@ class ApiGameSessionControllerTest {
         }
     }
 
+    @Test void sharedControlOnNonSharedSessionIsEmptySuccessNotServerError() {
+        when(service.sharedControlView(any(), any())).thenThrow(new GameSessionException("GAME_ACTION_UNSUPPORTED", "本局没有共享运行控制"));
+        AjaxResult result = controller.sharedControl("10");
+        assertEquals(200, result.get("code"));
+        assertFalse(result.containsKey("reasonCode"));
+        when(service.sharedControlView(any(), any())).thenThrow(new GameSessionException("GAME_FORBIDDEN_SCOPE", "仅本场运营人员可查看控制视图"));
+        assertEquals(500, controller.sharedControl("10").get("code"));
+    }
+
     @Test void sharedStaffGuidanceAndManualSignUseAuthenticatedClubPrincipal() {
         for (String action : java.util.Arrays.asList("QUEST_GUIDE", "ARRIVAL_CONFIRM", "STAFF_MANUAL_SIGN", "RUN_PAUSE", "MANUAL_IMPORT")) {
             org.mockito.Mockito.clearInvocations(service);

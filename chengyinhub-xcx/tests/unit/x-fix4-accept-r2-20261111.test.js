@@ -10,7 +10,7 @@ const noComments = (s) => s.replace(/<!--[\s\S]*?-->/g, '')
 test('N-1 故事流「继续探索」避开 Home 条:收尾区与底垫都含安全区', () => {
   const wxss = read('pages/play/index.wxss')
   assert.match(wxss, /\.chfull__pad\{height:calc\(440rpx \+ env\(safe-area-inset-bottom\)\);\}/)
-  assert.match(wxss, /\.chfull__end\{ padding:42rpx 46rpx env\(safe-area-inset-bottom\); \}/)
+  assert.match(wxss, /\.chfull__end\{ padding:42rpx 46rpx calc\(env\(safe-area-inset-bottom\) \+ 32rpx\); \}/)
   assert.match(read('pages/play/play-topbar.wxss'), /\.chfull\.is-navmap \.chfull__pad\{ height:calc\(560rpx \+ env\(safe-area-inset-bottom\)\); \}/)
 })
 
@@ -76,7 +76,7 @@ test('N-11 通关卡(finale)跟主题外观:底/字/按钮读 --lk-*,文案避�
 })
 
 test('N-13 内嵌玩法块底部留 Home 条安全区', () => {
-  assert.match(read('pages/play/index.wxss'), /\.chfull__kit\{ position:relative; box-sizing:border-box; padding-top:var\(--cy-space-6\); padding-bottom:calc\(var\(--cy-space-6\) \+ env\(safe-area-inset-bottom\)\); \}/)
+  assert.match(read('pages/play/index.wxss'), /\.chfull__kit\{ position:relative; box-sizing:border-box; padding-top:var\(--cy-space-6\); padding-bottom:calc\(var\(--cy-space-6\) \+ env\(safe-area-inset-bottom\) \+ 32rpx\); \}/)
 })
 
 test('N-14 夜城霓虹参数(青粉/红青)真的改 --lk-a/--lk-b;显式配色仍以配色为准', () => {
