@@ -29,6 +29,7 @@ class DataRetentionServiceImplTest {
     private BizEventLogMapper eventMapper;
     private NpcChatLogMapper npcChatMapper;
     private NpcChatRequestMapper npcChatRequestMapper;
+    private com.chengyinhub.business.mapper.AiGenerationLogMapper aiGenerationLogMapper;
     private DataRetentionServiceImpl svc;
     private Date cutoff;
 
@@ -43,8 +44,24 @@ class DataRetentionServiceImplTest {
         ReflectionTestUtils.setField(svc, "bizEventLogMapper", eventMapper);
         ReflectionTestUtils.setField(svc, "npcChatLogMapper", npcChatMapper);
         ReflectionTestUtils.setField(svc, "npcChatRequestMapper", npcChatRequestMapper);
+        aiGenerationLogMapper = mock(com.chengyinhub.business.mapper.AiGenerationLogMapper.class);
+        ReflectionTestUtils.setField(svc, "aiGenerationLogMapper", aiGenerationLogMapper);
         ReflectionTestUtils.setField(svc,"npcAsrIntents",mock(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
         cutoff = new Date();
+    }
+
+    @Test
+    void cleanAiGenerationLogs_deletesInBatchesUntilClean() {
+        when(aiGenerationLogMapper.deleteAiGenerationLogsBefore(any(), eq(1000))).thenReturn(1000).thenReturn(7);
+
+        assertEquals(1007, svc.cleanAiGenerationLogs(cutoff, 1000, 500));
+        verify(aiGenerationLogMapper, times(2)).deleteAiGenerationLogsBefore(eq(cutoff), eq(1000));
+    }
+
+    @Test
+    void cleanAiGenerationLogs_invalidArgsDeleteNothing() {
+        assertEquals(0, svc.cleanAiGenerationLogs(null, 1000, 500));
+        verify(aiGenerationLogMapper, never()).deleteAiGenerationLogsBefore(any(), org.mockito.ArgumentMatchers.anyInt());
     }
 
     @Test

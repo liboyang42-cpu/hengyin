@@ -633,6 +633,9 @@ public class PlayNodeQueryApplication {
         if (topicForFlow != null) data.put("topicCover", topicForFlow.getImgUrl());
         // 完成页标题、自由探索卡包抬头都要主题名;此前前端读 d.topicName 而这里从没下发 ⇒ 恒空,只能回落章节名。
         if (topicForFlow != null) data.put("topicName", topicForFlow.getName());
+        // P0-14:AI 起草的主题在游玩页显示「AI 生成」(判据见 AigcLabel)
+        if (topicForFlow != null) data.put("topicAiGenerated",
+                com.chengyinhub.business.service.support.AigcLabel.isAiGenerated(topicForFlow.getPublishMode()));
         // 主题配乐(作者媒体,详情页同一条):游玩页作循环底乐,#659 移除的是合成环境音,不是作者音频。
         if (topicForFlow != null) data.put("topicAudioUrl", topicForFlow.getAudioUrl());
         // 故事开局的「初始状态」页只列作者真开了的精力 / 幸运:回执里的 hp/luck 没开也有值(取配置初始值),看不出开没开

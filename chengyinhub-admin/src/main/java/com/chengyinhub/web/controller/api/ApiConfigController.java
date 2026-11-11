@@ -85,6 +85,8 @@ public class ApiConfigController extends BaseController {
         // R11 p1 F-7:入口按服务端同一个闸显示 —— 功能关着就不摆「发票」「自由探索权益」入口(端点闸照旧)
         data.put("userInvoice", complianceFeatureSwitches != null && complianceFeatureSwitches.userInvoiceOn());
         data.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
+        // P0-14 / P2-020:生成式 AI 算法备案号公示位;未配置为空串,小程序据此不显示
+        data.put("aigcFilingNo", aigcFilingNo());
         return success(data);
     }
 
@@ -96,6 +98,20 @@ public class ApiConfigController extends BaseController {
             return 0L;
         }
     }
+
+    /** sys_config 中的备案号原文(去首尾空白、限 64 字);缺失或读失败为空串。 */
+    String aigcFilingNo() {
+        try {
+            String value = configService.selectConfigByKey(AIGC_FILING_NO_KEY);
+            if (value == null) return "";
+            value = value.trim();
+            return value.length() > 64 ? value.substring(0, 64) : value;
+        } catch (RuntimeException e) {
+            return "";
+        }
+    }
+
+    static final String AIGC_FILING_NO_KEY = "aigc.algorithm.filing-no";
 
     private boolean readFlag(String key) {
         return NpcFeatureFlags.flagOn(configService.selectConfigByKey(key));

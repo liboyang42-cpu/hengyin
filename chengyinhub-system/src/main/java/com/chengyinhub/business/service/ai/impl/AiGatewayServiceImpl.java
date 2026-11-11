@@ -415,8 +415,9 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
 
         int latencyMs = (int) (System.currentTimeMillis() - t0);
-        int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
-        int tokenOut = estimateSingle(modelText);
+        int[] usage = client.takeLastUsage();
+        int tokenIn = usage != null ? usage[0] : estimateSingle(systemPrompt) + estimateSingle(userPrompt);
+        int tokenOut = usage != null ? usage[1] : estimateSingle(modelText);
 
         // 4. 出参内容安全
         String secOut;
@@ -448,7 +449,10 @@ public class AiGatewayServiceImpl implements AiGatewayService
         saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
 
         if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
-        return new AiGatewayResult(traceId, modelText, modelName, 0);
+        AiGatewayResult generated = new AiGatewayResult(traceId, modelText, modelName, 0);
+        generated.setTokenIn(tokenIn);
+        generated.setTokenOut(tokenOut);
+        return generated;
     }
 
     /**
