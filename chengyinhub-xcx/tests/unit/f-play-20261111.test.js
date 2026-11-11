@@ -187,3 +187,22 @@ test('V3-05 进度游标看得见:用药丸自己的字色(--lk-bg)而不是与�
   assert.match(bar, /height: 6rpx/);
   assert.match(read('pages/play/index.wxml'), /<view class="theme-gpill__i" style="transform:scaleX\(\{\{doneCount \/ total\}\}\)"><\/view>/);
 });
+
+test('V3-11 相册试玩不再死循环:advanced-game 对同一个打开着的节点只开局一次,关掉再开 / 换节点照旧重开', () => {
+  let config;
+  const file = path.join(ROOT, 'pages/play/components/advanced-game/index.js');
+  const src = fs.readFileSync(file, 'utf8');
+  const fn = src.slice(src.indexOf("'show,node.nodeId': function"), src.indexOf('\n  },\n  lifetimes:'));
+  const observer = new Function('return {' + fn + '}')()['show,node.nodeId'];
+  const inst = { starts: 0, start() { this.starts++; }, stopTimer() {}, stopDrawAudio() {}, stopBackgroundMusic() {} };
+  observer.call(inst, true, 29);
+  observer.call(inst, true, 29);   // 父页重传 node(挂了新的 previewKit)
+  observer.call(inst, true, 29);
+  assert.equal(inst.starts, 1, '同一个打开着的节点不重复开局');
+  observer.call(inst, true, 30);
+  assert.equal(inst.starts, 2, '换节点重开');
+  observer.call(inst, false, 30);
+  observer.call(inst, true, 30);
+  assert.equal(inst.starts, 3, '关掉再开重开');
+  void config;
+});

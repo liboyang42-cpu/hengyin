@@ -40,8 +40,12 @@ Component({
   },
   observers: {
     'show,node.nodeId': function (show, nodeId) {
-      if (show && nodeId) this.start();
-      if (!show) { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); this.stopBackgroundMusic(); }
+      /* f-play V3-11:同一个打开着的节点只开局一次。父页每次 setData 重新传 node(试玩里会话视图回来就给节点挂新的 previewKit)
+         都会触发这里;不判就又 start → hydrate → 回传会话 → 父页再挂 previewKit → 再 start,相册试玩在 rig 里就此死循环、渲染进程崩掉。
+         打开(show 由假变真)或换了节点才重开;关掉清掉记号,下次打开照旧重开。 */
+      const key = show && nodeId ? String(nodeId) : '';
+      if (key && this._startedFor !== key) { this._startedFor = key; this.start(); }
+      if (!show) { this._startedFor = ''; this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); this.stopBackgroundMusic(); }
     }
   },
   lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); this.stopBackgroundMusic(); } },

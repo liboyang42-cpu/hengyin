@@ -922123,7 +922123,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:94"
+        "staticSource": "pages/play/components/advanced-game/index.js:98"
       }
     },
     {
@@ -922203,7 +922203,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:548"
+        "staticSource": "pages/play/components/advanced-game/index.js:552"
       }
     },
     {
@@ -922283,7 +922283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:550"
+        "staticSource": "pages/play/components/advanced-game/index.js:554"
       }
     },
     {
@@ -922372,7 +922372,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:431"
+        "staticSource": "pages/play/components/advanced-game/index.js:435"
       }
     },
     {
@@ -922520,7 +922520,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:415"
+        "staticSource": "pages/play/components/advanced-game/index.js:419"
       }
     },
     {
@@ -922668,7 +922668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:480"
+        "staticSource": "pages/play/components/advanced-game/index.js:484"
       }
     },
     {
@@ -922816,7 +922816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:487"
+        "staticSource": "pages/play/components/advanced-game/index.js:491"
       }
     },
     {
@@ -922964,7 +922964,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:481"
+        "staticSource": "pages/play/components/advanced-game/index.js:485"
       }
     },
     {
@@ -923044,7 +923044,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:548"
+        "staticSource": "pages/play/components/advanced-game/index.js:552"
       }
     },
     {
@@ -923165,7 +923165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:492"
+        "staticSource": "pages/play/components/advanced-game/index.js:496"
       }
     },
     {
@@ -923313,7 +923313,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:246"
+        "staticSource": "pages/play/components/advanced-game/index.js:250"
       }
     },
     {
@@ -923393,7 +923393,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:544"
+        "staticSource": "pages/play/components/advanced-game/index.js:548"
       }
     },
     {
@@ -923530,7 +923530,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:345"
+        "staticSource": "pages/play/components/advanced-game/index.js:349"
       }
     },
     {
