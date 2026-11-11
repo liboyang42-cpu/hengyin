@@ -84,4 +84,18 @@
 4. **`scripts/fixtures.json` 与生成器长期不同步**：launch 上全量重跑 `_gen_fixtures.js` 会改动约 5000 行，还会把 4 条既有 fixture 合同和 D35 的 `fixtureVerified` 一起打红，说明其他 lane 改页面后没有重生成。<br>• 本线只并入了 14 条新行的生成结果。<br>• 默认：不全量重生成。<br>• 建议：由矩阵 owner 在下一波统一重生成并校准 fixture。
 5. **动效没有逐帧实拍**：G-1 的 20 组动效只核对了时长和曲线逐值与原关键帧相同，没有 rig 帧条对比；G-3、G-5、G-16 的界面变化也没有实拍。<br>• 默认：上线前由 lead 用 rig 补拍 ai-npc 首次介绍、分享层、落地页、队伍席位、礼物页这几处。
 
+
+## 五、合并后跟进(2026-11-11)
+
+#780 已由 lead 合入。之后 launch 又合入了 l-payout3、qx-final2 和 f-compliance。
+
+#779 在 `206049b6f` 上：35 个 check，33 个通过。另外两个是 Fast gates 与 Backend tests，都只因为第四节第 2 条架构 finding 而红：后端单测 18709 个，0 失败。PR 事件路径上 gitleaks 是绿的。
+
+f-compliance 合入后(`aee716fe1`)，#779 的小程序静态门又变红(run 42978418505)，本线开草稿 PR **#787**(`claude/qx-green2-20261111`)修两处：
+
+- **danger-confirm 门禁**：设置页「AI 对话记录」组件调用 `/api/ai/npc/chat/data/delete` 时没有登记。这个组件本来就先弹 `ai.npc.chatData.delete` 危险确认，所以按同一接口、同一确认键补登记。
+- **孤立单位门禁**：套票可退金额改为 `{{quote.amount || '—'}}`。`amount` 一定是校验过的非空字符串，显示不变。
+
+验证：小程序全量单测 **17227/17227**；静态门各子门禁、台账 `--check` 都通过。全量 CI 已在该分支触发。
+
 STATUS: PARTIAL - 原有的 7 个小程序红单测和 Gameplay HTTP 用例都已修好(全量单测 17217/17217，generic-only 在 CI 上三个头都 success)；顺带修好了全量 CI 暴露的小程序静态门 11 个子门禁、迁移安全门和分包互引缺陷；本地 ui-integrity、台账、路由矩阵、mvn 打包、后台构建、主包 2038.7 KiB 都通过；还剩 gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者两项，都要你在受信策略或白名单上拍板
