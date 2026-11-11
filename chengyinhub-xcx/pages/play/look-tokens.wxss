@@ -4,6 +4,11 @@
    作用域:玩家页根节点 .play 上的 lookClass(look--<风格> [look-palette--<配色>]),章节配色 .atmosphere--<配色> 覆盖同名变量。
    只在主题内生效;结算 / 平台页不挂 look 类,或用 .lk-plain 强制回到玩家黑。
    读者:本文件下半部分的 .lk-* 类(弹窗 / 卡片 / 按钮 / 标签),以及任何组件里的 var(--lk-*)。 */
+/* x-fix4 N-6/N-7:玩法皮肤(style/play-surface.wxss .skin-*)与道具(骰子等)统一读 --pk-embed-*。
+   故事流内嵌块在 .chfull__kit 上给章节配色;整屏/弹层里的玩法没有这组变量,落回皮肤原值 =
+   暗色外观里出现白矩形、亮蓝抽卡屏。这里在挂了 look-- 的玩家页根上补一份取外观色,
+   .chfull__kit 离玩法更近,仍以它为准。 */
+.play[class*="look--"] { --pk-embed-bg:var(--lk-bg); --pk-embed-ink:var(--lk-ink); --pk-embed-sub:var(--lk-mute); --pk-embed-soft:rgba(var(--lk-ink-rgb), .1); --pk-embed-accent:var(--lk-a); --pk-embed-ok:var(--lk-a); --pk-embed-scrim:rgba(var(--lk-bg-rgb), .86); } /* ds-ok */
 .play { --lk-ok:#22C55E; --lk-ok-rgb:34,197,94; } /* ds-ok 与 --cy-comp-sheet-player-success 同值 */
 .look--stardust { --lk-fd:"Songti SC","STSong","Noto Serif SC",serif; --lk-fw:600; --lk-ls:.03em; --lk-fs:"Xingkai SC","Kaiti SC","STKaiti",cursive; --lk-fm:"Songti SC",serif; --lk-r:36rpx; --lk-rb:999rpx; --lk-cut:none; --lk-bg:#0A0A0A; --lk-ink:#F2F2F0; --lk-mute:#9AA0AA; --lk-a:#E9E2D0; --lk-b:#9AA0AA; --lk-ink-rgb:242,242,240; --lk-a-rgb:233,226,208; --lk-b-rgb:154,160,170; --lk-bg-rgb:10,10,10; --lk-card:#1D1D1C; --lk-pop:#2A2A2A; --lk-ctl:#343433; --lk-dim:#B1B1B0; --lk-shade-rgb:0,0,0; } /* ds-ok 外观目录 星尘 · 黑 */
 .look--stardust.look-palette--default, .look--stardust .atmosphere--default { --lk-bg:#0A0A0A; --lk-ink:#F2F2F0; --lk-mute:#9AA0AA; --lk-a:#E9E2D0; --lk-b:#9AA0AA; --lk-ink-rgb:242,242,240; --lk-a-rgb:233,226,208; --lk-b-rgb:154,160,170; --lk-bg-rgb:10,10,10; --lk-card:#1D1D1C; --lk-pop:#2A2A2A; --lk-ctl:#343433; --lk-dim:#B1B1B0; --lk-shade-rgb:0,0,0; } /* ds-ok 外观目录 星尘 · 黑 */

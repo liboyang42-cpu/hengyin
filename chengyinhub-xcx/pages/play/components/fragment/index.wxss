@@ -2,7 +2,7 @@
   display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; }
 .frag-mask--on { opacity: 1; }
 .frag-card { width: 560rpx; padding: 56rpx 44rpx; border-radius: 20rpx;
-  background: linear-gradient(160deg,#efe6d6,#e2d5bf); color: #3a2f26;
+  background: var(--lk-pop, linear-gradient(160deg,#efe6d6,#e2d5bf)); color: var(--lk-ink, #3a2f26); /* ds-ok 主题内读外观弹层色 */
   box-shadow: 0 20rpx 60rpx rgba(0,0,0,.5); transform: rotateY(90deg); transition: transform .18s ease-out; }
 .frag-card--flip { transform: rotateY(0deg); }
 /* M10 碎片飞入手记:飞向左下 journalfab(left 28rpx/bottom 356rpx),缩小淡出 */

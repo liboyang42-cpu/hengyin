@@ -31,7 +31,7 @@
 .skin-branch   { --bg:var(--pk-embed-bg, #12100e); --ink:var(--pk-embed-ink, #f2efe9); --sub:var(--pk-embed-sub, #8b857a); --soft:var(--pk-embed-soft, #211e1a); --accent:var(--pk-embed-accent, #d8a05a); --ok:var(--pk-embed-ok, #d8a05a); } /* ds-ok */
 /* 浅色玻璃(精准停表):值取自原型 #kit2 那一屏自己的底 / 墨 / 灰,不是新造的色。
    台面的退出 / 还能错 / 倒数跟着走浅色,不再是暗版字压在浅底上。--ci-* 只给倒数层用 */
-.skin-glass    { --bg:var(--pk-embed-bg, #f2f4f6); --ink:var(--pk-embed-ink, #111111); --sub:var(--pk-embed-sub, #5a5f66); --soft:var(--pk-embed-soft, #cfd4d9); --accent:var(--pk-embed-accent, #111111); --ok:var(--pk-embed-ok, #12a06f); --ci-scrim:rgba(242, 244, 246, .86); --ci-ink:#111111; } /* ds-ok */
+.skin-glass    { --bg:var(--pk-embed-bg, #f2f4f6); --ink:var(--pk-embed-ink, #111111); --sub:var(--pk-embed-sub, #5a5f66); --soft:var(--pk-embed-soft, #cfd4d9); --accent:var(--pk-embed-accent, #111111); --ok:var(--pk-embed-ok, #12a06f); --ci-scrim:var(--pk-embed-scrim, rgba(242, 244, 246, .86)); --ci-ink:var(--pk-embed-ink, #111111); } /* ds-ok */
 /* 兜底:没指定皮肤时按问答暗版,别落到透明 */
 .skin-none     { --bg:var(--pk-embed-bg, #0d0d10); --ink:var(--pk-embed-ink, #f6f6f8); --sub:var(--pk-embed-sub, #8a8a92); --soft:var(--pk-embed-soft, #1b1b20); --accent:var(--pk-embed-accent, #ff6b6b); --ok:var(--pk-embed-ok, #3ecf8e); } /* ds-ok */
 
