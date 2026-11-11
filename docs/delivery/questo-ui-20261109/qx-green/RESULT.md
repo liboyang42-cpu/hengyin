@@ -113,4 +113,17 @@ lead 后来直接在 launch 提交了 `afa90ffd5`，把留存 IT 和危险动作
 
 lead 随后又在 launch 提交了 `00331811d`，加上同一行可退金额兜底。到这一步，#787 的代码修复已全部进 launch，分支同步后只剩本 RESULT 文档。#779 在 `00331811d` 上：Fast gates 的红仍然只来自架构门(本次发现见 artifact `architecture-findings-43012117038-1`)。
 
-STATUS: PARTIAL - 本线负责的代码修复都已进 launch：7 个小程序红单测、Gameplay HTTP 用例、小程序静态门、Funds MySQL IT(真库 754/754)；#779 剩下的红只有 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项，都要你在受信策略或白名单上拍板，本线不改
+
+l-icons / l-iconsB 合入后(`fb9f1c287`)，#779 的小程序静态门有七个子门禁变红：DS 硬编码、孤立单位、死数据字段、截图矩阵、截图覆盖率、UI-GATE-0、UI 有效性。根因只有两个页面：
+- 新路由 `subpackagePass/reveal`：标题字号是原型定值，没有像同文件其他原型值那样标 ds-ok；`paid` 只用来决定按钮去向，却走了 setData；截图矩阵里没有这一行。
+- `subpackageMember/market/membership`：l-iconsB 撤下了主题库缩略图，但页面还在请求 `/api/platform-pass/library` 并 setData `library`；主题数插值前缺 `||` 兜底。
+
+修法(`4f7dc5048`，在 #787 上)：
+- reveal：标题标 ds-ok；`paid` 改为实例字段。
+- membership：去掉多余的主题库请求和字段；主题数改为 `{{view.count || 0}}`。外层 wx:if 已排除 null，显示不变；l-iconsB 单测的固定文本随之更新为兜底写法。
+- 截图矩阵：补 F314 行，同步 STATS 和 fixtures。
+- 动作台账：按新树重建，只少一条 GET，其余是行号平移。
+
+本地复核：七个子门禁、台账 `--check`、路由矩阵 `--check`、U3、危险动作门禁全部通过；小程序全量单测 17248/17248。
+
+STATUS: PARTIAL - 本线代码修复已进 launch；l-icons 合入后新出的小程序静态门七处红已在 #787(`4f7dc5048`)修好，待 lead 合入；#779 其余红只剩 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项，都要你拍板
