@@ -172,4 +172,9 @@ apt 源故障约在 17:00(UTC)前恢复：lead 记录小程序静态门在 `538a
 
 x-fix2 / x-fix3 合入后(`9f91019d5` 起)，小程序单测分片和静态门因动作台账未重建、计数固定值未跟上而变红。本线在 #787(`ca2b1ba1e`)上修过一版：重建台账，新增 goBackDetail ×2 和 onIconError ×2，计数随之对齐。lead 随后在 launch 上独立做了同样的修复，跨页日期单测改为剥掉零宽空格后再比对。#787 同步 `ca2ca9791` 时，冲突文件一律取 launch 版本，现在又只剩本文档。在 `ca2ca9791` 合并树上本地复核：小程序 11 项静态门禁全部通过，全量单测 17323/17323。lead 也已提交发布迁移演练基线修正(`b547919c3`)。
 
-STATUS: PARTIAL - 本线负责的代码修复全部进了 launch，当前头 ca2ca9791 本地小程序静态门与全量单测全绿，Gameplay HTTP generic-only 此前在 c16af7ca1 上为 success；#779 剩余要你拍板的是架构门 AuthorWriteReceipt 消费者与 gitleaks 历史命中
+#779 当前头 `9617cbba2`（x-fix2 / x-fix3 收口后）的 CI（run 43089942872 及同头配套 run）：36 个 job，34 个通过。20 个小程序单测分片、小程序静态门与汇总、迁移安全门、迁移布局门、SBOM 依赖扫描、管理端构建、管理端 E2E 契约门、Secret scan（gitleaks）、Funds MySQL IT 及其自检、隔离 Redis 恢复、Followup 39 后端用例、**发布迁移演练 rehearsal** 全部 success。只剩 2 个红，都是架构门：
+- Fast gates：架构门（StoreKit `DEPENDENCY_EXPANSION` 已接受，另有 owners.json 未登记的边界）；
+- Backend tests：「Check private Mapper compiled references」判定 BLOCKED（`ApiTopicTemplateController` → `AuthorWriteReceiptService`），后端构建与测试本身通过。
+这两项都要你在 master 的 `ci/architecture/owners.json` 批准，PR 内改代码无法消除。本地在 `9617cbba2`（与 #787 代码一致）复核：ui-integrity UI-GATE-0:PASS、动作台账 6027 控件零差异，action-ledger 与 d192 单测 51/51。
+
+STATUS: PARTIAL - 本线负责的代码修复全部进了 launch；#779 头 9617cbba2 上除架构门外全部 CI 为绿（含 rehearsal、gitleaks、20 个单测分片、静态门、Funds IT），剩余 Fast gates 与 Backend tests 两个红都是需要你在 master owners.json 批准的架构门
