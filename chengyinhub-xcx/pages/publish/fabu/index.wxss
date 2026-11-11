@@ -5149,6 +5149,7 @@ page { background: var(--cy-btn-solid-bg); }
 .sp-issue__t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .sp-issue__w { margin-top: 4rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
 .sp-issue__go { flex: none; font-size: 26rpx; font-weight: 700; } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
+.sp-issue--warn { color: var(--cy-color-status-warning); } /* warning 档:不拦发布 */
 .sp-desc { margin-top: 24rpx; font-size: 30rpx; line-height: 1.7; color: var(--cy-color-text-secondary); } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
 .sp-sec { margin: 52rpx 4rpx 16rpx; font-size: 26rpx; font-weight: 700; color: var(--cy-color-text-tertiary); } /* ds-ok P-9 原型尺寸(业主批准稿,逐字照搬) */
 .sp-group { border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-elevated); }
