@@ -8,10 +8,10 @@
 
 | 文件 | 用途 |
 |---|---|
-| `MIGRATIONS.md` | 151 个迁移的逐项清单：执行序、类别（必须 / 可选 / 需业主授权 / 不执行）、阶段、重跑规则 |
+| `MIGRATIONS.md` | 155 个迁移的逐项清单：执行序、类别（必须 / 可选 / 需业主授权 / 不执行）、阶段、重跑规则 |
 | `release-precheck.sql` | 只读预检，每个迁移一条 SELECT，判出 APPLIED / NEEDED / PARTIAL 等状态 |
 | `release-migrations.json` | 上面两份的机器版本 |
-| `release-manifest.json` | `ci/release_manifest.py manifest` 对候选头的输出：源码树、小程序导出身份、全部 636 个迁移的哈希（生产状态一律 UNKNOWN） |
+| `release-manifest.json` | `ci/release_manifest.py manifest` 对候选头的输出：源码树、小程序导出身份、全部 640 个迁移的哈希（生产状态一律 UNKNOWN） |
 | `gen_release_set.py` | 生成以上三份的脚本，只读 git，不连库 |
 
 更早的发布包 `docs/delivery/release-closeout-20261029/release-steps.md` 仍然有效：它写的 88 项特殊规则（广播三件套、D-PAYEE、单次执行清单）全部保留，下文会指过去。
@@ -22,10 +22,10 @@
 
 | 项 | 值 |
 |---|---|
-| 候选头（写这份清单时） | `2256f79e792cb56e2afbcf5dfc6ca60944002e39`（`launch/questo-20261110`，含 l-payout3） |
+| 候选头（写这份清单时） | `52193cc26cc80830f5a8f9b021d1a80ef0d64024`（`launch/questo-20261110`，含 l-payout3 与 f-* 六条修复线；qx-final3 重算，原为 `2256f79e`） |
 | 最终 SHA | PR #779 合入 `master` 后的合并提交。**jar 和小程序必须都用这一个 SHA**（审计 B-4「0.1 版本对齐」） |
 | 生产参考基线 | 10-29 发布包的基线 `19408d49`（Merge #452）。10-22、10-28、10-29 三个包都**没有**在生产确认执行过，所以这次的发布集把它们全部算进来 |
-| 迁移发布集 | 151 项 = 10-29 包 88 项 + 10-29 之后 63 项（其中 launch 波次 34 项）。必须 100、可选 28、需业主授权 19、不执行 4 |
+| 迁移发布集 | 155 项 = 10-29 包 88 项 + 10-29 之后 67 项（其中 launch 波次 38 项）。必须 102、可选 29、需业主授权 20、不执行 4 |
 | 迁移执行序 | 候选头上 `ci/migration_ledger.py` 的全量拓扑序，依赖来自 `ci/migration-dependencies.json` |
 
 **最终 SHA 定下来以后，先重算一次发布集**，确认合并没有带进新迁移：
@@ -67,7 +67,7 @@ diff <(grep -v '候选' docs/delivery/questo-ui-20261109/f-release/MIGRATIONS.md
 
 10-29 包沿用的三条硬规则：
 
-1. `migration_20261013_admin_role_page_grants.sql`（本清单 step 130）判 `NEEDED` 时**禁止执行**，停下交我。它被 step 134 `migration_20261109_play_help_audit_permission.sql` 依赖，所以在本清单里升进了第 1 轮；它停下时 134 也不能跑，其余迁移不受影响。
+1. `migration_20261013_admin_role_page_grants.sql`（本清单 step 134）判 `NEEDED` 时**禁止执行**，停下交我。它被 step 138 `migration_20261109_play_help_audit_permission.sql` 依赖，所以在本清单里升进了第 1 轮；它停下时 138 也不能跑，其余迁移不受影响。
 2. 广播三件套（`20261023_d_official_broadcast_delivery` / `20261026_official_broadcast_delivery` / `20261028_official_broadcast_protocol_union`）按 10-29 `release-steps.md` 第 2 节的表处理。10-26 那个永不执行。
 3. 10-29 `release-steps.md` 第 2 节列出的 25 个「单次执行」项，判 `APPLIED` 时不得重跑。
 
@@ -84,10 +84,10 @@ diff <(grep -v '候选' docs/delivery/questo-ui-20261109/f-release/MIGRATIONS.md
 
 | step | 文件 | 注意 |
 |---|---|---|
-| 96、146 | `migration_public_content_catalog_20261108.sql`、`migration_z_marketing_revenue_channel_reverse_kind_20261108.sql` | **不执行**。它们的断言把两列唯一索引数成 1 行：前者断言必失败，后者的 ALTER 会被静默跳过。由紧跟其后的 `*_index_shape_20261109.sql`（step 97、147）替代，DDL 一字不差、断言已修。只跑替代文件 |
+| 99、150 | `migration_public_content_catalog_20261108.sql`、`migration_z_marketing_revenue_channel_reverse_kind_20261108.sql` | **不执行**。它们的断言把两列唯一索引数成 1 行：前者断言必失败，后者的 ALTER 会被静默跳过。由紧跟其后的 `*_index_shape_20261109.sql`（step 103、147）替代，DDL 一字不差、断言已修。只跑替代文件 |
 | 11 | `migration_20261024_d_committed_official_notice_wx.sql` | 既建表又插一条暂停的 `sys_job`。调度器会对每一行 `invoke_target` 做 bean 查找，旧 jar 如果没有这个 bean，**旧 jar 的定时任务会整体停掉**，直到新 jar 起来。接口不受影响。所以把第 1 轮和 jar 替换安排在同一个窗口，跑完第 1、2 轮马上换 jar |
-| 98 | `migration_public_content_catalog_node_topic_index_20261108.sql` | 给 `cms_topic_node` 加索引。先看 10-29 预检 [6/7] 的行数，放低峰 |
-| 150、151 | `migration_z_workshop_paid_review_20261109.sql`、`migration_zz_questo_collation_align_20261109.sql` | 都改新建的空表（工坊、Questo 营销表），表里应当没有数据。如果预检显示这些表已有行，先停下 |
+| 101 | `migration_public_content_catalog_node_topic_index_20261108.sql` | 给 `cms_topic_node` 加索引。先看 10-29 预检 [6/7] 的行数，放低峰 |
+| 154、155 | `migration_z_workshop_paid_review_20261109.sql`、`migration_zz_questo_collation_align_20261109.sql` | 都改新建的空表（工坊、Questo 营销表），表里应当没有数据。如果预检显示这些表已有行，先停下 |
 | 32、33、38 | 主题类别、商家行业及其读回 | 改的是参考数据，不删行、不改 id。主题类别改名是业主 11-01 走查定的，被商家行业迁移依赖，所以放在必须里 |
 
 ---
@@ -165,9 +165,9 @@ bash scripts/production-preflight.sh --service <你的服务名>
 |---|---|---|
 | 36 | `migration_20261104_content_safety_jobs_post_deploy.sql` | `contentSafetyRecheckTask.run()`、`sensitiveContentRescanTask.run()` |
 | 49 | `migration_20261110_ecommerce_payout_wiring.sql` | `ecommercePayoutTask.shareAndRetry()`、`ecommercePayoutTask.syncOnboarding()`（另建 `ecom_refund` 表和菜单；开关关时新 jar 不读这张表） |
-| 51 | `migration_20261111_ecommerce_combine.sql` | 不插任务；只建 6 张合单表，按依赖跟在 49 后面 |
-| 66 | `migration_marketing_task_registration_20261108.sql` | `channelRefundConsumptionTask.run()`、`marketingRevenuePostingTask.run()` |
-| 90 | `migration_o14_reco_search_jobs_20261022.sql` | `recommendationScoreDailyTask.run()`、`contentSearchProjectionTask.refresh()`（10-29 包原排在 jar 前，这里挪到 jar 后，理由同上） |
+| 52 | `migration_20261111_ecommerce_combine.sql` | 不插任务；只建 6 张合单表，按依赖跟在 49 后面 |
+| 68 | `migration_marketing_task_registration_20261108.sql` | `channelRefundConsumptionTask.run()`、`marketingRevenuePostingTask.run()` |
+| 93 | `migration_o14_reco_search_jobs_20261022.sql` | `recommendationScoreDailyTask.run()`、`contentSearchProjectionTask.refresh()`（10-29 包原排在 jar 前，这里挪到 jar 后，理由同上） |
 
 - 任务插入后全部保持**暂停**。启用按 `chengyinhub-xcx/docs/发版checklist.md` 的 C-1：先确认 bean 在新 jar 里，启用后跨一个 cron 周期看日志，没有 bean-not-found 再继续。
 - 电商、营销分配、渠道退款三类任务，在对应资金开关打开之前**不要启用**。
@@ -184,19 +184,20 @@ bash scripts/production-preflight.sh --service <你的服务名>
 | 37 | `migration_20261104_invitee_signup_points_off.sql` | 关掉「被邀请人报名送分」积分规则（id 6） | 业主 11-04 已定 |
 | 39（第 5 轮） | `migration_20261104_topic_total_time_seconds.sql` | 把误按分钟存的主题总时长换算成秒 | 台账规定新 jar 起来后才能跑（旧 jar 仍按分钟写） |
 | 41 | `migration_20261105_welcome_points_fifty.sql` | 注册赠送积分规则（id 1）改为 50 | 新 jar 的余额和流水都读这条规则，不跑的话两边会对不上 |
-| 54、55 | `migration_20261102_club_session_gather_point.sql` 及其读回 | 给未结束的俱乐部场次补集合点坐标（只填空值） | |
-| 73 | `migration_20261027_merchant_brand_images_to_gallery.sql` | 商家品牌图搬进图库（审计 M-31） | 先跑 10-29 预检附录的预览 |
-| 82 | `migration_o14_content_city_code_backfill_20261022.sql` | 主题 / 活动城市编码回填 | |
-| 100 | `migration_20261029_unlist_test_topics.sql` | 软删 5 个测试主题（`del_flag=1`，可恢复） | 审计 B-7 / E-3。有未结束报名、对局的主题会被跳过。文件头有预览和回滚语句。990052–990056、990068、990069 不在范围 |
-| 104 | `migration_20261103_settlement_rule_three_percent.sql` | 通用结算规则的平台抽成改为 3% | **资金口径**。只影响执行后新结算 |
-| 107、108 | `migration_20261030_merchant_game_mechanics.sql`、`migration_20261104_merchant_activity_limit.sql` | 商家默认档位：开放分支 / 博弈玩法；同时 3 场活动 | 改的是 `user_permission` 默认行 |
-| 109 | `migration_member_visited_poi_poi_key_backfill_20261022.sql` | 到访点 poi_key 回填 | |
-| 118 | `migration_20261101_prefab_life_template_copy.sql` | 官方模板 990059 文案修订 | 只改仍是种子原文的行 |
-| 121 | `migration_20261028_remove_wildlife_theme.sql` | 下架野生动物主题 | |
-| 122 | `migration_20261028_template_shelf_list_free_explore.sql` | 模板货架上架自由探索 | |
-| 123 | `migration_20261030_merchant_game_covers_to_oss.sql` | 平台商家玩法封面 URL 改指 OSS | **先确认文件里列出的 OSS 对象都已存在**，否则封面变空 |
-| 133 | `migration_20261104_review_wording_seeded_text.sql` | 种子文案「盲盒 / 探店日 / 竞猜」改名 | 只改逐字等于原文的行 |
-| 136（第 5 轮） | `migration_20261023_g_wp08_delivery_jobs_paused.sql` | 登记两个暂停任务 | 纯 sys_job，所以放 jar 后 |
+| 56、57 | `migration_20261102_club_session_gather_point.sql` 及其读回 | 给未结束的俱乐部场次补集合点坐标（只填空值） | |
+| 75 | `migration_20261027_merchant_brand_images_to_gallery.sql` | 商家品牌图搬进图库（审计 M-31） | 先跑 10-29 预检附录的预览 |
+| 84 | `migration_o14_content_city_code_backfill_20261022.sql` | 主题 / 活动城市编码回填 | |
+| 103 | `migration_20261029_unlist_test_topics.sql` | 软删 5 个测试主题（`del_flag=1`，可恢复） | 审计 B-7 / E-3。有未结束报名、对局的主题会被跳过。文件头有预览和回滚语句。990052–990056、990068、990069 不在范围 |
+| 107 | `migration_20261103_settlement_rule_three_percent.sql` | 通用结算规则的平台抽成改为 3% | **资金口径**。只影响执行后新结算 |
+| 110、111 | `migration_20261030_merchant_game_mechanics.sql`、`migration_20261104_merchant_activity_limit.sql` | 商家默认档位：开放分支 / 博弈玩法；同时 3 场活动 | 改的是 `user_permission` 默认行 |
+| 112 | `migration_member_visited_poi_poi_key_backfill_20261022.sql` | 到访点 poi_key 回填 | |
+| 121 | `migration_20261101_prefab_life_template_copy.sql` | 官方模板 990059 文案修订 | 只改仍是种子原文的行 |
+| 124 | `migration_20261028_remove_wildlife_theme.sql` | 下架野生动物主题 | |
+| 125 | `migration_20261028_template_shelf_list_free_explore.sql` | 模板货架上架自由探索 | |
+| 126 | `migration_20261030_merchant_game_covers_to_oss.sql` | 平台商家玩法封面 URL 改指 OSS | **先确认文件里列出的 OSS 对象都已存在**，否则封面变空 |
+| 127 | `migration_20261111_rule_seed_split_steps.sql` | 官方模板种子规则改成一步一行（f-pages P-41） | 只改仍是种子原文的行；文件末尾自带只读断言 |
+| 137 | `migration_20261104_review_wording_seeded_text.sql` | 种子文案「盲盒 / 探店日 / 竞猜」改名 | 只改逐字等于原文的行 |
+| 140（第 5 轮） | `migration_20261023_g_wp08_delivery_jobs_paused.sql` | 登记两个暂停任务 | 纯 sys_job，所以放 jar 后 |
 
 审计 B-7 说的「E-2 删除玩家账号的商家行」和「QA 分群清理」在仓库里**没有对应迁移**，这次不处理，见 RESULT.md 待你决定。
 
@@ -213,7 +214,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
 
 **其他 OSS 对象**：
 
-- ☐ step 123 引用的商家玩法封面对象都已在 OSS。
+- ☐ step 126 引用的商家玩法封面对象都已在 OSS。
 - ☐ 漫游转场视频（可选）按发版清单「漫游大气层转场视频」处理；没传就不播，不影响其他功能。
 
 **公众平台**：
