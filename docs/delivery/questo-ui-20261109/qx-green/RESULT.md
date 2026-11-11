@@ -98,4 +98,6 @@ f-compliance 合入后(`aee716fe1`)，#779 的小程序静态门又变红(run 42
 
 验证：小程序全量单测 **17227/17227**；静态门各子门禁、台账 `--check` 都通过。全量 CI 已在该分支触发。
 
+f-compliance 合入后 Funds MySQL IT 也变红：`RoamLocationRetentionMySqlIT.realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay` 报 `Data retention cleanup failed steps=[ai_generation_log]`。原因不在服务端：f-compliance 给真实清理任务加了 ai_generation_log 留存步骤，但这个 IT 自己组装的任务没有注入 `aiGenerationLogMapper`，库里也没有这张表。修法（`3e3d3824f`）：IT 执行已发布的建表迁移和 `create_time` 索引迁移，注入真实 Mapper，种一行 181 天前、一行当前的数据，断言只删过期行、索引存在。原有断言一条没动，只是多覆盖了一个步骤。本地 test-compile 通过；按约定 Java IT 只在 CI 上跑，全量 CI 已重新触发。
+
 STATUS: PARTIAL - 原有的 7 个小程序红单测和 Gameplay HTTP 用例都已修好(全量单测 17217/17217，generic-only 在 CI 上三个头都 success)；顺带修好了全量 CI 暴露的小程序静态门 11 个子门禁、迁移安全门和分包互引缺陷；本地 ui-integrity、台账、路由矩阵、mvn 打包、后台构建、主包 2038.7 KiB 都通过；还剩 gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者两项，都要你在受信策略或白名单上拍板
