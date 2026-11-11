@@ -1,0 +1,3 @@
+var f = function (x) { return x ? 1 : 0; };
+var g = (x) => x;
+module.exports = { f: f };

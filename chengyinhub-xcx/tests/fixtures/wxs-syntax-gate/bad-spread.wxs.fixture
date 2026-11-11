@@ -1,0 +1,2 @@
+function f(a, b) { return [].concat(...a); }
+module.exports = { f: f };

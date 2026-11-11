@@ -1,0 +1,2 @@
+var r = /a/g;
+module.exports = { r: r };

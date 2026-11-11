@@ -1,0 +1,6 @@
+function f(ds, s) {
+  var n = (ds.wh * 1) || 0;
+  if (n !== n) n = 0;
+  return { wh: n, s: ('' + s).split(','), p: parseFloat(s), r: getRegExp('^a', 'gi'), d: getDate() };
+}
+module.exports = { f: f };
