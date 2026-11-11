@@ -10,7 +10,7 @@ const ROLL_MS = 900;
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
-const { createShakeDetector } = require('../../utils/play-shake.js');
+const { createShakeDetector, holdAccelerometer } = require('../../utils/play-shake.js');
 const { createD20Renderer } = require('../../utils/d20-renderer.js');
 
 /* 骰面点位:九宫格里哪几格有点。1 在中心、2 走对角,与真骰子一致 —— 
@@ -175,17 +175,18 @@ Component({
     _onShake() {
       if (this._hidden || !this.data.show || this.data.mode === 'd20') return;
       if (this._shakeOn) return;
-      this._shakeOn = true;
+      // f-play V3-04:共用传感器(play-shake holdAccelerometer);内嵌与整屏同时挂着时只有最上面那份收读数
       const tick = (res) => { if (this._tick === tick && this._shakeOn && !this._hidden && this.data.show) this._shake(res); };
       this._tick = tick;
-      wx.startAccelerometer({ interval: 'game', fail() {} });
-      wx.onAccelerometerChange(this._tick);
+      this._release = holdAccelerometer(wx, tick);
+      this._shakeOn = !!this._release;
     },
     _offShake() {
       if (!this._shakeOn) return;
       this._shakeOn = false;
-      wx.stopAccelerometer({ fail() {} });
-      wx.offAccelerometerChange && wx.offAccelerometerChange(this._tick);
+      const release = this._release;
+      this._release = null; this._tick = null;
+      if (release) release();
     },
 
     _settle(settled) {
