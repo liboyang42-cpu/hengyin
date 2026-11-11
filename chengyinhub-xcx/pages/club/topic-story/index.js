@@ -9,6 +9,7 @@
 //                    且揭示即 0 分,语义和权限都不是「主理人看答案」。
 const app = getApp();
 const { haversine } = require('../../../utils/geo.js');
+const aigcLabel = require('../../../utils/aigc-label.js');
 function openAddress() { return require('../../../utils/open-address.js') }
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -189,6 +190,7 @@ Page({
           chapters: chapters,
           activeChapterIndex: 0,
           activeChapter: chapters[0] || null,
+          aiGenerated: aigcLabel.isAiGenerated(res.data.publishMode),
         });
       },
       fail() {

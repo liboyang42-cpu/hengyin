@@ -11,7 +11,8 @@
     "cy-tabs": "/components/cy/tabs/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-modal-host": "/components/cy/modal-host/index"
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-tag": "/components/cy/tag/index"
   },
   "navigationBarTitleText": "剧情与玩法",
   "navigationBarBackgroundColor": "#000000",

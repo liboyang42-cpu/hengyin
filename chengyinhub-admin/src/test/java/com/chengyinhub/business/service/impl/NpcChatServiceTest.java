@@ -160,6 +160,23 @@ class NpcChatServiceTest {
     }
 
     @Test
+    void successfulChatRecordsGatewayTokenUsageInsteadOfZero() {
+        AiGatewayResult generated = new AiGatewayResult("trace-2", "往右边走。", "deepseek", 0);
+        generated.setTokenIn(321);
+        generated.setTokenOut(45);
+        when(aiGatewayService.generate(anyLong(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(generated);
+
+        service.chat(req("req-101", "下一站去哪"), USER_ONE);
+
+        ArgumentCaptor<com.chengyinhub.business.domain.NpcChatLog> logged =
+                ArgumentCaptor.forClass(com.chengyinhub.business.domain.NpcChatLog.class);
+        verify(npcChatLogMapper).insertNpcChatLog(logged.capture());
+        assertEquals(Integer.valueOf(321), logged.getValue().getTokenIn());
+        assertEquals(Integer.valueOf(45), logged.getValue().getTokenOut());
+    }
+
+    @Test
     void terminalReplayReturnsSameResultWithoutCallingGatewayAgain() {
         NpcChatRequest terminal = terminal("req-replay", USER_ONE, "SUCCEEDED", "PASS", null, false, "已完成。");
         when(npcChatRequestMapper.selectByUserAndRequestId(USER_ONE, requestId("req-replay"))).thenReturn(terminal);

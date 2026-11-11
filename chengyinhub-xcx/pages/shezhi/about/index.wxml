@@ -11,6 +11,7 @@
       <image class="about-app__logo" src="/images/cy_logo_mark.png" mode="aspectFit" />
       <view class="about-app__name">城瘾</view>
       <view class="about-app__version">版本 {{version}}</view>
+      <view wx:if="{{aigcFilingNo}}" class="about-app__version about-app__filing">{{aigcFilingNo}}</view>
     </view>
 
     <view class="about-section">

@@ -166,8 +166,20 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         return post(body, null, null, null);
     }
 
+    /** 本线程最近一次响应里的上游 usage;chat 为同步调用,网关在同一线程立即取走。 */
+    private static final ThreadLocal<int[]> LAST_USAGE = new ThreadLocal<>();
+
+    @Override
+    public int[] takeLastUsage()
+    {
+        int[] usage = LAST_USAGE.get();
+        LAST_USAGE.remove();
+        return usage;
+    }
+
     private String post(JSONObject body, String image, String systemPrompt, String userPrompt)
     {
+        LAST_USAGE.remove();
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         requireReady();
         long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(Math.min(timeoutMs, 10_000));
@@ -319,7 +331,22 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         {
             throw new IllegalStateException("AI 模型返回文本无效");
         }
+        LAST_USAGE.set(usageOf(json.get("usage")));
         return (String) content;
+    }
+
+    /** OpenAI 兼容 usage.prompt_tokens / completion_tokens;缺失或非法即 null(未知不是 0)。 */
+    static int[] usageOf(Object usageValue)
+    {
+        if (!(usageValue instanceof JSONObject)) return null;
+        JSONObject usage = (JSONObject) usageValue;
+        Object in = usage.get("prompt_tokens");
+        Object out = usage.get("completion_tokens");
+        if (!(in instanceof Number) || !(out instanceof Number)) return null;
+        long a = ((Number) in).longValue();
+        long b = ((Number) out).longValue();
+        if (a < 0 || b < 0 || a > Integer.MAX_VALUE || b > Integer.MAX_VALUE) return null;
+        return new int[] { (int) a, (int) b };
     }
 
     private String truncate(String s, int max)

@@ -26,6 +26,15 @@ public interface LlmClient
     String chat(String systemPrompt, String userPrompt);
 
     /**
+     * 取走本线程最近一次 chat 的上游用量 {promptTokens, completionTokens}(上游响应带 usage 时)。
+     * 取后即清;上游没给 usage 时返回 null,调用方保持原估算口径,不当作 0。
+     */
+    default int[] takeLastUsage()
+    {
+        return null;
+    }
+
+    /**
      * 带图对话(OpenAI vision 格式):messages[].content 为数组,[{type:"image_url",...},{type:"text",...}]。
      * 默认实现不支持视觉;支持视觉的实现(OpenAiCompatibleLlmClient)覆盖。
      *

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-option-sheet": "/components/cy/option-sheet/index",
+    "cy-danger-confirm": "/components/cy/danger-confirm/index"
+  }
+}

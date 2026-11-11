@@ -126,6 +126,8 @@ const MATRIX = [
   ['pages/activity/official-detail/index.js', "url: `/api/official/v2/events/${this.data.id}/publish-check`", 'required', 'publisher', 'controlled-event-operator'],
   // CL4 N5:NPC 对话导出,身份只取登录态(getAppUserId),端点不收任何用户 ID。
   ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
+  // f-compliance OFF-AI-DEL-01:设置页「AI 对话记录」导出同一接口,身份只取登录态。
+  ['subpackageMember/components/cy/ai-chat-records/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
@@ -481,7 +483,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 r2-store:主题结账层与发现页各读一次在售通票目录(已入 MATRIX),122 → 124。  
   // 2026-11-10 qx-s2 staging 合并树:r2-create(b4-21)撤掉预设页,qx-b4 的「固定玩法预设库」一处直接 GET 随页退场,124 → 123(实测)。
   // 2026-11-10 l-pass:通行证页概览/主题库读取、游戏主题库、通行证与礼品入口卡、开通后订单轮询四处直接 GET(已入 MATRIX),123 → 127。
-  assert.equal(directCount, 127, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
+  // 2026-11-11 f-compliance:设置页 AI 对话记录导出一处直接 GET(同 NPC 面板接口,已入 MATRIX),127 → 128。
+  assert.equal(directCount, 128, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

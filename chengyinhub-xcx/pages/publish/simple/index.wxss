@@ -212,3 +212,6 @@
 .simple-ai__send.is-exhausted { opacity: .45; }
 
 .req { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* P0-14 生成式 AI 算法备案号公示(后台未配置则不渲染) */
+.simple-ai__filing { margin-top: var(--cy-space-6); text-align: center; color: var(--cy-color-ai-ink); opacity: .55; font-size: var(--cy-type-micro); }

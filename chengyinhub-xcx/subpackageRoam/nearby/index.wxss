@@ -269,3 +269,6 @@ page { background: var(--cy-comp-sheet-player-page); }
 .nb-back__pill { border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(28,28,30,.88); color: #fff; } /* ds-ok 同 .mt-chip 底色 */
 .nb-back::after { content: ''; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); }
 .mt-card--empty { align-items: flex-end; background: linear-gradient(180deg, #2C2C2E, #1C1C1E); } /* ds-ok 空态卡与 .mt-card 同底 */
+
+/* TEAM-REPORT-01 举报入口:同队伍详情页 .team-report 的次级文字链 */
+.mt-report { min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); text-decoration: underline; }
