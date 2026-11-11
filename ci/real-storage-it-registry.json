@@ -762,7 +762,7 @@
     },
     "launch-f-money3": {
       "lineage": "f-money3 20261111 launch fix lane: free-explore themes may not carry a paid self-play price (no settlement exit)",
-      "registered_source": "PENDING",
+      "registered_source": "bca001f93fe535c4136c7662ad5b36ae946e14b3",
       "note": "FreeExploreSelfPlayPriceGateMySqlIT (4): cms_topic/cms_registration from sql/base_schema_20260818.sql plus the existing cms_topic migration chain; production TopicSaleFinalizationServiceImpl.finalizeForSale and TopicPublicationContentGuard over the real CmsTopicMapper XML, plus the read-only precheck SQL copied verbatim from docs/delivery/questo-ui-20261109/f-money3/RESULT.md. Source registration only, execution NOT_RUN until dispatched.",
       "classes": [
         "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT"
