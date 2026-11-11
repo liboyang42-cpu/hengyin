@@ -5,8 +5,8 @@
   "backgroundColorTop": "#F3F4F4",
   "backgroundColorBottom": "#F3F4F4",
   "usingComponents": {
-    "cy-avatar": "/components/cy/avatar/index",
     "cy-btn": "/components/cy/btn/index",
+    "cy-cell": "/components/cy/cell/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",

@@ -1,5 +1,5 @@
 const toast = require('../../../../../utils/toast.js'); const drafts = require('../../../utils/club-edit-draft.js');
-const { decodeDisplayText } = require('../../../../../utils/display-text.js');
+const { decodeDisplayText } = require('../../../../../utils/display-text.js'); const tagLibrary = require('../../../../../utils/tag-library.js'); const DIR_OPTIONS = tagLibrary.tagLabels('club', '活动倾向'); const DIR_ICONS = tagLibrary.decorateTags(DIR_OPTIONS, 'club', tagLibrary.CLUB_ICON_DIR).reduce(function (map, item) { map[item.label] = item.iconSrc; return map; }, {}); // G-8:活动倾向选项与图标只从标签库取
 const app = getApp();
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
@@ -46,7 +46,7 @@ Component({
         { val: '内容创作团队', sub: '内容产出 · IP 运营' },
         { val: '其他', sub: '' }
       ],
-      dirOptions: ['轻社交', '深度社交', 'RPG体验', '城市定向', '解谜路线', '沉浸式剧情', '运动路线', '艺术体验', '美食体验', '主题聚会'],
+      dirOptions: DIR_OPTIONS, dirIcons: DIR_ICONS,
       loadState: 'loading',
       loadErrorText: '',
       saveErrorText: '', draftNotice: '', draftAvailable: false, draftBlocked: false, draftComparison: '', draftCanDiscard: false,

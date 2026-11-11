@@ -38,6 +38,7 @@ function mount(options = {}) {
     require(name) {
       if (name.endsWith('/club-edit-draft.js')) return drafts
       if (name.endsWith('/display-text.js')) return { decodeDisplayText }
+      if (name.endsWith('/tag-library.js')) return require('../../utils/tag-library.js') // f-merchant G-8:活动倾向来自标签库(纯函数,用真模块)
       if (name.endsWith('/toast.js')) return toast
       throw Error('Unexpected dependency: ' + name)
     },

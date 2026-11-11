@@ -36,8 +36,7 @@ Page({
     introOn: false,     // 完整版序列帧层
     idleOn: false,      // 待机循环层
     step: { grad: false, eb: false, h: false, p: false, btn: false, skip: false },
-    copy: { eb: '通行证', h: '赢取你的钥匙', p: '持证期间，主题库里的城市定向随时开玩。', btn: '开始' },
-    paid: false
+    copy: { eb: '通行证', h: '赢取你的钥匙', p: '持证期间，主题库里的城市定向随时开玩。', btn: '开始' }
   },
   onLoad(options) {
     const o = options || {}
@@ -47,7 +46,8 @@ Page({
     try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
     const paid = o.mode === 'paid'
     const copy = paid ? this._paidCopy(o) : this.data.copy
-    this.setData({ reduced, merchant, paid, copy })
+    this._paid = paid // 只决定「开始」跳哪页,不渲染,不走 setData(U4)
+    this.setData({ reduced, merchant, copy })
     if (merchant) return
     const full = !reduced && (paid || !seenBefore())
     if (!seenBefore()) markSeen()
@@ -88,7 +88,7 @@ Page({
     if (this._navigating) return
     this._navigating = true
     clearTimeout(this._endT)
-    const url = this.data.paid ? LIBRARY : MEMBERSHIP
+    const url = this._paid ? LIBRARY : MEMBERSHIP
     wx.redirectTo({ url, fail: () => { this._navigating = false } })
   },
   goBack() {

@@ -24,6 +24,10 @@
     "cy-coop-invite-sheet": "/subpackageMember/components/cy/coop-invite-sheet/index",
     "cy-report-sheet": "/subpackageMember/components/cy/report-sheet/index",
     "cy-merchant-correction-sheet": "/subpackageMember/components/cy/merchant-correction-sheet/index",
-    "cy-share-card": "/components/cy/share-card/index"
+    "cy-share-card": "/components/cy/share-card/index",
+    "cy-post-compose": "/pages/square/components/cy/post-compose/index"
+  },
+  "componentPlaceholder": {
+    "cy-post-compose": "view"
   }
 }

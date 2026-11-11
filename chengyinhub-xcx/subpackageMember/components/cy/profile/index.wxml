@@ -257,6 +257,20 @@
       <!-- ===== TAB · 推文 ===== -->
       <block wx:if="{{activeTab === 'posts'}}">
         <view class="pc-feed">
+          <!-- f-pages P-20/M-33:本人主页(玩家和商家)帖文 tab 的发帖入口,与商家「发现」、俱乐部详情同一形态;
+               放在状态块之前,空态上方也有。只在 canCompose(服务端 communityPostWrite)时出现。 -->
+          <view class="post-composer-collapsed" wx:if="{{isSelf && canCompose}}" bindtap="openComposer"
+                aria-role="button" aria-label="发帖文" hover-class="cy-pressed" hover-stay-time="80">
+            <cy-avatar class="post-composer-me" size="72" src="{{img.one(_avatarSrc) || myAvatar || '/images/d_profile.png'}}" name="我" />
+            <view class="post-composer-col">
+              <text class="post-composer-who">{{_displayName || myNickname || (isMerchantView ? '我的店' : '城瘾玩家')}}</text>
+              <text class="post-composer-ph">有什么新鲜好玩的分享吗？</text>
+              <view class="post-composer-tools">
+                <cy-icon class="post-composer-ico" name="image" size="44" />
+                <cy-icon class="post-composer-ico" name="pin-solid" size="44" />
+              </view>
+            </view>
+          </view>
           <cy-error class="pc-feed-state" load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '帖文加载失败'}}" sub="{{feedAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadFeed" />
           <cy-empty class="pc-feed-state" wx:elif="{{nodata && !clubPostList.length}}" title="还没有帖文" />
           <!-- 帖文第三轮(业主定稿 P-1,V-16):我的帖文和发现、俱乐部详情用同一张帖文卡,不再是自己那套 pc-post -->
@@ -592,6 +606,8 @@
 <cy-share-card wx:if="{{subjectIsMerchant}}" show="{{shopShareShow}}" card="{{shopShareCard}}" bind:close="closeShopShare" />
 <!-- l-after:我的 → 邀请好友 = 统一的 Spotify 式邀请页(个人码) -->
 <cy-share-card wx:if="{{isSelf}}" show="{{inviteShow}}" card="{{inviteCard}}" bind:close="closeInvite" />
+<!-- f-pages P-20/M-33:全站统一的全屏发帖弹窗(社区模式),商家日间页包一层 theme-merchant 才取得到日间 token -->
+<view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-post-compose wx:if="{{isSelf}}" show="{{composerOpen}}" bind:close="closeComposer" bind:published="onComposePublished" /></view>
 <view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-merchant-correction-sheet wx:if="{{!isSelf}}" show="{{correctionShow}}" merchant-id="{{correctionMerchantId}}" bind:close="onCorrectionClose" /></view>
 
 <!-- [P0-2] ③ 选章核销:一商家在同一路线承接多章是常态 ⇒ 交集≥2 时由他自己选,

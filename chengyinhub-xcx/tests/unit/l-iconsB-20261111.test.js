@@ -189,7 +189,7 @@ test('通行证页按 proto ps-pass:实色卡 + 标准列表行 + 底部固定�
   assert.match(wxml, /<view class="pp__card">[\s\S]*?<text class="pp__eb">城瘾通行证<\/text>/)
   assert.match(wxml, /<text class="pp__k" wx:if="\{\{view\.active && view\.untilText\}\}">有效期至 \{\{view\.untilText\}\}<\/text>/, '有效期只写服务端给的')
   assert.match(wxml, /<view class="pp__key"><cy-frames sheets="\{\{\[\{ src: '\/subpackageMember\/images\/frames\/glass-key\.webp', n: 24 \}\][^>]*w="\{\{184\}\}" h="\{\{184\}\}"/, 'qx-final2:按本 lane 跨 lane 建议,卡里的钥匙换成 l-icons 的 glass-key 序列帧,尺寸不变')
-  assert.match(wxml, /<cy-illus name="seal" size="72" bare \/>[\s\S]*?可玩主题库[\s\S]*?wx:if="\{\{view\.count !== null\}\}">\{\{view\.count\}\} 个主题 · 持证 ¥0/)
+  assert.match(wxml, /<cy-illus name="seal" size="72" bare \/>[\s\S]*?可玩主题库[\s\S]*?wx:if="\{\{view\.count !== null\}\}">\{\{view\.count \|\| 0\}\} 个主题 · 持证 ¥0/)
   assert.doesNotMatch(wxml, /邀请队友|通行证勋章|已用 .* 天/, '服务端没给的事实(队友权益 / 勋章数 / 已用天数)不画')
   assert.match(wxml, /<view class="pp__foot" wx:if="\{\{state === 'ready' && view\.enabled\}\}">/)
   assert.match(wxml, /wx:if="\{\{view\.active\}\}" class="pp__pill" bindtap="goLibrary"[^>]*>去主题库<\/view>/)

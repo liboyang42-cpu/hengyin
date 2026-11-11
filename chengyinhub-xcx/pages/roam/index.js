@@ -812,6 +812,28 @@ Page({
       },
     });
     this._loadActiveRoamEvents();
+    this._loadOfficialRoutes();
+  },
+  // f-pages P0-79(2026-11-11):官方路线入口回到漫游护照大卡(原入口随旧漫游地图改版消失)。
+  // 只认服务端:GET /api/preset/route/list 回了 ≥1 条已上架路线才摆卡,没有就不出;后端报错照常提示。
+  _loadOfficialRoutes() {
+    if (this.data.passportError) return;
+    const current = this._roamReadScope();
+    const token = {};
+    this._officialRoutesToken = token;
+    req('/api/preset/route/list', 'GET', {}).then((res) => {
+      if (!current() || this._unloaded || this._officialRoutesToken !== token || !apiOk(res)) return;
+      const routes = Array.isArray(res.data) ? res.data.filter((r) => r && typeof r === 'object' && r.id != null) : [];
+      const passport = this.data.passport || {};
+      if (!routes.length || !Array.isArray(passport.plays) || passport.plays.some((p) => p && p.key === 'routes')) return;
+      const first = routes[0];
+      const cover = first.previewImg ? getApp().getImgUrl(first.previewImg) : '';
+      const card = { key: 'routes', icon: 'map', title: '官方路线', sub: routes.length + ' 条路线', cover, photo: 'goals' };
+      const plays = passport.plays.slice();
+      const eventIdx = plays.findIndex((p) => p && p.key === 'event');
+      plays.splice(eventIdx >= 0 ? eventIdx + 1 : 0, 0, card);
+      this.setData({ 'passport.plays': plays });
+    });
   },
   retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
@@ -844,6 +866,7 @@ Page({
     const key = e.currentTarget.dataset.key;
     if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
     if (key === 'event') { this.openRoamTasks(); return; }   // 没有单场可直达时进官方活动任务列表
+    if (key === 'routes') { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/subpackageRoam/official-routes/index', complete: () => { this._eventNavigating = false; } }); return; }
     // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
     this.openNearbyMap();
   },
@@ -1643,7 +1666,7 @@ Page({
        ⚠️ share 走 scene 栈(sceneStack 已清),不在这里另设 show 位 —— 见 scene-sheet-single-host-contract。 */
     this._placeCardPoi = null; this._pinFocusId = null; this._markerSig = ''; this._searchKey = '';
     this.setData({ screen: 'entry-map', finish: {}, sceneStack: [], sceneCurrent: null,
-      entryMarkers: [], entryCards: [], searchPlaces: [], entryLoadError: false,
+      entryMarkers: [], liveCards: [], entryCards: [], searchPlaces: [], entryLoadError: false,
       entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false,
       camOpen: false, shopStrip: { rows: [], idx: 0 }, placeCard: null, pinCountLabel: '',
       topicView: null, checkinView: null, multiView: null, runnerView: null,
@@ -6114,7 +6137,9 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl, this._entryPlaces);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
+    // P-32:主地图底部横滑卡 = 同一批附近活动卡 + 附近队伍卡(同一份读数,不另拉)
+    const liveCards = [].concat(view.cards, (this._entryTeams || []).map((team) => entryMap.teamView(team, getImgUrl)).filter(Boolean));
+    this.setData({ liveCards, entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
   },
   _showEntrySheet(entrySheet, entryActivity, entryPlace) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryPlace: entryPlace || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
@@ -6148,6 +6173,18 @@ Page({
   },
   openEntryActivityList() { wx.navigateTo({ url: '/pages/activity/list/index' }); },
   onEntryCardTap(e) { const d = e.currentTarget.dataset; if (d.kind === 'far-topic') { wx.navigateTo({ url: '/pages/topic/index/index?id=' + d.id }); return; } this.openEntryActivity(d.kind, d.id); },
+  // P-32:主地图底部横滑卡。队伍 → 队伍详情;活动 / 主题 → 各自详情页(主地图上没有入口弹层宿主,直接去页)
+  onLiveCardTap(e) {
+    const d = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (d.kind === 'team') { this._openEntryTeamById(d.id); return; }
+    const row = (this._entryItems || []).find((item) => item && item.kind === d.kind && String(item.id) === String(d.id));
+    if (!row || this._navigating) return;
+    const topicId = row.topicId || (row.kind === 'topic' ? row.id : null);
+    const path = topicId
+      ? '/pages/topic/index/index?id=' + encodeURIComponent(topicId)
+      : '/pages/activity/detail/index?id=' + encodeURIComponent(row.id);
+    this._navigating = true; wx.navigateTo({ url: path, complete: () => { this._navigating = false; } });
+  },
   openEntryActivity(kind, id) {
     const row = (this._entryItems || []).find((item) => item && item.kind === kind && String(item.id) === String(id));
     if (!row) return;

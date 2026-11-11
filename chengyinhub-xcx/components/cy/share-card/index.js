@@ -7,6 +7,7 @@
 // r3-share(refs4/share-page-cards):每种内容一张整色卡 —— 上半封面 / 勋章,下沿一道弧,城瘾徽标压在弧上,
 // 眉题胶囊 + 两行大标题 + 一行副信息;卡下一颗主按钮「发给微信好友」,其余渠道缩成一排小圆钮。
 const cyToast = require('../../../utils/toast.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const cyModal = require('../../../utils/modal.js');
 const { ALBUM_SAVE, classifyAlbumSaveError } = require('../../../utils/album-save-outcome.js');
 const { tintFromPixels } = require('../../../utils/share-tint.js');
@@ -64,6 +65,7 @@ Component({
     statusBarHeight: 20, kind: 'theme', heading: '分享主题', title: '', cover: '', eyebrow: '主题', sub: '',
     steps: [], inviterText: '', art: '',
     colors: KINDS.theme.colors, colorIndex: 0, bg: KINDS.theme.colors[0], qr: '', channels: CHANNELS,
+    qrReady: false, reducedMotion: false,
   },
   observers: {
     'show, card': function (show, card) {
@@ -88,6 +90,7 @@ Component({
         inviterText: kind === 'invite' ? inviterLine(c.inviter, c.seatsLeft) : '',
         art: kind === 'invite' && typeof c.art === 'string' && c.art.indexOf('data:image/svg+xml') === 0 ? c.art : '',
         colors: KINDS[kind].colors, colorIndex: 0, bg: KINDS[kind].colors[0], qr: givenQr,
+        qrReady: false, reducedMotion: readReducedMotion(),
       });
       if (!givenQr) this._loadCode();
       this._loadTint();
@@ -97,6 +100,7 @@ Component({
     detached() { this._detached = true; },
   },
   methods: {
+    onQrLoad() { if (!this.data.qrReady) this.setData({ qrReady: true }); },
   noop() {},
 
   _loadCode() {

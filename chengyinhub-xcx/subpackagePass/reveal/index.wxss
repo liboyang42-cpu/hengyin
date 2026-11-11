@@ -14,7 +14,7 @@
 .ky__in { opacity: 0; transform: translateY(16rpx); transition: opacity 550ms ease, transform 550ms var(--cy-ease-out); }
 .ky__in.is-on { opacity: 1; transform: none; }
 .ky__eb { font-size: 22rpx; letter-spacing: .32em; color: rgba(255, 255, 255, .72); margin-bottom: 24rpx; } /* ds-ok 原型 .ky-eb */
-.ky__h { font-size: 50rpx; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; margin-bottom: 20rpx; }
+.ky__h { font-size: 50rpx; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; margin-bottom: 20rpx; } /* ds-ok 原型 ps-key 标题逐值(同文件其余原型值的做法) */
 .ky__p { max-width: 540rpx; font-size: 28rpx; line-height: 1.5; color: rgba(255, 255, 255, .78); margin-bottom: 44rpx; } /* ds-ok 原型 .ky-p */
 .ky__btn { align-self: stretch; height: 100rpx; border-radius: 50rpx; background: #FFFFFF; color: #111111; display: flex; align-items: center; justify-content: center; font-size: 32rpx; font-weight: 600; } /* ds-ok 原型白药丸 */
 .ky--reduced .ky__grad, .ky--reduced .ky__in, .ky--reduced .ky__layer--idle, .ky--reduced .ky__skip { transition: none; }

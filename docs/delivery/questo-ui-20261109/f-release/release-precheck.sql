@@ -1,5 +1,5 @@
 -- =====================================================================================
--- f-release 只读预检（候选 2256f79e792cb56e2afbcf5dfc6ca60944002e39）
+-- f-release 只读预检（候选 52193cc26cc80830f5a8f9b021d1a80ef0d64024）
 -- 每个发布迁移一条 SELECT，返回 step / migration_id / release_class / phase / status。
 -- 只读：全部是 SELECT（information_schema 与业务表），生成器逐句校验，无写入、无 SET、无 PREPARE。
 -- 不含任何主机、端口、账号；由业主用只读账号执行（建议先 SET SESSION TRANSACTION READ ONLY，不在本文件里）。
@@ -474,22 +474,34 @@ SELECT 50 AS step, '20261110_platform_pass' AS migration_id, '必须' AS release
   CONCAT(present, '/', expected) AS objects_present, '表 platform_pass_plan、platform_pass_order、platform_pass_membership、platform_pass_claim' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'platform_pass_plan'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'platform_pass_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'platform_pass_membership'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'platform_pass_claim'), 0)) AS present, 4 AS expected) x;
 
--- [51] migration_20261111_ecommerce_combine.sql · 必须 · POST_DEPLOY
-SELECT 51 AS step, '20261111_ecommerce_combine' AS migration_id, '必须' AS release_class, 'POST_DEPLOY' AS phase,
+-- [51] migration_20261111_aigc_filing_config_seed.sql · 必须 · PRE_DEPLOY
+SELECT 51 AS step, '20261111_aigc_filing_config_seed' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
+FROM (SELECT (IFNULL((SELECT COUNT(*) = 1 AS assertion_ok FROM sys_config WHERE config_key = 'aigc.algorithm.filing-no'), 0)) AS present, 1 AS expected) x;
+
+-- [52] migration_20261111_ecommerce_combine.sql · 必须 · POST_DEPLOY
+SELECT 52 AS step, '20261111_ecommerce_combine' AS migration_id, '必须' AS release_class, 'POST_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 ecom_combine_order、ecom_combine_sub_order、ecom_combine_refund、ecom_combine_settlement、ecom_combine_return、ecom_supplier_payable' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_combine_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_combine_sub_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_combine_refund'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_combine_settlement'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_combine_return'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_supplier_payable'), 0)) AS present, 6 AS expected) x;
 
--- [52] migration_ai_theme_draft_request_intent_20261024.sql · 必须 · PRE_DEPLOY
-SELECT 52 AS exec_order, 'ai_theme_draft_request_intent_20261024' AS migration_id,
+-- [53] migration_20261111_ai_generation_log_retention_index.sql · 必须 · PRE_DEPLOY
+SELECT 53 AS step, '20261111_ai_generation_log_retention_index' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT(present, '/', expected) AS objects_present, '索引 ai_generation_log.idx_ai_gen_create_time' AS detail
+FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ai_generation_log' AND index_name = 'idx_ai_gen_create_time'), 0)) AS present, 1 AS expected) x;
+
+-- [54] migration_ai_theme_draft_request_intent_20261024.sql · 必须 · PRE_DEPLOY
+SELECT 54 AS exec_order, 'ai_theme_draft_request_intent_20261024' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 ai_theme_draft_request_intent（单次执行）' AS detail
 FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'member_id', 'prepare_key', 'request_id', 'request_hash', 'product_type', 'plan_hash', 'role', 'pool', 'original_day', 'counter_key', 'nonce', 'receipt_key', 'reservation', 'creator_config_hash', 'gateway_config_hash', 'state', 'provider_state', 'reason_code', 'claim_token', 'result_hash', 'outcome_hash', 'claimed_at', 'created_at', 'updated_at', 'completed_at', 'execute_before', 'context_expires_at', 'result_expires_at', 'context_purged_at', 'result_purged_at')) = 31 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ai_theme_draft_request_intent') AS c0) AS z7;
 
--- [53] migration_audit_problem_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 53 AS exec_order, 'audit_problem_20261022' AS migration_id,
+-- [55] migration_audit_problem_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 55 AS exec_order, 'audit_problem_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 audit_problem' AS detail
@@ -498,8 +510,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 4 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 4534874757148141377 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'audit_problem')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'audit_problem'), 3) AS c0) AS x6;
 
--- [54] migration_20261102_club_session_gather_point.sql · 需业主授权 · PRE_DEPLOY
-SELECT 54 AS step, '20261102_club_session_gather_point' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [56] migration_20261102_club_session_gather_point.sql · 需业主授权 · PRE_DEPLOY
+SELECT 56 AS step, '20261102_club_session_gather_point' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '复用 20261104 readback 的精确谓词：该填未填的场次为 0' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 0 AS club_session_gather_point_none_missing
@@ -514,8 +526,8 @@ WHERE a.club_id IS NOT NULL AND a.club_id > 0
       WHERE t.owner_type = 2 AND t.owner_id = a.id AND t.del_flag = 0
         AND t.gather_lat IS NOT NULL AND t.gather_lng IS NOT NULL)), 0)) AS present, 1 AS expected) x;
 
--- [55] migration_20261104_club_session_gather_point_readback.sql · 需业主授权 · PRE_DEPLOY
-SELECT 55 AS step, '20261104_club_session_gather_point_readback' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [57] migration_20261104_club_session_gather_point_readback.sql · 需业主授权 · PRE_DEPLOY
+SELECT 57 AS step, '20261104_club_session_gather_point_readback' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 0 AS club_session_gather_point_none_missing
@@ -530,8 +542,8 @@ WHERE a.club_id IS NOT NULL AND a.club_id > 0
       WHERE t.owner_type = 2 AND t.owner_id = a.id AND t.del_flag = 0
         AND t.gather_lat IS NOT NULL AND t.gather_lng IS NOT NULL)), 0)) AS present, 1 AS expected) x;
 
--- [56] migration_20261024_d_chapter_application_round.sql · 必须 · PRE_DEPLOY
-SELECT 56 AS exec_order, '20261024_d_chapter_application_round' AS migration_id,
+-- [58] migration_20261024_d_chapter_application_round.sql · 必须 · PRE_DEPLOY
+SELECT 58 AS exec_order, '20261024_d_chapter_application_round' AS migration_id,
   CASE WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'merchant_chapter_application.application_round + CHECK（单次执行）' AS detail
@@ -539,14 +551,14 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_chapter_application' AND column_name = 'application_round') AS c0,
     (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM information_schema.table_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_merchant_application_round') AS c1) AS z8;
 
--- [57] migration_20261029_club_post_repost.sql · 必须 · PRE_DEPLOY
-SELECT 57 AS step, '20261029_club_post_repost' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [59] migration_20261029_club_post_repost.sql · 必须 · PRE_DEPLOY
+SELECT 59 AS step, '20261029_club_post_repost' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 club_post_repost；列 club_post.repost_count' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club_post_repost'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club_post' AND column_name = 'repost_count'), 0)) AS present, 2 AS expected) x;
 
--- [58] migration_club_welcome_note_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 58 AS exec_order, 'club_welcome_note_20261022' AS migration_id,
+-- [60] migration_club_welcome_note_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 60 AS exec_order, 'club_welcome_note_20261022' AS migration_id,
   CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
                   AND table_name = 'club' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
        WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
@@ -559,8 +571,8 @@ SELECT 58 AS exec_order, 'club_welcome_note_20261022' AS migration_id,
        ELSE 'CONFLICT' END AS status,
   'welcome_note 普通可空列；NEEDED 才执行一次，APPLIED 必须跳过原 SQL' AS detail;
 
--- [59] migration_doc2_f3_bundle_ledger_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 59 AS exec_order, 'doc2_f3_bundle_ledger_20261022' AS migration_id,
+-- [61] migration_doc2_f3_bundle_ledger_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 61 AS exec_order, 'doc2_f3_bundle_ledger_20261022' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 explore_bundle_* x6' AS detail
@@ -584,8 +596,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 11477923173872796512 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'explore_bundle_exit_case')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'explore_bundle_exit_case'), 3) AS c5) AS x7;
 
--- [60] migration_doc2_f3_refund_hold_20261026.sql · 可选 · PRE_DEPLOY
-SELECT 60 AS exec_order, 'doc2_f3_refund_hold_20261026' AS migration_id,
+-- [62] migration_doc2_f3_refund_hold_20261026.sql · 可选 · PRE_DEPLOY
+SELECT 62 AS exec_order, 'doc2_f3_refund_hold_20261026' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 explore_bundle_refund_hold' AS detail
@@ -594,44 +606,44 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 12929690359715079447 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'explore_bundle_refund_hold')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'explore_bundle_refund_hold'), 3) AS c0) AS n10;
 
--- [61] migration_marketing_attribution_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 61 AS step, 'marketing_attribution_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [63] migration_marketing_attribution_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 63 AS step, 'marketing_attribution_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 marketing_referral_credential、marketing_attribution' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_referral_credential'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_attribution'), 0)) AS present, 2 AS expected) x;
 
--- [62] migration_marketing_product_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 62 AS step, 'marketing_product_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [64] migration_marketing_product_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 64 AS step, 'marketing_product_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 marketing_product、marketing_product_item、marketing_product_order、marketing_product_order_line、gift_entitlement' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product_item'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product_order_line'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'gift_entitlement'), 0)) AS present, 5 AS expected) x;
 
--- [63] migration_marketing_extra_seat_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 63 AS step, 'marketing_extra_seat_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [65] migration_marketing_extra_seat_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 65 AS step, 'marketing_extra_seat_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '索引 marketing_product_order.idx_marketing_order_extra_seat' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'marketing_product_order' AND index_name = 'idx_marketing_order_extra_seat'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_marketing_order_fulfillment' AND check_clause LIKE '%3%'), 0)) AS present, 2 AS expected) x;
 
--- [64] migration_marketing_revenue_allocation_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 64 AS step, 'marketing_revenue_allocation_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [66] migration_marketing_revenue_allocation_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 66 AS step, 'marketing_revenue_allocation_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 marketing_revenue_rule、marketing_revenue_allocation、marketing_revenue_allocation_line、marketing_revenue_posting_task' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_rule'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_allocation'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_allocation_line'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_posting_task'), 0)) AS present, 4 AS expected) x;
 
--- [65] migration_marketing_z_channel_voucher_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 65 AS step, 'marketing_z_channel_voucher_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [67] migration_marketing_z_channel_voucher_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 67 AS step, 'marketing_z_channel_voucher_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 marketing_channel_voucher_account、marketing_channel_order_verification、marketing_channel_voucher、marketing_channel_redemption、marketing_channel_refund_verification' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_voucher_account'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_order_verification'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_voucher'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_redemption'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_refund_verification'), 0)) AS present, 5 AS expected) x;
 
--- [66] migration_marketing_task_registration_20261108.sql · 必须 · POST_DEPLOY
-SELECT 66 AS step, 'marketing_task_registration_20261108' AS migration_id, '必须' AS release_class, 'POST_DEPLOY' AS phase,
+-- [68] migration_marketing_task_registration_20261108.sql · 必须 · POST_DEPLOY
+SELECT 68 AS step, 'marketing_task_registration_20261108' AS migration_id, '必须' AS release_class, 'POST_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '定时任务 channelRefundConsumptionTask.run()、marketingRevenuePostingTask.run()' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'channelRefundConsumptionTask.run()'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'marketingRevenuePostingTask.run()'), 0)) AS present, 2 AS expected) x;
 
--- [67] migration_20261023_cash_withdraw_fund_fact.sql · 必须 · PRE_DEPLOY
-SELECT 67 AS exec_order, '20261023_cash_withdraw_fund_fact' AS migration_id,
+-- [69] migration_20261023_cash_withdraw_fund_fact.sql · 必须 · PRE_DEPLOY
+SELECT 69 AS exec_order, '20261023_cash_withdraw_fund_fact' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 member_cash_withdraw_fund_fact + 两个只追加触发器（单次执行）' AS detail
@@ -640,8 +652,8 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name = 'cash_fund_fact_no_update') AS c1,
     (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name = 'cash_fund_fact_no_delete') AS c2) AS z9;
 
--- [68] migration_20261024_cash_withdraw_transfer_intent.sql · 必须 · PRE_DEPLOY
-SELECT 68 AS exec_order, '20261024_cash_withdraw_transfer_intent' AS migration_id,
+-- [70] migration_20261024_cash_withdraw_transfer_intent.sql · 必须 · PRE_DEPLOY
+SELECT 70 AS exec_order, '20261024_cash_withdraw_transfer_intent' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 member_cash_withdraw_transfer_intent（单次执行）' AS detail
@@ -650,8 +662,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 12031721957538158388 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'member_cash_withdraw_transfer_intent')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'member_cash_withdraw_transfer_intent'), 3) AS c0) AS n1;
 
--- [69] migration_20261025_cash_withdraw_fund_request_compat.sql · 必须 · PRE_DEPLOY
-SELECT 69 AS exec_order, '20261025_cash_withdraw_fund_request_compat' AS migration_id,
+-- [71] migration_20261025_cash_withdraw_fund_request_compat.sql · 必须 · PRE_DEPLOY
+SELECT 71 AS exec_order, '20261025_cash_withdraw_fund_request_compat' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'member_cash_withdraw_fund_fact 请求身份 8 列 + CHECK（单次执行）' AS detail
@@ -666,8 +678,8 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'member_cash_withdraw_fund_fact' AND column_name = 'channel_batch_id') AS c7,
     (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM information_schema.table_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_cash_fund_request') AS c8) AS z10;
 
--- [70] migration_member_profile_version_20261022.sql · 必须 · PRE_DEPLOY
-SELECT 70 AS exec_order, 'member_profile_version_20261022' AS migration_id,
+-- [72] migration_member_profile_version_20261022.sql · 必须 · PRE_DEPLOY
+SELECT 72 AS exec_order, 'member_profile_version_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 ums_member_profile_version' AS detail
@@ -676,8 +688,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 16657050347810390992 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ums_member_profile_version')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ums_member_profile_version'), 3) AS c0) AS x8;
 
--- [71] migration_member_visited_poi_poi_key_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 71 AS exec_order, 'member_visited_poi_poi_key_20261022' AS migration_id,
+-- [73] migration_member_visited_poi_poi_key_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 73 AS exec_order, 'member_visited_poi_poi_key_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'member_visited_poi.poi_key + uk_member_poi_key' AS detail
@@ -689,8 +701,8 @@ FROM (SELECT
        AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = 'member_id,poi_key' THEN 1 ELSE 2 END
    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'member_visited_poi' AND index_name = 'uk_member_poi_key'), 3) AS c1) AS x9;
 
--- [72] migration_merchant_category_ids_20261022.sql · 必须 · PRE_DEPLOY
-SELECT 72 AS exec_order, 'merchant_category_ids_20261022' AS migration_id,
+-- [74] migration_merchant_category_ids_20261022.sql · 必须 · PRE_DEPLOY
+SELECT 74 AS exec_order, 'merchant_category_ids_20261022' AS migration_id,
   CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
                   AND table_name = 'mms_merchant' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
        WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
@@ -705,8 +717,8 @@ SELECT 72 AS exec_order, 'merchant_category_ids_20261022' AS migration_id,
        ELSE 'CONFLICT' END AS status,
   'category_ids 结构齐全仍须附录 B3 核对数据；DATA_PREVIEW 不是迁移已完成证明' AS detail;
 
--- [73] migration_20261027_merchant_brand_images_to_gallery.sql · 需业主授权 · PRE_DEPLOY
-SELECT 73 AS exec_order, '20261027_merchant_brand_images_to_gallery' AS migration_id,
+-- [75] migration_20261027_merchant_brand_images_to_gallery.sql · 需业主授权 · PRE_DEPLOY
+SELECT 75 AS exec_order, '20261027_merchant_brand_images_to_gallery' AS migration_id,
   CASE WHEN p0 = 3 OR c0 = 3 THEN 'BLOCKED_PREREQ' ELSE 'DATA_PREVIEW' END AS status,
   '数据搬迁：有品牌形象图的商家须跑附录 C2 预览；DATA_PREVIEW 不是搬迁完成证明' AS detail
 FROM (SELECT
@@ -714,8 +726,8 @@ FROM (SELECT
     IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'mms_merchant'
          AND column_name IN ('derivatives', 'gallery')) = 2, 4, 3) AS c0) AS n29;
 
--- [74] migration_merchant_desk_receipt_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 74 AS exec_order, 'merchant_desk_receipt_20261022' AS migration_id,
+-- [76] migration_merchant_desk_receipt_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 76 AS exec_order, 'merchant_desk_receipt_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 merchant_desk_receipt' AS detail
@@ -724,8 +736,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 3217512040811375428 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'merchant_desk_receipt')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_desk_receipt'), 3) AS c0) AS x10;
 
--- [75] migration_merchant_redemption_anchor_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 75 AS exec_order, 'merchant_redemption_anchor_20261022' AS migration_id,
+-- [77] migration_merchant_redemption_anchor_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 77 AS exec_order, 'merchant_redemption_anchor_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 merchant_redemption_anchor' AS detail
@@ -734,8 +746,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 10133716487572001376 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'merchant_redemption_anchor')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_redemption_anchor'), 3) AS c0) AS x11;
 
--- [76] migration_merchant_wechat_qrcode_20261022.sql · 必须 · PRE_DEPLOY
-SELECT 76 AS exec_order, 'merchant_wechat_qrcode_20261022' AS migration_id,
+-- [78] migration_merchant_wechat_qrcode_20261022.sql · 必须 · PRE_DEPLOY
+SELECT 78 AS exec_order, 'merchant_wechat_qrcode_20261022' AS migration_id,
   CASE WHEN (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()
                   AND table_name = 'mms_merchant' AND engine = 'InnoDB') <> 1 THEN 'BLOCKED_PREREQ'
        WHEN (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
@@ -750,16 +762,16 @@ SELECT 76 AS exec_order, 'merchant_wechat_qrcode_20261022' AS migration_id,
        ELSE 'CONFLICT' END AS status,
   'wechat_qrcode 结构齐全仍须附录 B4 核对数据；DATA_PREVIEW 不是迁移已完成证明' AS detail;
 
--- [77] migration_npc_voice_enrollment_intent_20261024.sql · 必须 · PRE_DEPLOY
-SELECT 77 AS exec_order, 'npc_voice_enrollment_intent_20261024' AS migration_id,
+-- [79] migration_npc_voice_enrollment_intent_20261024.sql · 必须 · PRE_DEPLOY
+SELECT 79 AS exec_order, 'npc_voice_enrollment_intent_20261024' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 npc_voice_enrollment_intent（单次执行）' AS detail
 FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'npc_id', 'scope_type', 'scope_id', 'actor_member_id', 'sample_sha256', 'sample_reference', 'state', 'voice_id', 'reason_code', 'profile_version', 'created_at', 'updated_at')) = 13 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'npc_voice_enrollment_intent') AS c0) AS z11;
 
--- [78] migration_npc_voice_confirmed_attempt_20261024.sql · 必须 · PRE_DEPLOY
-SELECT 78 AS exec_order, 'npc_voice_confirmed_attempt_20261024' AS migration_id,
+-- [80] migration_npc_voice_confirmed_attempt_20261024.sql · 必须 · PRE_DEPLOY
+SELECT 80 AS exec_order, 'npc_voice_confirmed_attempt_20261024' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'npc_voice_enrollment_intent 请求身份 2 列 + 唯一键 + CHECK（单次执行）' AS detail
@@ -769,8 +781,8 @@ FROM (SELECT
     (SELECT IF(COUNT(*) > 0, 1, 0) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'npc_voice_enrollment_intent' AND index_name = 'uk_nvei_request') AS c2,
     (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM information_schema.table_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'chk_nvei_request') AS c3) AS z12;
 
--- [79] migration_o14_city_code_backfill_log_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 79 AS exec_order, 'o14_city_code_backfill_log_20261022' AS migration_id,
+-- [81] migration_o14_city_code_backfill_log_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 81 AS exec_order, 'o14_city_code_backfill_log_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 o14_city_code_backfill_log' AS detail
@@ -779,8 +791,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 15028227347182792313 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'o14_city_code_backfill_log')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'o14_city_code_backfill_log'), 3) AS c0) AS x12;
 
--- [80] migration_o14_cms_activity_city_code_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 80 AS exec_order, 'o14_cms_activity_city_code_20261022' AS migration_id,
+-- [82] migration_o14_cms_activity_city_code_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 82 AS exec_order, 'o14_cms_activity_city_code_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'cms_activity.city_code + 索引' AS detail
@@ -792,8 +804,8 @@ FROM (SELECT
        AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = 'city_code' THEN 1 ELSE 2 END
    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_activity' AND index_name = 'idx_cms_activity_city_code'), 3) AS c1) AS x13;
 
--- [81] migration_o14_cms_topic_city_code_20261022.sql · 必须 · PRE_DEPLOY
-SELECT 81 AS exec_order, 'o14_cms_topic_city_code_20261022' AS migration_id,
+-- [83] migration_o14_cms_topic_city_code_20261022.sql · 必须 · PRE_DEPLOY
+SELECT 83 AS exec_order, 'o14_cms_topic_city_code_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'cms_topic.city_code + 索引' AS detail
@@ -805,8 +817,8 @@ FROM (SELECT
        AND GROUP_CONCAT(column_name ORDER BY seq_in_index) = 'city_code' THEN 1 ELSE 2 END
    FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND index_name = 'idx_cms_topic_city_code'), 3) AS c1) AS x14;
 
--- [82] migration_o14_content_city_code_backfill_20261022.sql · 需业主授权 · PRE_DEPLOY
-SELECT 82 AS exec_order, 'o14_content_city_code_backfill_20261022' AS migration_id,
+-- [84] migration_o14_content_city_code_backfill_20261022.sql · 需业主授权 · PRE_DEPLOY
+SELECT 84 AS exec_order, 'o14_content_city_code_backfill_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '数据回填:前置列就位后须跑 _precheck_o14_content_city_code_backfill_20261022.sql 预览' AS detail
@@ -814,8 +826,8 @@ FROM (SELECT
     IFNULL((SELECT IF(COUNT(*) = 1, 1, 3) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club' AND engine = 'InnoDB'), 3) AS p0,
     IFNULL((SELECT IF(EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'city_code') AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_activity' AND column_name = 'city_code') AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'o14_city_code_backfill_log'), 4, 0)), 3) AS c0) AS x15;
 
--- [83] migration_o14_content_search_document_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 83 AS exec_order, 'o14_content_search_document_20261022' AS migration_id,
+-- [85] migration_o14_content_search_document_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 85 AS exec_order, 'o14_content_search_document_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 content_search_document' AS detail
@@ -824,8 +836,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 7 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 3318759553424233406 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'content_search_document')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'content_search_document'), 3) AS c0) AS x16;
 
--- [84] migration_20261023_d_official_broadcast_delivery.sql · 必须 · PRE_DEPLOY
-SELECT 84 AS exec_order, '20261023_d_official_broadcast_delivery' AS migration_id,
+-- [86] migration_20261023_d_official_broadcast_delivery.sql · 必须 · PRE_DEPLOY
+SELECT 86 AS exec_order, '20261023_d_official_broadcast_delivery' AS migration_id,
   CASE WHEN pre <> 2 THEN 'BLOCKED_PREREQ'
        WHEN d = 4 AND s = 2 THEN 'APPLIED'
        WHEN d = 0 AND s = 0 AND o = 0 THEN 'NEEDED'
@@ -834,8 +846,8 @@ SELECT 84 AS exec_order, '20261023_d_official_broadcast_delivery' AS migration_i
   '广播 D 协议 6 列；CONFLICT = 10-26 旧协议已单独落库（D 与 union 均不可执行，停下）' AS detail
 FROM (SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('official_broadcast','official_broadcast_log') AND engine = 'InnoDB') AS pre, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_title', 'delivery_sub', 'failure_code', 'reached_time')) AS d, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('frozen_title', 'frozen_sub', 'intent_id', 'attempts', 'update_time')) AS o, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_state','message_id')) AS s, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast' AND column_name IN ('audience_frozen','client_request_id','request_owner','request_hash')) AS b, (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_creation') AS cr, (SELECT MAX(column_type) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name = 'delivery_state') AS st) AS z13;
 
--- [85] migration_20261026_official_broadcast_delivery.sql · 不执行 · PRE_DEPLOY
-SELECT 85 AS exec_order, '20261026_official_broadcast_delivery' AS migration_id,
+-- [87] migration_20261026_official_broadcast_delivery.sql · 不执行 · PRE_DEPLOY
+SELECT 87 AS exec_order, '20261026_official_broadcast_delivery' AS migration_id,
   CASE WHEN pre <> 2 THEN 'BLOCKED_PREREQ'
        WHEN d = 4 AND o = 5 AND b = 4 AND cr = 1 THEN 'APPLIED'
        WHEN d = 0 AND (o > 0 OR b > 0 OR cr > 0) THEN 'CONFLICT'
@@ -843,8 +855,8 @@ SELECT 85 AS exec_order, '20261026_official_broadcast_delivery' AS migration_id,
   '永不执行（被 D + union 取代）；APPLIED = union 已组合出超集；CONFLICT = 旧协议已单独落库' AS detail
 FROM (SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('official_broadcast','official_broadcast_log') AND engine = 'InnoDB') AS pre, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_title', 'delivery_sub', 'failure_code', 'reached_time')) AS d, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('frozen_title', 'frozen_sub', 'intent_id', 'attempts', 'update_time')) AS o, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_state','message_id')) AS s, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast' AND column_name IN ('audience_frozen','client_request_id','request_owner','request_hash')) AS b, (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_creation') AS cr, (SELECT MAX(column_type) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name = 'delivery_state') AS st) AS z14;
 
--- [86] migration_20261028_official_broadcast_protocol_union.sql · 必须 · PRE_DEPLOY
-SELECT 86 AS exec_order, '20261028_official_broadcast_protocol_union' AS migration_id,
+-- [88] migration_20261028_official_broadcast_protocol_union.sql · 必须 · PRE_DEPLOY
+SELECT 88 AS exec_order, '20261028_official_broadcast_protocol_union' AS migration_id,
   CASE WHEN pre <> 2 THEN 'BLOCKED_PREREQ'
        WHEN d = 4 AND s = 2 AND o = 5 AND b = 4 AND cr = 1 AND st = 'varchar(32)' THEN 'APPLIED'
        WHEN o = 0 AND b = 0 AND cr = 0 AND (d = 4 OR (d = 0 AND s = 0)) THEN 'NEEDED'
@@ -853,8 +865,8 @@ SELECT 86 AS exec_order, '20261028_official_broadcast_protocol_union' AS migrati
   '广播双协议组合（单次执行；只接受 D 前缀）；CONFLICT = 10-26 旧协议已单独落库' AS detail
 FROM (SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name IN ('official_broadcast','official_broadcast_log') AND engine = 'InnoDB') AS pre, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_title', 'delivery_sub', 'failure_code', 'reached_time')) AS d, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('frozen_title', 'frozen_sub', 'intent_id', 'attempts', 'update_time')) AS o, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name IN ('delivery_state','message_id')) AS s, (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast' AND column_name IN ('audience_frozen','client_request_id','request_owner','request_hash')) AS b, (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_creation') AS cr, (SELECT MAX(column_type) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'official_broadcast_log' AND column_name = 'delivery_state') AS st) AS z15;
 
--- [87] migration_orient_geo_ar_team_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 87 AS exec_order, 'orient_geo_ar_team_20261022' AS migration_id,
+-- [89] migration_orient_geo_ar_team_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 89 AS exec_order, 'orient_geo_ar_team_20261022' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 orient_* x5 + sys_config 5 键' AS detail
@@ -880,8 +892,8 @@ FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.team.completion_ratio'), 3) AS c8,
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.safety.enabled'), 3) AS c9) AS x17;
 
--- [88] migration_orient_score_recovery_20261026.sql · 必须 · PRE_DEPLOY
-SELECT 88 AS exec_order, 'orient_score_recovery_20261026' AS migration_id,
+-- [90] migration_orient_score_recovery_20261026.sql · 必须 · PRE_DEPLOY
+SELECT 90 AS exec_order, 'orient_score_recovery_20261026' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 orient_score_recovery' AS detail
@@ -890,8 +902,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 7890895288392942713 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'orient_score_recovery')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'orient_score_recovery'), 3) AS c0) AS n11;
 
--- [89] migration_orient_score_sync_receipt_20261026.sql · 必须 · PRE_DEPLOY
-SELECT 89 AS exec_order, 'orient_score_sync_receipt_20261026' AS migration_id,
+-- [91] migration_orient_score_sync_receipt_20261026.sql · 必须 · PRE_DEPLOY
+SELECT 91 AS exec_order, 'orient_score_sync_receipt_20261026' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 orient_score_sync_receipt' AS detail
@@ -900,8 +912,17 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 2 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 7518263432094455407 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'orient_score_sync_receipt')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'orient_score_sync_receipt'), 3) AS c0) AS n12;
 
--- [90] migration_o14_reco_search_jobs_20261022.sql · 可选 · POST_DEPLOY
-SELECT 90 AS exec_order, 'o14_reco_search_jobs_20261022' AS migration_id,
+-- [92] migration_20261111_creator_income_detail_idempotency.sql · 可选 · PRE_DEPLOY
+SELECT 92 AS step, '20261111_creator_income_detail_idempotency' AS migration_id, '可选' AS release_class, 'PRE_DEPLOY' AS phase,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
+FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM information_schema.statistics
+      WHERE table_schema=DATABASE() AND table_name='creator_income_detail'
+        AND index_name='uk_creator_income_idempotency' AND non_unique=0 AND column_name='idempotency_key')=1
+       AS creator_income_idempotency_ready), 0)) AS present, 1 AS expected) x;
+
+-- [93] migration_o14_reco_search_jobs_20261022.sql · 可选 · POST_DEPLOY
+SELECT 93 AS exec_order, 'o14_reco_search_jobs_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'sys_job 2 行(暂停)' AS detail
@@ -910,20 +931,20 @@ FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_job WHERE invoke_target = 'recommendationScoreDailyTask.run()'), 3) AS c0,
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_job WHERE invoke_target = 'contentSearchProjectionTask.refresh()'), 3) AS c1) AS x18;
 
--- [91] migration_marketing_redemption_constraint_name_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 91 AS step, 'marketing_redemption_constraint_name_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [94] migration_marketing_redemption_constraint_name_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 94 AS step, 'marketing_redemption_constraint_name_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, 'CHECK 约束已是新形状' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = DATABASE() AND table_name = 'redemption' AND constraint_type = 'CHECK' AND constraint_name = 'ck_perk_redemption_status'), 0)) AS present, 1 AS expected) x;
 
--- [92] migration_marketing_promotion_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 92 AS step, 'marketing_promotion_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [95] migration_marketing_promotion_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 95 AS step, 'marketing_promotion_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 marketing_offer、marketing_offer_item、marketing_tier、marketing_promotion、marketing_promotion_redemption、marketing_order_adjustment、marketing_promotion_refund_fact' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_offer'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_offer_item'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_tier'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_promotion'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_promotion_redemption'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_order_adjustment'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_promotion_refund_fact'), 0)) AS present, 7 AS expected) x;
 
--- [93] migration_play_arrive_guard_log_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 93 AS exec_order, 'play_arrive_guard_log_20261022' AS migration_id,
+-- [96] migration_play_arrive_guard_log_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 96 AS exec_order, 'play_arrive_guard_log_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 play_arrive_guard_log' AS detail
@@ -932,8 +953,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 15745635712475062580 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'play_arrive_guard_log')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'play_arrive_guard_log'), 3) AS c0) AS x19;
 
--- [94] migration_pms_sku_booking_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 94 AS exec_order, 'pms_sku_booking_20261022' AS migration_id,
+-- [97] migration_pms_sku_booking_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 97 AS exec_order, 'pms_sku_booking_20261022' AS migration_id,
   CASE WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 pms_sku_booking_rule / pms_sku_capacity_slot' AS detail
@@ -945,46 +966,46 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 6569897251089178890 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'pms_sku_capacity_slot')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pms_sku_capacity_slot'), 3) AS c1) AS x20;
 
--- [95] migration_preset_draft_source_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 95 AS step, 'preset_draft_source_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [98] migration_preset_draft_source_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 98 AS step, 'preset_draft_source_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 cms_member_template.preset_source' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_member_template' AND column_name = 'preset_source'), 0)) AS present, 1 AS expected) x;
 
--- [96] migration_public_content_catalog_20261108.sql · 不执行 · PRE_DEPLOY
-SELECT 96 AS step, 'public_content_catalog_20261108' AS migration_id, '不执行' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [99] migration_public_content_catalog_20261108.sql · 不执行 · PRE_DEPLOY
+SELECT 99 AS step, 'public_content_catalog_20261108' AS migration_id, '不执行' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 content_landing_metadata、content_landing_translation' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_metadata'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_translation'), 0)) AS present, 2 AS expected) x;
 
--- [97] migration_public_content_catalog_index_shape_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 97 AS step, 'public_content_catalog_index_shape_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [100] migration_public_content_catalog_index_shape_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 100 AS step, 'public_content_catalog_index_shape_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 content_landing_metadata、content_landing_translation' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_metadata'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_translation'), 0)) AS present, 2 AS expected) x;
 
--- [98] migration_public_content_catalog_node_topic_index_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 98 AS step, 'public_content_catalog_node_topic_index_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [101] migration_public_content_catalog_node_topic_index_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 101 AS step, 'public_content_catalog_node_topic_index_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '索引 cms_topic_node.idx_topic_node_topic' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_topic_node' AND index_name = 'idx_topic_node_topic'), 0)) AS present, 1 AS expected) x;
 
--- [99] migration_20261023_advanced_command_fingerprint.sql · 必须 · PRE_DEPLOY
-SELECT 99 AS exec_order, '20261023_advanced_command_fingerprint' AS migration_id,
+-- [102] migration_20261023_advanced_command_fingerprint.sql · 必须 · PRE_DEPLOY
+SELECT 102 AS exec_order, '20261023_advanced_command_fingerprint' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'play_attempt_log.request_fingerprint（可重入）' AS detail
 FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(data_type = 'char' AND character_maximum_length = 64 AND character_set_name = 'ascii' AND collation_name = 'ascii_bin' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'play_attempt_log' AND column_name = 'request_fingerprint') AS c0) AS z16;
 
--- [100] migration_20261029_unlist_test_topics.sql · 需业主授权 · PRE_DEPLOY
-SELECT 100 AS exec_order, '20261029_unlist_test_topics' AS migration_id,
+-- [103] migration_20261029_unlist_test_topics.sql · 需业主授权 · PRE_DEPLOY
+SELECT 103 AS exec_order, '20261029_unlist_test_topics' AS migration_id,
   CASE WHEN todo > 0 THEN 'DATA_PREVIEW' ELSE 'APPLIED' END AS status,
   '下架 5 个测试主题：DATA_PREVIEW = 仍有可软删的在架目标行；被守卫跳过的行不计入，见附录 C5' AS detail
 FROM (SELECT (SELECT COUNT(*) FROM cms_topic t WHERE (t.id, t.name, t.member_id) IN ((990062, '预制人生 · 第一站', 100092), (8, '西安大唐不夜城灯光秀', 100000), (7, '上海沉浸式戏剧', 100000), (6, '成都宽窄巷子辣味食材寻味', 100000), (1, '上海滨江 10KM 骑行', 100086)) AND t.del_flag = 0 AND NOT (EXISTS (SELECT 1 FROM cms_registration r WHERE (r.topic_id = t.id OR (r.owner_type = 1 AND r.owner_id = t.id) OR (r.owner_type = 2 AND r.owner_id IN (SELECT a.id FROM cms_activity a WHERE a.topic_id = t.id))) AND (r.registration_status <> 3 OR r.payment_status IN (1, 2))) OR EXISTS (SELECT 1 FROM player_run_session s WHERE s.topic_id = t.id AND s.run_state <> 'ENDED') OR EXISTS (SELECT 1 FROM topic_route_session s WHERE s.topic_id = t.id AND s.status = 0))) AS todo) AS z28;
 
--- [101] migration_orient_scoring_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 101 AS exec_order, 'orient_scoring_20261022' AS migration_id,
+-- [104] migration_orient_scoring_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 104 AS exec_order, 'orient_scoring_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 orient_score_* x4 + sys_config 5 键' AS detail
@@ -1008,8 +1029,8 @@ FROM (SELECT
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.scoring.xp_rate_pct'), 3) AS c7,
     IFNULL((SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_config WHERE config_key = 'orient.scoring.dispute_window_hours'), 3) AS c8) AS x21;
 
--- [102] migration_orient_session_lifecycle_20261022.sql · 必须 · PRE_DEPLOY
-SELECT 102 AS exec_order, 'orient_session_lifecycle_20261022' AS migration_id,
+-- [105] migration_orient_session_lifecycle_20261022.sql · 必须 · PRE_DEPLOY
+SELECT 105 AS exec_order, 'orient_session_lifecycle_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'topic_route_session.phase + status 注释 + 新表 orient_session_clock' AS detail
@@ -1024,16 +1045,16 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 13932434150092499771 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'orient_session_clock')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'orient_session_clock'), 3) AS c2) AS x22;
 
--- [103] migration_photo_check_intent_20261023.sql · 必须 · PRE_DEPLOY
-SELECT 103 AS exec_order, 'photo_check_intent_20261023' AS migration_id,
+-- [106] migration_photo_check_intent_20261023.sql · 必须 · PRE_DEPLOY
+SELECT 106 AS exec_order, 'photo_check_intent_20261023' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 photo_check_intent（单次执行）' AS detail
 FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'member_id', 'session_id', 'action_key', 'request_fingerprint', 'context_json', 'image_reference', 'reservation', 'original_day', 'nonce', 'state', 'provider_state', 'reason_code', 'encoded_input_sha256', 'model_name', 'prompt_version', 'encoder_version', 'result_pass', 'result_confidence', 'result_reason', 'result_degraded', 'attempt_log_id', 'created_at', 'updated_at')) = 24 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'photo_check_intent') AS c0) AS z17;
 
--- [104] migration_20261103_settlement_rule_three_percent.sql · 需业主授权 · PRE_DEPLOY
-SELECT 104 AS step, '20261103_settlement_rule_three_percent' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [107] migration_20261103_settlement_rule_three_percent.sql · 需业主授权 · PRE_DEPLOY
+SELECT 107 AS step, '20261103_settlement_rule_three_percent' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM settlement_rule
@@ -1046,28 +1067,28 @@ FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM settlement_rule
           AND platform_commission_rate = 0.0300 AND merchant_rate = 0.9700 AND creator_rate = 0.0000) = 2
    AS settlement_rule_three_percent), 0)) AS present, 1 AS expected) x;
 
--- [105] migration_20261102_club_checkin_phone_visible.sql · 必须 · PRE_DEPLOY
-SELECT 105 AS step, '20261102_club_checkin_phone_visible' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [108] migration_20261102_club_checkin_phone_visible.sql · 必须 · PRE_DEPLOY
+SELECT 108 AS step, '20261102_club_checkin_phone_visible' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 club_role_assignment.customer_phone_visible' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club_role_assignment' AND column_name = 'customer_phone_visible'), 0)) AS present, 1 AS expected) x;
 
--- [106] migration_club_host_reservation_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 106 AS step, 'club_host_reservation_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [109] migration_club_host_reservation_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 109 AS step, 'club_host_reservation_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 club_event_series.host_reservation_required' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club_event_series' AND column_name = 'host_reservation_required'), 0)) AS present, 1 AS expected) x;
 
--- [107] migration_20261030_merchant_game_mechanics.sql · 需业主授权 · PRE_DEPLOY
-SELECT 107 AS step, '20261030_merchant_game_mechanics' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [110] migration_20261030_merchant_game_mechanics.sql · 需业主授权 · PRE_DEPLOY
+SELECT 110 AS step, '20261030_merchant_game_mechanics' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 1 AS assertion_ok
   FROM user_permission
  WHERE role = 'merchant' AND membership_level IS NULL AND can_branch = 1 AND can_game_mechanic = 1), 0)) AS present, 1 AS expected) x;
 
--- [108] migration_20261104_merchant_activity_limit.sql · 需业主授权 · PRE_DEPLOY
-SELECT 108 AS step, '20261104_merchant_activity_limit' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [111] migration_20261104_merchant_activity_limit.sql · 需业主授权 · PRE_DEPLOY
+SELECT 111 AS step, '20261104_merchant_activity_limit' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 1 AS merchant_activity_limit_three
@@ -1075,8 +1096,8 @@ FROM user_permission
 WHERE role = 'merchant' AND membership_level IS NULL
   AND can_create_event = 1 AND max_events = 3), 0)) AS present, 1 AS expected) x;
 
--- [109] migration_member_visited_poi_poi_key_backfill_20261022.sql · 需业主授权 · PRE_DEPLOY
-SELECT 109 AS exec_order, 'member_visited_poi_poi_key_backfill_20261022' AS migration_id,
+-- [112] migration_member_visited_poi_poi_key_backfill_20261022.sql · 需业主授权 · PRE_DEPLOY
+SELECT 112 AS exec_order, 'member_visited_poi_poi_key_backfill_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '数据回填:poi_key 列就位后须跑附录 B 的只读预览' AS detail
@@ -1084,14 +1105,14 @@ FROM (SELECT
     IFNULL((SELECT IF(COUNT(*) = 1, 1, 3) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'roam_poi' AND engine = 'InnoDB'), 3) AS p0,
     IFNULL((SELECT IF(EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'member_visited_poi' AND column_name = 'poi_key'), 4, 0)), 3) AS c0) AS x23;
 
--- [110] migration_20261031_roam_session_track.sql · 必须 · PRE_DEPLOY
-SELECT 110 AS step, '20261031_roam_session_track' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [113] migration_20261031_roam_session_track.sql · 必须 · PRE_DEPLOY
+SELECT 113 AS step, '20261031_roam_session_track' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 roam_session.track_json' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_session' AND column_name = 'track_json'), 0)) AS present, 1 AS expected) x;
 
--- [111] migration_roam_share_version_20261022.sql · 必须 · PRE_DEPLOY
-SELECT 111 AS exec_order, 'roam_share_version_20261022' AS migration_id,
+-- [114] migration_roam_share_version_20261022.sql · 必须 · PRE_DEPLOY
+SELECT 114 AS exec_order, 'roam_share_version_20261022' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'roam_share_snapshot.version' AS detail
@@ -1100,8 +1121,8 @@ FROM (SELECT
     IFNULL((SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'int' AND is_nullable = 'NO' AND column_default = '1') = 1 THEN 1 ELSE 2 END
    FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_share_snapshot' AND column_name = 'version'), 3) AS c0) AS x24;
 
--- [112] migration_20261024_official_roam_challenges.sql · 必须 · PRE_DEPLOY
-SELECT 112 AS exec_order, '20261024_official_roam_challenges' AS migration_id,
+-- [115] migration_20261024_official_roam_challenges.sql · 必须 · PRE_DEPLOY
+SELECT 115 AS exec_order, '20261024_official_roam_challenges' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN p1 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'roam_poi 3 列 + roam_poi_reward_log 2 列' AS detail
@@ -1114,8 +1135,8 @@ FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'varchar(2048)' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_poi_reward_log' AND column_name = 'photo_url') AS c3,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'varchar(255)' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_poi_reward_log' AND column_name = 'submitted_answer') AS c4) AS n22;
 
--- [113] migration_20261025_official_poi_quotes.sql · 必须 · PRE_DEPLOY
-SELECT 113 AS exec_order, '20261025_official_poi_quotes' AS migration_id,
+-- [116] migration_20261025_official_poi_quotes.sql · 必须 · PRE_DEPLOY
+SELECT 116 AS exec_order, '20261025_official_poi_quotes' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'roam_poi.quotes_json / photo_credit' AS detail
@@ -1124,8 +1145,8 @@ FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'text' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_poi' AND column_name = 'quotes_json') AS c0,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'text' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_poi' AND column_name = 'photo_credit') AS c1) AS n23;
 
--- [114] migration_20261023_g_cash_evidence_expand.sql · 必须 · PRE_DEPLOY
-SELECT 114 AS exec_order, '20261023_g_cash_evidence_expand' AS migration_id,
+-- [117] migration_20261023_g_cash_evidence_expand.sql · 必须 · PRE_DEPLOY
+SELECT 117 AS exec_order, '20261023_g_cash_evidence_expand' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 2 THEN 'CONFLICT' WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 1 THEN 'APPLIED'
        WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 0 AND dirty = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '合作结算现金证据：3 新表 + coop_settlement 5 列 + adjustment 2 列（单次执行）；BLOCKED_PREREQ = 存量结算行有平台/空受款人/悬空 claim，迁移前置断言会拒绝' AS detail
@@ -1142,8 +1163,8 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement_adjustment' AND column_name = 'cash_event_id') AS c9,
     (SELECT IF((SELECT COUNT(*) FROM coop_settlement h LEFT JOIN ums_member m ON m.id = h.merchant_id WHERE h.merchant_id IS NULL OR h.merchant_id <= 0 OR m.id IS NULL OR h.payee_type = 'platform' OR h.line_type IN ('PLATFORM','DEPOSIT_DEDUCTION')) + (SELECT COUNT(*) FROM coop_settlement_adjustment a LEFT JOIN coop_settlement h ON h.id = a.settlement_id WHERE a.claim_id IS NULL OR a.claim_id <= 0 OR h.id IS NULL) = 0, 0, 3)) AS dirty) AS z18;
 
--- [115] migration_20261022_theme_state_key_attribute_def.sql · 必须 · PRE_DEPLOY
-SELECT 115 AS exec_order, '20261022_theme_state_key_attribute_def' AS migration_id,
+-- [118] migration_20261022_theme_state_key_attribute_def.sql · 必须 · PRE_DEPLOY
+SELECT 118 AS exec_order, '20261022_theme_state_key_attribute_def' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3, c4, c5, c6, c7, c8) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'theme_state_key 9 列' AS detail
@@ -1168,8 +1189,8 @@ FROM (SELECT
     IFNULL((SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'varchar(1024)' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END
    FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_state_key' AND column_name = 'rules_json'), 3) AS c8) AS x25;
 
--- [116] migration_20261022_theme_character.sql · 必须 · PRE_DEPLOY
-SELECT 116 AS exec_order, '20261022_theme_character' AS migration_id,
+-- [119] migration_20261022_theme_character.sql · 必须 · PRE_DEPLOY
+SELECT 119 AS exec_order, '20261022_theme_character' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 theme_character' AS detail
@@ -1178,8 +1199,8 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 3 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 44189788068057420 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'theme_character')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_character'), 3) AS c0) AS x26;
 
--- [117] migration_20261028_d20_attribute_registry.sql · 必须 · PRE_DEPLOY
-SELECT 117 AS exec_order, '20261028_d20_attribute_registry' AS migration_id,
+-- [120] migration_20261028_d20_attribute_registry.sql · 必须 · PRE_DEPLOY
+SELECT 120 AS exec_order, '20261028_d20_attribute_registry' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN p1 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'theme_state_key.is_attribute / attribute_preset；同文件回填为 ON DUPLICATE KEY UPDATE，可重跑' AS detail
@@ -1189,8 +1210,8 @@ FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'tinyint(1)' AND is_nullable = 'NO' AND column_default = '0') = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_state_key' AND column_name = 'is_attribute') AS c0,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'varchar(16)' AND is_nullable = 'YES' AND column_default IS NULL) = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'theme_state_key' AND column_name = 'attribute_preset') AS c1) AS n24;
 
--- [118] migration_20261101_prefab_life_template_copy.sql · 需业主授权 · PRE_DEPLOY
-SELECT 118 AS step, '20261101_prefab_life_template_copy' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [121] migration_20261101_prefab_life_template_copy.sql · 需业主授权 · PRE_DEPLOY
+SELECT 121 AS step, '20261101_prefab_life_template_copy' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM cms_topic WHERE id = 990059) = 0
@@ -1200,8 +1221,8 @@ FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM cms_topic WHERE id = 990059) 
         AND (SELECT COUNT(*) FROM cms_topic_chapter WHERE id = 213 AND blocks LIKE '%一根烟%') = 0
         AND (SELECT COUNT(*) FROM cms_topic WHERE id = 990059 AND description LIKE '%内部试玩版%') = 0) AS prefab_life_copy_fixed), 0)) AS present, 1 AS expected) x;
 
--- [119] migration_20261101_prefab_life_template_state_keys.sql · 可选 · PRE_DEPLOY
-SELECT 119 AS step, '20261101_prefab_life_template_state_keys' AS migration_id, '可选' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [122] migration_20261101_prefab_life_template_state_keys.sql · 可选 · PRE_DEPLOY
+SELECT 122 AS step, '20261101_prefab_life_template_state_keys' AS migration_id, '可选' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT (
@@ -1210,20 +1231,20 @@ FROM (SELECT (IFNULL((SELECT (
         AND state_key IN ('counter.energy', 'counter.instability') AND key_type = 'counter') = 2
 ) AS prefab_life_state_keys_ready), 0)) AS present, 1 AS expected) x;
 
--- [120] migration_topic_location_contract_20261107.sql · 必须 · PRE_DEPLOY
-SELECT 120 AS step, 'topic_location_contract_20261107' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [123] migration_topic_location_contract_20261107.sql · 必须 · PRE_DEPLOY
+SELECT 123 AS step, 'topic_location_contract_20261107' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 cms_topic.content_contract_json' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'content_contract_json'), 0)) AS present, 1 AS expected) x;
 
--- [121] migration_20261028_remove_wildlife_theme.sql · 需业主授权 · PRE_DEPLOY
-SELECT 121 AS exec_order, '20261028_remove_wildlife_theme' AS migration_id,
+-- [124] migration_20261028_remove_wildlife_theme.sql · 需业主授权 · PRE_DEPLOY
+SELECT 124 AS exec_order, '20261028_remove_wildlife_theme' AS migration_id,
   CASE WHEN c0 > 1 THEN 'CONFLICT' WHEN c0 = 1 THEN 'DATA_PREVIEW' ELSE 'APPLIED' END AS status,
   '在架目标行数：1=须先跑 _precheck_remove_wildlife_theme_20261028.sql（引用计数全 0）；0=无事可做' AS detail
 FROM (SELECT (SELECT COUNT(*) FROM cms_topic WHERE id BETWEEN 990052 AND 990056 AND name = '野生邻居观察局' AND del_flag = 0) AS c0) AS n30;
 
--- [122] migration_20261028_template_shelf_list_free_explore.sql · 需业主授权 · PRE_DEPLOY
-SELECT 122 AS exec_order, '20261028_template_shelf_list_free_explore' AS migration_id,
+-- [125] migration_20261028_template_shelf_list_free_explore.sql · 需业主授权 · PRE_DEPLOY
+SELECT 125 AS exec_order, '20261028_template_shelf_list_free_explore' AS migration_id,
   CASE WHEN c1 > 0 THEN 'CONFLICT' WHEN c0 > 0 THEN 'DATA_PREVIEW' ELSE 'APPLIED' END AS status,
   '待上架模板数（>0 先核对 6 个名称各恰好 1 行且 is_template=1）；同名多行判 CONFLICT' AS detail
 FROM (SELECT
@@ -1232,8 +1253,8 @@ FROM (SELECT
     (SELECT COUNT(*) FROM (SELECT name FROM cms_topic WHERE del_flag = 0 AND name IN ('风味巡游', '不惑之年', '预制人生', '高温末日逃生', '上海像一部旧电影', '生活不掉线')
       GROUP BY name HAVING COUNT(*) > 1) d) AS c1) AS n31;
 
--- [123] migration_20261030_merchant_game_covers_to_oss.sql · 需业主授权 · PRE_DEPLOY
-SELECT 123 AS step, '20261030_merchant_game_covers_to_oss' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [126] migration_20261030_merchant_game_covers_to_oss.sql · 需业主授权 · PRE_DEPLOY
+SELECT 126 AS step, '20261030_merchant_game_covers_to_oss' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT (
@@ -1277,8 +1298,83 @@ FROM (SELECT (IFNULL((SELECT (
   'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/54079a8c0d978ec61aa270e9b78216a6.jpg')) >= 35
 ) AS merchant_game_covers_on_oss), 0)) AS present, 1 AS expected) x;
 
--- [124] migration_verification_review_evidence_20261022.sql · 可选 · PRE_DEPLOY
-SELECT 124 AS exec_order, 'verification_review_evidence_20261022' AS migration_id,
+-- [127] migration_20261111_rule_seed_split_steps.sql · 需业主授权 · PRE_DEPLOY
+SELECT 127 AS step, '20261111_rule_seed_split_steps' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
+FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM cms_template_library WHERE rule_instructions IN ('1. 到达指定门店。2. 向店员说出今日暗号。3. 输入暗号或扫码完成任务,领取隐藏奖励。(运营提示:暗号每天可换一次;商家必须提前知道暗号和奖励,否则现场体验会断)',
+  '1. 阅读店铺故事或观察现场线索。2. 回答老板留下的问题。3. 答对后点亮店铺故事徽章。(运营提示:题目必须能从现场找到答案,不要出只有老板知道、玩家猜不到的问题)',
+  '1. 找到店内指定拍照点。2. 拍下符合要求的照片。3. 上传照片后完成任务,生成分享素材。(运营提示:拍照要求必须具体,例如「包含店铺招牌」或「拍下今日限定甜品」,不要写「拍一张好看的照片」)',
+  '1. 到达合作门店。2. 扫码或由店员核销。3. 点亮风味印章,集满指定数量兑换奖励。(运营提示:必须提前定义集几枚章可兑换什么,建议 3 家给基础奖励,5 家给进阶奖励;二维码在路线/点位层绑定)',
+  '1. 到店领取新品体验。2. 完成试吃、试喝或试用。3. 提交你的判断,领取体验官奖励。(运营提示:商家改造时把「正确项」设为最想传达的卖点;如要收集真实偏好,等问卷能力上线)',
+  '1. 按任务要求选择商品或套餐组合。2. 拍下你的搭配成果。3. 上传后获得风格称号或专属优惠。(运营提示:商家要提前准备 2-3 套推荐搭配,降低用户选择成本)',
+  '1. 到达集合点。2. 找到领队完成签到。3. 领取今日身份,准备出发。(运营提示:默认放在俱乐部主题的第一个节点,解决迟到、散乱、陌生人尴尬;小规模熟人局可改为无需验证)',
+  '1. 小队同时出发。2. 在限定时间内到达目标点。3. 完成点亮后进入下一站,最终按完成时间和任务数排名。(运营提示:坐标在路线/点位层绑定;GPS 偏差大的点位可改扫码)',
+  '1. 到达指定地点。2. 观察现场细节,找到线索。3. 输入答案,解锁下一段故事。(运营提示:谜题答案必须稳定存在,不要依赖临时海报、会被遮挡的物件或容易变化的菜单)',
+  '1. 阅读今日拍摄主题。2. 在指定区域内寻找画面。3. 上传照片,完成取景任务。(运营提示:如做评选,规则要提前说明——按主题契合、构图、故事感评分)',
+  '1. 完成本队线索。2. 得到接力暗号。3. 将暗号交给下一队,完成接力。(运营提示:第一版队伍顺序由领队线下控制,小程序负责节点完成和记录)',
+  '1. 小队成员抽取角色。2. 按角色分工完成任务。3. 上传证据或回答问题,解锁小队奖励。(运营提示:第一版角色可先线下抽卡,小程序记录「角色任务完成」;系统自动分配角色上线后自动升级)',
+  '1. 先观察桌面或展示柜中的招牌线索。2. 启动 60 秒倒计时。3. 在四个选项中选出本店招牌。4. 用时更短的玩家进入本场榜单。商家采用后必须把题目和四个选项改成本店真实商品。',
+  '1. 抽取一张风味线索卡。2. 回答两道偏好题。3. 并列时完成最后取舍。4. 获得明亮探索家或醇厚治愈派结果。5. 选择对应体验分支并请店员推荐。结果仅用于本局展示 不写入跨节点偏好标签。商家采用后可改结果文案 但不得把偏好推断为健康或消费能力。',
+  '1. 启动五分钟倒计时。2. 从菜单路径或陈列路径选一条。3. 按分支找到隐藏口令。4. 回答最终验证题。商家采用后必须现场走通两条路径 且不能依赖临时海报。',
+  '1. 阅读现场安全提示。2. 启动 60 秒倒计时。3. 选出正确做法。4. 按正确完成用时进入榜单。本玩法只做知识反应 不宣称识别动作质量或运动消耗。',
+  '1. 依次抽出三轮节奏并点击播放。2. 队员根据听到的节拍轻拍桌面。3. 播放并复刻完一段后再抽下一轮。4. 三轮结束后按完赛用时进榜。模板音频为程序合成击打音 不含歌曲采样。',
+  '1. 抽取一个原创故事开场。2. 系统自动分配讲述者与选择者。3. 按角色顺序完成四轮接力。4. 队伍共同选择故事分支并解锁结局。本模板是公开信息的协作接力 不冒充完整隐藏身份推理。',
+  '1. 启动三分钟倒计时。2. 观察示例污渍。3. 选择油性或水性线索分支。4. 在最终题中选出稳妥做法。本玩法只做常识互动 不承诺清洁效果 真实贵重衣物应交由专业人员判断。',
+  '1. 阅读安全情境 不设置速度奖励。2. 选择电器或燃气分支。3. 完成避险顺序。4. 回答最终安全题。本玩法不远程诊断真实故障 遇到危险应立即离开并联系当地紧急服务或合格专业人员。',
+  '1. 向店员领取盲品小样。2. 闭眼尝。3. 睁眼在四个选项中作答。4. 答错可以再答 答对才给分。商家采用后必须把四个选项和正确答案改成本店真实商品 答案由服务端保管 不会下发给玩家。',
+  '1. 全程不开口 用比划 眼神或演技表达你要的东西。2. 开口即失败 由玩家自己认输。3. 店员猜中后扫玩家出示的见证码完成核销。商家采用后请先和店员说明规则 高峰时段不建议开启。',
+  '1. 用店里现有的东西配出你的作品。2. 拍一张照片。3. 给它起一个名字并提交。名字会公开展示 提交前会做内容安全检测。商家采用后可把备选名改成本店风格 并决定是否把作品上今日推荐。',
+  '1. 找个位置坐下。2. 播放店主的歌单。3. 听完。本玩法不判定通关 也不给奖励分 它只是让你在这一站停一会儿。商家采用后请填入曲目地址 并确认已获得播放授权。',
+  '1. 只有在开放时段内才能开局 时段由服务端判定。2. 不在时段内会看到倒计时和订阅提醒。3. 时段内进入即可开始。商家采用后必须把开放时段改成本店真实营业时间 跨夜时段(如 23:00 到 01:00)是允许的。',
+  '1. 授权微信运动。2. 刷新步数 步数由服务端解密微信运动数据得到。3. 达到目标步数即落章。客户端自己填的步数不作数。商家采用后可按线路长度调整目标步数 建议 3000 到 8000 之间。',
+  '1. 到达后领取今日城市签。2. 一天只有一条 由服务端按日期选定。3. 同一天重复领会拿到同一条 不会换。商家采用后可把签文改成本店口吻 每条 1 至 4 行 每行不超过 24 字。',
+  '1. 从外白渡桥起步，沿苏州河向西。2. 每到一座桥，拍下桥头的桥名牌。3. 走累了随时收工，下次接着走。4. 九张集齐视为完成。全程走人行道，不翻护栏，不在桥面车行道一侧停留拍摄。',
+  '1. 进馆后先不看导览，随便走到哪算哪。2. 选一件让你自己停下来的作品。3. 坐下或站定看满十分钟，中途不看手机。4. 拍下展签，写一句话。展厅拍摄请遵守场馆规定，禁拍区域不拍。',
+  '1. 每家店只做一件事：找一本你没听过的书。2. 站着读完前三页。3. 拍下封面，放回原位或结账带走，都算完成。4. 五家店集满五张。请遵守各店的拍照与试读规定，不拆封、不长时间占用座位。',
+  '1. 早上七点半到八点半之间到场。2. 找三样你叫不出名字的时令菜，各拍一张。3. 挑其中一样，问摊主怎么做。4. 买一样今天就吃得掉的东西收工。摊主在做生意，问一句就好，别长时间占着摊位。',
+  '1. 天黑后到达，手机就够。2. 拍第一张：完全不含人的建筑局部。3. 拍第二张：有陌生人但看不清脸的街景。4. 拍第三张：你自己的影子。5. 选一张留下，另外两张当场删掉——这一步才是任务本身。不为取景越过围栏或站上台阶边沿。',
+  '1. 出发前把配速播报关掉。2. 沿武康路、五原路、安福路跑一圈，约五公里。3. 想停就停，遇到好看的路口可以走过去。4. 回到武康大楼路口拍一张，记下当时第一个念头。人行道行人多，请降速避让、礼让行人。',
+  '1. 从龙美术馆前广场出发，沿骑行道往南骑约七点五公里。2. 找一处江边台阶停下。3. 待够十分钟，不刷手机、不听播客，什么都不做。4. 拍一张你面前的江面，然后原路折返。遵守骑行道限速与单向指引。',
+  '1. 只走公共街面，不进私人院落。2. 找那些几乎不会被拍到的细节：旧门牌编号、砖缝里的植物、被漆盖过的招牌、修过三次的排水口。3. 找到就拍，凑满十张结束。这一带住着人：请压低音量，不拍摄居民与室内，遇施工围挡绕行。')) = 0
+   AND (SELECT COUNT(*) FROM cms_member_template WHERE rule_instructions IN ('1. 到达指定门店。2. 向店员说出今日暗号。3. 输入暗号或扫码完成任务,领取隐藏奖励。(运营提示:暗号每天可换一次;商家必须提前知道暗号和奖励,否则现场体验会断)',
+  '1. 阅读店铺故事或观察现场线索。2. 回答老板留下的问题。3. 答对后点亮店铺故事徽章。(运营提示:题目必须能从现场找到答案,不要出只有老板知道、玩家猜不到的问题)',
+  '1. 找到店内指定拍照点。2. 拍下符合要求的照片。3. 上传照片后完成任务,生成分享素材。(运营提示:拍照要求必须具体,例如「包含店铺招牌」或「拍下今日限定甜品」,不要写「拍一张好看的照片」)',
+  '1. 到达合作门店。2. 扫码或由店员核销。3. 点亮风味印章,集满指定数量兑换奖励。(运营提示:必须提前定义集几枚章可兑换什么,建议 3 家给基础奖励,5 家给进阶奖励;二维码在路线/点位层绑定)',
+  '1. 到店领取新品体验。2. 完成试吃、试喝或试用。3. 提交你的判断,领取体验官奖励。(运营提示:商家改造时把「正确项」设为最想传达的卖点;如要收集真实偏好,等问卷能力上线)',
+  '1. 按任务要求选择商品或套餐组合。2. 拍下你的搭配成果。3. 上传后获得风格称号或专属优惠。(运营提示:商家要提前准备 2-3 套推荐搭配,降低用户选择成本)',
+  '1. 到达集合点。2. 找到领队完成签到。3. 领取今日身份,准备出发。(运营提示:默认放在俱乐部主题的第一个节点,解决迟到、散乱、陌生人尴尬;小规模熟人局可改为无需验证)',
+  '1. 小队同时出发。2. 在限定时间内到达目标点。3. 完成点亮后进入下一站,最终按完成时间和任务数排名。(运营提示:坐标在路线/点位层绑定;GPS 偏差大的点位可改扫码)',
+  '1. 到达指定地点。2. 观察现场细节,找到线索。3. 输入答案,解锁下一段故事。(运营提示:谜题答案必须稳定存在,不要依赖临时海报、会被遮挡的物件或容易变化的菜单)',
+  '1. 阅读今日拍摄主题。2. 在指定区域内寻找画面。3. 上传照片,完成取景任务。(运营提示:如做评选,规则要提前说明——按主题契合、构图、故事感评分)',
+  '1. 完成本队线索。2. 得到接力暗号。3. 将暗号交给下一队,完成接力。(运营提示:第一版队伍顺序由领队线下控制,小程序负责节点完成和记录)',
+  '1. 小队成员抽取角色。2. 按角色分工完成任务。3. 上传证据或回答问题,解锁小队奖励。(运营提示:第一版角色可先线下抽卡,小程序记录「角色任务完成」;系统自动分配角色上线后自动升级)',
+  '1. 先观察桌面或展示柜中的招牌线索。2. 启动 60 秒倒计时。3. 在四个选项中选出本店招牌。4. 用时更短的玩家进入本场榜单。商家采用后必须把题目和四个选项改成本店真实商品。',
+  '1. 抽取一张风味线索卡。2. 回答两道偏好题。3. 并列时完成最后取舍。4. 获得明亮探索家或醇厚治愈派结果。5. 选择对应体验分支并请店员推荐。结果仅用于本局展示 不写入跨节点偏好标签。商家采用后可改结果文案 但不得把偏好推断为健康或消费能力。',
+  '1. 启动五分钟倒计时。2. 从菜单路径或陈列路径选一条。3. 按分支找到隐藏口令。4. 回答最终验证题。商家采用后必须现场走通两条路径 且不能依赖临时海报。',
+  '1. 阅读现场安全提示。2. 启动 60 秒倒计时。3. 选出正确做法。4. 按正确完成用时进入榜单。本玩法只做知识反应 不宣称识别动作质量或运动消耗。',
+  '1. 依次抽出三轮节奏并点击播放。2. 队员根据听到的节拍轻拍桌面。3. 播放并复刻完一段后再抽下一轮。4. 三轮结束后按完赛用时进榜。模板音频为程序合成击打音 不含歌曲采样。',
+  '1. 抽取一个原创故事开场。2. 系统自动分配讲述者与选择者。3. 按角色顺序完成四轮接力。4. 队伍共同选择故事分支并解锁结局。本模板是公开信息的协作接力 不冒充完整隐藏身份推理。',
+  '1. 启动三分钟倒计时。2. 观察示例污渍。3. 选择油性或水性线索分支。4. 在最终题中选出稳妥做法。本玩法只做常识互动 不承诺清洁效果 真实贵重衣物应交由专业人员判断。',
+  '1. 阅读安全情境 不设置速度奖励。2. 选择电器或燃气分支。3. 完成避险顺序。4. 回答最终安全题。本玩法不远程诊断真实故障 遇到危险应立即离开并联系当地紧急服务或合格专业人员。',
+  '1. 向店员领取盲品小样。2. 闭眼尝。3. 睁眼在四个选项中作答。4. 答错可以再答 答对才给分。商家采用后必须把四个选项和正确答案改成本店真实商品 答案由服务端保管 不会下发给玩家。',
+  '1. 全程不开口 用比划 眼神或演技表达你要的东西。2. 开口即失败 由玩家自己认输。3. 店员猜中后扫玩家出示的见证码完成核销。商家采用后请先和店员说明规则 高峰时段不建议开启。',
+  '1. 用店里现有的东西配出你的作品。2. 拍一张照片。3. 给它起一个名字并提交。名字会公开展示 提交前会做内容安全检测。商家采用后可把备选名改成本店风格 并决定是否把作品上今日推荐。',
+  '1. 找个位置坐下。2. 播放店主的歌单。3. 听完。本玩法不判定通关 也不给奖励分 它只是让你在这一站停一会儿。商家采用后请填入曲目地址 并确认已获得播放授权。',
+  '1. 只有在开放时段内才能开局 时段由服务端判定。2. 不在时段内会看到倒计时和订阅提醒。3. 时段内进入即可开始。商家采用后必须把开放时段改成本店真实营业时间 跨夜时段(如 23:00 到 01:00)是允许的。',
+  '1. 授权微信运动。2. 刷新步数 步数由服务端解密微信运动数据得到。3. 达到目标步数即落章。客户端自己填的步数不作数。商家采用后可按线路长度调整目标步数 建议 3000 到 8000 之间。',
+  '1. 到达后领取今日城市签。2. 一天只有一条 由服务端按日期选定。3. 同一天重复领会拿到同一条 不会换。商家采用后可把签文改成本店口吻 每条 1 至 4 行 每行不超过 24 字。',
+  '1. 从外白渡桥起步，沿苏州河向西。2. 每到一座桥，拍下桥头的桥名牌。3. 走累了随时收工，下次接着走。4. 九张集齐视为完成。全程走人行道，不翻护栏，不在桥面车行道一侧停留拍摄。',
+  '1. 进馆后先不看导览，随便走到哪算哪。2. 选一件让你自己停下来的作品。3. 坐下或站定看满十分钟，中途不看手机。4. 拍下展签，写一句话。展厅拍摄请遵守场馆规定，禁拍区域不拍。',
+  '1. 每家店只做一件事：找一本你没听过的书。2. 站着读完前三页。3. 拍下封面，放回原位或结账带走，都算完成。4. 五家店集满五张。请遵守各店的拍照与试读规定，不拆封、不长时间占用座位。',
+  '1. 早上七点半到八点半之间到场。2. 找三样你叫不出名字的时令菜，各拍一张。3. 挑其中一样，问摊主怎么做。4. 买一样今天就吃得掉的东西收工。摊主在做生意，问一句就好，别长时间占着摊位。',
+  '1. 天黑后到达，手机就够。2. 拍第一张：完全不含人的建筑局部。3. 拍第二张：有陌生人但看不清脸的街景。4. 拍第三张：你自己的影子。5. 选一张留下，另外两张当场删掉——这一步才是任务本身。不为取景越过围栏或站上台阶边沿。',
+  '1. 出发前把配速播报关掉。2. 沿武康路、五原路、安福路跑一圈，约五公里。3. 想停就停，遇到好看的路口可以走过去。4. 回到武康大楼路口拍一张，记下当时第一个念头。人行道行人多，请降速避让、礼让行人。',
+  '1. 从龙美术馆前广场出发，沿骑行道往南骑约七点五公里。2. 找一处江边台阶停下。3. 待够十分钟，不刷手机、不听播客，什么都不做。4. 拍一张你面前的江面，然后原路折返。遵守骑行道限速与单向指引。',
+  '1. 只走公共街面，不进私人院落。2. 找那些几乎不会被拍到的细节：旧门牌编号、砖缝里的植物、被漆盖过的招牌、修过三次的排水口。3. 找到就拍，凑满十张结束。这一带住着人：请压低音量，不拍摄居民与室内，遇施工围挡绕行。')) = 0 AS rule_seed_split_done), 0)) AS present, 1 AS expected) x;
+
+-- [128] migration_verification_review_evidence_20261022.sql · 可选 · PRE_DEPLOY
+SELECT 128 AS exec_order, 'verification_review_evidence_20261022' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 verification_review_evidence' AS detail
@@ -1287,20 +1383,20 @@ FROM (SELECT
        AND (SELECT COUNT(*) = 5 AND BIT_XOR(CAST(CONV(LEFT(SHA2(CONCAT_WS('|',index_name,non_unique,seq_in_index,column_name),256),16),16,10) AS UNSIGNED)) = 17353113222738040501 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'verification_review_evidence')
        THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'verification_review_evidence'), 3) AS c0) AS x27;
 
--- [125] migration_video_bounty_host_tip_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 125 AS step, 'video_bounty_host_tip_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [129] migration_video_bounty_host_tip_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 129 AS step, 'video_bounty_host_tip_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 video_bounty_campaign、video_bounty_submission、video_bounty_evidence、video_bounty_accrual、host_tip_config、host_tip_intent' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_campaign'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_evidence'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_accrual'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'host_tip_config'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'host_tip_intent'), 0)) AS present, 6 AS expected) x;
 
--- [126] migration_video_bounty_group_verification_20261108.sql · 必须 · PRE_DEPLOY
-SELECT 126 AS step, 'video_bounty_group_verification_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [130] migration_video_bounty_group_verification_20261108.sql · 必须 · PRE_DEPLOY
+SELECT 130 AS step, 'video_bounty_group_verification_20261108' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 video_bounty_submission.verified_group_key、video_bounty_submission.verified_by、video_bounty_submission.verified_at、video_bounty_submission.verified_source_ref、video_bounty_submission.verified_group_version；索引 video_bounty_submission.idx_vbs_verified_group' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_group_key'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_by'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_at'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_source_ref'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_group_version'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND index_name = 'idx_vbs_verified_group'), 0)) AS present, 6 AS expected) x;
 
--- [127] migration_20261025_coop_order_station_fulfillment.sql · 必须 · PRE_DEPLOY
-SELECT 127 AS exec_order, '20261025_coop_order_station_fulfillment' AS migration_id,
+-- [131] migration_20261025_coop_order_station_fulfillment.sql · 必须 · PRE_DEPLOY
+SELECT 131 AS exec_order, '20261025_coop_order_station_fulfillment' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 coop_order_station_fulfillment + coop_invite.supply_station_id + 2 触发器（单次执行）' AS detail
@@ -1310,8 +1406,8 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name = 'tr_corsf_immutable_update') AS c2,
     (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name = 'tr_corsf_immutable_delete') AS c3) AS z19;
 
--- [128] migration_w8_refund_fulfillment_recovery_20261026.sql · 可选 · PRE_DEPLOY
-SELECT 128 AS exec_order, 'w8_refund_fulfillment_recovery_20261026' AS migration_id,
+-- [132] migration_w8_refund_fulfillment_recovery_20261026.sql · 可选 · PRE_DEPLOY
+SELECT 132 AS exec_order, 'w8_refund_fulfillment_recovery_20261026' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 4 THEN 'DATA_PREVIEW' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'refund_application.fulfillment_sync_queue_at + 恢复队列索引' AS detail
@@ -1320,8 +1416,8 @@ FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_type = 'datetime(6)' AND is_nullable = 'NO' AND column_default = 'CURRENT_TIMESTAMP(6)') = 1 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'refund_application' AND column_name = 'fulfillment_sync_queue_at') AS c0,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN COUNT(*) = 4 AND SUM(non_unique = 1 AND ((seq_in_index = 1 AND column_name = 'source_type') OR (seq_in_index = 2 AND column_name = 'del_flag') OR (seq_in_index = 3 AND column_name = 'fulfillment_sync_queue_at') OR (seq_in_index = 4 AND column_name = 'id'))) = 4 THEN 1 ELSE 2 END FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'refund_application' AND index_name = 'idx_refund_fulfillment_recovery') AS c1) AS n25;
 
--- [129] migration_20261026_user_invoice_menu.sql · 可选 · PRE_DEPLOY
-SELECT 129 AS exec_order, '20261026_user_invoice_menu' AS migration_id,
+-- [133] migration_20261026_user_invoice_menu.sql · 可选 · PRE_DEPLOY
+SELECT 133 AS exec_order, '20261026_user_invoice_menu' AS migration_id,
   CASE WHEN p0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT' WHEN c0 = 1 THEN 'APPLIED'
        WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'sys_menu 用户发票处理 C 菜单 + 4 个 F 按钮；父菜单 funds-aftercare 须恰好 1 行；PARTIAL 可重跑（逐行 NOT EXISTS + 形状守卫）' AS detail
@@ -1329,8 +1425,8 @@ FROM (SELECT
     (SELECT IF(COUNT(*) = 1, 1, 3) FROM sys_menu WHERE menu_type = 'M' AND path = 'funds-aftercare') AS p0,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN COUNT(*) > COUNT(DISTINCT perms) OR SUM(NOT ((perms = 'business:userInvoice:list' AND menu_type <=> 'C' AND component <=> 'business/userInvoice/index' AND route_name <=> 'UserInvoiceProcessing' AND path <=> 'userInvoice' AND parent_id <=> (SELECT MIN(menu_id) FROM sys_menu WHERE menu_type = 'M' AND path = 'funds-aftercare')) OR (perms <> 'business:userInvoice:list' AND menu_type <=> 'F' AND parent_id <=> (SELECT MIN(menu_id) FROM sys_menu WHERE perms = 'business:userInvoice:list')))) > 0 THEN 2 WHEN COUNT(*) = 5 THEN 1 ELSE 5 END FROM sys_menu WHERE perms IN ('business:userInvoice:list', 'business:userInvoice:query', 'business:userInvoice:taxView', 'business:userInvoice:process', 'business:userInvoice:reconcile')) AS c0) AS n26;
 
--- [130] migration_20261013_admin_role_page_grants.sql · 必须 · PRE_DEPLOY
-SELECT 130 AS exec_order, '20261013_admin_role_page_grants' AS migration_id,
+-- [134] migration_20261013_admin_role_page_grants.sql · 必须 · PRE_DEPLOY
+SELECT 134 AS exec_order, '20261013_admin_role_page_grants' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'APPLIED = 4 个后台角色均已有页面授权(本迁移 no-op);NEEDED = 有角色无页面授权,禁止执行,交 owner(见 pack D-PAYEE 节);checksum 对账见附录 A' AS detail
@@ -1340,8 +1436,8 @@ FROM (SELECT
      WHERE rm.role_id = r.role_id AND m.menu_type = 'C')) = COUNT(*) THEN 1 ELSE 0 END
    FROM sys_role r WHERE r.del_flag = '0' AND r.role_key IN ('cy_operator', 'cy_auditor', 'cy_support', 'cy_finance')), 3) AS c0) AS x28;
 
--- [131] migration_20261016_admin_role_payee_separation_forward.sql · 必须 · PRE_DEPLOY
-SELECT 131 AS exec_order, '20261016_admin_role_payee_separation_forward' AS migration_id,
+-- [135] migration_20261016_admin_role_payee_separation_forward.sql · 必须 · PRE_DEPLOY
+SELECT 135 AS exec_order, '20261016_admin_role_payee_separation_forward' AS migration_id,
   CASE WHEN GREATEST(p0, p1, p2, p3, p4, p5, p6, p7) = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 4 THEN 'DATA_PREVIEW' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'D-PAYEE:operator 有 payout 无 verify、finance 有 verify 无 payout' AS detail
@@ -1361,8 +1457,8 @@ FROM (SELECT
      WHERE r.del_flag = '0' AND r.role_key = 'cy_operator' AND m.perms = 'business:clubpayee:verify') = 0 AND (SELECT COUNT(*) FROM sys_role_menu rm JOIN sys_role r ON r.role_id = rm.role_id JOIN sys_menu m ON m.menu_id = rm.menu_id
      WHERE r.del_flag = '0' AND r.role_key = 'cy_finance' AND m.perms = 'business:clubpayee:payout') = 0, 1, 0)), 3) AS c0) AS x29;
 
--- [132] migration_20261027_orient_scoring_menu_grants.sql · 可选 · PRE_DEPLOY
-SELECT 132 AS exec_order, '20261027_orient_scoring_menu_grants' AS migration_id,
+-- [136] migration_20261027_orient_scoring_menu_grants.sql · 可选 · PRE_DEPLOY
+SELECT 136 AS exec_order, '20261027_orient_scoring_menu_grants' AS migration_id,
   CASE WHEN p0 = 3 OR p1 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 OR c1 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 AND c1 = 1 THEN 'APPLIED' WHEN c0 = 0 AND c1 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '官方主题 C 菜单下 2 个 F 按钮，仅授 cy_operator；PARTIAL 可重跑（逐行 NOT EXISTS + 事务守卫）' AS detail
@@ -1379,8 +1475,8 @@ FROM (SELECT
                   WHERE r.role_key = 'cy_operator' AND r.del_flag = '0' AND NOT EXISTS (SELECT 1 FROM sys_role_menu x
                   WHERE x.role_id = r.role_id AND x.menu_id = m.menu_id)) THEN 1 ELSE 5 END) AS c1) AS n27;
 
--- [133] migration_20261104_review_wording_seeded_text.sql · 需业主授权 · PRE_DEPLOY
-SELECT 133 AS step, '20261104_review_wording_seeded_text' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [137] migration_20261104_review_wording_seeded_text.sql · 需业主授权 · PRE_DEPLOY
+SELECT 137 AS step, '20261104_review_wording_seeded_text' AS migration_id, '需业主授权' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 0 AS seeded_job_text_renamed
@@ -1388,20 +1484,20 @@ FROM sys_job
 WHERE invoke_target = 'predictVoidExpiredTask.run()'
   AND (job_name = '竞猜轮次超时作废' COLLATE utf8mb4_bin OR remark = '商家超过48小时不给竞猜答案的轮次作废且不发奖;自收敛任务,无过期轮次时空跑' COLLATE utf8mb4_bin)), 0)) AS present, 1 AS expected) x;
 
--- [134] migration_20261109_play_help_audit_permission.sql · 必须 · PRE_DEPLOY
-SELECT 134 AS step, '20261109_play_help_audit_permission' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [138] migration_20261109_play_help_audit_permission.sql · 必须 · PRE_DEPLOY
+SELECT 138 AS step, '20261109_play_help_audit_permission' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '后台按钮权限 business:playhelp:query（零角色授权）' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 1 FROM sys_menu WHERE perms = 'business:playhelp:query' AND menu_type = 'F'), 0)) AS present, 1 AS expected) x;
 
--- [135] migration_20261109_questo_admin_menus.sql · 必须 · PRE_DEPLOY
-SELECT 135 AS step, '20261109_questo_admin_menus' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [139] migration_20261109_questo_admin_menus.sql · 必须 · PRE_DEPLOY
+SELECT 139 AS step, '20261109_questo_admin_menus' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '菜单行 12 个' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:contentlanding:review'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:hosttip:audit'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:issue'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:list'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:manage'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:reconcile'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:revoke'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:verify'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:revenue:list'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:videobounty:config'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:videobounty:review'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE component = 'business/analytics/postgame'), 0)) AS present, 12 AS expected) x;
 
--- [136] migration_20261023_g_wp08_delivery_jobs_paused.sql · 需业主授权 · POST_DEPLOY
-SELECT 136 AS exec_order, '20261023_g_wp08_delivery_jobs_paused' AS migration_id,
+-- [140] migration_20261023_g_wp08_delivery_jobs_paused.sql · 需业主授权 · POST_DEPLOY
+SELECT 140 AS exec_order, '20261023_g_wp08_delivery_jobs_paused' AS migration_id,
   CASE WHEN GREATEST(c0, c1) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'sys_job 两个暂停的补偿任务（20261013 种子已登记时为 APPLIED）' AS detail
@@ -1409,15 +1505,15 @@ FROM (SELECT
     (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_job WHERE CAST(TRIM(invoke_target) AS BINARY) = CAST('imNotificationDeliveryTask.deliverPending()' AS BINARY)) AS c0,
     (SELECT CASE COUNT(*) WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END FROM sys_job WHERE CAST(TRIM(invoke_target) AS BINARY) = CAST('roamRewardDeliveryTask.run()' AS BINARY)) AS c1) AS z20;
 
--- [137] migration_club_post_media_review_budget_20261024.sql · 必须 · PRE_DEPLOY
-SELECT 137 AS exec_order, 'club_post_media_review_budget_20261024' AS migration_id,
+-- [141] migration_club_post_media_review_budget_20261024.sql · 必须 · PRE_DEPLOY
+SELECT 141 AS exec_order, 'club_post_media_review_budget_20261024' AS migration_id,
   CASE WHEN t <> 1 THEN 'BLOCKED_PREREQ' WHEN s IS NULL THEN 'CONFLICT'
        WHEN s LIKE '%orstate=5or%|%orstate=5or%' THEN 'APPLIED' WHEN s LIKE '%if%|%if%' THEN 'NEEDED' ELSE 'CONFLICT' END AS status,
   '帖子媒体审核外发 CHECK 允许 state=5（可重入）' AS detail
 FROM (SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club_post_media_review_outbox' AND engine = 'InnoDB') AS t, (SELECT GROUP_CONCAT(REGEXP_REPLACE(LOWER(cc.check_clause), '[[:space:]`()]', '') ORDER BY cc.constraint_name SEPARATOR '|') FROM information_schema.check_constraints cc JOIN information_schema.table_constraints tc ON tc.constraint_schema = cc.constraint_schema AND tc.constraint_name = cc.constraint_name WHERE cc.constraint_schema = DATABASE() AND tc.table_name = 'club_post_media_review_outbox' AND cc.constraint_name IN ('chk_club_post_media_review_owner','chk_club_post_media_review_trace')) AS s) AS z21;
 
--- [138] migration_20261024_wx_verified_payment_fact.sql · 必须 · PRE_DEPLOY
-SELECT 138 AS exec_order, '20261024_wx_verified_payment_fact' AS migration_id,
+-- [142] migration_20261024_wx_verified_payment_fact.sql · 必须 · PRE_DEPLOY
+SELECT 142 AS exec_order, '20261024_wx_verified_payment_fact' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 wx_verified_payment_fact / _rejection / wx_payment_callback_fact_link（单次执行）' AS detail
@@ -1426,8 +1522,8 @@ FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'rejection_key', 'rejection_reason', 'original_fact_id', 'candidate_fact_hash', 'notify_hash', 'candidate_facts', 'created_at')) = 8 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'wx_verified_payment_fact_rejection') AS c1,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('inbox_id', 'notify_hash', 'fact_id', 'fact_hash', 'created_at')) = 5 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'wx_payment_callback_fact_link') AS c2) AS z22;
 
--- [139] migration_20261024_clm_commerce_payment_proof.sql · 必须 · PRE_DEPLOY
-SELECT 139 AS exec_order, '20261024_clm_commerce_payment_proof' AS migration_id,
+-- [143] migration_20261024_clm_commerce_payment_proof.sql · 必须 · PRE_DEPLOY
+SELECT 143 AS exec_order, '20261024_clm_commerce_payment_proof' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2, c3) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2, c3) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2, c3) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2, c3) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '会员发票 / 商城订单支付证明 2+2 列（单次执行）' AS detail
@@ -1437,8 +1533,8 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'oms_order' AND column_name = 'verified_payment_fact_id') AS c2,
     (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'oms_order' AND column_name = 'verified_payment_fact_hash') AS c3) AS z23;
 
--- [140] migration_20261024_coop_original_refund_components.sql · 必须 · PRE_DEPLOY
-SELECT 140 AS exec_order, '20261024_coop_original_refund_components' AS migration_id,
+-- [144] migration_20261024_coop_original_refund_components.sql · 必须 · PRE_DEPLOY
+SELECT 144 AS exec_order, '20261024_coop_original_refund_components' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 coop_settlement_original_component / refund_receipt / original_adjustment（单次执行）' AS detail
@@ -1447,16 +1543,16 @@ FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'cash_close_id', 'topic_id', 'refund_id', 'verified_fact_id', 'verified_fact_kind', 'verified_fact_hash', 'wx_fact_id', 'source_registration_id', 'payer_registration_id', 'currency', 'refund_amount', 'total_amount', 'cumulative_before', 'cumulative_after', 'reversed_amount', 'calculation_version', 'source_fingerprint', 'created_at')) = 19 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement_refund_receipt') AS c1,
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'cash_close_id', 'component_id', 'receipt_id', 'settlement_id', 'payer_registration_id', 'amount', 'head_was_paid', 'wallet_debit', 'debt_amount', 'created_at')) = 11 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement_original_adjustment') AS c2) AS z24;
 
--- [141] migration_20261024_coop_negative_margin_manual.sql · 必须 · PRE_DEPLOY
-SELECT 141 AS exec_order, '20261024_coop_negative_margin_manual' AS migration_id,
+-- [145] migration_20261024_coop_negative_margin_manual.sql · 必须 · PRE_DEPLOY
+SELECT 145 AS exec_order, '20261024_coop_negative_margin_manual' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 coop_settlement_manual_case（单次执行）' AS detail
 FROM (SELECT
     (SELECT CASE WHEN COUNT(*) = 0 THEN 0 WHEN SUM(column_name IN ('id', 'case_key', 'topic_id', 'reason', 'negative_amount', 'source_snapshot', 'state', 'created_at')) = 8 THEN 1 ELSE 2 END FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement_manual_case') AS c0) AS z25;
 
--- [142] migration_20261024_registration_payment_fact.sql · 必须 · PRE_DEPLOY
-SELECT 142 AS exec_order, '20261024_registration_payment_fact' AS migration_id,
+-- [146] migration_20261024_registration_payment_fact.sql · 必须 · PRE_DEPLOY
+SELECT 146 AS exec_order, '20261024_registration_payment_fact' AS migration_id,
   CASE WHEN GREATEST(c0, c1, c2) = 3 THEN 'BLOCKED_PREREQ' WHEN GREATEST(c0, c1, c2) = 2 THEN 'CONFLICT'
        WHEN LEAST(c0, c1, c2) = 1 THEN 'APPLIED' WHEN GREATEST(c0, c1, c2) = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   '新表 cms_registration_payment_fact + 两个只追加触发器（单次执行）' AS detail
@@ -1465,58 +1561,58 @@ FROM (SELECT
     (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name = 'registration_paid_fact_no_update') AS c1,
     (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema = DATABASE() AND trigger_name = 'registration_paid_fact_no_delete') AS c2) AS z26;
 
--- [143] migration_20261024_wx_success_fact_business_index.sql · 必须 · PRE_DEPLOY
-SELECT 143 AS exec_order, '20261024_wx_success_fact_business_index' AS migration_id,
+-- [147] migration_20261024_wx_success_fact_business_index.sql · 必须 · PRE_DEPLOY
+SELECT 147 AS exec_order, '20261024_wx_success_fact_business_index' AS migration_id,
   CASE WHEN c0 = 3 THEN 'BLOCKED_PREREQ' WHEN c0 = 2 THEN 'CONFLICT'
        WHEN c0 = 1 THEN 'APPLIED' WHEN c0 = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   'wx_verified_payment_fact 业务单号索引（单次执行）' AS detail
 FROM (SELECT
     (SELECT IF(COUNT(*) > 0, 1, 0) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'wx_verified_payment_fact' AND index_name = 'ix_wx_fact_business') AS c0) AS z27;
 
--- [144] migration_x12_topic_look_20261029.sql · 必须 · PRE_DEPLOY
-SELECT 144 AS step, 'x12_topic_look_20261029' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [148] migration_x12_topic_look_20261029.sql · 必须 · PRE_DEPLOY
+SELECT 148 AS step, 'x12_topic_look_20261029' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 cms_topic.look_json' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'look_json'), 0)) AS present, 1 AS expected) x;
 
--- [145] migration_z_channel_voucher_snapshot_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 145 AS step, 'z_channel_voucher_snapshot_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [149] migration_z_channel_voucher_snapshot_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 149 AS step, 'z_channel_voucher_snapshot_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '列 marketing_channel_voucher.grant_snapshot_json' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_voucher' AND column_name = 'grant_snapshot_json'), 0)) AS present, 1 AS expected) x;
 
--- [146] migration_z_marketing_revenue_channel_reverse_kind_20261108.sql · 不执行 · PRE_DEPLOY
-SELECT 146 AS step, 'z_marketing_revenue_channel_reverse_kind_20261108' AS migration_id, '不执行' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [150] migration_z_marketing_revenue_channel_reverse_kind_20261108.sql · 不执行 · PRE_DEPLOY
+SELECT 150 AS step, 'z_marketing_revenue_channel_reverse_kind_20261108' AS migration_id, '不执行' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, 'CHECK 约束已是新形状' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_revenue_posting_kind' AND check_clause LIKE '%3%'), 0)) AS present, 1 AS expected) x;
 
--- [147] migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 147 AS step, 'z_marketing_revenue_channel_reverse_kind_index_shape_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [151] migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 151 AS step, 'z_marketing_revenue_channel_reverse_kind_index_shape_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, 'CHECK 约束已是新形状' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_revenue_posting_kind' AND check_clause LIKE '%3%'), 0)) AS present, 1 AS expected) x;
 
--- [148] migration_z_workshop_apple_iap_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 148 AS step, 'z_workshop_apple_iap_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [152] migration_z_workshop_apple_iap_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 152 AS step, 'z_workshop_apple_iap_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 workshop_apple_original、workshop_apple_transaction、workshop_apple_notification' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_original'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_transaction'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_notification'), 0)) AS present, 3 AS expected) x;
 
--- [149] migration_z_workshop_purchase_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 149 AS step, 'z_workshop_purchase_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [153] migration_z_workshop_purchase_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 153 AS step, 'z_workshop_purchase_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 workshop_version、workshop_order、workshop_install' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_version'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_install'), 0)) AS present, 3 AS expected) x;
 
--- [150] migration_z_workshop_paid_review_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 150 AS step, 'z_workshop_paid_review_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [154] migration_z_workshop_paid_review_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 154 AS step, 'z_workshop_paid_review_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '表 workshop_apple_product、workshop_draft_lineage；列 workshop_version.id、workshop_version.source_kind、workshop_version.review_state、workshop_version.audit_task_id、workshop_version.review_hash、workshop_version.review_snapshot、workshop_version.approved_at、workshop_order.version_review_hash、workshop_order.currency、workshop_order.amount_milliunits、workshop_order.app_account_token、workshop_order.apple_bundle_id、workshop_order.apple_environment、workshop_order.apple_product_id、workshop_order.apple_transaction_id、workshop_order.apple_original_transaction_id、workshop_order.apple_fact_hash、workshop_order.apple_revocation_hash；索引 workshop_version.uk_workshop_version_audit、workshop_version.idx_workshop_source、workshop_version.idx_workshop_shelf、workshop_order.uk_workshop_apple_account、workshop_order.uk_workshop_apple_transaction、workshop_order.uk_workshop_apple_original' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_product'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_draft_lineage'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'source_kind'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'review_state'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'audit_task_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'review_hash'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'review_snapshot'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'approved_at'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'version_review_hash'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'currency'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'amount_milliunits'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'app_account_token'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_bundle_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_environment'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_product_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_transaction_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_original_transaction_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_fact_hash'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_revocation_hash'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND index_name = 'uk_workshop_version_audit'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND index_name = 'idx_workshop_source'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND index_name = 'idx_workshop_shelf'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND index_name = 'uk_workshop_apple_account'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND index_name = 'uk_workshop_apple_transaction'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND index_name = 'uk_workshop_apple_original'), 0)) AS present, 26 AS expected) x;
 
--- [151] migration_zz_questo_collation_align_20261109.sql · 必须 · PRE_DEPLOY
-SELECT 151 AS step, 'zz_questo_collation_align_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
+-- [155] migration_zz_questo_collation_align_20261109.sql · 必须 · PRE_DEPLOY
+SELECT 155 AS step, 'zz_questo_collation_align_20261109' AS migration_id, '必须' AS release_class, 'PRE_DEPLOY' AS phase,
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '这些表里隐式 utf8mb4_0900_ai_ci 的列数为 0（38 张表）' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) = 0 FROM information_schema.columns WHERE table_schema = DATABASE() AND collation_name = 'utf8mb4_0900_ai_ci' AND table_name IN ('cms_registration_seat_invitation', 'cms_registration_seat_invitation_request', 'cms_topic_content_revision', 'content_landing_metadata', 'content_landing_translation', 'gift_entitlement', 'host_tip_config', 'host_tip_intent', 'marketing_attribution', 'marketing_channel_order_verification', 'marketing_channel_redemption', 'marketing_channel_refund_verification', 'marketing_channel_voucher', 'marketing_channel_voucher_account', 'marketing_offer', 'marketing_offer_item', 'marketing_order_adjustment', 'marketing_product', 'marketing_product_item', 'marketing_product_order', 'marketing_product_order_line', 'marketing_promotion', 'marketing_promotion_redemption', 'marketing_promotion_refund_fact', 'marketing_referral_credential', 'marketing_revenue_allocation', 'marketing_revenue_allocation_line', 'marketing_revenue_posting_task', 'marketing_revenue_rule', 'marketing_tier', 'play_help_run_quota', 'video_bounty_accrual', 'video_bounty_campaign', 'video_bounty_evidence', 'video_bounty_submission', 'workshop_apple_notification', 'workshop_apple_original', 'workshop_apple_transaction')), 0)) AS present, 1 AS expected) x;

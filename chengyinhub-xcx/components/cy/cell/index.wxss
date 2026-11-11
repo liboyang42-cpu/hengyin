@@ -15,8 +15,9 @@
 .cell--twoline { min-height: 128rpx; }
 
 .cell__icon {
-  width: 44rpx;
-  height: 44rpx;
+  width: var(--cy-comp-cell-icon-size, 44rpx);
+  height: var(--cy-comp-cell-icon-size, 44rpx);
+  border-radius: var(--cy-comp-cell-icon-radius, 0);
   flex-shrink: 0;
 }
 /* tint=mono:把深色线性图标统一染成前景色描边(暗底页图标可见且风格一致) */

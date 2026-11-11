@@ -637,6 +637,8 @@ const RAW = [
   ['F311', 'F311-journey-seats-missing-param.png', '/subpackageJourney/pages/seats/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '同行席位大厅:缺报名单时的状态'],
   ['F312', 'F312-journey-promo-missing-param.png', '/subpackageJourney/pages/promo/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '推广记录:缺参数时的状态'],
   ['F313', 'F313-journey-settle-missing-param.png', '/subpackageJourney/pages/settle/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '结算四步:缺参数时的状态(真数据走战报)'],
+  // 2026-11-11 qx-final2:l-icons 新增的通行证钥匙开场页补矩阵行(真实运行时,首次进入播完整版,之后待机循环)
+  ['F314', 'F314-pass-reveal-normal.png', '/subpackagePass/reveal/index', 'player', 'normal', null, undefined, { selector: '.ky__stage', min: 1 }, 'real-data', 'P1', '', '通行证钥匙开场:序列帧 + 文案 + 开始按钮'],
 ];
 /* eslint-enable max-len */
 
@@ -684,10 +686,10 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
 // 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 const STATS = {
-  "total": 365,
+  "total": 366,
   "byPriority": {
     "P0": 139,
-    "P1": 216,
+    "P1": 217,
     "P2": 10
   },
   "blockedByPriority": {
@@ -697,9 +699,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 209,
+    "P1": 210,
     "P2": 2,
-    "total": 341
+    "total": 342
   },
   "blocked": 24,
   "domains": {
@@ -708,12 +710,12 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 111
+    "F": 112
   },
   "control": {
     "setData": 185,
     "identity+setData": 115,
-    "real-data": 58,
+    "real-data": 59,
     "real-device": 7
   },
   "fixtureVerified": 16

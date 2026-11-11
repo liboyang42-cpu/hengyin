@@ -3,6 +3,15 @@ const { createVerificationWorkflow } = require('./verification-readback.js');
 // 只使用现有端点的回执合同；通用业务500可能发生在核销事务提交之后。
 const UNKNOWN_MESSAGE = '核销结果待确认，请勿重复核销；请先查看核销记录';
 const record = value => value && typeof value === 'object' && !Array.isArray(value);
+// P0-42 / P1-016:服务端 409(CONFLICT)= 这张票/这单的核销状态在别处变了,本次没有结论,柜台要先复核记录。
+// 后端带中文原话就原样给(不改写),只有空串或工程词(英文码)才换成下面这句。
+const CONFLICT_MESSAGE = '核销状态有变化，请先在核销记录里复核';
+function isConflict(response, httpStatus) {
+  return Number(httpStatus) === 409 || record(response) && (response.code === 409 || response.code === '409');
+}
+function conflictMessage(msg) {
+  return typeof msg === 'string' && /[\u4e00-\u9fa5]/.test(msg) ? msg : CONFLICT_MESSAGE;
+}
 const positiveId = value => (typeof value === 'number' || typeof value === 'string')
   && /^[1-9]\d*$/.test(String(value)) && Number.isSafeInteger(Number(value));
 function chapterReceipt(data, request) {
@@ -31,6 +40,8 @@ function classifyVerificationOutcome(response, channel, httpStatus, request) {
   // request-client 只在历史 code=2 鉴权拒绝且重登失败时以 fail(body, 2) 返回。
   if (channel === 'fail' && httpStatus === 2 && record(response) && (response.code === 2 || response.code === '2'))
     return { status: 'failed', response: { code: 401, msg: '登录状态已失效，未执行核销' } };
+  // 409 不是「未核销」也不是「已核销」:进复核态,原待办保留(再扫同一目标只回读,不重发)。
+  if (isConflict(response, httpStatus)) return { status: 'review', response: { code: 409, msg: conflictMessage(record(response) ? response.msg : '') } };
   // request-client 保留的 HTTP 拒绝；408/5xx/无 HTTP 回执绝不走此分支。
   if ([400, 401, 403, 404, 405, 413, 415, 426, 429].includes(status))
     return { status: 'failed', response: { code: status, msg: '请求被拒绝，未执行核销' } };
@@ -127,6 +138,9 @@ function receiptDetail(response) {
 
 function resolveVerificationResult(response, action) {
   const label = action || '核销';
+  if (isConflict(response)) {
+    return { state: 'review', title: '待复核', message: conflictMessage(response.msg), show: true };
+  }
   // 展示层不作提交结论；写闸已按端点将未知结果正规化为202。
   if (!record(response) || ![200, '200', 400, 401, 403, 404, 405, 413, 415, 426, 429, 500, '500'].includes(response.code)
       || response.code == 500 && !response.msg && !isDuplicate(response)) {
@@ -176,13 +190,15 @@ function verificationSheetView(result) {
   const success = r.state === 'success';
   const stop = r.stop || '';
   const message = r.message || '';
-  return {
+  const view = {
     kind: success ? 'success' : 'fail',
     sub: success ? [stop, message].filter(Boolean).join(' · ') : stop,
     pill: success && r.perk ? '请提供：' + r.perk : '',
     meta: r.warn || '',
     why: success ? '' : message,
   };
+  if (r.state === 'review') view.review = true;
+  return view;
 }
 
-module.exports = { resolveVerificationResult, verificationSheetView, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow, notRedeemedMessage };
+module.exports = { CONFLICT_MESSAGE, resolveVerificationResult, verificationSheetView, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow, notRedeemedMessage };

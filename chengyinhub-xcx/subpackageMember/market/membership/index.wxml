@@ -26,7 +26,7 @@
       <view class="pp__list">
         <view class="pp__row" bindtap="goLibrary" aria-role="button" aria-label="可玩主题库" hover-class="cy-pressed" hover-stay-time="80">
           <view class="pp__ic"><cy-illus name="seal" size="72" bare /></view>
-          <view class="pp__row-m"><text class="pp__row-t">可玩主题库</text><text class="pp__row-s" wx:if="{{view.count !== null}}">{{view.count}} 个主题 · 持证 ¥0</text></view>
+          <view class="pp__row-m"><text class="pp__row-t">可玩主题库</text><text class="pp__row-s" wx:if="{{view.count !== null}}">{{view.count || 0}} 个主题 · 持证 ¥0</text></view>
           <cy-icon name="chevron-right" size="32" />
         </view>
       </view>
