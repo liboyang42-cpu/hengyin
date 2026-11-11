@@ -24,8 +24,8 @@ test('帖文详情:正文按 pre-wrap 保留换行,且模板里正文两侧没�
   // pre-wrap 会把模板里包住插值的换行/缩进一并显示出来,所以正文必须紧贴插值。
   const wxml = read('pages/square/detail/index.wxml')
   assert.match(wxml, /<view class="post-text"[^>]*>\{\{info\.contents\}\}<\/view>/)
-  // 页面根节点固定是 theme-dark,上面这条规则覆盖全部帖文详情。
-  assert.match(wxml, /^<view class="detail theme-dark">/)
+  // 根节点按视角二选一(2026-11-11 f-merchant M-35:商家浅色),pre-wrap 规则对两种根都生效。
+  assert.match(wxml, /^<view class="detail \{\{merchantView \? 'theme-merchant' : 'theme-dark'\}\}">/)
 })
 
 test('负控:去掉 pre-wrap 必须判红', () => {

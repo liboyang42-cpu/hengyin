@@ -657,6 +657,10 @@ page{ background:var(--cy-color-bg-page); }
   background:rgba(8,10,13,.56); backdrop-filter:blur(22px) saturate(1.15); /* ds-ok 原型黑玻璃 */
   border:2rpx solid rgba(255,255,255,.10); /* ds-ok 原型 1px */
   display:flex; flex-direction:column; justify-content:space-between; }
+/* P-32:主地图底部横滑卡,压在读数卡上方一道缝;卡用入口页的 entry-card 几何缩到 200rpx 高,免得盖住地图 */
+.live-peek{ position:absolute; left:0; right:0; z-index:40; height:200rpx; white-space:nowrap; bottom:calc(250rpx + 246rpx + 19rpx + env(safe-area-inset-bottom)); } /* ds-ok 与 .pcard bottom 同一基准 + 卡高 246 + 缝 19 */
+.live-peek .entry-card{ width:420rpx; height:200rpx; } /* ds-ok 同 entry-card 比例缩小 */
+.entry-card__tag--team { background: var(--cy-play-role-player); }
 .pcard__head{ box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; }
 .pcard__head--goal{ gap:var(--cy-space-2); }
 .pcard__goal-copy{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--cy-space-1); }

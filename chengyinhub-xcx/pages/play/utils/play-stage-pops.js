@@ -2,7 +2,8 @@
 //   ① 玩法开始弹窗(pop-kitstart):故事流入口卡 / 地点卡点开先看一张弹窗(封面 · 模板 · 绑定地点 · 一句说明),选「嵌入故事流 / 全屏」再开始;
 //   ② 延伸任务翻页卡(pop-ext):一次一张,点卡或箭头翻到下一张;
 //   ③ 本局完成屏的奖励事实(真夺到的勋章);
-//   ④ 地点卡玻璃面板上的三个数字(距离 / 步行 / 开放),只写拿得到的。
+//   ④ 地点卡玻璃面板上的三个数字(距离 / 步行 / 开放),只写拿得到的;
+//   ⑤ f-play:走完后的只读回看与选章状态(V3-07/08/09)。
 // index.js 的 UI 门禁基线按行号登记,新方法都放这里,index.js 只留单行挂钩。
 
 // 玩法类型 → 作者在玩法目录里看到的名字(pages/publish/utils/publish/node-game-catalog.js 的 label;分包之间不能 require,这里抄常用的一份)
@@ -15,6 +16,7 @@ const KIT_LABELS = {
   scan: '扫码参与', bingo: '九宫格', blindTaste: '闭眼盲品', dailySign: '今日城市签', objectCard: '拍物成卡', check: 'D20', musiccorner: '音乐角',
 };
 const WALK_M_PER_MIN = 80;
+const chapterTrail = require('./chapter-trail.js');
 
 function firstImg(v) { return v ? String(v).split(/[,;]/)[0].trim() : ''; }
 /** 这一站玩法的类型名:试玩读草稿预览 kit,真实游玩读节点配置里启用的那一段;认不出就不写(不写「玩法」凑数) */
@@ -114,6 +116,37 @@ function methods() {
     },
     /** 地点卡玻璃面板上的数字(见 sheetFacts) */
     _sheetFacts(node) { return sheetFacts(node, typeof this._distText === 'function' ? this._distText(node) : ''); },
+    /** f-play:地点卡开着时定位每一跳都重算距离 / 步行 —— 开卡时算一次的话,走到站上还写着出发时的「1.7km · 22 分钟」。文字没变不 setData */
+    _refreshSheetFacts() {
+      const sh = this.data.sheet || {};
+      const node = sh.show && sh.node;
+      if (!node || !node.lat || !node.lng) return;
+      const f = this._sheetFacts(node);
+      if (f.distText === node.distText && f.walkText === node.walkText) return;
+      this.setData({ 'sheet.node.distText': f.distText, 'sheet.node.walkText': f.walkText });
+    },
+    /** f-play V3-09:选章每一行的状态,与 onPickChapter 放行同一判据(chapterReadState):completed 写「已完成」、locked 压暗不可点 */
+    _chapterPickStates() {
+      return (this.data.chapterCards || []).map((c) => chapterTrail.chapterReadState(c, this.data.nodes, this._historyNodes));
+    },
+    /** f-play V3-07/08:真实局走完后,完成页「继续」回到故事流的只读回看(最后一章已完成的那章,停在末尾,往上滑读完整个故事;
+     *  多章时「…」里有「切换章节」换章)。不是走完的局 / 自由探索 / 一章都没读完时返回 false,照旧离开。 */
+    _reviewAfterFinish() {
+      const d = this.data;
+      if (!d.allDone || d.isPreview || d.isMock || Number(d.mode) === 2 || typeof this.onPickChapter !== 'function') return false;
+      const idx = this._chapterPickStates().lastIndexOf('completed');
+      if (idx < 0) return false;
+      this.onPickChapter({ currentTarget: { dataset: { idx } } });
+      clearTimeout(this._reviewEndT);
+      // 停在末尾:滚到最后一段(scroll-into-view 认段落 id,与 wxml 的 chapter-game- / chapter-block- 同一口径)
+      this._reviewEndT = setTimeout(() => {
+        const paras = this.data.chapterParas || [];
+        const last = paras[paras.length - 1];
+        if (this._playDisposed || !this.data.chapterFull || !last) return;
+        this.setData({ chapterGameAnchor: last.nodeId ? 'chapter-game-' + last.nodeId : 'chapter-block-' + last.i });
+      }, 700);
+      return true;
+    },
   };
   return api;
 }

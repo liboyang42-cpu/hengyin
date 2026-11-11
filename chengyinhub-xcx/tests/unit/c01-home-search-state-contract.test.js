@@ -116,6 +116,8 @@ const loadPage = (rel, options = {}) => {
     if (request.endsWith('list-append.js')) return require(path.join(ROOT, 'utils/list-append.js'))
     // W8 评论写作用域核对账号(reader/sameReader):纯函数,用真模块不用桩
     if (request === '../../../utils/user-character.js') return require(path.join(ROOT, 'utils/user-character.js'))
+    // f-merchant M-35:帖文详情按视角挂商家浅色,导航栏换色在契约沙箱里无副作用
+    if (request === '../../../utils/merchant-theme.js') return { merchantPageShow() {}, merchantPageRestore() {} }
     if (request === '../utils/topic-template-remix.js') return { remixTopicTemplate: () => Promise.resolve(false) }
     if (request === '../../../utils/ui-state-request.js') {
       return {

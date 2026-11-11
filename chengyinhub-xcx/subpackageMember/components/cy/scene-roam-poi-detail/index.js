@@ -58,7 +58,7 @@ Component({
   },
   data: {
     photoIndex: 0, photoCredit: '', creditOpen: false, ratingOptions: [1, 2, 3, 4, 5],
-    challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false,
+    challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false, reviewSheetShow: false,
     choiceSheetShow: false,
     choiceSheetItems: [],
     state: 'loading',
@@ -178,7 +178,7 @@ Component({
       const merchantId = this.data.merchantId
       const resetState = (state) => this.setData({
         photoIndex: 0, photoCredit: '', creditOpen: false,
-        challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false,
+        challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false, reviewSheetShow: false,
         checkinPending: false,
         reverifyChecking: false, reverifyReady: false, reverifyStarted: false, pendingStatusText: '',
         errorText: '',
@@ -592,6 +592,9 @@ Component({
         successStatusAbnormal: () => { if (!this._closed && token === this._loadToken && actor === ownerId()) this.setData({ reviewsError: true }) },
       })
     },
+    // f-pages P0-108/P0-109:评价表单在半屏弹层里;只有已完成挑战才开得了(服务端同样只收已完成玩家的评价)
+    openReviewSheet() { if (this.data.node && this.data.node.completed && !this.data.reviewSubmitting) this.setData({ reviewSheetShow: true }) },
+    closeReviewSheet() { this.setData({ reviewSheetShow: false }) },
     onReviewInput(e) { this.setData({ reviewText: e.detail.value }) },
     onReviewRating(e) { this.setData({ reviewRating: Number(e.currentTarget.dataset.rating) }) },
     deleteOwnReview(e) {
@@ -624,7 +627,7 @@ Component({
         success: res => {
           if (!current()) return
           this.setData({ reviewSubmitting: false })
-          if (res && res.code == 200) { toast('评价已提交'); this._load() }
+          if (res && res.code == 200) { toast('评价已提交'); this.setData({ reviewSheetShow: false }); this._load() }
           else toast(bizFailureMessage(res, '评价未提交，请重试'))
         },
         fail: () => { if (current()) { this.setData({ reviewSubmitting: false }); toast('评价未提交，请重试') } },

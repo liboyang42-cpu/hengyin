@@ -59,6 +59,6 @@ test('P-28 第二轮(业主 2026-11-02):自由探索不带队时菜单不出「�
   assert.ok(row, '找不到「队伍位置」行')
   assert.match(row[1], /lead\.exists/)
   assert.match(row[1], /!lead\.freeEntry/)
-  // 「切换章节」只报告不改:仍只按 mode==2 出
-  assert.match(wxml, /<view class="drow" wx:if="\{\{mode==2\}\}" bindtap="openStackOrChaptersFromTools"/)
+  // 「切换章节」:自由探索照旧出;2026-11-11 f-play V3-08 城市定向多章也出(走完后回看换章)
+  assert.match(wxml, /<view class="drow" wx:if="\{\{mode==2 \|\| chapterCards\.length > 1\}\}" bindtap="openStackOrChaptersFromTools"/)
 })

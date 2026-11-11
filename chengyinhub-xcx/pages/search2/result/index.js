@@ -1,7 +1,7 @@
 // 搜索结果独立页(2026-07-31):原来搜索输入后结果直接铺在 search2 同页下方,
 // 现改成跳转到这里 —— 逻辑从 pages/search2/index.js 的 runSearch/updateVisibleResults 搬来,
 // 数据源仍是同一个 utils/discover-search.js。
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const { isMerchantView } = require('../../../utils/roleGuard.js'); const merchantTheme = require('../../../utils/merchant-theme.js'); // M-35:商家搜索结果同为浅色
 const app = getApp();
 const discoverSearch = require('../../../utils/discover-search.js');
 const { openScene } = require('../../../utils/scene-entry.js');
@@ -34,7 +34,7 @@ Page({
     visibleResults: []
   },
 
-  onLoad(options) {
+  onLoad(options) { if (isMerchantView()) this.setData({ merchantView: true });
     const keyword = options.keyword ? decodeURIComponent(options.keyword) : '';
     const categoryId = options.categoryId || null;
     this._filters = {
@@ -65,20 +65,20 @@ Page({
     this.setData({ keyword: keyword }, () => this.runSearch());
   },
 
-  onUnload() {
+  onUnload() { if (this.data.merchantView) merchantTheme.merchantPageRestore();
     this._unloaded = true;
     this._searchSeq = (this._searchSeq || 0) + 1;
     if (this._searchSkeletonTimer) clearTimeout(this._searchSkeletonTimer);
   },
 
-  onShow() {
+  onShow() { if (this.data.merchantView) merchantTheme.merchantPageShow();
     this._hidden = false;
     if (this._searchWasHidden || (this._resultOwner !== undefined && this._resultOwner !== memberId(app))) {
       this._searchWasHidden = false;
       this.runSearch();
     }
   },
-  onHide() {
+  onHide() { if (this.data.merchantView) merchantTheme.merchantPageRestore();
     this._hidden = true;
     this._searchWasHidden = true;
     this._searchSeq = (this._searchSeq || 0) + 1;

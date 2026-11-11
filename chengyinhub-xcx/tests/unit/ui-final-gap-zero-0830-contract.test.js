@@ -62,10 +62,13 @@ test('退款售后详情不再保留查单表单与最近查询(2026-09-17 改 R
   assert.match(js, /!\['REFUND', 'MANUAL_CASE'\]\.includes\(recordType\)\)\s*\{\s*wx\.redirectTo\(\{ url: '\/pages\/merchant\/aftercare\/index' \}\)/)
 })
 
-test('经营团队空态内含主邀请动作和门店说明详情入口', () => {
+test('经营团队空态在成员卡内，邀请员工是页底主按钮', () => {
+  // 2026-11-11 f-merchant M-18:照门店信息版式重排 —— 空态是成员卡里一行「还没有员工」,
+  // 邀请动作统一到页底主按钮(有无员工都在);「详情」说明开关随版式撤掉(不留说明文字)。
   const wxml = read('pages/merchant/team/index.wxml')
-  assert.match(wxml, /<cy-empty wx:else title="还没有员工"[^>]*cta="邀请员工" bind:cta="openInviteRoleSheet"/)   // 2026-09-06 空态收编进 cy-empty,主动作走 cta
-  assert.match(wxml, /class="tm-store-details"/)
+  assert.match(wxml, /class="tm-card-empty" wx:else>还没有员工</)
+  assert.match(wxml, /<cy-btn variant="primary"[^>]*bind:tap="openInviteRoleSheet">邀请员工<\/cy-btn>/)
+  assert.doesNotMatch(wxml, /tm-store-details/)
 })
 
 test('编辑章节使用浅色内容高度弹窗与二次确认删除', () => {

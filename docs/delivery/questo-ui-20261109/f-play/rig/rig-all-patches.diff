@@ -1,0 +1,194 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..3cf9a383 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -23,6 +23,12 @@ LOG = RIG_HOME / "out" / "application.log"
+ def env():
+     work = RIG_HOME / "work"
+     e = ca.app_env(dict(os.environ), work)
++    # [SEAM qx-s0] rig-only dummy object-storage config so media URLs can be signed/serialized
++    # (play/nodes, covers). Values are placeholders, not credentials; nothing reaches a real bucket.
++    for k in ("CHENGYIN_OSS_ENDPOINT", "CHENGYIN_OSS_ACCESS_KEY_ID", "CHENGYIN_OSS_ACCESS_KEY_SECRET",
++              "CHENGYIN_OSS_BUCKET_NAME"):
++        if os.environ.get(k):
++            e[k] = os.environ[k]
+     sf = RIG_HOME / "secrets.env"
+     if sf.exists():
+         for line in sf.read_text().splitlines():
+@@ -53,6 +59,9 @@ def start(fail_path=""):
+     # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
+     cmd += ["--spring.profiles.active=druid,local",
+             "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
++    # [SEAM qx-c1] rig-only public base for APPROVED local media (no product config is changed).
++    if os.environ.get("RIG_MEDIA_PUBLIC_BASE_URL"):
++        cmd += ["--app.media.public-base-url=" + os.environ["RIG_MEDIA_PUBLIC_BASE_URL"]]
+     log = open(LOG, "ab")
+     p = subprocess.Popen(cmd, cwd=str(RIG_HOME / "work"), env=env(), stdout=log, stderr=subprocess.STDOUT,
+                          start_new_session=True)
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+index 3098b681..519bbf86 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb-seed/tools/compile.mjs
+@@ -130,7 +130,10 @@ function compileNode(el, file, ctx) {
+   }
+   if (el.tag === 'include' || el.tag === 'import') { node.src = resolve(file, a.src, '.wxml'); return node; }
+   if (el.tag === 'template' && a.name) { node.name = a.name; node.c = el.c.map((c) => compileNode(c, file)).filter(Boolean); return node; }
+-  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true); return node; }
++  if (el.tag === 'template' && a.is != null) { node.is = compileValue(a.is); if (a.data != null) node.data = compileValue(a.data, true);
++    /* CLUB-WALK HARNESS PATCH: keep wx:for / wx:if on <template is> */
++    for (const [k, v] of el.attrs) { if (k === 'wx:if') node.if = compileValue(v); else if (k === 'wx:elif') node.elif = compileValue(v); else if (k === 'wx:else') node.else = 1; else if (k === 'wx:for' || k === 'wx:for-items') node.for = compileValue(v); else if (k === 'wx:for-item') node.fi = v; else if (k === 'wx:for-index') node.fx = v; else if (k === 'wx:key') node.key = v; }
++    return node; }
+   const props = {};
+   for (const [k, v] of el.attrs) {
+     if (k === 'wx:if') node.if = compileValue(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..467c1937 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -192,7 +192,7 @@ function infoOf(file) {
+     if (n.g === 'import') { var sub = infoOf(n.src); for (var t in sub.tpl) info.tpl[t] = sub.tpl[t]; }
+   });
+   // nested wxs (inside blocks) too
+-  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
++  (function walk(list) { list.forEach(function (n) { if (n.g === 'wxs' && !info.wxs[n.m]) info.wxs[n.m] = n.src ? reqWxs(n.src) : reqWxs(n.inlineId); if (n.g === 'template' && n.name && !info.tpl[n.name]) info.tpl[n.name] = { nodes: n.c, file: file }; /* CLUB-WALK HARNESS PATCH: nested <template name> */ if (n.c && n.g !== 'template') walk(n.c); }); })(nodes);
+   return info;
+ }
+ function rootScope(data, info, extraWxs) {
+@@ -541,9 +541,39 @@ function mkEvent(el, type, detail, native, target) {
+   if (native && native.clientX !== undefined) { ev3.touches = touchList(native); ev3.changedTouches = ev3.touches; if (!detail) ev3.detail = { x: ev3.touches[0].x, y: ev3.touches[0].y }; }
+   return ev3;
+ }
++
++// ---- qx-u1 rig shim: WXS event handlers get (event, ownerInstance) and event.instance, as on device ----
++function wxsDesc(el) {
++  if (!el) return null;
++  return {
++    setStyle: function (o) {
++      if (typeof o === 'string') { el.style.cssText = o; return; }
++      for (var k in o) { if (k.indexOf('--') === 0) el.style.setProperty(k, o[k]); else el.style[k] = o[k]; }
++    },
++    addClass: function (c) { el.classList.add(c); },
++    removeClass: function (c) { el.classList.remove(c); },
++    hasClass: function (c) { return el.classList.contains(c); },
++    getDataset: function () { return el.__ds || {}; },
++    getBoundingClientRect: function () { var r = el.getBoundingClientRect(); var s = MP.scale || 1; return { left: r.left / s, top: r.top / s, width: r.width / s, height: r.height / s }; },
++    getComputedStyle: function (keys) { var cs = window.getComputedStyle(el), o = {}; (keys || []).forEach(function (k) { o[k] = cs[k]; }); return o; },
++    selectComponent: function (sel) { try { return wxsDesc(el.querySelector(sel)); } catch (e) { return null; } },
++  };
++}
++function wxsOwner(owner) {
++  if (!owner) return null;
++  if (!owner.__wxsState) owner.__wxsState = {};
++  var root = owner.__root;
++  return {
++    getState: function () { return owner.__wxsState; },
++    selectComponent: function (sel) { var n = null; try { n = root.querySelector(sel); } catch (e) {} return wxsDesc(n); },
++    callMethod: function (name, arg) { if (typeof owner[name] === 'function') return owner[name](arg); },
++    requestAnimationFrame: function (fn) { return requestAnimationFrame(fn); },
++    setStyle: function () {}, addClass: function () {}, removeClass: function () {},
++  };
++}
+ function callHandler(el, b, evt) {
+   var owner = el.__owner; var h = b.h;
+-  if (typeof h === 'function') return h.call(owner, evt);
++  if (typeof h === 'function') { evt.instance = wxsDesc(el); return h(evt, wxsOwner(owner)); }
+   if (!h || typeof h !== 'string') return;
+   var fn = owner && owner[h];
+   if (typeof fn !== 'function') { MP.log.push('no handler ' + h); return; }
+@@ -551,6 +581,11 @@ function callHandler(el, b, evt) {
+ }
+ function fire(el, type, detail) { var b = el.__on && el.__on[type]; if (b) callHandler(el, b, mkEvent(el, type, detail)); }
+ MP.fire = fire;
++/* f-play rig seam: accelerometer. MP.shake(n, gapMs) feeds n strong g-readings to every listener while the sensor is started;
++   MP.tilt(x,y,z) feeds one reading. Returns how many listeners received it (0 = sensor stopped / nobody listening). */
++MP.accelRead = function (r) { if (!MP.accelOn) return 0; var ls = (MP.accelListeners || []).slice(); ls.forEach(function (f) { try { f(r); } catch (e) { MP.log.push('accel listener error ' + e); } }); return ls.length; };
++MP.tilt = function (x, y, z) { return MP.accelRead({ x: x, y: y, z: z }); };
++MP.shake = function (n, gap) { n = n || 1; var got = 0, i = 0; return new Promise(function (res) { (function one() { got = Math.max(got, MP.accelRead({ x: 1.6, y: -1.1, z: .9 })); if (++i < n) setTimeout(one, gap || 950); else res(got); })(); }); };
+ var NATIVE = { tap: 'click', touchstart: 'pointerdown', touchmove: 'pointermove', touchend: 'pointerup', touchcancel: 'pointercancel', longpress: 'pointerdown', longtap: 'pointerdown', animationend: 'animationend', transitionend: 'transitionend', animationstart: 'animationstart', animationiteration: 'animationiteration' };
+ function installEvents(el) {
+   if (!el.__evInstalled) {
+@@ -632,7 +667,11 @@ function coerce(spec, v) {
+ }
+ function Instance() {}
+ Instance.prototype.setData = function (patch, cb) {
++  /* f-play rig probe: setData 计数(按组件路径 + 键),排查渲染死循环 */
++  var sc = MP.setDataCount = MP.setDataCount || {}; var sk = this.__path + ' ' + Object.keys(patch || {}).slice(0, 3).join(','); sc[sk] = (sc[sk] || 0) + 1; if (sc[sk] === 200 || sc[sk] === 2000) console.error('LOOP ' + JSON.stringify(Object.entries(sc).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 10)) + ' ' + sc[sk] + ' ' + sk + ' @ ' + new Error().stack.split('\n').slice(2, 18).join(' | '));
+   var changed = [];
++  /* f-play rig seam: WeChat 的 setData 把数据序列化后再进视图层,页面里共享的对象引用不会串到别的数据路径;rig 照做(MP.noSetDataClone 关掉) */
++  if (!MP.noSetDataClone) { var cp = {}; for (var ck in patch) { var cv = patch[ck]; try { cp[ck] = (cv && typeof cv === 'object') ? JSON.parse(JSON.stringify(cv)) : cv; } catch (e) { cp[ck] = cv; } } patch = cp; }
+   for (var k in patch) { if (MP.watchKey && k === MP.watchKey) MP.log.push('SET ' + k + ' ' + JSON.stringify(Object.keys(patch[k] || {})) + ' @ ' + (new Error().stack.split('\n').slice(2, 6).join(' | '))); setPath(this.data, k, patch[k]); changed.push(k); }
+   this.__runObservers(changed);
+   if (cb) this.__cbs.push(cb);
+@@ -700,6 +739,7 @@ Instance.prototype.__setProps = function (props, initial) {
+     var nv = coerce(spec[k], props[k]); if (nv && typeof nv === 'object') nv = clone(nv); var ov = this.data[k];
+     if (initial ? true : !same(nv, ov)) {
+       this.data[k] = nv; changed.push(k);
++      if (/advanced-game/.test(this.__path) && !initial) { MP.propLog = MP.propLog || []; if (MP.propLog.length < 30) MP.propLog.push(k + ' :: ' + ((ov && nv && typeof nv === 'object') ? Object.keys(nv).filter(function (q) { return JSON.stringify(nv[q]) !== JSON.stringify(ov[q]); }).map(function (q) { return q + '=' + JSON.stringify(ov[q]).slice(0, 160) + '→' + JSON.stringify(nv[q]).slice(0, 160); }).join(' ; ') : JSON.stringify(nv).slice(0, 60))); }
+       var s = spec[k]; var obs = s && typeof s === 'object' && s.observer;
+       if (obs && !initial) { var f = typeof obs === 'function' ? obs : this[obs]; if (f) { try { f.call(this, nv, ov, [k]); } catch (e) { console.error('prop observer', e); } } }
+       else if (obs && initial && !same(nv, propDefault(s))) { var f2 = typeof obs === 'function' ? obs : this[obs]; if (f2) { var self = this; (function (f2, nv, ov, k) { Promise.resolve().then(function () { try { f2.call(self, nv, ov, [k]); } catch (e) { console.error('prop observer', e); } }); })(f2, nv, propDefault(s), k); } }
+@@ -1000,7 +1040,8 @@ var wxImpl = {
+     };
+     return recorder;
+   },
+-  startAccelerometer: function (o) { return ok(o); }, stopAccelerometer: function (o) { return ok(o); }, onAccelerometerChange: function () {}, offAccelerometerChange: function () {},
++  startAccelerometer: function (o) { MP.accelOn = true; MP.accelStarts = (MP.accelStarts || 0) + 1; return ok(o); }, stopAccelerometer: function (o) { MP.accelOn = false; MP.accelStops = (MP.accelStops || 0) + 1; return ok(o); },
++  onAccelerometerChange: function (f) { (MP.accelListeners = MP.accelListeners || []).push(f); }, offAccelerometerChange: function (f) { MP.accelListeners = (MP.accelListeners || []).filter(function (x) { return f && x !== f; }); },
+   startCompass: function (o) { return ok(o); }, stopCompass: function (o) { return ok(o); }, onCompassChange: function (f) { MP.compassListeners.push(f); }, offCompassChange: function () { MP.compassListeners = []; },
+   startDeviceMotionListening: function (o) { return ok(o); }, stopDeviceMotionListening: function (o) { return ok(o); }, onDeviceMotionChange: function () {}, offDeviceMotionChange: function () {},
+   onAudioInterruptionBegin: function () {}, onAudioInterruptionEnd: function () {}, offAudioInterruptionBegin: function () {}, offAudioInterruptionEnd: function () {},
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+index 8d3c49fb..ff8f9bb5 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+@@ -29,6 +29,12 @@ export async function launch(opts = {}) {
+   page.on('response', (r) => { if (r.status() >= 400) consoleLog.push(`[error] HTTP ${r.status()} ${r.url()}`.slice(0, 400)); });
+   page.on('requestfailed', (r) => consoleLog.push(`[error] FAILED ${r.url().slice(0, 300)} ${r.failure() && r.failure().errorText}`));
+   page.on('pageerror', (e) => pageErrors.push(String(e && e.stack || e).slice(0, 2000)));
++  // [SEAM r3-share] rig-only: OSS placeholder host (oss-rig.invalid) is unreachable from Chrome; serve a generated cover SVG.
++  if (process.env.RIG_FAKE_OSS === '1') {
++    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A65A"/><stop offset="1" stop-color="#C8553D"/></linearGradient></defs><rect width="1200" height="900" fill="url(#s)"/><circle cx="880" cy="260" r="110" fill="#FFE3A3"/><path d="M0 620 L120 520 L120 380 L220 380 L220 470 L300 470 L300 300 L380 260 L460 300 L460 520 L560 520 L560 420 L660 420 L660 340 L720 300 L780 340 L780 500 L880 500 L880 400 L980 400 L980 540 L1200 540 L1200 900 L0 900 Z" fill="#3B2C35"/><path d="M0 760 C300 690 520 820 800 740 S1100 700 1200 720 L1200 900 L0 900 Z" fill="#241C24"/></svg>';
++    await page.setRequestInterception(true);
++    page.on('request', (r) => { if (/^https?:\/\/oss-rig\.invalid\//.test(r.url())) r.respond({ status: 200, contentType: 'image/svg+xml', headers: { 'Access-Control-Allow-Origin': '*' }, body: svg }); else r.continue(); });
++  }
+   const q = new URLSearchParams();
+   for (const k of ['path', 'identity', 'env', 'lat', 'lng', 'heading', 'scan', 'scene']) if (opts[k] != null && opts[k] !== '') q.set(k, String(opts[k]));
+   await page.goto(`${BASE}/?${q}`, { waitUntil: 'load', timeout: 120000 });
+@@ -92,6 +98,7 @@ export async function launch(opts = {}) {
+     },
+     async text() { return page.evaluate(visibleText); },
+     async loc(lat, lng) { await page.evaluate((a, b) => window.MPWEB.setLocation(a, b), lat, lng); await sleep(300); },
++    async shake(n, gap) { return page.evaluate((a) => window.MPWEB.shake(a[0], a[1]), [n || 1, gap || 950]); },
+     async heading(d) { await page.evaluate((x) => window.MPWEB.setHeading(x), d); },
+     async scan(payload) { await page.evaluate((p) => window.MPWEB.setScan(p), payload); },
+     async pay(mode) { await page.evaluate((m) => { window.MPWEB.payDecision = m; }, mode); },
+@@ -153,6 +160,7 @@ async function runSteps(w, steps) {
+       else if (k === 'scroll') await w.scroll(v);
+       else if (k === 'loc') await w.loc(v[0], v[1]);
+       else if (k === 'heading') await w.heading(v);
++      else if (k === 'shake') console.log('SHAKE', await w.shake(v));
+       else if (k === 'scan') await w.scan(v);
+       else if (k === 'pay') await w.pay(v);
+       else if (k === 'phone') await w.phone(v);
+diff --git a/docs/delivery/cloud-walk-20261101/rig/up.sh b/docs/delivery/cloud-walk-20261101/rig/up.sh
+index 5d6a74b8..0c9b00c2 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/up.sh
++++ b/docs/delivery/cloud-walk-20261101/rig/up.sh
+@@ -5,7 +5,7 @@
+ #        RIG_SKIP_BUILD=1 bash up.sh   # reuse existing candidate jar
+ set -euo pipefail
+ export LANG=C.UTF-8 LC_ALL=C.UTF-8   # POSIX locale breaks javac on the repo's Chinese filenames
+-SHA=a1d30fb295d361122aec76fa9c180b4b496a9b0a
++SHA="${SHA:-a1d30fb295d361122aec76fa9c180b4b496a9b0a}"
+ RIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO="$(git -C "$RIG_DIR" rev-parse --show-toplevel)"
+ export RIG_HOME="${RIG_HOME:-$HOME/walk-rig}"
+@@ -27,7 +27,7 @@ if ! "$PY" -c 'import pymysql, cryptography' 2>/dev/null; then
+ fi
+ 
+ # 2. candidate checkout at the tested commit (detached worktree, never pushed)
+-git -C "$REPO" fetch -q origin master || true
++true
+ if [ ! -d "$CAND/.git" ] && [ ! -f "$CAND/.git" ]; then
+   git -C "$REPO" worktree add --detach "$CAND" "$SHA" >/dev/null
+ fi
