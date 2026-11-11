@@ -33,37 +33,105 @@
 .gseg2 .it{padding:0 12px;height:26px;display:flex;align-items:center;border-radius:999px;font:600 12px/1 -apple-system,"PingFang SC",sans-serif;color:var(--lk-mute);cursor:pointer}
 .gseg2 .it.on{background:var(--lk-ink);color:var(--lk-bg)}
 
-/* ===== 风格 B 插画动画 ===== */
-.ib{position:relative;display:inline-block;flex:none;--e:cubic-bezier(.34,1.56,.64,1)}
+/* ===== 风格 B v2 插画动画:主动作 + 次级动作,闪光只在「完成」那一下 ===== */
+.ib{position:relative;display:inline-block;flex:none;--e:cubic-bezier(.34,1.56,.64,1);--eo:cubic-bezier(.2,.8,.2,1)}
 .ib svg{display:block;width:100%;height:100%;overflow:visible}
-.ib .gd{transform-origin:60px 106px;animation:ibGd .6s var(--e) var(--ic-d) both}
-.ib svg>g,.ib svg>path.sp{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both}
-.ib svg>path.sp{animation:ibIn .5s var(--e) calc(var(--ic-d) + 420ms) both,ibTw 2.2s ease-in-out calc(var(--ic-d) + 1s) infinite alternate}
+.ib .gd{transform-origin:60px 107px;animation:ibGd .6s var(--e) var(--ic-d) both}
+.ib svg>g{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both}
+.ib svg>path.sp,.ib .burst,.ib .conf,.ib .plus{opacity:0}
+.ib .sp,.ib .cf{transform-box:fill-box;transform-origin:center}
+@keyframes ibIn{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes ibGd{from{transform:scaleX(.2);opacity:0}to{transform:scaleX(1);opacity:1}}
+@keyframes ibSpark{0%{opacity:0;transform:scale(0) rotate(0)}30%{opacity:1;transform:scale(1.25) rotate(20deg)}70%{opacity:1;transform:scale(1) rotate(40deg)}100%{opacity:0;transform:scale(.6) rotate(60deg)}}
+@keyframes ibBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+/* 线索 */
+.ib--clue .mg{transform-origin:50px 50px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibLook 3.6s ease-in-out calc(var(--ic-d) + .9s) infinite}
+@keyframes ibLook{0%,100%{transform:translate(0,0) rotate(0)}22%{transform:translate(-9px,4px) rotate(-7deg)}50%{transform:translate(7px,-3px) rotate(6deg)}72%{transform:translate(-2px,2px) rotate(-1deg)}}
+.ib--clue .glint{stroke-dasharray:22;stroke-dashoffset:22;animation:ibGlint 3.6s ease-in-out calc(var(--ic-d) + 1.1s) infinite} @keyframes ibGlint{0%,20%{stroke-dashoffset:22;opacity:0}35%{stroke-dashoffset:0;opacity:1}55%{stroke-dashoffset:-22;opacity:0}100%{stroke-dashoffset:-22;opacity:0}}
+.ib--clue .note{transform-origin:50px 86px;animation:ibIn .5s var(--e) calc(var(--ic-d) + 0ms) both,ibPeek 3.6s ease-in-out calc(var(--ic-d) + .9s) infinite} @keyframes ibPeek{0%,60%,100%{transform:translateY(0) rotate(0)}75%{transform:translateY(-6px) rotate(-6deg)}88%{transform:translateY(-2px) rotate(2deg)}}
+.ib--clue .found{animation:ibSpark 1s ease-out calc(var(--ic-d) + 3.5s) infinite;animation-duration:3.6s} .ib--clue .found.f2{animation-delay:calc(var(--ic-d) + 3.7s)}
+@keyframes ibSparkLoop{0%,78%{opacity:0;transform:scale(0)}84%{opacity:1;transform:scale(1.25) rotate(20deg)}92%{opacity:1;transform:scale(1) rotate(40deg)}100%{opacity:0;transform:scale(.6) rotate(60deg)}}
+.ib--clue .found{animation-name:ibSparkLoop;animation-delay:calc(var(--ic-d) + .9s);animation-timing-function:ease-out}
+/* 勋章 */
+.ib--badge .md{transform-origin:60px 50px;animation:ibDropSquash .9s var(--eo) calc(var(--ic-d) + 60ms) both,ibBob 2.6s ease-in-out calc(var(--ic-d) + 1.4s) infinite alternate}
+@keyframes ibDropSquash{0%{transform:translateY(-40px) scale(.9);opacity:0}55%{transform:translateY(4px) scale(1.06,.9);opacity:1}75%{transform:translateY(-3px) scale(.98,1.03)}100%{transform:translateY(0) scale(1)}}
+.ib--badge .rib{transform-origin:60px 62px;animation:ibIn .5s var(--e) calc(var(--ic-d) + 260ms) both,ibSwing 2.6s ease-in-out calc(var(--ic-d) + .9s) infinite} @keyframes ibSwing{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}45%{transform:rotate(5deg)}70%{transform:rotate(-2deg)}}
+.ib--badge .burst{animation:ibBurst 1.2s ease-out calc(var(--ic-d) + .62s) both} .ib--badge .burst .sp,.ib--badge .burst .cf{animation:ibSpark 1.1s ease-out calc(var(--ic-d) + .62s) both}
+@keyframes ibBurst{0%{opacity:0;transform:scale(.6)}20%{opacity:1}100%{opacity:1;transform:scale(1.15)}}
+/* 钥匙 */
+.ib--key .kb{transform-origin:40px 40px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibTurn 3.4s cubic-bezier(.5,0,.3,1) calc(var(--ic-d) + 1.1s) infinite}
+@keyframes ibTurn{0%,40%,100%{transform:rotate(0)}58%{transform:rotate(-90deg)}70%{transform:rotate(-82deg)}}
+.ib--key .gem{transform-origin:40px 40px;animation:ibGem 3.4s ease-in-out calc(var(--ic-d) + 1.1s) infinite} @keyframes ibGem{0%,50%,100%{transform:scale(1)}60%{transform:scale(1.18)}}
+.ib--key .click{animation:ibSparkLoop 3.4s ease-out calc(var(--ic-d) + 1.1s) infinite} .ib--key .click.f2{animation-delay:calc(var(--ic-d) + 1.25s)}
+/* 成功 */
+.ib--success .tile{transform-origin:60px 58px;animation:ibStamp .5s var(--e) calc(var(--ic-d) + 80ms) both} @keyframes ibStamp{from{transform:scale(1.5);opacity:0}60%{transform:scale(.94);opacity:1}to{transform:scale(1)}}
+.ib--success .ck{stroke-dasharray:60;stroke-dashoffset:60;animation:ibDraw .45s ease-out calc(var(--ic-d) + 440ms) forwards} @keyframes ibDraw{to{stroke-dashoffset:0}}
+.ib--success .conf{animation:ibShow .1s linear calc(var(--ic-d) + .85s) both} @keyframes ibShow{to{opacity:1}}
+.ib--success .conf .cf,.ib--success .conf .sp{animation:ibConf 1.6s cubic-bezier(.2,.6,.3,1) calc(var(--ic-d) + .85s) both} @keyframes ibConf{0%{transform:scale(0) translateY(0);opacity:0}15%{transform:scale(1.3) translateY(-10px) rotate(40deg);opacity:1}100%{transform:scale(.9) translateY(26px) rotate(200deg);opacity:0}}
+/* 失败 */
+.ib--fail .tile{transform-origin:60px 58px;animation:ibFall .55s var(--eo) calc(var(--ic-d) + 80ms) both,ibShake .45s ease-in-out calc(var(--ic-d) + 640ms) 1} @keyframes ibFall{from{transform:translateY(-30px);opacity:0}70%{transform:translateY(3px);opacity:1}to{transform:translateY(0)}} @keyframes ibShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
+.ib--fail .hr{transform-origin:76px 68px;animation:ibCrack .6s var(--e) calc(var(--ic-d) + 1s) both} @keyframes ibCrack{to{transform:translate(4px,3px) rotate(4deg)}}
+.ib--fail .hl{transform-origin:46px 68px;animation:ibCrackL .6s var(--e) calc(var(--ic-d) + 1s) both} @keyframes ibCrackL{to{transform:translate(-2px,1px) rotate(-2deg)}}
+.ib--fail .cloud{transform-origin:96px 28px;animation:ibCloud .9s var(--eo) calc(var(--ic-d) + 1.1s) both,ibBob 2.4s ease-in-out calc(var(--ic-d) + 2s) infinite alternate} @keyframes ibCloud{from{transform:translateX(26px);opacity:0}to{transform:translateX(0);opacity:1}}
+.ib--fail .drop{transform-box:fill-box;transform-origin:center;animation:ibDrip 1.8s ease-in calc(var(--ic-d) + 2.1s) infinite} @keyframes ibDrip{0%,30%{transform:translateY(0) scale(0);opacity:0}45%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(40px) scale(1);opacity:0}}
+/* 调查中 */
+.ib--wait .hg{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibFlip 4.2s cubic-bezier(.5,0,.25,1.3) calc(var(--ic-d) + 1.2s) infinite} @keyframes ibFlip{0%,74%{transform:rotate(0)}92%,100%{transform:rotate(180deg)}}
+.ib--wait .sand-t{transform-origin:60px 38px;animation:ibSandT 4.2s linear calc(var(--ic-d) + 1.2s) infinite} @keyframes ibSandT{0%{transform:scaleY(1)}74%{transform:scaleY(.25)}75%,100%{transform:scaleY(1)}}
+.ib--wait .sand-b{transform-origin:60px 92px;animation:ibSandB 4.2s linear calc(var(--ic-d) + 1.2s) infinite} @keyframes ibSandB{0%{transform:scaleY(.35)}74%{transform:scaleY(1)}75%,100%{transform:scaleY(.35)}}
+.ib--wait .grain{animation:ibGrain .8s linear calc(var(--ic-d) + 1.2s) infinite} .ib--wait .g2{animation-delay:calc(var(--ic-d) + 1.47s)} .ib--wait .gr3{animation-delay:calc(var(--ic-d) + 1.74s)} @keyframes ibGrain{from{transform:translateY(-8px);opacity:0}30%{opacity:1}to{transform:translateY(16px);opacity:0}}
+.ib--wait .glint{animation:ibGlintSway 2.1s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibGlintSway{from{transform:translateX(0)}to{transform:translateX(3px)}}
+/* 队伍 */
+.ib--team .p{transform-origin:60px 100px}
+.ib--team .p1{animation:ibIn .62s var(--e) calc(var(--ic-d) + 60ms) both,ibLeanL 3s ease-in-out calc(var(--ic-d) + 1s) infinite} .ib--team .p3{animation:ibIn .62s var(--e) calc(var(--ic-d) + 160ms) both,ibLeanR 3s ease-in-out calc(var(--ic-d) + 1s) infinite} .ib--team .p2{animation:ibIn .62s var(--e) calc(var(--ic-d) + 260ms) both,ibHop 3s ease-in-out calc(var(--ic-d) + 1s) infinite}
+@keyframes ibLeanL{0%,100%{transform:translateX(0) rotate(0)}40%,60%{transform:translateX(5px) rotate(5deg)}} @keyframes ibLeanR{0%,100%{transform:translateX(0) rotate(0)}40%,60%{transform:translateX(-5px) rotate(-5deg)}}
+@keyframes ibHop{0%,30%,70%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-7px) scale(.96,1.05)}55%{transform:translateY(0) scale(1.04,.96)}}
+.ib--team .heart{animation:ibHeart 3s ease-out calc(var(--ic-d) + 1s) infinite} @keyframes ibHeart{0%,42%{opacity:0;transform:scale(0) translateY(0)}50%{opacity:1;transform:scale(1.2) translateY(-4px)}80%{opacity:1;transform:scale(1) translateY(-14px)}100%{opacity:0;transform:scale(.8) translateY(-22px)}}
+/* 通行证 */
+.ib--pass .card{transform-origin:60px 8px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibPend 3.2s ease-in-out calc(var(--ic-d) + .8s) infinite} @keyframes ibPend{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.ib--pass .lan{transform-origin:60px 2px;animation:ibPend 3.2s ease-in-out calc(var(--ic-d) + .9s) infinite}
+.ib--pass .valid{animation:ibPulse 1.6s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibPulse{from{transform:scale(.8);opacity:.7}to{transform:scale(1.25);opacity:1}}
+/* 积分 */
+.ib--points .c{transform-origin:60px 86px} .ib--points .c1{animation:ibCoin .55s var(--eo) calc(var(--ic-d) + 60ms) both} .ib--points .c2{animation:ibCoin .55s var(--eo) calc(var(--ic-d) + 260ms) both} .ib--points .c3{animation:ibCoin .55s var(--eo) calc(var(--ic-d) + 460ms) both,ibFlipX 4s ease-in-out calc(var(--ic-d) + 1.3s) infinite}
+@keyframes ibCoin{from{transform:translateY(-46px);opacity:0}70%{transform:translateY(3px) scale(1.04,.94);opacity:1}to{transform:translateY(0) scale(1)}}
+@keyframes ibFlipX{0%,70%,100%{transform:scaleX(1)}80%{transform:scaleX(.1)}90%{transform:scaleX(1)}}
+.ib--points .plus{transform-origin:100px 30px;animation:ibPlus 4s ease-out calc(var(--ic-d) + 1.3s) infinite} @keyframes ibPlus{0%,74%{opacity:0;transform:scale(0) translateY(0)}80%{opacity:1;transform:scale(1.2) translateY(-2px)}95%{opacity:1;transform:scale(1) translateY(-8px)}100%{opacity:0}}
+/* 章节印 */
+.ib--seal .stp{transform-origin:60px 60px;animation:ibPress 1s var(--e) calc(var(--ic-d) + 80ms) both,ibPressLoop 3.6s cubic-bezier(.5,0,.2,1) calc(var(--ic-d) + 1.4s) infinite} @keyframes ibPress{from{transform:translateY(-30px);opacity:0}50%{transform:translateY(10px);opacity:1}to{transform:translateY(0)}} @keyframes ibPressLoop{0%,60%,100%{transform:translateY(0)}68%{transform:translateY(-10px)}76%{transform:translateY(10px) scale(1.02,.96)}84%{transform:translateY(0)}}
+.ib--seal .imp{transform-origin:60px 91px;animation:ibStamp .4s var(--e) calc(var(--ic-d) + 560ms) both,ibImp 3.6s ease-out calc(var(--ic-d) + 1.4s) infinite} @keyframes ibImp{0%,75%,100%{transform:scale(1)}78%{transform:scale(1.06,.9)}}
+.ib--seal .ink{animation:ibSpark 3.6s ease-out calc(var(--ic-d) + 4.1s) infinite;animation-name:ibSparkLoop;animation-delay:calc(var(--ic-d) + 1.4s)} .ib--seal .ink.i2{animation-delay:calc(var(--ic-d) + 1.5s)}
+.ib--seal .stamped{animation:ibSparkLoop 3.6s ease-out calc(var(--ic-d) + 1.4s) infinite}
+@media (prefers-reduced-motion:reduce){.ib *{animation:none!important}.ib--success .ck{stroke-dashoffset:0}.ib svg>path.sp,.ib .burst,.ib .conf,.ib .plus{opacity:1}}
+/* ===== 风格 B v1(旧,对照用)===== */
+.ib1{position:relative;display:inline-block;flex:none;--e:cubic-bezier(.34,1.56,.64,1)}
+.ib1 svg{display:block;width:100%;height:100%;overflow:visible}
+.ib1 .gd{transform-origin:60px 106px;animation:ibGd .6s var(--e) var(--ic-d) both}
+.ib1 svg>g,.ib1 svg>path.sp{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both}
+.ib1 svg>path.sp{animation:ibIn .5s var(--e) calc(var(--ic-d) + 420ms) both,ibTw 2.2s ease-in-out calc(var(--ic-d) + 1s) infinite alternate}
 @keyframes ibIn{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes ibGd{from{transform:scaleX(.2);opacity:0}to{transform:scaleX(1);opacity:1}}
 @keyframes ibTw{0%{opacity:.35;transform:scale(.8) rotate(0)}100%{opacity:1;transform:scale(1.1) rotate(25deg)}}
-.ib--clue .mg{transform-origin:50px 50px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibLook 3.2s ease-in-out calc(var(--ic-d) + 1s) infinite}
+.ib1--clue .mg{transform-origin:50px 50px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibLook 3.2s ease-in-out calc(var(--ic-d) + 1s) infinite}
 @keyframes ibLook{0%,100%{transform:translate(0,0) rotate(0)}30%{transform:translate(-5px,3px) rotate(-6deg)}60%{transform:translate(5px,-2px) rotate(5deg)}}
-.ib--clue .pip{transform-origin:58px 56px;animation:ibPulse 1.4s ease-in-out calc(var(--ic-d) + 1.2s) infinite alternate} @keyframes ibPulse{from{transform:scale(.85)}to{transform:scale(1.2)}}
-.ib--badge .rib{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 60ms) both,ibSway 2.6s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibSway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
-.ib--badge .md{transform-origin:60px 50px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 200ms) both,ibBob 2.6s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
-.ib--key .kb{transform-origin:40px 40px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibTurn 3s ease-in-out calc(var(--ic-d) + 1.1s) infinite} @keyframes ibTurn{0%,55%,100%{transform:rotate(0)}70%{transform:rotate(-28deg)}85%{transform:rotate(6deg)}}
-.ib--success .tile{transform-origin:60px 58px;animation:ibStamp .5s var(--e) calc(var(--ic-d) + 80ms) both} @keyframes ibStamp{from{transform:scale(1.5);opacity:0}60%{transform:scale(.94);opacity:1}to{transform:scale(1)}}
-.ib--success .ck{stroke-dasharray:60;stroke-dashoffset:60;animation:ibDraw .5s ease-out calc(var(--ic-d) + 420ms) forwards} @keyframes ibDraw{to{stroke-dashoffset:0}}
-.ib--success .burst{animation:ibIn .5s var(--e) calc(var(--ic-d) + 600ms) both,ibSpin 9s linear calc(var(--ic-d) + 1s) infinite} @keyframes ibSpin{to{transform:rotate(360deg)}}
-.ib--fail .tile{transform-origin:60px 58px;animation:ibIn .5s var(--e) calc(var(--ic-d) + 80ms) both,ibShake .5s ease-in-out calc(var(--ic-d) + 620ms) 1} @keyframes ibShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
-.ib--fail .half{transform-origin:76px 68px;animation:ibCrack .6s var(--e) calc(var(--ic-d) + 700ms) both} @keyframes ibCrack{to{transform:translate(3px,2px) rotate(3deg)}}
-.ib--fail .puff{transform-origin:100px 100px;animation:ibIn .5s var(--e) calc(var(--ic-d) + 900ms) both,ibBob 2s ease-in-out calc(var(--ic-d) + 1.4s) infinite alternate}
-.ib--wait .hg{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibFlip 3.2s ease-in-out calc(var(--ic-d) + 1.2s) infinite} @keyframes ibFlip{0%,65%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
-.ib--wait .grain{animation:ibGrain .9s linear calc(var(--ic-d) + .8s) infinite} .ib--wait .g2{animation-delay:calc(var(--ic-d) + 1.25s)} @keyframes ibGrain{from{transform:translateY(-6px);opacity:0}30%{opacity:1}to{transform:translateY(14px);opacity:0}}
-.ib--team .p{transform-origin:60px 100px} .ib--team .p1{animation:ibIn .62s var(--e) calc(var(--ic-d) + 60ms) both,ibLean 2.8s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} .ib--team .p3{animation:ibIn .62s var(--e) calc(var(--ic-d) + 160ms) both,ibLean 2.8s ease-in-out calc(var(--ic-d) + 1s) infinite alternate-reverse} .ib--team .p2{animation:ibIn .62s var(--e) calc(var(--ic-d) + 260ms) both,ibBob 2.8s ease-in-out calc(var(--ic-d) + 1s) infinite alternate}
+.ib1--clue .pip{transform-origin:58px 56px;animation:ibPulse 1.4s ease-in-out calc(var(--ic-d) + 1.2s) infinite alternate} @keyframes ibPulse{from{transform:scale(.85)}to{transform:scale(1.2)}}
+.ib1--badge .rib{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 60ms) both,ibSway 2.6s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibSway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.ib1--badge .md{transform-origin:60px 50px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 200ms) both,ibBob 2.6s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.ib1--key .kb{transform-origin:40px 40px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibTurn 3s ease-in-out calc(var(--ic-d) + 1.1s) infinite} @keyframes ibTurn{0%,55%,100%{transform:rotate(0)}70%{transform:rotate(-28deg)}85%{transform:rotate(6deg)}}
+.ib1--success .tile{transform-origin:60px 58px;animation:ibStamp .5s var(--e) calc(var(--ic-d) + 80ms) both} @keyframes ibStamp{from{transform:scale(1.5);opacity:0}60%{transform:scale(.94);opacity:1}to{transform:scale(1)}}
+.ib1--success .ck{stroke-dasharray:60;stroke-dashoffset:60;animation:ibDraw .5s ease-out calc(var(--ic-d) + 420ms) forwards} @keyframes ibDraw{to{stroke-dashoffset:0}}
+.ib1--success .burst{animation:ibIn .5s var(--e) calc(var(--ic-d) + 600ms) both,ibSpin 9s linear calc(var(--ic-d) + 1s) infinite} @keyframes ibSpin{to{transform:rotate(360deg)}}
+.ib1--fail .tile{transform-origin:60px 58px;animation:ibIn .5s var(--e) calc(var(--ic-d) + 80ms) both,ibShake .5s ease-in-out calc(var(--ic-d) + 620ms) 1} @keyframes ibShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
+.ib1--fail .half{transform-origin:76px 68px;animation:ibCrack .6s var(--e) calc(var(--ic-d) + 700ms) both} @keyframes ibCrack{to{transform:translate(3px,2px) rotate(3deg)}}
+.ib1--fail .puff{transform-origin:100px 100px;animation:ibIn .5s var(--e) calc(var(--ic-d) + 900ms) both,ibBob 2s ease-in-out calc(var(--ic-d) + 1.4s) infinite alternate}
+.ib1--wait .hg{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibFlip 3.2s ease-in-out calc(var(--ic-d) + 1.2s) infinite} @keyframes ibFlip{0%,65%{transform:rotate(0)}85%,100%{transform:rotate(180deg)}}
+.ib1--wait .grain{animation:ibGrain .9s linear calc(var(--ic-d) + .8s) infinite} .ib1--wait .g2{animation-delay:calc(var(--ic-d) + 1.25s)} @keyframes ibGrain{from{transform:translateY(-6px);opacity:0}30%{opacity:1}to{transform:translateY(14px);opacity:0}}
+.ib1--team .p{transform-origin:60px 100px} .ib1--team .p1{animation:ibIn .62s var(--e) calc(var(--ic-d) + 60ms) both,ibLean 2.8s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} .ib1--team .p3{animation:ibIn .62s var(--e) calc(var(--ic-d) + 160ms) both,ibLean 2.8s ease-in-out calc(var(--ic-d) + 1s) infinite alternate-reverse} .ib1--team .p2{animation:ibIn .62s var(--e) calc(var(--ic-d) + 260ms) both,ibBob 2.8s ease-in-out calc(var(--ic-d) + 1s) infinite alternate}
 @keyframes ibLean{from{transform:translateX(-2px) rotate(-2deg)}to{transform:translateX(2px) rotate(2deg)}}
-.ib--pass .card{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibFloat 3s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibFloat{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-4px) rotate(2deg)}}
-.ib--points .c{transform-origin:60px 86px} .ib--points .c1{animation:ibDrop .5s var(--e) calc(var(--ic-d) + 60ms) both} .ib--points .c2{animation:ibDrop .5s var(--e) calc(var(--ic-d) + 220ms) both} .ib--points .c3{animation:ibDrop .5s var(--e) calc(var(--ic-d) + 380ms) both,ibBob 2.4s ease-in-out calc(var(--ic-d) + 1s) infinite alternate}
+.ib1--pass .card{transform-origin:60px 60px;animation:ibIn .62s var(--e) calc(var(--ic-d) + 80ms) both,ibFloat 3s ease-in-out calc(var(--ic-d) + 1s) infinite alternate} @keyframes ibFloat{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-4px) rotate(2deg)}}
+.ib1--points .c{transform-origin:60px 86px} .ib1--points .c1{animation:ibDrop .5s var(--e) calc(var(--ic-d) + 60ms) both} .ib1--points .c2{animation:ibDrop .5s var(--e) calc(var(--ic-d) + 220ms) both} .ib1--points .c3{animation:ibDrop .5s var(--e) calc(var(--ic-d) + 380ms) both,ibBob 2.4s ease-in-out calc(var(--ic-d) + 1s) infinite alternate}
 @keyframes ibDrop{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
-.ib--seal .stp{transform-origin:60px 60px;animation:ibPress 1s var(--e) calc(var(--ic-d) + 80ms) both,ibPressLoop 3.4s ease-in-out calc(var(--ic-d) + 1.4s) infinite} @keyframes ibPress{from{transform:translateY(-30px);opacity:0}50%{transform:translateY(10px);opacity:1}to{transform:translateY(0)}} @keyframes ibPressLoop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(9px)}}
-.ib--seal .imp{transform-origin:60px 91px;animation:ibStamp .4s var(--e) calc(var(--ic-d) + 560ms) both}
-@media (prefers-reduced-motion:reduce){.ib *{animation:none!important}.ib--success .ck{stroke-dashoffset:0}}
+.ib1--seal .stp{transform-origin:60px 60px;animation:ibPress 1s var(--e) calc(var(--ic-d) + 80ms) both,ibPressLoop 3.4s ease-in-out calc(var(--ic-d) + 1.4s) infinite} @keyframes ibPress{from{transform:translateY(-30px);opacity:0}50%{transform:translateY(10px);opacity:1}to{transform:translateY(0)}} @keyframes ibPressLoop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(9px)}}
+.ib1--seal .imp{transform-origin:60px 91px;animation:ibStamp .4s var(--e) calc(var(--ic-d) + 560ms) both}
+@media (prefers-reduced-motion:reduce){.ib1 *{animation:none!important}.ib1--success .ck{stroke-dashoffset:0}}
 
 /* ===== 风格 C 波点 ===== */
 .idot{position:relative;display:inline-block;flex:none;--dot-c:var(--lk-a)}
@@ -172,3 +240,27 @@
 .ship__h{font:700 17px/1.3 -apple-system,"PingFang SC",sans-serif;margin-bottom:10px}
 .ship__opt{padding:10px 0;border-top:1px solid #EEF0F3} .ship__opt b{display:block;font:600 14px/1.3 -apple-system,"PingFang SC",sans-serif;margin-bottom:4px} .ship__opt p{margin:0;font:400 13px/1.65 -apple-system,"PingFang SC",sans-serif;color:#4B5160}
 .ship__tbl>div{display:flex;gap:10px;padding:10px 0;border-top:1px solid #EEF0F3} .ship__tbl b{flex:none;width:92px;font:600 13px/1.5 -apple-system,"PingFang SC",sans-serif} .ship__tbl span{font:400 13px/1.6 -apple-system,"PingFang SC",sans-serif;color:#4B5160}
+
+/* ===== v2:参考屏 · 旧新对照 · 调色盘 · 标准通行证页 ===== */
+.refrule{padding:12px 14px;display:flex;flex-direction:column;gap:8px} .refrule>div{display:flex;gap:10px;font:400 13px/1.5 -apple-system,"PingFang SC",sans-serif;color:var(--lk-ink)} .refrule b{flex:none;width:20px;height:20px;border-radius:50%;background:var(--lk-ink);color:var(--lk-bg);font:700 11px/20px -apple-system,sans-serif;text-align:center}
+.refi{background:var(--lk-soft);border:1px solid var(--lk-line);border-radius:var(--lk-r);overflow:hidden;margin-bottom:10px}
+.refi img{display:block;width:100%;background:#fff}
+.refi__t{font:600 13px/1.3 -apple-system,"PingFang SC",sans-serif;padding:10px 12px 2px}
+.refi__d{font:400 12px/1.5 -apple-system,"PingFang SC",sans-serif;color:var(--lk-mute);padding:0 12px}
+.refi__l{display:block;font:500 11px/1.4 ui-monospace,Menlo,monospace;color:var(--lk-a);padding:6px 12px 10px;word-break:break-all;text-decoration:none}
+.ovn{border:1px solid var(--lk-line);border-radius:var(--lk-r);overflow:hidden;background:var(--lk-soft)}
+.ovn__h,.ovn__r{display:grid;grid-template-columns:56px 1fr 1fr;align-items:center;justify-items:center;padding:8px 6px;border-top:1px solid var(--lk-line)}
+.ovn__h{border-top:0;background:var(--lk-ctl)} .ovn__h b{font:600 12px/1 -apple-system,"PingFang SC",sans-serif;color:var(--lk-ink)} .ovn__r>span{justify-self:start;font:500 13px/1 -apple-system,"PingFang SC",sans-serif;color:var(--lk-mute);padding-left:6px}
+.palr{display:grid;grid-template-columns:repeat(6,1fr);gap:6px} .palr>div{display:flex;flex-direction:column;align-items:center;gap:4px} .palr i{position:relative;display:block;width:100%;aspect-ratio:1;border-radius:12px;border:2px solid #121213;overflow:hidden} .palr i b{position:absolute;right:0;top:0;bottom:0;width:50%} .palr span{font:500 11px/1 -apple-system,"PingFang SC",sans-serif;color:var(--lk-mute)}
+.psx{background:var(--cy-color-bg-page,#000);color:var(--cy-color-text-primary,#fff)}
+.psv{padding:104px 16px 0;display:flex;flex-direction:column;gap:10px}
+.pcard{background:var(--cy-color-bg-surface,#161618);border:1px solid var(--cy-color-border-subtle,rgba(255,255,255,.08));border-radius:20px;padding:20px 20px 18px}
+.pcard__top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.psx .gl-bar{background:rgba(255,255,255,.12)} .psx .gl-bar i{background:#CDFF71}
+.plist{background:var(--cy-color-bg-surface,#161618);border:1px solid var(--cy-color-border-subtle,rgba(255,255,255,.08));border-radius:20px;overflow:hidden}
+.pitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--cy-color-border-subtle,rgba(255,255,255,.08))} .pitem:first-child{border-top:0}
+.pitem>div{flex:1;display:flex;flex-direction:column;gap:4px} .pitem b{font:600 15px/1 -apple-system,"PingFang SC",sans-serif} .pitem>div>span{font:400 12px/1 -apple-system,"PingFang SC",sans-serif;opacity:.6}
+.pitem>svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;opacity:.45}
+.psx .gl-foot{background:linear-gradient(180deg,transparent,var(--cy-color-bg-page,#000) 55%)}
+
+.shipx .pl-top{background:linear-gradient(180deg,#fff 70%,rgba(255,255,255,0));top:0;height:91px;padding-top:47px;box-sizing:border-box}
