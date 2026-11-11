@@ -166,12 +166,14 @@ test('cy-frames 只有一份规范实现(pages/play);subpackageMember / subpacka
 
 // ---------- 资产与分包 ----------
 test('玻璃序列帧在用它的分包里,每枚 24 帧 112px、6 列,单枚不超过 64 KB;主包没有新资产', () => {
-  const list = [['pages/play/images/frames/glass-badge.webp', 'pages/play/index.wxml'], ['pages/play/images/frames/glass-success.webp', 'pages/play/index.wxml'], ['subpackageMember/images/frames/glass-pass.webp', 'subpackageMember/market/membership/index.wxml'], ['subpackageMember/images/frames/glass-key.webp', 'subpackageMember/market/membership/index.wxml']]
+  const list = [['pages/play/images/frames/glass-badge.webp', 'pages/play/index.wxml'], ['pages/play/images/frames/glass-success.webp', 'pages/play/index.wxml'], ['subpackageMember/images/frames/glass-key.webp', 'subpackageMember/market/membership/index.wxml']]
   for (const [f, user] of list) {
     const st = fs.statSync(path.join(ROOT, f))
     assert.ok(st.size > 10000 && st.size <= 65536, f + ' ' + st.size)
     assert.ok(read(user).includes('/' + f), user + ' 用 ' + f)
   }
+  // qx-final2 合入 l-iconsB:通行证页英雄区改为 ps-pass 实色卡,glass-pass 在 ps-pass 里没有位置,资产随之删除;卡里的钥匙仍是 glass-key。
+  assert.ok(!fs.existsSync(path.join(ROOT, 'subpackageMember/images/frames/glass-pass.webp')), 'glass-pass 已无调用者,不留孤儿资产')
   assert.ok(!fs.existsSync(path.join(ROOT, 'images/frames')), '主包里没有序列帧')
   const idx = read('pages/play/index.wxml')
   assert.match(idx, /<cy-frames sheets="\{\{\[\{ src: previewEnding\.reward \? '\/pages\/play\/images\/frames\/glass-badge\.webp' : '\/pages\/play\/images\/frames\/glass-success\.webp', n: 24 \}\]\}\}" cols="\{\{6\}\}" fw="\{\{112\}\}" fh="\{\{112\}\}" w="\{\{340\}\}" h="\{\{340\}\}"/)
@@ -244,7 +246,7 @@ test('通行证页 / 主题库 / 通行证列表:不做玻璃、入口先走钥�
   for (const f of ['subpackageMember/market/membership/index.wxss', 'subpackageMember/market/passes/index.wxss', 'subpackageMember/market/library/index.wxss', 'subpackagePass/reveal/index.wxss']) {
     assert.doesNotMatch(read(f), /backdrop-filter/, f + ' 不做玻璃(业主「里面不需要是玻璃的 就是正常的样式」)')
   }
-  assert.match(read('subpackageMember/market/membership/index.wxml'), /<cy-frames sheets="\{\{\[\{ src: '\/subpackageMember\/images\/frames\/glass-pass\.webp', n: 24 \}\]\}\}"/)
+  assert.match(read('subpackageMember/market/membership/index.wxml'), /<view class="pp__key"><cy-frames sheets="\{\{\[\{ src: '\/subpackageMember\/images\/frames\/glass-key\.webp', n: 24 \}\]\}\}"/, 'qx-final2:ps-pass 卡里的钥匙用 l-icons 的玻璃序列帧')
   assert.doesNotMatch(read('subpackageMember/market/membership/index.wxml'), /class="ok /, '旧的 ps-success 层已退场')
   assert.match(read('subpackageMember/market/passes/index.js'), /wx\.navigateTo\(\{ url: '\/subpackagePass\/reveal\/index'/)
   for (const f of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/library/index.js', 'subpackageMember/market/passes/index.js']) {

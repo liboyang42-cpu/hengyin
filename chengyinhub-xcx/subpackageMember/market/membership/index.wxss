@@ -1,32 +1,34 @@
-/* l-pass 通行证页。原型 proto/game page.css .pass2 / .lib / .psok 改写:只用 transition,不新增 keyframes。 */
-.pp { --pp-warm-hi: #B8431A; --pp-warm-mid: #3B1708; --pp-ink: #FFF4EA; --pp-sub: rgba(255, 244, 234, .75); --pp-gold: #FFD9A8; /* ds-ok 参考 refs4 暖橙渐变与票面金(物件固有色) */
-  min-height: 100vh; color: var(--pp-ink);
-  background: radial-gradient(ellipse 90% 60% at 50% 0%, var(--pp-warm-hi) 0%, var(--pp-warm-mid) 45%, #000 85%); /* ds-ok 原型 .pass2 */ }
+/* l-pass 通行证页。原型 proto/game page.css .psok 改写:只用 transition,不新增 keyframes。 */
+/* l-iconsB 2026-11-11:按 proto/icons ps-pass 改回标准玩家样式 —— 黑底 token、实色卡、标准列表行、底部固定白药丸;不做玻璃、不再用暖橙渐变。
+   l-icons 2026-11-11:开通成功改跳 subpackagePass/reveal 钥匙开场,本页不再有开通成功层。 */
+.pp { min-height: 100vh; color: var(--cy-color-text-primary); background: var(--cy-color-bg-page); }
 .pp__frame { min-height: 100vh; }
-.pp__body { padding: 0 var(--cy-space-4, 32rpx); }
-.pp__hero { display: flex; flex-direction: column; align-items: center; padding: 20rpx 0 12rpx; }
-.pp__art { position: relative; width: 300rpx; height: 300rpx; }
-.pp__key { position: absolute; right: -52rpx; bottom: -12rpx; }
-.pp__cnt { display: flex; align-items: baseline; margin-top: 12rpx; }
-.pp__cnt-n { font-size: 88rpx; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
-.pp__cnt-u { margin-left: 12rpx; font-size: var(--cy-type-card-title); font-weight: 600; color: var(--pp-sub); }
-.pp__until { margin-top: 12rpx; font-size: var(--cy-type-body); color: var(--pp-sub); }
-.pp__plans { display: flex; gap: 20rpx; margin: 36rpx 0 24rpx; }
-.pp__plan { position: relative; flex: 1; min-height: 88rpx; padding: 28rpx; border-radius: 36rpx; background: rgba(255, 255, 255, .08); border: 3rpx solid transparent; transition: background 200ms ease, border-color 200ms ease; /* ds-ok 原型 .plan */ }
-.pp__plan.is-on { border-color: var(--pp-gold); background: rgba(255, 255, 255, .14); /* ds-ok */ }
+.pp__body { display: flex; flex-direction: column; gap: 20rpx; padding: 16rpx var(--cy-space-4) 0; }
+.pp__card { padding: 40rpx 40rpx 36rpx; border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); border: 1px solid var(--cy-color-border-subtle); }
+.pp__card-top { display: flex; align-items: center; justify-content: space-between; }
+.pp__card-t { display: flex; flex-direction: column; min-width: 0; }
+.pp__eb { font-size: var(--cy-type-micro); font-weight: 600; letter-spacing: .2em; color: var(--cy-color-text-secondary); }
+.pp__h { margin-top: 16rpx; font-size: var(--cy-type-display); font-weight: 700; line-height: 1.1; }
+.pp__k { margin-top: 16rpx; font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; color: var(--cy-color-text-secondary); }
+.pp__key { flex: none; margin: 0 -20rpx -20rpx 0; } /* 钥匙在锁里转四分之一圈时杆会往上扫,顶上不吃进卡片内边距 */
+.pp__list { border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); border: 1px solid var(--cy-color-border-subtle); overflow: hidden; }
+.pp__row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 88rpx; padding: 24rpx 28rpx; color: var(--cy-color-text-tertiary); }
+.pp__row + .pp__row { border-top: 1px solid var(--cy-color-border-subtle); }
+.pp__ic { flex: none; width: 80rpx; height: 80rpx; display: flex; align-items: center; justify-content: center; }
+.pp__row-m { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.pp__row-t { font-size: var(--cy-type-card-title); font-weight: 600; color: var(--cy-color-text-primary); }
+.pp__row-s { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.pp__plans { display: flex; gap: 20rpx; margin-top: 20rpx; }
+.pp__plan { position: relative; flex: 1; min-height: 88rpx; padding: 28rpx; border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); border: 3rpx solid var(--cy-color-border-subtle); transition: border-color 200ms ease; }
+.pp__plan.is-on { border-color: var(--cy-color-text-primary); }
 .pp__plan-p { display: block; font-size: var(--cy-type-sheet-title); font-weight: 800; }
-.pp__plan-l { display: block; margin-top: 4rpx; font-size: var(--cy-type-label); color: var(--pp-sub); }
-.pp__rib { position: absolute; right: 20rpx; top: -18rpx; padding: 4rpx 16rpx; border-radius: var(--cy-radius-pill); background: var(--pp-gold); color: var(--pp-warm-mid); font-size: var(--cy-type-micro); font-weight: 700; }
-.pp__pill { height: 100rpx; border-radius: 50rpx; background: #FFFFFF; color: #111111; display: flex; align-items: center; justify-content: center; font-size: 32rpx; font-weight: 700; /* ds-ok 原型白药丸 */ }
+.pp__plan-l { display: block; margin-top: 4rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
+.pp__rib { position: absolute; right: 20rpx; top: -18rpx; padding: 4rpx 16rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-brand); color: var(--cy-color-text-on-light); font-size: var(--cy-type-micro); font-weight: 700; }
+.pp__renew { min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); border: 1px solid var(--cy-color-border-default); font-size: var(--cy-type-button); font-weight: 600; }
+.pp__renew.is-off { opacity: .45; }
+.pp__terms { display: block; text-align: center; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.pp__err { display: block; text-align: center; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
+.pp__pad { height: calc(260rpx + env(safe-area-inset-bottom)); }
+.pp__foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--cy-z-sticky); padding: 28rpx 40rpx calc(28rpx + env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent, var(--cy-color-bg-page) 55%); }
+.pp__pill { height: 104rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; }
 .pp__pill.is-off { opacity: .45; }
-.pp__terms { display: block; text-align: center; margin: 20rpx 0 8rpx; font-size: 22rpx; color: rgba(255, 244, 234, .55); /* ds-ok */ }
-.pp__err { display: block; text-align: center; margin-top: 8rpx; font-size: var(--cy-type-label); color: var(--cy-color-status-danger); }
-.pp__sec { display: block; margin: 44rpx 0 20rpx; font-size: 30rpx; font-weight: 700; color: rgba(255, 244, 234, .7); /* ds-ok */ }
-.pp__lib { display: flex; flex-wrap: wrap; gap: 24rpx; }
-.pp__it { position: relative; width: calc(50% - 12rpx); border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--cy-color-bg-surface); }
-.pp__it-cv { display: block; width: 100%; height: 220rpx; }
-.pp__it-z { position: absolute; right: 16rpx; top: 16rpx; height: 44rpx; padding: 0 16rpx; border-radius: 22rpx; background: var(--cy-color-status-success); color: #FFFFFF; font-size: 24rpx; line-height: 44rpx; font-weight: 700; /* ds-ok ¥0 绿角标白字 */ }
-.pp__it-n { display: block; padding: 16rpx 20rpx 4rpx; font-size: var(--cy-type-body); color: var(--cy-color-text-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.pp__it-d { display: block; padding: 0 20rpx 20rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); }
-.pp__more { display: flex; align-items: center; justify-content: center; gap: 8rpx; min-height: 88rpx; margin-top: 16rpx; font-size: var(--cy-type-body); color: var(--pp-ink); }
-.pp__pad { height: 80rpx; }
