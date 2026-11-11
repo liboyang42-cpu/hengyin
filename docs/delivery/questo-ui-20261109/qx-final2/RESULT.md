@@ -76,7 +76,29 @@
 
 ## 五、PR #779 的 CI
 
-(进行中：`4cf14763` 上的静态门与 Gameplay HTTP 因 runner 的 Ubuntu apt 源解析失败而未执行，正在重跑；最终结果补写在这里。)
+按时间顺序，每一轮红灯和处理：
+
+| 头 | 红的 job | 原因 | 处理 |
+|---|---|---|---|
+| `2256f79e`(前三条合入) | Fast gates、Backend tests | 架构门禁(见下) | 只能在 master 受信策略放行 |
+| `e01a45de`(l-icons / l-iconsB 合入) | Mini program static gates | DS 硬编码、孤立单位、U4 死字段、截图矩阵、覆盖率 5 个子门禁 | F2-2 修好 |
+| `c7bc7584` | 小程序单测 1 条 | F314 缺生成器 fixture | 补 fixture |
+| `eb272ae7`(并行合入 f-*) | 小程序单测 4 条 + U4 | 见 F2-3 至 F2-6 | 修好，全量单测 17288/17288 |
+| `4cf14763` 及之后的纯文档头 | Mini program static gates、Mini program static checks；Gameplay HTTP | runner 从约 14:04 UTC 起解析不了 `*.ubuntu.com`，「Ensure ripgrep」/「Install clients and private Redis」装包失败，门禁脚本和测试**一条都没执行** | 重跑 4 次仍是同一原因；不是代码问题，本地已逐个复跑这些子门禁全部通过。等 runner 恢复后重跑 failed jobs 即可 |
+
+最终头(`4cf14763` 及其后的纯文档提交)上各 job：
+
+| Job | 结果 |
+|---|---|
+| Detect changed areas、Secret scan (gitleaks)、SBOM + dependency scan | success |
+| Mini program unit shard 1–20 | 全部 success |
+| Migration layout gate、Migration safety gate | success |
+| Admin UI build gate、Admin UI E2E contract gate | success |
+| Funds MySQL IT、Funds IT gate self-test、Followup 39 selected backend cases、isolated-authenticated-redis-recovery、Mini followup focused regression | success |
+| Mini program static gates / static checks | **failure(基础设施)**：apt 装 ripgrep 失败，未执行 |
+| Fast gates | **failure(要你放行)**：架构门 9 条，StoreKit 已接受，另 8 条新边界见待你决定 1 |
+| Backend tests | **failure(要你放行)**：构建、全部单测、整应用启动、迁移 MySQL IT 都 success，只有末步编译期引用门 `EXACT_STORAGE_PORT_CONSUMER` |
+| Gameplay HTTP generic-only(手动) | `2256f79e`、`fb9f1c28` 通过；`4cf14763` / `17de18de` 因同一个 apt 故障未执行 |
 
 ## 六、剩余风险
 
@@ -98,4 +120,4 @@
 3. **l-icons 的 3 条、l-iconsB 的 5 条、l-payout3 的 5 条待你决定**原样保留，见各自 RESULT.md。
 4. qx-final 的待你决定 1、2、5、6、7、8 仍然有效；3、4、9 已由 qx-green 解决。
 
-STATUS: PARTIAL - 五条 lane 全部合入、本地门禁全过、真库 IT 全过；PR CI 等 runner 装包恢复后重跑，架构门禁两处要你在 master 受信策略里放行
+STATUS: PARTIAL - qx-green、l-editor2、l-payout3、l-icons、l-iconsB 五条都已合入并修完合并与并行合入带来的红灯；本地门禁全过(小程序全量 17288/17288、UI-GATE-0、台账与路由矩阵零差异、mvn、Java 0 失败、管理端、主包 2044.5 KiB、keyframes)，真库 IT 全部通过；PR CI 只剩架构门禁两处(要你在 master 受信策略放行)和 runner 装包故障导致未执行的静态门与 Gameplay HTTP(等 runner 恢复后重跑)
