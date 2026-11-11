@@ -141,4 +141,9 @@ lead 在 `c7bc75843` 合入了与本线等价的钥匙开场页修复，随后�
 
 **需要你处理(本线被环境安全策略拦下，未绕过)**：U5 silentError 白名单。f-pages 给 `pages/mylike/mylike.js` 新增了「据点」页签，多出两处 silentError(据点收藏列表、取消收藏据点)，实际 6 处，白名单登记 4 处。两处都有可见承接：列表失败落页内 cy-error，取消失败由动作自己的「操作失败」或「取消结果未确认」toast 承接并回读，与已登记的 4 处同一口径。修法：在 `ci/silent-error-allowlist.txt` 把该行的计数改为 6，并补一句原因。本线尝试修改时被拦，没有绕过。
 
-STATUS: PARTIAL - 本线负责的代码修复都已进 launch 或在 #787(`b483bc070`)待合；#779 剩余的红：U5 silentError 白名单(mylike 4→6，环境拦截了本线的修改，需要你改)、gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者，三项都要你拍板
+
+lead 随后在 launch 合入了等价修复(`181e222f3`、`4cf14763e`)，包括 mylike 的 silentError 白名单(4→6)和路由视角推断的生成器修正。#787 同步后与 launch 只差本 RESULT 文档；在同一棵树上本地复核，所有小程序子门禁(含 U5)、台账、路由矩阵都通过。
+
+#779 在 `eb272ae74` 和 `4cf14763e` 上，Gameplay HTTP generic-only 和小程序静态门红，都是 runner 的 apt 域名解析失败造成的(装 redis-server / ripgrep 时报「Temporary failure resolving archive.ubuntu.com」)。HTTP 任务的 82 个 Python 前置检查已通过，红在 Java 用例开始之前；静态门也是在装工具时就红了。属于基础设施故障，不是代码问题。本线安排约 30 分钟后对这两个 run 各重跑一次失败的 job。
+
+STATUS: PARTIAL - 本线负责的代码修复已全部进 launch；#779 当前的 HTTP / 静态门红是 runner apt 域名解析故障，待重跑；仍需你拍板的是 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项
