@@ -1,7 +1,7 @@
 :host { display: block; }
 .aura { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  background: #FAFBFD; /* ds-ok: 收集册整屏底色,业主定的 mymind 浅色 */ }
-.aura__b { position: absolute; border-radius: 50%; filter: blur(92rpx); opacity: .8; animation: auraDrift 16s ease-in-out infinite alternate; will-change: transform; }
+  background: var(--cy-color-bg-page); /* x-fix2 L-1:玩家域深色底 */ }
+.aura__b { position: absolute; border-radius: 50%; filter: blur(92rpx); opacity: .16; animation: auraDrift 16s ease-in-out infinite alternate; will-change: transform; }
 .aura__b--1 { width: 600rpx; height: 600rpx; left: -120rpx; top: 220rpx; background: #CFE0FF; /* ds-ok: 同上 */ }
 .aura__b--2 { width: 560rpx; height: 560rpx; left: 380rpx; top: 820rpx; background: #CDEFEB; /* ds-ok: 同上 */ animation-duration: 19s; animation-delay: -6s; }
 .aura__b--3 { width: 520rpx; height: 520rpx; left: 0; top: 1360rpx; background: #E6E0FF; /* ds-ok: 同上 */ animation-duration: 22s; animation-delay: -11s; }

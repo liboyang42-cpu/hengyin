@@ -36,3 +36,33 @@ test('P-2 确认订单/购买弹层:不再把门票写成「通行证」;没有�
   assert.doesNotMatch(visible, /自玩通行证|主题通行证/)
   assert.doesNotMatch(read('pages/topic/components/cy/pass-reveal/index.js'), /value: '自玩通行证'/)
 })
+
+test('L-1 收集册(勋章/邮票/藏品)玩家侧一律深色:不再挂 theme-light 逃生口,状态栏白字', () => {
+  for (const p of ['badge-wall', 'stamp-album', 'object-cards']) {
+    const base = 'subpackageP3/pages/' + p + '/index/index'
+    assert.doesNotMatch(noComments(read(base + '.wxml')), /theme-light/, p)
+    assert.doesNotMatch(read(base + '.wxss'), /^\.theme-light /m, p)
+    const json = JSON.parse(read(base + '.json'))
+    assert.equal(json.navigationBarTextStyle, 'white', p)
+    assert.notEqual(String(json.backgroundColor).toLowerCase(), '#ffffff', p)
+  }
+  assert.doesNotMatch(read('subpackageP3/components/album-aura/index.wxss'), /#FAFBFD/i)
+  assert.doesNotMatch(read('subpackageP3/components/album-intro/index.wxss'), /#FAFBFD/i)
+  assert.doesNotMatch(read('subpackageP3/pages/object-cards/index/index.wxss'), /#FAFBFD/i)
+})
+
+test('M-2 勋章墙:单枚图片失败只降级这一枚(徽记/星标),重新载入时清空', () => {
+  const wxml = read('subpackageP3/pages/badge-wall/index/index.wxml')
+  assert.match(wxml, /wx:if="\{\{item\.iconUrl && !iconBroken\[item\._idx\]\}\}"[^>]*binderror="onIconError"/)
+  assert.match(wxml, /<cy-icon wx:else name="star" size="64" \/>/)
+  const js = read('subpackageP3/pages/badge-wall/index/index.js')
+  assert.match(js, /badges: list, iconBroken: \{\},/)
+  // 行为:把 onIconError 拿出来跑一次
+  const src = js.match(/  onIconError\(e\) \{[\s\S]*?\n  \},/)[0]
+  const fn = new Function('return {' + src + '}')().onIconError
+  const page = { data: { iconBroken: {} }, setData(d) { for (const k of Object.keys(d)) { const [, i] = k.split('.'); this.data.iconBroken[i] = d[k] } } }
+  fn.call(page, { currentTarget: { dataset: { idx: 3 } } })
+  assert.deepEqual(page.data.iconBroken, { 3: true })
+  fn.call(page, { currentTarget: { dataset: {} } })
+  assert.deepEqual(page.data.iconBroken, { 3: true })
+})
