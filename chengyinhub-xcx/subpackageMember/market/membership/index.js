@@ -38,7 +38,6 @@ Page({
     state: 'loading',
     scrolled: false,
     view: { enabled: false },
-    library: [],
     buying: false,
     buyError: '',
     reduced: false
@@ -62,15 +61,12 @@ Page({
   load() {
     const seq = (this._seq = (this._seq || 0) + 1)
     this.setData({ state: 'loading' })
-    Promise.all([
-      get('/api/platform-pass'),
-      get('/api/platform-pass/library', { limit: 12 })
-    ]).then(([ov, lib]) => {
+    // qx-final2:主题封面只在旧的开通成功层 / 主题网格里用,两者合并后都已退场;主题数取概览的 libraryCount
+    get('/api/platform-pass').then((ov) => {
       if (seq !== this._seq || this._unloaded) return
       if (!isBizOk(ov) || !ov.data) { this.setData({ state: 'error' }); return }
       this._overview = ov.data
-      const rows = isBizOk(lib) && lib.data && Array.isArray(lib.data.rows) ? lib.data.rows.map(pp.libraryRow).filter(Boolean) : []
-      this.setData({ state: 'ready', view: pp.passView(ov.data, this._selected || '', this._platform), library: rows })
+      this.setData({ state: 'ready', view: pp.passView(ov.data, this._selected || '', this._platform) })
     })
   },
   onPlan(e) {
