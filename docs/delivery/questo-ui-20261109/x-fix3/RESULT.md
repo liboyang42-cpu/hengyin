@@ -33,6 +33,8 @@
 - ui-integrity：`UI-GATE-0:PASS`，未新增基线条目。
 - route-matrix：PASS（171 路由 / 27 场景）。
 - 新增与相关单测（earnings-merchant-theme-fallback、merchant-more-sheet-distinct-icons）通过。
-- 台账 `--check`、主包体积、全量 `npm run test:unit`：执行时仍在运行，**本文件提交时未取得结果**，需补跑确认。
+- 全量 `npm run test:unit`：17323 项，通过 17318，失败 5。其中 `ann-d-funds` 的 D33 契约断言是 ME-3 引入的回归（旧断言要求 `onShow` 恒恢复深色），已随修复调整断言，现通过。其余 4 项在 x-fix3 之前的基线（1001a073）上同样失败：`action-ledger.test.js` 3 项（含 R30）、`sc-ui-date-count-cross-page` 1 项，与本通道无关，未处理。
+- 台账 `--check`：FAIL（台账漂移）。基线 1001a073 同样 FAIL，非本通道引入；`--write` 会改动约 4000 行，不属本通道范围，**未重写**，需 root 统一处理。
+- 主包体积：本次未取得数字（脚本输出被截断），需补跑确认 < 2048 KiB。
 
 STATUS: PARTIAL（M-1/C-1/A-1/A-2/L-5/ME-1/ME-2/ME-3 已修已推；L-4 判为测试数据、A-3 待截图；Java 构建与测试待 VPS）
