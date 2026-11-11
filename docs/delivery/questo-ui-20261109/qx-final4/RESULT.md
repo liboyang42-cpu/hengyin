@@ -52,7 +52,7 @@
 
 没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`（按规定）。
 
-## 五、PR #779 CI（本线最后一次检查时的头 `844638cf7`，含其他代理在本线之后推送的 qx-final5 / qx-final6 提交）
+## 五、PR #779 CI（头 `538a47ab`，含其他代理在本线之后推送的 qx-final5 / qx-final6 提交）
 
 | Job | 结果 | 说明 |
 |---|---|---|
@@ -71,8 +71,8 @@
 | real-storage-it 批次（EcomPayoutMapperMySqlIT、EcomPayoutWiringMySqlIT、P0* 6 个等） | ✅ | `FreeExploreSelfPlayPriceGateMySqlIT` 本线已修，等批次在新头复跑 |
 | **Backend tests** | ❌（架构项） | 单测 18759 条（0 失败，672 跳过）、MyBatis/MySQL IT 469 条（0 失败）全过；末步 compiled-ports 只报 1 条 `EXACT_STORAGE_PORT_CONSUMER`：`ApiTopicTemplateController → AuthorWriteReceiptService` |
 | **Fast gates (CWD / API existence / silentError)** | ❌（架构项） | 我在本地用受信 master 的 `ci/architecture/gate.py` 模拟 pull_request 事件复跑，findings 正好 9 条：StoreKit `DEPENDENCY_EXPANSION`（`chengyinhub-system/pom.xml`）+ 8 条 `NEW_UNOWNED_BOUNDARY`（`ApiMerchantPayoutAccountController`、`ApiPlatformPassController`、`ApiPlayFeedbackController`、`EcomCombineMapper`、`EcomPayoutMapper`、`PlayHelpAuditMapper`、`PlayRunFeedbackMapper`、`PlayRunFeedbackService`），没有新增项 |
-| **Mini program static gates** / Mini program static checks（汇总） | ❌（基础设施） | runner 解析不了 `azure.archive.ubuntu.com` / `archive.ubuntu.com` / `security.ubuntu.com`，`apt-get install ripgrep` 失败，门禁本身没有执行。已对该 run 触发一次「重跑失败 job」；本地 UI-GATE-0、台账、路由矩阵、危险操作门都已通过 |
-| **rehearsal**（release-migration-rehearsal） | ❌ | `[1] 模拟基线 … FAIL: 基线库上预检不符合 pack 的 expectedAtBaseline`。这是 qx-final6 / f-rehearsal 在本线之后合入、并在同一时段持续修改的发布迁移 pack；复现要起 MySQL 演练库，本线不能本地起 Docker，也不碰另一条正在推送的线的 pack，留给 qx-final6 |
+| Mini program static gates | ✅ | `844638cf7` 上曾因 runner 解析不了 Ubuntu 源（`apt-get install ripgrep` 失败）而红；runner 恢复后在 `538a47ab` 上通过 |
+| **rehearsal**（release-migration-rehearsal） | ❌ | `[1] 模拟基线 … FAIL: 基线库上预检不符合 pack 的 expectedAtBaseline`（`844638cf7`、`538a47ab` 两次相同）。workflow 是 qx-final6 / f-rehearsal 在本线之后合入的；qx-final6 RESULT 剩余风险 1 已写明「隔离演练还没有在 156 项上实跑」，原因是 `20261101_stagger_sys_job_seconds` 的断言依赖生产 `sys_job` 编号，合成基线没有这些行，要补合成行或由业主定这项可选迁移。复现与验证都要起 MySQL 演练库，本线不能本地起 Docker，所以没改 |
 
 以下由另一份 master 受信策略 PR 处理，本线没有改 `ci/architecture/*`：
 1. StoreKit `DEPENDENCY_EXPANSION`（`chengyinhub-system/pom.xml`）
@@ -84,7 +84,7 @@
 1. **主包只剩约 3.5 KiB 余量**（2044.5 / 2048 KiB）。l-icons 的新素材都在分包（`pages/play`、`subpackageMember`、`subpackagePass`），本线没有增加主包体积；下一处改主包的需求很可能超限。真实压缩体积要用开发者工具上传后的「代码质量」或 CLI `--info-output` 核对。
 2. **launch 分支上同时有多个代理在推送**（qx-final5、qx-final6 在本线推送之后又合入了 f-play2 / f-rehearsal）。每次推送前我都先同步、不强推，但 #779 的最终 CI 状态取决于最后一次推送。
 3. **rehearsal 红**：发布迁移 pack 的基线期望与演练库不一致，属于 f-rehearsal / qx-final6，见上表。
-4. **runner 解析不了 Ubuntu 源**（14:04Z 起）：小程序静态门在 CI 上没有真正执行；要等 GitHub runner 恢复后重跑。
+4. runner 解析不了 Ubuntu 源的问题（14:04Z 起）已恢复，小程序静态门在 `538a47ab` 上已通过。
 5. l-icons 待你决定 3 条、l-iconsB 待你决定 5 条，原样保留在各自 RESULT.md（例如 `glass-key.webp` 55 KB 略超 50 KB 目标、钥匙开场分包首次下载 1.7 MB 是否加 `preloadRule`、v2 未重画的 15 枚旧插图与新插图同屏、失败插图的「落地抖一下」）。
 
 ## 七、需要真机验的
@@ -98,8 +98,7 @@
 
 ## 八、待你决定
 
-1. **rehearsal 由谁收口**：默认留给 qx-final6（f-rehearsal 的 pack 正由它维护），本线不改。
-2. **小程序静态门**：runner 恢复后需要再重跑一次 `Mini program static gates`；本地对应门禁都已通过。
-3. 架构门禁三类 10 条：在 master 受信策略里登记（另一份 PR）。
+1. **rehearsal 怎么收口**：默认留给 f-rehearsal / qx-final6（合成基线补照生产编号造的 `sys_job` 行，或由你决定 `20261101_stagger_sys_job_seconds` 这项可选迁移是否进发布集），本线不改。
+2. 架构门禁三类 10 条：在 master 受信策略里登记（另一份 PR）。
 
-STATUS: PARTIAL - l-icons、l-iconsB 已全部在 launch（l-iconsB 最后一次同步以 5f5084b9 补记），本地门禁全过（小程序 17288/17288、UI-GATE-0、台账与路由矩阵零差异、危险操作门与自证、主包 2044.5 KiB、keyframes 9/9、mvn package）；修了两处 CI 红（f-money3 真库 IT 的 TINYINT 读取、e2e 夹具来源哈希）。#779 CI 除架构门禁项外还有两处红：Mini program static gates（runner 解析不了 Ubuntu 源，基础设施）和 rehearsal（qx-final6 维护的发布迁移 pack 基线期望不符）
+STATUS: PARTIAL - l-icons、l-iconsB 已全部在 launch（l-iconsB 最后一次同步以 5f5084b9 补记），本地门禁全过（小程序 17288/17288、UI-GATE-0、台账与路由矩阵零差异、危险操作门与自证、主包 2044.5 KiB、keyframes 9/9、mvn package）；修了两处 CI 红（f-money3 真库 IT 的 TINYINT 读取、e2e 夹具来源哈希），小程序静态门已恢复变绿。#779 CI 除架构门禁项外还剩 rehearsal 红（qx-final6 已知的发布迁移隔离演练合成基线问题，需起 MySQL 演练库）
