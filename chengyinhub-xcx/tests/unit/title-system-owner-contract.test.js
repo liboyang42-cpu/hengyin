@@ -135,6 +135,7 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageJourney/pages/settle/index', // 2026-11-10 qx-s2 staging 合流:r2-finish 结算流程页(custom 导航 + cy-nav-bar plain,不挂 cy-page-title)补入标题盘点
   'subpackageJourney/pages/seats/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   // 2026-11-10 qx-final:l-after 也新增了同一页 market/library,已在上面 l-pass 行登记,此处去重
+  'subpackagePass/reveal/index', // 2026-11-11 l-icons:通行证钥匙开场(custom 导航 + cy-nav-bar plain,封面页不挂标题,不挂 cy-page-title)
 ]
 
 const EXPECTED_PAGE_TITLE_ROUTES = [
@@ -363,8 +364,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 l-pass +2(均 custom 导航):通行证页 market/membership、游戏主题库 market/library ⇒ 169;custom 168。
   // 2026-11-10 l-payout +1(custom 导航):商家收款账户 ⇒ 168;custom 167。
   // 2026-11-10 qx-final 合入 l-payout:商家收款账户 pages/merchant/payout-account +1,叠加在 l-pass/l-after 合并计数之上。
-  assert.equal(rows.length, 170, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 169)
+  // 2026-11-11 l-icons +1(custom 导航):通行证钥匙开场 subpackagePass/reveal ⇒ 171;custom 170。
+  assert.equal(rows.length, 171, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 170)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

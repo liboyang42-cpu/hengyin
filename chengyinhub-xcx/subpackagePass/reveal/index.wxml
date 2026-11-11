@@ -1,0 +1,23 @@
+<!-- l-icons 通行证 · 钥匙开场(proto/icons ps-key):上半区序列帧,下半区活的渐变 / 文字 / 按钮;右上「跳过」只在完整版里 -->
+<view class="theme-dark ky {{merchant ? 'ky--plain' : ''}} {{reduced ? 'ky--reduced' : ''}} {{step.grad ? 'ky-g' : ''}}">
+  <cy-nav-bar plain custom-back bind:back="goBack" />
+  <cy-empty wx:if="{{merchant}}" fill class="cy-fill-state" size="lg" kind="empty" title="商家账号没有通行证" />
+  <block wx:else>
+    <view class="ky__stage" aria-hidden="true">
+      <view class="ky__layer" wx:if="{{introOn}}">
+        <cy-frames sheets="{{fr.intro}}" cols="{{fr.cols}}" fw="{{fr.fw}}" fh="{{fr.fh}}" w="{{750}}" h="{{1000}}" fps="{{fr.introFps}}" mode="once" enter="none" reduced-motion="{{false}}" bind:end="onIntroEnd" />
+      </view>
+      <view class="ky__layer ky__layer--idle {{idleOn ? 'is-on' : ''}}" wx:if="{{idleOn}}">
+        <cy-frames sheets="{{fr.idle}}" cols="{{fr.cols}}" fw="{{fr.fw}}" fh="{{fr.fh}}" w="{{750}}" h="{{1000}}" fps="{{fr.idleFps}}" mode="loop" enter="none" still="{{0}}" reduced-motion="{{reduced}}" />
+      </view>
+    </view>
+    <view class="ky__grad" aria-hidden="true"></view>
+    <text class="ky__skip {{step.skip ? 'is-on' : ''}}" wx:if="{{full && !idleOn}}" style="top: {{statusBarHeight + navBarHeight + 8}}px;" bindtap="onSkip" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</text>
+    <view class="ky__txt">
+      <text class="ky__eb ky__in {{step.eb ? 'is-on' : ''}}">{{copy.eb}}</text>
+      <text class="ky__h ky__in {{step.h ? 'is-on' : ''}}">{{copy.h}}</text>
+      <text class="ky__p ky__in {{step.p ? 'is-on' : ''}}" wx:if="{{copy.p}}">{{copy.p}}</text>
+      <view class="ky__btn ky__in {{step.btn ? 'is-on' : ''}}" bindtap="onStart" aria-role="button" aria-label="{{copy.btn}}" hover-class="cy-pressed" hover-stay-time="80">{{copy.btn}}</view>
+    </view>
+  </block>
+</view>

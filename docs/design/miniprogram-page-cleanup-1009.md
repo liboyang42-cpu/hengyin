@@ -237,6 +237,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageJourney/pages/settle/index` | 否 | `chengyinhub-xcx/pages/play/index.js:9475` | KEEP |
 | `pages/team/detail/index` | 否 | `chengyinhub-xcx/pages/team/join/index.js:119` | KEEP |
 | `pages/team/join/index` | 否 | `chengyinhub-xcx/pages/team/detail/index.js:172` | KEEP |
+| `subpackagePass/reveal/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:69` | KEEP |
 
 ## 验证与未验证
 

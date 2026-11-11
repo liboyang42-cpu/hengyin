@@ -446,7 +446,7 @@
   <view class="pv-ending__body {{previewEnding.real ? 'pv-ending__body--real' : ''}}">
   <!-- l-play 本局完成(proto gp-run-end,业主「应该是绿色的 不应该是对勾 应该是动画 获得了什么线索或勋章之类的」):整屏泛绿,勋章 / 成功插图落下 + 光环 + 闪光;
        「获得勋章」与勋章名只在这一局真夺到勋章时写(_wonMedals,与完成页勋章堆同口径),没有就只说「本局完成」 -->
-  <view class="pv-ending__hero" wx:if="{{previewEnding.real}}" aria-hidden="true"><view class="pv-ending__glow"></view><view class="pv-ending__illus"><cy-illus name="{{previewEnding.reward ? 'badge' : 'success'}}" size="340" delay="{{400}}" reduced-motion="{{reducedMotion}}" /><view class="pv-ending__spk pv-ending__spk--a"><cy-illus name="sparkles" size="80" bare="{{true}}" delay="{{1000}}" reduced-motion="{{reducedMotion}}" /></view><view class="pv-ending__spk pv-ending__spk--b"><cy-illus name="sparkles" size="60" bare="{{true}}" delay="{{1200}}" reduced-motion="{{reducedMotion}}" /></view><view class="pv-ending__ring"></view></view></view>
+  <view class="pv-ending__hero" wx:if="{{previewEnding.real}}" aria-hidden="true"><view class="pv-ending__glow"></view><view class="pv-ending__illus"><cy-frames sheets="{{[{ src: previewEnding.reward ? '/pages/play/images/frames/glass-badge.webp' : '/pages/play/images/frames/glass-success.webp', n: 24 }]}}" cols="{{6}}" fw="{{112}}" fh="{{112}}" w="{{340}}" h="{{340}}" fps="{{10}}" delay="{{400}}" reduced-motion="{{reducedMotion}}" /><view class="pv-ending__spk pv-ending__spk--a"><cy-illus name="sparkles" size="80" bare="{{true}}" delay="{{1000}}" reduced-motion="{{reducedMotion}}" /></view><view class="pv-ending__spk pv-ending__spk--b"><cy-illus name="sparkles" size="60" bare="{{true}}" delay="{{1200}}" reduced-motion="{{reducedMotion}}" /></view><view class="pv-ending__ring"></view></view></view>
   <text class="pv-ending__k">{{previewEnding.real ? (previewEnding.reward ? '本局完成 · 获得勋章' : (previewEnding.archive.identity.length ? '这一生的结局' : '本局完成')) : '本局结局 · 试玩'}}</text>
   <text class="pv-ending__title">{{previewEnding.real && previewEnding.reward ? previewEnding.reward.name : previewEnding.list[previewEnding.idx].title}}</text>
   <text class="pv-ending__copy" wx:if="{{previewEnding.real && previewEnding.reward}}">{{previewEnding.list[previewEnding.idx].title}}{{previewEnding.list[previewEnding.idx].summary ? ' · ' + previewEnding.list[previewEnding.idx].summary : ''}}</text>
@@ -509,7 +509,7 @@
 
 <!-- 开局「开机」:黑场 → 白线横扫 → 暖光 → 淡出,压在第一道开场门上面,只放一次 -->
 <view class="st-boot st-boot--{{bootStage}}" wx:if="{{bootStage}}" aria-hidden="true"><view class="st-boot__warm"></view><view class="st-boot__line"></view></view>
-<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show && !chapterGate.held}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
+<cy-chapter-flip wx:if="{{chapterFull && chapterGate.show && !chapterGate.held}}" mode="gate" faces="{{chapterGate.faces}}" end-info="{{chapterGate.endInfo}}" info="{{chapterGate.info}}" look="{{chapterGate.look}}" reduced-motion="{{reducedMotion}}" bind:continue="continueChapterGate" />
 <!-- P-08 第四轮(业主):带领场本章还没放行 → 不放翻转门,上方「等待放行」、屏幕中间集合屏同款三点等待(减弱动态时静止)。
      这一屏没有真实动作,所以不放按钮。队长放行后换回正常的章节翻转门,播完照常进正文。 -->
 <view class="chhold {{reducedMotion ? 'chhold--still' : ''}}" wx:if="{{chapterFull && chapterGate.show && chapterGate.held && !chapterGate.away}}" aria-role="status" aria-label="等待放行">
