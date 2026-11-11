@@ -173,7 +173,7 @@ import {
   listReturns, retryReturn, listEcomRefunds
 } from '@/api/business/ecommercePayout'
 
-const REPLANNABLE = ['RECEIVER_NOT_ONBOARDED', 'SHARE_RATIO_EXCEEDED', 'PLATFORM_RECEIVER_MISSING', 'NO_LEDGER_COMPONENTS', 'LEDGER_CONSERVATION']
+const REPLANNABLE = ['RECEIVER_NOT_ONBOARDED', 'SHARE_RATIO_EXCEEDED', 'PLATFORM_RECEIVER_MISSING', 'NO_LEDGER_COMPONENTS', 'LEDGER_CONSERVATION', 'SUB_MERCHANT_SHARE_UNSUPPORTED']
 
 export default {
   name: 'EcommercePayout',
@@ -207,7 +207,8 @@ export default {
         RECEIVER_NOT_ONBOARDED: '接收方未进件', SHARE_RATIO_EXCEEDED: '超过分账比例上限',
         PLATFORM_RECEIVER_MISSING: '平台接收方未配置', NO_LEDGER_COMPONENTS: '账本无份额',
         LEDGER_CONSERVATION: '账本份额与实付不等', REFUNDED_BEFORE_SHARE: '分账前已退款',
-        WECHAT_SHARE_CLOSED: '微信分账关闭', ORDER_FACTS_MISSING: '支付事实缺失'
+        WECHAT_SHARE_CLOSED: '微信分账关闭', ORDER_FACTS_MISSING: '支付事实缺失',
+        SUB_MERCHANT_SHARE_UNSUPPORTED: '不支持商户间分账'
       }
     }
   },
