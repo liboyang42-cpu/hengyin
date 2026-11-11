@@ -56,7 +56,7 @@ Page({
     this.openScene({ detail: { id: 'merchant-profit', params } })
   },
 
-  onShow() { this._hidden = false; merchantTheme.merchantPageRestore() },
+  onShow() { this._hidden = false; if (this.data.merchantView) merchantTheme.merchantPageShow(); else merchantTheme.merchantPageRestore() },
   onHide() { this._hidden = true; this._withdrawEpoch = (this._withdrawEpoch || 0) + 1; merchantTheme.merchantPageRestore() },
   onUnload() { this._unloaded = true; this._withdrawEpoch = (this._withdrawEpoch || 0) + 1; merchantTheme.merchantPageRestore() },
 

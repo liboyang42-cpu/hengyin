@@ -1541,6 +1541,8 @@
 <canvas type="2d" id="snapcv" style="position:fixed;left:-2000px;top:0;width:375px;height:500px;"></canvas>
 
 <view class="play-loading" wx:if="{{loading}}" style="padding-top:{{chrome.contentTop || 0}}px" aria-role="status" aria-live="polite" aria-label="正在加载路线">
+  <!-- x-fix2 L-2:加载骨架在纯黑底上近乎不可见,整屏像黑屏且出不去;压在 z200,外层返回键够不着,这里单放一颗 -->
+  <view class="play-back play-back--load" wx:if="{{!isPreview}}" style="top:{{chrome.actionTop}}px" bindtap="goBackDetail" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="34" /></view>
   <cy-skeleton type="detail" />
 </view>
 
