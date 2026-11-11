@@ -1,7 +1,7 @@
 <!-- 通用分享层(2026-10-31 业主批准 P-8;r3-share 按 refs4/share-page-cards 改版):
      每种内容一张整色卡 —— 上面是封面(勋章是勋章本身),下沿一道弧,城瘾徽标压在弧上,下面大号两行标题;
      卡下是色块圆点、一颗主按钮「发给微信好友」、一排小渠道。活动 / 主题 / 勋章 / 店铺走这一层。 -->
-<view wx:if="{{show}}" class="sc {{scIn === 1 ? 'sc--pre' : ''}}" style="--sc-bg:{{bg}};padding-top:{{statusBarHeight}}px;" catchtouchmove="noop">
+<view wx:if="{{show}}" class="sc {{scIn === 1 ? 'sc--pre' : ''}} {{reducedMotion ? 'sc--reduced' : ''}}" style="--sc-bg:{{bg}};padding-top:{{statusBarHeight}}px;" catchtouchmove="noop">
   <view class="sc-top">
     <view class="sc-x" bindtap="close" aria-role="button" aria-label="关闭分享" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="36" /></view>
     <text class="sc-h">{{heading}}</text>
@@ -20,7 +20,7 @@
           <view class="sc-inv-step" wx:for="{{steps}}" wx:key="*this"><text class="sc-inv-dot">{{index + 1}}</text><text class="sc-inv-name">{{item}}</text></view>
         </view>
         <view class="sc-inv-who" wx:if="{{inviterText}}"><image wx:if="{{art}}" class="sc-inv-art" src="{{art}}" mode="aspectFit" aria-hidden="true" /><text>{{inviterText}}</text></view>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr sc-qr--inv" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr sc-qr--inv {{qrReady ? 'sc-qr--ready' : ''}}" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" bindload="onQrLoad" /></view>
       </view>
     </view>
     <view class="sc-card sc-card--{{kind}}" wx:else>
@@ -40,7 +40,7 @@
         <text class="sc-eb">{{eyebrow}}</text>
         <text class="sc-big">{{title}}</text>
         <text class="sc-m" wx:if="{{sub}}">{{sub}}</text>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr {{qrReady ? 'sc-qr--ready' : ''}}" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" bindload="onQrLoad" /></view>
       </view>
     </view>
   </view>
