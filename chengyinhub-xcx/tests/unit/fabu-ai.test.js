@@ -533,3 +533,18 @@ test('未登记发布者的明确零价主题:完成后内容预检通过直接�
   const created = sent.find((request) => request.url === '/api/topic/v2/create');
   assert.doesNotMatch(created.data, /realName|idCard|identityConsent/);
 });
+
+// x-fix3 A-2：测试/新环境没配 AI 时后端回 500「AI 服务配置缺失」,只给一条平静的建议项,不把后端报错串给作者看,发布照常。
+test('预检遇 AI 配置缺失 → 通用建议文案、不透出后端报错、照常发布', () => {
+  const p = makeReadyPage();
+  sent = [];
+  p.submitForm();
+  sent[0].success({ code: 500, msg: 'AI 服务配置缺失，请联系管理员' });
+
+  const label = p._precheckSkipLabel('AI 服务配置缺失，请联系管理员');
+  assert.ok(label.indexOf('安全预检暂不可用') >= 0);
+  assert.equal(label.indexOf('配置缺失'), -1);
+  assert.equal(label.indexOf('管理员'), -1);
+  assert.equal(p.data.publishCheck.show, false);
+  assert.equal(createdCount(), 1, 'AI 未配置必须还能发布');
+});
