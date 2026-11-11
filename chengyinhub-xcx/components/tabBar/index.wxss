@@ -14,10 +14,10 @@
    它浅端是白 .88、深端 .82,压在浅灰页底上仍读成白条;而它还被弹窗/浮层共用,不改取值。
    底栏要一眼看得出是玻璃:不透明度压到 .55 让滚动内容透光,模糊加深一档。 */
 .tabbar {
-  --tabbar-glass: rgba(255, 255, 255, 0.55); /* ds-ok: 底栏专用玻璃档,任务禁止改全局 --cy-color-bg-glass 取值 */
+  --tabbar-glass: rgba(255, 255, 255, 0.78); /* ds-ok: 底栏专用玻璃档;x-fix2 ME-4:.55 在不渲染 backdrop-filter 的环境里字直接透上来,提到 .78 */
 }
 .tabbar.dark {
-  --tabbar-glass: rgba(28, 28, 30, 0.55); /* ds-ok: 底栏专用玻璃档,任务禁止改全局 --cy-color-bg-glass 取值 */
+  --tabbar-glass: rgba(28, 28, 30, 0.82); /* ds-ok: 底栏专用玻璃档;x-fix2 ME-4:同上,深端 .82 */
 }
 
 .tabbar .kg {

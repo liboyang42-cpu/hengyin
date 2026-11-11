@@ -240,7 +240,7 @@ page { background: var(--cy-color-bg-page); }
    正文没丢:每一行点进去还是原来那件全文半屏(openStory),所以是换排版不是删内容。
    1px = 1.923rpx。 */
 .jkv{ display:flex; align-items:center; padding:23rpx 0; border-bottom:2rpx solid rgba(255,255,255,.07); } /* ds-ok 原型 .kv 12px 0 / 1px 白 7% */
-.jkv__k{ flex:none; width:123rpx; font-size:23rpx; color:#8A93A0; } /* ds-ok 原型 .dv 12px #8A93A0,.kv .k 宽 64px */
+.jkv__k{ flex:none; width:123rpx; font-size:23rpx; color:#8A93A0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 原型 .dv 12px #8A93A0,.kv .k 宽 64px */
 .jkv__copy{ flex:1; min-width:0; display:flex; flex-direction:column; margin-left:23rpx; } /* ds-ok 原型 .dcopy + margin-left:12px */
 .jkv__t{ font-size:27rpx; color:#FFFFFF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 原型 .dt 14px */
 .jkv__s{ margin-top:4rpx; font-size:21rpx; color:#6A7282; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 原型 .ds 11px #6A7282 / 上 2px */

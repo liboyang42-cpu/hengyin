@@ -2,7 +2,7 @@
 <view class="theme-dark lb" style="--pm-x:{{pm}};">
   <cy-nav-bar plain custom-back bind:back="goBack" />
   <cy-page-title title="游戏主题库" />
-  <view class="lb-kinds" aria-role="tablist">
+  <view class="lb-kinds" wx:if="{{state !== 'off' && state !== 'merchant'}}" aria-role="tablist">
     <view class="lb-kind {{kind === item.key ? 'is-on' : ''}}" wx:for="{{kinds}}" wx:key="key" data-key="{{item.key}}" bindtap="onKind"
           aria-role="tab" aria-selected="{{kind === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
   </view>

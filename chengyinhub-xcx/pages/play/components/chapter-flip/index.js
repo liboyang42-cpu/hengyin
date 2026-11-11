@@ -24,6 +24,36 @@ const STAT_ROLL_MS = 900;                 // 三格数据滚上来
 const DOT = { cell: 11, r: 4.6, w: 330, h: 260, font: '800 236px sans-serif' };   // l-icons:圆点章节号(原型 dots.js chapter)
 const SEAL = { R1: 62, R2: 46, N1: 44, N2: 28, r1: 3, r2: 1.8, rg: 2.8, box: 100, cell: 7, font: '700 64px "Songti SC","STSong","Noto Serif SC",serif', spinMs: 9000 };
 const SEAL_GAP = 16;                      // 章节印与上方文字 / 下方按钮的最小间距(390 宽稿 px)
+// x-fix2 L-3:离屏画布字形取样拿不到点(开发者工具 / 旧基础库的 OffscreenCanvas 不画字或 getImageData 失败)时,
+// 章节号退回这套内置 5×7 点阵数字;否则屏上只剩章节印两圈橙点 = 验收看到的「一个糊掉的橙色圆环」。
+const DIGITS = { 0: '01110100011001110101110011000101110', 1: '00100011000010000100001000010001110', 2: '01110100010000100010001000100011111',
+  3: '11110000010000101110000010000111110', 4: '00010001100101010010111110001000010', 5: '11111100001111000001000011000101110',
+  6: '00110010001000011110100011000101110', 7: '11111000010001000100010000100001000', 8: '01110100011000101110100011000101110',
+  9: '01110100011000101111000010001001100' };
+const SEAL_GLYPH = ['.....#.....', '###########', '..#.....#..', '...#...#...', '###########', '.#########.', '.#.......#.',
+  '.#########.', '.#.......#.', '.#########.', '.....#.....', '###########', '.....#.....'];
+/** 内置点阵字形(行串数组,# 为点)→ 在 box×box 里居中的点 */
+function glyphPoints(rows, box, cell) {
+  const n = Math.floor(box / cell), x0 = Math.floor((n - rows[0].length) / 2), y0 = Math.floor((n - rows.length) / 2), out = [];
+  rows.forEach((row, r) => row.split('').forEach((ch, c) => { if (ch === '#') out.push({ x: (x0 + c) * cell, y: (y0 + r) * cell, row: (y0 + r) * cell / box }); }));
+  return out;
+}
+/** 内置点阵数字 → 与 gridPoints 同形的点({x,y,row}),在 w×h 的格子里居中,单元 = cell */
+function digitPoints(text, w, h, cell) {
+  const ds = String(text || '').split('').filter((c) => DIGITS[c]);
+  if (!ds.length) return [];
+  const cols = Math.floor(w / cell), rows = Math.floor(h / cell), span = ds.length * 6 - 1;
+  const k = Math.max(1, Math.min(Math.floor(cols / span), Math.floor(rows / 7)));
+  const x0 = Math.floor((cols - span * k) / 2), y0 = Math.floor((rows - 7 * k) / 2), out = [];
+  ds.forEach((d, n) => {
+    for (let r = 0; r < 7 * k; r++) for (let c = 0; c < 5 * k; c++) {
+      if (DIGITS[d][Math.floor(r / k) * 5 + Math.floor(c / k)] !== '1') continue;
+      const y = (y0 + r) * cell;
+      out.push({ x: (x0 + n * 6 * k + c) * cell, y, row: y / h });
+    }
+  });
+  return out;
+}
 
 function chars(text) { return Array.from(String(text || '')); }
 /** 数据格怎么滚:纯整数从 0 滚;mm:ss 按秒滚;a/b 只滚 a;别的(例如「—」)不滚,直接写。 */
@@ -317,12 +347,17 @@ Component({
       const S = this._S;
       if (dots) { w = w || DOT.w; h = h || DOT.h; cell = cell || DOT.cell; tile = tile || DOT.r * 2; }
       w = w || 330; h = h || 250; cell = cell || 9;
-      const mask = this._mask(w, h, draw || ((g) => {
-        g.font = dots ? DOT.font : '800 238px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + (dots ? h * 0.04 : 10));
-      }));
+      let mask = null;
+      try {
+        mask = this._mask(w, h, draw || ((g) => {
+          g.font = dots ? DOT.font : '800 238px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + (dots ? h * 0.04 : 10));
+        }));
+      } catch (e) { mask = null; }
       this._seal = null;   // 重新拼数字时章节印一起重来(完成屏 → 下一章开场由 _placeSeal 再放)
       const ox = this._cx - (w * S) / 2, oy = (top != null ? top : this._cy - h / 2 - 20) ;
-      const pts = E.gridPoints(mask, w, h, cell, 0, 0).map((p) => ({ x: ox + p.x * S, y: oy + p.y * S, row: p.row }));
+      let grid = mask ? E.gridPoints(mask, w, h, cell, 0, 0) : [];
+      if (!grid.length && dots) grid = digitPoints(text, w, h, cell);   // x-fix2 L-3
+      const pts = grid.map((p) => ({ x: ox + p.x * S, y: oy + p.y * S, row: p.row }));
       const now = Date.now(), M = silver ? E.PAL.silver : E.PAL.gold, lk = dots ? this._colors() : null;
       while (this._tiles.length < pts.length) { const st = this._stars[Math.random() * this._stars.length | 0]; this._tiles.push({ x: st.x, y: st.y, vx: 0, vy: 0, sz: 1.4 }); }
       this._tiles.length = pts.length;
@@ -369,6 +404,7 @@ Component({
       for (let j = 0; j < SEAL.N2; j++) { const a = j / SEAL.N2 * 6.283 + 0.11; add.push(mk(cx + Math.cos(a) * SEAL.R2 * S, cy + Math.sin(a) * SEAL.R2 * S, SEAL.r2, 2, j, a)); }
       const box = SEAL.box; let glyph = [];
       try { const mask = this._mask(box, box, (g) => { g.font = SEAL.font; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('章', box / 2, box / 2 + box * 0.04); }); glyph = E.gridPoints(mask, box, box, SEAL.cell, 0, 0); } catch (e) { glyph = []; }   // 离屏画布不可用时只画两圈
+      if (!glyph.length) glyph = glyphPoints(SEAL_GLYPH, box, SEAL.cell);   // x-fix2 L-3:取样不到就用内置「章」点阵,不只剩两圈点
       glyph.forEach((p, i) => add.push(mk(cx - box / 2 * S + (p.x + SEAL.cell / 2) * S, cy - box / 2 * S + (p.y + SEAL.cell / 2) * S, SEAL.rg, 3, i, 0)));
       this._seal = { cx, cy, S, t0: now };
       this._tiles = (this._tiles || []).filter((t) => !t.seal).concat(add);

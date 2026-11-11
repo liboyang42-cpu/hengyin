@@ -267,7 +267,7 @@ test('CU-M-80 未开放自助开通时，升级权益要有可执行的客服入
 
 test('CU-M-83 经营类目与行业类型保留各自字段和已填值，移除说明小字', () => {
   const wxml = read(DECOR_WXML)
-  assert.match(wxml, /title="经营类目"[\s\S]{0,200}value="\{\{m\.preference \|\| '待填写'\}\}"/)
+  assert.match(wxml, /title="经营类目"[\s\S]{0,200}value="\{\{m\.preference \|\| '未设置'\}\}"/)
   assert.match(wxml, /title="行业类型" value="\{\{catNames \|\| '选择行业'\}\}"/)
   assert.doesNotMatch(wxml, /description="自由描述店内主营，用于主页展示"|description="平台行业分类，单选，用于搜索与推荐"/)
 })

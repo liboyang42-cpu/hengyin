@@ -99,3 +99,81 @@ test('P-8 地点卡大字「开放」只放时段,说明文字不挤进数字位
   assert.equal(sheetFacts({ businessTime: '公共区域观察；以现场通行和开放时间为准' }, '').hoursText, '')
   assert.equal(sheetFacts({ businessTime: '00:00-23:59' }, '').hoursText, '')
 })
+
+test('L-3 章节号 / 章节印字形取样失败时退回内置点阵数字与「章」字点阵,不再只剩两圈橙点', () => {
+  const src = read('pages/play/components/chapter-flip/index.js')
+  const block = src.match(/const DIGITS = [\s\S]*?\nfunction digitPoints[\s\S]*?\n}\n/)[0]
+  const digitPoints = new Function(block + '; return digitPoints;')()
+  const pts = digitPoints('01', 330, 260, 11)
+  assert.ok(pts.length > 20, '两位数字应落出足够多的点')
+  for (const p of pts) { assert.ok(p.x >= 0 && p.x < 330 && p.y >= 0 && p.y < 260); assert.equal(p.x % 11, 0); assert.ok(p.row >= 0 && p.row < 1) }
+  const xs = pts.map((p) => p.x)
+  assert.ok(Math.min(...xs) > 0 && Math.max(...xs) < 330 - 11, '居中,不贴边')
+  assert.deepEqual(digitPoints('', 330, 260, 11), [])
+  assert.match(src, /if \(!grid\.length && dots\) grid = digitPoints\(text, w, h, cell\);/)
+  assert.match(src, /\} catch \(e\) \{ mask = null; \}/)
+  assert.match(src, /if \(!glyph\.length\) glyph = glyphPoints\(SEAL_GLYPH, box, SEAL\.cell\);/)
+  const gblock = src.match(/const SEAL_GLYPH = [\s\S]*?\nfunction glyphPoints[\s\S]*?\n}\n/)[0]
+  const g = new Function(gblock + '; return glyphPoints(SEAL_GLYPH, 100, 7);')()
+  assert.ok(g.length > 40)
+  for (const p of g) assert.ok(p.x >= 0 && p.x < 100 && p.y >= 0 && p.y < 100)
+})
+
+test('M-2 勋章墙加载失败:按全站口径留空白遮罩,但收集册页头照常在;藏品页 ✦ 钮在深底上是浅色线条', () => {
+  const wxml = read('subpackageP3/pages/badge-wall/index/index.wxml')
+  assert.match(wxml, /<view class="bw-list" wx:if="\{\{viewMode === 'list' && \(loadFail \|\| partialFail\) && !wallAuthRequired\}\}">\s*<album-head active="medal" \/>/)
+  const oc = read('subpackageP3/pages/object-cards/index/index.wxss')
+  assert.match(oc, /\.alb-light \.oc-gather::before \{[^}]*stroke%3D%22%23F2F2F4%22/)
+})
+
+test('P-9 旅程手记:不再有说明句,左格不塞节点名;P-10 里程碑文案不再「距 1 个还差 1 个」', () => {
+  const wxml = read('pages/play/index.wxml')
+  assert.doesNotMatch(wxml, /这一趟自动记下来的|nextChapterText/)
+  assert.match(wxml, /<view class="sheet-meta">\{\{chapter\.name\}\}<\/view>/)
+  const js = read('pages/play/index.js')
+  assert.doesNotMatch(js, /走完本章坐标|nextChapterText/)
+  assert.match(js, /seg\.kvK = parts\.length > 1 \? parts\[0\] : \(seg\.label === n\.name \? '未到' : parts\[0\] \|\| ''\);/)
+  assert.match(read('pages/play/index.wxss'), /\.jkv__k\{[^}]*white-space:nowrap; overflow:hidden; text-overflow:ellipsis;/)
+  const { buildMilestone } = require('../../pages/play/utils/play-milestone.js')
+  assert.equal(buildMilestone(0).title, '第一个主题还没完成')
+  assert.doesNotMatch(wxml, /距 \{\{milestone\.next\.value\}\} 个还差/)
+  assert.match(wxml, /'下一档 ' \+ milestone\.next\.value \+ ' 个主题'/)
+})
+
+test('P-11 首页城市定位确认是一句陈述,不再是长问句(合规要点:精确位置 / 发送给城瘾以确定首页城市 / 不用于附近排序 保留)', () => {
+  for (const f of ['pages/index/index.js', 'pages/privacy/index.js']) {
+    const s = read(f)
+    assert.match(s, /content: '使用精确位置并发送给城瘾以确定首页城市，之后进入首页自动定位，不用于附近排序。'/, f)
+    assert.doesNotMatch(s, /附近排序吗？/, f)
+  }
+})
+
+test('P-13/P-15/P-16/P-18/ME-4 玩家侧小项', () => {
+  // P-13 通行证未开放 / 商家:不摆筛选条
+  assert.match(read('subpackageMember/market/library/index.wxml'), /<view class="lb-kinds" wx:if="\{\{state !== 'off' && state !== 'merchant'\}\}"/)
+  // P-15 投诉建议有自己的图标,不再和 AI 对话记录重复
+  const sz = read('pages/shezhi/shezhi.wxml')
+  const icon = (id) => (sz.match(new RegExp('id="' + id + '"[^>]*icon="([^"]+)"')) || [])[1]
+  assert.equal(icon('settings-feedback'), '/pages/shezhi/images/icon_lc_megaphone.svg')
+  assert.notEqual(icon('settings-feedback'), icon('settings-ai-chat-records'))
+  assert.ok(fs.existsSync(path.join(ROOT, 'pages/shezhi/images/icon_lc_megaphone.svg')))
+  // P-16 选中的筛选胶囊在浅色地图上有落影
+  assert.match(read('subpackageRoam/nearby/index.wxss'), /\.mt-chip\.is-on \{ background: #fff; color: #000; font-weight: 600; box-shadow: 0 4rpx 16rpx/)
+  // P-18 没封面的票卡放插画,不留空
+  const sw = read('subpackageMember/signup/index.wxml')
+  assert.match(sw, /<view class="wc__im wc__im--illus" wx:else aria-hidden="true"><cy-illus /)
+  assert.equal(JSON.parse(read('subpackageMember/signup/index.json')).usingComponents['cy-illus'], '/subpackageMember/components/cy-illus/index')
+  // ME-4 底栏玻璃不透明度够,不渲染模糊时字也不透上来
+  const tb = read('components/tabBar/index.wxss')
+  assert.match(tb, /--tabbar-glass: rgba\(255, 255, 255, 0\.78\)/)
+  assert.match(tb, /--tabbar-glass: rgba\(28, 28, 30, 0\.82\)/)
+})
+
+test('P-12 主题详情数据条:开放时间只在连字符后折行,不再 break-all 把「10.13」劈开', () => {
+  const { buildTopicStatBar } = require('../../pages/topic/utils/topic-detail-facts.js')
+  const open = buildTopicStatBar({ showStartDate: '10.11', showEndDate: '10.13' }).find((c) => c.key === 'open')
+  assert.equal(open.value, '10.11-​10.13')
+  const css = read('pages/topic/index/index.wxss')
+  assert.match(css, /\.topic \.statbar__value \{ max-width: 100%; white-space: normal; word-break: keep-all; overflow-wrap: anywhere;/)
+  assert.doesNotMatch(css, /\.topic \.statbar__value \{[^}]*break-all/)
+})
