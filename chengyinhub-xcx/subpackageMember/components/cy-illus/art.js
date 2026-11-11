@@ -2,29 +2,20 @@
 // 逐字移植自 docs/delivery/questo-ui-20261109/proto/game/icons.js(业主批准的原型):
 // 两层 —— 底层白色有机形(blob),上层粗黑描边 + 白填充 + 柠檬绿点缀的手绘物件(figure)。全部原创 SVG。
 // 小程序不能内联 <svg>,所以两层各自出成 data URI,由组件分别做进场 / 待机的 transform 过渡。
+// l-iconsB 2026-11-11:业主批准风格 B v2(proto/icons icons-b.js)。线索 / 勋章 / 钥匙 / 成功 / 失败 / 调查中 / 队伍 / 通行证 / 积分 / 章节印
+// 十枚改由 art-b.js 出图(分层 + 主 / 次级动作),旧画法删掉;其余 15 枚 v2 没有重画,保持原样。名字与 layers() 用法不变。
 'use strict';
+var B = require('./art-b.js');
 var K = '#121213', L = '#CDFF71', W = '#FFFFFF';
 var S = 'fill="' + W + '" stroke="' + K + '" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
 var SK = 'fill="' + K + '" stroke="' + K + '" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
 var SL = 'fill="' + L + '" stroke="' + K + '" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
 var LN = 'fill="none" stroke="' + K + '" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
 var BLOB = ['M22 58C14 36 34 16 58 14c26-2 44 10 48 34 4 22-12 44-36 50C46 104 24 92 22 58Z', 'M18 50C22 26 46 12 70 16c24 4 36 24 34 46-2 26-24 44-50 42C30 102 14 76 18 50Z', 'M26 46C30 24 52 10 74 18c20 8 32 30 28 52-4 24-28 38-52 32C28 96 20 70 26 46Z'];
-// 小感叹气泡(空态里的那个)
-function bang(x, y) { return '<g class="bang" transform="translate(' + x + ' ' + y + ')"><path d="M-13 -9c0-7 6-11 13-11s13 4 13 11-6 11-13 11l-5 7-1-8c-5-2-7-5-7-10z" ' + S + ' stroke-width="4"/><path d="M0-14v8M0 0v1" ' + LN + ' stroke-width="4"/></g>'; }
 function star4(cx, cy, r, fill) { return '<path d="M' + cx + ' ' + (cy - r) + 'Q' + (cx + r * .18) + ' ' + (cy - r * .18) + ' ' + (cx + r) + ' ' + cy + 'Q' + (cx + r * .18) + ' ' + (cy + r * .18) + ' ' + cx + ' ' + (cy + r) + 'Q' + (cx - r * .18) + ' ' + (cy + r * .18) + ' ' + (cx - r) + ' ' + cy + 'Q' + (cx - r * .18) + ' ' + (cy - r * .18) + ' ' + cx + ' ' + (cy - r) + 'Z" fill="' + (fill || L) + '" stroke="' + K + '" stroke-width="4" stroke-linejoin="round"/>'; }
 var D = {
-  clue: { b: 0, f: '<path class="hd" d="M72 72 98 98" stroke="' + K + '" stroke-width="12" stroke-linecap="round"/><circle class="lens" cx="52" cy="52" r="24" ' + S + '/><path d="M38 46c2-7 8-12 15-13" ' + LN + ' stroke="' + L + '" stroke-width="6"/><circle class="pip" cx="58" cy="58" r="5" fill="' + L + '"/>' + bang(90, 26) },
-  badge: { b: 1, f: '<path class="rib" d="M46 66 36 108l16-8 8 12 4-46z" ' + SL + '/><path class="rib" d="M74 66l10 42-16-8-8 12-4-46z" ' + SL + '/><circle cx="60" cy="50" r="30" ' + LN + ' stroke-dasharray="6 5"/><circle cx="60" cy="50" r="24" ' + S + '/><path d="M60 34l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="' + K + '"/>' },
   stamp: { b: 2, f: '<rect x="30" y="24" width="60" height="72" rx="3" ' + S + ' stroke-dasharray="5 4"/><rect x="38" y="32" width="44" height="56" rx="2" ' + LN + ' stroke-width="4"/><path class="wave" d="M40 70c6-10 12-10 18 0s12 10 18 0" ' + LN + ' stroke="' + L + '" stroke-width="7"/><circle cx="52" cy="48" r="7" fill="' + K + '"/><circle cx="52" cy="48" r="13" ' + LN + ' stroke-width="3"/>' },
-  key: { b: 0, f: '<g class="kb"><path d="M52 50 96 94" stroke="' + K + '" stroke-width="11" stroke-linecap="round"/><path d="M84 82l10-10M92 92l10-10" stroke="' + K + '" stroke-width="8" stroke-linecap="round"/><circle cx="40" cy="42" r="20" ' + SL + '/><circle cx="40" cy="42" r="7" fill="' + K + '"/><path d="M28 34c3-5 8-8 14-8" ' + LN + ' stroke="' + W + '" stroke-width="5"/></g>' },
-  success: { b: 1, f: '<g class="burst">' + star4(60, 56, 34) + star4(96, 30, 9, K) + star4(26, 84, 7, K) + star4(92, 86, 6, W) + '</g>' + bang(90, 60).replace('class="bang"', 'class="bang b2"') },
-  fail: { b: 2, f: '<path class="cloud" d="M34 64c-10 0-16-7-16-15 0-9 8-16 18-14 4-12 16-18 28-14 10 3 15 11 15 20 10 0 16 6 16 14 0 7-6 13-16 13H34z" ' + S + '/><path class="bolt" d="M60 60 46 86h12l-6 22 22-30H62l8-18z" ' + SL + '/><circle cx="44" cy="46" r="3" fill="' + K + '"/><circle cx="64" cy="44" r="3" fill="' + K + '"/><path d="M48 56c4-3 10-3 14 0" ' + LN + ' stroke-width="4"/>' },
-  wait: { b: 0, f: '<path d="M22 54h76" stroke="' + K + '" stroke-width="9" stroke-linecap="round"/><path d="M36 54c0-18 8-30 24-30s24 12 24 30" ' + SK + '/><path d="M40 42h40" stroke="' + L + '" stroke-width="6" stroke-linecap="round"/><g class="glass"><circle cx="50" cy="80" r="15" ' + S + '/><path d="M61 91l14 14" stroke="' + K + '" stroke-width="9" stroke-linecap="round"/><circle cx="54" cy="84" r="4" fill="' + L + '"/></g><g class="dots"><circle cx="86" cy="80" r="3.5" fill="' + K + '"/><circle cx="96" cy="80" r="3.5" fill="' + K + '"/><circle cx="106" cy="80" r="3.5" fill="' + K + '"/></g>' },
-  team: { b: 1, f: '<g class="pl"><circle cx="34" cy="52" r="14" ' + SK + '/><path d="M12 96c0-16 10-26 22-26s22 10 22 26" ' + SK + '/></g><g class="pr"><circle cx="86" cy="52" r="14" ' + SL + '/><path d="M64 96c0-16 10-26 22-26s22 10 22 26" ' + SL + '/></g><g class="pc"><circle cx="60" cy="44" r="17" ' + S + '/><path d="M32 104c0-20 12-32 28-32s28 12 28 32" ' + S + '/><path d="M53 42h4M63 42h4" ' + LN + ' stroke-width="4"/></g>' },
   seat: { b: 2, f: '<path d="M36 26h48c6 0 10 4 10 10v30H26V36c0-6 4-10 10-10z" ' + S + '/><path d="M40 40h20" ' + LN + ' stroke="' + L + '" stroke-width="5"/><path d="M22 66h76v16c0 5-4 8-8 8H30c-4 0-8-3-8-8z" ' + SL + '/><path d="M18 60v26M102 60v26" ' + LN + ' stroke-width="7"/><path d="M34 90v16M86 90v16" ' + LN + ' stroke-width="7"/>' },
-  pass: { b: 0, f: '<g class="tk" transform="rotate(-8 60 60)"><path d="M18 36h84v18a8 8 0 0 0 0 16v18H18V70a8 8 0 0 0 0-16z" ' + S + '/><path d="M68 40v44" ' + LN + ' stroke-dasharray="4 5" stroke-width="4"/><rect x="26" y="46" width="32" height="10" rx="5" fill="' + L + '"/><path d="M26 66h22M26 76h14" ' + LN + ' stroke-width="4"/><circle cx="86" cy="62" r="7" fill="' + K + '"/></g>' },
-  points: { b: 1, f: '<g class="coin c3"><ellipse cx="60" cy="86" rx="30" ry="12" ' + S + '/></g><g class="coin c2"><ellipse cx="60" cy="70" rx="30" ry="12" ' + SK + '/></g><g class="coin c1"><ellipse cx="60" cy="54" rx="30" ry="12" ' + SL + '/><path d="M44 54c2-5 8-7 14-7" ' + LN + ' stroke="' + W + '" stroke-width="4"/></g>' },
-  seal: { b: 2, f: '<path class="wax" d="M60 22c6 0 8 6 14 7s11-3 15 1 0 10 3 15 9 6 9 12-7 6-9 12-1 11-4 15-9 1-15 2-8 7-14 7-8-6-14-7-11 3-15-1 0-10-3-15-9-6-9-12 7-6 9-12 1-11 4-15 9-1 15-2 8-7 14-7z" ' + SL + '/><circle cx="60" cy="60" r="20" ' + S + '/><text class="n" x="60" y="68" text-anchor="middle" font-size="22" font-weight="800" fill="' + K + '" font-family="-apple-system,PingFang SC,sans-serif">__N__</text>' },
   trophy: { b: 0, f: '<path d="M38 28h44v22c0 14-10 24-22 24S38 64 38 50z" ' + S + '/><path d="M38 34c-10 0-16 6-14 14 2 7 8 10 16 10M82 34c10 0 16 6 14 14-2 7-8 10-16 10" ' + LN + '/><path d="M60 74v14M44 96h32M48 88h24" ' + LN + ' stroke-width="7"/><path d="M44 104h32" stroke="' + K + '" stroke-width="9" stroke-linecap="round"/>' + star4(60, 48, 10) },
   compass: { b: 1, f: '<circle cx="60" cy="60" r="34" ' + S + '/><circle cx="60" cy="60" r="26" ' + LN + ' stroke-dasharray="3 6" stroke-width="3"/><g class="needle"><path d="M60 36l8 24-8 24-8-24z" ' + SK + '/><path d="M60 36l8 24H52z" fill="' + L + '" stroke="' + K + '" stroke-width="4" stroke-linejoin="round"/></g><circle cx="60" cy="60" r="4" fill="' + W + '" stroke="' + K + '" stroke-width="3"/><text x="60" y="26" text-anchor="middle" font-size="12" font-weight="800" fill="' + K + '" font-family="-apple-system,sans-serif">N</text>' },
   backpack: { b: 2, f: '<path d="M36 44c0-10 10-18 24-18s24 8 24 18v54H36z" ' + S + '/><path d="M48 26v-8M72 26v-8M48 18h24" ' + LN + '/><rect x="44" y="64" width="32" height="26" rx="6" ' + SL + '/><path d="M44 54h32" ' + LN + ' stroke-width="4"/>' },
@@ -53,11 +44,26 @@ function dedupeAttrs(svg) {
 function uri(body) {
   return 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(dedupeAttrs('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" overflow="visible">' + body + '</svg>'));
 }
-function has(name) { return Object.prototype.hasOwnProperty.call(D, name); }
+function has(name) { return B.has(name) || Object.prototype.hasOwnProperty.call(D, name); }
+var ORDER = ['clue', 'badge', 'stamp', 'key', 'success', 'fail', 'wait', 'team', 'seat', 'pass', 'points', 'seal', 'trophy', 'compass', 'backpack', 'bookmark', 'envelope', 'star', 'locked', 'unlocked', 'hourglass', 'gem', 'sparkles', 'question', 'rays'];
+var B_CACHE = {};
+/** 风格 B v2:地影单独作 blob(bare 时不画),其余整枚作 fg(给只要一张图的宿主,如分享卡);layers 给组件逐层做动作。 */
+function layersB(key) {
+  if (B_CACHE[key]) return B_CACHE[key];
+  var ls = B.split(key), gd = '', fg = '';
+  ls.forEach(function (l) { var svg = l.parts.map(function (p) { return p.svg; }).join(''); if (l.k === 'gd') gd += svg; else fg += l.g ? '<g class="' + l.k + '">' + svg + '</g>' : svg; });
+  B_CACHE[key] = {
+    name: key, label: NAMES[key], b2: true, blob: uri(gd), fg: uri(fg),
+    layers: ls.map(function (l, i) { return { id: i, k: l.k || '_', g: l.g, parts: l.parts.map(function (p, j) { return { id: j, k: p.k || '_', src: uri(p.svg) }; }) }; }),
+  };
+  return B_CACHE[key];
+}
 /** 两层图:blob 底 + figure;未知名字回落「线索」,与原型 img() 一致。n 只用于「章节印」的数字。 */
 function layers(name, n) {
-  var key = has(name) ? name : 'clue', d = D[key];
+  var key = has(name) ? name : 'clue';
+  if (B.has(key)) return layersB(key);
+  var d = D[key];
   var label = n == null || n === '' ? '一' : String(n).replace(/[<>&"']/g, '');
   return { name: key, label: NAMES[key], blob: uri('<path d="' + BLOB[d.b] + '" fill="' + W + '"/>'), fg: uri(d.f.replace('__N__', label)) };
 }
-module.exports = { NAMES: NAMES, LIST: Object.keys(D), layers: layers, has: has, dedupeAttrs: dedupeAttrs };
+module.exports = { NAMES: NAMES, LIST: ORDER, B_LIST: B.LIST, layers: layers, has: has, isB: B.has, dedupeAttrs: dedupeAttrs };

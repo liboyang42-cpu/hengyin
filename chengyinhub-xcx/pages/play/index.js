@@ -4293,7 +4293,7 @@ Page({
     const flip = chapterFlip.buildGateFlip({ cards, chapterId: chapter.id, nodes: this.data.nodes, topicCover: this.data.topicCover, topicName: this.data.topicName, desc: introLine(chapter.description), elapsed: this._gateElapsed() }); if (chapter.opening) Object.assign(flip, { endInfo: null, info: { kicker: chapter.name === '序章' ? '' : '序章', title: chapter.name || '', desc: introLine(chapter.description), stats: [] } });
     const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:先停在「等待放行」屏,放行后才放翻转门
     this.setData({ chapterGate: Object.assign({ show: true, held, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
-      total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '' }, flip) });
+      total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '', look: this._look ? { style: this._look.style, palette: this._look.palette || '', legacy: !!this._look.legacy } : null }, flip) });   // l-icons:圆点章节号 / 章节印的颜色跟外观
     // 2026-09-24 用户:章节门每章都要点一次太打断 —— 停 2.8 秒自己进正文,点一下仍可提前
     clearTimeout(this._gateTimer);
     if (held) return;   // 放行由带领轮询解开(见 loadTeamProgress),不靠计时自己进正文

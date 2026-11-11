@@ -153,7 +153,8 @@ test('页面:新页在分包、插图用分包副本、新样式不加 keyframes
   assert.ok(member.pages.includes('market/membership/index'));
   assert.ok(member.pages.includes('market/library/index'));
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.json'), 'utf8'));
-  assert.equal(json.usingComponents['cy-illus'], '/subpackageMember/components/cy-illus/index');
+  // 2026-11-11 l-icons:英雄区插图换成 3D 玻璃序列帧(cy-frames 分包副本),cy-illus 不再登记
+  assert.equal(json.usingComponents['cy-frames'], '/subpackageMember/components/cy-frames/index');
   for (const f of ['subpackageMember/market/membership/index.wxss', 'subpackageMember/market/library/index.wxss', 'subpackageMember/market/passes/index.wxss', 'pages/topic/components/cy/self-play-checkout/index.wxss']) {
     assert.ok(!/@keyframes/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), f);
   }
@@ -161,7 +162,9 @@ test('页面:新页在分包、插图用分包副本、新样式不加 keyframes
   assert.match(passes, /wx:if="\{\{member\}\}"/);
   const ok = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.js'), 'utf8');
   assert.match(ok, /r\.state === 'paid'\) \{ this\._celebrate/);
-  assert.match(fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.wxss'), 'utf8'), /\.ok\.is-reduced/);
+  // 2026-11-11 l-icons:开通成功的 ps-success 层换成 subpackagePass/reveal 钥匙开场(完整版),成功动效仍只在 PAID 后出现
+  assert.match(ok, /_celebrate\(order\) \{[\s\S]*wx\.redirectTo\(\{ url: REVEAL \+ '\?' \+ q\.join/);
+  assert.doesNotMatch(fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.wxss'), 'utf8'), /\.ok\.is-reduced/);
 });
 
 test('cy-illus 每张图层都是合法 XML:同一标签无重复属性(data URI 按 XML 解析,重复属性整张不显示)', () => {

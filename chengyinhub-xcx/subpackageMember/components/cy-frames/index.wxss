@@ -1,0 +1,7 @@
+/* cy-frames:序列帧播放器。外框裁切,当前雪碧图按帧位移(transform),下一张预挂着但看不见;进场 pop = 缩放 + 透明度过渡。 */
+.fr { position: relative; display: block; overflow: hidden; flex: none; }
+.fr__img { position: absolute; left: 0; top: 0; display: block; opacity: 0; pointer-events: none; }
+.fr__img.is-cur { opacity: 1; }
+.fr--pop { opacity: 0; transform: scale(.6); transition: opacity var(--cy-motion-slow) ease, transform 700ms var(--cy-ease-spring); }
+.fr--pop.is-on { opacity: 1; transform: none; }
+.fr.fr--reduced, .fr.fr--reduced.fr--pop { transition: none; opacity: 1; transform: none; }
