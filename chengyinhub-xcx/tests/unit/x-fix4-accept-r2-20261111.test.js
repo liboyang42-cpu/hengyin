@@ -74,3 +74,20 @@ test('N-11 通关卡(finale)跟主题外观:底/字/按钮读 --lk-*,文案避�
   assert.match(w, /\.cf--finale \.cf__copy \{ top: calc\(33\.3vh \+ 45vw \+ 24rpx\);[^}]*overflow: hidden;/)
   assert.match(w, /\.cf--finale \.cf__pill--p \{ background: var\(--lk-a,/)
 })
+
+test('N-13 内嵌玩法块底部留 Home 条安全区', () => {
+  assert.match(read('pages/play/index.wxss'), /\.chfull__kit\{ position:relative; box-sizing:border-box; padding-top:var\(--cy-space-6\); padding-bottom:calc\(var\(--cy-space-6\) \+ env\(safe-area-inset-bottom\)\); \}/)
+})
+
+test('N-14 夜城霓虹参数(青粉/红青)真的改 --lk-a/--lk-b;显式配色仍以配色为准', () => {
+  for (const f of ['pages/play/look-tokens.wxss', 'pages/publish/fabu/look-tokens.wxss']) {
+    const t = read(f)
+    const idx = (re) => t.search(re)
+    const base = idx(/^\.look--cyber \{/m)
+    const neon = idx(/^\.look--cyber\.look-neon--cyan_pink \{ --lk-a:#2DE2E6;/m)
+    const palBlue = idx(/^\.look--cyber\.look-palette--blue,/m)
+    assert.ok(base >= 0 && neon > base && neon < palBlue, '霓虹规则在基础之后、配色规则之前')
+    assert.match(t, /\.look--cyber\.look-neon--cyan_pink\.look-palette--default, \.look--cyber\.look-neon--cyan_pink \.atmosphere--default \{ --lk-a:#2DE2E6;/)
+    assert.match(t, /\.look--cyber\.look-neon--red_cyan\.look-palette--default, \.look--cyber\.look-neon--red_cyan \.atmosphere--default \{ --lk-a:#FF2E4C;/)
+  }
+})
