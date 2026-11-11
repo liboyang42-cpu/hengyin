@@ -192224,6 +192224,15 @@
           "route": "pages/topic/pricing/index",
           "segments": [
             {
+              "selector": "cy-inline-error.pg-field-err",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/pricing/index",
+          "segments": [
+            {
               "selector": "cy-inline-error",
               "index": 0
             }
@@ -1093470,7 +1093479,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9531"
+        "staticSource": "pages/publish/fabu/index.js:9532"
       }
     },
     {
@@ -1093555,7 +1093564,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9519"
+        "staticSource": "pages/publish/fabu/index.js:9520"
       }
     },
     {
@@ -1093622,7 +1093631,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9600"
+        "staticSource": "pages/publish/fabu/index.js:9601"
       }
     },
     {
@@ -1094346,7 +1094355,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9440"
+        "staticSource": "pages/publish/fabu/index.js:9441"
       }
     },
     {
@@ -1094463,7 +1094472,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9823"
+        "staticSource": "pages/publish/fabu/index.js:9824"
       }
     },
     {
@@ -1094545,7 +1094554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9241"
+        "staticSource": "pages/publish/fabu/index.js:9242"
       }
     },
     {
@@ -1094627,7 +1094636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9241"
+        "staticSource": "pages/publish/fabu/index.js:9242"
       }
     },
     {
@@ -1094880,7 +1094889,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9785"
+        "staticSource": "pages/publish/fabu/index.js:9786"
       }
     },
     {
@@ -1094962,7 +1094971,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9241"
+        "staticSource": "pages/publish/fabu/index.js:9242"
       }
     },
     {
@@ -1095130,7 +1095139,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9268"
+        "staticSource": "pages/publish/fabu/index.js:9269"
       }
     },
     {
@@ -1101567,7 +1101576,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9018"
+        "staticSource": "pages/publish/fabu/index.js:9019"
       }
     },
     {
@@ -1109170,7 +1109179,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9026"
+        "staticSource": "pages/publish/fabu/index.js:9027"
       }
     },
     {
@@ -1109427,7 +1109436,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9046"
+        "staticSource": "pages/publish/fabu/index.js:9047"
       }
     },
     {
@@ -1109495,7 +1109504,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9746"
+        "staticSource": "pages/publish/fabu/index.js:9747"
       }
     },
     {
@@ -1109653,7 +1109662,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9746"
+        "staticSource": "pages/publish/fabu/index.js:9747"
       }
     },
     {
@@ -1114305,7 +1114314,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9746"
+        "staticSource": "pages/publish/fabu/index.js:9747"
       }
     },
     {
@@ -1114936,7 +1114945,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9746"
+        "staticSource": "pages/publish/fabu/index.js:9747"
       }
     },
     {
@@ -1115770,7 +1115779,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9746"
+        "staticSource": "pages/publish/fabu/index.js:9747"
       }
     },
     {
@@ -1117012,7 +1117021,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8728"
+        "staticSource": "pages/publish/fabu/index.js:8729"
       }
     },
     {
@@ -1117110,7 +1117119,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8728"
+        "staticSource": "pages/publish/fabu/index.js:8729"
       }
     },
     {
@@ -1117445,7 +1117454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9174"
+        "staticSource": "pages/publish/fabu/index.js:9175"
       }
     },
     {
@@ -1117513,7 +1117522,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9746"
+        "staticSource": "pages/publish/fabu/index.js:9747"
       }
     },
     {
@@ -1117580,7 +1117589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9174"
+        "staticSource": "pages/publish/fabu/index.js:9175"
       }
     },
     {
@@ -1117647,7 +1117656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9128"
+        "staticSource": "pages/publish/fabu/index.js:9129"
       }
     },
     {
@@ -1117714,7 +1117723,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9181"
+        "staticSource": "pages/publish/fabu/index.js:9182"
       }
     },
     {
@@ -1117938,7 +1117947,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9773"
+        "staticSource": "pages/publish/fabu/index.js:9774"
       }
     },
     {
@@ -1118258,7 +1118267,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9906"
+        "staticSource": "pages/publish/fabu/index.js:9907"
       }
     },
     {
@@ -1118376,7 +1118385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9723"
+        "staticSource": "pages/publish/fabu/index.js:9724"
       }
     },
     {
@@ -1118493,7 +1118502,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9748"
+        "staticSource": "pages/publish/fabu/index.js:9749"
       }
     },
     {
@@ -1121192,7 +1121201,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9111"
+        "staticSource": "pages/publish/fabu/index.js:9112"
       }
     },
     {
@@ -1121326,7 +1121335,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9117"
+        "staticSource": "pages/publish/fabu/index.js:9118"
       }
     },
     {
@@ -1121393,7 +1121402,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9108"
+        "staticSource": "pages/publish/fabu/index.js:9109"
       }
     },
     {
@@ -1269154,7 +1269163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:82"
+        "staticSource": "pages/topic/pricing/index.js:84"
       }
     },
     {
@@ -1269279,7 +1269288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:94"
+        "staticSource": "pages/topic/pricing/index.js:96"
       }
     },
     {
@@ -1269404,7 +1269413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:217"
+        "staticSource": "pages/topic/pricing/index.js:221"
       }
     },
     {
@@ -1269471,7 +1269480,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:236"
+        "staticSource": "pages/topic/pricing/index.js:240"
       }
     },
     {
@@ -1269538,7 +1269547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:238"
+        "staticSource": "pages/topic/pricing/index.js:242"
       }
     },
     {
@@ -1269663,7 +1269672,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:249"
+        "staticSource": "pages/topic/pricing/index.js:253"
       }
     },
     {
@@ -1269730,7 +1269739,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:227"
+        "staticSource": "pages/topic/pricing/index.js:231"
       }
     },
     {
@@ -1269801,7 +1269810,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:82"
+        "staticSource": "pages/topic/pricing/index.js:84"
       }
     },
     {
@@ -1269868,11 +1269877,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:258"
+        "staticSource": "pages/topic/pricing/index.js:262"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:75:bindtap:goPartner:10",
+      "id": "pages/topic/pricing/index.wxml:76:bindtap:goPartner:10",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269895,7 +1269904,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goPartner",
-        "line": 75,
+        "line": 76,
         "selectorHint": ".pg-lineup-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1269939,11 +1269948,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:204"
+        "staticSource": "pages/topic/pricing/index.js:208"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:89:bind:action:confirmPrice:11",
+      "id": "pages/topic/pricing/index.wxml:90:bind:action:confirmPrice:11",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1269966,7 +1269975,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "confirmPrice",
-        "line": 89,
+        "line": 90,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{submitError}}",
         "disabledCondition": null,
@@ -1270054,11 +1270063,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:293"
+        "staticSource": "pages/topic/pricing/index.js:299"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:92:bind:disabledtap:onConfirmDisabledTap:13",
+      "id": "pages/topic/pricing/index.wxml:93:bind:disabledtap:onConfirmDisabledTap:13",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270081,7 +1270090,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onConfirmDisabledTap",
-        "line": 92,
+        "line": 93,
         "selectorHint": "cy-btn[bind:disabledtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canConfirmPrice}}",
@@ -1270121,11 +1270130,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:266"
+        "staticSource": "pages/topic/pricing/index.js:270"
       }
     },
     {
-      "id": "pages/topic/pricing/index.wxml:92:bindtap:confirmPrice:12",
+      "id": "pages/topic/pricing/index.wxml:93:bindtap:confirmPrice:12",
       "route": "pages/topic/pricing/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1270148,7 +1270157,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmPrice",
-        "line": 92,
+        "line": 93,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{!canConfirmPrice}}",
@@ -1270236,7 +1270245,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/pricing/index.js:293"
+        "staticSource": "pages/topic/pricing/index.js:299"
       }
     },
     {

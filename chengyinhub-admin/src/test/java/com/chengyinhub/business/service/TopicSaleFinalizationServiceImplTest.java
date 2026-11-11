@@ -403,6 +403,22 @@ class TopicSaleFinalizationServiceImplTest {
     }
 
     @Test
+    void freeExploreWithPaidSelfPlayHasNoSettlementExitAndNeverStartsSelling() {
+        CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
+        topic.setSelfPlay(1);
+        topic.setSelfPlayPrice(new BigDecimal("39.90"));
+        topic.setRecruitDeadline(Date.from(NOW.minusSeconds(1)));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID)).thenReturn(topic);
+
+        IllegalStateException error = assertThrows(IllegalStateException.class, () -> service.finalizeForSale(TOPIC_ID));
+
+        assertEquals("自由探索主题不能设置收费自玩票，请改为给主题门票定价", error.getMessage());
+        verify(reviewStatusSource, never()).assertSaleApproved(any());
+        verify(saleSnapshotMapper, never()).insertSnapshot(any(TopicSaleSnapshot.class));
+        verify(topicMapper, never()).finalizeForSale(any(Long.class), any(Date.class), any(Date.class));
+    }
+
+    @Test
     void freeExploreAlsoRequiresCanonicalAndWritesFinalizationCas() {
         CmsTopic topic = pricingTopic(ProductType.FREE_EXPLORE);
         topic.setSelfPlay(1);

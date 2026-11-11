@@ -544,7 +544,8 @@ class RegistryContractTest(unittest.TestCase):
                     "launch-l-payout": 9,  # l-payout EcomPayoutMapperMySqlIT
                     "launch-l-payout2": 6,  # l-payout2 EcomPayoutWiringMySqlIT
                     "launch-l-payout3": 9,  # l-payout3 EcomCombineMapperMySqlIT
-                    "launch-f-money": 2}  # f-money CreatorIncomeDetailIdempotencyMySqlIT
+                    "launch-f-money": 2,  # f-money CreatorIncomeDetailIdempotencyMySqlIT
+                    "launch-f-money3": 4}  # f-money3 FreeExploreSelfPlayPriceGateMySqlIT
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

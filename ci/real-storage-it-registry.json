@@ -759,6 +759,14 @@
       "classes": [
         "com.chengyinhub.business.it.CreatorIncomeDetailIdempotencyMySqlIT"
       ]
+    },
+    "launch-f-money3": {
+      "lineage": "f-money3 20261111 launch fix lane: free-explore themes may not carry a paid self-play price (no settlement exit)",
+      "registered_source": "PENDING",
+      "note": "FreeExploreSelfPlayPriceGateMySqlIT (4): cms_topic/cms_registration from sql/base_schema_20260818.sql plus the existing cms_topic migration chain; production TopicSaleFinalizationServiceImpl.finalizeForSale and TopicPublicationContentGuard over the real CmsTopicMapper XML, plus the read-only precheck SQL copied verbatim from docs/delivery/questo-ui-20261109/f-money3/RESULT.md. Source registration only, execution NOT_RUN until dispatched.",
+      "classes": [
+        "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -2170,6 +2178,14 @@
       ],
       "gates": {},
       "note": "f-money P0-17 idempotency unique key migration on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "f-money3 free-explore paid self-play gate on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
     }
   }
 }

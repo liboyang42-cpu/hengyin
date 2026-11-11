@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.common.constant.ProductType;
+import com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.dto.PricingResult;
@@ -288,6 +289,11 @@ public class PricingServiceImpl implements IPricingService {
         // P-34(第三轮):已过定价阶段(开售及以后)单独标出,定价页不再误报「合作阵容锁定后可定价」
         r.setPriced(lifecycleRow != null && lifecycleRow.getLifecycle() != null && lifecycleRow.getLifecycle() > 2);
         r.setConfirmBlockReason(blockReason);
+        // f-money3:「无人带」页签在自由探索主题上不可定价;与 confirmPrice 同一句,前端挂在价格栏下。
+        if ("self".equals(subType) && cmsTopicMapper != null && Integer.valueOf(ProductType.FREE_EXPLORE)
+                .equals(cmsTopicMapper.selectProductTypeById(topicId))) {
+            r.setSelfPriceError(FreeExploreSelfPlayPricePolicy.MESSAGE);
+        }
         r.setCurrentPrice(currentPrice(topicId, subType));
         r.setTickets(ticketRows(topicId, subType));
         java.util.Map<String, Object> reference = pricingReferenceMapper == null
@@ -439,6 +445,10 @@ public class PricingServiceImpl implements IPricingService {
         // 风险的真实形状:**产品越成功,亏得越多** —— 冷启动核销率低时完全看不见,
         // 等玩家真开始认真通关才爆,而那正是最不想踩刹车的时候。所以闸必须在开卖前。
         assertRevshareAffordable(topicId, guidedPrice, selfPrice);
+        // f-money3:自由探索主题的自玩票没有结算出口,锁价不得写入非零自玩价(放在既有闸之后、任何写入之前)。
+        if (FreeExploreSelfPlayPricePolicy.violatesPrice(topic.getProductType(), selfPrice)) {
+            throw new IllegalStateException(FreeExploreSelfPlayPricePolicy.MESSAGE);
+        }
 
         // self 票:复用现有自玩票(不收编),把终价写回 cms_topic
         CmsTopic upd = new CmsTopic();

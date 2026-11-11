@@ -54,6 +54,12 @@ public class PricingResult implements Serializable {
     /** P-34:主题已过定价阶段(lifecycle>2,终价已确认),只读展示。 */
     private Boolean priced;
 
+    /** f-money3:无人带页签不能定价的原因(自由探索主题);与 confirmPrice 拒绝原话一致,前端挂在价格栏下。 */
+    private String selfPriceError;
+
+    public String getSelfPriceError() { return selfPriceError; }
+    public void setSelfPriceError(String selfPriceError) { this.selfPriceError = selfPriceError; }
+
     /**
      * 第四轮(多票价):城市定向作者自己发的票(有人带档),每张一行,定价页逐张确认终价。
      * 只有一张票时页面照旧走单价;非城市定向/无人带档为空。
