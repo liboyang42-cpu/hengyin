@@ -147,6 +147,8 @@ const TITLELESS_SOLID_NAV = new Set([
   // 顶栏只承载返回出口 + 右上「跳过」。再挂一个导航级标题就是同屏双标题,
   // 且与已确认的参考构图(顶部只有 Skip、无标题)相悖。
   'pages/publish/template-intro/index',
+  // 2026-11-11 l-icons 通行证钥匙开场(proto/icons ps-key):整屏 3D 钥匙 + 眉题「通行证」/ 标题在画面正中,顶栏只有返回 + 右上「跳过」,同 template-intro 的理由
+  'subpackagePass/reveal/index',
 ])
 
 function assertCentredTitle(route, wxml) {

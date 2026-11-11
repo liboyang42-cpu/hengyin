@@ -36,7 +36,8 @@ if (want('ch-start-frames')) { console.log('== ch-start-frames');   // 帧条:�
   await play('route', { LOOK: 'STARDUST', PAL: 'DEFAULT' }, async (w) => { await w.tap('开始游戏'); await sleep(1200); const t0 = Date.now(); for (const at of [300, 700, 1100, 1600, 2200, 2700]) { await sleep(Math.max(0, at - (Date.now() - t0))); await w.shot(`ch-start-f${at}-${P}`); } });
 }
 if (want('ch-start-reduced')) { console.log('== ch-start-reduced');
-  await play('route', { LOOK: 'SURVIVAL', PAL: 'DEFAULT' }, async (w) => { await w.eval(`(()=>{${PG}.setData({reducedMotion:true});return 1})()`); await w.tap('开始游戏'); await sleep(1200 + 600); await w.shot(`ch-start-reduced-${P}`); });
+  // 页面级 reducedMotion 会让门的所有计时归零、门瞬间自己进(l-play 既有行为),所以在门出来之后再把组件切到减少动态效果,拍它的终态
+  await play('route', { LOOK: 'SURVIVAL', PAL: 'DEFAULT' }, async (w) => { await w.tap('开始游戏'); await sleep(900); await w.eval(`(()=>{const c=${PG}.selectComponent('cy-chapter-flip');if(c)c.setData({reducedMotion:true});return !!c})()`); await sleep(700); await w.shot(`ch-start-reduced-${P}`); });
 }
 if (want('ch-end')) { console.log('== ch-end');
   await play('two', { LOOK: 'PAPER', PAL: 'DEFAULT' }, async (w) => { await w.tap('开始游戏'); await sleep(1200 + 5000); await w.eval(GATE2); await sleep(1800); await w.shot(`ch-end-${P}`); await sleep(4200); await w.shot(`ch-end-next-${P}`); });

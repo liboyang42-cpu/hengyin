@@ -23,7 +23,7 @@ const COVER_H = 330;                      // 完成屏顶部照片高度(390 宽
 const STAT_ROLL_MS = 900;                 // 三格数据滚上来
 const DOT = { cell: 11, r: 4.6, w: 330, h: 260, font: '800 236px sans-serif' };   // l-icons:圆点章节号(原型 dots.js chapter)
 const SEAL = { R1: 62, R2: 46, N1: 44, N2: 28, r1: 3, r2: 1.8, rg: 2.8, box: 100, cell: 7, font: '700 64px "Songti SC","STSong","Noto Serif SC",serif', spinMs: 9000 };
-const SEAL_GAP = 24;                      // 章节印与上方文字 / 下方按钮的最小间距(390 宽稿 px)
+const SEAL_GAP = 16;                      // 章节印与上方文字 / 下方按钮的最小间距(390 宽稿 px)
 
 function chars(text) { return Array.from(String(text || '')); }
 /** 数据格怎么滚:纯整数从 0 滚;mm:ss 按秒滚;a/b 只滚 a;别的(例如「—」)不滚,直接写。 */
@@ -154,7 +154,7 @@ Component({
       const info = this.data.info || {};
       if (this._ctx && info.number) this._assemble({ text: info.number, top: 150 * this._S, dots: true });
       this.setData({ start: true });
-      if (this._ctx && info.number) this._at(() => this._placeSeal(), fromEnd ? 1100 : 900);   // 文字解码完、「读下去」亮起时量文字块,再放章节印
+      if (this._ctx && info.number) this._at(() => this._placeSeal(), fromEnd ? 800 : 600);   // 文字块一落位就量它,再放章节印(门 3.6s 自己进,印要在 2.5s 前拼好)
       this._at(() => this.setData({ startIn: true }), 40);
       this._decode(info, fromEnd ? 500 : 300);
       this._at(() => this.setData({ cta: true }), fromEnd ? 1100 : 900);
@@ -348,7 +348,7 @@ Component({
       const place = (copyBottom) => {
         if (this._gone || this._stage !== 'start') return;
         const top = Math.max(copyBottom || 0, est) + SEAL_GAP * S, bottom = btnTop - SEAL_GAP * S, band = bottom - top;
-        if (band < 80 * S) return;
+        if (band < 64 * S) return;
         const R = Math.min(1, band / 2 / (SEAL.R1 * S + 4));
         this._buildSeal(this._cx, (top + bottom) / 2, R);
       };
@@ -363,7 +363,7 @@ Component({
       const mk = (tx, ty, r, kind, i, a) => {
         const ang = Math.random() * 6.283, d = (160 + Math.random() * 420) * this._S;
         return { x: Math.min(W, Math.max(0, tx + Math.cos(ang) * d)), y: Math.min(H, Math.max(0, ty + Math.sin(ang) * d)), vx: 0, vy: 0, sz: 0, tx, ty, tsz: r * 2 * S, loose: 0, dot: 1, ring: kind, a0: a, seal: 1,
-          c: kind === 1 ? lk.a : lk.ink, a: 1, delay: 900 + i * 14 + Math.random() * 200, born: now, silver: false };
+          c: kind === 1 ? lk.a : lk.ink, a: 1, delay: i * 8 + Math.random() * 120, born: now, silver: false };
       };
       for (let i = 0; i < SEAL.N1; i++) { const a = i / SEAL.N1 * 6.283; add.push(mk(cx + Math.cos(a) * SEAL.R1 * S, cy + Math.sin(a) * SEAL.R1 * S, SEAL.r1, 1, i, a)); }
       for (let j = 0; j < SEAL.N2; j++) { const a = j / SEAL.N2 * 6.283 + 0.11; add.push(mk(cx + Math.cos(a) * SEAL.R2 * S, cy + Math.sin(a) * SEAL.R2 * S, SEAL.r2, 2, j, a)); }
