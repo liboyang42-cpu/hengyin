@@ -102,11 +102,12 @@
 |---|---|
 | `mvn -q -DskipTests install`（`LC_ALL=C.UTF-8`） | 通过 |
 | 支付相关单测（l-payout / l-payout2 原 69 条 + 本线 39 条） | 108 条全部通过（`evidence/unit-tests.txt`） |
-| 后端全量单测 `mvn -pl chengyinhub-system,chengyinhub-admin test` | FULLTEST_PLACEHOLDER |
-| Real Storage IT `launch-l-payout3` | IT3_PLACEHOLDER |
-| Real Storage IT `launch-l-payout2`（回归） | IT2_PLACEHOLDER |
-| Real Storage IT `launch-l-payout`（回归） | IT1_PLACEHOLDER |
+| 后端全量单测 `mvn -pl chengyinhub-system,chengyinhub-admin test` | 13119 条，0 失败，35 错误分布在 15 个类，均与本线无关：14 个 `*MyBatisTest` 是本容器连不上 MySQL；`MerchantCrmProfileNamespaceMyBatisTest` 在全量运行中有 1 条 H2 报错，单独复跑时本分支与底座都是 7/7 通过。明细见 `evidence/full-test.txt` |
+| Real Storage IT `launch-l-payout3` | **success**，run [42955808847](https://github.com/liboyang42-cpu/hengyin/actions/runs/42955808847) @ `5e05edca6e66`（9/9，真 MySQL 8 执行迁移与 mapper） |
+| Real Storage IT `launch-l-payout2`（回归） | **success**，run [42955811926](https://github.com/liboyang42-cpu/hengyin/actions/runs/42955811926) @ `5e05edca6e66`（6/6） |
+| Real Storage IT `launch-l-payout`（回归） | **success**，run [42955815299](https://github.com/liboyang42-cpu/hengyin/actions/runs/42955815299) @ `5e05edca6e66`（9/9） |
 | `python3 -m unittest ci.test_real_storage_it` | 92 条通过 |
+| PR CI（当前 head） | Followup 39 selected backend cases、isolated-authenticated-redis-recovery 均 success |
 | 迁移门禁 layout / safety / dup-create | 全过 |
 | `ci/role_permission_contract.py` | 三段全过（623 个后台端点全部带权限） |
 | 没有运行 | `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`（按规定）。小程序和后台 Vue 本线都没改 |
@@ -148,4 +149,4 @@
 4. **合单部分子单退款失败（ABNORMAL）**：默认列为退款待补偿、人工处理，与 l-payout2 相同。
 5. **运营端 Vue 页面**：本线只加了带权限的后台接口（`/business/ecommerce-payout/supplier-payables`），没有加页面。默认：下一线在「电商收付通」页加一个「供应商应付」标签。
 
-STATUS: PARTIAL - 合单下单 / 回调 / 退款 / 结算 / 供应商应付已全部接入且默认关闭；特征测试、单测、真库 IT 均已完成，结果见第五节；全部微信合单接口未连沙箱实测（需你开通后联调），官方文档只能经搜索摘录核对，运营端没有新页面
+STATUS: PARTIAL - 合单下单 / 回调 / 退款 / 结算 / 供应商应付已全部接入且默认关闭；特征测试、108 条支付单测、真库 IT（launch-l-payout3 9/9，l-payout / l-payout2 回归）全部通过；全部微信合单接口未连沙箱实测（需你开通后联调），官方文档只能经搜索摘录核对，运营端没有新页面
