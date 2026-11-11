@@ -118,3 +118,10 @@ test('L-3 章节号 / 章节印字形取样失败时退回内置点阵数字与�
   assert.ok(g.length > 40)
   for (const p of g) assert.ok(p.x >= 0 && p.x < 100 && p.y >= 0 && p.y < 100)
 })
+
+test('M-2 勋章墙加载失败:按全站口径留空白遮罩,但收集册页头照常在;藏品页 ✦ 钮在深底上是浅色线条', () => {
+  const wxml = read('subpackageP3/pages/badge-wall/index/index.wxml')
+  assert.match(wxml, /<view class="bw-list" wx:if="\{\{viewMode === 'list' && \(loadFail \|\| partialFail\) && !wallAuthRequired\}\}">\s*<album-head active="medal" \/>/)
+  const oc = read('subpackageP3/pages/object-cards/index/index.wxss')
+  assert.match(oc, /\.alb-light \.oc-gather::before \{[^}]*stroke%3D%22%23F2F2F4%22/)
+})
