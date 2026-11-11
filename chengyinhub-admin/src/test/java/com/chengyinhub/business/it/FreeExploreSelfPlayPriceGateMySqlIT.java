@@ -187,7 +187,8 @@ class FreeExploreSelfPlayPriceGateMySqlIT {
                 () -> tx.execute(status -> c.service.finalizeForSale(BAD_PRICING)));
 
         assertEquals("开售审核未通过", next.getMessage(), "本闸放行后由原有开售闸接手");
-        assertEquals(2, ((Number) row(BAD_PRICING).get("lifecycle")).intValue());
+        // lifecycle 是 TINYINT(1),驱动按 Boolean 读回;用 CAST 取整数值
+        assertEquals(2, db.queryForObject("select cast(lifecycle as signed) from cms_topic where id=?", Integer.class, BAD_PRICING));
     }
 
     // ===================================================================== 发布检查
