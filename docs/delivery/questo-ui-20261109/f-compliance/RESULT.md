@@ -20,7 +20,7 @@
 - 后端：`mvn -q -DskipTests install` 通过；涉及模块的单测 271 例 + 6 例全部通过（0 失败）。
 - 迁移：`ci/migration_gates.py sql`、`dep-order`、`ci/migration-safety-check.sh` 全部通过。两份新迁移都已登记进 `ci/migration-dependencies.json`，没有改动任何已有迁移。
 - 小程序：`node chengyinhub-xcx/tests/lint/ui-integrity.js` → **UI-GATE-0:PASS**，没有新增基线条目（附近页方法追加在文件末尾，避免行号位移）。action-ledger 已用 `--write` 重建，冻结计数逐条加了注释（tap 3018 → 3021，事件合同 2979 → 2986，合计 5997 → 6007），游玩页两条按行号定位的条目只是位移（322 → 323，534 → 535）。GET 授权矩阵登记了新导出调用点（127 → 128）。
-- 全量单测：见文末补记。
+- 全量小程序单测（仓库根下 `node --test "tests/unit/**/*.test.js"`）：17227 例，全部通过，0 失败。
 - 主包：`mainpkg-size-report` 合计 3221KB，与底座同一档，按 0.633 折算约 2039 KiB，低于 2048。新增的组件和工具函数都放在分包，主包只多了 `utils/aigc-label.js`（约 0.6KB）和设置页、关于页的几行。
 - 没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`。diff 已扫描过，不含密钥。
 
@@ -48,9 +48,5 @@ rig 里做过的夹具和注入（HARNESS，只动 rig 的一次性库，不碰�
 
 - `subpackageMember/components/cy/npc-chat/index.js` 里的删除请求改为 JSON（属于原面板的缺陷，只改了这一处，两行）。
 - 游玩页（l-play 的地盘）只加了一行菜单、一个 option-sheet 和开场眉题，Page 合并时多展开了一个 `playSos`，没有动别的行。
-
-## 补记
-
-全量小程序单测：见 PR 描述（本文件提交时正在跑）。
 
 STATUS: COMPLETE
