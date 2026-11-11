@@ -128,15 +128,16 @@ class FreeExplorePriceLockAcceptanceTest {
         topic.setEndDate(new java.util.Date(1_800_086_400_000L));
         topic.setSaleEndAt(new java.util.Date(1_800_082_800_000L));
 
-        service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), new BigDecimal("66.60"), 37,
+        // f-money3:自由探索不再接受无人带(自玩)价,终价只落主题门票。
+        service.confirmPrice(TOPIC_ID, new BigDecimal("128.00"), null, 37,
                 new BigDecimal("100"), 4);
 
         ArgumentCaptor<CmsTopic> topicWrite = ArgumentCaptor.forClass(CmsTopic.class);
         verify(cmsTopicMapper).updateCmsTopic(topicWrite.capture());
         CmsTopic upd = topicWrite.getValue();
         assertEquals(TOPIC_ID, upd.getId());
-        assertEquals(Integer.valueOf(1), upd.getSelfPlay());
-        assertEquals(new BigDecimal("66.60"), upd.getSelfPlayPrice(), "无人带终价必须原样落 cms_topic.self_play_price");
+        assertNull(upd.getSelfPlay(), "自由探索锁价不得写自玩票开关");
+        assertNull(upd.getSelfPlayPrice(), "自由探索锁价不得写 cms_topic.self_play_price");
         assertEquals(new BigDecimal("0.12"), upd.getFeePlatformRate());
         assertEquals(new BigDecimal("0.04"), upd.getFeeGuaranteeBaseRate());
         assertEquals(new BigDecimal("0.01"), upd.getFeeGuaranteeStepRate());
@@ -200,20 +201,41 @@ class FreeExplorePriceLockAcceptanceTest {
         when(ticketMapper.selectOmsTicketList(any(OmsTicket.class))).thenReturn(java.util.Arrays.asList(pending, priced));
         when(ticketMapper.updateOmsTicket(any(OmsTicket.class))).thenReturn(1);
 
-        service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null);
+        // f-money3:自由探索的终价走门票(guided 档);发布时留空价的票由同一终价补齐。
+        service.confirmPrice(TOPIC_ID, new BigDecimal("66.60"), null, null, null, null);
 
         ArgumentCaptor<OmsTicket> ticketWrite = ArgumentCaptor.forClass(OmsTicket.class);
-        verify(ticketMapper).updateOmsTicket(ticketWrite.capture());
-        assertEquals(Long.valueOf(6601L), ticketWrite.getValue().getId());
-        assertEquals(new BigDecimal("66.60"), ticketWrite.getValue().getPrice());
-        assertNull(ticketWrite.getValue().getTotalInventory(), "只写价格,不碰库存");
+        verify(ticketMapper, org.mockito.Mockito.atLeastOnce()).updateOmsTicket(ticketWrite.capture());
+        OmsTicket fill = ticketWrite.getAllValues().get(ticketWrite.getAllValues().size() - 1);
+        assertEquals(Long.valueOf(6601L), fill.getId());
+        assertEquals(new BigDecimal("66.60"), fill.getPrice());
+        assertNull(fill.getTotalInventory(), "只写价格,不碰库存");
+    }
+
+    @Test
+    void refuse_selfPriceOnFreeExploreHasNoSettlementExit_andWritesNothing() {
+        freeExploreTopic(2);
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> service.confirmPrice(TOPIC_ID, null, new BigDecimal("66.60"), null, null, null));
+        assertEquals("自由探索主题不能设置收费自玩票，请改为给主题门票定价", e.getMessage());
+        assertNoWrite();
+    }
+
+    @Test
+    void preview_selfTabOnFreeExploreCarriesTheSameRefusalAsConfirm() {
+        CmsTopic topic = freeExploreTopic(2);
+        when(cmsTopicMapper.selectCmsTopicLifecycleById(TOPIC_ID)).thenReturn(topic);
+        when(cmsTopicMapper.selectProductTypeById(TOPIC_ID)).thenReturn(ProductType.FREE_EXPLORE);
+        assertEquals("自由探索主题不能设置收费自玩票，请改为给主题门票定价",
+                service.previewTopic(TOPIC_ID, null, null, "self").getSelfPriceError());
+        assertNull(service.previewTopic(TOPIC_ID, new BigDecimal("100"), 4, "guided").getSelfPriceError());
     }
 
     @Test
     void confirm_priceExactlyAtFloorIsAccepted() {
         freeExploreTopic(2);
 
-        service.confirmPrice(TOPIC_ID, new BigDecimal("48.20"), new BigDecimal("18.08"), null,
+        service.confirmPrice(TOPIC_ID, new BigDecimal("48.20"), null, null,
                 new BigDecimal("100"), 4);
 
         verify(cmsTopicMapper).updateCmsTopic(any(CmsTopic.class));

@@ -28,18 +28,26 @@ class ProfitSharePlannerTest {
     }
 
     @Test
-    void platformAndOtherMerchantSharesGoToWechatSellerShareRetained() {
-        ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(order(10000), List.of(
+    void otherSubMerchantShareGoesManualUnlessRelayedViaThePlatform() {
+        List<ProfitSharePlanner.Component> cs = List.of(
                 c(1, "PLATFORM", "ACCOUNTING", null, "15.00"),
                 c(2, "MERCHANT_VERIFY", "MEMBER", 22L, "10.00"),
-                c(3, "INITIATOR_MARGIN", "MEMBER", 11L, "75.00")), PLATFORM, 30,
+                c(3, "INITIATOR_MARGIN", "MEMBER", 11L, "75.00"));
+        // f-money 待决定 2：微信不支持二级商户之间直接分账，合单关时整单转人工，不出任何接收方。
+        ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(order(10000), cs, PLATFORM, 30,
                 m -> m == 22L ? Optional.of(OTHER) : Optional.empty());
-        assertTrue(plan.ready());
-        assertEquals(2500, plan.sharedFen());
-        assertEquals(List.of(new ProfitSharePlanner.Receiver(PLATFORM, 1500), new ProfitSharePlanner.Receiver(OTHER, 1000)),
-                plan.receivers());
-        assertEquals(3, plan.lines().size());
-        assertNotNull(plan.planHash());
+        assertEquals("MANUAL", plan.state());
+        assertEquals(ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED, plan.manualReason());
+        assertTrue(plan.receivers().isEmpty());
+        assertEquals(0, plan.sharedFen());
+        assertTrue(plan.lines().stream().noneMatch(l -> l.kind() == ProfitSharePlanner.ReceiverKind.SUB_MERCHANT));
+        ProfitSharePlanner.Plan relay = ProfitSharePlanner.plan(order(10000), cs, PLATFORM, 30,
+                m -> m == 22L ? Optional.of(OTHER) : Optional.empty(), true);
+        assertTrue(relay.ready());
+        assertEquals(2500, relay.sharedFen());
+        assertEquals(List.of(new ProfitSharePlanner.Receiver(PLATFORM, 2500)), relay.receivers());
+        assertEquals(3, relay.lines().size());
+        assertNotNull(relay.planHash());
     }
 
     @Test
@@ -48,9 +56,8 @@ class ProfitSharePlannerTest {
                 c(1, "PLATFORM", "ACCOUNTING", null, "1.00"),
                 c(2, "MERCHANT_VERIFY", "MEMBER", 22L, "0.50"),
                 c(3, "LEAD_FEE", "MEMBER", 23L, "0.50"),
-                c(4, "INITIATOR_MARGIN", "MEMBER", 11L, "8.00")), PLATFORM, 30, m -> Optional.of(OTHER));
-        assertEquals(List.of(new ProfitSharePlanner.Receiver(PLATFORM, 100), new ProfitSharePlanner.Receiver(OTHER, 100)),
-                plan.receivers());
+                c(4, "INITIATOR_MARGIN", "MEMBER", 11L, "8.00")), PLATFORM, 30, m -> Optional.of(OTHER), true);
+        assertEquals(List.of(new ProfitSharePlanner.Receiver(PLATFORM, 200)), plan.receivers());
     }
 
     @Test
@@ -114,9 +121,10 @@ class ProfitSharePlannerTest {
     void samePlanSameHash() {
         List<ProfitSharePlanner.Component> cs = List.of(c(2, "MERCHANT_VERIFY", "MEMBER", 22L, "1.00"),
                 c(1, "PLATFORM", "ACCOUNTING", null, "1.00"), c(3, "INITIATOR_MARGIN", "MEMBER", 11L, "8.00"));
-        String a = ProfitSharePlanner.plan(order(1000), cs, PLATFORM, 30, m -> Optional.of(OTHER)).planHash();
+        String a = ProfitSharePlanner.plan(order(1000), cs, PLATFORM, 30, m -> Optional.of(OTHER), true).planHash();
         String b = ProfitSharePlanner.plan(order(1000), List.of(cs.get(2), cs.get(1), cs.get(0)), PLATFORM, 30,
-                m -> Optional.of(OTHER)).planHash();
+                m -> Optional.of(OTHER), true).planHash();
+        assertNotNull(a);
         assertEquals(a, b);
     }
 

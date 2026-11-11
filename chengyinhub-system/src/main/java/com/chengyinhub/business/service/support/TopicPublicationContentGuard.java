@@ -163,6 +163,12 @@ public class TopicPublicationContentGuard {
             issues.add(PublicationProblem.at(PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED, null,
                     "recruitDeadline", "自由探索主题缺少招募截止时间"));
         }
+        // f-money3:存量草稿 / 旧客户端可能带着自由探索 + 收费自玩票,发布与试检查同一判据。
+        if (topic != null && FreeExploreSelfPlayPricePolicy.violates(
+                topic.getProductType(), topic.getSelfPlay(), topic.getSelfPlayPrice())) {
+            issues.add(PublicationProblem.at(FreeExploreSelfPlayPricePolicy.CODE, null,
+                    FreeExploreSelfPlayPricePolicy.FIELD, FreeExploreSelfPlayPricePolicy.MESSAGE));
+        }
         if (topicId != null) {
             OmsTicket ticketQuery = new OmsTicket();
             ticketQuery.setOwnerType(1L);

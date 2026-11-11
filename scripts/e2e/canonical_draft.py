@@ -48,7 +48,9 @@ canonical = {
                               "licensedEntity": "chengyin", "validFrom": 1000, "validTo": 2000,
                               "editingRight": True, "humanPortraitConsent": True, "petPortraitConsent": True,
                               "channels": ["mini-program"]},
-    "completionPolicy": {"evidenceRule": "FOUR_STORE_REDEEM", "requiredChapterIds": chapters},
+    # 四店固定补偿(FOUR_STORE_REDEEM)已停止新售票(ExploreSaleSnapshotGate);现售形态是普通自由探索:
+    # 必选章全部完成即通关,走 TopicSaleCanonicalV1.validateFreeExploration 口径。
+    "completionPolicy": {"evidenceRule": "ALL_REQUIRED_CHAPTERS", "requiredChapterIds": chapters},
     "relationshipPolicy": {"platformTransaction": True, "clubCommunityOptIn": True, "forcedFollow": False,
                             "forcedGroupJoin": False, "merchantContactDisclosure": False},
     "refundReschedulePolicy": {"rescheduleDeadline": 800, "rescheduleLimit": 1,

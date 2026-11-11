@@ -147,8 +147,28 @@ class TopicDraftLegacyFieldPreservationTest {
         ticket.setTotalStock(10);
         TopicUpdateDTO dto = legacyEdit();
         dto.setTickets(new ArrayList<ActivityTicketRequest>(Collections.singletonList(ticket)));
+        // f-money3:存量是经典定向 + 收费自玩票(8.00);改成自由探索时必须显式关掉自玩票。
+        dto.setSelfPlay(0);
         CmsTopic patch = savedPatch(dto);
         assertEquals(Integer.valueOf(ProductType.FREE_EXPLORE), patch.getProductType());
+    }
+
+    @Test
+    void switchingToFreeExploreWhileKeepingThePaidSelfPlayIsRejectedBeforeWriting() {
+        ActivityTicketRequest ticket = new ActivityTicketRequest();
+        ticket.setName("尚未定时的票");
+        ticket.setMode(ProductType.FREE_EXPLORE);
+        ticket.setPrice(BigDecimal.ZERO);
+        ticket.setTotalStock(10);
+        TopicUpdateDTO dto = legacyEdit();
+        dto.setTickets(new ArrayList<ActivityTicketRequest>(Collections.singletonList(ticket)));
+        com.chengyinhub.business.exception.TopicPublicationContentException refused = assertThrows(
+                com.chengyinhub.business.exception.TopicPublicationContentException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwner(dto, MEMBER, "creator"));
+        assertEquals("FREE_EXPLORE_SELF_PLAY_PRICED", refused.getData().getIssues().get(0).getCode());
+        assertEquals("selfPlayPrice", refused.getData().getIssues().get(0).getField());
+        assertEquals("自由探索主题不能设置收费自玩票，请改为给主题门票定价", refused.getMessage());
+        verify(topicMapper, never()).updateCmsTopic(any(CmsTopic.class));
     }
 
     @Test

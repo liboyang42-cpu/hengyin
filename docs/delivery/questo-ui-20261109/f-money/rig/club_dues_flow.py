@@ -43,7 +43,7 @@ def main(out):
          {"clubId": CLUB_ID, "enabled": True, "version": ver, "requestId": "fm-set-" + uuid.uuid4().hex[:12]})
     p = call("plan/save", "POST", "/api/club/membership/plan/save", otok,
              {"clubId": CLUB_ID, "name": "月度会员", "durationDays": 30, "priceFen": 1990, "benefits": ["活动优先报名"],
-              "graceDays": 3, "pastDueDays": 7, "exitPolicy": "到期自动失效", "refundPolicy": "未使用可申请退款",
+              "graceDays": 3, "pastDueDays": 7, "exitPolicy": "END_IMMEDIATELY", "refundPolicy": "MANUAL_REVIEW",
               "status": "ACTIVE", "requestId": "fm-plan-" + uuid.uuid4().hex[:12]})
     plan_id = (p.get("data") or {}).get("id") or (p.get("data") or {}).get("planId")
     if plan_id is None:

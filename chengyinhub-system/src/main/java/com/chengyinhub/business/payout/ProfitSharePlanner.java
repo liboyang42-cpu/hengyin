@@ -26,6 +26,12 @@ public final class ProfitSharePlanner {
      */
     public enum ReceiverKind { PLATFORM, SUB_MERCHANT, RETAINED, SUPPLIER_RELAY }
 
+    /**
+     * f-money 待决定 2（业主 2026-11-11 确认）：电商收付通不支持从卖家二级商户直接分账给另一个二级商户。
+     * 合单开关关闭时，凡是需要分给卖家以外二级商户的计划一律整单转人工，不向微信提交任何分账（含平台佣金）。
+     */
+    public static final String SUB_TO_SUB_UNSUPPORTED = "SUB_MERCHANT_SHARE_UNSUPPORTED";
+
     /** 账本里一笔付款在一条结算行上的份额（元，最多两位小数）。receiverKind=ACCOUNTING 表示平台。 */
     public record Component(long settlementId, String lineType, String receiverKind, Long receiverMemberId, BigDecimal amountYuan) { }
 
@@ -54,7 +60,8 @@ public final class ProfitSharePlanner {
 
     /**
      * @param relayViaPlatform l-payout3 合单开关打开时为真：其他收款方的份额一律分给平台并标记 SUPPLIER_RELAY，
-     *                         不再向其他二级商户直接分账（微信不支持多商户直接分账）。
+     *                         不再向其他二级商户直接分账（微信不支持多商户直接分账）。为假时需要分给卖家以外二级商户的
+     *                         计划整单转人工（{@link #SUB_TO_SUB_UNSUPPORTED}）。
      */
     public static Plan plan(Order order, Collection<Component> components, String platformMchid, int maxSharePercent,
                             Function<Long, Optional<String>> memberSubMchid, boolean relayViaPlatform) {
@@ -97,7 +104,8 @@ public final class ProfitSharePlanner {
             if (mchid.get().equals(order.subMchid())) {
                 lines.add(new Line(c.settlementId(), c.lineType(), ReceiverKind.RETAINED, order.subMchid(), c.receiverMemberId(), fen));
             } else {
-                lines.add(new Line(c.settlementId(), c.lineType(), ReceiverKind.SUB_MERCHANT, mchid.get(), c.receiverMemberId(), fen));
+                // 二级商户之间直接分账微信不支持：整单转人工，钱冻结在卖家二级商户，不提交任何分账。
+                return manual(SUB_TO_SUB_UNSUPPORTED, lines);
             }
         }
         // 账本对这笔付款的份额之和必须正好等于实付；对不上说明账本不完整或已调整，不能按局部分账。

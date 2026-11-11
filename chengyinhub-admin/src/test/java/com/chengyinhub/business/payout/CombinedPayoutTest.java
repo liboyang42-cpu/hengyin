@@ -309,12 +309,15 @@ class CombinedPayoutTest {
         }
 
         @Test
-        void combinedOffKeepsLPayout2DirectSplitToTheOtherSubMerchant() {
+        void combinedOffFailsClosedInsteadOfSplittingToTheOtherSubMerchant() {
+            // f-money 待决定 2：微信不支持二级商户之间直接分账；合单关时整单转人工，不提交任何分账。
             EcommerceProfitShareService s = service(L2_ONLY);
             s.planTopic(1);
             s.submitPlanned(10);
-            assertEquals(List.of(new ProfitSharePlanner.Receiver(SP, 1500), new ProfitSharePlanner.Receiver("1900000202", 1000)),
-                    gateway.lastReceivers);
+            assertEquals(null, gateway.lastReceivers);
+            assertTrue(gateway.calls.isEmpty());
+            assertEquals("MANUAL", mapper.orders.get(0).getState());
+            assertEquals(ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED, mapper.orders.get(0).getManualReason());
             assertTrue(combineMapper.payables.isEmpty());
         }
 

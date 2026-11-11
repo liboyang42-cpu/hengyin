@@ -199,7 +199,8 @@ test('负控：移除实名闸会让未登记收费主题进入登记流程，�
 })
 
 test('自玩票上送不把未填写的价格悄悄改成0', () => {
-  assert.match(read('pages/publish/fabu/index.js'), /selfPlayPrice: this\.data\.formData\.selfPlay \? this\.data\.formData\.selfPlayPrice : 0,/)
+  // f-money3:只在经典定向上送(自由探索带收费自玩票后端会拒),经典定向仍原样上送作者填的价。
+  assert.match(read('pages/publish/fabu/index.js'), /selfPlayPrice: productType === 1 && this\.data\.formData\.selfPlay \? this\.data\.formData\.selfPlayPrice : 0,/)
 })
 
 test('场景主理人副本同样不采集实名，商家仍保留采集和失败阻断', () => {

@@ -179,19 +179,29 @@ class MoneyFlowLedgerAcceptanceTest {
     }
 
     @Test
-    void singleMerchantWithAThirdPartyShareAndCombinedOffSplitsSubMerchantToSubMerchant() {
+    void singleMerchantWithAThirdPartyShareAndCombinedOffFailsClosedAndFundsStayWithTheSeller() {
         ChannelSimulator ch = new ChannelSimulator();
         FakeEcomPayoutMapper m = sellerTrade(List.of(comp(1, "PLATFORM", "ACCOUNTING", null, "15.00"),
                 comp(2, "MERCHANT_VERIFY", "MEMBER", 66L, "10.00"), comp(3, "INITIATOR_MARGIN", "MEMBER", 55L, "75.00")));
         m.memberSubMchids.put(66L, List.of(OTHER_SUB));
         EcommerceProfitShareService s = shareService(m, ch, new FakeEcomCombineMapper(), L2_ONLY);
         ch.pay(SELLER_SUB, 10000);
-        s.planTopic(1);
-        s.submitPlanned(10);
+        assertEquals(1, s.planTopic(1));
+        assertEquals(0, s.submitPlanned(10));
+        assertEquals(0, s.submitPlanned(10)); // T+14 任务重跑仍不提交
+        // f-money 待决定 2：业主 11-11 确认微信不支持二级商户之间直接分账。合单关时提交前失败关闭：整单转人工，
+        // 不向微信提交任何分账（平台佣金也不分），钱整笔冻结在卖家二级商户，等运营处理。
+        assertEquals("MANUAL", m.orders.get(0).getState());
+        assertEquals(ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED, m.orders.get(0).getManualReason());
+        assertTrue(ch.calls.isEmpty(), "合单关时不得调用分账：" + ch.calls);
+        assertEquals(0, ch.subToSub());
         assertEquals(0, ch.redistributed());
-        // 不是二清，但这是二级商户之间直接分账——业主 11-11 确认微信不支持。合单开关关、只开 l-payout2 时会走到这里。
-        assertEquals(1000, ch.subToSub());
-        REPORT.put("ON(仅 l-payout2，合单关) 单商户 + 第三方份额", List.copyOf(ch.moves));
+        assertEquals(10000L, ch.balance.get(SELLER_SUB));
+        assertEquals(null, ch.balance.get(OTHER_SUB));
+        assertEquals(null, ch.balance.get(SP));
+        assertEquals(-10000L, ch.balance.get(PAYER));
+        assertEquals(0, ch.net());
+        REPORT.put("ON(仅 l-payout2，合单关) 单商户 + 第三方份额：转人工，不分账", List.copyOf(ch.moves));
     }
 
     @Test
