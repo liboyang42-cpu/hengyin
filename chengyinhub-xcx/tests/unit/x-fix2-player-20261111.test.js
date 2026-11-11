@@ -143,7 +143,7 @@ test('P-9 旅程手记:不再有说明句,左格不塞节点名;P-10 里程碑�
 test('P-11 首页城市定位确认是一句陈述,不再是长问句(合规要点:精确位置 / 发送给城瘾以确定首页城市 / 不用于附近排序 保留)', () => {
   for (const f of ['pages/index/index.js', 'pages/privacy/index.js']) {
     const s = read(f)
-    assert.match(s, /content: '使用精确位置并发送给城瘾以确定首页城市，之后进入首页自动定位，不用于附近排序。'/, f)
+    assert.match(s, /content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。'/, f)
     assert.doesNotMatch(s, /附近排序吗？/, f)
   }
 })

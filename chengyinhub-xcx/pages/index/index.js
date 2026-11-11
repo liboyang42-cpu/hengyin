@@ -1551,9 +1551,10 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (scope.gateCoversLocation) { this.recordHomeCityConsent(scope); return; } // P-38:隐私闸已一并同意定位
     modal.show({
       title: '首页城市定位',
-      content: '使用精确位置并发送给城瘾以确定首页城市，之后进入首页自动定位，不用于附近排序。',
+      content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。',
       confirmText: '同意定位',
       cancelText: '暂不定位',
+      maskClosable: true, // x-fix4 L2-1:点空白处 = 暂不定位,干净收起,不再一直盖着 feed
       success(result) {
         if (!isCurrentLocationRequest(that, scope)) return;
         homeCity.saveLocationDeclined(!result.confirm);

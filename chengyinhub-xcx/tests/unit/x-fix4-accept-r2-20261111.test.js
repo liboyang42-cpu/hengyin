@@ -97,3 +97,11 @@ test('L2-2 通行证页:平台通行证在售时不再写「暂无在售通行�
   assert.match(wxml, /wx:if="\{\{!products\.length && !member\}\}" kind="empty" title="暂无在售通行证"/)
   assert.match(read('subpackageMember/market/passes/index.js'), /planSide = \(v\.plans \|\| \[\]\)\.map\(\(c\) => c\.price\)/)
 })
+
+test('P-11/L2-1 首页定位确认:文案更短(保留精确位置/发送给城瘾/不用于附近排序),点空白处=暂不定位', () => {
+  const js = read('pages/index/index.js')
+  assert.match(js, /content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。'/)
+  assert.match(js, /maskClosable: true, \/\/ x-fix4 L2-1/)
+  assert.match(read('components/cy/modal-host/index.js'), /maskClosable: opts\.maskClosable === true/)
+  assert.match(read('components/cy/modal-host/index.wxml'), /mask-closable="\{\{maskClosable\}\}"/)
+})

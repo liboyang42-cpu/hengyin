@@ -375,7 +375,7 @@ Page({
     try {
       modal.show({
         title: '首页城市定位',
-        content: '使用精确位置并发送给城瘾以确定首页城市，之后进入首页自动定位，不用于附近排序。',
+        content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。',
         confirmText: '同意定位',
         cancelText: '暂不定位',
         success: result => { if (result.confirm && current()) save(); else finish(); },
