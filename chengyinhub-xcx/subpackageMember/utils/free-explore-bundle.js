@@ -48,8 +48,7 @@ function order(value, owner, registrationId) {
     if (!exactId(row.id) || !['AVAILABLE', 'RESERVED', 'REDEEMED', 'FORFEITED', 'HELD', 'REFUND_PENDING', 'REFUNDED'].includes(row.status)) throw Error('权益暂时读不全，请刷新');
     const balance = Array.isArray(bundle.balances) && bundle.balances.find(item => exactId(item.grantId)
       && exactId(item.grantId) === exactId(row.grantId) && exactId(item.holderMemberId) === owner);
-    const statusText = row.status === 'AVAILABLE' ? balance && balance.expired === true ? '当前不在有效期内'
-      : balance && balance.expired === false ? '可用' : '可用' : STATES[row.status];
+    const statusText = row.status === 'AVAILABLE' ? (balance && balance.expired === true ? '当前不在有效期内' : '可用') : STATES[row.status];
     return { id: exactId(row.id), chapterId: exactId(row.chapterId), status: row.status, statusText,
       validTo: String(row.validTo || ''), unitCode: String(row.unitCode || '') };
   });
