@@ -111,6 +111,12 @@ class EcommercePayoutServicesTest {
             mapper.trades.add(t);
             mapper.sellerMembers.put("MERCHANT:5", 55L);
             mapper.memberSubMchids.put(66L, List.of("1900000202"));
+            // f-money 待决定 2 起，合单关时只有「平台佣金」一个分账接收方能提交；第三方份额的用例见 SubMerchantShareFailClosedTest。
+            mapper.components.put(77L, List.of(comp(1, "PLATFORM", "ACCOUNTING", null, "15.00"),
+                    comp(3, "INITIATOR_MARGIN", "MEMBER", 55L, "85.00")));
+        }
+
+        void withThirdPartyShare() {
             mapper.components.put(77L, List.of(comp(1, "PLATFORM", "ACCOUNTING", null, "15.00"),
                     comp(2, "MERCHANT_VERIFY", "MEMBER", 66L, "10.00"), comp(3, "INITIATOR_MARGIN", "MEMBER", 55L, "75.00")));
         }
@@ -139,13 +145,12 @@ class EcommercePayoutServicesTest {
             assertEquals(0, service.planTopic(1));
             EcomProfitShareOrder order = mapper.orders.get(0);
             assertEquals("PLANNED", order.getState());
-            assertEquals(2500L, order.getSharedFen());
-            assertEquals(3, mapper.lines.size());
+            assertEquals(1500L, order.getSharedFen());
+            assertEquals(2, mapper.lines.size());
 
             assertEquals(1, service.submitPlanned(10));
             assertEquals("SUCCESS", order.getState());
-            assertEquals(List.of(new ProfitSharePlanner.Receiver("1900000001", 1500), new ProfitSharePlanner.Receiver("1900000202", 1000)),
-                    gateway.lastReceivers);
+            assertEquals(List.of(new ProfitSharePlanner.Receiver("1900000001", 1500)), gateway.lastReceivers);
             assertEquals(0, service.submitPlanned(10)); // 已成功不再提交
         }
 
@@ -169,7 +174,7 @@ class EcommercePayoutServicesTest {
         void closedReceiverGoesManual() {
             service.planTopic(1);
             gateway.share = new EcommercePayGateway.ShareResult("FINISHED", "W1",
-                    List.of(new EcommercePayGateway.ReceiverResult("1900000202", 1000, "CLOSED", "RECEIVER_INVALID")));
+                    List.of(new EcommercePayGateway.ReceiverResult("1900000001", 1500, "CLOSED", "RECEIVER_INVALID")));
             service.submitPlanned(10);
             assertEquals("MANUAL", mapper.orders.get(0).getState());
         }
@@ -186,6 +191,7 @@ class EcommercePayoutServicesTest {
 
         @Test
         void unroutableReceiverIsPersistedAsManualAndNeverSubmitted() {
+            withThirdPartyShare();
             mapper.memberSubMchids.clear();
             service.planTopic(1);
             assertEquals("MANUAL", mapper.orders.get(0).getState());
@@ -196,6 +202,7 @@ class EcommercePayoutServicesTest {
 
         @Test
         void ambiguousMemberWithTwoSubMerchantsGoesManual() {
+            withThirdPartyShare();
             mapper.memberSubMchids.put(66L, List.of("1900000202", "1900000303"));
             service.planTopic(1);
             assertEquals("MANUAL", mapper.orders.get(0).getState());
@@ -206,12 +213,12 @@ class EcommercePayoutServicesTest {
             service.planTopic(1);
             service.submitPlanned(10);
             assertEquals(EcommerceProfitShareService.ReturnOutcome.ALL_RETURNED, service.returnForRefund("REG1", "RF1", 10000, 0));
-            assertEquals(2, mapper.returns.size());
+            assertEquals(1, mapper.returns.size());
             long returned = mapper.returns.stream().mapToLong(r -> r.getAmountFen()).sum();
-            assertEquals(2500, returned);
+            assertEquals(1500, returned);
             int callsBefore = gateway.calls.size();
             assertEquals(EcommerceProfitShareService.ReturnOutcome.ALL_RETURNED, service.returnForRefund("REG1", "RF1", 10000, 0));
-            assertEquals(2, mapper.returns.size());
+            assertEquals(1, mapper.returns.size());
             assertEquals(callsBefore, gateway.calls.size());
         }
 

@@ -26,6 +26,7 @@ import com.chengyinhub.business.service.ITopicSaleFinalizationService;
 import com.chengyinhub.business.service.IProductRoleService;
 import com.chengyinhub.business.service.support.CoopOrderLineupSource;
 import com.chengyinhub.business.service.support.FulfillmentWindowResolver;
+import com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy;
 import com.chengyinhub.business.service.support.ApprovedSaleCanonical;
 import com.chengyinhub.business.service.support.ApprovedSaleCanonicalSource;
 import com.chengyinhub.business.service.support.CommercialReviewStatusSource;
@@ -146,6 +147,10 @@ public class TopicSaleFinalizationServiceImpl implements ITopicSaleFinalizationS
             throw new IllegalStateException("PRICING 主题已有 sellingStartedAt，拒绝覆盖开售时刻");
         }
         boolean canonicalExplore = Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType());
+        // f-money3:自由探索 + 非零自玩价没有结算出口,开售终检失败关闭(存量行不改,只拒开售)。
+        if (FreeExploreSelfPlayPricePolicy.violates(topic.getProductType(), topic.getSelfPlay(), topic.getSelfPlayPrice())) {
+            throw new IllegalStateException(FreeExploreSelfPlayPricePolicy.MESSAGE);
+        }
         if (canonicalExplore) {
             reviewStatusSource.assertSaleApproved(topicId);
         }

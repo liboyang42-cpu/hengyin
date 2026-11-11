@@ -62,6 +62,7 @@
                 activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
                 block-size="24" bindchange="onSliderChange" />
         <view class="pg-range"><text>地板 {{money.amount2(floorText)}}</text><text>最高 {{money.amount2(sliderMax)}}</text></view>
+        <cy-inline-error class="pg-field-err" wx:if="{{selfPriceError}}" kind="field" title="{{selfPriceError}}" />
         <view class="pg-reference" wx:if="{{referenceText}}">
           <text>{{referenceText}}</text>
           <text wx:if="{{referenceDeltaText}}" class="pg-delta">{{referenceDeltaText}}</text>

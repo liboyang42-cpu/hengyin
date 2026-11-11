@@ -10,7 +10,8 @@ import sys, pathlib, json, time, hashlib, datetime
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from chain_lib import http, q, ex, admin_token, app_token, step, show, readback
 
-EXEC_CLUB_ID, EXEC_CLUB_PHONE = 7002, "13900000008"
+# 现售自由探索只开放内容所属俱乐部的场次(见 chain_sale_close)。
+EXEC_CLUB_ID, EXEC_CLUB_PHONE = 7001, "13900000003"
 PLAYER_PHONE, PLAYER_MEMBER = "13900000009", 9009
 MERCHANT_PHONE_BY_MEMBER = {9002: "13900000002", 9005: "13900000005",
                             9006: "13900000006", 9007: "13900000007"}
@@ -98,6 +99,14 @@ def main(tid):
     show("consents", (http("POST", "/api/compliance/consents", token=ptok, json_body={
         "docType": "activity_host_data_sharing", "scene": "activity_signup",
         "eventType": "AGREE", "requestId": "e2e-consent-%d" % tid}).get("msg") or "")[:20])
+    # 结算页的参与人记录是姓名真源(RegistrationOrderCreateGateImpl.validatePurchaseProfile):
+    # 走小程序同一真实入口补一条本人参与人,幂等 requestId 让重跑不重复建行。
+    participant = http("POST", "/api/user/address/action", token=ptok, form={
+        "fullName": "E2E 玩家二号", "mobilePhone": PLAYER_PHONE, "isDefault": "1",
+        "requestId": "e2e-participant-%d" % PLAYER_MEMBER})
+    show("participant", (participant.get("msg") or "")[:30])
+    if participant.get("code") != 200:
+        print("   ✗ 参与人记录未建,链路在此中断"); return 1
     ticket = q("SELECT id FROM oms_ticket WHERE owner_type=2 AND owner_id=%s ORDER BY id LIMIT 1", (act,))[0][0]
     body = {"ownerType": 2, "ownerId": act, "ticketId": ticket,
             "tickets": [{"ticketId": ticket, "count": 1}],

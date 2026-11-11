@@ -2735,6 +2735,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         topic.setPublishMode(dto.getPublishMode() != null && !dto.getPublishMode().trim().isEmpty()
                 ? dto.getPublishMode().trim() : "pro");
 
+        // f-money3:自由探索上的收费自玩票没有结算出口,发布 / 存草稿都拒(失败关闭),不再静默落 0。
+        com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy.assertAllowed(
+                productType, dto.getSelfPlay(), dto.getSelfPlayPrice());
         // M2 自玩票:仅「经典定向」(mode=1)可开;自由定向本就一人玩,无自玩票。
         if (isCityOrienteering && dto.getSelfPlay() != null && dto.getSelfPlay() == 1
                 && dto.getSelfPlayPrice() != null && dto.getSelfPlayPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
@@ -3213,6 +3216,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setPublishMode(dto.getPublishMode() != null && !dto.getPublishMode().trim().isEmpty()
                 ? dto.getPublishMode().trim() : "pro");
 
+        // f-money3:与 createTopicInternal 同一判据(未传 selfPlay 时沿用存量值,见 preserveOmittedAuthorConfig)。
+        com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy.assertAllowed(
+                productType, dto.getSelfPlay(), dto.getSelfPlayPrice());
         if (isCityOrienteering && dto.getSelfPlay() != null && dto.getSelfPlay() == 1
                 && dto.getSelfPlayPrice() != null && dto.getSelfPlayPrice().compareTo(BigDecimal.ZERO) > 0) {
             patch.setSelfPlay(1);

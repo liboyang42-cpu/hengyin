@@ -1,0 +1,15 @@
+
+──────── 步骤 1:1 内容槽 PLATFORM（同 chain_player）
+   content-slot                       操作成功
+
+──────── 步骤 2:2 俱乐部 7001 开今天这一场
+   open-session 2026-11-11 22:47      {"msg": "开团成功", "code": 200, "data": {"activityId": 20}, "_status": 200}
+   [库回读] 场次票                      ((90, Decimal('69.00'), datetime.datetime(2026, 11, 21, 8, 0)),)
+
+──────── 步骤 3:3 玩家结算前置：同意 / 参与人 / 入俱乐部
+   consents                           操作成功
+   address                            操作成功
+   club/join                          {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+
+ACTIVITY_ID=20
+TICKET_ID=90

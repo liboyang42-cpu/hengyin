@@ -8356,9 +8356,10 @@ Page({
         ? this._normalizeDateTime(this.data.formData.recruitDeadline, '23:59:59') : null,
       publishToCreative: this.data.publishToCreative ? 1 : 0, // 1=同步到创意广场 0=否(后端 ApiTopicController.createTopic 已处理:开关开则插 dataType=2 创意广场帖)
       clubId: this.data.formData.clubId || '', // 归属俱乐部(任何 mode 传了即挂靠;经典定向未传后端自动兜底)
-      // M2 自玩票:仅「经典定向」生效(后端以 ticket mode=1 再次兜底,自由定向不开)
-      selfPlay: this.data.formData.selfPlay ? 1 : 0,
-      selfPlayPrice: this.data.formData.selfPlay ? this.data.formData.selfPlayPrice : 0,
+      // M2 自玩票:仅「经典定向」生效。f-money3:自由探索带收费自玩票后端会拒(没有结算出口),
+      // 编辑器已无自玩票栏位(a5-v3-29),草稿里残留的值只在经典定向上送,不让作者被看不见的字段卡住。
+      selfPlay: productType === 1 && this.data.formData.selfPlay ? 1 : 0,
+      selfPlayPrice: productType === 1 && this.data.formData.selfPlay ? this.data.formData.selfPlayPrice : 0,
       selfPlayQuota: this.data.formData.selfPlayQuota || 0,
       teamMode: Number(this.data.formData.teamMode) || 0,
       teamMaxMembers: Number(this.data.formData.teamMaxMembers) || 4,

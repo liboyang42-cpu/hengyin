@@ -1,0 +1,1674 @@
+{
+ "mode": "off",
+ "started": "2026-11-11T12:11:37",
+ "flows": [
+  {
+   "flow": "主题门票-退款",
+   "steps": [
+    {
+     "step": "后台开自玩票 ¥39.90",
+     "code": 500,
+     "msg": "非官方主题仅允许调整漫游导流开关；历史待归属主题请走归属流程",
+     "status": 200
+    },
+    {
+     "step": "参与人 E2E 玩家小城",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": null, \"createTime\": \"2026-11-11 20:11:39\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 11, \"memberId\": 9004, \"fullName\": \"E2E 玩家小城\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000004\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"fm2-participant-13900000004\"}"
+    },
+    {
+     "step": "同意报名信息共享",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"occurredAt\": \"2026-11-11T20:11:40.000+08:00\", \"requestId\": \"fm2-consent-b4d89d39c3\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}"
+    },
+    {
+     "step": "自玩票 报价",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"payAmount\": 39.9, \"pointsUsed\": 0, \"pointsDeductYuan\": 0.0, \"couponDeductYuan\": 0, \"quoteSign\": \"f793ded6fbb9758e3b1192fa45a943d4\", \"memberDiscountYuan\": 0.0, \"clubMember\": false, \"prioritySignupEnabled\": false, \"refundDeadline\": \"2026-11-20T00:00:00.000+08:00\", \"refundableNow\": true, \"delivery\": {\"purchaseKind\": 2, \"ticketName\": null, \"teamSize\": null, \"minPeople\": null, \"maxPeople\": null, \"needAudit\": null, \"serviceStartAt\": \"2026-11-21T09:00:00.000+08:00\", \"serviceEndAt\": \"2026-12-21T09:00:00.000+08:00\", \"refundRule\": null, \"beneficiaryKind\": \"PAYER_SELF\", \"sellerMemberId\": 9003, \"amountF"
+    },
+    {
+     "step": "自玩票 建单",
+     "code": 200,
+     "msg": "报名创建成功",
+     "status": 200,
+     "data": "{\"registrationId\": 74, \"registrationNo\": \"T20261111228A2C44\", \"payableAmount\": 39.9, \"expireTime\": \"2026-11-11T20:41:39.861+08:00\", \"expiresAt\": \"2026-12-22T00:00:00.000+08:00\", \"paymentType\": 1, \"registrationIds\": [74], \"payParams\": {\"appId\": \"e2e-stub-appid\", \"timeStamp\": \"0\", \"nonceStr\": \"e2estub\", \"package\": \"prepay_id=e2e-stub\", \"signType\": \"RSA\", \"paySign\": \"e2e-stub\"}}"
+    },
+    {
+     "step": "订单",
+     "registration": [
+      74,
+      "T20261111228A2C44",
+      3990
+     ]
+    },
+    {
+     "step": "pay（直连回调）",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "玩家取消并退款",
+     "code": 200,
+     "msg": "报名已取消，现金退款渠道处理中，尚未确认到账，本单未使用积分",
+     "status": 200,
+     "data": "{\"registrationId\": 74, \"scope\": \"REGISTRATION\", \"cancellationStatus\": \"CANCELLED\", \"cashRefundStatus\": \"PROCESSING\", \"cashRefundAmount\": 39.9, \"pointsUsed\": 0, \"pointsReturned\": 0, \"pointsRefundStatus\": \"NOT_NEEDED\"}"
+    },
+    {
+     "step": "退款通知 RF74",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "退款对账任务",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    }
+   ],
+   "notes": [
+    "[FIXTURE] 后台入口拒改非官方主题（产品规则），直接写 cms_topic.self_play/self_play_price=39.90",
+    "[FIXTURE] 直连商户号已验签支付事实 id=1（无商户私钥，同 chain_player）"
+   ],
+   "db_changes": {
+    "cms_registration": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 74,
+       "registration_no": "T20261111228A2C44",
+       "parent_order_no": null,
+       "request_id": "fm2-off-5295d80e0eeb",
+       "request_fingerprint": "4983653bfa53a638df1f92f26dc1aa58be1f32815adcf4510029fef957bc5afb",
+       "owner_type": 1,
+       "owner_id": 990014,
+       "activity_title": "E2E 探店日一期",
+       "ticket_id": null,
+       "ticket_name": null,
+       "ticket_price": null,
+       "member_id": 9004,
+       "real_name": "v1:N/KHXH6N5fLPsgfHHcoc2fMLCRYLXADjgiM++cWtoF+JOJ8mDf4u6TmmBpA=",
+       "phone": "v1:DeAgBldDnrm7ucjdUHB8AMvQjHt7F3Lq93u2Qm1ji1l9xikW1tvx",
+       "phone_hash": "014169736851c6dc782abc704d9768b9e39433f576ddd4e24c4e80fe344084ed",
+       "email": null,
+       "address": null,
+       "address_id": null,
+       "participate_date": null,
+       "order_num": 1,
+       "original_amount": "39.90",
+       "discount_amount": "0.00",
+       "total_amount": "39.90",
+       "point_used": 0,
+       "point_deduct_amount": "0.00",
+       "point_deduct_rate": "0.0200",
+       "max_point_deduct": null,
+       "payable_amount": "39.90",
+       "payment_status": 4,
+       "payment_type": 1,
+       "payment_time": "2026-11-11 20:11:40",
+       "transaction_id": "RIG-TXN-11228A2C44",
+       "point_payment_amount": "0.00",
+       "wechat_payment_amount": "39.90",
+       "fee_platform_rate": "0.0300",
+       "registration_status": 3,
+       "pay_expire_time": "2026-11-11 20:41:40",
+       "verification_code": null,
+       "qrcode_url": null,
+       "verification_status": 0,
+       "verification_time": null,
+       "first_successful_scan_at": null,
+       "verifier_id": null,
+       "points_returned": 0,
+       "topic_id": 990014,
+       "purchase_kind": 2,
+       "source_club_id": null,
+       "source_frozen_at": null,
+       "source_channel_code": null,
+       "expires_at": "2026-12-22 00:00:00",
+       "refund_policy_code": "START_24H_100_50_0",
+       "refund_policy_version": 1,
+       "refund_deadline": "2026-11-21 00:00:00"
+      }
+     }
+    ],
+    "cms_registration_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "registration_id": 74,
+       "registration_no": "T20261111228A2C44",
+       "payment_fact_id": 1,
+       "payment_fact_hash": "45f05c11eca9844ce3d6df25cb9a9ff7f8ea4330544173f152b0c83fca83ca3d",
+       "transaction_id": "RIG-TXN-11228A2C44",
+       "consumed_at": "2026-11-11 12:11:40.128435"
+      }
+     }
+    ],
+    "wx_verified_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "fact_kind": "PAYMENT",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "T20261111228A2C44",
+       "wx_out_trade_no": "T20261111228A2C44",
+       "merchant_event_no": "T20261111228A2C44",
+       "provider_id": "RIG-TXN-11228A2C44",
+       "transaction_id": "RIG-TXN-11228A2C44",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 3990,
+       "amount_fen": 3990,
+       "success_at": "2026-11-11T12:11:39Z",
+       "intent_request_hash": null,
+       "fact_hash": "45f05c11eca9844ce3d6df25cb9a9ff7f8ea4330544173f152b0c83fca83ca3d",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:11:39.927639"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 2,
+       "fact_kind": "REFUND",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "T20261111228A2C44",
+       "wx_out_trade_no": "T20261111228A2C44",
+       "merchant_event_no": "RF74",
+       "provider_id": "RIG-RF-RF74",
+       "transaction_id": "RIG-TXN-11228A2C44",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 3990,
+       "amount_fen": 3990,
+       "success_at": "2026-11-11T12:11:44Z",
+       "intent_request_hash": null,
+       "fact_hash": "036b00c139872824833a2832d8054c70d122ff557e98670eb125d2e153bf4312",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:11:44.789278"
+      }
+     }
+    ],
+    "wx_payment_callback_inbox": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "notify_hash": "19ae6af5fa85d34f6b07c02b3aa48ecded0d9ca944ea713d35c4b600a5eaf755",
+       "biz_type": 1,
+       "biz_id": 74,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "8b7c2bc366e3497996ac2c876d0d4d70",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 2,
+       "notify_hash": "9c7a08a56b7b29a0647d46c150cbbf028df51359e847ca569f1887dd63b6cf06",
+       "biz_type": 2,
+       "biz_id": 1,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "a5bd43921cd0478680e95d749b4bb1d0",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     }
+    ],
+    "refund_application": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "refund_no": "RF74",
+       "source_type": "registration",
+       "source_id": 74,
+       "owner_type": 1,
+       "owner_id": 990014,
+       "member_id": 9004,
+       "merchant_id": 9003,
+       "paid_amount": "39.90",
+       "refund_amount": "39.90",
+       "status": 1,
+       "reason": "用户申请退款",
+       "reject_reason": "用户申请退款",
+       "reviewer_id": 0,
+       "reviewed_at": "2026-11-11 20:11:45",
+       "adjustment_created": 0,
+       "idempotency_key": "registration:74",
+       "del_flag": 0,
+       "platform_takeover_at": null,
+       "payout_status": 1,
+       "payout_submission_state": "LEGACY_RECONCILE",
+       "payout_method": null,
+       "payout_receipt_url": null,
+       "payout_handler_id": null,
+       "payout_handled_at": null,
+       "payout_reviewer2_id": null,
+       "payout_reviewed2_at": null,
+       "payout_remark": "原路退款成功(回调确认到账)",
+       "payout_lease_token": null,
+       "payout_lease_owner": null,
+       "payout_lease_expires_at": null,
+       "created_by_user_id": null,
+       "fulfillment_sync_queue_at": "2026-11-11 12:11:44.664400"
+      }
+     }
+    ]
+   },
+   "channel_moves": [
+    {
+     "at": "2026-11-11T12:11:39.942606448Z",
+     "kind": "PAYMENT",
+     "from": "PAYER",
+     "to": "E2EMCH0001",
+     "fen": 3990,
+     "ref": "T20261111228A2C44",
+     "ref2": "RIG-TXN-11228A2C44"
+    },
+    {
+     "at": "2026-11-11T12:11:44.743520851Z",
+     "kind": "REFUND",
+     "from": "E2EMCH0001",
+     "to": "PAYER",
+     "fen": 3990,
+     "ref": "T20261111228A2C44",
+     "ref2": "RF74"
+    }
+   ]
+  },
+  {
+   "flow": "主题门票-结算",
+   "steps": [
+    {
+     "step": "参与人 E2E 玩家小城",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": \"\", \"createTime\": \"2026-11-11 20:11:40\", \"updateBy\": \"\", \"updateTime\": null, \"remark\": null, \"id\": 11, \"memberId\": 9004, \"fullName\": \"E2E 玩家小城\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000004\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"fm2-participant-13900000004\"}"
+    },
+    {
+     "step": "同意报名信息共享",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"occurredAt\": \"2026-11-11T20:11:49.000+08:00\", \"requestId\": \"fm2-consent-74c0703249\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}"
+    },
+    {
+     "step": "自玩票 报价",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"payAmount\": 39.9, \"pointsUsed\": 0, \"pointsDeductYuan\": 0.0, \"couponDeductYuan\": 0, \"quoteSign\": \"f793ded6fbb9758e3b1192fa45a943d4\", \"memberDiscountYuan\": 0.0, \"clubMember\": false, \"prioritySignupEnabled\": false, \"refundDeadline\": \"2026-11-20T00:00:00.000+08:00\", \"refundableNow\": true, \"delivery\": {\"purchaseKind\": 2, \"ticketName\": null, \"teamSize\": null, \"minPeople\": null, \"maxPeople\": null, \"needAudit\": null, \"serviceStartAt\": \"2026-11-21T09:00:00.000+08:00\", \"serviceEndAt\": \"2026-12-21T09:00:00.000+08:00\", \"refundRule\": null, \"beneficiaryKind\": \"PAYER_SELF\", \"sellerMemberId\": 9003, \"amountF"
+    },
+    {
+     "step": "自玩票 建单",
+     "code": 200,
+     "msg": "报名创建成功",
+     "status": 200,
+     "data": "{\"registrationId\": 75, \"registrationNo\": \"T2026111120DF2B92\", \"payableAmount\": 39.9, \"expireTime\": \"2026-11-11T20:41:48.595+08:00\", \"expiresAt\": \"2026-12-22T00:00:00.000+08:00\", \"paymentType\": 1, \"registrationIds\": [75], \"payParams\": {\"appId\": \"e2e-stub-appid\", \"timeStamp\": \"0\", \"nonceStr\": \"e2estub\", \"package\": \"prepay_id=e2e-stub\", \"signType\": \"RSA\", \"paySign\": \"e2e-stub\"}}"
+    },
+    {
+     "step": "订单",
+     "registration": [
+      75,
+      "T2026111120DF2B92",
+      3990
+     ]
+    },
+    {
+     "step": "pay（直连回调）",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "结算任务",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    },
+    {
+     "step": "结算后主理人清退",
+     "code": 200,
+     "msg": "报名已取消，现金退款渠道处理中，尚未确认到账，本单未使用积分",
+     "status": 200,
+     "data": "{\"registrationId\": 75, \"scope\": \"REGISTRATION\", \"cancellationStatus\": \"CANCELLED\", \"cashRefundStatus\": \"PROCESSING\", \"cashRefundAmount\": 39.9, \"pointsUsed\": 0, \"pointsReturned\": 0, \"pointsRefundStatus\": \"NOT_NEEDED\"}"
+    },
+    {
+     "step": "退款通知 RF75",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "退款对账任务",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    }
+   ],
+   "notes": [
+    "[FIXTURE] 直连商户号已验签支付事实 id=3（无商户私钥，同 chain_player）",
+    "[FIXTURE] 支付时间整体拨到 15 天前（T+14 已到）；主题仍在售，不改档期"
+   ],
+   "db_changes": {
+    "cms_registration": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 75,
+       "registration_no": "T2026111120DF2B92",
+       "parent_order_no": null,
+       "request_id": "fm2-off-41bc6c3e2f81",
+       "request_fingerprint": "4983653bfa53a638df1f92f26dc1aa58be1f32815adcf4510029fef957bc5afb",
+       "owner_type": 1,
+       "owner_id": 990014,
+       "activity_title": "E2E 探店日一期",
+       "ticket_id": null,
+       "ticket_name": null,
+       "ticket_price": null,
+       "member_id": 9004,
+       "real_name": "v1:Do9U5nQLqC7UXDtQSZKkGjpC7ygUALjLO1LDIn6xE5aNoYgm5VgN+l7Yldo=",
+       "phone": "v1:WRBjflNGlt+nS1looYsFP4aPW/0C8htnKs1lwPMnJ4lK9nFAWSq8",
+       "phone_hash": "014169736851c6dc782abc704d9768b9e39433f576ddd4e24c4e80fe344084ed",
+       "email": null,
+       "address": null,
+       "address_id": null,
+       "participate_date": null,
+       "order_num": 1,
+       "original_amount": "39.90",
+       "discount_amount": "0.00",
+       "total_amount": "39.90",
+       "point_used": 0,
+       "point_deduct_amount": "0.00",
+       "point_deduct_rate": "0.0200",
+       "max_point_deduct": null,
+       "payable_amount": "39.90",
+       "payment_status": 4,
+       "payment_type": 1,
+       "payment_time": "2026-10-27 20:11:49",
+       "transaction_id": "RIG-TXN-1120DF2B92",
+       "point_payment_amount": "0.00",
+       "wechat_payment_amount": "39.90",
+       "fee_platform_rate": "0.0300",
+       "registration_status": 3,
+       "pay_expire_time": "2026-11-11 20:41:49",
+       "verification_code": null,
+       "qrcode_url": null,
+       "verification_status": 0,
+       "verification_time": null,
+       "first_successful_scan_at": null,
+       "verifier_id": null,
+       "points_returned": 0,
+       "topic_id": 990014,
+       "purchase_kind": 2,
+       "source_club_id": null,
+       "source_frozen_at": null,
+       "source_channel_code": null,
+       "expires_at": "2026-12-22 00:00:00",
+       "refund_policy_code": "START_24H_100_50_0",
+       "refund_policy_version": 1,
+       "refund_deadline": "2026-11-21 00:00:00"
+      }
+     }
+    ],
+    "cms_registration_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "registration_id": 75,
+       "registration_no": "T2026111120DF2B92",
+       "payment_fact_id": 3,
+       "payment_fact_hash": "3b807b63e255512d3245595d90629ba106200edadfb76786c513b1515b9b5d75",
+       "transaction_id": "RIG-TXN-1120DF2B92",
+       "consumed_at": "2026-11-11 12:11:48.769900"
+      }
+     }
+    ],
+    "wx_verified_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 3,
+       "fact_kind": "PAYMENT",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "T2026111120DF2B92",
+       "wx_out_trade_no": "T2026111120DF2B92",
+       "merchant_event_no": "T2026111120DF2B92",
+       "provider_id": "RIG-TXN-1120DF2B92",
+       "transaction_id": "RIG-TXN-1120DF2B92",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 3990,
+       "amount_fen": 3990,
+       "success_at": "2026-11-11T12:11:48Z",
+       "intent_request_hash": null,
+       "fact_hash": "3b807b63e255512d3245595d90629ba106200edadfb76786c513b1515b9b5d75",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:11:48.634484"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 4,
+       "fact_kind": "REFUND",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "T2026111120DF2B92",
+       "wx_out_trade_no": "T2026111120DF2B92",
+       "merchant_event_no": "RF75",
+       "provider_id": "RIG-RF-RF75",
+       "transaction_id": "RIG-TXN-1120DF2B92",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 3990,
+       "amount_fen": 3990,
+       "success_at": "2026-11-11T12:11:53Z",
+       "intent_request_hash": null,
+       "fact_hash": "3b5c8000f11ccb0c788cdb387d4b76220547f0f0fb03a09d3e4f3a3ccc7a94f0",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:11:53.166592"
+      }
+     }
+    ],
+    "wx_payment_callback_inbox": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 3,
+       "notify_hash": "48ba22cd7f8edf5efa259b60edfa7629cc9f00542613c4b9de5058a419c56c2a",
+       "biz_type": 1,
+       "biz_id": 75,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "476262322e534c97bd699dd4a3993d9e",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 4,
+       "notify_hash": "dc51a47d6ebf24bf62f2ce776efe2ba30e1496d3c20b473c5d938addef3c54e7",
+       "biz_type": 2,
+       "biz_id": 2,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "18b52a2205ca4c51b9bdd72348169d7d",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     }
+    ],
+    "refund_application": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 2,
+       "refund_no": "RF75",
+       "source_type": "registration",
+       "source_id": 75,
+       "owner_type": 1,
+       "owner_id": 990014,
+       "member_id": 9004,
+       "merchant_id": 9003,
+       "paid_amount": "39.90",
+       "refund_amount": "39.90",
+       "status": 1,
+       "reason": "主理人取消报名并退款",
+       "reject_reason": "主理人取消报名并退款",
+       "reviewer_id": 0,
+       "reviewed_at": "2026-11-11 20:11:53",
+       "adjustment_created": 0,
+       "idempotency_key": "registration:75",
+       "del_flag": 0,
+       "platform_takeover_at": null,
+       "payout_status": 1,
+       "payout_submission_state": "LEGACY_RECONCILE",
+       "payout_method": null,
+       "payout_receipt_url": null,
+       "payout_handler_id": null,
+       "payout_handled_at": null,
+       "payout_reviewer2_id": null,
+       "payout_reviewed2_at": null,
+       "payout_remark": "原路退款成功(回调确认到账)",
+       "payout_lease_token": null,
+       "payout_lease_owner": null,
+       "payout_lease_expires_at": null,
+       "created_by_user_id": null,
+       "fulfillment_sync_queue_at": "2026-11-11 12:11:53.079470"
+      }
+     }
+    ]
+   },
+   "channel_moves": [
+    {
+     "at": "2026-11-11T12:11:48.645661304Z",
+     "kind": "PAYMENT",
+     "from": "PAYER",
+     "to": "E2EMCH0001",
+     "fen": 3990,
+     "ref": "T2026111120DF2B92",
+     "ref2": "RIG-TXN-1120DF2B92"
+    },
+    {
+     "at": "2026-11-11T12:11:53.137361385Z",
+     "kind": "REFUND",
+     "from": "E2EMCH0001",
+     "to": "PAYER",
+     "fen": 3990,
+     "ref": "T2026111120DF2B92",
+     "ref2": "RF75"
+    }
+   ]
+  },
+  {
+   "flow": "场次票-退款",
+   "steps": [
+    {
+     "step": "主理人开场次 2026-11-14",
+     "code": 200,
+     "msg": "开团成功",
+     "status": 200,
+     "data": "{\"activityId\": 13}"
+    },
+    {
+     "step": "参与人 E2E 玩家二号",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": null, \"createTime\": \"2026-11-11 20:11:56\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 12, \"memberId\": 9009, \"fullName\": \"E2E 玩家二号\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000009\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"fm2-participant-13900000009\"}"
+    },
+    {
+     "step": "同意报名信息共享",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"occurredAt\": \"2026-11-11T20:11:57.000+08:00\", \"requestId\": \"fm2-consent-77a5679386\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}"
+    },
+    {
+     "step": "场次票 报价",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"payAmount\": 69.0, \"pointsUsed\": 0, \"pointsDeductYuan\": 0.0, \"couponDeductYuan\": 0, \"quoteSign\": \"9fc512417a9b1335fcd28686f8c6ea2a\", \"memberDiscountYuan\": 0.0, \"clubMember\": true, \"prioritySignupEnabled\": false, \"refundDeadline\": \"2026-11-13T10:07:00.000+08:00\", \"refundableNow\": true, \"delivery\": {\"purchaseKind\": 3, \"ticketName\": \"标准场次票\", \"teamSize\": 0, \"minPeople\": null, \"maxPeople\": null, \"needAudit\": 0, \"serviceStartAt\": \"2026-11-14T10:07:00.000+08:00\", \"serviceEndAt\": \"2026-11-14T23:59:59.000+08:00\", \"refundRule\": \"开场前24小时可退\", \"beneficiaryKind\": \"PAYER_SELF\", \"sellerMemberId\": 9003, \"amou"
+    },
+    {
+     "step": "场次票 建单",
+     "code": 200,
+     "msg": "报名创建成功",
+     "status": 200,
+     "data": "{\"registrationId\": 76, \"registrationNo\": \"A20261111DBAF9703\", \"payableAmount\": 69.0, \"expireTime\": \"2026-11-11T20:41:57.041+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [76], \"payParams\": {\"appId\": \"e2e-stub-appid\", \"timeStamp\": \"0\", \"nonceStr\": \"e2estub\", \"package\": \"prepay_id=e2e-stub\", \"signType\": \"RSA\", \"paySign\": \"e2e-stub\"}}"
+    },
+    {
+     "step": "订单",
+     "registration": [
+      76,
+      "A20261111DBAF9703",
+      6900
+     ],
+     "activity": 13
+    },
+    {
+     "step": "pay（直连回调）",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "玩家开场前取消并退款",
+     "code": 200,
+     "msg": "报名已取消，现金退款渠道处理中，尚未确认到账，本单未使用积分",
+     "status": 200,
+     "data": "{\"registrationId\": 76, \"scope\": \"PARENT_ORDER\", \"cancellationStatus\": \"CANCELLED\", \"cashRefundStatus\": \"PROCESSING\", \"cashRefundAmount\": 69.0, \"pointsUsed\": 0, \"pointsReturned\": 0, \"pointsRefundStatus\": \"NOT_NEEDED\"}"
+    },
+    {
+     "step": "退款通知 RF76",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "退款对账任务",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    }
+   ],
+   "notes": [
+    "[FIXTURE] 直连商户号已验签支付事实 id=5（无商户私钥，同 chain_player）"
+   ],
+   "db_changes": {
+    "cms_registration": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 76,
+       "registration_no": "A20261111DBAF9703",
+       "parent_order_no": "P2026111116306511",
+       "request_id": "fm2-off-6df8930178f0",
+       "request_fingerprint": "e060497f1dc9202a26aee3f370213c0fd8e995f498214d784c79df4082f7e153",
+       "owner_type": 2,
+       "owner_id": 13,
+       "activity_title": "E2E 探店日一期",
+       "ticket_id": 80,
+       "ticket_name": "标准场次票",
+       "ticket_price": "69.00",
+       "member_id": 9009,
+       "real_name": "v1:04otFeNlZWMwx5bbM9jZr5W7xpMDnjQfDAuk5P6LCARxgjfjnZgRh/LaLMI=",
+       "phone": "v1:af+R03DwNnfB1a4M4qk02VOoNRUIG0tYDUI4XqBQHHxgHLHmOmDA",
+       "phone_hash": "0a0a2893a1841c6bbd7f040e795663039251badc2f80ea499bc25d1e132e3f49",
+       "email": null,
+       "address": null,
+       "address_id": null,
+       "participate_date": null,
+       "order_num": 1,
+       "original_amount": "69.00",
+       "discount_amount": "0.00",
+       "total_amount": "69.00",
+       "point_used": 0,
+       "point_deduct_amount": "0.00",
+       "point_deduct_rate": "0.0200",
+       "max_point_deduct": null,
+       "payable_amount": "69.00",
+       "payment_status": 4,
+       "payment_type": 1,
+       "payment_time": "2026-11-11 20:11:57",
+       "transaction_id": "RIG-TXN-11DBAF9703",
+       "point_payment_amount": "0.00",
+       "wechat_payment_amount": "69.00",
+       "fee_platform_rate": "0.0300",
+       "registration_status": 3,
+       "pay_expire_time": "2026-11-11 20:41:57",
+       "verification_code": null,
+       "qrcode_url": null,
+       "verification_status": 0,
+       "verification_time": null,
+       "first_successful_scan_at": null,
+       "verifier_id": null,
+       "points_returned": 0,
+       "topic_id": null,
+       "purchase_kind": 3,
+       "source_club_id": null,
+       "source_frozen_at": "2026-11-11 20:11:57",
+       "source_channel_code": null,
+       "expires_at": null,
+       "refund_policy_code": "START_24H_100_50_0",
+       "refund_policy_version": 1,
+       "refund_deadline": "2026-11-14 10:07:00"
+      }
+     }
+    ],
+    "cms_registration_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "registration_id": 76,
+       "registration_no": "A20261111DBAF9703",
+       "payment_fact_id": 5,
+       "payment_fact_hash": "bf79dedae80414e414edb76afdf48344b0f455a47953cf4f2b2872832deb7399",
+       "transaction_id": "RIG-TXN-11DBAF9703",
+       "consumed_at": "2026-11-11 12:11:57.210963"
+      }
+     }
+    ],
+    "wx_verified_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 5,
+       "fact_kind": "PAYMENT",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "A20261111DBAF9703",
+       "wx_out_trade_no": "A20261111DBAF9703",
+       "merchant_event_no": "A20261111DBAF9703",
+       "provider_id": "RIG-TXN-11DBAF9703",
+       "transaction_id": "RIG-TXN-11DBAF9703",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 6900,
+       "amount_fen": 6900,
+       "success_at": "2026-11-11T12:11:57Z",
+       "intent_request_hash": null,
+       "fact_hash": "bf79dedae80414e414edb76afdf48344b0f455a47953cf4f2b2872832deb7399",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:11:57.114339"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 6,
+       "fact_kind": "REFUND",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "A20261111DBAF9703",
+       "wx_out_trade_no": "A20261111DBAF9703",
+       "merchant_event_no": "RF76",
+       "provider_id": "RIG-RF-RF76",
+       "transaction_id": "RIG-TXN-11DBAF9703",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 6900,
+       "amount_fen": 6900,
+       "success_at": "2026-11-11T12:12:01Z",
+       "intent_request_hash": null,
+       "fact_hash": "4d9c0f901372ac69d99160629e47fb2fc3797b66bd8eb5be7066959f757a41b9",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:12:01.563625"
+      }
+     }
+    ],
+    "wx_payment_callback_inbox": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 5,
+       "notify_hash": "131a5a34f242234048a13429915e782f255e59e63a4a61602bf3b7d3441c229c",
+       "biz_type": 1,
+       "biz_id": 76,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "4960a0ef2ba64429ba42ace8f39a0263",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 6,
+       "notify_hash": "d6edee97d10be7da1cdada4eeec9c68a9160e557c43b5db8bf55ceacbc1a1fd4",
+       "biz_type": 2,
+       "biz_id": 3,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "fa787f9d2fae4d3d8ccb525ee4373ef5",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     }
+    ],
+    "refund_application": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 3,
+       "refund_no": "RF76",
+       "source_type": "registration",
+       "source_id": 76,
+       "owner_type": 2,
+       "owner_id": 13,
+       "member_id": 9009,
+       "merchant_id": 9003,
+       "paid_amount": "69.00",
+       "refund_amount": "69.00",
+       "status": 1,
+       "reason": "用户申请退款",
+       "reject_reason": "用户申请退款",
+       "reviewer_id": 0,
+       "reviewed_at": "2026-11-11 20:12:02",
+       "adjustment_created": 0,
+       "idempotency_key": "registration:76",
+       "del_flag": 0,
+       "platform_takeover_at": null,
+       "payout_status": 1,
+       "payout_submission_state": "LEGACY_RECONCILE",
+       "payout_method": null,
+       "payout_receipt_url": null,
+       "payout_handler_id": null,
+       "payout_handled_at": null,
+       "payout_reviewer2_id": null,
+       "payout_reviewed2_at": null,
+       "payout_remark": "原路退款成功(回调确认到账)",
+       "payout_lease_token": null,
+       "payout_lease_owner": null,
+       "payout_lease_expires_at": null,
+       "created_by_user_id": null,
+       "fulfillment_sync_queue_at": "2026-11-11 12:12:01.480843"
+      }
+     }
+    ]
+   },
+   "channel_moves": [
+    {
+     "at": "2026-11-11T12:11:57.121531710Z",
+     "kind": "PAYMENT",
+     "from": "PAYER",
+     "to": "E2EMCH0001",
+     "fen": 6900,
+     "ref": "A20261111DBAF9703",
+     "ref2": "RIG-TXN-11DBAF9703"
+    },
+    {
+     "at": "2026-11-11T12:12:01.536468408Z",
+     "kind": "REFUND",
+     "from": "E2EMCH0001",
+     "to": "PAYER",
+     "fen": 6900,
+     "ref": "A20261111DBAF9703",
+     "ref2": "RF76"
+    }
+   ]
+  },
+  {
+   "flow": "场次票-结算",
+   "steps": [
+    {
+     "step": "主理人开场次 2026-11-15",
+     "code": 200,
+     "msg": "开团成功",
+     "status": 200,
+     "data": "{\"activityId\": 14}"
+    },
+    {
+     "step": "参与人 E2E 玩家二号",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": \"\", \"createTime\": \"2026-11-11 20:11:57\", \"updateBy\": \"\", \"updateTime\": null, \"remark\": null, \"id\": 12, \"memberId\": 9009, \"fullName\": \"E2E 玩家二号\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000009\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"fm2-participant-13900000009\"}"
+    },
+    {
+     "step": "同意报名信息共享",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"occurredAt\": \"2026-11-11T20:12:05.000+08:00\", \"requestId\": \"fm2-consent-8969086cf2\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}"
+    },
+    {
+     "step": "场次票 报价",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"payAmount\": 69.0, \"pointsUsed\": 0, \"pointsDeductYuan\": 0.0, \"couponDeductYuan\": 0, \"quoteSign\": \"6fc96b39cd75d8dd37cbe6f2fa326837\", \"memberDiscountYuan\": 0.0, \"clubMember\": true, \"prioritySignupEnabled\": false, \"refundDeadline\": \"2026-11-14T10:07:00.000+08:00\", \"refundableNow\": true, \"delivery\": {\"purchaseKind\": 3, \"ticketName\": \"标准场次票\", \"teamSize\": 0, \"minPeople\": null, \"maxPeople\": null, \"needAudit\": 0, \"serviceStartAt\": \"2026-11-15T10:07:00.000+08:00\", \"serviceEndAt\": \"2026-11-15T23:59:59.000+08:00\", \"refundRule\": \"开场前24小时可退\", \"beneficiaryKind\": \"PAYER_SELF\", \"sellerMemberId\": 9003, \"amou"
+    },
+    {
+     "step": "场次票 建单",
+     "code": 200,
+     "msg": "报名创建成功",
+     "status": 200,
+     "data": "{\"registrationId\": 77, \"registrationNo\": \"A20261111538562EE\", \"payableAmount\": 69.0, \"expireTime\": \"2026-11-11T20:42:05.377+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [77], \"payParams\": {\"appId\": \"e2e-stub-appid\", \"timeStamp\": \"0\", \"nonceStr\": \"e2estub\", \"package\": \"prepay_id=e2e-stub\", \"signType\": \"RSA\", \"paySign\": \"e2e-stub\"}}"
+    },
+    {
+     "step": "订单",
+     "registration": [
+      77,
+      "A20261111538562EE",
+      6900
+     ],
+     "activity": 14
+    },
+    {
+     "step": "pay（直连回调）",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "结算任务（T+14）",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    },
+    {
+     "step": "结算后主理人清退",
+     "code": 200,
+     "msg": "报名已取消，现金退款渠道处理中，尚未确认到账，本单未使用积分",
+     "status": 200,
+     "data": "{\"registrationId\": 77, \"scope\": \"PARENT_ORDER\", \"cancellationStatus\": \"CANCELLED\", \"cashRefundStatus\": \"PROCESSING\", \"cashRefundAmount\": 69.0, \"pointsUsed\": 0, \"pointsReturned\": 0, \"pointsRefundStatus\": \"NOT_NEEDED\"}"
+    },
+    {
+     "step": "退款通知 RF77",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "退款对账任务",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    }
+   ],
+   "notes": [
+    "[FIXTURE] 直连商户号已验签支付事实 id=7（无商户私钥，同 chain_player）",
+    "[FIXTURE] 场次整体拨到 20 天前（结束 + 14 天已过，退款截止已过）"
+   ],
+   "db_changes": {
+    "cms_registration": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 77,
+       "registration_no": "A20261111538562EE",
+       "parent_order_no": "P202611118978A6A6",
+       "request_id": "fm2-off-1440f1357e14",
+       "request_fingerprint": "d61886bd4e33c958a5f05949c4f89e327946b7e12c287c80dc76866ff2f56515",
+       "owner_type": 2,
+       "owner_id": 14,
+       "activity_title": "E2E 探店日一期",
+       "ticket_id": 81,
+       "ticket_name": "标准场次票",
+       "ticket_price": "69.00",
+       "member_id": 9009,
+       "real_name": "v1:wgP07YPdy5Zac0KARLlkmr1GGVPPvs/YS6r47AbaBeaiXpiekv++7RDiEYQ=",
+       "phone": "v1:rqsApc2R/rh6irEs8yKR5y3bLoTTiyUIw3bQdKXMDM2UD1SJd8uH",
+       "phone_hash": "0a0a2893a1841c6bbd7f040e795663039251badc2f80ea499bc25d1e132e3f49",
+       "email": null,
+       "address": null,
+       "address_id": null,
+       "participate_date": null,
+       "order_num": 1,
+       "original_amount": "69.00",
+       "discount_amount": "0.00",
+       "total_amount": "69.00",
+       "point_used": 0,
+       "point_deduct_amount": "0.00",
+       "point_deduct_rate": "0.0200",
+       "max_point_deduct": null,
+       "payable_amount": "69.00",
+       "payment_status": 4,
+       "payment_type": 1,
+       "payment_time": "2026-10-21 20:12:06",
+       "transaction_id": "RIG-TXN-11538562EE",
+       "point_payment_amount": "0.00",
+       "wechat_payment_amount": "69.00",
+       "fee_platform_rate": "0.0300",
+       "registration_status": 3,
+       "pay_expire_time": "2026-11-11 20:42:05",
+       "verification_code": null,
+       "qrcode_url": null,
+       "verification_status": 0,
+       "verification_time": null,
+       "first_successful_scan_at": null,
+       "verifier_id": null,
+       "points_returned": 0,
+       "topic_id": null,
+       "purchase_kind": 3,
+       "source_club_id": null,
+       "source_frozen_at": "2026-11-11 20:12:06",
+       "source_channel_code": null,
+       "expires_at": null,
+       "refund_policy_code": "START_24H_100_50_0",
+       "refund_policy_version": 1,
+       "refund_deadline": "2026-10-23 12:12:09"
+      }
+     }
+    ],
+    "cms_registration_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "registration_id": 77,
+       "registration_no": "A20261111538562EE",
+       "payment_fact_id": 7,
+       "payment_fact_hash": "41045752e59dea575332aafe108b44edb3f3fd9c8589105b07633234a2699e9c",
+       "transaction_id": "RIG-TXN-11538562EE",
+       "consumed_at": "2026-11-11 12:12:05.554782"
+      }
+     }
+    ],
+    "wx_verified_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 7,
+       "fact_kind": "PAYMENT",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "A20261111538562EE",
+       "wx_out_trade_no": "A20261111538562EE",
+       "merchant_event_no": "A20261111538562EE",
+       "provider_id": "RIG-TXN-11538562EE",
+       "transaction_id": "RIG-TXN-11538562EE",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 6900,
+       "amount_fen": 6900,
+       "success_at": "2026-11-11T12:12:05Z",
+       "intent_request_hash": null,
+       "fact_hash": "41045752e59dea575332aafe108b44edb3f3fd9c8589105b07633234a2699e9c",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:12:05.449650"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 8,
+       "fact_kind": "REFUND",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "A20261111538562EE",
+       "wx_out_trade_no": "A20261111538562EE",
+       "merchant_event_no": "RF77",
+       "provider_id": "RIG-RF-RF77",
+       "transaction_id": "RIG-TXN-11538562EE",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 6900,
+       "amount_fen": 6900,
+       "success_at": "2026-11-11T12:12:12Z",
+       "intent_request_hash": null,
+       "fact_hash": "1f1163e567f5adcc40a7dc11f6c427fde0f38a49042f698898bc2cc4670090d2",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:12:12.977538"
+      }
+     }
+    ],
+    "wx_payment_callback_inbox": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 7,
+       "notify_hash": "d94983cd2c7848e58ede4eef37138ad105eae79ce1ed53bd0f18a6a05637563b",
+       "biz_type": 1,
+       "biz_id": 77,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "36645ce3497c4f039385e913fc615c81",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 8,
+       "notify_hash": "052d7159af244bc77302aab7632193555fb979b942685290eafb4a51ab13102c",
+       "biz_type": 2,
+       "biz_id": 4,
+       "event_type": "SUCCESS",
+       "state": 2,
+       "owner_token": "8628dbd043f34cc48f98a70e1a6130af",
+       "fence_token": 1,
+       "lease_until": null,
+       "attempt_count": 1,
+       "last_error_code": null
+      }
+     }
+    ],
+    "refund_application": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 4,
+       "refund_no": "RF77",
+       "source_type": "registration",
+       "source_id": 77,
+       "owner_type": 2,
+       "owner_id": 14,
+       "member_id": 9009,
+       "merchant_id": 9003,
+       "paid_amount": "69.00",
+       "refund_amount": "69.00",
+       "status": 1,
+       "reason": "主理人取消报名并退款",
+       "reject_reason": "主理人取消报名并退款",
+       "reviewer_id": 0,
+       "reviewed_at": "2026-11-11 20:12:13",
+       "adjustment_created": 0,
+       "idempotency_key": "registration:77",
+       "del_flag": 0,
+       "platform_takeover_at": null,
+       "payout_status": 1,
+       "payout_submission_state": "LEGACY_RECONCILE",
+       "payout_method": null,
+       "payout_receipt_url": null,
+       "payout_handler_id": null,
+       "payout_handled_at": null,
+       "payout_reviewer2_id": null,
+       "payout_reviewed2_at": null,
+       "payout_remark": "原路退款成功(回调确认到账)",
+       "payout_lease_token": null,
+       "payout_lease_owner": null,
+       "payout_lease_expires_at": null,
+       "created_by_user_id": null,
+       "fulfillment_sync_queue_at": "2026-11-11 12:12:12.882285"
+      }
+     }
+    ],
+    "ums_member_balance_detail": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 39,
+       "member_id": 9003,
+       "current_balance": "0.00",
+       "after_balance": "62.10",
+       "change_balance": "62.10",
+       "change_reason": "活动分润 - E2E 探店日一期",
+       "event_type": 3,
+       "event_id": 14,
+       "coop_settlement_payout_id": null,
+       "change_type": 1,
+       "del_flag": 0
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 40,
+       "member_id": 9001,
+       "current_balance": "0.00",
+       "after_balance": "6.90",
+       "change_balance": "6.90",
+       "change_reason": "活动平台分润 - E2E 探店日一期",
+       "event_type": 7,
+       "event_id": 14,
+       "coop_settlement_payout_id": null,
+       "change_type": 1,
+       "del_flag": 0
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 41,
+       "member_id": 9001,
+       "current_balance": "6.90",
+       "after_balance": "4.83",
+       "change_balance": "-2.07",
+       "change_reason": "退款冲销",
+       "event_type": 6,
+       "event_id": 4,
+       "coop_settlement_payout_id": null,
+       "change_type": 2,
+       "del_flag": 0
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 42,
+       "member_id": 9003,
+       "current_balance": "62.10",
+       "after_balance": "0.00",
+       "change_balance": "-62.10",
+       "change_reason": "退款冲销",
+       "event_type": 6,
+       "event_id": 4,
+       "coop_settlement_payout_id": null,
+       "change_type": 2,
+       "del_flag": 0
+      }
+     }
+    ],
+    "ums_member_settlement_debt": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "member_id": 9003,
+       "source_type": "refund:merchant",
+       "source_id": 4,
+       "amount": "4.83",
+       "repaid_amount": "0.00",
+       "status": 0,
+       "due_time": "2026-12-11 20:12:13"
+      }
+     }
+    ],
+    "settlement_detail": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "claim_id": 4,
+       "entry_kind": "ORIGIN",
+       "event_key": "ORIGIN",
+       "batch_id": 0,
+       "merchant_id": 9003,
+       "source_type": "registration",
+       "source_id": 77,
+       "receiver_type": "merchant",
+       "receiver_id": 9003,
+       "gross_amount": "66.93",
+       "commission_amount": "0.00",
+       "settlement_amount": "66.93",
+       "status": 1,
+       "fail_reason": null,
+       "idempotency_key": "registration:77:merchant:9003"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 2,
+       "claim_id": 5,
+       "entry_kind": "ORIGIN",
+       "event_key": "ORIGIN",
+       "batch_id": 0,
+       "merchant_id": 9003,
+       "source_type": "registration",
+       "source_id": 77,
+       "receiver_type": "platform",
+       "receiver_id": 0,
+       "gross_amount": "2.07",
+       "commission_amount": "0.00",
+       "settlement_amount": "2.07",
+       "status": 1,
+       "fail_reason": null,
+       "idempotency_key": "registration:77:platform:0"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 3,
+       "claim_id": null,
+       "entry_kind": null,
+       "event_key": null,
+       "batch_id": 0,
+       "merchant_id": 9003,
+       "source_type": "refund",
+       "source_id": 4,
+       "receiver_type": "platform",
+       "receiver_id": 0,
+       "gross_amount": "-2.07",
+       "commission_amount": "0.00",
+       "settlement_amount": "-2.07",
+       "status": 1,
+       "fail_reason": "退款冲销",
+       "idempotency_key": "refund:4:platform:0"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 4,
+       "claim_id": null,
+       "entry_kind": null,
+       "event_key": null,
+       "batch_id": 0,
+       "merchant_id": 9003,
+       "source_type": "refund",
+       "source_id": 4,
+       "receiver_type": "merchant",
+       "receiver_id": 9003,
+       "gross_amount": "-66.93",
+       "commission_amount": "0.00",
+       "settlement_amount": "-66.93",
+       "status": 1,
+       "fail_reason": "退款冲销",
+       "idempotency_key": "refund:4:merchant:9003"
+      }
+     }
+    ],
+    "settlement_claim": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 4,
+       "commercial_context_type": "ACTIVITY",
+       "commercial_context_id": 14,
+       "fulfillment_type": "REGISTRATION",
+       "fulfillment_id": 77,
+       "beneficiary_role": "MERCHANT",
+       "beneficiary_id": 9003,
+       "service_unit": "MERCHANT_PARTICIPATION",
+       "settlement_route": "REGISTRATION_SPLIT",
+       "source_contract_type": "DIRECT_REGISTRATION",
+       "source_contract_id": 77,
+       "status": "ACTIVE"
+      }
+     },
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 5,
+       "commercial_context_type": "ACTIVITY",
+       "commercial_context_id": 14,
+       "fulfillment_type": "REGISTRATION",
+       "fulfillment_id": 77,
+       "beneficiary_role": "PLATFORM",
+       "beneficiary_id": 0,
+       "service_unit": "MERCHANT_PARTICIPATION",
+       "settlement_route": "REGISTRATION_SPLIT",
+       "source_contract_type": "DIRECT_REGISTRATION",
+       "source_contract_id": 77,
+       "status": "ACTIVE"
+      }
+     }
+    ]
+   },
+   "channel_moves": [
+    {
+     "at": "2026-11-11T12:12:05.455615576Z",
+     "kind": "PAYMENT",
+     "from": "PAYER",
+     "to": "E2EMCH0001",
+     "fen": 6900,
+     "ref": "A20261111538562EE",
+     "ref2": "RIG-TXN-11538562EE"
+    },
+    {
+     "at": "2026-11-11T12:12:12.956509676Z",
+     "kind": "REFUND",
+     "from": "E2EMCH0001",
+     "to": "PAYER",
+     "fen": 6900,
+     "ref": "A20261111538562EE",
+     "ref2": "RF77"
+    }
+   ]
+  },
+  {
+   "flow": "俱乐部会费",
+   "steps": [
+    {
+     "step": "刷新配置缓存",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    },
+    {
+     "step": "会费设置",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"clubId\": 7001, \"enabled\": false, \"version\": 0}"
+    },
+    {
+     "step": "开启会员制",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": \"9003\", \"createTime\": \"2026-11-11 20:12:16\", \"updateBy\": \"9003\", \"updateTime\": \"2026-11-11 20:12:16\", \"remark\": null, \"clubId\": 7001, \"enabled\": true, \"version\": 0}"
+    },
+    {
+     "step": "保存收费方案 ¥19.90/30天",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": \"9003\", \"createTime\": \"2026-11-11 20:12:16\", \"updateBy\": \"9003\", \"updateTime\": \"2026-11-11 20:12:16\", \"remark\": null, \"id\": 1, \"clubId\": 7001, \"name\": \"月度会员\", \"durationDays\": 30, \"priceFen\": 1990, \"benefitsJson\": \"[\\\"活动优先报名\\\"]\", \"graceDays\": 3, \"pastDueDays\": 7, \"exitPolicy\": \"END_IMMEDIATELY\", \"refundPolicy\": \"MANUAL_REVIEW\", \"status\": \"ACTIVE\", \"version\": 0, \"createdByMemberId\": 9003, \"delFlag\": 0}"
+    },
+    {
+     "step": "会员续费下单",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"invoice\": {\"createBy\": null, \"createTime\": \"2026-11-11 20:12:17\", \"updateBy\": null, \"updateTime\": \"2026-11-11 20:12:17\", \"remark\": null, \"id\": 1, \"invoiceNo\": \"CLM5719cf967aac6efe761cd2db51990\", \"outTradeNo\": \"CLM5719cf967aac6efe761cd2db51990\", \"clubId\": 7001, \"ownerMemberIdSnapshot\": 9003, \"memberId\": 9009, \"planId\": 1, \"planVersionSnapshot\": 0, \"planNameSnapshot\": \"月度会员\", \"durationDaysSnapshot\": 30, \"amountFen\": 1990, \"benefitsSnapshot\": \"[\\\"活动优先报名\\\"]\", \"graceDaysSnapshot\": 3, \"pastDueDaysSnapshot\": 7, \"exitPolicySnapshot\": \"END_IMMEDIATELY\", \"refundPolicySnapshot\": \"MANUAL_REVIEW\", \"snaps"
+    },
+    {
+     "step": "会费支付（直连回调）",
+     "code": null,
+     "msg": "",
+     "status": 204,
+     "raw": ""
+    },
+    {
+     "step": "会员申请退款",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"createBy\": \"9009\", \"createTime\": \"2026-11-11 20:12:16\", \"updateBy\": \"9009\", \"updateTime\": \"2026-11-11 20:12:16\", \"remark\": null, \"id\": 1, \"clubId\": 7001, \"memberId\": 9009, \"invoiceId\": 1, \"status\": \"PENDING_REVIEW\", \"reason\": \"E2E 退款\", \"requestId\": \"fm2-rf-1f1f2b9934\", \"version\": 0}"
+    },
+    {
+     "step": "财务对账（主理人）",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "[{\"createBy\": null, \"createTime\": \"2026-11-11 20:12:17\", \"updateBy\": null, \"updateTime\": \"2026-11-11 20:12:17\", \"remark\": null, \"id\": 1, \"invoiceNo\": \"CLM5719cf967aac6efe761cd2db51990\", \"outTradeNo\": \"CLM5719cf967aac6efe761cd2db51990\", \"clubId\": 7001, \"ownerMemberIdSnapshot\": 9003, \"memberId\": 9009, \"planId\": 1, \"planVersionSnapshot\": 0, \"planNameSnapshot\": \"月度会员\", \"durationDaysSnapshot\": 30, \"amountFen\": 1990, \"benefitsSnapshot\": \"[\\\"活动优先报名\\\"]\", \"graceDaysSnapshot\": 3, \"pastDueDaysSnapshot\": 7, \"exitPolicySnapshot\": \"END_IMMEDIATELY\", \"refundPolicySnapshot\": \"MANUAL_REVIEW\", \"snapshotHash\": n"
+    }
+   ],
+   "notes": [
+    "[FIXTURE] 既有功能闸 feature.flag.clubMembership=true（上线前就有的闸，两种开关一致）",
+    "[FIXTURE] 直连商户号已验签支付事实 id=9（无商户私钥，同 chain_player）"
+   ],
+   "db_changes": {
+    "wx_verified_payment_fact": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 9,
+       "fact_kind": "PAYMENT",
+       "mchid": "E2EMCH0001",
+       "appid": "wxe2e00000000001",
+       "business_out_trade_no": "CLM5719cf967aac6efe761cd2db51990",
+       "wx_out_trade_no": "CLM5719cf967aac6efe761cd2db51990",
+       "merchant_event_no": "CLM5719cf967aac6efe761cd2db51990",
+       "provider_id": "RIG-TXN-cd2db51990",
+       "transaction_id": "RIG-TXN-cd2db51990",
+       "trade_type": "JSAPI",
+       "currency": "CNY",
+       "total_fen": 1990,
+       "amount_fen": 1990,
+       "success_at": "2026-11-11T12:12:16Z",
+       "intent_request_hash": null,
+       "fact_hash": "7be1b969b37ca0e0c0fead1e66092b1c28e453fd3e324ebc369031bbd3da431f",
+       "verification_version": 1,
+       "verification_outcome": "VERIFIED",
+       "verification_method": "SDK_QUERY_ORIGINAL_ORDER",
+       "original_payment_state": "SUCCESS",
+       "created_at": "2026-11-11 12:12:16.756497"
+      }
+     }
+    ],
+    "club_membership_invoice": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "invoice_no": "CLM5719cf967aac6efe761cd2db51990",
+       "out_trade_no": "CLM5719cf967aac6efe761cd2db51990",
+       "club_id": 7001,
+       "owner_member_id_snapshot": 9003,
+       "member_id": 9009,
+       "plan_id": 1,
+       "plan_version_snapshot": 0,
+       "plan_name_snapshot": "月度会员",
+       "duration_days_snapshot": 30,
+       "amount_fen": 1990,
+       "benefits_snapshot": "[\"活动优先报名\"]",
+       "grace_days_snapshot": 3,
+       "past_due_days_snapshot": 7,
+       "exit_policy_snapshot": "END_IMMEDIATELY",
+       "refund_policy_snapshot": "MANUAL_REVIEW",
+       "snapshot_hash": "f8e45e6001bea9cae8cf89c4fffd83e6e1be2ed6121b85fc33986c7915ed4525",
+       "status": "PAID",
+       "active_paying_member_id": null,
+       "idempotency_key": "fm2-renew-off",
+       "request_fingerprint": "2b64d58d68f53c404fc0d228dea3f6724727a020c59a63730f5e4eb933bb320c",
+       "transaction_id": "RIG-TXN-cd2db51990",
+       "pay_params_json": "{\"appId\": \"e2e-stub-appid\", \"package\": \"prepay_id=e2e-stub\", \"paySign\": \"e2e-stub\", \"nonceStr\": \"e2estub\", \"signType\": \"RSA\", \"timeStamp\": \"0\"}",
+       "resume_blocked_at": null,
+       "paid_at": "2026-11-11 20:12:17",
+       "version": 3,
+       "verified_payment_fact_id": 9,
+       "verified_payment_fact_hash": "37626531623936396233376361306530633066656164316536363039326231633238653435336664336533323465626333363930333162626433646134333166"
+      }
+     }
+    ],
+    "club_membership_term": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "club_id": 7001,
+       "member_id": 9009,
+       "plan_id": 1,
+       "source_invoice_id": 1,
+       "status": "ACTIVE",
+       "starts_at": "2026-11-11 20:12:17",
+       "ends_at": "2026-12-11 20:12:17",
+       "grace_ends_at": "2026-12-14 20:12:17",
+       "expires_at": "2026-12-21 20:12:17",
+       "benefits_snapshot": "[\"活动优先报名\"]",
+       "exit_policy_snapshot": "END_IMMEDIATELY",
+       "refund_policy_snapshot": "MANUAL_REVIEW",
+       "version": 0
+      }
+     }
+    ],
+    "club_membership_refund_review": [
+     {
+      "op": "INSERT",
+      "row": {
+       "id": 1,
+       "club_id": 7001,
+       "member_id": 9009,
+       "invoice_id": 1,
+       "status": "PENDING_REVIEW",
+       "reason": "E2E 退款",
+       "request_id": "fm2-rf-1f1f2b9934",
+       "version": 0
+      }
+     }
+    ]
+   },
+   "channel_moves": [
+    {
+     "at": "2026-11-11T12:12:16.761724236Z",
+     "kind": "PAYMENT",
+     "from": "PAYER",
+     "to": "E2EMCH0001",
+     "fen": 1990,
+     "ref": "CLM5719cf967aac6efe761cd2db51990",
+     "ref2": "RIG-TXN-cd2db51990"
+    }
+   ]
+  },
+  {
+   "flow": "通行证JSAPI",
+   "steps": [
+    {
+     "step": "通行证总览",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200,
+     "data": "{\"enabled\": false, \"unavailableReason\": \"PLATFORM_PASS_DISABLED\"}"
+    },
+    {
+     "step": "套餐",
+     "plans": [
+      [
+       "MONTH",
+       "3900",
+       "0"
+      ],
+      [
+       "YEAR",
+       "29900",
+       "0"
+      ]
+     ]
+    },
+    {
+     "step": "下单（JSAPI）",
+     "code": 503,
+     "msg": "通行证暂未开放",
+     "status": 200
+    }
+   ],
+   "notes": [
+    "通行证未能下单（开关全关时这是预期）"
+   ],
+   "db_changes": {},
+   "channel_moves": []
+  },
+  {
+   "flow": "对账",
+   "steps": [
+    {
+     "step": "退款对账任务",
+     "code": 200,
+     "msg": "操作成功",
+     "status": 200
+    },
+    {
+     "step": "按收款商户号汇总（已验签事实）",
+     "totals": {
+      "E2EMCH0001": {
+       "PAYMENT": 23770,
+       "REFUND": 21780
+      }
+     }
+    }
+   ],
+   "notes": [],
+   "db_changes": {},
+   "channel_moves": []
+  }
+ ],
+ "topic_id": 990014,
+ "switches": {
+  "ecommerceEnabled": false,
+  "sellerRoutingEnabled": false,
+  "profitSharingEnabled": false,
+  "maxSharePercent": 30,
+  "creatorEnabled": false
+ },
+ "fact_totals": {
+  "E2EMCH0001": {
+   "PAYMENT": 23770,
+   "REFUND": 21780
+  }
+ },
+ "finished": "2026-11-11T12:12:21"
+}
