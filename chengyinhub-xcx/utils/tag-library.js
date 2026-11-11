@@ -8,6 +8,9 @@
 
 const MERCHANT_ICON_DIR = '/pages/merchant/images/tags/';
 const MEMBER_ICON_DIR = '/subpackageMember/images/tags/';
+// 2026-11-11 f-merchant(G-8 收尾):俱乐部「活动倾向」与快速配置的主题兴趣也从本库取,图标放各自分包。
+const CLUB_ICON_DIR = '/pages/club/images/tags/';
+const PUBLISH_ICON_DIR = '/pages/publish/images/tags/';
 const ICONS = ['baby', 'bike', 'book-open', 'brush', 'camera', 'coffee', 'croissant', 'cup-soda', 'dices',
   'drama', 'flower-2', 'footprints', 'frame', 'game-handle', 'heart-pulse', 'landmark', 'moon', 'music',
   'noodles', 'outdoor', 'parachute', 'paw-print', 'platte', 'ripple', 'scissors', 'sport', 'tennis', 'tent',
@@ -30,6 +33,10 @@ const SETS = {
       ['亲子家庭', 'baby'], ['潮流青年', 'music']],
   },
   club: {
+    // 创建俱乐部第 2 步与编辑页「活动倾向」的唯一选项来源(原两页各抄一份同样的 10 个词)
+    活动倾向: [['轻社交', 'coffee'], ['深度社交', 'voice'], ['RPG体验', 'game-handle'], ['城市定向', 'footprints'],
+      ['解谜路线', 'dices'], ['沉浸式剧情', 'drama'], ['运动路线', 'sport'], ['艺术体验', 'platte'], ['美食体验', 'noodles'],
+      ['主题聚会', 'music']],
     俱乐部: [['城市漫步', 'footprints'], ['骑行', 'bike'], ['徒步户外', 'outdoor'], ['露营', 'tent'], ['摄影', 'camera'],
       ['桌游', 'dices'], ['剧本推理', 'drama'], ['读书会', 'book-open'], ['音乐', 'music'], ['运动健身', 'sport'],
       ['球类', 'tennis'], ['水上运动', 'ripple'], ['极限运动', 'parachute'], ['亲子', 'baby'], ['宠物', 'paw-print'],
@@ -62,6 +69,12 @@ function tagSet(kind) {
   return Object.keys(set).map(group => ({ group, tags: set[group].map(([label, icon]) => ({ label, icon })) }));
 }
 
+/** 某一类某一组的标签名(按库内顺序);组不存在返回 []。 */
+function tagLabels(kind, group) {
+  const set = SETS[kindOf(kind)];
+  return (set[group] || []).map(pair => pair[0]);
+}
+
 /** 标签名 → 图标名:先查本类预设,再按关键字认领;都不中返回 ''。 */
 function tagIcon(label, kind) {
   const text = String(label == null ? '' : label).trim();
@@ -85,4 +98,4 @@ function decorateTags(labels, kind, iconDir) {
     });
 }
 
-module.exports = { MERCHANT_ICON_DIR, MEMBER_ICON_DIR, ICONS, tagSet, tagIcon, decorateTags };
+module.exports = { MERCHANT_ICON_DIR, MEMBER_ICON_DIR, CLUB_ICON_DIR, PUBLISH_ICON_DIR, ICONS, tagSet, tagLabels, tagIcon, decorateTags };

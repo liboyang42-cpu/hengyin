@@ -1,0 +1,143 @@
+{
+ "fps": 18,
+ "scale": 1.5,
+ "cropH": 520,
+ "cols": 3,
+ "intro": [
+  {
+   "file": "key-intro-0.webp",
+   "n": 6,
+   "bytes": 10058
+  },
+  {
+   "file": "key-intro-1.webp",
+   "n": 6,
+   "bytes": 16056
+  },
+  {
+   "file": "key-intro-2.webp",
+   "n": 6,
+   "bytes": 12046
+  },
+  {
+   "file": "key-intro-3.webp",
+   "n": 6,
+   "bytes": 26098
+  },
+  {
+   "file": "key-intro-4.webp",
+   "n": 6,
+   "bytes": 77714
+  },
+  {
+   "file": "key-intro-5.webp",
+   "n": 6,
+   "bytes": 87330
+  },
+  {
+   "file": "key-intro-6.webp",
+   "n": 6,
+   "bytes": 117910
+  },
+  {
+   "file": "key-intro-7.webp",
+   "n": 6,
+   "bytes": 80598
+  },
+  {
+   "file": "key-intro-8.webp",
+   "n": 6,
+   "bytes": 66278
+  },
+  {
+   "file": "key-intro-9.webp",
+   "n": 6,
+   "bytes": 66910
+  },
+  {
+   "file": "key-intro-10.webp",
+   "n": 6,
+   "bytes": 78226
+  },
+  {
+   "file": "key-intro-11.webp",
+   "n": 6,
+   "bytes": 86666
+  },
+  {
+   "file": "key-intro-12.webp",
+   "n": 6,
+   "bytes": 84546
+  },
+  {
+   "file": "key-intro-13.webp",
+   "n": 5,
+   "bytes": 58310
+  }
+ ],
+ "idle": [
+  {
+   "file": "key-idle-0.webp",
+   "n": 6,
+   "bytes": 65624
+  },
+  {
+   "file": "key-idle-1.webp",
+   "n": 6,
+   "bytes": 68366
+  },
+  {
+   "file": "key-idle-2.webp",
+   "n": 6,
+   "bytes": 64632
+  },
+  {
+   "file": "key-idle-3.webp",
+   "n": 6,
+   "bytes": 59780
+  },
+  {
+   "file": "key-idle-4.webp",
+   "n": 6,
+   "bytes": 56446
+  },
+  {
+   "file": "key-idle-5.webp",
+   "n": 6,
+   "bytes": 61246
+  },
+  {
+   "file": "key-idle-6.webp",
+   "n": 6,
+   "bytes": 67158
+  },
+  {
+   "file": "key-idle-7.webp",
+   "n": 6,
+   "bytes": 70096
+  },
+  {
+   "file": "key-idle-8.webp",
+   "n": 6,
+   "bytes": 67430
+  },
+  {
+   "file": "key-idle-9.webp",
+   "n": 6,
+   "bytes": 66086
+  },
+  {
+   "file": "key-idle-10.webp",
+   "n": 6,
+   "bytes": 62152
+  },
+  {
+   "file": "key-idle-11.webp",
+   "n": 6,
+   "bytes": 64160
+  }
+ ],
+ "idleFps": 12,
+ "fw": 585,
+ "fh": 780
+}

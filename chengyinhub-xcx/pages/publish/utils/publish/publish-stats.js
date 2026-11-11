@@ -1,21 +1,15 @@
 // FE-11 发布器统计纯函数。从 pages/publish/fabu/index.js 抽出:章节/路线里程·时长·完成度计算。
 // 无 wx / 无 this / 无副作用,可直接单测。逻辑与原 fabu 内联实现逐字一致:
-//  - 距离保留 km 单位 + atan2 写法(不复用 utils/geo 的米制 haversine,避免 .toFixed(2) 浮点漂移)
+//  - 距离保留 km 单位;球面距离复用 utils/geo 的 haversine(O-02 合并,只换算单位)
 //  - 显示格式("Xh,Ymin" / "X.XXkm")、完成度勾项与顺序均不变
 // 页面读 this.data 的部分由调用方以显式入参传入(chapters / formData / ctx),模块本身不碰 this.data。
 const { hasUsableCoords } = require('./pro-editor-policy.js');
+const geo = require('../../../../utils/geo.js');
 
-// 两点球面距离(公里)。Haversine,R=6371km(= 原 calculateDistance)。
+// 两点球面距离(公里)。O-02(2026-11-11):全站只保留 utils/geo 这一份 haversine(米制,asin 写法),
+// 这里只做 m → km 换算;asin(√a) 与原 atan2(√a,√(1-a)) 数学等价,.toFixed(2) 展示不受影响(单测钉 111.19km ±0.1)。
 function haversineKm(lat1, lon1, lat2, lon2) {
-  const R = 6371; // 地球半径（公里）
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return geo.haversine(lat1, lon1, lat2, lon2) / 1000;
 }
 
 // 单章节统计:总时长(分钟)+ 显示格式 + 站点数 + 模板数(= 原 calculateChapterStats)。

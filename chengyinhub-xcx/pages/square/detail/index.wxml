@@ -1,4 +1,4 @@
-<view class="detail theme-dark">
+<view class="detail {{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -252,5 +252,5 @@
 <cy-popover show="{{avatarPopShow}}" anchor="{{avatarPopAnchor}}" items="{{avatarPopItems}}"
             bind:pick="onAvatarPopPick" bind:close="onAvatarPopClose" />
 
-<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+<cy-option-sheet class="{{merchantView ? 'theme-merchant' : 'theme-dark'}}" show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
   confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

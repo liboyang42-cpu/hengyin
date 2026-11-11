@@ -252,7 +252,6 @@ Page({
     submitting: false,
     createdInvite: null,
     canShareCreatedInvite: false,
-    storeDetailsExpanded: false,
   },
 
   onLoad(options) {
@@ -417,7 +416,6 @@ Page({
   // R9-22:工作台不在原生 tabBar 里,switchTab 必然 switchTab:fail。商家页统一 reLaunch
   // (同 components/tabBar 与 relation/index 的「返回工作台」),并让工作台成为根页。
   goWorkbench() { wx.reLaunch({ url: '/pages/merchant/index/index' }); },
-  toggleStoreDetails() { this.setData({ storeDetailsExpanded: !this.data.storeDetailsExpanded }); },
 
   loadRoles() {
     const requestToken = (this._rolesRequestToken || 0) + 1;
@@ -521,11 +519,20 @@ Page({
   openOperatorRoleSheet(event) {
     const id = Number(event.currentTarget.dataset.id);
     const operator = this.data.operators.find((item) => Number(item.id) === id);
-    if (!operator || !this.data.roles.length || this.data.submitting) return;
+    // 岗位列表没拉到时仍可打开面板做「移除」;改岗行随岗位列表出现。
+    if (!operator || this.data.submitting) return;
     this.setData({ roleSheet: { show: true, mode: 'operator', operator } });
   },
 
   closeRoleSheet() { this.setData({ roleSheet: { show: false, mode: '', operator: null } }); },
+
+  // M-18:成员行只有一个入口(岗位面板),移除从面板底部的红色行进入原三段式确认。
+  removeFromSheet() {
+    const operator = this.data.roleSheet.operator;
+    if (!operator || this.data.submitting) return;
+    this.closeRoleSheet();
+    this.askRemoveOperator({ currentTarget: { dataset: { id: operator.id } } });
+  },
 
   onRolePick(event) {
     const roleCode = event.currentTarget.dataset.role;

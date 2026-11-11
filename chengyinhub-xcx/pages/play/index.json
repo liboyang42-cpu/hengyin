@@ -50,7 +50,8 @@
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-back-guard": "/components/cy/back-guard/index",
     "cy-look-transition": "/pages/play/components/look-transition/index",
-    "cy-illus": "/pages/play/components/cy-illus/index"
+    "cy-illus": "/pages/play/components/cy-illus/index",
+    "cy-frames": "/pages/play/components/cy-frames/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",

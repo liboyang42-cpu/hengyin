@@ -67,14 +67,14 @@ test('cy-illus 插图集与原型同为 25 张,未知名回落线索,章节印�
   assert.equal(x.name, 'clue')
   assert.ok(x.blob.startsWith('data:image/svg+xml;charset=utf8,'))
   assert.ok(x.fg.startsWith('data:image/svg+xml;charset=utf8,'))
+  // l-iconsB:章节印换成风格 B v2(印记是白星,不画数字);n 不再进图,也就不会把宿主给的字符串拼进 SVG
   const seal = decodeURIComponent(art.layers('seal', '<3>').fg)
-  assert.ok(seal.includes('>3</text>'))
-  assert.ok(decodeURIComponent(art.layers('seal').fg).includes('>一</text>'))
+  assert.ok(!seal.includes('<3>') && !seal.includes('</text>'))
 })
 
 test('cy-illus 只有一份规范实现;其他分包的副本必须逐字相同', () => {
   const canon = path.join(XCX, 'pages/play/components/cy-illus')
-  const files = ['art.js', 'index.js', 'index.json', 'index.wxml', 'index.wxss']
+  const files = ['art.js', 'art-b.js', 'index.js', 'index.json', 'index.wxml', 'index.wxss']
   const copies = []
   ;(function walk(dir) {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -114,13 +114,21 @@ test('cy-illus 组件:进场后加 is-on,减少动态效果直接终态且不起
   assert.equal(r.data.reduced, true)
   assert.equal(r.data.on, true)
   assert.equal(r._idleT, undefined)
-  assert.equal(r.data.enter, 'burst')
+  assert.equal(r.data.enter, 'b2', 'l-iconsB:成功换成风格 B v2,进场 / 待机走 art-b.js 的时间表')
   def.lifetimes.detached.call(r)
 
   const m = make({ reducedMotion: false, name: 'key' })
   def.lifetimes.attached.call(m)
   assert.equal(m.data.on, false)
-  assert.equal(m.data.enter, 'swing')
-  assert.equal(m.data.idleKind, 'swing')
+  assert.equal(m.data.b2, true)
+  assert.equal(m.data.idleKind, 'b2')
   def.lifetimes.detached.call(m)
+
+  // v2 没有重画的旧画法照旧
+  const o = make({ reducedMotion: false, name: 'sparkles' })
+  def.lifetimes.attached.call(o)
+  assert.equal(o.data.b2, false)
+  assert.equal(o.data.enter, 'burst')
+  assert.equal(o.data.idleKind, 'sway')
+  def.lifetimes.detached.call(o)
 })

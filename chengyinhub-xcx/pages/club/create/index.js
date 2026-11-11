@@ -2,6 +2,8 @@ const app = getApp();
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const roleGuard = require('../../../utils/roleGuard.js');
+const tagLibrary = require('../../../utils/tag-library.js'); // G-8:活动倾向选项与图标只从标签库取
+const DIR_OPTIONS = tagLibrary.tagLabels('club', '活动倾向');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const wizardMorph = require('../../../utils/wizard-morph.js');
 const { bizFailureMessage } = require('../../../utils/response-shape.js');
@@ -11,8 +13,9 @@ const { memberId, retryLogin } = require('../../../utils/session/login-reload.js
 // 原来的 activityPrefs.indexOf(item) >= 0 恒为假 —— 2026-09-02 截图对稿实测:
 // 选满 3 个后底色仍是未选态,稿要求的白底黑字加粗从来没渲染过。
 function buildDirList(options, prefs) {
-  return (options || []).map(function (val) {
-    return { val: val, on: (prefs || []).indexOf(val) >= 0 ? 1 : 0 };
+  const icons = tagLibrary.decorateTags(options || [], 'club', tagLibrary.CLUB_ICON_DIR);
+  return (options || []).map(function (val, index) {
+    return { val: val, icon: (icons[index] || {}).iconSrc || '', on: (prefs || []).indexOf(val) >= 0 ? 1 : 0 };
   });
 }
 
@@ -43,8 +46,8 @@ Page({
       { val: '内容创作团队', sub: '内容产出 · IP 运营' },
       { val: '其他', sub: '' }
     ],
-    dirOptions: ['轻社交', '深度社交', 'RPG体验', '城市定向', '解谜路线', '沉浸式剧情', '运动路线', '艺术体验', '美食体验', '主题聚会'],
-    dirList: buildDirList(['轻社交', '深度社交', 'RPG体验', '城市定向', '解谜路线', '沉浸式剧情', '运动路线', '艺术体验', '美食体验', '主题聚会'], []),
+    dirOptions: DIR_OPTIONS,
+    dirList: buildDirList(DIR_OPTIONS, []),
     // 表单字段
     clubType: '',
     activityPrefs: [],

@@ -156,6 +156,24 @@ function activityView(row, teams, getImgUrl) {
   };
 }
 
+// f-pages P-32(2026-11-11):主地图底部横滑的队伍卡。只用 /api/team/nearby 已回的字段,不另拉。
+function teamView(team, getImgUrl) {
+  if (!team || team.teamId == null) return null;
+  const joined = Number(team.joinedCount) || 0;
+  const max = Number(team.maxMembers) || 0;
+  const distance = H.fmtKm(team.distance);
+  const avatar = team.leaderAvatar ? (getImgUrl ? getImgUrl(team.leaderAvatar) : team.leaderAvatar) : '';
+  return {
+    key: 'team-' + team.teamId,
+    id: team.teamId,
+    kind: 'team',
+    title: String(team.title || '玩家队伍'),
+    cover: avatar,
+    tag: '队伍',
+    meta: [String(team.activityName || team.topicName || ''), max ? joined + '/' + max + ' 人' : '', distance && ('距你 ' + distance)].filter(Boolean).join(' · '),
+  };
+}
+
 function build(items, teams, layers, getImgUrl, places) {
   const visible = layers || { activities: true, teams: true, posts: true };
   const rows = (items || []).filter((row) => validPoint(row) && H.isMapItem(row));
@@ -189,4 +207,4 @@ function parseMarker(markerId) {
 
 function hasLayerError(errors) { return !!(errors && (errors.activities || errors.teams)); }
 
-module.exports = { build, activityView, sessionWhen, parseMarker, hasLayerError, isCatalogPlace, placeView, buildPlaceMarkers };
+module.exports = { build, activityView, teamView, sessionWhen, parseMarker, hasLayerError, isCatalogPlace, placeView, buildPlaceMarkers };

@@ -509,6 +509,10 @@ Page({
         toast(res.data && res.data.couponGranted === false ? '核销成功，该券已失效或停发，未发放' : '核销成功，优惠券已发放给玩家');
         return;
       }
+      if (result.status === 'review') {
+        modal.show({ title: '待复核', content: res.msg, showCancel: false, confirmText: '知道了' });
+        return;
+      }
       modal.show({ title: '核销失败', content: res.msg || '请重试', showCancel: false });
     }, {
       city: target, isCurrent: current,

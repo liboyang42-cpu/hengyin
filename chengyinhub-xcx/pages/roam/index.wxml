@@ -526,6 +526,15 @@
   <view class="pmask" catchtap="closeShopStrip" aria-role="button" aria-label="收起附近商家" hover-class="cy-pressed" hover-stay-time="80"></view>
 </block>
 
+<!-- f-pages P-32:主地图底部横滑卡 —— 附近活动与队伍,与入口页「附近活动」同一张 entry-card、同一份读数;读数为空就不出。 -->
+<scroll-view wx:if="{{screen=='map' && !shopStrip.rows.length && liveCards.length}}" class="live-peek" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
+  <view class="entry-card live-card" wx:for="{{liveCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
+        bindtap="onLiveCardTap" aria-role="button" aria-label="打开{{item.tag}} {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+    <image class="entry-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+    <view class="entry-card__shade"></view>
+    <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'team' ? 'team' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta" wx:if="{{item.meta || item.address}}">{{item.meta || item.address}}</text></view>
+  </view>
+</view></scroll-view>
 <view class="pcard {{goal.act === 'retry-poi' ? 'pcard--long-goal' : ''}}" wx:if="{{screen=='map' && !shopStrip.rows.length}}">
   <view wx:if="{{goal.act}}" class="pcard__head pcard__head--goal" bindtap="onGoalTap" aria-role="button" aria-label="{{goal.readerLabel}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="pcard__goal-copy">

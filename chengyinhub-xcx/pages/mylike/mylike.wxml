@@ -29,6 +29,41 @@
       </block>
     </block>
 
+    <!-- f-pages OFF-FAV-01:「据点」页签,与主题卡同一张 favorite-card;封面取据点封面,其次商家 logo -->
+    <block wx:elif="{{activeFavoriteTab === 'nodes'}}">
+      <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{errorMsg && loginRequired && nodeList.length === 0}}" kind="no-permission" title="登录后查看收藏" cta="登录" bind:cta="loginFavorites" />
+      <cy-error load-failure fill class="cy-fill-state" size="lg" wx:elif="{{errorMsg && nodeList.length === 0}}" icon="empty-state" title="收藏加载失败" sub="{{errorMsg}}" bind:retry="refreshData" auto-back />
+      <cy-skeleton wx:elif="{{loading && nodeList.length === 0}}" type="card" count="3" />
+      <cy-empty fill class="cy-fill-state" size="lg" wx:elif="{{nodeList.length === 0}}" kind="empty" title="暂无收藏的据点" />
+      <block wx:else>
+      <view class="favorite-refreshing cy-refresh-float" wx:if="{{refreshing}}" aria-role="status" aria-live="polite"></view>
+      <view class="favorite-card" wx:for="{{nodeList}}" wx:key="id">
+        <image class="favorite-card__cover" lazy-load="true"
+          src="{{img.first(item.coverImg) || item.merchantLogo || '/images/mer1.jpg'}}"
+          mode="aspectFill" bindtap="goNode" data-id="{{item.id}}" aria-role="button" aria-label="打开{{item.name || '收藏据点'}}" hover-class="cy-pressed" hover-stay-time="80"/>
+        <view class="favorite-card__scrim"></view>
+        <view class="favorite-card__body">
+          <text class="favorite-card__title favorite-card__title--node">{{item.name}}</text>
+          <text class="favorite-card__type" wx:if="{{item.merchantName || item.merchantAddress}}">{{item.merchantName || item.merchantAddress}}</text>
+        </view>
+        <view class="favorite-card__actions">
+          <button open-type="share" data-type="node" data-id="{{item.id}}" data-name="{{item.name}}"
+            data-img="{{img.first(item.coverImg) || item.merchantLogo}}" aria-label="分享据点">
+            <view class="favorite-card__action-visual">
+              <image src="/pages/mylike/images/icon_up.png" mode="aspectFit" />
+            </view>
+          </button>
+          <button bindtap="nodeUnfavorite" data-id="{{item.id}}" aria-label="取消收藏">
+            <view class="favorite-card__action-visual">
+              <cy-icon class="favorite-card__action-heart" name="heart" size="32" />
+            </view>
+          </button>
+        </view>
+      </view>
+      <view class="favorite-end" wx:if="{{nodeList.length}}">已加载全部据点</view>
+      </block>
+    </block>
+
     <block wx:else>
       <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
       <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{errorMsg && loginRequired && ztList1.length === 0}}" kind="no-permission" title="登录后查看收藏" cta="登录" bind:cta="loginFavorites" />

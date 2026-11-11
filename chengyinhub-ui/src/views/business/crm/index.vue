@@ -1,8 +1,25 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" label-width="80px">
-      <el-form-item label="主体用户ID" prop="merchantId">
-        <el-input v-model="queryParams.merchantId" placeholder="mms_merchant.member_id" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="商家" prop="merchantId">
+        <el-select
+          v-model="queryParams.merchantId"
+          filterable
+          remote
+          clearable
+          placeholder="输入商家名搜索"
+          :remote-method="searchMerchants"
+          :loading="merchantLoading"
+          style="width: 240px"
+          @change="handleQuery"
+        >
+          <el-option
+            v-for="m in merchantOptions"
+            :key="m.id"
+            :label="m.name + '（#' + m.memberId + '）'"
+            :value="m.memberId"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="用户ID" prop="memberId">
         <el-input v-model="queryParams.memberId" clearable @keyup.enter.native="handleQuery" />
@@ -52,6 +69,7 @@
 
 <script>
 import { listCrmCustomer, getCrmSummary, aggregateCrm } from '@/api/business/crm'
+import { listMerchant } from '@/api/business/merchant'
 
 export default {
   name: 'MerchantCrm',
@@ -61,6 +79,9 @@ export default {
       customerList: [],
       total: 0,
       summary: null,
+      merchantOptions: [],
+      merchantLoading: false,
+      merchantSearchSeq: 0,
       queryParams: { pageNum: 1, pageSize: 10, merchantId: null, memberId: null, customerStage: null }
     }
   },
@@ -82,11 +103,26 @@ export default {
         this.summary = res.data || null
       }).finally(() => { this.loading = false })
     },
+    // CRM 按商家主体用户（mms_merchant.member_id）查;运营按店名远程搜索,不再手填编号。
+    searchMerchants(keyword) {
+      const seq = ++this.merchantSearchSeq
+      if (!keyword) { this.merchantOptions = []; return }
+      this.merchantLoading = true
+      listMerchant({ name: keyword, pageNum: 1, pageSize: 20 })
+        .then(res => { if (seq === this.merchantSearchSeq) this.merchantOptions = (res.rows || []).filter(m => m && m.memberId) })
+        .catch(() => {
+          // 搜商家失败不能渲染成「没有这个商家」
+          if (seq !== this.merchantSearchSeq) return
+          this.merchantOptions = []
+          this.$modal.msgError('商家搜索失败，请重试')
+        })
+        .finally(() => { if (seq === this.merchantSearchSeq) this.merchantLoading = false })
+    },
     handleQuery() { this.queryParams.pageNum = 1; this.getList() },
     resetQuery() { this.resetForm('queryForm'); this.handleQuery() },
     handleAggregate() {
       if (!this.queryParams.merchantId) {
-        this.$modal.msgWarning('请先输入 mms_merchant.member_id（商家主体用户ID），不要填写商家行ID')
+        this.$modal.msgWarning('请先搜索并选择商家')
         return
       }
       aggregateCrm(this.queryParams.merchantId).then(() => {
