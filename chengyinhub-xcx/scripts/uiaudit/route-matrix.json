@@ -1275,7 +1275,7 @@
       "pagePath": "pages/square/detail/index",
       "pkg": "pages/square",
       "tabBar": false,
-      "role": "merchant",
+      "role": "player",
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
@@ -1288,7 +1288,7 @@
       "pagePath": "pages/search2/index",
       "pkg": "pages/search2",
       "tabBar": false,
-      "role": "merchant",
+      "role": "player",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
@@ -1299,7 +1299,7 @@
       "pagePath": "pages/search2/result/index",
       "pkg": "pages/search2",
       "tabBar": false,
-      "role": "merchant",
+      "role": "player",
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
