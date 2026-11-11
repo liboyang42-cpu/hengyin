@@ -77,7 +77,7 @@ diff <(grep -v '候选' docs/delivery/questo-ui-20261109/f-release/MIGRATIONS.md
 
 每个文件都走 **chengyin-db-migrate** skill：只读预检 → 展示文件和状态 → 你确认 → 执行 → 回读，留回执。按 `MIGRATIONS.md`「执行轮次」表的 step 顺序。任何一步报错或断言为假就**立即停**，存输出，重跑预检，不要跳过往下走。
 
-- **第 1 轮 `1_PRE_REQUIRED`（98 项）**：新 jar 直接读写这些表和列。不跑完不能上新 jar。
+- **第 1 轮 `1_PRE_REQUIRED`（103 项里的 98 项；另 5 项必须项在第 3 轮）**：新 jar 直接读写这些表和列。不跑完不能上新 jar。
 - **第 2 轮 `2_PRE_OPTIONAL`（28 项）**：新 jar 在缺失时能容忍（多是开关种子、菜单、可选索引）。建议同一个窗口里跑完。审计 B-6 说的「D1 积分配置是可选项」就是这里的 `migration_20261023_points_value_config_seed.sql`。
 
 这一段要特别注意的几项：
@@ -235,7 +235,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
   （四个序号取腾讯位置服务控制台里绑到这个 key 的样式序号；说明见 `components/cy/free-map/DARK_MAP.md`）。
 - ☐ 在上传拷贝里跑 `node scripts/preflight-release.js`，没有 BLOCK。
 - ☐ 开发者工具打开上传拷贝。保持 `project.config.json` 现有设置，**不要勾**「不校验合法域名」。AppID 和 API 目标在你的私有环境里配。
-- ☐ 先「编译」并真机预览，再「上传」。版本号按现有规则递增，备注写最终 SHA。用 `--info-output` 存包体 JSON，跑 `node scripts/wechat-release-contract.js --info <info.json>`，确认主包和每个分包都 < 2 MB（本地估算主包 2037.2 KiB，余量很薄）。
+- ☐ 先「编译」并真机预览，再「上传」。版本号按现有规则递增，备注写最终 SHA。用 `--info-output` 存包体 JSON，跑 `node scripts/wechat-release-contract.js --info <info.json>`，确认主包和每个分包都 < 2 MB（本地估算主包 2044.5 KiB，余量只剩约 3.5 KiB）。
 
 ---
 
@@ -282,7 +282,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
 **商家**
 
 - ☐ 商家首次进入用旧版首屏（业主决定 W2-16），不是积木 logo。
-- ☐ 商家创建活动：同时最多 3 场（如果第 7 节 step 111 已执行）。
+- ☐ 商家创建活动：同时最多 3 场（如果第 7 节 111 已执行）。
 
 ---
 

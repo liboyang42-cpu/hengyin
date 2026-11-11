@@ -40,6 +40,8 @@ public class PublicationProblem {
     public static final String CODE_FREEZE_PREVIEW_INCOMPLETE = "FREEZE_PREVIEW_INCOMPLETE";
     public static final String CODE_ROUTE_MODE_INVALID = "ROUTE_MODE_INVALID";
     public static final String CODE_LOCATION_BINDING_INVALID = "LOCATION_BINDING_INVALID";
+    /** f-money3:自由探索主题设了非零自玩票价(没有结算出口)。 */
+    public static final String CODE_FREE_EXPLORE_SELF_PLAY_PRICED = "FREE_EXPLORE_SELF_PLAY_PRICED";
 
     private final String level;
     private final String code;

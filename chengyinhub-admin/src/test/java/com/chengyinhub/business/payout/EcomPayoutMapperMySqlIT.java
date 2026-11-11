@@ -329,10 +329,13 @@ class EcomPayoutMapperMySqlIT {
     @Test
     void serviceEndToEndOnRealSqlPlansSplitsAndReturnsFromTheLedger() throws Exception {
         exec("insert into mms_merchant(id, member_id, del_flag) values (5, 55, 0), (6, 66, 0)");
-        exec("insert into cms_registration(id, registration_no, owner_type, owner_id) values (77, 'REG77', 1, 1)");
+        exec("insert into cms_registration(id, registration_no, owner_type, owner_id) values (77, 'REG77', 1, 1), (78, 'REG78', 1, 1)");
+        // REG77：平台佣金 + 卖家本人份额（唯一第三方收款方 = 卖家）；REG78：另有一个已进件的二级商户份额。
         exec("insert into coop_settlement_original_component(topic_id, payer_registration_id, settlement_id, receiver_kind,"
                 + " receiver_member_id, line_type, original_amount) values (1, 77, 11, 'ACCOUNTING', null, 'PLATFORM', 15.00),"
-                + " (1, 77, 12, 'MEMBER', 66, 'MERCHANT_VERIFY', 10.00), (1, 77, 13, 'MEMBER', 55, 'INITIATOR_MARGIN', 75.00)");
+                + " (1, 77, 12, 'MEMBER', 55, 'MERCHANT_VERIFY', 10.00), (1, 77, 13, 'MEMBER', 55, 'INITIATOR_MARGIN', 75.00),"
+                + " (1, 78, 11, 'ACCOUNTING', null, 'PLATFORM', 15.00),"
+                + " (1, 78, 12, 'MEMBER', 66, 'MERCHANT_VERIFY', 10.00), (1, 78, 13, 'MEMBER', 55, 'INITIATOR_MARGIN', 75.00)");
         EcomSubMerchant seller = sub("MERCHANT", 5);
         EcomSubMerchant other = sub("MERCHANT", 6);
         mapper.markApplymentSubmitted(seller.getId(), 1L);
@@ -340,32 +343,39 @@ class EcomPayoutMapperMySqlIT {
         mapper.updateApplymentStatus(seller.getId(), "CHECKING", "FINISH", null, null, "1900000101", null);
         mapper.updateApplymentStatus(other.getId(), "CHECKING", "FINISH", null, null, "1900000202", null);
         seller("REG77", 10000, "4200000077");
+        seller("REG78", 10000, "4200000078");
         exec("insert into coop_settlement(id, topic_id, payable_time) values (11, 1, date_sub(now(), interval 1 day)),"
                 + " (12, 1, date_sub(now(), interval 1 day)), (13, 1, date_add(now(), interval 1 day))");
 
         PayoutSwitches on = new PayoutSwitches(true, true, true, "1900000001", "wxsp", "", 30, false, "none");
         FakeEcommerceGateway gateway = new FakeEcommerceGateway();
         EcommerceProfitShareService service = new EcommerceProfitShareService(mapper, gateway, on, TransactionOperations.withoutTransaction());
-        assertEquals(1, service.planTopic(1));
+        assertEquals(2, service.planTopic(1));
         assertEquals(0, service.planTopic(1));
         EcomProfitShareOrder order = mapper.selectShareOrder("REG77", 1L);
         assertEquals("PLANNED", order.getState());
-        assertEquals(2500L, order.getSharedFen());
+        assertEquals(1500L, order.getSharedFen());
         assertEquals(3, mapper.selectShareLines(order.getId()).size());
+        // f-money 待决定 2：合单关时需要分给另一个二级商户的单整单转人工，不提交任何分账。
+        EcomProfitShareOrder frozen = mapper.selectShareOrder("REG78", 1L);
+        assertEquals("MANUAL", frozen.getState());
+        assertEquals(ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED, frozen.getManualReason());
         assertEquals(0, service.submitPlanned(10), "l-payout2：结算头 13 未到期，不提交");
         exec("update coop_settlement set payable_time = date_sub(now(), interval 1 hour) where id = 13");
         assertEquals(1, service.submitPlanned(10));
+        assertEquals(0, service.submitPlanned(10));
         assertEquals("SUCCESS", mapper.selectShareOrder("REG77", 1L).getState());
-        assertEquals(List.of(new ProfitSharePlanner.Receiver("1900000001", 1500), new ProfitSharePlanner.Receiver("1900000202", 1000)),
-                gateway.lastReceivers);
+        assertEquals("MANUAL", mapper.selectShareOrder("REG78", 1L).getState());
+        assertEquals(List.of(new ProfitSharePlanner.Receiver("1900000001", 1500)), gateway.lastReceivers);
+        assertTrue(gateway.calls.stream().noneMatch(c -> c.contains(frozen.getOutOrderNo())), gateway.calls.toString());
         assertEquals(EcommerceProfitShareService.ReturnOutcome.ALL_RETURNED, service.returnForRefund("REG77", "RF1", 4000, 0));
         long returned = mapper.selectReturnsByShareOrder(order.getId()).stream().mapToLong(EcomProfitShareReturn::getAmountFen).sum();
-        assertEquals(1000, returned); // round(2500 × 4000 / 10000)
+        assertEquals(600, returned); // round(1500 × 4000 / 10000)
         assertEquals(EcommerceProfitShareService.ReturnOutcome.ALL_RETURNED, service.returnForRefund("REG77", "RF2", 6000, 4000));
         returned = mapper.selectReturnsByShareOrder(order.getId()).stream().mapToLong(EcomProfitShareReturn::getAmountFen).sum();
-        assertEquals(2500, returned);
+        assertEquals(1500, returned);
         Map<String, Long> byMchid = new java.util.TreeMap<>();
         mapper.selectReturnsByShareOrder(order.getId()).forEach(r -> byMchid.merge(r.getReturnMchid(), r.getAmountFen(), Long::sum));
-        assertEquals(Map.of("1900000001", 1500L, "1900000202", 1000L), byMchid);
+        assertEquals(Map.of("1900000001", 1500L), byMchid);
     }
 }

@@ -1,0 +1,497 @@
+package com.chengyinhub.e2e;
+
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.service.ICmsRegistrationService;
+import com.chengyinhub.business.service.IClubMembershipService;
+import com.chengyinhub.business.service.ICoopInviteService;
+import com.chengyinhub.business.service.IMerchantCommerceService;
+import com.chengyinhub.common.config.WxPayConfig;
+import org.springframework.beans.factory.ObjectProvider;
+import com.chengyinhub.business.service.IWechatPayService;
+import com.chengyinhub.business.service.RefundRequestResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * ★桩:支付可用性(环境依赖)。只存在于本地 e2e 运行时的 exploded jar 里,仓库产品码一行都没有。
+ *
+ * <p>桩掉的只有【外部支付通道】这一层:商户凭据、SDK 构造、官方验签、预下单。
+ * 「支付成功」仍然走【真实回调入口】 POST /api/registration/callback →
+ * 会员、商城、押金或报名的真实业务服务,因此金额冻结校验
+ * (matchesFrozenWechatAmount)、订单状态机、entitlement 等业务侧一条都没被绕过。
+ * 绝不直接改 payment_status。
+ */
+@Component
+@Primary
+public class E2eWechatPayStub implements IWechatPayService {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    // 用 @Lazy 字段注入而不是构造注入:产品码里 CmsTopicServiceImpl 也注入 IWechatPayService,
+    // 构造注入会形成 stub → registrationService → … → wechatPayService → stub 的循环。
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private ICmsRegistrationService registrationService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private ObjectProvider<IClubMembershipService> clubMembershipServiceProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private IMerchantCommerceService merchantCommerceService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private ICoopInviteService coopInviteService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService depositPaymentFacts;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private WxPayConfig wxPayConfig;
+
+    /** [f-money2 rig] 产品真实回调路由;退款通知与通行证支付都经它分发。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.impl.WechatPaymentCallbackRouter callbackRouter;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.impl.RigPartnerBridge partnerBridge;
+
+    /** [f-money2 rig] 直连商户号退款通道模拟:outRefundNo → 受理记录。 */
+    private final java.util.concurrent.ConcurrentHashMap<String, RigRefund> rigRefunds = new java.util.concurrent.ConcurrentHashMap<>();
+    private record RigRefund(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference original,
+                             String outRefundNo, long refundFen, String refundId, java.time.Instant successAt) { }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService verifiedPaymentFacts;
+
+    @Override
+    public String resolveBusinessOrderNo(String wxOutTradeNo) {
+        // 夹具没有真实支付尝试，不伪造持久化订单映射。
+        return null;
+    }
+
+    @Override
+    public boolean isReady() {
+        return true;
+    }
+
+    @Override
+    public boolean isAppReady() {
+        return true;
+    }
+
+    @Override
+    public Map<String, String> createOrder(CmsRegistration registration) {
+        // [f-money2 rig] 同 WechatPaymentSdkGateway.createOrder:先问产品的电商收付通适配器,不是卖家收款单才走直连桩。
+        if (registration != null) {
+            Map<String, String> partnerParams = partnerBridge.createOrder(registration, wxPayConfig.getMerchantId());
+            if (partnerParams != null) return partnerParams;
+        }
+        Map<String, String> params = new LinkedHashMap<String, String>();
+        params.put("appId", "e2e-stub-appid");
+        params.put("timeStamp", "0");
+        params.put("nonceStr", "e2estub");
+        params.put("package", "prepay_id=e2e-stub");
+        params.put("signType", "RSA");
+        params.put("paySign", "e2e-stub");
+        return params;
+    }
+
+    @Override
+    public Map<String, String> createAppOrder(CmsRegistration registration) {
+        return createOrder(registration);
+    }
+
+    @Override
+    public Map<String, String> createGenericAppOrder(String outTradeNo, BigDecimal amountYuan,
+                                                     String description) {
+        return createOrder(null);
+    }
+
+    @Override
+    public Map<String, String> createGenericOrder(String outTradeNo, BigDecimal amountYuan,
+                                                  String description, String openid) {
+        return createOrder(null);
+    }
+
+    /** 受控参数从 body 直读(明文 JSON),再交给真实业务回调处理。 */
+    @Override
+    public String handlePayCallback(String requestBody, Map<String, String> headers) {
+        try {
+            JsonNode root = JSON.readTree(requestBody);
+            Map<String, String> resultMap = new HashMap<String, String>();
+            resultMap.put("out_trade_no", root.path("out_trade_no").asText(null));
+            resultMap.put("transaction_id", root.path("transaction_id").asText(null));
+            resultMap.put("trade_state", root.path("trade_state").asText(null));
+            if (root.hasNonNull("total")) {
+                resultMap.put("total", String.valueOf(root.path("total").asInt()));
+            }
+            // 原始可信事实的引用与渠道身份只做透传:真实回调按 verified_fact_id/hash 回读已存在的 VERIFIED 行逐项核对,
+            // 桩不造事实,也不替业务侧判断它对不对。
+            for (String key : new String[]{"verified_fact_id", "verified_fact_hash", "wx_out_trade_no",
+                    "mchid", "appid", "trade_type", "currency"}) {
+                if (root.hasNonNull(key)) resultMap.put(key, root.path(key).asText());
+            }
+            String outTradeNo = resultMap.get("out_trade_no");
+            String transactionId = resultMap.get("transaction_id");
+            Integer total = root.hasNonNull("total") ? root.path("total").asInt() : null;
+            String result;
+            IClubMembershipService membership = clubMembershipServiceProvider == null
+                    ? null : clubMembershipServiceProvider.getIfAvailable();
+            if (outTradeNo != null && outTradeNo.startsWith("CLM")) {
+                RigChannelLedger.move("PAYMENT", "PAYER", root.path("mchid").asText(""), total == null ? 0 : total, outTradeNo, transactionId);
+                boolean paid = "SUCCESS".equals(resultMap.get("trade_state"));
+                result = paid && membership != null && membership.supportsOutTradeNo(outTradeNo)
+                        && membership.handlePaidInvoice(outTradeNo, paid, total, transactionId, verifiedReference(root,outTradeNo,total,transactionId))
+                        ? "SUCCESS" : "FAIL";
+            } else if (outTradeNo != null && outTradeNo.startsWith("PPO") && callbackRouter != null) {
+                // [f-money2 rig] 通行证 JSAPI 回调交给产品真实路由(WechatPaymentCallbackRouter → PlatformPassService.handleJsapiPaid)。
+                RigChannelLedger.move("PAYMENT", "PAYER", root.path("mchid").asText(""), total == null ? 0 : total, outTradeNo, transactionId);
+                result = callbackRouter.payment(resultMap).result();
+            } else if (merchantCommerceService.supportsOutTradeNo(outTradeNo)) {
+                boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
+                result = paid && merchantCommerceService.handlePaidOrder(outTradeNo, paid, total, transactionId, verifiedReference(root,outTradeNo,total,transactionId))
+                        ? "SUCCESS" : "FAIL";
+            } else if (outTradeNo != null && outTradeNo.startsWith("DEP")) {
+                boolean paid = "SUCCESS".equalsIgnoreCase(resultMap.get("trade_state"));
+                result = "FAIL";
+                if (paid && total != null && "CNY".equals(root.path("currency").asText(null))
+                        && wxPayConfig.getMerchantId() != null
+                        && wxPayConfig.getMerchantId().equals(root.path("mchid").asText(null))
+                        && depositPaymentFacts != null) {
+                    // The fake channel never creates VERIFIED facts; only an already trusted original may be consumed.
+                    var original = depositPaymentFacts.findPaymentSuccess(wxPayConfig.getMerchantId(), outTradeNo, transactionId);
+                    if (original != null && outTradeNo.equals(original.facts().businessOutTradeNo())
+                            && "CNY".equals(original.facts().currency())
+                            && original.facts().totalFen() == total.longValue()
+                            && original.facts().amountFen() == total.longValue()
+                            && coopInviteService.markDepositPaid(outTradeNo, total.longValue(), transactionId, original.reference()))
+                        result = "SUCCESS";
+                }
+            } else {
+                RigChannelLedger.move("PAYMENT", "PAYER", root.path("mchid").asText(""), total == null ? 0 : total, outTradeNo, transactionId);
+                result = registrationService.handleWechatPayCallback(resultMap);
+            }
+            if (!"SUCCESS".equalsIgnoreCase(result)) {
+                return "{\"code\": \"FAIL\",\"message\": \"" + result + "\"}";
+            }
+            return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
+        } catch (Exception e) {
+            return "{\"code\": \"FAIL\",\"message\": \"" + e.getClass().getSimpleName() + "\"}";
+        }
+    }
+
+    /** Fixture consumes an explicitly stored original Reference; never creates proof from plaintext. */
+    private com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference verifiedReference(
+            JsonNode root,String no,Integer fen,String tx) {
+        var ref=new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                root.path("verified_fact_id").asLong(0),root.path("verified_fact_hash").asText(null));
+        var stored=verifiedPaymentFacts.requireVerified(ref);var fact=stored.facts();
+        if(!ref.equals(stored.reference()) || !ref.hash().equals(fact.factHash())
+                || fact.kind()!=com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                || !no.equals(fact.businessOutTradeNo()) || fen==null || fact.totalFen()!=fen.longValue()
+                || !tx.equals(fact.transactionId()))throw new IllegalArgumentException("original fixture payment required");
+        return ref;
+    }
+
+    @Override
+    public String handleRefundCallback(String requestBody, Map<String, String> headers) {
+        // [f-money2 rig] 模拟微信退款通知:通知体只给 out_refund_no,事实一律回查(同真实网关),再交真实路由落账。
+        try {
+            String no = JSON.readTree(requestBody).path("out_refund_no").asText(null);
+            RigRefund r = no == null ? null : rigRefunds.get(no);
+            if (r == null) return "{\"code\": \"FAIL\",\"message\": \"unknown refund\"}";
+            Map<String, String> facts = queryRefundFacts(r.original(), no);
+            boolean ok = facts != null && "SUCCESS".equals(facts.get("status")) && callbackRouter.refund(facts);
+            return ok ? "{\"code\": \"SUCCESS\",\"message\": \"成功\"}" : "{\"code\": \"FAIL\",\"message\": \"not applied\"}";
+        } catch (Exception e) {
+            return "{\"code\": \"FAIL\",\"message\": \"" + e.getClass().getSimpleName() + "\"}";
+        }
+    }
+
+    @Override
+    public String handleEcommercePayCallback(String requestBody, Map<String, String> headers) {
+        try { return partnerBridge.ecommercePayCallback(requestBody, headers); }
+        catch (Exception e) { return "{\"code\": \"FAIL\",\"message\": \"" + e.getClass().getSimpleName() + "\"}"; }
+    }
+
+    @Override
+    public String handleEcommerceRefundCallback(String requestBody, Map<String, String> headers) {
+        try { return partnerBridge.ecommerceRefundCallback(requestBody, headers); }
+        catch (Exception e) { return "{\"code\": \"FAIL\",\"message\": \"" + e.getClass().getSimpleName() + "\"}"; }
+    }
+
+    @Override
+    public String queryRefundStatus(String outRefundNo) {
+        RigRefund r = outRefundNo == null ? null : rigRefunds.get(outRefundNo);
+        return r == null ? "UNKNOWN" : "SUCCESS";
+    }
+
+    @Override
+    public Map<String, String> queryRefundFacts(String outRefundNo) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public String refreshPayoutFromWx(String outRefundNo) {
+        return "UNKNOWN";
+    }
+
+    @Override
+    public Map<String, String> queryOrderStatus(String outTradeNo) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public boolean closeOrder(String outTradeNo) {
+        return false;
+    }
+
+    @Override
+    public boolean closePaymentAttempt(String businessOutTradeNo, String observedWxOutTradeNo) {
+        return false;
+    }
+
+    @Override
+    public boolean lockPaymentAttemptForUpdate(String businessOutTradeNo, String observedWxOutTradeNo) {
+        // This fixture has no verified payment attempt or business-row lock.
+        return false;
+    }
+
+    @Override
+    public RefundRequestResult submitRefund(String outTradeNo, String outRefundNo, BigDecimal refundAmount,
+                                            BigDecimal totalAmount, String reason) {
+        return RefundRequestResult.DEFINITIVE_FAILED;
+    }
+
+    @Override
+    public RefundRequestResult submitRefund(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment,
+                                            String outTradeNo, String outRefundNo, BigDecimal refundAmount,
+                                            BigDecimal totalAmount, String reason) {
+        RefundRequestResult partnerResult = partnerBridge.submitRefund(originalPayment, outTradeNo, outRefundNo,
+                refundAmount.movePointRight(2).longValueExact(), totalAmount.movePointRight(2).longValueExact(), reason);
+        if (partnerResult != null) return partnerResult;
+        // [f-money2 rig] 模拟微信退款受理:只认已存在的 VERIFIED 原支付事实,金额不得超过原单;受理即记一笔通道移动。
+        try {
+            var paid = verifiedPaymentFacts.requireVerified(originalPayment).facts();
+            long fen = refundAmount.movePointRight(2).longValueExact();
+            if (paid.kind() != com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.PAYMENT
+                    || !paid.businessOutTradeNo().equals(outTradeNo) || fen <= 0 || fen > paid.totalFen()
+                    || outRefundNo == null || !outRefundNo.matches("[A-Za-z0-9_-]{1,64}")) return RefundRequestResult.DEFINITIVE_FAILED;
+            RigRefund existing = rigRefunds.putIfAbsent(outRefundNo, new RigRefund(originalPayment, outRefundNo, fen,
+                    "RIG-RF-" + outRefundNo, java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS)));
+            if (existing == null) RigChannelLedger.move("REFUND", paid.mchid(), "PAYER", fen, outTradeNo, outRefundNo);
+            return RefundRequestResult.ACCEPTED;
+        } catch (RuntimeException e) {
+            return RefundRequestResult.UNKNOWN;
+        }
+    }
+
+    @Override
+    public Map<String, String> queryTransferResult(String outBatchNo, String outDetailNo) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public Map<String, String> transferToBalance(String outBatchNo, String outDetailNo, BigDecimal amountYuan,
+                                                 String openid, String remark, String appid) {
+        return new LinkedHashMap<String, String>();
+    }
+
+    @Override
+    public Map<String, String> transferToBalance(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        return java.util.Map.of("ok", "false", "ambiguous", "true", "error", "No real immutable transfer client in E2E fixture");
+    }
+
+    @Override
+    public Map<String, String> queryTransferResult(com.chengyinhub.business.domain.dto.CashWithdrawTransferIntent intent) {
+        return java.util.Map.of("result", "UNKNOWN", "error", "No real transfer detail evidence in E2E fixture");
+    }
+    @Override
+    public Map<String,String> queryRefundFacts(com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference originalPayment, String outRefundNo) {
+        boolean[] handled = new boolean[1];
+        Map<String,String> partnerFacts = partnerBridge.queryRefundFacts(originalPayment, outRefundNo, handled);
+        if (handled[0]) return partnerFacts;
+        // [f-money2 rig] 模拟微信退款查单:只回本通道受理过的退款;SUCCESS 时与真实网关同口径写一条 VERIFIED REFUND 事实。
+        RigRefund r = outRefundNo == null ? null : rigRefunds.get(outRefundNo);
+        if (r == null) { Map<String,String> missing = new HashMap<>(); missing.put("status","NOT_FOUND"); return missing; }
+        if (!r.original().equals(originalPayment)) return null;
+        var paid = verifiedPaymentFacts.requireVerified(originalPayment).facts();
+        Map<String,String> facts = new HashMap<>();
+        facts.put("outRefundNo", outRefundNo); facts.put("outTradeNo", paid.businessOutTradeNo());
+        facts.put("wxOutTradeNo", paid.wxOutTradeNo()); facts.put("status", "SUCCESS");
+        facts.put("refund", String.valueOf(r.refundFen())); facts.put("total", String.valueOf(paid.totalFen()));
+        facts.put("currency", "CNY"); facts.put("mchid", paid.mchid()); facts.put("appid", paid.appid());
+        facts.put("tradeType", paid.tradeType()); facts.put("transactionId", paid.transactionId());
+        facts.put("refundId", r.refundId()); facts.put("successTime", r.successAt().toString());
+        var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.REFUND,
+                paid.mchid(), paid.appid(), paid.businessOutTradeNo(), paid.wxOutTradeNo(), outRefundNo, r.refundId(),
+                paid.transactionId(), paid.tradeType(), "CNY", paid.totalFen(), r.refundFen(), r.successAt(),
+                paid.intentRequestHash(), "SUCCESS");
+        var ref = verifiedPaymentFacts.recordVerified(fact);
+        facts.put("verified_fact_id", Long.toString(ref.id())); facts.put("verified_fact_hash", ref.hash());
+        return facts;
+    }
+
+    @Override public boolean lockClosablePaymentAttemptForUpdate(String businessNo,String observedWxNo) { return false; }
+
+}
+
+/**
+ * [f-money2 rig] 通道资金移动记账:每笔「从 → 到 金额」追加一行 JSON 到 $RIG_CHANNEL_LEDGER(默认不写)。
+ * 只描述模拟通道里发生的移动,不参与任何业务判断。
+ */
+final class RigChannelLedger {
+    private RigChannelLedger() { }
+    static synchronized void move(String kind, String from, String to, long fen, String ref, String ref2) {
+        // 应用进程只继承白名单环境变量;rig 应用的工作目录是 $RIG_HOME/work,账本固定写在 $RIG_HOME/out。
+        String path = System.getenv().getOrDefault("RIG_CHANNEL_LEDGER", "../out/channel-ledger.jsonl");
+        String line = String.format("{\"at\":\"%s\",\"kind\":\"%s\",\"from\":\"%s\",\"to\":\"%s\",\"fen\":%d,\"ref\":\"%s\",\"ref2\":\"%s\"}%n",
+                java.time.Instant.now(), kind, from, to, fen, ref, ref2 == null ? "" : ref2);
+        try {
+            java.nio.file.Files.writeString(java.nio.file.Path.of(path), line, java.nio.charset.StandardCharsets.UTF_8,
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+        } catch (java.io.IOException ignored) { }
+    }
+}
+
+/**
+ * [f-money2 rig] 电商收付通通道模拟器:把产品的 wechatEcommercePayGateway bean 换成内存通道,
+ * 按微信语义回包(下单 → 通知 → 查单、分账 → 查询 → 完结、回退、电商退款 → 查询),每笔移动记账。
+ * 只在 rig 的 exploded jar 里存在;开关(payout.ecommerce.*)仍由产品 PayoutSwitches 判定,关时产品根本不会调到这里。
+ * 支付通知:rig 只 POST {"sub_mchid","out_trade_no"} 到真实通知入口,本模拟器把它当作「付款人已付」,
+ * 产品随后照真实流程回查 queryPartnerOrder 并逐字段核对后才写 PAYMENT 事实。
+ */
+@org.springframework.stereotype.Component
+class RigEcommerceChannel implements org.springframework.beans.factory.config.BeanPostProcessor {
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
+        if ("wechatEcommercePayGateway".equals(beanName)
+                && bean instanceof com.chengyinhub.business.payout.EcommercePayGateway
+                && !(bean instanceof Channel)) {
+            return new Channel();
+        }
+        return bean;
+    }
+
+    static final class Channel implements com.chengyinhub.business.payout.EcommercePayGateway {
+        private record Order(String sub, String outTradeNo, long totalFen, String state, String txn, String successTime) { }
+        private record Refund(String sub, String outRefundNo, String outTradeNo, String txn, long fen, long total) { }
+        private final java.util.Map<String, Order> orders = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.Map<String, ShareResult> shares = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.Map<String, ReturnResult> returns = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.Map<String, Refund> refunds = new java.util.concurrent.ConcurrentHashMap<>();
+        private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+        // 与 install-channel.sh 的 --payout.ecommerce.sp-mchid / sp-appid 同值(应用进程不继承任意环境变量)。
+        private static String sp() { return "1900009001"; }
+        private static String spAppid() { return "wxrigsp000000001"; }
+
+        @Override public java.util.Map<String, String> prepayJsapi(String subMchid, String outTradeNo, long totalFen, String description, String spOpenid) {
+            orders.putIfAbsent(outTradeNo, new Order(subMchid, outTradeNo, totalFen, "NOTPAY", null, null));
+            java.util.Map<String, String> p = new java.util.LinkedHashMap<>();
+            p.put("appId", spAppid()); p.put("timeStamp", "0"); p.put("nonceStr", "rigecom");
+            p.put("package", "prepay_id=rig-ecom-" + outTradeNo); p.put("signType", "RSA"); p.put("paySign", "rig");
+            return p;
+        }
+        @Override public ApplymentSubmitted submitApplyment(String outRequestNo, java.util.Map<String, Object> body) { return new ApplymentSubmitted(1L); }
+        /** 进件:rig 视为微信已审核通过并签约,按 out_request_no 派生一个稳定的二级商户号。 */
+        @Override public ApplymentStatus queryApplyment(String outRequestNo) {
+            String sub = "1901" + String.format("%06d", Math.floorMod(outRequestNo.hashCode(), 1000000));
+            return new ApplymentStatus(1L, "FINISH", "rig 视为已完成进件", null, sub);
+        }
+
+        @Override public ShareResult createProfitSharing(String subMchid, String transactionId, String outOrderNo,
+                                                         java.util.List<com.chengyinhub.business.payout.ProfitSharePlanner.Receiver> receivers, boolean finish) {
+            ShareResult existing = shares.get(outOrderNo);
+            if (existing != null) return existing;
+            java.util.List<ReceiverResult> out = new java.util.ArrayList<>();
+            for (var r : receivers) {
+                out.add(new ReceiverResult(r.mchid(), r.amountFen(), "SUCCESS", null));
+                RigChannelLedger.move("PROFIT_SHARE", subMchid, r.mchid(), r.amountFen(), outOrderNo, transactionId);
+            }
+            ShareResult result = new ShareResult("FINISHED", "RIG-PS-" + outOrderNo, out);
+            shares.put(outOrderNo, result);
+            if (finish) RigChannelLedger.move("UNFREEZE", subMchid + "(冻结)", subMchid, 0, outOrderNo, "finish=true");
+            return result;
+        }
+        @Override public ShareResult queryProfitSharing(String subMchid, String transactionId, String outOrderNo) {
+            ShareResult r = shares.get(outOrderNo);
+            if (r == null) throw new IllegalStateException("RESOURCE_NOT_EXISTS");
+            return r;
+        }
+        @Override public ReturnResult createReturn(String subMchid, String outOrderNo, String outReturnNo, String returnMchid, long amountFen, String description) {
+            ReturnResult existing = returns.get(outReturnNo);
+            if (existing != null) return existing;
+            RigChannelLedger.move("PROFIT_SHARE_RETURN", returnMchid, subMchid, amountFen, outOrderNo, outReturnNo);
+            ReturnResult r = new ReturnResult("SUCCESS", "RIG-RT-" + outReturnNo, null);
+            returns.put(outReturnNo, r);
+            return r;
+        }
+        @Override public ReturnResult queryReturn(String subMchid, String outOrderNo, String outReturnNo) {
+            ReturnResult r = returns.get(outReturnNo);
+            if (r == null) throw new IllegalStateException("RESOURCE_NOT_EXISTS");
+            return r;
+        }
+        @Override public void finishProfitSharing(String subMchid, String transactionId, String outOrderNo, String description) {
+            RigChannelLedger.move("UNFREEZE", subMchid + "(冻结)", subMchid, 0, outOrderNo, "finish");
+        }
+        @Override public RefundAccepted createRefund(String subMchid, String transactionId, String outRefundNo, long refundFen, long totalFen, String reason) {
+            Order o = null;
+            for (Order x : orders.values()) if (transactionId != null && transactionId.equals(x.txn())) o = x;
+            if (o == null || !subMchid.equals(o.sub()) || refundFen <= 0 || refundFen > totalFen) throw new IllegalStateException("INVALID_REQUEST");
+            if (refunds.putIfAbsent(outRefundNo, new Refund(subMchid, outRefundNo, o.outTradeNo(), transactionId, refundFen, totalFen)) == null)
+                RigChannelLedger.move("REFUND", subMchid, "PAYER", refundFen, o.outTradeNo(), outRefundNo);
+            return new RefundAccepted("RIG-ERF-" + outRefundNo, outRefundNo);
+        }
+        @Override public String paymentNotifyUrl() { return "https://rig.invalid/api/payout/ecommerce/notify"; }
+        @Override public PartnerOrder queryPartnerOrder(String subMchid, String outTradeNo) {
+            Order o = orders.get(outTradeNo);
+            if (o == null || !o.sub().equals(subMchid)) throw new PartnerOrderNotFound("ORDER_NOT_EXIST", null);
+            return new PartnerOrder(sp(), o.sub(), spAppid(), o.outTradeNo(), o.txn(), o.state(), "JSAPI", o.totalFen(), "CNY", o.successTime());
+        }
+        @Override public void closePartnerOrder(String subMchid, String outTradeNo) {
+            orders.computeIfPresent(outTradeNo, (k, o) -> "NOTPAY".equals(o.state()) ? new Order(o.sub(), k, o.totalFen(), "CLOSED", null, null) : o);
+        }
+        @Override public PartnerOrder parsePaymentNotification(String body, java.util.Map<String, String> headers) {
+            try {
+                var n = JSON.readTree(body);
+                String no = n.path("out_trade_no").asText(null), sub = n.path("sub_mchid").asText(null);
+                Order o = no == null ? null : orders.get(no);
+                if (o == null || !o.sub().equals(sub)) throw new IllegalArgumentException("unknown order");
+                if ("NOTPAY".equals(o.state())) {
+                    String txn = "RIG-ETX-" + no;
+                    String at = java.time.OffsetDateTime.now(java.time.ZoneOffset.ofHours(8)).withNano(0).toString();
+                    o = new Order(o.sub(), no, o.totalFen(), "SUCCESS", txn, at);
+                    orders.put(no, o);
+                    RigChannelLedger.move("PAYMENT", "PAYER", o.sub() + "(冻结)", o.totalFen(), no, txn);
+                }
+                return queryPartnerOrder(o.sub(), no);
+            } catch (java.io.IOException e) { throw new IllegalArgumentException(e); }
+        }
+        @Override public RefundNotice parseRefundNotification(String body, java.util.Map<String, String> headers) {
+            try {
+                var n = JSON.readTree(body);
+                Refund r = refunds.get(n.path("out_refund_no").asText(""));
+                if (r == null) throw new IllegalArgumentException("unknown refund");
+                return new RefundNotice(sp(), r.sub(), r.outRefundNo());
+            } catch (java.io.IOException e) { throw new IllegalArgumentException(e); }
+        }
+        @Override public RefundQuery queryRefund(String subMchid, String outRefundNo) {
+            Refund r = refunds.get(outRefundNo);
+            if (r == null || !r.sub().equals(subMchid)) throw new RefundNotFound("RESOURCE_NOT_EXISTS", null);
+            return new RefundQuery(outRefundNo, "RIG-ERF-" + outRefundNo, r.outTradeNo(), r.txn(), "SUCCESS", r.fen(), "CNY",
+                    java.time.OffsetDateTime.now(java.time.ZoneOffset.ofHours(8)).withNano(0).toString());
+        }
+    }
+}

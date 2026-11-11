@@ -139,6 +139,8 @@ MYBATIS_ITS=(
   P0CityRunChainMySqlIT
   P0FreeExploreSupplyGateMySqlIT
   P0DeregistrationMySqlIT
+  # P0-23 需补供给恢复:必选章退出停售 → 批准补位并生效 → 仅主办显式恢复;未补/过期/越权/重放均不恢复。
+  P0FreeExploreSupplyRecoveryMySqlIT
   # 2026-10-22 发布验收 P1 玩家念头(领取/步数基线/达成加运气上限仅一次)与隐私(按用途撤回、到访头像窗口、
   #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
   JourneyThoughtProgressMySqlIT
