@@ -264,6 +264,37 @@
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
   <view class="tools-mask {{toolsOut ? 'is-out' : ''}}" catchtouchmove="noop" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
     <scroll-view class="tools tools--corner {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
+        <!-- f-play2(2026-11-11):队长自己的几行(扫成员票核销 / 展示整团码 / 解锁下一章节 / 放行这一站 / 整团结算)提到菜单最上面。
+             原来排在第 9 行以后,菜单 52vh 正好切在「队伍位置」下沿、又不显示滚动条:队员停在「等待放行」时,队长打开菜单看不到「解锁下一章节」。
+             行内容与守卫一字未改,只换位置;不是队长时这几行本来就不渲染,队员的菜单不变。 -->
+        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadVerifyMemberTicketFromTools" aria-role="button" aria-label="扫成员票核销" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--scan2"></view>
+          <view class="dcopy"><text class="dt">扫成员票核销</text></view>
+          <view class="darr"></view>
+        </view>
+        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadShowGroupCodeFromTools" aria-role="button" aria-label="展示整团码" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--groupcode"></view>
+          <view class="dcopy"><text class="dt">展示整团码</text></view>
+          <view class="darr"></view>
+        </view>
+        <view class="drow" wx:if="{{lead.exists && lead.isLeader && !lead.directorRun}}" bindtap="leadUnlockFromTools" aria-role="button" aria-label="解锁下一章节" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--unlock"></view>
+          <view class="dcopy"><text class="dt">解锁下一章节</text></view>
+          <view class="darr"></view>
+        </view>
+        <!-- P-23:成员在罗盘站读取失败两次时,队长可现场放行(成员本人点「跳过这一站」) -->
+        <view class="drow" wx:for="{{lead.isLeader ? lead.skipRequests : []}}" wx:key="key" bindtap="leadReleaseStation"
+              data-member-id="{{item.memberId}}" data-node-id="{{item.nodeId}}" data-nickname="{{item.nickname}}" data-node-name="{{item.nodeName}}"
+              aria-role="button" aria-label="放行这一站" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--unlock"></view>
+          <view class="dcopy"><text class="dt">放行这一站</text><text class="ds">{{item.nickname}} · {{item.nodeName}}</text></view>
+          <view class="darr"></view>
+        </view>
+        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadSettleFromTools" aria-role="button" aria-label="整团结算" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--settle"></view>
+          <view class="dcopy"><text class="dt">整团结算</text></view>
+          <view class="darr"></view>
+        </view>
 <!-- 文档二 L5 B6/B7/B9:联系主办 / 联系商家,菜单第一行;只给拨打,号码不上屏;没有号码整行不出 -->
         <view class="drow" wx:if="{{playContact}}" bindtap="callPlayContact" aria-role="button" aria-label="{{playContact.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="phone" size="36" /></view><view class="dcopy"><text class="dt">{{playContact.label}}</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{!isPreview}}" bindtap="openSos" aria-role="button" aria-label="紧急求助" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="warning" size="36" /></view><view class="dcopy"><text class="dt">紧急求助</text></view><view class="darr"></view></view>
@@ -333,34 +364,6 @@
           <view class="dic pic pic--team"></view>
           <view class="dcopy"><text class="dt">队伍位置</text></view>
           <text class="dv">{{lead.arrived}}/{{lead.total}}</text>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadVerifyMemberTicketFromTools" aria-role="button" aria-label="扫成员票核销" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--scan2"></view>
-          <view class="dcopy"><text class="dt">扫成员票核销</text></view>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadShowGroupCodeFromTools" aria-role="button" aria-label="展示整团码" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--groupcode"></view>
-          <view class="dcopy"><text class="dt">展示整团码</text></view>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" wx:if="{{lead.exists && lead.isLeader && !lead.directorRun}}" bindtap="leadUnlockFromTools" aria-role="button" aria-label="解锁下一章节" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--unlock"></view>
-          <view class="dcopy"><text class="dt">解锁下一章节</text></view>
-          <view class="darr"></view>
-        </view>
-        <!-- P-23:成员在罗盘站读取失败两次时,队长可现场放行(成员本人点「跳过这一站」) -->
-        <view class="drow" wx:for="{{lead.isLeader ? lead.skipRequests : []}}" wx:key="key" bindtap="leadReleaseStation"
-              data-member-id="{{item.memberId}}" data-node-id="{{item.nodeId}}" data-nickname="{{item.nickname}}" data-node-name="{{item.nodeName}}"
-              aria-role="button" aria-label="放行这一站" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--unlock"></view>
-          <view class="dcopy"><text class="dt">放行这一站</text><text class="ds">{{item.nickname}} · {{item.nodeName}}</text></view>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" wx:if="{{lead.exists && lead.isLeader}}" bindtap="leadSettleFromTools" aria-role="button" aria-label="整团结算" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--settle"></view>
-          <view class="dcopy"><text class="dt">整团结算</text></view>
           <view class="darr"></view>
         </view>
         <!-- 自由探索(原型 x-tools)。六行逐条照原型:我的权益 / 入场码 / 旅程手记 /
