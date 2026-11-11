@@ -750,6 +750,14 @@
       "classes": [
         "com.chengyinhub.business.payout.EcomCombineMapperMySqlIT"
       ]
+    },
+    "launch-f-money": {
+      "lineage": "f-money 20261111 launch fix lane: P0-17 creator_income_detail idempotency unique key (no write path yet)",
+      "registered_source": "fc6a061b0884a6be877d4abd737c75eb57dd1602",
+      "note": "CreatorIncomeDetailIdempotencyMySqlIT (2): CREATE TABLE copied verbatim from migration_p3_phase_b_player_world_creator.sql, two legacy NULL-key rows, then migration_20261111_creator_income_detail_idempotency.sql applied verbatim twice on a scratch MySQL 8 schema. Covers the unique index shape, legacy rows keeping NULL keys, duplicate-key rejection and INSERT IGNORE no-op. Source registration only, execution NOT_RUN until dispatched.",
+      "classes": [
+        "com.chengyinhub.business.it.CreatorIncomeDetailIdempotencyMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -2146,6 +2154,14 @@
       ],
       "gates": {},
       "note": "l-payout3 EcomCombineMapper.xml + migration_20261111_ecommerce_combine.sql on real MySQL/MyBatis; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.it.CreatorIncomeDetailIdempotencyMySqlIT": {
+      "tests": 2,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "f-money P0-17 idempotency unique key migration on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
     }
   }
 }
