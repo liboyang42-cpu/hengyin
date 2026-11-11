@@ -524,14 +524,7 @@ class RoamLocationRetentionMySqlIT {
                     new org.springframework.core.io.FileSystemResource("sql/migration_20261024_d_npc_asr_intent.sql"));
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
                     new org.springframework.core.io.FileSystemResource("sql/migration_20261024_d_npc_asr_shared_quota.sql"));
-            // The real task also expires AIGC generation logs; use the shipped table + retention-index migrations.
-            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
-                    new org.springframework.core.io.FileSystemResource("sql/migration_ai_generation_log.sql"));
-            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
-                    new org.springframework.core.io.FileSystemResource("sql/migration_20261111_ai_generation_log_retention_index.sql"));
         }
-        db.execute("insert into ai_generation_log(id,member_id,biz_type,create_time) values"
-                + "(1,9,'npc_chat',date_sub(now(),interval 181 day)),(2,9,'npc_chat',now())");
         for (int id = 101; id <= 103; id++) {
             boolean unknown = id == 103;
             db.update("insert into npc_asr_intent(id,user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,"
@@ -546,13 +539,14 @@ class RoamLocationRetentionMySqlIT {
         var asrIdentities = asrIdentitySnapshot();
         var freshAsr = db.queryForMap("select * from npc_asr_intent where id=102");
         var unknownAsr = db.queryForMap("select * from npc_asr_intent where id=103");
-        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request")) {
+        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request", "ai_generation_log")) {
             String timeColumn = table.equals("tms_browse_record") ? "browse_time" : "create_time";
             db.execute("create table " + table + "(id bigint primary key," + timeColumn + " datetime not null) engine=InnoDB");
             String oldAge = switch (table) {
                 case "tms_browse_record" -> "181 day";
                 case "biz_event_log" -> "366 day";
                 case "npc_chat_log" -> "91 day";
+                case "ai_generation_log" -> "181 day";
                 default -> "49 hour";
             };
             db.execute("insert into " + table + " values(1,date_sub(now(),interval " + oldAge + ")),(2,now())");
@@ -603,15 +597,12 @@ class RoamLocationRetentionMySqlIT {
         org.springframework.test.util.ReflectionTestUtils.setField(task, "eventDays", 365);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "npcChatDays", 90);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "npcChatRequestHours", 48);
-        org.springframework.test.util.ReflectionTestUtils.setField(task, "aiGenerationDays", 180);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "batchSize", 2);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "maxBatches", 20);
 
         assertDoesNotThrow(task::run);
-        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request"))
+        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request", "ai_generation_log"))
             assertEquals(java.util.List.of(2L), db.queryForList("select id from " + table + " order by id", Long.class));
-        assertEquals(java.util.List.of(2L), db.queryForList("select id from ai_generation_log order by id", Long.class));
-        assertEquals(1, db.queryForObject("select count(*) from information_schema.statistics where table_schema=? and table_name='ai_generation_log' and index_name='idx_ai_gen_create_time'", Integer.class, database));
         assertEquals(asrIdentities, asrIdentitySnapshot(), "body expiry must not release ASR/quota/UNKNOWN identity");
         assertEquals(java.util.List.of(101L, 102L, 103L), db.queryForList("select id from npc_asr_intent order by id", Long.class));
         assertNull(db.queryForObject("select transcript from npc_asr_intent where id=101", String.class));
