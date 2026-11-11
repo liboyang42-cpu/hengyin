@@ -17,11 +17,15 @@ function positiveId(value) {
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
-function parseReviewRouteOptions(options) {
+// L-5：商家视角裸开口碑（没带 mode 也没带 merchantRowId）就是在看自己的口碑，进管理态；
+// 只有玩家/访客缺商家参数才落「商家信息不完整」。管理态仍由商家门禁与后端权限把关。
+function parseReviewRouteOptions(options, merchantView) {
   const input = options && typeof options === 'object' ? options : {};
+  const merchantRowId = decimalId(input.merchantRowId);
+  const ownBare = merchantView === true && !merchantRowId && !input.mode;
   return {
-    mode: input.mode === 'manage' ? 'manage' : 'public',
-    merchantRowId: decimalId(input.merchantRowId),
+    mode: input.mode === 'manage' || ownBare ? 'manage' : 'public',
+    merchantRowId: merchantRowId,
   };
 }
 
