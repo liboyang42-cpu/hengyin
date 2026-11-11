@@ -129,4 +129,16 @@ l-icons / l-iconsB 合入后(`fb9f1c287`)，#779 的小程序静态门有七个�
 
 lead 的 `e01a45ded` 只修了 membership 的 library 字段，其余五个子门禁在 #779 上仍然是红的：DS 硬编码、孤立单位、截图矩阵、截图覆盖率、reveal 的 paid 死字段。本线把 #787 同步到 `e01a45ded`(membership js 和台账都取 launch 版本)，#787 现在只带 reveal 的两处、membership wxml 的兜底、F314 矩阵行和 fixtures，以及一条测试固定文本。合并树上本地复核：上述子门禁、台账、路由矩阵都通过，小程序全量单测全部通过。
 
-STATUS: PARTIAL - l-icons 合入后剩下的小程序静态门红已在 #787 修好，待 lead 合入；#779 其余红只剩 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项，都要你拍板
+
+lead 在 `c7bc75843` 合入了与本线等价的钥匙开场页修复，随后又合入 f-play、f-pages、f-merchant(launch 头 `1059a6791`)。#779 的小程序静态检查在 `c7bc75843` 上仍是红的。本线把 #787 同步到 `1059a6791` 后本地复核，找出以下问题并修复(`b483bc070`)：
+- **`tests/unit/action-ledger.test.js` 语法错误**：合并时截掉了一段多行注释的开头，整个文件跑不起来，48 条台账用例(含固定计数)全部失效。已按 `c7bc75843` 原文逐字补回，48/48 通过。
+- **U4 死字段**：快速配置页(`pages/publish/simple`)在 P-43 撤掉模式眉题后，`mode` 只用在请求体里。已改为实例字段 `_mode`；两份 simple-ai 单测里读写 `data.mode` 的地方改为 `page._mode`，语义不变(71/71)。
+- **弹窗主题作用域**：帖文详情的举报原因半屏挂在主题容器外，商家浅色态会弹出玩家黑窗。已按 `shezhi` 的先例在宿主上挂同一视角的主题类。
+- **弱锚点基线**：A10、A12 已经不弱，按棘轮把基线从 6 条收窄到 4 条。
+- **路由矩阵与动作台账**：按合并树重建。三条路由的视角推断变为 merchant，其余是行号平移。
+
+本地复核：除 U5 外，各子门禁、台账、路由矩阵都通过；小程序全量单测 17288/17288。
+
+**需要你处理(本线被环境安全策略拦下，未绕过)**：U5 silentError 白名单。f-pages 给 `pages/mylike/mylike.js` 新增了「据点」页签，多出两处 silentError(据点收藏列表、取消收藏据点)，实际 6 处，白名单登记 4 处。两处都有可见承接：列表失败落页内 cy-error，取消失败由动作自己的「操作失败」或「取消结果未确认」toast 承接并回读，与已登记的 4 处同一口径。修法：在 `ci/silent-error-allowlist.txt` 把该行的计数改为 6，并补一句原因。本线尝试修改时被拦，没有绕过。
+
+STATUS: PARTIAL - 本线负责的代码修复都已进 launch 或在 #787(`b483bc070`)待合；#779 剩余的红：U5 silentError 白名单(mylike 4→6，环境拦截了本线的修改，需要你改)、gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者，三项都要你拍板
