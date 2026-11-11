@@ -126,4 +126,7 @@ l-icons / l-iconsB 合入后(`fb9f1c287`)，#779 的小程序静态门有七个�
 
 本地复核：七个子门禁、台账 `--check`、路由矩阵 `--check`、U3、危险动作门禁全部通过；小程序全量单测 17248/17248。
 
-STATUS: PARTIAL - 本线代码修复已进 launch；l-icons 合入后新出的小程序静态门七处红已在 #787(`4f7dc5048`)修好，待 lead 合入；#779 其余红只剩 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项，都要你拍板
+
+lead 的 `e01a45ded` 只修了 membership 的 library 字段，其余五个子门禁在 #779 上仍然是红的：DS 硬编码、孤立单位、截图矩阵、截图覆盖率、reveal 的 paid 死字段。本线把 #787 同步到 `e01a45ded`(membership js 和台账都取 launch 版本)，#787 现在只带 reveal 的两处、membership wxml 的兜底、F314 矩阵行和 fixtures，以及一条测试固定文本。合并树上本地复核：上述子门禁、台账、路由矩阵都通过，小程序全量单测全部通过。
+
+STATUS: PARTIAL - l-icons 合入后剩下的小程序静态门红已在 #787 修好，待 lead 合入；#779 其余红只剩 gitleaks 历史命中和架构门 AuthorWriteReceipt 消费者两项，都要你拍板
