@@ -30,19 +30,39 @@ public class EcommerceSettlementGuard {
         this.profitSharing = profitSharing;
     }
 
+    /** l-payout3 合单（合单开关关闭时不装配也不读）。 */
+    private com.chengyinhub.business.mapper.EcomCombineMapper combineMapper;
+    private EcommerceCombinedSettlementService combinedSettlement;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setCombined(com.chengyinhub.business.mapper.EcomCombineMapper combineMapper,
+                            EcommerceCombinedSettlementService combinedSettlement) {
+        this.combineMapper = combineMapper;
+        this.combinedSettlement = combinedSettlement;
+    }
+
+    private boolean combinedActive() { return switches.combinedEnabled() && combineMapper != null; }
+
     public boolean active() { return switches.ecommerceEnabled(); }
 
     /** 结算头里由微信（二级商户）收款的净额，元。未启用时恒为 0 且不读库。 */
     public BigDecimal partnerPortion(Long settlementId) {
         if (!active() || settlementId == null) return BigDecimal.ZERO;
         BigDecimal portion = mapper.sumPartnerPortionForSettlement(settlementId);
-        return portion == null ? BigDecimal.ZERO : portion;
+        if (portion == null) portion = BigDecimal.ZERO;
+        if (combinedActive()) {
+            // l-payout3：合单收款的分项全部已在微信侧（卖家子单 / 平台自营子单），其他收款方由平台按供应商结算付，不记会员余额。
+            BigDecimal combined = combineMapper.sumCombinedPortionForSettlement(settlementId);
+            if (combined != null) portion = portion.add(combined);
+        }
+        return portion;
     }
 
     /** 账本分项的原支付是否由二级商户收款。未启用时恒为 false 且不读库。 */
     public boolean isPartnerPaymentFact(Long paymentFactId) {
         if (!active() || paymentFactId == null) return false;
-        return mapper.countPartnerPaymentFact(paymentFactId) > 0;
+        if (mapper.countPartnerPaymentFact(paymentFactId) > 0) return true;
+        return combinedActive() && combineMapper.countCombinedPaymentFact(paymentFactId) > 0;
     }
 
     /**
@@ -53,6 +73,7 @@ public class EcommerceSettlementGuard {
         if (!switches.profitSharingEnabled() || topicId == null) return;
         try {
             profitSharing.planTopic(topicId);
+            if (combinedActive() && combinedSettlement != null) combinedSettlement.planTopic(topicId);
         } catch (RuntimeException e) {
             log.warn("ecom profit share plan after settlement failed topicId={} type={}", topicId, e.getClass().getSimpleName());
         }

@@ -26,6 +26,8 @@ public class EcommercePayoutTask {
     @Autowired private EcommerceProfitShareService profitShareService;
     @Autowired private EcommerceSubMerchantService subMerchantService;
     @Autowired private AlarmService alarmService;
+    /** l-payout3 合单结算；合单开关关闭时 active() 为假，不读不写。 */
+    @Autowired(required = false) private com.chengyinhub.business.payout.EcommerceCombinedSettlementService combinedSettlement;
 
     public void shareAndRetry() {
         if (!switches.profitSharingEnabled()) return;
@@ -35,6 +37,10 @@ public class EcommercePayoutTask {
             int synced = profitShareService.syncProcessing(100);
             int returns = profitShareService.syncReturns(100);
             logger.info("电商收付通分账：补计划 {}，提交 {}，查分账 {}，查回退 {}", planned, submitted, synced, returns);
+            if (combinedSettlement != null && combinedSettlement.active()) {
+                logger.info("电商收付通合单结算：补计划 {}，提交 {}，查分账 {}", combinedSettlement.planMissing(50),
+                        combinedSettlement.submitDue(50), combinedSettlement.syncProcessing(100));
+            }
         } catch (RuntimeException e) {
             alarm("电商收付通分账任务失败", e);
             throw e;

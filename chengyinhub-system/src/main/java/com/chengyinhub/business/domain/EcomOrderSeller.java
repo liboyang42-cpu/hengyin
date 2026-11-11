@@ -9,6 +9,8 @@ public class EcomOrderSeller {
     private Long totalFen;
     private String transactionId;
     private Long registrationId;
+    /** l-payout3：合单支付单的占位记录（不是表列）。subMchid 此时是合单商户号（电商平台商户号）。 */
+    private boolean combined;
 
     public String getOutTradeNo() { return outTradeNo; }
     public void setOutTradeNo(String outTradeNo) { this.outTradeNo = outTradeNo; }
@@ -24,4 +26,6 @@ public class EcomOrderSeller {
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
     public Long getRegistrationId() { return registrationId; }
     public void setRegistrationId(Long registrationId) { this.registrationId = registrationId; }
+    public boolean isCombined() { return combined; }
+    public void setCombined(boolean combined) { this.combined = combined; }
 }

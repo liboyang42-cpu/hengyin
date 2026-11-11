@@ -86,4 +86,46 @@ public interface EcommercePayGateway {
     RefundNotice parseRefundNotification(String body, Map<String, String> headers);
 
     RefundQuery queryRefund(String subMchid, String outRefundNo);
+
+    // ---- l-payout3：合单支付（电商收付通，combine_mchid 与子单 mchid 都是电商平台商户号，sub_mchid 为二级商户号） ----
+
+    /** 合单下单的一笔子单。 */
+    record CombinedSubRequest(String subMchid, String outTradeNo, long amountFen, String description, boolean profitSharing) { }
+
+    /** 合单查单 / 已验签合单通知里的一笔子单。tradeState/tradeType 用微信枚举名。 */
+    record CombinedSub(String mchid, String subMchid, String outTradeNo, String transactionId, String tradeState,
+                       String tradeType, Long totalFen, String currency, String successTime) { }
+
+    record CombinedOrder(String combineAppid, String combineMchid, String combineOutTradeNo, List<CombinedSub> subOrders) { }
+
+    /** 合单单号不存在（404 ORDER_NOT_EXIST / RESOURCE_NOT_EXISTS）。 */
+    final class CombinedOrderNotFound extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        public CombinedOrderNotFound(String message, Throwable cause) { super(message, cause); }
+    }
+
+    /** POST /v3/combine-transactions/jsapi，返回小程序调起参数。 */
+    default Map<String, String> prepayCombinedJsapi(String combineOutTradeNo, List<CombinedSubRequest> subOrders, String openid) {
+        throw new UnsupportedOperationException("COMBINE_NOT_SUPPORTED");
+    }
+
+    /** GET /v3/combine-transactions/out-trade-no/{combine_out_trade_no}。 */
+    default CombinedOrder queryCombinedOrder(String combineOutTradeNo) {
+        throw new UnsupportedOperationException("COMBINE_NOT_SUPPORTED");
+    }
+
+    /** POST /v3/combine-transactions/out-trade-no/{combine_out_trade_no}/close（必须带全部子单）。 */
+    default void closeCombinedOrder(String combineOutTradeNo, List<CombinedSubRequest> subOrders) {
+        throw new UnsupportedOperationException("COMBINE_NOT_SUPPORTED");
+    }
+
+    /** 合单支付通知验签解密；只用于定位合单号，事实一律另行查单核对。 */
+    default String parseCombinedNotification(String body, Map<String, String> headers) {
+        throw new UnsupportedOperationException("COMBINE_NOT_SUPPORTED");
+    }
+
+    /** 合单支付通知地址（冻结支付意图时作为原请求指纹的一部分）。 */
+    default String combinedNotifyUrl() {
+        throw new UnsupportedOperationException("COMBINE_NOT_SUPPORTED");
+    }
 }

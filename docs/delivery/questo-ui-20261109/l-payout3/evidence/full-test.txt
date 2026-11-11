@@ -1,0 +1,10 @@
+后端全量单测：LC_ALL=C.UTF-8 mvn -o -pl chengyinhub-system,chengyinhub-admin test（分支 claude/l-payout3-20261111 @ 52648a778）
+合计 13119 条：0 失败，35 错误（分布在 15 个类），577 跳过
+
+报错的 15 个类：
+- 14 个 *MyBatisTest（com.chengyinhub.business.it.*）：本容器没有 MySQL，Communications link failure / Connection refused。
+  AuditReportLane, ClubCrmCheckinDetail, ClubDissolutionGate, ClubTopicManageStats, ComplianceF7,
+  MerchantDashboardAggregation, MerchantNumbersAgree, O08MemberOnlyTopicLocation, PublicActivityScopeGate,
+  PublicTopicFeedGate, PublicVisibility, RedemptionRewardClawback, TopicDraftVisibility, TopicSyncPostRestore
+- 1 个 MerchantCrmProfileNamespaceMyBatisTest（H2）：在全量运行中 1 条报 H2 内联 Java 函数编译错误。
+  单独复跑时，本分支与 launch 底座都是 7/7 通过；本线没有改它涉及的任何文件。
