@@ -139,8 +139,7 @@ test('SC-UI-DATE-COUNT 主题起止日期:主题卡 / 主题页 / 向导 / 统�
       topicCardTime: startMd,
       topicCardWeek: TOPIC_START.w,
       manageDate: TOPIC_START.ymd,
-      // x-fix2 P-12:数据条开放时间在连字符后插零宽空格,窄格只在此处折行;日期本身不变
-      topicPageOpen: TOPIC_START.m + '.' + TOPIC_START.d + '-\u200b' + TOPIC_END.m + '.' + TOPIC_END.d,
+      topicPageOpen: TOPIC_START.m + '.' + TOPIC_START.d + '-' + TOPIC_END.m + '.' + TOPIC_END.d,
       wizardStart: TOPIC_START.ymd, wizardEnd: TOPIC_END.ymd,
       detailRange: TOPIC_START.m + '月' + TOPIC_START.d + '日 – ' + TOPIC_END.m + '月' + TOPIC_END.d + '日',
       eventOpsLabel: TOPIC.name + ' · ' + TOPIC_START.m + '月' + TOPIC_START.d + '日–' + TOPIC_END.m + '月' + TOPIC_END.d + '日 · 自有',
