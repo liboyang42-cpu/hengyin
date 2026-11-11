@@ -1765,12 +1765,12 @@
 <view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="none"></view>
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
-<cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show && !playKit.pop}}" bind:kitaction="onPlayKitAction" /><!-- l-play:分支剧情在居中弹窗里(play-stage.wxml),不盖整屏 -->
-<cy-play-verdict show="{{r5Verdict.show}}" kind="{{r5Verdict.kind}}" text="{{r5Verdict.text}}" images="{{r5Verdict.images}}" closable="{{true}}" bind:close="closeR5Verdict" />
+<cy-playkit id="playKit" class="pk-lookhost {{lookClass}}" kit="{{playKit.kit}}" show="{{playKit.show && !playKit.pop}}" bind:kitaction="onPlayKitAction" /><!-- l-play:分支剧情在居中弹窗里(play-stage.wxml),不盖整屏 -->
+<cy-play-verdict class="pk-lookhost {{lookClass}}" show="{{r5Verdict.show}}" kind="{{r5Verdict.kind}}" text="{{r5Verdict.text}}" images="{{r5Verdict.images}}" closable="{{true}}" bind:close="closeR5Verdict" />
 
 <!-- R14 旅程检定(入口在 encounter.allowedActions,与 playKit 是两套;
      失败也推进:结算前后都能退出,不拦节点完成) -->
-<cy-playkit-journey-check show="{{journeyCheck.show && journeyCheck.present !== 'inline'}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
+<cy-playkit-journey-check class="pk-lookhost {{lookClass}}" show="{{journeyCheck.show && journeyCheck.present !== 'inline'}}" loading="{{journeyCheck.loading}}" unknown="{{journeyCheck.unknown}}"
   skill="{{journeyCheck.skill}}" tier="{{journeyCheck.tier}}" mods="{{journeyCheck.mods}}"
   advantage="{{journeyCheck.advantage}}" disadvantage="{{journeyCheck.disadvantage}}"
   receipt="{{journeyCheck.receipt}}" r5="{{journeyCheck.r5}}" allowed-actions="{{journeyCheck.allowedActions}}" disabled-reason="{{journeyCheck.disabledReason}}"
@@ -1988,7 +1988,7 @@
 </view>
 </block>
 
-<cy-playkit-album show="{{album.show}}" title="{{album.title}}" images="{{album.images}}" bind:close="closeAlbum" />
+<cy-playkit-album class="pk-lookhost {{lookClass}}" show="{{album.show}}" title="{{album.title}}" images="{{album.images}}" bind:close="closeAlbum" />
 
 <view class="theme-dark"><cy-theme-records title="{{topicName || info.name}}" history-open="{{themeHistoryOpen}}" rows="{{themeHistoryRows}}" more="{{themeHistoryMore}}" busy="{{themeRecordsBusy}}" error="{{themeRecordsError}}" read-failure="{{themeRecordsReadFailure}}" card-session="{{themeCardSessionId}}" card="{{themeResultCard}}" replay-allowed="{{themeRecordsState.replayAllowed === true}}" replay-busy="{{themeReplayBusy}}" bind:closehistory="closeThemeHistory" bind:morehistory="loadMoreThemeHistory" bind:opencard="openThemeRecordCard" bind:closecard="closeThemeResultCard" bind:replay="replayThemeSession" bind:report="openThemeRunReport" bind:checkreplay="checkThemeReplay" replay-unconfirmed="{{themeReplayUnconfirmed}}" bind:retrycard="retryThemeResultCard" /></view>
 
