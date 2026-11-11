@@ -343,14 +343,14 @@
         <view class="dc-card dc-fields">
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="店铺名称"
-            value="{{m.name || '待填写'}}"
+            value="{{m.name || '未设置'}}"
             required="{{true}}"
             bind:tap="onBasicAction" data-action="openField"
             data-k="name"
           />
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="经营类目"
-            value="{{m.preference || '待填写'}}"
+            value="{{m.preference || '未设置'}}"
 
             required="{{false}}"
             bind:tap="onBasicAction" data-action="openPreference"
@@ -359,21 +359,21 @@
           <!-- owner 2026-10-22:联系电话 / 门店微信号 / 门店二维码由商家在此自助维护(原 CU-M-08 只读) -->
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="联系电话"
-            value="{{m.phone || '未填写'}}"
+            value="{{m.phone || '未设置'}}"
             required="{{false}}"
             bind:tap="onBasicAction" data-action="openField"
             data-k="phone"
           />
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="门店微信"
-            value="{{wechatId || '待填写'}}"
+            value="{{wechatId || '未设置'}}"
             required="{{false}}"
             bind:tap="onBasicAction" data-action="openField"
             data-k="wechat"
           />
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="门店二维码"
-            value="{{wechatQr ? (basicEditing ? '更换' : '查看') : (basicEditing ? '上传二维码' : '未上传')}}"
+            value="{{wechatQr ? (basicEditing ? '更换' : '查看') : (basicEditing ? '上传二维码' : '未设置')}}"
             required="{{false}}"
             hairline="{{false}}"
             bind:tap="onQrcodeTap"
