@@ -92,7 +92,7 @@ test('过场组件:通关期间不出字,按钮最后才出;盖在通关勋章�
   assert.match(js, /LOGO_SRC = '\/images\/cy_logo_mark\.png'/, '方块拼成城瘾标志')
   assert.match(js, /silver: true, cell: 5/, '标志用银色细方块(业主:缝要看得出)')
   assert.match(wxml, /aria-label="保存通关卡"/)
-  assert.match(wxss, /\.cf--finale \{ z-index: 320; \}/)
+  assert.match(wxss, /\.cf--finale \{ z-index: 320;/)
   const page = read('pages/play/index.wxml')
   assert.match(page, /<cy-chapter-flip wx:if="\{\{showFinish && finale\.show\}\}" mode="finale"/)
 })

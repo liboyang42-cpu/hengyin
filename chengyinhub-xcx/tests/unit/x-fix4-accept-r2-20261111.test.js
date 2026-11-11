@@ -67,3 +67,10 @@ test('N-9 结算页没带 topicName 时按主题 id 补主题名,标题不落「
   page._fillTopicName.call(none, '9912702')
   assert.equal(calls.length, 1, '已有主题名不再请求')
 })
+
+test('N-11 通关卡(finale)跟主题外观:底/字/按钮读 --lk-*,文案避开标志并裁掉乱码字', () => {
+  const w = read('pages/play/components/chapter-flip/index.wxss')
+  assert.match(w, /\.cf--finale \{ z-index: 320; background: var\(--lk-bg, #1F1F21\); color: var\(--lk-ink, #F5F5F2\); \}/)
+  assert.match(w, /\.cf--finale \.cf__copy \{ top: calc\(33\.3vh \+ 45vw \+ 24rpx\);[^}]*overflow: hidden;/)
+  assert.match(w, /\.cf--finale \.cf__pill--p \{ background: var\(--lk-a,/)
+})

@@ -26,7 +26,11 @@
 .cf__pill--s { background: #2C2C2E; color: #F5F5F2; } /* ds-ok 原型定值 */
 .cf__pill--p { background: #E9C47C; color: #111111; } /* ds-ok 原型定值 */
 .cf-pressed { opacity: .8; }
-.cf--finale { z-index: 320; }   /* 盖在通关勋章页(300)之上,播完关掉才露出它 */
+.cf--finale { z-index: 320; background: var(--lk-bg, #1F1F21); color: var(--lk-ink, #F5F5F2); } /* ds-ok x-fix4 N-11:通关卡跟主题外观,不再是固定灰;回落原型定值 */
+.cf--finale .cf__k, .cf--finale .cf__d, .cf--finale .cf__sk { color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 回落原型定值 */
+.cf--finale .cf__copy { top: calc(33.3vh + 45vw + 24rpx); max-width: calc(100vw - 92rpx); overflow: hidden; } /* x-fix4 N-11:避开银色标志下沿;解码乱码字不漏到两侧 */
+.cf--finale .cf__pill--s { background: rgba(var(--lk-ink-rgb, 245,245,242), .12); color: var(--lk-ink, #F5F5F2); } /* ds-ok 回落原型定值 */
+.cf--finale .cf__pill--p { background: var(--lk-a, #E9C47C); color: var(--lk-bg, #111111); } /* ds-ok 回落原型定值 */   /* 盖在通关勋章页(300)之上,播完关掉才露出它 */
 .cf-tap { opacity: .96; }
 /* ===== l-play 章节完成整屏(proto gp-chapter-end;没有卡片) =====
    顶部照片 330px 渐入底色,方块章节号在画布上压在照片上(96px 起),成功插图 + 文字 + 三格数据在 380px 起,底部「下一站」。
