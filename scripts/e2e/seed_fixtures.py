@@ -107,6 +107,20 @@ def seed_member_permission_defaults(execute):
         execute(sql, row + (row[0],))
 
 
+CLUB_OWNER_MEMBERS = (9003, 9008)
+MERCHANT_OWNER_MEMBERS = (9002, 9005, 9006, 9007)
+
+
+def fixture_member_role(member_id):
+    """RBAC 单一真源:俱乐部 owner 必须是 club 角色(ClubAccessServiceImpl 对 owner 校验 ROLE_CLUB),
+    与后台 RoleServiceImpl.changeRole 授权口径一致;否则会费、角色分配等 owner 写接口恒 403。"""
+    if member_id in MERCHANT_OWNER_MEMBERS:
+        return "merchant"
+    if member_id in CLUB_OWNER_MEMBERS:
+        return "club"
+    return "player"
+
+
 def seed_club_leader_capabilities(execute):
     """实体主理人只在能力从未建立时获得对应能力；不复活已撤销记录。"""
     for leader_id, member_id in CLUB_LEADER_CAPABILITY_SUBJECTS:
@@ -250,7 +264,7 @@ def main():
         merchant_owner = mid in (9002, 9005, 9006, 9007)
         ex("INSERT INTO ums_member(id,nickname,phone,role,user_type,status,create_time) "
            "VALUES(%s,%s,%s,%s,%s,1,NOW())",
-           (mid, nick, phone, "merchant" if merchant_owner else "player", 2 if merchant_owner else 1))
+           (mid, nick, phone, fixture_member_role(mid), 2 if merchant_owner else 1))
 
     print("[seed] 商家主体 + 俱乐部")
     ex("INSERT INTO sys_category(id,type,parent_id,category_name,level,sort_id,status,del_flag,create_time) "
@@ -291,6 +305,11 @@ def main():
     ex("INSERT INTO club_member(club_id,member_id,role,status,join_time,del_flag) "
        "SELECT 7002,9009,0,1,NOW(),0 WHERE NOT EXISTS "
        "(SELECT 1 FROM club_member WHERE club_id=7002 AND member_id=9009 AND del_flag=0)")
+    # 现售自由探索场次只由内容所属俱乐部 7001 开(俱乐部场次「请先加入俱乐部再报名」),
+    # 玩家二号同时是 7001 的普通成员,玩家链与俱乐部会费链都从这里起步。
+    ex("INSERT INTO club_member(club_id,member_id,role,status,join_time,del_flag) "
+       "SELECT 7001,9009,0,1,NOW(),0 WHERE NOT EXISTS "
+       "(SELECT 1 FROM club_member WHERE club_id=7001 AND member_id=9009 AND del_flag=0)")
     cur.execute("UPDATE club SET member_count=(SELECT COUNT(*) FROM club_member "
                 "WHERE club_id=club.id AND status=1 AND del_flag=0) WHERE id IN (7001,7002)")
     seed_visible_topic(ex)
