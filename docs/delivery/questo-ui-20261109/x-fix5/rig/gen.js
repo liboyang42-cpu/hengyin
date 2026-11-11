@@ -50,4 +50,4 @@ if (kind === 'compare') nodes[0].previewKit = { type: 'compare', prompt: '把两
   right: { label: '邮戳的日期', items: [{ id: 'r1', time: '1924', text: '邮政大楼落成' }, { id: 'r2', time: '1936', text: '钟楼加装报时' }, { id: 'r3', time: '1945', text: '第一封信寄出' }] } };
 if (kind === 'album') chapters[0].blocks.splice(1, 0, { type: 'dream', title: '旧照片', images: imgs.map((u, i) => ({ url: u, line: '第 ' + (i + 1) + ' 张' })) });
 const look = process.env.LOOK === 'none' ? '' : JSON.stringify({ style: process.env.LOOK || 'STARDUST', palette: process.env.PAL || 'DEFAULT' });
-process.stdout.write(JSON.stringify({ topicId: '', topicName: '老城三封信', topicCover: '/pages/play/images/d_topic1.png', mode: 1, chapters, nodes, startStory: true, thoughts: [], endings: [], startState: [], look }));
+process.stdout.write(JSON.stringify({ topicId: '', topicName: '老城三封信', topicCover: '/pages/play/images/d_topic1.png', mode: Number(process.env.MODE) || 1, chapters, nodes, startStory: true, thoughts: [], endings: [], startState: [], look }));

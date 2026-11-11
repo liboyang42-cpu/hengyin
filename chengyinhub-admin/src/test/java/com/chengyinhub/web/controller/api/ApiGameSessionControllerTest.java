@@ -60,11 +60,11 @@ class ApiGameSessionControllerTest {
     }
 
     @Test void sharedControlOnNonSharedSessionIsEmptySuccessNotServerError() {
-        when(service.sharedControlView(any(), any())).thenThrow(new GameSessionException("GAME_ACTION_UNSUPPORTED", "本局没有共享运行控制"));
+        org.mockito.Mockito.doThrow(new GameSessionException("GAME_ACTION_UNSUPPORTED", "本局没有共享运行控制")).when(service).sharedControlView(any(), any());
         AjaxResult result = controller.sharedControl("10");
         assertEquals(200, result.get("code"));
         assertFalse(result.containsKey("reasonCode"));
-        when(service.sharedControlView(any(), any())).thenThrow(new GameSessionException("GAME_FORBIDDEN_SCOPE", "仅本场运营人员可查看控制视图"));
+        org.mockito.Mockito.doThrow(new GameSessionException("GAME_FORBIDDEN_SCOPE", "仅本场运营人员可查看控制视图")).when(service).sharedControlView(any(), any());
         assertEquals(500, controller.sharedControl("10").get("code"));
     }
 
