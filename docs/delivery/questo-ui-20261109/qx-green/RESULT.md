@@ -169,4 +169,7 @@ lead 在 launch 上直接提交了同一哈希修复(`60c43860e`)。随后 qx-fi
 
 apt 源故障约在 17:00(UTC)前恢复：lead 记录小程序静态门在 `538a47ab7` 上重新变绿。本线随即在当前 launch 头 `c16af7ca1`(代码与 `844638cf7` 相同，含 f-play2 / f-money2 / f-money3)上手动触发 Gameplay HTTP generic-only(run 43067254372)：**success**。`844638cf7` 的 CI 重跑里 20 个小程序单测分片也全绿；Backend tests 只有「Check private Mapper compiled references」(架构 / 存储端口)这一步红，后端构建与测试、隔离全量启动、迁移真库 IT 都通过。
 
-STATUS: PARTIAL - 本线负责的代码修复全部进了 launch，Gameplay HTTP generic-only 在当前头为 success，apt 故障已恢复；#779 剩余：Release migration rehearsal(156 项发布包，等 f-rehearsal 收口)、架构门 AuthorWriteReceipt 消费者、gitleaks 历史命中，后两项要你拍板
+
+x-fix2 / x-fix3 合入后(`9f91019d5` 起)，小程序单测分片和静态门因动作台账未重建、计数固定值未跟上而变红。本线在 #787(`ca2b1ba1e`)上修过一版：重建台账，新增 goBackDetail ×2 和 onIconError ×2，计数随之对齐。lead 随后在 launch 上独立做了同样的修复，跨页日期单测改为剥掉零宽空格后再比对。#787 同步 `ca2ca9791` 时，冲突文件一律取 launch 版本，现在又只剩本文档。在 `ca2ca9791` 合并树上本地复核：小程序 11 项静态门禁全部通过，全量单测 17323/17323。lead 也已提交发布迁移演练基线修正(`b547919c3`)。
+
+STATUS: PARTIAL - 本线负责的代码修复全部进了 launch，当前头 ca2ca9791 本地小程序静态门与全量单测全绿，Gameplay HTTP generic-only 此前在 c16af7ca1 上为 success；#779 剩余要你拍板的是架构门 AuthorWriteReceipt 消费者与 gitleaks 历史命中
