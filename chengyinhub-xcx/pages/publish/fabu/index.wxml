@@ -90,12 +90,16 @@
          「未命名主题」—— 走到最后才被必填打回来。 -->
     <view class="pd-title-field" id="fieldName" wx:if="{{editorPage === 1}}">
       <text class="g-req" aria-hidden="true">*</text>
-      <input
-        class="pd-title-input"
+      <!-- x-fix5 A-3 / N-19:标题是单行 input 时,长标题(自由探索草稿 · 付费自玩…)被右缘截断;改成自适应高度的多行框,折行显示全文 -->
+      <textarea
+        class="pd-title-input pd-title-input--wrap"
         value="{{formData.name}}"
         bindinput="onNameChange"
         placeholder="未命名主题"
         placeholder-class="pd-title-input__ph"
+        auto-height
+        disable-default-padding
+        show-confirm-bar="{{false}}"
         maxlength="30" />
       <!-- 保存状态:已存本机 / 保存中 / 已存云端(语义回读通过后才显示) / 云端未存 / 待确认 / 本机未存 -->
       <text wx:if="{{themeSaveLabel}}" class="pd-save-state {{themeSaveState === 'saved' ? 'pd-save-state--saved' : 'pd-save-state--unsaved'}}"

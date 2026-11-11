@@ -117,10 +117,10 @@ test('A-4 模板介绍没有精选示例时不画「暂无精选示例」说明�
   assert.doesNotMatch(noComments(read('pages/publish/template-intro/index.wxml')), /暂无精选示例/)
 })
 
-test('ME-4 底栏实底提前到图标行之前(浅 38% / 深 30%),卡片字不从图标周围透出', () => {
+test('ME-4 底栏实底提前到图标行之前(x-fix5 再提前到 12%),卡片字不从图标周围透出', () => {
   const w = read('components/tabBar/index.wxss')
-  assert.match(w, /rgba\(255, 255, 255, 0\.96\) 38%, rgba\(255, 255, 255, 0\.96\) 100%\)/)
-  assert.match(w, /var\(--cy-color-bg-page\) 30%, var\(--cy-color-bg-page\) 100%\)/)
+  assert.match(w, /rgba\(255, 255, 255, 0\.96\) 12%, rgba\(255, 255, 255, 0\.96\) 100%\)/)
+  assert.match(w, /var\(--cy-color-bg-page\) 12%, var\(--cy-color-bg-page\) 100%\)/)
 })
 
 test('P-15 帖文处置与申诉不再复用聊天气泡图标', () => {

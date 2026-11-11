@@ -4700,7 +4700,7 @@ Page({
   // 章节名称输入框变化处理
   onNameChange(e) {
     this.setData({
-      'formData.name': e.detail.value
+      'formData.name': String(e.detail.value == null ? '' : e.detail.value).replace(/[\r\n]+/g, '')   // 标题是折行显示的多行框,回车不进名字
     }, () => this.refreshPrimaryActionState());
   },
   // 章节名称输入框变化处理
@@ -6254,7 +6254,7 @@ Page({
           refundSupported: ticket.refundSupported !== false,
           syncWithTheme: ticket.syncWithTheme || false
         }
-      }, () => this.refreshTicketSaveState());
+      }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     } else {
       this.setData({
         showTicketEditor: true,
@@ -6279,8 +6279,25 @@ Page({
           refundSupported: true,
           syncWithTheme: false
         }
-      }, () => this.refreshTicketSaveState());
+      }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     }
+  },
+
+  // x-fix5 A-3:编辑器在票种列表底部展开时,「添加票种 / 收起」这一行会落在底栏(返回/预览)下面够不着。
+  // 展开后把它滚到视口上三分之一处。
+  _revealTicketEditor() {
+    if (typeof wx.pageScrollTo !== 'function') return;
+    wx.nextTick(() => {
+      wx.createSelectorQuery().select('.tk-editor').boundingClientRect().selectViewport().scrollOffset().exec((r) => {
+        const rect = r && r[0], view = r && r[1];
+        if (!rect || !view) return;
+        let win = { windowHeight: 667 };
+        try { win = wx.getWindowInfo(); } catch (e) { /* 取不到按默认高度 */ }
+        const limit = (win.windowHeight || 667) * 0.45;
+        if (rect.top <= limit) return;
+        wx.pageScrollTo({ scrollTop: Math.max(0, view.scrollTop + rect.top - (win.windowHeight || 667) * 0.2), duration: 220 });
+      });
+    });
   },
 
   closeTicketEditor() {

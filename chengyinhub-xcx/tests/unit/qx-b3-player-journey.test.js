@@ -15,7 +15,7 @@ test('P7 未计分显示「本局不计分」，未知用时不显示 0，名次
     rank: { scope: 'quest', scopeId: 3, qualified: false, rank: null, score: null }, nodes: [], rewardsState: 'UNAVAILABLE' });
   assert.equal(r.scoreText, '本局不计分');
   assert.equal(r.scored, false);
-  assert.equal(r.elapsedText, '未知');
+  assert.equal(r.elapsedText, '—');
   assert.equal(r.rankText, '暂无名次');
   assert.equal(r.nodesText, '4/4');
   assert.equal(r.win, true);

@@ -141,13 +141,15 @@ Page({
     })
     // 第十二轮 k3(p3 N4):默认昵称分不出人时,确认层带上申请时刻(与卡片上「申请于」同一个值)。
     const baseName = (row && row.nickname) || '城瘾玩家'
-    const name = baseName === '城瘾用户' && row && row.requestTimeText ? baseName + ' · ' + row.requestTimeText + ' 申请' : baseName
+    const name = baseName
+    // x-fix5 N-17:默认昵称仍要分得出人,但时刻放进正文,标题只写名字(原来整句塞进标题,太长且重复「申请」)
+    const timeLine = baseName === '城瘾用户' && row && row.requestTimeText ? '申请于 ' + row.requestTimeText + '。' : ''
     // 第十二轮 k9(p3 N13):拒绝原来要点三次(拒绝 → 危险确认 → 原因弹层 → 确认拒绝)。拒绝可逆、原因选填,
     // 并成一个弹层:标题指名道姓,原因可不填,点「确认拒绝」就发。
-    if (!approve) { this.askRejectReason(memberId, name); return }
+    if (!approve) { this.askRejectReason(memberId, timeLine ? baseName + ' · ' + row.requestTimeText + ' 申请' : baseName); return }
     modal.show({
       title: '通过「' + name + '」的入会申请',
-      content: '通过后，对方将成为正式成员，可查看成员名单并使用成员功能。',
+      content: timeLine + '通过后，对方将成为正式成员，可查看成员名单并使用成员功能。',
       confirmText: '通过',
       cancelText: '取消',
       success(result) { if (result.confirm) that.review(memberId, approve) },

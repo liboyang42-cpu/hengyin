@@ -4457,7 +4457,7 @@ Page({
       /* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
-      that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook();
+      that._applyStoryVars(d); that._applyLook(d.look); that._probeCasebook(d.routeState);
       that._puzzlePersonalBest = Number(d.puzzlePersonalBest) || 0;
       // 原局历史只认 /history 的冻结快照；/nodes 的当前作者投影不能冒充旧剧情。
       const catalog = raw.map((n, i) => that.normNode(n, i, mode));
@@ -8365,7 +8365,7 @@ Page({
         seg.label = '前路未知'; seg.locked = true;
         seg.paras = fr <= 0 ? paras : ['░░░░░░░░░ ░░░░░ ░░░░░░░░ ░░░░'];
       } else {
-        seg.label = n.name; seg.paras = ['这一页尚未书写。你的脚步还没抵达这里。'];
+        seg.label = n.name; seg.paras = [];   // x-fix5 P-9:没到过的站不写说明句(业主:不要辅助说明),这一行只剩站名
       }
       /* 原型 .kv 一行三格:左边一格标签、右边标题与一句。
          label 形如「第 3 站 · 已抵达」/「我的第 2 步 · 昼夜咖啡」—— 按「 · 」劈开正好，

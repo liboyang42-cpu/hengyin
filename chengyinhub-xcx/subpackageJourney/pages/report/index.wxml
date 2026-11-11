@@ -16,7 +16,7 @@
     </view>
     <view class="jn-grid jn-grid--card">
       <view class="jn-stat"><text class="jn-stat__v">{{report.nodesText}}</text><text class="jn-stat__l">完成节点</text></view>
-      <view class="jn-stat"><text class="jn-stat__v {{report.elapsedText === '未知' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="jn-stat__l">用时</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.elapsedText === '—' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="jn-stat__l">用时</text></view>
       <view class="jn-stat"><text class="jn-stat__v {{report.scored ? '' : 'is-muted'}}">{{report.scoreText}}</text><text class="jn-stat__l">解谜分</text></view>
     </view>
 

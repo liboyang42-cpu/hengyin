@@ -11,6 +11,7 @@ const isId = value => (typeof value === 'number' && Number.isSafeInteger(value) 
 const record = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const list = value => (Array.isArray(value) ? value : []);
 const UNKNOWN = '未知';
+const NO_VALUE = '—';
 
 function pad(n) { return n < 10 ? '0' + n : String(n); }
 
@@ -32,7 +33,7 @@ function dateText(value, withTime) {
 }
 
 function durationText(seconds) {
-  if (!isNum(seconds) || seconds < 0) return UNKNOWN;
+  if (!isNum(seconds) || seconds < 0) return NO_VALUE;   // x-fix5 R3-8:用时未知写「—」,不写「未知」
   const s = Math.floor(seconds);
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
   return h > 0 ? h + ':' + pad(m) + ':' + pad(r) : pad(m) + ':' + pad(r);

@@ -5118,6 +5118,7 @@ page { background: var(--cy-btn-solid-bg); }
 .pd-title-field { flex-wrap: wrap; row-gap: var(--cy-space-1); }
 .pd-title-field .pd-title-input { flex: 1 1 calc(100% - 48rpx); width: auto; }
 .pd-title-field .pd-save-state { margin-left: 0; }
+.pd-title-input--wrap { height: auto; min-height: 84rpx; word-break: break-all; } /* x-fix5 A-3 折行显示全文,不再单行截断 */
 
 /* 文档二 L1:可玩时段选「自定义」时,底部选择卡里展开开始 / 结束 +「完成」 */
 .pw-custom { margin-top: var(--cy-space-3); }
