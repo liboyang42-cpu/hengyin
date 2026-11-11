@@ -114,6 +114,15 @@ function methods() {
     },
     /** 地点卡玻璃面板上的数字(见 sheetFacts) */
     _sheetFacts(node) { return sheetFacts(node, typeof this._distText === 'function' ? this._distText(node) : ''); },
+    /** f-play:地点卡开着时定位每一跳都重算距离 / 步行 —— 开卡时算一次的话,走到站上还写着出发时的「1.7km · 22 分钟」。文字没变不 setData */
+    _refreshSheetFacts() {
+      const sh = this.data.sheet || {};
+      const node = sh.show && sh.node;
+      if (!node || !node.lat || !node.lng) return;
+      const f = this._sheetFacts(node);
+      if (f.distText === node.distText && f.walkText === node.walkText) return;
+      this.setData({ 'sheet.node.distText': f.distText, 'sheet.node.walkText': f.walkText });
+    },
   };
   return api;
 }

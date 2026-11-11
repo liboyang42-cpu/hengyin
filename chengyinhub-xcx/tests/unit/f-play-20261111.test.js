@@ -104,3 +104,26 @@ test('顶部缺图:主题开场标题卡后面压主题封面(原型 gp-start),�
   assert.match(block, /\.st-intro__body, \.st-intro__go\{ position:relative; \}/, '标题与按钮压在封面之上');
   assert.doesNotMatch(block, /@keyframes|animation:/);
 });
+
+test('地点卡距离跟着定位走:开着的卡每一跳重算,走到站上不再写出发时的距离;没变不 setData', () => {
+  const pops = require('../../pages/play/utils/play-stage-pops.js');
+  const api = pops.methods();
+  let dist = '1.7km';
+  const writes = [];
+  const page = Object.assign({}, api, {
+    data: { sheet: { show: true, node: Object.assign({ lat: 31.238, lng: 121.484 }, pops.sheetFacts({}, '1.7km')) } },
+    _distText() { return dist; },
+    setData(p) { writes.push(p); for (const [k, v] of Object.entries(p)) { const ks = k.split('.'); let o = this.data; ks.slice(0, -1).forEach((x) => { o = o[x]; }); o[ks[ks.length - 1]] = v; } },
+  });
+  assert.equal(page.data.sheet.node.walkText, '22');
+  page._refreshSheetFacts();
+  assert.equal(writes.length, 0, '距离没变不写');
+  dist = '0m';
+  page._refreshSheetFacts();
+  assert.deepEqual(writes, [{ 'sheet.node.distText': '0m', 'sheet.node.walkText': '' }]);
+  page.data.sheet.show = false; dist = '5m';
+  page._refreshSheetFacts();
+  assert.equal(writes.length, 1, '卡关着不写');
+  const src = read('pages/play/index.js');
+  assert.match(src, /if \(distText !== that\.data\.storyDistText\) that\.setData\(\{ storyDistText: distText \}\);\n\s+\}\n\s+that\._refreshSheetFacts\(\);/, '挂在定位回调里');
+});

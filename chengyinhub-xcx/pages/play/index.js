@@ -5320,6 +5320,7 @@ Page({
             const distText = that._distText(that.data.nextNode);
             if (distText !== that.data.storyDistText) that.setData({ storyDistText: distText });
           }
+          that._refreshSheetFacts();   // f-play:开着的地点卡距离 / 步行跟着走
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。
