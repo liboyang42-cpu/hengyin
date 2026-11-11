@@ -142,7 +142,7 @@
 | P0-20 注销只清本人 | **新增** `P0DeregistrationMySqlIT`（BT, RS）；`AccountDeregistrationRaceMySqlIT`（BT） | 1 DA 发起注销 → 二次确认（短信 / 微信）；2 看 7 天冷静期展示并撤回一次；3 再次发起，测试库把到期时间调到过去（测试库，owner 操作）→ 等任务执行 | DA · 真机 | 冷静期展示与撤回可用；到期后旧登录态被踢下线（Redis 会话撤销只有 Mockito 证明） | 录屏 + 测试库只读回读 | R |
 | P0-21 财务记录保留 | 同上用例（BT, RS） | 接 P0-20：后台 / 只读 SQL 看 DA 的订单、退款行仍在且 PII 已抹 | AD · 测试库 | 行数不变，PII 已抹 | 只读 SQL 结果（打码） | A |
 | P0-22 重新注册隔离 | 同上用例（BT, RS） | 接 P0-20：同一微信号重新进入 | DA · 真机 | 新账号，看不到历史订单 / 报名 | 截图 | R |
-| P0-23 需补供给恢复 | 仅 Mockito（AC1 §5-1 `topicSupplyAutoOnlineBlockReason`） | 补齐供给后看主题是否恢复上线 / 可锁价 | MA、CL · DT | 恢复路径文案与状态正确 | 截图 | T |
+| P0-23 需补供给恢复 | **新增** `P0FreeExploreSupplyRecoveryMySqlIT`（BT, RS）；Mockito `OrdinarySupplyResumeTest`（AC1 §5-1 `topicSupplyAutoOnlineBlockReason`） | 补齐供给后看主题是否恢复上线 / 可锁价 | MA、CL · DT | 恢复路径文案与状态正确 | 截图 | T |
 | P0-24 （未对号） | — | owner 从私有 §9.1 补卡义 | — | — | — | X |
 | P0-25 （未对号） | — | 同上 | — | — | — | X |
 
