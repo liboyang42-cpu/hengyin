@@ -52,7 +52,7 @@ Page({
     aiTweaks: ['再加一站', '换成晚上', '缩短到 1 小时'],
     interests: INTERESTS.map(function (it) { return Object.assign({ on: false }, it); }),
     interestText: '', planOpen: false,
-    mode: 2, operationScope: ''
+    operationScope: ''
   },
   onCreatorLogin() { return retryLogin(this, app, this._resumeCreatorLoad); },
   _resumeCreatorLoad() {
@@ -79,7 +79,9 @@ Page({
     this._creatorOwner = memberId(app);
     let seed = '';
     try { seed = decodeURIComponent(String((options && options.idea) || '')).trim().slice(0, 60); } catch (_) {}
-    this.setData({ creatorLoginRequired: false, mode: Number(options && options.mode) === 2 ? 2 : 1,
+    // 起草类型(2 自由 / 1 定向)只进请求体,不渲染(f-merchant 撤掉引导句后 WXML 零消费),不走 setData(U4)
+    this._productType = Number(options && options.mode) === 2 ? 2 : 1;
+    this.setData({ creatorLoginRequired: false,
       aiIdea: seed, operationScope: options && options.scope === 'MERCHANT' ? 'MERCHANT' : '',
       statusBarHeight: (app.globalData && app.globalData.statusBarHeight) || 44,
       navBarHeight: (app.globalData && app.globalData.navBarHeight) || 44, reducedMotion: readReducedMotion() });
@@ -292,7 +294,7 @@ Page({
     const value = { version: 2, memberId: ctx.owner, prepareKey, requestId: null,
       stage: 'PREPARE_UNCONFIRMED', state: null, reasonCode: null, createdAt: Date.now() };
     this._prepareSnapshot = Object.freeze({ owner: ctx.owner, prepareKey,
-      payload: Object.freeze({ prepareKey, idea, productType: this.data.mode }) });
+      payload: Object.freeze({ prepareKey, idea, productType: this._productType || 2 }) });
     if (!this._saveAi(ctx, value)) return;
     this._renderAiIdentity(); this._sendPrepare(ctx);
   },
@@ -623,7 +625,7 @@ Page({
     const idea = this._composeIdea();
     if (!idea) { this.setData({ aiError: '先说说这次新起草的灵感。' }); return; }
     const ctx = this._capture('modal', this._aiPending); if (!ctx || !this._current(ctx)) return;
-    const input = Object.freeze({ idea, productType: this.data.mode });
+    const input = Object.freeze({ idea, productType: this._productType || 2 });
     this._newActionPrompt = ctx;
     modal.show({ title: '另起一次 AI 起草？',
       content: '上一次的结果仍可能返回。原记录会保留；另起一次不是重试，可能额外占用 AI 额度。是否明确另起？',
