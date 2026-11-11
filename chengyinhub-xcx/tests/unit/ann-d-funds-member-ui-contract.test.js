@@ -124,8 +124,9 @@ function assertAnnotationDContract(files) {
   assert.match(files.earningsWxml, /<view class="er-page \{\{merchantView \? 'theme-merchant' : 'theme-dark'\}\}">/,
     'D33 账户收益是玩家资金页，页面根必须显式进入深色主题')
   assert.match(files.earningsJs, /require\('\.\.\/\.\.\/\.\.\/\.\.\/utils\/merchant-theme\.js'\)/)
-  assert.match(files.earningsJs, /onShow\(\)\s*\{\s*this\._hidden = false;\s*merchantTheme\.merchantPageRestore\(\)\s*\}/,
-    'D33 原生导航栏必须与玩家深色页面同步')
+  // x-fix3 ME-3:商家视角(merchantView)切浅色状态栏;玩家视角仍恢复深色
+  assert.match(files.earningsJs, /onShow\(\)\s*\{\s*this\._hidden = false;\s*if \(this\.data\.merchantView\) merchantTheme\.merchantPageShow\(\);\s*else merchantTheme\.merchantPageRestore\(\)\s*\}/,
+    'D33 原生导航栏必须与玩家深色页面同步(商家视角另切浅色)')
   const earningsRoot = rule(files.earningsWxss, '.er-page.theme-dark')
   assert.match(earningsRoot, /background:\s*var\(--cy-color-bg-page\)/,
     'D33 页面底必须直接读取深色根的语义 token，不能读取 page 上的浅色 alias 快照')
