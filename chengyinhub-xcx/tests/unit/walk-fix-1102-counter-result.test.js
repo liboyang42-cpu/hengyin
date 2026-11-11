@@ -62,7 +62,8 @@ test('M-05/M-23 结果面板用现成的 cy-result-sheet，无「操作结果」
   assert.doesNotMatch(sheet, /cy-scene-sheet|verify-result/);
   assert.doesNotMatch(sheet, /sceneCurrent\.title/);
   for (const k of ['kind', 'title', 'sub', 'meta', 'pill', 'why']) assert.match(sheet, new RegExp(k + '="\\{\\{verificationResult\\.' + k + '\\}\\}"'));
-  assert.match(sheet, /primary-text="\{\{merchantAccess\.canVerify \? '继续扫码' : '完成'\}\}"/);
+  // 2026-11-11 f-merchant P0-42:409 复核态主按钮改「查看核销记录」,其余照旧
+  assert.match(sheet, /primary-text="\{\{verificationResult\.review \? '查看核销记录' : \(merchantAccess\.canVerify \? '继续扫码' : '完成'\)\}\}"/);
   assert.match(sheet, /bind:primary="onVerificationPrimary"/);
   assert.match(sheet, /bind:secondary="closeVerificationResult"/);
   assert.match(sheet, /bind:close="closeVerificationResult"/);

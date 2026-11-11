@@ -89,7 +89,8 @@ test('M-21:参谋包缺店名/Logo 时补读 /api/merchant/info(与首页、我�
 test('M-21:成功回包没有店名或 Logo 才补读;两者齐全不多发请求', () => {
   const js = read('pages/merchant/marketing/ai-insight/index.js');
   assert.match(js, /storeLogo: String\(profile\.logo \|\| ''\)\.trim\(\)/);
-  assert.match(js, /if \(!that\.data\.storeName \|\| !that\.data\.storeLogo\) that\._loadStoreIdentity\(isCurrent\);/);
+  // 2026-11-11 f-merchant G-5:身份广播过(_identityStale)也要回读覆盖
+  assert.match(js, /if \(that\._identityStale \|\| !that\.data\.storeName \|\| !that\.data\.storeLogo\) that\._loadStoreIdentity\(isCurrent\);/);
   assert.match(js, /_clearSensitiveState[\s\S]*?storeLogo: '',/);
 });
 

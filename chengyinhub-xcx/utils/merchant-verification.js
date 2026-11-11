@@ -190,14 +190,15 @@ function verificationSheetView(result) {
   const success = r.state === 'success';
   const stop = r.stop || '';
   const message = r.message || '';
-  return {
-    review: r.state === 'review',
+  const view = {
     kind: success ? 'success' : 'fail',
     sub: success ? [stop, message].filter(Boolean).join(' · ') : stop,
     pill: success && r.perk ? '请提供：' + r.perk : '',
     meta: r.warn || '',
     why: success ? '' : message,
   };
+  if (r.state === 'review') view.review = true;
+  return view;
 }
 
 module.exports = { CONFLICT_MESSAGE, resolveVerificationResult, verificationSheetView, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow, notRedeemedMessage };

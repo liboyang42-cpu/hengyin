@@ -62,7 +62,7 @@ Page({
     this._hidden = false;
     this._navigating = false; // 从聊天页返回时刷新未读/最后一条;兜底清跳转中标记
     this._syncViewTheme();
-    this._syncCommunityEntry(); const identityDirty = this._identityEpoch !== identitySync.identityEpoch(); this._identityEpoch = identitySync.identityEpoch(); // G-5:身份广播过 ⇒ 丢掉已确认的会话快照整表重拉
+    this._syncCommunityEntry(); const identityDirty = this._identityEpoch !== undefined && this._identityEpoch !== identitySync.identityEpoch(); this._identityEpoch = identitySync.identityEpoch(); // G-5:身份广播过 ⇒ 丢掉已确认的会话快照整表重拉
     if (identityDirty && this.data.loaded) { this.loadConversations(false); this.loadInvites(); } else if (this.data.loaded || resumed || this._conversationReader && !sameReader(app, this._conversationReader)) {
       this.loadConversations(true);
       this.loadInvites();
