@@ -391,7 +391,9 @@ def render_precheck(head_sha, rows):
                        "       THEN 1 ELSE 2 END" % (cols, col_fp, idx, idx_fp, table))
                 if block.count("THEN 1 ELSE 2 END") != 1:
                     raise SystemExit("追加形状只支持单表分类块: %s" % r["migrationId"])
-                block = block.replace("THEN 1 ELSE 2 END", alt)
+                # qx-final7 起 pack 预检块自身已带这个形状（CI 演练第一遍后回读需要），不重复追加。
+                if alt not in block:
+                    block = block.replace("THEN 1 ELSE 2 END", alt)
                 out.append("-- 也接受 %s 落地后的形状（f-rehearsal：否则全部执行后重跑预检会误判 CONFLICT）" % source)
             out.append(block.rstrip() + ";")
         else:

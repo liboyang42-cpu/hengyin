@@ -712,7 +712,7 @@
       "idempotencyGuard": "静态幂等（IF NOT EXISTS / INSERT…WHERE NOT EXISTS / 写绝对值）；f-rehearsal 两遍执行零报错",
       "expectedAtBaseline": "NEEDED",
       "expectedAfterApply": [
-        "NEEDED"
+        "APPLIED"
       ],
       "lockRisk": "UPDATE sys_job：按键/条件写少量行（按语句归纳）",
       "verifySelectOnly": [
@@ -739,7 +739,14 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM sys_category WHERE type = 1 AND parent_id = 0 AND status = 1 AND del_flag = 0 AND category_name IN ('衣物洗护', '家政维修', '出行服务', '科技数码')) = 0 AND (SELECT COUNT(*) FROM sys_category WHERE type = 1 AND parent_id = 0 AND status = 1 AND del_flag = 0 AND category_name IN ('城市漫步', '历史人文', '美食探店', '解谜冒险', '夜游', '摄影打卡', '艺术展览', '城市运动', '户外徒步', '亲子同行', '娱乐休闲', '生活美学')) = 12 AS theme_categories_ready), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 32
+      "step": 32,
+      "rerunKnownDelta": {
+        "table": "sys_category",
+        "ignoredColumns": [
+          "update_time"
+        ],
+        "reason": "UPDATE 带 update_time = NOW()，重跑会命中名称未变的行（21–23、25）只刷新 update_time；类别名称、层级、状态零变更（f-rehearsal 第四节）"
+      }
     },
     {
       "migrationId": "20261102_merchant_industry_categories",
@@ -2452,7 +2459,14 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type IN ('activity', 'topic', 'topic_club') AND status = 1 AND del_flag = 0 AND NOT (platform_commission_rate = 0.0300 AND merchant_rate = 0.9700 AND creator_rate = 0.0000)) = 0 AND (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type IN ('activity', 'topic') AND status = 1 AND del_flag = 0 AND platform_commission_rate = 0.0300 AND merchant_rate = 0.9700 AND creator_rate = 0.0000) = 2 AS settlement_rule_three_percent), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 107
+      "step": 107,
+      "rerunKnownDelta": {
+        "table": "settlement_rule",
+        "ignoredColumns": [
+          "update_time"
+        ],
+        "reason": "写绝对费率并刷新 update_time；重跑时三项费率、状态零变更，只有 update_time 刷新（f-rehearsal 第四节）"
+      }
     },
     {
       "migrationId": "20261102_club_checkin_phone_visible",
