@@ -742,6 +742,14 @@
       "classes": [
         "com.chengyinhub.business.payout.EcomPayoutWiringMySqlIT"
       ]
+    },
+    "launch-l-payout3": {
+      "lineage": "l-payout3 20261111 launch wave: 电商收付通合单支付 for multi-payee topic tickets (seller + platform-held sub-orders), combined settlement and supplier payables",
+      "registered_source": "56ff97c02e48ba07c003c16e05867a9fe768ede0",
+      "note": "EcomCombineMapperMySqlIT (9): migration_20261111_ecommerce_combine.sql applied verbatim (and re-applied) on a scratch MySQL 8 schema. Covers combine-order/sub-order/sub-refund/settlement/return/payable unique keys, CHECK constraints (split conservation, distinct payees, refund cap, shortfall xor surplus, payable source/amount), CAS updates, paid-orders-for-topic and backfill SQL across collations, due-settlement SQL (payable_time/complaint/del_flag) and the combined-portion SQL used by T+14. Source registration only, execution NOT_RUN until dispatched.",
+      "classes": [
+        "com.chengyinhub.business.payout.EcomCombineMapperMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -2130,6 +2138,14 @@
       ],
       "gates": {},
       "note": "l-payout2 wiring SQL in EcomPayoutMapper.xml + both 20261110 payout migrations on real MySQL/MyBatis; task-owned scratch schema dropped and read back at the end. Source registration 20261110, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.payout.EcomCombineMapperMySqlIT": {
+      "tests": 9,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "l-payout3 EcomCombineMapper.xml + migration_20261111_ecommerce_combine.sql on real MySQL/MyBatis; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
     }
   }
 }
