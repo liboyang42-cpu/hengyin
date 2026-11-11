@@ -28,7 +28,7 @@ test('据点页:评价区保留,表单在半屏弹层里,入口只对已完成�
   const wxml = read(D + 'index.wxml');
   assert.match(wxml, /<text class="poi-section__title">玩家评价<\/text>/);
   assert.match(wxml, /<cy-btn wx:if="\{\{node\.completed\}\}" class="poi-review-open" variant="secondary" bind:tap="openReviewSheet">写评价<\/cy-btn>/);
-  assert.match(wxml, /<cy-sheet show="\{\{reviewSheetShow\}\}" title="评价据点" fixed="half" footer bind:close="closeReviewSheet">/);
+  assert.match(wxml, /<cy-sheet show="\{\{reviewSheetShow\}\}" no-depth title="评价据点" fixed="half" footer bind:close="closeReviewSheet">/);
   const sheet = wxml.slice(wxml.indexOf('<cy-sheet show="{{reviewSheetShow}}"'), wxml.indexOf('</cy-sheet>'));
   assert.match(sheet, /class="poi-rating-pick"/);
   assert.match(sheet, /<textarea class="poi-review-input"/);
@@ -58,4 +58,22 @@ test('我的收藏「据点」页签:读 favorites,行进 poi-detail,取消收�
   assert.match(block, /bindtap="goNode" data-id="\{\{item\.id\}\}"/);
   assert.match(block, /bindtap="nodeUnfavorite" data-id="\{\{item\.id\}\}" aria-label="取消收藏"/);
   assert.match(block, /<cy-icon class="favorite-card__action-heart" name="heart" size="32" \/>/);
+});
+
+test('据点评价半屏嵌在 scene 面板里:no-depth 不进叠层登记,外层 scene 不被压暗 / pointer-events:none(rig 实测原先整层变暗点不动)', () => {
+  const behavior = require('../../behaviors/sheet-depth.js');
+  const registry = require('../../utils/sheet-depth.js');
+  registry._reset();
+  const mk = (noDepth) => ({ data: { _under: false, noDepth }, getPageId: () => 'p', setData(p) { Object.assign(this.data, p) },
+    _applySheetDepth: behavior.methods._applySheetDepth });
+  const scene = mk(false), nested = mk(true), plain = mk(false);
+  behavior.observers.show.call(scene, true);
+  behavior.observers.show.call(nested, true);
+  assert.equal(scene.data._under, false, 'no-depth 的嵌套弹层打开时外层仍是顶层');
+  behavior.observers.show.call(plain, true);
+  assert.equal(scene.data._under, true, '普通弹层照旧把下面那层压下去');
+  behavior.observers.show.call(nested, false);
+  registry._reset();
+  const js = read('components/cy/sheet/index.js');
+  assert.match(js, /noDepth: \{ type: Boolean, value: false \},/);
 });

@@ -80,7 +80,7 @@
       {{node.completed ? '挑战已完成' : completing ? '正在确认' : checkinPending ? (reverifyReady ? (reverifyStarted ? '现场核验中' : '开始现场核验') : '结果待确认') : node.needRedeem ? '出示核销码' : challengePhoto ? '继续答题' : '开始挑战'}}
     </cy-btn>
   </view>
-  <cy-sheet show="{{reviewSheetShow}}" title="评价据点" fixed="half" footer bind:close="closeReviewSheet">
+  <cy-sheet show="{{reviewSheetShow}}" no-depth title="评价据点" fixed="half" footer bind:close="closeReviewSheet">
     <view class="poi-review-form">
       <view class="poi-rating-pick" aria-role="radiogroup" aria-label="游玩体验评分">
         <view wx:for="{{ratingOptions}}" wx:key="*this" data-rating="{{item}}" bindtap="onReviewRating" aria-role="radio" aria-checked="{{reviewRating === item}}" aria-label="{{item}}星" hover-class="cy-pressed" hover-stay-time="80" class="poi-rating-pick__item {{reviewRating >= item ? 'is-on' : ''}}"><cy-icon name="star-filled" size="28" /></view>

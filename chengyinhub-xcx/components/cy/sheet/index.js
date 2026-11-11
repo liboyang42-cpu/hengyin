@@ -38,6 +38,8 @@ Component(withNativeBackGuard({
     backGuard: { type: Boolean, value: true },
     // 叠层景深由 behaviors/sheet-depth.js 按打开顺序自动算(_under);stacked 只留给旧调用显式指定
     stacked: { type: Boolean, value: false },
+    // 嵌在另一层弹层面板里的弹层(如 scene 组件内的半屏表单)传 true:不进叠层登记,否则外层被压暗并 pointer-events:none,连同里面这层一起点不动
+    noDepth: { type: Boolean, value: false },
     closeIcon: {type:String,value:'close-sm'},
     closeIconSize: {type:Number,value:44},
     show:         { type: Boolean, value: false },

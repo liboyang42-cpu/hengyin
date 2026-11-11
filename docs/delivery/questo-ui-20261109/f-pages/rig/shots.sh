@@ -18,3 +18,6 @@ SCROLLROW="(()=>{const walk=(r)=>{for(const el of r.querySelectorAll('*')){if(el
 OPENROUTES="(()=>{const p=getCurrentPages().slice(-1)[0];const k=p.data.passport.plays.map(x=>x.key);p.onPassportPlayTap({currentTarget:{dataset:{key:'routes'}}});return JSON.stringify(k)})()"
 # P0-79 漫游护照「官方路线」大卡(rig 库里放了两条已上架路线)
 run P0-79 "{\"path\":\"pages/roam/index\",$ID}" "[{\"wait\":3500},{\"tap\":\"漫游护照\"},{\"wait\":2500},{\"scroll\":500},{\"wait\":1200},{\"eval\":\"$SCROLLROW\"},{\"wait\":800},{\"shot\":\"P0-79-$P\"},{\"eval\":\"$OPENROUTES\"},{\"wait\":2500},{\"shot\":\"P0-79-list-$P\"}]"
+# P0-108/109 据点页评价:rig 库里 9004 对该据点有一条已完成记录(roam_poi_reward_log status=1),评价区出「写评价」;点开半屏
+OPENREVIEW="(()=>{const walk=(r)=>{for(const el of r.querySelectorAll('*')){if(el.shadowRoot){const f=walk(el.shadowRoot);if(f)return f}if(el.childElementCount===0&&el.textContent.trim()===want)return el}return null};let want='写评价';let t=walk(document);if(!t){want='玩家评价';t=walk(document)}if(t)t.scrollIntoView({block:'center'});return !!t})()"
+run P0-108 "{\"path\":\"subpackageRoam/poi-detail/index?poiId=1\",$ID}" "[{\"wait\":3500},{\"shot\":\"P0-108-top-$P\"},{\"eval\":\"$OPENREVIEW\"},{\"wait\":800},{\"shot\":\"P0-108-$P\"},{\"tapSel\":\"cy-btn.poi-review-open\"},{\"wait\":3500},{\"shot\":\"P0-108-sheet-$P\"}]"

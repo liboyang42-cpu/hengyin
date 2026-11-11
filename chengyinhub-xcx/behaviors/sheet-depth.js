@@ -15,6 +15,7 @@ module.exports = define({
   data: { _under: false },
   observers: {
     show(value) {
+      if (value && this.data.noDepth) return
       if (value) depth.open(this)
       else depth.close(this)
     },
