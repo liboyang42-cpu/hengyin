@@ -350,7 +350,8 @@ public class NpcChatService
             terminalize(processing, NpcChatRequest.STATUS_SUCCEEDED, "PASS", null, null, false,
                     truncateCodePoints(result.getText(), SAFE_TEXT_MAX_CODE_POINTS));
             NpcChatResp response = finish(processing, logEntry(processing.getUserId(), processing.getSessionId(),
-                    profileId, message, result.getText(), 0, result.getModel(), (int) (System.currentTimeMillis() - startMs)), true);
+                    profileId, message, result.getText(), 0, result.getModel(), (int) (System.currentTimeMillis() - startMs),
+                    result.getTokenIn(), result.getTokenOut()), true);
             if (NpcChatRequest.STATUS_SUCCEEDED.equals(response.getOutcomeStatus())
                     && ("npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType)))
             {
@@ -802,6 +803,12 @@ public class NpcChatService
     private NpcChatLog logEntry(Long userId, Long sessionId, Long profileId, String message, String reply,
                                 int safetyFlag, String model, int latencyMs)
     {
+        return logEntry(userId, sessionId, profileId, message, reply, safetyFlag, model, latencyMs, null, null);
+    }
+
+    private NpcChatLog logEntry(Long userId, Long sessionId, Long profileId, String message, String reply,
+                                int safetyFlag, String model, int latencyMs, Integer tokenIn, Integer tokenOut)
+    {
         NpcChatLog entry = new NpcChatLog();
         entry.setUserId(userId);
         entry.setProfileId(profileId == null ? 0L : profileId);
@@ -811,9 +818,9 @@ public class NpcChatService
         entry.setSafetyFlag(safetyFlag);
         entry.setModel(model);
         entry.setLatencyMs(latencyMs);
-        // The gateway result exposes no provider usage. Unknown usage is not a measured zero.
-        entry.setTokenIn(null);
-        entry.setTokenOut(null);
+        // 成功时取网关同一次调用写入 ai_generation_log 的用量;失败/未知保持 null,不是测得的 0。
+        entry.setTokenIn(tokenIn);
+        entry.setTokenOut(tokenOut);
         return entry;
     }
 

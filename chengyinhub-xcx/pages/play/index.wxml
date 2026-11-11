@@ -266,6 +266,7 @@
     <scroll-view class="tools tools--corner {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
 <!-- 文档二 L5 B6/B7/B9:联系主办 / 联系商家,菜单第一行;只给拨打,号码不上屏;没有号码整行不出 -->
         <view class="drow" wx:if="{{playContact}}" bindtap="callPlayContact" aria-role="button" aria-label="{{playContact.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="phone" size="36" /></view><view class="dcopy"><text class="dt">{{playContact.label}}</text></view><view class="darr"></view></view>
+        <view class="drow" wx:if="{{!isPreview}}" bindtap="openSos" aria-role="button" aria-label="紧急求助" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="warning" size="36" /></view><view class="dcopy"><text class="dt">紧急求助</text></view><view class="darr"></view></view>
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
         <view class="drow" wx:if="{{gameModule.enabled}}" bindtap="openGameModuleFromTools" aria-role="button" aria-label="本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">本局线索</text></view><view class="darr"></view></view>
@@ -485,7 +486,7 @@
      9-22 删掉的是通用起始页(play-intro,带路线骨架),这一页只给故事主题,内容全来自主题本身。 -->
 <view class="st-intro atmosphere--default {{storyIntro.out ? 'st-intro--out' : ''}}" wx:if="{{storyIntro.show}}">
   <view class="st-intro__body">
-    <text class="st-intro__k">城瘾 · {{modeLabel}}</text>
+    <text class="st-intro__k">城瘾 · {{modeLabel}}{{topicAiGenerated ? ' · AI 生成' : ''}}</text>
     <text class="st-intro__t">{{storyIntro.title}}</text>
     <text class="st-intro__line" wx:if="{{storyIntro.line}}">{{storyIntro.line}}</text>
   </view>
@@ -1616,6 +1617,7 @@
                     reduced="{{reducedMotion}}" bind:confirm="closeMedal" />
 </view>
 <cy-celebrate event-key="{{celebrationEvent}}" reduced-motion="{{reducedMotion}}" />
+<cy-option-sheet wx:if="{{sosOpen}}" show="{{sosOpen}}" title="紧急求助" items="{{sosItems}}" immediate bind:select="onSosSelect" bind:cancel="closeSos" />
 </view>
 
 <!-- G01-G12:游玩宿主内的二级内容统一进入 sceneStack；内容组件与漫游宿主同源，避免两套状态/空壳。 -->

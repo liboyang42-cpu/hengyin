@@ -12,6 +12,7 @@ Page({
 
   data: {
     privacyGateShow: false,
+    showAiChatRecords: false,
     userInfo: {},
     settingsAuthRequired: false,
     settingsAccessDenied: false,
@@ -231,6 +232,10 @@ Page({
   goInvoice() {
     wx.navigateTo({ url: '/subpackageMember/invoice/index' });
   },
+
+  // OFF-AI-DEL-01:AI 对话记录 导出 / 清除(组件在 subpackageMember,复用 NPC 面板同一接口)
+  openAiChatRecords() { this.setData({ showAiChatRecords: true }); },
+  closeAiChatRecords() { this.setData({ showAiChatRecords: false }); },
 
   goAbout() {
     wx.navigateTo({ url: '/pages/shezhi/about/index' });

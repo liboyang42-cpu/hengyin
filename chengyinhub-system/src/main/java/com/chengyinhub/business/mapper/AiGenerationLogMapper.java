@@ -1,6 +1,9 @@
 package com.chengyinhub.business.mapper;
 
+import java.util.Date;
 import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
 
 import com.chengyinhub.business.domain.AiGenerationLog;
 
@@ -28,4 +31,9 @@ public interface AiGenerationLogMapper
      * @return 日志
      */
     AiGenerationLog selectAiGenerationLogById(Long id);
+
+    /**
+     * 留存到期清理:删 create_time 早于 cutoff 的日志,每批 limit 行(dataRetentionCleanupTask 调用)。
+     */
+    int deleteAiGenerationLogsBefore(@Param("cutoff") Date cutoff, @Param("limit") int limit);
 }

@@ -67,7 +67,7 @@
           <view class="simple-ai__draft-shade"></view>
           <view class="simple-ai__draft-over">
             <text class="simple-ai__draft-t">{{aiPlan.title}}</text>
-            <text class="simple-ai__draft-m">{{aiPlanNodes.length}} 站</text>
+            <text class="simple-ai__draft-m">AI 生成 · {{aiPlanNodes.length}} 站</text>
             <view class="simple-ai__draft-btn" bindtap="openDraft" aria-role="button" aria-label="打开草稿" hover-class="cy-pressed" hover-stay-time="80">打开草稿</view>
           </view>
         </view>
@@ -82,7 +82,7 @@
       <block wx:if="{{aiPlan && planOpen}}">
         <view class="simple-ai__section-heading">
           <text>AI 为你整理的初稿</text>
-          <text class="simple-ai__section-state">{{aiPlanModeKnown ? '可编辑' : '只读 · 原模式待确认'}}</text>
+          <text class="simple-ai__section-state">{{aiPlanModeKnown ? 'AI 生成 · 可编辑' : 'AI 生成 · 只读 · 原模式待确认'}}</text>
         </view>
         <cy-card class="simple-ai__card">
           <text class="simple-ai__field-label">主题名称<text class="req" aria-hidden="true">*</text></text>
@@ -115,6 +115,7 @@
              enterAiEditor 的前两道守卫与 canEnterAiEditor 同判据,禁用时点它只会落 aiError 文案。 -->
         <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" disabled="{{!canEnterAiEditor}}" bindtap="enterAiEditor" bind:disabledtap="enterAiEditor"><text>确认地点，进入编辑器</text><cy-icon name="arrow-right" size="28" /></cy-btn>
       </block>
+      <view wx:if="{{aigcFilingNo}}" class="simple-ai__filing">{{aigcFilingNo}}</view>
     </view>
   </scroll-view>
 
