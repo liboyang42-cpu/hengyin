@@ -68,7 +68,7 @@
     "player.withdrawable": "existing migration_20260808_player_withdrawable final rule 1; supersedes historical tuple 0"
   },
   "sourceFiles": {
-    "scripts/e2e/seed_fixtures.py": "3456c1b60b5709ea7750ebfb0967a1a129be60fb5f578b8e2e950b86791afc08",
+    "scripts/e2e/seed_fixtures.py": "fa9043cd673841ced55868c0ff73d34eba5e0bd61095ec8743a35c1bd73714ee",
     "chengyinhub-admin/sql/migration_20260808_player_withdrawable.sql": "3153581f219ff4aeb72c8acb12cd6907ec77b5ab1c5e94a06e99432d636344ec",
     "chengyinhub-admin/sql/migration_p2_4_admin_ia_menu.sql": "e56f1e2ae1227af1ee56f93a48227460b0eea252a0320a2369811d9b37c91743",
     "chengyinhub-admin/sql/migration_web_admin_nine_domains_20260719.sql": "d7dfb04a890923dbe6b946393c0c5db62450e56036b67a5c18359563cb11d358",
