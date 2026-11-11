@@ -1,0 +1,11 @@
+tap ["开始游戏",{"exact":true}]
+tap ["开启定位",{"exact":true,"nth":1}]
+tap ["开始",{"exact":true}]
+tapSel .fx-packwrap
+EVAL "{\"saw\":true,\"all\":false,\"mode\":2}"
+EVAL 1
+tap ["入场码",{"exact":true}]
+EVAL "{\"fl\":[\"loadData\"],\"saw\":true,\"all\":true,\"show\":false,\"scene\":\"qr-ticket\",\"cg\":true}"
+shot p2c-after
+ERR []
+CONERR ["[error] HTTP 404 http://127.0.0.1:8097/favicon.ico","[error] Failed to load resource: the server responded with a status of 404 (Not Found)","[error] FAILED wxfile://usr/cy-dot-qr.png net::ERR_UNKNOWN_URL_SCHEME","[error] Failed to load resource: net::ERR_UNKNOWN_URL_SCHEME"]

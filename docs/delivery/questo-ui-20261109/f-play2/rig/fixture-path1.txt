@@ -1,0 +1,59 @@
+
+──────── 步骤 1:0 发布者实名（真实入口，同 chain_platform）
+   publisher/identity                 {"msg": "操作成功", "code": 200, "data": {"registered": true}, "_status": 200}
+
+──────── 步骤 2:1a 节点玩法模板：到站打卡（POST /api/template/publish，validationMethod=0）
+   template/publish                   {"msg": "操作成功", "code": 200, "data": 6011, "writeReceipt": {"requestId": "rig-tpl-1111134503", "state": "COMPLETED", "operation": "TEMPLATE_PUBLISH"}, "_status": 200}
+   review 13(TEMPLATE) v0             审核处理成功
+   [库回读] template                 ((6011, 9003, 1, 1, 1),)
+   template/publish (QA+hintLadder)   {"msg": "操作成功", "code": 200, "data": 6012, "writeReceipt": {"requestId": "rig-tpl-qa-1111134503", "state": "COMPLETED", "operation": "TEMPLATE_PUBLISH"}, "_status": 200}
+   review 14(TEMPLATE) v0             审核处理成功
+   [库回读] qa template              ((6012, 1, 1),)
+
+──────── 步骤 3:1-2 建期：自营城市定向（productType=1），两章各一站
+   POST /api/topic/v2/create          {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990017, "auditTaskId": 16, "reviewState": "PENDING", "bundledTemplateIds": [6011, 6012], "published": true, "commercialAwaitingReview": true, "commercialNextStep": "已提交立项审核，审核与定价完成前尚未开售", "
+   [库回读] topic                    ((990017, 1, 7, 1, 1, 0, None),)
+
+──────── 步骤 4:3 内容审核（若有待审任务）
+   review 15(TOPIC_PROJECT_REVIEW) v0 审核处理成功
+   review 16(TOPIC) v0                审核处理成功
+   [库回读] status/user_status/lifecycle ((1, 1, 1),)
+
+──────── 步骤 5:3b0 发布者 → 执行俱乐部 7002 发 type1 合作邀约，俱乐部接受 ⇒ ORGANIZER coop_order（同 chain_merchant_club）
+   coop/invite                        {"msg": "已发起", "code": 200, "data": {"inviteId": 990025}, "_status": 200}
+   coop/handle accept 990025          {"msg": "已接受", "code": 200, "data": {"conversationId": 2}, "_status": 200}
+   [库回读] coop_order               ((2, 'ORGANIZER', 0),)
+
+──────── 步骤 6:3c 招募到期任务：RECRUITING → PRICING（topicRecruitDeadlineTask，同 chain_merchant_club）
+   run job                            {"msg": "操作成功", "code": 200, "_status": 200}
+   [库回读] lifecycle(应为 2=PRICING)  ((2,),)
+
+──────── 步骤 7:3d 俱乐部主理人锁价（POST /api/topic/pricing/confirm）
+   pricing/confirm                    {"msg": "终价已确认，已提交开售审核，审核通过后开售", "code": 200, "_status": 200}
+
+──────── 步骤 8:3a 平台：内容槽改判为 PLATFORM（同 chain_player，真实后台入口；二清闸只放行自营局收钱）
+   content-slot                       操作成功
+   [库回读] product_role             (('CONTENT', 'CLUB', 0), ('CONTENT', 'PLATFORM', 1))
+
+──────── 步骤 9:3e 开售提审 → 审核通过 → SELLING（POST /business/audit/topic/{id}/sale-submit）
+   sale-submit                        {"msg": "已提交开售审核", "lifecycle": "PRICING", "code": 200, "taskId": 17, "reviewRequired": true, "_status": 200}
+   review 17                          {"msg": "审核处理成功", "code": 200, "_status": 200}
+   [库回读] lifecycle/selling_started_at ((3, datetime.datetime(2026, 11, 11, 21, 45, 9)),)
+
+──────── 步骤 10:3b 主题层 69.00 guided 票种模板（后台 POST /business/ticket，同 chain_merchant_club；open-session 复制到场次）
+   business/ticket                    {"msg": "主题已进入 SELLING，售卖目录（票种/价格/库存/履约窗）已冻结", "code": 409, "_status": 200}
+   [库回读] 主题票                      ((81, '城市定向场次票', None, Decimal('69.00'), datetime.datetime(2026, 11, 10, 10, 0), datetime.datetime(2026, 11, 14, 13, 45, 3), datetime.datetime(2026, 11, 13, 13, 45, 3)),)
+
+──────── 步骤 11:4 俱乐部开一场（POST /api/club/open-session，club 7001 是主题所属俱乐部 ⇒ clubOwned，不需要合作单）
+   open-session 2026-11-11 21:57      {"msg": "开团成功", "code": 200, "data": {"activityId": 14}, "_status": 200}
+   [库回读] activity                 ((14, 990017, 7001, 1, datetime.datetime(2026, 11, 11, 21, 57), datetime.datetime(2026, 11, 11, 23, 59, 59)),)
+   [库回读] 场次票                      ((83, Decimal('69.00')),)
+
+──────── 步骤 12:5-8 玩家：同意 → 参与人 → 报价 → 报名本场（ownerType=2）
+   consents                           操作成功
+   address                            操作成功
+   club/join                          {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   [库回读] club_member              ((7001, 9004, 1),)
+
+TOPIC_ID=990017
+ACTIVITY_ID=14
