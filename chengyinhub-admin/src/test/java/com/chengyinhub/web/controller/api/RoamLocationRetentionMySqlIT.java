@@ -524,7 +524,14 @@ class RoamLocationRetentionMySqlIT {
                     new org.springframework.core.io.FileSystemResource("sql/migration_20261024_d_npc_asr_intent.sql"));
             org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
                     new org.springframework.core.io.FileSystemResource("sql/migration_20261024_d_npc_asr_shared_quota.sql"));
+            // The real task also expires AIGC generation logs; use the shipped table + retention-index migrations.
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource("sql/migration_ai_generation_log.sql"));
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection,
+                    new org.springframework.core.io.FileSystemResource("sql/migration_20261111_ai_generation_log_retention_index.sql"));
         }
+        db.execute("insert into ai_generation_log(id,member_id,biz_type,create_time) values"
+                + "(1,9,'npc_chat',date_sub(now(),interval 181 day)),(2,9,'npc_chat',now())");
         for (int id = 101; id <= 103; id++) {
             boolean unknown = id == 103;
             db.update("insert into npc_asr_intent(id,user_id,request_id,node_id,merchant_member_id,audio_sha256,audio_format,"
@@ -576,7 +583,8 @@ class RoamLocationRetentionMySqlIT {
                 new ClassPathResource("mapper/business/BizEventLogMapper.xml"),
                 new ClassPathResource("mapper/business/NpcChatLogMapper.xml"),
                 new ClassPathResource("mapper/business/NpcChatRequestMapper.xml"),
-                new ClassPathResource("mapper/business/NpcAsrIntentMapper.xml"));
+                new ClassPathResource("mapper/business/NpcAsrIntentMapper.xml"),
+                new ClassPathResource("mapper/business/AiGenerationLogMapper.xml"));
         SqlSessionTemplate extra = new SqlSessionTemplate(extraFactory.getObject());
         var target = new com.chengyinhub.business.service.impl.DataRetentionServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(target, "tmsBrowseRecordMapper", extra.getMapper(com.chengyinhub.business.mapper.TmsBrowseRecordMapper.class));
@@ -584,6 +592,7 @@ class RoamLocationRetentionMySqlIT {
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatLogMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatLogMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatRequestMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatRequestMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcAsrIntents", extra.getMapper(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "aiGenerationLogMapper", extra.getMapper(com.chengyinhub.business.mapper.AiGenerationLogMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamMapper", roam);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamShareSnapshotMapper", shares);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamLocationRetentionService", service(roam));
@@ -594,12 +603,15 @@ class RoamLocationRetentionMySqlIT {
         org.springframework.test.util.ReflectionTestUtils.setField(task, "eventDays", 365);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "npcChatDays", 90);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "npcChatRequestHours", 48);
+        org.springframework.test.util.ReflectionTestUtils.setField(task, "aiGenerationDays", 180);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "batchSize", 2);
         org.springframework.test.util.ReflectionTestUtils.setField(task, "maxBatches", 20);
 
         assertDoesNotThrow(task::run);
         for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request"))
             assertEquals(java.util.List.of(2L), db.queryForList("select id from " + table + " order by id", Long.class));
+        assertEquals(java.util.List.of(2L), db.queryForList("select id from ai_generation_log order by id", Long.class));
+        assertEquals(1, db.queryForObject("select count(*) from information_schema.statistics where table_schema=? and table_name='ai_generation_log' and index_name='idx_ai_gen_create_time'", Integer.class, database));
         assertEquals(asrIdentities, asrIdentitySnapshot(), "body expiry must not release ASR/quota/UNKNOWN identity");
         assertEquals(java.util.List.of(101L, 102L, 103L), db.queryForList("select id from npc_asr_intent order by id", Long.class));
         assertNull(db.queryForObject("select transcript from npc_asr_intent where id=101", String.class));
