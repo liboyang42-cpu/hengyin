@@ -1,4 +1,4 @@
-// 2026-11-11 f-pages(漫游护照官方路线大卡 +22 行、主地图横滑卡;个人主页帖文 tab 发帖入口 +6/+29 行):roam/index.js 17 条 U4-DYNAMIC / U5 与 cy/profile/index.js 3 条 U1-VARIABLE / U4-DYNAMIC 既有锚点仅行号位移(roam 831→853、1883→1906、1972→1995、2758→2781、2787→2810、4200→4223、4573→4596、4787→4810、4872→4895、4983→5006、5088→5111、5146→5169、5431→5454、6093→6116、6100→6123、6278→6315、6287→6324;profile 720→726、1296→1325、2145→2174),difflib 对 launch 底座逐行映射且调用行逐字相同,理由与条数不变、不新增登记;u1Variable / u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
+// 2026-11-11 f-pages(漫游护照官方路线大卡 +22 行、主地图横滑卡;个人主页帖文 tab 发帖入口 +6/+29 行):roam/index.js 17 条 U4-DYNAMIC / U5 与 cy/profile/index.js 3 条 U1-VARIABLE / U4-DYNAMIC 既有锚点仅行号位移(roam 831→853、1883→1906、1972→1995、2758→2781、2787→2810、4200→4223、4573→4596、4787→4810、4872→4895、4983→5006、5088→5111、5146→5169、5431→5454、6093→6116、6100→6123、6278→6315、6287→6324;profile 720→726、1296→1326、2145→2175),difflib 对 launch 底座逐行映射且调用行逐字相同,理由与条数不变、不新增登记;u1Variable / u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-10 l-editor(编辑器原型 v2:顶部添加栏 / 章节卡 / 图片组 / 分支 / 弹窗预览,fabu/index.js 增行;play/index.js 故事流投影加 gallery / branch / cap 三个分支 +12 行):fabu 11 条既有 U4-DYNAMIC 锚点仅行号位移(1220→1235、3460→3598、4550→4688、4932→5070、6019→6157、6281→6419、6981→7119、6993→7131、7060→7198、7618→7756、9900→10038)、play U5 loadMilestone 调用点 8883→8894 仅行号位移(脚本逐行校验调用行与 launch 底座逐字相同),条数不变、不新增登记;原 1220 那条理由改记 _storyDerived 的六个固定键;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-10 l-misc(模板配置去掉素材来源声明 -59 行):publish/temp/index.js 6 条 U4-DYNAMIC 锚点仅行号位移(1494→1489、1495→1490、1538→1533、3070→3011、3943→3884、4070→4011;1495 那条在对象里本就出现两次,一并改);逐行比对 launch 底座原行逐字相同,条数与理由不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-10 qx-final 合入 l-misc(在 l-editor 之后):fabu/index.js 的 U4-DYNAMIC 锚点取 l-editor 的重锚,publish/temp/index.js 的取 l-misc 的重锚(l-editor 未改 temp);条数与理由不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 在合并树重算。
@@ -986,7 +986,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"c9ddefbbd8ea42010336409077de5a407efd5dded8f8519e512252e9c12fef94",
+"d79346d6dfc147846ca157fbb6f9969bd9080d4a3519d60f0ac8b574c37ede03",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1393,7 +1393,7 @@ module.exports = {
     "chengyinhub-xcx/pages/activity/official-mine/index.js:174": "BL-80 通知复盘读取网络失败:按卡片路径写 _statsLoading=false;sameItem 校验防止写到换行后的另一张卡;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:175": "BL-80 通知复盘读取网络失败的 _statsText 动态键:写「网络连接失败，点一下重试」,在该卡触达行消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/roam/index.js:605": "BL-70 横滑卡头像堆按命中行拼 shopStrip.rows[i].visitors 路径批量回写;只在横滑卡 poi__who 头像堆消费,epoch 丢弃迟到回包;owner=小程序,复核=2026-12-31",
-    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2174": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2175": "本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/activity/official-mine/index.js:167": "BL-80 通知复盘读取成功分支的 _canRecover 动态键:按同一卡片路径写是否可安全恢复原投递(仅 code 200 且 canRecoverInapp 为真),sameItem 校验防止写到换行后的另一张卡,在该卡「安全恢复原投递」按钮消费;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/index/index.js:1320": "底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/index/index.js:1427": "底部活动翻页只追加bottomActivityList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30",
@@ -1434,7 +1434,7 @@ module.exports = {
   // (本支) "chengyinhub-xcx/pages/publish/temp/index.js:1833": "玩家预览 patch 先固定写 pvStep/pvStepKey/pvStepLabel 与四个临时态，仅按 story/challenge 枚举追加 pvBeats 或任务展示字段；步骤 key 不参与字段名拼接；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/publish/temp/index.js:2503": "couponPatch 在同方法内从空对象开始，只可能追加 selectedCouponId 与 selectedCouponName 两个固定奖励展示字段，再展开进固定回填对象；owner=小程序，复核=2026-09-30",
   // (本支) "chengyinhub-xcx/pages/publish/temp/index.js:2636": "模板回填 patch 只逐项追加 durationIndex/Text、difficultyIndex/Label、playersIndex/Text 六个固定选择器字段，且仅在字典中找到匹配值时写入；owner=小程序，复核=2026-09-30",
-    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1325": "profilePatch 在本方法内以 userInfo/balanceText/cityName/categoryList/casePicsList/joinDate/friendNum/followNum/fansNum 固定键创建，仅按本人/他人条件追加 growthLevel 与 primaryCta，不展开服务端对象键；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1326": "profilePatch 在本方法内以 userInfo/balanceText/cityName/categoryList/casePicsList/joinDate/friendNum/followNum/fansNum 固定键创建，仅按本人/他人条件追加 growthLevel 与 primaryCta，不展开服务端对象键；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/activity/list/index.js:339": "applyFilter 只派生 events/summary/emptyTitle/emptySub/emptyKind/curError/loading/errorMsg；extra 的两个调用点仅传 tab 或 keyword 固定键，不展开接口对象键，公开与本人数据源各自保留原状态；owner=小程序，复核=2026-10-16",
     // 2026-09-20 合并后按最终源码重钉。
     // (本支) 2026-09-19 用户改判摘除首页搜索入口(goSearch 及其注释 -6 行),锚点 1274→1268 等量换 key,调用点与理由一字未改,digest 显式重算。

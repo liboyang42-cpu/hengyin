@@ -776,6 +776,7 @@ Component({
       if (this._profileAttached === false || epoch !== this._communityProfileEpoch
           || owner !== String(app.getUserID() || '') || target !== String(this.data.userId || '')) return;
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
+      this.syncComposeAccess();   // f-pages P-20:社区开关读到后(loadFeatureFlags 回来再 settle)同步发帖入口
       if (!communityReadable()) {
         this._postsRequestGeneration = (this._postsRequestGeneration || 0) + 1;
         this.setData({ memberTabs: tabs, list: [], clubPostList: [], hasMore: false, feedErr: false, feedAuthError: false,

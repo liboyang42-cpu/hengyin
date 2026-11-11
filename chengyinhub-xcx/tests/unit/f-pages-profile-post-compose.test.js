@@ -33,6 +33,10 @@ test('帖文 tab 的发帖入口在状态块之前(空态上方也有),只在 is
 test('canCompose 只来自 app.canUseCommunity(true),发布成功回读帖文流', () => {
   const js = read(DIR + 'index.js');
   assert.match(js, /syncComposeAccess: function \(\) \{\s*var can = !!this\.data\.isSelf && typeof app\.canUseCommunity === 'function' && app\.canUseCommunity\(true\);/);
+  // 启动时 features 与本页读取并发:社区开关回来后 _syncCommunityProfile 的 settle 再同步一次(rig 实测原先停在 false)
+  const settle = js.slice(js.indexOf('_syncCommunityProfile() {'), js.indexOf('initializeProfile: function'));
+  assert.match(settle, /const tabs = profileTabs\(this\.data\.isSelf, this\.data\.isMerchantView\);\s*this\.syncComposeAccess\(\);/);
+  assert.match(settle, /if \(pending && typeof pending\.then === 'function'\) pending\.then\(settle\);/);
   assert.match(js, /that\.buildDerivedState\(\);\s*that\.syncComposeAccess\(\);/);
   assert.match(js, /openComposer: function \(\) \{\s*if \(!this\.data\.isSelf \|\| !this\.data\.canCompose\) return;/);
   assert.match(js, /onComposePublished: function \(\) \{\s*this\.setData\(\{ composerOpen: false \}\);\s*this\.reloadFeed\(\);/);
