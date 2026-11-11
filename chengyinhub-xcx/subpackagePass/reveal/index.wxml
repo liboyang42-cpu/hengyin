@@ -1,5 +1,5 @@
 <!-- l-icons 通行证 · 钥匙开场(proto/icons ps-key):上半区序列帧,下半区活的渐变 / 文字 / 按钮;右上「跳过」只在完整版里 -->
-<view class="theme-dark ky {{reduced ? 'ky--reduced' : ''}} {{step.grad ? 'ky-g' : ''}}">
+<view class="theme-dark ky {{merchant ? 'ky--plain' : ''}} {{reduced ? 'ky--reduced' : ''}} {{step.grad ? 'ky-g' : ''}}">
   <cy-nav-bar plain custom-back bind:back="goBack" />
   <cy-empty wx:if="{{merchant}}" fill class="cy-fill-state" size="lg" kind="empty" title="商家账号没有通行证" />
   <block wx:else>

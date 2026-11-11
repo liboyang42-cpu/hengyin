@@ -1,5 +1,6 @@
 /* l-icons 通行证 · 钥匙开场(proto/icons icons.css .ky*,px × 1.923 = rpx)。只用 transition,没有 keyframes;减少动态效果直接终态。 */
 .ky { position: relative; min-height: 100vh; overflow: hidden; color: #FFFFFF; background: #0A0908 radial-gradient(ellipse 90% 55% at 50% 30%, #1A1410 0%, #0A0908 70%); } /* ds-ok 原型 .ky 定值(烤帧的底色要和它一致) */
+.ky--plain { display: flex; flex-direction: column; background: var(--cy-bg-page); } /* 商家账号:只剩导航和空态,空态占满剩余高度(cy-fill-state 要父级是 flex 列) */
 .ky__stage { position: absolute; left: 0; top: 0; width: 750rpx; height: 1000rpx; z-index: 2; }
 .ky__layer { position: absolute; left: 0; top: 0; }
 .ky__layer--idle { opacity: 0; transition: opacity 420ms ease; }
