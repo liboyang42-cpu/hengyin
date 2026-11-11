@@ -64,6 +64,7 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
     private final String apiV3Key;
     private final String notifyUrl;
     private final String refundNotifyUrl;
+    private String combineNotifyUrl = "";
     private final ObjectMapper json = new ObjectMapper();
     private volatile Clients clients;
 
@@ -84,6 +85,12 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
         this.apiV3Key = apiV3Key;
         this.notifyUrl = notifyUrl;
         this.refundNotifyUrl = refundNotifyUrl;
+    }
+
+    /** l-payout3：合单支付通知地址（payout.ecommerce.combine-notify-url）。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    void setCombineNotifyUrl(@Value("${payout.ecommerce.combine-notify-url:}") String combineNotifyUrl) {
+        this.combineNotifyUrl = combineNotifyUrl == null ? "" : combineNotifyUrl;
     }
 
     private Clients clients() {
@@ -349,6 +356,125 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
                 throw new RefundNotFound("RESOURCE_NOT_EXISTS", e);
             throw e;
         }
+    }
+
+    // ---- l-payout3：合单支付。SDK 0.2.15 没有合单模型，按官方 APIv3 路径与字段直接请求（字段需在沙箱核对）。
+
+    static final String COMBINE_PATH = "https://api.mch.weixin.qq.com/v3/combine-transactions/";
+
+    @Override
+    public String combinedNotifyUrl() {
+        if (blank(combineNotifyUrl)) throw new IllegalStateException("ECOMMERCE_COMBINE_NOTIFY_URL_MISSING");
+        return combineNotifyUrl.trim();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, String> prepayCombinedJsapi(String combineOutTradeNo, List<CombinedSubRequest> subOrders, String openid) {
+        if (!switches.combinedEnabled()) throw new IllegalStateException("COMBINE_SWITCH_OFF");
+        Clients c = clients();
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("combine_appid", switches.spAppid());
+        body.put("combine_mchid", switches.spMchid());
+        body.put("combine_out_trade_no", combineOutTradeNo);
+        body.put("sub_orders", combinedSubBody(subOrders, true));
+        body.put("combine_payer_info", Map.of("openid", openid));
+        body.put("notify_url", combinedNotifyUrl());
+        Map<String, Object> resp = c.http().execute(postJson(COMBINE_PATH + "jsapi", body), Map.class).getServiceResponse();
+        String prepayId = resp == null ? null : str(resp.get("prepay_id"));
+        if (blank(prepayId)) throw new IllegalStateException("COMBINE_PREPAY_ID_MISSING");
+        String timeStamp = Long.toString(java.time.Instant.now().getEpochSecond());
+        String nonce = com.wechat.pay.java.core.util.NonceUtil.createNonce(32);
+        String pkg = "prepay_id=" + prepayId;
+        String message = switches.spAppid() + "\n" + timeStamp + "\n" + nonce + "\n" + pkg + "\n";
+        Map<String, String> params = new HashMap<>();
+        params.put("appId", switches.spAppid());
+        params.put("timeStamp", timeStamp);
+        params.put("nonceStr", nonce);
+        params.put("package", pkg);
+        params.put("signType", "RSA");
+        params.put("paySign", c.config().createSigner().sign(message).getSign());
+        return params;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CombinedOrder queryCombinedOrder(String combineOutTradeNo) {
+        Clients c = clients();
+        HttpRequest request = new HttpRequest.Builder().httpMethod(HttpMethod.GET)
+                .url(COMBINE_PATH + "out-trade-no/" + URLEncoder.encode(combineOutTradeNo, StandardCharsets.UTF_8))
+                .addHeader("Accept", "application/json").addHeader("Content-Type", "application/json").build();
+        try {
+            return combinedOrder(c.http().execute(request, Map.class).getServiceResponse());
+        } catch (com.wechat.pay.java.core.exception.ServiceException e) {
+            if (e.getHttpStatusCode() == 404) throw new CombinedOrderNotFound(e.getErrorCode(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void closeCombinedOrder(String combineOutTradeNo, List<CombinedSubRequest> subOrders) {
+        Clients c = clients();
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("combine_appid", switches.spAppid());
+        body.put("sub_orders", combinedSubBody(subOrders, false));
+        c.http().execute(postJson(COMBINE_PATH + "out-trade-no/"
+                + URLEncoder.encode(combineOutTradeNo, StandardCharsets.UTF_8) + "/close", body), Object.class);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public String parseCombinedNotification(String body, Map<String, String> headers) {
+        Map<String, Object> r = clients().notifications().parse(notificationParam(body, headers), Map.class);
+        return r == null ? null : str(r.get("combine_out_trade_no"));
+    }
+
+    private List<Map<String, Object>> combinedSubBody(List<CombinedSubRequest> subOrders, boolean prepay) {
+        if (subOrders == null || subOrders.size() < 2 || subOrders.size() > CombinedCheckoutPolicy.MAX_SUB_ORDERS)
+            throw new IllegalArgumentException("COMBINE_SUB_ORDER_COUNT");
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (CombinedSubRequest s : subOrders) {
+            Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("mchid", switches.spMchid());
+            m.put("sub_mchid", s.subMchid());
+            m.put("out_trade_no", s.outTradeNo());
+            if (prepay) {
+                m.put("attach", "cy");
+                m.put("amount", Map.of("total_amount", s.amountFen(), "currency", "CNY"));
+                m.put("description", s.description());
+                m.put("settle_info", Map.of("profit_sharing", s.profitSharing()));
+            }
+            list.add(m);
+        }
+        return list;
+    }
+
+    private HttpRequest postJson(String url, Object body) {
+        try {
+            return new HttpRequest.Builder().httpMethod(HttpMethod.POST).url(url)
+                    .addHeader("Accept", "application/json").addHeader("Content-Type", "application/json")
+                    .body(new JsonRequestBody.Builder().body(json.writeValueAsString(body)).build()).build();
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalArgumentException("COMBINE_BODY_INVALID", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    static CombinedOrder combinedOrder(Map<String, Object> r) {
+        if (r == null) return null;
+        List<CombinedSub> subs = new ArrayList<>();
+        Object raw = r.get("sub_orders");
+        if (raw instanceof List<?> list) {
+            for (Object o : list) {
+                if (!(o instanceof Map<?, ?> m)) continue;
+                Map<String, Object> amount = m.get("amount") instanceof Map<?, ?> a ? (Map<String, Object>) a : Map.of();
+                subs.add(new CombinedSub(str(m.get("mchid")), str(m.get("sub_mchid")), str(m.get("out_trade_no")),
+                        str(m.get("transaction_id")), str(m.get("trade_state")), str(m.get("trade_type")),
+                        asLong(amount.get("total_amount")), str(amount.get("currency")), str(m.get("success_time"))));
+            }
+        }
+        return new CombinedOrder(str(r.get("combine_appid")), str(r.get("combine_mchid")), str(r.get("combine_out_trade_no")),
+                List.copyOf(subs));
     }
 
     private static com.wechat.pay.java.core.notification.RequestParam notificationParam(String body, Map<String, String> headers) {

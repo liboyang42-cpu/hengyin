@@ -67,6 +67,11 @@ public interface IWechatPayService extends WechatPaymentOperations {
         return "{\"code\": \"FAIL\",\"message\": \"未开通\"}";
     }
 
+    /** l-payout3：电商收付通合单支付通知（payout.ecommerce.combine-notify-url）。开关关闭时一律回 FAIL，不处理。 */
+    default String handleEcommerceCombinePayCallback(String requestBody, Map<String, String> headers) {
+        return "{\"code\": \"FAIL\",\"message\": \"未开通\"}";
+    }
+
     /** 查微信退款真实状态(SUCCESS/PROCESSING/ABNORMAL/CLOSED),失败返回 null。 */
     String queryRefundStatus(String outRefundNo);
 

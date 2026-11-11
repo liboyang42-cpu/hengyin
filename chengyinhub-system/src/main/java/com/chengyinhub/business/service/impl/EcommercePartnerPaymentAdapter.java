@@ -82,13 +82,50 @@ public class EcommercePartnerPaymentAdapter {
         this.members = members;
     }
 
+    /** l-payout3：合单支付；合单开关关闭时本类不调用它。 */
+    private EcommerceCombinedPayment combined;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setCombined(EcommerceCombinedPayment combined) { this.combined = combined; }
+
+    private EcommerceCombinedPayment activeCombined() { return combined != null && combined.enabled() ? combined : null; }
+
     /** 电商收付通总开关。为假时网关不调用本类任何其它方法。 */
     public boolean enabled() { return switches.ecommerceEnabled(); }
 
     /** 业务单若以二级商户为卖家下过单，返回其卖家记录；否则 null（平台商户号单）。 */
     EcomOrderSeller sellerFor(String businessNo) {
         if (!enabled() || businessNo == null || businessNo.isBlank()) return null;
-        return mapper.selectOrderSeller(businessNo);
+        EcomOrderSeller seller = mapper.selectOrderSeller(businessNo);
+        if (seller != null) return seller;
+        return combinedMarker(businessNo);
+    }
+
+    /**
+     * l-payout3：合单支付单在网关眼里也是「电商单」：支付意图与事实都记在合单商户号（电商平台商户号）下，
+     * 所以占位记录的 subMchid 用 sp_mchid，网关现有的锁尝试 / 查单 / 关单 / 退款接点无需改动即可分派到这里。
+     */
+    private EcomOrderSeller combinedMarker(String businessNo) {
+        EcommerceCombinedPayment c = activeCombined();
+        if (c == null) return null;
+        com.chengyinhub.business.domain.EcomCombineOrder row = c.find(businessNo);
+        if (row == null) return null;
+        EcomOrderSeller marker = new EcomOrderSeller();
+        marker.setOutTradeNo(row.getOutTradeNo());
+        marker.setSubMchid(switches.spMchid());
+        marker.setSellerType("COMBINED");
+        marker.setSellerId(row.getSellerId());
+        marker.setTotalFen(row.getTotalFen());
+        marker.setTransactionId(row.getSellerTransactionId());
+        marker.setCombined(true);
+        return marker;
+    }
+
+    private com.chengyinhub.business.domain.EcomCombineOrder combinedRow(EcomOrderSeller marker) {
+        EcommerceCombinedPayment c = activeCombined();
+        com.chengyinhub.business.domain.EcomCombineOrder row = c == null ? null : c.find(marker.getOutTradeNo());
+        if (row == null) throw new IllegalStateException("合单收款单不可用（合单开关已关闭？）");
+        return row;
     }
 
     /** 已付事实是否属于二级商户为卖家的单：商户号必须等于登记的 sub_mchid。 */
@@ -120,6 +157,13 @@ public class EcommercePartnerPaymentAdapter {
         String businessNo = registration.getRegistrationNo();
         EcomOrderSeller seller = mapper.selectOrderSeller(businessNo);
         if (seller == null) {
+            EcommerceCombinedPayment c = activeCombined();
+            if (c != null) {
+                // l-payout3：多方收款的主题门票走合单；单一收款方继续下面的 l-payout2 路径。
+                EcommerceCombinedPayment.Placed placed = c.createOrder(registration, platformMchid);
+                if (placed.route() == EcommerceCombinedPayment.Route.COMBINED) return placed.params();
+                if (placed.route() == EcommerceCombinedPayment.Route.PLATFORM) return null;
+            }
             if (!switches.sellerRoutingEnabled() || !Long.valueOf(1L).equals(registration.getOwnerType())) return null;
             if (platformMchid != null && !platformMchid.isBlank() && intents.hasAnyAttempt(platformMchid, businessNo)) return null;
             SellerOfRecordPolicy.Decision decision = sellers.decide(registration);
@@ -182,6 +226,7 @@ public class EcommercePartnerPaymentAdapter {
     // ------------------------------------------------------------------ 查单 / 关单
 
     Map<String, String> queryOrderStatus(String businessNo, EcomOrderSeller seller) {
+        if (seller.isCombined()) return combined.queryOrderStatus(businessNo, combinedRow(seller));
         requireOutsideBusinessTransaction();
         String subMchid = seller.getSubMchid();
         String wxNo = intents.currentWechatPaymentNo(businessNo, subMchid);
@@ -203,6 +248,7 @@ public class EcommercePartnerPaymentAdapter {
     }
 
     boolean closePaymentAttempt(String businessNo, String observedWxNo, EcomOrderSeller seller) {
+        if (seller.isCombined()) return combined.closePaymentAttempt(businessNo, observedWxNo, combinedRow(seller));
         RestoreDispatchGuard.requireDispatchAllowed();
         requireOutsideBusinessTransaction();
         String subMchid = seller.getSubMchid();
@@ -264,6 +310,12 @@ public class EcommercePartnerPaymentAdapter {
         return facts(businessNo, original, "SUCCESS".equals(original.tradeState()) ? recordPayment(businessNo, original) : null);
     }
 
+    /** l-payout3：已验签合单通知里的合单号 → 查单核对写事实。合单开关关闭返回 null（回 FAIL）。 */
+    Map<String, String> verifiedCombinedNotificationFacts(String combineOutTradeNo) {
+        EcommerceCombinedPayment c = activeCombined();
+        return c == null ? null : c.verifiedNotificationFacts(combineOutTradeNo);
+    }
+
     // ------------------------------------------------------------------ 退款
 
     /**
@@ -272,6 +324,7 @@ public class EcommercePartnerPaymentAdapter {
      */
     RefundRequestResult submitRefund(WechatVerifiedPaymentFact paid, EcomOrderSeller seller, String outRefundNo,
                                      long refundFen, long totalFen, String reason) {
+        if (seller.isCombined()) return combined.submitRefund(paid, combinedRow(seller), outRefundNo, refundFen, totalFen, reason);
         RestoreDispatchGuard.requireDispatchAllowed();
         requireOutsideBusinessTransaction();
         if (paid.kind() != WechatVerifiedPaymentFact.Kind.PAYMENT || !paid.mchid().equals(seller.getSubMchid())
@@ -353,6 +406,7 @@ public class EcommercePartnerPaymentAdapter {
      * 返回 null 表示未知（调用方保持处理中）；SUCCESS 时写不可变 REFUND 事实。
      */
     Map<String, String> queryRefundFacts(WechatVerifiedPaymentFact paid, EcomOrderSeller seller, String outRefundNo) {
+        if (seller.isCombined()) return combined.queryRefundFacts(paid, combinedRow(seller), outRefundNo);
         requireOutsideBusinessTransaction();
         if (outRefundNo == null || !outRefundNo.matches(ID)) return null;
         EcomRefund row = mapper.selectRefund(outRefundNo);
@@ -416,7 +470,12 @@ public class EcommercePartnerPaymentAdapter {
     Map<String, String> verifiedRefundNoticeFacts(EcommercePayGateway.RefundNotice notice) {
         if (notice == null || !switches.spMchid().equals(notice.spMchid()) || !matches(notice.outRefundNo(), ID)) return null;
         EcomRefund row = mapper.selectRefund(notice.outRefundNo());
-        if (row == null || !row.getSubMchid().equals(notice.subMchid())) return null;
+        if (row == null) {
+            // l-payout3：合单子单的退款通知（子单退款单号记在 ecom_combine_refund）。
+            EcommerceCombinedPayment c = activeCombined();
+            return c == null ? null : c.verifiedRefundNoticeFacts(notice);
+        }
+        if (!row.getSubMchid().equals(notice.subMchid())) return null;
         EcomOrderSeller seller = mapper.selectOrderSeller(row.getOutTradeNo());
         WechatVerifiedPaymentFactService.Stored paid = verifiedFacts.findPaymentSuccess(row.getOutTradeNo());
         if (seller == null || paid == null || !paid.facts().mchid().equals(row.getSubMchid())
@@ -502,7 +561,7 @@ public class EcommercePartnerPaymentAdapter {
         return amount.setScale(2, RoundingMode.UNNECESSARY).movePointRight(2).intValueExact();
     }
 
-    private static String description(String value) {
+    static String description(String value) {
         if (value.length() <= 127) return value;
         int end = Character.isHighSurrogate(value.charAt(123)) ? 123 : 124;
         return value.substring(0, end) + "...";
