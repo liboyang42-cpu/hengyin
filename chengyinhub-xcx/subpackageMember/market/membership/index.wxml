@@ -26,7 +26,7 @@
       </view>
       <view class="pp__pill {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
       <text class="pp__terms" wx:if="{{view.terms}}">{{view.terms}}</text>
-      <text class="pp__err" wx:if="{{buyError}}" aria-role="alert">{{buyError}}</text>
+      <cy-inline-error class="pp__err" wx:if="{{buyError}}" kind="field" title="{{buyError}}" />
 
       <block wx:if="{{library.length}}">
         <text class="pp__sec">可玩主题库</text>
@@ -57,7 +57,7 @@
     </view>
     <view class="ok__copy">
       <text class="ok__k">通行证 · 已开通</text>
-      <text class="ok__t" wx:if="{{view.count !== null}}">{{view.count}} 个主题，全部可玩</text>
+      <text class="ok__t" wx:if="{{view.count !== null}}">{{view.count || 0}} 个主题，全部可玩</text>
       <text class="ok__s" wx:if="{{ok.untilText}}">到 {{ok.untilText}} · 价格都是 ¥0</text>
       <view class="ok__thumbs" wx:if="{{library.length}}">
         <image wx:for="{{library}}" wx:key="id" wx:if="{{index < 5 && item.cover}}" class="ok__th" style="transition-delay: {{index * 80}}ms;" src="{{item.cover}}" mode="aspectFill" />

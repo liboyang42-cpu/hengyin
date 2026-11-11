@@ -4,30 +4,31 @@
 /* r2-join 落地页:同行两端 + 「怎么玩」模式卡。颜色全走 token;动效只用 transform/opacity,
  * 减弱动态效果时整体静止(app.wxss 全局兜底 + 本页显式关掉循环)。 */
 .jl { display: flex; flex-direction: column; align-items: center; }
-.jl-duo { display: flex; align-items: center; justify-content: center; margin-top: 24rpx; animation: jl-rise 420ms cubic-bezier(.2,.8,.2,1) both; }
+.jl-duo { display: flex; align-items: center; justify-content: center; margin-top: 24rpx; transition: opacity 420ms cubic-bezier(.2,.8,.2,1), transform 420ms cubic-bezier(.2,.8,.2,1); }
 .jl-seat { position: relative; width: 136rpx; height: 136rpx; display: flex; align-items: center; justify-content: center; }
 .jl-av { position: relative; z-index: 1; width: 112rpx; height: 112rpx; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
   background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }
 .jl-av image { width: 100%; height: 100%; }
 .jl-av--you { background: transparent; border: 3rpx dashed var(--cy-color-text-secondary); box-sizing: border-box; color: var(--cy-color-text-secondary); }
-.jl-seat--you.is-on .jl-av--you { border-style: solid; border-color: var(--cy-color-brand); background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); animation: jl-pop 380ms cubic-bezier(.3,1.4,.5,1) both; }
+.jl-seat--you.is-on .jl-av--you { border-style: solid; border-color: var(--cy-color-brand); background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); }
+.jl-av--you { transition: transform 380ms cubic-bezier(.3,1.4,.5,1); }
 .jl-av__no { font-variant-numeric: tabular-nums; }
-.jl-ring { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2rpx solid var(--cy-color-brand); opacity: 0; animation: jl-ring 2.4s ease-out infinite; }
-.jl-ring--you { animation-delay: 1.2s; }
-.jl-link { position: relative; width: 150rpx; height: 8rpx; margin: 0 4rpx; border-radius: 4rpx; background: var(--cy-color-border-subtle); overflow: hidden; }
-.jl-link__dot { position: absolute; top: 0; left: 0; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--cy-color-brand); animation: jl-flow 1.8s linear infinite; }
-.jl-link__dot--2 { animation-delay: .6s; }
-.jl-link__dot--3 { animation-delay: 1.2s; }
+.jl-ring { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2rpx solid var(--cy-color-brand); opacity: 0; transform: scale(1.18); transition: opacity 1.68s ease-out, transform 1.68s ease-out; }
+.jl-ring.is-reset { opacity: .6; transform: scale(.82); transition: none; }
+.jl-link { position: relative; width: 150rpx; height: 8rpx; margin: 0 4rpx; border-radius: 4rpx; background: var(--cy-color-border-subtle); overflow: hidden; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
+.jl-link__dot { position: absolute; top: 0; left: 0; width: 8rpx; height: 8rpx; border-radius: 50%; background: var(--cy-color-brand); opacity: 0; transform: translateX(-12rpx); }
+.jl-link__dot.is-run, .jl-link__dot.is-out { transform: translateX(150rpx); transition: transform 1.8s linear, opacity .36s linear; }
+.jl-link__dot.is-run { opacity: 1; }
 .jl-name { margin-top: 16rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
-.jl-pill { animation: jl-rise 420ms 80ms cubic-bezier(.2,.8,.2,1) both; }
+.jl-pill { transition: opacity 420ms cubic-bezier(.2,.8,.2,1) 80ms, transform 420ms cubic-bezier(.2,.8,.2,1) 80ms; }
 
 .jl-play { align-self: stretch; margin: 48rpx 38rpx 0; }
 .jl-play__h { display: block; margin-bottom: 19rpx; font-size: var(--cy-type-card-title); font-weight: 700; color: var(--cy-color-text-primary); }
 .jl-tiles { display: flex; gap: 19rpx; }
 .jl-tile { flex: 1; min-width: 0; min-height: 176rpx; box-sizing: border-box; padding: 24rpx; display: flex; flex-direction: column; gap: 8rpx;
   border-radius: var(--cy-comp-sheet-group-radius); background: var(--cy-comp-sheet-group-bg); border: 3rpx solid transparent;
-  color: var(--cy-color-text-secondary); animation: jl-rise 420ms cubic-bezier(.2,.8,.2,1) both;
-  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease; }
+  color: var(--cy-color-text-secondary);
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, translate 420ms cubic-bezier(.2,.8,.2,1) var(--jl-d, 0ms), filter 420ms cubic-bezier(.2,.8,.2,1) var(--jl-d, 0ms); }
 .jl-tile.is-active { border-color: var(--cy-color-brand); background: var(--cy-color-brand-soft); color: var(--cy-color-text-primary); }
 .jl-tile.is-off { opacity: .55; }
 /* 服务端只给一种玩法时:整宽一张,不画单选圈(没有可选的东西) */
@@ -42,19 +43,25 @@
 .jl-tile__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .jl-rules { margin-top: 19rpx; padding: 8rpx 31rpx; border-radius: var(--cy-comp-sheet-group-radius); background: var(--cy-comp-sheet-group-bg); }
-.jl-rule { display: flex; align-items: center; gap: 19rpx; min-height: 80rpx; animation: jl-rise 320ms cubic-bezier(.2,.8,.2,1) both; }
+.jl-rule { display: flex; align-items: center; gap: 19rpx; min-height: 80rpx; transition: opacity 320ms cubic-bezier(.2,.8,.2,1) var(--jl-d, 0ms), transform 320ms cubic-bezier(.2,.8,.2,1) var(--jl-d, 0ms); }
 .jl-rule__dot { flex: none; width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--cy-color-border-strong); }
 .jl-rule__dot.is-on { background: var(--cy-color-brand); }
 .jl-rule__k { flex: 1; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
 .jl-rule__v { font-size: var(--cy-type-body); font-weight: 600; color: var(--cy-color-text-primary); }
 .jl-facts { align-self: stretch; }
 
-@keyframes jl-rise { from { opacity: 0; transform: translateY(24rpx); } to { opacity: 1; transform: none; } }
-@keyframes jl-pop { from { transform: scale(.6); } to { transform: none; } }
-@keyframes jl-ring { 0% { opacity: .6; transform: scale(.82); } 70% { opacity: 0; transform: scale(1.18); } 100% { opacity: 0; transform: scale(1.18); } }
-@keyframes jl-flow { from { transform: translateX(-12rpx); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } to { transform: translateX(150rpx); opacity: 0; } }
+/* 进场与循环都用 transition 一段段重放(MOTION.md 不新增 @keyframes):
+ * enter() 先挂 *-pre(起点、无过渡),34ms 后撤掉补间到原位;卡片用 translate + filter:opacity(),transform 留给按压。
+ * 光圈 / 连线光点由 beats() 循环:复位(无过渡)→ 补间 → 停在隐身,时长与原关键帧逐段一致。 */
+.jl--pre .jl-duo { opacity: 0; transform: translateY(24rpx); transition: none; }
+.jl--pre .jl-pill { opacity: 0; transform: translateY(24rpx); transition: none; }
+.jl--tiles-pre .jl-tile { translate: 0 24rpx; filter: opacity(0); transition: none; }
+.jl--rules-pre .jl-rule { opacity: 0; transform: translateY(24rpx); transition: none; }
+.jl--pop-pre .jl-av--you { transform: scale(.6); transition: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .jl-duo, .jl-pill, .jl-tile, .jl-rule, .jl-seat--you.is-on .jl-av--you { animation: none; }
-  .jl-ring, .jl-link__dot { animation: none; opacity: 0; }
+  .jl .jl-duo, .jl .jl-pill, .jl .jl-rule { opacity: 1; transform: none; transition: none; }
+  .jl .jl-tile { translate: none; filter: none; transition: none; }
+  .jl .jl-av--you { transform: none; transition: none; }
+  .jl .jl-ring, .jl .jl-link__dot { opacity: 0; transition: none; }
 }

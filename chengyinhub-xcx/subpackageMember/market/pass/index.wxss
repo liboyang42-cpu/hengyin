@@ -16,7 +16,7 @@ page { background: var(--cy-color-bg-page); }
 .mp-bar__reason { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
 .mp-bar__note { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); text-align: center; }
 .mp-gift { padding: var(--cy-space-4) 0; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); text-align: center; }
-.mp-share { width: 100%; min-height: 88rpx; line-height: 88rpx; border-radius: var(--cy-radius-pill, 999rpx); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); font-size: var(--cy-type-body); font-weight: 600; }
+.mp-share { width: 100%; min-height: 88rpx; line-height: 88rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); font-size: var(--cy-type-body); font-weight: 600; }
 .mp-sum .mp-row.is-off .mp-row__v { color: var(--cy-color-text-secondary); font-weight: 500; }
 .mp-sum__k { display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
 .mp-sum__note { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }

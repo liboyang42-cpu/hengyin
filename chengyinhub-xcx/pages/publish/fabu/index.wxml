@@ -827,7 +827,7 @@
         <view class="sx-br__opt" wx:for="{{storyBranch.options}}" wx:key="index" wx:for-item="opt" wx:for-index="optIndex">
           <view class="sx-br__line">
             <text class="story-branch__k">{{storyAbc[optIndex]}}</text>
-            <input class="sx-br__in" value="{{opt.text}}" data-i="{{optIndex}}" bindinput="onStoryBranchOptionText" maxlength="40" placeholder="玩家看到的选项" placeholder-class="ed-cap__ph" aria-label="第 {{optIndex + 1}} 条分支" />
+            <input class="sx-br__in" value="{{opt.text}}" data-i="{{optIndex}}" bindinput="onStoryBranchOptionText" maxlength="40" placeholder="玩家看到的选项" placeholder-class="ed-cap__ph" aria-label="第 {{(optIndex + 1) || 1}} 条分支" />
             <view class="sx-br__x" wx:if="{{storyBranch.options.length > 2}}" data-i="{{optIndex}}" catchtap="removeStoryBranchOption" aria-role="button" aria-label="删除这条分支" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
           </view>
           <view class="sx-br__tos">

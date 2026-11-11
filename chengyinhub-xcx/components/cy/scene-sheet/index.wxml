@@ -14,7 +14,7 @@
           bindtouchstart="{{gs.sheetStart}}" catchtouchmove="{{gs.sheetMove}}"
           bindtouchend="{{gs.sheetEnd}}" bindtouchcancel="{{gs.sheetEnd}}"
           data-panel=".ss__panel" data-off="{{_closing}}" data-blocked="{{!closable || dirty}}"
-          data-rm="{{reducedMotion}}" data-wh="{{winH}}">
+          data-rm="{{reducedMotion}}" data-whsel=".ss__mask">
       <view class="ss__back" wx:if="{{canBack}}" bindtap="onBack" data-testid="scene-sheet-back" aria-role="button" aria-label="返回上一步" hover-class="cy-pressed" hover-stay-time="80"><view class="ss__control"><cy-icon name="back" size="32" /></view></view>
       <view class="ss__title">{{title}}</view>
       <view class="ss__close" wx:if="{{closable}}" bindtap="onClose" data-testid="scene-sheet-close" aria-role="button" aria-label="{{closeLabel}}" hover-class="cy-pressed" hover-stay-time="80"><view class="ss__control"><cy-icon name="close-sm" size="44" /></view></view>

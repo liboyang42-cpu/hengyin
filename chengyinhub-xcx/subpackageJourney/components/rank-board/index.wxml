@@ -10,10 +10,10 @@
   <view class="rb-hero {{heroOn ? 'is-on' : ''}}" wx:if="{{hero}}">
     <view class="rb-hero__wreath">
       <image class="rb-hero__laurel rb-hero__laurel--l" src="/subpackageJourney/images/laurel.svg" mode="aspectFit" aria-hidden="true" />
-      <view class="rb-hero__num" aria-label="第 {{hero.rank}} 名">
+      <view class="rb-hero__num" aria-label="第 {{hero.rank || '—'}} 名">
         <view class="rb-digit" wx:for="{{digits}}" wx:key="index" aria-hidden="true">
-          <view class="rb-digit__col" style="transform:translateY(-{{item * 10}}%)">
-            <text>0</text><text>1</text><text>2</text><text>3</text><text>4</text><text>5</text><text>6</text><text>7</text><text>8</text><text>9</text>
+          <view class="rb-digit__col" style="transform:translateY(-{{(item * 10) || 0}}%)">
+            <text class="rb-digit__n">0</text><text class="rb-digit__n">1</text><text class="rb-digit__n">2</text><text class="rb-digit__n">3</text><text class="rb-digit__n">4</text><text class="rb-digit__n">5</text><text class="rb-digit__n">6</text><text class="rb-digit__n">7</text><text class="rb-digit__n">8</text><text class="rb-digit__n">9</text>
           </view>
         </view>
       </view>
@@ -38,10 +38,12 @@
     </view>
     <view class="rb-row {{item.mine ? 'is-me' : ''}}" wx:for="{{rank.entries}}" wx:key="key">
       <text class="rb-rank {{item.rank && item.rank <= 3 ? 'is-top' : ''}}">{{item.rank || '—'}}</text>
-      <view class="rb-av"><image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
+      <view class="rb-av"><image class="rb-av__img" wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" /><text wx:else>{{item.initial}}</text></view>
       <text class="rb-row__b rb-grow">{{item.name}}</text>
       <text class="rb-row__v">{{item.scoreText}}</text>
     </view>
     <text class="rb-note" wx:if="{{rank.unattributed}}">{{rank.unattributed}}</text>
   </view>
 </view>
+<!-- 「更多」榜单走 kit 选项弹层(点一行即切榜),不用系统 ActionSheet -->
+<cy-option-sheet show="{{moreShow}}" title="更多榜单" items="{{moreItems}}" immediate="{{true}}" bind:select="onMoreSelect" bind:cancel="onMoreCancel" />

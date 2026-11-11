@@ -5,6 +5,7 @@
 //   · 问过且没开定位时,站点卡的主按钮是「扫码到达」(直接绑原有 onScanArrive);别的入口点到达只给一句轻提示,不再回到定位说明。
 // index.js 的 UI 门禁基线按行号登记,这里放方法,index.js 只在原行上挂钩(不增删行)。
 const cyModal = require('../../../utils/modal.js');
+const cyToast = require('../../../utils/toast.js');
 
 /** 跳过说明弹窗、按「已同意」继续:只给静默重取位置用 */
 function confirmNow(opts) { if (opts && typeof opts.success === 'function') opts.success({ confirm: true, cancel: false }); }
@@ -48,7 +49,7 @@ function methods() {
     },
     /** 问过、没开定位时点「到达」:不再弹说明,只给一句轻提示;站点卡的主按钮此时已是「扫码到达」 */
     _locationDeclinedToast() {
-      if (typeof wx.showToast === 'function') wx.showToast({ title: '定位未开启，可扫码到达', icon: 'none' });
+      cyToast('定位未开启，可扫码到达');
     },
     /** 取位置失败:系统拒绝时给「怎么打开」,去设置打开后回来静默开始定位 */
     _locationGuide(err) {

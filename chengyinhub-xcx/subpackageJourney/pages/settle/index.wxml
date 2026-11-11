@@ -3,7 +3,7 @@
      数字全部读战报;没有的格子不出。插图用 cy-illus(qx-base 底座的空态同款插图集,分包逐字副本)。 -->
 <wxs module="cnt" src="../../../utils/wxs/count.wxs" />
 <view class="theme-dark st {{reduced ? 'st--reduced' : ''}}">
-  <cy-nav-bar plain custom-back bind:back="onBack" />
+  <cy-nav-bar plain title="结算" custom-back bind:back="onBack" />
   <cy-nav-spacer />
   <view class="st-dots" wx:if="{{state === 'ready'}}" aria-label="第 {{stepIndex + 1}} 步，共 4 步">
     <view class="st-dot {{index <= stepIndex ? 'is-on' : ''}}" wx:for="{{steps}}" wx:key="*this"></view>
@@ -54,7 +54,7 @@
         <textarea class="st-textarea" value="{{review}}" maxlength="{{reviewMax}}" placeholder="喜欢哪一站？" placeholder-class="st-ph" bindinput="onReview" auto-height />
         <text class="st-count">{{review.length}} / {{reviewMax}}</text>
       </view>
-      <text class="st-err" wx:if="{{rateError}}">{{rateError}}</text>
+      <cy-inline-error class="st-err" wx:if="{{rateError}}" kind="field" title="{{rateError}}" />
     </view>
 
     <!-- 4 分享:帖文 / 故事 分段;卡片 = 封面淡入底 + 勋章插图 + 已通关 + 主题名 + 节点 / 分 / 名次 + 城瘾;底部一行 分享 + 完成 -->

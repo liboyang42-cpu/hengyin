@@ -6,7 +6,7 @@
   <view class="gf__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar title="领取礼品" plain custom-back bind:back="goBack" />
     <!-- r2-join:领取态用礼物图标(不再用通用空态插画/警告三角),整块居中 -->
-    <view class="gf-hero {{state === 'failed' ? 'is-off' : ''}} {{state === 'claimed' ? 'is-done' : ''}}" aria-role="status">
+    <view class="gf-hero {{state === 'failed' ? 'is-off' : ''}} {{state === 'claimed' ? 'is-done' : ''}} {{gfIn === 1 ? 'gf--pre' : ''}} {{gfGlow === 0 ? 'gf-glow--0' : ''}}" aria-role="status">
       <view class="gf-hero__badge">
         <view class="gf-hero__glow" wx:if="{{state === 'ready' || state === 'unknown'}}"></view>
         <cy-icon name="{{state === 'claimed' ? 'check' : 'gift'}}" size="72" />

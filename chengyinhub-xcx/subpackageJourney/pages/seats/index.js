@@ -16,8 +16,8 @@ const app = getApp();
 const INVITE_KEY = 'journey-seat-invite:';
 
 Page({
-  data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '', seats: null,
-    busy: false, actionError: '', inviteToken: '',
+  data: { state: 'loading', stateKind: 'loading', stateTitle: '加载中', stateCta: '',
+    actionError: '',
     lobby: null, head: null, me: null, tiles: [], inviteShow: false, inviteCard: null, playUrl: '', privacyGateShow: false },
 
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
@@ -47,7 +47,7 @@ Page({
       this._summary = res.data;
       const seats = view.seatsView(res.data);
       this._seats = seats;
-      this.setData({ state: 'ready', seats, lobby: lobby.lobbyView(seats, res.data, this.data.me), playUrl: lobby.playUrl(seats) });
+      this.setData({ state: 'ready', lobby: lobby.lobbyView(seats, res.data, this.data.me), playUrl: lobby.playUrl(seats) });
       if (!this._extrasRead) { this._extrasRead = true; this._loadExtras(seats); }
     });
   },
@@ -88,7 +88,7 @@ Page({
       kind: 'invite', id: String(s.topicId || ''), title: head.name || '一起来玩', cover: head.cover || '',
       inviter: me.name || '', seatsLeft: l.openCount, art: illus.layers('envelope').fg
     } });
-    if (!this.data.inviteToken && !this.data.busy) this.onInvite();
+    if (!this._inviteToken && !this._busy) this.onInvite();
   },
   onSeatTap(e) { if (e.currentTarget.dataset.tappable) this.onOpenInvite(); },
   onCloseInvite() { this.setData({ inviteShow: false }); },
@@ -100,12 +100,13 @@ Page({
   },
 
   onInvite() {
-    if (this.data.busy) return;
+    if (this._busy) return;
     const requestId = this._pendingId || this._pending() || view.newRequestId('seatinv');
     this._setPending(requestId);
-    this.setData({ busy: true, actionError: '' });
+    this._busy = true; // 只防连点,不渲染
+    this.setData({ actionError: '' });
     api.seatInvite(app, this._registrationId, requestId).then(res => {
-      this.setData({ busy: false });
+      this._busy = false;
       if (res.netFail || res.code === 'fail' || Number(res.code) >= 500) {
         this._pendingInvite = true; this.setData({ actionError: '结果还没确认，请稍后查询' });
         return;
@@ -114,23 +115,24 @@ Page({
       this._pendingInvite = false;
       if (!api.ok(res) || !res.data || !res.data.token) { this.setData({ actionError: res.msg || '邀请失败' }); this.load(); return; }
       this._invite = res.data;
-      this.setData({ inviteToken: res.data.token });
+      this._inviteToken = res.data.token; // 只给分享路径用,不渲染
       this.load();
     });
   },
 
   onCancel(e) {
     const id = e.currentTarget.dataset.id;
-    const seat = (this.data.seats.seats || []).find(s => s.invitationId === String(id));
-    if (!seat || this.data.busy) return;
+    const seat = ((this._seats || {}).seats || []).find(s => s.invitationId === String(id));
+    if (!seat || this._busy) return;
     modal.show({ dangerKey: 'seat.invite-cancel', dangerParams: { name: seat.no }, success: r => {
       if (!r || !r.confirm) return;
       const requestId = view.newRequestId('seatcxl');
-      this.setData({ busy: true, actionError: '' });
+      this._busy = true;
+      this.setData({ actionError: '' });
       api.seatCancel(app, id, requestId).then(res => {
-        this.setData({ busy: false });
+        this._busy = false;
         if (!api.ok(res) && !res.netFail) this.setData({ actionError: res.msg || '撤销失败' });
-        if (this._invite && String(this._invite.invitationId) === String(id)) { this._invite = null; this.setData({ inviteToken: '' }); }
+        if (this._invite && String(this._invite.invitationId) === String(id)) { this._invite = null; this._inviteToken = ''; }
         this.load();
       });
     } });
@@ -141,7 +143,7 @@ Page({
     const target = Number(s.ownerType) === 2 ? 'aid=' + s.ownerId + '&tid=' + (s.topicId || '') : 'tid=' + (s.topicId || '');
     return {
       title: '一起来玩',
-      path: '/subpackageJourney/pages/landing/index?k=s&t=' + encodeURIComponent(this.data.inviteToken) + '&' + target
+      path: '/subpackageJourney/pages/landing/index?k=s&t=' + encodeURIComponent(this._inviteToken) + '&' + target
     };
   }
 });

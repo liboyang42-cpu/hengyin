@@ -10,10 +10,10 @@
       <!-- r2-join S18A:只做版式整理(输入框与卡同层、去掉提示性占位、空态居中不撑高),上方样式等业主参考图 -->
       <block wx:if="{{campaignKey && topicId}}">
       <cy-tabs variant="chip" tabs="{{platforms}}" active="{{form.platform}}" bind:change="onPlatform" />
-      <text class="vb-field__err" wx:if="{{fieldError.field === 'platform'}}">{{fieldError.text}}</text>
+      <cy-inline-error class="vb-field__err" wx:if="{{fieldError.field === 'platform'}}" kind="field" title="{{fieldError.text}}" />
       <view class="vb-form">
         <input class="vb-input" placeholder="视频页链接" value="{{form.sourceUrl}}" bindinput="onUrl" maxlength="512" />
-        <text class="vb-field__err" wx:if="{{fieldError.field === 'sourceUrl'}}">{{fieldError.text}}</text>
+        <cy-inline-error class="vb-field__err" wx:if="{{fieldError.field === 'sourceUrl'}}" kind="field" title="{{fieldError.text}}" />
         <input class="vb-input" placeholder="原视频分组（选填）" value="{{form.originGroupKey}}" bindinput="onGroup" maxlength="64" />
         <cy-inline-error wx:if="{{submitError}}" kind="data" title="{{submitError}}" />
         <cy-btn variant="primary" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submit">提交投稿</cy-btn>

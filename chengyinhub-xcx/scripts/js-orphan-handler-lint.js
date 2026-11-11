@@ -87,6 +87,8 @@ function includedWxml(wxmlFile, seen = new Set()) {
   return [...seen];
 }
 
+const wxsCallMethodNames = S.wxsCallMethodNames; // 2026-11-10 qx-green:见 lib/xcx-scan.js
+
 function lintRepo() {
   const { map } = S.buildJsToWxmlMap();
   const jsFiles = [...map.keys()];
@@ -127,6 +129,7 @@ function lintRepo() {
         const cls = S.classifyBinding(b.value);
         if (cls.kind === 'identifier') boundNames.add(cls.name);
       });
+      wxsCallMethodNames(w, wsrc).forEach((n) => boundNames.add(n));
     });
 
     S.extractOwnHandlerEntries(jsFile).forEach(({ name, line }) => {
@@ -174,6 +177,10 @@ function runSelfTest() {
     '',
   ].join('\n'));
   write('index.wxml', '<view bindtap="onBoundTap"></view>\n<view class="on-tap-btn" bindtap="onTap"></view>\n');
+  // qx-green:本页引入的 wxs 里 callMethod('onWxsDrop') 算绑定;没引入的 wxs、注释里的 callMethod 不算
+  write('drag.wxs', "function end(e, o) { o.callMethod('onWxsDrop', {}); }\n// o.callMethod('onCommentOnly')\nmodule.exports = { end: end };\n");
+  write('other.wxs', "function x(e, o) { o.callMethod('onGhostTap', {}); }\nmodule.exports = { x: x };\n");
+  const wxsNames = wxsCallMethodNames(path.join(dir, 'index.wxml'), '<wxs src="./drag.wxs" module="d" />\n<!-- <wxs src="./other.wxs" module="o" /> -->\n');
 
   const src = fs.readFileSync(jsPath, 'utf8');
   const masked = S.maskNonCode(src);
@@ -205,6 +212,8 @@ function runSelfTest() {
     '红:handler 形状判定认得 go/tap/handle 真前缀': isHandlerShaped('goBack') && isHandlerShaped('tapItem') && isHandlerShaped('handleSubmit') && isHandlerShaped('onX'),
     '\\b 陷阱:onTapExtra 不被 onTap 的绑定顶替': hyphenTrapOk,
     '\\b 陷阱:identifierOccurrences 全等匹配': occOk,
+    '绿:本页引入的 wxs 里 callMethod 的方法算绑定': wxsNames.has('onWxsDrop'),
+    '红:注释里的 callMethod、被注释掉的 <wxs> 引入都不算': !wxsNames.has('onCommentOnly') && !wxsNames.has('onGhostTap'),
     '棘轮:新增判红 / 存量放行 / 基线缺失不豁免': S.selfTestRatchet(),
   };
   const failed = Object.keys(checks).filter((k) => !checks[k]);

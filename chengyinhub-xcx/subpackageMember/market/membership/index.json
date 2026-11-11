@@ -11,6 +11,7 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-access-gate": "/components/cy/access-gate/index",
-    "cy-illus": "/subpackageMember/components/cy-illus/index"
+    "cy-illus": "/subpackageMember/components/cy-illus/index",
+    "cy-inline-error": "/components/cy/inline-error/index"
   }
 }

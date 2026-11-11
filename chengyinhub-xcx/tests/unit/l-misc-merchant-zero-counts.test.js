@@ -19,7 +19,8 @@ test('营销活动四格计数:没有就 0', () => {
 
 test('评价页:条数与回复率没有就 0', () => {
   const wxml = read('pages/merchant/reviews/index.wxml')
-  assert.ok(wxml.includes('{{total != null ? total : 0}} 条已核销评价'))
-  assert.ok(wxml.includes('{{replyRatePct != null ? replyRatePct : 0}}%'))
+  // qx-green:孤立单位门禁要求单位前插值用 || 兜底;{{x || 0}} 与原 {{x != null ? x : 0}} 对数字显示完全一致
+  assert.ok(wxml.includes('{{total || 0}} 条已核销评价'))
+  assert.ok(wxml.includes('{{replyRatePct || 0}}%'))
   assert.doesNotMatch(wxml, /replyRatePct \+ '%' : '—'/)
 })
