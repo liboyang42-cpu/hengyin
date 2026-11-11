@@ -16,7 +16,8 @@ test('首屏分派:城市定向且 allDone ⇒ openFinish,否则故事流', () =
 })
 
 function assertCloseFinishContract(source) {
-  assert.match(source, /closeFinish\(\) \{\s*\n\s*this\._hideFinish\(\(\) => \{\s*\n\s*if \(this\.data\.allDone && !this\._canContinueMerchantGames\(\) && !this\.data\.isPreview && !this\.data\.isMock\) this\.goBackDetail\(\);/)
+  assert.match(source, /closeFinish\(\) \{\s*\n\s*this\._hideFinish\(\(\) => \{\s*\n\s*if \(this\.data\.allDone && !this\._canContinueMerchantGames\(\) && !this\.data\.isPreview && !this\.data\.isMock && !this\._reviewAfterFinish\(\)\) this\.goBackDetail\(\);/)
+  // 2026-11-11 f-play V3-07(业主:通关后能往上滑回看整个故事):有已完成章节的城市定向先回故事流只读回看,回看打不开才回详情;仍不落回开局
 }
 
 test('关闭通关卡后无可继续商家玩法的已通关主题回详情,不落回开局', () => {

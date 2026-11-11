@@ -1,0 +1,4 @@
+[{"tap":"开始游戏"},{"wait":5000},{"scroll":600},{"wait":1500},{"scroll":600},{"wait":1500},{"scroll":600},{"wait":3000},{"shot":"album-1-card"},
+ {"eval":"JSON.stringify({card:$P.data.playKit.card,type:$P.data.playKit.kit&&$P.data.playKit.kit.type})"},
+ {"tryTap":"谁在钟楼留下了钥匙"},{"wait":2000},{"shot":"album-2-kitstart"},{"tryTap":"开始"},{"wait":2500},{"shot":"album-3-full"},
+ {"eval":"JSON.stringify({show:$P.data.playKit.show})"},{"wait":2000},{"shot":"album-4-full-later"}]

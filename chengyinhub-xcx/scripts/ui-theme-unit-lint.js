@@ -35,7 +35,9 @@ const DOMAIN_RULES = [
     // 2026-11-05 第十一轮 i1(p1 F-9,业主规则「玩家深色、商家浅色」):官方活动详情与主办控制台进共享域,
     // 与「我发布的」同一做法 —— 根节点按 policy.isMerchantView 在 theme-merchant / theme-dark 间二选一。
     // 搜索地图也按 roleGuard.isMerchantView 选择根主题与地图样式。
-    route: /^(?:pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap)\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    // 2026-11-11 f-merchant(M-35):商家工作台的搜索(search2)与「发现」点进的帖文详情(square/detail)进共享域,
+    // 同样按 roleGuard.isMerchantView 在根节点二选一。商家可达页的暗根清单由 tests/unit/f-merchant-light-reach.test.js 守。
+    route: /^(?:pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',

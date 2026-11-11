@@ -78,12 +78,13 @@ test('帖文详情:开关拉取后确认开放才请求详情', async () => {
   assert.ok(app.requests.some((r) => r.url === '/api/creativesquare/info'))
 })
 
-test('收藏页:社区读闸关时只留「主题」页签且不请求帖文收藏;开关确认开放后补回页签', async () => {
+// 2026-11-11 f-pages OFF-FAV-01:收藏页加「据点」页签(不走社区闸),闸关时留「主题」「据点」
+test('收藏页:社区读闸关时只留「主题」「据点」页签且不请求帖文收藏;开关确认开放后补回页签', async () => {
   const closed = communityApp(false, false)
   const p = page(loadDefinition('pages/mylike/mylike.js', closed, wxStub(), 'Page'))
   p.onLoad({})
   await settle()
-  assert.equal(p.data.favoriteTabs.map((t) => t.key).join(','), 'topics')
+  assert.equal(p.data.favoriteTabs.map((t) => t.key).join(','), 'topics,nodes')
   assert.equal(p.data.activeFavoriteTab, 'topics')
   assert.equal(closed.requests.some((r) => /bookmark/.test(r.url)), false)
 
@@ -91,7 +92,7 @@ test('收藏页:社区读闸关时只留「主题」页签且不请求帖文收�
   const q = page(loadDefinition('pages/mylike/mylike.js', later, wxStub(), 'Page'))
   q.onLoad({})
   await settle()
-  assert.equal(q.data.favoriteTabs.map((t) => t.key).join(','), 'posts,topics')
+  assert.equal(q.data.favoriteTabs.map((t) => t.key).join(','), 'posts,topics,nodes')
   assert.equal(q.data.activeFavoriteTab, 'topics', '补回页签不抢当前页签')
 })
 

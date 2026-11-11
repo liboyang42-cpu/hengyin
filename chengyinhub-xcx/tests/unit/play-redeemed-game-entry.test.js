@@ -154,7 +154,8 @@ function bannerVisible(instance) {
 }
 
 function packVisible(instance) {
-  const expression = wxml.match(/<block wx:if="{{([^}]+)}}">\s*<!-- ===== 章节选择弹窗/)[1];
+  // 2026-11-11 f-play V3-08:选章弹窗挪到这块外面(走完后也要能弹),按块自己的守卫条件定位
+  const expression = wxml.match(/<block wx:if="{{(!screen && \(!allDone \|\| canContinueGames\)[^}]+)}}">/)[1];
   return vm.runInNewContext(expression, instance.data);
 }
 

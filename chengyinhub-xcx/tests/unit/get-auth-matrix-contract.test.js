@@ -129,6 +129,8 @@ const MATRIX = [
   // f-compliance OFF-AI-DEL-01:设置页「AI 对话记录」导出同一接口,身份只取登录态。
   ['subpackageMember/components/cy/ai-chat-records/index.js', "url: '/api/ai/npc/chat/data/export'", 'required', 'member', 'self-account'],
   ['pages/activity/official-detail/index.js', "url: '/api/official/events/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  // f-pages OFF-FAV-01:我的收藏「据点」页签读本人收藏的据点;服务端 uid() 取登录身份,未登录拒绝,不收任何用户 ID。
+  ['pages/mylike/mylike.js', "url: '/api/city/nodes/favorites'", 'required', 'member', 'self-account'],
   ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
   // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
   ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
@@ -208,6 +210,8 @@ const MATRIX = [
   ['pages/publish/fabu/theme-route-names.js', "url: '/api/topic/state-keys', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   ['pages/publish/fabu/theme-d20-page.js', "url: '/api/topic/play-setup', method: 'GET'", 'required', 'publisher', 'self-publisher'],
   // 2026-11-04 第九轮 m4(owner 批准):官方路线列表与详情游客可读,只回已上架路线,游客走 PresetRouteGuestProjection。
+  // f-pages P0-79:漫游护照探一次官方路线目录决定是否摆「官方路线」大卡;同一公开只读端点(permitAll,只回已上架路线)。
+  ['pages/roam/index.js', "req('/api/preset/route/list', 'GET'", 'optional', 'visitor/member', 'public-official-route'],
   ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'optional', 'visitor/member', 'public-official-route'],
   ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'optional', 'visitor/member', 'public-official-route'],
   ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
@@ -484,7 +488,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 qx-s2 staging 合并树:r2-create(b4-21)撤掉预设页,qx-b4 的「固定玩法预设库」一处直接 GET 随页退场,124 → 123(实测)。
   // 2026-11-10 l-pass:通行证页概览/主题库读取、游戏主题库、通行证与礼品入口卡、开通后订单轮询四处直接 GET(已入 MATRIX),123 → 127。
   // 2026-11-11 f-compliance:设置页 AI 对话记录导出一处直接 GET(同 NPC 面板接口,已入 MATRIX),127 → 128。
-  assert.equal(directCount, 128, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
+  // 2026-11-11 f-pages:我的收藏「据点」页签读本人收藏据点一处直接 GET(已入 MATRIX),128 → 129。
+  assert.equal(directCount, 129, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -501,7 +506,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 staging 合流:qx-b1 +2 与 qx-b8 +1 叠加,46 → 49。
   // 2026-11-09 V3-35:漫游入口地图把目录地点画成图钉,另读一次 /api/roam/pois(与地图页同端点同权限档),46 → 47。
   // 2026-11-10 staging 合流:再叠加 qx-a4 +1,49 → 50。
-  assert.equal(wrapperCount, 50, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-11 f-pages:漫游护照「官方路线」大卡探一次公开路线目录(已入 MATRIX),50 → 51。
+  assert.equal(wrapperCount, 51, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

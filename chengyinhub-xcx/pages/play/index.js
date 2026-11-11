@@ -500,7 +500,7 @@ Page({
     chapterCount: 0,   // 本主题章节数(开始前读数)
     searchPlaces: [],   // 顶部输入地址的候选,见 _searchPlaces
     // 自由探索选章弹窗:切换章节=先选章(cur=当前章下标),选完地点卡只出该章的点
-    chapterPick: { show: false, cur: 0 },
+    chapterPick: { show: false, cur: 0, states: [] },
     // 章节内容全屏态(Figma 3963:14970):一次一段、居中,滚动时按距屏心远近算 scale/opacity/blur
     chapterFull: false, chapterParas: [],
     // 相册(2026-09-24 用户):故事流里一条一直滚动的圆角照片带,点开是白底全屏(3D 弯折卡 + 彩光 + 倒影)
@@ -1374,7 +1374,7 @@ Page({
     if (this.data.chapterCards.length > 1) {
       const idx = this.data.chapterCards.findIndex(c => String(c.id) === String(this.data.chapter.id));
       this.closeChapterFull();
-      this.setData({ 'chapterPick.show': true, 'chapterPick.cur': Math.max(0, idx) }); return;
+      this.setData({ 'chapterPick.show': true, 'chapterPick.cur': Math.max(0, idx), 'chapterPick.states': this._chapterPickStates() }); return;
     }
     // 地点卡层已删:唯一的选点面就是卡包(用户裁决「完整地点列表=卡包」),别让入口点了没反应。
     this.setData({ packOpen: true });
@@ -5320,6 +5320,7 @@ Page({
             const distText = that._distText(that.data.nextNode);
             if (distText !== that.data.storyDistText) that.setData({ storyDistText: distText });
           }
+          if (typeof that._refreshSheetFacts === 'function') that._refreshSheetFacts();   // f-play:开着的地点卡距离 / 步行跟着走
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
           // 性能:回灌地图会触发 free-map 全量 _rebuild(重画节点+circles+箭头),GPS 每 1-3s 一次太频繁,
           // 节流成"移动 ≥5 米才回灌";nav.remainM/气泡阈值仍每 tick 刷(便宜,不受影响)。
@@ -8606,7 +8607,7 @@ Page({
   },
   closeFinish() {
     this._hideFinish(() => {
-      if (this.data.allDone && !this._canContinueMerchantGames() && !this.data.isPreview && !this.data.isMock) this.goBackDetail();
+      if (this.data.allDone && !this._canContinueMerchantGames() && !this.data.isPreview && !this.data.isMock && !this._reviewAfterFinish()) this.goBackDetail();   // f-play V3-07:先回故事流只读回看
     });
   },
   _hideFinish(callback) {

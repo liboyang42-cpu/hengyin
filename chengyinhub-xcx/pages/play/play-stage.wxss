@@ -124,7 +124,9 @@
 /* ===== 顶栏进度药丸(proto hud .gpill):N/M 站,底边一条随进度长 ===== */
 .theme-story-hud .theme-hp, .theme-story-hud .theme-bag-entry { white-space: nowrap; flex: none; }
 .theme-gpill { position: relative; flex: none; height: 48rpx; padding: 0 18rpx; display: inline-flex; align-items: center; border-radius: var(--lk-rb, var(--cy-radius-pill)); clip-path: var(--lk-cut); overflow: hidden; background: var(--lk-ink, #FFFFFF); color: var(--lk-bg, #000000); font-size: 22rpx; font-weight: 700; font-family: var(--lk-fm); } /* ds-ok 回落玩家黑白 */
-.theme-gpill__i { position: absolute; left: 0; right: 0; bottom: 0; height: 4rpx; background: var(--lk-a, #FFFFFF); transform-origin: left; transition: transform .9s cubic-bezier(.16,1,.3,1); } /* ds-ok 回落白 */
+.theme-gpill__i { position: absolute; left: 0; right: 0; bottom: 0; height: 6rpx; background: var(--lk-bg, #000000); transform-origin: left; transition: transform .9s cubic-bezier(.16,1,.3,1); } /* ds-ok 回落黑 */
+/* f-play V3-05:进度游标改用药丸自己的字色(--lk-bg,与「1/2」同一对比度)。原来用强调色 --lk-a:星尘默认 #E9E2D0 压在 #F2F2F0 的药丸上对比 1.15,
+   25 套外观里 20 套低于 2:1,游标基本看不见;加粗到 6rpx(原型 2px)让走一站就能看出长了一截。 */
 .play--reduced-motion .theme-gpill__i { transition: none; }
 
 /* ===== 背包:没有配图的物品 / 线索 / 待领奖励用插图(原型「图标换成统一一套」) ===== */

@@ -46,7 +46,7 @@ Page({
     try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
     const paid = o.mode === 'paid'
     const copy = paid ? this._paidCopy(o) : this.data.copy
-    this._paid = paid // 只决定按钮去向,不上屏,不进 setData
+    this._paid = paid // 只决定「开始」跳哪页,不渲染,不走 setData(U4)
     this.setData({ reduced, merchant, copy })
     if (merchant) return
     const full = !reduced && (paid || !seenBefore())

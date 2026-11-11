@@ -25,6 +25,12 @@ function codeRejected(msg) {
 function classifyCityNodeRedeem(response, channel, httpStatus, code) {
   const unknown = { status: 'unknown', response: { code: 202, msg: UNKNOWN_MESSAGE } };
   const status = Number(httpStatus);
+  // 409 进复核态(与 utils/merchant-verification.js 同口径):后端中文原话原样给,否则给固定中文句
+  if (status === 409 || record(response) && (response.code === 409 || response.code === '409')) {
+    const msg = record(response) && typeof response.msg === 'string' && /[\u4e00-\u9fa5]/.test(response.msg)
+      ? response.msg : '核销状态有变化，请先在核销记录里复核';
+    return { status: 'review', response: { code: 409, msg } };
+  }
   if (channel === 'fail' && httpStatus === 2 && record(response) && (response.code === 2 || response.code === '2'))
     return { status: 'failed', response: { code: 401, msg: '登录状态已失效，未执行核销' } };
   if ([400, 401, 403, 404, 405, 413, 415, 426, 429].includes(status))

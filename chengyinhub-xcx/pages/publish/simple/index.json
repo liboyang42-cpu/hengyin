@@ -4,6 +4,7 @@
   "navigationBarTextStyle": "black",
   "usingComponents": {
     "cy-card": "/components/cy/card/index",
+    "cy-cell": "/components/cy/cell/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-icon": "/components/cy/icon/index",

@@ -20,7 +20,7 @@
           <view class="sc-inv-step" wx:for="{{steps}}" wx:key="*this"><text class="sc-inv-dot">{{index + 1}}</text><text class="sc-inv-name">{{item}}</text></view>
         </view>
         <view class="sc-inv-who" wx:if="{{inviterText}}"><image wx:if="{{art}}" class="sc-inv-art" src="{{art}}" mode="aspectFit" aria-hidden="true" /><text>{{inviterText}}</text></view>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr sc-qr--inv" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr sc-qr--inv {{qrReady || reducedMotion ? 'sc-qr--ready' : ''}}{{reducedMotion ? ' sc-qr--static' : ''}}" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" bindload="onQrLoad" binderror="onQrLoad" /></view>
       </view>
     </view>
     <view class="sc-card sc-card--{{kind}}" wx:else>
@@ -40,7 +40,7 @@
         <text class="sc-eb">{{eyebrow}}</text>
         <text class="sc-big">{{title}}</text>
         <text class="sc-m" wx:if="{{sub}}">{{sub}}</text>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr {{qrReady || reducedMotion ? 'sc-qr--ready' : ''}}{{reducedMotion ? ' sc-qr--static' : ''}}" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" bindload="onQrLoad" binderror="onQrLoad" /></view>
       </view>
     </view>
   </view>

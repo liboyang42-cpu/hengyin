@@ -1535,6 +1535,19 @@
             <text class="sp-issue__go">去修改</text><cy-icon name="chevron-right" size="24" />
           </view>
         </view>
+        <!-- 发布前检查 warning 档(2026-11-11):advisory 是软建议,不拦发布,「完成」仍只看 blocking;有字段的可定位 -->
+        <view class="sp-issues sp-issues--warn" wx:if="{{publishCheck.advisory.length}}">
+          <view class="sp-issue sp-issue--warn" wx:for="{{publishCheck.advisory}}" wx:key="index" wx:if="{{item.field}}" data-field="{{item.field}}" bindtap="locatePublishIssue"
+                aria-role="button" aria-label="{{item.label}}，去修改" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="sp-issue__star">!</text>
+            <view class="sp-issue__t"><text>{{item.label}}</text><text class="sp-issue__w" wx:if="{{item.where}}">{{item.where}}</text></view>
+            <text class="sp-issue__go">去修改</text><cy-icon name="chevron-right" size="24" />
+          </view>
+          <view class="sp-issue sp-issue--warn" wx:for="{{publishCheck.advisory}}" wx:key="index" wx:if="{{!item.field}}">
+            <text class="sp-issue__star">!</text>
+            <view class="sp-issue__t"><text>{{item.label}}</text><text class="sp-issue__w" wx:if="{{item.where}}">{{item.where}}</text></view>
+          </view>
+        </view>
         <view class="sp-desc" wx:if="{{publishCheck.preview.description}}">{{publishCheck.preview.description}}</view>
 
         <block wx:if="{{publishCheck.preview.ticketRows.length}}">

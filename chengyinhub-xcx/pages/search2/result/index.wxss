@@ -1,4 +1,7 @@
 @charset "UTF-8";
+@import '../../../style/merchant-light-scope.wxss';
+/* M-35:商家浅色根节点铺满一屏,内容短时不露出 page{} 的暗底 */
+.s2-root { min-height: 100vh; }
 /* 2026-07-31:根链改 flex column + min-height:100vh,让空态/错误态 fill 变体能在
    "标题下方到屏幕底部"这段剩余空间里居中(不是整屏居中,也不是 min-height:60vh 拍脑袋值)。 */
 page { display: flex; flex-direction: column; min-height: 100vh; }

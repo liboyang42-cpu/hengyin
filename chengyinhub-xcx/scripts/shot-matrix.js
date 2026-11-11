@@ -637,8 +637,8 @@ const RAW = [
   ['F311', 'F311-journey-seats-missing-param.png', '/subpackageJourney/pages/seats/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '同行席位大厅:缺报名单时的状态'],
   ['F312', 'F312-journey-promo-missing-param.png', '/subpackageJourney/pages/promo/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '推广记录:缺参数时的状态'],
   ['F313', 'F313-journey-settle-missing-param.png', '/subpackageJourney/pages/settle/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '结算四步:缺参数时的状态(真数据走战报)'],
-  // 2026-11-11 qx-green:l-icons 新增钥匙开场路由补矩阵行(真实运行时;首次进入播完整版,之后落到待机终态)
-  ['F314', 'F314-pass-reveal-normal.png', '/subpackagePass/reveal/index', 'player', 'normal', null, undefined, { selector: '.ky__txt', min: 1 }, 'real-data', 'P1', '', '通行证钥匙开场:序列帧 + 文字 + 按钮;商家账号只给一句原因'],
+  // 2026-11-11 qx-final2:l-icons 新增的通行证钥匙开场页补矩阵行(真实运行时,首次进入播完整版,之后待机循环)
+  ['F314', 'F314-pass-reveal-normal.png', '/subpackagePass/reveal/index', 'player', 'normal', null, undefined, { selector: '.ky__stage', min: 1 }, 'real-data', 'P1', '', '通行证钥匙开场:序列帧 + 文案 + 开始按钮'],
 ];
 /* eslint-enable max-len */
 

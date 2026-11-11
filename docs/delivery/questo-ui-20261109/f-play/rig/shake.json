@@ -1,0 +1,4 @@
+[{"tap":"开始游戏"},{"wait":5000},{"scroll":600},{"wait":1500},{"scroll":600},{"wait":1500},{"scroll":600},{"wait":3000},{"shot":"SHK-1-inline"},
+ {"eval":"JSON.stringify({accelOn:window.MPWEB.accelOn,listeners:(window.MPWEB.accelListeners||[]).length,kit:$P.data.playKit&&$P.data.playKit.kit&&$P.data.playKit.kit.type,show:$P.data.playKit&&$P.data.playKit.show,card:$P.data.playKit&&$P.data.playKit.card})"},
+ {"shake":1},{"wait":2600},{"shot":"SHK-2-after-shake"},{"strip":"SHK-3","n":3,"every":500},
+ {"eval":"JSON.stringify({accelOn:window.MPWEB.accelOn,starts:window.MPWEB.accelStarts,stops:window.MPWEB.accelStops,kit:$P.data.playKit&&$P.data.playKit.kit&&{face:$P.data.playKit.kit.face,values:$P.data.playKit.kit.values,state:$P.data.playKit.kit.state}})","max":800}]

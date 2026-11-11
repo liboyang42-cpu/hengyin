@@ -50,9 +50,9 @@
   </view>
 </view>
 <view class="rv-group">
-  <!-- P-56:已绑定也能点,走微信手机号授权换绑(同一 getPhoneNumber → /api/getwxbindphone) -->
+  <!-- P-56:已绑定也能点,走微信手机号授权换绑(同一 getPhoneNumber → /api/getwxbindphone);行尾是修改图标,不是「进入下一页」的箭头 -->
   <button class="rv-row rv-row--btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="{{userInfo.phone ? '更换手机号' : '绑定手机号'}}" hover-class="cy-pressed" hover-stay-time="80">
-    <text class="rv-row__k">手机号</text><text class="rv-row__v {{userInfo.phone ? '' : 'is-empty'}}">{{phoneMasked || '未绑定'}}</text><cy-icon class="rv-row__cv" name="chevron-right" size="32" />
+    <text class="rv-row__k">手机号</text><text class="rv-row__v {{userInfo.phone ? '' : 'is-empty'}}">{{phoneMasked || '未绑定'}}</text><cy-icon class="rv-row__cv" name="edit" size="32" />
   </button>
 </view>
 <view class="rv-group">

@@ -120,6 +120,10 @@
 /* 横向留白、正文滚动和固定按钮都交给 cy-sheet。 */
 .pk-hint { padding-bottom: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 .pk-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
+/* G-8:活动倾向带标签库图标(深色线稿);俱乐部域暗底未选中反白,选中实底用原色 */
+.pk-chips .chip { display: inline-flex; align-items: center; }
+.chip-ico { width: 32rpx; height: 32rpx; margin-right: var(--cy-space-1); flex-shrink: 0; filter: invert(1); }
+.chip.on .chip-ico { filter: none; }
 .pk-opt {
   display: flex; align-items: center; gap: var(--cy-space-2); min-height: 112rpx;
   border-bottom: 1rpx solid var(--cy-color-border-subtle);

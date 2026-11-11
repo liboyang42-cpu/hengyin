@@ -1,0 +1,1 @@
+[{"wait":1500},{"open":"pages/topic/index/index?id=990015"},{"wait":3500},{"eval":"($P.onHeroCta(),1)"},{"wait":3000},{"shot":"p2-01-wallet"},{"tap":"开始游戏"},{"wait":5000},{"shot":"p2-02-play-intro"},{"tryTap":["开启定位",{"nth":1}]},{"wait":2000},{"tap":"开始游戏"},{"wait":1500},{"strip":"p2-03-chapter-start","n":4,"every":700},{"wait":3000},{"shot":"p2-04-story"},{"dump":1,"max":1500}]
