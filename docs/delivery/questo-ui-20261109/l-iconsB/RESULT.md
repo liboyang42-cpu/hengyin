@@ -37,7 +37,7 @@ rig：cloud-walk mpweb 浏览器运行时，改前包 = `launch/questo-20261110`
 ## 闸门
 
 - 本 lane 及受影响的单测：`l-iconsB-20261111`（12/12）、`launch-look-tokens-illus`、`l-play-20261110`、`l-kits-20261110`、`l-pass-platform-pass`、`l-after-items`、`questo-b2-player`、`empty-state-figma-illustration-contract`、`motion-property-ratchet`、`reduced-motion-coverage-contract`、`get-auth-matrix-contract`、`route-matrix-freshness`、`nav-page-title-spacing-contract`、`title-system-owner-contract` 全部通过。改了另外两个 lane 的断言：`launch-look-tokens-illus`（成功 / 钥匙的进场名改成 b2、章节印不再画数字、副本清单加 `art-b.js`）、`l-play-20261110`（重复属性去重的样例换成 v2 钥匙宝石描边）。
-- 全量小程序单测（`node --test tests/unit/*.test.js`，1839 个文件）：运行中，结果出来后补在这一行。
+- 全量小程序单测（`node --test tests/unit/*.test.js`，1839 个文件，17239 条）：17237 通过、2 条失败，都是 `action-ledger.test.js` 里写死的台账计数（商家空态 +1：tap 3021 → 3022、合计 6007 → 6008），已按重建实测改并注明来由。
 - `node tests/lint/ui-integrity.js`：**UI-GATE-0:PASS**（没加基线）。
 - 动作台账：`build-action-ledger.js --write` 已提交，之后无漂移。
 - `ds-hardcode-gate.sh`（只看新增行）：通过。没有跑 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`。
