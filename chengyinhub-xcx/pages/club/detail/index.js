@@ -4,7 +4,7 @@ const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../utils/club-pinned-notice.js');
 const clubPostRepost = require('../../../utils/club-post-repost.js');
 const { isClubLeader } = require('../../../utils/roleGuard.js');
-const { isPoolList, decoratePool, parseInviteId, STATUS_LABEL } = require('../../../utils/coop-invite-view.js');
+const { isPoolList, decoratePool, parseInviteId, STATUS_LABEL, readCoopListResult } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
@@ -1403,8 +1403,9 @@ Page({
       header: jsonHeader(),
       success(res) {
         if (String(clubId) !== String(that.data.clubId)) return;
-        const received = isSuccess(res) && res.data && Array.isArray(res.data.received) ? res.data.received : null;
-        const sent = isSuccess(res) && res.data && Array.isArray(res.data.sent) ? res.data.sent : null;
+        const list = readCoopListResult(res);
+        const received = list && list.received;
+        const sent = list && list.sent;
         if (!received || !sent) {
           that._sentInviteRows = null;
           that.setData({ messageState: 'error', messages: [], inviteFeedbackState: 'error', sentInvites: [] });
@@ -1418,8 +1419,14 @@ Page({
         that.setData({ messageState: 'ready', messages: messages });
         that.applySentInviteFilter();
       },
-      fail() {
+      fail(res, statusCode) {
         if (String(clubId) !== String(that.data.clubId)) return;
+        if (readCoopListResult(res, statusCode)) {
+          that._sentInviteRows = [];
+          that.setData({ messageState: 'ready', messages: [] });
+          that.applySentInviteFilter();
+          return;
+        }
         that._sentInviteRows = null;
         that.setData({ messageState: 'error', messages: [], inviteFeedbackState: 'error', sentInvites: [] });
         that.updateOwnerStage();

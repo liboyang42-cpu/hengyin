@@ -15,7 +15,7 @@ test('报价到达:价格取 payAmount,无减免不划线,积分/席位步进器
   assert.equal(v.single.strike, '');
   assert.equal(v.totalText, '¥39');
   assert.equal(v.payLabel, '支付 ¥39');
-  assert.deepEqual(v.bill.map((r) => r.k), ['自玩通行证 × 1']);
+  assert.deepEqual(v.bill.map((r) => r.k), ['自玩门票 × 1']);
   assert.equal(v.points, undefined);
   assert.equal(v.seats, undefined);
   assert.deepEqual(v.trust.map((t) => t.label), ['购买后不可退', '1 人自玩']);

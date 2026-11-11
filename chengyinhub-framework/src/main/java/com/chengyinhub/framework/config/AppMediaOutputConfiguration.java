@@ -31,6 +31,7 @@ public class AppMediaOutputConfiguration {
     static final Set<String> MEDIA_FIELDS = com.chengyinhub.business.service.support.AppMediaSchema.MEDIA_FIELDS;
     static final Set<String> MEDIA_JSON_FIELDS = com.chengyinhub.business.service.support.AppMediaSchema.MEDIA_JSON_FIELDS;
     private static final Set<String> MULTI_MEDIA_FIELDS = com.chengyinhub.business.service.support.AppMediaSchema.MULTI_MEDIA_FIELDS;
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AppMediaOutputConfiguration.class);
     private static final String CACHE_ATTRIBUTE = AppMediaOutputConfiguration.class.getName() + ".cache";
     private final AppMediaReferenceGuard media;
     // Internal tree parsing deliberately does not register this HTTP serializer recursively.
@@ -152,7 +153,14 @@ public class AppMediaOutputConfiguration {
             }
             if (cache.containsKey(key)) return cache.get(key);
         }
-        String safe = media.visibleUrl(reference, viewer);
+        String safe;
+        try {
+            safe = media.visibleUrl(reference, viewer);
+        } catch (RuntimeException unresolvable) {
+            // M-1：一张图签不出地址（如对象存储未配置）只让这一项无图，不能让整条响应写 JSON 失败。
+            log.warn("媒体引用无法解析，按无图输出: {} ({})", reference, unresolvable.getMessage());
+            safe = "";
+        }
         if (safe == null) safe = "";
         if (cache != null) {
             cache.put(key, safe);

@@ -218,7 +218,19 @@ function decorateApplies(rows, box) {
   });
 }
 
+// C-1：俱乐部主理人读 /api/coop/list 时，商家身份 403（无商家行时请求层拦截，或账号挂着失效商家行）
+// 只表示「没有合作邀约」，不是读失败；其余非成功回包仍按失败处理。返回 { received, sent } 或 null。
+function readCoopListResult(res, statusCode) {
+  const code = res && res.code !== undefined ? Number(res.code) : NaN;
+  if (Number(statusCode) === 403 || code === 403) return { received: [], sent: [] };
+  if (code !== 200 || !res.data) return null;
+  const received = Array.isArray(res.data.received) ? res.data.received : null;
+  const sent = Array.isArray(res.data.sent) ? res.data.sent : null;
+  return received && sent ? { received: received, sent: sent } : null;
+}
+
 module.exports = {
+  readCoopListResult,
   APPLY_STATUS, isApplyList, decorateApplies, badgeOf, INVITE_BADGE,
   TYPE_LABEL, STATUS_LABEL, termsOf, countdownOf, slotOf, contactOf, decorate, parseInviteId, INVITE_ID_ERROR,
   isTopicMerchantSupply, supplyStationView, supplyStationConfirmation, sameSupplyStationConfirmation,
