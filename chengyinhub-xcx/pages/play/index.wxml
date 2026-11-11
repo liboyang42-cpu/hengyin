@@ -301,7 +301,7 @@
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
         <view class="drow" wx:if="{{gameModule.enabled}}" bindtap="openGameModuleFromTools" aria-role="button" aria-label="本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">本局线索</text></view><view class="darr"></view></view>
-        <view class="drow" wx:if="{{topicId && !isPreview}}" bindtap="openJourneyRewards" aria-role="button" aria-label="各站奖励" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">各站奖励</text></view></view>
+        <view class="drow" wx:if="{{topicId && !isPreview}}" bindtap="openJourneyRewards" aria-role="button" aria-label="各站奖励" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--gift"></view><view class="dcopy"><text class="dt">各站奖励</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{themeBag.sessionId && (themeBag.actionRows.length || themeBag.awaitingChallenge || zeroHpView || themeBag.pendingRows.length)}}" bindtap="openThemeGameplay" aria-role="button" aria-label="打开背包与任务" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与任务</text><text class="ds" wx:if="{{zeroHpView}}">{{zeroHpView.message || zeroHpView.title}}</text><text class="ds" wx:elif="{{themeBag.awaitingChallenge}}">{{themeBag.names.hp}}已归零 · 完成挑战可{{themeBag.challengeRestoreText}}{{themeBag.challengeProgressText ? ' · ' + themeBag.challengeProgressLabel + ' ' + themeBag.challengeProgressText : ''}}</text><text class="ds" wx:elif="{{themeBag.pendingRows.length}}">有待领取物品</text><text class="ds" wx:else>{{themeBag.names.hp}} {{themeBag.hp}} · {{themeBag.names.luck}} {{themeBag.luck}} · {{themeBag.names.action}} {{themeBag.actions}}</text></view><view class="darr"></view></view>
         <!-- 伏笔(2026-09-22 用户裁决「玩家侧收进右上角菜单」):只列已经埋下的那些。
              没埋下的服务端根本不下发 —— 提前露出名字就是剧透。进度靠到站同步步数推进。
@@ -371,7 +371,7 @@
         <block wx:if="{{mode==2}}">
         <view class="drow" bindtap="openRightsFromTools" aria-role="button" aria-label="我的权益" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--gift"></view>
-          <view class="dcopy"><text class="dt">我的权益</text><text class="ds">{{total}} 家 · 已核销 {{doneCount}} 家</text></view>
+          <view class="dcopy"><text class="dt">我的权益</text><text class="ds">{{merchantCount}} 家 · 已核销 {{merchantDoneCount}} 家</text></view>
           <view class="darr"></view>
         </view>
         <view class="drow" wx:if="{{regId && !isPreview && !isMock}}" bindtap="openTicketFromTools" aria-role="button" aria-label="入场码" hover-class="cy-pressed" hover-stay-time="80">
@@ -495,6 +495,7 @@
     <text class="st-intro__t">{{storyIntro.title}}</text>
     <text class="st-intro__line" wx:if="{{storyIntro.line}}">{{storyIntro.line}}</text>
   </view>
+  <view class="play-back" wx:if="{{!isPreview}}" style="top:{{chrome.actionTop}}px" bindtap="goBackDetail" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="34" /></view>
   <view class="st-intro__go" bindtap="startStoryIntro" aria-role="button" aria-label="开始游戏" hover-class="cy-pressed" hover-stay-time="80">开始游戏</view>
 </view>
 <!-- 初始状态(原型 statsIntro,2026-09-24):建档交上去之后,列出这一局带着出发的数值 -->
@@ -633,7 +634,7 @@
         <view class="fx-tile__shade"></view>
         <view class="fx-tile__lock" wx:if="{{item.locked}}"><cy-icon name="lock" size="28" /><text>前路未知</text></view>
         <!-- 一章一商家:章节名是这张卡的身份,压在营业态之上。两个小标竖着排,不抢同一个角。 -->
-        <view class="fx-tile__tags">
+        <view class="fx-tile__tags {{item.crowded || item.statusText ? 'fx-tile__tags--below' : ''}}">
           <view class="fx-tile__chap" wx:if="{{item.chapterLabel}}">{{item.chapterLabel}}</view>
           <view class="fx-tile__biz" wx:if="{{item.openText && !item.done}}">
             <view class="fx-tile__dot" style="background:{{item.openDot || '#C7C7C7'}}"></view>
@@ -658,6 +659,8 @@
            封口条要整条向右扯出包外,放里面会被裁掉。
          ★ 光效(压暗/光晕/白闪/冲击波/放射光条)z-index 全部低于卡包,碎片高于卡包。
            光跑到包表面上就成了「屏幕闪了一下」,不是「从袋子里炸出来」。 -->
+    <!-- x-fix2 P-6:卡包首屏只有一个包,也要留一颗返回(预览态有自己的返回) -->
+    <view class="play-back" wx:if="{{!packOpen && !isPreview}}" style="top:{{chrome.actionTop}}px" bindtap="goBackDetail" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="34" /></view>
     <view class="fx-dim {{packDim ? 'is-on' : ''}}"></view>
     <view class="fx-packwrap" wx:if="{{!packOpen}}" bindtap="openPack"
           bindtouchstart="onPackTouchStart" catchtouchmove="onPackTouchMove"
@@ -782,7 +785,7 @@
             <view class="fx-shop__n">{{hero.node.name}}</view>
             <view class="fx-shop__m">
               <text wx:if="{{hero.node.done}}" class="fx-shop__off">已核销</text>
-              <block wx:else>
+              <block wx:elif="{{hero.node.openText}}">
                 <view class="fx-tile__dot" style="background:{{hero.node.openDot || '#C7C7C7'}}"></view>
                 <text>{{hero.node.openText}}</text>
               </block>

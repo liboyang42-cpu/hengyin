@@ -39,6 +39,8 @@ function sheetFacts(node, distText) {
   if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); if (meters > 0) out.walkText = String(Math.max(1, Math.ceil(meters / WALK_M_PER_MIN))); }
   const biz = String(node && node.businessTime || '');
   if (biz && !/^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(biz)) out.hoursText = biz.replace(/:00/g, '').replace(/\s*[-~至]\s*/, '–');
+  // x-fix2 P-8:大字格只放时段;「公共区域观察;以现场…为准」这类说明已在地址行(metaLine)里,不挤进数字位
+  if (!/^\d{1,2}(:\d{2})?–\d{1,2}(:\d{2})?$/.test(out.hoursText.trim())) out.hoursText = '';
   return out;
 }
 /** 翻页卡组:当前下标 + 下一张(循环) */

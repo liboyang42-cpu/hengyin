@@ -572,8 +572,7 @@ Page({
   /* 去结算:自玩通行证进确认订单;发布者的票种绑在场次上,进选场次弹层并预选同名票种 */
   onBuyGo() {
     const opt = (this.data.buyOpts || [])[this.data.buySel];
-    if (!opt) return; // x-fix2 P-2:没有可买票种(如城市定向无场次)时不落到自玩结账
-    if (opt.kind === 'pass') return this.onSelfPlayGoCheckout();
+    if (!opt) return; if (opt.kind === 'pass') return this.onSelfPlayGoCheckout(); // x-fix2 P-2:没有可买票种(如城市定向无场次)时不落到自玩结账
     this.setData({ selfPlayConfirmShow: false, buyIn: false, sessionPreferName: opt.name });
     this.bmClick({ currentTarget: { dataset: {} } });
   },
@@ -607,8 +606,7 @@ Page({
 
   onHeroCta() {
     const kind = this.data.heroCta && this.data.heroCta.kind;
-    if (kind === 'locked') return this.lockedTip();
-    if (kind === 'closed') return toast('主题已截止');
+    if (kind === 'locked') return this.lockedTip(); if (kind === 'closed') return toast('主题已截止'); // x-fix2 P-1
     if (kind === 'joined') return this.goJoinedPlay();
     if (kind === 'selfplay') return this.selfPlayBuy();
     if (kind === 'signup') return this.bmClick({ currentTarget: { dataset: {} } });

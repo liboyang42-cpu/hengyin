@@ -2144,3 +2144,9 @@ page { background: var(--cy-color-bg-page); }
   display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; background:var(--cy-color-play-story-text); color:var(--cy-color-play-story-page); }
 .finsheet__settle + .finsheet__cta{ background:var(--cy-color-play-story-surface); color:var(--cy-color-play-story-text); }
 .finsheet__pad{ height:123rpx; }
+
+/* x-fix2 P-6:卡包首屏 / 故事开场的返回钮,与 fx-story__back 同形 */
+.play-back{ position:fixed; left:var(--cy-page-x); z-index:122; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%;
+  background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); display:flex; align-items:center; justify-content:center; }
+/* x-fix2 P-7:右上角有状态角标(未到店/已体验)时,章节名整列下移到角标下面,不再钻到角标底下 */
+.fx-tile__tags--below{ top:68rpx; }
