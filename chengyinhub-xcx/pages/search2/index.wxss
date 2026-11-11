@@ -1,6 +1,8 @@
 @charset "UTF-8";
 @import '../../style/picker-wheel.wxss';
 @import '../../style/merchant-light-scope.wxss';
+/* M-35:商家浅色根节点铺满一屏,内容短时不露出 page{} 的暗底 */
+.s2-root { min-height: 100vh; }
 .search2 .sousuo {
   gap: var(--cy-space-3);
 }
