@@ -5,6 +5,7 @@ const app = getApp()
 const { isBizOk } = require('../../../utils/response-shape.js')
 const lib = require('../../utils/pass-library.js')
 const { enter } = require('../../../utils/page-motion.js')
+const roleGuard = require('../../../utils/roleGuard.js')
 
 Page({
   data: {
@@ -20,12 +21,18 @@ Page({
   onLoad(options) {
     const kind = options && lib.KINDS.some((k) => k.key === options.kind) ? options.kind : 'all'
     this.setData({ kind })
+    // l-icons:商家没有通行证(业主 2026-11-11),商家账号不读主题库,只给一句原因
+    let merchant = false
+    try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
+    this._merchant = merchant
+    if (merchant) { this.setData({ state: 'merchant' }); return }
     this.reload()
   },
   onPullDownRefresh() { this.reload() },
   onUnload() { this._unloaded = true },
 
   reload() {
+    if (this._merchant) { wx.stopPullDownRefresh(); return }
     const seq = (this._seq = (this._seq || 0) + 1)
     this.setData({ state: 'loading', error: '' })
     app.sendRequest({

@@ -6,6 +6,9 @@ const { isBizOk } = require('../../../utils/response-shape.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const pp = require('../../utils/platform-pass.js')
 const payFlow = require('../../utils/platform-pass-pay.js')
+const roleGuard = require('../../../utils/roleGuard.js')
+
+const REVEAL = '/subpackagePass/reveal/index'
 
 function request(opts) {
   return new Promise((resolve, reject) => {
@@ -38,17 +41,20 @@ Page({
     library: [],
     buying: false,
     buyError: '',
-    reduced: false,
-    ok: { mounted: false, show: false, step: 0, untilText: '' }
+    reduced: false
   },
   onLoad() {
     let reduced = false
     try { reduced = !!readReducedMotion() } catch (e) { reduced = false }
     this.setData({ reduced })
     this._platform = pp.platformOf(wx)
+    // l-icons:商家没有通行证(业主 2026-11-11),商家账号进来只给一句原因,不读套餐、不出购买
+    let merchant = false
+    try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
+    if (merchant) { this.setData({ state: 'merchant' }); return }
     this.load()
   },
-  onUnload() { this._unloaded = true; (this._okT || []).forEach(clearTimeout) },
+  onUnload() { this._unloaded = true },
   onPageScroll(e) {
     const s = !!(e && e.scrollTop > 40)
     if (s !== this.data.scrolled) this.setData({ scrolled: s })
@@ -86,16 +92,14 @@ Page({
       this.setData({ buyError: r.message || '开通失败，请稍后再试' })
     })
   },
+  /** 开通成功(服务端订单 PAID):去钥匙开场页播完整版(l-icons,proto ps-key),文案里的数字只带服务端给过的值 */
   _celebrate(order) {
     const untilText = pp.dateText(order && order.validTo)
-    this.setData({ ok: { mounted: true, show: false, step: 0, untilText } })
-    this.load()
-    if (this.data.reduced) { this.setData({ 'ok.show': true, 'ok.step': 3 }); return }
-    const t = (ms, fn) => { (this._okT = this._okT || []).push(setTimeout(fn, ms)) }
-    t(34, () => this.setData({ 'ok.show': true }))
-    t(900, () => this.setData({ 'ok.step': 1 }))   // 钥匙飞入插锁
-    t(2400, () => this.setData({ 'ok.step': 2 }))  // 锁打开 + 硬币
-    t(3000, () => this.setData({ 'ok.step': 3 }))  // 文案 / 封面 / 按钮
+    const count = this.data.view && this.data.view.count !== null && this.data.view.count !== undefined ? String(this.data.view.count) : ''
+    const q = ['mode=paid']
+    if (/^\d+$/.test(count)) q.push('count=' + count)
+    if (untilText) q.push('until=' + encodeURIComponent(untilText))
+    wx.redirectTo({ url: REVEAL + '?' + q.join('&'), fail: () => { this.load() } })
   },
   openTopic(e) {
     const id = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id
@@ -106,8 +110,7 @@ Page({
   goLibrary() {
     if (this._navigating) return
     this._navigating = true
-    const after = () => { this._navigating = false; if (this.data.ok.mounted) this.setData({ ok: { mounted: false, show: false, step: 0, untilText: '' } }) }
-    wx.navigateTo({ url: '/subpackageMember/market/library/index', complete: after })
+    wx.navigateTo({ url: '/subpackageMember/market/library/index', complete: () => { this._navigating = false } })
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack()
