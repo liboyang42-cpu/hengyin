@@ -4,6 +4,7 @@ const cyToast = require('../../../utils/toast.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
 const pp = require('../../utils/platform-pass.js')
+const roleGuard = require('../../../utils/roleGuard.js')
 
 const TABS = [
   { key: 'shop', label: '可购买' },
@@ -46,6 +47,10 @@ Page({
   },
   // l-pass:通行证入口只看服务端 enabled;有效期 / 可玩主题数只写服务端给的值
   loadMember() {
+    // l-icons:商家没有通行证(业主 2026-11-11),商家账号不出通行证卡、不出主题库行
+    let merchant = false
+    try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
+    if (merchant) { this.setData({ member: null }); return }
     app.sendRequest({
       url: '/api/platform-pass', method: 'GET', hideLoading: true, autoErrorToast: false,
       success: (res) => {

@@ -1,19 +1,32 @@
-<!-- l-pass 通行证(我的 → 通行证与礼品 → 通行证)。原型 proto/game ps-pass + ps-success。数字只读服务端。 -->
+<!-- l-pass 通行证(我的 → 通行证与礼品 → 通行证)。原型 proto/game ps-pass + ps-success。数字只读服务端。
+     l-iconsB 2026-11-11:页面按 proto/icons ps-pass 改回标准玩家样式;商家账号只给一句原因。 -->
 <view class="theme-dark pp"><cy-access-gate kind="login" />
   <cy-toast id="cy-toast" />
   <view class="pp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar overlay scrolled="{{scrolled}}" tint="light" custom-back title="通行证" bind:back="goBack" />
     <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
     <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
+    <cy-empty wx:elif="{{state === 'merchant'}}" fill class="cy-fill-state" size="lg" kind="empty" title="商家账号没有通行证" />
     <cy-empty wx:elif="{{!view.enabled}}" fill class="cy-fill-state" size="lg" kind="empty" title="通行证暂未开放" />
     <view wx:else class="pp__body">
-      <view class="pp__hero">
-        <view class="pp__art">
-          <cy-illus name="pass" size="300" />
-          <view class="pp__key"><cy-illus name="key" size="140" delay="500" bare /></view>
+      <!-- l-iconsB:proto/icons ps-pass 标准玩家样式(实色卡 + 标准列表行 + 底部固定药丸,不做玻璃)。卡里只写服务端给的事实 -->
+      <view class="pp__card">
+        <view class="pp__card-top">
+          <view class="pp__card-t">
+            <text class="pp__eb">城瘾通行证</text>
+            <text class="pp__h">{{view.active ? '已开通' : '未开通'}}</text>
+            <text class="pp__k" wx:if="{{view.active && view.untilText}}">有效期至 {{view.untilText}}</text>
+          </view>
+          <view class="pp__key"><cy-illus name="key" size="184" /></view>
         </view>
-        <view class="pp__cnt" wx:if="{{view.count !== null}}"><text class="pp__cnt-n">{{view.count}}</text><text class="pp__cnt-u">个主题 全部可玩</text></view>
-        <text class="pp__until" wx:if="{{view.active && view.untilText}}">有效期至 {{view.untilText}}</text>
+      </view>
+
+      <view class="pp__list">
+        <view class="pp__row" bindtap="goLibrary" aria-role="button" aria-label="可玩主题库" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="pp__ic"><cy-illus name="seal" size="72" bare /></view>
+          <view class="pp__row-m"><text class="pp__row-t">可玩主题库</text><text class="pp__row-s" wx:if="{{view.count !== null}}">{{view.count}} 个主题 · 持证 ¥0</text></view>
+          <cy-icon name="chevron-right" size="32" />
+        </view>
       </view>
 
       <view class="pp__plans" wx:if="{{view.plans.length}}" aria-role="radiogroup">
@@ -24,24 +37,16 @@
           <text class="pp__plan-l">{{item.line}}</text>
         </view>
       </view>
-      <view class="pp__pill {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
+      <view wx:if="{{view.active && view.plans.length}}" class="pp__renew {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
       <text class="pp__terms" wx:if="{{view.terms}}">{{view.terms}}</text>
       <cy-inline-error class="pp__err" wx:if="{{buyError}}" kind="field" title="{{buyError}}" />
-
-      <block wx:if="{{library.length}}">
-        <text class="pp__sec">可玩主题库</text>
-        <view class="pp__lib">
-          <view wx:for="{{library}}" wx:key="id" wx:if="{{index < 4}}" class="pp__it" data-id="{{item.id}}" bindtap="openTopic" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
-            <image class="pp__it-cv" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load />
-            <text class="pp__it-z">¥0</text>
-            <text class="pp__it-n">{{item.name}}</text>
-            <text class="pp__it-d" wx:if="{{item.data}}">{{item.data}}</text>
-          </view>
-        </view>
-        <view class="pp__more" bindtap="goLibrary" aria-role="button" aria-label="进入游戏主题库" hover-class="cy-pressed" hover-stay-time="80"><text>进入游戏主题库</text><cy-icon name="chevron-right" size="28" /></view>
-      </block>
       <view class="pp__pad"></view>
     </view>
+  </view>
+
+  <view class="pp__foot" wx:if="{{state === 'ready' && view.enabled}}">
+    <view wx:if="{{view.active}}" class="pp__pill" bindtap="goLibrary" aria-role="button" aria-label="去主题库" hover-class="cy-pressed" hover-stay-time="80">去主题库</view>
+    <view wx:else class="pp__pill {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
   </view>
 
   <!-- ps-success:服务端订单 PAID 才出现。钥匙飞入 → 锁打开 → 积分币弹出 → 文案与封面升起。只用过渡。 -->

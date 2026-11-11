@@ -180,3 +180,44 @@ test('组件:宿主把名字从调查中换成成功时,按新图的时间表从
   assert.equal(vm.data.ec, 'e1')
   def.lifetimes.detached.call(vm)
 })
+
+const read = (p) => fs.readFileSync(path.join(XCX, p), 'utf8')
+
+test('通行证页按 proto ps-pass:实色卡 + 标准列表行 + 底部固定药丸;黑底 token,不做玻璃、不再用暖橙渐变', () => {
+  const wxml = read('subpackageMember/market/membership/index.wxml')
+  const css = read('subpackageMember/market/membership/index.wxss')
+  assert.match(wxml, /<view class="pp__card">[\s\S]*?<text class="pp__eb">城瘾通行证<\/text>/)
+  assert.match(wxml, /<text class="pp__k" wx:if="\{\{view\.active && view\.untilText\}\}">有效期至 \{\{view\.untilText\}\}<\/text>/, '有效期只写服务端给的')
+  assert.match(wxml, /<view class="pp__key"><cy-illus name="key" size="184" \/><\/view>/)
+  assert.match(wxml, /<cy-illus name="seal" size="72" bare \/>[\s\S]*?可玩主题库[\s\S]*?wx:if="\{\{view\.count !== null\}\}">\{\{view\.count\}\} 个主题 · 持证 ¥0/)
+  assert.doesNotMatch(wxml, /邀请队友|通行证勋章|已用 .* 天/, '服务端没给的事实(队友权益 / 勋章数 / 已用天数)不画')
+  assert.match(wxml, /<view class="pp__foot" wx:if="\{\{state === 'ready' && view\.enabled\}\}">/)
+  assert.match(wxml, /wx:if="\{\{view\.active\}\}" class="pp__pill" bindtap="goLibrary"[^>]*>去主题库<\/view>/)
+  assert.match(wxml, /wx:else class="pp__pill[^"]*" bindtap="onBuy"/)
+  const top = css.slice(0, css.indexOf('/* ps-success'))
+  assert.match(top, /\.pp \{[^}]*background: var\(--cy-color-bg-page\); \}/)
+  assert.match(top, /\.pp__card \{[^}]*background: var\(--cy-color-bg-surface\);[^}]*border: 1px solid var\(--cy-color-border-subtle\);/)
+  assert.doesNotMatch(top.replace(/\/\*[\s\S]*?\*\//g, ''), /backdrop-filter|radial-gradient/)
+})
+
+test('商家看不到通行证:我的里没有入口;通行证页 / 主题库 / 通行证与礼品页按商家视角直接收住', () => {
+  assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<view class="pc-team-entry" wx:if="\{\{!isMerchantView\}\}">\s*<cy-cell title="通行证与礼品"/)
+  for (const p of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/library/index.js', 'subpackageMember/market/passes/index.js']) {
+    assert.match(read(p), /try \{ merchant = !!roleGuard\.isMerchantView\(\) \} catch \(e\) \{ merchant = false \}/, p)
+  }
+  assert.match(read('subpackageMember/market/membership/index.wxml'), /wx:elif="\{\{state === 'merchant'\}\}"[^>]*title="商家账号没有通行证"/)
+  let def
+  global.Page = (d) => { def = d }
+  global.getApp = () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 }, getUserRole: () => 'merchant', getUserType: () => '', sendRequest: () => assert.fail('商家不该请求通行证接口') })
+  global.wx = { getStorageSync: () => '', getDeviceInfo: () => ({ platform: 'devtools' }) }
+  const p = require.resolve('../../subpackageMember/market/membership/index.js')
+  delete require.cache[p]
+  try {
+    require(p)
+    const vm = { data: JSON.parse(JSON.stringify(def.data)) }
+    vm.setData = (o) => Object.assign(vm.data, o)
+    Object.assign(vm, def)
+    def.onLoad.call(vm)
+    assert.equal(vm.data.state, 'merchant')
+  } finally { delete global.Page; delete global.getApp; delete global.wx }
+})

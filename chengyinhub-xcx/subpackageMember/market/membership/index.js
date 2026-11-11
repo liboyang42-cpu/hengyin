@@ -6,6 +6,7 @@ const { isBizOk } = require('../../../utils/response-shape.js')
 const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const pp = require('../../utils/platform-pass.js')
 const payFlow = require('../../utils/platform-pass-pay.js')
+const roleGuard = require('../../../utils/roleGuard.js')
 
 function request(opts) {
   return new Promise((resolve, reject) => {
@@ -46,6 +47,10 @@ Page({
     try { reduced = !!readReducedMotion() } catch (e) { reduced = false }
     this.setData({ reduced })
     this._platform = pp.platformOf(wx)
+    // l-icons:商家没有通行证(业主 2026-11-11),商家账号进来只给一句原因,不读套餐、不出购买
+    let merchant = false
+    try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
+    if (merchant) { this.setData({ state: 'merchant' }); return }
     this.load()
   },
   onUnload() { this._unloaded = true; (this._okT || []).forEach(clearTimeout) },
