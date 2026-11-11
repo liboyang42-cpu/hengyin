@@ -1354075,7 +1354075,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:110"
+        "staticSource": "subpackageMember/market/membership/index.js:106"
       }
     },
     {
@@ -1354142,7 +1354142,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:76"
+        "staticSource": "subpackageMember/market/membership/index.js:72"
       }
     },
     {
@@ -1354313,7 +1354313,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:82"
+        "staticSource": "subpackageMember/market/membership/index.js:78"
       }
     },
     {
@@ -1354383,7 +1354383,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:110"
+        "staticSource": "subpackageMember/market/membership/index.js:106"
       }
     },
     {
@@ -1354554,7 +1354554,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:82"
+        "staticSource": "subpackageMember/market/membership/index.js:78"
       }
     },
     {
@@ -1354624,7 +1354624,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:115"
+        "staticSource": "subpackageMember/market/membership/index.js:111"
       }
     },
     {
@@ -1354679,23 +1354679,15 @@
       "targets": {
         "routes": [],
         "apis": [
-          "/api/platform-pass",
-          "/api/platform-pass/library"
+          "/api/platform-pass"
         ],
         "primaryApis": [
-          "/api/platform-pass",
-          "/api/platform-pass/library"
+          "/api/platform-pass"
         ],
         "auxiliaryApis": [],
         "apiContracts": [
           {
             "url": "/api/platform-pass",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/platform-pass/library",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1354714,7 +1354706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:62"
+        "staticSource": "subpackageMember/market/membership/index.js:61"
       }
     },
     {

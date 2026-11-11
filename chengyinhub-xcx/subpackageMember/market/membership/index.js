@@ -38,7 +38,6 @@ Page({
     state: 'loading',
     scrolled: false,
     view: { enabled: false },
-    library: [],
     buying: false,
     buyError: '',
     reduced: false
@@ -62,15 +61,12 @@ Page({
   load() {
     const seq = (this._seq = (this._seq || 0) + 1)
     this.setData({ state: 'loading' })
-    Promise.all([
-      get('/api/platform-pass'),
-      get('/api/platform-pass/library', { limit: 12 })
-    ]).then(([ov, lib]) => {
+    // l-iconsB 起本页不再渲染主题库缩略图(入口改为「可玩主题库」行),不再顺带拉主题库
+    get('/api/platform-pass').then((ov) => {
       if (seq !== this._seq || this._unloaded) return
       if (!isBizOk(ov) || !ov.data) { this.setData({ state: 'error' }); return }
       this._overview = ov.data
-      const rows = isBizOk(lib) && lib.data && Array.isArray(lib.data.rows) ? lib.data.rows.map(pp.libraryRow).filter(Boolean) : []
-      this.setData({ state: 'ready', view: pp.passView(ov.data, this._selected || '', this._platform), library: rows })
+      this.setData({ state: 'ready', view: pp.passView(ov.data, this._selected || '', this._platform) })
     })
   },
   onPlan(e) {
