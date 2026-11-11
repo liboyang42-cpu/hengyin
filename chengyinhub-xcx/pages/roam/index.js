@@ -815,13 +815,13 @@ Page({
     this._loadOfficialRoutes();
   },
   // f-pages P0-79(2026-11-11):官方路线入口回到漫游护照大卡(原入口随旧漫游地图改版消失)。
-  // 只认服务端:GET /api/preset/route/list 回了 ≥1 条已上架路线才摆卡,没有就不出;失败静默。
+  // 只认服务端:GET /api/preset/route/list 回了 ≥1 条已上架路线才摆卡,没有就不出;后端报错照常提示。
   _loadOfficialRoutes() {
     if (this.data.passportError) return;
     const current = this._roamReadScope();
     const token = {};
     this._officialRoutesToken = token;
-    req('/api/preset/route/list', 'GET', {}, { silentError: true }).then((res) => {
+    req('/api/preset/route/list', 'GET', {}).then((res) => {
       if (!current() || this._unloaded || this._officialRoutesToken !== token || !apiOk(res)) return;
       const routes = Array.isArray(res.data) ? res.data.filter((r) => r && typeof r === 'object' && r.id != null) : [];
       const passport = this.data.passport || {};
@@ -1666,8 +1666,7 @@ Page({
        ⚠️ share 走 scene 栈(sceneStack 已清),不在这里另设 show 位 —— 见 scene-sheet-single-host-contract。 */
     this._placeCardPoi = null; this._pinFocusId = null; this._markerSig = ''; this._searchKey = '';
     this.setData({ screen: 'entry-map', finish: {}, sceneStack: [], sceneCurrent: null,
-      entryMarkers: [],
-    liveCards: [],                // P-32:主地图底部横滑卡(附近活动 + 队伍) entryCards: [], searchPlaces: [], entryLoadError: false,
+      entryMarkers: [], liveCards: [], entryCards: [], searchPlaces: [], entryLoadError: false,
       entrySheet: '', entryActivity: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false,
       camOpen: false, shopStrip: { rows: [], idx: 0 }, placeCard: null, pinCountLabel: '',
       topicView: null, checkinView: null, multiView: null, runnerView: null,

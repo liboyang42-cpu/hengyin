@@ -1,6 +1,6 @@
 'use strict';
-// f-pages(2026-11-11)发布前检查 warning 档:本地 advisory(软建议)在弹层里可见,不拦「完成」;
-// 只有 advisory 时不再静默直发,先出弹层给作者看一眼。
+// f-pages(2026-11-11)发布前检查 warning 档:弹层出现时本地 advisory(软建议)以琥珀色可见,不拦「完成」。
+// 弹层何时出现不变:2026-10-30 业主 V-24「删除发布确认」——没有阻断项就直接发布,advisory 不单独把弹层叫出来。
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
@@ -24,10 +24,10 @@ test('「完成」只看 blocking;advisory 不禁用按钮', () => {
   assert.doesNotMatch(wxml, /disabled="\{\{[^}]*advisory/);
 });
 
-test('预检后:没有 blocking 但有本地 advisory 时出弹层,不直发;两者都空才直发', () => {
+test('V-24 不回退:是否出弹层只看 blocking,advisory 不单独叫出弹层', () => {
   const js = read('pages/publish/fabu/index.js');
   const body = js.slice(js.indexOf('_afterPrecheck(aiIssues, skipLabel) {'), js.indexOf('_showBackendPublishIssue(issue) {'));
-  assert.match(body, /const local = this\.buildPublishCheck\(\);/);
-  assert.match(body, /!local\.blocking\.length && !local\.advisory\.length/);
+  assert.match(body, /if \(!blockingAi && !this\.buildPublishCheck\(\)\.blocking\.length/);
+  assert.doesNotMatch(body, /advisory\.length/);
   assert.match(body, /this\._showPublishCheck\(aiIssues, skipLabel\);/);
 });

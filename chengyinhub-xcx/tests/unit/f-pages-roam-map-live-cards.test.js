@@ -44,12 +44,14 @@ test('主地图横滑卡只在 screen=map、商家条收起且有卡时渲染,�
 test('分享 / 邀请卡的码:读好后弹到位,只用 transition,减少动态效果下无过渡', () => {
   const wxml = read('components/cy/share-card/index.wxml');
   assert.equal((wxml.match(/bindload="onQrLoad"/g) || []).length, 2, '邀请卡与普通卡两处码图都接 bindload');
-  assert.match(wxml, /class="sc-qr sc-qr--inv \{\{qrReady \? 'sc-qr--ready' : ''\}\}"/);
-  assert.match(wxml, /\{\{reducedMotion \? 'sc--reduced' : ''\}\}/);
+  assert.equal((wxml.match(/binderror="onQrLoad"/g) || []).length, 2, '码图读失败也不停在透明态');
+  assert.match(wxml, /class="sc-qr sc-qr--inv \{\{qrReady \|\| reducedMotion \? 'sc-qr--ready' : ''\}\}\{\{reducedMotion \? ' sc-qr--static' : ''\}\}"/);
+  assert.match(wxml, /class="sc \{\{scIn === 1 \? 'sc--pre' : ''\}\}"/, '根节点 class 不动');
   const wxss = read('components/cy/share-card/index.wxss');
   assert.match(wxss, /\.sc-qr \{ opacity: 0; transform: scale\(\.6\); transition: opacity var\(--cy-motion-standard\) var\(--cy-ease-out\), transform var\(--cy-motion-reveal, 450ms\) var\(--cy-ease-spring\); \}/);
   assert.match(wxss, /\.sc-qr--ready \{ opacity: 1; transform: scale\(1\); \}/);
-  assert.match(wxss, /\.sc--reduced \.sc-qr \{ transition: none; \}/);
+  assert.match(wxss, /\.sc-qr--static \{ transition: none; \}/);
+  assert.match(wxss, /@media \(prefers-reduced-motion: reduce\) \{ \.sc-qr \{ opacity: 1; transform: none; transition: none; \} \}/);
   assert.doesNotMatch(wxss, /@keyframes/);
   const js = read('components/cy/share-card/index.js');
   assert.match(js, /onQrLoad\(\) \{ if \(!this\.data\.qrReady\) this\.setData\(\{ qrReady: true \}\); \}/);

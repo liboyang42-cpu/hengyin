@@ -404,7 +404,6 @@ Page({
             if (!isCurrent()) return;
             if (res && res.code == '200' && res.data && res.data.favorited === false) {
               that._recordFavoriteRemoval('nodes', requestKey);
-              toast.success('已取消收藏');
               that.setData({ nodeList: that.data.nodeList.filter(node => String(node.id) !== requestKey) });
             } else if (res && res.code == '200') {
               // 回包说仍在收藏(并发下被 toggle 回来):不摘卡,重读列表对齐

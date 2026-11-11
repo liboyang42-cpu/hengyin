@@ -7542,9 +7542,7 @@ Page({
     const blockingAi = (aiIssues || []).some((issue) => issue && issue.message && issue.level === 'error'
       && issue.type !== 'parse_error' && AI_BLIND_ISSUE_TYPES.indexOf(issue.type) < 0
       && AI_ADVISORY_ISSUE_TYPES.indexOf(issue.type) < 0);
-    // warning 档(2026-11-11):本地 advisory(软建议)不拦发布,但要先在弹层里给作者看一眼再「完成」,不再静默直发
-    const local = this.buildPublishCheck();
-    if (!blockingAi && !local.blocking.length && !local.advisory.length
+    if (!blockingAi && !this.buildPublishCheck().blocking.length
         && (!this.data.identityRequired || this.data.identityRegistered)) {
       this._publishPrecheckOk = !skipLabel && !(aiIssues || []).length;
       this._publishAfterIdentity();

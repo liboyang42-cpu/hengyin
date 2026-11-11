@@ -43,7 +43,7 @@
           mode="aspectFill" bindtap="goNode" data-id="{{item.id}}" aria-role="button" aria-label="打开{{item.name || '收藏据点'}}" hover-class="cy-pressed" hover-stay-time="80"/>
         <view class="favorite-card__scrim"></view>
         <view class="favorite-card__body">
-          <text class="favorite-card__title">{{item.name}}</text>
+          <text class="favorite-card__title favorite-card__title--node">{{item.name}}</text>
           <text class="favorite-card__type" wx:if="{{item.merchantName || item.merchantAddress}}">{{item.merchantName || item.merchantAddress}}</text>
         </view>
         <view class="favorite-card__actions">

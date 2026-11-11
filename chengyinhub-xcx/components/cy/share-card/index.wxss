@@ -24,7 +24,8 @@
 /* f-pages G-11(2026-11-11):码出现动效 —— 码图读好之前不占视觉(opacity 0、缩到 .6),bindload 后弹到位;只用过渡,减少动态效果下直接到终态 */
 .sc-qr { opacity: 0; transform: scale(.6); transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-reveal, 450ms) var(--cy-ease-spring); }
 .sc-qr--ready { opacity: 1; transform: scale(1); }
-.sc--reduced .sc-qr { transition: none; }
+.sc-qr--static { transition: none; }
+@media (prefers-reduced-motion: reduce) { .sc-qr { opacity: 1; transform: none; transition: none; } }
 .sc-card--shop .sc-qr { width: 128rpx; height: 128rpx; }
 /* 勋章:上半是勋章本身,后面一圈暖光 */
 .sc-glow { position: absolute; left: 80rpx; top: 17rpx; width: 400rpx; height: 400rpx; border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 120, .45) 0%, rgba(255, 214, 120, 0) 70%); } /* ds-ok 勋章暖光 */
