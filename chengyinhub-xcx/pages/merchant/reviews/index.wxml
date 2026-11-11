@@ -29,8 +29,7 @@
             title="商家信息不完整" cta="返回" bind:cta="onNavBack" />
   <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg"
             title="还没有真实到店评价"
-            sub=""
-            cta="重新加载" bind:cta="retry" />
+            sub="" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" class="review-scroll" scroll-y enhanced
                show-scrollbar="{{false}}" lower-threshold="160" bindscrolltolower="loadMore">

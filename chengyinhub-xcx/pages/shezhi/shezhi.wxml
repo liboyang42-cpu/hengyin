@@ -24,7 +24,7 @@
     <cy-cell id="settings-ai-chat-records" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_message-square-text.svg" title="AI 对话记录" bind:tap="openAiChatRecords" />
     <cy-cell id="settings-marketing-consent" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_ticket.svg"
              title="营销消息与优惠券" bind:tap="openMarketingConsent" />
-    <cy-cell id="settings-post-governance" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_message-square-warning.svg"
+    <cy-cell id="settings-post-governance" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_shield-alert.svg"
              title="帖文处置与申诉" description="" bind:tap="openPostGovernance" />
     <!-- V1-P53(2026-11-09):P-53 从「我的」撤掉投诉建议时写着「设置里已有」,设置里其实没有这一行 —— 补回,开同一个 settings-feedback 场景 -->
     <cy-cell id="settings-feedback" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_megaphone.svg" title="投诉建议" bind:tap="goFeedback" />
