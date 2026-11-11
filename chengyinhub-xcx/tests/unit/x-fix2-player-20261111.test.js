@@ -177,3 +177,13 @@ test('P-12 主题详情数据条:开放时间只在连字符后折行,不再 bre
   assert.match(css, /\.topic \.statbar__value \{ max-width: 100%; white-space: normal; word-break: keep-all; overflow-wrap: anywhere;/)
   assert.doesNotMatch(css, /\.topic \.statbar__value \{[^}]*break-all/)
 })
+
+test('L-2 游玩页加载遮罩(z200 纯黑底 + 暗骨架)自带返回键;开机黑场是约 2 秒自清的过渡帧', () => {
+  const w = read('pages/play/index.wxml')
+  const m = w.match(/<view class="play-loading"[\s\S]*?<cy-skeleton type="detail" \/>/)
+  assert.ok(m, 'play-loading 块')
+  assert.match(m[0], /class="play-back play-back--load" wx:if="\{\{!isPreview\}\}"[^>]*bindtap="goBackDetail"/)
+  assert.match(read('pages/play/index.wxss'), /\.play-back--load\{ z-index:201; \}/)
+  // 开机黑场必须自清:最后一拍把 bootStage 置空
+  assert.match(read('pages/play/index.js'), /\['fade', 1100\], \['', 2000\]/)
+})

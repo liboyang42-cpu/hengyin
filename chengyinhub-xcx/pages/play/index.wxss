@@ -325,6 +325,8 @@ page { background: var(--cy-color-bg-page); }
    数字来自真实累计完成主题数(见 index.js loadMilestone),接口没取到时整条不渲染。 */
 .play-loading{ position:fixed; inset:0; z-index:200; display:flex; align-items:flex-start; justify-content:center; padding:0 var(--cy-page-x); box-sizing:border-box; background:var(--cy-color-bg-page); }
 
+.play-back--load{ z-index:201; }
+
 /* 非阻断时间横幅 */
 .play-timebar{ position:fixed; left:0; right:0; top:0; z-index:120; padding:var(--cy-legacy-18) 24rpx; padding-top:calc(18rpx + env(safe-area-inset-top)); text-align:center; background: var(--cy-color-overlay); color: var(--cy-color-play-accent); font-size:26rpx; } /* ds-ok 非阻断时间横幅沿用既有字号 */
 /* 空态遮罩 */
