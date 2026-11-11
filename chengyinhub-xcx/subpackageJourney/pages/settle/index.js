@@ -80,7 +80,19 @@ Page({
       if (!report.finished) { this.setData({ state: 'error', stateKind: 'not-started', stateTitle: '这一局还没结束', stateCta: '' }); return; }
       this.setData({ state: 'ready', report, shareCard: shareCard.cardLines(report, this.data.topicName) });
       this._enterOverview();
+      this._fillTopicName(report.topicId || this._query.topicId);
     });
+  },
+
+  // x-fix4 N-9:从战报/直链进来没带 topicName 时,按主题 id 补主题名,标题不再落「本局」
+  _fillTopicName(topicId) {
+    if (this.data.topicName || !view.isId(topicId)) return;
+    app.sendRequest({ url: '/api/topic/info-to-user', method: 'POST', data: { id: topicId }, hideLoading: true, autoErrorToast: false,
+      success: res => {
+        const d = res && String(res.code) === '200' && res.data;
+        if (!d || !d.name || this._gone || this.data.topicName) return;
+        this.setData({ topicName: d.name, shareCard: shareCard.cardLines(this.data.report, d.name) });
+      } });
   },
 
   // 总览进场:插图先落,字与两格依次升起;分数在卡落定后数上来(只在第一次拿到战报时)
