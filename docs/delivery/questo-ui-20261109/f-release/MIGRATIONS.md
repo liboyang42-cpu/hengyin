@@ -1,10 +1,10 @@
-# 发布迁移清单（f-release，候选 `fa7fc0ef`）
+# 发布迁移清单（f-release，候选 `1eb2ba0c`）
 
 由 `gen_release_set.py` 生成，勿手改。生产执行状态一律 **UNKNOWN**，以 `release-precheck.sql` 的结果为准。
 
 | 项 | 值 |
 |---|---|
-| 候选头 | `fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2` |
+| 候选头 | `1eb2ba0c6a5fefc42502ea88ba339ed980e65fab` |
 | 生产参考基线 | 10-29 发布包基线 `19408d49`（Merge #452）；10-22、10-28、10-29 三个包都没有在生产确认执行 |
 | 发布集 | 156 项 = 10-29 包 88 项 + 10-29 之后 68 项（其中 launch 波次 39 项） |
 | 候选头全量迁移数 | 641（执行序 order 取自其拓扑序） |

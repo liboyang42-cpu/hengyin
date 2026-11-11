@@ -1,5 +1,5 @@
 -- =====================================================================================
--- f-release 只读预检（候选 fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2）
+-- f-release 只读预检（候选 1eb2ba0c6a5fefc42502ea88ba339ed980e65fab）
 -- 每个发布迁移一条 SELECT，返回 step / migration_id / release_class / phase / status。
 -- 只读：全部是 SELECT（information_schema 与业务表），生成器逐句校验，无写入、无 SET、无 PREPARE。
 -- 不含任何主机、端口、账号；由业主用只读账号执行（建议先 SET SESSION TRANSACTION READ ONLY，不在本文件里）。

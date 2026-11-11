@@ -271,7 +271,12 @@ def build(head):
     all_items = migrations_at(str(ROOT), head_sha)
     by_path = {m["path"]: m for m in all_items}
     rows = []
+    diff = migration_diff(str(ROOT), PACK_SOURCE, head_sha)
+    # qx-final6 起 pack 契约也收录了 10-29 之后的新增项（供隔离演练）；这些项仍按 NEW_META 标注，此处只取原 10-29 包。
+    added_since_pack = {c["migrationId"] for c in diff["changes"]}
     for m in pack["migrations"]:
+        if m["migrationId"] in added_since_pack:
+            continue
         now = by_path.get(m["path"])
         if not now or now["sha256"] != m["sha256"]:
             raise SystemExit("10-29 包内迁移在候选头上缺失或内容变化: %s" % m["path"])
@@ -289,7 +294,6 @@ def build(head):
         rows.append({"source": "10-29 发布包（未确认执行）", "class": cls, "phase": phase, "note": note, "rerun": rerun,
                      "packPhase": m["phase"], "migrationId": now["migrationId"], "path": now["path"],
                      "sha256": now["sha256"], "order": now["order"], "dependsOn": now["dependsOn"]})
-    diff = migration_diff(str(ROOT), PACK_SOURCE, head_sha)
     if any(c["change"] != "ADDED" for c in diff["changes"]):
         raise SystemExit("10-29 之后有迁移被修改或删除: %s" % [c["path"] for c in diff["changes"] if c["change"] != "ADDED"])
     since_master = {c["path"] for c in migration_diff(str(ROOT), MASTER_BRIEF_BASE, head_sha)["changes"]}
