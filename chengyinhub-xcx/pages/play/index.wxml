@@ -319,8 +319,8 @@
           <view class="dcopy"><text class="dt">{{runState === 'running' ? '暂停这一局' : '开始这一局'}}</text><text class="ds" wx:if="{{runState !== 'idle'}}">{{runHoldPct > 0 ? (runHoldLeft > 0 ? '还有 ' + runHoldLeft + ' 站未完成 · 松开取消' : '松开取消') : '长按结束这一局'}}</text></view>
           <view class="darr"></view>
         </view>
-        <!-- 自由探索在地图模式下的切章节:原来挂在底栏左键上,底栏没了就收到这里。 -->
-        <view class="drow" wx:if="{{mode==2}}" bindtap="openStackOrChaptersFromTools" aria-role="button" aria-label="切换章节" hover-class="cy-pressed" hover-stay-time="80">
+        <!-- 自由探索在地图模式下的切章节:原来挂在底栏左键上,底栏没了就收到这里。f-play V3-08:城市定向多章时也在这里(走完后回看换章)。 -->
+        <view class="drow" wx:if="{{mode==2 || chapterCards.length > 1}}" bindtap="openStackOrChaptersFromTools" aria-role="button" aria-label="切换章节" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--route"></view>
           <view class="dcopy"><text class="dt">切换章节</text></view>
           <view class="darr"></view>
@@ -527,14 +527,14 @@
        paused  读数=用时/已完成/路程     按钮=继续(绿) · 结束(红)
      卡右上角的展开钮任何状态都能点,展开看本章剧情(见 openJournalFromTools)。
      「核销」两个模式都需要 ⇒ 提到地图右侧常驻圆钮,不跟模式相关的动作挤同一排。 -->
-<block wx:if="{{!screen && (!allDone || canContinueGames) && !emptyTip && !loading && !chapterFull}}">
+<!-- f-play V3-08:选章放在「没走完才显示」的块外面 —— 原来在块里,走完一局(allDone)之后点「切换章节」数据开了、弹窗永远不渲染。 -->
   <!-- ===== 章节选择弹窗(自由探索:切换章节先选章,选完白卡换成该章的商家/地点)===== -->
 <view class="chpick-mask" catchtouchmove="noop" wx:if="{{chapterPick.show}}" bindtap="closeChapterPick" aria-role="button" aria-label="关闭章节选择" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="chpick" wx:if="{{chapterPick.show}}">
   <view class="chpick__grab"></view>
   <view class="chpick__hd">选择章节</view>
-  <view class="chpick__row {{index==chapterPick.cur?'is-on':''}}" wx:for="{{chapterCards}}" wx:key="key"
-        data-idx="{{index}}" bindtap="onPickChapter" aria-role="button" aria-label="{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="chpick__row {{index==chapterPick.cur?'is-on':''}} {{chapterPick.states[index] === 'locked' ? 'is-locked' : ''}}" wx:for="{{chapterCards}}" wx:key="key"
+        data-idx="{{index}}" bindtap="onPickChapter" aria-role="button" aria-label="{{item.title}}{{chapterPick.states[index] === 'completed' ? '，已完成' : (chapterPick.states[index] === 'locked' ? '，未解锁' : '')}}" aria-disabled="{{chapterPick.states[index] === 'locked'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="chpick__cover">
       <image wx:if="{{item.cover}}" src="{{img.first(item.cover)}}" mode="aspectFill" />
       <cy-icon wx:else name="flag" size="40" />
@@ -542,11 +542,12 @@
     <view class="chpick__copy">
       <text class="chpick__meta">{{item.meta}}{{item.category ? ' · ' + item.category : ''}}</text>
       <text class="chpick__title">{{item.title}}</text>
-      <text class="chpick__sub">{{item.nodeCount}} 处地点{{item.mileage ? ' · ' + item.mileage : ''}}</text>
+      <text class="chpick__sub">{{chapterPick.states[index] === 'completed' ? '已完成 · ' : ''}}{{item.nodeCount}} 处地点{{item.mileage ? ' · ' + item.mileage : ''}}</text>
     </view>
     <cy-icon wx:if="{{index==chapterPick.cur}}" class="chpick__check" name="check" size="40" />
   </view>
 </view>
+<block wx:if="{{!screen && (!allDone || canContinueGames) && !emptyTip && !loading && !chapterFull}}">
 
   <!-- ===== 导航态顶部条(Figma 3962:14212)=====
        ⚠️ 稿上写的是「7 米后 右转」这种逐向指令。我们没有导航 SDK,拿不到转向动作,

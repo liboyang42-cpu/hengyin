@@ -787,6 +787,7 @@ page { background: var(--cy-color-bg-page); }
 .chpick__meta{ font-size:21rpx; color:#6A7282; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__title{ font-size:31rpx; font-weight:700; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__sub{ font-size:23rpx; color:#6A7282; } /* ds-ok Figma 实测(用户裁决字面值) */
+.chpick__row.is-locked{ opacity:.4; } /* f-play V3-09:还没解锁的章压暗,点了不进(onPickChapter 同一判据) */
 .chpick__check{ flex:none; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 
 /* ===== 完赛路线推荐卡(#555,finsheet 内)+ 场景栈宿主(#572)—— 样式随 master ===== */

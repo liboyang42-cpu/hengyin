@@ -125,5 +125,54 @@ test('地点卡距离跟着定位走:开着的卡每一跳重算,走到站上不
   page._refreshSheetFacts();
   assert.equal(writes.length, 1, '卡关着不写');
   const src = read('pages/play/index.js');
-  assert.match(src, /if \(distText !== that\.data\.storyDistText\) that\.setData\(\{ storyDistText: distText \}\);\n\s+\}\n\s+that\._refreshSheetFacts\(\);/, '挂在定位回调里');
+  assert.match(src, /if \(distText !== that\.data\.storyDistText\) that\.setData\(\{ storyDistText: distText \}\);\n\s+\}\n\s+if \(typeof that\._refreshSheetFacts === 'function'\) that\._refreshSheetFacts\(\);/, '挂在定位回调里');
+});
+
+test('V3-08 选章弹窗不在「没走完才显示」的块里:走完一局后「切换章节」能真的弹出来;城市定向多章也有入口', () => {
+  const wxml = read('pages/play/index.wxml');
+  const pick = wxml.indexOf('<view class="chpick" wx:if="{{chapterPick.show}}">');
+  const gate = '<block wx:if="{{!screen && (!allDone || canContinueGames) && !emptyTip && !loading && !chapterFull}}">';
+  const blockStart = wxml.indexOf(gate);
+  assert.ok(pick > 0 && blockStart > 0 && pick < blockStart, '选章弹窗在 allDone 守卫块之前,不受它管');
+  const before = wxml.slice(0, pick);
+  assert.equal((before.match(/<block\b/g) || []).length, (before.match(/<\/block>/g) || []).length, '外面没有未闭合的 block 包着选章弹窗');
+  assert.match(wxml, /<view class="drow" wx:if="\{\{mode==2 \|\| chapterCards\.length > 1\}\}" bindtap="openStackOrChaptersFromTools"/);
+});
+
+test('V3-09 选章每行带完成态:已完成写「已完成」,未解锁压暗,判据与 onPickChapter 同一个 chapterReadState', () => {
+  const wxml = read('pages/play/index.wxml');
+  assert.match(wxml, /chapterPick\.states\[index\] === 'locked' \? 'is-locked' : ''/);
+  assert.match(wxml, /<text class="chpick__sub">\{\{chapterPick\.states\[index\] === 'completed' \? '已完成 · ' : ''\}\}/);
+  assert.match(read('pages/play/index.wxss'), /\.chpick__row\.is-locked\{ opacity:\.4; \}/);
+  assert.match(read('pages/play/index.js'), /'chapterPick\.states': this\._chapterPickStates\(\)/);
+  const api = require('../../pages/play/utils/play-stage-pops.js').methods();
+  const page = Object.assign({}, api, { _historyNodes: [], data: {
+    chapterCards: [{ id: 1, blocks: [{ type: 'node', nodeId: '11' }] }, { id: 2, blocks: [{ type: 'node', nodeId: '22' }] }, { id: 3, locked: true }],
+    nodes: [{ nodeId: 11, chapterId: 1, done: true }, { nodeId: 22, chapterId: 2, done: false }],
+  } });
+  assert.deepEqual(page._chapterPickStates(), ['completed', 'available', 'locked']);
+});
+
+test('V3-07 走完后完成页「继续」回到故事流只读回看(最后一章已完成的那章,停在末尾往上滑);不是走完的真实局照旧离开', () => {
+  assert.match(read('pages/play/index.js'), /!this\.data\.isMock && !this\._reviewAfterFinish\(\)\) this\.goBackDetail\(\);/);
+  const api = require('../../pages/play/utils/play-stage-pops.js').methods();
+  const mk = (data) => {
+    const picked = [];
+    const page = Object.assign({}, api, { _historyNodes: [], data: Object.assign({
+      allDone: true, isPreview: false, isMock: false, mode: 1, chapterFull: false, chapterParas: [],
+      chapterCards: [{ id: 1, blocks: [{ type: 'node', nodeId: '11' }] }, { id: 2, blocks: [{ type: 'node', nodeId: '22' }] }],
+      nodes: [{ nodeId: 11, chapterId: 1, done: true }, { nodeId: 22, chapterId: 2, done: true }],
+    }, data), onPickChapter(e) { picked.push(e.currentTarget.dataset.idx); }, setData() {} });
+    return { page, picked };
+  };
+  const ok = mk({});
+  assert.equal(ok.page._reviewAfterFinish(), true);
+  assert.deepEqual(ok.picked, [1], '最后一章已完成的那章');
+  clearTimeout(ok.page._reviewEndT);
+  for (const bad of [{ allDone: false }, { isPreview: true }, { isMock: true }, { mode: 2 },
+    { nodes: [{ nodeId: 11, chapterId: 1, done: false }, { nodeId: 22, chapterId: 2, done: false }] }]) {
+    const x = mk(bad);
+    assert.equal(x.page._reviewAfterFinish(), false, JSON.stringify(bad));
+    assert.deepEqual(x.picked, []);
+  }
 });
