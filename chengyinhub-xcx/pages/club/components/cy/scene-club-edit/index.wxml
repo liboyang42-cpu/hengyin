@@ -197,7 +197,7 @@
     <view class="pk-chips">
       <view wx:for="{{dirOptions}}" wx:key="*this" class="chip {{draftPrefsOn[item] ? 'on' : ''}}"
             data-val="{{item}}" catchtap="toggleDraftDir" aria-role="button"
-            aria-label="活动倾向：{{item}}" aria-pressed="{{!!draftPrefsOn[item]}}" hover-class="cy-pressed" hover-stay-time="80">{{item}}</view>
+            aria-label="活动倾向：{{item}}" aria-pressed="{{!!draftPrefsOn[item]}}" hover-class="cy-pressed" hover-stay-time="80"><image wx:if="{{dirIcons[item]}}" class="chip-ico" src="{{dirIcons[item]}}" mode="aspectFit" aria-hidden="true" />{{item}}</view>
     </view>
   </view>
   <view slot="footer"><cy-btn variant="primary" bindtap="applyPicker">应用</cy-btn></view>

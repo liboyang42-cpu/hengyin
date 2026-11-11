@@ -126,6 +126,7 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
     setTimeout() { return 0 },
     require(request) {
       if (request.endsWith('/club-edit-draft.js')) return require('../../pages/club/utils/club-edit-draft.js')
+      if (request.endsWith('/tag-library.js')) return require('../../utils/tag-library.js') // f-merchant G-8:活动倾向来自标签库(纯函数,用真模块)
       throw new Error('unexpected require: ' + request)
     },
     wx: {
