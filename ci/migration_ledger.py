@@ -121,6 +121,9 @@ EXPLICIT_AUXILIARY_SQL = {
     "docs/delivery/release-closeout-20261022/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/release-closeout-20261028/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/release-closeout-20261029/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
+    # f-release(launch/questo-20261110)发布集的每文件只读预检:全是 SELECT,由
+    # docs/delivery/questo-ui-20261109/f-release/gen_release_set.py 生成并逐句校验;runner 不执行、不进台账。
+    "docs/delivery/questo-ui-20261109/f-release/release-precheck.sql": "AUXILIARY_NOT_EXECUTED",
 }
 IGNORED_DIRS = {".git", "node_modules", "target"}
 MIGRATION_ID = re.compile(r"^[a-z0-9][a-z0-9_]*$")

@@ -86,7 +86,7 @@ test('quote calls read-only API and labels result as neither application nor arr
   const h = harness(); h.answer(0, raw()); h.page.loadQuote();
   assert.equal(h.requests[1].method, 'GET');
   h.answer(1, { route: 'PLATFORM_BALANCE', amount: '2000.01', reason: '部分使用' });
-  assert.match(h.page.data.quote.notice, /尚未提交退款/); assert.match(h.page.data.quote.notice, /不代表到账/);
+  assert.match(h.page.data.quote.notice, /尚未提交退款/); assert.doesNotMatch(h.page.data.quote.notice, /试算|不代表/);
 });
 test('legacy order remains readable without inventing entitlements', () => {
   const h = harness(); h.answer(0, { registrationId: ID, bundle: null });
@@ -155,7 +155,7 @@ test('purchase UNKNOWN readback retains original key and never initiates another
   const h = harness({ requestId: 'purchase-original' });
   assert.match(h.requests[0].url, /order\/receipt$/);
   h.answer(0, { requestId: 'purchase-original', receipt: 'NOT_FOUND', outcome: 'UNKNOWN' });
-  assert.equal(h.page._registrationId, ''); assert.match(h.page.data.notice, /不代表未购买/);
+  assert.equal(h.page._registrationId, ''); assert.match(h.page.data.notice, /确认中/); assert.doesNotMatch(h.page.data.notice, /不代表|回读|原请求/);
   h.page.reload(); assert.equal(h.requests[1].data.requestId, 'purchase-original');
   h.answer(1, { requestId: 'purchase-original', receipt: 'FOUND', order: raw() });
   assert.equal(h.page._registrationId, ID); assert.equal(h.requests[2].data.registrationId, ID);
@@ -237,7 +237,7 @@ test('review UNKNOWN re-entry freezes payload and replays only after explicit re
   h.page.resumeReview(); assert.equal(h.requests[5].data, original);
   h.answer(5, { reviewId: '123', status: 'PENDING_REVIEW', replayed: true });
   assert.equal(h.page.data.reviewPending, null); assert.equal(h.storage.size, 0);
-  assert.match(h.page.data.notice, /尚未公开/);
+  assert.match(h.page.data.notice, /审核通过后公开/);
 });
 test('review storage failure prevents send and invalid draft cannot submit', () => {
   const h = eligibleReview(); h.page.inputReview({ detail: { value: '短' } }); h.page.submitReview();
@@ -349,4 +349,20 @@ test('refund freeze is a definitive cancellation refusal and does not claim canc
   assert.equal(h.storage.size, 0);
   assert.equal(h.page.data.error, '退款冻结中');
   assert.equal(h.page.data.detail.reservations[0].status, 'BOOKED');
+});
+
+// f-compliance:玩家页不显示内部编号与内部用语(10-23 文案规则);后端 msg 原样透传不在此列
+test('free-explore player copy hides internal ids and wording', () => {
+  const fs = require('fs'); const path = require('path');
+  const root = path.join(__dirname, '../../subpackageMember');
+  const wxml = fs.readFileSync(path.join(root, 'free-explore/index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(root, 'free-explore/index.js'), 'utf8');
+  const wire = fs.readFileSync(path.join(root, 'utils/free-explore-bundle.js'), 'utf8');
+  for (const id of ['targetOfferId}}', 'reservationId}}', 'refundId}}', 'unitCode}}', '权益 {{item.id}}']) assert.ok(!wxml.includes(id), id);
+  const literals = (src) => (src.match(/'[^'\n]*'/g) || []).filter(x => /[\u4e00-\u9fff]/.test(x)).join('\n');
+  for (const word of ['回读', '原请求', '不代表', '试算', '供给', '履约', '请求号']) {
+    assert.ok(!wxml.replace(/<!--[\s\S]*?-->/g, '').replace(/bindtap="[^"]*"/g, '').includes(word), 'wxml ' + word);
+    assert.ok(!literals(js).includes(word), 'js ' + word);
+    assert.ok(!literals(wire).includes(word), 'wire ' + word);
+  }
 });

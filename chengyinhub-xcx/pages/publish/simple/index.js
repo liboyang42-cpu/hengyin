@@ -6,6 +6,7 @@ const modal = require('../../../utils/modal.js');
 const { pickLocation, hasCoords } = require('../../../utils/location/location-manager.js');
 function openAddress() { return require('../../../utils/open-address.js') }
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const aigcLabel = require('../../../utils/aigc-label.js');
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const STATES = ['PREPARED', 'PROCESSING', 'UNKNOWN', 'SUCCEEDED', 'FAILED'];
 const VIEW_FIELDS = 'contextAvailable,executeBefore,productType,reasonCode,replayed,requestId,result,resultAvailable,resultExpiresAt,state';
@@ -45,6 +46,7 @@ Page({
   data: {
     creatorLoginRequired: false, statusBarHeight: 44, navBarHeight: 44,
     aiIdea: '', aiPlanProductType: null, aiPlanModeKnown: false, aiGenerating: false, aiError: '', aiPlan: null, aiPlanNodes: [], canEnterAiEditor: false,
+    aigcFilingNo: '',
     aiTraceId: '', aiQuotaLoaded: false, aiDraftPending: false, aiRemaining: 0, reducedMotion: false,
     aiIntentLabel: '', aiIntentIdentity: '', aiCanContinue: false, aiCanConfirmNew: false, aiHistoryPreviewLabel: '',
     aiRecoveryLoading: false, aiHistoryShow: false, aiHistoryItems: [],
@@ -87,6 +89,8 @@ Page({
     this._resumeAiSession();
   },
   onShow() {
+    const filing = aigcLabel.filingNo(app);
+    if (filing !== this.data.aigcFilingNo) this.setData({ aigcFilingNo: filing });
     if (this._creatorOwnerChanged() || !this._aiInitialised || this._unloaded) return;
     if (this._hidden || !this._sameSession(this._sessionAtLoad)) this._resumeAiSession();
   },

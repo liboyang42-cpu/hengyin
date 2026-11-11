@@ -44,4 +44,11 @@ public interface IDataRetentionService {
      * 该表只承载短期重放，不替代 npc_chat_log 的合规留存策略。
      */
     int cleanNpcChatRequests(Date cutoff, int batchSize, int maxBatches);
+
+    /**
+     * 删 cutoff 之前的 AI 生成日志(ai_generation_log,AIGC 生成内容日志留存期,默认 180 天)。
+     *
+     * @return 实际删除总行数
+     */
+    int cleanAiGenerationLogs(Date cutoff, int batchSize, int maxBatches);
 }

@@ -153,6 +153,29 @@ class AiGatewayServiceImplTest {
     }
 
     @Test
+    void providerUsageIsReturnedAndLoggedWhenPresent() {
+        when(mockLlm.takeLastUsage()).thenReturn(new int[] {200, 17});
+
+        AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"a\"}");
+
+        assertEquals(Integer.valueOf(200), result.getTokenIn());
+        assertEquals(Integer.valueOf(17), result.getTokenOut());
+        org.mockito.ArgumentCaptor<com.chengyinhub.business.domain.AiGenerationLog> logged =
+                org.mockito.ArgumentCaptor.forClass(com.chengyinhub.business.domain.AiGenerationLog.class);
+        verify(aiGenerationLogMapper).insertAiGenerationLog(logged.capture());
+        assertEquals(Integer.valueOf(200), logged.getValue().getTokenIn());
+        assertEquals(Integer.valueOf(17), logged.getValue().getTokenOut());
+    }
+
+    @Test
+    void missingProviderUsageKeepsNonZeroEstimate() {
+        AiGatewayResult result = service.generate(MEMBER_ID, "club", "merchant_plan", "[BIZ:merchant_plan]\n", "{\"idea\":\"test\"}");
+
+        assertTrue(result.getTokenIn() > 0);
+        assertTrue(result.getTokenOut() > 0);
+    }
+
+    @Test
     void playerThemeDraftSkipsGenericQuotaUntilDraftIsValidated() {
         AiGatewayResult result = service.generate(MEMBER_ID, "player", "theme_draft",
                 "[BIZ:theme_draft]\n", "{\"idea\":\"night walk\"}");

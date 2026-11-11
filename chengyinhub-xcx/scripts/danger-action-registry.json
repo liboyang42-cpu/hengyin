@@ -383,6 +383,13 @@
       "irreversible": true,
       "confirmKey": "ai.npc.chatData.delete",
       "reason": "服务端硬删该账号全部 NPC 对话记录,无法恢复"
+    },
+    {
+      "endpoint": "/api/ai/npc/chat/data/delete",
+      "file": "subpackageMember/components/cy/ai-chat-records/index.js",
+      "irreversible": true,
+      "confirmKey": "ai.npc.chatData.delete",
+      "reason": "设置页「AI 对话记录」清除入口,与 NPC 面板同一接口、同一确认弹窗;服务端硬删该账号全部 NPC 对话记录,无法恢复"
     }
   ]
 }

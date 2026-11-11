@@ -359,3 +359,6 @@
 .play-card__meta { color: var(--cy-comp-oncover-fg-dim); }
 .play-btn--ghost { background: var(--cy-color-play-accent-soft); color: var(--cy-comp-oncover-fg); }
 .play-btn--solid { background: var(--cy-comp-oncover-fg); color: var(--cy-color-text-on-light); }
+
+/* P0-14 AIGC 显式标识 */
+.story-aigc { display: flex; padding: 0 var(--cy-space-4, 32rpx); margin-top: var(--cy-space-2, 16rpx); }

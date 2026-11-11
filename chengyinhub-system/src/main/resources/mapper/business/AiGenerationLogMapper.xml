@@ -63,4 +63,11 @@
                 COALESCE(#{delFlag}, 0), sysdate())
     </insert>
 
+    <delete id="deleteAiGenerationLogsBefore">
+        <!-- AIGC 生成日志留存到期删除;create_time 由 insert 写服务端时间,走 idx_ai_gen_create_time。 -->
+        delete from ai_generation_log
+        where create_time &lt; #{cutoff}
+        limit #{limit}
+    </delete>
+
 </mapper>
