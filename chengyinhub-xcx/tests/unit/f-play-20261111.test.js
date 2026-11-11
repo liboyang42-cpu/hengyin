@@ -176,3 +176,14 @@ test('V3-07 走完后完成页「继续」回到故事流只读回看(最后一�
     assert.deepEqual(x.picked, []);
   }
 });
+
+test('V3-05 进度游标看得见:用药丸自己的字色(--lk-bg)而不是与药丸同色系的强调色,随 doneCount/total 伸长', () => {
+  const wxss = read('pages/play/play-stage.wxss');
+  const pill = /\.theme-gpill \{[^}]*background: var\(--lk-ink, #FFFFFF\); color: var\(--lk-bg, #000000\)/;
+  assert.match(wxss, pill);
+  const bar = wxss.match(/\.theme-gpill__i \{([^}]*)\}/)[1];
+  assert.match(bar, /background: var\(--lk-bg, #000000\)/, '游标与药丸底色对比 = 数字的对比');
+  assert.doesNotMatch(bar, /--lk-a/);
+  assert.match(bar, /height: 6rpx/);
+  assert.match(read('pages/play/index.wxml'), /<view class="theme-gpill__i" style="transform:scaleX\(\{\{doneCount \/ total\}\}\)"><\/view>/);
+});
