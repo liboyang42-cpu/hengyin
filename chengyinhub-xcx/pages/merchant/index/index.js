@@ -1454,6 +1454,12 @@ Page({
 
   // 结果面板主按钮:能核销的账号是「继续扫码」,其余只有「完成」。
   onVerificationPrimary() {
+    // 复核态:主按钮去核销记录核对这一笔,不接着扫下一位
+    if (this.data.verificationResult && this.data.verificationResult.review) {
+      this.closeScene();
+      wx.navigateTo({ url: '/pages/merchant/verify-records/index' });
+      return;
+    }
     if (this.data.merchantAccess && this.data.merchantAccess.canVerify) this.continueScan();
     else this.closeVerificationResult();
   },

@@ -14,7 +14,7 @@ function harness(owner = '7', community = true) {
   vm.runInNewContext(source, { getApp: () => app, Page: p => { definition = p; },
     wx: { navigateTo: v => navigations.push(v.url) }, setTimeout: () => 1, clearTimeout() {},
     require: p => p.includes('discover-search') ? search : p.includes('login-reload') ? session
-      : p.includes('page-motion') ? { enter() {} } : p.includes('scene-entry') ? { openScene() {} } : () => {} });
+      : p.includes('page-motion') ? { enter() {} } : p.includes('scene-entry') ? { openScene() {} } : p.includes('roleGuard') ? { isMerchantView: () => false } : p.includes('merchant-theme') ? { merchantPageShow() {}, merchantPageRestore() {} } : () => {} });
   const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)),
     setData(v, done) { Object.assign(this.data, v); if (done) done(); } });
   const unified = () => requests.filter(r => r.url === '/api/search/unified');

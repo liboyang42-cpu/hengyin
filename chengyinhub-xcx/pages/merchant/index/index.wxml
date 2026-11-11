@@ -324,7 +324,7 @@
     <!-- M-05/M-23:核销结果走现成的 cy-result-sheet(成功绿勾章,同 pages/merchant/customer),不另画面板、不带标题栏。 -->
     <cy-result-sheet show="{{true}}" kind="{{verificationResult.kind}}" title="{{verificationResult.title}}"
       sub="{{verificationResult.sub}}" meta="{{verificationResult.meta}}" pill="{{verificationResult.pill}}" why="{{verificationResult.why}}"
-      duration="{{0}}" primary-text="{{merchantAccess.canVerify ? '继续扫码' : '完成'}}" secondary-text="{{merchantAccess.canVerify ? '完成' : ''}}"
+      duration="{{0}}" primary-text="{{verificationResult.review ? '查看核销记录' : (merchantAccess.canVerify ? '继续扫码' : '完成')}}" secondary-text="{{merchantAccess.canVerify || verificationResult.review ? '完成' : ''}}"
       bind:primary="onVerificationPrimary" bind:secondary="closeVerificationResult" bind:close="closeVerificationResult" />
   </view>
 
