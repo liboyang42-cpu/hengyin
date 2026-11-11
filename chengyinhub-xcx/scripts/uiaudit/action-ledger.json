@@ -1107301,7 +1107301,7 @@
         "handler": "onStoryGripTap",
         "line": 492,
         "selectorHint": ".story-grip",
-        "visibleCondition": "{{!storyEditor.preview}}",
+        "visibleCondition": "{{!storyEditor.preview && block.type !== 'text'}}",
         "disabledCondition": null,
         "ariaLabel": "拖动或移动这一块",
         "ariaLabelExpression": null,

@@ -2189,17 +2189,17 @@ Page({
     this._storyScrollNow = Number(e.detail && e.detail.scrollTop) || 0;
   },
 
-  // ── 拖拽排序(任何块,段落也算)。长按块或左侧把手 → 这里量一次几何、拿起(震一下);
+  // ── 拖拽排序(正文段除外:l-editor2 业主「正文不能拖」,段落只作落点 / 被拆开的宿主)。长按块或右侧把手 → 这里量一次几何、拿起(震一下);
   //    之后的跟手、让位、贴边滚动全在渲染层 utils/wxs/story-drag.wxs,不逐帧 setData;
   //    跨过一格回调 onStoryDragSlot(轻震),松手回调 onStoryDragDrop(改顺序,再震一下)。
   onStoryDragArm(e) {
     const ds = e.currentTarget.dataset;
     const blockKey = ds.blockkey;
     const from = Number(ds.index);
-    // 正在输入的那一段:长按留给系统的选字,不抢(把手仍然能拖)
-    const fromGrip = !!(e.target && e.target.dataset && e.target.dataset.grip);
-    if (!blockKey || this.data.storyDrag.key || this.data.storyEditor.preview
-        || (!fromGrip && this._storyFocusKey === blockKey && this.data.storyEditor.kb > 0)) return;
+    if (!blockKey || this.data.storyDrag.key || this.data.storyEditor.preview) return;
+    // 正文段不拿起:长按留给系统选字,点一下就是改字
+    const armed = ((this._storyChapter() || {}).blocks || [])[from];
+    if (!armed || armed.key !== blockKey || armed.type === 'text') return;
     const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || {};
     const startY = Number(touch.clientY != null ? touch.clientY : (e.detail && e.detail.y)) || 0;
     const startScroll = this._storyScrollNow || 0;
