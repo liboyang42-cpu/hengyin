@@ -96,7 +96,7 @@ function harness(options = {}) {
   function finish(req, data, callback = 'success') { req[callback](data); if (req.complete) req.complete(); }
   const ready = () => { finish(take('/quota'), { code: 200, data: { limited: true, remaining: 3 } }); finish(take('/recovery'), { code: 200, data: { items: [], nextCursor: null } }); page.setData({ aiIdea: '原灵感' }); return page; };
   const begin = () => { page.generateAiPlan(); return take('/prepare'); };
-  const prepare = () => { const req = begin(); finish(req, { code: 200, data: view('PREPARED', { replayed: false, productType: page.data.mode }) }); return take('/execute'); };
+  const prepare = () => { const req = begin(); finish(req, { code: 200, data: view('PREPARED', { replayed: false, productType: page._mode }) }); return take('/execute'); };
   const switchOwner = (id, token) => store.applySnapshot({ user_id: id, authorization: token, role: 'player' });
   const selection = (index, target = page) => {
     const sheet = target.selectComponent('#ai-history-sheet'); assert.ok(sheet, 'real option sheet mounted');
@@ -140,7 +140,7 @@ if (require.main === module) {
   });
   test('same-page unconfirmed continuation uses frozen original key/idea/mode, not edited input', () => {
     const h = harness(); h.ready(); const first = h.begin(); const body = JSON.parse(first.data);
-    first.fail({}); first.complete(); h.page.setData({ aiIdea: 'edited', mode: 1 });
+    first.fail({}); first.complete(); h.page.setData({ aiIdea: 'edited' }); h.page._mode = 1;
     h.page.continueAiDraft(); const second = h.take('/prepare'); assert.deepEqual(JSON.parse(second.data), body);
   });
   test('cold prepareKey has no raw input and only GET; unconfirmed does not manufacture new id', () => {
@@ -356,7 +356,7 @@ if (require.main === module) {
     assert.equal(h.sent.filter(r => /prepare|execute/.test(r.url)).length, 0); assert.equal(h.page.data.aiRemaining, 0);
   });
   test('same-page original mode is retained through map confirmation and only fabu editor navigation', () => {
-    const h = harness(); h.ready(); const req = h.prepare(); h.page.setData({ mode: 1 });
+    const h = harness(); h.ready(); const req = h.prepare(); h.page._mode = 1;
     h.finish(req, { code: 200, data: view('SUCCEEDED', { replayed: false, resultAvailable: true, result: DRAFT }) });
     h.page.confirmAiNodePoi({ currentTarget: { dataset: { index: 0 } } }); h.pois[0].success({ name: 'confirmed', longitude: 1, latitude: 2 });
     h.page.enterAiEditor(); assert.match(h.navigations[0], /^\/pages\/publish\/fabu\/index\?mode=2/);
@@ -444,8 +444,8 @@ if (require.main === module) {
   });
   test('confirmed UNKNOWN archives original eight fields before a new prepare; modal complete cannot clear its loading', () => {
     const h = harness(); h.ready(); h.finish(h.prepare(), { code: 409, data: view('UNKNOWN') });
-    const original = h.values[journal.key('7')]; h.page.setData({ aiIdea: 'new explicit idea', mode: 1 });
-    h.page.requestConfirmedNewAiAction(); h.page.setData({ aiIdea: 'edited after prompt', mode: 2 });
+    const original = h.values[journal.key('7')]; h.page.setData({ aiIdea: 'new explicit idea' }); h.page._mode = 1;
+    h.page.requestConfirmedNewAiAction(); h.page.setData({ aiIdea: 'edited after prompt' }); h.page._mode = 2;
     const confirm = h.modals[0]; confirm.success({ confirm: true }); const next = h.take('/prepare');
     const body = JSON.parse(next.data); assert.equal(body.idea, 'new explicit idea'); assert.equal(body.productType, 1);
     assert.notEqual(body.prepareKey, original.prepareKey); assert.deepEqual(journal.history(h.wx, '7').values, [original]);

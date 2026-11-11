@@ -9,7 +9,7 @@ function makePage() { const h = harness(); pageConfig = h.page; return h.page; }
 
 test('简单 AI 入口加载并展示玩家的剩余额度', () => {
   const h = harness(); const page = h.page;
-  assert.equal(page.data.mode, 2);
+  assert.equal(page._mode, 2); // 起草模式只进请求体,不走 setData
   const quota = h.take('/quota'); assert.equal(quota.method, 'POST');
   h.finish(quota, { code: 200, data: { limited: true, remaining: 2 } });
   assert.equal(page.data.aiQuotaLoaded, true); assert.equal(page.data.aiRemaining, 2);
@@ -18,7 +18,7 @@ test('成功生成后用响应中的额度刷新提示', () => {
   const h = harness({ entry: { mode: '1' } }); h.ready();
   h.finish(h.prepare(), { code: 200, data: view('SUCCEEDED', { productType: 1, replayed: false, resultAvailable: true,
     result: { traceId: 'trace-1', remainingQuota: 2, draft: { title: '夜游', storyline: '沿街探索', nodes: [{ merchantName: '第一站', task: '观察招牌' }] } } }) });
-  assert.equal(h.page.data.mode, 1); assert.equal(h.page.data.aiPlan.title, '夜游'); assert.equal(h.page.data.aiRemaining, 2);
+  assert.equal(h.page._mode, 1); assert.equal(h.page.data.aiPlan.title, '夜游'); assert.equal(h.page.data.aiRemaining, 2);
 });
 test('AI 返回超过三站的草稿时保持 fail-closed，不进入后续编辑', () => {
   const h = harness(); h.ready();
