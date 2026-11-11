@@ -17,8 +17,10 @@ Page({
     statusBarHeight: (app.globalData || {}).statusBarHeight || 20,
     navBarHeight: (app.globalData || {}).navBarHeight || 44,
     isMerchantView: false,
-    favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }],
+    // f-pages OFF-FAV-01(2026-11-11):加「据点」页签,读 GET /api/city/nodes/favorites(一次全量,无分页)
+    favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }, { key: 'nodes', label: '据点' }],
     activeFavoriteTab: 'posts',
+    nodeList: [],
     postList: [],
     postMoreShow: false,
     postMoreItems: ['取消收藏'],
@@ -49,13 +51,13 @@ Page({
   syncCommunityTab() {
     const readable = () => typeof app.canUseCommunity === 'function' && app.canUseCommunity(false);
     if (readable()) return;
-    this.setData({ favoriteTabs: [{ key: 'topics', label: '主题' }], activeFavoriteTab: 'topics' });
+    this.setData({ favoriteTabs: [{ key: 'topics', label: '主题' }, { key: 'nodes', label: '据点' }], activeFavoriteTab: 'topics' });
     const owner = String(app.getUserID ? app.getUserID() || '' : '');
     const pending = typeof app.loadFeatureFlags === 'function' ? app.loadFeatureFlags() : null;
     if (!pending || typeof pending.then !== 'function') return;
     pending.then(() => {
       if (owner !== String(app.getUserID ? app.getUserID() || '' : '') || !readable()) return;
-      this.setData({ favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }] });
+      this.setData({ favoriteTabs: [{ key: 'posts', label: '帖文' }, { key: 'topics', label: '主题' }, { key: 'nodes', label: '据点' }] });
     });
   },
 
@@ -92,9 +94,9 @@ Page({
     this._stopPullWithCurrent = false;
     this._favoriteShowRefresh = null;
     this._favoriteLoadedPages = Object.create(null);
-    this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) };
-    this._unlikePrompts = Object.create(null);
-    this.setData({ postList: [], ztList1: [], loading: false, refreshing: false, errorMsg: '', loginRequired: false,
+    this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null), nodes: Object.create(null) };
+    this._unlikePrompts = Object.create(null); this._nodeUnfavoriteRequests = Object.create(null);
+    this.setData({ postList: [], ztList1: [], nodeList: [], loading: false, refreshing: false, errorMsg: '', loginRequired: false,
       hasMore1: true, hasMorePosts: true, pageConfig: { pageNum: 1, pageSize: 10 } });
     return true;
   },
@@ -111,7 +113,8 @@ Page({
 
   _recordFavoriteRemoval(type, id) {
     this._favoriteRemovalVersion = (this._favoriteRemovalVersion || 0) + 1;
-    const removed = this._favoriteRemovals || (this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null) });
+    const removed = this._favoriteRemovals || (this._favoriteRemovals = { posts: Object.create(null), topics: Object.create(null), nodes: Object.create(null) });
+    if (!removed[type]) removed[type] = Object.create(null);
     removed[type][String(id)] = this._favoriteRemovalVersion;
   },
   _filterFavoriteRead(type, rows, version) {
@@ -141,11 +144,13 @@ Page({
       if (stopPullAfterComplete) that._stopPullWithCurrent = true;
       return;
     }
-    const currentList = that.data.activeFavoriteTab === 'posts' ? that.data.postList : that.data.ztList1;
+    const tab = that.data.activeFavoriteTab;
+    const currentList = tab === 'posts' ? that.data.postList : tab === 'nodes' ? that.data.nodeList : that.data.ztList1;
     const refreshing = that.data.pageConfig.pageNum === 1 && currentList.length > 0;
     that.setData({ loading: true, refreshing: refreshing, errorMsg: '', loginRequired: false });
     
-    if (that.data.activeFavoriteTab === 'posts') that.getPostFavoriteList(stopPullAfterComplete);
+    if (tab === 'posts') that.getPostFavoriteList(stopPullAfterComplete);
+    else if (tab === 'nodes') that.getNodeFavoriteList(stopPullAfterComplete);
     else that.getTopicLikeList(stopPullAfterComplete);
   },
 
@@ -307,6 +312,128 @@ Page({
         that._flushFavoriteShowRefresh();
       }
     });
+  },
+
+  // f-pages OFF-FAV-01:据点收藏(member_collectible coll_type=3)。接口一次返回全部在架据点,最新收藏在前;
+  // 行跳 /subpackageRoam/poi-detail/index?poiId=(与分享、时间线同一长期契约路径)
+  getNodeFavoriteList: function(stopPullAfterComplete) {
+    const that = this;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const requestId = (this._favoriteListRequestId || 0) + 1;
+    this._favoriteListRequestId = requestId;
+    const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+      && requestId === that._favoriteListRequestId;
+    const removalVersion = that._favoriteRemovalVersion || 0;
+    const hasOldContent = that.data.nodeList.length > 0;
+    const finishLoadError = function (res, fallback, statusCode) {
+      const message = app.getRequestErrorMessage(res, fallback);
+      if (hasOldContent) that.setData({ refreshing: false, errorMsg: '' });
+      else that.setData({ refreshing: false, errorMsg: message, loginRequired: isLoginRequired(app, res, statusCode) });
+    };
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/city/nodes/favorites',
+      method: 'GET',
+      success: function (res) {
+        if (!isCurrent()) return;
+        if (res && res.code == '200' && isRecordList(res.data)) {
+          const rows = res.data.map(function (row) { return Object.assign({}, row, { id: row.poiId }); });
+          that.setData({ nodeList: that._filterFavoriteRead('nodes', rows, removalVersion), errorMsg: '' });
+        } else {
+          finishLoadError(res, '收藏加载失败');
+        }
+      },
+      fail: function (res, statusCode) {
+        if (!isCurrent()) return;
+        finishLoadError(res, '收藏加载失败', statusCode);
+      },
+      successStatusAbnormal: function (res, statusCode) {
+        if (!isCurrent()) return;
+        finishLoadError(res, '服务暂不可用，请稍后重试', statusCode);
+      },
+      complete: function () {
+        if (!isCurrent()) return;
+        const shouldStopPull = stopPullAfterComplete || that._stopPullWithCurrent;
+        that._stopPullWithCurrent = false;
+        that.setData({ loading: false, refreshing: false });
+        if (shouldStopPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
+        that._flushFavoriteShowRefresh();
+      }
+    });
+  },
+
+  // 取消收藏据点:POST /api/city/nodes/{id}/favorite 是 toggle,回包 favorited=false 才摘卡;
+  // per-id 在途锁挡住第二次发送(否则会把刚取消的收藏插回去);结果未知时回读列表再定。
+  nodeUnfavorite: function(e) {
+    const that = this;
+    this._syncFavoriteAccount();
+    const owner = this._favoriteOwner; const generation = this._favoriteGeneration;
+    const id = e.currentTarget.dataset.id;
+    if (id == null || id === '') return;
+    const requestKey = String(id);
+    that._nodeUnfavoriteRequests = that._nodeUnfavoriteRequests || Object.create(null);
+    if (that._nodeUnfavoriteRequests[requestKey]) return;
+    const prompts = that._unlikePrompts || (that._unlikePrompts = Object.create(null));
+    const promptKey = 'node:' + requestKey;
+    if (prompts[promptKey]) return;
+    const prompt = {};
+    prompts[promptKey] = prompt;
+    const finishPrompt = () => {
+      if (prompts[promptKey] !== prompt) return false;
+      delete prompts[promptKey];
+      return true;
+    };
+    modal.show({
+      title: '提示',
+      content: '确定要取消收藏吗？',
+      success: function (res) {
+        if (!finishPrompt() || !that._isFavoriteResponseCurrent(owner, generation)) return;
+        if (!res.confirm || that._nodeUnfavoriteRequests[requestKey]) return;
+        const request = {};
+        that._nodeUnfavoriteRequests[requestKey] = request;
+        const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+          && that._nodeUnfavoriteRequests[requestKey] === request;
+        app.sendRequest({
+          url: '/api/city/nodes/' + encodeURIComponent(requestKey) + '/favorite',
+          method: 'POST',
+          hideLoading: true,
+          silentError: true,
+          success: function (res) {
+            if (!isCurrent()) return;
+            if (res && res.code == '200' && res.data && res.data.favorited === false) {
+              that._recordFavoriteRemoval('nodes', requestKey);
+              toast.success('已取消收藏');
+              that.setData({ nodeList: that.data.nodeList.filter(node => String(node.id) !== requestKey) });
+            } else if (res && res.code == '200') {
+              // 回包说仍在收藏(并发下被 toggle 回来):不摘卡,重读列表对齐
+              request.unknown = true;
+            } else {
+              toast((res && res.msg) || '操作失败');
+            }
+          },
+          fail: function () {
+            if (!isCurrent()) return;
+            request.unknown = true;
+            toast('取消结果未确认，正在确认');
+          },
+          complete: function () {
+            if (!isCurrent()) return;
+            delete that._nodeUnfavoriteRequests[requestKey];
+            if (request.unknown && that.data.activeFavoriteTab === 'nodes' && !that.data.loading) that.refreshData();
+          }
+        });
+      },
+      fail: finishPrompt,
+      complete: finishPrompt
+    });
+  },
+
+  goNode: function(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id == null || id === '') return;
+    wx.navigateTo({ url: '/subpackageRoam/poi-detail/index?poiId=' + encodeURIComponent(id) });
   },
 
   /**
@@ -548,6 +675,13 @@ Page({
           path: '/pages/square/detail/index?id=' + dataset.postId
         };
       }
+      if (dataset.type === 'node') {
+        return {
+          title: dataset.name ? ('据点：' + dataset.name) : '城瘾据点',
+          path: '/subpackageRoam/poi-detail/index?poiId=' + encodeURIComponent(dataset.id),
+          imageUrl: dataset.img || undefined
+        };
+      }
       const id = dataset.id;
       const name = dataset.name;
       const imageUrl = dataset.img;
@@ -608,6 +742,7 @@ Page({
     if (that.data.loading) return;
     
     // 检查是否还有更多数据
+    if (that.data.activeFavoriteTab === 'nodes') return; // 据点收藏一次全量,无分页
     const hasMore = that.data.activeFavoriteTab === 'posts' ? that.data.hasMorePosts : that.data.hasMore1;
     if (!hasMore) return;
     

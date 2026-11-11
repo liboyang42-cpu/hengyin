@@ -812,6 +812,28 @@ Page({
       },
     });
     this._loadActiveRoamEvents();
+    this._loadOfficialRoutes();
+  },
+  // f-pages P0-79(2026-11-11):官方路线入口回到漫游护照大卡(原入口随旧漫游地图改版消失)。
+  // 只认服务端:GET /api/preset/route/list 回了 ≥1 条已上架路线才摆卡,没有就不出;失败静默。
+  _loadOfficialRoutes() {
+    if (this.data.passportError) return;
+    const current = this._roamReadScope();
+    const token = {};
+    this._officialRoutesToken = token;
+    req('/api/preset/route/list', 'GET', {}, { silentError: true }).then((res) => {
+      if (!current() || this._unloaded || this._officialRoutesToken !== token || !apiOk(res)) return;
+      const routes = Array.isArray(res.data) ? res.data.filter((r) => r && typeof r === 'object' && r.id != null) : [];
+      const passport = this.data.passport || {};
+      if (!routes.length || !Array.isArray(passport.plays) || passport.plays.some((p) => p && p.key === 'routes')) return;
+      const first = routes[0];
+      const cover = first.previewImg ? getApp().getImgUrl(first.previewImg) : '';
+      const card = { key: 'routes', icon: 'map', title: '官方路线', sub: routes.length + ' 条路线', cover, photo: 'goals' };
+      const plays = passport.plays.slice();
+      const eventIdx = plays.findIndex((p) => p && p.key === 'event');
+      plays.splice(eventIdx >= 0 ? eventIdx + 1 : 0, 0, card);
+      this.setData({ 'passport.plays': plays });
+    });
   },
   retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
@@ -844,6 +866,7 @@ Page({
     const key = e.currentTarget.dataset.key;
     if (key === 'event' && this._activeRoamEventId) { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + this._activeRoamEventId, complete: () => { this._eventNavigating = false; } }); return; } // 跳转中不响应连点,免得叠两层活动详情
     if (key === 'event') { this.openRoamTasks(); return; }   // 没有单场可直达时进官方活动任务列表
+    if (key === 'routes') { if (this._eventNavigating) return; this._eventNavigating = true; wx.navigateTo({ url: '/subpackageRoam/official-routes/index', complete: () => { this._eventNavigating = false; } }); return; }
     // 发现附近店铺:漫游开始前 _pois 为空、横滑条只在 map 态渲染,原 goDiscover 在这里只会弹「没有合作商家」→ 改去地图
     this.openNearbyMap();
   },

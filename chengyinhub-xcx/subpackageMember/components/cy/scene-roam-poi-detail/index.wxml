@@ -71,14 +71,8 @@
       <text class="poi-story">{{item.contents}}</text>
       <cy-btn wx:if="{{item.mine}}" variant="secondary" data-id="{{item.id}}" bind:tap="deleteOwnReview">删除我的评价</cy-btn>
     </view>
-    <view wx:if="{{node.completed}}" class="poi-review">
-      <text class="poi-story">这次玩得怎么样？评价可跳过，不影响勋章。</text>
-      <view class="poi-rating-pick" aria-role="radiogroup" aria-label="游玩体验评分">
-        <view wx:for="{{ratingOptions}}" wx:key="*this" data-rating="{{item}}" bindtap="onReviewRating" aria-role="radio" aria-checked="{{reviewRating === item}}" aria-label="{{item}}星" hover-class="cy-pressed" hover-stay-time="80" class="poi-rating-pick__item {{reviewRating >= item ? 'is-on' : ''}}"><cy-icon name="star-filled" size="28" /></view>
-      </view>
-      <textarea class="poi-review-input" value="{{reviewText}}" maxlength="500" placeholder="写下真实游玩感受" bindinput="onReviewInput" aria-label="游玩评价" />
-      <cy-btn loading="{{reviewSubmitting}}" disabled="{{reviewSubmitting}}" bind:tap="submitReview">提交评价</cy-btn>
-    </view>
+    <!-- f-pages P0-108/P0-109(2026-11-11):评价表单改成半屏弹层;评价区只留「写评价」入口。只对已完成挑战的玩家出(服务端同样拦)。 -->
+    <cy-btn wx:if="{{node.completed}}" class="poi-review-open" variant="secondary" bind:tap="openReviewSheet">写评价</cy-btn>
   </view>
   <view wx:if="{{node}}" class="poi-footer">
     <cy-btn class="poi-footer__button" variant="secondary" bind:tap="openLocation" disabled="{{!hasLocation}}">导航</cy-btn>
@@ -86,6 +80,17 @@
       {{node.completed ? '挑战已完成' : completing ? '正在确认' : checkinPending ? (reverifyReady ? (reverifyStarted ? '现场核验中' : '开始现场核验') : '结果待确认') : node.needRedeem ? '出示核销码' : challengePhoto ? '继续答题' : '开始挑战'}}
     </cy-btn>
   </view>
+  <cy-sheet show="{{reviewSheetShow}}" title="评价据点" fixed="half" footer bind:close="closeReviewSheet">
+    <view class="poi-review-form">
+      <view class="poi-rating-pick" aria-role="radiogroup" aria-label="游玩体验评分">
+        <view wx:for="{{ratingOptions}}" wx:key="*this" data-rating="{{item}}" bindtap="onReviewRating" aria-role="radio" aria-checked="{{reviewRating === item}}" aria-label="{{item}}星" hover-class="cy-pressed" hover-stay-time="80" class="poi-rating-pick__item {{reviewRating >= item ? 'is-on' : ''}}"><cy-icon name="star-filled" size="28" /></view>
+      </view>
+      <textarea class="poi-review-input" value="{{reviewText}}" maxlength="500" placeholder="写下真实游玩感受" bindinput="onReviewInput" aria-label="游玩评价" />
+    </view>
+    <view slot="footer">
+      <cy-btn loading="{{reviewSubmitting}}" disabled="{{reviewSubmitting}}" bind:tap="submitReview">提交评价</cy-btn>
+    </view>
+  </cy-sheet>
   <cy-option-sheet checkmark="{{true}}" show="{{choiceSheetShow}}" back-guard="{{false}}" title="{{node.questionName || '选择答案'}}" items="{{choiceSheetItems}}" confirm-text="提交"
                    bind:select="onChoiceSheetSelect" bind:cancel="onChoiceSheetCancel" />
   <!-- 物理返回 / iOS 侧滑:0 尺寸 page-container 守卫先关答题半屏(等同点取消),不把整页弹出去。
