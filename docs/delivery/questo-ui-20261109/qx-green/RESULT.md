@@ -163,4 +163,7 @@ f-play2(含 f-money2 / f-money3)合入后(`25b8ad033`)，真库 IT `FreeExploreS
 
 `ed9e3406b` 上「Migration safety gate」红：`ci/test_prelaunch_business_seeds.py` 校验 `ci/prelaunch-seed-provenance.json` 里登记的种子源文件哈希，f-money2(`bc02b5125`)改了 `scripts/e2e/seed_fixtures.py` 没同步登记。本线逐行审阅了那 31 行改动：俱乐部 owner 补 club 角色、玩家二号加入 7001、cms_setting 与活动结算默认费率行，全部是固定 E2E 夹具 id 的幂等插入，没有主机或密钥。审阅后按源文件重绑哈希(`70fd8a83b`，在 #787 上)。本地复核：该步骤的 4 个测试文件共 43 个用例全部通过。
 
-STATUS: PARTIAL - 「Migration safety gate」的种子来源哈希已在 #787(`70fd8a83b`)修好，待 lead 合入；#779 其余红：runner apt 域名解析故障(待重跑)、gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者，后两项要你拍板
+
+lead 在 launch 上直接提交了同一哈希修复(`60c43860e`)。随后 qx-final6 合入 f-rehearsal 并把发布迁移包扩到 156 项(`4e9e418ac`)。头 `844638cf7` 上新出现「Release migration rehearsal / rehearsal」红(run 43059982344)：静态 pack 契约通过、MySQL 8.0.45 起库成功，但第 [1] 步建好模拟基线(199 个快照后迁移、16 组合成行)后，「基线库上预检不符合 pack 的 expectedAtBaseline」。上一次绿是 10-29 的 88 项包，这是 156 项包第一次在 CI 上跑。不符合的具体 migrationId 只在 run 的 report artifact 里(release-migration-rehearsal-43059982344-a1)；本环境下载 artifact 的主机被网络策略拦截，也没有 MySQL / docker，无法复现。这属于 f-release / qx-final6 的发布包范围，涉及迁移的上线前预期状态，需要 lead 或你看 artifact 后在 pack 里修正，本线没有改。
+
+STATUS: PARTIAL - 本线负责的代码修复都已进 launch；#779 剩余的红：Release migration rehearsal(156 项发布包的基线预检与 expectedAtBaseline 不符，需看 artifact 后由发布包 owner 修)、runner apt 域名解析故障(待重跑)、gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者
