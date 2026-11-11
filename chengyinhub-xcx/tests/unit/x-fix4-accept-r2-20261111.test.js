@@ -91,3 +91,48 @@ test('N-14 夜城霓虹参数(青粉/红青)真的改 --lk-a/--lk-b;显式配色
     assert.match(t, /\.look--cyber\.look-neon--red_cyan\.look-palette--default, \.look--cyber\.look-neon--red_cyan \.atmosphere--default \{ --lk-a:#FF2E4C;/)
   }
 })
+
+test('L2-2 通行证页:平台通行证在售时不再写「暂无在售通行证」,入口上列方案价格', () => {
+  const wxml = read('subpackageMember/market/passes/index.wxml')
+  assert.match(wxml, /wx:if="\{\{!products\.length && !member\}\}" kind="empty" title="暂无在售通行证"/)
+  assert.match(read('subpackageMember/market/passes/index.js'), /planSide = \(v\.plans \|\| \[\]\)\.map\(\(c\) => c\.price\)/)
+})
+
+test('P-11/L2-1 首页定位确认:文案更短(保留精确位置/发送给城瘾/不用于附近排序),点空白处=暂不定位', () => {
+  const js = read('pages/index/index.js')
+  assert.match(js, /content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。'/)
+  assert.match(js, /maskClosable: true, \/\/ x-fix4 L2-1/)
+  assert.match(read('components/cy/modal-host/index.js'), /maskClosable: opts\.maskClosable === true/)
+  assert.match(read('components/cy/modal-host/index.wxml'), /mask-closable="\{\{maskClosable\}\}"/)
+})
+
+test('A-3 编辑器长标题不被保存胶囊挤断,票务页尾部净空再抬一档', () => {
+  const w = read('pages/publish/fabu/index.wxss')
+  assert.match(w, /\.pd-title-field \{ flex-wrap: wrap;/)
+  assert.match(w, /\.pd-title-field \.pd-title-input \{ flex: 1 1 calc\(100% - 48rpx\); width: auto; \}/)
+  assert.match(w, /\.slopes-sheet-bottom \{\s*height: calc\(160rpx \+ env\(safe-area-inset-bottom\)\);/)
+})
+
+test('A-4 模板介绍没有精选示例时不画「暂无精选示例」说明句', () => {
+  assert.doesNotMatch(noComments(read('pages/publish/template-intro/index.wxml')), /暂无精选示例/)
+})
+
+test('ME-4 底栏实底提前到图标行之前(浅 38% / 深 30%),卡片字不从图标周围透出', () => {
+  const w = read('components/tabBar/index.wxss')
+  assert.match(w, /rgba\(255, 255, 255, 0\.96\) 38%, rgba\(255, 255, 255, 0\.96\) 100%\)/)
+  assert.match(w, /var\(--cy-color-bg-page\) 30%, var\(--cy-color-bg-page\) 100%\)/)
+})
+
+test('P-15 帖文处置与申诉不再复用聊天气泡图标', () => {
+  const x = read('pages/shezhi/shezhi.wxml')
+  assert.match(x, /id="settings-post-governance"[^>]*icon="\/pages\/shezhi\/images\/icon_lc_shield-alert\.svg"/)
+  assert.ok(fs.existsSync(path.join(ROOT, 'pages/shezhi/images/icon_lc_shield-alert.svg')))
+  const icons = [...noComments(x).matchAll(/<cy-cell id="settings-[a-z-]+"[^>]*?icon="([^"]+)"/g)].map((m) => m[1])
+  const bubble = icons.filter((i) => /message-square/.test(i))
+  assert.equal(bubble.length, 1, '聊天气泡图标只给 AI 对话记录')
+})
+
+test('L-5 口碑空列表不再摆「重新加载」(空不是错)', () => {
+  const x = read('pages/merchant/reviews/index.wxml')
+  assert.match(x, /title="还没有真实到店评价"\s*sub="" \/>/)
+})

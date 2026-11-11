@@ -22,7 +22,7 @@
           <text class="mk-member__s" wx:if="{{member.side}}">{{member.side}}</text>
           <cy-icon name="chevron-right" size="28" />
         </view>
-        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!products.length}}" kind="empty" title="暂无在售通行证" />
+        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!products.length && !member}}" kind="empty" title="暂无在售通行证" />
         <view class="mk-card" wx:for="{{products}}" wx:key="id" bindtap="openProduct" data-id="{{item.id}}"
               hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.name}}">
           <view class="mk-card__head">

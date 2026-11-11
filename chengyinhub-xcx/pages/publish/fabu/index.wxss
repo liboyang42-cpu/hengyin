@@ -1278,7 +1278,7 @@ page { background: var(--cy-btn-solid-bg); }
      渐隐区就被顶住,底部一大块死灰。现在两处相加正好等于底栏高度,中途滚动照旧从
      渐变里透出来,只有终点被抬到底栏之上。 */
 .slopes-sheet-bottom {
-  height: calc(100rpx + env(safe-area-inset-bottom));
+  height: calc(160rpx + env(safe-area-inset-bottom)); /* x-fix4 A-3:票务页最后一行「添加票种/收起」被整宽完成钮压住,尾部净空再抬 60rpx */
 }
 
 .slopes-map-editbar {
@@ -5114,6 +5114,10 @@ page { background: var(--cy-btn-solid-bg); }
 }
 .pd-save-state--saved { background: var(--cy-topic-save-saved-bg); color: var(--cy-topic-save-saved-text); }
 .pd-save-state--unsaved { background: var(--cy-topic-save-unsaved-bg); color: var(--cy-topic-save-unsaved-text); }
+/* x-fix4 A-3:长标题不再被右侧保存状态胶囊挤成「自由探索草稿 · 付…」——输入框独占一行,胶囊换到下一行靠左 */
+.pd-title-field { flex-wrap: wrap; row-gap: var(--cy-space-1); }
+.pd-title-field .pd-title-input { flex: 1 1 calc(100% - 48rpx); width: auto; }
+.pd-title-field .pd-save-state { margin-left: 0; }
 
 /* 文档二 L1:可玩时段选「自定义」时,底部选择卡里展开开始 / 结束 +「完成」 */
 .pw-custom { margin-top: var(--cy-space-3); }

@@ -15,6 +15,7 @@ Component({
     cancelText: '取消',
     showCancel: true,
     danger: false,
+    maskClosable: false,
     editable: false,
     // PR10 F-L3-09:editable 时改用多行 textarea(长原因类输入),其余行为(maxlength/validate)不变
     multiline: false,
@@ -48,6 +49,7 @@ Component({
         cancelText: opts.cancelText || '取消',
         showCancel: opts.showCancel !== false,
         danger: !!opts.danger,
+        maskClosable: opts.maskClosable === true,
         editable: !!opts.editable,
         multiline: !!opts.editable && !!opts.multiline,
         placeholderText: opts.placeholderText || '',

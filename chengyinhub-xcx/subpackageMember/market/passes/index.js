@@ -57,7 +57,9 @@ Page({
         const d = isBizOk(res) && res.data
         if (!d || d.enabled !== true) { this.setData({ member: null }); return }
         const v = pp.passView(d, '', pp.platformOf(wx))
-        const side = v.active && v.untilText ? '有效期至 ' + v.untilText : (v.count !== null ? v.count + ' 个主题全部可玩' : '')
+        // x-fix4 L2-2:没有有效期时把在售方案价格摆在入口上(支付通道不可用也照样列出,不当「暂无在售」)
+        const planSide = (v.plans || []).map((c) => c.price).filter(Boolean).join(' · ')
+        const side = v.active && v.untilText ? '有效期至 ' + v.untilText : (planSide || (v.count !== null ? v.count + ' 个主题全部可玩' : ''))
         this.setData({ member: { side } })
       }
     })
