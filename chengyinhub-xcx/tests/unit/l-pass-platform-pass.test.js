@@ -136,7 +136,7 @@ test('结账:通行证覆盖 → ¥0、免费领取、明细多一行通行证�
   assert.equal(v.member, true);
   assert.equal(v.totalText, '¥0');
   assert.equal(v.payLabel, '免费领取');
-  assert.deepEqual(v.bill.map((r) => [r.k, r.v]), [['自玩通行证 × 1', '¥39'], ['通行证', '你已可直接游玩']]);
+  assert.deepEqual(v.bill.map((r) => [r.k, r.v]), [['自玩门票 × 1', '¥39'], ['通行证', '你已可直接游玩']]);
   assert.equal(v.single.strike, '');
   assert.deepEqual(v.passes, []);
 });

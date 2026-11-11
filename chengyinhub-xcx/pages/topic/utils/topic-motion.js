@@ -170,7 +170,7 @@ function buyOptions(info) {
   const d = info || {};
   const out = [];
   const price = (v) => (v === undefined || v === null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
-  if (Number(d.selfPlay) === 1 && price(d.selfPlayPrice) !== null) out.push({ key: 'pass', kind: 'pass', name: '自玩通行证', price: price(d.selfPlayPrice), people: 1 });
+  if (Number(d.selfPlay) === 1 && price(d.selfPlayPrice) !== null) out.push({ key: 'pass', kind: 'pass', name: '自玩门票', price: price(d.selfPlayPrice), people: 1 });
   if ((d.activityList || []).length) {
     const byName = {};
     (d.omsTicketList || []).forEach((t) => {

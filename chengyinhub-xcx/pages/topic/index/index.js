@@ -572,7 +572,8 @@ Page({
   /* 去结算:自玩通行证进确认订单;发布者的票种绑在场次上,进选场次弹层并预选同名票种 */
   onBuyGo() {
     const opt = (this.data.buyOpts || [])[this.data.buySel];
-    if (!opt || opt.kind === 'pass') return this.onSelfPlayGoCheckout();
+    if (!opt) return; // x-fix2 P-2:没有可买票种(如城市定向无场次)时不落到自玩结账
+    if (opt.kind === 'pass') return this.onSelfPlayGoCheckout();
     this.setData({ selfPlayConfirmShow: false, buyIn: false, sessionPreferName: opt.name });
     this.bmClick({ currentTarget: { dataset: {} } });
   },

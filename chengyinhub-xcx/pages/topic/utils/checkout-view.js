@@ -81,7 +81,7 @@ function checkoutView(o) {
   const bill = [];
   if (pay !== null) {
     const listAmount = member && isNum(quote.memberDiscountYuan) ? Number(quote.memberDiscountYuan) : (discount ? pay + discount : pay);
-    bill.push({ key: 'pass', k: '自玩通行证 × 1', v: yuan(listAmount) });
+    bill.push({ key: 'pass', k: '自玩门票 × 1', v: yuan(listAmount) });
     if (discount) bill.push({ key: 'club', k: '俱乐部会员', v: '-' + yuan(discount), minus: true });
     if (member) bill.push({ key: 'member', k: '通行证', v: '你已可直接游玩', minus: true });
   }
@@ -96,7 +96,7 @@ function checkoutView(o) {
   return {
     pills: headPills(info),
     single: {
-      title: '自玩通行证',
+      title: '自玩门票',
       price: pay === null ? '—' : yuan(pay),
       strike: discount ? yuan(pay + discount) : '',
       line: win.untilText ? '可玩至 ' + win.untilText : ''

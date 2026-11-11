@@ -511,15 +511,15 @@
   <!-- M2 自玩通行证:2026-10-22 业主 —— 「随时开玩」不直接付款,弹层只讲清买的是什么,按钮「去结算」进确认订单页。
        单独同意(不默认勾、不打包进按钮)随付款一起搬到确认订单页,口径不变。 -->
   <view class="bdim {{buyIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{selfPlayConfirmShow}}" bindtap="onSelfPlayCancel" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="bsheet {{buyIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{selfPlayConfirmShow}}" catchtouchmove="noop" aria-role="dialog" aria-label="自玩通行证">
+  <view class="bsheet {{buyIn ? 'is-in' : ''}} {{reducedMotion ? 'is-still' : ''}}" wx:if="{{selfPlayConfirmShow}}" catchtouchmove="noop" aria-role="dialog" aria-label="自玩门票">
     <view class="bsheet__grab"></view>
     <view class="bsheet__x" bindtap="onSelfPlayCancel" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="bsheet__xi"></view></view>
-    <text class="bsheet__h">自玩通行证</text>
+    <text class="bsheet__h">自玩门票</text>
     <text class="bsheet__sub">{{selfPlayValidText}}，不用选场次</text>
     <view class="hticket">
       <image class="hticket__im" src="{{(coverImages && coverImages[0]) || info.imgUrl}}" mode="aspectFill" />
       <view class="hticket__perf"></view>
-      <view class="hticket__in"><text class="hticket__k">城瘾 · 主题通行证</text><text class="hticket__b">{{info.name}}</text><text class="hticket__p">{{buyOpts[buySel].priceText}}</text><text class="hticket__u">{{buyOpts[buySel].name}}</text></view>
+      <view class="hticket__in"><text class="hticket__k">城瘾 · 主题门票</text><text class="hticket__b">{{info.name}}</text><text class="hticket__p">{{buyOpts[buySel].priceText}}</text><text class="hticket__u">{{buyOpts[buySel].name}}</text></view>
       <view class="hticket__holo"></view><view class="hticket__glare"></view>
       <view class="hticket__n hticket__n--t"></view><view class="hticket__n hticket__n--b"></view>
     </view>

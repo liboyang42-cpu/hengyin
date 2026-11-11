@@ -21,3 +21,18 @@ test('P-1 已截止主题:头图按钮只讲「已截止」,不再给报名/自�
   assert.match(wxml, /topic-story-paywall__cta" wx:if="\{\{heroCta\.kind !== 'closed'\}\}"/)
   assert.match(read('pages/topic/index/index.js'), /if \(kind === 'closed'\) return toast\('主题已截止'\)/)
 })
+
+test('P-2 确认订单/购买弹层:不再把门票写成「通行证」;没有可买票种时不落到自玩结账', () => {
+  const { checkoutView } = require('../../pages/topic/utils/checkout-view.js')
+  const v = checkoutView({ info: { selfPlayPrice: 39 }, quoteState: 'ready', quote: { payAmount: 39 } })
+  assert.equal(v.single.title, '自玩门票')
+  assert.deepEqual(v.bill.map((r) => r.k), ['自玩门票 × 1'])
+  const m = require('../../pages/topic/utils/topic-motion.js')
+  assert.equal(m.buyOptions({ selfPlay: 1, selfPlayPrice: 9 })[0].name, '自玩门票')
+  assert.deepEqual(m.buyOptions({ selfPlay: 0, activityList: [] }), [], '城市定向无场次:没有票种')
+  const js = read('pages/topic/index/index.js')
+  assert.match(js, /if \(!opt\) return; \/\/ x-fix2 P-2/)
+  const visible = noComments(read('pages/topic/index/index.wxml'))
+  assert.doesNotMatch(visible, /自玩通行证|主题通行证/)
+  assert.doesNotMatch(read('pages/topic/components/cy/pass-reveal/index.js'), /value: '自玩通行证'/)
+})
