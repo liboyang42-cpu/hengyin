@@ -555,6 +555,14 @@
 /* 帖文第三轮:帖文卡自带左右 16pt,在正文栏里抵掉一层,和发现页同宽(多图能滑到屏幕边) */
 .pc-feed { margin-left: calc(-1 * var(--cy-page-x)); margin-right: calc(-1 * var(--cy-page-x)); }
 .pc-feed-state { display: block; padding: 0 var(--cy-page-x); }
+/* f-pages P-20/M-33:发帖入口,同商家「发现」页 / 俱乐部详情的 post-composer-collapsed */
+.post-composer-collapsed { display: flex; align-items: flex-start; gap: var(--cy-space-3); padding: 26rpx var(--cy-page-x); border-bottom: 1rpx solid var(--cy-color-border-subtle); } /* ds-ok: py13 = 26rpx,同俱乐部详情 */
+.post-composer-me { flex: none; }
+.post-composer-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-legacy-4); }
+.post-composer-who { font-size: var(--cy-type-card-title); font-weight: 500; color: var(--cy-color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
+.post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
+.post-composer-ico { flex: none; color: var(--cy-color-text-primary); }
 .pc-post {
   background: transparent; border: none;
   border-radius: 0; padding: var(--cy-space-3) var(--cy-space-1); margin-bottom: var(--cy-space-1);
