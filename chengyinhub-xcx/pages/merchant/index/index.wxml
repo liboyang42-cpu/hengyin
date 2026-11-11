@@ -264,7 +264,7 @@
           <text class="rv-more-label">协作邀请</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadAftercare}}" bindtap="onMoreItem" data-action="aftercare" aria-role="button" aria-label="打开退款售后" hover-class="cy-pressed" hover-stay-time="80">
-          <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
+          <cy-icon class="rv-more-ico" name="repost" size="40" />
           <text class="rv-more-label">退款售后</text>
         </view>
         <!-- BL-76:核销员(MERCHANT_CHECKIN)只有核销与核销记录权限,原先「更多」里没有任何可进的项。 -->
@@ -273,11 +273,11 @@
           <text class="rv-more-label">核销记录</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadFinance}}" bindtap="onMoreItem" data-action="payoutAccount" aria-role="button" aria-label="打开收款账户" hover-class="cy-pressed" hover-stay-time="80">
-          <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
+          <cy-icon class="rv-more-ico" name="finance" size="40" />
           <text class="rv-more-label">收款账户</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoupons}}" bindtap="onMoreItem" data-action="coupon" aria-role="button" aria-label="管理优惠券" hover-class="cy-pressed" hover-stay-time="80">
-          <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
+          <cy-icon class="rv-more-ico" name="coupon" size="40" />
           <text class="rv-more-label">管理优惠券</text>
         </view>
         <!-- #814 删掉的那个假入口(文案与实际跳转不符,跳的是核销台账)不要再加回来;
