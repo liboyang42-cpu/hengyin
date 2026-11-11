@@ -61,7 +61,7 @@ Page({
   load() {
     const seq = (this._seq = (this._seq || 0) + 1)
     this.setData({ state: 'loading' })
-    // l-iconsB 起本页不再渲染主题库缩略图(入口改为「可玩主题库」行),不再顺带拉主题库
+    // qx-final2:主题封面只在旧的开通成功层 / 主题网格里用,两者合并后都已退场;主题数取概览的 libraryCount
     get('/api/platform-pass').then((ov) => {
       if (seq !== this._seq || this._unloaded) return
       if (!isBizOk(ov) || !ov.data) { this.setData({ state: 'error' }); return }
