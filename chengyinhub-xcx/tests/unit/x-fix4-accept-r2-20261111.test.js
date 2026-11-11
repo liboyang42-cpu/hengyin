@@ -27,7 +27,7 @@ test('N-6 骰子内嵌块与整屏台面读外观色,不再是暗色外观里的
 test('N-7 玩家页根在 look 下给出 --pk-embed-*;抽卡屏/详情读外观色,不再亮蓝/浅灰', () => {
   for (const f of ['pages/play/look-tokens.wxss', 'pages/publish/fabu/look-tokens.wxss']) {
     const t = read(f)
-    assert.match(t, /\.play\[class\*="look--"\] \{ --pk-embed-bg:var\(--lk-bg\); --pk-embed-ink:var\(--lk-ink\);/)
+    assert.match(t, /\.play\[class\*="look--"\](, \.pk-lookhost\[class\*="look--"\])? \{ --pk-embed-bg:var\(--lk-bg\); --pk-embed-ink:var\(--lk-ink\);/)
     assert.match(t, /--pk-embed-accent:var\(--lk-a\);/)
   }
   const r = read('pages/play/components/playkit-random/index.wxss')
