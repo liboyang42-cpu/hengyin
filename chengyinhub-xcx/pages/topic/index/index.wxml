@@ -112,7 +112,7 @@
         <view class="hero-title">{{info.name}}</view>
         <view class="hero-desc" wx:if="{{info.heroIntro}}">{{info.heroIntro}}</view>
         <view class="hero-acts" id="heroActs">
-          <view wx:if="{{heroCta.text}}" class="hero-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}} {{docked ? 'is-away' : ''}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
+          <view wx:if="{{heroCta.text}}" class="hero-cta {{heroCta.kind === 'locked' || heroCta.kind === 'closed' ? 'is-off' : ''}} {{docked ? 'is-away' : ''}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
           <view class="hero-fav {{faved ? 'is-on' : ''}} {{docked ? 'is-away' : ''}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
           <!-- 2026-10-31 业主:收藏旁边放分享,进通用分享页(主题卡 + 色块 + 渠道;微信好友在那一页) -->
           <view class="hero-fav hero-share" bindtap="openShareCard" aria-role="button" aria-label="分享主题" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="share" size="35" /></view>
@@ -396,7 +396,7 @@
               <view class="topic-story-paywall__price-row">
                 <view class="topic-story-paywall__price">{{money.amount(info.selfPlayPrice)}}</view>
               </view>
-              <view class="topic-story-paywall__cta" bindtap="selfPlayBuy" aria-role="button" aria-label="立即解锁" hover-class="cy-pressed" hover-stay-time="80">立即解锁</view>
+              <view class="topic-story-paywall__cta" wx:if="{{heroCta.kind !== 'closed'}}" bindtap="selfPlayBuy" aria-role="button" aria-label="立即解锁" hover-class="cy-pressed" hover-stay-time="80">立即解锁</view>
               <view class="topic-story-paywall__orders" bindtap="goMyOrders" aria-role="button" aria-label="前往我的订单找回购票" hover-class="cy-pressed" hover-stay-time="80">已购票？去「我的订单」找回</view>
             </view>
           </view>
@@ -545,7 +545,7 @@
     bind:wallet="onRevealWallet" bind:play="onRevealPlay" />
 
   <!-- 2026-10-22 停靠层:价格按钮/收藏滚出顶栏后飞到这里(右下角 / 顶栏胶囊左侧);故事扇收成顶栏小卡堆 -->
-  <view wx:if="{{docked && heroCta.text}}" class="dock-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}}" style="{{dockCtaStyle}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
+  <view wx:if="{{docked && heroCta.text}}" class="dock-cta {{heroCta.kind === 'locked' || heroCta.kind === 'closed' ? 'is-off' : ''}}" style="{{dockCtaStyle}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
   <view wx:if="{{docked}}" class="dock-fav {{faved ? 'is-on' : ''}}" style="{{dockFavStyle}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
 </view>
   <cy-option-sheet show="{{clubSheetShow}}" title="选择承接俱乐部" items="{{clubSheetItems}}" confirm-text="下一步"

@@ -607,6 +607,7 @@ Page({
   onHeroCta() {
     const kind = this.data.heroCta && this.data.heroCta.kind;
     if (kind === 'locked') return this.lockedTip();
+    if (kind === 'closed') return toast('主题已截止');
     if (kind === 'joined') return this.goJoinedPlay();
     if (kind === 'selfplay') return this.selfPlayBuy();
     if (kind === 'signup') return this.bmClick({ currentTarget: { dataset: {} } });
