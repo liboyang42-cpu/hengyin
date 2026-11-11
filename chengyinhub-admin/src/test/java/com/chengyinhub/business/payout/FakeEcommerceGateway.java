@@ -47,7 +47,25 @@ public class FakeEcommerceGateway implements EcommercePayGateway {
     @Override public RefundNotice parseRefundNotification(String body, Map<String, String> headers) { calls.add("parseRefund"); return null; }
     @Override public RefundQuery queryRefund(String sub, String no) {
         calls.add("refundQuery:" + no);
+        if (refundQueries.containsKey(no)) return refundQueries.get(no);
         if (refundQuery == null) throw new RefundNotFound("RESOURCE_NOT_EXISTS", null);
         return refundQuery;
     }
+
+    // ---- l-payout3 合单
+    public CombinedOrder combinedOrder;
+    public List<CombinedSubRequest> lastCombinedSubs;
+    public final Map<String, RefundQuery> refundQueries = new java.util.HashMap<>();
+
+    @Override public Map<String, String> prepayCombinedJsapi(String no, List<CombinedSubRequest> subs, String openid) {
+        calls.add("combinePrepay:" + no); lastCombinedSubs = subs; return Map.of("package", "prepay_id=P");
+    }
+    @Override public CombinedOrder queryCombinedOrder(String no) {
+        calls.add("combineQuery:" + no);
+        if (combinedOrder == null) throw new CombinedOrderNotFound("ORDER_NOT_EXIST", null);
+        return combinedOrder;
+    }
+    @Override public void closeCombinedOrder(String no, List<CombinedSubRequest> subs) { calls.add("combineClose:" + no); }
+    @Override public String parseCombinedNotification(String body, Map<String, String> headers) { calls.add("parseCombine"); return body; }
+    @Override public String combinedNotifyUrl() { return "https://api.example.com/api/registration/ecommerce-combine-callback"; }
 }
