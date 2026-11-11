@@ -414,7 +414,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playSos = require('./utils/play-sos.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const chapterVideo = require('./chapter-video.js');
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
@@ -462,11 +462,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...playSos.methods(),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
+    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...playSos.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -531,7 +531,7 @@ Page({
     // 奖励掉落卡:带服务端稳定 ID(badgeCode),可跳到徽章墙回读,不是一闪而过的 toast
     rewardDrop: { show: false, text: '', badges: [] },
     ringSegs: [],                 // 已核销环:等分间断条,一家一条,核销一家亮一条(见 _ringSegs)
-    topicName: '',                // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
+    topicName: '', topicAiGenerated: false, // 卡包印刷用:一章一商家后 chapter.name 只是第一章,不能拿它当主题名
     topicAudioUrl: '',            // 主题配乐:游玩页循环底乐(作者媒体)
     themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
@@ -4485,7 +4485,7 @@ Page({
       // subpackagePrefab。那条换轨让「用玩法模板 + 主题配置做出《预制人生》」永远无法验收 ——
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
-        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '',
+        loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true,
         mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
@@ -4574,7 +4574,7 @@ Page({
     this._historyNodes = [];
     that._passExpiresAt = d.expiresAt || '';
     this.setData({
-      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', mode, serverMode: mode,
+      loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true, mode, serverMode: mode,
       modeLabel: mode == 2 ? '自由探索' : '城市定向',
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,

@@ -1,0 +1,2 @@
+<cy-option-sheet wx:if="{{show}}" show="{{show}}" title="AI 对话记录" items="{{items}}" immediate bind:select="onSelect" bind:cancel="onCancel" />
+<cy-danger-confirm id="ai-records-dc" bind:confirm="onConfirmClear" />

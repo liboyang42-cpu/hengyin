@@ -17,9 +17,11 @@
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
-    "cy-danger-confirm": "/components/cy/danger-confirm/index"
+    "cy-danger-confirm": "/components/cy/danger-confirm/index",
+    "cy-ai-chat-records": "/subpackageMember/components/cy/ai-chat-records/index"
   },
   "componentPlaceholder": {
-    "cy-scene-route-content": "view"
+    "cy-scene-route-content": "view",
+    "cy-ai-chat-records": "view"
   }
 }

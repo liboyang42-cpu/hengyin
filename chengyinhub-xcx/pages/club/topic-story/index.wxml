@@ -8,6 +8,7 @@
 
   <!-- Tabs · 路线 / 玩法(Figma 228:135 / 228:152)。稿上没有整条底线,故 hairline=false。 -->
   <cy-tabs wx:if="{{!missingParam}}" class="story-tabs" tabs="{{tabs}}" active="{{tab}}" hairline="{{false}}" bind:change="onTab" />
+  <view wx:if="{{aiGenerated && loaded && !loadError}}" class="story-aigc"><cy-tag variant="mono" icon="none">AI 生成</cy-tag></view>
 
   <!-- 第十二轮 k9(p3 未覆盖·游客扫页):缺主题的链接原来落 load-failure 空白,只剩两个页签 -->
   <cy-empty wx:if="{{missingParam}}" fill size="lg" kind="missing-param" title="链接已失效" cta="返回" bind:cta="onRetry" />

@@ -3,6 +3,7 @@ const app = getApp();
 // 视角身份复用 identity-policy(与 pages/shezhi/shezhi.js 同源),不自造判断
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const aigcLabel = require('../../../utils/aigc-label.js');
 
 function getRuntimeVersion() {
   try {
@@ -21,6 +22,7 @@ Page({
     showAgreementSheet: false,
     // 关于页是共享页(商家也从设置进来),主题必须显式两分
     isMerchantView: false,
+    aigcFilingNo: '',
   },
 
   onLoad() {
@@ -28,7 +30,10 @@ Page({
     this.syncViewTheme();
   },
 
-  onShow() { this.syncViewTheme(); },
+  onShow() {
+    this.syncViewTheme();
+    this.setData({ aigcFilingNo: aigcLabel.filingNo(app) });
+  },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() { merchantTheme.merchantPageRestore(); },
 
