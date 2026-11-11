@@ -313,6 +313,17 @@ def main():
     cur.execute("UPDATE club SET member_count=(SELECT COUNT(*) FROM club_member "
                 "WHERE club_id=club.id AND status=1 AND del_flag=0) WHERE id IN (7001,7002)")
     seed_visible_topic(ex)
+    # 结算配置行 cms_setting(id=1):活动结算每个事务都重读平台收款会员(platform_member_id),缺行即拒结。
+    # 平台账户取 E2E 平台运营 9001。
+    ex("INSERT INTO cms_setting(id,platform_member_id,create_by,create_time) SELECT 1,9001,'e2e-seed',NOW() FROM dual "
+       "WHERE NOT EXISTS (SELECT 1 FROM cms_setting WHERE id=1)")
+    # 活动(场次)结算的费率单一真源 settlement_rule(biz_type=activity):缺它 settlementTask 拒结整批
+    # (CmsActivityServiceImpl.validateActivityCommissionSettings)。值取表默认(平台 10% / 主办 90% / 创作者 0,H8)。
+    ex("INSERT INTO settlement_rule(merchant_id,biz_type,rule_name,settlement_cycle,platform_commission_rate,"
+       "merchant_rate,creator_rate,inviter_rate,status,del_flag,create_time) "
+       "SELECT 0,'activity','E2E 活动结算默认费率','daily',0.1000,0.9000,0.0000,0.0000,1,0,NOW() FROM dual "
+       "WHERE NOT EXISTS (SELECT 1 FROM settlement_rule WHERE merchant_id=0 AND biz_type='activity' "
+       "AND status=1 AND del_flag=0)")
 
     print("[seed] 商家自己的玩法模板(图片验证 —— 探店日『看规则/传照片』那一步靠它)")
     # validation_method: 1=文字验证 2=图片验证 3=选项验证(CmsMemberTemplate.java:74)
