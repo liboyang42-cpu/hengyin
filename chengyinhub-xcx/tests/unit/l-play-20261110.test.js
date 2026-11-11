@@ -274,7 +274,8 @@ test('本局完成屏:整屏泛绿 + 勋章 / 成功插图;「获得勋章」只
   assert.deepEqual(host()._endingReward(), { reward: null }, '没夺到就不写')
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /\{\{previewEnding\.real \? 'pv-ending--run' : ''\}\}/)
-  assert.match(wxml, /<cy-illus name="\{\{previewEnding\.reward \? 'badge' : 'success'\}\}" size="340"/)
+  // 2026-11-11 l-icons:奖励时刻的插图换成 3D 玻璃序列帧(cy-frames),勋章 / 成功仍按 previewEnding.reward 二选一
+  assert.match(wxml, /<cy-frames sheets="\{\{\[\{ src: previewEnding\.reward \? '\/pages\/play\/images\/frames\/glass-badge\.webp' : '\/pages\/play\/images\/frames\/glass-success\.webp', n: 24 \}\]\}\}"[^>]*w="\{\{340\}\}"/)
   assert.match(wxml, /previewEnding\.reward \? '本局完成 · 获得勋章' : \(previewEnding\.archive\.identity\.length \? '这一生的结局' : '本局完成'\)/)
   assert.doesNotMatch(wxml, /pv-ending__seal|pv-ending__tick/)
   const js = read('pages/play/index.js')
