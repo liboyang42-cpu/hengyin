@@ -252,6 +252,9 @@ test('通行证页 / 主题库 / 通行证列表:不做玻璃、入口先走钥�
   }
   assert.match(read('subpackageMember/market/membership/index.wxml'), /state === 'merchant'[^>]*商家账号没有通行证/)
   assert.match(read('subpackageMember/market/library/index.wxml'), /state === 'merchant'[^>]*商家账号没有通行证/)
+  // 钥匙开场页的商家空态:父级是 flex 列,cy-fill-state 才能占满剩余高度(否则插图被导航压住)
+  assert.match(read('subpackagePass/reveal/index.wxml'), /class="theme-dark ky \{\{merchant \? 'ky--plain' : ''\}\}/)
+  assert.match(read('subpackagePass/reveal/index.wxss'), /\.ky--plain \{ display: flex; flex-direction: column;/)
   // 已有的两个入口仍按商家视角隐藏
   assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /wx:if="\{\{!isMerchantView\}\}">\s*<cy-cell title="通行证与礼品"/)
   assert.match(read('pages/talent/list/index.js'), /if \(this\.data\.isMerchantViewer \|\| !app\.getUserID\(\)\)/)
