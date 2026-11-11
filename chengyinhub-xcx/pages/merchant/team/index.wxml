@@ -28,8 +28,8 @@
          成员行点开同一张岗位面板改岗或移除,底部一个主按钮。 -->
     <view class="tm-content">
       <view class="dc-card dc-fields">
-        <cy-cell title="门店" value="{{access.merchant.name || '门店'}}" />
-        <cy-cell title="我的岗位" value="{{access.roleName}}" hairline="{{false}}" />
+        <cy-cell title="门店" value="{{access.merchant.name || '门店'}}" arrow="{{false}}" />
+        <cy-cell title="我的岗位" value="{{access.roleName}}" arrow="{{false}}" hairline="{{false}}" />
       </view>
 
       <view class="dc-card dc-fields" wx:if="{{hasIncomingInvite || acceptResult}}">
