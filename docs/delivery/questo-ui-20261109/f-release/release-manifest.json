@@ -3,8 +3,8 @@
   "generatedFrom": "ci/release_manifest.py (git objects only; no DB/host access)",
   "public": {
     "repo": "liboyang42-cpu/hengyin",
-    "commit": "52193cc26cc80830f5a8f9b021d1a80ef0d64024",
-    "tree": "b27758ced65c1ed0d61950ba501d2fa93e07a815"
+    "commit": "fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2",
+    "tree": "5a5bb3c31783faacbac7fc3949454c7f0717d2c0"
   },
   "backend": {
     "modules": [
@@ -18,7 +18,7 @@
   },
   "ci": {
     "repo": "liboyang42-cpu/hengyin",
-    "lookupCommand": "gh run list --repo liboyang42-cpu/hengyin --commit 52193cc26cc80830f5a8f9b021d1a80ef0d64024 --limit 100 --json databaseId,workflowName,event,status,conclusion,headSha,url",
+    "lookupCommand": "gh run list --repo liboyang42-cpu/hengyin --commit fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2 --limit 100 --json databaseId,workflowName,event,status,conclusion,headSha,url",
     "expectedWorkflows": [
       ".github/workflows/backend-jar.yml",
       ".github/workflows/chain-acceptance.yml",
@@ -38,7 +38,7 @@
       ".github/workflows/upload-template-cover-preview.yml"
     ],
     "jarWorkflow": ".github/workflows/backend-jar.yml",
-    "jarArtefactName": "backend-jar-52193cc26cc80830f5a8f9b021d1a80ef0d64024",
+    "jarArtefactName": "backend-jar-fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2",
     "lookup": {
       "status": "NOT_LOOKED_UP",
       "runs": []
@@ -49,7 +49,7 @@
     "bytes": "TO_FILL_FROM_CI_ARTEFACT",
     "sha256": "TO_FILL_FROM_CI_ARTEFACT",
     "embeddedGitCommitId": "TO_FILL_FROM_CI_ARTEFACT",
-    "embeddedGitCommitIdMustEqual": "52193cc26cc80830f5a8f9b021d1a80ef0d64024",
+    "embeddedGitCommitIdMustEqual": "fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2",
     "privateUpload": {
       "location": "OWNER_INPUT_REQUIRED",
       "deployed": false
@@ -57,7 +57,7 @@
   },
   "miniProgram": {
     "path": "chengyinhub-xcx",
-    "treeHash": "d2fa945ef63d05698df9445685154be1f5f33ec2",
+    "treeHash": "467b2a40751c9b0d404973a69155b4a44540f104",
     "fileCount": 5142,
     "appJsonBlob": "ee546466ecb479dc2339743249b3ba7b7aea1d83",
     "projectConfigBlob": "1fb9bd87e64b6b8e63a75111b05a17a266cf4861",
@@ -8569,8 +8569,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/publish/simple/index.js",
-        "blob": "8d7a70d03d474e77fcae069f0417b06d115c0bb7",
-        "bytes": 47460
+        "blob": "26df27ac2eaea8bbce3d1827886e6988ff162d63",
+        "bytes": 47616
       },
       {
         "path": "chengyinhub-xcx/pages/publish/simple/index.json",
@@ -9424,8 +9424,8 @@
       },
       {
         "path": "chengyinhub-xcx/pages/square/detail/index.wxml",
-        "blob": "8ab356dd6fdb126ea70a39c74dd4c5acfd672bf5",
-        "bytes": 15829
+        "blob": "e48d75c20e26047a26d6f7518c318f0d71f72c81",
+        "bytes": 15888
       },
       {
         "path": "chengyinhub-xcx/pages/square/detail/index.wxss",
@@ -11369,8 +11369,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/fixtures.json",
-        "blob": "1ada5f28496e36b734e85ff17ac6541ff6ffe3e6",
-        "bytes": 419851
+        "blob": "905c5f3a3100ef3d016e54dcffd4f18134d1ec2d",
+        "bytes": 419918
       },
       {
         "path": "chengyinhub-xcx/scripts/gen-proto-icons.py",
@@ -11559,8 +11559,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
-        "blob": "5eafe990bf474567a58e3a7947726a48d091a7a7",
-        "bytes": 37140013
+        "blob": "668611ca5f3803b681af4c8d43d126cd7e8f398b",
+        "bytes": 37139987
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/action-runtime.js",
@@ -11584,8 +11584,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/build-route-matrix.js",
-        "blob": "7923c3042fd432aa6a6b63454d88c22c1c7a978a",
-        "bytes": 14385
+        "blob": "66faf55c29303cd5ce0f4dd9040bed18d17d061d",
+        "bytes": 14676
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/coverage-exemptions.json",
@@ -11634,8 +11634,8 @@
       },
       {
         "path": "chengyinhub-xcx/scripts/uiaudit/weak-anchor-baseline.json",
-        "blob": "57b6b6ffee4ce13c2f9eb9188c9dd1f1308d6d5a",
-        "bytes": 2588
+        "blob": "0343de61b385748b381df80e6f9987f9ced656f4",
+        "bytes": 2540
       },
       {
         "path": "chengyinhub-xcx/scripts/undefined-token-gate.js",
@@ -15404,8 +15404,8 @@
       },
       {
         "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
-        "blob": "a59382f0ceca91f7be19fe08e840bb3c4a61cf9e",
-        "bytes": 236749
+        "blob": "46bcace19c62d200fa1bb2827ba8f78703e396b3",
+        "bytes": 236879
       },
       {
         "path": "chengyinhub-xcx/tests/unit/action-runtime.test.js",
@@ -23454,13 +23454,13 @@
       },
       {
         "path": "chengyinhub-xcx/tests/unit/simple-ai-v2-guards.test.js",
-        "blob": "ae73bcc44a39f0f79dce18ede66da9735eadc6a1",
-        "bytes": 51169
+        "blob": "d49a40cdc7ee1fb9e1a17493a61225d4e6bb20e4",
+        "bytes": 51216
       },
       {
         "path": "chengyinhub-xcx/tests/unit/simple-ai.test.js",
-        "blob": "ea83d7e79cc3f281f2c9782ec293de58def541f6",
-        "bytes": 8972
+        "blob": "b4c34e4eef808288a9ae7cad7f65f267ccd94e7e",
+        "bytes": 8978
       },
       {
         "path": "chengyinhub-xcx/tests/unit/simple-preset-source-contract.test.js",
@@ -25782,7 +25782,7 @@
   "migrations": {
     "directory": "chengyinhub-admin/sql",
     "ordering": "explicit-dependencies-then-path-bytewise (ci/migration-dependencies.json)",
-    "count": 640,
+    "count": 641,
     "appliedStateSource": "未知;只能由 owner 经 chengyin-db-migrate 只读预检回填,本脚本永不判定",
     "items": [
       {
@@ -33602,13 +33602,26 @@
         "applied": "UNKNOWN"
       },
       {
+        "migrationId": "zzz_committed_official_notice_job_reregister_20261111",
+        "explicitManaged": false,
+        "path": "chengyinhub-admin/sql/migration_zzz_committed_official_notice_job_reregister_20261111.sql",
+        "sha256": "e8a58381bb89409bd4f1cb8f90e32b9bb9ea5d28e3adab5c5985fff74a624576",
+        "gitBlob": "a88e5ae067cd248aec020705ef278c6a9229a578",
+        "bytes": 2448,
+        "order": 639,
+        "dependsOn": [
+          "20261024_d_committed_official_notice_wx"
+        ],
+        "applied": "UNKNOWN"
+      },
+      {
         "migrationId": "seed_preset_demo",
         "explicitManaged": true,
         "path": "chengyinhub-admin/sql/seed_preset_demo.sql",
         "sha256": "5951b0d1b7df86ee88d64aea256fd6cfead7282ec424ae1e762ce408ce04827e",
         "gitBlob": "8bb3d26732e26d4958c4543f47c412517abf978e",
         "bytes": 6882,
-        "order": 639,
+        "order": 640,
         "dependsOn": [
           "preset_route"
         ],
@@ -33621,7 +33634,7 @@
         "sha256": "886bf11c3464b4ab820e953893b0536f2eb77c9096e3be637c6d2a2acbe98226",
         "gitBlob": "41087c126c249915c7a75fa15e4a016cab715c8d",
         "bytes": 1837,
-        "order": 640,
+        "order": 641,
         "dependsOn": [],
         "applied": "UNKNOWN"
       }

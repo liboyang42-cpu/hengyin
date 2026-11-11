@@ -4,6 +4,15 @@
 只连 127.0.0.1。登录走真实 /api/login/phone：短信验证码夹具先写进本机 Redis（同 scripts/e2e/chain_lib.app_token）。
 判定：HTTP 状态、业务 code，以及响应体与应用日志里是否出现 1054 / 1146 / 1267 / BadSqlGrammar 等 schema 错误。
 
+冒烟前的准备（只写演练库；<member> 是第一次运行 smoke.py 登录后新建玩家的 id）：
+  UPDATE cms_topic SET status = 1, user_status = 1, is_recommend = 1 WHERE id IN (990059, 98400);
+  INSERT INTO cms_registration(id, registration_no, member_id, owner_type, owner_id, topic_id, registration_status,
+    payment_status, purchase_kind, original_amount, total_amount, payable_amount, pay_expire_time, create_time) VALUES
+    (98701,'rehearsal-smoke-1',<member>,1,98400,98400,2,2,2,0,0,0,NOW(),NOW()),
+    (98702,'rehearsal-smoke-2',<member>,1,990059,990059,2,2,2,0,0,0,NOW(),NOW());
+  UPDATE cms_topic_chapter SET name = CONCAT('rehearsal-chapter-', id) WHERE topic_id = 990059 AND name IS NULL;
+  UPDATE cms_topic SET published_config_version = 1 WHERE id IN (98400, 990059);
+
 用法：python3 smoke.py --base http://127.0.0.1:18080 --log <app.log> --report <out.json>
 """
 import argparse
