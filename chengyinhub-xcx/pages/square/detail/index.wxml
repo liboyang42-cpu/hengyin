@@ -1,4 +1,4 @@
-<view class="detail theme-dark">
+<view class="detail {{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

@@ -1,3 +1,4 @@
+@import '../../../style/merchant-light-scope.wxss';
 /* 2026-07-31:根链改 flex column + min-height:100vh,交给 cy-empty/cy-error 的 fill 变体
    在"标题下方到屏幕底部"这段剩余空间里居中,替换掉原来 .detail-state 自己猜的 min-height:48vh。 */
 page{

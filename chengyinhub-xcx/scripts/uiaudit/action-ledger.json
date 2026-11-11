@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6007,
+  "controlCount": 6005,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -2056,7 +2056,6 @@
         "pages/merchant/index/index",
         "pages/merchant/marketing/ai-insight/index",
         "pages/merchant/relation/index",
-        "pages/merchant/team/index",
         "pages/play/index",
         "pages/publish/activity/index",
         "pages/roam/index",
@@ -2405,24 +2404,6 @@
             },
             {
               "selector": "cy-avatar",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/team/index",
-          "segments": [
-            {
-              "selector": "cy-avatar.tm-avatar",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/team/index",
-          "segments": [
-            {
-              "selector": "cy-avatar.tm-store-logo",
               "index": 0
             }
           ]
@@ -39909,6 +39890,24 @@
             {
               "selector": "cy-btn",
               "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 5
             }
           ]
         },
@@ -91821,6 +91820,7 @@
         "pages/merchant/decor/index",
         "pages/merchant/relation/index",
         "pages/merchant/reviews/index",
+        "pages/merchant/team/index",
         "pages/shezhi/about/index",
         "pages/shezhi/shezhi",
         "pages/square/detail/index",
@@ -92350,6 +92350,51 @@
             {
               "selector": "cy-cell",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-cell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-cell",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-cell",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-cell",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/team/index",
+          "segments": [
+            {
+              "selector": "cy-cell",
+              "index": 4
             }
           ]
         },
@@ -156496,15 +156541,6 @@
             {
               "selector": "cy-empty",
               "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/team/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 1
             }
           ]
         },
@@ -918248,7 +918284,7 @@
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:103:bindtap:askRevokeInvite:11",
+      "id": "pages/merchant/team/index.wxml:100:bindtap:onRolePick:11",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -918266,17 +918302,17 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": "cy-danger-confirm",
+      "confirmationMode": null,
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "askRevokeInvite",
-        "line": 103,
-        "selectorHint": ".tm-row-action",
+        "handler": "onRolePick",
+        "line": 100,
+        "selectorHint": ".tm-role-option",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "撤销{{item.roleName}}邀请",
+        "ariaLabelExpression": "选择{{item.name}}岗位",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -918286,34 +918322,90 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "other",
+      "baseActionClass": "read",
       "effectClasses": [
-        "other"
+        "read",
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/operators/invite",
+          "/api/merchant/operators/list",
+          "/api/merchant/operators/role",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/merchant/operators/invite",
+          "/api/merchant/operators/list",
+          "/api/merchant/operators/role"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/operators/invite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/operators/list",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/operators/role",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
-        "modal-cancelled"
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:667"
+        "staticSource": "pages/merchant/team/index.js:537"
       }
     },
     {
@@ -918448,11 +918540,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:294"
+        "staticSource": "pages/merchant/team/index.js:293"
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:112:bind:tap:goWorkbench:12",
+      "id": "pages/merchant/team/index.wxml:110:bindtap:removeFromSheet:12",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -918470,88 +918562,18 @@
       "requiredReadbackLinksByBranch": null,
       "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
-      "confirmationMode": null,
+      "confirmationMode": "cy-danger-confirm",
       "control": {
-        "tag": "cy-btn",
-        "event": "bind:tap",
-        "handler": "goWorkbench",
-        "line": 112,
-        "selectorHint": "cy-btn[bind:tap]",
-        "visibleCondition": null,
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "removeFromSheet",
+        "line": 110,
+        "selectorHint": ".tm-role-option",
+        "visibleCondition": "{{roleSheet.mode === 'operator' && roleSheet.operator}}",
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/merchant/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:419"
-      }
-    },
-    {
-      "id": "pages/merchant/team/index.wxml:118:bind:requestclose:closeRoleSheet:13",
-      "route": "pages/merchant/team/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/team/index.wxml",
-        "js": "pages/merchant/team/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-sheet",
-        "event": "bind:requestclose",
-        "handler": "closeRoleSheet",
-        "line": 118,
-        "selectorHint": "cy-scene-sheet[bind:requestclose]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "移除{{roleSheet.operator.nickname}}",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -918561,7 +918583,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "state",
-      "interactionMode": "event-contract",
+      "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
@@ -918579,17 +918601,18 @@
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "modal-cancelled"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:528"
+        "staticSource": "pages/merchant/team/index.js:530"
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:121:bindtap:onRolePick:14",
+      "id": "pages/merchant/team/index.wxml:117:bind:cancel:cancelDanger:14",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -918609,16 +918632,16 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onRolePick",
-        "line": 121,
-        "selectorHint": ".tm-role-option",
+        "tag": "cy-danger-confirm",
+        "event": "bind:cancel",
+        "handler": "cancelDanger",
+        "line": 117,
+        "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "选择{{item.name}}岗位",
-        "ariaRole": "button",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -918627,14 +918650,98 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
       "effectClasses": [
-        "read",
-        "state"
+        "other"
       ],
       "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/team/index.js:683"
+      }
+    },
+    {
+      "id": "pages/merchant/team/index.wxml:117:bind:confirm:confirmDanger:13:variant:invite",
+      "route": "pages/merchant/team/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/team/index.wxml",
+        "js": "pages/merchant/team/index.js"
+      },
+      "variant": {
+        "id": "invite",
+        "predicate": {
+          "dangerConfirm.type": {
+            "$not": "operator"
+          }
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/merchant/operators/invite/revoke",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-danger-confirm",
+        "event": "bind:confirm",
+        "handler": "confirmDanger",
+        "line": 117,
+        "selectorHint": "#dc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -918642,75 +918749,138 @@
           "pages/privacy/index"
         ],
         "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/operators/invite",
-          "/api/merchant/operators/list",
-          "/api/merchant/operators/role",
-          "/api/role/info"
+          "/api/merchant/operators/invite/revoke"
         ],
         "primaryApis": [
-          "/api/merchant/operators/invite",
-          "/api/merchant/operators/list",
-          "/api/merchant/operators/role"
+          "/api/merchant/operators/invite/revoke"
         ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
+        "auxiliaryApis": [],
         "apiContracts": [
           {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/operators/invite",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/operators/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/operators/role",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
+            "url": "/api/merchant/operators/invite/revoke",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/merchant/operators/invite/revoke"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:530"
+        "staticSource": "pages/merchant/team/index.js:688"
+      }
+    },
+    {
+      "id": "pages/merchant/team/index.wxml:117:bind:confirm:confirmDanger:13:variant:operator",
+      "route": "pages/merchant/team/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/team/index.wxml",
+        "js": "pages/merchant/team/index.js"
+      },
+      "variant": {
+        "id": "operator",
+        "predicate": {
+          "dangerConfirm.type": "operator"
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/merchant/operators/remove",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-danger-confirm",
+        "event": "bind:confirm",
+        "handler": "confirmDanger",
+        "line": 117,
+        "selectorHint": "#dc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/merchant/operators/remove"
+        ],
+        "primaryApis": [
+          "/api/merchant/operators/remove"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/merchant/operators/remove",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/merchant/operators/remove"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/team/index.js:688"
       }
     },
     {
@@ -918846,279 +919016,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:416"
-      }
-    },
-    {
-      "id": "pages/merchant/team/index.wxml:134:bind:cancel:cancelDanger:16",
-      "route": "pages/merchant/team/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/team/index.wxml",
-        "js": "pages/merchant/team/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:cancel",
-        "handler": "cancelDanger",
-        "line": 134,
-        "selectorHint": "#dc",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:676"
-      }
-    },
-    {
-      "id": "pages/merchant/team/index.wxml:134:bind:confirm:confirmDanger:15:variant:invite",
-      "route": "pages/merchant/team/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/team/index.wxml",
-        "js": "pages/merchant/team/index.js"
-      },
-      "variant": {
-        "id": "invite",
-        "predicate": {
-          "dangerConfirm.type": {
-            "$not": "operator"
-          }
-        },
-        "predicateScope": "page",
-        "componentHostSelector": null,
-        "locatorInstance": null
-      },
-      "requiredRequests": [
-        {
-          "urlTemplate": "/api/merchant/operators/invite/revoke",
-          "method": "POST",
-          "kind": "write"
-        }
-      ],
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:confirm",
-        "handler": "confirmDanger",
-        "line": 134,
-        "selectorHint": "#dc",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/merchant/operators/invite/revoke"
-        ],
-        "primaryApis": [
-          "/api/merchant/operators/invite/revoke"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/merchant/operators/invite/revoke",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/merchant/operators/invite/revoke"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:681"
-      }
-    },
-    {
-      "id": "pages/merchant/team/index.wxml:134:bind:confirm:confirmDanger:15:variant:operator",
-      "route": "pages/merchant/team/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/team/index.wxml",
-        "js": "pages/merchant/team/index.js"
-      },
-      "variant": {
-        "id": "operator",
-        "predicate": {
-          "dangerConfirm.type": "operator"
-        },
-        "predicateScope": "page",
-        "componentHostSelector": null,
-        "locatorInstance": null
-      },
-      "requiredRequests": [
-        {
-          "urlTemplate": "/api/merchant/operators/remove",
-          "method": "POST",
-          "kind": "write"
-        }
-      ],
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:confirm",
-        "handler": "confirmDanger",
-        "line": 134,
-        "selectorHint": "#dc",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/merchant/operators/remove"
-        ],
-        "primaryApis": [
-          "/api/merchant/operators/remove"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/merchant/operators/remove",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/merchant/operators/remove"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:681"
+        "staticSource": "pages/merchant/team/index.js:415"
       }
     },
     {
@@ -919261,11 +919159,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:794"
+        "staticSource": "pages/merchant/team/index.js:801"
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:36:bindtap:toggleStoreDetails:3",
+      "id": "pages/merchant/team/index.wxml:36:bind:tap:acceptIncomingInvite:3",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -919285,83 +919183,16 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "toggleStoreDetails",
+        "tag": "cy-cell",
+        "event": "bind:tap",
+        "handler": "acceptIncomingInvite",
         "line": 36,
-        "selectorHint": ".tm-store-details",
-        "visibleCondition": null,
-        "disabledCondition": null,
+        "selectorHint": "cy-cell[bind:tap]",
+        "visibleCondition": "{{hasIncomingInvite}}",
+        "disabledCondition": "{{accepting}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": "{{storeDetailsExpanded}}",
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:420"
-      }
-    },
-    {
-      "id": "pages/merchant/team/index.wxml:45:bindtap:acceptIncomingInvite:4",
-      "route": "pages/merchant/team/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/team/index.wxml",
-        "js": "pages/merchant/team/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "acceptIncomingInvite",
-        "line": 45,
-        "selectorHint": ".tm-text-action",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "接受团队邀请",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -919471,11 +919302,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:794"
+        "staticSource": "pages/merchant/team/index.js:801"
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:63:bindtap:openInviteRoleSheet:5",
+      "id": "pages/merchant/team/index.wxml:69:bind:tap:openOperatorRoleSheet:6",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -919495,125 +919326,16 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openInviteRoleSheet",
-        "line": 63,
-        "selectorHint": ".tm-add",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "邀请员工",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/merchant/operators/roles",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/merchant/operators/roles"
-        ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/merchant/operators/roles",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:511"
-      }
-    },
-    {
-      "id": "pages/merchant/team/index.wxml:83:bindtap:openOperatorRoleSheet:8",
-      "route": "pages/merchant/team/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/team/index.wxml",
-        "js": "pages/merchant/team/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
+        "tag": "cy-cell",
+        "event": "bind:tap",
         "handler": "openOperatorRoleSheet",
-        "line": 83,
-        "selectorHint": ".tm-row-action",
+        "line": 69,
+        "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "调整{{item.nickname}}的岗位",
-        "ariaRole": "button",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -919647,11 +919369,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:521"
+        "staticSource": "pages/merchant/team/index.js:519"
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:84:bindtap:askRemoveOperator:9",
+      "id": "pages/merchant/team/index.wxml:84:bind:tap:askRevokeInvite:7",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -919671,16 +919393,16 @@
       "requestMode": "ordered",
       "confirmationMode": "cy-danger-confirm",
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "askRemoveOperator",
+        "tag": "cy-cell",
+        "event": "bind:tap",
+        "handler": "askRevokeInvite",
         "line": 84,
-        "selectorHint": ".tm-row-action",
+        "selectorHint": "cy-cell[bind:tap]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "移除{{item.nickname}}",
-        "ariaRole": "button",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -919716,11 +919438,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:656"
+        "staticSource": "pages/merchant/team/index.js:674"
       }
     },
     {
-      "id": "pages/merchant/team/index.wxml:88:bind:cta:openInviteRoleSheet:10",
+      "id": "pages/merchant/team/index.wxml:90:bind:tap:openInviteRoleSheet:8",
       "route": "pages/merchant/team/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -919740,13 +919462,13 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
+        "tag": "cy-btn",
+        "event": "bind:tap",
         "handler": "openInviteRoleSheet",
-        "line": 88,
-        "selectorHint": "cy-empty[bind:cta]",
+        "line": 90,
+        "selectorHint": "cy-btn[bind:tap]",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{submitting}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -919759,7 +919481,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "read",
-      "interactionMode": "event-contract",
+      "interactionMode": "tap",
       "baseActionClass": "read",
       "effectClasses": [
         "read",
@@ -919825,7 +919547,144 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/team/index.js:511"
+        "staticSource": "pages/merchant/team/index.js:509"
+      }
+    },
+    {
+      "id": "pages/merchant/team/index.wxml:93:bind:tap:goWorkbench:9",
+      "route": "pages/merchant/team/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/team/index.wxml",
+        "js": "pages/merchant/team/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bind:tap",
+        "handler": "goWorkbench",
+        "line": 93,
+        "selectorHint": "cy-btn[bind:tap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/team/index.js:418"
+      }
+    },
+    {
+      "id": "pages/merchant/team/index.wxml:97:bind:requestclose:closeRoleSheet:10",
+      "route": "pages/merchant/team/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/team/index.wxml",
+        "js": "pages/merchant/team/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-sheet",
+        "event": "bind:requestclose",
+        "handler": "closeRoleSheet",
+        "line": 97,
+        "selectorHint": "cy-scene-sheet[bind:requestclose]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/team/index.js:527"
       }
     },
     {

@@ -1,5 +1,6 @@
 @charset "UTF-8";
 @import '../../style/picker-wheel.wxss';
+@import '../../style/merchant-light-scope.wxss';
 .search2 .sousuo {
   gap: var(--cy-space-3);
 }
