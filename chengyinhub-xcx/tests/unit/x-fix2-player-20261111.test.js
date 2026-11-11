@@ -168,3 +168,12 @@ test('P-13/P-15/P-16/P-18/ME-4 玩家侧小项', () => {
   assert.match(tb, /--tabbar-glass: rgba\(255, 255, 255, 0\.78\)/)
   assert.match(tb, /--tabbar-glass: rgba\(28, 28, 30, 0\.82\)/)
 })
+
+test('P-12 主题详情数据条:开放时间只在连字符后折行,不再 break-all 把「10.13」劈开', () => {
+  const { buildTopicStatBar } = require('../../pages/topic/utils/topic-detail-facts.js')
+  const open = buildTopicStatBar({ showStartDate: '10.11', showEndDate: '10.13' }).find((c) => c.key === 'open')
+  assert.equal(open.value, '10.11-​10.13')
+  const css = read('pages/topic/index/index.wxss')
+  assert.match(css, /\.topic \.statbar__value \{ max-width: 100%; white-space: normal; word-break: keep-all; overflow-wrap: anywhere;/)
+  assert.doesNotMatch(css, /\.topic \.statbar__value \{[^}]*break-all/)
+})

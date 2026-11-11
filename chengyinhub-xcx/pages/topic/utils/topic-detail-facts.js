@@ -89,7 +89,7 @@ function buildTopicStatBar(info, opts) {
   /* CU-M-88:这一格的值是**起止日期区间**(7.4-7.29),副标签原来固定写「总时长」,
      把一段日期说成了时长 —— 而真正的时长是上一格「预计游玩 · 小时」,两格语义撞车。
      日期区间不需要副标签,删掉它(wxml 的 wx:elif 缺 sub 时整行不出)。 */
-  if (start && end) cells.push({ key: 'open', label: '开放时间', value: start + '-' + end })
+  if (start && end) cells.push({ key: 'open', label: '开放时间', value: start + '-\u200b' + end })   // x-fix2 P-12:窄格里只在连字符后折行,不把「10.13」劈成「10. / 13」
 
   const mileage = positiveNumber(data.totalMileage)
   if (mileage) cells.push({ key: 'mileage', label: '总里程', value: String(mileage), sub: '公里' })
