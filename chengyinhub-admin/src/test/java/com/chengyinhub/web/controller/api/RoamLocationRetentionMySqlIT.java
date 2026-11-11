@@ -539,13 +539,14 @@ class RoamLocationRetentionMySqlIT {
         var asrIdentities = asrIdentitySnapshot();
         var freshAsr = db.queryForMap("select * from npc_asr_intent where id=102");
         var unknownAsr = db.queryForMap("select * from npc_asr_intent where id=103");
-        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request")) {
+        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request", "ai_generation_log")) {
             String timeColumn = table.equals("tms_browse_record") ? "browse_time" : "create_time";
             db.execute("create table " + table + "(id bigint primary key," + timeColumn + " datetime not null) engine=InnoDB");
             String oldAge = switch (table) {
                 case "tms_browse_record" -> "181 day";
                 case "biz_event_log" -> "366 day";
                 case "npc_chat_log" -> "91 day";
+                case "ai_generation_log" -> "181 day";
                 default -> "49 hour";
             };
             db.execute("insert into " + table + " values(1,date_sub(now(),interval " + oldAge + ")),(2,now())");
@@ -576,7 +577,8 @@ class RoamLocationRetentionMySqlIT {
                 new ClassPathResource("mapper/business/BizEventLogMapper.xml"),
                 new ClassPathResource("mapper/business/NpcChatLogMapper.xml"),
                 new ClassPathResource("mapper/business/NpcChatRequestMapper.xml"),
-                new ClassPathResource("mapper/business/NpcAsrIntentMapper.xml"));
+                new ClassPathResource("mapper/business/NpcAsrIntentMapper.xml"),
+                new ClassPathResource("mapper/business/AiGenerationLogMapper.xml"));
         SqlSessionTemplate extra = new SqlSessionTemplate(extraFactory.getObject());
         var target = new com.chengyinhub.business.service.impl.DataRetentionServiceImpl();
         org.springframework.test.util.ReflectionTestUtils.setField(target, "tmsBrowseRecordMapper", extra.getMapper(com.chengyinhub.business.mapper.TmsBrowseRecordMapper.class));
@@ -584,6 +586,7 @@ class RoamLocationRetentionMySqlIT {
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatLogMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatLogMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcChatRequestMapper", extra.getMapper(com.chengyinhub.business.mapper.NpcChatRequestMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "npcAsrIntents", extra.getMapper(com.chengyinhub.business.mapper.NpcAsrIntentMapper.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(target, "aiGenerationLogMapper", extra.getMapper(com.chengyinhub.business.mapper.AiGenerationLogMapper.class));
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamMapper", roam);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamShareSnapshotMapper", shares);
         org.springframework.test.util.ReflectionTestUtils.setField(target, "roamLocationRetentionService", service(roam));
@@ -598,7 +601,7 @@ class RoamLocationRetentionMySqlIT {
         org.springframework.test.util.ReflectionTestUtils.setField(task, "maxBatches", 20);
 
         assertDoesNotThrow(task::run);
-        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request"))
+        for (String table : java.util.List.of("tms_browse_record", "biz_event_log", "npc_chat_log", "npc_chat_request", "ai_generation_log"))
             assertEquals(java.util.List.of(2L), db.queryForList("select id from " + table + " order by id", Long.class));
         assertEquals(asrIdentities, asrIdentitySnapshot(), "body expiry must not release ASR/quota/UNKNOWN identity");
         assertEquals(java.util.List.of(101L, 102L, 103L), db.queryForList("select id from npc_asr_intent order by id", Long.class));
