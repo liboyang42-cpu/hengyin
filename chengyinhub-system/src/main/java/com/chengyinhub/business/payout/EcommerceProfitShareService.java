@@ -54,6 +54,13 @@ public class EcommerceProfitShareService {
     private final EcommercePayGateway gateway;
     private final PayoutSwitches switches;
     private final TransactionOperations tx;
+    /** l-payout3：合单 / 供应商应付表；未装配时转付行不落应付（合单开关关闭时也不会出现转付行）。 */
+    private com.chengyinhub.business.mapper.EcomCombineMapper combineMapper;
+
+    @Autowired(required = false)
+    public void setCombineMapper(com.chengyinhub.business.mapper.EcomCombineMapper combineMapper) {
+        this.combineMapper = combineMapper;
+    }
 
     @Autowired
     public EcommerceProfitShareService(EcomPayoutMapper mapper, EcommercePayGateway gateway, PayoutSwitches switches,
@@ -100,7 +107,7 @@ public class EcommerceProfitShareService {
             ProfitSharePlanner.Order order = new ProfitSharePlanner.Order(trade.getOutTradeNo(), trade.getTransactionId(),
                     trade.getSubMchid(), trade.getTotalFen(), sellerMember == null ? Set.of() : Set.of(sellerMember));
             ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(order, components, switches.platformReceiverMchid(),
-                    switches.maxSharePercent(), this::memberSubMchid);
+                    switches.maxSharePercent(), this::memberSubMchid, switches.combinedEnabled());
             Boolean inserted = tx.execute(status -> persist(topicId, trade, plan));
             if (Boolean.TRUE.equals(inserted)) created++;
         }
@@ -209,9 +216,37 @@ public class EcommerceProfitShareService {
         } else if ("FINISHED".equals(s) || "SUCCESS".equals(s)) {
             boolean allDone = result.receivers() == null || result.receivers().stream()
                     .allMatch(r -> r.result() == null || "SUCCESS".equals(r.result()));
-            if (allDone) mapper.updateShareOrderState(shareOrderId, PROCESSING, SUCCESS, result.wxOrderId(), null);
+            if (allDone && mapper.updateShareOrderState(shareOrderId, PROCESSING, SUCCESS, result.wxOrderId(), null) == 1)
+                recordRelayPayables(shareOrderId);
         }
         // PROCESSING / PENDING：保持，等下一次 sync。
+    }
+
+    /**
+     * l-payout3：分账成功后，分给平台转付的份额（SUPPLIER_RELAY）落供应商应付，由平台按供应商结算付给对方。
+     * 唯一键保证重复调用只落一次；没有转付行或合单组件未装配时什么都不做。
+     */
+    private void recordRelayPayables(long shareOrderId) {
+        if (combineMapper == null) return;
+        EcomProfitShareOrder order = mapper.selectShareOrderById(shareOrderId);
+        if (order == null) return;
+        for (EcomProfitShareLine l : mapper.selectShareLines(shareOrderId)) {
+            if (!ProfitSharePlanner.ReceiverKind.SUPPLIER_RELAY.name().equals(l.getReceiverKind())
+                    || l.getReceiverMemberId() == null || l.getAmountFen() == null || l.getAmountFen() <= 0) continue;
+            com.chengyinhub.business.domain.EcomSupplierPayable p = new com.chengyinhub.business.domain.EcomSupplierPayable();
+            p.setSource("RELAY");
+            p.setBusinessOutTradeNo(order.getOutTradeNo());
+            p.setTopicId(order.getTopicId());
+            p.setSettlementId(l.getSettlementId());
+            p.setLineType(l.getLineType());
+            p.setPayeeMemberId(l.getReceiverMemberId());
+            p.setAmountFen(l.getAmountFen());
+            try {
+                combineMapper.insertPayable(p);
+            } catch (DuplicateKeyException already) {
+                // 已落过。
+            }
+        }
     }
 
     /**
@@ -373,7 +408,7 @@ public class EcommerceProfitShareService {
         ProfitSharePlanner.Order o = new ProfitSharePlanner.Order(trade.getOutTradeNo(), trade.getTransactionId(),
                 trade.getSubMchid(), trade.getTotalFen(), sellerMember == null ? Set.of() : Set.of(sellerMember));
         ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(o, components, switches.platformReceiverMchid(),
-                switches.maxSharePercent(), this::memberSubMchid);
+                switches.maxSharePercent(), this::memberSubMchid, switches.combinedEnabled());
         String result = tx.execute(status -> {
             boolean manual = "MANUAL".equals(plan.state());
             String hash = plan.planHash() == null ? sha("MANUAL|" + plan.manualReason() + "|" + order.getOutTradeNo()) : plan.planHash();

@@ -29,7 +29,7 @@ Component({
     preset: { type: String, value: '' }
   },
   data: {
-    tabs: [], more: [], scope: '', moreLabel: '更多', period: 'all',
+    tabs: [], more: [], scope: '', moreLabel: '更多', period: 'all', moreShow: false, moreItems: [],
     state: '', error: '', rank: null, hero: null, digits: [], heroOn: false
   },
   observers: {
@@ -80,16 +80,16 @@ Component({
     onMore() {
       const more = this.data.more;
       if (!more.length) return;
-      wx.showActionSheet({
-        itemList: more.map(x => x.label),
-        success: r => {
-          const pick = more[r.tapIndex];
-          if (!pick) return;
-          this.setData({ scope: pick.key, moreLabel: pick.label });
-          this.load();
-        }
-      });
+      this.setData({ moreShow: true, moreItems: more.map(x => x.label) });
     },
+    onMoreSelect(e) {
+      const pick = this.data.more[e.detail.index];
+      this.setData({ moreShow: false });
+      if (!pick) return;
+      this.setData({ scope: pick.key, moreLabel: pick.label });
+      this.load();
+    },
+    onMoreCancel() { this.setData({ moreShow: false }); },
     onPeriod(e) { this.setData({ period: e.detail.key }); this.load(); },
     // 名次数字滚动:同位数时从上一个数滚到新数;首次出现从 0 滚上来。减少动态时直接落位。
     _show(rank, state) {

@@ -616,6 +616,15 @@ public class ApiRegistrationController extends BaseController {
         return callbackResponse(() -> wechatPayService.handleEcommerceRefundCallback(requestBody, headers));
     }
 
+    /** l-payout3：电商收付通合单支付通知。payout.ecommerce.combine-notify-url 指向本端点；合单开关关闭时回 FAIL。 */
+    @Operation(summary = "电商收付通合单支付回调")
+    @PostMapping("/ecommerce-combine-callback")
+    @Anonymous
+    public ResponseEntity<?> ecommerceCombinePayCallback(@RequestBody String requestBody,
+                                                         @RequestHeader Map<String, String> headers) {
+        return callbackResponse(() -> wechatPayService.handleEcommerceCombinePayCallback(requestBody, headers));
+    }
+
     private ResponseEntity<?> callbackResponse(Supplier<String> callback) {
         try {
             Map<String, Object> ack = JSON.parseObject(callback.get());

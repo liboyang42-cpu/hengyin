@@ -1,6 +1,7 @@
 const teamSeats = require('../utils/team-seats.js');
 const inviteQr = require('../utils/team-invite-qr.js');
 const cyToast = require('../../../utils/toast.js');
+const { enter, beats } = require('../../../utils/page-motion.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
@@ -78,9 +79,9 @@ Page({
       });
     }
   },
-  onShow() { this._hidden = false; if (this.teamId && !this._left) { this._openRecovery(); this.load(); } },
-  onHide() { this._hidden = true; if (this._recovery) this._recovery.dispose(); this._resetReads(); },
-  onUnload() { this._disposed = true; if (this._recovery) this._recovery.dispose(); this._resetReads(); },
+  onShow() { this._hidden = false; this._breath = beats(this, 'seatBreath', [[1, 1200], [0, 1200]], { rest: 1 }); if (this.teamId && !this._left) { this._openRecovery(); this.load(); } },
+  onHide() { this._hidden = true; if (this._breath) this._breath(); if (this._recovery) this._recovery.dispose(); this._resetReads(); },
+  onUnload() { this._disposed = true; this._unloaded = true; if (this._breath) this._breath(); if (this._recovery) this._recovery.dispose(); this._resetReads(); },
 
   _openRecovery() {
     if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
@@ -191,6 +192,7 @@ Page({
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id) === context.teamId) {
           const team = res.data.team;
           that._seats = !!(res.data.seats && Number.isSafeInteger(res.data.seats.available));
+          enter(that, 'seatIn', { once: true });
           that.setData({
             loading: false,
             refreshing: false,

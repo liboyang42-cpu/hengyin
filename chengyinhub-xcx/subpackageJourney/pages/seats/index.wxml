@@ -56,7 +56,7 @@
 
     <!-- 已邀请列表(可撤回)留在页面里;邀请本身走统一的 Spotify 式邀请页(cy-share-card kind=invite,l-after) -->
     <view class="lb-invited" wx:if="{{lobby.showParty && (lobby.invited.length || actionError)}}">
-      <text class="jn-err" wx:if="{{actionError}}">{{actionError}}</text>
+      <cy-inline-error class="jn-err" wx:if="{{actionError}}" kind="field" title="{{actionError}}" />
       <view class="jn-group" wx:if="{{lobby.invited.length}}">
         <view class="jn-row" wx:for="{{lobby.invited}}" wx:key="key">
           <text class="jn-rank">{{item.no}}</text>

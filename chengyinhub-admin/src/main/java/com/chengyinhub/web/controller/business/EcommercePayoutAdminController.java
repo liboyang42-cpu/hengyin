@@ -28,6 +28,22 @@ public class EcommercePayoutAdminController extends BaseController {
     @Autowired private EcommerceSubMerchantService subMerchantService;
     @Autowired private EcommerceProfitShareService profitShareService;
     @Autowired private EcommercePayoutQueryService queryService;
+    @Autowired private com.chengyinhub.business.payout.EcommerceCombinedSettlementService combinedSettlement;
+
+    /** l-payout3：平台为卖家部分的供应商应付（合单平台自营子单 / 单商户单经平台转付）。合单开关关闭时为空。 */
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
+    @GetMapping("/supplier-payables")
+    public AjaxResult supplierPayables(@RequestParam(required = false) String state,
+                                       @RequestParam(defaultValue = "50") int limit) {
+        return success(combinedSettlement.payables(state, limit));
+    }
+
+    /** l-payout3：运营完成线下对公付款或灵活用工打款后，录入付款单号标记已付（只能从 PENDING 推进一次）。 */
+    @PreAuthorize("@ss.hasPermi('business:ecommercepayout:edit')")
+    @PostMapping("/supplier-payables/{id}/paid")
+    public AjaxResult markSupplierPayablePaid(@PathVariable Long id, @RequestParam String reference) {
+        return combinedSettlement.markPaid(id, reference, getUsername()) ? success() : error("应付不存在、已处理或合单未开通");
+    }
 
     @PreAuthorize("@ss.hasPermi('business:ecommercepayout:query')")
     @GetMapping("/sub-merchant")

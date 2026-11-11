@@ -310,53 +310,64 @@ test('页面:没有光标时插到文末;音频先落空块', () => {
   assert.deepEqual(blocksOf(page).map((b) => b.type), ['text', 'text', 'audio'])
 })
 
+// l-editor2(业主「正文不能拖」):拖动只给非正文块;正文段照样是落点
+const withDivider = (page) => { blocksOf(page).splice(1, 0, { key: 'd1', type: 'divider' }); return page }
+
 test('页面:长按量一次几何挂到 data-geo,拿起震一次;渲染层回调落点后改顺序,epoch +1', () => {
-  const page = openPage()
-  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
-  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: {} }, touches: [{ clientY: 140 }] })
-  assert.equal(page.data.storyDrag.key, 'p1')
+  const page = withDivider(openPage())
+  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 20 }, { top: 200, height: 40 }]
+  page.onStoryDragArm({ currentTarget: { id: 'sb-d1', dataset: { blockkey: 'd1', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 180 }] })
+  assert.equal(page.data.storyDrag.key, 'd1')
   const geo = JSON.parse(page.data.storyDrag.geo)
-  assert.deepEqual([geo.from, geo.y, geo.top, geo.h], [0, 140, [120, 170], [40, 40]])
+  assert.deepEqual([geo.from, geo.y, geo.top, geo.h], [1, 180, [120, 170, 200], [40, 20, 40]])
   const epoch = page.data.storyDrag.epoch
-  page.onStoryDragSlot({ target: 1 })
-  page.onStoryDragDrop({ key: 'p1', from: 0, to: 1, scrollTop: 0 })
-  assert.deepEqual(blocksOf(page).map((b) => b.key), ['p2', 'p1'])
+  page.onStoryDragSlot({ target: 0 })
+  page.onStoryDragDrop({ key: 'd1', from: 1, to: 0, scrollTop: 0 })
+  assert.deepEqual(blocksOf(page).map((b) => b.key), ['d1', 'p1', 'p2'])
   assert.deepEqual(vibrations, ['light', 'light', 'medium'])
   assert.deepEqual([page.data.storyDrag.key, page.data.storyDrag.geo, page.data.storyDrag.epoch], ['', '', epoch + 1])
 })
 
 test('页面:长按原地松手 = 选中该块(显示删除键),不改顺序', () => {
-  const page = openPage()
-  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
-  page.onStoryDragArm({ currentTarget: { id: 'sb-p2', dataset: { blockkey: 'p2', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 190 }] })
-  page.onStoryDragDrop({ key: 'p2', from: 1, to: 1, scrollTop: 0 })
-  assert.deepEqual(blocksOf(page).map((b) => b.key), ['p1', 'p2'])
-  assert.equal(page.data.storyEditor.selectedBlockKey, 'p2')
+  const page = withDivider(openPage())
+  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 20 }, { top: 200, height: 40 }]
+  page.onStoryDragArm({ currentTarget: { id: 'sb-d1', dataset: { blockkey: 'd1', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 180 }] })
+  page.onStoryDragDrop({ key: 'd1', from: 1, to: 1, scrollTop: 0 })
+  assert.deepEqual(blocksOf(page).map((b) => b.key), ['p1', 'd1', 'p2'])
+  assert.equal(page.data.storyEditor.selectedBlockKey, 'd1')
 })
 
 test('页面:几何还没量完手就松了 → 不进入拖拽态,按原地松手处理', () => {
-  const page = openPage()
-  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
+  const page = withDivider(openPage())
+  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 20 }, { top: 200, height: 40 }]
   let pending = null
   const realQuery = wx.createSelectorQuery
   wx.createSelectorQuery = () => { const q = realQuery(); q.exec = (cb) => { pending = cb }; return q }
-  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: {} }, touches: [{ clientY: 140 }] })
+  page.onStoryDragArm({ currentTarget: { id: 'sb-d1', dataset: { blockkey: 'd1', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 180 }] })
   page.onStoryTouchRelease()
   pending([queryRects, { top: 100, bottom: 700, height: 600 }, { scrollTop: 0, scrollHeight: 600 }])
   wx.createSelectorQuery = realQuery
   assert.equal(page.data.storyDrag.key, '')
-  assert.equal(page.data.storyEditor.selectedBlockKey, 'p1')
+  assert.equal(page.data.storyEditor.selectedBlockKey, 'd1')
 })
 
-test('页面:正在输入的段长按留给系统选字;按住把手仍然能拖', () => {
-  const page = openPage()
-  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 40 }]
-  page._storyFocusKey = 'p1'
+test('页面(l-editor2):正文段长按不拿起、不震、不选中 —— 输入中、没在输入、下标对不上都一样', () => {
+  const page = withDivider(openPage())
+  queryRects = [{ top: 120, height: 40 }, { top: 170, height: 20 }, { top: 200, height: 40 }]
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: {} }, touches: [{ clientY: 140 }] })
+  page._storyFocusKey = 'p2'
   page.data.storyEditor.kb = 300
-  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: { blockkey: 'p1' } }, touches: [{ clientY: 140 }] })
-  assert.equal(page.data.storyDrag.key, '')
-  page.onStoryDragArm({ currentTarget: { id: 'sb-p1', dataset: { blockkey: 'p1', index: 0 } }, target: { dataset: { grip: '1', blockkey: 'p1' } }, touches: [{ clientY: 140 }] })
-  assert.equal(page.data.storyDrag.key, 'p1')
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p2', dataset: { blockkey: 'p2', index: 2 } }, target: { dataset: { grip: '1', blockkey: 'p2' } }, touches: [{ clientY: 220 }] })
+  page.onStoryDragArm({ currentTarget: { id: 'sb-p2', dataset: { blockkey: 'p2', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 220 }] })
+  assert.deepEqual([page.data.storyDrag.key, page.data.storyDrag.geo, page.data.storyEditor.selectedBlockKey], ['', '', ''])
+  assert.deepEqual(vibrations, [])
+  assert.deepEqual(blocksOf(page).map((b) => b.key), ['p1', 'd1', 'p2'])
+})
+
+test('页面(l-editor2):WXML 正文段不出把手;长按只有 .story-block 一处挂(正文由 onStoryDragArm 拒绝)', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.wxml'), 'utf8')
+  assert.match(wxml, /class="story-grip" wx:if="\{\{!storyEditor\.preview && block\.type !== 'text'\}\}"/)
+  assert.equal((wxml.match(/onStoryDragArm/g) || []).length, 1, '只有 .story-block 一处挂拿起')
 })
 
 test('页面:保存 payload 与重开后的块顺序一致', () => {
@@ -456,15 +467,16 @@ test('页面:开场白 / 结语写在章节卡上,派生去向;上送时还原�
 test('页面:拖进段落中间 → 渲染层回调 split,页面把那一段临时拆成两半;松手按 split 拆段并给撤销条', () => {
   const page = openPage()
   page.data.formData.chapters[0].blocks[0].content = '雨停了。她推开门。'
-  queryRects = [{ top: 120, height: 80 }, { top: 210, height: 40 }]
-  page.onStoryDragArm({ currentTarget: { id: 'sb-p2', dataset: { blockkey: 'p2', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 230 }] })
+  blocksOf(page)[1] = { key: 'd1', type: 'divider' }
+  queryRects = [{ top: 120, height: 80 }, { top: 210, height: 20 }]
+  page.onStoryDragArm({ currentTarget: { id: 'sb-d1', dataset: { blockkey: 'd1', index: 1 } }, target: { dataset: {} }, touches: [{ clientY: 220 }] })
   const geo = JSON.parse(page.data.storyDrag.geo)
-  assert.deepEqual([geo.kind, geo.len, geo.bounds], [['p', ''], [9, 5], [[4], []]])
-  page.onStoryDragSplit({ index: 0, at: 4, h: 40 })
-  assert.deepEqual(page.data.storyDrag.split, { key: 'p1', at: 4, a: '雨停了。', b: '她推开门。', h: 40 })
-  page.onStoryDragDrop({ key: 'p2', from: 1, to: 1, scrollTop: 0, split: { index: 0, at: 4 } })
-  assert.deepEqual(blocksOf(page).map((b) => b.content), ['雨停了。', '她推开门。', '她推开门。'])
-  assert.equal(blocksOf(page)[1].key, 'p2')
+  assert.deepEqual([geo.kind, geo.len, geo.bounds], [['p', ''], [9, 0], [[4], []]])
+  page.onStoryDragSplit({ index: 0, at: 4, h: 20 })
+  assert.deepEqual(page.data.storyDrag.split, { key: 'p1', at: 4, a: '雨停了。', b: '她推开门。', h: 20 })
+  page.onStoryDragDrop({ key: 'd1', from: 1, to: 1, scrollTop: 0, split: { index: 0, at: 4 } })
+  assert.deepEqual(blocksOf(page).map((b) => b.type === 'text' ? b.content : b.type), ['雨停了。', 'divider', '她推开门。'])
+  assert.equal(blocksOf(page)[1].key, 'd1')
   assert.equal(page.data.storyDrag.split, null)
   assert.match(page.data.storyUndo.text, /拆成两段/)
 })

@@ -29,7 +29,7 @@
       </view>
       <view class="pp__pill {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
       <text class="pp__terms" wx:if="{{view.terms}}">{{view.terms}}</text>
-      <text class="pp__err" wx:if="{{buyError}}" aria-role="alert">{{buyError}}</text>
+      <cy-inline-error class="pp__err" wx:if="{{buyError}}" kind="field" title="{{buyError}}" />
 
       <block wx:if="{{library.length}}">
         <text class="pp__sec">可玩主题库</text>

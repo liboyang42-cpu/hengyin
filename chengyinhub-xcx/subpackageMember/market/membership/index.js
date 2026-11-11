@@ -39,7 +39,6 @@ Page({
     scrolled: false,
     view: { enabled: false },
     library: [],
-    selected: '',
     buying: false,
     buyError: '',
     reduced: false
@@ -71,13 +70,14 @@ Page({
       if (!isBizOk(ov) || !ov.data) { this.setData({ state: 'error' }); return }
       this._overview = ov.data
       const rows = isBizOk(lib) && lib.data && Array.isArray(lib.data.rows) ? lib.data.rows.map(pp.libraryRow).filter(Boolean) : []
-      this.setData({ state: 'ready', view: pp.passView(ov.data, this.data.selected, this._platform), library: rows })
+      this.setData({ state: 'ready', view: pp.passView(ov.data, this._selected || '', this._platform), library: rows })
     })
   },
   onPlan(e) {
     const code = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.code
     if (!code || this.data.buying) return
-    this.setData({ selected: code, view: pp.passView(this._overview, code, this._platform) })
+    this._selected = code // 选中态由 view 渲染,这里只记住
+    this.setData({ view: pp.passView(this._overview, code, this._platform) })
   },
   onBuy() {
     const v = this.data.view

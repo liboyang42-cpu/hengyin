@@ -251,6 +251,45 @@ public class WechatPayServiceImpl implements IWechatPayService {
         }
     }
 
+    /**
+     * l-payout3：电商收付通合单支付通知。验签后只取合单号定位，事实一律按原合单号查单、逐笔子单核对后写不可变支付事实，
+     * 再交给同一业务路由。合单开关关闭时直接回 FAIL。
+     */
+    @Override
+    public String handleEcommerceCombinePayCallback(String requestBody, Map<String, String> headers) {
+        EcommercePartnerPaymentAdapter partner = gateway.enabledPartner();
+        if (partner == null || ecommerceGateway == null) return "{\"code\": \"FAIL\",\"message\": \"未开通\"}";
+        String safeReference = "UNKNOWN";
+        try {
+            String combineNo = ecommerceGateway.parseCombinedNotification(requestBody, headers);
+            safeReference = combineNo != null && combineNo.matches("[A-Za-z0-9_-]{1,32}") ? combineNo : "UNKNOWN";
+            Map<String, String> facts = partner.verifiedCombinedNotificationFacts(combineNo);
+            if (facts == null) {
+                alarmService.alarmThrottled("payment.callback.ecommerce.combine.facts", "合单支付回调原单事实缺失或不符",
+                        "order=" + safeReference + " result=FAIL");
+                return "{\"code\": \"FAIL\",\"message\": \"支付事实核验失败\"}";
+            }
+            WechatPaymentCallbackRouter.Outcome outcome = callbacks.payment(facts);
+            if (!"SUCCESS".equalsIgnoreCase(outcome.result())) {
+                alarmService.alarmThrottled("payment.callback.ecommerce.combine." + outcome.route(), "合单支付回调业务订单处理失败",
+                        "route=" + outcome.route() + " order=" + safeReference + " result=FAIL");
+                return "{\"code\": \"FAIL\",\"message\": \"业务处理失败,请重试\"}";
+            }
+            return "{\"code\": \"SUCCESS\",\"message\": \"成功\"}";
+        } catch (WechatPaymentCallbackRouter.RoutingException e) {
+            alarmService.alarmThrottled("payment.callback.ecommerce.combine.routing", "合单支付回调业务路由不唯一",
+                    "order=" + safeReference + " matches=" + e.matches() + " result=FAIL");
+            return "{\"code\": \"FAIL\",\"message\": \"支付路由核验失败\"}";
+        } catch (ValidationException e) {
+            alarmService.alarmThrottled("payment.callback.ecommerce.combine.signature", "合单支付回调验签失败",
+                    "type=" + e.getClass().getSimpleName() + " result=FAIL");
+            return "{\"code\": \"FAIL\",\"message\": \"签名验证失败\"}";
+        } catch (Exception e) {
+            logger.warn("合单支付回调处理异常 order={} type={}", safeReference, e.getClass().getSimpleName());
+            return "{\"code\": \"FAIL\",\"message\": \"支付结果暂无法核验，请重试\"}";
+        }
+    }
+
     /** l-payout2：电商收付通退款通知。只取退款单号定位，事实一律按原支付事实为界重新查单。 */
     @Override
     public String handleEcommerceRefundCallback(String requestBody, Map<String, String> headers) {

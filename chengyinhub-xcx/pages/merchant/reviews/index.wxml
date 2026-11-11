@@ -43,7 +43,7 @@
             <image wx:for="{{ratingStars}}" wx:key="value" class="review-score-star"
                    src="{{item.filled ? '/pages/merchant/images/merchant/reviews/icon-star-filled.svg' : '/pages/merchant/images/merchant/reviews/icon-star-muted.svg'}}" mode="aspectFit" />
           </view>
-          <text class="review-score-copy">{{total != null ? total : 0}} 条已核销评价<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
+          <text class="review-score-copy">{{total || 0}} 条已核销评价<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
         </view>
       </view>
 
@@ -69,7 +69,7 @@
           <view class="review-stat-icon review-stat-icon--rate">
             <image src="/pages/merchant/images/merchant/reviews/icon-check-blue.svg" mode="aspectFit" />
           </view>
-          <text class="review-stat-value">{{replyRatePct != null ? replyRatePct : 0}}%</text>
+          <text class="review-stat-value">{{replyRatePct || 0}}%</text>
           <text class="review-stat-label">已回复率</text>
           
         </view>

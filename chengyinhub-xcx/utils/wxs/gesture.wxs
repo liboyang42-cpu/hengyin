@@ -98,7 +98,8 @@ function measure(inst, key, fallback) {
 function px(n) { return Math.round(n * 10) / 10; }
 
 /* 弹层:data-panel(面板选择器)、data-root / data-dragcls(拖拽期间挂在根上的类)、data-off(退场中不接手)、
- *       data-blocked(脏输入或不许随手关 ⇒ 过阈值也只弹回)、data-rm(减动效)、data-wh(窗口高)、
+ *       data-blocked(脏输入或不许随手关 ⇒ 过阈值也只弹回)、data-rm(减动效)、data-wh(窗口高)
+ *       或 data-whsel(铺满窗口的遮罩选择器,起拖时在视图层直接量,窗口高不必走 setData)、
  *       data-ph(面板高兜底)、data-detents(可停靠的档,默认只有自身高度一档) */
 function sheetStart(e, ins) {
   var ds = e.currentTarget.dataset;
@@ -111,7 +112,7 @@ function sheetStart(e, ins) {
     y0: t.clientY, y: t.clientY, t: e.timeStamp, py: null, pt: null, on: false,
     base: st.sRest || 0, off: st.sRest || 0, h: 0,
     sel: ds.panel, root: ds.root, cls: ds.dragcls,
-    rm: flag(ds.rm), blocked: flag(ds.blocked), wh: Number(ds.wh) || 0, ph: ds.ph, det: ds.detents || '',
+    rm: flag(ds.rm), blocked: flag(ds.blocked), wh: Number(ds.wh) || 0, whsel: ds.whsel || '', ph: ds.ph, det: ds.detents || '',
   };
 }
 
@@ -130,6 +131,7 @@ function sheetMove(e, ins) {
     if (Math.abs(dy) < TAP_SLOP) return;
     d.on = true;
     d.h = measure(panel, 'height', d.ph);
+    if (!(d.wh > 0) && d.whsel) d.wh = measure(ins.selectComponent(d.whsel), 'height', 0);
     st.sSettle = false;
     if (d.root && d.cls) { var root = ins.selectComponent(d.root); if (root) root.addClass(d.cls); }
   }

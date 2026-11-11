@@ -18,7 +18,7 @@
 .rb-hero__num { position: relative; display: flex; height: 168rpx; margin: 0 16rpx; overflow: hidden; }
 .rb-digit { height: 168rpx; overflow: hidden; }
 .rb-digit__col { display: flex; flex-direction: column; transition: transform var(--cy-motion-roll, 520ms) var(--cy-ease-roll, cubic-bezier(.2, .9, .2, 1)); }
-.rb-digit__col text { display: block; height: 168rpx; line-height: 168rpx; font-size: 168rpx; font-weight: 800; letter-spacing: -.04em; /* ds-ok 月桂大名次字号(proto 84px) */
+.rb-digit__n { display: block; height: 168rpx; line-height: 168rpx; font-size: 168rpx; font-weight: 800; letter-spacing: -.04em; /* ds-ok 月桂大名次字号(proto 84px) */
   font-variant-numeric: tabular-nums; color: var(--cy-color-text-primary); text-align: center; } /* ds-ok 月桂大名次(参考 team-rank-laurel)*/
 .rb-hero__pct { margin-top: var(--cy-space-1); font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); opacity: 0; transform: translateY(16rpx);
   transition: opacity var(--cy-motion-standard) ease 640ms, transform var(--cy-motion-standard) var(--cy-ease-settle, cubic-bezier(.16, 1, .3, 1)) 640ms; }
@@ -43,7 +43,7 @@
 .rb-rank.is-top { color: var(--cy-color-status-success); }
 .rb-av { flex: none; width: 64rpx; height: 64rpx; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
   background: var(--cy-color-bg-elevated); font-size: var(--cy-type-label); font-weight: 600; }
-.rb-av image { width: 100%; height: 100%; }
+.rb-av__img { width: 100%; height: 100%; }
 .rb-note { display: block; padding: 20rpx 31rpx; font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .rb--reduced .rb-digit__col, .rb--reduced .rb-list, .rb--reduced .rb-hero__laurel, .rb--reduced .rb-hero__pct { transition: none; }
 .rb--reduced .rb-hero__laurel, .rb--reduced .rb-hero__pct { opacity: 1; transform: none; }

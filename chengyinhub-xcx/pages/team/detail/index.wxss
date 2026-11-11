@@ -22,18 +22,20 @@ button.team-action::after { border: 0; }
 /* U06-01 席位(r2-join):头像 + 空位虚线圈一排,依次弹入;空位轻呼吸;下方小标签 */
 .tm-seats { padding-top: var(--cy-space-3); padding-bottom: var(--cy-space-3); }
 .tm-seat-strip { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); }
-.tm-seat-cell { position: relative; width: 88rpx; height: 88rpx; animation: tm-seat-in 360ms cubic-bezier(.3,1.3,.5,1) both; }
+.tm-seat-cell { position: relative; width: 88rpx; height: 88rpx; transition: opacity 360ms cubic-bezier(.3,1.3,.5,1) var(--tm-d, 0ms), transform 360ms cubic-bezier(.3,1.3,.5,1) var(--tm-d, 0ms); }
+/* 依次弹入:数据落地前 enter(seatIn) 挂 is-pre(缩小透明、无过渡),撤掉后按 --tm-d 逐个错开弹回 */
+.tm-seat-strip.is-pre .tm-seat-cell { opacity: 0; transform: scale(.6); transition: none; }
 .tm-seat-av { width: 88rpx; height: 88rpx; border-radius: 50%; background: var(--cy-bg-elevated); }
 .tm-seat-crown { position: absolute; left: 50%; bottom: -10rpx; transform: translateX(-50%); padding: 0 10rpx; border-radius: var(--cy-radius-pill); background: var(--cy-brand); color: var(--cy-text-inverse); font-size: var(--cy-font-micro); line-height: 1.4; white-space: nowrap; }
-.tm-seat-open { width: 88rpx; height: 88rpx; box-sizing: border-box; border-radius: 50%; border: 3rpx dashed var(--cy-text-secondary); display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary); animation: tm-seat-breathe 2.4s ease-in-out infinite; }
+.tm-seat-open { width: 88rpx; height: 88rpx; box-sizing: border-box; border-radius: 50%; border: 3rpx dashed var(--cy-text-secondary); display: flex; align-items: center; justify-content: center; color: var(--cy-text-secondary); opacity: .75; transition: opacity 1.2s ease-in-out; }
+/* 空位轻呼吸:beats(seatBreath) 每 1.2s 在 .75 与 1 之间往返(原 2.4s 一个来回,ease-in-out) */
+.tm-seat-strip.is-lit .tm-seat-open { opacity: 1; }
 .tm-chips { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-top: var(--cy-space-3); }
 .tm-seat-strip + .tm-chips { padding-top: var(--cy-space-3); border-top: 1rpx solid var(--cy-border-line); }
 .tm-chip { display: inline-flex; align-items: center; gap: 8rpx; padding: 8rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-bg-elevated); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .tm-chip__v { font-weight: 700; color: var(--cy-text-title); font-variant-numeric: tabular-nums; }
 .tm-chip.is-bad, .tm-chip.is-bad .tm-chip__v { color: var(--cy-danger); }
-@keyframes tm-seat-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
-@keyframes tm-seat-breathe { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .tm-seat-cell, .tm-seat-open { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tm-seat-strip .tm-seat-cell { opacity: 1; transform: none; transition: none; } .tm-seat-strip .tm-seat-open { opacity: 1; transition: none; } }
 
 /* l-misc 队伍二维码弹层:码图是白底方块(黑点码要白底才扫得出),加入码一行可点复制 */
 .tm-qr { display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-4); padding: var(--cy-space-2) var(--cy-space-4) var(--cy-space-5); }

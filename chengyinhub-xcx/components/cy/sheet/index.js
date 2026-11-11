@@ -75,10 +75,9 @@ Component(withNativeBackGuard({
      *   顶边让开之后不再需要让位:用户统一规则是应用弹层不占微信导航区。 */
     fullMaxH: '',
     /* 拖拽:_dragOut 面板已被甩出屏外(退场不再从 0 播 sh-down)· _gestureCmd 变一次 = 让视图层撤掉行内位移
-     * _winH 窗口高,给 WXS 算档位 */
+     * 窗口高由 WXS 起拖时量遮罩(data-whsel),不走 setData */
     _dragOut: false,
     _gestureCmd: 0,
-    _winH: 0,
     /* 档位(peek | half | full):决定升起 / 落下用哪一档时长。full 变体与 fixed 档直接知道;
      * 贴内容高的弹窗挂载时先 _measuring(面板与遮罩不动、不可见),量完高度再起跑 —— 只多一帧。 */
     _lv: '',
@@ -109,7 +108,6 @@ Component(withNativeBackGuard({
       this.setData({
         // 值是字符串拼出来的:wxml 侧只做一次三元拼接,不在模板里算几何。
         fullMaxH: `--cy-comp-sheet-max-h: calc(100vh - ${sheetTop}px);`,
-        _winH: (w && (w.windowHeight || w.screenHeight)) || 0,
         closeLabel: (this.data.navTitle || this.data.title) ? '关闭' + (this.data.navTitle || this.data.title) : '关闭当前面板',
       });
     },

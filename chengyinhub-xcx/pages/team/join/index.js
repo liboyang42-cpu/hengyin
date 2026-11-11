@@ -1,6 +1,7 @@
 const teamSeats = require('../utils/team-seats.js');
 const { normalizeJoinCode } = require('../utils/team-invite-qr.js');
 const toast = require('../../../utils/toast.js');
+const { enter } = require('../../../utils/page-motion.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
@@ -129,6 +130,7 @@ Page({
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id)) {
           that.teamId = exactId(res.data.team.id);
           that._recovery.setTarget(that.teamId);
+          enter(that, 'seatIn', { once: true });
           that.setData({
             loading: false,
             refreshing: false,

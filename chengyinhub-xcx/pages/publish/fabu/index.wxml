@@ -489,7 +489,7 @@
           wx:for-index="blockIndex">
           <view class="story-block {{storyDrag.key === block.key ? 'is-lifted' : ''}} {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}} {{block.type === 'divider' ? 'is-divider' : ''}}" id="sb-{{block.key}}" data-blockkey="{{block.key}}" data-index="{{blockIndex}}"
                 bindlongpress="{{storyEditor.preview ? '' : 'onStoryDragArm'}}" bindtouchstart="{{sd.start}}" catchtouchmove="{{storyDrag.key ? sd.move : ''}}" bindtouchend="{{sd.end}}" bindtouchcancel="{{sd.end}}">
-          <view class="story-grip" wx:if="{{!storyEditor.preview}}" data-grip="1" data-blockkey="{{block.key}}" data-index="{{blockIndex}}" catchtap="onStoryGripTap" aria-role="button" aria-label="拖动或移动这一块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-grip__dots"></view></view>
+          <view class="story-grip" wx:if="{{!storyEditor.preview && block.type !== 'text'}}" data-grip="1" data-blockkey="{{block.key}}" data-index="{{blockIndex}}" catchtap="onStoryGripTap" aria-role="button" aria-label="拖动或移动这一块" hover-class="cy-pressed" hover-stay-time="80"><view class="story-grip__dots"></view></view>
           <view class="story-text-block sx-para sx-para--{{block.style || 'body'}} {{storyEditor.selectedBlockKey === block.key ? 'is-selected' : ''}}" wx:if="{{block.type === 'text'}}">
             <text class="sx-para__bullet" wx:if="{{block.style === 'ul'}}">•</text>
             <text class="sx-para__bullet sx-para__bullet--num" wx:if="{{block.style === 'ol'}}">{{storyListNo[blockIndex]}}.</text>
@@ -827,7 +827,7 @@
         <view class="sx-br__opt" wx:for="{{storyBranch.options}}" wx:key="index" wx:for-item="opt" wx:for-index="optIndex">
           <view class="sx-br__line">
             <text class="story-branch__k">{{storyAbc[optIndex]}}</text>
-            <input class="sx-br__in" value="{{opt.text}}" data-i="{{optIndex}}" bindinput="onStoryBranchOptionText" maxlength="40" placeholder="玩家看到的选项" placeholder-class="ed-cap__ph" aria-label="第 {{optIndex + 1}} 条分支" />
+            <input class="sx-br__in" value="{{opt.text}}" data-i="{{optIndex}}" bindinput="onStoryBranchOptionText" maxlength="40" placeholder="玩家看到的选项" placeholder-class="ed-cap__ph" aria-label="第 {{(optIndex + 1) || 1}} 条分支" />
             <view class="sx-br__x" wx:if="{{storyBranch.options.length > 2}}" data-i="{{optIndex}}" catchtap="removeStoryBranchOption" aria-role="button" aria-label="删除这条分支" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
           </view>
           <view class="sx-br__tos">

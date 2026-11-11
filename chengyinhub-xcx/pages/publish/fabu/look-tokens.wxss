@@ -39,14 +39,14 @@
 .lk-mute { color: var(--lk-mute); }
 .lk-dim { color: var(--lk-dim); }
 .lk-line { border-color: rgba(var(--lk-ink-rgb), .2); }
-.lk-btn { display: flex; align-items: center; justify-content: center; gap: 16rpx; min-height: 100rpx; padding: 0 40rpx; box-sizing: border-box; border-radius: var(--lk-rb); clip-path: var(--lk-cut); font-size: 32rpx; font-weight: 600; letter-spacing: .04em; transition: transform var(--cy-motion-press) ease, opacity var(--cy-motion-fast) ease; }
+.lk-btn { display: flex; align-items: center; justify-content: center; gap: 16rpx; min-height: 100rpx; padding: 0 40rpx; box-sizing: border-box; border-radius: var(--lk-rb); clip-path: var(--lk-cut); font-size: var(--cy-type-button); font-weight: 600; letter-spacing: .04em; transition: transform var(--cy-motion-press) ease, opacity var(--cy-motion-fast) ease; }
 .lk-btn:active { transform: scale(.97); }
 .lk-btn--primary { background: var(--lk-ink); color: var(--lk-bg); }
 .lk-btn--accent { background: var(--lk-a); color: var(--lk-bg); }
 .lk-btn--ghost { background: rgba(var(--lk-ink-rgb), .07); color: var(--lk-ink); border: 1rpx solid rgba(var(--lk-ink-rgb), .2); }
 .lk-btn--text { background: transparent; color: var(--lk-mute); font-weight: 500; }
 .lk-btn--ok { background: var(--lk-ok); color: #FFFFFF; } /* ds-ok 成功绿上的白字 */
-.lk-chip { display: inline-flex; align-items: center; gap: 12rpx; min-height: 64rpx; padding: 0 26rpx; border-radius: var(--lk-rb); clip-path: var(--lk-cut); border: 1rpx solid rgba(var(--lk-ink-rgb), .2); background: rgba(var(--lk-ink-rgb), .07); color: var(--lk-ink); font-size: 26rpx; }
+.lk-chip { display: inline-flex; align-items: center; gap: 12rpx; min-height: 64rpx; padding: 0 26rpx; border-radius: var(--lk-rb); clip-path: var(--lk-cut); border: 1rpx solid rgba(var(--lk-ink-rgb), .2); background: rgba(var(--lk-ink-rgb), .07); color: var(--lk-ink); font-size: 26rpx; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 .lk-chip.is-on { background: var(--lk-ink); color: var(--lk-bg); border-color: var(--lk-ink); }
 .look--paper .lk-btn { font-family: var(--lk-fd); font-weight: 700; }
 .look--survival .lk-btn { font-family: var(--lk-fm); letter-spacing: .14em; }

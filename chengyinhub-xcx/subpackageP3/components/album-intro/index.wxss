@@ -9,7 +9,7 @@
 .ai.is-ring .ai__stamps { pointer-events: none; }
 .ai.is-ring .ai__route { opacity: 0; transition: opacity 240ms linear; }
 /* 路线:虚线从第一枚画到第三枚(scaleX 从左展开) */
-.ai__route { position: absolute; left: 170rpx; top: 640rpx; width: 450rpx; height: 6rpx; border-radius: 3rpx;
+.ai__route { position: absolute; left: 170rpx; top: 640rpx; width: 450rpx; height: 6rpx; border-radius: 3rpx; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   background: repeating-linear-gradient(90deg, #1B1D22 0 14rpx, transparent 14rpx 26rpx); /* ds-ok: 路线墨色虚线 */
   transform-origin: 0 50%; transform: rotate(14deg) scaleX(0); opacity: .55;
   transition: transform 520ms var(--cy-ease-out) 560ms; }
@@ -50,7 +50,7 @@
 /* 卡堆:正面一张,后两张往右下错开、各转一点角,像穿在同一个环上的一摞卡 */
 .ar__stack { position: absolute; left: 50%; top: calc(var(--nav-top) + 200rpx); width: 500rpx; height: 620rpx; margin-left: -250rpx; transform: translateY(80rpx); transition: transform 560ms cubic-bezier(.2, 1.2, .4, 1); }
 .ai.is-ring .ar__stack { transform: translateY(0); }
-.ar__card { position: absolute; left: 0; top: 0; width: 500rpx; height: 620rpx; border-radius: 40rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+.ar__card { position: absolute; left: 0; top: 0; width: 500rpx; height: 620rpx; border-radius: var(--cy-radius-xl); box-sizing: border-box; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2rpx 0 rgba(0, 0, 0, .06), 0 24rpx 48rpx rgba(27, 29, 34, .16); /* ds-ok: 浅底落影 */
   transform-origin: 44rpx 52rpx; transition: transform 520ms cubic-bezier(.3, .7, .2, 1), opacity 260ms linear; }
 .ar__card--medal { background: #C6F05A; } /* ds-ok: 卡色(参考图荧光绿) */
@@ -68,7 +68,7 @@
 .ar__hole { position: absolute; left: 30rpx; top: 38rpx; width: 28rpx; height: 28rpx; border-radius: 50%; background: #FAFBFD; box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, .25); } /* ds-ok: 打孔 */
 .ar__ring { position: absolute; left: -22rpx; top: 6rpx; z-index: 5; width: 92rpx; height: 92rpx; border-radius: 50%; box-sizing: border-box; pointer-events: none;
   border: 10rpx solid #B9BEC7; border-right-color: transparent; transform: rotate(-30deg); /* ds-ok: 金属环 */
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, .12); }
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, .12); } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 .ar__foot { position: absolute; left: var(--cy-page-x); right: var(--cy-page-x); bottom: calc(56rpx + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; }
 .ar__dots { display: flex; gap: 12rpx; }
 .ar__dot { width: 14rpx; height: 14rpx; border-radius: 7rpx; background: rgba(27, 29, 34, .2); /* ds-ok */ transition: transform 300ms var(--cy-ease-out), background-color 300ms linear; }

@@ -77,15 +77,28 @@ test('r2 a6-w2-16:AI 店铺角色首次介绍回到 R12 那一版(3D 物件),每
     for (const n of [a, b]) assert.ok(fs.existsSync(path.join(root, 'pages/merchant/images/npc-intro/' + n + '.png')), n);
   }
   const css = read('pages/merchant/decor/ai-npc/index.wxss');
-  const anims = [0, 1, 2, 3].map((k) => {
-    const m = css.match(new RegExp('\\.ni-o--k' + k + '\\.ni-o--on \\{[^}]*animation: (ni-[a-z]+)'));
-    const n = css.match(new RegExp('\\.ni-o--sm\\.ni-o--k' + k + '\\.ni-o--on \\{[^}]*animation: (ni-[a-z]+)'));
-    assert.ok(m && n, 'step ' + k + ' 两个物件都有动效');
-    return m[1] + '+' + n[1];
+  // qx-green:棘轮(MOTION.md 不新增 @keyframes)要求改成 transition —— 每步两个物件各有自己的起点(未上场时停在那里)
+  // 与到位补间,多段动作(星光闪 / 挥手 / 闹钟摆)由 JS 按原关键帧段落逐段换 ni-stage--bN;四步仍互不相同
+  assert.doesNotMatch(css, /@keyframes ni-/);
+  const rule = (sel) => { const m = css.match(new RegExp('(?:^|\\n)' + sel.replace(/\./g, '\\.') + ' \\{([^}]*)\\}')); return m ? m[1] : ''; };
+  const sigs = [0, 1, 2, 3].map((k) => {
+    const from = rule('.ni-o--k' + k), fromSm = rule('.ni-o--sm.ni-o--k' + k);
+    const on = rule('.ni-o--k' + k + '.ni-o--on'), onSm = rule('.ni-o--sm.ni-o--k' + k + '.ni-o--on');
+    assert.ok(/transform:/.test(from) && /transform:/.test(fromSm), 'step ' + k + ' 两个物件都有起点');
+    assert.ok(/transition:/.test(on) && /transition:/.test(onSm), 'step ' + k + ' 两个物件都有到位补间');
+    return from.match(/transform: ([^;]+)/)[1] + '+' + fromSm.match(/transform: ([^;]+)/)[1];
   });
-  assert.equal(new Set(anims).size, 4, '每步动效不一样:' + anims.join(' / '));
-  for (const name of ['ni-rise', 'ni-twinkle', 'ni-wave', 'ni-pop', 'ni-drop', 'ni-swing', 'ni-flip', 'ni-turn']) assert.match(css, new RegExp('@keyframes ' + name + ' '));
+  assert.equal(new Set(sigs).size, 4, '每步动效不一样:' + sigs.join(' / '));
+  for (const sel of ['.ni-stage--b1 .ni-o--sm.ni-o--k0.ni-o--on', '.ni-stage--b1 .ni-o--k1.ni-o--on', '.ni-stage--b1 .ni-o--sm.ni-o--k2.ni-o--on']) {
+    assert.ok(css.includes(sel + ' {'), '多段动作有分段样式:' + sel);
+  }
+  assert.match(js, /0: \{ frames: \[\[1, 700\], \[2, 700\]\], opts: \{ delay: 400/, '星光一直闪');
+  assert.match(js, /1: \{ frames: \[\[1, 240\], \[2, 240\], \[3, 240\], \[4, 880\]\], opts: \{ delay: 200, times: 2/, '手挥两下');
+  assert.match(js, /2: \{ frames: \[\[1, 300\], \[2, 300\], \[3, 300\], \[4, 300\]\], opts: \{ delay: 500, times: 2/, '闹钟摆两下');
+  assert.match(view, /index === introPrev \? 'ni-o--out'/, '上一步的物件缩走');
   for (const k of [1, 2, 3]) assert.match(css, new RegExp('\\.ni-glow--' + k + ' \\{'), '每步光晕换色');
-  assert.match(css, /prefers-reduced-motion: reduce\) \{ \.ni-o \{ transition: none; \} \.ni-stage \.ni-o\.ni-o--on \{ animation: none; \} \}/);
+  assert.match(css, /prefers-reduced-motion: reduce\) \{ \.ni-o \{ transition: none; \} \.ni-stage \.ni-o \{ transition: none !important; \} \}/);
+  assert.match(css, /\.ni--still \.ni-stage \.ni-o \{ transition: none !important; \}/, '应用内减少动态效果也直接到位');
+  assert.match(view, /class="ni \{\{niStill \? 'ni--still' : ''\}\}"/);
   assert.match(js, /INTRO_SEEN_KEY = 'cy_ai_npc_intro_seen'/, '只弹一次的存储标记不变');
 });

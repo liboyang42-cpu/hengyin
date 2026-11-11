@@ -256,3 +256,17 @@ test('cy-scene-sheet wxml:half / full 头部起拖,page 档没有', () => {
   assert.match(head[0], /data-blocked="\{\{!closable \|\| dirty\}\}"/, '没有 ✕ 的场景不许拖关')
   assert.match(wxml, /class="ss__panel"[^>]*bindtransitionend="\{\{gs\.sheetSettle\}\}"[^>]*gcmd="\{\{_gestureCmd\}\}"/)
 })
+
+test('qx-green:窗口高由视图层量遮罩(data-whsel),不走 setData;量到才有中间档,量不到只回 0', () => {
+  const gs = loadWxs()
+  const panel = makeEl({ height: 600 })
+  const owner = makeOwner({ '.sh__panel': panel, '.sh': makeEl(), '.sh__mask': makeEl({ height: 800 }) })
+  sheetDrag(gs, owner, { steps: Array(6).fill(20), stepMs: 100, ds: { wh: 0, whsel: '.sh__mask', detents: 'half' } })
+  assert.equal(offsetOf(lastStyle(panel)), 120, '600 高的面板在 800 高窗口里 half 档 = 600 - 0.6 × 800')
+  const bare = makeEl({ height: 600 })
+  const noMask = makeOwner({ '.sh__panel': bare, '.sh': makeEl() })
+  sheetDrag(gs, noMask, { steps: Array(6).fill(20), stepMs: 100, ds: { wh: 0, whsel: '.sh__mask', detents: 'half' } })
+  assert.equal(offsetOf(lastStyle(bare)), 0, '量不到窗口高就只有自身一档')
+  assert.match(fs.readFileSync(SHEET_WXML, 'utf8'), /data-whsel="\.sh__mask"/)
+  assert.match(fs.readFileSync(SCENE_WXML, 'utf8'), /data-whsel="\.ss__mask"/)
+})

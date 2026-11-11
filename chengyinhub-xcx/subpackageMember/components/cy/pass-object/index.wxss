@@ -22,12 +22,12 @@
 .po__p { position: absolute; transition: transform .9s var(--po-ease), opacity .5s ease, box-shadow .5s ease; }
 
 /* 厚度:同形状的暗金层错开一点,看起来是块金属 */
-.po__edge { left: 10rpx; top: 14rpx; width: 420rpx; height: 252rpx; border-radius: 28rpx; background: var(--po-gold-dark); opacity: 0;
+.po__edge { left: 10rpx; top: 14rpx; width: 420rpx; height: 252rpx; border-radius: 28rpx; background: var(--po-gold-dark); opacity: 0; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   transform: translate(-150rpx, -120rpx) rotate(-24deg) scale(.7); }
-.po__body { left: 0; top: 0; width: 300rpx; height: 252rpx; border-radius: 28rpx 8rpx 8rpx 28rpx; overflow: hidden; opacity: .5;
+.po__body { left: 0; top: 0; width: 300rpx; height: 252rpx; border-radius: 28rpx 8rpx 8rpx 28rpx; overflow: hidden; opacity: .5; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   background: linear-gradient(135deg, var(--po-gold-deep) 0%, var(--po-gold) 32%, var(--po-gold-hi) 46%, var(--po-gold) 60%, var(--po-gold-deep) 100%);
   transform: translate(-160rpx, -140rpx) rotate(-24deg) scale(.7); }
-.po__stub { left: 304rpx; top: 0; width: 116rpx; height: 252rpx; border-radius: 8rpx 28rpx 28rpx 8rpx; overflow: hidden; opacity: .5;
+.po__stub { left: 304rpx; top: 0; width: 116rpx; height: 252rpx; border-radius: 8rpx 28rpx 28rpx 8rpx; overflow: hidden; opacity: .5; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   background: linear-gradient(160deg, var(--po-gold) 0%, var(--po-gold-hi) 40%, var(--po-gold-deep) 100%);
   transform: translate(200rpx, 160rpx) rotate(38deg) scale(.7); transition-delay: .08s; }
 .po__perf { left: 296rpx; top: 18rpx; width: 16rpx; height: 216rpx; opacity: .5;
@@ -43,10 +43,10 @@
 .po__shine { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; opacity: .0;
   background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .55) 48%, rgba(255, 255, 255, 0) 62%); /* ds-ok 金属扫光 */
   transform: translateX(-100%); transition: transform 1.2s ease .7s, opacity .3s ease .7s; }
-.po__face { position: absolute; left: 30rpx; right: 24rpx; bottom: 22rpx; font-size: 26rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--po-gold-dark);
+.po__face { position: absolute; left: 30rpx; right: 24rpx; bottom: 22rpx; font-size: 26rpx; font-weight: 700; letter-spacing: 4rpx; color: var(--po-gold-dark); /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .po__bars { position: absolute; left: 28rpx; right: 28rpx; top: 36rpx; bottom: 36rpx; display: flex; flex-direction: column; justify-content: space-between; }
-.po__bar { height: 6rpx; border-radius: 3rpx; background: var(--po-gold-dark); opacity: .35; }
+.po__bar { height: 6rpx; border-radius: 3rpx; background: var(--po-gold-dark); opacity: .35; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
 
 .po__spark { width: 14rpx; height: 14rpx; border-radius: 50%; background: var(--po-gold-hi); opacity: 0; left: 127rpx; top: 107rpx; transform: scale(.2); }
 .po--open .po__spark { opacity: .9; transition: transform .9s cubic-bezier(.1, .7, .3, 1), opacity .4s ease; }

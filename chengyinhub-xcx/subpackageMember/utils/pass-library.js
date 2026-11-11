@@ -4,7 +4,8 @@
  * 卡片字段复用 pages/topic/utils/public-catalog.cardView。
  * 「¥0 可玩」只在服务端给了通行证覆盖事实时出(行上的 passCovered === true,由 l-pass 的通行证接口补);
  * 没有这个事实就不画价签,不把未知写成 0。换接口时只改这一个文件。 */
-const catalog = require('../../pages/topic/utils/public-catalog.js')
+// 分包不能互引资源(下载顺序不定,对方分包未就绪时 require 失败):用本分包里的逐字副本,单测守住与 pages/topic 原件一致
+const catalog = require('./public-catalog.js')
 
 const KINDS = [
   { key: 'all', label: '全部', productType: '' },

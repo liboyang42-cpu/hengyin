@@ -20,7 +20,11 @@ import java.util.function.Function;
  */
 public final class ProfitSharePlanner {
 
-    public enum ReceiverKind { PLATFORM, SUB_MERCHANT, RETAINED }
+    /**
+     * SUPPLIER_RELAY（l-payout3）：其他商家 / 俱乐部 / 个人的份额。电商收付通不支持在多个二级商户之间直接分账，
+     * 所以合单开关打开时这类份额分给平台，再由平台按供应商结算付给对方（落 ecom_supplier_payable），不记会员余额。
+     */
+    public enum ReceiverKind { PLATFORM, SUB_MERCHANT, RETAINED, SUPPLIER_RELAY }
 
     /** 账本里一笔付款在一条结算行上的份额（元，最多两位小数）。receiverKind=ACCOUNTING 表示平台。 */
     public record Component(long settlementId, String lineType, String receiverKind, Long receiverMemberId, BigDecimal amountYuan) { }
@@ -45,6 +49,15 @@ public final class ProfitSharePlanner {
      */
     public static Plan plan(Order order, Collection<Component> components, String platformMchid, int maxSharePercent,
                             Function<Long, Optional<String>> memberSubMchid) {
+        return plan(order, components, platformMchid, maxSharePercent, memberSubMchid, false);
+    }
+
+    /**
+     * @param relayViaPlatform l-payout3 合单开关打开时为真：其他收款方的份额一律分给平台并标记 SUPPLIER_RELAY，
+     *                         不再向其他二级商户直接分账（微信不支持多商户直接分账）。
+     */
+    public static Plan plan(Order order, Collection<Component> components, String platformMchid, int maxSharePercent,
+                            Function<Long, Optional<String>> memberSubMchid, boolean relayViaPlatform) {
         if (order == null || order.totalFen() <= 0 || order.subMchid() == null || order.subMchid().isBlank()
                 || order.transactionId() == null || order.transactionId().isBlank())
             return manual("ORDER_FACTS_MISSING", List.of());
@@ -71,6 +84,12 @@ public final class ProfitSharePlanner {
                 return manual("LEDGER_RECEIVER_UNKNOWN", lines);
             if (order.sellerMemberIds() != null && order.sellerMemberIds().contains(c.receiverMemberId())) {
                 lines.add(new Line(c.settlementId(), c.lineType(), ReceiverKind.RETAINED, order.subMchid(), c.receiverMemberId(), fen));
+                continue;
+            }
+            if (relayViaPlatform) {
+                if (platformMchid == null || platformMchid.isBlank()) return manual("PLATFORM_RECEIVER_MISSING", lines);
+                if (platformMchid.equals(order.subMchid())) return manual("PLATFORM_IS_SELLER", lines);
+                lines.add(new Line(c.settlementId(), c.lineType(), ReceiverKind.SUPPLIER_RELAY, platformMchid, c.receiverMemberId(), fen));
                 continue;
             }
             Optional<String> mchid = memberSubMchid == null ? Optional.empty() : memberSubMchid.apply(c.receiverMemberId());

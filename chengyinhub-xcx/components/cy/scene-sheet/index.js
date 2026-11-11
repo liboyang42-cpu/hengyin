@@ -46,7 +46,6 @@ Component(withNativeBackGuard({
     navRight: 0,
     closeLabel: '关闭当前场景',
     panelTopPx: 0,
-    winH: 0,
     _in: false,
     _gestureCmd: 0, // 变一次 = 让视图层撤掉面板的行内位移
   },
@@ -77,7 +76,6 @@ Component(withNativeBackGuard({
         navTop,
         navRight,
         panelTopPx,
-        winH: windowInfo.windowHeight || windowInfo.screenHeight || 0,
         closeLabel: this.data.title ? '关闭' + this.data.title : '关闭当前场景',
       });
     },
