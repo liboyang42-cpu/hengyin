@@ -112,7 +112,7 @@ function sheetStart(e, ins) {
     y0: t.clientY, y: t.clientY, t: e.timeStamp, py: null, pt: null, on: false,
     base: st.sRest || 0, off: st.sRest || 0, h: 0,
     sel: ds.panel, root: ds.root, cls: ds.dragcls,
-    rm: flag(ds.rm), blocked: flag(ds.blocked), wh: Number(ds.wh) || 0, whsel: ds.whsel || '', ph: ds.ph, det: ds.detents || '',
+    rm: flag(ds.rm), blocked: flag(ds.blocked), wh: (ds.wh * 1) || 0, whsel: ds.whsel || '', ph: ds.ph, det: ds.detents || '',
   };
 }
 
