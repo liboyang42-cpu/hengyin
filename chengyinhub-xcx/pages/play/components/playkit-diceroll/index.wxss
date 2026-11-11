@@ -29,9 +29,9 @@
   padding: var(--pk-top, 120rpx) 44rpx calc(env(safe-area-inset-bottom) + 60rpx);   /* ds-ok 原型 22px/30px */
   box-sizing: border-box;
   text-align: center;
-  color: #2a2540;                          /* ds-ok 原型 .dz */
-  /* 参考视频里的地是暖灰,中间稍亮一点,像顶上有一盏灯 */
-  background: radial-gradient(64% 42% at 50% 58%, #f6eaea 0%, #f3f0ee 58%, #f1f1ef 100%);  /* ds-ok */
+  color: var(--pk-embed-ink, #2a2540);     /* ds-ok 原型 .dz;内嵌/主题内读外观墨色 */
+  /* 参考视频里的地是暖灰,中间稍亮一点,像顶上有一盏灯;主题内(--pk-embed-bg 由 look/章节配色给出)跟主题底色 */
+  background: var(--pk-embed-bg, radial-gradient(64% 42% at 50% 58%, #f6eaea 0%, #f3f0ee 58%, #f1f1ef 100%));  /* ds-ok */
 }
 .dz--press { opacity: .96; }
 
@@ -185,8 +185,9 @@
   gap: 18rpx;
   padding: 36rpx 44rpx;
   text-align: center;
-  color: #2a2540;                          /* ds-ok 与整屏版同一道具色 */
-  background: radial-gradient(64% 42% at 50% 42%, #f6eaea 0%, #f3f0ee 58%, #f1f1ef 100%);  /* ds-ok */
+  color: var(--pk-embed-ink, #2a2540);     /* ds-ok 与整屏版同一道具色;主题内读外观墨色 */
+  background: var(--pk-embed-bg, radial-gradient(64% 42% at 50% 42%, #f6eaea 0%, #f3f0ee 58%, #f1f1ef 100%));  /* ds-ok N-6:暗色外观里不再是白矩形 */
+  border-radius: var(--pk-qt-radius, 0);
 }
 .dzi__k {
   flex: none;
@@ -256,8 +257,8 @@
   justify-content: center;
   padding: 0 56rpx;
   border-radius: 999rpx;  /* ds-ok 道具胶囊 */
-  background: #2a2540;                     /* ds-ok */
-  color: #F8F6F3;                          /* ds-ok */
+  background: var(--pk-embed-ink, #2a2540);   /* ds-ok */
+  color: var(--atmo-bg, var(--lk-bg, #F8F6F3));             /* ds-ok 按钮字取章节底色(--pk-embed-bg 可能是 transparent) */
   font-size: var(--cy-type-body);
   font-weight: 800;
 }

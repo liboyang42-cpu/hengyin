@@ -19,7 +19,7 @@
   width:52rpx; height:52rpx; border-radius:50%; display:flex; align-items:center; justify-content:center; transform:rotate(90deg); /* V3-13/14 展开时箭头朝上 = 收起 */
   background:var(--cy-color-bg-elevated); color:var(--cy-color-text-secondary); }
 /* 地图档时正文让位:顶部留白跟着雷达加高 */
-.chfull.is-navmap .chfull__pad{ height:560rpx; }
+.chfull.is-navmap .chfull__pad{ height:calc(560rpx + env(safe-area-inset-bottom)); }
 /* 背包图标:图标库没有背包,画一个(与发布页 rt-bag-glyph 同法) */
 .ptb-bag{ position:relative; width:30rpx; height:26rpx; margin-top:8rpx; border:3rpx solid currentColor; border-radius:6rpx; box-sizing:border-box; } /* ds-ok 雷达北针 / 画出来的背包图标(图标库没有背包) */
 .ptb-bag::before{ content:""; position:absolute; left:50%; top:-12rpx; width:14rpx; height:10rpx; margin-left:-7rpx;

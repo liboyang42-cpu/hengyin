@@ -38,8 +38,8 @@
   transform: translateY(0);
   transition: transform .14s cubic-bezier(.2, .8, .2, 1), box-shadow .14s, background .18s;
 }
-.bg__cell.pale { background: #ffffff; color: #111114; }        /* ds-ok */
-.bg__cell.dark { background: #111114; color: #ffffff; }        /* ds-ok */
+.bg__cell.pale { background: var(--lk-ink, #ffffff); color: var(--lk-bg, #111114); }        /* ds-ok */
+.bg__cell.dark { background: var(--lk-ctl, #111114); color: var(--lk-ink, #ffffff); }        /* ds-ok */
 /* 填过的格子被**按下去**:厚度收掉一半,一眼看出这格已经踩实了 */
 .bg__cell.done {
   background: #3fd2d2;                                         /* ds-ok */
@@ -90,8 +90,8 @@
   position: absolute;
   left: 0; right: 0; bottom: 0;
   z-index: 6;
-  background: #ffffff;                                         /* ds-ok 原型 .unlock */
-  color: #111114;                                              /* ds-ok */
+  background: var(--lk-pop, #ffffff);                          /* ds-ok 原型 .unlock;主题内读外观弹层色 */
+  color: var(--lk-ink, #111114);                                              /* ds-ok */
   border-top: 6rpx solid #000;                                 /* ds-ok */
   border-radius: 40rpx 40rpx 0 0;  /* ds-ok 九宫格面板,逐值照原型 */
   padding: 40rpx var(--cy-page-x) calc(env(safe-area-inset-bottom) + 40rpx);

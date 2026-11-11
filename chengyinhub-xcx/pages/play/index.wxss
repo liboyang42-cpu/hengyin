@@ -515,7 +515,7 @@ page { background: var(--cy-color-bg-page); }
   -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); /* ds-ok 遮罩只取 alpha,与颜色主题无关 */
   mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); } /* ds-ok 同上 */
 
-.chfull__pad{height:440rpx;}
+.chfull__pad{height:calc(440rpx + env(safe-area-inset-bottom));} /* x-fix4 N-1 底部留白含 Home 条安全区 */
 .chfull__cover{ display:block; width:100%; height:346rpx; border-radius:38rpx; background:#101418; } /* ds-ok 原型 图 180px / r20 / 底 #101418 */
 .chfull__para{display:block;min-height:0;padding:0;font-size:34rpx;line-height:1.95;color:var(--cy-color-text-primary);} /* ds-ok 用户指定原型正文 17px/1.95 */
 /* ★ 内嵌玩法(契约 §1.5):故事流里的这一块。三个变量把 cy-play-stage 从「四边贴死」
@@ -531,7 +531,7 @@ page { background: var(--cy-color-bg-page); }
 .chfull__kit{ width:100%; --pe-unfold:1; --pk-card-h:auto; --pk-card-h-tall:auto; --pk-card-radius:0; --pk-card-pad:var(--cy-space-5) 0 0; --pk-card-bg:transparent; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
 /* V3-10/53(2026-11-06 业主「现在这种不是嵌入 只是把之前的全屏缩小了」):内嵌玩法是故事流里的一块,高度跟内容走,
    不再撑满一屏、不再竖向居中;上方剧情紧接着,往上滑就能回看。滚到它时对准的是块内的 .chfull__kit-anchor(让出顶栏与渐隐)。 */
-.chfull__kit{ position:relative; box-sizing:border-box; padding-top:var(--cy-space-6); padding-bottom:var(--cy-space-6); }
+.chfull__kit{ position:relative; box-sizing:border-box; padding-top:var(--cy-space-6); padding-bottom:calc(var(--cy-space-6) + env(safe-area-inset-bottom)); } /* x-fix4 N-13 内嵌玩法块的底部按钮(就标这些等)不压 Home 条 */
 .chfull__kit-anchor{ position:absolute; left:0; width:1rpx; height:1rpx; pointer-events:none; }
 /* 要整屏的玩法(摇一摇 / 相册 / 变色就点等):故事流里只留一张入口卡,点开整屏 */
 .chfull__kit .chfull__game-cue{ margin:0 auto; }
@@ -542,7 +542,7 @@ page { background: var(--cy-color-bg-page); }
 .chstat{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; }
 .chstat__v{ font-size:50rpx; font-weight:800; color:#FFFFFF; line-height:1; font-variant-numeric:tabular-nums; } /* ds-ok 原型 .g3 .v 26px/800 */
 .chstat__l{ margin-top:13rpx; font-size:21rpx; color:#6A7282; } /* ds-ok 原型 .g3 .l 11px #6A7282 / 上 7px */
-.chfull__end{ padding:42rpx 46rpx 0; } /* ds-ok 原型 CTA 上 22px */
+.chfull__end{ padding:42rpx 46rpx env(safe-area-inset-bottom); } /* ds-ok 原型 CTA 上 22px */
 /* 终章反转:整章翻成对话框。正文段 = 「我」发出去的消息(右侧气泡),反转块 = 对面的回话(左侧)。
    不做过渡:一下子「塌」成聊天记录本身就是那个反转。 */
 .chfull.is-chat .chfull__para.st-line{ margin-bottom:24rpx; opacity:1; transform:none; filter:none; }
