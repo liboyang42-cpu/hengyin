@@ -22,7 +22,7 @@
 
 | 项 | 值 |
 |---|---|
-| 候选头（写这份清单时） | `52193cc26cc80830f5a8f9b021d1a80ef0d64024`（`launch/questo-20261110`，含 l-payout3 与 f-* 六条修复线；qx-final3 重算，原为 `2256f79e`）。f-rehearsal 增补 step 156 后，`MIGRATIONS.md` / `release-*.json` / `release-precheck.sql` 按 `fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2` 重算 |
+| 候选头（写这份清单时） | `52193cc26cc80830f5a8f9b021d1a80ef0d64024`（`launch/questo-20261110`，含 l-payout3 与 f-* 六条修复线；qx-final3 重算，原为 `2256f79e`）。f-rehearsal 增补 step 156 后，`MIGRATIONS.md` / `release-*.json` / `release-precheck.sql` 按 `fa7fc0ef60cb607dde4b32f4ceec6dd17131c1c2` 重算；qx-final6 合入 #796 并修复后，四个产物与 `release-manifest.json` 按 `8dd648bd6acb5d3fce1c5a8ae14ec03050499bea` 重算（156 项不变，641 个迁移） |
 | 最终 SHA | PR #779 合入 `master` 后的合并提交。**jar 和小程序必须都用这一个 SHA**（审计 B-4「0.1 版本对齐」） |
 | 生产参考基线 | 10-29 发布包的基线 `19408d49`（Merge #452）。10-22、10-28、10-29 三个包都**没有**在生产确认执行过，所以这次的发布集把它们全部算进来 |
 | 迁移发布集 | 156 项 = 10-29 包 88 项 + 10-29 之后 68 项（其中 launch 波次 39 项）。必须 103、可选 29、需业主授权 20、不执行 4（f-rehearsal 增补 step 156，见第 6 节） |
@@ -229,7 +229,7 @@ bash scripts/production-preflight.sh --service <你的服务名>
 
 ## 9 开发者工具上传（和 jar 同一个 SHA）
 
-- ☐ 干净检出**最终 SHA**，只用 `chengyinhub-xcx/` 目录。核对它的 tree hash 和 `app.json` 的 blob 与 `ci/release_manifest.py manifest --commit <最终 SHA>` 输出里的 `miniProgram.treeHash`、`appJsonBlob` 一致（f-rehearsal 重算的候选头 `fa7fc0ef` 上分别是 `467b2a40…`、`ee546466…`，合并后会变，以最终 SHA 的输出为准）。
+- ☐ 干净检出**最终 SHA**，只用 `chengyinhub-xcx/` 目录。核对它的 tree hash 和 `app.json` 的 blob 与 `ci/release_manifest.py manifest --commit <最终 SHA>` 输出里的 `miniProgram.treeHash`、`appJsonBlob` 一致（f-rehearsal 重算的候选头 `fa7fc0ef` 上分别是 `467b2a40…`、`ee546466…`；qx-final6 重算的 `8dd648bd` 上是 `8e3abc38…`、`ee546466…`；以最终 SHA 的输出为准）。
 - ☐ 复制一份**上传拷贝**，对它跑深色地图样式脚本（仓库本身永远是空 key）：
   `CY_MAP_SUBKEY=… CY_MAP_STYLE_BLACK=… CY_MAP_STYLE_WHITE=… CY_MAP_STYLE_PAPER=… CY_MAP_STYLE_2077=… node scripts/release-map-style.js --dir <上传拷贝> --require`
   （四个序号取腾讯位置服务控制台里绑到这个 key 的样式序号；说明见 `components/cy/free-map/DARK_MAP.md`）。
