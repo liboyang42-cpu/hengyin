@@ -166,4 +166,7 @@ f-play2(含 f-money2 / f-money3)合入后(`25b8ad033`)，真库 IT `FreeExploreS
 
 lead 在 launch 上直接提交了同一哈希修复(`60c43860e`)。随后 qx-final6 合入 f-rehearsal 并把发布迁移包扩到 156 项(`4e9e418ac`)。头 `844638cf7` 上新出现「Release migration rehearsal / rehearsal」红(run 43059982344)：静态 pack 契约通过、MySQL 8.0.45 起库成功，但第 [1] 步建好模拟基线(199 个快照后迁移、16 组合成行)后，「基线库上预检不符合 pack 的 expectedAtBaseline」。上一次绿是 10-29 的 88 项包，这是 156 项包第一次在 CI 上跑。不符合的具体 migrationId 只在 run 的 report artifact 里(release-migration-rehearsal-43059982344-a1)；本环境下载 artifact 的主机被网络策略拦截，也没有 MySQL / docker，无法复现。这属于 f-release / qx-final6 的发布包范围，涉及迁移的上线前预期状态，需要 lead 或你看 artifact 后在 pack 里修正，本线没有改。
 
-STATUS: PARTIAL - 本线负责的代码修复都已进 launch；#779 剩余的红：Release migration rehearsal(156 项发布包的基线预检与 expectedAtBaseline 不符，需看 artifact 后由发布包 owner 修)、runner apt 域名解析故障(待重跑)、gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者
+
+apt 源故障约在 17:00(UTC)前恢复：lead 记录小程序静态门在 `538a47ab7` 上重新变绿。本线随即在当前 launch 头 `c16af7ca1`(代码与 `844638cf7` 相同，含 f-play2 / f-money2 / f-money3)上手动触发 Gameplay HTTP generic-only(run 43067254372)：**success**。`844638cf7` 的 CI 重跑里 20 个小程序单测分片也全绿；Backend tests 只有「Check private Mapper compiled references」(架构 / 存储端口)这一步红，后端构建与测试、隔离全量启动、迁移真库 IT 都通过。
+
+STATUS: PARTIAL - 本线负责的代码修复全部进了 launch，Gameplay HTTP generic-only 在当前头为 success，apt 故障已恢复；#779 剩余：Release migration rehearsal(156 项发布包，等 f-rehearsal 收口)、架构门 AuthorWriteReceipt 消费者、gitleaks 历史命中，后两项要你拍板
