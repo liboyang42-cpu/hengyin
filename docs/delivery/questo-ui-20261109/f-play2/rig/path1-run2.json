@@ -1,0 +1,5 @@
+[{"wait":3500},{"tap":"开始游戏"},{"wait":6000},{"tryTap":["开启定位",{"nth":1}]},{"wait":2500},{"shot":"r2-10-intro"},{"tap":"开始游戏"},{"wait":2500},{"shot":"r2-11-route-share"},{"tryTap":"开始"},{"wait":600},{"strip":"r2-12-ch1-open","n":4,"every":800},{"wait":6000},{"tryTap":["开启定位",{"nth":1}]},{"wait":2000},{"shot":"r2-13-story"},{"scroll":900},{"wait":1500},{"tryTap":"继续探索"},{"wait":3000},{"shot":"r2-14-map"},{"loc":[31.2304,121.4737]},{"wait":5000},{"shot":"r2-15-st1-arrived"},{"dump":1,"max":400},{"scroll":900},{"wait":1500},{"shot":"r2-16-ch1-tail"},{"tryTap":"继续探索"},{"strip":"r2-17-ch1-end","n":6,"every":800},{"wait":4000},{"shot":"r2-18-held"},{"dump":1,"max":300},
+ {"wait":30000},
+ {"strip":"r2-19-ch2-gate","n":14,"every":700},
+ {"eval":"JSON.stringify({cf:$P.data.chapterFull,g:$P.data.chapterGate&&{s:$P.data.chapterGate.show,h:$P.data.chapterGate.held,a:$P.data.chapterGate.away},paras:($P.data.chapterParas||[]).map(p=>(p.text||p.kind||'').slice(0,6)),ch:$P.data.chapter&&$P.data.chapter.id})"},
+ {"dump":1,"max":500},{"wait":3000},{"shot":"r2-20-ch2-story"},{"dump":1,"max":500}]

@@ -259,13 +259,14 @@
     "p0-acceptance-ac1": {
       "lineage": "AC1 feature/lane-ac1-p0-chains-20261022 (release closeout 2026-10-22, P0 acceptance cards)",
       "registered_source": "14e6a1b6db55ab275335264f60169555b2b829c5",
-      "note": "Backend half of the 实施文档一 §9.1 P0 cards: redemption (scan/group code, wrong/cancelled/reversed, two-staff race), cross-account, city-run resume race and FINISH freeze, free-exploration supply gate, deregistration scope/finance retention/re-registration. Schema comes only from sql/base_schema_20260818.sql and existing migration files. Map: docs/delivery/release-closeout-20261022/acceptance-p0-backend.md.",
+      "note": "Backend half of the 实施文档一 §9.1 P0 cards: redemption (scan/group code, wrong/cancelled/reversed, two-staff race), cross-account, city-run resume race and FINISH freeze, free-exploration supply gate, deregistration scope/finance retention/re-registration; P0-23 supply recovery (required-chapter exit pause, confirmed replacement, host-only explicit restore, idempotent replay) was added later at its own source, so receipts must bind the actual dispatched source_sha. Schema comes only from sql/base_schema_20260818.sql and existing migration files. Map: docs/delivery/release-closeout-20261022/acceptance-p0-backend.md.",
       "classes": [
         "com.chengyinhub.business.it.P0RedemptionChainMySqlIT",
         "com.chengyinhub.business.it.P0CrossAccountMySqlIT",
         "com.chengyinhub.business.service.impl.P0CityRunChainMySqlIT",
         "com.chengyinhub.business.it.P0FreeExploreSupplyGateMySqlIT",
-        "com.chengyinhub.business.it.P0DeregistrationMySqlIT"
+        "com.chengyinhub.business.it.P0DeregistrationMySqlIT",
+        "com.chengyinhub.business.it.P0FreeExploreSupplyRecoveryMySqlIT"
       ]
     },
     "architecture-day-batch1": {
@@ -757,6 +758,14 @@
       "note": "CreatorIncomeDetailIdempotencyMySqlIT (2): CREATE TABLE copied verbatim from migration_p3_phase_b_player_world_creator.sql, two legacy NULL-key rows, then migration_20261111_creator_income_detail_idempotency.sql applied verbatim twice on a scratch MySQL 8 schema. Covers the unique index shape, legacy rows keeping NULL keys, duplicate-key rejection and INSERT IGNORE no-op. Source registration only, execution NOT_RUN until dispatched.",
       "classes": [
         "com.chengyinhub.business.it.CreatorIncomeDetailIdempotencyMySqlIT"
+      ]
+    },
+    "launch-f-money3": {
+      "lineage": "f-money3 20261111 launch fix lane: free-explore themes may not carry a paid self-play price (no settlement exit)",
+      "registered_source": "bca001f93fe535c4136c7662ad5b36ae946e14b3",
+      "note": "FreeExploreSelfPlayPriceGateMySqlIT (4): cms_topic/cms_registration from sql/base_schema_20260818.sql plus the existing cms_topic migration chain; production TopicSaleFinalizationServiceImpl.finalizeForSale and TopicPublicationContentGuard over the real CmsTopicMapper XML, plus the read-only precheck SQL copied verbatim from docs/delivery/questo-ui-20261109/f-money3/RESULT.md. Source registration only, execution NOT_RUN until dispatched.",
+      "classes": [
+        "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT"
       ]
     }
   },
@@ -1786,6 +1795,13 @@
       "gates": {},
       "note": "C4edd source-only candidate: canonical incremental typed migration and actual Mapper/transaction owner, old broadcast checks retained; NOT_RUN on this integration."
     },
+    "com.chengyinhub.business.it.P0FreeExploreSupplyRecoveryMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {}
+    },
     "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
       "tests": 64,
       "storage": [
@@ -2162,6 +2178,14 @@
       ],
       "gates": {},
       "note": "f-money P0-17 idempotency unique key migration on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "f-money3 free-explore paid self-play gate on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
     }
   }
 }

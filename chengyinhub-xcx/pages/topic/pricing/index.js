@@ -61,6 +61,8 @@ Page({
     themeClass: 'theme-merchant', phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
     teamSizeError: '',
+    // f-money3:自由探索主题的「无人带」(自玩票)没有结算出口,后端预览给原因,挂在终价栏下红字。
+    selfPriceError: '',
     lineup: [], tickets: [], // 第四轮:作者的几张票逐张确认终价(≥2 张才显示逐张栏)
   },
 
@@ -137,9 +139,11 @@ Page({
                 };
               })
           : [];
+        const selfPriceError = that.data.subType === 'self' ? (res.data.selfPriceError || '') : '';
         that.setData({
           hasPreview: true,
           errorText: '',
+          selfPriceError: selfPriceError,
           lineup: lineup,
           floor: floor,
           floorText: money(res.data.priceMin),
@@ -149,7 +153,7 @@ Page({
           // CU-C-70:floor=0(例:带队成本被静默摊成 0)时 min>=floor 恒真,旧式自校验放行零价。
           // 人数这道条件必须参与,不然按钮点得动而价格是 0。
           canConfirmPrice: pricesOk(ticketRows(that.data.subType, res.data.tickets, floor), start, floor) && res.data.canConfirm !== false
-            && teamSizeOk(that.data.subType, that.data.teamSize),
+            && teamSizeOk(that.data.subType, that.data.teamSize) && !selfPriceError,
           teamSizeError: that._teamTouched ? teamSizeErrorText(that.data.subType, that.data.teamSize) : '', // p3 F6:动过人数或点了确认才报
           sliderMax: sliderMax,
           referencePrice: reference,
@@ -218,7 +222,7 @@ Page({
     const type = (e.detail && e.detail.key) !== undefined ? e.detail.key : e.currentTarget.dataset.type;
     if (type === this.data.subType) return;
     this.setData({
-      subType: type, hasPreview: false, errorText: '', tickets: [],
+      subType: type, hasPreview: false, errorText: '', tickets: [], selfPriceError: '',
       teamSizeError: this._teamTouched ? teamSizeErrorText(type, this.data.teamSize) : '',
     });
     this.preview();
@@ -252,7 +256,7 @@ Page({
   _canConfirmPrice(patch) {
     const data = Object.assign({}, this.data, patch || {});
     return pricesOk(data.tickets, data.finalPrice, data.floor) && !data.phaseBlocked
-      && teamSizeOk(data.subType, data.teamSize);
+      && teamSizeOk(data.subType, data.teamSize) && !data.selfPriceError;
   },
 
   onSliderChange(e) {
@@ -267,6 +271,8 @@ Page({
     if (this.data.saving) return;
     // P-34:开售后人数提示已无意义,先说终价已确认
     // 第四轮(业主:输入问题只在字段下方红字说):人数/票价不对时回执就是那一栏下的红字,不再在底部另起提示框。
+    // f-money3:原因已在终价栏下红字常挂,这里不再另起提示。
+    if (!this.data.priced && this.data.selfPriceError) { this.setData({ submitError: '' }); return; }
     const teamSizeError = teamSizeErrorText(this.data.subType, this.data.teamSize);
     if (!this.data.priced && teamSizeError) {
       this._teamTouched = true;

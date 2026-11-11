@@ -46,7 +46,8 @@ public class EcommerceProfitShareService {
     static final String REFUNDED_BEFORE_SHARE = "REFUNDED_BEFORE_SHARE";
     /** 只有这些「计划阶段」转人工的原因可以在补齐条件后重新计划；微信侧已关闭 / 已退款的单不能。 */
     static final Set<String> REPLANNABLE = Set.of("RECEIVER_NOT_ONBOARDED", "SHARE_RATIO_EXCEEDED",
-            "PLATFORM_RECEIVER_MISSING", "NO_LEDGER_COMPONENTS", "LEDGER_CONSERVATION");
+            "PLATFORM_RECEIVER_MISSING", "NO_LEDGER_COMPONENTS", "LEDGER_CONSERVATION",
+            ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED);
 
     public enum ReturnOutcome { NOT_APPLICABLE, ALL_RETURNED, PENDING, FAILED, SWITCH_OFF }
 
@@ -159,6 +160,11 @@ public class EcommerceProfitShareService {
         if (!switches.profitSharingEnabled()) return 0;
         int submitted = 0;
         for (EcomProfitShareOrder order : mapper.selectDuePlannedShareOrders(new java.util.Date(), clamp(limit))) {
+            if (!switches.combinedEnabled() && hasSubMerchantReceiver(order.getId())) {
+                // f-money 待决定 2：本次改动前落下的计划可能含二级商户接收方。合单关时提交前失败关闭：整单转人工，不调微信。
+                mapper.updateShareOrderState(order.getId(), PLANNED, MANUAL, null, ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED);
+                continue;
+            }
             if (mapper.updateShareOrderState(order.getId(), PLANNED, PROCESSING, null, null) != 1) continue;
             submitted++;
             try {
@@ -192,6 +198,12 @@ public class EcommerceProfitShareService {
             }
         }
         return n;
+    }
+
+    private boolean hasSubMerchantReceiver(long shareOrderId) {
+        for (EcomProfitShareLine l : mapper.selectShareLines(shareOrderId))
+            if (ProfitSharePlanner.ReceiverKind.SUB_MERCHANT.name().equals(l.getReceiverKind())) return true;
+        return false;
     }
 
     private List<ProfitSharePlanner.Receiver> receivers(long shareOrderId) {

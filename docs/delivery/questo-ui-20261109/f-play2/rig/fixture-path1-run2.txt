@@ -1,0 +1,23 @@
+   [库回读] reused topic             ((990017, 1, 3, 1, 1),)
+
+──────── 步骤 1:3a 平台：内容槽改判为 PLATFORM（同 chain_player，真实后台入口；二清闸只放行自营局收钱）
+   content-slot                       操作成功
+   [库回读] product_role             (('CONTENT', 'CLUB', 0), ('CONTENT', 'PLATFORM', 0), ('CONTENT', 'PLATFORM', 1))
+
+──────── 步骤 2:3b 主题层 69.00 guided 票种模板（后台 POST /business/ticket，同 chain_merchant_club；open-session 复制到场次）
+   business/ticket                    {"msg": "主题已进入 SELLING，售卖目录（票种/价格/库存/履约窗）已冻结", "code": 409, "_status": 200}
+   [库回读] 主题票                      ((81, '城市定向场次票', None, Decimal('69.00'), datetime.datetime(2026, 11, 10, 10, 0), datetime.datetime(2026, 11, 14, 13, 45, 3), datetime.datetime(2026, 11, 13, 13, 45, 3)),)
+
+──────── 步骤 3:4 俱乐部开一场（POST /api/club/open-session，club 7001 是主题所属俱乐部 ⇒ clubOwned，不需要合作单）
+   open-session 2026-11-11 22:17      {"msg": "开团成功", "code": 200, "data": {"activityId": 15}, "_status": 200}
+   [库回读] activity                 ((15, 990017, 7001, 1, datetime.datetime(2026, 11, 11, 22, 17), datetime.datetime(2026, 11, 11, 23, 59, 59)),)
+   [库回读] 场次票                      ((84, Decimal('69.00')),)
+
+──────── 步骤 4:5-8 玩家：同意 → 参与人 → 报价 → 报名本场（ownerType=2）
+   consents                           操作成功
+   address                            操作成功
+   club/join                          {"msg": "加入成功", "code": 200, "data": {"state": "joined"}, "_status": 200}
+   [库回读] club_member              ((7001, 9004, 1),)
+
+TOPIC_ID=990017
+ACTIVITY_ID=15
