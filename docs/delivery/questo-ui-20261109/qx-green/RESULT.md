@@ -177,4 +177,6 @@ x-fix2 / x-fix3 合入后(`9f91019d5` 起)，小程序单测分片和静态门�
 - Backend tests：「Check private Mapper compiled references」判定 BLOCKED（`ApiTopicTemplateController` → `AuthorWriteReceiptService`），后端构建与测试本身通过。
 这两项都要你在 master 的 `ci/architecture/owners.json` 批准，PR 内改代码无法消除。本地在 `9617cbba2`（与 #787 代码一致）复核：ui-integrity UI-GATE-0:PASS、动作台账 6027 控件零差异，action-ledger 与 d192 单测 51/51。
 
-STATUS: PARTIAL - 本线负责的代码修复全部进了 launch；#779 头 9617cbba2 上除架构门外全部 CI 为绿（含 rehearsal、gitleaks、20 个单测分片、静态门、Funds IT），剩余 Fast gates 与 Backend tests 两个红都是需要你在 master owners.json 批准的架构门
+x-fix4 合入 launch 后（`94e3000e3`、`6b6164559`、`730f94d96`），CI 上「Mini program static checks」和单测分片 2/20、12/20 变红。原因：L-5 去掉了商家口碑页空态的「重新加载」（cy-empty bind:cta retry），动作台账没重建，控件 6027 → 6026、事件合同 2997 → 2996、local 事件合同 2898 → 2897；N-9 让结算页按主题 id 调 `/api/topic/info-to-user` 补主题名，路由矩阵的 needsLogin 随之变成 true。本线在 #787 上重建了台账与路由矩阵，按实测同步了三处计数（`ccb44affb`），在合并树上本地复核：11 项静态门禁全部通过，小程序全量单测 17337/17337。x-fix4 随后在 launch 上独立提交了同样的重建（`833027d04`）。#787 同步时，冲突文件取 launch 版本，复核台账 6026 零差异、路由矩阵 171 路由零差异、action-ledger 单测 48/48。现在 #787 又只剩本文档和 launch 有差异。同一批头上的 Fast gates 与 Backend tests 红，仍然是架构门；Fast gates 的非架构步骤（CI 脚本工作目录无关、接口存在性及自检、silentError 白名单）本地都通过。
+
+STATUS: PARTIAL - 本线负责的代码修复全部进了 launch（含 x-fix4 后的台账重建，与 833027d04 一致）；本地合并树 11 项静态门禁与全量单测 17337/17337 全绿；#779 剩余的 Fast gates 与 Backend tests 两个红都是要你在 master owners.json 批准的架构门
