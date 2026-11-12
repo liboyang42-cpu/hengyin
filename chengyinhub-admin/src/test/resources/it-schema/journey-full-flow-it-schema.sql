@@ -125,6 +125,7 @@ CREATE TABLE `cms_topic_chapter` (
   `allowed_validation_methods` varchar(255) DEFAULT NULL,
   `max_node_xp` int DEFAULT NULL,
   `need_group` int DEFAULT NULL,
+  `reward_text` varchar(64) DEFAULT NULL,
   `create_by` varchar(64) DEFAULT NULL,
   `create_time` datetime DEFAULT NULL,
   `update_by` varchar(64) DEFAULT NULL,

@@ -110,7 +110,8 @@ class P0FreeExploreSupplyRecoveryMySqlIT {
                 "migration_circle_theme_batch2_20260821.sql",
                 "migration_x10_chapter_audio_20260905.sql",
                 "migration_topic_chapter_finish_time_20260910.sql",
-                "migration_20261105_chapter_video.sql"));
+                "migration_20261105_chapter_video.sql",
+                "migration_20261112_chapter_reward.sql"));
         MIGRATIONS.put("cms_topic_node", List.of("migration_node_unlock_after_20260820.sql"));
         MIGRATIONS.put("merchant_chapter_offer", List.of(
                 "migration_20261003_merchant_offer_withdrawal_columns.sql",
