@@ -58,8 +58,6 @@ const MATRIX = [
   //   通行证列表 get() 服务 /list(listSellable,无会员维度)与 /orders、/gifts/bought、/gifts/received(均 requireAppMemberId 本人);
   //   同一调用点按其中最严的本人档登记,四个端点都必须登录。
   ['subpackageMember/market/passes/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
-  //   ApiWorkshopController /capabilities:平台能力开关,无会员维度。
-  ['subpackageMember/market/passes/index.js', "url: '/api/workshop/capabilities'", 'required', 'member', 'global-authenticated-read'],
   // 原写入回执仅按登录态actor读取，operation和requestId不接受会员ID。
   ['utils/author-write-recovery.js', "url: '/api/author-write/receipt'", 'required', 'member', 'self-account'],
   // Team board reads retain authenticated access; detail additionally enforces active team membership.
@@ -489,7 +487,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-10 l-pass:通行证页概览/主题库读取、游戏主题库、通行证与礼品入口卡、开通后订单轮询四处直接 GET(已入 MATRIX),123 → 127。
   // 2026-11-11 f-compliance:设置页 AI 对话记录导出一处直接 GET(同 NPC 面板接口,已入 MATRIX),127 → 128。
   // 2026-11-11 f-pages:我的收藏「据点」页签读本人收藏据点一处直接 GET(已入 MATRIX),128 → 129。
-  assert.equal(directCount, 129, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
+  // x-design1 D6:通行证页删掉 /api/workshop/capabilities 的无人消费请求,129 → 128。
+  assert.equal(directCount, 128, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

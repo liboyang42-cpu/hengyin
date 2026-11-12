@@ -15,3 +15,8 @@ test('D6:主题库入口仍只在商店页 ready 且服务端开放(member)时�
   assert.match(wxml, /<block wx:if="\{\{tab === 'shop' && state === 'ready'\}\}">\s*<view class="mk-row mk-row--go" wx:if="\{\{member\}\}"/)
   assert.match(wxml, /<block wx:elif="\{\{tab === 'orders'\}\}">/)
 })
+
+test('D6:页面不再请求 /api/workshop/capabilities,也没有无人消费的 workshopReason', () => {
+  const js = read('subpackageMember/market/passes/index.js')
+  assert.doesNotMatch(js, /workshop|loadWorkshop/i)
+})

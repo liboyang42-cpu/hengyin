@@ -33,7 +33,6 @@ Page({
     orders: [],
     giftsBought: [],
     giftsReceived: [],
-    workshopReason: '',
     member: null, // l-pass 通行证入口;服务端未开放为 null,不出
     pointBalance: null // r2-store:/api/user/info.point;读不到为 null,整卡不出(不写 0)
   },
@@ -41,7 +40,6 @@ Page({
     const tab = options && TABS.some((t) => t.key === options.tab) ? options.tab : 'shop'
     this.setData({ tab })
     this.load()
-    this.loadWorkshop()
     this.loadPoints()
     this.loadMember()
   },
@@ -84,16 +82,6 @@ Page({
     if (this._navigating) return
     this._navigating = true
     wx.navigateTo({ url: '/subpackageMember/points-history/index', complete: () => { this._navigating = false } })
-  },
-  // U07-03:付费模板只看服务端能力;微信通道不可用时写原因,可用时本端仍未接安装流程,不出入口
-  loadWorkshop() {
-    app.sendRequest({
-      url: '/api/workshop/capabilities', method: 'GET', hideLoading: true, autoErrorToast: false,
-      success: (res) => {
-        const cap = isBizOk(res) && res.data && res.data.wechatApp
-        this.setData({ workshopReason: cap && cap.available === false ? mv.workshopReasonText(cap.reason) : '' })
-      }
-    })
   },
   onShow() { if (this._loaded) { this.load(true); this.loadPoints(); this.loadMember() } },
   onPullDownRefresh() { this.load(true) },
