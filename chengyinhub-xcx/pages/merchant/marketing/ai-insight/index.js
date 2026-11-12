@@ -447,11 +447,13 @@ Page({
     const prevKey = 'prev' + def.key.charAt(0).toUpperCase() + def.key.slice(1);
     const cur = numberOrNull(src[def.key]);
     const prev = numberOrNull(src[prevKey]);
-    // 上期为 0 或缺失不算百分比(没有基数 ≠ 涨了无穷大)
+    // D-93:环比只认服务端 changeRates(与营销首页 stages[].changeRate 同一 SafeRatio 口径);
+    // 上期为 0 时服务端给 null,不显示百分比。端上不再自己拿本期/上期相除。
+    const rate = numberOrNull(src.changeRates && src.changeRates[def.key]);
     let deltaText = '';
     let deltaDown = false;
-    if (cur !== null && prev !== null && prev > 0) {
-      const pct = Math.round((cur - prev) / prev * 100);
+    if (rate !== null) {
+      const pct = Math.round(rate * 100);
       deltaDown = pct < 0;
       deltaText = pct === 0 ? '持平' : (pct < 0 ? '' : '+') + pct + '%';
     }

@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.SmsCoupon;
 import com.chengyinhub.business.domain.dto.MerchantMarketingAnalyticsFact;
 import com.chengyinhub.business.domain.dto.MerchantSearchQuery;
+import com.chengyinhub.business.domain.dto.MerchantVerifyMetric;
 import com.chengyinhub.business.domain.vo.PublicMemberVO;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper;
@@ -18,17 +19,15 @@ import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.mapper.CoopInviteMapper;
 import com.chengyinhub.business.service.IMerchantAggregateReadService;
+import com.chengyinhub.business.service.IMerchantMetricsService;
 import com.chengyinhub.business.service.IMmsMerchantService;
 import com.chengyinhub.business.service.ISmsCouponService;
+import com.chengyinhub.business.service.support.MerchantMetricPeriod;
 import com.chengyinhub.system.domain.SysCategory;
 import com.chengyinhub.system.service.ISysCategoryService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -45,8 +44,6 @@ import java.util.Set;
 @Service
 public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadService {
 
-    private static final ZoneId MARKETING_TIMEZONE = ZoneId.of("Asia/Shanghai");
-
     private final IMmsMerchantService merchantService;
     private final IClubService clubService;
     private final IClubMemberService clubMemberService;
@@ -58,6 +55,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
     private final CmsTopicChapterMapper chapterMapper;
     /** CU-M-61:把 category_id 翻成品类名,商家卡无图时按品类出图标 */
     private final ISysCategoryService categoryService;
+    private final IMerchantMetricsService metricsService;
 
     public MerchantAggregateReadServiceImpl(IMmsMerchantService merchantService,
                                             IClubService clubService,
@@ -68,7 +66,8 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
                                             ICmsActivityService activityService,
                                             MerchantMarketingAnalyticsMapper marketingAnalyticsMapper,
                                             CmsTopicChapterMapper chapterMapper,
-                                            ISysCategoryService categoryService) {
+                                            ISysCategoryService categoryService,
+                                            IMerchantMetricsService metricsService) {
         this.merchantService = merchantService;
         this.clubService = clubService;
         this.clubMemberService = clubMemberService;
@@ -79,6 +78,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         this.marketingAnalyticsMapper = marketingAnalyticsMapper;
         this.chapterMapper = chapterMapper;
         this.categoryService = categoryService;
+        this.metricsService = metricsService;
     }
 
     @Override
@@ -565,21 +565,22 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         if (windowDays != 7 && windowDays != 30) {
             throw new IllegalArgumentException("windowDays仅支持7或30");
         }
-        MarketingWindow marketingWindow = resolveMarketingWindow(
-                windowDays, Clock.system(MARKETING_TIMEZONE));
-        Date previousStart = marketingWindow.getPreviousStart();
-        Date currentStart = marketingWindow.getCurrentStart();
-        Date endExclusive = marketingWindow.getEndExclusive();
+        // D-93:窗口与核销都走与店铺参谋共用的 IMerchantMetricsService,本类不再自己解析时间窗或数核销。
+        MerchantMetricPeriod period = metricsService.window(windowDays);
+        Date previousStart = period.getPreviousStart();
+        Date currentStart = period.getCurrentStart();
+        Date endExclusive = period.getEndExclusive();
         MerchantMarketingAnalyticsFact fact = marketingAnalyticsMapper.selectAnalytics(
                 memberId, previousStart, currentStart, endExclusive);
         if (fact == null) fact = new MerchantMarketingAnalyticsFact();
+        MerchantVerifyMetric verify = metricsService.verify(memberId, Collections.singletonList(period)).get(0);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("semantics", "INDEPENDENT_EVENT_COUNTS");
         result.put("windowDays", windowDays);
         Map<String, Object> window = new LinkedHashMap<>();
-        window.put("timezone", MARKETING_TIMEZONE.getId());
-        window.put("basis", MARKETING_WINDOW_BASIS);
+        window.put("timezone", MerchantMetricPeriod.ZONE.getId());
+        window.put("basis", MerchantMetricPeriod.BASIS);
         window.put("previousStartInclusive", previousStart.getTime());
         window.put("currentStartInclusive", currentStart.getTime());
         window.put("endExclusive", endExclusive.getTime());
@@ -589,7 +590,9 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         stages.add(eventStage("BROWSE", "浏览", fact.getCurrentBrowse(), fact.getPreviousBrowse()));
         stages.add(eventStage("SIGNUP", "报名", fact.getCurrentSignup(), fact.getPreviousSignup()));
         stages.add(eventStage("PAYMENT", "支付", fact.getCurrentPayment(), fact.getPreviousPayment()));
-        stages.add(eventStage("VERIFY", "核销", fact.getCurrentVerify(), fact.getPreviousVerify()));
+        Map<String, Object> verifyStage = eventStage("VERIFY", "核销", verify.getCurrent(), verify.getPrevious());
+        verifyStage.put("changeRate", verify.getChangeRate());
+        stages.add(verifyStage);
         stages.add(eventStage("REFUND_APPLY", "退款申请",
                 fact.getCurrentRefundApply(), fact.getPreviousRefundApply()));
         result.put("stages", stages);
@@ -604,25 +607,6 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         touchpoints.put("items", items);
         result.put("touchpoints", touchpoints);
         return result;
-    }
-
-    /** 近 N 个自然日,含今天(Asia/Shanghai)。 */
-    static final String MARKETING_WINDOW_BASIS = "DAYS_INCL_TODAY";
-
-    static MarketingWindow resolveMarketingWindow(int windowDays, Clock clock) {
-        if (windowDays != 7 && windowDays != 30) {
-            throw new IllegalArgumentException("windowDays仅支持7或30");
-        }
-        LocalDate today = clock.instant().atZone(MARKETING_TIMEZONE).toLocalDate();
-        // check-1104 p2 F-2:窗口含今天(到明天 0 点为止),与店铺参谋 / 核销台账同一规则;
-        // 原先截到今天 0 点,当天核销在营销页恒为 0。
-        ZonedDateTime endExclusive = today.plusDays(1).atStartOfDay(MARKETING_TIMEZONE);
-        ZonedDateTime currentStart = endExclusive.minusDays(windowDays);
-        ZonedDateTime previousStart = currentStart.minusDays(windowDays);
-        return new MarketingWindow(
-                Date.from(previousStart.toInstant()),
-                Date.from(currentStart.toInstant()),
-                Date.from(endExclusive.toInstant()));
     }
 
     private Map<String, Object> eventStage(String code, String label, long current, long previous) {
@@ -675,30 +659,6 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
 
     private static <T> List<T> safe(List<T> source) {
         return source == null ? Collections.<T>emptyList() : source;
-    }
-
-    static final class MarketingWindow {
-        private final Date previousStart;
-        private final Date currentStart;
-        private final Date endExclusive;
-
-        private MarketingWindow(Date previousStart, Date currentStart, Date endExclusive) {
-            this.previousStart = previousStart;
-            this.currentStart = currentStart;
-            this.endExclusive = endExclusive;
-        }
-
-        Date getPreviousStart() {
-            return previousStart;
-        }
-
-        Date getCurrentStart() {
-            return currentStart;
-        }
-
-        Date getEndExclusive() {
-            return endExclusive;
-        }
     }
 
     private static final class Partner {

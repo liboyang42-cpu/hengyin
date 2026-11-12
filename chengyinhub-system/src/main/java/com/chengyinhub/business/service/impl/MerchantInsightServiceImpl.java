@@ -1,9 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,12 +27,16 @@ import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.dto.MerchantInsightCrowdFact;
 import com.chengyinhub.business.domain.dto.MerchantInsightSupplyFact;
 import com.chengyinhub.business.domain.dto.MerchantInsightVisitFact;
+import com.chengyinhub.business.domain.dto.MerchantVerifyMetric;
 import com.chengyinhub.business.domain.vo.ai.AiMerchantInsightResp;
 import com.chengyinhub.business.domain.vo.ai.MerchantInsightResp;
 import com.chengyinhub.business.mapper.MerchantInsightMapper;
 import com.chengyinhub.business.service.IAiCreatorService;
 import com.chengyinhub.business.service.IMerchantInsightService;
+import com.chengyinhub.business.service.IMerchantMetricsService;
 import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.support.MerchantMetricPeriod;
+import com.chengyinhub.common.utils.SafeRatio;
 
 /**
  * 商家店铺参谋:facts 纯 SQL 聚合(必出)→ AI 解读(可降级)→ 整份缓存(当日)。
@@ -56,7 +58,8 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     /** 店铺参谋主卡可切换的时间窗(自然日,含今天) */
     private static final int[] TREND_WINDOWS = { 7, 30, 90 };
     private static final int LOW_SAMPLE_THRESHOLD = 10;
-    private static final String CACHE_PREFIX = "ai:merchant:insight:v3:";
+    // D-93:trends/attribution 改走共用指标服务并带 changeRates,旧形状的当日缓存不再复用
+    private static final String CACHE_PREFIX = "ai:merchant:insight:v4:";
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final String LOW_SAMPLE_SUMMARY =
@@ -73,6 +76,10 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
 
     @Autowired
     private com.chengyinhub.business.mapper.MmsMerchantMapper mmsMerchantMapper;
+
+    /** D-93:与营销首页共用的时间窗与核销口径 */
+    @Autowired
+    private IMerchantMetricsService merchantMetricsService;
 
     @Autowired
     private com.chengyinhub.business.service.ICmsTopicService cmsTopicService;
@@ -117,7 +124,11 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         List<com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent> events =
                 merchantInsightMapper.selectVisitorEvents(merchantMemberId);
 
-        JSONObject facts = buildFacts(visits, crowd, supply, events, since);
+        // D-93:主卡走势与归因三数按与营销首页同一窗口(Asia/Shanghai 自然日含今天)计,核销取共用指标服务
+        List<MerchantMetricPeriod> periods = merchantMetricsService.windows(TREND_WINDOWS);
+        List<MerchantVerifyMetric> verify = merchantMetricsService.verify(merchantMemberId, periods);
+        JSONObject trends = buildTrends(events, periods, verify);
+        JSONObject facts = buildFacts(visits, crowd, supply, events, since, attributionOf(trends));
         // 店铺档案进事实包(纯档案字段无 PII):AI 据此推「适合的主题/联动商铺」
         facts.put("profile", profileFactsOf(profileView));
         // 真实候选池:招商中主题 + 附近商家(只带 id/name/category,不带 phone 等联系方式)。
@@ -130,7 +141,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         // 单客行只做页面展示,绝不放进 facts(facts 会整包喂给模型,昵称头像不许进 prompt)
         resp.setRecentVisitors(buildRecentVisitors(events));
         // 主卡 7/30/90 天走势:与 recentVisitors 一样只做页面展示,不进 facts、不喂 AI
-        resp.setTrends(buildTrends(events, now.toLocalDate()));
+        resp.setTrends(trends);
 
         boolean lowSample = facts.getBooleanValue("lowSample", true);
         AiMerchantInsightResp ai = null;
@@ -399,11 +410,12 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
                                   List<MerchantInsightCrowdFact> crowd,
                                   List<MerchantInsightSupplyFact> supply,
                                   List<com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent> events,
-                                  Date since)
+                                  Date since,
+                                  JSONObject attribution)
     {
         JSONObject facts = new JSONObject();
         facts.put("window", "近" + WINDOW_DAYS + "天");
-        facts.put("attribution", buildAttribution(events, since));
+        facts.put("attribution", attribution);
         facts.put("split", buildVisitorSplit(events, since));
         facts.put("sources", buildTopicSources(events, since));
         facts.put("checkin", buildCheckinFacts(visits));
@@ -415,40 +427,23 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
         return facts;
     }
 
-    /** 归因价值卡:本期(近30天)与上期(30-60天前)的 到店玩家/打卡/核销 三数,环比在前端算 */
-    private JSONObject buildAttribution(List<com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent> events,
-                                        Date since)
+    /**
+     * 归因价值卡 = 主卡 30 天窗口的 到店玩家/打卡/核销 本期与上期(D-93:不再另按滚动 30×24h 现算一遍,
+     * 与主卡、营销首页同一窗口;环比由服务端 changeRates 给出,端上不再自己除)。
+     */
+    private JSONObject attributionOf(JSONObject trends)
     {
-        Date prevSince = daysAgo(WINDOW_DAYS * 2);
-        Set<Long> curMembers = new HashSet<>();
-        Set<Long> prevMembers = new HashSet<>();
-        int curCheckins = 0, prevCheckins = 0, curRedeems = 0, prevRedeems = 0;
-        for (com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent e : events)
+        JSONObject out = new JSONObject();
+        for (Object o : trends.getJSONArray("windows"))
         {
-            Date at = eventAt(e);
-            if (at == null) continue;
-            boolean cur = !at.before(since);
-            boolean prev = at.before(since) && !at.before(prevSince);
-            if (cur && e.getMemberId() != null) curMembers.add(e.getMemberId());
-            if (prev && e.getMemberId() != null) prevMembers.add(e.getMemberId());
-            if (e.getCheckinAt() != null)
+            JSONObject w = (JSONObject) o;
+            if (w.getIntValue("days") != WINDOW_DAYS) continue;
+            for (String key : new String[] { "visitors", "checkins", "redeems",
+                    "prevVisitors", "prevCheckins", "prevRedeems", "changeRates" })
             {
-                if (!e.getCheckinAt().before(since)) curCheckins++;
-                else if (!e.getCheckinAt().before(prevSince)) prevCheckins++;
-            }
-            if (e.getRedeemedAt() != null)
-            {
-                if (!e.getRedeemedAt().before(since)) curRedeems++;
-                else if (!e.getRedeemedAt().before(prevSince)) prevRedeems++;
+                out.put(key, w.get(key));
             }
         }
-        JSONObject out = new JSONObject();
-        out.put("visitors", curMembers.size());
-        out.put("checkins", curCheckins);
-        out.put("redeems", curRedeems);
-        out.put("prevVisitors", prevMembers.size());
-        out.put("prevCheckins", prevCheckins);
-        out.put("prevRedeems", prevRedeems);
         return out;
     }
 
@@ -533,86 +528,74 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     }
 
     /**
-     * 主卡走势:每个时间窗(7/30/90 个自然日,含今天)给本期/上期的 到店玩家/打卡/核销 三数,
-     * 外加逐日三数(daily 按日期升序,长度 = 窗口天数)。计数口径与 buildAttribution 相同:
-     * 到店玩家按事件时刻去重 member,打卡按 checkinAt,核销按 redeemedAt;区别只在窗口按自然日切,
-     * 逐日格才能和窗口合计对得上。逐日到店玩家是当天去重,跨天相加不等于窗口去重人数。
+     * 主卡走势:每个时间窗(7/30/90 个自然日,含今天,Asia/Shanghai —— D-93 与营销首页同一 MerchantMetricPeriod)
+     * 给本期/上期的 到店玩家/打卡/核销 三数、服务端环比 changeRates,外加逐日三数(daily 按日期升序,长度 = 窗口天数)。
+     * 到店玩家按事件时刻去重 member,打卡按 checkinAt;核销(本期/上期/逐日)直接取共用指标服务
+     * IMerchantMetricsService#verify,与营销首页 VERIFY 阶段同一份数。逐日到店玩家是当天去重,跨天相加不等于窗口去重人数。
      */
     private JSONObject buildTrends(List<com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent> events,
-                                   LocalDate today)
+                                   List<MerchantMetricPeriod> periods, List<MerchantVerifyMetric> verify)
     {
         JSONArray windows = new JSONArray();
         DateTimeFormatter dayLabel = DateTimeFormatter.ofPattern("MM-dd");
-        for (int days : TREND_WINDOWS)
+        for (int k = 0; k < periods.size(); k++)
         {
-            LocalDate start = today.minusDays(days - 1L);
-            LocalDate prevStart = start.minusDays(days);
+            MerchantMetricPeriod period = periods.get(k);
+            MerchantVerifyMetric redeemMetric = verify.get(k);
+            int days = period.getDays();
             List<Set<Long>> dayMembers = new ArrayList<>();
             int[] dayCheckins = new int[days];
-            int[] dayRedeems = new int[days];
             for (int i = 0; i < days; i++) dayMembers.add(new HashSet<>());
             Set<Long> curMembers = new HashSet<>();
             Set<Long> prevMembers = new HashSet<>();
-            int curCheckins = 0, prevCheckins = 0, curRedeems = 0, prevRedeems = 0;
+            int curCheckins = 0, prevCheckins = 0;
             for (com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent e : events)
             {
-                LocalDate at = localDay(eventAt(e));
-                if (at != null && e.getMemberId() != null && !at.isAfter(today))
+                Date at = eventAt(e);
+                if (e.getMemberId() != null)
                 {
-                    if (!at.isBefore(start))
+                    int index = period.currentDayIndex(at);
+                    if (index >= 0)
                     {
                         curMembers.add(e.getMemberId());
-                        dayMembers.get(dayIndex(start, at)).add(e.getMemberId());
+                        dayMembers.get(index).add(e.getMemberId());
                     }
-                    else if (!at.isBefore(prevStart)) prevMembers.add(e.getMemberId());
+                    else if (period.inPrevious(at)) prevMembers.add(e.getMemberId());
                 }
-                LocalDate checkin = localDay(e.getCheckinAt());
-                if (checkin != null && !checkin.isAfter(today))
-                {
-                    if (!checkin.isBefore(start)) { curCheckins++; dayCheckins[dayIndex(start, checkin)]++; }
-                    else if (!checkin.isBefore(prevStart)) prevCheckins++;
-                }
-                LocalDate redeemed = localDay(e.getRedeemedAt());
-                if (redeemed != null && !redeemed.isAfter(today))
-                {
-                    if (!redeemed.isBefore(start)) { curRedeems++; dayRedeems[dayIndex(start, redeemed)]++; }
-                    else if (!redeemed.isBefore(prevStart)) prevRedeems++;
-                }
+                int checkinIndex = period.currentDayIndex(e.getCheckinAt());
+                if (checkinIndex >= 0) { curCheckins++; dayCheckins[checkinIndex]++; }
+                else if (period.inPrevious(e.getCheckinAt())) prevCheckins++;
             }
+            long[] dayRedeems = redeemMetric.getDaily();
             JSONArray daily = new JSONArray();
             for (int i = 0; i < days; i++)
             {
                 JSONObject d = new JSONObject();
-                d.put("date", start.plusDays(i).format(dayLabel));
+                d.put("date", period.getCurrentStartDay().plusDays(i).format(dayLabel));
                 d.put("visitors", dayMembers.get(i).size());
                 d.put("checkins", dayCheckins[i]);
                 d.put("redeems", dayRedeems[i]);
                 daily.add(d);
             }
+            JSONObject changeRates = new JSONObject();
+            changeRates.put("visitors", SafeRatio.change(curMembers.size(), prevMembers.size(), 4));
+            changeRates.put("checkins", SafeRatio.change(curCheckins, prevCheckins, 4));
+            changeRates.put("redeems", redeemMetric.getChangeRate());
             JSONObject w = new JSONObject();
             w.put("days", days);
             w.put("visitors", curMembers.size());
             w.put("checkins", curCheckins);
-            w.put("redeems", curRedeems);
+            w.put("redeems", redeemMetric.getCurrent());
             w.put("prevVisitors", prevMembers.size());
             w.put("prevCheckins", prevCheckins);
-            w.put("prevRedeems", prevRedeems);
+            w.put("prevRedeems", redeemMetric.getPrevious());
+            w.put("changeRates", changeRates);
             w.put("daily", daily);
             windows.add(w);
         }
         JSONObject out = new JSONObject();
         out.put("windows", windows);
         return out;
-    }
-
-    private static LocalDate localDay(Date d)
-    {
-        return d == null ? null : d.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
-
-    private static int dayIndex(LocalDate start, LocalDate day)
-    {
-        return (int) java.time.temporal.ChronoUnit.DAYS.between(start, day);
     }
 
     /** 事件时刻 = 打卡时间优先,无打卡取核销时间 */
