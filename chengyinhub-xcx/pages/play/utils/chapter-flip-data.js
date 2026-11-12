@@ -53,6 +53,7 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, e
         { k: '坐标', v: prevDone + '/' + prevNodes.length },
       ].filter(Boolean),
       next: nextNode && nextNode.name ? String(nextNode.name) : '',
+      reward: prev.reward || '',   // D-82 章节级奖励:没设就不出那一行
     };
   }
   const n = cur && cur.nodeCount ? cur.nodeCount : chapterNodes(nodes, cur && cur.id).length;

@@ -597,6 +597,8 @@ public class PlayNodeQueryApplication {
                         : ChapterAtmospherePreset.DEFAULT);
                 // 章节背景旁白:玩家端进入本章自动播放(2026-09-04 起音频不再是 blocks 里的块)
                 cm.put("audioUrl", originalChapterAudio.containsKey(c.getId()) ? originalChapterAudio.get(c.getId()) : c.getAudioUrl());
+                // D-82 章节级奖励:章节结束卡的奖励行(空 = 不出这一行)
+                cm.put("rewardText", c.getRewardText());
                 if (resolveBlocks && ChapterBlockReadSupport.isRequiredChapter(c)) {
                     // 章节呈现冻结上线前发布的老局：blocks 早已冻结在 thoughtChapters 里，那一份优先。
                     List<Object> blocks;
@@ -825,6 +827,7 @@ public class PlayNodeQueryApplication {
                     ? ChapterAtmospherePreset.normalizeForRead(frozenText(row, "atmospherePreset"))
                     : ChapterAtmospherePreset.DEFAULT);
             cm.put("audioUrl", audio);
+            cm.put("rewardText", frozenText(row, "rewardText"));   // D-82;冻结前发布的局没有这键 ⇒ null
             if (resolveBlocks && row.path("required").asBoolean(false)) {
                 List<Object> blocks = JSON.convertValue(row.path("blocks"),
                         new com.fasterxml.jackson.core.type.TypeReference<List<Object>>() { });

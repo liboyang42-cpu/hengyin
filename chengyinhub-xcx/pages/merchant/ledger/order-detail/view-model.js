@@ -59,7 +59,7 @@ function buildMerchantOrderDetail(input) {
   return {
     id: order.id == null ? '' : String(order.id),
     orderNo: order.orderSn || (order.id != null ? `订单 #${order.id}` : '未命名订单'),
-    amount: firstMoney(order) || '—',
+    amount: firstMoney(order) || '¥0.00',
     status: status.text,
     statusVariant: status.variant,
     detailRows: compact([

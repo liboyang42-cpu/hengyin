@@ -151,6 +151,8 @@ public final class TopicContentWriteGuard {
         if (c.getMaxNodeXp() != null && c.getMaxNodeXp() < 0) {
             throw new IllegalStateException("单节点探索值上限不能为负");
         }
+        // D-82 章节级奖励:结束卡一行文案,超长/多行挡在写之前
+        com.chengyinhub.business.util.ChapterRewardText.requireValid(c.getRewardText());
     }
 
     /** 只收 1-5 的逗号串(对齐 cms_member_template.validation_method 的取值域);空 = 不限。 */

@@ -2,6 +2,7 @@ package com.chengyinhub.business.domain.dto;
 
 /**
  * 商家营销分析的两段等长窗口事实。每个字段都是独立事件数，不表达相邻转化。
+ * 核销字段仍由 selectAnalytics 回填但页面不再读取(D-93):两页核销统一由 IMerchantInsightService 计算。
  */
 public class MerchantMarketingAnalyticsFact {
     private long currentBrowse;

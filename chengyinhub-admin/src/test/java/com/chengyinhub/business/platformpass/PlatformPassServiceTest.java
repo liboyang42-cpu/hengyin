@@ -290,6 +290,58 @@ class PlatformPassServiceTest {
         return (List<Map<String, Object>>) catalog.get("rows");
     }
 
+    // ---- D-112 通行证卡字段
+
+    private Map<String, Object> activeSegment(String planCode, Date from, Date to) {
+        Map<String, Object> active = new HashMap<>();
+        active.put("id", 7L); active.put("plan_code", planCode);
+        active.put("valid_from", from); active.put("valid_to", to);
+        return active;
+    }
+
+    @Test
+    void holdingCarriesPlanLabelAndProgressDays() {
+        enableAll();
+        Date now = new Date();
+        long day = 86_400_000L;
+        when(mapper.selectActiveMembership(MEMBER, now))
+                .thenReturn(activeSegment("YEAR", new Date(now.getTime() - 65 * day), new Date(now.getTime() + 300 * day)));
+        Map<String, Object> holding = service.holding(MEMBER, now);
+        assertEquals("YEAR", holding.get("planCode"));
+        assertEquals("年卡", holding.get("planLabel"));
+        assertEquals(365, holding.get("daysTotal"));
+        assertEquals(300, holding.get("daysRemaining"));
+        assertEquals(false, holding.get("teammateBenefit"), "通行证只覆盖本人自玩");
+        assertNull(holding.get("badge"));
+    }
+
+    @Test
+    void holdingFlagsExpiringBadgeAndMonthLabelAndClampsRemaining() {
+        enableAll();
+        Date now = new Date();
+        long day = 86_400_000L;
+        when(mapper.selectActiveMembership(MEMBER, now))
+                .thenReturn(activeSegment("MONTH", new Date(now.getTime() - 26 * day), new Date(now.getTime() + 4 * day - 1000)));
+        Map<String, Object> holding = service.holding(MEMBER, now);
+        assertEquals("月卡", holding.get("planLabel"));
+        assertEquals(30, holding.get("daysTotal"));
+        assertEquals(4, holding.get("daysRemaining"), "向上取整天");
+        assertEquals("EXPIRING", holding.get("badge"));
+    }
+
+    @Test
+    void holdingWithoutActiveSegmentHasNullCardFacts() {
+        enableAll();
+        Map<String, Object> holding = service.holding(99L, new Date());
+        assertEquals(false, holding.get("active"));
+        assertNull(holding.get("planCode"));
+        assertNull(holding.get("planLabel"));
+        assertNull(holding.get("daysTotal"));
+        assertNull(holding.get("daysRemaining"));
+        assertNull(holding.get("badge"));
+        assertEquals(false, holding.get("teammateBenefit"));
+    }
+
     // ---- 下单
 
     @Test

@@ -14,6 +14,7 @@ import com.chengyinhub.business.service.ITopicRouteRuntimeService;
 import com.chengyinhub.business.service.ITopicContentGraphAuthoringService;
 import com.chengyinhub.business.service.support.*;
 import com.chengyinhub.business.util.ChapterAtmospherePreset;
+import com.chengyinhub.business.util.ChapterRewardText;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.bean.BeanUtils;
@@ -243,6 +244,8 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
             chapter.setId(null);
             // 配色不靠 copyProperties 隐式透传:枚举必须当场收敛(存量别名也在这里被写成新档)
             chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(chapterDTO.getAtmospherePreset()));
+            // D-82 章节级奖励:去首尾空白,空白不落库
+            chapter.setRewardText(ChapterRewardText.requireValidOrNull(chapterDTO.getRewardText()));
             chapter.setSortId(++chapterSortId);
             chapter.setTopicId(topicId);
             chapter.setCreateBy(username);
@@ -339,6 +342,7 @@ public class TopicContentGraphAuthoringServiceImpl implements ITopicContentGraph
                 // 旧章节 id 只用于剧情 chapterId 映射,绝不带进新行
                 chapter.setId(null);
                 chapter.setAtmospherePreset(ChapterAtmospherePreset.requireValid(source.getAtmospherePreset()));
+                chapter.setRewardText(ChapterRewardText.requireValidOrNull(source.getRewardText()));   // D-82
                 chapter.setTopicId(topicId);
                 chapter.setSortId(compiled.getChapterSortId());
                 chapter.setRequired(1);

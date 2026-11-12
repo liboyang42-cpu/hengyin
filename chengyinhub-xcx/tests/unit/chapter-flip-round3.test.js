@@ -38,10 +38,13 @@ function instance(def, props) {
   return inst
 }
 
-test('翻转门播完自己进(第四轮:held 已从组件退场,等待放行改在 play 页)', () => {
+test('翻转门 D-46 点了才能进(取代原「播完自己进」;held 已从组件退场,等待放行改在 play 页)', () => {
   const def = load()
   const c = instance(def)
   c._gate()
+  c.flush()
+  assert.deepEqual(c.events, [], 'D-46:不点不进')
+  c.onTap()
   c.flush()
   assert.deepEqual(c.events, ['continue'])
 })

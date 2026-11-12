@@ -251,7 +251,7 @@ test('§3.5 被看者是商家才切商家 About,与观看者角色无关', () =
   assert.equal(merchantViewsPlayer.data.subjectIsMerchant, false)
   assert.equal(merchantViewsPlayer.data.merchantState, 'not-merchant')
   assert.equal(merchantViewsPlayer.data.isMerchantView, false,
-    '观看者是商家不得把别人的主页染成商家主题')
+    '观看者是商家不改 isMerchantView(商家 About/CTA 仍由被看者决定);浅色主题走 viewerLight(D-91)')
 })
 
 test('§3.5 About 分支只能由被看者身份开闸,不许挂观看者身份', () => {

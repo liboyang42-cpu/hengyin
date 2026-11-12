@@ -10,6 +10,7 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const motion = require('../../../../utils/motion.js');
 
 const FLIP_MS = 480;    // = --cy-motion-flip(MOTION.md §2.1);减少动态效果时 10ms
+const SWIPE_MIN_PX = 40;  // D-56:左右滑翻页的最小横向位移(且须明显大于纵向,不抢卡内竖向滚动)
 /* 便签在板上的位置与倾斜(原型三张:左上 / 中下 / 右上;再多的循环错开,最多画 6 张) */
 const PIN_SLOTS = [[40, 36, -4], [260, 120, 3], [460, 32, -2], [110, 136, 4], [340, 48, -3], [520, 130, 2]];
 const MAX_PINS = 6;
@@ -85,11 +86,27 @@ Component({
     _clearEnd() { if (this._endT) { clearTimeout(this._endT); this._endT = null; } },
     _clearPop() { if (this._popT) { clearTimeout(this._popT); this._popT = null; } },
     /** 翻到下一位:当前这张绕竖轴翻出去、下一张翻进来;翻完才换「指认 X」。 */
-    onFlipNext() {
+    onFlipNext() { this._flipBy(1); },
+    /** D-56 左右滑也能翻:向左滑 = 下一位,向右滑 = 上一位。横向位移够长且明显大于纵向才算,卡内竖向滚动不受影响;仍用同一套 is-out / is-in 过渡。 */
+    onDeckTouchStart(e) {
+      const t = e && e.touches && e.touches[0];
+      this._swipe = t ? { x: t.clientX, y: t.clientY } : null;
+    },
+    onDeckTouchEnd(e) {
+      const from = this._swipe;
+      this._swipe = null;
+      const t = e && e.changedTouches && e.changedTouches[0];
+      if (!from || !t) return;
+      const dx = t.clientX - from.x;
+      const dy = t.clientY - from.y;
+      if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      this._flipBy(dx < 0 ? 1 : -1);
+    },
+    _flipBy(step) {
       const n = this.data.suspects.length;
       if (n < 2 || this._flipT || this.data.confirmOpen) return;
       const cur = this.data.cur;
-      const next = (cur + 1) % n;
+      const next = (cur + step + n) % n;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
       this.setData({ outIdx: cur, inIdx: next });
       this._flipT = setTimeout(() => {

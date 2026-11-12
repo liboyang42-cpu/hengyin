@@ -54,7 +54,7 @@ class TopicEditionReopenBlocksColumnMyBatisIT {
                     + " location_count BIGINT, template_count BIGINT, sort_id BIGINT, category VARCHAR(64),"
                     + " category_id INT, recruit_enabled TINYINT, perk_min_value DECIMAL(10,2), max_merchant INT,"
                     + " required TINYINT, terms_mode VARCHAR(16), max_per_head_fee DECIMAL(10,2),"
-                    + " allowed_validation_methods VARCHAR(64), max_node_xp INT)"
+                    + " allowed_validation_methods VARCHAR(64), max_node_xp INT, reward_text VARCHAR(64))"
     };
 
     @Test
