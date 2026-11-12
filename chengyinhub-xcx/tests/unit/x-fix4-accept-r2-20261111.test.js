@@ -71,11 +71,7 @@ test('N-9 结算页没带 topicName 时按主题 id 补主题名,标题不落「
 test('N-11 通关卡(finale)跟主题外观:底/字/按钮读 --lk-*,文案避开标志并裁掉乱码字', () => {
   const w = read('pages/play/components/chapter-flip/index.wxss')
   assert.match(w, /\.cf--finale \{ z-index: 320; background: var\(--lk-bg, #1F1F21\); color: var\(--lk-ink, #F5F5F2\); \}/)
-<<<<<<< HEAD
   assert.match(w, /\.cf--finale \.cf__copy \{ top: calc\(33\.3vh \+ 45vw \+ 24rpx\);[^}]*overflow: visible;/)
-=======
-  assert.match(w, /\.cf--finale \.cf__copy \{ top: calc\(33\.3vh \+ 45vw \+ 24rpx\);[^}]*overflow: visible;/) // x-fix6 R4-5:不再裁切
->>>>>>> e302d126 (test: x-fix6 同步断言与 UI 基线重锚（首页定位卡、底栏、通关卡），台账计数 +2)
   assert.match(w, /\.cf--finale \.cf__pill--p \{ background: var\(--lk-a,/)
 })
 
@@ -105,11 +101,7 @@ test('L2-2 通行证页:平台通行证在售时不再写「暂无在售通行�
 test('P-11/L2-1 首页定位确认:文案更短(保留精确位置/发送给城瘾/不用于附近排序),点空白处=暂不定位', () => {
   const js = read('pages/index/index.js')
   assert.match(js, /content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。'/)
-<<<<<<< HEAD
   assert.match(js, /this\.setData\(\{ locationPrompt: \{/) // x-fix6 L2-1:居中弹窗改为 feed 顶部非阻塞卡片
-=======
-  assert.match(js, /x-fix6 L2-1:不再用居中弹窗/) // x-fix6:定位同意改顶部卡片
->>>>>>> e302d126 (test: x-fix6 同步断言与 UI 基线重锚（首页定位卡、底栏、通关卡），台账计数 +2)
   assert.match(read('components/cy/modal-host/index.js'), /maskClosable: opts\.maskClosable === true/)
 })
 
@@ -126,11 +118,7 @@ test('A-4 模板介绍没有精选示例时不画「暂无精选示例」说明�
 
 test('ME-4 底栏实底提前到图标行之前(x-fix5 再提前到 12%),卡片字不从图标周围透出', () => {
   const w = read('components/tabBar/index.wxss')
-<<<<<<< HEAD
   assert.match(w, /rgba\(255, 255, 255, 0\) 0%, #FFFFFF 6%, #FFFFFF 100%\)/)   // x-fix6 ME-4:浅色图标行完全不透明
-=======
-  assert.match(w, /#FFFFFF 6%, #FFFFFF 100%\)/ /* x-fix6 ME-4 */)
->>>>>>> e302d126 (test: x-fix6 同步断言与 UI 基线重锚（首页定位卡、底栏、通关卡），台账计数 +2)
   assert.match(w, /var\(--cy-color-bg-page\) 12%, var\(--cy-color-bg-page\) 100%\)/)
 })
 

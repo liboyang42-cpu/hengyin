@@ -30,16 +30,7 @@ beforeEach(() => {
 
 function page() {
   const value = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)) })
-<<<<<<< HEAD
   value.setData = (patch, done) => { Object.assign(value.data, patch); if (patch && patch.locationPrompt) modals.push({ title: patch.locationPrompt.title, content: patch.locationPrompt.content, success: (r) => (r && r.confirm ? value.onLocationPromptAgree() : value.onLocationPromptDecline()) }) /* x-fix6 首页定位改为 feed 顶部卡片:locationPrompt 等同原弹窗,同意/暂不走卡片按钮处理器 */; if (done) done() }
-=======
-  // x-fix6 L2-1:定位同意改为顶部卡片(data.locationPrompt),这里把卡片还原成旧「弹窗」记录,断言口径不变
-  value.setData = (patch, done) => {
-    Object.assign(value.data, patch)
-    if (patch.locationPrompt) modals.push({ title: patch.locationPrompt.title, content: patch.locationPrompt.content, success: (r) => (r.confirm ? value.onLocationPromptAgree() : value.onLocationPromptDecline()) })
-    if (done) done()
-  }
->>>>>>> e302d126 (test: x-fix6 同步断言与 UI 基线重锚（首页定位卡、底栏、通关卡），台账计数 +2)
   return value
 }
 const flush = async () => { for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve)) }

@@ -119,10 +119,6 @@ test('A-3 / N-19 编辑器标题改多行自适应框折行;票种编辑器展�
 
 test('ME-4 底栏实底提前到 12%', () => {
   const w = read('components/tabBar/index.wxss')
-<<<<<<< HEAD
   assert.match(w, /rgba\(255, 255, 255, 0\) 0%, #FFFFFF 6%, #FFFFFF 100%\)/)   // x-fix6 把浅色渐隐再收到 6% 且全不透明
-=======
-  assert.match(w, /#FFFFFF 6%, #FFFFFF 100%\)/ /* x-fix6 ME-4 */)
->>>>>>> e302d126 (test: x-fix6 同步断言与 UI 基线重锚（首页定位卡、底栏、通关卡），台账计数 +2)
   assert.match(w, /var\(--cy-color-bg-page\) 12%, var\(--cy-color-bg-page\) 100%\)/)
 })
