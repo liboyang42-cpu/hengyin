@@ -204,17 +204,9 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
   vertical-align: top;
 }
 
-.activity-poster-empty {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  background: var(--cy-color-bg-elevated);
-  color: var(--cy-color-text-tertiary);
-  font-size: var(--cy-type-caption);
-}
+/* D13:无海报用统一的 look 渐变 + 小插画(cy-cover-fb),底色与布局由全局类给 */
+.activity-poster-empty { overflow: hidden; }
+.activity-poster-empty .cy-cover-fb__art { width: 72rpx; height: 54rpx; }
 
 .setbox_lb_li_top_con {
   margin: 0 0 0 192rpx; /* ds-ok: 对齐左侧 160rpx 缩略图(float:left)+32rpx 间隙的实际宽度,不是通用间距 */

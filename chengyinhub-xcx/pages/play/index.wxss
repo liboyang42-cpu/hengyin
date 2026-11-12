@@ -2143,7 +2143,7 @@ page { background: var(--cy-color-bg-page); }
 .finsheet .finsheet__cta{ box-shadow:none; border-radius:var(--cy-comp-btn-radius); }
 .finsheet__settle{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(188rpx + env(safe-area-inset-bottom)); height:104rpx; border-radius:var(--cy-comp-btn-radius);
   display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; background:var(--cy-color-play-story-text); color:var(--cy-color-play-story-page); }
-.finsheet__settle + .finsheet__cta{ background:var(--cy-color-play-story-surface); color:var(--cy-color-play-story-text); }
+.finsheet__settle + .finsheet__cta{ background:transparent; color:var(--cy-color-play-story-muted); font-weight:600; } /* D14:有「查看结算」主按钮时,「继续」退成文字按钮;保存图片 · 分享仍同一行 */
 .finsheet__pad{ height:123rpx; }
 /* x-fix6 R4-2:两颗底部按钮(查看结算 + 继续)时底座高 123rpx,路线卡按同量再收,「保存图片 / 分享」整行落在底座之上 */
 .finsheet--two .finsheet__routecv{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 1023rpx) * 3 / 4)); }

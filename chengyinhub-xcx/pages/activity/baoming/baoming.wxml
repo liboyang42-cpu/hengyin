@@ -83,7 +83,7 @@
              两者都没有时如实提示待同步,不拿路线票券占位图冒充活动海报。 -->
         <view class="setbox_lb_li_top_tu">
           <image wx:if="{{img.first(activityInfo.imgUrl) || img.first(activityInfo.imgArr)}}" lazy-load="true" src="{{img.first(activityInfo.imgUrl) || img.first(activityInfo.imgArr)}}" mode="aspectFill" />
-          <view wx:else class="activity-poster-empty">暂无海报</view>
+          <view wx:else class="activity-poster-empty cy-cover-fb" aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </view>
         <view class="setbox_lb_li_top_con">
           <!-- 参考图的条目顺序是「标题 → 时间 → 地点」:先回答"是什么",再说何时何地。
