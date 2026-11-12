@@ -309,8 +309,15 @@ class TemplateMarketLifecycleMySqlIT {
             assertEquals(1L, projection(id).getStatus());
             CmsMemberTemplate edit = new CmsMemberTemplate(); edit.setId(id); edit.setQuestionAnswer("changed");
             publish.updateAdminTemplate(edit, "author");
-            assertEquals(0L, projection(id).getStatus());
+            assertEquals(2L, projection(id).getStatus(), "个人玩法变更使广场旧审核失效，不自动生成广场待审单");
             assertEquals(0L, members.selectCmsMemberTemplateById(id).getStatus());
+            CmsTemplateLibrary publicQuery = new CmsTemplateLibrary(); publicQuery.setStatus(1L); publicQuery.setDelFlag(0);
+            assertTrue(libraries.selectCmsTemplateLibraryList(publicQuery).stream()
+                    .noneMatch(row -> id.equals(row.getMemberTemplateId())), "失效投影不能继续公开");
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> publish.submitTemplateToMarket(id, 7L, "author"), "修改后须重新完成个人审核再提交广场审核");
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> publish.updateTemplateLibraryStatus(id, 1, 7L), "旧广场审核不能直接恢复上架");
         } finally { worker.shutdownNow(); }
     }
 

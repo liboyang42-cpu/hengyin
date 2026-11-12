@@ -219,7 +219,7 @@ class PlatformPassServiceTest {
         Date now = new Date(1_800_000_000_000L);
         when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
         Map<String, Object> noSelfPlay = new HashMap<>(libraryTopic(1L));
-        noSelfPlay.put("self_play", 0);
+        noSelfPlay.put("self_play", Boolean.FALSE);
         Map<String, Object> closed = new HashMap<>(libraryTopic(2L));
         closed.put("lifecycle", 6);
         Map<String, Object> notStarted = new HashMap<>(libraryTopic(3L));
@@ -280,7 +280,7 @@ class PlatformPassServiceTest {
     }
 
     private static Map<String, Object> libraryTopic(long id) {
-        return Map.of("id", id, "name", "主题" + id, "product_type", 1, "self_play", 1, "lifecycle", 3,
+        return Map.of("id", id, "name", "主题" + id, "product_type", 1, "self_play", Boolean.TRUE, "lifecycle", 3,
                 "selling_started_at", new Date(1_600_000_000_000L), "sale_end_at", new Date(4_102_444_800_000L),
                 "self_play_price", new BigDecimal("100.00"));
     }

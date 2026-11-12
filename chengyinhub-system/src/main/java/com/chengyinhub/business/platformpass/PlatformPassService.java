@@ -702,6 +702,7 @@ public class PlatformPassService {
 
     static Long num(Object value) {
         if (value instanceof Number n) return n.longValue();
+        if (value instanceof Boolean bit) return bit ? 1L : 0L;
         if (value == null) return null;
         return Long.valueOf(value.toString());
     }

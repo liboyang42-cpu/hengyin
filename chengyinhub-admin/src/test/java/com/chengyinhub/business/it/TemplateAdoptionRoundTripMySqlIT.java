@@ -99,7 +99,7 @@ class TemplateAdoptionRoundTripMySqlIT {
 
     @Test void firstAdoptedDraftCountsBeforePublicationAndReplayOrReadoptionNeverInflates() {
         CmsTemplateLibrary original = adoptionSource(false);
-        TemplateAdoptionCommand command = adoptionCommand(original.getId(), 7L, "d89_first_draft");
+        TemplateAdoptionCommand command = adoptionCommand(original.getId(), 7L, "d89_first_draft_01");
         Map<String, Object> completed = adoption.adopt(7L, 7L, command, "adopter");
         Long draftId = Long.valueOf((String) completed.get("draftId"));
         CmsMemberTemplate draft = members.selectCmsMemberTemplateById(draftId);
